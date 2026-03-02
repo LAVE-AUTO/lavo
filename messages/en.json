@@ -1,0 +1,25 @@
+{
+  "common": {
+    "loading": "Loading...",
+    "error": "An error occurred",
+    "success": "Success",
+    "cancel": "Cancel",
+    "confirm": "Confirm",
+    "save": "Save",
+    "back": "Back"
+  },
+  "home": {
+    "title": "Welcome to LAVO",
+    "subtitle": "Booking and payment platform for car wash stations",
+    "apiStatus": "API Status",
+    "ready": "Project initialized. Ready for Drizzle schema."
+  },
+  "auth": {
+    "login": "Login",
+    "register": "Register",
+    "logout": "Logout",
+    "email": "Email",
+    "password": "Password",
+    "forgotPassword": "Forgot password"
+  }
+}

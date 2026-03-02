@@ -24,19 +24,32 @@ Each domain has a backend + API surface. Frontend is provided for end‑user / a
 
 ---
 
-## 2. `src/app` — Route groups and pages
+## 2. i18n (next-intl)
 
-Base: Next.js App Router with route groups. The root layout remains in `src/app/layout.tsx`.  
-Route groups do **not** change URLs; they only organize code.
+- **Locales:** `fr` (default), `en`. URLs are prefixed: `/fr`, `/en`.
+- **Messages:** `messages/fr.json`, `messages/en.json`.
+- **Config:** `src/i18n/routing.ts`, `src/i18n/request.ts`, `src/i18n/navigation.ts`.
+- **Middleware:** `src/middleware.ts` handles locale detection and redirects.
+- **Usage:** `useTranslations('namespace')` in client components; `getTranslations` in server components.
+
+---
+
+## 3. `src/app` — Route groups and pages
+
+Base: Next.js App Router. All pages live under `src/app/[locale]/` for i18n.  
+Route groups `(public)`, `(client)`, `(station)`, `(admin)` do **not** change URLs; they only organize code.
 
 - **Root layout**
   - `src/app/layout.tsx` — Global HTML `<html>`/`<body>` wrapper, fonts, and metadata.
 
+- **Locale layout**
+  - `src/app/[locale]/layout.tsx` — NextIntlClientProvider, Providers. Wraps all route groups.
+
 - **Public group `(public)`**
-  - `src/app/(public)/layout.tsx` — Wrapper for all public pages.
-  - `src/app/(public)/page.tsx` → `/` (home / welcome + API health check).
-  - `src/app/(public)/login/page.tsx` → `/login`
-  - `src/app/(public)/register/page.tsx` → `/register`
+  - `src/app/[locale]/(public)/layout.tsx` — Wrapper for all public pages.
+  - `src/app/[locale]/(public)/page.tsx` → `/fr` or `/en` (home / welcome + API health check).
+  - `src/app/[locale]/(public)/login/page.tsx` → `/fr/login` or `/en/login`
+  - `src/app/[locale]/(public)/register/page.tsx` → `/fr/register` or `/en/register`
   - `src/app/(public)/register/confirmation/page.tsx` → `/register/confirmation`
   - `src/app/(public)/forgot-password/page.tsx` → `/forgot-password`
   - `src/app/(public)/reset-password/page.tsx` → `/reset-password`
@@ -238,7 +251,19 @@ All of these components currently render simple headings or containers; they exi
 
 ---
 
-## 6. Styling and theming
+## 6. Testing
+
+- **Framework:** Jest + React Testing Library + @testing-library/jest-dom.
+- **Config:** `jest.config.ts`, `jest.setup.ts`.
+- **Structure:**
+  - `tests/unit/` — Unit tests (helpers, lib, services).
+  - `tests/integration/` — API integration tests (placeholder).
+  - `tests/e2e/` — End-to-end tests (placeholder).
+- **Scripts:** `npm test`, `npm run test:watch`, `npm run test:coverage`.
+
+---
+
+## 7. Styling and theming
 
 Visual theming (colors, typography, spacing) is handled by the existing Tailwind configuration and `src/app/globals.css`.  
 This initialization step **does not** modify Tailwind config or global styles. All new components and pages are intentionally minimal so that design can be iterated later without changing the architecture.

@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import { useTranslations } from 'next-intl';
 import { getFromApi } from '@/services/axios-service';
 
 interface HealthData {
@@ -10,6 +11,8 @@ interface HealthData {
 }
 
 export default function WelcomePage() {
+  const t = useTranslations('home');
+  const tCommon = useTranslations('common');
   const [health, setHealth] = useState<HealthData | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -31,18 +34,18 @@ export default function WelcomePage() {
     <div className="flex min-h-screen flex-col items-center justify-center bg-zinc-50 px-4 dark:bg-zinc-950">
       <main className="w-full max-w-2xl rounded-2xl bg-white p-8 shadow-lg dark:bg-zinc-900">
         <h1 className="mb-4 text-3xl font-bold tracking-tight text-zinc-900 dark:text-zinc-50">
-          Bienvenue sur LAVO
+          {t('title')}
         </h1>
         <p className="mb-6 text-zinc-600 dark:text-zinc-400">
-          Plateforme de réservation et paiement pour stations de lavage.
+          {t('subtitle')}
         </p>
 
         <div className="rounded-xl border border-zinc-200 bg-zinc-50 p-4 dark:border-zinc-700 dark:bg-zinc-800">
           <h2 className="mb-2 text-sm font-medium text-zinc-500 dark:text-zinc-400">
-            Statut API
+            {t('apiStatus')}
           </h2>
           {loading && (
-            <p className="text-zinc-600 dark:text-zinc-300">Chargement...</p>
+            <p className="text-zinc-600 dark:text-zinc-300">{tCommon('loading')}</p>
           )}
           {error && (
             <p className="text-red-600 dark:text-red-400">{error}</p>
@@ -67,7 +70,7 @@ export default function WelcomePage() {
         </div>
 
         <p className="mt-6 text-center text-sm text-zinc-500 dark:text-zinc-400">
-          Projet initialisé. Prêt pour le schéma Drizzle.
+          {t('ready')}
         </p>
       </main>
     </div>

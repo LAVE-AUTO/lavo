@@ -1,0 +1,25 @@
+{
+  "common": {
+    "loading": "Chargement...",
+    "error": "Une erreur est survenue",
+    "success": "Succès",
+    "cancel": "Annuler",
+    "confirm": "Confirmer",
+    "save": "Enregistrer",
+    "back": "Retour"
+  },
+  "home": {
+    "title": "Bienvenue sur LAVO",
+    "subtitle": "Plateforme de réservation et paiement pour stations de lavage",
+    "apiStatus": "Statut API",
+    "ready": "Projet initialisé. Prêt pour le schéma Drizzle."
+  },
+  "auth": {
+    "login": "Connexion",
+    "register": "Inscription",
+    "logout": "Déconnexion",
+    "email": "Email",
+    "password": "Mot de passe",
+    "forgotPassword": "Mot de passe oublié"
+  }
+}
