@@ -4,15 +4,15 @@
 
 ```mermaid
 flowchart TD
-    Pyramid[Testing Pyramid] --> Unit[Unit tests (many)]
-    Pyramid --> Integration[Integration tests (some)]
-    Pyramid --> E2E[E2E tests (few)]
+    Pyramid[Testing Pyramid] --> Unit[Unit tests - many]
+    Pyramid --> Integration[Integration tests - some]
+    Pyramid --> E2E[E2E tests - few]
 
     Unit --> Targets1[Pure helpers and lib utilities]
-    Unit --> Targets2[Domain services (business rules)]
+    Unit --> Targets2[Domain services - business rules]
 
     Integration --> ApiRoutes[API routes /api/v1]
-    Integration --> DbLayer[Drizzle + PostgreSQL (test DB)]
+    Integration --> DbLayer[Drizzle and PostgreSQL test DB]
 
     E2E --> UiFlows[Critical UI flows]
     E2E --> Payments[Stripe sandbox flows]

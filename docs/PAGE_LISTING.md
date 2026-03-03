@@ -11,7 +11,7 @@ Below, routes are shown as `/[locale]/...`.
 
 ```mermaid
 flowchart TD
-    Root[ /[locale] ] --> Public[Public]
+    Root[Locale root] --> Public[Public]
     Root --> Client[Client area]
     Root --> Station[Station area]
     Root --> Admin[Admin area]

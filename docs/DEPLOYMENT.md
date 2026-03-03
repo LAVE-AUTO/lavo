@@ -45,10 +45,10 @@ flowchart TD
     Commit[Commit to main] --> Build[Railway build: npm run build]
     Build --> Start[Railway start: npm run start]
     Start --> Db[Connect Railway PostgreSQL]
-    Db --> Migrate[Run migrations (Drizzle planned)]
+    Db --> Migrate[Run migrations - Drizzle planned]
     Migrate --> Webhook[Configure Stripe webhooks]
     Webhook --> Smoke[Run smoke checks]
-    Smoke --> Health[GET /api/v1/health]
+    Smoke --> Health[Health check endpoint]
     Health --> Ok{Healthy?}
     Ok -->|Yes| Live[Production live]
     Ok -->|No| Rollback[Rollback to last good build]

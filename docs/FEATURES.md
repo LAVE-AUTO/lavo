@@ -40,8 +40,8 @@ flowchart TD
     LateFlow -->|Queue switch| Queue[Queue position updated]
 
     Presence -->|Service validated| Completed[Service completed]
-    Completed -->|Rate| Rating[Rating + comment]
-    Completed -->|Tip (optional)| Tip[Tip payment]
+    Completed -->|Rate| Rating[Rating and comment]
+    Completed -->|Optional tip| Tip[Tip payment]
     Completed -->|Receipt| History[History and receipts]
 ```
 
@@ -72,7 +72,7 @@ flowchart TD
     List --> Search[Search bar filter]
     Search --> Card[Station card]
     Card --> Detail[Station details]
-    Detail --> Join[Join (Google Maps)]
+    Detail --> Join[Join - Google Maps]
     Detail --> Slots[Next slots]
 ```
 
@@ -103,7 +103,7 @@ flowchart TD
     Tolerance --> Queue[Queue position assigned]
     Queue --> Switch[Switch with queue head]
     Switch --> Absent{Still absent?}
-    Absent -->|Yes| NoShow[no_show + fee record]
+    Absent -->|Yes| NoShow[no_show and fee record]
     Absent -->|No| Continue[Service continues]
 ```
 
@@ -116,7 +116,7 @@ flowchart TD
     Station[Station] --> Validate[Validate service]
     Validate --> Notify[Notify client]
     Notify --> Rate[Submit rating]
-    Notify --> Tip[Leave tip (optional)]
+    Notify --> Tip[Leave tip optional]
     Rate --> Aggregate[Update station average]
     Rate --> AdminMod[Admin moderation]
 ```

@@ -86,16 +86,16 @@ flowchart TD
     StationUser[Station User] -->|Manage slots and validate| WebUI
     AdminUser[Super Admin] -->|Govern platform| WebUI
 
-    WebUI -->|Calls| ApiRoutes[Next.js API Routes /api/v1]
+    WebUI -->|Calls| ApiRoutes[Next.js API routes]
     ApiRoutes -->|Delegates| DomainServices[Domain Services src/server]
-    DomainServices -->|Reads/Writes| DataLayer[Data Access Layer (Drizzle planned)]
+    DomainServices -->|Reads/Writes| DataLayer[Data Access Layer - Drizzle planned]
     DataLayer -->|SQL| Postgres[(PostgreSQL)]
 
     DomainServices -->|Payments| Stripe[Stripe Connect]
     DomainServices -->|Email| Resend[Resend]
     DomainServices -->|Push| Fcm[Firebase FCM]
     WebUI -->|Navigation link| Maps[Google Maps]
-    WebUI -->|Tracking via metas| Analytics[Google Analytics / PageSense]
+    WebUI -->|Tracking via metas| Analytics[Google Analytics and PageSense]
 
     CronJobs[Cron / Scheduled Tasks] -->|Reminders, queue switch| DomainServices
     Stripe -->|Webhooks| ApiRoutes
