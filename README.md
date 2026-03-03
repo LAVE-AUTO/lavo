@@ -1,36 +1,64 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# LAVO
 
-## Getting Started
+Car wash station booking and payments platform.
 
-First, run the development server:
+[![Build](https://img.shields.io/badge/build-planned-lightgrey)](#) [![Version](https://img.shields.io/badge/version-0.1.0-blue)](#) [![License](https://img.shields.io/badge/license-MIT-green)](./LICENSE)
+
+## Quick Start
+
+Requirement: Node.js **>= 20.9.0**
 
 ```bash
+npm install
+cp .env.example .env
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+- App: `http://localhost:3000/fr` or `http://localhost:3000/en`
+- Health check: `http://localhost:3000/api/v1/health`
 
-You can start editing the home page by modifying `src/app/(public)/page.tsx`. The page auto-updates as you edit the file.
+## Key Features
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+- Station discovery (listing, search, detail)
+- Slot-based reservations with capacity handling
+- Stripe Connect payments (commission split, payouts, refunds, tips)
+- Notifications (email via Resend, push via Firebase FCM)
+- Late handling with queue switch and no-show fees (planned)
+- Admin governance (KYC, disputes, commission settings, audit logs)
 
-## Learn More
+## Tech Stack
 
-To learn more about Next.js, take a look at the following resources:
+- Next.js 16.1.6 (App Router), React 19.2.3, TypeScript 5
+- Tailwind CSS v4, next-intl (fr/en)
+- PostgreSQL (Neon for development; Railway PostgreSQL for production)
+- Drizzle ORM, Zod, Axios
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+## Deployment Status
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+[Standalone Application]
 
-## Deploy on Vercel
+- Installation: see `docs/INSTALLATION.md`
+- Deployment: see `docs/DEPLOYMENT.md`
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+## Documentation
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+- `docs/PROJECT_SUMMARY.md`
+- `docs/ARCHITECTURE.md`
+- `docs/FEATURES.md`
+- `docs/DATABASE.md`
+- `docs/TESTING_STRATEGY.md`
+- `docs/PAGE_LISTING.md`
+- `docs/CHARTS_PROVIDER.md`
+
+## License & Contributing
+
+- License: `LICENSE`
+- Contributing: `CONTRIBUTING.md`
+
+## Developed By
+
+**Leroi Kakatsi**
+
+- Email: [leroi.kakatsi@epitech.eu](mailto:leroi.kakatsi@epitech.eu)
+- WhatsApp: [+233 53 561 0908](https://wa.me/233535610908)
+- Portfolio: [king-kakatsi.netlify.app](https://king-kakatsi.netlify.app)
