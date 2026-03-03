@@ -1,16 +1,10 @@
-import { NextResponse } from 'next/server';
+import { notImplementedResponse } from '@/lib/responses';
 
 /**
  * POST /api/v1/reservations
  * Placeholder route for reservation creation/listing.
  */
 export async function POST() {
-  return NextResponse.json(
-    {
-      ok: false,
-      message: 'Reservations endpoint not implemented yet.',
-    },
-    { status: 501 }
-  );
+  return notImplementedResponse('Reservations endpoint not implemented yet.');
 }
 

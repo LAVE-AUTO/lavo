@@ -8,6 +8,7 @@ import {
   useCallback,
   type ReactNode,
 } from 'react';
+import { useLocale } from 'next-intl';
 import { initAxiosService, refreshAxiosService } from '@/services/axios-service';
 
 const AUTH_TOKEN_KEY = 'lavo_auth_token';
@@ -69,6 +70,10 @@ function setStoredAuth(token: string | null, user: AuthUser | null): void {
 }
 
 export function AuthProvider({ children }: { children: ReactNode }) {
+  const locale = useLocale();
+  const loginPath = `/${locale}/login`;
+  const homePath = `/${locale}`;
+
   const [user, setUser] = useState<AuthUser | null>(null);
   const [token, setToken] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
@@ -78,9 +83,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setToken(null);
     setUser(null);
     if (typeof window !== 'undefined') {
-      window.location.href = '/login';
+      window.location.href = loginPath;
     }
-  }, []);
+  }, [loginPath]);
 
   useEffect(() => {
     const storedToken = getStoredToken();
@@ -102,7 +107,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
 
     setIsLoading(false);
-  }, [handleUnauthorized]);
+  }, [handleUnauthorized, loginPath]);
 
   const login = useCallback((newToken: string, newUser: AuthUser) => {
     setStoredAuth(newToken, newUser);
@@ -115,10 +120,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         setStoredAuth(null, null);
         setToken(null);
         setUser(null);
-        if (typeof window !== 'undefined') window.location.href = '/login';
+        if (typeof window !== 'undefined') window.location.href = loginPath;
       },
     });
-  }, []);
+  }, [loginPath]);
 
   const logout = useCallback(() => {
     setStoredAuth(null, null);
@@ -128,9 +133,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       baseURL: process.env.NEXT_PUBLIC_API_URL || '/api/v1',
     });
     if (typeof window !== 'undefined') {
-      window.location.href = '/';
+      window.location.href = homePath;
     }
-  }, []);
+  }, [homePath]);
 
   const refetchUser = useCallback(async () => {
     if (!token) return;
@@ -138,6 +143,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || '/api/v1'}/auth/me`, {
         headers: { Authorization: `Bearer ${token}` },
       });
+      if (res.status === 401) {
+        handleUnauthorized();
+        return;
+      }
       if (res.ok) {
         const data = await res.json();
         const u = data?.data ?? data?.user;
@@ -149,7 +158,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     } catch {
       // Silent fail; keep current user
     }
-  }, [token]);
+  }, [token, handleUnauthorized]);
 
   const value: AuthContextValue = {
     user,

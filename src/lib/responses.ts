@@ -69,3 +69,13 @@ export const error409 = (message = 'Conflict') =>
   errorResponse(message, HTTP_STATUS.CONFLICT);
 export const error500 = (error?: unknown) =>
   errorResponse('Internal server error', HTTP_STATUS.SERVER_ERROR, error);
+
+/**
+ * Standard 501 Not Implemented response (consistent with success: false contract).
+ */
+export function notImplementedResponse(message: string): NextResponse {
+  return NextResponse.json(
+    { success: false, message },
+    { status: 501 }
+  );
+}

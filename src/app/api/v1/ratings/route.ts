@@ -1,16 +1,10 @@
-import { NextResponse } from 'next/server';
+import { notImplementedResponse } from '@/lib/responses';
 
 /**
  * POST /api/v1/ratings
  * Placeholder route for submitting ratings.
  */
 export async function POST() {
-  return NextResponse.json(
-    {
-      ok: false,
-      message: 'Ratings endpoint not implemented yet.',
-    },
-    { status: 501 }
-  );
+  return notImplementedResponse('Ratings endpoint not implemented yet.');
 }
 

@@ -1,16 +1,10 @@
-import { NextResponse } from 'next/server';
+import { notImplementedResponse } from '@/lib/responses';
 
 /**
  * GET /api/v1/stations
  * Placeholder route for public stations listing.
  */
 export async function GET() {
-  return NextResponse.json(
-    {
-      ok: false,
-      message: 'Stations listing not implemented yet.',
-    },
-    { status: 501 }
-  );
+  return notImplementedResponse('Stations listing not implemented yet.');
 }
 

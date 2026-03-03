@@ -18,12 +18,14 @@ export default function WelcomePage() {
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    getFromApi<HealthData>('/health')
+    getFromApi<{ data?: HealthData }>('/health')
       .then(([ok, data]) => {
-        if (ok && data && typeof data === 'object' && 'status' in data) {
-          setHealth(data as HealthData);
+        const body = data as { data?: HealthData; message?: string };
+        const payload = body?.data;
+        if (ok && payload && typeof payload === 'object' && 'status' in payload) {
+          setHealth(payload);
         } else {
-          setError((data as { message?: string })?.message ?? 'Service unavailable');
+          setError(body?.message ?? 'Service unavailable');
         }
       })
       .catch(() => setError('Service unavailable'))
