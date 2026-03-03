@@ -57,8 +57,18 @@ npm run dev
 
 ## Developed By
 
-**Leroi Kakatsi**
+### Leroi Kakatsi - Fullstack & Mobile developer
 
 - Email: [leroi.kakatsi@epitech.eu](mailto:leroi.kakatsi@epitech.eu)
 - WhatsApp: [+233 53 561 0908](https://wa.me/233535610908)
 - Portfolio: [king-kakatsi.netlify.app](https://king-kakatsi.netlify.app)
+
+### Valence Odounbourou
+- **Email**: valence.odounbourou@epitech.eu
+- **WhatsApp**: [+229 01 61 40 50 56](https://wa.me/22961405056)
+- **Portfolio**: [personnal-project-bice.vercel.app](https://personnal-project-bice.vercel.app/)
+
+### Lauret Chacha - Fullstack developer
+- **Email:** lauret.chacha@epitech.eu
+- **WhatsApp:** [+229 01 62 16 66 38](https://wa.me/22961405056)
+- **Portfolio:** [lauret.chacha.vercel.app](https://lauret.chacha.vercel.app)
