@@ -66,7 +66,7 @@ npm run dev
 ### Valence Odounbourou
 - **Email**: valence.odounbourou@epitech.eu
 - **WhatsApp**: [+229 01 61 40 50 56](https://wa.me/22961405056)
-- **Portfolio**: [personnal-project-bice.vercel.app](https://personnal-project-bice.vercel.app/)
+- **Portfolio**: [valenceod61.vercel.app](https://personnal-project-bice.vercel.app/)
 
 ### Lauret Chacha - Fullstack developer
 - **Email:** lauret.chacha@epitech.eu
