@@ -1,5 +1,79 @@
 # LAVO Architecture
 
+## Project Tree Structure
+
+```
+lavo/
+├── docs/                    # Project documentation
+│   ├── ARCHITECTURE.md
+│   ├── CHARTS_PROVIDER.md
+│   ├── DATABASE.md
+│   ├── DEPLOYMENT.md
+│   ├── FEATURES.md
+│   ├── INSTALLATION.md
+│   ├── PAGE_LISTING.md
+│   ├── PROJECT_SUMMARY.md
+│   └── TESTING_STRATEGY.md
+├── messages/                # next-intl locale files
+│   ├── en.json
+│   └── fr.json
+├── public/                  # Static assets
+├── src/
+│   ├── app/
+│   │   ├── api/v1/          # REST API route handlers
+│   │   │   ├── admin/dashboard/
+│   │   │   ├── auth/register/
+│   │   │   ├── health/
+│   │   │   ├── history/
+│   │   │   │   ├── client/
+│   │   │   │   └── station/
+│   │   │   ├── ratings/
+│   │   │   ├── reservations/
+│   │   │   ├── station/config/
+│   │   │   ├── stations/
+│   │   │   ├── support/
+│   │   │   └── webhooks/stripe/
+│   │   ├── [locale]/        # Locale-prefixed UI routes
+│   │   │   ├── (admin)/admin/      # Super Admin pages
+│   │   │   ├── (client)/client/   # Client dashboard pages
+│   │   │   ├── (public)/          # Public pages (home, login, register, stations)
+│   │   │   ├── (station)/station/  # Station dashboard pages
+│   │   │   └── layout.tsx
+│   │   ├── globals.css
+│   │   └── layout.tsx
+│   ├── components/
+│   │   ├── admin/           # Admin-specific components
+│   │   ├── auth/            # LoginForm, RegisterForm
+│   │   ├── history/         # ClientHistoryTable
+│   │   ├── layout/          # MainLayout, ClientLayout, StationLayout, AdminLayout, etc.
+│   │   ├── ratings/         # StarRating, RatingForm
+│   │   ├── reservations/   # ReservationCard, SlotPicker
+│   │   ├── stations/        # StationCard, StationDetail, SearchBar
+│   │   └── ui/              # Button, Input, Card, Modal, Badge, Spinner, etc.
+│   ├── context/            # Auth, Theme, Toast providers
+│   ├── helpers/             # constants, validators, string-helper, date-helper
+│   ├── i18n/                # routing, request, navigation (next-intl)
+│   ├── lib/                 # errors, responses; db/ (Drizzle placeholder)
+│   ├── server/              # Domain services (auth, stations, reservations, payments, admin, etc.)
+│   ├── services/            # axios, local-storage, cookie, memory-cache
+│   ├── types/               # Shared TypeScript types (placeholder)
+│   └── middleware.ts        # next-intl locale middleware
+├── tests/
+│   ├── unit/
+│   ├── integration/
+│   └── e2e/
+├── .env.example
+├── jest.config.ts
+├── jest.setup.ts
+├── next.config.ts
+├── package.json
+├── postcss.config.mjs
+├── tsconfig.json
+└── README.md
+```
+
+Route groups `(public)`, `(client)`, `(station)`, `(admin)` do not appear in URLs; only `[locale]` and the page path do (e.g. `/fr/login`, `/en/client/dashboard`).
+
 ## System Overview
 
 LAVO is a full-stack Next.js application that combines a web UI (clients, stations, and Super Admin) with REST API endpoints under `/api/v1`. The codebase is structured by business domains and follows a layered approach to keep pages/routes thin and concentrate business rules inside server-side services.
