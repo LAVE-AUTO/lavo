@@ -87,13 +87,13 @@ export function VerifyEmailView({ token }: VerifyEmailViewProps) {
     }
 
     setResending(true);
-    try {
-      await postWithApi('/auth/resend-verification', { email: email.trim() });
+    const [ok] = await postWithApi('/auth/resend-verification', { email: email.trim() });
+    setResending(false);
+
+    if (ok) {
       setView('resent');
-    } catch {
+    } else {
       setEmailError(t('error_generic'));
-    } finally {
-      setResending(false);
     }
   };
 
