@@ -38,7 +38,7 @@ export function TabSwitcher({ activeTab, loginLabel, registerLabel }: TabSwitche
           key={key}
           type="button"
           onClick={() => goTo(key)}
-          className={`flex-1 py-2.5 rounded-lg text-sm tracking-wide transition-all duration-200 ${
+          className={`flex-1 py-2.5 rounded-lg text-[15px] tracking-wide transition-all duration-200 ${
             activeTab === key ? activeClass : inactiveClass
           }`}
         >
