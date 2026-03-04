@@ -3,7 +3,7 @@
  * Effective at a given time; past reservations keep their snapshot rate.
  */
 import { decimal, pgTable, timestamp, uuid } from "drizzle-orm/pg-core";
-import { admins } from "./admins";
+import { users } from "./users";
 
 /** Commission rate history; effective_at defines when rate applies. */
 export const commissionSettings = pgTable("commission_settings", {
@@ -11,7 +11,7 @@ export const commissionSettings = pgTable("commission_settings", {
   rate: decimal("rate", { precision: 5, scale: 4 }).notNull(),
   set_by: uuid("set_by")
     .notNull()
-    .references(() => admins.id, { onDelete: "cascade" }),
+    .references(() => users.id, { onDelete: "cascade" }),
   effective_at: timestamp("effective_at", {
     mode: "date",
     withTimezone: true,

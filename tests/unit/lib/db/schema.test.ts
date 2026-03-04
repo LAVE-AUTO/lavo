@@ -6,7 +6,6 @@ import { getTableName } from "drizzle-orm";
 import {
   users,
   emailVerificationTokens,
-  admins,
   adminLogs,
   stations,
   stationConfigs,
@@ -22,7 +21,6 @@ import {
   settingsTypeEnum,
   usersRelations,
   emailVerificationTokensRelations,
-  adminsRelations,
   adminLogsRelations,
   stationsRelations,
   stationConfigsRelations,
@@ -40,7 +38,6 @@ describe("db/schema", () => {
   describe("schema import", () => {
     it("imports schema index without error", () => {
       expect(users).toBeDefined();
-      expect(admins).toBeDefined();
       expect(stations).toBeDefined();
     });
   });
@@ -52,7 +49,6 @@ describe("db/schema", () => {
     const tableSpec: [string, unknown, string][] = [
       ["users", users, "users"],
       ["emailVerificationTokens", emailVerificationTokens, "email_verification_tokens"],
-      ["admins", admins, "admins"],
       ["adminLogs", adminLogs, "admin_logs"],
       ["stations", stations, "stations"],
       ["stationConfigs", stationConfigs, "station_configs"],
@@ -95,6 +91,7 @@ describe("db/schema", () => {
       expect(users.id).toBeDefined();
       expect(users.email).toBeDefined();
       expect(users.password_hash).toBeDefined();
+      expect(users.role).toBeDefined();
       expect(users.status).toBeDefined();
     });
 
@@ -121,7 +118,6 @@ describe("db/schema", () => {
     const relationSpec: [string, unknown][] = [
       ["usersRelations", usersRelations],
       ["emailVerificationTokensRelations", emailVerificationTokensRelations],
-      ["adminsRelations", adminsRelations],
       ["adminLogsRelations", adminLogsRelations],
       ["stationsRelations", stationsRelations],
       ["stationConfigsRelations", stationConfigsRelations],
