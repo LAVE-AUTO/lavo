@@ -27,7 +27,7 @@ export const users = pgTable(
     last_name: varchar("last_name", { length: 100 }).notNull(),
     email: varchar("email", { length: 255 }).notNull().unique(),
     phone: varchar("phone", { length: 30 }),
-    password_hash: text("password_hash").notNull(),
+    password_hash: text("password_hash"),
     role: userRoleEnum("role").notNull().default("client"),
     status: varchar("status", { length: 30 }).notNull(),
     email_verified_at: timestamp("email_verified_at", {

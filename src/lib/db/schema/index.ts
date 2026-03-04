@@ -28,6 +28,7 @@ export * from "./notifications";
 export * from "./commission";
 export * from "./support";
 export * from "./settings";
+export * from "./auth-rate-limits";
 
 export const usersRelations = relations(users, ({ many }) => ({
   emailVerificationTokens: many(emailVerificationTokens),
