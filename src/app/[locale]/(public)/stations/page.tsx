@@ -25,7 +25,7 @@ export default async function PublicStationsPage({ params }: Props) {
   setRequestLocale(locale);
 
   return (
-    <main className="min-h-screen bg-[#1A2116]">
+    <main className="min-h-screen bg-[#EDEDED] dark:bg-[#1A2116] transition-colors">
       <StationsHero />
       <StationsStats />
 

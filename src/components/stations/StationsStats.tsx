@@ -12,7 +12,7 @@ function StatItem({
 }) {
   return (
     <div className="flex flex-col items-center text-center px-6 py-4">
-      <span className={`text-[24px] font-black ${accent ? 'text-gold' : 'text-white'}`}>
+      <span className={`text-[18px] font-black ${accent ? 'text-gold' : 'text-[#000C1F] dark:text-white'}`}>
         {value}
       </span>
       <span className="text-[10px] font-bold text-[#9A9A8A] uppercase tracking-wider mt-0.5">
@@ -37,9 +37,9 @@ export async function StationsStats() {
   const reviews   = MOCK_STATIONS.reduce((acc, s) => acc + s.reviewCount, 0);
 
   return (
-    <div className="bg-[#1E2A1A] border-b border-[#2C3828]" id="stations-list">
+    <div className="bg-[#C8C8B4] dark:bg-[#1E2A1A] border-b border-[#CCCCCC] dark:border-[#2C3828] transition-colors" id="stations-list">
       <div className="max-w-6xl mx-auto px-4 sm:px-6">
-        <div className="grid grid-cols-2 sm:grid-cols-4 divide-x divide-[#2C3828]">
+        <div className="grid grid-cols-2 sm:grid-cols-4 divide-x divide-[#CCCCCC] dark:divide-[#2C3828]">
           <StatItem
             value={`${total}`}
             label={isFr ? 'Stations' : 'Stations'}
