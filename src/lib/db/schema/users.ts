@@ -4,12 +4,19 @@
  */
 import {
   index,
+  pgEnum,
   pgTable,
   text,
   timestamp,
   uuid,
   varchar,
 } from "drizzle-orm/pg-core";
+
+export const userRoleEnum = pgEnum("user_role", [
+  "admin",
+  "client",
+  "station",
+]);
 
 /** Client accounts and identity. */
 export const users = pgTable(
@@ -21,6 +28,7 @@ export const users = pgTable(
     email: varchar("email", { length: 255 }).notNull().unique(),
     phone: varchar("phone", { length: 30 }),
     password_hash: text("password_hash").notNull(),
+    role: userRoleEnum("role").notNull().default("client"),
     status: varchar("status", { length: 30 }).notNull(),
     email_verified_at: timestamp("email_verified_at", {
       mode: "date",
@@ -40,7 +48,10 @@ export const users = pgTable(
       .notNull()
       .defaultNow(),
   },
-  (table) => [index("users_status_idx").on(table.status)]
+  (table) => [
+    index("users_status_idx").on(table.status),
+    index("users_role_idx").on(table.role),
+  ]
 );
 
 /**

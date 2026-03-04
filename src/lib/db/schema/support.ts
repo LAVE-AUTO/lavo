@@ -2,7 +2,6 @@
  * Support tickets created by users, optionally assigned to admins.
  */
 import { pgTable, text, timestamp, uuid, varchar } from "drizzle-orm/pg-core";
-import { admins } from "./admins";
 import { users } from "./users";
 
 /** Support tickets created by users; optionally assigned to admins. */
@@ -11,7 +10,7 @@ export const supportTickets = pgTable("support_tickets", {
   created_by: uuid("created_by")
     .notNull()
     .references(() => users.id, { onDelete: "cascade" }),
-  assigned_to: uuid("assigned_to").references(() => admins.id, {
+  assigned_to: uuid("assigned_to").references(() => users.id, {
     onDelete: "set null",
   }),
   subject: varchar("subject", { length: 255 }).notNull(),

@@ -11,7 +11,7 @@ import { Pool } from "pg";
 import * as schema from "../src/lib/db/schema";
 import {
   settings,
-  admins,
+  users,
   commissionSettings,
   stations,
   stationConfigs,
@@ -43,6 +43,7 @@ async function seed(): Promise<void> {
   try {
     await db.transaction(async (tx) => {
     const adminType = "admin" as const;
+    const adminRole = "admin" as const;
 
     const existingSettings = await tx
       .select({ key: settings.key })
@@ -61,7 +62,11 @@ async function seed(): Promise<void> {
     }
     console.log("Settings: platform defaults upserted.");
 
-    const existingAdmins = await tx.select({ id: admins.id }).from(admins).limit(1);
+    const existingAdmins = await tx
+      .select({ id: users.id })
+      .from(users)
+      .where(eq(users.role, adminRole))
+      .limit(1);
     let adminId: string;
     if (existingAdmins.length > 0) {
       adminId = existingAdmins[0].id;
@@ -70,19 +75,28 @@ async function seed(): Promise<void> {
       const passwordHash =
         process.env.SEED_ADMIN_PASSWORD_HASH ?? SEED_ADMIN_PASSWORD_HASH_DEFAULT;
       const [inserted] = await tx
-        .insert(admins)
+        .insert(users)
         .values({
+          first_name: "LAVO",
+          last_name: "Seed Admin",
           email: SEED_ADMIN_EMAIL,
+          phone: null,
           password_hash: passwordHash,
-          name: "LAVO Seed Admin",
+          status: "active",
+          email_verified_at: null,
+          stripe_customer_id: null,
+          role: adminRole,
         })
-        .returning({ id: admins.id });
+        .returning({ id: users.id });
       if (!inserted) throw new Error("Failed to insert seed admin.");
       adminId = inserted.id;
       console.log("Admins: seed admin created (email: " + SEED_ADMIN_EMAIL + ").");
     }
 
-    const existingCommission = await tx.select({ id: commissionSettings.id }).from(commissionSettings).limit(1);
+    const existingCommission = await tx
+      .select({ id: commissionSettings.id })
+      .from(commissionSettings)
+      .limit(1);
     if (existingCommission.length === 0) {
       await tx.insert(commissionSettings).values({
         rate: SEED_COMMISSION_RATE,
