@@ -165,6 +165,13 @@
     "filter_all": "Toutes",
     "filter_available": "Disponibles",
     "filter_nearby": "Proches",
+    "filter_price_asc": "Prix ↑",
+    "filter_best_rated": "Mieux notés",
+    "filter_panel_title": "Filtres & Tri",
+    "filter_sort_label": "Trier par",
+    "filter_city_label": "Ville",
+    "filter_city_all": "Toutes les villes",
+    "filter_reset": "Réinitialiser",
     "available_slots": "{count} créneau(x) disponible(s)",
     "no_slots": "Indisponible",
     "join": "Rejoindre",
@@ -194,7 +201,7 @@
     "queue_wait_time": "Temps estimé : {min} min",
     "join_success": "Vous avez rejoint la station avec succès",
     "join_error": "Impossible de rejoindre la station. Veuillez réessayer.",
-    "price_unit": "XAF",
+    "price_unit": "$",
     "open_maps": "Ouvrir dans Maps",
     "back_to_list": "Retour aux stations"
   }

@@ -74,13 +74,13 @@ export function PublicNavbar() {
         <div className="max-w-6xl mx-auto px-4 sm:px-6 h-16 flex items-center justify-between gap-4">
 
           {/* Logo */}
-          <Link href="/" className="shrink-0" aria-label="LAVO – Accueil">
+          <Link href="/" className="shrink-0" aria-label="Slowtime – Accueil">
             {isDark ? (
               <div className="flex items-center gap-2">
                 <div className="rounded-lg bg-white/95 p-0.5 border border-gold/25 shadow-sm shrink-0">
                   <Image src="/logo/frame2.png" alt="" width={28} height={28} className="w-7 h-7 object-contain" aria-hidden="true" />
                 </div>
-                <span className="text-[17px] font-bold text-white tracking-wide">LAVO</span>
+                <span className="text-[17px] font-bold text-white tracking-wide">Slowtime</span>
               </div>
             ) : (
               <Image src={lightLogoSrc} alt={t('logo_alt')} width={120} height={32} className="h-8 w-auto object-contain" priority />
@@ -129,11 +129,11 @@ export function PublicNavbar() {
               </Link>
             </div>
 
-            {/* Hamburger — mobile */}
+            {/* Hamburger — tablet only (mobile uses BottomNav, desktop uses inline nav) */}
             <button
               type="button"
               onClick={() => setMenuOpen((v) => !v)}
-              className="md:hidden w-9 h-9 flex items-center justify-center rounded-lg text-[#1A1A1A] dark:text-white hover:bg-black/8 dark:hover:bg-white/8 transition-colors"
+              className="hidden sm:flex md:hidden w-9 h-9 items-center justify-center rounded-lg text-[#1A1A1A] dark:text-white hover:bg-black/8 dark:hover:bg-white/8 transition-colors"
               aria-label={menuOpen ? 'Fermer le menu' : 'Ouvrir le menu'}
               aria-expanded={menuOpen}
             >
@@ -179,6 +179,8 @@ export function PublicNavbar() {
 
       {/* Spacer to push page content below the fixed navbar */}
       <div className="h-16" aria-hidden="true" />
+      {/* Bottom spacer for mobile bottom nav */}
+      <div className="sm:hidden h-16" aria-hidden="true" />
     </>
   );
 }
