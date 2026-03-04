@@ -35,6 +35,24 @@
     "feature_reviews_label": "Verified reviews",
     "feature_reviews_sub": "Ratings verified after every wash"
   },
+  "verify_email": {
+    "title": "Email verification",
+    "subtitle": "We are verifying your email address",
+    "loading": "Verifying...",
+    "success_title": "Email verified!",
+    "success_message": "Your account is now active. You can sign in.",
+    "back_to_login": "Sign in",
+    "error_title": "Link expired",
+    "error_message": "This verification link is invalid or has expired.",
+    "resend_label": "Enter your email to receive a new link",
+    "resend_email_placeholder": "example@email.com",
+    "resend_submit": "Resend",
+    "resend_loading": "Sending...",
+    "resend_success_title": "Email sent!",
+    "resend_success_message": "A new verification link has been sent. Check your inbox and spam folder.",
+    "error_email_invalid": "Invalid email address",
+    "error_generic": "An error occurred. Please try again."
+  },
   "login": {
     "welcome_title": "Welcome to Slowtime",
     "welcome_subtitle": "Sign in to your account",
