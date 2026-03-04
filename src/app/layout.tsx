@@ -13,7 +13,7 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "LAVO",
+  title: "Slowtime",
   description: "Plateforme de réservation et paiement pour stations de lavage",
   icons: {
     icon: '/logo/frame2.png',
