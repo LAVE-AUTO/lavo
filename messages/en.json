@@ -140,6 +140,24 @@
     "confirmation_spam": "Check your spam folder if you don't receive it within a few minutes.",
     "confirmation_back": "Back to login"
   },
+  "nav": {
+    "home": "Home",
+    "stations": "Stations",
+    "login": "Sign in",
+    "register": "Register",
+    "logo_alt": "LAVO"
+  },
+  "footer": {
+    "tagline": "The booking and payment platform for your car wash stations.",
+    "quick_links": "Quick links",
+    "legal": "Legal",
+    "privacy": "Privacy",
+    "terms": "Terms",
+    "contact": "Contact",
+    "about": "About",
+    "copyright": "© {year} LAVO. All rights reserved.",
+    "made_with": "Made with care in Cameroon."
+  },
   "stations": {
     "page_title": "Car wash stations",
     "page_subtitle": "Find the nearest station",
