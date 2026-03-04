@@ -2,63 +2,60 @@ import { LangToggle } from './LangToggle';
 import { ThemeToggle } from './ThemeToggle';
 
 interface AuthHeaderProps {
+  /** Page heading displayed above the tab switcher. */
   title: string;
+  /** Short description displayed below the heading. */
   subtitle: string;
 }
 
 /**
- * Car wash brand icon used inside the logo circle.
+ * Small car icon shown in the mobile header bar.
  */
-function CarIcon() {
+function MiniCarIcon() {
   return (
-    <svg viewBox="0 0 36 36" fill="none" width="36" height="36" aria-hidden="true">
-      <path
-        d="M5 20l3-8h20l3 8"
-        stroke="#C49A1E"
-        strokeWidth="2"
-        strokeLinecap="round"
-      />
-      <rect
-        x="4"
-        y="18"
-        width="28"
-        height="10"
-        rx="3"
-        fill="#1A2116"
-        stroke="#C49A1E"
-        strokeWidth="1.5"
-      />
+    <svg viewBox="0 0 36 36" fill="none" width="28" height="28" aria-hidden="true">
+      <path d="M5 20l3-8h20l3 8" stroke="#C49A1E" strokeWidth="2" strokeLinecap="round" />
+      <rect x="4" y="18" width="28" height="10" rx="3" fill="#1A2116" stroke="#C49A1E" strokeWidth="1.5" />
       <circle cx="10" cy="28" r="3" fill="#C49A1E" />
       <circle cx="26" cy="28" r="3" fill="#C49A1E" />
-      <path d="M10 14l2-4h12l2 4" fill="#C49A1E" opacity="0.4" />
     </svg>
   );
 }
 
 /**
- * Auth page header with logo, title, subtitle, language toggle and theme toggle.
+ * Auth page header.
  *
- * @param title - Page heading
- * @param subtitle - Page sub-heading
+ * - Mobile: top bar with logo + wordmark + controls, then title + subtitle below.
+ * - Desktop: only title + subtitle + controls (brand panel handles logo/branding).
  */
 export function AuthHeader({ title, subtitle }: AuthHeaderProps) {
   return (
-    <div className="relative flex flex-col items-center pt-12 pb-6 px-6">
-      <div className="absolute top-4 left-4">
-        <ThemeToggle />
+    <div className="mb-6">
+      {/* Mobile-only top bar: logo + controls */}
+      <div className="flex items-center justify-between mb-5 lg:hidden">
+        <div className="flex items-center gap-2">
+          <MiniCarIcon />
+          <span className="text-lg font-bold text-[#000C1F] dark:text-white tracking-widest uppercase">
+            LAVO
+          </span>
+        </div>
+        <div className="flex items-center gap-2">
+          <ThemeToggle />
+          <LangToggle />
+        </div>
       </div>
-      <div className="absolute top-4 right-4">
+
+      {/* Desktop-only controls (top-right) */}
+      <div className="hidden lg:flex justify-end gap-2 mb-4">
+        <ThemeToggle />
         <LangToggle />
       </div>
 
-      <div className="w-16 h-16 rounded-full bg-white flex items-center justify-center mb-4 shadow-sm">
-        <CarIcon />
-      </div>
-
-      <h1 className="text-2xl font-bold text-[#000C1F] dark:text-white text-center tracking-tight font-rajdhani">
+      {/* Title + subtitle */}
+      <h1 className="text-[26px] font-bold text-[#000C1F] dark:text-white leading-tight">
         {title}
       </h1>
-      <p className="text-[13px] text-[#555555] dark:text-lavo-muted text-center mt-1.5 leading-snug font-rajdhani">
+      <p className="mt-1 text-[14px] text-[#555] dark:text-lavo-muted leading-snug">
         {subtitle}
       </p>
     </div>

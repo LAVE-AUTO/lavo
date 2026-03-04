@@ -1,4 +1,5 @@
 import { getTranslations, setRequestLocale } from 'next-intl/server';
+import { AuthPageLayout } from '@/components/auth/AuthPageLayout';
 import { AuthHeader } from '@/components/auth/AuthHeader';
 import { TabSwitcher } from '@/components/auth/TabSwitcher';
 import { RegisterForm } from '@/components/auth/RegisterForm';
@@ -15,7 +16,6 @@ export async function generateMetadata({ params }: Props) {
 
 /**
  * Public registration page.
- * Renders the auth header, tab switcher (active: register) and the register form.
  */
 export default async function RegisterPage({ params }: Props) {
   const { locale } = await params;
@@ -24,19 +24,24 @@ export default async function RegisterPage({ params }: Props) {
   const t = await getTranslations({ locale, namespace: 'register' });
 
   return (
-    <div className="min-h-screen bg-[#EDEDED] dark:bg-[#111810] flex items-center justify-center py-8 px-4">
-      <div className="w-full max-w-sm bg-white dark:bg-dark-bg rounded-3xl shadow-xl overflow-hidden">
+    <AuthPageLayout>
+      <div className="w-full max-w-lg animate-fade-in">
         <AuthHeader
           title={t('welcome_title')}
           subtitle={t('welcome_subtitle')}
         />
-        <TabSwitcher
-          activeTab="register"
-          loginLabel={t('tab_login')}
-          registerLabel={t('tab_register')}
-        />
-        <RegisterForm />
+
+        <div className="bg-white dark:bg-dark-bg rounded-2xl shadow-lg overflow-hidden">
+          <div className="px-8 pt-6 pb-2">
+            <TabSwitcher
+              activeTab="register"
+              loginLabel={t('tab_login')}
+              registerLabel={t('tab_register')}
+            />
+          </div>
+          <RegisterForm />
+        </div>
       </div>
-    </div>
+    </AuthPageLayout>
   );
 }
