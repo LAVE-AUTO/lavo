@@ -11,7 +11,7 @@ type Props = {
 export async function generateMetadata({ params }: Props) {
   const { locale } = await params;
   const t = await getTranslations({ locale, namespace: 'register' });
-  return { title: `LAVO — ${t('tab_register')}` };
+  return { title: `Slowtime — ${t('tab_register')}` };
 }
 
 /**
@@ -29,6 +29,7 @@ export default async function RegisterPage({ params }: Props) {
         <AuthHeader
           title={t('welcome_title')}
           subtitle={t('welcome_subtitle')}
+          locale={locale}
         />
 
         <div className="bg-white dark:bg-dark-card rounded-2xl shadow-[0_4px_24px_rgba(0,0,0,0.08),_0_1px_2px_rgba(0,0,0,0.04)] dark:shadow-[0_8px_40px_rgba(0,0,0,0.5)] dark:ring-1 dark:ring-gold/10 overflow-hidden">
