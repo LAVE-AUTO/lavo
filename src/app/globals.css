@@ -17,18 +17,18 @@
   --font-mono: var(--font-geist-mono);
 
   /* LAVO brand colors */
-  --color-gold: #C49A1E;
-  --color-gold-hover: #D4A820;
-  --color-dark-bg: #1A2116;
-  --color-dark-card: #1E2A1A;
+  --color-gold:         #C49A1E;
+  --color-gold-hover:   #D4A820;
+  --color-dark-bg:      #1A2116;
+  --color-dark-card:    #1E2A1A;
   --color-dark-surface: #243020;
   --color-tab-inactive: #2C3828;
-  --color-lavo-error: #E8472A;
+  --color-lavo-error:   #E8472A;
   --color-lavo-success: #00C851;
-  --color-lavo-muted: #A0A0A0;
+  --color-lavo-muted:   #A0A0A0;
 
   /* LAVO fonts */
-  --font-rajdhani: 'Rajdhani', sans-serif;
+  --font-rajdhani:    'Rajdhani', sans-serif;
   --font-roboto-mono: 'Roboto Mono', monospace;
 }
 
@@ -39,8 +39,52 @@
   }
 }
 
+/* Rajdhani is the global brand font for all text. */
 body {
   background: var(--background);
   color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  font-family: 'Rajdhani', sans-serif;
 }
+
+/* ------------------------------------------------------------------ */
+/* Animations                                                          */
+/* ------------------------------------------------------------------ */
+
+@keyframes fade-in-up {
+  from { opacity: 0; transform: translateY(18px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes fade-in {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
+@keyframes float {
+  0%, 100% { transform: translateY(0px); }
+  50%       { transform: translateY(-12px); }
+}
+
+@keyframes gold-shimmer {
+  0%, 100% { opacity: 1; }
+  50%       { opacity: 0.55; }
+}
+
+@keyframes slide-in-left {
+  from { opacity: 0; transform: translateX(-24px); }
+  to   { opacity: 1; transform: translateX(0); }
+}
+
+.animate-fade-in-up   { animation: fade-in-up  0.55s ease-out both; }
+.animate-fade-in      { animation: fade-in      0.4s  ease-out both; }
+.animate-float        { animation: float        3.5s  ease-in-out infinite; }
+.animate-gold-shimmer { animation: gold-shimmer 2.5s  ease-in-out infinite; }
+.animate-slide-in-left { animation: slide-in-left 0.5s ease-out both; }
+
+.animation-delay-100 { animation-delay: 100ms; }
+.animation-delay-200 { animation-delay: 200ms; }
+.animation-delay-300 { animation-delay: 300ms; }
+.animation-delay-400 { animation-delay: 400ms; }
+.animation-delay-500 { animation-delay: 500ms; }
+.animation-delay-600 { animation-delay: 600ms; }
+.animation-delay-700 { animation-delay: 700ms; }

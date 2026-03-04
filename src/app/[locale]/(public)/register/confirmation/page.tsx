@@ -1,5 +1,6 @@
 import { getTranslations, setRequestLocale } from 'next-intl/server';
 import { Link } from '@/i18n/navigation';
+import { AuthPageLayout } from '@/components/auth/AuthPageLayout';
 
 type Props = {
   params: Promise<{ locale: string }>;
@@ -12,17 +13,17 @@ export async function generateMetadata({ params }: Props) {
 }
 
 /**
- * Envelope icon displayed on the confirmation page.
+ * Envelope icon for the confirmation page.
  */
 function EnvelopeIcon() {
   return (
     <svg
-      width="40"
-      height="40"
+      width="44"
+      height="44"
       viewBox="0 0 24 24"
       fill="none"
       stroke="#00C851"
-      strokeWidth="2"
+      strokeWidth="1.75"
       strokeLinecap="round"
       strokeLinejoin="round"
       aria-hidden="true"
@@ -34,8 +35,7 @@ function EnvelopeIcon() {
 }
 
 /**
- * Registration confirmation page.
- * Informs the user to check their email and provides a link back to login.
+ * Registration confirmation page — displayed after a successful sign-up.
  */
 export default async function RegisterConfirmationPage({ params }: Props) {
   const { locale } = await params;
@@ -44,29 +44,32 @@ export default async function RegisterConfirmationPage({ params }: Props) {
   const t = await getTranslations({ locale, namespace: 'register' });
 
   return (
-    <div className="min-h-screen bg-[#EDEDED] dark:bg-[#111810] flex items-center justify-center px-4 py-8">
-      <div className="w-full max-w-sm bg-white dark:bg-dark-bg rounded-3xl shadow-xl p-8 text-center">
-        <div className="w-20 h-20 rounded-full bg-lavo-success/10 flex items-center justify-center mx-auto mb-6">
-          <EnvelopeIcon />
+    <AuthPageLayout>
+      <div className="w-full max-w-lg animate-fade-in">
+        <div className="bg-white dark:bg-dark-bg rounded-2xl shadow-lg p-10 text-center">
+          {/* Icon */}
+          <div className="w-20 h-20 rounded-full bg-lavo-success/10 border border-lavo-success/20 flex items-center justify-center mx-auto mb-6">
+            <EnvelopeIcon />
+          </div>
+
+          <h1 className="text-[26px] font-bold text-[#000C1F] dark:text-white mb-3">
+            {t('confirmation_title')}
+          </h1>
+          <p className="text-[15px] text-[#555] dark:text-lavo-muted mb-3 leading-relaxed">
+            {t('confirmation_message')}
+          </p>
+          <p className="text-[13px] text-[#888] dark:text-lavo-muted mb-10">
+            {t('confirmation_spam')}
+          </p>
+
+          <Link
+            href="/login"
+            className="block w-full py-3.5 bg-gold hover:bg-gold-hover rounded-[10px] text-[15px] font-bold text-[#1A2116] tracking-wide transition-colors duration-150 text-center"
+          >
+            {t('confirmation_back')}
+          </Link>
         </div>
-
-        <h1 className="text-[22px] font-bold text-[#000C1F] dark:text-white mb-3 font-rajdhani">
-          {t('confirmation_title')}
-        </h1>
-        <p className="text-[14px] text-[#555] dark:text-lavo-muted mb-3 leading-relaxed font-rajdhani">
-          {t('confirmation_message')}
-        </p>
-        <p className="text-[12px] text-[#888] dark:text-lavo-muted mb-8 font-rajdhani">
-          {t('confirmation_spam')}
-        </p>
-
-        <Link
-          href="/login"
-          className="block w-full py-3.5 bg-gold hover:bg-gold-hover rounded-[10px] text-[15px] font-extrabold text-[#1A2116] tracking-wide transition-colors duration-150 font-rajdhani text-center"
-        >
-          {t('confirmation_back')}
-        </Link>
       </div>
-    </div>
+    </AuthPageLayout>
   );
 }
