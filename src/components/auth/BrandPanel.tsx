@@ -141,9 +141,11 @@ export function BrandPanel() {
     <div
       className="relative w-full h-full flex flex-col justify-between overflow-hidden"
       style={{
-        background: isDark
-          ? 'linear-gradient(160deg, #0D1A0D 0%, #1A2116 45%, #243020 100%)'
-          : 'linear-gradient(160deg, #F8F4EC 0%, #EEE8D4 45%, #E8DFCA 100%)',
+        backgroundImage: isDark
+          ? `linear-gradient(160deg, rgba(13,26,13,0.91) 0%, rgba(26,33,22,0.88) 45%, rgba(36,48,32,0.85) 100%), url('https://images.unsplash.com/photo-1492144534655-ae79c964c9d7?w=1400&q=80')`
+          : `linear-gradient(160deg, rgba(248,244,236,0.89) 0%, rgba(238,232,212,0.86) 45%, rgba(232,223,202,0.83) 100%), url('https://images.unsplash.com/photo-1492144534655-ae79c964c9d7?w=1400&q=80')`,
+        backgroundSize: 'auto, cover',
+        backgroundPosition: 'center, center',
       }}
     >
       {/* Dot-pattern overlay */}

@@ -127,12 +127,18 @@ body {
 /* ------------------------------------------------------------------ */
 
 .auth-form-bg {
-  background:
-    radial-gradient(ellipse at 50% 0%, rgba(196,154,30,0.07) 0%, transparent 60%),
-    #F0EDE6;
+  background-image:
+    radial-gradient(ellipse at 50% 0%, rgba(196,154,30,0.09) 0%, transparent 55%),
+    linear-gradient(rgba(244, 241, 234, 0.93), rgba(238, 234, 224, 0.93)),
+    url('https://images.unsplash.com/photo-1492144534655-ae79c964c9d7?w=1920&q=80');
+  background-size: auto, auto, cover;
+  background-position: center, center, center;
 }
 .dark .auth-form-bg {
-  background:
-    radial-gradient(ellipse at 50% 0%, rgba(196,154,30,0.09) 0%, transparent 60%),
-    #1A2116;
+  background-image:
+    radial-gradient(ellipse at 50% 0%, rgba(196,154,30,0.09) 0%, transparent 55%),
+    linear-gradient(rgba(26, 33, 22, 0.94), rgba(26, 33, 22, 0.94)),
+    url('https://images.unsplash.com/photo-1492144534655-ae79c964c9d7?w=1920&q=80');
+  background-size: auto, auto, cover;
+  background-position: center, center, center;
 }

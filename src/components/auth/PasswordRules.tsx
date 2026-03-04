@@ -44,7 +44,7 @@ export function PasswordRules({ password }: PasswordRulesProps) {
         return (
           <p
             key={key}
-            className={`text-[12px] font-medium flex items-center gap-1.5 transition-colors duration-200 ${
+            className={`text-[13px] font-medium flex items-center gap-1.5 transition-colors duration-200 ${
               valid ? 'text-lavo-success' : 'text-lavo-muted'
             }`}
           >

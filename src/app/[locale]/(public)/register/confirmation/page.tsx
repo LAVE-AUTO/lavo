@@ -46,7 +46,7 @@ export default async function RegisterConfirmationPage({ params }: Props) {
   return (
     <AuthPageLayout>
       <div className="w-full max-w-lg animate-fade-in">
-        <div className="bg-white dark:bg-dark-bg rounded-2xl shadow-lg p-10 text-center">
+        <div className="bg-white dark:bg-dark-card rounded-2xl shadow-[0_4px_24px_rgba(0,0,0,0.08),_0_1px_2px_rgba(0,0,0,0.04)] dark:shadow-[0_8px_40px_rgba(0,0,0,0.5)] dark:ring-1 dark:ring-gold/10 p-10 text-center">
           {/* Icon */}
           <div className="w-20 h-20 rounded-full bg-lavo-success/10 border border-lavo-success/20 flex items-center justify-center mx-auto mb-6">
             <EnvelopeIcon />

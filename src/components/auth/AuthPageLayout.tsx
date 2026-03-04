@@ -20,7 +20,7 @@ export function AuthPageLayout({ children }: AuthPageLayoutProps) {
       </aside>
 
       {/* Right form panel */}
-      <main className="flex-1 flex flex-col items-center justify-center min-h-screen auth-form-bg overflow-y-auto px-6 py-10">
+      <main className="flex-1 flex flex-col items-center justify-center min-h-screen auth-form-bg overflow-y-auto scroll-smooth px-6 py-10">
         {children}
       </main>
     </div>
