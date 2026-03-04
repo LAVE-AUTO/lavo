@@ -1,8 +1,10 @@
 /**
  * LAVO seed script: platform defaults, one admin, commission, one station with config and vehicle formats.
- * Run after migrations: npm run db:migrate && npm run db:seed
- * Requires DATABASE_URL in the environment.
+ * Run after migrations: npm run db:migrate && npm run db:seed (or after db:push).
+ * Loads .env from project root; requires DATABASE_URL in the environment or .env.
+ * Does not import bcrypt (native addon can segfault on some systems); uses pre-computed hash or SEED_ADMIN_PASSWORD_HASH.
  */
+import "dotenv/config";
 import { eq, and, isNull } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/node-postgres";
 import { Pool } from "pg";
@@ -17,7 +19,7 @@ import {
 } from "../src/lib/db/schema";
 import {
   SEED_ADMIN_EMAIL,
-  SEED_ADMIN_PASSWORD_DEFAULT,
+  SEED_ADMIN_PASSWORD_HASH_DEFAULT,
   PLATFORM_SETTINGS,
   SEED_STATION_NAME,
   SEED_STATION_ADDRESS,
@@ -38,7 +40,8 @@ async function seed(): Promise<void> {
   const pool = new Pool({ connectionString: url });
   const db = drizzle(pool, { schema });
 
-  await db.transaction(async (tx) => {
+  try {
+    await db.transaction(async (tx) => {
     const adminType = "admin" as const;
 
     const existingSettings = await tx
@@ -64,9 +67,8 @@ async function seed(): Promise<void> {
       adminId = existingAdmins[0].id;
       console.log("Admins: reusing existing admin.");
     } else {
-      const bcrypt = await import("bcrypt");
-      const password = process.env.SEED_ADMIN_PASSWORD ?? SEED_ADMIN_PASSWORD_DEFAULT;
-      const passwordHash = await bcrypt.hash(password, 10);
+      const passwordHash =
+        process.env.SEED_ADMIN_PASSWORD_HASH ?? SEED_ADMIN_PASSWORD_HASH_DEFAULT;
       const [inserted] = await tx
         .insert(admins)
         .values({
@@ -139,10 +141,12 @@ async function seed(): Promise<void> {
       );
       console.log("Vehicle formats: five rows inserted for seed station.");
     }
-  });
+    });
 
-  await pool.end();
-  console.log("Seed completed.");
+    console.log("Seed completed.");
+  } finally {
+    await pool.end();
+  }
 }
 
 export { seed };
