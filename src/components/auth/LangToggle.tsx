@@ -19,8 +19,7 @@ export function LangToggle() {
     router.replace(pathname, { locale: next });
   };
 
-  const base =
-    'px-2.5 py-1 text-[11px] font-bold tracking-wider transition-colors duration-150 font-rajdhani';
+  const base = 'px-2.5 py-1 text-[11px] font-bold tracking-wider transition-colors duration-150';
   const active = 'bg-gold text-[#1A2116]';
   const inactive = 'bg-transparent text-white dark:text-white text-[#333]';
 

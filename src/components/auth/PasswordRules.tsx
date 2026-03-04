@@ -15,10 +15,10 @@ interface Rule {
 }
 
 const PASSWORD_RULES: Rule[] = [
-  { key: 'password_rule_min', test: (p) => p.length >= 8 },
-  { key: 'password_rule_upper', test: (p) => /[A-Z]/.test(p) },
-  { key: 'password_rule_lower', test: (p) => /[a-z]/.test(p) },
-  { key: 'password_rule_number', test: (p) => /[0-9]/.test(p) },
+  { key: 'password_rule_min',     test: (p) => p.length >= 8 },
+  { key: 'password_rule_upper',   test: (p) => /[A-Z]/.test(p) },
+  { key: 'password_rule_lower',   test: (p) => /[a-z]/.test(p) },
+  { key: 'password_rule_number',  test: (p) => /[0-9]/.test(p) },
   { key: 'password_rule_special', test: (p) => /[!@#$%^&*(),.?":{}|<>]/.test(p) },
 ];
 
@@ -27,8 +27,8 @@ interface PasswordRulesProps {
 }
 
 /**
- * Displays real-time password strength rules.
- * Hidden when password field is empty.
+ * Real-time password strength rules displayed below the password field.
+ * Hidden when the password field is empty.
  *
  * @param password - Current password value to validate against the rules
  */
@@ -38,13 +38,13 @@ export function PasswordRules({ password }: PasswordRulesProps) {
   if (!password) return null;
 
   return (
-    <div className="mt-1 mb-3 grid grid-cols-1 gap-0.5 px-0.5">
+    <div className="mb-4 grid grid-cols-2 gap-x-4 gap-y-1 px-0.5 animate-fade-in">
       {PASSWORD_RULES.map(({ key, test }) => {
         const valid = test(password);
         return (
           <p
             key={key}
-            className={`text-[11px] font-medium font-rajdhani flex items-center gap-1.5 ${
+            className={`text-[12px] font-medium flex items-center gap-1.5 transition-colors duration-200 ${
               valid ? 'text-lavo-success' : 'text-lavo-muted'
             }`}
           >

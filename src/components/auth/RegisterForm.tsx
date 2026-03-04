@@ -78,7 +78,7 @@ export function RegisterForm() {
     const next: FormErrors = {};
 
     if (!formData.firstName.trim()) next.firstName = t('error_required');
-    if (!formData.lastName.trim()) next.lastName = t('error_required');
+    if (!formData.lastName.trim())  next.lastName  = t('error_required');
 
     if (!formData.email.trim()) {
       next.email = t('error_required');
@@ -108,10 +108,10 @@ export function RegisterForm() {
     try {
       const [success, response] = await postWithApi('/auth/register', {
         first_name: formData.firstName.trim(),
-        last_name: formData.lastName.trim(),
-        email: formData.email.trim(),
-        phone: formData.phone.trim() || undefined,
-        password: formData.password,
+        last_name:  formData.lastName.trim(),
+        email:      formData.email.trim(),
+        phone:      formData.phone.trim() || undefined,
+        password:   formData.password,
       });
 
       if (success) {
@@ -120,10 +120,7 @@ export function RegisterForm() {
       }
 
       const data = response as { code?: string };
-      if (
-        data?.code === 'EMAIL_ALREADY_EXISTS' ||
-        data?.code === 'CONFLICT'
-      ) {
+      if (data?.code === 'EMAIL_ALREADY_EXISTS' || data?.code === 'CONFLICT') {
         showError(t('error_email_exists'));
       } else {
         showError(t('error_generic'));
@@ -135,11 +132,11 @@ export function RegisterForm() {
     }
   };
 
-  const eyeButton = (visible: boolean, toggle: () => void, ariaLabel: string) => (
+  const eyeButton = (visible: boolean, toggle: () => void, label: string) => (
     <button
       type="button"
       onClick={toggle}
-      aria-label={ariaLabel}
+      aria-label={label}
       className="text-[#888] hover:text-[#555] dark:hover:text-[#ccc] transition-colors"
     >
       <EyeIcon open={visible} />
@@ -147,43 +144,52 @@ export function RegisterForm() {
   );
 
   return (
-    <form onSubmit={handleSubmit} noValidate className="px-6 pb-8">
-      <FormField
-        label={t('first_name')}
-        required
-        placeholder={t('first_name_placeholder')}
-        value={formData.firstName}
-        onChange={handleChange('firstName')}
-        error={errors.firstName}
-        autoComplete="given-name"
-      />
-      <FormField
-        label={t('last_name')}
-        required
-        placeholder={t('last_name_placeholder')}
-        value={formData.lastName}
-        onChange={handleChange('lastName')}
-        error={errors.lastName}
-        autoComplete="family-name"
-      />
-      <FormField
-        label={t('email')}
-        required
-        type="email"
-        placeholder={t('email_placeholder')}
-        value={formData.email}
-        onChange={handleChange('email')}
-        error={errors.email}
-        autoComplete="email"
-      />
-      <FormField
-        label={t('phone')}
-        type="tel"
-        placeholder={t('phone_placeholder')}
-        value={formData.phone}
-        onChange={handleChange('phone')}
-        autoComplete="tel"
-      />
+    <form onSubmit={handleSubmit} noValidate className="px-8 pb-8">
+      {/* Name row — side by side on larger screens */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-4">
+        <FormField
+          label={t('first_name')}
+          required
+          placeholder={t('first_name_placeholder')}
+          value={formData.firstName}
+          onChange={handleChange('firstName')}
+          error={errors.firstName}
+          autoComplete="given-name"
+        />
+        <FormField
+          label={t('last_name')}
+          required
+          placeholder={t('last_name_placeholder')}
+          value={formData.lastName}
+          onChange={handleChange('lastName')}
+          error={errors.lastName}
+          autoComplete="family-name"
+        />
+      </div>
+
+      {/* Email + Phone row */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-4">
+        <FormField
+          label={t('email')}
+          required
+          type="email"
+          placeholder={t('email_placeholder')}
+          value={formData.email}
+          onChange={handleChange('email')}
+          error={errors.email}
+          autoComplete="email"
+        />
+        <FormField
+          label={t('phone')}
+          type="tel"
+          placeholder={t('phone_placeholder')}
+          value={formData.phone}
+          onChange={handleChange('phone')}
+          autoComplete="tel"
+        />
+      </div>
+
+      {/* Password */}
       <FormField
         label={t('password')}
         required
@@ -200,6 +206,8 @@ export function RegisterForm() {
         )}
       />
       <PasswordRules password={formData.password} />
+
+      {/* Confirm password */}
       <FormField
         label={t('confirm_password')}
         required
@@ -216,10 +224,11 @@ export function RegisterForm() {
         )}
       />
 
+      {/* Submit */}
       <button
         type="submit"
         disabled={isLoading}
-        className="w-full py-3.5 mt-4 bg-gold hover:bg-gold-hover active:scale-[0.98] disabled:opacity-70 rounded-[10px] text-[15px] font-extrabold text-[#1A2116] tracking-wide transition-all duration-150 font-rajdhani flex items-center justify-center gap-2"
+        className="w-full py-3.5 mt-2 bg-gold hover:bg-gold-hover active:scale-[0.98] disabled:opacity-70 rounded-[10px] text-[15px] font-bold text-[#1A2116] tracking-wide transition-all duration-150 flex items-center justify-center gap-2"
       >
         {isLoading ? (
           <>
