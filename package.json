@@ -12,6 +12,7 @@
     "test:coverage": "jest --coverage",
     "db:generate": "drizzle-kit generate",
     "db:migrate": "drizzle-kit migrate",
+    "db:seed": "ts-node --compiler-options '{\"module\":\"CommonJS\",\"moduleResolution\":\"node\"}' scripts/seed.ts",
     "db:studio": "drizzle-kit studio"
   },
   "dependencies": {
@@ -31,9 +32,12 @@
     "@testing-library/react": "^16.3.2",
     "@types/jest": "^30.0.0",
     "@types/node": "^20",
+    "@types/pg": "^8.11.10",
     "@types/react": "^19",
+    "@types/bcrypt": "^5.0.2",
     "@types/react-dom": "^19",
     "babel-plugin-react-compiler": "1.0.0",
+    "bcrypt": "^5.1.1",
     "drizzle-kit": "^0.28.1",
     "eslint": "^9",
     "eslint-config-next": "16.1.6",
