@@ -14,7 +14,7 @@ import {
   uuid,
   varchar,
 } from "drizzle-orm/pg-core";
-import { admins } from "./admins";
+import { users } from "./users";
 
 /** Station identity, approval lifecycle, and operational flags. */
 export const stations = pgTable(
@@ -33,7 +33,7 @@ export const stations = pgTable(
     stripe_account_id: varchar("stripe_account_id", { length: 100 }),
     average_score: decimal("average_score", { precision: 3, scale: 2 }),
     total_ratings: integer("total_ratings").notNull().default(0),
-    approved_by: uuid("approved_by").references(() => admins.id),
+    approved_by: uuid("approved_by").references(() => users.id),
     approved_at: timestamp("approved_at", {
       mode: "date",
       withTimezone: true,
