@@ -94,3 +94,45 @@ body {
   to   { width: 100%; }
 }
 .animate-progress-fill { animation: progress-fill linear both; }
+
+/* ------------------------------------------------------------------ */
+/* Button shine sweep                                                   */
+/* ------------------------------------------------------------------ */
+
+@keyframes shine-sweep {
+  from { transform: translateX(-200%) skewX(-20deg); }
+  to   { transform: translateX(300%) skewX(-20deg); }
+}
+
+.btn-shine {
+  position: relative;
+  overflow: hidden;
+}
+.btn-shine::after {
+  content: '';
+  position: absolute;
+  inset-block: 0;
+  left: 0;
+  width: 50%;
+  background: linear-gradient(90deg, transparent, rgba(255,255,255,0.28), transparent);
+  transform: skewX(-20deg) translateX(-200%);
+  pointer-events: none;
+}
+.btn-shine:not(:disabled):hover::after {
+  animation: shine-sweep 0.55s ease-out;
+}
+
+/* ------------------------------------------------------------------ */
+/* Auth form side background                                            */
+/* ------------------------------------------------------------------ */
+
+.auth-form-bg {
+  background:
+    radial-gradient(ellipse at 50% 0%, rgba(196,154,30,0.07) 0%, transparent 60%),
+    #F0EDE6;
+}
+.dark .auth-form-bg {
+  background:
+    radial-gradient(ellipse at 50% 0%, rgba(196,154,30,0.09) 0%, transparent 60%),
+    #0E150D;
+}
