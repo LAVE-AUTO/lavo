@@ -13,7 +13,7 @@ const INTERVAL_MS = 3500;
 
 function CalendarIcon() {
   return (
-    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+    <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
       <rect x="3" y="4" width="18" height="18" rx="2" ry="2" />
       <line x1="16" y1="2" x2="16" y2="6" />
       <line x1="8" y1="2" x2="8" y2="6" />
@@ -24,7 +24,7 @@ function CalendarIcon() {
 
 function CardIcon() {
   return (
-    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+    <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
       <rect x="1" y="4" width="22" height="16" rx="2" ry="2" />
       <line x1="1" y1="10" x2="23" y2="10" />
     </svg>
@@ -33,7 +33,7 @@ function CardIcon() {
 
 function ShieldIcon() {
   return (
-    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+    <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
       <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
     </svg>
   );
@@ -41,7 +41,7 @@ function ShieldIcon() {
 
 function StarIcon() {
   return (
-    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+    <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
       <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" />
     </svg>
   );
@@ -197,47 +197,55 @@ export function BrandPanel() {
           <CarIllustration isDark={isDark} />
 
           <div>
-            <h2 className={`text-3xl xl:text-4xl font-bold leading-tight animate-fade-in-up animation-delay-100 ${textPrimary}`}>
+            <h2 className={`text-4xl xl:text-[2.75rem] font-bold leading-tight animate-fade-in-up animation-delay-100 ${textPrimary}`}>
               {t('headline')}{' '}
               <span className="text-gold">{t('headline_accent')}</span>
             </h2>
-            <p className={`mt-3 text-[15px] leading-relaxed animate-fade-in-up animation-delay-200 ${textSecondary}`}>
+            <p className={`mt-3 text-[16px] leading-relaxed animate-fade-in-up animation-delay-200 ${textSecondary}`}>
               {t('subtitle')}
             </p>
           </div>
         </div>
 
         {/* ── Feature carousel ── */}
-        <div className="flex flex-col gap-4">
+        <div className="flex flex-col gap-3">
+
+          {/* Editorial counter + divider */}
+          <div className="flex items-center gap-3">
+            <div className="h-px w-8 bg-gold/60" />
+            <span className={`text-[11px] font-bold tracking-[0.2em] uppercase ${isDark ? 'text-gold/80' : 'text-gold'}`}>
+              {String(activeIdx + 1).padStart(2, '0')} / {String(FEATURE_KEYS.length).padStart(2, '0')}
+            </span>
+          </div>
+
           {/* Active feature card */}
           <div
             key={activeIdx}
-            className={`flex items-start gap-4 animate-fade-in-up rounded-xl p-4 ${featureCardBg}`}
+            className={`flex items-center gap-5 animate-fade-in-up rounded-2xl p-5 ${featureCardBg}`}
           >
-            <div className="mt-0.5 w-11 h-11 rounded-xl bg-gold/15 border border-gold/30 flex items-center justify-center text-gold shrink-0">
+            <div className="w-16 h-16 rounded-2xl bg-gold/20 border-2 border-gold/40 flex items-center justify-center text-gold shrink-0">
               {FEATURE_ICONS[activeIdx]}
             </div>
             <div>
-              <p className={`text-[17px] font-bold leading-snug ${textPrimary}`}>
+              <p className={`text-[21px] font-bold leading-tight ${textPrimary}`}>
                 {t(FEATURE_KEYS[activeIdx].label)}
               </p>
-              <p className={`text-[13px] mt-0.5 leading-snug ${textSecondary}`}>
+              <p className={`text-[14px] mt-1.5 leading-relaxed ${textSecondary}`}>
                 {t(FEATURE_KEYS[activeIdx].sub)}
               </p>
             </div>
           </div>
 
           {/* Progress bar + dot navigation */}
-          <div className="flex flex-col gap-2.5">
-            <div className={`w-full h-[2px] rounded-full ${trackColor}`}>
+          <div className="flex items-center gap-4">
+            <div className={`flex-1 h-[3px] rounded-full ${trackColor}`}>
               <div
                 key={progressKey}
                 className="h-full bg-gold rounded-full animate-progress-fill"
                 style={{ animationDuration: `${INTERVAL_MS}ms` }}
               />
             </div>
-
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-2 shrink-0">
               {FEATURE_KEYS.map((_, i) => (
                 <button
                   key={i}
@@ -245,7 +253,7 @@ export function BrandPanel() {
                   onClick={() => handleDotClick(i)}
                   aria-label={`Feature ${i + 1}`}
                   className={`rounded-full transition-all duration-300 ${
-                    i === activeIdx ? 'w-5 h-2 bg-gold' : `w-2 h-2 ${inactiveDot}`
+                    i === activeIdx ? 'w-6 h-2.5 bg-gold' : `w-2.5 h-2.5 ${inactiveDot}`
                   }`}
                 />
               ))}
