@@ -1,4 +1,5 @@
 import { getTranslations, setRequestLocale } from 'next-intl/server';
+import { MOCK_STATIONS } from '@/data/stations-mock';
 import { StationDetail } from '@/components/stations/StationDetail';
 
 type Props = {
@@ -6,14 +7,19 @@ type Props = {
 };
 
 export async function generateMetadata({ params }: Props) {
-  const { locale } = await params;
-  const t = await getTranslations({ locale, namespace: 'stations' });
-  return { title: `LAVO — ${t('page_title')}` };
+  const { locale, id } = await params;
+  const t       = await getTranslations({ locale, namespace: 'stations' });
+  const station = MOCK_STATIONS.find((s) => s.id === id);
+  const name    = station ? station.name : t('page_title');
+  return {
+    title: `LAVO — ${name}`,
+    description: station?.description ?? t('page_subtitle'),
+  };
 }
 
 /**
  * Public station detail page.
- * Passes the station ID to the client StationDetail component for data fetching.
+ * Reads station ID from async params and passes it to the client StationDetail.
  */
 export default async function StationDetailPage({ params }: Props) {
   const { locale, id } = await params;
