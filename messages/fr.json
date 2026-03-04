@@ -35,6 +35,24 @@
     "feature_reviews_label": "Avis certifiés",
     "feature_reviews_sub": "Notations vérifiées après chaque lavage"
   },
+  "verify_email": {
+    "title": "Vérification de l'email",
+    "subtitle": "Nous vérifions votre adresse email",
+    "loading": "Vérification en cours...",
+    "success_title": "Email vérifié !",
+    "success_message": "Votre compte est maintenant actif. Vous pouvez vous connecter.",
+    "back_to_login": "Se connecter",
+    "error_title": "Lien expiré",
+    "error_message": "Ce lien de vérification est invalide ou a expiré.",
+    "resend_label": "Entrez votre email pour recevoir un nouveau lien",
+    "resend_email_placeholder": "exemple@email.com",
+    "resend_submit": "Renvoyer",
+    "resend_loading": "Envoi en cours...",
+    "resend_success_title": "Email envoyé !",
+    "resend_success_message": "Un nouveau lien de vérification a été envoyé. Vérifiez votre boîte mail et vos spams.",
+    "error_email_invalid": "Adresse email invalide",
+    "error_generic": "Une erreur est survenue. Veuillez réessayer."
+  },
   "login": {
     "welcome_title": "Bienvenue sur Slowtime",
     "welcome_subtitle": "Connectez-vous à votre compte",
