@@ -69,10 +69,10 @@ export function AuthHeader({ title, subtitle, locale }: AuthHeaderProps) {
       </div>
 
       {/* Title + subtitle */}
-      <h1 className="text-[26px] font-bold text-[#1A2116] dark:text-white leading-tight">
+      <h1 className="text-[28px] font-bold text-[#1A2116] dark:text-white leading-tight">
         {title}
       </h1>
-      <p className="mt-1 text-[14px] text-[#5A6B54] dark:text-lavo-muted leading-snug">
+      <p className="mt-1.5 text-[15px] text-[#5A6B54] dark:text-lavo-muted leading-snug">
         {subtitle}
       </p>
     </div>
