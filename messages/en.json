@@ -165,6 +165,13 @@
     "filter_all": "All",
     "filter_available": "Available",
     "filter_nearby": "Nearby",
+    "filter_price_asc": "Price ↑",
+    "filter_best_rated": "Best rated",
+    "filter_panel_title": "Filters & Sort",
+    "filter_sort_label": "Sort by",
+    "filter_city_label": "City",
+    "filter_city_all": "All cities",
+    "filter_reset": "Reset",
     "available_slots": "{count} slot(s) available",
     "no_slots": "Unavailable",
     "join": "Join",
@@ -194,7 +201,7 @@
     "queue_wait_time": "Estimated wait: {min} min",
     "join_success": "You have successfully joined the station",
     "join_error": "Unable to join the station. Please try again.",
-    "price_unit": "XAF",
+    "price_unit": "$",
     "open_maps": "Open in Maps",
     "back_to_list": "Back to stations"
   }

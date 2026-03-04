@@ -117,7 +117,7 @@ export function StationDetail({ id }: StationDetailProps) {
       </div>
 
       {/* ── Scrollable body ── */}
-      <div className="max-w-2xl mx-auto px-4 py-5 pb-28 space-y-4">
+      <div className="max-w-2xl mx-auto px-4 py-5 pb-36 sm:pb-24 space-y-4">
 
         {/* Title + meta */}
         <div>
@@ -253,7 +253,7 @@ export function StationDetail({ id }: StationDetailProps) {
       </div>
 
       {/* ── Sticky footer CTA ── */}
-      <div className="fixed bottom-0 left-0 right-0 bg-[#1A2116] border-t border-[#2C3828] px-4 py-3 flex items-center gap-3 z-40">
+      <div className="fixed bottom-16 sm:bottom-0 left-0 right-0 bg-[#1A2116] border-t border-[#2C3828] px-4 py-3 flex items-center gap-3 z-40">
         <div>
           <div className="text-[18px] font-black text-white leading-none">
             {station.priceFrom.toLocaleString()}

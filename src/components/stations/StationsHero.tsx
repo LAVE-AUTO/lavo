@@ -40,7 +40,7 @@ export async function StationsHero() {
           <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full border border-gold/30 bg-gold/10 mb-5 animate-fade-in">
             <span className="w-1.5 h-1.5 rounded-full bg-gold animate-gold-shimmer" />
             <span className="text-[11px] font-bold text-gold uppercase tracking-widest">
-              LAVO Network
+              Slowtime Network
             </span>
           </div>
 
