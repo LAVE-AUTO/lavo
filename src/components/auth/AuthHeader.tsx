@@ -1,3 +1,4 @@
+import Image from 'next/image';
 import { LangToggle } from './LangToggle';
 import { ThemeToggle } from './ThemeToggle';
 
@@ -9,24 +10,14 @@ interface AuthHeaderProps {
 }
 
 /**
- * Small car icon shown in the mobile header bar.
- */
-function MiniCarIcon() {
-  return (
-    <svg viewBox="0 0 36 36" fill="none" width="28" height="28" aria-hidden="true">
-      <path d="M5 20l3-8h20l3 8" stroke="#C49A1E" strokeWidth="2" strokeLinecap="round" />
-      <rect x="4" y="18" width="28" height="10" rx="3" fill="#1A2116" stroke="#C49A1E" strokeWidth="1.5" />
-      <circle cx="10" cy="28" r="3" fill="#C49A1E" />
-      <circle cx="26" cy="28" r="3" fill="#C49A1E" />
-    </svg>
-  );
-}
-
-/**
  * Auth page header.
  *
- * - Mobile: top bar with logo + wordmark + controls, then title + subtitle below.
+ * - Mobile: top bar with logo + controls, then title + subtitle below.
  * - Desktop: only title + subtitle + controls (brand panel handles logo/branding).
+ *
+ * Logos use CSS dark-mode classes — no client-side JS needed.
+ * Light mode: full horizontal wordmark (logo2_2.png)
+ * Dark mode:  gold S icon (frame2.png) + "LAVO" text
  */
 export function AuthHeader({ title, subtitle }: AuthHeaderProps) {
   return (
@@ -34,11 +25,34 @@ export function AuthHeader({ title, subtitle }: AuthHeaderProps) {
       {/* Mobile-only top bar: logo + controls */}
       <div className="flex items-center justify-between mb-5 lg:hidden">
         <div className="flex items-center gap-2">
-          <MiniCarIcon />
-          <span className="text-lg font-bold text-[#000C1F] dark:text-white tracking-widest uppercase">
-            LAVO
-          </span>
+          {/* Light mode: horizontal wordmark */}
+          <Image
+            src="/logo/logo2_2.png"
+            alt="LAVO"
+            width={120}
+            height={32}
+            className="object-contain h-8 w-auto dark:hidden"
+            priority
+          />
+          {/* Dark mode: gold S medallion + wordmark text */}
+          <div className="hidden dark:flex items-center gap-2">
+            <div className="w-8 h-8 rounded-full overflow-hidden border border-gold/40 bg-white shrink-0">
+              <Image
+                src="/logo/frame2.png"
+                alt=""
+                width={32}
+                height={32}
+                className="w-full h-full object-cover"
+                aria-hidden="true"
+                priority
+              />
+            </div>
+            <span className="text-lg font-bold text-white tracking-widest uppercase">
+              LAVO
+            </span>
+          </div>
         </div>
+
         <div className="flex items-center gap-2">
           <ThemeToggle />
           <LangToggle />
