@@ -1,15 +1,15 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useMemo } from 'react';
 import { useTranslations } from 'next-intl';
 import { Link } from '@/i18n/navigation';
-import { getFromApi, postWithApi } from '@/services/axios-service';
+import { postWithApi } from '@/services/axios-service';
 import { useToast } from '@/context/toast-context';
 import { Spinner } from '@/components/ui/Spinner';
 import { StarRating } from '@/components/ratings/StarRating';
 import { StationReviews } from './StationReviews';
+import { MOCK_STATIONS } from '@/data/stations-mock';
 import type { StationDetailData } from '@/types/station';
-import type { ApiSuccessBody } from '@/types';
 
 interface StationDetailProps {
   id: string;
@@ -17,36 +17,18 @@ interface StationDetailProps {
 
 /**
  * Client-side station detail view.
- * Fetches GET /stations/:id and renders hero, info, services, queue and reviews.
+ * Uses static mock data (replace with GET /stations/:id when backend is ready).
  */
 export function StationDetail({ id }: StationDetailProps) {
   const t = useTranslations('stations');
   const { success, error } = useToast();
 
-  const [station, setStation] = useState<StationDetailData | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [hasError, setHasError] = useState(false);
+  const station: StationDetailData | undefined = useMemo(
+    () => MOCK_STATIONS.find((s) => s.id === id),
+    [id]
+  );
+
   const [joining, setJoining] = useState(false);
-
-  useEffect(() => {
-    let cancelled = false;
-
-    const fetch = async () => {
-      setLoading(true);
-      setHasError(false);
-      const [ok, data] = await getFromApi<ApiSuccessBody<StationDetailData>>(`/stations/${id}`);
-      if (cancelled) return;
-      setLoading(false);
-      if (ok) {
-        setStation((data as ApiSuccessBody<StationDetailData>).data);
-      } else {
-        setHasError(true);
-      }
-    };
-
-    fetch();
-    return () => { cancelled = true; };
-  }, [id]);
 
   const handleJoin = async () => {
     if (!station) return;
@@ -65,16 +47,7 @@ export function StationDetail({ id }: StationDetailProps) {
     }
   };
 
-  if (loading) {
-    return (
-      <div className="flex flex-col items-center justify-center py-32 gap-4">
-        <Spinner size="lg" />
-        <p className="text-[14px] text-lavo-muted">{t('loading')}</p>
-      </div>
-    );
-  }
-
-  if (hasError || !station) {
+  if (!station) {
     return (
       <div className="flex flex-col items-center justify-center py-32 gap-4 text-center">
         <p className="text-[15px] font-semibold text-[#1A1A1A] dark:text-white">{t('error_load')}</p>
