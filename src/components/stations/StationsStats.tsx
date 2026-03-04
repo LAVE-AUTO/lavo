@@ -11,11 +11,11 @@ function StatItem({
   accent?: boolean;
 }) {
   return (
-    <div className="flex flex-col items-center text-center px-6 py-5">
-      <span className={`text-[28px] font-black ${accent ? 'text-gold' : 'text-[#1A1A1A] dark:text-white'}`}>
+    <div className="flex flex-col items-center text-center px-6 py-4">
+      <span className={`text-[24px] font-black ${accent ? 'text-gold' : 'text-white'}`}>
         {value}
       </span>
-      <span className="text-[12px] font-semibold text-lavo-muted uppercase tracking-wider mt-0.5">
+      <span className="text-[10px] font-bold text-[#9A9A8A] uppercase tracking-wider mt-0.5">
         {label}
       </span>
     </div>
@@ -24,7 +24,7 @@ function StatItem({
 
 /**
  * Stats bar between the hero and the station list.
- * Shows live counts derived from mock data.
+ * Dark design matching the HTML mockup's filter-bar / results-header aesthetic.
  * Server component.
  */
 export async function StationsStats() {
@@ -37,9 +37,9 @@ export async function StationsStats() {
   const reviews   = MOCK_STATIONS.reduce((acc, s) => acc + s.reviewCount, 0);
 
   return (
-    <div className="bg-white dark:bg-dark-card border-b border-[#E0E0D0] dark:border-[#2C3828]" id="stations-list">
+    <div className="bg-[#1E2A1A] border-b border-[#2C3828]" id="stations-list">
       <div className="max-w-6xl mx-auto px-4 sm:px-6">
-        <div className="grid grid-cols-2 sm:grid-cols-4 divide-x divide-[#E0E0D0] dark:divide-[#2C3828]">
+        <div className="grid grid-cols-2 sm:grid-cols-4 divide-x divide-[#2C3828]">
           <StatItem
             value={`${total}`}
             label={isFr ? 'Stations' : 'Stations'}

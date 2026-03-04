@@ -5,28 +5,18 @@ import { useTranslations } from 'next-intl';
 import { Link } from '@/i18n/navigation';
 import { postWithApi } from '@/services/axios-service';
 import { useToast } from '@/context/toast-context';
-import { StarRating } from '@/components/ratings/StarRating';
 import { Spinner } from '@/components/ui/Spinner';
-import type { Station } from '@/types/station';
+import type { StationDetailData } from '@/types/station';
 
 interface StationCardProps {
-  station: Station;
+  station: StationDetailData;
   unavailable?: boolean;
-}
-
-function MapPinIcon() {
-  return (
-    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-      <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z" />
-      <circle cx="12" cy="10" r="3" />
-    </svg>
-  );
 }
 
 /**
  * Station card for the public list page.
- * Displays station info, rating, available slots, tags, and action buttons.
- * When unavailable (no slots), the card is grayed and the Join button is hidden.
+ * Matches the result-card design from the HTML mockup:
+ * dark card, photo, name/price row, rating, 3-col stats, tags, gold buttons.
  */
 export function StationCard({ station, unavailable = false }: StationCardProps) {
   const t = useTranslations('stations');
@@ -62,13 +52,13 @@ export function StationCard({ station, unavailable = false }: StationCardProps) 
   return (
     <article
       className={[
-        'bg-white dark:bg-dark-card rounded-2xl overflow-hidden shadow-sm border border-[#EBEBDF] dark:border-[#2C3828] transition-shadow duration-200',
-        unavailable ? 'opacity-50 grayscale' : 'hover:shadow-md',
+        'bg-[#1E2A1A] rounded-[14px] overflow-hidden',
+        unavailable ? 'opacity-50 grayscale pointer-events-none' : '',
       ].join(' ')}
       aria-disabled={unavailable}
     >
-      {/* Station image */}
-      <div className="relative h-[120px] bg-gradient-to-br from-[#2C3828] to-[#1A2116] dark:from-[#243020] dark:to-[#1A2116] flex items-center justify-center overflow-hidden">
+      {/* Photo area */}
+      <div className="relative h-[110px] bg-[#2C3828] flex items-center justify-center overflow-hidden">
         {station.imageUrl ? (
           <img
             src={station.imageUrl}
@@ -76,7 +66,7 @@ export function StationCard({ station, unavailable = false }: StationCardProps) 
             className="w-full h-full object-cover"
           />
         ) : (
-          <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="#3A4A36" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+          <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#3A4A36" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
             <path d="M3 17l2-7h14l2 7" />
             <path d="M5 17v2h2v-2M17 17v2h2v-2" />
             <path d="M8 10V7a1 1 0 011-1h6a1 1 0 011 1v3" />
@@ -86,47 +76,70 @@ export function StationCard({ station, unavailable = false }: StationCardProps) 
         )}
 
         {unavailable && (
-          <span className="absolute top-2 left-2 px-2 py-0.5 rounded bg-lavo-error text-white text-[10px] font-bold tracking-wide">
+          <span className="absolute top-2 left-2 px-2 py-0.5 rounded-full bg-lavo-error/90 text-white text-[9px] font-bold tracking-wide">
             {t('no_slots')}
           </span>
         )}
 
-        {!unavailable && (
-          <span className="absolute top-2 right-2 px-2 py-0.5 rounded bg-lavo-success/90 text-white text-[10px] font-bold">
-            {t('available_slots', { count: station.availableSlots })}
+        {!unavailable && station.availableSlots > 0 && (
+          <span className="absolute top-2 left-2 px-2 py-0.5 rounded-full bg-black/60 text-white text-[9px] font-bold">
+            {station.availableSlots}/{station.totalSlots} places
+          </span>
+        )}
+
+        {station.verified && (
+          <span className="absolute top-2 right-2 w-5 h-5 bg-lavo-success rounded-full flex items-center justify-center" title="Vérifié">
+            <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+              <polyline points="20 6 9 17 4 12" />
+            </svg>
           </span>
         )}
       </div>
 
       {/* Card body */}
-      <div className="p-4">
+      <div className="p-3 pb-3.5">
+        {/* Name + price */}
         <div className="flex items-start justify-between gap-2 mb-1">
-          <h3 className="text-[15px] font-bold text-[#1A1A1A] dark:text-white leading-tight line-clamp-1">
+          <h3 className="text-[15px] font-black text-white leading-tight line-clamp-1">
             {station.name}
           </h3>
-          <span className="text-[15px] font-bold text-gold shrink-0">
-            {station.priceFrom.toLocaleString()} {t('price_unit')}
+          <span className="text-[15px] font-black text-gold shrink-0">
+            {station.priceFrom.toLocaleString()} <span className="text-[11px] font-semibold">{t('price_unit')}</span>
           </span>
         </div>
 
-        <p className="flex items-center gap-1 text-[12px] text-lavo-muted mb-2 line-clamp-1">
-          <MapPinIcon />
-          {station.address}, {station.city}
-        </p>
-
-        <div className="flex items-center gap-2 mb-3">
-          <StarRating value={station.rating} />
-          <span className="text-[12px] text-lavo-muted">
-            {station.rating.toFixed(1)} · {t('reviews_count', { count: station.reviewCount })}
-          </span>
+        {/* Rating */}
+        <div className="flex items-center gap-1.5 mb-2.5 text-[11px]">
+          <span className="text-gold">★</span>
+          <span className="text-white font-semibold">{station.rating.toFixed(1)}</span>
+          <span className="text-gold">({station.reviewCount} {t('reviews_count', { count: station.reviewCount }).replace(/\d+ /, '')})</span>
         </div>
 
+        {/* Stats grid */}
+        <div className="grid grid-cols-3 gap-1 mb-2.5 text-center">
+          <div>
+            <div className="text-[13px] font-bold text-white">{station.availableSlots}</div>
+            <div className="text-[9px] text-[#9A9A8A]">Places dispo</div>
+          </div>
+          <div>
+            <div className="text-[13px] font-bold text-white">
+              {station.estimatedWaitMinutes > 0 ? `${station.estimatedWaitMinutes} min` : '—'}
+            </div>
+            <div className="text-[9px] text-[#9A9A8A]">Attente</div>
+          </div>
+          <div>
+            <div className="text-[13px] font-bold text-white">{station.services.length}</div>
+            <div className="text-[9px] text-[#9A9A8A]">Services</div>
+          </div>
+        </div>
+
+        {/* Tags */}
         {station.tags.length > 0 && (
-          <div className="flex flex-wrap gap-1.5 mb-3">
+          <div className="flex flex-wrap gap-1 mb-3">
             {station.tags.slice(0, 3).map((tag) => (
               <span
                 key={tag}
-                className="px-2 py-0.5 rounded-full text-[10px] font-semibold bg-[#F0F0E8] dark:bg-[#2C3828] text-[#444] dark:text-lavo-muted border border-[#E0E0D0] dark:border-[#3A4A36]"
+                className="px-2 py-0.5 rounded-full text-[9px] font-bold bg-[#2C3828] text-[#9A9A8A] border border-[#3A4A36]"
               >
                 {tag}
               </span>
@@ -134,24 +147,24 @@ export function StationCard({ station, unavailable = false }: StationCardProps) 
           </div>
         )}
 
+        {/* Action buttons */}
         <div className="flex gap-2">
-          <Link
-            href={`/stations/${station.id}`}
-            className="flex-1 py-2.5 border border-gold rounded-[8px] text-[12px] font-bold text-gold text-center hover:bg-gold/5 transition-colors"
-          >
-            {t('details')}
-          </Link>
-
           {!unavailable && (
             <button
               type="button"
               onClick={handleJoin}
               disabled={joining}
-              className="flex-1 py-2.5 bg-gold hover:bg-gold-hover disabled:opacity-70 rounded-[8px] text-[12px] font-bold text-[#1A2116] transition-colors flex items-center justify-center gap-1.5"
+              className="flex-1 py-2 border border-gold rounded-[8px] text-[11px] font-bold text-gold text-center hover:bg-gold/10 transition-colors disabled:opacity-60 flex items-center justify-center gap-1"
             >
               {joining ? <Spinner size="sm" /> : t('join')}
             </button>
           )}
+          <Link
+            href={`/stations/${station.id}`}
+            className="flex-1 py-2 bg-gold hover:bg-gold-hover rounded-[8px] text-[11px] font-bold text-[#1A2116] text-center transition-colors"
+          >
+            {t('details')}
+          </Link>
         </div>
       </div>
     </article>
