@@ -4,7 +4,7 @@
  * are imported from domain files and relations reference them here.
  */
 import { relations } from "drizzle-orm";
-import { adminLogs, admins } from "./admins";
+import { adminLogs } from "./admins";
 import { commissionSettings } from "./commission";
 import { emailVerificationTokens, users } from "./users";
 import { noShowFees, reservations } from "./reservations";
@@ -17,7 +17,6 @@ import {
 } from "./stations";
 import { supportTickets } from "./support";
 import { timeSlots } from "./slots";
-import { settings } from "./settings";
 
 export * from "./users";
 export * from "./admins";
@@ -48,24 +47,17 @@ export const emailVerificationTokensRelations = relations(
   })
 );
 
-export const adminsRelations = relations(admins, ({ many }) => ({
-  adminLogs: many(adminLogs),
-  commissionSettings: many(commissionSettings),
-  supportTickets: many(supportTickets),
-  stationsApproved: many(stations, { relationName: "approvedByAdmin" }),
-}));
-
 export const adminLogsRelations = relations(adminLogs, ({ one }) => ({
-  admin: one(admins, {
+  admin: one(users, {
     fields: [adminLogs.admin_id],
-    references: [admins.id],
+    references: [users.id],
   }),
 }));
 
 export const stationsRelations = relations(stations, ({ one, many }) => ({
-  approvedByAdmin: one(admins, {
+  approvedByAdmin: one(users, {
     fields: [stations.approved_by],
-    references: [admins.id],
+    references: [users.id],
   }),
   stationConfig: one(stationConfigs),
   vehicleFormats: many(vehicleFormats),
@@ -167,9 +159,9 @@ export const notificationsRelations = relations(notifications, ({ one }) => ({
 export const commissionSettingsRelations = relations(
   commissionSettings,
   ({ one }) => ({
-    setByAdmin: one(admins, {
+    setByAdmin: one(users, {
       fields: [commissionSettings.set_by],
-      references: [admins.id],
+      references: [users.id],
     }),
   })
 );
@@ -179,8 +171,8 @@ export const supportTicketsRelations = relations(supportTickets, ({ one }) => ({
     fields: [supportTickets.created_by],
     references: [users.id],
   }),
-  assignedToAdmin: one(admins, {
+  assignedToAdmin: one(users, {
     fields: [supportTickets.assigned_to],
-    references: [admins.id],
+    references: [users.id],
   }),
 }));
