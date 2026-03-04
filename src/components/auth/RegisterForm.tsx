@@ -228,7 +228,7 @@ export function RegisterForm() {
       <button
         type="submit"
         disabled={isLoading}
-        className="w-full py-3.5 mt-2 bg-gold hover:bg-gold-hover active:scale-[0.98] disabled:opacity-70 rounded-[10px] text-[15px] font-bold text-[#1A2116] tracking-wide transition-all duration-150 flex items-center justify-center gap-2"
+        className="btn-shine w-full py-3.5 mt-2 bg-gold hover:bg-gold-hover active:scale-[0.98] disabled:opacity-70 rounded-[10px] text-[15px] font-bold text-[#1A2116] tracking-wide transition-all duration-150 flex items-center justify-center gap-2"
       >
         {isLoading ? (
           <>
