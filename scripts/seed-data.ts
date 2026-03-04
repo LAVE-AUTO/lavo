@@ -7,6 +7,10 @@ export const SEED_ADMIN_EMAIL = "admin@lavo.local";
 /** Default admin password for seed (dev only). Override with SEED_ADMIN_PASSWORD in production. */
 export const SEED_ADMIN_PASSWORD_DEFAULT = "ChangeMe123!";
 
+/** Pre-computed bcrypt hash for SEED_ADMIN_PASSWORD_DEFAULT. Seed script uses this to avoid loading bcrypt (segfault on some systems). For custom password set SEED_ADMIN_PASSWORD_HASH in .env. */
+export const SEED_ADMIN_PASSWORD_HASH_DEFAULT =
+  "$2b$10$q0/a/xj6fSrI/aArWuDqOO0hJVyDUwh8tCilT0vaDpAklhjgST/dm";
+
 export const PLATFORM_SETTINGS: Array<{ key: string; value: string }> = [
   { key: "cancellation_penalty_percent", value: "20" },
   { key: "default_late_tolerance_minutes", value: "5" },
