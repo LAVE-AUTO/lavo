@@ -15,6 +15,10 @@ const geistMono = Geist_Mono({
 export const metadata: Metadata = {
   title: "LAVO",
   description: "Plateforme de réservation et paiement pour stations de lavage",
+  icons: {
+    icon: '/logo/frame2.png',
+    apple: '/logo/frame2.png',
+  },
 };
 
 export default function RootLayout({
