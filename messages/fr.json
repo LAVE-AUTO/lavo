@@ -140,6 +140,24 @@
     "confirmation_spam": "Vérifiez vos spams si vous ne le recevez pas dans quelques minutes.",
     "confirmation_back": "Retour à la connexion"
   },
+  "nav": {
+    "home": "Accueil",
+    "stations": "Stations",
+    "login": "Se connecter",
+    "register": "S'inscrire",
+    "logo_alt": "LAVO"
+  },
+  "footer": {
+    "tagline": "La plateforme de réservation et de paiement pour vos stations de lavage automobile.",
+    "quick_links": "Liens rapides",
+    "legal": "Légal",
+    "privacy": "Confidentialité",
+    "terms": "Conditions",
+    "contact": "Contact",
+    "about": "À propos",
+    "copyright": "© {year} LAVO. Tous droits réservés.",
+    "made_with": "Fait avec soin au Cameroun."
+  },
   "stations": {
     "page_title": "Stations de lavage",
     "page_subtitle": "Trouvez la station la plus proche",
