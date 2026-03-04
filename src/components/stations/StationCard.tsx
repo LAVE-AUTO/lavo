@@ -52,18 +52,18 @@ export function StationCard({ station, unavailable = false }: StationCardProps) 
   return (
     <article
       className={[
-        'bg-[#1E2A1A] rounded-[14px] overflow-hidden',
+        'bg-[#1E2A1A] rounded-[14px] overflow-hidden border border-[#2C3828] group hover:border-gold/30 transition-all duration-300',
         unavailable ? 'opacity-50 grayscale pointer-events-none' : '',
       ].join(' ')}
       aria-disabled={unavailable}
     >
       {/* Photo area */}
-      <div className="relative h-[110px] bg-[#2C3828] flex items-center justify-center overflow-hidden">
+      <div className="relative h-[160px] bg-[#2C3828] flex items-center justify-center overflow-hidden">
         {station.imageUrl ? (
           <img
             src={station.imageUrl}
             alt={station.name}
-            className="w-full h-full object-cover"
+            className="w-full h-full object-cover group-hover:scale-[1.01] transition-transform duration-300"
           />
         ) : (
           <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#3A4A36" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
@@ -74,6 +74,13 @@ export function StationCard({ station, unavailable = false }: StationCardProps) 
             <circle cx="16.5" cy="17" r="1.5" fill="#3A4A36" />
           </svg>
         )}
+
+        {/* Gradient overlay at bottom with station name */}
+        <div className="absolute inset-x-0 bottom-0 h-16 bg-gradient-to-t from-black/60 to-transparent pt-6 flex items-end px-3 pb-2 pointer-events-none">
+          <span className="text-white text-[13px] font-bold leading-tight line-clamp-1 drop-shadow">
+            {station.name}
+          </span>
+        </div>
 
         {unavailable && (
           <span className="absolute top-2 left-2 px-2 py-0.5 rounded-full bg-lavo-error/90 text-white text-[9px] font-bold tracking-wide">
@@ -97,49 +104,49 @@ export function StationCard({ station, unavailable = false }: StationCardProps) 
       </div>
 
       {/* Card body */}
-      <div className="p-3 pb-3.5">
+      <div className="p-5">
         {/* Name + price */}
-        <div className="flex items-start justify-between gap-2 mb-1">
-          <h3 className="text-[15px] font-black text-white leading-tight line-clamp-1">
+        <div className="flex items-start justify-between gap-2 mb-2">
+          <h3 className="text-[22px] font-black text-white leading-tight line-clamp-1">
             {station.name}
           </h3>
-          <span className="text-[15px] font-black text-gold shrink-0">
-            {station.priceFrom.toLocaleString()} <span className="text-[11px] font-semibold">{t('price_unit')}</span>
+          <span className="text-[22px] font-black text-gold shrink-0">
+            {station.priceFrom.toLocaleString()} <span className="text-[13px] font-semibold">{t('price_unit')}</span>
           </span>
         </div>
 
         {/* Rating */}
-        <div className="flex items-center gap-1.5 mb-2.5 text-[11px]">
-          <span className="text-gold">★</span>
+        <div className="flex items-center gap-1.5 mb-3 text-[16px]">
+          <span className="text-gold text-[18px]">★</span>
           <span className="text-white font-semibold">{station.rating.toFixed(1)}</span>
           <span className="text-gold">({station.reviewCount} {t('reviews_count', { count: station.reviewCount }).replace(/\d+ /, '')})</span>
         </div>
 
-        {/* Stats grid */}
-        <div className="grid grid-cols-3 gap-1 mb-2.5 text-center">
-          <div>
-            <div className="text-[13px] font-bold text-white">{station.availableSlots}</div>
-            <div className="text-[9px] text-[#9A9A8A]">Places dispo</div>
+        {/* Stats grid with dividers */}
+        <div className="grid grid-cols-3 mb-3 text-center">
+          <div className="border-r border-[#2C3828] pr-2">
+            <div className="text-[28px] font-black text-white leading-none">{station.availableSlots}</div>
+            <div className="text-[13px] text-[#9A9A8A] mt-1">Places dispo</div>
           </div>
-          <div>
-            <div className="text-[13px] font-bold text-white">
-              {station.estimatedWaitMinutes > 0 ? `${station.estimatedWaitMinutes} min` : '—'}
+          <div className="border-r border-[#2C3828] px-2">
+            <div className="text-[28px] font-black text-white leading-none">
+              {station.estimatedWaitMinutes > 0 ? `${station.estimatedWaitMinutes}` : '—'}
             </div>
-            <div className="text-[9px] text-[#9A9A8A]">Attente</div>
+            <div className="text-[13px] text-[#9A9A8A] mt-1">min attente</div>
           </div>
-          <div>
-            <div className="text-[13px] font-bold text-white">{station.services.length}</div>
-            <div className="text-[9px] text-[#9A9A8A]">Services</div>
+          <div className="pl-2">
+            <div className="text-[28px] font-black text-white leading-none">{station.services.length}</div>
+            <div className="text-[13px] text-[#9A9A8A] mt-1">Services</div>
           </div>
         </div>
 
         {/* Tags */}
         {station.tags.length > 0 && (
-          <div className="flex flex-wrap gap-1 mb-3">
+          <div className="flex flex-wrap gap-1.5 mb-4">
             {station.tags.slice(0, 3).map((tag) => (
               <span
                 key={tag}
-                className="px-2 py-0.5 rounded-full text-[9px] font-bold bg-[#2C3828] text-[#9A9A8A] border border-[#3A4A36]"
+                className="py-1 px-3 rounded-full text-[13px] font-bold bg-[#2C3828] text-[#9A9A8A] border border-[#3A4A36]"
               >
                 {tag}
               </span>
@@ -148,20 +155,20 @@ export function StationCard({ station, unavailable = false }: StationCardProps) 
         )}
 
         {/* Action buttons */}
-        <div className="flex gap-2">
+        <div className="flex gap-3">
           {!unavailable && (
             <button
               type="button"
               onClick={handleJoin}
               disabled={joining}
-              className="flex-1 py-2 border border-gold rounded-[8px] text-[11px] font-bold text-gold text-center hover:bg-gold/10 transition-colors disabled:opacity-60 flex items-center justify-center gap-1"
+              className="flex-1 py-3.5 border border-gold rounded-xl text-[16px] font-bold text-gold text-center hover:bg-gold/10 transition-colors disabled:opacity-60 flex items-center justify-center gap-1"
             >
               {joining ? <Spinner size="sm" /> : t('join')}
             </button>
           )}
           <Link
             href={`/stations/${station.id}`}
-            className="flex-1 py-2 bg-gold hover:bg-gold-hover rounded-[8px] text-[11px] font-bold text-[#1A2116] text-center transition-colors"
+            className="flex-1 py-3.5 bg-gold hover:bg-gold-hover rounded-xl text-[16px] font-bold text-[#1A2116] text-center transition-colors"
           >
             {t('details')}
           </Link>

@@ -45,7 +45,7 @@ export function SearchBar({ value, onChange, placeholder }: SearchBarProps) {
         value={value}
         onChange={handleChange}
         placeholder={placeholder}
-        className="flex-1 bg-transparent text-[13px] text-[#9A9A8A] placeholder-[#9A9A8A] outline-none"
+        className="flex-1 bg-transparent text-[20px] text-[#9A9A8A] placeholder-[#9A9A8A] outline-none"
         aria-label={placeholder}
       />
       {value && (
