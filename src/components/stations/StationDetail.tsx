@@ -50,8 +50,8 @@ export function StationDetail({ id }: StationDetailProps) {
   if (!station) {
     return (
       <div className="flex flex-col items-center justify-center py-32 gap-4 text-center">
-        <p className="text-[20px] font-semibold text-white">{t('error_load')}</p>
-        <Link href="/stations" className="text-[16px] font-semibold text-gold hover:text-gold-hover transition-colors">
+        <p className="text-[14px] font-semibold text-[#000C1F] dark:text-[#FFF8EC]">{t('error_load')}</p>
+        <Link href="/stations" className="text-[13px] font-semibold text-gold hover:text-gold-hover transition-colors">
           {t('back_to_list')}
         </Link>
       </div>
@@ -61,13 +61,13 @@ export function StationDetail({ id }: StationDetailProps) {
   const hasSlots = station.availableSlots > 0;
 
   return (
-    <div className="min-h-screen bg-[#1A2116] animate-fade-in">
+    <div className="min-h-screen bg-[#EDEDED] dark:bg-[#1A2116] transition-colors animate-fade-in">
       {/* ── Hero ── */}
-      <div className="relative h-[260px] sm:h-[320px] bg-gradient-to-br from-[#2C3828] to-[#1A2116] overflow-hidden">
+      <div className="relative h-[260px] sm:h-[320px] bg-gradient-to-br from-[#D5D5C5] to-[#EDEDED] dark:from-[#2C3828] dark:to-[#1A2116] overflow-hidden">
         {station.imageUrl ? (
           <img src={station.imageUrl} alt={station.name} className="w-full h-full object-cover" />
         ) : (
-          <div className="w-full h-full flex items-center justify-center text-[#3A4A36] text-[20px] font-semibold">
+          <div className="w-full h-full flex items-center justify-center text-[#999] dark:text-[#3A4A36] text-[14px] font-semibold">
             Photo
           </div>
         )}
@@ -104,7 +104,7 @@ export function StationDetail({ id }: StationDetailProps) {
       </div>
 
       {/* ── Breadcrumb bar ── */}
-      <div className="bg-[#1E2A1A] py-3 px-5 text-[15px] font-semibold text-[#9A9A8A]">
+      <div className="bg-[#C8C8B4] dark:bg-[#1E2A1A] py-3 px-5 text-[12px] font-semibold text-[#666] dark:text-[#9A9A8A] transition-colors">
         <span>{station.address}</span>
         <span className="mx-1">·</span>
         <span>{station.city}</span>
@@ -122,19 +122,19 @@ export function StationDetail({ id }: StationDetailProps) {
         {/* Title + meta */}
         <div>
           <div className="flex items-start gap-2 mb-1">
-            <h1 className="text-[32px] sm:text-[36px] font-black text-white leading-tight flex-1">
+            <h1 className="text-[22px] sm:text-[26px] font-black text-[#000C1F] dark:text-[#FFF8EC] leading-tight flex-1">
               {station.name}
             </h1>
             {station.verified && (
-              <span className="shrink-0 mt-1 text-[15px] font-bold text-lavo-success flex items-center gap-1">
+              <span className="shrink-0 mt-1 text-[11px] font-bold text-lavo-success flex items-center gap-1">
                 <span className="w-1.5 h-1.5 rounded-full bg-lavo-success inline-block" />
                 Vérifié
               </span>
             )}
           </div>
-          <div className="flex items-center gap-2 text-[16px] text-[#9A9A8A]">
-            <span className="text-gold text-[20px]">★</span>
-            <span className="text-white font-semibold">{station.rating.toFixed(1)}</span>
+          <div className="flex items-center gap-2 text-[12px] text-[#666] dark:text-[#9A9A8A]">
+            <span className="text-gold text-[14px]">★</span>
+            <span className="text-[#000C1F] dark:text-[#FFF8EC] font-semibold">{station.rating.toFixed(1)}</span>
             <span>({station.reviewCount} avis)</span>
             <span>·</span>
             <span>{station.availableSlots} places</span>
@@ -148,20 +148,20 @@ export function StationDetail({ id }: StationDetailProps) {
         </div>
 
         {/* Price box */}
-        <div className="bg-[#1E2A1A] rounded-xl p-5">
+        <div className="bg-[#C8C8B4] dark:bg-[#1E2A1A] rounded-xl p-5 transition-colors">
           <div className="flex items-start justify-between mb-2">
             <div>
-              <div className="text-[15px] text-[#9A9A8A] mb-1">{t('detail_price_from')}</div>
+              <div className="text-[11px] text-[#666] dark:text-[#9A9A8A] mb-1">{t('detail_price_from')}</div>
               {station.openingHours && (
-                <div className="text-[16px] text-white">Horaires : {station.openingHours}</div>
+                <div className="text-[12px] text-[#000C1F] dark:text-[#FFF8EC]">Horaires : {station.openingHours}</div>
               )}
             </div>
-            <div className="text-[36px] font-black text-gold leading-none">
+            <div className="text-[24px] font-black text-gold leading-none">
               {station.priceFrom.toLocaleString()}
-              <span className="text-[20px] font-semibold ml-1">{t('price_unit')}</span>
+              <span className="text-[14px] font-semibold ml-1">{t('price_unit')}</span>
             </div>
           </div>
-          <div className="flex items-center gap-2 text-[16px] text-[#9A9A8A]">
+          <div className="flex items-center gap-2 text-[12px] text-[#666] dark:text-[#9A9A8A]">
             <span className="w-1.5 h-1.5 rounded-full bg-lavo-success shrink-0" />
             {hasSlots
               ? `${station.availableSlots} créneau(x) disponible(s)`
@@ -178,29 +178,29 @@ export function StationDetail({ id }: StationDetailProps) {
 
         {/* Queue banner */}
         {hasSlots && (
-          <div className="bg-[#1E2A1A] rounded-xl p-4">
-            <div className="flex items-center gap-2 text-[15px] font-black text-white tracking-wider uppercase mb-3">
+          <div className="bg-[#C8C8B4] dark:bg-[#1E2A1A] rounded-xl p-4 transition-colors">
+            <div className="flex items-center gap-2 text-[11px] font-black text-[#000C1F] dark:text-[#FFF8EC] tracking-wider uppercase mb-3">
               <span className="w-2 h-2 rounded-full bg-lavo-success animate-pulse shrink-0" />
               {t('detail_queue')}
             </div>
             <div className="grid grid-cols-3 gap-2 text-center">
               <div>
-                <div className="text-[36px] font-black text-white leading-none">{station.queueCount}</div>
-                <div className="text-[14px] text-[#9A9A8A] mt-1">{t('queue_waiting')}</div>
+                <div className="text-[22px] font-black text-[#000C1F] dark:text-[#FFF8EC] leading-none">{station.queueCount}</div>
+                <div className="text-[10px] text-[#666] dark:text-[#9A9A8A] mt-1">{t('queue_waiting')}</div>
               </div>
               <div>
-                <div className={`text-[36px] font-black leading-none ${station.estimatedWaitMinutes > 20 ? 'text-lavo-error' : 'text-white'}`}>
+                <div className={`text-[22px] font-black leading-none ${station.estimatedWaitMinutes > 20 ? 'text-lavo-error' : 'text-[#000C1F] dark:text-[#FFF8EC]'}`}>
                   {station.estimatedWaitMinutes > 0 ? `${station.estimatedWaitMinutes}` : '—'}
                 </div>
-                <div className="text-[14px] text-[#9A9A8A] mt-1">Minutes</div>
+                <div className="text-[10px] text-[#666] dark:text-[#9A9A8A] mt-1">Minutes</div>
               </div>
               <div>
-                <div className="text-[36px] font-black text-white leading-none">{station.availableSlots}</div>
-                <div className="text-[14px] text-[#9A9A8A] mt-1">{t('queue_available')}</div>
+                <div className="text-[22px] font-black text-[#000C1F] dark:text-[#FFF8EC] leading-none">{station.availableSlots}</div>
+                <div className="text-[10px] text-[#666] dark:text-[#9A9A8A] mt-1">{t('queue_available')}</div>
               </div>
             </div>
             {station.estimatedWaitMinutes > 0 && (
-              <p className="text-[20px] text-[#9A9A8A] mt-3 leading-relaxed">
+              <p className="text-[12px] text-[#666] dark:text-[#9A9A8A] mt-3 leading-relaxed">
                 Partez maintenant pour arriver <strong className="text-gold">pile au bon moment !</strong>
               </p>
             )}
@@ -210,19 +210,19 @@ export function StationDetail({ id }: StationDetailProps) {
         {/* Description */}
         {station.description && (
           <div>
-            <h2 className="text-[24px] font-black text-white mb-2">{t('detail_description')}</h2>
-            <p className="text-[20px] text-[#9A9A8A] leading-[1.7]">{station.description}</p>
+            <h2 className="text-[16px] font-black text-[#000C1F] dark:text-[#FFF8EC] mb-2">{t('detail_description')}</h2>
+            <p className="text-[12px] text-[#666] dark:text-[#9A9A8A] leading-[1.7]">{station.description}</p>
           </div>
         )}
 
         {/* Services */}
         {station.services.length > 0 && (
           <div>
-            <h2 className="text-[24px] font-black text-white mb-3">{t('detail_services')}</h2>
+            <h2 className="text-[16px] font-black text-[#000C1F] dark:text-[#FFF8EC] mb-3">{t('detail_services')}</h2>
             <div className="space-y-2">
               {station.services.map((service) => (
-                <div key={service} className="flex items-center gap-2 text-[20px] text-white">
-                  <span className="text-lavo-success text-[18px] shrink-0">✓</span>
+                <div key={service} className="flex items-center gap-2 text-[13px] text-[#000C1F] dark:text-[#FFF8EC]">
+                  <span className="text-lavo-success text-[12px] shrink-0">✓</span>
                   {service}
                 </div>
               ))}
@@ -231,47 +231,47 @@ export function StationDetail({ id }: StationDetailProps) {
         )}
 
         {/* Location box */}
-        <div className="bg-[#1E2A1A] rounded-xl px-4 py-3 flex items-center gap-3">
+        <div className="bg-[#C8C8B4] dark:bg-[#1E2A1A] rounded-xl px-4 py-3 flex items-center gap-3 transition-colors">
           <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#C49A1E" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
             <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z" />
             <circle cx="12" cy="10" r="3" />
           </svg>
           <div>
-            <div className="text-[20px] font-semibold text-white">{station.address}</div>
-            <div className="text-[16px] text-[#9A9A8A]">{station.city}</div>
+            <div className="text-[13px] font-semibold text-[#000C1F] dark:text-[#FFF8EC]">{station.address}</div>
+            <div className="text-[11px] text-[#666] dark:text-[#9A9A8A]">{station.city}</div>
           </div>
         </div>
 
         {/* Reviews */}
         <div>
-          <h2 className="text-[24px] font-black text-white mb-3">
+          <h2 className="text-[16px] font-black text-[#000C1F] dark:text-[#FFF8EC] mb-3">
             <span className="text-lavo-success mr-1">●</span>
             {t('detail_reviews')} ({station.reviewCount})
           </h2>
-          <StationReviews reviews={station.reviews} dark />
+          <StationReviews reviews={station.reviews} />
         </div>
       </div>
 
       {/* ── Sticky footer CTA ── */}
-      <div className="fixed bottom-16 sm:bottom-0 left-0 right-0 bg-[#1A2116] border-t border-[#2C3828] px-4 py-3 flex items-center gap-3 z-40">
+      <div className="fixed bottom-16 sm:bottom-0 left-0 right-0 bg-[#EDEDED] dark:bg-[#1A2116] border-t border-[#CCCCCC] dark:border-[#2C3828] px-4 py-3 flex items-center gap-3 z-40 transition-colors">
         <div>
-          <div className="text-[24px] font-black text-white leading-none">
+          <div className="text-[18px] font-black text-[#000C1F] dark:text-[#FFF8EC] leading-none">
             {station.priceFrom.toLocaleString()}
-            <span className="text-[13px] font-semibold ml-1 text-[#9A9A8A]">{t('price_unit')}</span>
+            <span className="text-[11px] font-semibold ml-1 text-[#666] dark:text-[#9A9A8A]">{t('price_unit')}</span>
           </div>
-          <div className="text-[15px] text-[#9A9A8A]">{t('detail_price_from')}</div>
+          <div className="text-[11px] text-[#666] dark:text-[#9A9A8A]">{t('detail_price_from')}</div>
         </div>
         {hasSlots ? (
           <button
             type="button"
             onClick={handleJoin}
             disabled={joining}
-            className="flex-1 py-4 bg-gold hover:bg-gold-hover disabled:opacity-70 rounded-[10px] text-[18px] font-black text-[#1A2116] transition-colors flex items-center justify-center gap-2"
+            className="flex-1 py-3 bg-gold hover:bg-gold-hover disabled:opacity-70 rounded-[10px] text-[13px] font-black text-[#1A2116] transition-colors flex items-center justify-center gap-2"
           >
             {joining ? <><Spinner size="sm" /> {t('loading')}</> : t('detail_join')}
           </button>
         ) : (
-          <div className="flex-1 py-4 bg-[#2C3828] rounded-[10px] text-[18px] font-bold text-[#9A9A8A] text-center">
+          <div className="flex-1 py-3 bg-[#E0E0D0] dark:bg-[#2C3828] rounded-[10px] text-[13px] font-bold text-[#666] dark:text-[#9A9A8A] text-center transition-colors">
             {t('no_slots')}
           </div>
         )}
