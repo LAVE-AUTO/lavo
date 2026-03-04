@@ -74,6 +74,16 @@ export function RegisterForm() {
       }
     };
 
+  /** Validate specific fields on blur for immediate inline feedback. */
+  const handleBlur = (field: keyof RegisterFormData) => () => {
+    if (field === 'email' && formData.email && !validateEmail(formData.email)) {
+      setErrors((prev) => ({ ...prev, email: t('error_email_invalid') }));
+    }
+    if (field === 'confirmPassword' && formData.confirmPassword && formData.password !== formData.confirmPassword) {
+      setErrors((prev) => ({ ...prev, confirmPassword: t('error_password_mismatch') }));
+    }
+  };
+
   const validate = (): boolean => {
     const next: FormErrors = {};
 
@@ -155,6 +165,7 @@ export function RegisterForm() {
           onChange={handleChange('firstName')}
           error={errors.firstName}
           autoComplete="given-name"
+          autoFocus
         />
         <FormField
           label={t('last_name')}
@@ -176,6 +187,7 @@ export function RegisterForm() {
           placeholder={t('email_placeholder')}
           value={formData.email}
           onChange={handleChange('email')}
+          onBlur={handleBlur('email')}
           error={errors.email}
           autoComplete="email"
         />
@@ -215,6 +227,7 @@ export function RegisterForm() {
         placeholder={t('confirm_password_placeholder')}
         value={formData.confirmPassword}
         onChange={handleChange('confirmPassword')}
+        onBlur={handleBlur('confirmPassword')}
         error={errors.confirmPassword}
         autoComplete="new-password"
         rightIcon={eyeButton(

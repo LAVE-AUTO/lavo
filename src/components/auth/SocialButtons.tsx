@@ -40,7 +40,7 @@ export function SocialButtons() {
     'bg-[#F0F0E8] dark:bg-[#2C3828]',
     'border border-[#CCCCCC] dark:border-[#3A4A36]',
     'hover:bg-[#E8E8E0] dark:hover:bg-[#344430]',
-    'transition-colors duration-150 text-[13px] font-semibold',
+    'transition-colors duration-150 text-[14px] font-semibold',
     'text-[#333] dark:text-white',
   ].join(' ');
 
