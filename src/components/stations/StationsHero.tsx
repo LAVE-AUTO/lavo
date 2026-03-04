@@ -34,44 +34,63 @@ export async function StationsHero() {
       {/* Gold shimmer bar */}
       <div className="absolute top-0 left-0 right-0 h-[2px] bg-gradient-to-r from-transparent via-gold to-transparent animate-gold-shimmer" />
 
-      <div className="relative z-10 max-w-6xl mx-auto px-4 sm:px-6 py-16 sm:py-20">
-        <div className="max-w-xl">
-          {/* Label */}
-          <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full border border-gold/30 bg-gold/10 mb-5 animate-fade-in">
-            <span className="w-1.5 h-1.5 rounded-full bg-gold animate-gold-shimmer" />
-            <span className="text-[11px] font-bold text-gold uppercase tracking-widest">
-              Slowtime Network
-            </span>
+      <div className="relative z-10 max-w-6xl mx-auto px-4 sm:px-6 py-20 sm:py-28">
+        <div className="flex items-center gap-12">
+          {/* Left: text content */}
+          <div className="flex-1 max-w-xl">
+            {/* Label */}
+            <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full border border-gold/30 bg-gold/10 mb-5 animate-fade-in">
+              <span className="w-1.5 h-1.5 rounded-full bg-gold animate-gold-shimmer" />
+              <span className="text-[14px] font-bold text-gold uppercase tracking-widest">
+                Slowtime Network
+              </span>
+            </div>
+
+            {/* Title */}
+            <h1 className="text-[44px] sm:text-[60px] font-[900] text-white leading-tight mb-4 animate-fade-in-up animation-delay-100">
+              {t('page_title')}
+            </h1>
+
+            {/* Subtitle */}
+            <p className="text-[20px] sm:text-[22px] text-lavo-muted leading-[1.7] mb-8 animate-fade-in-up animation-delay-200">
+              {t('page_subtitle')}
+            </p>
+
+            {/* CTA */}
+            <div className="flex flex-wrap gap-3 animate-fade-in-up animation-delay-300">
+              <Link
+                href="#stations-list"
+                className="btn-shine inline-flex items-center gap-2 px-8 py-4 bg-gold hover:bg-gold-hover rounded-[12px] text-[18px] font-bold text-[#1A2116] transition-colors"
+              >
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                  <circle cx="11" cy="11" r="8" />
+                  <line x1="21" y1="21" x2="16.65" y2="16.65" />
+                </svg>
+                {t('filter_available')}
+              </Link>
+              <Link
+                href="/register"
+                className="inline-flex items-center gap-2 px-8 py-4 border border-white/20 hover:border-gold/50 rounded-[12px] text-[18px] font-bold text-white transition-colors"
+              >
+                {tn('register')}
+              </Link>
+            </div>
           </div>
 
-          {/* Title */}
-          <h1 className="text-[34px] sm:text-[44px] font-black text-white leading-tight mb-4 animate-fade-in-up animation-delay-100">
-            {t('page_title')}
-          </h1>
-
-          {/* Subtitle */}
-          <p className="text-[15px] sm:text-[17px] text-lavo-muted leading-relaxed mb-8 animate-fade-in-up animation-delay-200">
-            {t('page_subtitle')}
-          </p>
-
-          {/* CTA */}
-          <div className="flex flex-wrap gap-3 animate-fade-in-up animation-delay-300">
-            <Link
-              href="#stations-list"
-              className="btn-shine inline-flex items-center gap-2 px-6 py-3 bg-gold hover:bg-gold-hover rounded-[10px] text-[14px] font-bold text-[#1A2116] transition-colors"
-            >
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-                <circle cx="11" cy="11" r="8" />
-                <line x1="21" y1="21" x2="16.65" y2="16.65" />
-              </svg>
-              {t('filter_available')}
-            </Link>
-            <Link
-              href="/register"
-              className="inline-flex items-center gap-2 px-6 py-3 border border-white/20 hover:border-gold/50 rounded-[10px] text-[14px] font-bold text-white transition-colors"
-            >
-              {tn('register')}
-            </Link>
+          {/* Right: floating stat badges (desktop only) */}
+          <div className="hidden md:flex flex-col gap-4 shrink-0">
+            <div className="bg-[#1E2A1A]/90 border border-[#3A4A36] rounded-xl px-4 py-3 animate-fade-in-up animation-delay-100">
+              <div className="text-[24px] font-black text-gold leading-none">150+</div>
+              <div className="text-[14px] text-[#9A9A8A] mt-1">Stations partenaires</div>
+            </div>
+            <div className="bg-[#1E2A1A]/90 border border-[#3A4A36] rounded-xl px-4 py-3 animate-fade-in-up animation-delay-200">
+              <div className="text-[24px] font-black text-gold leading-none">4.8★</div>
+              <div className="text-[14px] text-[#9A9A8A] mt-1">Note moyenne</div>
+            </div>
+            <div className="bg-[#1E2A1A]/90 border border-[#3A4A36] rounded-xl px-4 py-3 animate-fade-in-up animation-delay-300">
+              <div className="text-[24px] font-black text-gold leading-none">&lt; 30min</div>
+              <div className="text-[14px] text-[#9A9A8A] mt-1">Temps moyen</div>
+            </div>
           </div>
         </div>
       </div>

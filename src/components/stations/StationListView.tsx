@@ -86,7 +86,7 @@ export function StationListView() {
             type="button"
             onClick={() => setPanelOpen((v) => !v)}
             className={[
-              'relative flex items-center gap-1.5 px-3 py-2.5 rounded-[10px] text-[12px] font-bold transition-colors',
+              'relative flex items-center gap-1.5 px-4 py-3 rounded-[10px] text-[15px] font-bold transition-colors',
               panelOpen ? 'bg-gold text-[#1A2116]' : 'bg-[#2C3828] text-[#9A9A8A]',
             ].join(' ')}
             aria-expanded={panelOpen}
@@ -114,7 +114,7 @@ export function StationListView() {
               type="button"
               onClick={() => setSort(key)}
               className={[
-                'px-3 py-1.5 rounded-full text-[10px] font-bold whitespace-nowrap transition-colors duration-150',
+                'py-2 px-4 rounded-full text-[14px] font-bold whitespace-nowrap transition-colors duration-150',
                 sort === key ? 'bg-gold text-[#1A2116]' : 'bg-[#1E2A1A] text-[#9A9A8A]',
               ].join(' ')}
             >
@@ -125,7 +125,7 @@ export function StationListView() {
             type="button"
             onClick={() => setFilter(filter === 'all' ? 'available' : 'all')}
             className={[
-              'px-3 py-1.5 rounded-full text-[10px] font-bold whitespace-nowrap transition-colors duration-150',
+              'py-2 px-4 rounded-full text-[14px] font-bold whitespace-nowrap transition-colors duration-150',
               filter === 'available' ? 'bg-gold text-[#1A2116]' : 'bg-[#1E2A1A] text-[#9A9A8A]',
             ].join(' ')}
           >
@@ -137,14 +137,14 @@ export function StationListView() {
         {panelOpen && (
           <div className="bg-[#1E2A1A] rounded-xl p-4 space-y-4 animate-fade-in border border-[#2C3828]">
             <div className="flex items-center justify-between">
-              <span className="text-[12px] font-black text-white uppercase tracking-wider">
+              <span className="text-[16px] font-black text-white uppercase tracking-wider">
                 {t('filter_panel_title')}
               </span>
               {activeCount > 0 && (
                 <button
                   type="button"
                   onClick={handleReset}
-                  className="text-[11px] font-bold text-gold hover:text-gold-hover"
+                  className="text-[13px] font-bold text-gold hover:text-gold-hover"
                 >
                   {t('filter_reset')}
                 </button>
@@ -153,7 +153,7 @@ export function StationListView() {
 
             {/* City filter */}
             <div>
-              <p className="text-[10px] font-bold text-[#9A9A8A] uppercase tracking-wider mb-2">
+              <p className="text-[14px] font-bold text-[#9A9A8A] uppercase tracking-wider mb-2">
                 {t('filter_city_label')}
               </p>
               <div className="flex flex-wrap gap-1.5">
@@ -161,7 +161,7 @@ export function StationListView() {
                   type="button"
                   onClick={() => setCityFilter('all')}
                   className={[
-                    'px-3 py-1.5 rounded-full text-[10px] font-bold transition-colors',
+                    'py-2 px-4 rounded-full text-[14px] font-bold transition-colors',
                     cityFilter === 'all' ? 'bg-gold text-[#1A2116]' : 'bg-[#2C3828] text-[#9A9A8A]',
                   ].join(' ')}
                 >
@@ -173,7 +173,7 @@ export function StationListView() {
                     type="button"
                     onClick={() => setCityFilter(city)}
                     className={[
-                      'px-3 py-1.5 rounded-full text-[10px] font-bold transition-colors',
+                      'py-2 px-4 rounded-full text-[14px] font-bold transition-colors',
                       cityFilter === city ? 'bg-gold text-[#1A2116]' : 'bg-[#2C3828] text-[#9A9A8A]',
                     ].join(' ')}
                   >
@@ -185,7 +185,7 @@ export function StationListView() {
 
             {/* Sort */}
             <div>
-              <p className="text-[10px] font-bold text-[#9A9A8A] uppercase tracking-wider mb-2">
+              <p className="text-[14px] font-bold text-[#9A9A8A] uppercase tracking-wider mb-2">
                 {t('filter_sort_label')}
               </p>
               <div className="flex flex-wrap gap-1.5">
@@ -195,7 +195,7 @@ export function StationListView() {
                     type="button"
                     onClick={() => setSort(key)}
                     className={[
-                      'px-3 py-1.5 rounded-full text-[10px] font-bold transition-colors',
+                      'py-2 px-4 rounded-full text-[14px] font-bold transition-colors',
                       sort === key ? 'bg-gold text-[#1A2116]' : 'bg-[#2C3828] text-[#9A9A8A]',
                     ].join(' ')}
                   >
@@ -207,7 +207,7 @@ export function StationListView() {
 
             {/* Availability toggle */}
             <div className="flex items-center justify-between">
-              <span className="text-[11px] font-semibold text-white">
+              <span className="text-[18px] font-semibold text-white">
                 {t('filter_available')} uniquement
               </span>
               <button
@@ -262,8 +262,8 @@ function SectionLabel({ label, count, accent = false }: { label: string; count: 
   return (
     <div className="flex items-center gap-3 mb-4">
       {accent && <span className="w-1 h-4 rounded-full bg-gold shrink-0" />}
-      <span className="text-[12px] font-black text-white uppercase tracking-widest">{label}</span>
-      <span className="text-[10px] text-[#9A9A8A] font-semibold bg-[#1E2A1A] px-2 py-0.5 rounded-full">
+      <span className="text-[16px] font-black text-white uppercase tracking-widest">{label}</span>
+      <span className="text-[14px] text-[#9A9A8A] font-semibold bg-[#1E2A1A] px-2 py-0.5 rounded-full">
         {count}
       </span>
     </div>
@@ -272,7 +272,7 @@ function SectionLabel({ label, count, accent = false }: { label: string; count: 
 
 function StationGrid({ stations, unavailable }: { stations: StationDetailData[]; unavailable: boolean }) {
   return (
-    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
       {stations.map((station) => (
         <StationCard key={station.id} station={station} unavailable={unavailable} />
       ))}
@@ -289,8 +289,8 @@ function EmptyState({ title, desc }: { title: string; desc: string }) {
           <line x1="21" y1="21" x2="16.65" y2="16.65" />
         </svg>
       </div>
-      <p className="text-[16px] font-black text-white">{title}</p>
-      <p className="text-[13px] text-[#9A9A8A] max-w-xs leading-relaxed">{desc}</p>
+      <p className="text-[22px] font-black text-white">{title}</p>
+      <p className="text-[20px] text-[#9A9A8A] max-w-xs leading-relaxed">{desc}</p>
     </div>
   );
 }
