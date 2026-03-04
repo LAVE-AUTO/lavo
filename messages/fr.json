@@ -22,6 +22,19 @@
     "password": "Mot de passe",
     "forgotPassword": "Mot de passe oublié"
   },
+  "brand_panel": {
+    "headline": "Votre lavage auto,",
+    "headline_accent": "quand vous voulez",
+    "subtitle": "Réservez, payez et suivez votre lavage en quelques clics.",
+    "feature_booking_label": "Réservation en temps réel",
+    "feature_booking_sub": "Choisissez votre créneau en quelques secondes",
+    "feature_payment_label": "Paiement sécurisé",
+    "feature_payment_sub": "Transactions chiffrées via Stripe Connect",
+    "feature_stations_label": "Stations certifiées",
+    "feature_stations_sub": "Chaque partenaire est vérifié et noté",
+    "feature_reviews_label": "Avis certifiés",
+    "feature_reviews_sub": "Notations vérifiées après chaque lavage"
+  },
   "register": {
     "welcome_title": "Bienvenue sur Lavo",
     "welcome_subtitle": "Réservez votre lavage auto en quelques clics",

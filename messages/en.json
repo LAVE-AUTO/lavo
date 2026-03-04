@@ -22,6 +22,19 @@
     "password": "Password",
     "forgotPassword": "Forgot password"
   },
+  "brand_panel": {
+    "headline": "Your car wash,",
+    "headline_accent": "whenever you want",
+    "subtitle": "Book, pay and track your wash in a few clicks.",
+    "feature_booking_label": "Real-time booking",
+    "feature_booking_sub": "Choose your slot in seconds",
+    "feature_payment_label": "Secure payment",
+    "feature_payment_sub": "Encrypted transactions via Stripe Connect",
+    "feature_stations_label": "Certified stations",
+    "feature_stations_sub": "Every partner is verified and rated",
+    "feature_reviews_label": "Verified reviews",
+    "feature_reviews_sub": "Ratings verified after every wash"
+  },
   "register": {
     "welcome_title": "Welcome to Lavo",
     "welcome_subtitle": "Book your car wash in a few clicks",
