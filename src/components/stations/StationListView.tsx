@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useMemo, useRef, useEffect } from 'react';
+import { useSearchParams } from 'next/navigation';
 import { useTranslations } from 'next-intl';
 import { MOCK_STATIONS } from '@/data/stations-mock';
 import { SearchBar } from './SearchBar';
@@ -32,7 +33,8 @@ function parseOpeningHours(oh: string): { open: number; close: number } | null {
  * a proper toggle switch for availability. Sort chips stay in the quick row.
  */
 export function StationListView() {
-  const t = useTranslations('stations');
+  const t            = useTranslations('stations');
+  const searchParams = useSearchParams();
 
   const [query,              setQuery]              = useState('');
   const [onlyAvail,         setOnlyAvail]          = useState(false);
@@ -47,6 +49,12 @@ export function StationListView() {
   const [date,               setDate]               = useState('');
   const [timeFrom,           setTimeFrom]           = useState('');
   const [timeTo,             setTimeTo]             = useState('');
+
+  /* ── Initialise query from URL param (?q=) ── */
+  useEffect(() => {
+    const q = searchParams.get('q');
+    if (q) setQuery(q);
+  }, [searchParams]);
 
   /* ── Price validation ── */
   const validateAndSetMin = (val: string) => {

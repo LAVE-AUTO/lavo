@@ -146,7 +146,8 @@
     "login": "Se connecter",
     "register": "S'inscrire",
     "favorites": "Favoris",
-    "logo_alt": "Slowtime"
+    "logo_alt": "Slowtime",
+    "greeting": "Bonjour"
   },
   "footer": {
     "tagline": "La plateforme de réservation et de paiement pour vos stations de lavage automobile au Canada.",
@@ -166,10 +167,18 @@
     "newsletter_desc": "Recevez les meilleures offres et nouveautés.",
     "newsletter_placeholder": "votre@email.com",
     "newsletter_submit": "S'abonner",
-    "social_follow": "Suivez-nous"
+    "social_follow": "Suivez-nous",
+    "cta_title": "Prêt pour un lavage impeccable ?",
+    "cta_subtitle": "Rejoignez des milliers de conducteurs qui font confiance à Slowtime au Canada.",
+    "cta_register": "Créer mon compte",
+    "cta_explore": "Explorer les stations",
+    "status_ok": "Service opérationnel"
   },
   "stations": {
     "page_title": "Stations de lavage",
+    "hero_near_you": "près de chez vous",
+    "hero_search_placeholder": "Rechercher par ville ou adresse...",
+    "hero_search_cta": "Explorer",
     "page_subtitle": "Trouvez la station la plus proche",
     "search_placeholder": "Rechercher une station...",
     "filter_all": "Toutes",

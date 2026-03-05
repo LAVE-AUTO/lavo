@@ -1,3 +1,4 @@
+import { Suspense } from 'react';
 import { getTranslations, setRequestLocale } from 'next-intl/server';
 import { StationListView } from '@/components/stations/StationListView';
 import { StationsHero } from '@/components/stations/StationsHero';
@@ -29,8 +30,10 @@ export default async function PublicStationsPage({ params }: Props) {
       <StationsHero />
       <StationsStats />
 
-      <section className="max-w-6xl mx-auto px-4 sm:px-6 py-10">
-        <StationListView />
+      <section id="stations-list" className="max-w-6xl mx-auto px-4 sm:px-6 py-10">
+        <Suspense fallback={<div className="py-20 text-center text-[#333333] dark:text-[#C0C0B0]">Chargement…</div>}>
+          <StationListView />
+        </Suspense>
       </section>
     </main>
   );
