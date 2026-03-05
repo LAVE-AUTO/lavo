@@ -15,12 +15,12 @@
     --font-sans: var(--font-geist-sans);
     --font-mono: var(--font-geist-mono);
     /* LAVO font size scale */
-    --font-size-2xs: 13px;
-    --font-size-xs: 14px;
-    --font-size-sm: 15px;
-    --font-size-base: 16px;
-    --font-size-md: 17px;
-    --font-size-lg: 20px;
+    --font-size-2xs: 14px;
+    --font-size-xs: 15px;
+    --font-size-sm: 16px;
+    --font-size-base: 17px;
+    --font-size-md: 19px;
+    --font-size-lg: 22px;
     /* LAVO brand colors */
     --color-gold: #C49A1E;
     --color-gold-hover: #D4A820;
