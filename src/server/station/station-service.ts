@@ -1,31 +1,25 @@
 import { randomUUID } from 'crypto';
 import bcrypt from 'bcrypt';
+import { db } from '@/lib/db';
+import { users, emailVerificationTokens, stations, stationDocuments } from '@/lib/db/schema';
 import { sendVerificationEmail } from '@/lib/email';
 import { ConflictError, ForbiddenError, NotFoundError } from '@/lib/errors';
+import { findByEmail, type SafeUser } from '@/server/auth/user-repository';
 import {
-  createUser,
-  findByEmail,
-  type SafeUser,
-} from '@/server/auth/user-repository';
-import { createToken } from '@/server/auth/token-repository';
-import {
-  createStation,
   findStationById,
   findStationByUserId,
   listStationsByStatus,
-  updateStationInfo,
   updateStationStatus,
   type Station,
 } from './station-repository';
-import { createDocuments, findDocumentsByStationId } from './document-repository';
+import { findDocumentsByStationId } from './document-repository';
 
-export type RegisterStationDto = {
+export type StationOnboardingDto = {
+  // Step 1 — account credentials
   email: string;
   phone: string;
   password: string;
-};
-
-export type StationInfoDto = {
+  // Step 2 — station details
   station_name: string;
   legal_name?: string;
   registration_number?: string;
@@ -36,84 +30,88 @@ export type StationInfoDto = {
   wash_post_count: number;
   wash_type: 'hand_wash' | 'automatic' | 'self_service';
   description?: string;
-};
-
-export type StationDocumentsDto = {
+  // Step 3 — documents + legal
   documents: { document_type: string; file_url: string }[];
   terms_accepted: true;
+};
+
+export type StationOnboardingResult = {
+  user: SafeUser;
+  station: Station;
 };
 
 export type StationWithDocuments = Station & {
   documents: Awaited<ReturnType<typeof findDocumentsByStationId>>;
 };
 
-export async function registerStation(dto: RegisterStationDto): Promise<SafeUser> {
+/**
+ * Creates the user account, station record, and documents in a single atomic
+ * transaction. No DB writes happen until all three steps have been submitted.
+ */
+export async function completeStationOnboarding(
+  dto: StationOnboardingDto
+): Promise<StationOnboardingResult> {
   const existing = await findByEmail(dto.email);
   if (existing) throw new ConflictError('Email already in use');
 
   const password_hash = await bcrypt.hash(dto.password, 12);
+  const verificationToken = randomUUID();
 
-  const user = await createUser({
-    email: dto.email,
-    phone: dto.phone,
-    password_hash,
-    role: 'station',
-    status: 'pending_verification',
-    // first_name and last_name intentionally omitted for station accounts
-  });
+  const { user, station } = await db.transaction(async (tx) => {
+    const [newUser] = await tx
+      .insert(users)
+      .values({
+        email: dto.email,
+        phone: dto.phone,
+        password_hash,
+        role: 'station',
+        status: 'pending_verification',
+      })
+      .returning();
 
-  const token = await createToken({
-    user_id: user.id,
-    token: randomUUID(),
-    type: 'email_verification',
-    expires_at: new Date(Date.now() + 24 * 60 * 60 * 1000),
+    await tx.insert(emailVerificationTokens).values({
+      user_id: newUser.id,
+      token: verificationToken,
+      type: 'email_verification',
+      expires_at: new Date(Date.now() + 24 * 60 * 60 * 1000),
+    });
+
+    const [newStation] = await tx
+      .insert(stations)
+      .values({
+        user_id: newUser.id,
+        name: dto.station_name,
+        legal_name: dto.legal_name,
+        registration_number: dto.registration_number,
+        address: dto.address,
+        city: dto.city,
+        latitude: dto.latitude?.toString(),
+        longitude: dto.longitude?.toString(),
+        wash_type: dto.wash_type,
+        description: dto.description,
+        wash_post_count: dto.wash_post_count,
+        status: 'pending_admin_validation',
+      })
+      .returning();
+
+    await tx.insert(stationDocuments).values(
+      dto.documents.map((d) => ({
+        station_id: newStation.id,
+        document_type: d.document_type,
+        file_url: d.file_url,
+        terms_accepted: dto.terms_accepted,
+      }))
+    );
+
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    const { password_hash: _, ...safeUser } = newUser;
+    return { user: safeUser as SafeUser, station: newStation };
   });
 
   // Fire-and-forget
-  sendVerificationEmail(user.email, user.email, token.token).catch(() => void 0);
+  sendVerificationEmail(user.email, user.email, verificationToken).catch(() => void 0);
 
-  return user;
-}
-
-export async function submitStationInfo(
-  userId: string,
-  dto: StationInfoDto
-): Promise<Station> {
-  // Only one station per user allowed
-  const existing = await findStationByUserId(userId);
-  if (existing) throw new ConflictError('Station info has already been submitted');
-
-  return createStation({
-    user_id: userId,
-    name: dto.station_name,
-    legal_name: dto.legal_name,
-    registration_number: dto.registration_number,
-    address: dto.address,
-    city: dto.city,
-    latitude: dto.latitude?.toString(),
-    longitude: dto.longitude?.toString(),
-    wash_type: dto.wash_type,
-    description: dto.description,
-    wash_post_count: dto.wash_post_count,
-    status: 'pending_review',
-  });
-}
-
-export async function submitStationDocuments(
-  userId: string,
-  dto: StationDocumentsDto
-): Promise<Station> {
-  const station = await findStationByUserId(userId);
-  if (!station) throw new NotFoundError('Station info not found — complete step 2 first');
-
-  if (station.status !== 'pending_review') {
-    throw new ForbiddenError('Documents have already been submitted for this station');
-  }
-
-  await createDocuments(station.id, dto.documents, dto.terms_accepted);
-  await updateStationStatus(station.id, 'pending_admin_validation');
-
-  return findStationById(station.id) as Promise<Station>;
+  return { user, station };
 }
 
 export async function getPendingStations(): Promise<Station[]> {

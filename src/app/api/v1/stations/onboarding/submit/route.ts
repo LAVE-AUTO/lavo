@@ -1,6 +1,6 @@
 import { headers } from 'next/headers';
-import { registerStation } from '@/server/station/station-service';
-import { registerStationSchema, mapZodErrors } from '@/validators/station';
+import { completeStationOnboarding } from '@/server/station/station-service';
+import { stationOnboardingSubmitSchema, mapZodErrors } from '@/validators/station';
 import { checkRateLimit, recordFailedAttempt, resetOnSuccess } from '@/lib/rate-limiter';
 import {
   successResponse,
@@ -15,13 +15,26 @@ import { AppError, ConflictError } from '@/lib/errors';
 import { HTTP_STATUS } from '@/helpers/constants';
 
 /**
- * POST /api/v1/stations/register
- * Step 1 — Create a station user account.
+ * POST /api/v1/stations/onboarding/submit
+ * Final step — receives all onboarding data (steps 1, 2, 3) and performs all
+ * DB operations atomically: creates the user account, the station record, and
+ * the uploaded documents in a single transaction.
  *
- * Body: { email, phone, password, confirm_password }
+ * No DB writes occur until this endpoint is called, so abandoning the form at
+ * any earlier step leaves no orphaned records.
+ *
+ * Body: {
+ *   // Step 1
+ *   email, phone, password, confirm_password,
+ *   // Step 2
+ *   station_name, legal_name?, registration_number?, address, city,
+ *   latitude?, longitude?, wash_post_count, wash_type, description?,
+ *   // Step 3
+ *   documents: [{ document_type, file_url }], terms_accepted: true
+ * }
  *
  * Responses:
- *   201 { message, data: SafeUser }
+ *   201 { message, data: { user: SafeUser, station: Station } }
  *   400 VALIDATION_FAILED
  *   409 EMAIL_ALREADY_EXISTS
  *   429 TOO_MANY_REQUESTS
@@ -41,22 +54,25 @@ export async function POST(request: Request) {
     return error400('Invalid JSON body', ApiCode.VALIDATION_FAILED);
   }
 
-  const parsed = registerStationSchema.safeParse(body);
+  const parsed = stationOnboardingSubmitSchema.safeParse(body);
   if (!parsed.success) {
     await recordFailedAttempt(ip);
     return error400('Validation failed', ApiCode.VALIDATION_FAILED, mapZodErrors(parsed.error));
   }
 
+  // confirm_password is for validation only — strip it before passing to the service
+  const { confirm_password: _, ...dto } = parsed.data;
+
   try {
-    const user = await registerStation({
-      email: parsed.data.email,
-      phone: parsed.data.phone,
-      password: parsed.data.password,
-    });
+    const result = await completeStationOnboarding(dto);
 
     await resetOnSuccess(ip);
 
-    return successResponse(user, 'Station account created. Please verify your email.', HTTP_STATUS.CREATED);
+    return successResponse(
+      result,
+      'Registration complete. Please verify your email.',
+      HTTP_STATUS.CREATED
+    );
   } catch (e) {
     if (e instanceof ConflictError) {
       return error409('Email already in use', ApiCode.EMAIL_ALREADY_EXISTS);
