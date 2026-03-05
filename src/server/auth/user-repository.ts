@@ -27,6 +27,13 @@ export async function createUser(data: NewUser): Promise<SafeUser> {
   return stripPasswordHash(user);
 }
 
+export async function updatePassword(userId: string, passwordHash: string): Promise<void> {
+  await db
+    .update(users)
+    .set({ password_hash: passwordHash, updated_at: new Date() })
+    .where(eq(users.id, userId));
+}
+
 export async function updateEmailVerified(userId: string): Promise<void> {
   await db
     .update(users)
