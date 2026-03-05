@@ -145,18 +145,28 @@
     "stations": "Stations",
     "login": "Se connecter",
     "register": "S'inscrire",
-    "logo_alt": "LAVO"
+    "favorites": "Favoris",
+    "logo_alt": "Slowtime"
   },
   "footer": {
-    "tagline": "La plateforme de réservation et de paiement pour vos stations de lavage automobile.",
+    "tagline": "La plateforme de réservation et de paiement pour vos stations de lavage automobile au Canada.",
     "quick_links": "Liens rapides",
     "legal": "Légal",
     "privacy": "Confidentialité",
-    "terms": "Conditions",
-    "contact": "Contact",
+    "terms": "Conditions d'utilisation",
+    "contact": "Contactez-nous",
     "about": "À propos",
-    "copyright": "© {year} LAVO. Tous droits réservés.",
-    "made_with": "Fait avec soin au Cameroun."
+    "copyright": "© {year} Slowtime. Tous droits réservés.",
+    "made_with": "Fait avec soin au Canada. 🍁",
+    "service_badge": "Service de lavage auto",
+    "stat_stations": "Stations",
+    "stat_clients": "Clients",
+    "stat_cities": "Villes",
+    "newsletter_title": "Restez informé",
+    "newsletter_desc": "Recevez les meilleures offres et nouveautés.",
+    "newsletter_placeholder": "votre@email.com",
+    "newsletter_submit": "S'abonner",
+    "social_follow": "Suivez-nous"
   },
   "stations": {
     "page_title": "Stations de lavage",
@@ -171,7 +181,15 @@
     "filter_sort_label": "Trier par",
     "filter_city_label": "Ville",
     "filter_city_all": "Toutes les villes",
+    "filter_city_placeholder": "Ex: Montréal",
+    "filter_price_label": "Fourchette de prix ($)",
+    "filter_price_min_placeholder": "Min (0)",
+    "filter_price_max_placeholder": "Max",
+    "filter_price_error_min": "Le prix minimum doit être ≥ 0",
+    "filter_price_error_max": "Le maximum doit être ≥ au minimum",
+    "filter_available_only": "Disponibles uniquement",
     "filter_reset": "Réinitialiser",
+    "filter_apply": "Appliquer",
     "available_slots": "{count} créneau(x) disponible(s)",
     "no_slots": "Indisponible",
     "join": "Rejoindre",
@@ -203,6 +221,15 @@
     "join_error": "Impossible de rejoindre la station. Veuillez réessayer.",
     "price_unit": "$",
     "open_maps": "Ouvrir dans Maps",
-    "back_to_list": "Retour aux stations"
+    "back_to_list": "Retour aux stations",
+    "detail_verified_label": "Vérifié",
+    "detail_add_favorite": "Ajouter aux favoris",
+    "detail_slots_available": "{count} créneau(x) disponible(s)",
+    "detail_wait_est": "Attente estimée : {min} min",
+    "detail_leave_now": "Partez maintenant pour arriver",
+    "detail_perfect_timing": "pile au bon moment !",
+    "detail_opening_hours": "Horaires : {hours}",
+    "places_dispo": "Places dispo",
+    "min_attente": "min attente"
   }
 }

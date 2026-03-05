@@ -145,18 +145,28 @@
     "stations": "Stations",
     "login": "Sign in",
     "register": "Register",
-    "logo_alt": "LAVO"
+    "favorites": "Favorites",
+    "logo_alt": "Slowtime"
   },
   "footer": {
-    "tagline": "The booking and payment platform for your car wash stations.",
+    "tagline": "The booking and payment platform for car wash stations across Canada.",
     "quick_links": "Quick links",
     "legal": "Legal",
-    "privacy": "Privacy",
-    "terms": "Terms",
-    "contact": "Contact",
+    "privacy": "Privacy policy",
+    "terms": "Terms of service",
+    "contact": "Contact us",
     "about": "About",
-    "copyright": "© {year} LAVO. All rights reserved.",
-    "made_with": "Made with care in Cameroon."
+    "copyright": "© {year} Slowtime. All rights reserved.",
+    "made_with": "Made with care in Canada. 🍁",
+    "service_badge": "Car wash service",
+    "stat_stations": "Stations",
+    "stat_clients": "Customers",
+    "stat_cities": "Cities",
+    "newsletter_title": "Stay informed",
+    "newsletter_desc": "Get the best deals and news.",
+    "newsletter_placeholder": "your@email.com",
+    "newsletter_submit": "Subscribe",
+    "social_follow": "Follow us"
   },
   "stations": {
     "page_title": "Car wash stations",
@@ -171,7 +181,15 @@
     "filter_sort_label": "Sort by",
     "filter_city_label": "City",
     "filter_city_all": "All cities",
+    "filter_city_placeholder": "e.g. Montréal",
+    "filter_price_label": "Price range ($)",
+    "filter_price_min_placeholder": "Min (0)",
+    "filter_price_max_placeholder": "Max",
+    "filter_price_error_min": "Min price must be ≥ 0",
+    "filter_price_error_max": "Max must be ≥ min",
+    "filter_available_only": "Available only",
     "filter_reset": "Reset",
+    "filter_apply": "Apply",
     "available_slots": "{count} slot(s) available",
     "no_slots": "Unavailable",
     "join": "Join",
@@ -203,6 +221,15 @@
     "join_error": "Unable to join the station. Please try again.",
     "price_unit": "$",
     "open_maps": "Open in Maps",
-    "back_to_list": "Back to stations"
+    "back_to_list": "Back to stations",
+    "detail_verified_label": "Verified",
+    "detail_add_favorite": "Add to favorites",
+    "detail_slots_available": "{count} slot(s) available",
+    "detail_wait_est": "Estimated wait: {min} min",
+    "detail_leave_now": "Leave now to arrive",
+    "detail_perfect_timing": "right on time!",
+    "detail_opening_hours": "Hours: {hours}",
+    "places_dispo": "Available slots",
+    "min_attente": "min wait"
   }
 }
