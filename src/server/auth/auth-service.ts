@@ -1,14 +1,21 @@
 import { randomUUID } from 'crypto';
 import bcrypt from 'bcrypt';
 import { signJwt } from '@/lib/jwt';
-import { sendVerificationEmail } from '@/lib/email';
-import { ConflictError, NotFoundError, TokenExpiredError, UnauthorizedError } from '@/lib/errors';
+import { sendVerificationEmail, sendPasswordResetEmail } from '@/lib/email';
+import {
+  ConflictError,
+  ForbiddenError,
+  NotFoundError,
+  TokenExpiredError,
+  UnauthorizedError,
+} from '@/lib/errors';
 import { JWT_DEFAULT_MAX_AGE, JWT_REMEMBER_MAX_AGE } from '@/helpers/constants';
 import {
   findByEmail,
   findById,
   createUser,
   updateEmailVerified,
+  updatePassword,
   type SafeUser,
 } from './user-repository';
 import {
@@ -151,6 +158,68 @@ export async function findOrCreateOAuthUser(data: {
 
   const tokens = await issueTokenPair(user, false);
   return { user, tokens, rememberMe: false };
+}
+
+export type LoginDto = {
+  email: string;
+  password: string;
+  remember_me: boolean;
+};
+
+export async function login(dto: LoginDto): Promise<AuthResult> {
+  const user = await findByEmail(dto.email);
+
+  // Use constant-time comparison to prevent timing attacks even when user not found
+  const dummyHash = '$2b$12$invalidhashfortimingprotection000000000000000000000000';
+  const passwordMatches = await bcrypt.compare(
+    dto.password,
+    user?.password_hash ?? dummyHash
+  );
+
+  if (!user || !passwordMatches) {
+    throw new UnauthorizedError('Invalid credentials');
+  }
+
+  if (user.status !== 'active') {
+    throw new ForbiddenError('Account is not active');
+  }
+
+  const { password_hash: _, ...safeUser } = user;
+  const tokens = await issueTokenPair(safeUser, dto.remember_me);
+  return { user: safeUser, tokens, rememberMe: dto.remember_me };
+}
+
+export async function forgotPassword(email: string): Promise<void> {
+  const user = await findByEmail(email);
+
+  // Always return silently to prevent email enumeration
+  if (!user || user.status !== 'active') return;
+
+  const token = await createToken({
+    user_id: user.id,
+    token: randomUUID(),
+    type: 'password_reset',
+    expires_at: new Date(Date.now() + 60 * 60 * 1000), // 1 hour
+  });
+
+  // Fire-and-forget: do not fail silently in case of email error
+  sendPasswordResetEmail(user.email, user.first_name, token.token).catch(
+    () => void 0
+  );
+}
+
+export async function resetPassword(token: string, newPassword: string): Promise<void> {
+  const record = await findValidToken(token, 'password_reset');
+
+  if (!record) {
+    const existing = await findTokenByValueAndType(token, 'password_reset');
+    if (existing) throw new TokenExpiredError('Reset token has expired or already been used');
+    throw new NotFoundError('Reset token not found');
+  }
+
+  const password_hash = await bcrypt.hash(newPassword, 12);
+  await updatePassword(record.user_id, password_hash);
+  await markTokenUsed(record.id);
 }
 
 export async function refreshSession(rawRefreshToken: string): Promise<AuthResult> {

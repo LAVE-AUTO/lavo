@@ -71,6 +71,15 @@ export class UnauthorizedError extends AppError {
 }
 
 /**
+ * Forbidden error (403) — alias for AuthorizationError.
+ */
+export class ForbiddenError extends AppError {
+  constructor(message = 'Permission denied') {
+    super(message, HTTP_STATUS.FORBIDDEN);
+  }
+}
+
+/**
  * Token expired error (400).
  */
 export class TokenExpiredError extends AppError {
