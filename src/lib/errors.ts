@@ -69,3 +69,12 @@ export class UnauthorizedError extends AppError {
     super(message, HTTP_STATUS.UNAUTHORIZED);
   }
 }
+
+/**
+ * Token expired error (400).
+ */
+export class TokenExpiredError extends AppError {
+  constructor(message = 'Token has expired') {
+    super(message, HTTP_STATUS.BAD_REQUEST);
+  }
+}

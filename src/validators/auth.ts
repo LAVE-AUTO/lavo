@@ -21,6 +21,14 @@ export const registerSchema = z.object({
 
 export type RegisterDto = z.infer<typeof registerSchema>;
 
+export const verifyEmailSchema = z.object({
+  token: z.string().min(1, 'Verification token is required'),
+});
+
+export const resendEmailSchema = z.object({
+  email: z.string().email('Invalid email address'),
+});
+
 export function mapZodErrors(
   err: z.ZodError
 ): NonNullable<ApiErrorBody['errors']> {

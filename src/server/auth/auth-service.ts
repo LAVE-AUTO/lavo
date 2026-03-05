@@ -2,7 +2,7 @@ import { randomUUID } from 'crypto';
 import bcrypt from 'bcrypt';
 import { signJwt } from '@/lib/jwt';
 import { sendVerificationEmail } from '@/lib/email';
-import { ConflictError, NotFoundError, UnauthorizedError } from '@/lib/errors';
+import { ConflictError, NotFoundError, TokenExpiredError, UnauthorizedError } from '@/lib/errors';
 import { JWT_DEFAULT_MAX_AGE, JWT_REMEMBER_MAX_AGE } from '@/helpers/constants';
 import {
   findByEmail,
@@ -11,7 +11,12 @@ import {
   updateEmailVerified,
   type SafeUser,
 } from './user-repository';
-import { createToken, findValidToken, markTokenUsed } from './token-repository';
+import {
+  createToken,
+  findValidToken,
+  findTokenByValueAndType,
+  markTokenUsed,
+} from './token-repository';
 import {
   generateRawToken,
   createRefreshToken,
@@ -94,10 +99,31 @@ export async function registerWithPassword(dto: RegisterDto): Promise<AuthResult
 
 export async function verifyEmail(token: string): Promise<void> {
   const record = await findValidToken(token, 'email_verification');
-  if (!record) throw new NotFoundError('Invalid or expired verification token');
+
+  if (!record) {
+    // Distinguish expired/used from never-existed
+    const existing = await findTokenByValueAndType(token, 'email_verification');
+    if (existing) throw new TokenExpiredError('Verification token has expired or already been used');
+    throw new NotFoundError('Verification token not found');
+  }
 
   await updateEmailVerified(record.user_id);
   await markTokenUsed(record.id);
+}
+
+export async function resendVerificationEmail(email: string): Promise<void> {
+  const user = await findByEmail(email);
+  if (!user) throw new NotFoundError('No account found with this email address');
+  if (user.status === 'active') throw new ConflictError('Email is already verified');
+
+  const token = await createToken({
+    user_id: user.id,
+    token: randomUUID(),
+    type: 'email_verification',
+    expires_at: new Date(Date.now() + 24 * 60 * 60 * 1000),
+  });
+
+  await sendVerificationEmail(user.email, user.first_name, token.token);
 }
 
 export async function findOrCreateOAuthUser(data: {

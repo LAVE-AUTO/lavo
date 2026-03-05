@@ -33,3 +33,19 @@ export async function markTokenUsed(tokenId: string): Promise<void> {
     .set({ used_at: new Date() })
     .where(eq(emailVerificationTokens.id, tokenId));
 }
+
+/**
+ * Finds a token by value and type regardless of expiry or used status.
+ * Used to distinguish "token not found" from "token expired".
+ */
+export async function findTokenByValueAndType(
+  token: string,
+  type: string
+): Promise<Token | undefined> {
+  return db.query.emailVerificationTokens.findFirst({
+    where: and(
+      eq(emailVerificationTokens.token, token),
+      eq(emailVerificationTokens.type, type)
+    ),
+  });
+}
