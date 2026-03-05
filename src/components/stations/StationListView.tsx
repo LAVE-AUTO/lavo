@@ -291,7 +291,7 @@ export function StationListView() {
                 onClick={() => setOnlyAvail((v) => !v)}
                 className={[
                   'relative shrink-0 w-11 h-6 rounded-full transition-colors duration-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-gold',
-                  onlyAvail ? 'bg-gold' : 'bg-[#D0D0C0] dark:bg-[#2C3828]',
+                  onlyAvail ? 'bg-gold' : 'bg-[#9A9A8A] dark:bg-[#2C3828]',
                 ].join(' ')}
               >
                 <span
