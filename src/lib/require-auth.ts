@@ -1,21 +1,20 @@
-import { cookies } from 'next/headers';
-import { verifyJwt, type JwtPayload } from '@/lib/jwt';
+import { headers } from 'next/headers';
+import { verifyJwt, extractBearerToken, type JwtPayload } from '@/lib/jwt';
 import { error401 } from '@/lib/responses';
-import { ACCESS_COOKIE_NAME } from '@/helpers/constants';
 import type { NextResponse } from 'next/server';
 
 /**
  * Auth guard for protected route handlers.
- * Extracts and verifies the access_token cookie.
+ * Reads the JWT from the Authorization: Bearer <token> header.
  *
  * Usage:
- *   const result = await requireAuth();
- *   if (result instanceof NextResponse) return result; // 401
- *   const { sub, role } = result; // authenticated payload
+ *   const auth = await requireAuth();
+ *   if (auth instanceof NextResponse) return auth; // 401
+ *   const { sub, role } = auth; // authenticated payload
  */
 export async function requireAuth(): Promise<JwtPayload | NextResponse> {
-  const cookieStore = await cookies();
-  const token = cookieStore.get(ACCESS_COOKIE_NAME)?.value;
+  const headersList = await headers();
+  const token = extractBearerToken(headersList.get('authorization'));
 
   if (!token) return error401();
 
