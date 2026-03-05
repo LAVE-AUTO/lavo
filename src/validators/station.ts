@@ -1,29 +1,25 @@
 import { z } from 'zod';
 import { mapZodErrors } from './auth';
+import { phoneSchema } from './shared';
 
 export { mapZodErrors };
 
-// Step 1: Create station user account
-export const registerStationSchema = z
-  .object({
-    email: z.string().email('Invalid email address'),
-    phone: z.string().min(8).max(30),
-    password: z
-      .string()
-      .min(8, 'Password must be at least 8 characters')
-      .regex(/[A-Z]/, 'Password must contain at least one uppercase letter')
-      .regex(/[a-z]/, 'Password must contain at least one lowercase letter')
-      .regex(/[0-9]/, 'Password must contain at least one number')
-      .regex(/[^A-Za-z0-9]/, 'Password must contain at least one special character'),
-    confirm_password: z.string().min(1, 'Password confirmation is required'),
-  })
-  .refine((data) => data.password === data.confirm_password, {
-    message: 'Passwords do not match',
-    path: ['confirm_password'],
-  });
+// ─── Base objects (reused in the submit schema) ──────────────────────────────
 
-// Step 2: Station details
-export const stationInfoSchema = z.object({
+const _step1Base = z.object({
+  email: z.string().email('Invalid email address'),
+  phone: phoneSchema,
+  password: z
+    .string()
+    .min(8, 'Password must be at least 8 characters')
+    .regex(/[A-Z]/, 'Password must contain at least one uppercase letter')
+    .regex(/[a-z]/, 'Password must contain at least one lowercase letter')
+    .regex(/[0-9]/, 'Password must contain at least one number')
+    .regex(/[^A-Za-z0-9]/, 'Password must contain at least one special character'),
+  confirm_password: z.string().min(1, 'Password confirmation is required'),
+});
+
+const _step2Base = z.object({
   station_name: z.string().min(2).max(200),
   legal_name: z.string().min(2).max(200).optional(),
   registration_number: z.string().max(100).optional(),
@@ -36,8 +32,7 @@ export const stationInfoSchema = z.object({
   description: z.string().max(1000).optional(),
 });
 
-// Step 3: Documents + legal confirmation
-export const stationDocumentsSchema = z.object({
+const _step3Base = z.object({
   documents: z
     .array(
       z.object({
@@ -50,6 +45,32 @@ export const stationDocumentsSchema = z.object({
     errorMap: () => ({ message: 'You must accept the terms and conditions' }),
   }),
 });
+
+// ─── Per-step validation schemas (no DB — used by validate endpoints) ────────
+
+// Step 1: account credentials
+export const registerStationSchema = _step1Base.refine(
+  (data) => data.password === data.confirm_password,
+  { message: 'Passwords do not match', path: ['confirm_password'] }
+);
+
+// Step 2: station details
+export const stationInfoSchema = _step2Base;
+
+// Step 3: documents + legal confirmation
+export const stationDocumentsSchema = _step3Base;
+
+// ─── Final submit schema (all steps merged — triggers DB operations) ─────────
+
+export const stationOnboardingSubmitSchema = _step1Base
+  .merge(_step2Base)
+  .merge(_step3Base)
+  .refine((data) => data.password === data.confirm_password, {
+    message: 'Passwords do not match',
+    path: ['confirm_password'],
+  });
+
+// ─── Admin ────────────────────────────────────────────────────────────────────
 
 // Admin: reject a station
 export const rejectStationSchema = z.object({
@@ -77,5 +98,6 @@ export const changePasswordSchema = z
 export type RegisterStationDto = z.infer<typeof registerStationSchema>;
 export type StationInfoDto = z.infer<typeof stationInfoSchema>;
 export type StationDocumentsDto = z.infer<typeof stationDocumentsSchema>;
+export type StationOnboardingSubmitDto = z.infer<typeof stationOnboardingSubmitSchema>;
 export type RejectStationDto = z.infer<typeof rejectStationSchema>;
 export type ChangePasswordDto = z.infer<typeof changePasswordSchema>;
