@@ -14,7 +14,7 @@ export function StationReviews({ reviews }: StationReviewsProps) {
 
   if (reviews.length === 0) {
     return (
-      <p className="text-[12px] text-[#666] dark:text-[#9A9A8A] py-4">{t('detail_no_reviews')}</p>
+      <p className="text-[15px] text-[#333333] dark:text-[#C0C0B0] py-4">{t('detail_no_reviews')}</p>
     );
   }
 
@@ -29,7 +29,7 @@ export function StationReviews({ reviews }: StationReviewsProps) {
 
 function StarRow({ rating }: { rating: number }) {
   return (
-    <span className="text-[12px] text-gold tracking-tight">
+    <span className="text-[15px] text-gold tracking-tight">
       {'★'.repeat(rating)}{'☆'.repeat(5 - rating)}
     </span>
   );
@@ -46,13 +46,13 @@ function ReviewCard({ review }: { review: Review }) {
           </svg>
         </div>
         <div className="flex-1 min-w-0">
-          <p className="text-[13px] font-bold text-[#000C1F] dark:text-[#FFF8EC] truncate">{review.authorName}</p>
-          <p className="text-[10px] text-[#666] dark:text-[#9A9A8A]">{review.date}</p>
+          <p className="text-[15px] font-bold text-[#000C1F] dark:text-[#FFF8EC] truncate">{review.authorName}</p>
+          <p className="text-[13px] text-[#333333] dark:text-[#C0C0B0]">{review.date}</p>
         </div>
         <StarRow rating={review.rating} />
       </div>
       {review.comment && (
-        <p className="text-[12px] text-[#555] dark:text-[#9A9A8A] leading-[1.7] mt-1.5">
+        <p className="text-[15px] text-[#111111] dark:text-[#D8D8C8] leading-[1.7] mt-1.5">
           {review.comment}
         </p>
       )}
