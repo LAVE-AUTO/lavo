@@ -12,10 +12,10 @@ function StatItem({
 }) {
   return (
     <div className="flex flex-col items-center text-center px-6 py-4">
-      <span className={`text-[18px] font-black ${accent ? 'text-gold' : 'text-[#000C1F] dark:text-white'}`}>
+      <span className={`text-[22px] font-black ${accent ? 'text-gold' : 'text-[#000000] dark:text-white'}`}>
         {value}
       </span>
-      <span className="text-[10px] font-bold text-[#9A9A8A] uppercase tracking-wider mt-0.5">
+      <span className="text-[14px] font-bold text-[#333333] dark:text-[#C0C0B0] uppercase tracking-wider mt-0.5">
         {label}
       </span>
     </div>
