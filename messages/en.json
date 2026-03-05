@@ -146,7 +146,8 @@
     "login": "Sign in",
     "register": "Register",
     "favorites": "Favorites",
-    "logo_alt": "Slowtime"
+    "logo_alt": "Slowtime",
+    "greeting": "Hello"
   },
   "footer": {
     "tagline": "The booking and payment platform for car wash stations across Canada.",
@@ -166,10 +167,18 @@
     "newsletter_desc": "Get the best deals and news.",
     "newsletter_placeholder": "your@email.com",
     "newsletter_submit": "Subscribe",
-    "social_follow": "Follow us"
+    "social_follow": "Follow us",
+    "cta_title": "Ready for an impeccable wash?",
+    "cta_subtitle": "Join thousands of drivers who trust Slowtime across Canada.",
+    "cta_register": "Create my account",
+    "cta_explore": "Explore stations",
+    "status_ok": "Service operational"
   },
   "stations": {
     "page_title": "Car wash stations",
+    "hero_near_you": "near you",
+    "hero_search_placeholder": "Search by city or address...",
+    "hero_search_cta": "Explore",
     "page_subtitle": "Find the nearest station",
     "search_placeholder": "Search for a station...",
     "filter_all": "All",
