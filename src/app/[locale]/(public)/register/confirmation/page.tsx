@@ -58,7 +58,7 @@ export default async function RegisterConfirmationPage({ params }: Props) {
           <p className="text-[15px] text-[#555] dark:text-lavo-muted mb-3 leading-relaxed">
             {t('confirmation_message')}
           </p>
-          <p className="text-[13px] text-[#888] dark:text-lavo-muted mb-10">
+          <p className="text-[20px] text-[#888] dark:text-lavo-muted mb-10">
             {t('confirmation_spam')}
           </p>
 
