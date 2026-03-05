@@ -24,16 +24,15 @@ const PASSWORD_RULES: Rule[] = [
 
 interface PasswordRulesProps {
   password: string;
+  namespace?: 'register' | 'reset_password';
 }
 
 /**
  * Real-time password strength rules displayed below the password field.
  * Hidden when the password field is empty.
- *
- * @param password - Current password value to validate against the rules
  */
-export function PasswordRules({ password }: PasswordRulesProps) {
-  const t = useTranslations('register');
+export function PasswordRules({ password, namespace = 'register' }: PasswordRulesProps) {
+  const t = useTranslations(namespace);
 
   if (!password) return null;
 

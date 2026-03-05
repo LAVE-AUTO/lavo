@@ -21,11 +21,15 @@ function FacebookIcon() {
   );
 }
 
+interface SocialButtonsProps {
+  namespace?: 'register' | 'login';
+}
+
 /**
  * OAuth social login buttons (Google and Facebook) with divider.
  */
-export function SocialButtons() {
-  const t = useTranslations('register');
+export function SocialButtons({ namespace = 'register' }: SocialButtonsProps) {
+  const t = useTranslations(namespace);
 
   const handleGoogle = () => {
     // TODO: implement Google OAuth redirect
