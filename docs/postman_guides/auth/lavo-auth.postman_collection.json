@@ -1,13 +1,18 @@
 {
   "info": {
     "name": "LAVO — Auth API",
-    "description": "Collection de tests pour le module d'authentification LAVO.\n\nVariable d'environnement requise : `base_url` (ex: http://localhost:3000)\n\n## Flux de test recommandé\n1. Register → status pending_verification, deux cookies\n2. Verify Email → status passe à active\n3. Login → access_token (15 min) + refresh_token\n4. Me → profil via access_token\n5. Refresh → rotation des tokens\n6. Forgot Password → email de réinitialisation\n7. Reset Password → nouveau mot de passe\n8. Logout → révocation DB + suppression cookies",
+    "description": "Collection de tests pour le module d'authentification LAVO.\n\nVariable requise : `base_url` (ex: http://localhost:3000)\nVariable auto-remplie : `access_token` (sauvegardé après login/register)\n\n## Architecture JWT hybride\n- `access_token` : dans le body (stockage mémoire JS côté client, 15 min)\n- `refresh_token` : httpOnly cookie (path /api/v1/auth, 1–30 jours, jamais exposé au JS)\n\n## Flux de test recommandé\n1. Register → data.user + data.access_token (sauvegardé automatiquement) + cookie refresh_token\n2. Verify Email → status passe à active\n3. Login → idem\n4. Me → header Authorization: Bearer {{access_token}}\n5. Refresh → POST sans body (cookie envoyé automatiquement) → nouveau access_token + nouveau cookie\n6. Forgot Password → email de réinitialisation\n7. Reset Password → nouveau mot de passe\n8. Logout → header Authorization: Bearer {{access_token}} + cookie effacé",
     "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
   },
   "variable": [
     {
       "key": "base_url",
       "value": "http://localhost:3000",
+      "type": "string"
+    },
+    {
+      "key": "access_token",
+      "value": "",
       "type": "string"
     }
   ],
@@ -23,19 +28,19 @@
               "script": {
                 "exec": [
                   "pm.test('Status 201', () => pm.response.to.have.status(201));",
-                  "pm.test('Body contient data.id', () => {",
+                  "pm.test('Body contient user + access_token (pas refresh_token)', () => {",
                   "  const json = pm.response.json();",
-                  "  pm.expect(json.data).to.have.property('id');",
-                  "  pm.expect(json.data).to.not.have.property('password_hash');",
-                  "  pm.expect(json.data.status).to.eql('pending_verification');",
-                  "  pm.expect(json.data.role).to.eql('client');",
+                  "  pm.expect(json.data.user).to.have.property('id');",
+                  "  pm.expect(json.data.user).to.not.have.property('password_hash');",
+                  "  pm.expect(json.data.user.status).to.eql('pending_verification');",
+                  "  pm.expect(json.data.user.role).to.eql('client');",
+                  "  pm.expect(json.data.access_token).to.be.a('string');",
+                  "  pm.expect(json.data).to.not.have.property('refresh_token');",
+                  "  pm.expect(json.data.token_type).to.eql('Bearer');",
+                  "  pm.expect(json.data.expires_in).to.eql(900);",
                   "});",
-                  "pm.test('Cookie access_token présent (15 min)', () => {",
-                  "  pm.expect(pm.cookies.has('access_token')).to.be.true;",
-                  "});",
-                  "pm.test('Cookie refresh_token présent', () => {",
-                  "  pm.expect(pm.cookies.has('refresh_token')).to.be.true;",
-                  "});"
+                  "const json = pm.response.json();",
+                  "if (json.data?.access_token) pm.collectionVariables.set('access_token', json.data.access_token);"
                 ],
                 "type": "text/javascript"
               }
@@ -75,10 +80,12 @@
               "script": {
                 "exec": [
                   "pm.test('Status 201', () => pm.response.to.have.status(201));",
-                  "pm.test('Cookie access_token présent', () => {",
-                  "  pm.expect(pm.cookies.has('access_token')).to.be.true;",
+                  "pm.test('access_token présent dans le body, refresh_token absent', () => {",
+                  "  const json = pm.response.json();",
+                  "  pm.expect(json.data.access_token).to.be.a('string');",
+                  "  pm.expect(json.data).to.not.have.property('refresh_token');",
                   "});",
-                  "pm.test('Cookie refresh_token présent (30j)', () => {",
+                  "pm.test('Cookie refresh_token httpOnly défini', () => {",
                   "  pm.expect(pm.cookies.has('refresh_token')).to.be.true;",
                   "});"
                 ],
@@ -347,19 +354,19 @@
               "script": {
                 "exec": [
                   "pm.test('Status 200', () => pm.response.to.have.status(200));",
-                  "pm.test('Body contient data.id', () => {",
+                  "pm.test('Body contient user + access_token (pas refresh_token)', () => {",
                   "  const json = pm.response.json();",
-                  "  pm.expect(json.data).to.have.property('id');",
-                  "  pm.expect(json.data).to.have.property('email');",
-                  "  pm.expect(json.data).to.not.have.property('password_hash');",
-                  "  pm.expect(json.data.status).to.eql('active');",
+                  "  pm.expect(json.data.user).to.have.property('id');",
+                  "  pm.expect(json.data.user).to.have.property('email');",
+                  "  pm.expect(json.data.user).to.not.have.property('password_hash');",
+                  "  pm.expect(json.data.user.status).to.eql('active');",
+                  "  pm.expect(json.data.access_token).to.be.a('string');",
+                  "  pm.expect(json.data).to.not.have.property('refresh_token');",
+                  "  pm.expect(json.data.token_type).to.eql('Bearer');",
+                  "  pm.expect(json.data.expires_in).to.eql(900);",
                   "});",
-                  "pm.test('Cookie access_token présent', () => {",
-                  "  pm.expect(pm.cookies.has('access_token')).to.be.true;",
-                  "});",
-                  "pm.test('Cookie refresh_token présent', () => {",
-                  "  pm.expect(pm.cookies.has('refresh_token')).to.be.true;",
-                  "});"
+                  "const json = pm.response.json();",
+                  "if (json.data?.access_token) pm.collectionVariables.set('access_token', json.data.access_token);"
                 ],
                 "type": "text/javascript"
               }
@@ -400,8 +407,12 @@
               "script": {
                 "exec": [
                   "pm.test('Status 200', () => pm.response.to.have.status(200));",
-                  "pm.test('Cookies présents', () => {",
-                  "  pm.expect(pm.cookies.has('access_token')).to.be.true;",
+                  "pm.test('access_token dans le body, refresh_token en cookie httpOnly', () => {",
+                  "  const json = pm.response.json();",
+                  "  pm.expect(json.data.access_token).to.be.a('string');",
+                  "  pm.expect(json.data).to.not.have.property('refresh_token');",
+                  "});",
+                  "pm.test('Cookie refresh_token défini (maxAge étendu)', () => {",
                   "  pm.expect(pm.cookies.has('refresh_token')).to.be.true;",
                   "});"
                 ],
@@ -636,7 +647,13 @@
           ],
           "request": {
             "method": "GET",
-            "header": [],
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}",
+                "description": "Token obtenu après login ou register"
+              }
+            ],
             "url": {
               "raw": "{{base_url}}/api/v1/auth/me",
               "host": [
@@ -649,7 +666,7 @@
                 "me"
               ]
             },
-            "description": "Le cookie access_token (15 min) est envoyé automatiquement. Doit être appelé après un register ou refresh réussi."
+            "description": "Envoyer le header Authorization: Bearer {{access_token}}. Doit être appelé après un login ou register réussi."
           }
         },
         {
@@ -671,13 +688,7 @@
           ],
           "request": {
             "method": "GET",
-            "header": [
-              {
-                "key": "Cookie",
-                "value": "",
-                "description": "Cookie vide pour simuler une session absente"
-              }
-            ],
+            "header": [],
             "url": {
               "raw": "{{base_url}}/api/v1/auth/me",
               "host": [
@@ -689,7 +700,8 @@
                 "auth",
                 "me"
               ]
-            }
+            },
+            "description": "Aucun header Authorization — simule une requête non authentifiée."
           }
         }
       ]
@@ -705,15 +717,49 @@
               "script": {
                 "exec": [
                   "pm.test('Status 200', () => pm.response.to.have.status(200));",
-                  "pm.test('refreshed = true', () => {",
+                  "pm.test('Nouveau access_token dans le body, refresh_token absent du body', () => {",
                   "  const json = pm.response.json();",
-                  "  pm.expect(json.data.refreshed).to.be.true;",
+                  "  pm.expect(json.data.access_token).to.be.a('string');",
+                  "  pm.expect(json.data).to.not.have.property('refresh_token');",
+                  "  pm.expect(json.data.token_type).to.eql('Bearer');",
+                  "  pm.expect(json.data.expires_in).to.eql(900);",
                   "});",
-                  "pm.test('Nouveau cookie access_token', () => {",
-                  "  pm.expect(pm.cookies.has('access_token')).to.be.true;",
-                  "});",
-                  "pm.test('Nouveau cookie refresh_token', () => {",
-                  "  pm.expect(pm.cookies.has('refresh_token')).to.be.true;",
+                  "const json = pm.response.json();",
+                  "if (json.data?.access_token) pm.collectionVariables.set('access_token', json.data.access_token);"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/v1/auth/refresh",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "auth",
+                "refresh"
+              ]
+            },
+            "description": "Aucun body requis — le cookie httpOnly refresh_token est envoyé automatiquement par le navigateur/Postman. L'ancien token est révoqué en DB et un nouveau access_token est retourné dans le body + nouveau cookie."
+          }
+        },
+        {
+          "name": "Refresh — cookie absent (401)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 401', () => pm.response.to.have.status(401));",
+                  "pm.test('Code UNAUTHORIZED', () => {",
+                  "  const json = pm.response.json();",
+                  "  pm.expect(json.code).to.eql('UNAUTHORIZED');",
                   "});"
                 ],
                 "type": "text/javascript"
@@ -735,47 +781,7 @@
                 "refresh"
               ]
             },
-            "description": "Le cookie refresh_token est envoyé automatiquement. L'ancien refresh_token est révoqué en DB et deux nouveaux cookies sont émis."
-          }
-        },
-        {
-          "name": "Refresh — sans cookie (401)",
-          "event": [
-            {
-              "listen": "test",
-              "script": {
-                "exec": [
-                  "pm.test('Status 401', () => pm.response.to.have.status(401));",
-                  "pm.test('Code UNAUTHORIZED', () => {",
-                  "  const json = pm.response.json();",
-                  "  pm.expect(json.code).to.eql('UNAUTHORIZED');",
-                  "});"
-                ],
-                "type": "text/javascript"
-              }
-            }
-          ],
-          "request": {
-            "method": "POST",
-            "header": [
-              {
-                "key": "Cookie",
-                "value": "",
-                "description": "Cookie vide pour simuler l'absence de refresh_token"
-              }
-            ],
-            "url": {
-              "raw": "{{base_url}}/api/v1/auth/refresh",
-              "host": [
-                "{{base_url}}"
-              ],
-              "path": [
-                "api",
-                "v1",
-                "auth",
-                "refresh"
-              ]
-            }
+            "description": "400 VALIDATION_FAILED — refresh_token absent du body."
           }
         },
         {
@@ -799,11 +805,19 @@
             "method": "POST",
             "header": [
               {
-                "key": "Cookie",
-                "value": "refresh_token=ancien_token_deja_utilise",
-                "description": "Simuler un replay attack avec un token déjà révoqué"
+                "key": "Content-Type",
+                "value": "application/json"
               }
             ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"refresh_token\": \"ancien_token_deja_utilise\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
             "url": {
               "raw": "{{base_url}}/api/v1/auth/refresh",
               "host": [
@@ -815,7 +829,8 @@
                 "auth",
                 "refresh"
               ]
-            }
+            },
+            "description": "401 UNAUTHORIZED — replay attack avec un token déjà révoqué."
           }
         }
       ]
@@ -1534,12 +1549,8 @@
                   "  const json = pm.response.json();",
                   "  pm.expect(json.data.logged_out).to.be.true;",
                   "});",
-                  "pm.test('Cookie access_token supprimé', () => {",
-                  "  pm.expect(pm.cookies.has('access_token')).to.be.false;",
-                  "});",
-                  "pm.test('Cookie refresh_token supprimé', () => {",
-                  "  pm.expect(pm.cookies.has('refresh_token')).to.be.false;",
-                  "});"
+                  "pm.collectionVariables.unset('access_token');",
+                  "pm.collectionVariables.unset('refresh_token');"
                 ],
                 "type": "text/javascript"
               }
@@ -1547,7 +1558,12 @@
           ],
           "request": {
             "method": "POST",
-            "header": [],
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}"
+              }
+            ],
             "url": {
               "raw": "{{base_url}}/api/v1/auth/logout",
               "host": [
@@ -1560,7 +1576,7 @@
                 "logout"
               ]
             },
-            "description": "Révoque le refresh_token en DB et supprime les deux cookies."
+            "description": "Révoque tous les refresh_tokens de l'utilisateur en DB. Le script de test efface les variables access_token et refresh_token de la collection."
           }
         }
       ]
@@ -1706,558 +1722,6 @@
               }
             },
             "description": "401 UNAUTHORIZED — pas de cookie access_token."
-          }
-        }
-      ]
-    },
-    {
-      "name": "Station Onboarding",
-      "description": "Flux en 3 etapes. Les endpoints validate/* ne font aucune ecriture en base — ils permettent au frontend de valider chaque etape avant de passer a la suivante. Toutes les operations DB sont declenchees uniquement par /submit.",
-      "item": [
-        {
-          "name": "validate/step1 — succes (200)",
-          "event": [
-            {
-              "listen": "test",
-              "script": {
-                "exec": [
-                  "pm.test('Status 200', () => pm.response.to.have.status(200));"
-                ],
-                "type": "text/javascript"
-              }
-            }
-          ],
-          "response": [],
-          "request": {
-            "method": "POST",
-            "header": [
-              {
-                "key": "Content-Type",
-                "value": "application/json"
-              }
-            ],
-            "url": {
-              "raw": "{{base_url}}/api/v1/stations/onboarding/validate/step1",
-              "host": ["{{base_url}}"],
-              "path": ["api", "v1", "stations", "onboarding", "validate", "step1"]
-            },
-            "body": {
-              "mode": "raw",
-              "raw": "{\"email\":\"station@example.com\",\"phone\":\"+33612345678\",\"password\":\"StationPass1!\",\"confirm_password\":\"StationPass1!\"}",
-              "options": { "raw": { "language": "json" } }
-            },
-            "description": "Valide les champs step 1 sans ecriture en base. Aucun compte n'est cree."
-          }
-        },
-        {
-          "name": "validate/step1 — confirm_password invalide (400)",
-          "event": [
-            {
-              "listen": "test",
-              "script": {
-                "exec": [
-                  "pm.test('Status 400', () => pm.response.to.have.status(400));",
-                  "pm.test('Erreur confirm_password', () => {",
-                  "  const json = pm.response.json();",
-                  "  pm.expect(json.code).to.eql('VALIDATION_FAILED');",
-                  "  pm.expect(json.errors.some(e => e.field === 'confirm_password')).to.be.true;",
-                  "});"
-                ],
-                "type": "text/javascript"
-              }
-            }
-          ],
-          "response": [],
-          "request": {
-            "method": "POST",
-            "header": [
-              {
-                "key": "Content-Type",
-                "value": "application/json"
-              }
-            ],
-            "url": {
-              "raw": "{{base_url}}/api/v1/stations/onboarding/validate/step1",
-              "host": ["{{base_url}}"],
-              "path": ["api", "v1", "stations", "onboarding", "validate", "step1"]
-            },
-            "body": {
-              "mode": "raw",
-              "raw": "{\"email\":\"station@example.com\",\"phone\":\"+33612345678\",\"password\":\"StationPass1!\",\"confirm_password\":\"Different!\"}",
-              "options": { "raw": { "language": "json" } }
-            },
-            "description": "400 VALIDATION_FAILED — confirm_password ne correspond pas."
-          }
-        },
-        {
-          "name": "validate/step2 — succes (200)",
-          "event": [
-            {
-              "listen": "test",
-              "script": {
-                "exec": [
-                  "pm.test('Status 200', () => pm.response.to.have.status(200));"
-                ],
-                "type": "text/javascript"
-              }
-            }
-          ],
-          "response": [],
-          "request": {
-            "method": "POST",
-            "header": [
-              {
-                "key": "Content-Type",
-                "value": "application/json"
-              }
-            ],
-            "url": {
-              "raw": "{{base_url}}/api/v1/stations/onboarding/validate/step2",
-              "host": ["{{base_url}}"],
-              "path": ["api", "v1", "stations", "onboarding", "validate", "step2"]
-            },
-            "body": {
-              "mode": "raw",
-              "raw": "{\"station_name\":\"Lavo Station Paris 15\",\"legal_name\":\"Lavo SAS\",\"registration_number\":\"RCS PARIS 123456789\",\"address\":\"12 rue de la Paix\",\"city\":\"Paris\",\"latitude\":48.8566,\"longitude\":2.3522,\"wash_post_count\":4,\"wash_type\":\"automatic\",\"description\":\"Station de lavage automatique au coeur de Paris.\"}",
-              "options": { "raw": { "language": "json" } }
-            },
-            "description": "Valide les champs step 2 sans ecriture en base. Aucune station n'est creee."
-          }
-        },
-        {
-          "name": "validate/step2 — wash_type invalide (400)",
-          "event": [
-            {
-              "listen": "test",
-              "script": {
-                "exec": [
-                  "pm.test('Status 400', () => pm.response.to.have.status(400));",
-                  "pm.test('Erreur wash_type', () => {",
-                  "  const json = pm.response.json();",
-                  "  pm.expect(json.code).to.eql('VALIDATION_FAILED');",
-                  "  pm.expect(json.errors.some(e => e.field === 'wash_type')).to.be.true;",
-                  "});"
-                ],
-                "type": "text/javascript"
-              }
-            }
-          ],
-          "response": [],
-          "request": {
-            "method": "POST",
-            "header": [
-              {
-                "key": "Content-Type",
-                "value": "application/json"
-              }
-            ],
-            "url": {
-              "raw": "{{base_url}}/api/v1/stations/onboarding/validate/step2",
-              "host": ["{{base_url}}"],
-              "path": ["api", "v1", "stations", "onboarding", "validate", "step2"]
-            },
-            "body": {
-              "mode": "raw",
-              "raw": "{\"station_name\":\"Test\",\"address\":\"1 rue Test\",\"city\":\"Lyon\",\"wash_post_count\":2,\"wash_type\":\"invalid\"}",
-              "options": { "raw": { "language": "json" } }
-            },
-            "description": "400 VALIDATION_FAILED — wash_type n'est pas une valeur autorisee."
-          }
-        },
-        {
-          "name": "submit — succes (201)",
-          "event": [
-            {
-              "listen": "test",
-              "script": {
-                "exec": [
-                  "pm.test('Status 201', () => pm.response.to.have.status(201));",
-                  "pm.test('Retourne user + station', () => {",
-                  "  const json = pm.response.json();",
-                  "  pm.expect(json.data).to.have.property('user');",
-                  "  pm.expect(json.data).to.have.property('station');",
-                  "  pm.expect(json.data.user).to.not.have.property('password_hash');",
-                  "  pm.expect(json.data.user.role).to.eql('station');",
-                  "  pm.expect(json.data.station.status).to.eql('pending_admin_validation');",
-                  "});"
-                ],
-                "type": "text/javascript"
-              }
-            }
-          ],
-          "response": [],
-          "request": {
-            "method": "POST",
-            "header": [
-              {
-                "key": "Content-Type",
-                "value": "application/json"
-              }
-            ],
-            "url": {
-              "raw": "{{base_url}}/api/v1/stations/onboarding/submit",
-              "host": ["{{base_url}}"],
-              "path": ["api", "v1", "stations", "onboarding", "submit"]
-            },
-            "body": {
-              "mode": "raw",
-              "raw": "{\n  \"email\": \"station@example.com\",\n  \"phone\": \"+33612345678\",\n  \"password\": \"StationPass1!\",\n  \"confirm_password\": \"StationPass1!\",\n  \"station_name\": \"Lavo Station Paris 15\",\n  \"legal_name\": \"Lavo SAS\",\n  \"registration_number\": \"RCS PARIS 123456789\",\n  \"address\": \"12 rue de la Paix\",\n  \"city\": \"Paris\",\n  \"latitude\": 48.8566,\n  \"longitude\": 2.3522,\n  \"wash_post_count\": 4,\n  \"wash_type\": \"automatic\",\n  \"description\": \"Station de lavage automatique au coeur de Paris.\",\n  \"documents\": [\n    {\"document_type\": \"registre_commerce\", \"file_url\": \"https://storage.example.com/doc1.pdf\"},\n    {\"document_type\": \"piece_identite\", \"file_url\": \"https://storage.example.com/doc2.pdf\"}\n  ],\n  \"terms_accepted\": true\n}",
-              "options": { "raw": { "language": "json" } }
-            },
-            "description": "Cree le compte, la station et les documents en une seule transaction. Email de verification envoye. Aucune ecriture en base avant cet appel."
-          }
-        },
-        {
-          "name": "submit — email deja utilise (409)",
-          "event": [
-            {
-              "listen": "test",
-              "script": {
-                "exec": [
-                  "pm.test('Status 409', () => pm.response.to.have.status(409));",
-                  "pm.test('Code EMAIL_ALREADY_EXISTS', () => {",
-                  "  const json = pm.response.json();",
-                  "  pm.expect(json.code).to.eql('EMAIL_ALREADY_EXISTS');",
-                  "});"
-                ],
-                "type": "text/javascript"
-              }
-            }
-          ],
-          "response": [],
-          "request": {
-            "method": "POST",
-            "header": [
-              {
-                "key": "Content-Type",
-                "value": "application/json"
-              }
-            ],
-            "url": {
-              "raw": "{{base_url}}/api/v1/stations/onboarding/submit",
-              "host": ["{{base_url}}"],
-              "path": ["api", "v1", "stations", "onboarding", "submit"]
-            },
-            "body": {
-              "mode": "raw",
-              "raw": "{\n  \"email\": \"station@example.com\",\n  \"phone\": \"+33612345678\",\n  \"password\": \"StationPass1!\",\n  \"confirm_password\": \"StationPass1!\",\n  \"station_name\": \"Lavo Station Paris 15\",\n  \"address\": \"12 rue de la Paix\",\n  \"city\": \"Paris\",\n  \"wash_post_count\": 4,\n  \"wash_type\": \"automatic\",\n  \"documents\": [{\"document_type\": \"registre_commerce\", \"file_url\": \"https://storage.example.com/doc1.pdf\"}],\n  \"terms_accepted\": true\n}",
-              "options": { "raw": { "language": "json" } }
-            },
-            "description": "409 EMAIL_ALREADY_EXISTS — l'email est deja associe a un compte."
-          }
-        },
-        {
-          "name": "submit — confirm_password invalide (400)",
-          "event": [
-            {
-              "listen": "test",
-              "script": {
-                "exec": [
-                  "pm.test('Status 400', () => pm.response.to.have.status(400));",
-                  "pm.test('Erreur confirm_password', () => {",
-                  "  const json = pm.response.json();",
-                  "  pm.expect(json.code).to.eql('VALIDATION_FAILED');",
-                  "  pm.expect(json.errors.some(e => e.field === 'confirm_password')).to.be.true;",
-                  "});"
-                ],
-                "type": "text/javascript"
-              }
-            }
-          ],
-          "response": [],
-          "request": {
-            "method": "POST",
-            "header": [
-              {
-                "key": "Content-Type",
-                "value": "application/json"
-              }
-            ],
-            "url": {
-              "raw": "{{base_url}}/api/v1/stations/onboarding/submit",
-              "host": ["{{base_url}}"],
-              "path": ["api", "v1", "stations", "onboarding", "submit"]
-            },
-            "body": {
-              "mode": "raw",
-              "raw": "{\n  \"email\": \"station2@example.com\",\n  \"phone\": \"+33612345678\",\n  \"password\": \"StationPass1!\",\n  \"confirm_password\": \"Different!\",\n  \"station_name\": \"Lavo Station Lyon\",\n  \"address\": \"5 rue Bellecour\",\n  \"city\": \"Lyon\",\n  \"wash_post_count\": 2,\n  \"wash_type\": \"hand_wash\",\n  \"documents\": [{\"document_type\": \"registre_commerce\", \"file_url\": \"https://storage.example.com/doc1.pdf\"}],\n  \"terms_accepted\": true\n}",
-              "options": { "raw": { "language": "json" } }
-            },
-            "description": "400 VALIDATION_FAILED — confirm_password ne correspond pas."
-          }
-        },
-        {
-          "name": "submit — CGU non acceptees (400)",
-          "event": [
-            {
-              "listen": "test",
-              "script": {
-                "exec": [
-                  "pm.test('Status 400', () => pm.response.to.have.status(400));",
-                  "pm.test('Erreur terms_accepted', () => {",
-                  "  const json = pm.response.json();",
-                  "  pm.expect(json.code).to.eql('VALIDATION_FAILED');",
-                  "  pm.expect(json.errors.some(e => e.field === 'terms_accepted')).to.be.true;",
-                  "});"
-                ],
-                "type": "text/javascript"
-              }
-            }
-          ],
-          "response": [],
-          "request": {
-            "method": "POST",
-            "header": [
-              {
-                "key": "Content-Type",
-                "value": "application/json"
-              }
-            ],
-            "url": {
-              "raw": "{{base_url}}/api/v1/stations/onboarding/submit",
-              "host": ["{{base_url}}"],
-              "path": ["api", "v1", "stations", "onboarding", "submit"]
-            },
-            "body": {
-              "mode": "raw",
-              "raw": "{\n  \"email\": \"station3@example.com\",\n  \"phone\": \"+33612345678\",\n  \"password\": \"StationPass1!\",\n  \"confirm_password\": \"StationPass1!\",\n  \"station_name\": \"Lavo Station Marseille\",\n  \"address\": \"3 rue Paradis\",\n  \"city\": \"Marseille\",\n  \"wash_post_count\": 3,\n  \"wash_type\": \"self_service\",\n  \"documents\": [{\"document_type\": \"registre_commerce\", \"file_url\": \"https://storage.example.com/doc1.pdf\"}],\n  \"terms_accepted\": false\n}",
-              "options": { "raw": { "language": "json" } }
-            },
-            "description": "400 VALIDATION_FAILED — terms_accepted doit etre true."
-          }
-        }
-      ]
-    },
-    {
-      "name": "Admin — Stations",
-      "item": [
-        {
-          "name": "Lister stations en attente (200)",
-          "response": [],
-          "request": {
-            "method": "GET",
-            "header": [],
-            "url": {
-              "raw": "{{base_url}}/api/v1/admin/stations",
-              "host": [
-                "{{base_url}}"
-              ],
-              "path": [
-                "api",
-                "v1",
-                "admin",
-                "stations"
-              ]
-            },
-            "description": "Authentifie admin. Retourne les stations avec status=pending_admin_validation."
-          }
-        },
-        {
-          "name": "Detail station (200)",
-          "response": [],
-          "request": {
-            "method": "GET",
-            "header": [],
-            "url": {
-              "raw": "{{base_url}}/api/v1/admin/stations/{{station_id}}",
-              "host": [
-                "{{base_url}}"
-              ],
-              "path": [
-                "api",
-                "v1",
-                "admin",
-                "stations",
-                "{{station_id}}"
-              ]
-            },
-            "description": "Detail station incluant les documents soumis."
-          }
-        },
-        {
-          "name": "Approuver station (200)",
-          "response": [],
-          "request": {
-            "method": "POST",
-            "header": [],
-            "url": {
-              "raw": "{{base_url}}/api/v1/admin/stations/{{station_id}}/approve",
-              "host": [
-                "{{base_url}}"
-              ],
-              "path": [
-                "api",
-                "v1",
-                "admin",
-                "stations",
-                "{{station_id}}",
-                "approve"
-              ]
-            },
-            "description": "Approuve la station — status=active."
-          }
-        },
-        {
-          "name": "Rejeter station (200)",
-          "response": [],
-          "request": {
-            "method": "POST",
-            "header": [
-              {
-                "key": "Content-Type",
-                "value": "application/json"
-              }
-            ],
-            "url": {
-              "raw": "{{base_url}}/api/v1/admin/stations/{{station_id}}/reject",
-              "host": [
-                "{{base_url}}"
-              ],
-              "path": [
-                "api",
-                "v1",
-                "admin",
-                "stations",
-                "{{station_id}}",
-                "reject"
-              ]
-            },
-            "body": {
-              "mode": "raw",
-              "raw": "{\"rejection_reason\":\"Documents fournis incomplets ou invalides.\"}",
-              "options": {
-                "raw": {
-                  "language": "json"
-                }
-              }
-            },
-            "description": "Rejette la station — status=rejected avec raison."
-          }
-        },
-        {
-          "name": "Rejeter — raison trop courte (400)",
-          "response": [],
-          "request": {
-            "method": "POST",
-            "header": [
-              {
-                "key": "Content-Type",
-                "value": "application/json"
-              }
-            ],
-            "url": {
-              "raw": "{{base_url}}/api/v1/admin/stations/{{station_id}}/reject",
-              "host": [
-                "{{base_url}}"
-              ],
-              "path": [
-                "api",
-                "v1",
-                "admin",
-                "stations",
-                "{{station_id}}",
-                "reject"
-              ]
-            },
-            "body": {
-              "mode": "raw",
-              "raw": "{\"rejection_reason\":\"Non\"}",
-              "options": {
-                "raw": {
-                  "language": "json"
-                }
-              }
-            },
-            "description": "400 VALIDATION_FAILED — rejection_reason trop courte."
-          }
-        },
-        {
-          "name": "Admin — non autorise (403)",
-          "response": [],
-          "request": {
-            "method": "GET",
-            "header": [],
-            "url": {
-              "raw": "{{base_url}}/api/v1/admin/stations",
-              "host": [
-                "{{base_url}}"
-              ],
-              "path": [
-                "api",
-                "v1",
-                "admin",
-                "stations"
-              ]
-            },
-            "description": "403 FORBIDDEN — role != admin."
-          }
-        }
-      ]
-    },
-    {
-      "name": "Station — Profil",
-      "item": [
-        {
-          "name": "Station Me — approuvee (200)",
-          "response": [],
-          "request": {
-            "method": "GET",
-            "header": [],
-            "url": {
-              "raw": "{{base_url}}/api/v1/station/me",
-              "host": [
-                "{{base_url}}"
-              ],
-              "path": [
-                "api",
-                "v1",
-                "station",
-                "me"
-              ]
-            },
-            "description": "Authentifie station avec status=active. Retourne la station et ses documents."
-          }
-        },
-        {
-          "name": "Station Me — non approuvee (403 BUSINESS_NOT_APPROVED)",
-          "response": [],
-          "request": {
-            "method": "GET",
-            "header": [],
-            "url": {
-              "raw": "{{base_url}}/api/v1/station/me",
-              "host": [
-                "{{base_url}}"
-              ],
-              "path": [
-                "api",
-                "v1",
-                "station",
-                "me"
-              ]
-            },
-            "description": "403 BUSINESS_NOT_APPROVED — station non encore approuvee."
-          }
-        },
-        {
-          "name": "Station Me — non authentifiee (401)",
-          "response": [],
-          "request": {
-            "method": "GET",
-            "header": [],
-            "url": {
-              "raw": "{{base_url}}/api/v1/station/me",
-              "host": [
-                "{{base_url}}"
-              ],
-              "path": [
-                "api",
-                "v1",
-                "station",
-                "me"
-              ]
-            },
-            "description": "401 UNAUTHORIZED."
           }
         }
       ]

@@ -1,7 +1,7 @@
 import { headers } from 'next/headers';
+import { NextResponse } from 'next/server';
 import { login } from '@/server/auth/auth-service';
 import { loginSchema, mapZodErrors } from '@/validators/auth';
-import { buildAccessCookieOptions, buildRefreshCookieOptions } from '@/lib/jwt';
 import {
   successResponse,
   error400,
@@ -14,6 +14,8 @@ import {
 import { ApiCode } from '@/types/api-codes';
 import { AppError, ForbiddenError, UnauthorizedError } from '@/lib/errors';
 import { checkRateLimit, recordFailedAttempt, resetOnSuccess } from '@/lib/rate-limiter';
+import { buildRefreshCookieOptions } from '@/lib/jwt';
+import { REFRESH_COOKIE_NAME } from '@/helpers/constants';
 
 /**
  * POST /api/v1/auth/login
@@ -22,7 +24,7 @@ import { checkRateLimit, recordFailedAttempt, resetOnSuccess } from '@/lib/rate-
  * Body: { email, password, remember_me? }
  *
  * Responses:
- *   200 { message, data: SafeUser }
+ *   200 { message, data: { user, access_token, refresh_token, token_type, expires_in } }
  *   400 VALIDATION_FAILED  — invalid input
  *   401 INVALID_CREDENTIALS — wrong email or password
  *   403 FORBIDDEN          — account not active or suspended
@@ -50,15 +52,23 @@ export async function POST(request: Request) {
   }
 
   try {
-    const { user, tokens, rememberMe } = await login(parsed.data);
+    const { user, tokens } = await login(parsed.data);
 
     await resetOnSuccess(ip);
 
-    const accessOpts = buildAccessCookieOptions();
-    const refreshOpts = buildRefreshCookieOptions(rememberMe);
-    const response = successResponse(user, 'Login successful');
-    response.cookies.set(accessOpts.name, tokens.accessJwt, accessOpts);
-    response.cookies.set(refreshOpts.name, tokens.rawRefreshToken, refreshOpts);
+    const res = successResponse({
+      user,
+      access_token: tokens.accessJwt,
+      token_type: 'Bearer',
+      expires_in: tokens.expiresIn,
+    }, 'Login successful');
+
+    const response = NextResponse.json(await res.json(), { status: res.status });
+    response.cookies.set(
+      REFRESH_COOKIE_NAME,
+      tokens.rawRefreshToken,
+      buildRefreshCookieOptions(parsed.data.remember_me),
+    );
     return response;
   } catch (e) {
     if (e instanceof UnauthorizedError) {
