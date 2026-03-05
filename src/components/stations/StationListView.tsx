@@ -296,7 +296,7 @@ export function StationListView() {
               >
                 <span
                   className={[
-                    'absolute top-[3px] w-[18px] h-[18px] rounded-full bg-white shadow transition-transform duration-200',
+                    'absolute top-[3px] left-0 w-[18px] h-[18px] rounded-full bg-white shadow transition-transform duration-200',
                     onlyAvail ? 'translate-x-[22px]' : 'translate-x-[3px]',
                   ].join(' ')}
                 />
