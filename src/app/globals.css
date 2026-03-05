@@ -22,7 +22,7 @@
     --font-size-md: 19px;
     --font-size-lg: 22px;
     /* LAVO brand colors */
-    --color-gold: #C49A1E;
+    --color-gold: #af8408;
     --color-gold-hover: #D4A820;
     --color-dark-bg: #1A2116;
     --color-dark-card: #1E2A1A;
@@ -51,6 +51,10 @@ body {
     color: var(--foreground);
     font-family: 'Rajdhani', sans-serif;
     font-size: var(--font-size-base);
+}
+
+button, [role="button"] {
+    cursor: pointer;
 }
 
 
@@ -127,6 +131,32 @@ body {
 
 .animate-gold-shimmer {
     animation: gold-shimmer 2.5s ease-in-out infinite;
+}
+
+@keyframes float-orb {
+    0%, 100% { transform: translateY(0px) scale(1); }
+    50%       { transform: translateY(-40px) scale(1.04); }
+}
+
+@keyframes float-card {
+    0%, 100% { transform: translateY(0px); }
+    40%      { transform: translateY(-11px); }
+    70%      { transform: translateY(-5px); }
+}
+
+.animate-float-orb {
+    animation: float-orb 10s ease-in-out infinite;
+}
+
+.animate-float-card {
+    animation: float-card 7s ease-in-out infinite;
+}
+
+.hero-title-gradient {
+    background: linear-gradient(120deg, #C49A1E 10%, #F2C94C 50%, #C49A1E 90%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
 }
 
 .animate-slide-in-left {

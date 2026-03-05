@@ -7,6 +7,7 @@ import { Link, usePathname } from '@/i18n/navigation';
 import { ThemeToggle } from '@/components/auth/ThemeToggle';
 import { LangToggle } from '@/components/auth/LangToggle';
 import { useTheme } from '@/context/theme-context';
+import { useAuth } from '@/context';
 
 function MenuIcon() {
   return (
@@ -39,6 +40,8 @@ export function PublicNavbar() {
   const { resolvedTheme } = useTheme();
   const isDark   = resolvedTheme === 'dark';
 
+  const { user, isAuthenticated } = useAuth();
+
   const [scrolled, setScrolled]   = useState(false);
   const [menuOpen, setMenuOpen]   = useState(false);
 
@@ -66,9 +69,10 @@ export function PublicNavbar() {
       <header
         className={[
           'fixed top-0 left-0 right-0 z-40 transition-all duration-300',
+          'bg-white/95 dark:bg-dark-bg/95 backdrop-blur-md border-b border-[#E0E0D0] shadow-sm',
           scrolled || menuOpen
-            ? 'bg-white/95 dark:bg-dark-bg/95 backdrop-blur-md border-b border-[#E0E0D0] dark:border-[#2C3828] shadow-sm'
-            : 'bg-transparent',
+            ? 'dark:border-[#2C3828]'
+            : 'dark:border-transparent dark:bg-transparent dark:backdrop-blur-none dark:shadow-none',
         ].join(' ')}
       >
         <div className="max-w-6xl mx-auto px-4 sm:px-6 h-16 flex items-center justify-between gap-4">
@@ -113,21 +117,59 @@ export function PublicNavbar() {
             <ThemeToggle />
             <LangToggle />
 
-            {/* Auth links — desktop */}
-            <div className="hidden md:flex items-center gap-2 ml-2">
-              <Link
-                href="/login"
-                className="px-4 py-2 text-[13px] font-bold text-[#1A1A1A] dark:text-white hover:text-gold dark:hover:text-gold transition-colors"
-              >
-                {t('login')}
-              </Link>
-              <Link
-                href="/register"
-                className="btn-shine px-5 py-2 bg-gold hover:bg-gold-hover rounded-[10px] text-[13px] font-bold text-[#1A2116] transition-colors"
-              >
-                {t('register')}
-              </Link>
+            {/* Notification bell */}
+            <button
+              type="button"
+              className="relative w-9 h-9 flex items-center justify-center rounded-lg text-[#1A1A1A] dark:text-white hover:bg-black/8 dark:hover:bg-white/8 transition-colors"
+              aria-label="Notifications"
+            >
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                <path d="M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9" />
+                <path d="M13.73 21a2 2 0 01-3.46 0" />
+              </svg>
+              {/* Badge placeholder */}
+              <span className="absolute top-1.5 right-1.5 w-2 h-2 rounded-full bg-gold border-2 border-white dark:border-dark-bg" aria-hidden="true" />
+            </button>
+
+            {/* User greeting or auth links — desktop */}
+            <div className="hidden md:flex items-center gap-2 ml-1">
+              {isAuthenticated && user ? (
+                <div className="flex items-center gap-2.5">
+                  <div className="w-8 h-8 rounded-full bg-gold/20 border border-gold/40 flex items-center justify-center shrink-0">
+                    <span className="text-[13px] font-black text-gold leading-none">
+                      {(user.first_name?.[0] ?? user.email[0]).toUpperCase()}
+                    </span>
+                  </div>
+                  <span className="text-[14px] font-semibold text-[#1A1A1A] dark:text-white">
+                    {t('greeting')}, <span className="text-gold">{user.first_name ?? user.email.split('@')[0]}</span>
+                  </span>
+                </div>
+              ) : (
+                <>
+                  <Link
+                    href="/login"
+                    className="px-4 py-2 text-[13px] font-bold text-[#1A1A1A] dark:text-white hover:text-gold dark:hover:text-gold transition-colors"
+                  >
+                    {t('login')}
+                  </Link>
+                  <Link
+                    href="/register"
+                    className="btn-shine px-5 py-2 bg-gold hover:bg-gold-hover rounded-[10px] text-[13px] font-bold text-[#1A2116] transition-colors"
+                  >
+                    {t('register')}
+                  </Link>
+                </>
+              )}
             </div>
+
+            {/* User avatar on mobile (when authenticated) */}
+            {isAuthenticated && user && (
+              <div className="flex md:hidden items-center gap-2">
+                <span className="text-[13px] font-semibold text-[#1A1A1A] dark:text-white">
+                  {t('greeting')}, <span className="text-gold">{user.first_name ?? user.email.split('@')[0]}</span>
+                </span>
+              </div>
+            )}
 
             {/* Hamburger — tablet only (mobile uses BottomNav, desktop uses inline nav) */}
             <button
@@ -160,18 +202,36 @@ export function PublicNavbar() {
               </Link>
             ))}
             <div className="pt-3 border-t border-[#E0E0D0] dark:border-[#2C3828] flex flex-col gap-2">
-              <Link
-                href="/login"
-                className="flex items-center justify-center py-3 rounded-xl border border-[#E0E0D0] dark:border-[#3A4A36] text-[14px] font-bold text-[#1A1A1A] dark:text-white hover:border-gold transition-colors"
-              >
-                {t('login')}
-              </Link>
-              <Link
-                href="/register"
-                className="btn-shine flex items-center justify-center py-3 bg-gold hover:bg-gold-hover rounded-xl text-[14px] font-bold text-[#1A2116] transition-colors"
-              >
-                {t('register')}
-              </Link>
+              {isAuthenticated && user ? (
+                <div className="flex items-center gap-3 px-2 py-2">
+                  <div className="w-9 h-9 rounded-full bg-gold/20 border border-gold/40 flex items-center justify-center shrink-0">
+                    <span className="text-[14px] font-black text-gold leading-none">
+                      {(user.first_name?.[0] ?? user.email[0]).toUpperCase()}
+                    </span>
+                  </div>
+                  <div>
+                    <p className="text-[15px] font-bold text-[#1A1A1A] dark:text-white leading-tight">
+                      {user.first_name ? `${user.first_name} ${user.last_name ?? ''}`.trim() : user.email}
+                    </p>
+                    <p className="text-[13px] text-[#555] dark:text-[#C0C0B0]">{user.email}</p>
+                  </div>
+                </div>
+              ) : (
+                <>
+                  <Link
+                    href="/login"
+                    className="flex items-center justify-center py-3 rounded-xl border border-[#E0E0D0] dark:border-[#3A4A36] text-[14px] font-bold text-[#1A1A1A] dark:text-white hover:border-gold transition-colors"
+                  >
+                    {t('login')}
+                  </Link>
+                  <Link
+                    href="/register"
+                    className="btn-shine flex items-center justify-center py-3 bg-gold hover:bg-gold-hover rounded-xl text-[14px] font-bold text-[#1A2116] transition-colors"
+                  >
+                    {t('register')}
+                  </Link>
+                </>
+              )}
             </div>
           </div>
         )}
