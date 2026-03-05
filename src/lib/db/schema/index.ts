@@ -13,6 +13,7 @@ import { notifications } from "./notifications";
 import { ratings } from "./ratings";
 import {
   stationConfigs,
+  stationDocuments,
   stations,
   vehicleFormats,
 } from "./stations";
@@ -32,7 +33,11 @@ export * from "./settings";
 export * from "./auth-rate-limits";
 export * from "./refresh-tokens";
 
-export const usersRelations = relations(users, ({ many }) => ({
+export const usersRelations = relations(users, ({ one, many }) => ({
+  station: one(stations, {
+    fields: [users.id],
+    references: [stations.user_id],
+  }),
   emailVerificationTokens: many(emailVerificationTokens),
   refreshTokens: many(refreshTokens),
   reservations: many(reservations, { relationName: "userReservations" }),
@@ -66,16 +71,30 @@ export const adminLogsRelations = relations(adminLogs, ({ one }) => ({
 }));
 
 export const stationsRelations = relations(stations, ({ one, many }) => ({
+  manager: one(users, {
+    fields: [stations.user_id],
+    references: [users.id],
+    relationName: "stationManager",
+  }),
   approvedByAdmin: one(users, {
     fields: [stations.approved_by],
     references: [users.id],
+    relationName: "stationApprover",
   }),
   stationConfig: one(stationConfigs),
+  documents: many(stationDocuments),
   vehicleFormats: many(vehicleFormats),
   timeSlots: many(timeSlots),
   reservations: many(reservations, { relationName: "stationReservations" }),
   ratings: many(ratings, { relationName: "stationRatings" }),
   notifications: many(notifications, { relationName: "stationNotifications" }),
+}));
+
+export const stationDocumentsRelations = relations(stationDocuments, ({ one }) => ({
+  station: one(stations, {
+    fields: [stationDocuments.station_id],
+    references: [stations.id],
+  }),
 }));
 
 export const stationConfigsRelations = relations(stationConfigs, ({ one }) => ({
@@ -148,7 +167,7 @@ export const ratingsRelations = relations(ratings, ({ one }) => ({
   }),
   station: one(stations, {
     fields: [ratings.station_id],
-    references: [stations.id],
+    references: [ratings.id],
   }),
 }));
 

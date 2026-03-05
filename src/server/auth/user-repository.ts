@@ -34,6 +34,16 @@ export async function updatePassword(userId: string, passwordHash: string): Prom
     .where(eq(users.id, userId));
 }
 
+export async function updateForcePasswordChange(
+  userId: string,
+  value: boolean
+): Promise<void> {
+  await db
+    .update(users)
+    .set({ force_password_change: value, updated_at: new Date() })
+    .where(eq(users.id, userId));
+}
+
 export async function updateEmailVerified(userId: string): Promise<void> {
   await db
     .update(users)
