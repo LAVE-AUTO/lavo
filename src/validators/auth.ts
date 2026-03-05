@@ -1,23 +1,30 @@
 import { z } from 'zod';
 import type { ApiErrorBody } from '@/types/api';
+import { phoneSchema } from './shared';
 
-export const registerSchema = z.object({
-  first_name: z.string().min(2).max(100),
-  last_name: z.string().min(2).max(100),
-  email: z.string().email(),
-  phone: z.string().min(8).max(30),
-  password: z
-    .string()
-    .min(8, 'Password must be at least 8 characters')
-    .regex(/[A-Z]/, 'Password must contain at least one uppercase letter')
-    .regex(/[a-z]/, 'Password must contain at least one lowercase letter')
-    .regex(/[0-9]/, 'Password must contain at least one number')
-    .regex(
-      /[^A-Za-z0-9]/,
-      'Password must contain at least one special character'
-    ),
-  remember_me: z.boolean().optional().default(false),
-});
+export const registerSchema = z
+  .object({
+    first_name: z.string().min(2).max(100),
+    last_name: z.string().min(2).max(100),
+    email: z.string().email(),
+    phone: phoneSchema,
+    password: z
+      .string()
+      .min(8, 'Password must be at least 8 characters')
+      .regex(/[A-Z]/, 'Password must contain at least one uppercase letter')
+      .regex(/[a-z]/, 'Password must contain at least one lowercase letter')
+      .regex(/[0-9]/, 'Password must contain at least one number')
+      .regex(
+        /[^A-Za-z0-9]/,
+        'Password must contain at least one special character'
+      ),
+    confirm_password: z.string().min(1, 'Password confirmation is required'),
+    remember_me: z.boolean().optional().default(false),
+  })
+  .refine((data) => data.password === data.confirm_password, {
+    message: 'Passwords do not match',
+    path: ['confirm_password'],
+  });
 
 export type RegisterDto = z.infer<typeof registerSchema>;
 
@@ -47,10 +54,16 @@ export const forgotPasswordSchema = z.object({
   email: z.string().email('Invalid email address'),
 });
 
-export const resetPasswordSchema = z.object({
-  token: z.string().min(1, 'Reset token is required'),
-  new_password: passwordSchema,
-});
+export const resetPasswordSchema = z
+  .object({
+    token: z.string().min(1, 'Reset token is required'),
+    new_password: passwordSchema,
+    confirm_new_password: z.string().min(1, 'Password confirmation is required'),
+  })
+  .refine((data) => data.new_password === data.confirm_new_password, {
+    message: 'Passwords do not match',
+    path: ['confirm_new_password'],
+  });
 
 export function mapZodErrors(
   err: z.ZodError
