@@ -2,14 +2,22 @@ import { randomUUID } from 'crypto';
 import bcrypt from 'bcrypt';
 import { signJwt } from '@/lib/jwt';
 import { sendVerificationEmail } from '@/lib/email';
-import { ConflictError, NotFoundError } from '@/lib/errors';
+import { ConflictError, NotFoundError, UnauthorizedError } from '@/lib/errors';
+import { JWT_DEFAULT_MAX_AGE, JWT_REMEMBER_MAX_AGE } from '@/helpers/constants';
 import {
   findByEmail,
+  findById,
   createUser,
   updateEmailVerified,
   type SafeUser,
 } from './user-repository';
 import { createToken, findValidToken, markTokenUsed } from './token-repository';
+import {
+  generateRawToken,
+  createRefreshToken,
+  findValidRefreshToken,
+  revokeRefreshToken,
+} from './refresh-token-repository';
 
 export type RegisterDto = {
   first_name: string;
@@ -20,14 +28,39 @@ export type RegisterDto = {
   remember_me: boolean;
 };
 
-export type RegisterResult = {
-  user: SafeUser;
-  jwt: string;
+export type AuthTokens = {
+  accessJwt: string;
+  rawRefreshToken: string;
 };
 
-export async function registerWithPassword(
-  dto: RegisterDto
-): Promise<RegisterResult> {
+export type AuthResult = {
+  user: SafeUser;
+  tokens: AuthTokens;
+  rememberMe: boolean;
+};
+
+async function issueTokenPair(
+  user: SafeUser,
+  rememberMe: boolean
+): Promise<AuthTokens> {
+  const accessJwt = await signJwt({
+    sub: user.id,
+    role: user.role,
+    email: user.email,
+    status: user.status,
+  });
+
+  const rawRefreshToken = generateRawToken();
+  const expiresAt = new Date(
+    Date.now() + (rememberMe ? JWT_REMEMBER_MAX_AGE : JWT_DEFAULT_MAX_AGE) * 1000
+  );
+
+  await createRefreshToken(user.id, rawRefreshToken, expiresAt);
+
+  return { accessJwt, rawRefreshToken };
+}
+
+export async function registerWithPassword(dto: RegisterDto): Promise<AuthResult> {
   const existing = await findByEmail(dto.email);
   if (existing) throw new ConflictError('Email already in use');
 
@@ -55,12 +88,8 @@ export async function registerWithPassword(
     () => void 0
   );
 
-  const jwt = await signJwt(
-    { sub: user.id, role: user.role, email: user.email, status: user.status },
-    dto.remember_me
-  );
-
-  return { user, jwt };
+  const tokens = await issueTokenPair(user, dto.remember_me);
+  return { user, tokens, rememberMe: dto.remember_me };
 }
 
 export async function verifyEmail(token: string): Promise<void> {
@@ -75,21 +104,43 @@ export async function findOrCreateOAuthUser(data: {
   email: string;
   firstName: string;
   lastName: string;
-}): Promise<SafeUser> {
+}): Promise<AuthResult> {
+  let user: SafeUser;
+
   const existing = await findByEmail(data.email);
   if (existing) {
-    // Return safe version without password_hash
     const { password_hash: _, ...safe } = existing;
-    return safe;
+    user = safe;
+  } else {
+    user = await createUser({
+      first_name: data.firstName,
+      last_name: data.lastName,
+      email: data.email,
+      password_hash: null,
+      role: 'client',
+      status: 'active',
+      email_verified_at: new Date(),
+    });
   }
 
-  return createUser({
-    first_name: data.firstName,
-    last_name: data.lastName,
-    email: data.email,
-    password_hash: null,
-    role: 'client',
-    status: 'active',
-    email_verified_at: new Date(),
-  });
+  const tokens = await issueTokenPair(user, false);
+  return { user, tokens, rememberMe: false };
+}
+
+export async function refreshSession(rawRefreshToken: string): Promise<AuthResult> {
+  const record = await findValidRefreshToken(rawRefreshToken);
+  if (!record) throw new UnauthorizedError('Invalid or expired refresh token');
+
+  const user = await findById(record.user_id);
+  if (!user) throw new UnauthorizedError('User not found');
+
+  // Rotate: revoke the used token immediately
+  await revokeRefreshToken(record.id);
+
+  // Determine rememberMe from remaining time: if > 1 day remaining → rememberMe
+  const remainingMs = record.expires_at.getTime() - Date.now();
+  const rememberMe = remainingMs > JWT_DEFAULT_MAX_AGE * 1000;
+
+  const tokens = await issueTokenPair(user, rememberMe);
+  return { user, tokens, rememberMe };
 }

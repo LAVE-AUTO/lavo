@@ -1,12 +1,12 @@
 import { NextResponse } from 'next/server';
 import { auth } from '@/auth';
 import { findOrCreateOAuthUser } from '@/server/auth/auth-service';
-import { signJwt, buildCookieOptions } from '@/lib/jwt';
+import { buildAccessCookieOptions, buildRefreshCookieOptions } from '@/lib/jwt';
 
 /**
  * GET /api/v1/auth/oauth/finalize
  * Bridge between NextAuth OAuth callback and our custom JWT session.
- * Creates or retrieves the user, issues our auth_token cookie, then redirects.
+ * Creates or retrieves the user, issues access + refresh cookies, then redirects.
  *
  * This route is the redirect target configured in auth.ts.
  */
@@ -23,22 +23,17 @@ export async function GET() {
   }
 
   try {
-    const user = await findOrCreateOAuthUser({
+    const { tokens } = await findOrCreateOAuthUser({
       email: oauthEmail,
       firstName: typeof oauthFirstName === 'string' ? oauthFirstName : '',
       lastName: typeof oauthLastName === 'string' ? oauthLastName : '',
     });
 
-    const jwt = await signJwt({
-      sub: user.id,
-      role: user.role,
-      email: user.email,
-      status: user.status,
-    });
-
-    const cookieOpts = buildCookieOptions(false);
+    const accessOpts = buildAccessCookieOptions();
+    const refreshOpts = buildRefreshCookieOptions(false);
     const response = NextResponse.redirect(`${appUrl}/fr/dashboard`);
-    response.cookies.set(cookieOpts.name, jwt, cookieOpts);
+    response.cookies.set(accessOpts.name, tokens.accessJwt, accessOpts);
+    response.cookies.set(refreshOpts.name, tokens.rawRefreshToken, refreshOpts);
     return response;
   } catch {
     return NextResponse.redirect(loginUrl);

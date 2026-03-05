@@ -7,6 +7,7 @@ import { relations } from "drizzle-orm";
 import { adminLogs } from "./admins";
 import { commissionSettings } from "./commission";
 import { emailVerificationTokens, users } from "./users";
+import { refreshTokens } from "./refresh-tokens";
 import { noShowFees, reservations } from "./reservations";
 import { notifications } from "./notifications";
 import { ratings } from "./ratings";
@@ -29,9 +30,11 @@ export * from "./commission";
 export * from "./support";
 export * from "./settings";
 export * from "./auth-rate-limits";
+export * from "./refresh-tokens";
 
 export const usersRelations = relations(users, ({ many }) => ({
   emailVerificationTokens: many(emailVerificationTokens),
+  refreshTokens: many(refreshTokens),
   reservations: many(reservations, { relationName: "userReservations" }),
   ratings: many(ratings, { relationName: "userRatings" }),
   supportTickets: many(supportTickets),
@@ -47,6 +50,13 @@ export const emailVerificationTokensRelations = relations(
     }),
   })
 );
+
+export const refreshTokensRelations = relations(refreshTokens, ({ one }) => ({
+  user: one(users, {
+    fields: [refreshTokens.user_id],
+    references: [users.id],
+  }),
+}));
 
 export const adminLogsRelations = relations(adminLogs, ({ one }) => ({
   admin: one(users, {

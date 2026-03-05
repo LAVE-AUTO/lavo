@@ -1,14 +1,12 @@
 import { headers } from 'next/headers';
 import { registerSchema, mapZodErrors } from '@/validators/auth';
-import {
-  registerWithPassword,
-} from '@/server/auth/auth-service';
+import { registerWithPassword } from '@/server/auth/auth-service';
 import {
   checkRateLimit,
   recordFailedAttempt,
   resetOnSuccess,
 } from '@/lib/rate-limiter';
-import { buildCookieOptions } from '@/lib/jwt';
+import { buildAccessCookieOptions, buildRefreshCookieOptions } from '@/lib/jwt';
 import {
   successResponse,
   error400,
@@ -61,17 +59,19 @@ export async function POST(request: Request) {
   }
 
   try {
-    const { user, jwt } = await registerWithPassword(parsed.data);
+    const { user, tokens, rememberMe } = await registerWithPassword(parsed.data);
 
     await resetOnSuccess(ip);
 
-    const cookieOpts = buildCookieOptions(parsed.data.remember_me);
+    const accessOpts = buildAccessCookieOptions();
+    const refreshOpts = buildRefreshCookieOptions(rememberMe);
     const response = successResponse(
       user,
       'Registration successful',
       HTTP_STATUS.CREATED
     );
-    response.cookies.set(cookieOpts.name, jwt, cookieOpts);
+    response.cookies.set(accessOpts.name, tokens.accessJwt, accessOpts);
+    response.cookies.set(refreshOpts.name, tokens.rawRefreshToken, refreshOpts);
     return response;
   } catch (e) {
     if (e instanceof ConflictError) {

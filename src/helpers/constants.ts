@@ -45,7 +45,10 @@ export const HTTP_STATUS = {
   SERVER_ERROR: 500,
 } as const;
 
-export const AUTH_COOKIE_NAME = 'auth_token';
+export const ACCESS_COOKIE_NAME = 'access_token';
+export const REFRESH_COOKIE_NAME = 'refresh_token';
+export const ACCESS_TOKEN_EXPIRY = '15m';
+export const ACCESS_TOKEN_MAX_AGE = 15 * 60;
 export const JWT_DEFAULT_EXPIRY = '1d';
 export const JWT_REMEMBER_EXPIRY = '30d';
 export const JWT_DEFAULT_MAX_AGE = 24 * 60 * 60;

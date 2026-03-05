@@ -1,10 +1,11 @@
 import { SignJWT, jwtVerify } from 'jose';
 import {
-  AUTH_COOKIE_NAME,
-  JWT_DEFAULT_EXPIRY,
-  JWT_REMEMBER_EXPIRY,
+  ACCESS_COOKIE_NAME,
+  ACCESS_TOKEN_EXPIRY,
+  ACCESS_TOKEN_MAX_AGE,
   JWT_DEFAULT_MAX_AGE,
   JWT_REMEMBER_MAX_AGE,
+  REFRESH_COOKIE_NAME,
 } from '@/helpers/constants';
 
 export interface JwtPayload {
@@ -20,15 +21,11 @@ function getSecret(): Uint8Array {
   return new TextEncoder().encode(secret);
 }
 
-export async function signJwt(
-  payload: JwtPayload,
-  rememberMe = false
-): Promise<string> {
-  const expiry = rememberMe ? JWT_REMEMBER_EXPIRY : JWT_DEFAULT_EXPIRY;
+export async function signJwt(payload: JwtPayload): Promise<string> {
   return new SignJWT({ ...payload })
     .setProtectedHeader({ alg: 'HS256' })
     .setIssuedAt()
-    .setExpirationTime(expiry)
+    .setExpirationTime(ACCESS_TOKEN_EXPIRY)
     .sign(getSecret());
 }
 
@@ -41,13 +38,24 @@ export async function verifyJwt(token: string): Promise<JwtPayload | null> {
   }
 }
 
-export function buildCookieOptions(rememberMe = false) {
+export function buildAccessCookieOptions() {
   return {
-    name: AUTH_COOKIE_NAME,
+    name: ACCESS_COOKIE_NAME,
     httpOnly: true,
     secure: process.env.NODE_ENV === 'production',
     sameSite: 'lax' as const,
     path: '/',
+    maxAge: ACCESS_TOKEN_MAX_AGE,
+  };
+}
+
+export function buildRefreshCookieOptions(rememberMe = false) {
+  return {
+    name: REFRESH_COOKIE_NAME,
+    httpOnly: true,
+    secure: process.env.NODE_ENV === 'production',
+    sameSite: 'strict' as const,
+    path: '/api/v1/auth',
     maxAge: rememberMe ? JWT_REMEMBER_MAX_AGE : JWT_DEFAULT_MAX_AGE,
   };
 }

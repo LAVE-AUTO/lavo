@@ -6,7 +6,7 @@ import {
   error401,
   error500,
 } from '@/lib/responses';
-import { AUTH_COOKIE_NAME } from '@/helpers/constants';
+import { ACCESS_COOKIE_NAME } from '@/helpers/constants';
 
 /**
  * GET /api/v1/auth/me
@@ -19,7 +19,7 @@ import { AUTH_COOKIE_NAME } from '@/helpers/constants';
  */
 export async function GET() {
   const cookieStore = await cookies();
-  const token = cookieStore.get(AUTH_COOKIE_NAME)?.value;
+  const token = cookieStore.get(ACCESS_COOKIE_NAME)?.value;
 
   if (!token) return error401();
 
