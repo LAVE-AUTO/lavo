@@ -13,6 +13,7 @@ export interface JwtPayload {
   role: string;
   email: string;
   status: string;
+  force_password_change: boolean;
 }
 
 function getSecret(): Uint8Array {

@@ -16,6 +16,7 @@ import {
   createUser,
   updateEmailVerified,
   updatePassword,
+  updateForcePasswordChange,
   type SafeUser,
 } from './user-repository';
 import {
@@ -60,6 +61,7 @@ async function issueTokenPair(
     role: user.role,
     email: user.email,
     status: user.status,
+    force_password_change: user.force_password_change,
   });
 
   const rawRefreshToken = generateRawToken();
@@ -96,7 +98,7 @@ export async function registerWithPassword(dto: RegisterDto): Promise<AuthResult
   });
 
   // Fire-and-forget: do not block registration on email failure
-  sendVerificationEmail(user.email, user.first_name, token.token).catch(
+  sendVerificationEmail(user.email, user.first_name ?? '', token.token).catch(
     () => void 0
   );
 
@@ -130,7 +132,7 @@ export async function resendVerificationEmail(email: string): Promise<void> {
     expires_at: new Date(Date.now() + 24 * 60 * 60 * 1000),
   });
 
-  await sendVerificationEmail(user.email, user.first_name, token.token);
+  await sendVerificationEmail(user.email, user.first_name ?? '', token.token);
 }
 
 export async function findOrCreateOAuthUser(data: {
@@ -189,6 +191,29 @@ export async function login(dto: LoginDto): Promise<AuthResult> {
   return { user: safeUser, tokens, rememberMe: dto.remember_me };
 }
 
+export async function changePassword(
+  userId: string,
+  currentPassword: string,
+  newPassword: string
+): Promise<void> {
+  const user = await findByEmail(
+    // findById strips password_hash, so we need to fetch with password
+    (await findById(userId))?.email ?? ''
+  );
+
+  if (!user) throw new NotFoundError('User not found');
+
+  // For accounts created via admin (may have null password), allow direct change if force_password_change
+  if (user.password_hash) {
+    const matches = await bcrypt.compare(currentPassword, user.password_hash);
+    if (!matches) throw new UnauthorizedError('Current password is incorrect');
+  }
+
+  const newHash = await bcrypt.hash(newPassword, 12);
+  await updatePassword(userId, newHash);
+  await updateForcePasswordChange(userId, false);
+}
+
 export async function forgotPassword(email: string): Promise<void> {
   const user = await findByEmail(email);
 
@@ -203,7 +228,7 @@ export async function forgotPassword(email: string): Promise<void> {
   });
 
   // Fire-and-forget: do not fail silently in case of email error
-  sendPasswordResetEmail(user.email, user.first_name, token.token).catch(
+  sendPasswordResetEmail(user.email, user.first_name ?? '', token.token).catch(
     () => void 0
   );
 }
