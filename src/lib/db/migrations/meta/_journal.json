@@ -15,6 +15,13 @@
       "when": 1772596104947,
       "tag": "0001_curvy_mac_gargan",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1772633220757,
+      "tag": "0002_cooing_sharon_carter",
+      "breakpoints": true
     }
   ]
 }
