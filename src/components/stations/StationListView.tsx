@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useRef, useEffect } from 'react';
 import { useTranslations } from 'next-intl';
 import { MOCK_STATIONS } from '@/data/stations-mock';
 import { SearchBar } from './SearchBar';
@@ -346,23 +346,12 @@ export function StationListView() {
               <p className="text-[14px] font-bold text-[#333333] dark:text-[#C0C0B0] uppercase tracking-wider mb-2">
                 {t('filter_categories_label')}
               </p>
-              <div className="flex flex-wrap gap-1.5">
-                {allCategories.map((cat) => (
-                  <button
-                    key={cat}
-                    type="button"
-                    onClick={() => toggleCategory(cat)}
-                    className={[
-                      'py-1.5 px-3.5 rounded-full text-[14px] font-bold transition-colors',
-                      selectedCategories.includes(cat)
-                        ? 'bg-gold text-[#1A2116]'
-                        : 'bg-[#F5F5EE] dark:bg-[#2C3828] text-[#222] dark:text-[#D0D0C0] hover:bg-[#E0E0D0] dark:hover:bg-[#3A4A36]',
-                    ].join(' ')}
-                  >
-                    {cat}
-                  </button>
-                ))}
-              </div>
+              <CustomMultiSelect
+                options={allCategories}
+                selected={selectedCategories}
+                onToggle={toggleCategory}
+                placeholder="Toutes les catégories"
+              />
             </div>
 
             {/* Vehicle types */}
@@ -370,23 +359,12 @@ export function StationListView() {
               <p className="text-[14px] font-bold text-[#333333] dark:text-[#C0C0B0] uppercase tracking-wider mb-2">
                 {t('filter_vehicle_label')}
               </p>
-              <div className="flex flex-wrap gap-1.5">
-                {ALL_VEHICLE_TYPES.map((v) => (
-                  <button
-                    key={v}
-                    type="button"
-                    onClick={() => toggleVehicle(v)}
-                    className={[
-                      'py-1.5 px-3.5 rounded-full text-[14px] font-bold transition-colors',
-                      selectedVehicles.includes(v)
-                        ? 'bg-gold text-[#1A2116]'
-                        : 'bg-[#F5F5EE] dark:bg-[#2C3828] text-[#222] dark:text-[#D0D0C0] hover:bg-[#E0E0D0] dark:hover:bg-[#3A4A36]',
-                    ].join(' ')}
-                  >
-                    {v}
-                  </button>
-                ))}
-              </div>
+              <CustomMultiSelect
+                options={ALL_VEHICLE_TYPES}
+                selected={selectedVehicles}
+                onToggle={toggleVehicle}
+                placeholder="Tous les véhicules"
+              />
             </div>
 
             {/* Services */}
@@ -394,23 +372,12 @@ export function StationListView() {
               <p className="text-[14px] font-bold text-[#333333] dark:text-[#C0C0B0] uppercase tracking-wider mb-2">
                 {t('filter_service_label')}
               </p>
-              <div className="flex flex-wrap gap-1.5">
-                {allServices.map((sv) => (
-                  <button
-                    key={sv}
-                    type="button"
-                    onClick={() => toggleService(sv)}
-                    className={[
-                      'py-1.5 px-3.5 rounded-full text-[14px] font-bold transition-colors',
-                      selectedServices.includes(sv)
-                        ? 'bg-gold text-[#1A2116]'
-                        : 'bg-[#F5F5EE] dark:bg-[#2C3828] text-[#222] dark:text-[#D0D0C0] hover:bg-[#E0E0D0] dark:hover:bg-[#3A4A36]',
-                    ].join(' ')}
-                  >
-                    {sv}
-                  </button>
-                ))}
-              </div>
+              <CustomMultiSelect
+                options={allServices}
+                selected={selectedServices}
+                onToggle={toggleService}
+                placeholder="Tous les services"
+              />
             </div>
 
             {/* Date */}
@@ -418,12 +385,30 @@ export function StationListView() {
               <label className="block text-[14px] font-bold text-[#333333] dark:text-[#C0C0B0] uppercase tracking-wider mb-2">
                 {t('filter_date_label')}
               </label>
-              <input
-                type="date"
-                value={date}
-                onChange={(e) => setDate(e.target.value)}
-                className="w-full px-3.5 py-2.5 rounded-lg bg-[#F5F5EE] dark:bg-[#2C3828] border border-[#E0E0D0] dark:border-[#3A4A36] text-[15px] text-[#1A1A1A] dark:text-white outline-none focus:border-gold transition-colors"
-              />
+              <div className="relative">
+                <svg
+                  className="absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none text-gold"
+                  width="16" height="16" viewBox="0 0 24 24" fill="none"
+                  stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"
+                  aria-hidden="true"
+                >
+                  <rect x="3" y="4" width="18" height="18" rx="2" ry="2" />
+                  <line x1="16" y1="2" x2="16" y2="6" />
+                  <line x1="8" y1="2" x2="8" y2="6" />
+                  <line x1="3" y1="10" x2="21" y2="10" />
+                </svg>
+                <input
+                  type="date"
+                  value={date}
+                  onChange={(e) => setDate(e.target.value)}
+                  className={[
+                    'w-full pl-10 pr-3.5 py-2.5 rounded-lg border text-[15px] outline-none transition-all duration-150 cursor-pointer',
+                    date
+                      ? 'border-gold bg-gold/5 dark:bg-gold/10 text-[#1A1A1A] dark:text-white'
+                      : 'border-[#E0E0D0] dark:border-[#3A4A36] bg-[#F5F5EE] dark:bg-[#2C3828] text-[#1A1A1A] dark:text-white',
+                  ].join(' ')}
+                />
+              </div>
             </div>
 
             {/* Time range */}
@@ -434,30 +419,22 @@ export function StationListView() {
               <div className="flex items-center gap-3">
                 <div className="flex-1">
                   <label className="block text-[13px] text-[#333333] dark:text-[#C0C0B0] mb-1">{t('filter_time_from')}</label>
-                  <select
+                  <CustomSelect
+                    options={HOURS.map((h) => ({ value: String(h), label: `${String(h).padStart(2, '0')}h00` }))}
                     value={timeFrom}
-                    onChange={(e) => setTimeFrom(e.target.value)}
-                    className="w-full px-3.5 py-2.5 rounded-lg bg-[#F5F5EE] dark:bg-[#2C3828] border border-[#E0E0D0] dark:border-[#3A4A36] text-[15px] text-[#1A1A1A] dark:text-white outline-none focus:border-gold transition-colors"
-                  >
-                    <option value="">--</option>
-                    {HOURS.map((h) => (
-                      <option key={h} value={String(h)}>{String(h).padStart(2, '0')}h00</option>
-                    ))}
-                  </select>
+                    onChange={setTimeFrom}
+                    placeholder="--"
+                  />
                 </div>
-                <div className="flex items-end pb-2.5 text-[#555] dark:text-[#B0B0A0] text-[14px] font-bold">&mdash;</div>
+                <div className="flex items-end pb-0.5 text-[#555] dark:text-[#B0B0A0] text-[14px] font-bold">&mdash;</div>
                 <div className="flex-1">
                   <label className="block text-[13px] text-[#333333] dark:text-[#C0C0B0] mb-1">{t('filter_time_to')}</label>
-                  <select
+                  <CustomSelect
+                    options={HOURS.map((h) => ({ value: String(h), label: `${String(h).padStart(2, '0')}h00` }))}
                     value={timeTo}
-                    onChange={(e) => setTimeTo(e.target.value)}
-                    className="w-full px-3.5 py-2.5 rounded-lg bg-[#F5F5EE] dark:bg-[#2C3828] border border-[#E0E0D0] dark:border-[#3A4A36] text-[15px] text-[#1A1A1A] dark:text-white outline-none focus:border-gold transition-colors"
-                  >
-                    <option value="">--</option>
-                    {HOURS.map((h) => (
-                      <option key={h} value={String(h)}>{String(h).padStart(2, '0')}h00</option>
-                    ))}
-                  </select>
+                    onChange={setTimeTo}
+                    placeholder="--"
+                  />
                 </div>
               </div>
             </div>
@@ -549,6 +526,175 @@ function EmptyState({ title, desc }: { title: string; desc: string }) {
       </div>
       <p className="text-[18px] font-black text-[#1A1A1A] dark:text-white">{title}</p>
       <p className="text-[15px] text-[#555] dark:text-[#C0C0B0] max-w-xs leading-relaxed">{desc}</p>
+    </div>
+  );
+}
+
+/* ------------------------------------------------------------------ */
+/* Custom select components                                             */
+/* ------------------------------------------------------------------ */
+
+interface CustomMultiSelectProps {
+  options: string[];
+  selected: string[];
+  onToggle: (opt: string) => void;
+  placeholder: string;
+}
+
+function CustomMultiSelect({ options, selected, onToggle, placeholder }: CustomMultiSelectProps) {
+  const [open, setOpen] = useState(false);
+  const ref = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (!open) return;
+    const handler = (e: MouseEvent) => {
+      if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false);
+    };
+    document.addEventListener('mousedown', handler);
+    return () => document.removeEventListener('mousedown', handler);
+  }, [open]);
+
+  const triggerLabel =
+    selected.length === 0 ? placeholder
+    : selected.length === 1 ? selected[0]
+    : `${selected[0]} +${selected.length - 1}`;
+
+  const isActive = open || selected.length > 0;
+
+  return (
+    <div ref={ref} className="relative">
+      <button
+        type="button"
+        onClick={() => setOpen((v) => !v)}
+        className={[
+          'w-full flex items-center justify-between px-3.5 py-2.5 rounded-lg border text-[15px] font-semibold transition-all duration-150 select-none',
+          isActive
+            ? 'border-gold bg-gold/5 dark:bg-gold/10 text-[#1A1A1A] dark:text-white'
+            : 'border-[#E0E0D0] dark:border-[#3A4A36] bg-[#F5F5EE] dark:bg-[#2C3828] text-[#555] dark:text-[#C0C0B0]',
+        ].join(' ')}
+      >
+        <span className={selected.length > 0 ? 'text-[#1A1A1A] dark:text-white' : ''}>{triggerLabel}</span>
+        <svg
+          width="16" height="16" viewBox="0 0 24 24" fill="none"
+          stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"
+          aria-hidden="true"
+          className={`shrink-0 transition-transform duration-200 ${open ? 'rotate-180 text-gold' : ''}`}
+        >
+          <polyline points="6 9 12 15 18 9" />
+        </svg>
+      </button>
+
+      {open && (
+        <div className="absolute top-[calc(100%+6px)] left-0 right-0 bg-white dark:bg-[#243020] border border-[#E0E0D0] dark:border-[#3A4A36] rounded-xl shadow-[0_8px_32px_rgba(0,0,0,0.12)] dark:shadow-[0_8px_32px_rgba(0,0,0,0.4)] z-50 max-h-52 overflow-y-auto animate-fade-in">
+          {options.map((opt) => {
+            const isSel = selected.includes(opt);
+            return (
+              <button
+                key={opt}
+                type="button"
+                onClick={() => onToggle(opt)}
+                className={[
+                  'w-full flex items-center justify-between px-3.5 py-2.5 text-[14px] font-semibold text-left transition-colors duration-100',
+                  isSel
+                    ? 'text-gold bg-gold/5 dark:bg-gold/10'
+                    : 'text-[#1A1A1A] dark:text-white hover:bg-[#F5F5EE] dark:hover:bg-[#2C3828]',
+                ].join(' ')}
+              >
+                <span>{opt}</span>
+                {isSel && (
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true" className="shrink-0 text-gold">
+                    <polyline points="20 6 9 17 4 12" />
+                  </svg>
+                )}
+              </button>
+            );
+          })}
+        </div>
+      )}
+    </div>
+  );
+}
+
+interface CustomSelectProps {
+  options: { value: string; label: string }[];
+  value: string;
+  onChange: (val: string) => void;
+  placeholder: string;
+}
+
+function CustomSelect({ options, value, onChange, placeholder }: CustomSelectProps) {
+  const [open, setOpen] = useState(false);
+  const ref = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (!open) return;
+    const handler = (e: MouseEvent) => {
+      if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false);
+    };
+    document.addEventListener('mousedown', handler);
+    return () => document.removeEventListener('mousedown', handler);
+  }, [open]);
+
+  const display = value
+    ? (options.find((o) => o.value === value)?.label ?? value)
+    : placeholder;
+
+  const isActive = open || value !== '';
+
+  return (
+    <div ref={ref} className="relative">
+      <button
+        type="button"
+        onClick={() => setOpen((v) => !v)}
+        className={[
+          'w-full flex items-center justify-between px-3.5 py-2.5 rounded-lg border text-[15px] font-semibold transition-all duration-150 select-none',
+          isActive
+            ? 'border-gold bg-gold/5 dark:bg-gold/10 text-[#1A1A1A] dark:text-white'
+            : 'border-[#E0E0D0] dark:border-[#3A4A36] bg-[#F5F5EE] dark:bg-[#2C3828] text-[#555] dark:text-[#C0C0B0]',
+        ].join(' ')}
+      >
+        <span className={value ? 'text-[#1A1A1A] dark:text-white' : ''}>{display}</span>
+        <svg
+          width="16" height="16" viewBox="0 0 24 24" fill="none"
+          stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"
+          aria-hidden="true"
+          className={`shrink-0 transition-transform duration-200 ${open ? 'rotate-180 text-gold' : ''}`}
+        >
+          <polyline points="6 9 12 15 18 9" />
+        </svg>
+      </button>
+
+      {open && (
+        <div className="absolute top-[calc(100%+6px)] left-0 right-0 bg-white dark:bg-[#243020] border border-[#E0E0D0] dark:border-[#3A4A36] rounded-xl shadow-[0_8px_32px_rgba(0,0,0,0.12)] dark:shadow-[0_8px_32px_rgba(0,0,0,0.4)] z-50 max-h-52 overflow-y-auto animate-fade-in">
+          <button
+            type="button"
+            onClick={() => { onChange(''); setOpen(false); }}
+            className="w-full px-3.5 py-2.5 text-[14px] font-semibold text-left text-[#9A9A8A] hover:bg-[#F5F5EE] dark:hover:bg-[#2C3828] transition-colors duration-100"
+          >
+            {placeholder}
+          </button>
+          {options.map((opt) => (
+            <button
+              key={opt.value}
+              type="button"
+              onClick={() => { onChange(opt.value); setOpen(false); }}
+              className={[
+                'w-full flex items-center justify-between px-3.5 py-2.5 text-[14px] font-semibold text-left transition-colors duration-100',
+                value === opt.value
+                  ? 'text-gold bg-gold/5 dark:bg-gold/10'
+                  : 'text-[#1A1A1A] dark:text-white hover:bg-[#F5F5EE] dark:hover:bg-[#2C3828]',
+              ].join(' ')}
+            >
+              <span>{opt.label}</span>
+              {value === opt.value && (
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true" className="shrink-0 text-gold">
+                  <polyline points="20 6 9 17 4 12" />
+                </svg>
+              )}
+            </button>
+          ))}
+        </div>
+      )}
     </div>
   );
 }
