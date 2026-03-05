@@ -41,5 +41,17 @@ export const HTTP_STATUS = {
   FORBIDDEN: 403,
   NOT_FOUND: 404,
   CONFLICT: 409,
+  TOO_MANY_REQUESTS: 429,
   SERVER_ERROR: 500,
 } as const;
+
+export const ACCESS_COOKIE_NAME = 'access_token';
+export const REFRESH_COOKIE_NAME = 'refresh_token';
+export const ACCESS_TOKEN_EXPIRY = '15m';
+export const ACCESS_TOKEN_MAX_AGE = 15 * 60;
+export const JWT_DEFAULT_EXPIRY = '1d';
+export const JWT_REMEMBER_EXPIRY = '30d';
+export const JWT_DEFAULT_MAX_AGE = 24 * 60 * 60;
+export const JWT_REMEMBER_MAX_AGE = 30 * 24 * 60 * 60;
+export const RATE_LIMIT_MAX_ATTEMPTS = 5;
+export const RATE_LIMIT_BLOCK_MINUTES = 15;

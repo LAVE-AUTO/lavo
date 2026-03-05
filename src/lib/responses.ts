@@ -124,6 +124,16 @@ export const error500 = (devError?: unknown) =>
   );
 
 /**
+ * Standard 429 Too Many Requests response.
+ */
+export const error429 = () =>
+  errorResponse(
+    'Too many requests. Please try again later.',
+    HTTP_STATUS.TOO_MANY_REQUESTS,
+    { code: ApiCode.TOO_MANY_REQUESTS }
+  );
+
+/**
  * Standard 501 Not Implemented response (status-first error body with code).
  */
 export function notImplementedResponse(message: string): NextResponse {
