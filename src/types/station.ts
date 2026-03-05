@@ -12,6 +12,7 @@ export interface Station {
   totalSlots: number;
   priceFrom: number;
   tags: string[];
+  vehicleTypes?: string[];
   imageUrl?: string;
   description?: string;
   openingHours?: string;
