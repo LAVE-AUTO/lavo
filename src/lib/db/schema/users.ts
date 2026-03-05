@@ -3,6 +3,7 @@
  * Client accounts, identity, and verification tokens (email, password reset).
  */
 import {
+  boolean,
   index,
   pgEnum,
   pgTable,
@@ -18,18 +19,25 @@ export const userRoleEnum = pgEnum("user_role", [
   "station",
 ]);
 
-/** Client accounts and identity. */
+/**
+ * All user accounts regardless of role.
+ * first_name / last_name are nullable to support station accounts.
+ * A CHECK constraint in the DB ensures client accounts always have both names.
+ */
 export const users = pgTable(
   "users",
   {
     id: uuid("id").primaryKey().defaultRandom(),
-    first_name: varchar("first_name", { length: 100 }).notNull(),
-    last_name: varchar("last_name", { length: 100 }).notNull(),
+    // Nullable: station accounts do not provide personal names
+    first_name: varchar("first_name", { length: 100 }),
+    last_name: varchar("last_name", { length: 100 }),
     email: varchar("email", { length: 255 }).notNull().unique(),
     phone: varchar("phone", { length: 30 }),
     password_hash: text("password_hash"),
     role: userRoleEnum("role").notNull().default("client"),
     status: varchar("status", { length: 30 }).notNull(),
+    // When true the user must change their password before accessing any endpoint
+    force_password_change: boolean("force_password_change").notNull().default(false),
     email_verified_at: timestamp("email_verified_at", {
       mode: "date",
       withTimezone: true,
@@ -80,4 +88,3 @@ export const emailVerificationTokens = pgTable("email_verification_tokens", {
     .notNull()
     .defaultNow(),
 });
-
