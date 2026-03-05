@@ -120,10 +120,10 @@ export function StationListView() {
             type="button"
             onClick={() => setPanelOpen((v) => !v)}
             className={[
-              'relative flex items-center gap-1.5 px-4 py-2.5 rounded-[10px] text-[13px] font-bold transition-colors',
+              'relative flex items-center gap-1.5 px-4 py-2.5 rounded-[10px] text-[15px] font-bold transition-colors',
               panelOpen
                 ? 'bg-gold text-[#1A2116]'
-                : 'bg-[#E0E0D0] dark:bg-[#2C3828] text-[#555] dark:text-[#9A9A8A] hover:bg-[#D0D0C0] dark:hover:bg-[#3A4A36]',
+                : 'bg-[#E0E0D0] dark:bg-[#2C3828] text-[#222] dark:text-[#D0D0C0] hover:bg-[#D0D0C0] dark:hover:bg-[#3A4A36]',
             ].join(' ')}
             aria-expanded={panelOpen}
             aria-label={t('filter_panel_title')}
@@ -150,10 +150,10 @@ export function StationListView() {
               type="button"
               onClick={() => setSort(key)}
               className={[
-                'py-1.5 px-3.5 rounded-full text-[11px] font-bold whitespace-nowrap transition-colors duration-150 shrink-0',
+                'py-1.5 px-3.5 rounded-full text-[14px] font-bold whitespace-nowrap transition-colors duration-150 shrink-0',
                 sort === key
                   ? 'bg-gold text-[#1A2116]'
-                  : 'bg-[#E0E0D0] dark:bg-[#1E2A1A] text-[#555] dark:text-[#9A9A8A] hover:bg-[#D0D0C0] dark:hover:bg-[#2C3828]',
+                  : 'bg-[#E0E0D0] dark:bg-[#1E2A1A] text-[#222] dark:text-[#D0D0C0] hover:bg-[#D0D0C0] dark:hover:bg-[#2C3828]',
               ].join(' ')}
             >
               {label}
@@ -165,10 +165,10 @@ export function StationListView() {
             type="button"
             onClick={() => setOnlyAvail((v) => !v)}
             className={[
-              'py-1.5 px-3.5 rounded-full text-[11px] font-bold whitespace-nowrap transition-colors duration-150 shrink-0',
+              'py-1.5 px-3.5 rounded-full text-[14px] font-bold whitespace-nowrap transition-colors duration-150 shrink-0',
               onlyAvail
                 ? 'bg-gold text-[#1A2116]'
-                : 'bg-[#E0E0D0] dark:bg-[#1E2A1A] text-[#555] dark:text-[#9A9A8A] hover:bg-[#D0D0C0] dark:hover:bg-[#2C3828]',
+                : 'bg-[#E0E0D0] dark:bg-[#1E2A1A] text-[#222] dark:text-[#D0D0C0] hover:bg-[#D0D0C0] dark:hover:bg-[#2C3828]',
             ].join(' ')}
           >
             {t('filter_available')}
@@ -181,14 +181,14 @@ export function StationListView() {
 
             {/* Header */}
             <div className="flex items-center justify-between">
-              <span className="text-[14px] font-black text-[#1A1A1A] dark:text-white uppercase tracking-wider">
+              <span className="text-[16px] font-black text-[#1A1A1A] dark:text-white uppercase tracking-wider">
                 {t('filter_panel_title')}
               </span>
               {activeCount > 0 && (
                 <button
                   type="button"
                   onClick={handleReset}
-                  className="text-[12px] font-bold text-gold hover:text-gold-hover transition-colors"
+                  className="text-[14px] font-bold text-gold hover:text-gold-hover transition-colors"
                 >
                   {t('filter_reset')}
                 </button>
@@ -197,7 +197,7 @@ export function StationListView() {
 
             {/* City input */}
             <div>
-              <label className="block text-[11px] font-bold text-[#9A9A8A] uppercase tracking-wider mb-2">
+              <label className="block text-[14px] font-bold text-[#333333] dark:text-[#C0C0B0] uppercase tracking-wider mb-2">
                 {t('filter_city_label')}
               </label>
               <input
@@ -205,13 +205,13 @@ export function StationListView() {
                 value={cityInput}
                 onChange={(e) => setCityInput(e.target.value)}
                 placeholder={t('filter_city_placeholder')}
-                className="w-full px-3.5 py-2.5 rounded-lg bg-[#F5F5EE] dark:bg-[#2C3828] border border-[#E0E0D0] dark:border-[#3A4A36] text-[13px] text-[#1A1A1A] dark:text-white placeholder-[#9A9A8A] outline-none focus:border-gold transition-colors"
+                className="w-full px-3.5 py-2.5 rounded-lg bg-[#F5F5EE] dark:bg-[#2C3828] border border-[#E0E0D0] dark:border-[#3A4A36] text-[15px] text-[#1A1A1A] dark:text-white placeholder-[#9A9A8A] outline-none focus:border-gold transition-colors"
               />
             </div>
 
             {/* Price range */}
             <div>
-              <label className="block text-[11px] font-bold text-[#9A9A8A] uppercase tracking-wider mb-2">
+              <label className="block text-[14px] font-bold text-[#333333] dark:text-[#C0C0B0] uppercase tracking-wider mb-2">
                 {t('filter_price_label')}
               </label>
               <div className="flex gap-3">
@@ -223,17 +223,17 @@ export function StationListView() {
                     onChange={(e) => validateAndSetMin(e.target.value)}
                     placeholder={t('filter_price_min_placeholder')}
                     className={[
-                      'w-full px-3.5 py-2.5 rounded-lg bg-[#F5F5EE] dark:bg-[#2C3828] border text-[13px] text-[#1A1A1A] dark:text-white placeholder-[#9A9A8A] outline-none transition-colors',
+                      'w-full px-3.5 py-2.5 rounded-lg bg-[#F5F5EE] dark:bg-[#2C3828] border text-[15px] text-[#1A1A1A] dark:text-white placeholder-[#9A9A8A] outline-none transition-colors',
                       priceErrors.min
                         ? 'border-lavo-error focus:border-lavo-error'
                         : 'border-[#E0E0D0] dark:border-[#3A4A36] focus:border-gold',
                     ].join(' ')}
                   />
                   {priceErrors.min && (
-                    <p className="text-[12px] text-lavo-error mt-1">{priceErrors.min}</p>
+                    <p className="text-[14px] text-lavo-error mt-1">{priceErrors.min}</p>
                   )}
                 </div>
-                <div className="flex items-center text-[#9A9A8A] text-[12px] font-bold pt-2.5">&mdash;</div>
+                <div className="flex items-center text-[#555] dark:text-[#B0B0A0] text-[14px] font-bold pt-2.5">&mdash;</div>
                 <div className="flex-1">
                   <input
                     type="number"
@@ -242,14 +242,14 @@ export function StationListView() {
                     onChange={(e) => validateAndSetMax(e.target.value)}
                     placeholder={t('filter_price_max_placeholder')}
                     className={[
-                      'w-full px-3.5 py-2.5 rounded-lg bg-[#F5F5EE] dark:bg-[#2C3828] border text-[13px] text-[#1A1A1A] dark:text-white placeholder-[#9A9A8A] outline-none transition-colors',
+                      'w-full px-3.5 py-2.5 rounded-lg bg-[#F5F5EE] dark:bg-[#2C3828] border text-[15px] text-[#1A1A1A] dark:text-white placeholder-[#9A9A8A] outline-none transition-colors',
                       priceErrors.max
                         ? 'border-lavo-error focus:border-lavo-error'
                         : 'border-[#E0E0D0] dark:border-[#3A4A36] focus:border-gold',
                     ].join(' ')}
                   />
                   {priceErrors.max && (
-                    <p className="text-[12px] text-lavo-error mt-1">{priceErrors.max}</p>
+                    <p className="text-[14px] text-lavo-error mt-1">{priceErrors.max}</p>
                   )}
                 </div>
               </div>
@@ -257,7 +257,7 @@ export function StationListView() {
 
             {/* Sort */}
             <div>
-              <p className="text-[11px] font-bold text-[#9A9A8A] uppercase tracking-wider mb-2">
+              <p className="text-[14px] font-bold text-[#333333] dark:text-[#C0C0B0] uppercase tracking-wider mb-2">
                 {t('filter_sort_label')}
               </p>
               <div className="flex flex-wrap gap-1.5">
@@ -267,10 +267,10 @@ export function StationListView() {
                     type="button"
                     onClick={() => setSort(key)}
                     className={[
-                      'py-1.5 px-3.5 rounded-full text-[11px] font-bold transition-colors',
+                      'py-1.5 px-3.5 rounded-full text-[14px] font-bold transition-colors',
                       sort === key
                         ? 'bg-gold text-[#1A2116]'
-                        : 'bg-[#F5F5EE] dark:bg-[#2C3828] text-[#555] dark:text-[#9A9A8A] hover:bg-[#E0E0D0] dark:hover:bg-[#3A4A36]',
+                        : 'bg-[#F5F5EE] dark:bg-[#2C3828] text-[#222] dark:text-[#D0D0C0] hover:bg-[#E0E0D0] dark:hover:bg-[#3A4A36]',
                     ].join(' ')}
                   >
                     {label}
@@ -281,7 +281,7 @@ export function StationListView() {
 
             {/* Availability toggle */}
             <div className="flex items-center justify-between gap-4 py-1">
-              <span className="text-[13px] font-semibold text-[#1A1A1A] dark:text-white leading-snug">
+              <span className="text-[15px] font-semibold text-[#1A1A1A] dark:text-white leading-snug">
                 {t('filter_available_only')}
               </span>
               <button
@@ -337,8 +337,8 @@ function SectionLabel({ label, count, accent = false }: { label: string; count: 
   return (
     <div className="flex items-center gap-3 mb-4">
       {accent && <span className="w-1 h-4 rounded-full bg-gold shrink-0" />}
-      <span className="text-[14px] font-black text-[#1A1A1A] dark:text-white uppercase tracking-widest">{label}</span>
-      <span className="text-[11px] text-[#9A9A8A] font-semibold bg-[#E0E0D0] dark:bg-[#1E2A1A] px-2 py-0.5 rounded-full">
+      <span className="text-[16px] font-black text-[#1A1A1A] dark:text-white uppercase tracking-widest">{label}</span>
+      <span className="text-[13px] text-[#555] dark:text-[#B0B0A0] font-semibold bg-[#E0E0D0] dark:bg-[#1E2A1A] px-2 py-0.5 rounded-full">
         {count}
       </span>
     </div>
@@ -364,8 +364,8 @@ function EmptyState({ title, desc }: { title: string; desc: string }) {
           <line x1="21" y1="21" x2="16.65" y2="16.65" />
         </svg>
       </div>
-      <p className="text-[16px] font-black text-[#1A1A1A] dark:text-white">{title}</p>
-      <p className="text-[13px] text-[#9A9A8A] max-w-xs leading-relaxed">{desc}</p>
+      <p className="text-[18px] font-black text-[#1A1A1A] dark:text-white">{title}</p>
+      <p className="text-[15px] text-[#555] dark:text-[#C0C0B0] max-w-xs leading-relaxed">{desc}</p>
     </div>
   );
 }
