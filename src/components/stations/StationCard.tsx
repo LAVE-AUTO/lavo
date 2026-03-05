@@ -161,14 +161,14 @@ export function StationCard({ station, unavailable = false }: StationCardProps) 
               type="button"
               onClick={handleJoin}
               disabled={joining}
-              className="flex-1 py-2.5 border-2 border-gold rounded-lg text-[12px] font-bold text-gold text-center hover:bg-gold/10 transition-colors disabled:opacity-60 flex items-center justify-center gap-1"
+              className="flex-1 py-2.5 border-2 border-gold rounded-lg text-[13px] font-bold text-gold text-center hover:bg-gold/10 transition-colors disabled:opacity-60 flex items-center justify-center gap-1"
             >
               {joining ? <Spinner size="sm" /> : t('join')}
             </button>
           )}
           <Link
             href={`/stations/${station.id}`}
-            className="flex-1 py-2.5 bg-gold hover:bg-gold-hover rounded-lg text-[12px] font-bold text-[#1A2116] text-center transition-colors"
+            className="flex-1 py-2.5 bg-gold hover:bg-gold-hover rounded-lg text-[13px] font-bold text-[#1A2116] text-center transition-colors"
           >
             {t('details')}
           </Link>

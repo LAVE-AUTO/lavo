@@ -63,7 +63,7 @@ export function FormField({
       </div>
 
       {error && (
-        <p className="mt-1.5 text-[20px] font-medium text-lavo-error flex items-center gap-1">
+        <p className="mt-1.5 text-[13px] font-medium text-lavo-error flex items-center gap-1">
           <span aria-hidden="true">!</span>
           {error}
         </p>
