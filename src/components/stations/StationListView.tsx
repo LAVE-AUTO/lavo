@@ -7,11 +7,23 @@ import { SearchBar } from './SearchBar';
 import { StationCard } from './StationCard';
 import type { StationDetailData } from '@/types/station';
 
-type SortKey   = 'default' | 'price_asc' | 'best_rated';
+type SortKey = 'default' | 'price_asc' | 'best_rated';
 
 interface PriceRange {
   min: string;
   max: string;
+}
+
+const ALL_VEHICLE_TYPES = ['Berline', 'SUV', 'Moto', 'Camionette'];
+const HOURS = Array.from({ length: 24 }, (_, i) => i);
+
+/** Parse "07h00 – 20h00" → { open: 7, close: 20 } */
+function parseOpeningHours(oh: string): { open: number; close: number } | null {
+  const parts = oh.split('–').map((s) => s.trim());
+  if (parts.length !== 2) return null;
+  const open  = parseInt(parts[0].split('h')[0], 10);
+  const close = parseInt(parts[1].split('h')[0], 10);
+  return isNaN(open) || isNaN(close) ? null : { open, close };
 }
 
 /**
@@ -22,13 +34,19 @@ interface PriceRange {
 export function StationListView() {
   const t = useTranslations('stations');
 
-  const [query,       setQuery]       = useState('');
-  const [onlyAvail,  setOnlyAvail]   = useState(false);
-  const [sort,        setSort]        = useState<SortKey>('default');
-  const [cityInput,   setCityInput]   = useState('');
-  const [price,       setPrice]       = useState<PriceRange>({ min: '', max: '' });
-  const [priceErrors, setPriceErrors] = useState({ min: '', max: '' });
-  const [panelOpen,   setPanelOpen]   = useState(false);
+  const [query,              setQuery]              = useState('');
+  const [onlyAvail,         setOnlyAvail]          = useState(false);
+  const [sort,               setSort]               = useState<SortKey>('default');
+  const [cityInput,          setCityInput]          = useState('');
+  const [price,              setPrice]              = useState<PriceRange>({ min: '', max: '' });
+  const [priceErrors,        setPriceErrors]        = useState({ min: '', max: '' });
+  const [panelOpen,          setPanelOpen]          = useState(false);
+  const [selectedCategories, setSelectedCategories] = useState<string[]>([]);
+  const [selectedVehicles,   setSelectedVehicles]   = useState<string[]>([]);
+  const [selectedServices,   setSelectedServices]   = useState<string[]>([]);
+  const [date,               setDate]               = useState('');
+  const [timeFrom,           setTimeFrom]           = useState('');
+  const [timeTo,             setTimeTo]             = useState('');
 
   /* ── Price validation ── */
   const validateAndSetMin = (val: string) => {
@@ -52,12 +70,32 @@ export function StationListView() {
     }
   };
 
+  /* ── Derived filter options ── */
+  const allCategories = useMemo(
+    () => [...new Set(MOCK_STATIONS.flatMap((s) => s.tags))].sort(),
+    []
+  );
+  const allServices = useMemo(
+    () => [...new Set(MOCK_STATIONS.flatMap((s) => s.services))].sort(),
+    []
+  );
+
+  /* ── Toggle helpers ── */
+  const toggleCategory = (c: string) =>
+    setSelectedCategories((prev) => prev.includes(c) ? prev.filter((x) => x !== c) : [...prev, c]);
+  const toggleVehicle = (v: string) =>
+    setSelectedVehicles((prev) => prev.includes(v) ? prev.filter((x) => x !== v) : [...prev, v]);
+  const toggleService = (s: string) =>
+    setSelectedServices((prev) => prev.includes(s) ? prev.filter((x) => x !== s) : [...prev, s]);
+
   /* ── Filtered + sorted results ── */
   const filtered = useMemo(() => {
     const q       = query.trim().toLowerCase();
     const city    = cityInput.trim().toLowerCase();
     const minNum  = parseFloat(price.min);
     const maxNum  = parseFloat(price.max);
+    const fromH   = timeFrom !== '' ? parseInt(timeFrom, 10) : null;
+    const toH     = timeTo   !== '' ? parseInt(timeTo,   10) : null;
 
     let results = MOCK_STATIONS.filter((s) => {
       const matchesQuery =
@@ -67,12 +105,25 @@ export function StationListView() {
         s.city.toLowerCase().includes(q) ||
         s.tags.some((tag) => tag.toLowerCase().includes(q));
 
-      const matchesAvail = !onlyAvail || s.availableSlots > 0;
-      const matchesCity  = !city || s.city.toLowerCase().includes(city);
-      const matchesMin   = isNaN(minNum) || price.min === '' || s.priceFrom >= minNum;
-      const matchesMax   = isNaN(maxNum) || price.max === '' || s.priceFrom <= maxNum;
+      const matchesAvail      = !onlyAvail || s.availableSlots > 0;
+      const matchesCity       = !city || s.city.toLowerCase().includes(city);
+      const matchesMin        = isNaN(minNum) || price.min === '' || s.priceFrom >= minNum;
+      const matchesMax        = isNaN(maxNum) || price.max === '' || s.priceFrom <= maxNum;
+      const matchesCategories = !selectedCategories.length || selectedCategories.some((c) => s.tags.includes(c));
+      const matchesVehicles   = !selectedVehicles.length || selectedVehicles.some((v) => s.vehicleTypes?.includes(v));
+      const matchesServices   = !selectedServices.length || selectedServices.some((sv) => s.services.includes(sv));
+      const matchesTime       = (() => {
+        if (fromH === null && toH === null) return true;
+        if (!s.openingHours) return true;
+        const parsed = parseOpeningHours(s.openingHours);
+        if (!parsed) return true;
+        const effectiveFrom = fromH ?? 0;
+        const effectiveTo   = toH   ?? 23;
+        return parsed.open <= effectiveTo && parsed.close >= effectiveFrom;
+      })();
 
-      return matchesQuery && matchesAvail && matchesCity && matchesMin && matchesMax;
+      return matchesQuery && matchesAvail && matchesCity && matchesMin && matchesMax
+        && matchesCategories && matchesVehicles && matchesServices && matchesTime;
     });
 
     if (sort === 'price_asc')  results = [...results].sort((a, b) => a.priceFrom - b.priceFrom);
@@ -95,7 +146,12 @@ export function StationListView() {
     (onlyAvail ? 1 : 0) +
     (cityInput.trim() ? 1 : 0) +
     (sort !== 'default' ? 1 : 0) +
-    (price.min !== '' || price.max !== '' ? 1 : 0);
+    (price.min !== '' || price.max !== '' ? 1 : 0) +
+    (selectedCategories.length ? 1 : 0) +
+    (selectedVehicles.length ? 1 : 0) +
+    (selectedServices.length ? 1 : 0) +
+    (date ? 1 : 0) +
+    (timeFrom !== '' || timeTo !== '' ? 1 : 0);
 
   const handleReset = () => {
     setOnlyAvail(false);
@@ -103,6 +159,12 @@ export function StationListView() {
     setCityInput('');
     setPrice({ min: '', max: '' });
     setPriceErrors({ min: '', max: '' });
+    setSelectedCategories([]);
+    setSelectedVehicles([]);
+    setSelectedServices([]);
+    setDate('');
+    setTimeFrom('');
+    setTimeTo('');
     setPanelOpen(false);
   };
 
@@ -276,6 +338,127 @@ export function StationListView() {
                     {label}
                   </button>
                 ))}
+              </div>
+            </div>
+
+            {/* Categories */}
+            <div>
+              <p className="text-[14px] font-bold text-[#333333] dark:text-[#C0C0B0] uppercase tracking-wider mb-2">
+                {t('filter_categories_label')}
+              </p>
+              <div className="flex flex-wrap gap-1.5">
+                {allCategories.map((cat) => (
+                  <button
+                    key={cat}
+                    type="button"
+                    onClick={() => toggleCategory(cat)}
+                    className={[
+                      'py-1.5 px-3.5 rounded-full text-[14px] font-bold transition-colors',
+                      selectedCategories.includes(cat)
+                        ? 'bg-gold text-[#1A2116]'
+                        : 'bg-[#F5F5EE] dark:bg-[#2C3828] text-[#222] dark:text-[#D0D0C0] hover:bg-[#E0E0D0] dark:hover:bg-[#3A4A36]',
+                    ].join(' ')}
+                  >
+                    {cat}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {/* Vehicle types */}
+            <div>
+              <p className="text-[14px] font-bold text-[#333333] dark:text-[#C0C0B0] uppercase tracking-wider mb-2">
+                {t('filter_vehicle_label')}
+              </p>
+              <div className="flex flex-wrap gap-1.5">
+                {ALL_VEHICLE_TYPES.map((v) => (
+                  <button
+                    key={v}
+                    type="button"
+                    onClick={() => toggleVehicle(v)}
+                    className={[
+                      'py-1.5 px-3.5 rounded-full text-[14px] font-bold transition-colors',
+                      selectedVehicles.includes(v)
+                        ? 'bg-gold text-[#1A2116]'
+                        : 'bg-[#F5F5EE] dark:bg-[#2C3828] text-[#222] dark:text-[#D0D0C0] hover:bg-[#E0E0D0] dark:hover:bg-[#3A4A36]',
+                    ].join(' ')}
+                  >
+                    {v}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {/* Services */}
+            <div>
+              <p className="text-[14px] font-bold text-[#333333] dark:text-[#C0C0B0] uppercase tracking-wider mb-2">
+                {t('filter_service_label')}
+              </p>
+              <div className="flex flex-wrap gap-1.5">
+                {allServices.map((sv) => (
+                  <button
+                    key={sv}
+                    type="button"
+                    onClick={() => toggleService(sv)}
+                    className={[
+                      'py-1.5 px-3.5 rounded-full text-[14px] font-bold transition-colors',
+                      selectedServices.includes(sv)
+                        ? 'bg-gold text-[#1A2116]'
+                        : 'bg-[#F5F5EE] dark:bg-[#2C3828] text-[#222] dark:text-[#D0D0C0] hover:bg-[#E0E0D0] dark:hover:bg-[#3A4A36]',
+                    ].join(' ')}
+                  >
+                    {sv}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {/* Date */}
+            <div>
+              <label className="block text-[14px] font-bold text-[#333333] dark:text-[#C0C0B0] uppercase tracking-wider mb-2">
+                {t('filter_date_label')}
+              </label>
+              <input
+                type="date"
+                value={date}
+                onChange={(e) => setDate(e.target.value)}
+                className="w-full px-3.5 py-2.5 rounded-lg bg-[#F5F5EE] dark:bg-[#2C3828] border border-[#E0E0D0] dark:border-[#3A4A36] text-[15px] text-[#1A1A1A] dark:text-white outline-none focus:border-gold transition-colors"
+              />
+            </div>
+
+            {/* Time range */}
+            <div>
+              <p className="text-[14px] font-bold text-[#333333] dark:text-[#C0C0B0] uppercase tracking-wider mb-2">
+                {t('filter_time_label')}
+              </p>
+              <div className="flex items-center gap-3">
+                <div className="flex-1">
+                  <label className="block text-[13px] text-[#333333] dark:text-[#C0C0B0] mb-1">{t('filter_time_from')}</label>
+                  <select
+                    value={timeFrom}
+                    onChange={(e) => setTimeFrom(e.target.value)}
+                    className="w-full px-3.5 py-2.5 rounded-lg bg-[#F5F5EE] dark:bg-[#2C3828] border border-[#E0E0D0] dark:border-[#3A4A36] text-[15px] text-[#1A1A1A] dark:text-white outline-none focus:border-gold transition-colors"
+                  >
+                    <option value="">--</option>
+                    {HOURS.map((h) => (
+                      <option key={h} value={String(h)}>{String(h).padStart(2, '0')}h00</option>
+                    ))}
+                  </select>
+                </div>
+                <div className="flex items-end pb-2.5 text-[#555] dark:text-[#B0B0A0] text-[14px] font-bold">&mdash;</div>
+                <div className="flex-1">
+                  <label className="block text-[13px] text-[#333333] dark:text-[#C0C0B0] mb-1">{t('filter_time_to')}</label>
+                  <select
+                    value={timeTo}
+                    onChange={(e) => setTimeTo(e.target.value)}
+                    className="w-full px-3.5 py-2.5 rounded-lg bg-[#F5F5EE] dark:bg-[#2C3828] border border-[#E0E0D0] dark:border-[#3A4A36] text-[15px] text-[#1A1A1A] dark:text-white outline-none focus:border-gold transition-colors"
+                  >
+                    <option value="">--</option>
+                    {HOURS.map((h) => (
+                      <option key={h} value={String(h)}>{String(h).padStart(2, '0')}h00</option>
+                    ))}
+                  </select>
+                </div>
               </div>
             </div>
 
