@@ -60,3 +60,21 @@ export class ConflictError extends AppError {
     super(message, HTTP_STATUS.CONFLICT);
   }
 }
+
+/**
+ * Unauthorized error (401) — alias for AuthenticationError.
+ */
+export class UnauthorizedError extends AppError {
+  constructor(message = 'Authentication required') {
+    super(message, HTTP_STATUS.UNAUTHORIZED);
+  }
+}
+
+/**
+ * Token expired error (400).
+ */
+export class TokenExpiredError extends AppError {
+  constructor(message = 'Token has expired') {
+    super(message, HTTP_STATUS.BAD_REQUEST);
+  }
+}
