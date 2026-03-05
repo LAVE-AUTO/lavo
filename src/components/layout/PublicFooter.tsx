@@ -52,7 +52,7 @@ export async function PublicFooter() {
               </div>
               <span className="text-[18px] font-bold tracking-wide text-white">LAVO</span>
             </div>
-            <p className="text-[20px] text-lavo-muted leading-relaxed max-w-sm">
+            <p className="text-[13px] text-lavo-muted leading-relaxed max-w-sm">
               {t('tagline')}
             </p>
 
@@ -89,7 +89,7 @@ export async function PublicFooter() {
                 <li key={href}>
                   <Link
                     href={href}
-                    className="text-[20px] text-[#C8C8B4] hover:text-gold transition-colors duration-150"
+                    className="text-[13px] text-[#C8C8B4] hover:text-gold transition-colors duration-150"
                   >
                     {label}
                   </Link>
@@ -108,7 +108,7 @@ export async function PublicFooter() {
                 <li key={label}>
                   <Link
                     href={href}
-                    className="text-[20px] text-[#C8C8B4] hover:text-gold transition-colors duration-150"
+                    className="text-[13px] text-[#C8C8B4] hover:text-gold transition-colors duration-150"
                   >
                     {label}
                   </Link>
