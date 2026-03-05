@@ -82,7 +82,7 @@ export function ForgotPasswordForm() {
         <p className="text-[15px] text-[#555] dark:text-lavo-muted leading-relaxed mb-2">
           {t('success_message')}
         </p>
-        <p className="text-[13px] text-[#888] dark:text-lavo-muted mb-8">
+        <p className="text-[20px] text-[#888] dark:text-lavo-muted mb-8">
           {t('success_spam')}
         </p>
         <Link
