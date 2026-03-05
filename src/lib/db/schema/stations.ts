@@ -1,5 +1,5 @@
 /**
- * Stations, station config (1-1), and vehicle formats.
+ * Stations, station config (1-1), vehicle formats, and station documents.
  * Station identity, approval lifecycle, and per-station pricing by vehicle format.
  */
 import {
@@ -7,6 +7,7 @@ import {
   decimal,
   index,
   integer,
+  pgEnum,
   pgTable,
   text,
   time,
@@ -16,11 +17,22 @@ import {
 } from "drizzle-orm/pg-core";
 import { users } from "./users";
 
-/** Station identity, approval lifecycle, and operational flags. */
+export const washTypeEnum = pgEnum("wash_type", [
+  "hand_wash",
+  "automatic",
+  "self_service",
+]);
+
+/**
+ * Station identity, approval lifecycle, and operational flags.
+ * user_id links to the managing user account (role = station).
+ */
 export const stations = pgTable(
   "stations",
   {
     id: uuid("id").primaryKey().defaultRandom(),
+    // Managing user account for this station (role = station)
+    user_id: uuid("user_id").references(() => users.id),
     name: varchar("name", { length: 200 }).notNull(),
     legal_name: varchar("legal_name", { length: 200 }),
     registration_number: varchar("registration_number", { length: 100 }),
@@ -28,8 +40,11 @@ export const stations = pgTable(
     city: varchar("city", { length: 100 }).notNull(),
     latitude: decimal("latitude", { precision: 10, scale: 7 }),
     longitude: decimal("longitude", { precision: 10, scale: 7 }),
+    wash_type: washTypeEnum("wash_type"),
+    description: text("description"),
+    wash_post_count: integer("wash_post_count"),
     status: varchar("status", { length: 30 }).notNull(),
-    is_open: boolean("is_open").notNull(),
+    is_open: boolean("is_open").notNull().default(false),
     stripe_account_id: varchar("stripe_account_id", { length: 100 }),
     average_score: decimal("average_score", { precision: 3, scale: 2 }),
     total_ratings: integer("total_ratings").notNull().default(0),
@@ -56,6 +71,7 @@ export const stations = pgTable(
     index("stations_status_idx").on(table.status),
     index("stations_city_idx").on(table.city),
     index("stations_is_open_idx").on(table.is_open),
+    index("stations_user_id_idx").on(table.user_id),
   ]
 );
 
@@ -101,6 +117,26 @@ export const vehicleFormats = pgTable("vehicle_formats", {
     .notNull()
     .defaultNow(),
   updated_at: timestamp("updated_at", {
+    mode: "date",
+    withTimezone: true,
+  })
+    .notNull()
+    .defaultNow(),
+});
+
+/**
+ * Documents submitted during station onboarding (step 3).
+ * One row per document; terms_accepted records the legal confirmation checkbox.
+ */
+export const stationDocuments = pgTable("station_documents", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  station_id: uuid("station_id")
+    .notNull()
+    .references(() => stations.id, { onDelete: "cascade" }),
+  document_type: varchar("document_type", { length: 50 }).notNull(),
+  file_url: text("file_url").notNull(),
+  terms_accepted: boolean("terms_accepted").notNull().default(false),
+  created_at: timestamp("created_at", {
     mode: "date",
     withTimezone: true,
   })

@@ -1,0 +1,507 @@
+{
+  "info": {
+    "name": "LAVO — Stations API",
+    "description": "Collection pour les endpoints liés aux stations de lavage.\n\nVariable requise : `base_url` (ex: http://localhost:3000)\nVariable auto-remplie : `access_token` (depuis la collection Auth)\n\n## Groupes\n- **Station Onboarding** : inscription station en 3 étapes (validate/step1, validate/step2, submit)\n- **Station — Profil** : lecture du profil station authentifiée",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    {
+      "key": "base_url",
+      "value": "http://localhost:3000",
+      "type": "string"
+    },
+    {
+      "key": "access_token",
+      "value": "",
+      "type": "string"
+    }
+  ],
+  "item": [
+    {
+      "name": "Station Onboarding",
+      "description": "Flux en 3 etapes. Les endpoints validate/* ne font aucune ecriture en base — ils permettent au frontend de valider chaque etape avant de passer a la suivante. Toutes les operations DB sont declenchees uniquement par /submit.",
+      "item": [
+        {
+          "name": "validate/step1 — succes (200)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 200', () => pm.response.to.have.status(200));"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "response": [],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/stations/onboarding/validate/step1",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "stations",
+                "onboarding",
+                "validate",
+                "step1"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\"email\":\"station@example.com\",\"phone\":\"+33612345678\",\"password\":\"StationPass1!\",\"confirm_password\":\"StationPass1!\"}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "description": "Valide les champs step 1 sans ecriture en base. Aucun compte n'est cree."
+          }
+        },
+        {
+          "name": "validate/step1 — confirm_password invalide (400)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 400', () => pm.response.to.have.status(400));",
+                  "pm.test('Erreur confirm_password', () => {",
+                  "  const json = pm.response.json();",
+                  "  pm.expect(json.code).to.eql('VALIDATION_FAILED');",
+                  "  pm.expect(json.errors.some(e => e.field === 'confirm_password')).to.be.true;",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "response": [],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/stations/onboarding/validate/step1",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "stations",
+                "onboarding",
+                "validate",
+                "step1"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\"email\":\"station@example.com\",\"phone\":\"+33612345678\",\"password\":\"StationPass1!\",\"confirm_password\":\"Different!\"}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "description": "400 VALIDATION_FAILED — confirm_password ne correspond pas."
+          }
+        },
+        {
+          "name": "validate/step2 — succes (200)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 200', () => pm.response.to.have.status(200));"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "response": [],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/stations/onboarding/validate/step2",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "stations",
+                "onboarding",
+                "validate",
+                "step2"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\"station_name\":\"Lavo Station Paris 15\",\"legal_name\":\"Lavo SAS\",\"registration_number\":\"RCS PARIS 123456789\",\"address\":\"12 rue de la Paix\",\"city\":\"Paris\",\"latitude\":48.8566,\"longitude\":2.3522,\"wash_post_count\":4,\"wash_type\":\"automatic\",\"description\":\"Station de lavage automatique au coeur de Paris.\"}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "description": "Valide les champs step 2 sans ecriture en base. Aucune station n'est creee."
+          }
+        },
+        {
+          "name": "validate/step2 — wash_type invalide (400)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 400', () => pm.response.to.have.status(400));",
+                  "pm.test('Erreur wash_type', () => {",
+                  "  const json = pm.response.json();",
+                  "  pm.expect(json.code).to.eql('VALIDATION_FAILED');",
+                  "  pm.expect(json.errors.some(e => e.field === 'wash_type')).to.be.true;",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "response": [],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/stations/onboarding/validate/step2",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "stations",
+                "onboarding",
+                "validate",
+                "step2"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\"station_name\":\"Test\",\"address\":\"1 rue Test\",\"city\":\"Lyon\",\"wash_post_count\":2,\"wash_type\":\"invalid\"}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "description": "400 VALIDATION_FAILED — wash_type n'est pas une valeur autorisee."
+          }
+        },
+        {
+          "name": "submit — succes (201)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 201', () => pm.response.to.have.status(201));",
+                  "pm.test('Retourne user + station', () => {",
+                  "  const json = pm.response.json();",
+                  "  pm.expect(json.data).to.have.property('user');",
+                  "  pm.expect(json.data).to.have.property('station');",
+                  "  pm.expect(json.data.user).to.not.have.property('password_hash');",
+                  "  pm.expect(json.data.user.role).to.eql('station');",
+                  "  pm.expect(json.data.station.status).to.eql('pending_admin_validation');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "response": [],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/stations/onboarding/submit",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "stations",
+                "onboarding",
+                "submit"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"station@example.com\",\n  \"phone\": \"+33612345678\",\n  \"password\": \"StationPass1!\",\n  \"confirm_password\": \"StationPass1!\",\n  \"station_name\": \"Lavo Station Paris 15\",\n  \"legal_name\": \"Lavo SAS\",\n  \"registration_number\": \"RCS PARIS 123456789\",\n  \"address\": \"12 rue de la Paix\",\n  \"city\": \"Paris\",\n  \"latitude\": 48.8566,\n  \"longitude\": 2.3522,\n  \"wash_post_count\": 4,\n  \"wash_type\": \"automatic\",\n  \"description\": \"Station de lavage automatique au coeur de Paris.\",\n  \"documents\": [\n    {\"document_type\": \"registre_commerce\", \"file_url\": \"https://storage.example.com/doc1.pdf\"},\n    {\"document_type\": \"piece_identite\", \"file_url\": \"https://storage.example.com/doc2.pdf\"}\n  ],\n  \"terms_accepted\": true\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "description": "Cree le compte, la station et les documents en une seule transaction. Email de verification envoye. Aucune ecriture en base avant cet appel."
+          }
+        },
+        {
+          "name": "submit — email deja utilise (409)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 409', () => pm.response.to.have.status(409));",
+                  "pm.test('Code EMAIL_ALREADY_EXISTS', () => {",
+                  "  const json = pm.response.json();",
+                  "  pm.expect(json.code).to.eql('EMAIL_ALREADY_EXISTS');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "response": [],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/stations/onboarding/submit",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "stations",
+                "onboarding",
+                "submit"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"station@example.com\",\n  \"phone\": \"+33612345678\",\n  \"password\": \"StationPass1!\",\n  \"confirm_password\": \"StationPass1!\",\n  \"station_name\": \"Lavo Station Paris 15\",\n  \"address\": \"12 rue de la Paix\",\n  \"city\": \"Paris\",\n  \"wash_post_count\": 4,\n  \"wash_type\": \"automatic\",\n  \"documents\": [{\"document_type\": \"registre_commerce\", \"file_url\": \"https://storage.example.com/doc1.pdf\"}],\n  \"terms_accepted\": true\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "description": "409 EMAIL_ALREADY_EXISTS — l'email est deja associe a un compte."
+          }
+        },
+        {
+          "name": "submit — confirm_password invalide (400)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 400', () => pm.response.to.have.status(400));",
+                  "pm.test('Erreur confirm_password', () => {",
+                  "  const json = pm.response.json();",
+                  "  pm.expect(json.code).to.eql('VALIDATION_FAILED');",
+                  "  pm.expect(json.errors.some(e => e.field === 'confirm_password')).to.be.true;",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "response": [],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/stations/onboarding/submit",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "stations",
+                "onboarding",
+                "submit"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"station2@example.com\",\n  \"phone\": \"+33612345678\",\n  \"password\": \"StationPass1!\",\n  \"confirm_password\": \"Different!\",\n  \"station_name\": \"Lavo Station Lyon\",\n  \"address\": \"5 rue Bellecour\",\n  \"city\": \"Lyon\",\n  \"wash_post_count\": 2,\n  \"wash_type\": \"hand_wash\",\n  \"documents\": [{\"document_type\": \"registre_commerce\", \"file_url\": \"https://storage.example.com/doc1.pdf\"}],\n  \"terms_accepted\": true\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "description": "400 VALIDATION_FAILED — confirm_password ne correspond pas."
+          }
+        },
+        {
+          "name": "submit — CGU non acceptees (400)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 400', () => pm.response.to.have.status(400));",
+                  "pm.test('Erreur terms_accepted', () => {",
+                  "  const json = pm.response.json();",
+                  "  pm.expect(json.code).to.eql('VALIDATION_FAILED');",
+                  "  pm.expect(json.errors.some(e => e.field === 'terms_accepted')).to.be.true;",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "response": [],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/stations/onboarding/submit",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "stations",
+                "onboarding",
+                "submit"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"station3@example.com\",\n  \"phone\": \"+33612345678\",\n  \"password\": \"StationPass1!\",\n  \"confirm_password\": \"StationPass1!\",\n  \"station_name\": \"Lavo Station Marseille\",\n  \"address\": \"3 rue Paradis\",\n  \"city\": \"Marseille\",\n  \"wash_post_count\": 3,\n  \"wash_type\": \"self_service\",\n  \"documents\": [{\"document_type\": \"registre_commerce\", \"file_url\": \"https://storage.example.com/doc1.pdf\"}],\n  \"terms_accepted\": false\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "description": "400 VALIDATION_FAILED — terms_accepted doit etre true."
+          }
+        }
+      ]
+    },
+    {
+      "name": "Station — Profil",
+      "item": [
+        {
+          "name": "Station Me — approuvee (200)",
+          "response": [],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/v1/station/me",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "station",
+                "me"
+              ]
+            },
+            "description": "Authentifie station avec status=active. Retourne la station et ses documents."
+          }
+        },
+        {
+          "name": "Station Me — non approuvee (403 BUSINESS_NOT_APPROVED)",
+          "response": [],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/v1/station/me",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "station",
+                "me"
+              ]
+            },
+            "description": "403 BUSINESS_NOT_APPROVED — station non encore approuvee."
+          }
+        },
+        {
+          "name": "Station Me — non authentifiee (401)",
+          "response": [],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/v1/station/me",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "station",
+                "me"
+              ]
+            },
+            "description": "401 UNAUTHORIZED."
+          }
+        }
+      ]
+    }
+  ]
+}
