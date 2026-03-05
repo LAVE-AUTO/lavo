@@ -1,11 +1,10 @@
 import { SignJWT, jwtVerify } from 'jose';
+import type { ResponseCookie } from 'next/dist/compiled/@edge-runtime/cookies';
 import {
-  ACCESS_COOKIE_NAME,
   ACCESS_TOKEN_EXPIRY,
-  ACCESS_TOKEN_MAX_AGE,
+  REFRESH_COOKIE_NAME,
   JWT_DEFAULT_MAX_AGE,
   JWT_REMEMBER_MAX_AGE,
-  REFRESH_COOKIE_NAME,
 } from '@/helpers/constants';
 
 export interface JwtPayload {
@@ -13,6 +12,7 @@ export interface JwtPayload {
   role: string;
   email: string;
   status: string;
+  force_password_change: boolean;
 }
 
 function getSecret(): Uint8Array {
@@ -38,24 +38,27 @@ export async function verifyJwt(token: string): Promise<JwtPayload | null> {
   }
 }
 
-export function buildAccessCookieOptions() {
+/**
+ * Returns the options for the httpOnly refresh token cookie.
+ * path is scoped to /api/v1/auth so the cookie is only sent to refresh/logout endpoints.
+ */
+export function buildRefreshCookieOptions(rememberMe = false): Partial<ResponseCookie> {
   return {
-    name: ACCESS_COOKIE_NAME,
     httpOnly: true,
     secure: process.env.NODE_ENV === 'production',
-    sameSite: 'lax' as const,
-    path: '/',
-    maxAge: ACCESS_TOKEN_MAX_AGE,
+    sameSite: 'lax',
+    path: '/api/v1/auth',
+    maxAge: rememberMe ? JWT_REMEMBER_MAX_AGE : JWT_DEFAULT_MAX_AGE,
+    name: REFRESH_COOKIE_NAME,
   };
 }
 
-export function buildRefreshCookieOptions(rememberMe = false) {
-  return {
-    name: REFRESH_COOKIE_NAME,
-    httpOnly: true,
-    secure: process.env.NODE_ENV === 'production',
-    sameSite: 'strict' as const,
-    path: '/api/v1/auth',
-    maxAge: rememberMe ? JWT_REMEMBER_MAX_AGE : JWT_DEFAULT_MAX_AGE,
-  };
+/**
+ * Extracts the Bearer token from an Authorization header value.
+ * Returns null if the header is missing or not a Bearer token.
+ */
+export function extractBearerToken(authHeader: string | null): string | null {
+  if (!authHeader?.startsWith('Bearer ')) return null;
+  const token = authHeader.slice(7).trim();
+  return token.length > 0 ? token : null;
 }

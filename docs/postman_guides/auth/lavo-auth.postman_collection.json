@@ -1,13 +1,18 @@
 {
   "info": {
     "name": "LAVO — Auth API",
-    "description": "Collection de tests pour le module d'authentification LAVO.\n\nVariable d'environnement requise : `base_url` (ex: http://localhost:3000)\n\n## Flux de test recommandé\n1. Register → récupère access_token (15 min) + refresh_token (1j/30j)\n2. Me → vérifie la session via access_token\n3. Refresh → rotation du refresh_token, nouveaux cookies\n4. Logout → révocation DB + suppression cookies",
+    "description": "Collection de tests pour le module d'authentification LAVO.\n\nVariable requise : `base_url` (ex: http://localhost:3000)\nVariable auto-remplie : `access_token` (sauvegardé après login/register)\n\n## Architecture JWT hybride\n- `access_token` : dans le body (stockage mémoire JS côté client, 15 min)\n- `refresh_token` : httpOnly cookie (path /api/v1/auth, 1–30 jours, jamais exposé au JS)\n\n## Flux de test recommandé\n1. Register → data.user + data.access_token (sauvegardé automatiquement) + cookie refresh_token\n2. Verify Email → status passe à active\n3. Login → idem\n4. Me → header Authorization: Bearer {{access_token}}\n5. Refresh → POST sans body (cookie envoyé automatiquement) → nouveau access_token + nouveau cookie\n6. Forgot Password → email de réinitialisation\n7. Reset Password → nouveau mot de passe\n8. Logout → header Authorization: Bearer {{access_token}} + cookie effacé",
     "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
   },
   "variable": [
     {
       "key": "base_url",
       "value": "http://localhost:3000",
+      "type": "string"
+    },
+    {
+      "key": "access_token",
+      "value": "",
       "type": "string"
     }
   ],
@@ -23,19 +28,19 @@
               "script": {
                 "exec": [
                   "pm.test('Status 201', () => pm.response.to.have.status(201));",
-                  "pm.test('Body contient data.id', () => {",
+                  "pm.test('Body contient user + access_token (pas refresh_token)', () => {",
                   "  const json = pm.response.json();",
-                  "  pm.expect(json.data).to.have.property('id');",
-                  "  pm.expect(json.data).to.not.have.property('password_hash');",
-                  "  pm.expect(json.data.status).to.eql('pending_verification');",
-                  "  pm.expect(json.data.role).to.eql('client');",
+                  "  pm.expect(json.data.user).to.have.property('id');",
+                  "  pm.expect(json.data.user).to.not.have.property('password_hash');",
+                  "  pm.expect(json.data.user.status).to.eql('pending_verification');",
+                  "  pm.expect(json.data.user.role).to.eql('client');",
+                  "  pm.expect(json.data.access_token).to.be.a('string');",
+                  "  pm.expect(json.data).to.not.have.property('refresh_token');",
+                  "  pm.expect(json.data.token_type).to.eql('Bearer');",
+                  "  pm.expect(json.data.expires_in).to.eql(900);",
                   "});",
-                  "pm.test('Cookie access_token présent (15 min)', () => {",
-                  "  pm.expect(pm.cookies.has('access_token')).to.be.true;",
-                  "});",
-                  "pm.test('Cookie refresh_token présent', () => {",
-                  "  pm.expect(pm.cookies.has('refresh_token')).to.be.true;",
-                  "});"
+                  "const json = pm.response.json();",
+                  "if (json.data?.access_token) pm.collectionVariables.set('access_token', json.data.access_token);"
                 ],
                 "type": "text/javascript"
               }
@@ -44,16 +49,26 @@
           "request": {
             "method": "POST",
             "header": [
-              { "key": "Content-Type", "value": "application/json" }
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
             ],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"first_name\": \"Jean\",\n  \"last_name\": \"Dupont\",\n  \"email\": \"jean.dupont@example.com\",\n  \"phone\": \"0612345678\",\n  \"password\": \"Test@1234\",\n  \"remember_me\": false\n}"
+              "raw": "{\n  \"first_name\": \"Jean\",\n  \"last_name\": \"Dupont\",\n  \"email\": \"jean.dupont@example.com\",\n  \"phone\": \"0612345678\",\n  \"password\": \"Test@1234\",\n  \"confirm_password\": \"Test@1234\",\n  \"remember_me\": false\n}"
             },
             "url": {
               "raw": "{{base_url}}/api/v1/auth/register",
-              "host": ["{{base_url}}"],
-              "path": ["api", "v1", "auth", "register"]
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "auth",
+                "register"
+              ]
             }
           }
         },
@@ -65,10 +80,12 @@
               "script": {
                 "exec": [
                   "pm.test('Status 201', () => pm.response.to.have.status(201));",
-                  "pm.test('Cookie access_token présent', () => {",
-                  "  pm.expect(pm.cookies.has('access_token')).to.be.true;",
+                  "pm.test('access_token présent dans le body, refresh_token absent', () => {",
+                  "  const json = pm.response.json();",
+                  "  pm.expect(json.data.access_token).to.be.a('string');",
+                  "  pm.expect(json.data).to.not.have.property('refresh_token');",
                   "});",
-                  "pm.test('Cookie refresh_token présent (30j)', () => {",
+                  "pm.test('Cookie refresh_token httpOnly défini', () => {",
                   "  pm.expect(pm.cookies.has('refresh_token')).to.be.true;",
                   "});"
                 ],
@@ -79,16 +96,26 @@
           "request": {
             "method": "POST",
             "header": [
-              { "key": "Content-Type", "value": "application/json" }
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
             ],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"first_name\": \"Marie\",\n  \"last_name\": \"Martin\",\n  \"email\": \"marie.martin@example.com\",\n  \"phone\": \"0698765432\",\n  \"password\": \"Test@1234\",\n  \"remember_me\": true\n}"
+              "raw": "{\n  \"first_name\": \"Marie\",\n  \"last_name\": \"Martin\",\n  \"email\": \"marie.martin@example.com\",\n  \"phone\": \"0698765432\",\n  \"password\": \"Test@1234\",\n  \"confirm_password\": \"Test@1234\",\n  \"remember_me\": true\n}"
             },
             "url": {
               "raw": "{{base_url}}/api/v1/auth/register",
-              "host": ["{{base_url}}"],
-              "path": ["api", "v1", "auth", "register"]
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "auth",
+                "register"
+              ]
             }
           }
         },
@@ -113,16 +140,26 @@
           "request": {
             "method": "POST",
             "header": [
-              { "key": "Content-Type", "value": "application/json" }
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
             ],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"first_name\": \"Jean\",\n  \"last_name\": \"Dupont\",\n  \"email\": \"jean.dupont@example.com\",\n  \"phone\": \"0612345678\",\n  \"password\": \"Test@1234\",\n  \"remember_me\": false\n}"
+              "raw": "{\n  \"first_name\": \"Jean\",\n  \"last_name\": \"Dupont\",\n  \"email\": \"jean.dupont@example.com\",\n  \"phone\": \"0612345678\",\n  \"password\": \"Test@1234\",\n  \"confirm_password\": \"Test@1234\",\n  \"remember_me\": false\n}"
             },
             "url": {
               "raw": "{{base_url}}/api/v1/auth/register",
-              "host": ["{{base_url}}"],
-              "path": ["api", "v1", "auth", "register"]
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "auth",
+                "register"
+              ]
             }
           }
         },
@@ -148,16 +185,26 @@
           "request": {
             "method": "POST",
             "header": [
-              { "key": "Content-Type", "value": "application/json" }
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
             ],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"first_name\": \"\",\n  \"last_name\": \"D\",\n  \"email\": \"pas-un-email\",\n  \"phone\": \"06\",\n  \"password\": \"faible\"\n}"
+              "raw": "{\n  \"first_name\": \"\",\n  \"last_name\": \"D\",\n  \"email\": \"pas-un-email\",\n  \"phone\": \"06\",\n  \"password\": \"faible\",\n  \"confirm_password\": \"faible\"\n}"
             },
             "url": {
               "raw": "{{base_url}}/api/v1/auth/register",
-              "host": ["{{base_url}}"],
-              "path": ["api", "v1", "auth", "register"]
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "auth",
+                "register"
+              ]
             }
           }
         },
@@ -181,18 +228,79 @@
           "request": {
             "method": "POST",
             "header": [
-              { "key": "Content-Type", "value": "application/json" }
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
             ],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"first_name\": \"Jean\",\n  \"last_name\": \"Dupont\",\n  \"email\": \"nouveau@example.com\",\n  \"phone\": \"0612345678\",\n  \"password\": \"test@1234\"\n}"
+              "raw": "{\n  \"first_name\": \"Jean\",\n  \"last_name\": \"Dupont\",\n  \"email\": \"nouveau@example.com\",\n  \"phone\": \"0612345678\",\n  \"password\": \"test@1234\",\n  \"confirm_password\": \"test@1234\"\n}"
             },
             "url": {
               "raw": "{{base_url}}/api/v1/auth/register",
-              "host": ["{{base_url}}"],
-              "path": ["api", "v1", "auth", "register"]
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "auth",
+                "register"
+              ]
             }
           }
+        },
+        {
+          "name": "Register — confirm_password ne correspond pas (400)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 400', () => pm.response.to.have.status(400));",
+                  "pm.test('Erreur sur le champ confirm_password', () => {",
+                  "  const json = pm.response.json();",
+                  "  pm.expect(json.code).to.eql('VALIDATION_FAILED');",
+                  "  pm.expect(json.errors.some(e => e.field === 'confirm_password')).to.be.true;",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"first_name\": \"Jean\",\n  \"last_name\": \"Dupont\",\n  \"email\": \"nouveau2@example.com\",\n  \"phone\": \"0612345678\",\n  \"password\": \"Test@1234\",\n  \"confirm_password\": \"Different@5678\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{base_url}}/api/v1/auth/register",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "auth",
+                "register"
+              ]
+            },
+            "description": "400 VALIDATION_FAILED — confirm_password ne correspond pas à password."
+          },
+          "response": []
         },
         {
           "name": "Register — body JSON invalide (400)",
@@ -210,7 +318,10 @@
           "request": {
             "method": "POST",
             "header": [
-              { "key": "Content-Type", "value": "application/json" }
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
             ],
             "body": {
               "mode": "raw",
@@ -218,8 +329,295 @@
             },
             "url": {
               "raw": "{{base_url}}/api/v1/auth/register",
-              "host": ["{{base_url}}"],
-              "path": ["api", "v1", "auth", "register"]
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "auth",
+                "register"
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Login",
+      "item": [
+        {
+          "name": "Login — succès (200)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 200', () => pm.response.to.have.status(200));",
+                  "pm.test('Body contient user + access_token (pas refresh_token)', () => {",
+                  "  const json = pm.response.json();",
+                  "  pm.expect(json.data.user).to.have.property('id');",
+                  "  pm.expect(json.data.user).to.have.property('email');",
+                  "  pm.expect(json.data.user).to.not.have.property('password_hash');",
+                  "  pm.expect(json.data.user.status).to.eql('active');",
+                  "  pm.expect(json.data.access_token).to.be.a('string');",
+                  "  pm.expect(json.data).to.not.have.property('refresh_token');",
+                  "  pm.expect(json.data.token_type).to.eql('Bearer');",
+                  "  pm.expect(json.data.expires_in).to.eql(900);",
+                  "});",
+                  "const json = pm.response.json();",
+                  "if (json.data?.access_token) pm.collectionVariables.set('access_token', json.data.access_token);"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"jean.dupont@example.com\",\n  \"password\": \"Test@1234\",\n  \"remember_me\": false\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/v1/auth/login",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "auth",
+                "login"
+              ]
+            },
+            "description": "L'utilisateur doit avoir le statut 'active' (email vérifié). Sinon utiliser verify-email d'abord."
+          }
+        },
+        {
+          "name": "Login — remember_me 30 jours",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 200', () => pm.response.to.have.status(200));",
+                  "pm.test('access_token dans le body, refresh_token en cookie httpOnly', () => {",
+                  "  const json = pm.response.json();",
+                  "  pm.expect(json.data.access_token).to.be.a('string');",
+                  "  pm.expect(json.data).to.not.have.property('refresh_token');",
+                  "});",
+                  "pm.test('Cookie refresh_token défini (maxAge étendu)', () => {",
+                  "  pm.expect(pm.cookies.has('refresh_token')).to.be.true;",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"jean.dupont@example.com\",\n  \"password\": \"Test@1234\",\n  \"remember_me\": true\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/v1/auth/login",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "auth",
+                "login"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Login — mauvais mot de passe (401)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 401', () => pm.response.to.have.status(401));",
+                  "pm.test('Code INVALID_CREDENTIALS', () => {",
+                  "  const json = pm.response.json();",
+                  "  pm.expect(json.code).to.eql('INVALID_CREDENTIALS');",
+                  "  pm.expect(json).to.not.have.property('data');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"jean.dupont@example.com\",\n  \"password\": \"MauvaisMotDePasse!\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/v1/auth/login",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "auth",
+                "login"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Login — email inexistant (401)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 401', () => pm.response.to.have.status(401));",
+                  "pm.test('Code INVALID_CREDENTIALS (pas NOT_FOUND)', () => {",
+                  "  const json = pm.response.json();",
+                  "  pm.expect(json.code).to.eql('INVALID_CREDENTIALS');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"inconnu@example.com\",\n  \"password\": \"Test@1234\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/v1/auth/login",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "auth",
+                "login"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Login — compte non actif (403)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 403', () => pm.response.to.have.status(403));",
+                  "pm.test('Code FORBIDDEN', () => {",
+                  "  const json = pm.response.json();",
+                  "  pm.expect(json.code).to.eql('FORBIDDEN');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"utilisateur.pending@example.com\",\n  \"password\": \"Test@1234\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/v1/auth/login",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "auth",
+                "login"
+              ]
+            },
+            "description": "Utiliser un compte avec statut pending_verification ou suspended."
+          }
+        },
+        {
+          "name": "Login — validation échouée (400)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 400', () => pm.response.to.have.status(400));",
+                  "pm.test('Code VALIDATION_FAILED', () => {",
+                  "  const json = pm.response.json();",
+                  "  pm.expect(json.code).to.eql('VALIDATION_FAILED');",
+                  "  pm.expect(json.errors).to.be.an('array');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"pas-un-email\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/v1/auth/login",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "auth",
+                "login"
+              ]
             }
           }
         }
@@ -249,13 +647,26 @@
           ],
           "request": {
             "method": "GET",
-            "header": [],
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}",
+                "description": "Token obtenu après login ou register"
+              }
+            ],
             "url": {
               "raw": "{{base_url}}/api/v1/auth/me",
-              "host": ["{{base_url}}"],
-              "path": ["api", "v1", "auth", "me"]
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "auth",
+                "me"
+              ]
             },
-            "description": "Le cookie access_token (15 min) est envoyé automatiquement. Doit être appelé après un register ou refresh réussi."
+            "description": "Envoyer le header Authorization: Bearer {{access_token}}. Doit être appelé après un login ou register réussi."
           }
         },
         {
@@ -277,18 +688,20 @@
           ],
           "request": {
             "method": "GET",
-            "header": [
-              {
-                "key": "Cookie",
-                "value": "",
-                "description": "Cookie vide pour simuler une session absente"
-              }
-            ],
+            "header": [],
             "url": {
               "raw": "{{base_url}}/api/v1/auth/me",
-              "host": ["{{base_url}}"],
-              "path": ["api", "v1", "auth", "me"]
-            }
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "auth",
+                "me"
+              ]
+            },
+            "description": "Aucun header Authorization — simule une requête non authentifiée."
           }
         }
       ]
@@ -304,16 +717,15 @@
               "script": {
                 "exec": [
                   "pm.test('Status 200', () => pm.response.to.have.status(200));",
-                  "pm.test('refreshed = true', () => {",
+                  "pm.test('Nouveau access_token dans le body, refresh_token absent du body', () => {",
                   "  const json = pm.response.json();",
-                  "  pm.expect(json.data.refreshed).to.be.true;",
+                  "  pm.expect(json.data.access_token).to.be.a('string');",
+                  "  pm.expect(json.data).to.not.have.property('refresh_token');",
+                  "  pm.expect(json.data.token_type).to.eql('Bearer');",
+                  "  pm.expect(json.data.expires_in).to.eql(900);",
                   "});",
-                  "pm.test('Nouveau cookie access_token', () => {",
-                  "  pm.expect(pm.cookies.has('access_token')).to.be.true;",
-                  "});",
-                  "pm.test('Nouveau cookie refresh_token', () => {",
-                  "  pm.expect(pm.cookies.has('refresh_token')).to.be.true;",
-                  "});"
+                  "const json = pm.response.json();",
+                  "if (json.data?.access_token) pm.collectionVariables.set('access_token', json.data.access_token);"
                 ],
                 "type": "text/javascript"
               }
@@ -324,14 +736,21 @@
             "header": [],
             "url": {
               "raw": "{{base_url}}/api/v1/auth/refresh",
-              "host": ["{{base_url}}"],
-              "path": ["api", "v1", "auth", "refresh"]
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "auth",
+                "refresh"
+              ]
             },
-            "description": "Le cookie refresh_token est envoyé automatiquement. L'ancien refresh_token est révoqué en DB et deux nouveaux cookies sont émis."
+            "description": "Aucun body requis — le cookie httpOnly refresh_token est envoyé automatiquement par le navigateur/Postman. L'ancien token est révoqué en DB et un nouveau access_token est retourné dans le body + nouveau cookie."
           }
         },
         {
-          "name": "Refresh — sans cookie (401)",
+          "name": "Refresh — cookie absent (401)",
           "event": [
             {
               "listen": "test",
@@ -349,18 +768,20 @@
           ],
           "request": {
             "method": "POST",
-            "header": [
-              {
-                "key": "Cookie",
-                "value": "",
-                "description": "Cookie vide pour simuler l'absence de refresh_token"
-              }
-            ],
+            "header": [],
             "url": {
               "raw": "{{base_url}}/api/v1/auth/refresh",
-              "host": ["{{base_url}}"],
-              "path": ["api", "v1", "auth", "refresh"]
-            }
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "auth",
+                "refresh"
+              ]
+            },
+            "description": "400 VALIDATION_FAILED — refresh_token absent du body."
           }
         },
         {
@@ -384,16 +805,32 @@
             "method": "POST",
             "header": [
               {
-                "key": "Cookie",
-                "value": "refresh_token=ancien_token_deja_utilise",
-                "description": "Simuler un replay attack avec un token déjà révoqué"
+                "key": "Content-Type",
+                "value": "application/json"
               }
             ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"refresh_token\": \"ancien_token_deja_utilise\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
             "url": {
               "raw": "{{base_url}}/api/v1/auth/refresh",
-              "host": ["{{base_url}}"],
-              "path": ["api", "v1", "auth", "refresh"]
-            }
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "auth",
+                "refresh"
+              ]
+            },
+            "description": "401 UNAUTHORIZED — replay attack avec un token déjà révoqué."
           }
         }
       ]
@@ -421,7 +858,10 @@
           "request": {
             "method": "POST",
             "header": [
-              { "key": "Content-Type", "value": "application/json" }
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
             ],
             "body": {
               "mode": "raw",
@@ -429,8 +869,15 @@
             },
             "url": {
               "raw": "{{base_url}}/api/v1/auth/verify-email",
-              "host": ["{{base_url}}"],
-              "path": ["api", "v1", "auth", "verify-email"]
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "auth",
+                "verify-email"
+              ]
             },
             "description": "Remplacer le token par celui reçu dans l'email de vérification. Après succès, le statut utilisateur passe à 'active'."
           }
@@ -455,7 +902,10 @@
           "request": {
             "method": "POST",
             "header": [
-              { "key": "Content-Type", "value": "application/json" }
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
             ],
             "body": {
               "mode": "raw",
@@ -463,8 +913,15 @@
             },
             "url": {
               "raw": "{{base_url}}/api/v1/auth/verify-email",
-              "host": ["{{base_url}}"],
-              "path": ["api", "v1", "auth", "verify-email"]
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "auth",
+                "verify-email"
+              ]
             }
           }
         },
@@ -488,7 +945,10 @@
           "request": {
             "method": "POST",
             "header": [
-              { "key": "Content-Type", "value": "application/json" }
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
             ],
             "body": {
               "mode": "raw",
@@ -496,8 +956,15 @@
             },
             "url": {
               "raw": "{{base_url}}/api/v1/auth/verify-email",
-              "host": ["{{base_url}}"],
-              "path": ["api", "v1", "auth", "verify-email"]
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "auth",
+                "verify-email"
+              ]
             },
             "description": "Utiliser un token déjà consommé ou dont la date d'expiry est dépassée."
           }
@@ -522,7 +989,10 @@
           "request": {
             "method": "POST",
             "header": [
-              { "key": "Content-Type", "value": "application/json" }
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
             ],
             "body": {
               "mode": "raw",
@@ -530,8 +1000,15 @@
             },
             "url": {
               "raw": "{{base_url}}/api/v1/auth/verify-email",
-              "host": ["{{base_url}}"],
-              "path": ["api", "v1", "auth", "verify-email"]
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "auth",
+                "verify-email"
+              ]
             }
           }
         }
@@ -560,7 +1037,10 @@
           "request": {
             "method": "POST",
             "header": [
-              { "key": "Content-Type", "value": "application/json" }
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
             ],
             "body": {
               "mode": "raw",
@@ -568,8 +1048,15 @@
             },
             "url": {
               "raw": "{{base_url}}/api/v1/auth/resend-verification-email",
-              "host": ["{{base_url}}"],
-              "path": ["api", "v1", "auth", "resend-verification-email"]
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "auth",
+                "resend-verification-email"
+              ]
             },
             "description": "L'utilisateur doit exister et avoir le statut pending_verification."
           }
@@ -594,7 +1081,10 @@
           "request": {
             "method": "POST",
             "header": [
-              { "key": "Content-Type", "value": "application/json" }
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
             ],
             "body": {
               "mode": "raw",
@@ -602,8 +1092,15 @@
             },
             "url": {
               "raw": "{{base_url}}/api/v1/auth/resend-verification-email",
-              "host": ["{{base_url}}"],
-              "path": ["api", "v1", "auth", "resend-verification-email"]
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "auth",
+                "resend-verification-email"
+              ]
             }
           }
         },
@@ -627,7 +1124,10 @@
           "request": {
             "method": "POST",
             "header": [
-              { "key": "Content-Type", "value": "application/json" }
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
             ],
             "body": {
               "mode": "raw",
@@ -635,8 +1135,15 @@
             },
             "url": {
               "raw": "{{base_url}}/api/v1/auth/resend-verification-email",
-              "host": ["{{base_url}}"],
-              "path": ["api", "v1", "auth", "resend-verification-email"]
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "auth",
+                "resend-verification-email"
+              ]
             },
             "description": "Utiliser l'email d'un utilisateur dont le statut est déjà 'active'."
           }
@@ -661,7 +1168,10 @@
           "request": {
             "method": "POST",
             "header": [
-              { "key": "Content-Type", "value": "application/json" }
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
             ],
             "body": {
               "mode": "raw",
@@ -669,10 +1179,358 @@
             },
             "url": {
               "raw": "{{base_url}}/api/v1/auth/resend-verification-email",
-              "host": ["{{base_url}}"],
-              "path": ["api", "v1", "auth", "resend-verification-email"]
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "auth",
+                "resend-verification-email"
+              ]
             }
           }
+        }
+      ]
+    },
+    {
+      "name": "Forgot Password",
+      "item": [
+        {
+          "name": "Forgot Password — succès (200, toujours)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/auth/forgot-password",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "auth",
+                "forgot-password"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"alice@example.com\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "description": "Envoie un email de réinitialisation si le compte existe. Retourne toujours 200 pour éviter l'énumération d'emails."
+          },
+          "response": []
+        },
+        {
+          "name": "Forgot Password — email inconnu (200, silencieux)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/auth/forgot-password",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "auth",
+                "forgot-password"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"nobody@example.com\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "description": "Même réponse 200 même si l'email n'existe pas — anti-énumération."
+          },
+          "response": []
+        },
+        {
+          "name": "Forgot Password — email invalide (400)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/auth/forgot-password",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "auth",
+                "forgot-password"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"not-an-email\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "description": "400 VALIDATION_FAILED — format email invalide."
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Reset Password",
+      "item": [
+        {
+          "name": "Reset Password — succès (200)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/auth/reset-password",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "auth",
+                "reset-password"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"token\": \"{{reset_token}}\",\n  \"new_password\": \"NewPass123!\",\n  \"confirm_new_password\": \"NewPass123!\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "description": "Réinitialise le mot de passe avec un token valide reçu par email."
+          },
+          "response": []
+        },
+        {
+          "name": "Reset Password — token inexistant (404)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/auth/reset-password",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "auth",
+                "reset-password"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"token\": \"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\",\n  \"new_password\": \"NewPass123!\",\n  \"confirm_new_password\": \"NewPass123!\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "description": "404 NOT_FOUND — le token n'a jamais existé en base."
+          },
+          "response": []
+        },
+        {
+          "name": "Reset Password — token expiré (400 TOKEN_EXPIRED)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/auth/reset-password",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "auth",
+                "reset-password"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"token\": \"{{expired_reset_token}}\",\n  \"new_password\": \"NewPass123!\",\n  \"confirm_new_password\": \"NewPass123!\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "description": "400 TOKEN_EXPIRED — le token existe mais a expiré ou déjà été utilisé."
+          },
+          "response": []
+        },
+        {
+          "name": "Reset Password — mot de passe faible (400)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/auth/reset-password",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "auth",
+                "reset-password"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"token\": \"{{reset_token}}\",\n  \"new_password\": \"weak\",\n  \"confirm_new_password\": \"weak\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "description": "400 VALIDATION_FAILED — le nouveau mot de passe ne respecte pas les règles (8+ chars, maj, min, chiffre, spécial)."
+          },
+          "response": []
+        },
+        {
+          "name": "Reset Password — token manquant (400)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/auth/reset-password",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "auth",
+                "reset-password"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"new_password\": \"NewPass123!\",\n  \"confirm_new_password\": \"NewPass123!\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "description": "400 VALIDATION_FAILED — champ token absent du body."
+          },
+          "response": []
+        },
+        {
+          "name": "Reset Password — confirm_new_password ne correspond pas (400)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 400', () => pm.response.to.have.status(400));",
+                  "pm.test('Erreur sur le champ confirm_new_password', () => {",
+                  "  const json = pm.response.json();",
+                  "  pm.expect(json.code).to.eql('VALIDATION_FAILED');",
+                  "  pm.expect(json.errors.some(e => e.field === 'confirm_new_password')).to.be.true;",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/auth/reset-password",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "auth",
+                "reset-password"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"token\": \"{{reset_token}}\",\n  \"new_password\": \"NewPass123!\",\n  \"confirm_new_password\": \"Different456!\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "description": "400 VALIDATION_FAILED — confirm_new_password ne correspond pas à new_password."
+          },
+          "response": []
         }
       ]
     },
@@ -691,12 +1549,8 @@
                   "  const json = pm.response.json();",
                   "  pm.expect(json.data.logged_out).to.be.true;",
                   "});",
-                  "pm.test('Cookie access_token supprimé', () => {",
-                  "  pm.expect(pm.cookies.has('access_token')).to.be.false;",
-                  "});",
-                  "pm.test('Cookie refresh_token supprimé', () => {",
-                  "  pm.expect(pm.cookies.has('refresh_token')).to.be.false;",
-                  "});"
+                  "pm.collectionVariables.unset('access_token');",
+                  "pm.collectionVariables.unset('refresh_token');"
                 ],
                 "type": "text/javascript"
               }
@@ -704,13 +1558,170 @@
           ],
           "request": {
             "method": "POST",
-            "header": [],
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}"
+              }
+            ],
             "url": {
               "raw": "{{base_url}}/api/v1/auth/logout",
-              "host": ["{{base_url}}"],
-              "path": ["api", "v1", "auth", "logout"]
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "auth",
+                "logout"
+              ]
             },
-            "description": "Révoque le refresh_token en DB et supprime les deux cookies."
+            "description": "Révoque tous les refresh_tokens de l'utilisateur en DB. Le script de test efface les variables access_token et refresh_token de la collection."
+          }
+        }
+      ]
+    },
+    {
+      "name": "Change Password",
+      "item": [
+        {
+          "name": "Change Password — succes (200)",
+          "response": [],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/auth/change-password",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "auth",
+                "change-password"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\"current_password\":\"OldPass123!\",\"new_password\":\"NewPass456!\",\"confirm_new_password\":\"NewPass456!\"}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "description": "Change password pour un compte authentifie. Efface le flag force_password_change."
+          }
+        },
+        {
+          "name": "Change Password — mauvais mot de passe actuel (401)",
+          "response": [],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/auth/change-password",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "auth",
+                "change-password"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\"current_password\":\"WrongPass!\",\"new_password\":\"NewPass456!\",\"confirm_new_password\":\"NewPass456!\"}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "description": "401 UNAUTHORIZED — current_password incorrect."
+          }
+        },
+        {
+          "name": "Change Password — confirmation invalide (400)",
+          "response": [],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/auth/change-password",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "auth",
+                "change-password"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\"current_password\":\"OldPass123!\",\"new_password\":\"NewPass456!\",\"confirm_new_password\":\"Different!\"}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "description": "400 VALIDATION_FAILED — confirm_new_password ne correspond pas."
+          }
+        },
+        {
+          "name": "Change Password — non authentifie (401)",
+          "response": [],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/auth/change-password",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "auth",
+                "change-password"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\"current_password\":\"OldPass123!\",\"new_password\":\"NewPass456!\",\"confirm_new_password\":\"NewPass456!\"}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "description": "401 UNAUTHORIZED — pas de cookie access_token."
           }
         }
       ]
@@ -740,8 +1751,14 @@
             "header": [],
             "url": {
               "raw": "{{base_url}}/api/v1/health",
-              "host": ["{{base_url}}"],
-              "path": ["api", "v1", "health"]
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "health"
+              ]
             }
           }
         }
