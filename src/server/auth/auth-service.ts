@@ -9,7 +9,7 @@ import {
   TokenExpiredError,
   UnauthorizedError,
 } from '@/lib/errors';
-import { JWT_DEFAULT_MAX_AGE, JWT_REMEMBER_MAX_AGE } from '@/helpers/constants';
+import { ACCESS_TOKEN_MAX_AGE, JWT_DEFAULT_MAX_AGE, JWT_REMEMBER_MAX_AGE } from '@/helpers/constants';
 import {
   findByEmail,
   findById,
@@ -44,6 +44,7 @@ export type RegisterDto = {
 export type AuthTokens = {
   accessJwt: string;
   rawRefreshToken: string;
+  expiresIn: number;
 };
 
 export type AuthResult = {
@@ -71,7 +72,7 @@ async function issueTokenPair(
 
   await createRefreshToken(user.id, rawRefreshToken, expiresAt);
 
-  return { accessJwt, rawRefreshToken };
+  return { accessJwt, rawRefreshToken, expiresIn: ACCESS_TOKEN_MAX_AGE };
 }
 
 export async function registerWithPassword(dto: RegisterDto): Promise<AuthResult> {
