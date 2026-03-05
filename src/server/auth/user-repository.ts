@@ -30,6 +30,6 @@ export async function createUser(data: NewUser): Promise<SafeUser> {
 export async function updateEmailVerified(userId: string): Promise<void> {
   await db
     .update(users)
-    .set({ email_verified_at: new Date(), updated_at: new Date() })
+    .set({ email_verified_at: new Date(), status: 'active', updated_at: new Date() })
     .where(eq(users.id, userId));
 }
