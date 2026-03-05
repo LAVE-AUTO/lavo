@@ -31,18 +31,18 @@ export async function StationsHero() {
             {/* Label */}
             <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full border border-gold/30 bg-gold/10 mb-5 animate-fade-in">
               <span className="w-1.5 h-1.5 rounded-full bg-gold animate-gold-shimmer" />
-              <span className="text-[12px] font-bold text-gold uppercase tracking-widest">
+              <span className="text-[15px] font-bold text-gold uppercase tracking-widest">
                 Slowtime Network
               </span>
             </div>
 
             {/* Title */}
-            <h1 className="text-[32px] sm:text-[48px] font-[900] text-white leading-tight mb-4 animate-fade-in-up animation-delay-100">
+            <h1 className="text-[40px] sm:text-[58px] font-[900] text-white leading-tight mb-4 animate-fade-in-up animation-delay-100">
               {t('page_title')}
             </h1>
 
             {/* Subtitle */}
-            <p className="text-[14px] sm:text-[16px] text-white/70 leading-[1.7] mb-8 animate-fade-in-up animation-delay-200">
+            <p className="text-[17px] sm:text-[19px] text-white/90 leading-[1.7] mb-8 animate-fade-in-up animation-delay-200">
               {t('page_subtitle')}
             </p>
 
@@ -50,7 +50,7 @@ export async function StationsHero() {
             <div className="flex flex-wrap gap-3 animate-fade-in-up animation-delay-300">
               <Link
                 href="#stations-list"
-                className="btn-shine inline-flex items-center gap-2 px-6 py-3 bg-gold hover:bg-gold-hover rounded-[10px] text-[14px] font-bold text-[#1A2116] transition-colors"
+                className="btn-shine inline-flex items-center gap-2 px-6 py-3 bg-gold hover:bg-gold-hover rounded-[10px] text-[17px] font-bold text-[#1A2116] transition-colors"
               >
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
                   <circle cx="11" cy="11" r="8" />
@@ -60,7 +60,7 @@ export async function StationsHero() {
               </Link>
               <Link
                 href="/register"
-                className="inline-flex items-center gap-2 px-6 py-3 border border-white/20 hover:border-gold/50 rounded-[10px] text-[14px] font-bold text-white transition-colors"
+                className="inline-flex items-center gap-2 px-6 py-3 border border-white/20 hover:border-gold/50 rounded-[10px] text-[17px] font-bold text-white transition-colors"
               >
                 {tn('register')}
               </Link>
@@ -82,8 +82,8 @@ export async function StationsHero() {
 function StatBadge({ value, label, delay }: { value: string; label: string; delay: string }) {
   return (
     <div className={`bg-[#1E2A1A]/90 border border-[#3A4A36] rounded-xl px-4 py-3 animate-fade-in-up animation-delay-${delay}`}>
-      <div className="text-[18px] font-black text-gold leading-none">{value}</div>
-      <div className="text-[11px] text-[#9A9A8A] mt-1">{label}</div>
+      <div className="text-[23px] font-black text-gold leading-none">{value}</div>
+      <div className="text-[14px] text-white/80 mt-1">{label}</div>
     </div>
   );
 }
