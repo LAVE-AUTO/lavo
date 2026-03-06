@@ -46,6 +46,27 @@ export async function sendVerificationEmail(
   });
 }
 
+export async function sendStationApprovalEmail(
+  to: string,
+  stationName: string
+): Promise<void> {
+  const loginUrl = `${APP_URL}/fr/login`;
+
+  await resend.emails.send({
+    from: FROM,
+    to,
+    subject: '[LAVO] Votre station a été approuvée',
+    html: `
+      <p>Bonjour,</p>
+      <p>Nous avons le plaisir de vous informer que votre station <strong>${stationName}</strong> a été approuvée et est maintenant active sur LAVO.</p>
+      <p>Vous pouvez dès à présent vous connecter avec votre adresse e-mail et le mot de passe que vous avez choisi lors de votre inscription :</p>
+      <p><a href="${loginUrl}">Se connecter à LAVO</a></p>
+      <p>Bienvenue dans la communauté LAVO !</p>
+      <p>L'équipe LAVO</p>
+    `,
+  });
+}
+
 /**
  * Sends an email to the admin when a new station application is submitted.
  * No-op if ADMIN_NOTIFICATION_EMAIL is not set (logs and skips).
