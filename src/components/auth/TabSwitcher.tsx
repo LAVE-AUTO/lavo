@@ -22,7 +22,7 @@ export function TabSwitcher({ activeTab, loginLabel, registerLabel }: TabSwitche
     if (tab !== activeTab) router.push(`/${tab}`);
   };
 
-  const activeClass = 'bg-gold text-[#1A2116] font-bold';
+  const activeClass = 'bg-gold text-dark-bg font-bold';
   const inactiveClass =
     'bg-transparent text-[#333] dark:text-white font-semibold hover:bg-black/5 dark:hover:bg-white/5';
 

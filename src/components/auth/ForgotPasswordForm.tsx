@@ -76,7 +76,7 @@ export function ForgotPasswordForm() {
         <div className="w-20 h-20 rounded-full bg-gold/10 border border-gold/25 flex items-center justify-center mx-auto mb-6">
           <MailSentIcon />
         </div>
-        <h2 className="text-[22px] font-bold text-[#1A2116] dark:text-white mb-3">
+        <h2 className="text-[22px] font-bold text-dark-bg dark:text-white mb-3">
           {t('success_title')}
         </h2>
         <p className="text-[15px] text-[#555] dark:text-lavo-muted leading-relaxed mb-2">
@@ -87,7 +87,7 @@ export function ForgotPasswordForm() {
         </p>
         <Link
           href="/login"
-          className="block w-full py-3.5 bg-gold hover:bg-gold-hover rounded-[10px] text-[16px] font-bold text-[#1A2116] tracking-wide transition-colors duration-150 text-center btn-shine"
+          className="block w-full py-3.5 bg-gold hover:bg-gold-hover rounded-[10px] text-[16px] font-bold text-dark-bg tracking-wide transition-colors duration-150 text-center btn-shine"
         >
           {t('back_to_login')}
         </Link>
@@ -113,7 +113,7 @@ export function ForgotPasswordForm() {
       <button
         type="submit"
         disabled={isLoading}
-        className="btn-shine w-full py-3.5 mt-2 bg-gold hover:bg-gold-hover active:scale-[0.98] disabled:opacity-70 rounded-[10px] text-[16px] font-bold text-[#1A2116] tracking-wide transition-all duration-150 flex items-center justify-center gap-2"
+        className="btn-shine w-full py-3.5 mt-2 bg-gold hover:bg-gold-hover active:scale-[0.98] disabled:opacity-70 rounded-[10px] text-[16px] font-bold text-dark-bg tracking-wide transition-all duration-150 flex items-center justify-center gap-2"
       >
         {isLoading ? (
           <>

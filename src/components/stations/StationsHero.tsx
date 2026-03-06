@@ -20,7 +20,7 @@ export async function StationsHero() {
         aria-hidden="true"
       />
       <div
-        className="absolute -bottom-40 -left-24 w-[480px] h-[480px] rounded-full bg-gold/[0.05] blur-[120px] animate-float-orb pointer-events-none"
+        className="absolute -bottom-40 -left-24 w-[480px] h-[480px] rounded-full bg-gold/5 blur-[120px] animate-float-orb pointer-events-none"
         style={{ animationDelay: '-5s' }}
         aria-hidden="true"
       />
@@ -35,7 +35,7 @@ export async function StationsHero() {
       />
 
       {/* Gold shimmer line */}
-      <div className="absolute top-0 left-0 right-0 h-[2px] bg-gradient-to-r from-transparent via-gold to-transparent animate-gold-shimmer" />
+      <div className="absolute top-0 left-0 right-0 h-[2px] bg-linear-to-r from-transparent via-gold to-transparent animate-gold-shimmer" />
 
       <div className="relative z-10 max-w-6xl mx-auto px-4 sm:px-6 py-16 sm:py-24">
         <div className="flex items-center gap-16">
@@ -55,7 +55,7 @@ export async function StationsHero() {
             </div>
 
             {/* Title */}
-            <h1 className="font-[900] leading-[1.05] mb-5 animate-fade-in-up animation-delay-100">
+            <h1 className="font-black leading-[1.05] mb-5 animate-fade-in-up animation-delay-100">
               <span className="block text-[42px] sm:text-[60px] text-white">{t('page_title')}</span>
               <span className="block text-[42px] sm:text-[60px] hero-title-gradient">{t('hero_near_you')}</span>
             </h1>
@@ -72,7 +72,7 @@ export async function StationsHero() {
             <div className="flex flex-wrap gap-3 animate-fade-in-up animation-delay-400">
               <Link
                 href="/register"
-                className="btn-shine inline-flex items-center gap-2 px-7 py-3.5 bg-gold hover:bg-gold-hover rounded-[12px] text-[15px] font-bold text-[#1A2116] transition-colors"
+                className="btn-shine inline-flex items-center gap-2 px-7 py-3.5 bg-gold hover:bg-gold-hover rounded-[12px] text-[15px] font-bold text-dark-bg transition-colors"
               >
                 {tn('register')}
                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
@@ -100,7 +100,7 @@ export async function StationsHero() {
         </div>
 
         {/* ── Bottom stats strip ── */}
-        <div className="mt-14 pt-7 border-t border-white/[0.1] grid grid-cols-3 gap-6 animate-fade-in-up animation-delay-500">
+        <div className="mt-14 pt-7 border-t border-white/10 grid grid-cols-3 gap-6 animate-fade-in-up animation-delay-500">
           <BottomStat value="2 500+" label="Lavages réservés" />
           <BottomStat value="98%" label="Satisfaction client" />
           <BottomStat value="7j/7" label="Disponibilité" />
@@ -112,9 +112,9 @@ export async function StationsHero() {
 
 function StatCard({ value, label, delay }: { value: string; label: string; delay: string }) {
   return (
-    <div className={`relative bg-white/[0.06] backdrop-blur-sm border border-white/[0.1] rounded-2xl px-5 py-4 w-[192px] animate-float-card animation-delay-${delay} hover:border-gold/30 transition-colors overflow-hidden`}>
-      <div className="absolute top-0 left-0 w-[3px] h-full bg-gradient-to-b from-gold/70 via-gold/30 to-transparent" />
-      <div className="text-[28px] font-[900] text-gold leading-none mb-1.5 pl-1">{value}</div>
+    <div className={`relative bg-white/6 backdrop-blur-sm border border-white/10 rounded-2xl px-5 py-4 w-[192px] animate-float-card animation-delay-${delay} hover:border-gold/30 transition-colors overflow-hidden`}>
+      <div className="absolute top-0 left-0 w-[3px] h-full bg-linear-to-b from-gold/70 via-gold/30 to-transparent" />
+      <div className="text-[28px] font-black text-gold leading-none mb-1.5 pl-1">{value}</div>
       <div className="text-[13px] text-white/55 leading-tight pl-1">{label}</div>
     </div>
   );
@@ -123,7 +123,7 @@ function StatCard({ value, label, delay }: { value: string; label: string; delay
 function BottomStat({ value, label }: { value: string; label: string }) {
   return (
     <div className="text-center">
-      <div className="text-[24px] sm:text-[28px] font-[900] text-gold leading-none">{value}</div>
+      <div className="text-[24px] sm:text-[28px] font-black text-gold leading-none">{value}</div>
       <div className="text-[13px] text-white/50 mt-1.5">{label}</div>
     </div>
   );

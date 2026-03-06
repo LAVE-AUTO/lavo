@@ -27,7 +27,7 @@ export function HeroSearch() {
   return (
     <form
       onSubmit={handleSubmit}
-      className="flex items-center gap-3 px-4 py-3.5 mb-7 bg-white/[0.07] hover:bg-white/[0.10] border border-white/[0.13] hover:border-gold/40 rounded-2xl transition-all backdrop-blur-sm group animate-fade-in-up animation-delay-300"
+      className="flex items-center gap-3 px-4 py-3.5 mb-7 bg-white/[0.07] hover:bg-white/10 border border-white/13 hover:border-gold/40 rounded-2xl transition-all backdrop-blur-sm group animate-fade-in-up animation-delay-300"
     >
       <div className="w-9 h-9 rounded-xl bg-gold/15 flex items-center justify-center shrink-0">
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#C49A1E" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
@@ -47,7 +47,7 @@ export function HeroSearch() {
 
       <button
         type="submit"
-        className="px-4 py-2 bg-gold hover:bg-gold-hover rounded-xl text-[13px] font-bold text-[#1A2116] transition-colors shrink-0 cursor-pointer"
+        className="px-4 py-2 bg-gold hover:bg-gold-hover rounded-xl text-[13px] font-bold text-dark-bg transition-colors shrink-0 cursor-pointer"
       >
         {t('hero_search_cta')}
       </button>
