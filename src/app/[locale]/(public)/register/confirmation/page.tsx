@@ -64,7 +64,7 @@ export default async function RegisterConfirmationPage({ params }: Props) {
 
           <Link
             href="/login"
-            className="block w-full py-3.5 bg-gold hover:bg-gold-hover rounded-[10px] text-[15px] font-bold text-[#1A2116] tracking-wide transition-colors duration-150 text-center"
+            className="block w-full py-3.5 bg-gold hover:bg-gold-hover rounded-[10px] text-[15px] font-bold text-dark-bg tracking-wide transition-colors duration-150 text-center"
           >
             {t('confirmation_back')}
           </Link>

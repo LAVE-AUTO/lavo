@@ -2,7 +2,7 @@ import { eq } from 'drizzle-orm';
 import { db } from '@/lib/db';
 import { stations } from '@/lib/db/schema';
 import { requireAuth } from '@/lib/require-auth';
-import { error401, error403 } from '@/lib/responses';
+import { error403 } from '@/lib/responses';
 import { ApiCode } from '@/types/api-codes';
 import type { JwtPayload } from '@/lib/jwt';
 import type { NextResponse } from 'next/server';

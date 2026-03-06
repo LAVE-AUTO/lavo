@@ -131,7 +131,7 @@ export function BrandPanel() {
     startInterval();
   };
 
-  const textPrimary   = isDark ? 'text-white'             : 'text-[#1A2116]';
+  const textPrimary   = isDark ? 'text-white'             : 'text-dark-bg';
   const textSecondary = isDark ? 'text-lavo-muted'         : 'text-[#5A6B54]';
   const trackColor    = isDark ? 'bg-white/10'             : 'bg-black/10';
   const inactiveDot   = isDark ? 'bg-white/20 hover:bg-white/40' : 'bg-black/20 hover:bg-black/40';

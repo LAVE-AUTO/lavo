@@ -88,8 +88,13 @@ export function LoginForm() {
       });
 
       if (success) {
-        const data = response as { token: string; user: AuthUser };
-        auth.login(data.token, data.user);
+        const body = response as { data?: { user: AuthUser; access_token: string } };
+        const data = body.data;
+        if (!data?.user || !data?.access_token) {
+          showError(t('error_generic'));
+          return;
+        }
+        auth.login(data.access_token, data.user);
 
         if (data.user.role === 'STATION')          router.push('/station');
         else if (data.user.role === 'SUPER_ADMIN') router.push('/admin');
@@ -156,7 +161,7 @@ export function LoginForm() {
             id="remember-me"
             checked={rememberMe}
             onChange={(e) => setRememberMe(e.target.checked)}
-            className="w-4 h-4 rounded border-[#CCCCCC] dark:border-[#3A4A36] accent-gold cursor-pointer"
+            className="w-4 h-4 rounded border-[#CCCCCC] dark:border-tab-inactive accent-gold cursor-pointer"
           />
           <span className="text-[14px] text-[#555] dark:text-lavo-muted">
             {t('remember_me')}
@@ -174,7 +179,7 @@ export function LoginForm() {
       <button
         type="submit"
         disabled={isLoading}
-        className="btn-shine w-full py-3.5 bg-gold hover:bg-gold-hover active:scale-[0.98] disabled:opacity-70 rounded-[10px] text-[16px] font-bold text-[#1A2116] tracking-wide transition-all duration-150 flex items-center justify-center gap-2"
+        className="btn-shine w-full py-3.5 bg-gold hover:bg-gold-hover active:scale-[0.98] disabled:opacity-70 rounded-[10px] text-[16px] font-bold text-dark-bg tracking-wide transition-all duration-150 flex items-center justify-center gap-2"
       >
         {isLoading ? (
           <>

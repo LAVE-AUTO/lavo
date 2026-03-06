@@ -50,10 +50,12 @@ export function StationListView() {
   const [timeFrom,           setTimeFrom]           = useState('');
   const [timeTo,             setTimeTo]             = useState('');
 
-  /* ── Initialise query from URL param (?q=) ── */
+  /* ── Sync query from URL param (?q=) without synchronous setState in effect ── */
   useEffect(() => {
     const q = searchParams.get('q');
-    if (q) setQuery(q);
+    if (q == null) return;
+    const id = setTimeout(() => setQuery(q), 0);
+    return () => clearTimeout(id);
   }, [searchParams]);
 
   /* ── Price validation ── */
@@ -138,7 +140,7 @@ export function StationListView() {
     if (sort === 'best_rated') results = [...results].sort((a, b) => b.rating - a.rating);
 
     return results;
-  }, [query, onlyAvail, sort, cityInput, price]);
+  }, [query, onlyAvail, sort, cityInput, price, selectedCategories, selectedVehicles, selectedServices, timeFrom, timeTo]);
 
   const available   = filtered.filter((s) => s.availableSlots > 0);
   const unavailable = filtered.filter((s) => s.availableSlots === 0);
@@ -192,8 +194,8 @@ export function StationListView() {
             className={[
               'relative flex items-center gap-1.5 px-4 py-2.5 rounded-[10px] text-[15px] font-bold transition-colors',
               panelOpen
-                ? 'bg-gold text-[#1A2116]'
-                : 'bg-[#E0E0D0] dark:bg-[#2C3828] text-[#222] dark:text-[#D0D0C0] hover:bg-[#D0D0C0] dark:hover:bg-[#3A4A36]',
+                ? 'bg-gold text-dark-bg'
+                : 'bg-[#E0E0D0] dark:bg-tab-inactive text-[#222] dark:text-[#D0D0C0] hover:bg-[#D0D0C0] dark:hover:bg-tab-inactive',
             ].join(' ')}
             aria-expanded={panelOpen}
             aria-label={t('filter_panel_title')}
@@ -205,7 +207,7 @@ export function StationListView() {
             </svg>
             <span className="hidden sm:inline">{t('filter_panel_title')}</span>
             {activeCount > 0 && (
-              <span className="absolute -top-1.5 -right-1.5 w-4 h-4 bg-gold text-[#1A2116] text-[13px] font-black rounded-full flex items-center justify-center">
+              <span className="absolute -top-1.5 -right-1.5 w-4 h-4 bg-gold text-dark-bg text-[13px] font-black rounded-full flex items-center justify-center">
                 {activeCount}
               </span>
             )}
@@ -222,8 +224,8 @@ export function StationListView() {
               className={[
                 'py-1.5 px-3.5 rounded-full text-[14px] font-bold whitespace-nowrap transition-colors duration-150 shrink-0',
                 sort === key
-                  ? 'bg-gold text-[#1A2116]'
-                  : 'bg-[#E0E0D0] dark:bg-[#1E2A1A] text-[#222] dark:text-[#D0D0C0] hover:bg-[#D0D0C0] dark:hover:bg-[#2C3828]',
+                  ? 'bg-gold text-dark-bg'
+                  : 'bg-[#E0E0D0] dark:bg-dark-card text-[#222] dark:text-[#D0D0C0] hover:bg-[#D0D0C0] dark:hover:bg-tab-inactive',
               ].join(' ')}
             >
               {label}
@@ -237,8 +239,8 @@ export function StationListView() {
             className={[
               'py-1.5 px-3.5 rounded-full text-[14px] font-bold whitespace-nowrap transition-colors duration-150 shrink-0',
               onlyAvail
-                ? 'bg-gold text-[#1A2116]'
-                : 'bg-[#E0E0D0] dark:bg-[#1E2A1A] text-[#222] dark:text-[#D0D0C0] hover:bg-[#D0D0C0] dark:hover:bg-[#2C3828]',
+                ? 'bg-gold text-dark-bg'
+                : 'bg-[#E0E0D0] dark:bg-dark-card text-[#222] dark:text-[#D0D0C0] hover:bg-[#D0D0C0] dark:hover:bg-tab-inactive',
             ].join(' ')}
           >
             {t('filter_available')}
@@ -247,7 +249,7 @@ export function StationListView() {
 
         {/* -- Expandable filter panel -- */}
         {panelOpen && (
-          <div className="bg-white dark:bg-[#1E2A1A] rounded-xl p-5 space-y-5 animate-fade-in border border-[#E0E0D0] dark:border-[#2C3828] shadow-sm">
+          <div className="bg-white dark:bg-dark-card rounded-xl p-5 space-y-5 animate-fade-in border border-[#E0E0D0] dark:border-tab-inactive shadow-sm">
 
             {/* Header */}
             <div className="flex items-center justify-between">
@@ -275,7 +277,7 @@ export function StationListView() {
                 value={cityInput}
                 onChange={(e) => setCityInput(e.target.value)}
                 placeholder={t('filter_city_placeholder')}
-                className="w-full px-3.5 py-2.5 rounded-lg bg-[#F5F5EE] dark:bg-[#2C3828] border border-[#E0E0D0] dark:border-[#3A4A36] text-[15px] text-[#1A1A1A] dark:text-white placeholder-[#9A9A8A] outline-none focus:border-gold transition-colors"
+                className="w-full px-3.5 py-2.5 rounded-lg bg-[#F5F5EE] dark:bg-tab-inactive border border-[#E0E0D0] dark:border-tab-inactive text-[15px] text-[#1A1A1A] dark:text-white placeholder-[#9A9A8A] outline-none focus:border-gold transition-colors"
               />
             </div>
 
@@ -293,10 +295,10 @@ export function StationListView() {
                     onChange={(e) => validateAndSetMin(e.target.value)}
                     placeholder={t('filter_price_min_placeholder')}
                     className={[
-                      'w-full px-3.5 py-2.5 rounded-lg bg-[#F5F5EE] dark:bg-[#2C3828] border text-[15px] text-[#1A1A1A] dark:text-white placeholder-[#9A9A8A] outline-none transition-colors',
+                      'w-full px-3.5 py-2.5 rounded-lg bg-[#F5F5EE] dark:bg-tab-inactive border text-[15px] text-[#1A1A1A] dark:text-white placeholder-[#9A9A8A] outline-none transition-colors',
                       priceErrors.min
                         ? 'border-lavo-error focus:border-lavo-error'
-                        : 'border-[#E0E0D0] dark:border-[#3A4A36] focus:border-gold',
+                        : 'border-[#E0E0D0] dark:border-tab-inactive focus:border-gold',
                     ].join(' ')}
                   />
                   {priceErrors.min && (
@@ -312,10 +314,10 @@ export function StationListView() {
                     onChange={(e) => validateAndSetMax(e.target.value)}
                     placeholder={t('filter_price_max_placeholder')}
                     className={[
-                      'w-full px-3.5 py-2.5 rounded-lg bg-[#F5F5EE] dark:bg-[#2C3828] border text-[15px] text-[#1A1A1A] dark:text-white placeholder-[#9A9A8A] outline-none transition-colors',
+                      'w-full px-3.5 py-2.5 rounded-lg bg-[#F5F5EE] dark:bg-tab-inactive border text-[15px] text-[#1A1A1A] dark:text-white placeholder-[#9A9A8A] outline-none transition-colors',
                       priceErrors.max
                         ? 'border-lavo-error focus:border-lavo-error'
-                        : 'border-[#E0E0D0] dark:border-[#3A4A36] focus:border-gold',
+                        : 'border-[#E0E0D0] dark:border-tab-inactive focus:border-gold',
                     ].join(' ')}
                   />
                   {priceErrors.max && (
@@ -339,8 +341,8 @@ export function StationListView() {
                     className={[
                       'py-1.5 px-3.5 rounded-full text-[14px] font-bold transition-colors',
                       sort === key
-                        ? 'bg-gold text-[#1A2116]'
-                        : 'bg-[#F5F5EE] dark:bg-[#2C3828] text-[#222] dark:text-[#D0D0C0] hover:bg-[#E0E0D0] dark:hover:bg-[#3A4A36]',
+                        ? 'bg-gold text-dark-bg'
+                        : 'bg-[#F5F5EE] dark:bg-tab-inactive text-[#222] dark:text-[#D0D0C0] hover:bg-[#E0E0D0] dark:hover:bg-tab-inactive',
                     ].join(' ')}
                   >
                     {label}
@@ -413,7 +415,7 @@ export function StationListView() {
                     'w-full pl-10 pr-3.5 py-2.5 rounded-lg border text-[15px] outline-none transition-all duration-150 cursor-pointer',
                     date
                       ? 'border-gold bg-gold/5 dark:bg-gold/10 text-[#1A1A1A] dark:text-white'
-                      : 'border-[#E0E0D0] dark:border-[#3A4A36] bg-[#F5F5EE] dark:bg-[#2C3828] text-[#1A1A1A] dark:text-white',
+                      : 'border-[#E0E0D0] dark:border-tab-inactive bg-[#F5F5EE] dark:bg-tab-inactive text-[#1A1A1A] dark:text-white',
                   ].join(' ')}
                 />
               </div>
@@ -459,7 +461,7 @@ export function StationListView() {
                 onClick={() => setOnlyAvail((v) => !v)}
                 className={[
                   'relative shrink-0 w-11 h-6 rounded-full transition-colors duration-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-gold',
-                  onlyAvail ? 'bg-gold' : 'bg-[#9A9A8A] dark:bg-[#2C3828]',
+                  onlyAvail ? 'bg-gold' : 'bg-[#9A9A8A] dark:bg-tab-inactive',
                 ].join(' ')}
               >
                 <span
@@ -506,7 +508,7 @@ function SectionLabel({ label, count, accent = false }: { label: string; count: 
     <div className="flex items-center gap-3 mb-4">
       {accent && <span className="w-1 h-4 rounded-full bg-gold shrink-0" />}
       <span className="text-[16px] font-black text-[#1A1A1A] dark:text-white uppercase tracking-widest">{label}</span>
-      <span className="text-[13px] text-[#555] dark:text-[#B0B0A0] font-semibold bg-[#E0E0D0] dark:bg-[#1E2A1A] px-2 py-0.5 rounded-full">
+      <span className="text-[13px] text-[#555] dark:text-[#B0B0A0] font-semibold bg-[#E0E0D0] dark:bg-dark-card px-2 py-0.5 rounded-full">
         {count}
       </span>
     </div>
@@ -526,7 +528,7 @@ function StationGrid({ stations, unavailable }: { stations: StationDetailData[];
 function EmptyState({ title, desc }: { title: string; desc: string }) {
   return (
     <div className="flex flex-col items-center justify-center py-24 gap-4 text-center animate-fade-in">
-      <div className="w-16 h-16 rounded-full bg-[#E0E0D0] dark:bg-[#1E2A1A] flex items-center justify-center">
+      <div className="w-16 h-16 rounded-full bg-[#E0E0D0] dark:bg-dark-card flex items-center justify-center">
         <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#9A9A8A" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
           <circle cx="11" cy="11" r="8" />
           <line x1="21" y1="21" x2="16.65" y2="16.65" />
@@ -578,7 +580,7 @@ function CustomMultiSelect({ options, selected, onToggle, placeholder }: CustomM
           'w-full flex items-center justify-between px-3.5 py-2.5 rounded-lg border text-[15px] font-semibold transition-all duration-150 select-none',
           isActive
             ? 'border-gold bg-gold/5 dark:bg-gold/10 text-[#1A1A1A] dark:text-white'
-            : 'border-[#E0E0D0] dark:border-[#3A4A36] bg-[#F5F5EE] dark:bg-[#2C3828] text-[#555] dark:text-[#C0C0B0]',
+            : 'border-[#E0E0D0] dark:border-tab-inactive bg-[#F5F5EE] dark:bg-tab-inactive text-[#555] dark:text-[#C0C0B0]',
         ].join(' ')}
       >
         <span className={selected.length > 0 ? 'text-[#1A1A1A] dark:text-white' : ''}>{triggerLabel}</span>
@@ -593,7 +595,7 @@ function CustomMultiSelect({ options, selected, onToggle, placeholder }: CustomM
       </button>
 
       {open && (
-        <div className="absolute top-[calc(100%+6px)] left-0 right-0 bg-white dark:bg-[#243020] border border-[#E0E0D0] dark:border-[#3A4A36] rounded-xl shadow-[0_8px_32px_rgba(0,0,0,0.12)] dark:shadow-[0_8px_32px_rgba(0,0,0,0.4)] z-50 max-h-52 overflow-y-auto animate-fade-in">
+        <div className="absolute top-[calc(100%+6px)] left-0 right-0 bg-white dark:bg-dark-surface border border-[#E0E0D0] dark:border-tab-inactive rounded-xl shadow-[0_8px_32px_rgba(0,0,0,0.12)] dark:shadow-[0_8px_32px_rgba(0,0,0,0.4)] z-50 max-h-52 overflow-y-auto animate-fade-in">
           {options.map((opt) => {
             const isSel = selected.includes(opt);
             return (
@@ -605,7 +607,7 @@ function CustomMultiSelect({ options, selected, onToggle, placeholder }: CustomM
                   'w-full flex items-center justify-between px-3.5 py-2.5 text-[14px] font-semibold text-left transition-colors duration-100',
                   isSel
                     ? 'text-gold bg-gold/5 dark:bg-gold/10'
-                    : 'text-[#1A1A1A] dark:text-white hover:bg-[#F5F5EE] dark:hover:bg-[#2C3828]',
+                    : 'text-[#1A1A1A] dark:text-white hover:bg-[#F5F5EE] dark:hover:bg-tab-inactive',
                 ].join(' ')}
               >
                 <span>{opt}</span>
@@ -658,7 +660,7 @@ function CustomSelect({ options, value, onChange, placeholder }: CustomSelectPro
           'w-full flex items-center justify-between px-3.5 py-2.5 rounded-lg border text-[15px] font-semibold transition-all duration-150 select-none',
           isActive
             ? 'border-gold bg-gold/5 dark:bg-gold/10 text-[#1A1A1A] dark:text-white'
-            : 'border-[#E0E0D0] dark:border-[#3A4A36] bg-[#F5F5EE] dark:bg-[#2C3828] text-[#555] dark:text-[#C0C0B0]',
+            : 'border-[#E0E0D0] dark:border-tab-inactive bg-[#F5F5EE] dark:bg-tab-inactive text-[#555] dark:text-[#C0C0B0]',
         ].join(' ')}
       >
         <span className={value ? 'text-[#1A1A1A] dark:text-white' : ''}>{display}</span>
@@ -673,11 +675,11 @@ function CustomSelect({ options, value, onChange, placeholder }: CustomSelectPro
       </button>
 
       {open && (
-        <div className="absolute top-[calc(100%+6px)] left-0 right-0 bg-white dark:bg-[#243020] border border-[#E0E0D0] dark:border-[#3A4A36] rounded-xl shadow-[0_8px_32px_rgba(0,0,0,0.12)] dark:shadow-[0_8px_32px_rgba(0,0,0,0.4)] z-50 max-h-52 overflow-y-auto animate-fade-in">
+        <div className="absolute top-[calc(100%+6px)] left-0 right-0 bg-white dark:bg-dark-surface border border-[#E0E0D0] dark:border-tab-inactive rounded-xl shadow-[0_8px_32px_rgba(0,0,0,0.12)] dark:shadow-[0_8px_32px_rgba(0,0,0,0.4)] z-50 max-h-52 overflow-y-auto animate-fade-in">
           <button
             type="button"
             onClick={() => { onChange(''); setOpen(false); }}
-            className="w-full px-3.5 py-2.5 text-[14px] font-semibold text-left text-[#9A9A8A] hover:bg-[#F5F5EE] dark:hover:bg-[#2C3828] transition-colors duration-100"
+            className="w-full px-3.5 py-2.5 text-[14px] font-semibold text-left text-[#9A9A8A] hover:bg-[#F5F5EE] dark:hover:bg-tab-inactive transition-colors duration-100"
           >
             {placeholder}
           </button>
@@ -690,7 +692,7 @@ function CustomSelect({ options, value, onChange, placeholder }: CustomSelectPro
                 'w-full flex items-center justify-between px-3.5 py-2.5 text-[14px] font-semibold text-left transition-colors duration-100',
                 value === opt.value
                   ? 'text-gold bg-gold/5 dark:bg-gold/10'
-                  : 'text-[#1A1A1A] dark:text-white hover:bg-[#F5F5EE] dark:hover:bg-[#2C3828]',
+                  : 'text-[#1A1A1A] dark:text-white hover:bg-[#F5F5EE] dark:hover:bg-tab-inactive',
               ].join(' ')}
             >
               <span>{opt.label}</span>

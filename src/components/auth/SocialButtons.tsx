@@ -41,9 +41,9 @@ export function SocialButtons({ namespace = 'register' }: SocialButtonsProps) {
 
   const btnClass = [
     'flex items-center gap-2.5 px-5 py-2.5 rounded-xl',
-    'bg-[#F0F0E8] dark:bg-[#2C3828]',
-    'border border-[#CCCCCC] dark:border-[#3A4A36]',
-    'hover:bg-[#E8E8E0] dark:hover:bg-[#344430]',
+    'bg-[#F0F0E8] dark:bg-tab-inactive',
+    'border border-[#CCCCCC] dark:border-tab-inactive',
+    'hover:bg-[#E8E8E0] dark:hover:bg-tab-inactive',
     'transition-colors duration-150 text-[14px] font-semibold',
     'text-[#333] dark:text-white',
   ].join(' ');

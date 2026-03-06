@@ -69,13 +69,13 @@ export function ResetPasswordForm({ token }: ResetPasswordFormProps) {
             <line x1="12" y1="16" x2="12.01" y2="16" />
           </svg>
         </div>
-        <p className="text-[16px] text-[#1A2116] dark:text-white font-semibold mb-2">
+        <p className="text-[16px] text-dark-bg dark:text-white font-semibold mb-2">
           {t('error_invalid_token')}
         </p>
         <div className="mt-6">
           <Link
             href="/forgot-password"
-            className="btn-shine block w-full py-3.5 bg-gold hover:bg-gold-hover rounded-[10px] text-[16px] font-bold text-[#1A2116] tracking-wide transition-colors duration-150 text-center"
+            className="btn-shine block w-full py-3.5 bg-gold hover:bg-gold-hover rounded-[10px] text-[16px] font-bold text-dark-bg tracking-wide transition-colors duration-150 text-center"
           >
             {t('back_to_login')}
           </Link>
@@ -90,7 +90,7 @@ export function ResetPasswordForm({ token }: ResetPasswordFormProps) {
         <div className="w-20 h-20 rounded-full bg-lavo-success/10 border border-lavo-success/20 flex items-center justify-center mx-auto mb-6">
           <SuccessIcon />
         </div>
-        <h2 className="text-[22px] font-bold text-[#1A2116] dark:text-white mb-3">
+        <h2 className="text-[22px] font-bold text-dark-bg dark:text-white mb-3">
           {t('success_title')}
         </h2>
         <p className="text-[15px] text-[#555] dark:text-lavo-muted leading-relaxed mb-8">
@@ -98,7 +98,7 @@ export function ResetPasswordForm({ token }: ResetPasswordFormProps) {
         </p>
         <Link
           href="/login"
-          className="btn-shine block w-full py-3.5 bg-gold hover:bg-gold-hover rounded-[10px] text-[16px] font-bold text-[#1A2116] tracking-wide transition-colors duration-150 text-center"
+          className="btn-shine block w-full py-3.5 bg-gold hover:bg-gold-hover rounded-[10px] text-[16px] font-bold text-dark-bg tracking-wide transition-colors duration-150 text-center"
         >
           {t('back_to_login')}
         </Link>
@@ -196,7 +196,7 @@ export function ResetPasswordForm({ token }: ResetPasswordFormProps) {
       <button
         type="submit"
         disabled={isLoading}
-        className="btn-shine w-full py-3.5 mt-2 bg-gold hover:bg-gold-hover active:scale-[0.98] disabled:opacity-70 rounded-[10px] text-[16px] font-bold text-[#1A2116] tracking-wide transition-all duration-150 flex items-center justify-center gap-2"
+        className="btn-shine w-full py-3.5 mt-2 bg-gold hover:bg-gold-hover active:scale-[0.98] disabled:opacity-70 rounded-[10px] text-[16px] font-bold text-dark-bg tracking-wide transition-all duration-150 flex items-center justify-center gap-2"
       >
         {isLoading ? (
           <>

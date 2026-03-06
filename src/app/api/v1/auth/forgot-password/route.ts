@@ -1,7 +1,9 @@
+import { headers } from 'next/headers';
 import { forgotPassword } from '@/server/auth/auth-service';
 import { forgotPasswordSchema, mapZodErrors } from '@/validators/auth';
-import { successResponse, error400, error500 } from '@/lib/responses';
+import { successResponse, error400, error429, error500 } from '@/lib/responses';
 import { ApiCode } from '@/types/api-codes';
+import { checkRateLimit, recordFailedAttempt } from '@/lib/rate-limiter';
 
 /**
  * POST /api/v1/auth/forgot-password
@@ -12,9 +14,16 @@ import { ApiCode } from '@/types/api-codes';
  * Responses:
  *   200 { data: { sent: true } }  — always, to prevent email enumeration
  *   400 VALIDATION_FAILED         — invalid email format
+ *   429 TOO_MANY_REQUESTS         — rate limit exceeded
  *   500 INTERNAL_ERROR
  */
 export async function POST(request: Request) {
+  const headersList = await headers();
+  const ip = headersList.get('x-forwarded-for')?.split(',')[0].trim() ?? 'unknown';
+
+  const { blocked } = await checkRateLimit(ip);
+  if (blocked) return error429();
+
   let body: unknown;
   try {
     body = await request.json();
@@ -26,6 +35,8 @@ export async function POST(request: Request) {
   if (!parsed.success) {
     return error400('Validation failed', ApiCode.VALIDATION_FAILED, mapZodErrors(parsed.error));
   }
+
+  await recordFailedAttempt(ip);
 
   try {
     await forgotPassword(parsed.data.email);
