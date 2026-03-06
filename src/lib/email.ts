@@ -45,3 +45,34 @@ export async function sendVerificationEmail(
     `,
   });
 }
+
+/**
+ * Sends an email to the admin when a new station application is submitted.
+ * No-op if ADMIN_NOTIFICATION_EMAIL is not set (logs and skips).
+ */
+export async function sendStationApplicationAdminNotification(
+  stationName: string,
+  stationId: string
+): Promise<void> {
+  const adminEmail = process.env.ADMIN_NOTIFICATION_EMAIL?.trim();
+  if (!adminEmail) {
+    if (process.env.NODE_ENV !== 'test') {
+      console.warn(
+        'sendStationApplicationAdminNotification: ADMIN_NOTIFICATION_EMAIL not set, skipping'
+      );
+    }
+    return;
+  }
+
+  await resend.emails.send({
+    from: FROM,
+    to: adminEmail,
+    subject: `[LAVO] New station application: ${stationName}`,
+    html: `
+      <p>A new station application has been submitted.</p>
+      <p><strong>Station name:</strong> ${stationName}</p>
+      <p><strong>Station ID:</strong> ${stationId}</p>
+      <p>Please review the application in the admin panel.</p>
+    `,
+  });
+}

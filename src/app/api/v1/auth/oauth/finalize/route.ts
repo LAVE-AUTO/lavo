@@ -31,13 +31,7 @@ export async function GET() {
       lastName: typeof oauthLastName === 'string' ? oauthLastName : '',
     });
 
-    const params = new URLSearchParams({
-      access_token: tokens.accessJwt,
-      token_type: 'Bearer',
-      expires_in: String(tokens.expiresIn),
-    });
-
-    const response = NextResponse.redirect(`${appUrl}/fr/auth/callback?${params}`);
+    const response = NextResponse.redirect(`${appUrl}/fr/auth/callback`);
     response.cookies.set(
       REFRESH_COOKIE_NAME,
       tokens.rawRefreshToken,

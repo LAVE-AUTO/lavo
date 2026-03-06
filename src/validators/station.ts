@@ -70,6 +70,35 @@ export const stationOnboardingSubmitSchema = _step1Base
     path: ['confirm_password'],
   });
 
+// ─── Station apply (multipart form: fields only; files validated in route) ─────
+
+/** Field names and types for POST /api/v1/stations/apply (multipart/form-data). */
+export const stationApplyFieldsSchema = z.object({
+  name: z.string().min(2).max(200),
+  legal_name: z.string().min(2).max(200).optional().or(z.literal('')),
+  registration_number: z.string().max(100).optional().or(z.literal('')),
+  address: z.string().min(5).max(500),
+  city: z.string().min(2).max(100),
+  latitude: z.preprocess(
+    (v) => (v === '' || v === undefined ? undefined : Number(v)),
+    z.number().min(-90).max(90).optional()
+  ),
+  longitude: z.preprocess(
+    (v) => (v === '' || v === undefined ? undefined : Number(v)),
+    z.number().min(-180).max(180).optional()
+  ),
+  wash_type: z.enum(['hand_wash', 'automatic', 'self_service']),
+  wash_post_count: z.coerce.number().int().min(1).max(100),
+  description: z.string().max(1000).optional().or(z.literal('')),
+  terms_accepted: z
+    .string()
+    .refine((v) => v === 'true' || v === '1', {
+      message: 'You must accept the terms and conditions',
+    })
+    .transform(() => true as const),
+});
+export type StationApplyFields = z.infer<typeof stationApplyFieldsSchema>;
+
 // ─── Admin ────────────────────────────────────────────────────────────────────
 
 // Admin: reject a station
@@ -94,6 +123,39 @@ export const changePasswordSchema = z
     message: 'Passwords do not match',
     path: ['confirm_new_password'],
   });
+
+// ─── Public API (Card 1) ─────────────────────────────────────────────────────
+
+/** Path param id for GET /stations/:id and POST /stations/:id/join. */
+export const stationIdParamSchema = z.object({
+  id: z.string().uuid('Invalid station id (must be a valid UUID)'),
+});
+
+/** Query params for GET /api/v1/stations (list active stations). */
+export const listStationsQuerySchema = z.object({
+  q: z
+    .string()
+    .optional()
+    .transform((s) => (typeof s === 'string' ? s.trim() : undefined) || undefined)
+    .refine((s) => s === undefined || s.length <= 200, {
+      message: 'Search must be at most 200 characters',
+    }),
+  city: z
+    .string()
+    .optional()
+    .transform((s) => (typeof s === 'string' ? s.trim() : undefined) || undefined)
+    .refine((s) => s === undefined || s.length <= 100, {
+      message: 'City must be at most 100 characters',
+    }),
+  sort: z
+    .enum(['slots_asc', 'slots_desc', 'name'], {
+      errorMap: () => ({ message: 'Invalid sort value. Use slots_asc, slots_desc, or name' }),
+    })
+    .optional(),
+});
+
+export type StationIdParam = z.infer<typeof stationIdParamSchema>;
+export type ListStationsQuery = z.infer<typeof listStationsQuerySchema>;
 
 export type RegisterStationDto = z.infer<typeof registerStationSchema>;
 export type StationInfoDto = z.infer<typeof stationInfoSchema>;
