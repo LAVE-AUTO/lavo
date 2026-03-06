@@ -91,22 +91,26 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     const storedToken = getStoredToken();
     const storedUser = getStoredUser();
 
-    if (storedToken) {
-      setToken(storedToken);
-      setUser(storedUser);
+    const id = setTimeout(() => {
+      if (storedToken) {
+        setToken(storedToken);
+        setUser(storedUser);
 
-      refreshAxiosService({
-        baseURL: process.env.NEXT_PUBLIC_API_URL || '/api/v1',
-        tokenGetter: () => getStoredToken(),
-        onUnauthorized: handleUnauthorized,
-      });
-    } else {
-      initAxiosService({
-        baseURL: process.env.NEXT_PUBLIC_API_URL || '/api/v1',
-      });
-    }
+        refreshAxiosService({
+          baseURL: process.env.NEXT_PUBLIC_API_URL || '/api/v1',
+          tokenGetter: () => getStoredToken(),
+          onUnauthorized: handleUnauthorized,
+        });
+      } else {
+        initAxiosService({
+          baseURL: process.env.NEXT_PUBLIC_API_URL || '/api/v1',
+        });
+      }
 
-    setIsLoading(false);
+      setIsLoading(false);
+    }, 0);
+
+    return () => clearTimeout(id);
   }, [handleUnauthorized, loginPath]);
 
   const login = useCallback((newToken: string, newUser: AuthUser) => {

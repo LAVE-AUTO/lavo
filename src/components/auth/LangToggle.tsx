@@ -20,7 +20,7 @@ export function LangToggle() {
   };
 
   const base = 'px-2.5 py-1 text-[11px] font-bold tracking-wider transition-colors duration-150';
-  const active = 'bg-gold text-[#1A2116]';
+  const active = 'bg-gold text-dark-bg';
   const inactive = 'bg-transparent text-black dark:text-white text-[#333]';
 
   return (

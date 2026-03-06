@@ -52,13 +52,12 @@ export function StationCard({ station, unavailable = false }: StationCardProps) 
   return (
     <article
       className={[
-        'bg-[#C8C8B4] dark:bg-[#1E2A1A] rounded-[14px] overflow-hidden border border-[#CCCCCC] dark:border-[#2C3828] group hover:border-gold/30 transition-all duration-300',
+        'bg-[#C8C8B4] dark:bg-dark-card rounded-[14px] overflow-hidden border border-[#CCCCCC] dark:border-tab-inactive group hover:border-gold/30 transition-all duration-300',
         unavailable ? 'opacity-50 grayscale pointer-events-none' : '',
       ].join(' ')}
-      aria-disabled={unavailable}
     >
       {/* Photo area */}
-      <div className="relative h-[140px] sm:h-[160px] bg-[#B8B8A4] dark:bg-[#2C3828] flex items-center justify-center overflow-hidden">
+      <div className="relative h-[140px] sm:h-[160px] bg-[#B8B8A4] dark:bg-tab-inactive flex items-center justify-center overflow-hidden">
         {station.imageUrl ? (
           <img
             src={station.imageUrl}
@@ -76,7 +75,7 @@ export function StationCard({ station, unavailable = false }: StationCardProps) 
         )}
 
         {/* Gradient overlay at bottom with station name */}
-        <div className="absolute inset-x-0 bottom-0 h-14 bg-gradient-to-t from-black/60 to-transparent pt-6 flex items-end px-3 pb-2 pointer-events-none">
+        <div className="absolute inset-x-0 bottom-0 h-14 bg-linear-to-t from-black/60 to-transparent pt-6 flex items-end px-3 pb-2 pointer-events-none">
           <span className="text-white text-[15px] font-bold leading-tight line-clamp-1 drop-shadow">
             {station.name}
           </span>
@@ -124,11 +123,11 @@ export function StationCard({ station, unavailable = false }: StationCardProps) 
 
         {/* Stats grid with dividers */}
         <div className="grid grid-cols-3 mb-3 text-center">
-          <div className="border-r border-[#CCCCCC] dark:border-[#2C3828] pr-2">
+          <div className="border-r border-[#CCCCCC] dark:border-tab-inactive pr-2">
             <div className="text-[17px] font-black text-[#0A0A14] dark:text-white leading-none">{station.availableSlots}</div>
             <div className="text-[14px] text-[#111111] dark:text-[#D8D8C8] mt-1">{t('places_dispo')}</div>
           </div>
-          <div className="border-r border-[#CCCCCC] dark:border-[#2C3828] px-2">
+          <div className="border-r border-[#CCCCCC] dark:border-tab-inactive px-2">
             <div className="text-[17px] font-black text-[#0A0A14] dark:text-white leading-none">
               {station.estimatedWaitMinutes > 0 ? `${station.estimatedWaitMinutes}` : '\u2014'}
             </div>
@@ -146,7 +145,7 @@ export function StationCard({ station, unavailable = false }: StationCardProps) 
             {station.tags.slice(0, 3).map((tag) => (
               <span
                 key={tag}
-                className="py-1 px-2.5 rounded-full text-[14px] font-bold bg-[#E8E8D8] dark:bg-[#2C3828] text-[#000000] dark:text-[#F0F0E8] border border-[#D0D0C0] dark:border-[#3A4A36]"
+                className="py-1 px-2.5 rounded-full text-[14px] font-bold bg-[#E8E8D8] dark:bg-tab-inactive text-[#000000] dark:text-[#F0F0E8] border border-[#D0D0C0] dark:border-tab-inactive"
               >
                 {tag}
               </span>
@@ -168,7 +167,7 @@ export function StationCard({ station, unavailable = false }: StationCardProps) 
           )}
           <Link
             href={`/stations/${station.id}`}
-            className="flex-1 py-2.5 bg-gold hover:bg-gold-hover rounded-lg text-[15px] font-bold text-[#1A2116] text-center transition-colors"
+            className="flex-1 py-2.5 bg-gold hover:bg-gold-hover rounded-lg text-[15px] font-bold text-dark-bg text-center transition-colors"
           >
             {t('details')}
           </Link>

@@ -30,7 +30,7 @@ export async function sendVerificationEmail(
   firstName: string,
   token: string
 ): Promise<void> {
-  const link = `${APP_URL}/api/v1/auth/verify-email?token=${token}`;
+  const link = `${APP_URL}/fr/verify-email?token=${token}`;
 
   await resend.emails.send({
     from: FROM,

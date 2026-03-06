@@ -38,7 +38,7 @@ export function SearchBar({ value, onChange, placeholder }: SearchBarProps) {
   };
 
   return (
-    <div className="flex items-center gap-2 px-3.5 py-2.5 bg-[#E0E0D0] dark:bg-[#2C3828] rounded-[10px] transition-colors">
+    <div className="flex items-center gap-2 px-3.5 py-2.5 bg-[#E0E0D0] dark:bg-tab-inactive rounded-[10px] transition-colors">
       <SearchIcon />
       <input
         type="search"
