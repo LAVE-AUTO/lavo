@@ -127,6 +127,7 @@ export const vehicleFormats = pgTable("vehicle_formats", {
 /**
  * Documents submitted during station onboarding (step 3).
  * One row per document; terms_accepted records the legal confirmation checkbox.
+ * storage: 'cloudinary' (default) or 'local'; local files are synced to Cloudinary by cron.
  */
 export const stationDocuments = pgTable("station_documents", {
   id: uuid("id").primaryKey().defaultRandom(),
@@ -135,6 +136,7 @@ export const stationDocuments = pgTable("station_documents", {
     .references(() => stations.id, { onDelete: "cascade" }),
   document_type: varchar("document_type", { length: 50 }).notNull(),
   file_url: text("file_url").notNull(),
+  storage: varchar("storage", { length: 20 }).notNull().default("cloudinary"),
   terms_accepted: boolean("terms_accepted").notNull().default(false),
   created_at: timestamp("created_at", {
     mode: "date",
@@ -143,3 +145,24 @@ export const stationDocuments = pgTable("station_documents", {
     .notNull()
     .defaultNow(),
 });
+
+/**
+ * Rows to process by sync-pending-uploads job: local files to upload to Cloudinary.
+ * Job reads batch by created_at, uploads file from station_documents.file_url, then clears row.
+ */
+export const pendingUploads = pgTable(
+  "pending_uploads",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    station_document_id: uuid("station_document_id")
+      .notNull()
+      .references(() => stationDocuments.id, { onDelete: "cascade" }),
+    created_at: timestamp("created_at", {
+      mode: "date",
+      withTimezone: true,
+    })
+      .notNull()
+      .defaultNow(),
+  },
+  (table) => [index("pending_uploads_created_at_idx").on(table.created_at)]
+);

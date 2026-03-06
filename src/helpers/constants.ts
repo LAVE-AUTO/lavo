@@ -25,11 +25,21 @@ export const DEFAULT_PAGE_SIZE = 20;
 export const MAX_PAGE_SIZE = 100;
 
 export const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5MB
+/** Max size for station application documents (images + PDF). */
+export const STATION_DOC_MAX_SIZE = 10 * 1024 * 1024; // 10MB
 export const ALLOWED_IMAGE_TYPES = [
   'image/jpeg',
   'image/png',
   'image/webp',
   'image/gif',
+];
+/** MIME types allowed for station documents (apply + onboarding). */
+export const ALLOWED_DOCUMENT_TYPES = [
+  'image/jpeg',
+  'image/png',
+  'image/webp',
+  'image/gif',
+  'application/pdf',
 ];
 
 export const HTTP_STATUS = {
