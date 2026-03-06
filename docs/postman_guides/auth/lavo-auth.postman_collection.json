@@ -1727,6 +1727,718 @@
       ]
     },
     {
+      "name": "Upload",
+      "item": [
+        {
+          "name": "Upload document — succes (201)",
+          "response": [],
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/v1/upload",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "upload"
+              ]
+            },
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                {
+                  "key": "file",
+                  "type": "file",
+                  "src": "",
+                  "description": "Fichier PDF ou image (max 10 MB)"
+                }
+              ]
+            },
+            "description": "Authentifie (nimporte quel role). Upload un fichier vers Cloudinary. Retourne url, public_id, format, bytes."
+          }
+        },
+        {
+          "name": "Upload — fichier manquant (400)",
+          "response": [],
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/v1/upload",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "upload"
+              ]
+            },
+            "body": {
+              "mode": "formdata",
+              "formdata": []
+            },
+            "description": "400 VALIDATION_FAILED — champ file absent du form-data."
+          }
+        },
+        {
+          "name": "Upload — type non supporte (400)",
+          "response": [],
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/v1/upload",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "upload"
+              ]
+            },
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                {
+                  "key": "file",
+                  "type": "file",
+                  "src": "",
+                  "description": "Envoyer un .exe ou .zip pour tester le rejet de type"
+                }
+              ]
+            },
+            "description": "400 VALIDATION_FAILED — type MIME non autorise (acceptes: jpeg, png, webp, pdf)."
+          }
+        },
+        {
+          "name": "Upload — fichier trop grand (413)",
+          "response": [],
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/v1/upload",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "upload"
+              ]
+            },
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                {
+                  "key": "file",
+                  "type": "file",
+                  "src": "",
+                  "description": "Fichier > 10 MB"
+                }
+              ]
+            },
+            "description": "413 VALIDATION_FAILED — fichier depasse la limite de 10 MB."
+          }
+        },
+        {
+          "name": "Upload — non authentifie (401)",
+          "response": [],
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/v1/upload",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "upload"
+              ]
+            },
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                {
+                  "key": "file",
+                  "type": "file",
+                  "src": ""
+                }
+              ]
+            },
+            "description": "401 UNAUTHORIZED — pas de cookie access_token."
+          }
+        }
+      ]
+    },
+    {
+      "name": "Station Onboarding",
+      "item": [
+        {
+          "name": "Step 1 — Creer compte station (201)",
+          "response": [],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/stations/register",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "stations",
+                "register"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\"email\":\"station@example.com\",\"phone\":\"+33612345678\",\"password\":\"StationPass1!\",\"confirm_password\":\"StationPass1!\"}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "description": "Cree un compte role=station. Email de verification envoye."
+          }
+        },
+        {
+          "name": "Step 1 — email deja utilise (409)",
+          "response": [],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/stations/register",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "stations",
+                "register"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\"email\":\"station@example.com\",\"phone\":\"+33612345678\",\"password\":\"StationPass1!\",\"confirm_password\":\"StationPass1!\"}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "description": "409 EMAIL_ALREADY_EXISTS."
+          }
+        },
+        {
+          "name": "Step 1 — confirmation invalide (400)",
+          "response": [],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/stations/register",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "stations",
+                "register"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\"email\":\"station2@example.com\",\"phone\":\"+33612345678\",\"password\":\"StationPass1!\",\"confirm_password\":\"Different!\"}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "description": "400 VALIDATION_FAILED."
+          }
+        },
+        {
+          "name": "Step 2 — Informations station (201)",
+          "response": [],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/stations/onboarding/info",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "stations",
+                "onboarding",
+                "info"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\"station_name\":\"Lavo Station Paris 15\",\"legal_name\":\"Lavo SAS\",\"registration_number\":\"RCS PARIS 123456789\",\"address\":\"12 rue de la Paix\",\"city\":\"Paris\",\"latitude\":48.8566,\"longitude\":2.3522,\"wash_post_count\":4,\"wash_type\":\"automatic\",\"description\":\"Station de lavage automatique.\"}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "description": "Authentifie station. Cree station avec status=pending_review."
+          }
+        },
+        {
+          "name": "Step 2 — non authentifie (401)",
+          "response": [],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/stations/onboarding/info",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "stations",
+                "onboarding",
+                "info"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\"station_name\":\"Test\",\"address\":\"1 rue Test\",\"city\":\"Lyon\",\"wash_post_count\":2,\"wash_type\":\"hand_wash\"}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "description": "401 UNAUTHORIZED."
+          }
+        },
+        {
+          "name": "Step 2 — wash_type invalide (400)",
+          "response": [],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/stations/onboarding/info",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "stations",
+                "onboarding",
+                "info"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\"station_name\":\"Test\",\"address\":\"1 rue Test\",\"city\":\"Lyon\",\"wash_post_count\":2,\"wash_type\":\"invalid\"}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "description": "400 VALIDATION_FAILED."
+          }
+        },
+        {
+          "name": "Step 3 — Documents et CGU (200)",
+          "response": [],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/stations/onboarding/documents",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "stations",
+                "onboarding",
+                "documents"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\"documents\":[{\"document_type\":\"registre_commerce\",\"file_url\":\"https://res.cloudinary.com/demo/image/upload/doc1.pdf\"},{\"document_type\":\"piece_identite\",\"file_url\":\"https://res.cloudinary.com/demo/image/upload/doc2.pdf\"}],\"terms_accepted\":true}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "description": "Enregistre les URLs Cloudinary et passe status=pending_admin_validation."
+          }
+        },
+        {
+          "name": "Step 3 — step 2 non complete (404)",
+          "response": [],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/stations/onboarding/documents",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "stations",
+                "onboarding",
+                "documents"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\"documents\":[{\"document_type\":\"registre_commerce\",\"file_url\":\"https://res.cloudinary.com/demo/image/upload/doc1.pdf\"}],\"terms_accepted\":true}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "description": "404 NOT_FOUND — step 2 non complete."
+          }
+        },
+        {
+          "name": "Step 3 — CGU non acceptees (400)",
+          "response": [],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/stations/onboarding/documents",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "stations",
+                "onboarding",
+                "documents"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\"documents\":[{\"document_type\":\"registre_commerce\",\"file_url\":\"https://res.cloudinary.com/demo/image/upload/doc1.pdf\"}],\"terms_accepted\":false}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "description": "400 VALIDATION_FAILED — terms_accepted doit etre true."
+          }
+        }
+      ]
+    },
+    {
+      "name": "Admin — Stations",
+      "item": [
+        {
+          "name": "Lister stations en attente (200)",
+          "response": [],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/v1/admin/stations",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "admin",
+                "stations"
+              ]
+            },
+            "description": "Authentifie admin. status=pending_admin_validation."
+          }
+        },
+        {
+          "name": "Detail station (200)",
+          "response": [],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/v1/admin/stations/{{station_id}}",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "admin",
+                "stations",
+                "{{station_id}}"
+              ]
+            },
+            "description": "Detail station + documents soumis."
+          }
+        },
+        {
+          "name": "Approuver station (200)",
+          "response": [],
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/v1/admin/stations/{{station_id}}/approve",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "admin",
+                "stations",
+                "{{station_id}}",
+                "approve"
+              ]
+            },
+            "description": "status=active. La station peut se connecter."
+          }
+        },
+        {
+          "name": "Rejeter station (200)",
+          "response": [],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/admin/stations/{{station_id}}/reject",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "admin",
+                "stations",
+                "{{station_id}}",
+                "reject"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\"rejection_reason\":\"Documents fournis incomplets ou invalides.\"}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "description": "status=rejected avec raison."
+          }
+        },
+        {
+          "name": "Rejeter — raison trop courte (400)",
+          "response": [],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/admin/stations/{{station_id}}/reject",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "admin",
+                "stations",
+                "{{station_id}}",
+                "reject"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\"rejection_reason\":\"Non\"}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "description": "400 VALIDATION_FAILED."
+          }
+        },
+        {
+          "name": "Admin — non autorise (403)",
+          "response": [],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/v1/admin/stations",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "admin",
+                "stations"
+              ]
+            },
+            "description": "403 FORBIDDEN — role != admin."
+          }
+        }
+      ]
+    },
+    {
+      "name": "Station — Profil",
+      "item": [
+        {
+          "name": "Station Me — approuvee (200)",
+          "response": [],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/v1/station/me",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "station",
+                "me"
+              ]
+            },
+            "description": "Authentifie station active. Retourne station + documents."
+          }
+        },
+        {
+          "name": "Station Me — non approuvee (403 BUSINESS_NOT_APPROVED)",
+          "response": [],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/v1/station/me",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "station",
+                "me"
+              ]
+            },
+            "description": "403 BUSINESS_NOT_APPROVED."
+          }
+        },
+        {
+          "name": "Station Me — non authentifiee (401)",
+          "response": [],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/v1/station/me",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "station",
+                "me"
+              ]
+            },
+            "description": "401 UNAUTHORIZED."
+          }
+        }
+      ]
+    },
+    {
       "name": "Health",
       "item": [
         {
