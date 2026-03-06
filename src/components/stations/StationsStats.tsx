@@ -37,7 +37,7 @@ export async function StationsStats() {
   const reviews   = MOCK_STATIONS.reduce((acc, s) => acc + s.reviewCount, 0);
 
   return (
-    <div className="bg-[#C8C8B4] dark:bg-[#1E2A1A] border-b border-[#CCCCCC] dark:border-[#2C3828] transition-colors" id="stations-list">
+    <div className="bg-[#C8C8B4] dark:bg-dark-card border-b border-[#CCCCCC] dark:border-tab-inactive transition-colors" id="stations-list">
       <div className="max-w-6xl mx-auto px-4 sm:px-6">
         <div className="grid grid-cols-2 sm:grid-cols-4 divide-x divide-[#CCCCCC] dark:divide-[#2C3828]">
           <StatItem

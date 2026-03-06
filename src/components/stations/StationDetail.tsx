@@ -61,9 +61,9 @@ export function StationDetail({ id }: StationDetailProps) {
   const hasSlots = station.availableSlots > 0;
 
   return (
-    <div className="min-h-screen bg-[#EDEDED] dark:bg-[#1A2116] transition-colors animate-fade-in">
+    <div className="min-h-screen bg-[#EDEDED] dark:bg-dark-bg transition-colors animate-fade-in">
       {/* ── Hero ── */}
-      <div className="relative h-[260px] sm:h-[320px] bg-gradient-to-br from-[#D5D5C5] to-[#EDEDED] dark:from-[#2C3828] dark:to-[#1A2116] overflow-hidden">
+      <div className="relative h-[260px] sm:h-[320px] bg-linear-to-br from-[#D5D5C5] to-[#EDEDED] dark:from-tab-inactive dark:to-dark-bg overflow-hidden">
         {station.imageUrl ? (
           <img src={station.imageUrl} alt={station.name} className="w-full h-full object-cover" />
         ) : (
@@ -71,7 +71,7 @@ export function StationDetail({ id }: StationDetailProps) {
             Photo
           </div>
         )}
-        <div className="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent" />
+        <div className="absolute inset-0 bg-linear-to-t from-black/50 to-transparent" />
 
         {/* Back button */}
         <Link
@@ -104,7 +104,7 @@ export function StationDetail({ id }: StationDetailProps) {
       </div>
 
       {/* ── Breadcrumb bar ── */}
-      <div className="bg-[#C8C8B4] dark:bg-[#1E2A1A] py-3 px-5 text-[15px] font-semibold text-[#333333] dark:text-[#C0C0B0] transition-colors">
+      <div className="bg-[#C8C8B4] dark:bg-dark-card py-3 px-5 text-[15px] font-semibold text-[#333333] dark:text-[#C0C0B0] transition-colors">
         <span>{station.address}</span>
         <span className="mx-1">·</span>
         <span>{station.city}</span>
@@ -148,7 +148,7 @@ export function StationDetail({ id }: StationDetailProps) {
         </div>
 
         {/* Price box */}
-        <div className="bg-[#C8C8B4] dark:bg-[#1E2A1A] rounded-xl p-5 transition-colors">
+        <div className="bg-[#C8C8B4] dark:bg-dark-card rounded-xl p-5 transition-colors">
           <div className="flex items-start justify-between mb-2">
             <div>
               <div className="text-[14px] text-[#333333] dark:text-[#C0C0B0] mb-1">{t('detail_price_from')}</div>
@@ -178,7 +178,7 @@ export function StationDetail({ id }: StationDetailProps) {
 
         {/* Queue banner */}
         {hasSlots && (
-          <div className="bg-[#C8C8B4] dark:bg-[#1E2A1A] rounded-xl p-4 transition-colors">
+          <div className="bg-[#C8C8B4] dark:bg-dark-card rounded-xl p-4 transition-colors">
             <div className="flex items-center gap-2 text-[14px] font-black text-[#000C1F] dark:text-[#FFF8EC] tracking-wider uppercase mb-3">
               <span className="w-2 h-2 rounded-full bg-lavo-success animate-pulse shrink-0" />
               {t('detail_queue')}
@@ -231,7 +231,7 @@ export function StationDetail({ id }: StationDetailProps) {
         )}
 
         {/* Location box */}
-        <div className="bg-[#C8C8B4] dark:bg-[#1E2A1A] rounded-xl px-4 py-3 flex items-center gap-3 transition-colors">
+        <div className="bg-[#C8C8B4] dark:bg-dark-card rounded-xl px-4 py-3 flex items-center gap-3 transition-colors">
           <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#C49A1E" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
             <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z" />
             <circle cx="12" cy="10" r="3" />
@@ -253,7 +253,7 @@ export function StationDetail({ id }: StationDetailProps) {
       </div>
 
       {/* ── Sticky footer CTA ── */}
-      <div className="fixed bottom-16 sm:bottom-0 left-0 right-0 bg-[#EDEDED] dark:bg-[#1A2116] border-t border-[#CCCCCC] dark:border-[#2C3828] px-4 py-3 flex items-center gap-3 z-40 transition-colors">
+      <div className="fixed bottom-16 sm:bottom-0 left-0 right-0 bg-[#EDEDED] dark:bg-dark-bg border-t border-[#CCCCCC] dark:border-tab-inactive px-4 py-3 flex items-center gap-3 z-40 transition-colors">
         <div>
           <div className="text-[20px] font-black text-[#000C1F] dark:text-[#FFF8EC] leading-none">
             {station.priceFrom.toLocaleString()}
@@ -266,12 +266,12 @@ export function StationDetail({ id }: StationDetailProps) {
             type="button"
             onClick={handleJoin}
             disabled={joining}
-            className="flex-1 py-3 bg-gold hover:bg-gold-hover disabled:opacity-70 rounded-[10px] text-[16px] font-black text-[#1A2116] transition-colors flex items-center justify-center gap-2"
+            className="flex-1 py-3 bg-gold hover:bg-gold-hover disabled:opacity-70 rounded-[10px] text-[16px] font-black text-dark-bg transition-colors flex items-center justify-center gap-2"
           >
             {joining ? <><Spinner size="sm" /> {t('loading')}</> : t('detail_join')}
           </button>
         ) : (
-          <div className="flex-1 py-3 bg-[#E0E0D0] dark:bg-[#2C3828] rounded-[10px] text-[16px] font-bold text-[#444444] dark:text-[#C0C0B0] text-center transition-colors">
+          <div className="flex-1 py-3 bg-[#E0E0D0] dark:bg-tab-inactive rounded-[10px] text-[16px] font-bold text-[#444444] dark:text-[#C0C0B0] text-center transition-colors">
             {t('no_slots')}
           </div>
         )}

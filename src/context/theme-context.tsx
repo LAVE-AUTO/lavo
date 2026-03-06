@@ -53,9 +53,12 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     const stored = getStoredTheme();
-    setThemeState(stored);
-    applyTheme(stored);
-    setResolvedTheme(stored === 'system' ? getSystemPreference() : stored);
+    const id = setTimeout(() => {
+      setThemeState(stored);
+      applyTheme(stored);
+      setResolvedTheme(stored === 'system' ? getSystemPreference() : stored);
+    }, 0);
+    return () => clearTimeout(id);
   }, []);
 
   useEffect(() => {

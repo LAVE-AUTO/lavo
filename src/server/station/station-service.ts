@@ -108,8 +108,8 @@ export async function completeStationOnboarding(
     return { user: safeUser as SafeUser, station: newStation };
   });
 
-  // Fire-and-forget
-  sendVerificationEmail(user.email, user.email, verificationToken).catch(() => void 0);
+  // Fire-and-forget (station accounts have no first_name; use station name for greeting)
+  sendVerificationEmail(user.email, dto.station_name ?? '', verificationToken).catch(() => void 0);
 
   return { user, station };
 }

@@ -61,6 +61,7 @@ export async function POST(request: Request) {
   }
 
   // confirm_password is for validation only — strip it before passing to the service
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars -- strip for service
   const { confirm_password: _, ...dto } = parsed.data;
 
   try {

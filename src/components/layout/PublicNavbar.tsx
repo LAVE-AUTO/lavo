@@ -51,8 +51,11 @@ export function PublicNavbar() {
     return () => window.removeEventListener('scroll', onScroll);
   }, []);
 
-  /* Close mobile menu on route change */
-  useEffect(() => { setMenuOpen(false); }, [pathname]);
+  /* Close mobile menu on route change (deferred to avoid synchronous setState in effect) */
+  useEffect(() => {
+    const id = setTimeout(() => setMenuOpen(false), 0);
+    return () => clearTimeout(id);
+  }, [pathname]);
 
   const lightLogoSrc = locale === 'fr' ? '/logo/logo2_2.png' : '/logo/logo_anglais_1.png';
 
@@ -71,7 +74,7 @@ export function PublicNavbar() {
           'fixed top-0 left-0 right-0 z-40 transition-all duration-300',
           'bg-white/95 dark:bg-dark-bg/95 backdrop-blur-md border-b border-[#E0E0D0] shadow-sm',
           scrolled || menuOpen
-            ? 'dark:border-[#2C3828]'
+            ? 'dark:border-tab-inactive'
             : 'dark:border-transparent dark:bg-transparent dark:backdrop-blur-none dark:shadow-none',
         ].join(' ')}
       >
@@ -154,7 +157,7 @@ export function PublicNavbar() {
                   </Link>
                   <Link
                     href="/register"
-                    className="btn-shine px-5 py-2 bg-gold hover:bg-gold-hover rounded-[10px] text-[13px] font-bold text-[#1A2116] transition-colors"
+                    className="btn-shine px-5 py-2 bg-gold hover:bg-gold-hover rounded-[10px] text-[13px] font-bold text-dark-bg transition-colors"
                   >
                     {t('register')}
                   </Link>
@@ -186,7 +189,7 @@ export function PublicNavbar() {
 
         {/* Mobile drawer */}
         {menuOpen && (
-          <div className="md:hidden bg-white dark:bg-dark-bg border-t border-[#E0E0D0] dark:border-[#2C3828] px-4 py-5 space-y-1 animate-fade-in">
+          <div className="md:hidden bg-white dark:bg-dark-bg border-t border-[#E0E0D0] dark:border-tab-inactive px-4 py-5 space-y-1 animate-fade-in">
             {navLinks.map(({ href, label }) => (
               <Link
                 key={href}
@@ -201,7 +204,7 @@ export function PublicNavbar() {
                 {label}
               </Link>
             ))}
-            <div className="pt-3 border-t border-[#E0E0D0] dark:border-[#2C3828] flex flex-col gap-2">
+            <div className="pt-3 border-t border-[#E0E0D0] dark:border-tab-inactive flex flex-col gap-2">
               {isAuthenticated && user ? (
                 <div className="flex items-center gap-3 px-2 py-2">
                   <div className="w-9 h-9 rounded-full bg-gold/20 border border-gold/40 flex items-center justify-center shrink-0">
@@ -220,13 +223,13 @@ export function PublicNavbar() {
                 <>
                   <Link
                     href="/login"
-                    className="flex items-center justify-center py-3 rounded-xl border border-[#E0E0D0] dark:border-[#3A4A36] text-[14px] font-bold text-[#1A1A1A] dark:text-white hover:border-gold transition-colors"
+                    className="flex items-center justify-center py-3 rounded-xl border border-[#E0E0D0] dark:border-tab-inactive text-[14px] font-bold text-[#1A1A1A] dark:text-white hover:border-gold transition-colors"
                   >
                     {t('login')}
                   </Link>
                   <Link
                     href="/register"
-                    className="btn-shine flex items-center justify-center py-3 bg-gold hover:bg-gold-hover rounded-xl text-[14px] font-bold text-[#1A2116] transition-colors"
+                    className="btn-shine flex items-center justify-center py-3 bg-gold hover:bg-gold-hover rounded-xl text-[14px] font-bold text-dark-bg transition-colors"
                   >
                     {t('register')}
                   </Link>
