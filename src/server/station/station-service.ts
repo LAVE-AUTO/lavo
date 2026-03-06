@@ -10,6 +10,7 @@ import {
 } from '@/lib/db/schema';
 import {
   sendVerificationEmail,
+  sendStationApprovalEmail,
   sendStationApplicationAdminNotification,
 } from '@/lib/email';
 import {
@@ -18,7 +19,7 @@ import {
   NotFoundError,
   ValidationError,
 } from '@/lib/errors';
-import { findByEmail, type SafeUser } from '@/server/auth/user-repository';
+import { findByEmail, findById, type SafeUser } from '@/server/auth/user-repository';
 import {
   findStationById,
   findStationByUserId,
@@ -160,6 +161,15 @@ export async function approveStation(
     approved_by: adminId,
     approved_at: new Date(),
   });
+
+  // Fire-and-forget — only possible if station has an associated user account (3-step flow)
+  if (station.user_id) {
+    findById(station.user_id).then((user) => {
+      if (user) {
+        sendStationApprovalEmail(user.email, station.name).catch(() => void 0);
+      }
+    }).catch(() => void 0);
+  }
 }
 
 export async function rejectStation(
