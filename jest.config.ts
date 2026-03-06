@@ -7,7 +7,10 @@ const config: Config = {
   coverageProvider: 'v8',
   testEnvironment: 'jsdom',
   setupFilesAfterEnv: ['<rootDir>/jest.setup.ts'],
-  moduleNameMapper: { '^@/(.*)$': '<rootDir>/src/$1' },
+  moduleNameMapper: {
+    '^@/(.*)$': '<rootDir>/src/$1',
+    '^libphonenumber-js$': '<rootDir>/tests/helpers/mocks/libphonenumber-js.ts',
+  },
   testPathIgnorePatterns: ['<rootDir>/node_modules/', '<rootDir>/.next/'],
   collectCoverageFrom: [
     'src/**/*.{ts,tsx}',

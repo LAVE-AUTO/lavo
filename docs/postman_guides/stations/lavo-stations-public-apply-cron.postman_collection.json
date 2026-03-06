@@ -1,0 +1,444 @@
+{
+  "info": {
+    "_postman_id": "2ef04412-e41a-4ece-97a7-12091ab0dd12",
+    "name": "LAVO — Stations (Public + Apply + Cron)",
+    "description": "Well-organized collection for:\n- Card 1: public stations API (list, detail, join)\n- Card 2: station apply (multipart/form-data) + cron sync pending uploads\n\nRequired variable: base_url (e.g. http://localhost:3000)\nOptional: station_id\nCron: cron_secret must match CRON_SECRET in .env\n\nNotes:\n- Public stations endpoints are public.\n- Cron endpoint requires x-cron-secret or Authorization: Bearer <CRON_SECRET>.\n- Apply uses multipart fields + file keys like document_<type> (example: document_kbis).",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    {
+      "key": "base_url",
+      "value": "http://localhost:3000",
+      "type": "string"
+    },
+    {
+      "key": "station_id",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "cron_secret",
+      "value": "",
+      "type": "string"
+    }
+  ],
+  "item": [
+    {
+      "name": "Public — Stations (Card 1)",
+      "item": [
+        {
+          "name": "List stations (200)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 200', () => pm.response.to.have.status(200));",
+                  "pm.test('Body has data array', () => {",
+                  "  const json = pm.response.json();",
+                  "  pm.expect(json).to.have.property('data');",
+                  "  pm.expect(Array.isArray(json.data)).to.be.true;",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/v1/stations?q=paris&city=&sort=name",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "stations"
+              ],
+              "query": [
+                {
+                  "key": "q",
+                  "value": "paris"
+                },
+                {
+                  "key": "city",
+                  "value": ""
+                },
+                {
+                  "key": "sort",
+                  "value": "name"
+                }
+              ]
+            },
+            "description": "GET /api/v1/stations — lists active stations. Query: q, city, sort (name|slots_asc|slots_desc)."
+          },
+          "response": []
+        },
+        {
+          "name": "List stations — invalid sort (400)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 400', () => pm.response.to.have.status(400));",
+                  "pm.test('VALIDATION_FAILED', () => {",
+                  "  const json = pm.response.json();",
+                  "  pm.expect(json.code).to.eql('VALIDATION_FAILED');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/v1/stations?sort=invalid_sort",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "stations"
+              ],
+              "query": [
+                {
+                  "key": "sort",
+                  "value": "invalid_sort"
+                }
+              ]
+            },
+            "description": "Negative test: invalid sort must return 400 VALIDATION_FAILED."
+          },
+          "response": []
+        },
+        {
+          "name": "Station detail (200)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 200', () => pm.response.to.have.status(200));",
+                  "pm.test('Body has station id', () => {",
+                  "  const json = pm.response.json();",
+                  "  pm.expect(json.data).to.have.property('id');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/v1/stations/{{station_id}}",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "stations",
+                "{{station_id}}"
+              ]
+            },
+            "description": "GET /api/v1/stations/:id — station detail. Requires station_id to be set."
+          },
+          "response": []
+        },
+        {
+          "name": "Join station (200)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 200', () => pm.response.to.have.status(200));",
+                  "pm.test('mapsUrl present', () => {",
+                  "  const json = pm.response.json();",
+                  "  pm.expect(json.data).to.have.property('mapsUrl');",
+                  "  pm.expect(json.data.mapsUrl).to.match(/^https:\\/\\/www\\.google\\.com\\/maps\\?q=/);",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/v1/stations/{{station_id}}/join",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "stations",
+                "{{station_id}}",
+                "join"
+              ]
+            },
+            "description": "POST /api/v1/stations/:id/join — returns a Google Maps URL."
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Public — Station apply (Card 2)",
+      "item": [
+        {
+          "name": "Apply (201) — multipart/form-data",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 201', () => pm.response.to.have.status(201));",
+                  "pm.test('Body has station_id', () => {",
+                  "  const json = pm.response.json();",
+                  "  pm.expect(json.data).to.have.property('station_id');",
+                  "  pm.collectionVariables.set('station_id', json.data.station_id);",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                {
+                  "key": "name",
+                  "value": "LAVO Station Apply Demo",
+                  "type": "text"
+                },
+                {
+                  "key": "legal_name",
+                  "value": "LAVO Demo SARL",
+                  "type": "text"
+                },
+                {
+                  "key": "registration_number",
+                  "value": "FR123456789",
+                  "type": "text"
+                },
+                {
+                  "key": "address",
+                  "value": "10 Rue de la Paix",
+                  "type": "text"
+                },
+                {
+                  "key": "city",
+                  "value": "Paris",
+                  "type": "text"
+                },
+                {
+                  "key": "wash_type",
+                  "value": "hand_wash",
+                  "type": "text"
+                },
+                {
+                  "key": "wash_post_count",
+                  "value": "2",
+                  "type": "text"
+                },
+                {
+                  "key": "description",
+                  "value": "Station application submitted via Postman.",
+                  "type": "text"
+                },
+                {
+                  "key": "terms_accepted",
+                  "value": "true",
+                  "type": "text"
+                },
+                {
+                  "key": "document_kbis",
+                  "type": "file",
+                  "src": "/ABSOLUTE/PATH/TO/your-document.pdf"
+                }
+              ]
+            },
+            "url": {
+              "raw": "{{base_url}}/api/v1/stations/apply",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "stations",
+                "apply"
+              ]
+            },
+            "description": "POST /api/v1/stations/apply — multipart/form-data. File keys must be document_<type> (e.g. document_kbis). Replace the file src with a real path."
+          },
+          "response": []
+        },
+        {
+          "name": "Apply — missing name (400)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 400', () => pm.response.to.have.status(400));",
+                  "pm.test('VALIDATION_FAILED', () => {",
+                  "  const json = pm.response.json();",
+                  "  pm.expect(json.code).to.eql('VALIDATION_FAILED');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                {
+                  "key": "address",
+                  "value": "10 Rue de la Paix",
+                  "type": "text"
+                },
+                {
+                  "key": "city",
+                  "value": "Paris",
+                  "type": "text"
+                },
+                {
+                  "key": "wash_type",
+                  "value": "hand_wash",
+                  "type": "text"
+                },
+                {
+                  "key": "wash_post_count",
+                  "value": "2",
+                  "type": "text"
+                },
+                {
+                  "key": "terms_accepted",
+                  "value": "true",
+                  "type": "text"
+                },
+                {
+                  "key": "document_kbis",
+                  "type": "file",
+                  "src": "/ABSOLUTE/PATH/TO/your-document.pdf"
+                }
+              ]
+            },
+            "url": {
+              "raw": "{{base_url}}/api/v1/stations/apply",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "stations",
+                "apply"
+              ]
+            },
+            "description": "Negative test: missing name -> 400 VALIDATION_FAILED."
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Cron — Pending uploads sync (Card 2)",
+      "item": [
+        {
+          "name": "Sync pending uploads (200)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 200', () => pm.response.to.have.status(200));",
+                  "pm.test('Body has processed/succeeded/failed', () => {",
+                  "  const json = pm.response.json();",
+                  "  pm.expect(json.data).to.have.property('processed');",
+                  "  pm.expect(json.data).to.have.property('succeeded');",
+                  "  pm.expect(json.data).to.have.property('failed');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "x-cron-secret",
+                "value": "{{cron_secret}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/cron/sync-pending-uploads",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "cron",
+                "sync-pending-uploads"
+              ]
+            },
+            "description": "GET /api/cron/sync-pending-uploads — requires x-cron-secret (or Authorization: Bearer <CRON_SECRET>)."
+          },
+          "response": []
+        },
+        {
+          "name": "Sync pending uploads — missing secret (401)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 401', () => pm.response.to.have.status(401));"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/cron/sync-pending-uploads",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "cron",
+                "sync-pending-uploads"
+              ]
+            },
+            "description": "Negative test: missing secret must return 401."
+          },
+          "response": []
+        }
+      ]
+    }
+  ]
+}
+

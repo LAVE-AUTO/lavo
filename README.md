@@ -71,4 +71,4 @@ npm run dev
 ### Lauret Chacha - Fullstack developer
 - **Email:** lauret.chacha@epitech.eu
 - **WhatsApp:** [+229 01 62 16 66 38](https://wa.me/22961405056)
-- **Portfolio:** [lauret.chacha.vercel.app](https://lauret.chacha.vercel.app)
+- **Portfolio:** [lauret-chacha.vercel.app](https://lauret-chacha.vercel.app)

@@ -12,6 +12,7 @@ import { noShowFees, reservations } from "./reservations";
 import { notifications } from "./notifications";
 import { ratings } from "./ratings";
 import {
+  pendingUploads,
   stationConfigs,
   stationDocuments,
   stations,
@@ -90,10 +91,18 @@ export const stationsRelations = relations(stations, ({ one, many }) => ({
   notifications: many(notifications, { relationName: "stationNotifications" }),
 }));
 
-export const stationDocumentsRelations = relations(stationDocuments, ({ one }) => ({
+export const stationDocumentsRelations = relations(stationDocuments, ({ one, many }) => ({
   station: one(stations, {
     fields: [stationDocuments.station_id],
     references: [stations.id],
+  }),
+  pendingUploads: many(pendingUploads),
+}));
+
+export const pendingUploadsRelations = relations(pendingUploads, ({ one }) => ({
+  stationDocument: one(stationDocuments, {
+    fields: [pendingUploads.station_document_id],
+    references: [stationDocuments.id],
   }),
 }));
 
@@ -167,7 +176,7 @@ export const ratingsRelations = relations(ratings, ({ one }) => ({
   }),
   station: one(stations, {
     fields: [ratings.station_id],
-    references: [ratings.id],
+    references: [stations.id],
   }),
 }));
 
