@@ -2,14 +2,14 @@ import { z } from 'zod';
 import { isValidPhoneNumber, parsePhoneNumber } from 'libphonenumber-js';
 
 /**
- * Validates and normalizes a phone number to E.164 format (+33612345678).
- * Accepts local and international formats with or without spaces/dashes.
- * Uses 'FR' as default country for numbers without a country code.
+ * Validates and normalizes a phone number to E.164 format (e.g. +14165551234).
+ * Expects the frontend to send the country code prefix (e.g. +1 416 555 1234).
+ * Falls back to 'CA' as default country if no country code is provided.
  */
 export const phoneSchema = z
   .string()
   .min(1, 'Phone number is required')
-  .refine((val) => isValidPhoneNumber(val, 'FR'), {
+  .refine((val) => isValidPhoneNumber(val, 'CA'), {
     message: 'Invalid phone number',
   })
-  .transform((val) => parsePhoneNumber(val, 'FR').format('E.164'));
+  .transform((val) => parsePhoneNumber(val, 'CA').format('E.164'));
