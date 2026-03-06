@@ -60,6 +60,7 @@ export async function POST(request: Request) {
   }
 
   try {
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars -- strip confirm_password for service
     const { confirm_password: _, ...dto } = parsed.data;
     const { user, tokens } = await registerWithPassword(dto);
 

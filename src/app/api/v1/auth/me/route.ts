@@ -1,5 +1,5 @@
-import { cookies } from 'next/headers';
-import { verifyJwt } from '@/lib/jwt';
+import { cookies, headers } from 'next/headers';
+import { verifyJwt, extractBearerToken } from '@/lib/jwt';
 import { findById } from '@/server/auth/user-repository';
 import {
   successResponse,
@@ -10,7 +10,8 @@ import { ACCESS_COOKIE_NAME } from '@/helpers/constants';
 
 /**
  * GET /api/v1/auth/me
- * Returns the authenticated user's profile from the httpOnly cookie.
+ * Returns the authenticated user's profile.
+ * Accepts token via Authorization: Bearer (preferred) or access_token cookie.
  *
  * Responses:
  *   200 { data: SafeUser }
@@ -18,8 +19,11 @@ import { ACCESS_COOKIE_NAME } from '@/helpers/constants';
  *   500 INTERNAL_ERROR
  */
 export async function GET() {
+  const headersList = await headers();
+  const bearerToken = extractBearerToken(headersList.get('authorization'));
   const cookieStore = await cookies();
-  const token = cookieStore.get(ACCESS_COOKIE_NAME)?.value;
+  const cookieToken = cookieStore.get(ACCESS_COOKIE_NAME)?.value;
+  const token = bearerToken ?? cookieToken ?? null;
 
   if (!token) return error401();
 
