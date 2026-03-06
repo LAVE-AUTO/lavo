@@ -2,6 +2,22 @@ import NextAuth from 'next-auth';
 import Google from 'next-auth/providers/google';
 import Facebook from 'next-auth/providers/facebook';
 
+const MIN_NEXTAUTH_SECRET_BYTES = 32;
+
+function getNextAuthSecret(): string {
+  const secret = process.env.NEXTAUTH_SECRET;
+  if (!secret) {
+    throw new Error('NEXTAUTH_SECRET is not set');
+  }
+  const encoded = new TextEncoder().encode(secret);
+  if (encoded.length < MIN_NEXTAUTH_SECRET_BYTES) {
+    throw new Error(
+      `NEXTAUTH_SECRET must be at least ${MIN_NEXTAUTH_SECRET_BYTES} bytes (256 bits). Current length: ${encoded.length} bytes.`
+    );
+  }
+  return secret;
+}
+
 export const { handlers, auth, signIn, signOut } = NextAuth({
   providers: [
     Google({
@@ -13,6 +29,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
       clientSecret: process.env.FACEBOOK_APP_SECRET!,
     }),
   ],
+  secret: getNextAuthSecret(),
   callbacks: {
     async redirect() {
       const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? 'http://localhost:3000';

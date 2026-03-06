@@ -1,18 +1,37 @@
 import { randomUUID } from 'crypto';
 import bcrypt from 'bcrypt';
 import { db } from '@/lib/db';
-import { users, emailVerificationTokens, stations, stationDocuments } from '@/lib/db/schema';
-import { sendVerificationEmail } from '@/lib/email';
-import { ConflictError, ForbiddenError, NotFoundError } from '@/lib/errors';
+import {
+  pendingUploads,
+  users,
+  emailVerificationTokens,
+  stations,
+  stationDocuments,
+} from '@/lib/db/schema';
+import {
+  sendVerificationEmail,
+  sendStationApplicationAdminNotification,
+} from '@/lib/email';
+import {
+  ConflictError,
+  ForbiddenError,
+  NotFoundError,
+  ValidationError,
+} from '@/lib/errors';
 import { findByEmail, type SafeUser } from '@/server/auth/user-repository';
 import {
   findStationById,
   findStationByUserId,
+  findActiveStationWithDetail,
+  listActiveStations,
   listStationsByStatus,
   updateStationStatus,
+  type ListActiveStationsFilters,
   type Station,
 } from './station-repository';
 import { findDocumentsByStationId } from './document-repository';
+import { uploadStationDocument, validateStationDocumentFile } from './upload-service';
+import type { StationApplyFields } from '@/validators/station';
 
 export type StationOnboardingDto = {
   // Step 1 — account credentials
@@ -165,4 +184,132 @@ export async function getMyStation(userId: string): Promise<StationWithDocuments
 
   const documents = await findDocumentsByStationId(station.id);
   return { ...station, documents };
+}
+
+// ─── Public API (Card 1) ────────────────────────────────────────────────────
+
+/**
+ * Returns list of active stations with optional search, city filter, and sort.
+ */
+export async function listStationsPublic(
+  filters: ListActiveStationsFilters
+): Promise<Station[]> {
+  return listActiveStations(filters);
+}
+
+/**
+ * Returns a single active station with config, vehicle formats, and time slots.
+ * Throws NotFoundError if station does not exist or is not active.
+ */
+export async function getStationDetailPublic(id: string) {
+  const station = await findActiveStationWithDetail(id);
+  if (!station) throw new NotFoundError('Station not found');
+  return station;
+}
+
+/**
+ * "Client en route": builds Google Maps URL for an active station from lat/lng or address.
+ * Throws NotFoundError if station does not exist or is not active.
+ */
+export async function getStationJoinPublic(id: string): Promise<{ mapsUrl: string }> {
+  const station = await findStationById(id);
+  if (!station || station.status !== 'active') throw new NotFoundError('Station not found');
+
+  const lat = station.latitude != null ? String(station.latitude) : null;
+  const lng = station.longitude != null ? String(station.longitude) : null;
+  const q =
+    lat != null && lng != null
+      ? `${lat},${lng}`
+      : encodeURIComponent([station.address, station.city].filter(Boolean).join(', '));
+  const mapsUrl = `https://www.google.com/maps?q=${q}`;
+  return { mapsUrl };
+}
+
+// ─── Station apply (Card 2) ───────────────────────────────────────────────────
+
+export type StationApplyFile = { document_type: string; file: File };
+
+export type StationApplyResult = { station_id: string; message: string };
+
+/**
+ * Handles station application: uploads files (Cloudinary or local), creates station
+ * with status pending_admin_validation, documents, pending_uploads for local files,
+ * and sends admin notification email.
+ */
+export async function submitStationApplication(
+  fields: StationApplyFields,
+  files: StationApplyFile[]
+): Promise<StationApplyResult> {
+  if (files.length === 0) {
+    throw new ValidationError('At least one document is required');
+  }
+
+  for (const { file } of files) {
+    validateStationDocumentFile(file);
+  }
+
+  const uploads = await Promise.all(
+    files.map(async ({ document_type, file }) => {
+      const result = await uploadStationDocument(file);
+      return { document_type, file_url: result.file_url, storage: result.storage };
+    })
+  );
+
+  const station = await db.transaction(async (tx) => {
+    const [newStation] = await tx
+      .insert(stations)
+      .values({
+        user_id: null,
+        name: fields.name,
+        legal_name: fields.legal_name || null,
+        registration_number: fields.registration_number || null,
+        address: fields.address,
+        city: fields.city,
+        latitude:
+          fields.latitude != null && !Number.isNaN(fields.latitude)
+            ? String(fields.latitude)
+            : null,
+        longitude:
+          fields.longitude != null && !Number.isNaN(fields.longitude)
+            ? String(fields.longitude)
+            : null,
+        wash_type: fields.wash_type,
+        description: fields.description || null,
+        wash_post_count: fields.wash_post_count,
+        status: 'pending_admin_validation',
+      })
+      .returning();
+
+    const docRows = await tx
+      .insert(stationDocuments)
+      .values(
+        uploads.map((u) => ({
+          station_id: newStation.id,
+          document_type: u.document_type,
+          file_url: u.file_url,
+          storage: u.storage,
+          terms_accepted: fields.terms_accepted,
+        }))
+      )
+      .returning();
+
+    for (const row of docRows) {
+      if (row.storage === 'local') {
+        await tx.insert(pendingUploads).values({
+          station_document_id: row.id,
+        });
+      }
+    }
+
+    return newStation;
+  });
+
+  sendStationApplicationAdminNotification(station.name, station.id).catch(() =>
+    void 0
+  );
+
+  return {
+    station_id: station.id,
+    message: 'Station application submitted. We will review it shortly.',
+  };
 }
