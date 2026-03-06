@@ -15,10 +15,18 @@ export interface JwtPayload {
   force_password_change: boolean;
 }
 
+const MIN_JWT_SECRET_BYTES = 32; // 256-bit minimum for HS256
+
 function getSecret(): Uint8Array {
   const secret = process.env.JWT_SECRET;
   if (!secret) throw new Error('JWT_SECRET is not set');
-  return new TextEncoder().encode(secret);
+  const encoded = new TextEncoder().encode(secret);
+  if (encoded.length < MIN_JWT_SECRET_BYTES) {
+    throw new Error(
+      `JWT_SECRET must be at least ${MIN_JWT_SECRET_BYTES} bytes (256 bits). Current length: ${encoded.length} bytes.`
+    );
+  }
+  return encoded;
 }
 
 export async function signJwt(payload: JwtPayload): Promise<string> {

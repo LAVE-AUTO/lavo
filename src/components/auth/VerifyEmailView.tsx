@@ -50,16 +50,13 @@ function MailIcon() {
 export function VerifyEmailView({ token }: VerifyEmailViewProps) {
   const t = useTranslations('verify_email');
 
-  const [view, setView]           = useState<ViewState>('loading');
-  const [email, setEmail]         = useState('');
+  const [view, setView] = useState<ViewState>(() => (!token ? 'expired' : 'loading'));
+  const [email, setEmail] = useState('');
   const [emailError, setEmailError] = useState('');
   const [resending, setResending] = useState(false);
 
   useEffect(() => {
-    if (!token) {
-      setView('expired');
-      return;
-    }
+    if (!token) return;
 
     let cancelled = false;
 
@@ -87,7 +84,7 @@ export function VerifyEmailView({ token }: VerifyEmailViewProps) {
     }
 
     setResending(true);
-    const [ok] = await postWithApi('/auth/resend-verification', { email: email.trim() });
+    const [ok] = await postWithApi('/auth/resend-verification-email', { email: email.trim() });
     setResending(false);
 
     if (ok) {
@@ -112,7 +109,7 @@ export function VerifyEmailView({ token }: VerifyEmailViewProps) {
         <div className="w-20 h-20 rounded-full bg-lavo-success/10 border border-lavo-success/20 flex items-center justify-center mx-auto mb-6">
           <CheckIcon />
         </div>
-        <h2 className="text-[22px] font-bold text-[#1A2116] dark:text-white mb-3">
+        <h2 className="text-[22px] font-bold text-dark-bg dark:text-white mb-3">
           {t('success_title')}
         </h2>
         <p className="text-[15px] text-[#555] dark:text-lavo-muted leading-relaxed mb-8">
@@ -120,7 +117,7 @@ export function VerifyEmailView({ token }: VerifyEmailViewProps) {
         </p>
         <Link
           href="/login"
-          className="btn-shine block w-full py-3.5 bg-gold hover:bg-gold-hover rounded-[10px] text-[16px] font-bold text-[#1A2116] tracking-wide transition-colors duration-150 text-center"
+          className="btn-shine block w-full py-3.5 bg-gold hover:bg-gold-hover rounded-[10px] text-[16px] font-bold text-dark-bg tracking-wide transition-colors duration-150 text-center"
         >
           {t('back_to_login')}
         </Link>
@@ -134,7 +131,7 @@ export function VerifyEmailView({ token }: VerifyEmailViewProps) {
         <div className="w-20 h-20 rounded-full bg-gold/10 border border-gold/25 flex items-center justify-center mx-auto mb-6">
           <MailIcon />
         </div>
-        <h2 className="text-[22px] font-bold text-[#1A2116] dark:text-white mb-3">
+        <h2 className="text-[22px] font-bold text-dark-bg dark:text-white mb-3">
           {t('resend_success_title')}
         </h2>
         <p className="text-[15px] text-[#555] dark:text-lavo-muted leading-relaxed mb-8">
@@ -157,7 +154,7 @@ export function VerifyEmailView({ token }: VerifyEmailViewProps) {
         <div className="w-16 h-16 rounded-full bg-lavo-error/10 border border-lavo-error/20 flex items-center justify-center mx-auto mb-5">
           <AlertIcon />
         </div>
-        <h2 className="text-[20px] font-bold text-[#1A2116] dark:text-white mb-2">
+        <h2 className="text-[20px] font-bold text-dark-bg dark:text-white mb-2">
           {t('error_title')}
         </h2>
         <p className="text-[14px] text-[#555] dark:text-lavo-muted leading-relaxed">
@@ -180,7 +177,7 @@ export function VerifyEmailView({ token }: VerifyEmailViewProps) {
         <button
           type="submit"
           disabled={resending}
-          className="btn-shine w-full py-3.5 mt-2 bg-gold hover:bg-gold-hover active:scale-[0.98] disabled:opacity-70 rounded-[10px] text-[16px] font-bold text-[#1A2116] tracking-wide transition-all duration-150 flex items-center justify-center gap-2"
+          className="btn-shine w-full py-3.5 mt-2 bg-gold hover:bg-gold-hover active:scale-[0.98] disabled:opacity-70 rounded-[10px] text-[16px] font-bold text-dark-bg tracking-wide transition-all duration-150 flex items-center justify-center gap-2"
         >
           {resending ? (
             <>

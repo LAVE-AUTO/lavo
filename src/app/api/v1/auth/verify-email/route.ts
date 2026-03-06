@@ -1,14 +1,16 @@
+import { headers } from 'next/headers';
 import { verifyEmail } from '@/server/auth/auth-service';
 import { verifyEmailSchema, mapZodErrors } from '@/validators/auth';
 import {
   successResponse,
   error400,
-  error404,
+  error429,
   error500,
   fromAppError,
 } from '@/lib/responses';
 import { ApiCode } from '@/types/api-codes';
 import { AppError, NotFoundError, TokenExpiredError } from '@/lib/errors';
+import { checkRateLimit, recordFailedAttempt, resetOnSuccess } from '@/lib/rate-limiter';
 
 /**
  * POST /api/v1/auth/verify-email
@@ -19,11 +21,17 @@ import { AppError, NotFoundError, TokenExpiredError } from '@/lib/errors';
  * Responses:
  *   200 { data: { verified: true } }
  *   400 VALIDATION_FAILED — token missing from body
- *   400 TOKEN_EXPIRED     — token exists but is expired or already used
- *   404 NOT_FOUND         — token does not exist
+ *   400 TOKEN_EXPIRED     — invalid or expired verification token
+ *   429 TOO_MANY_REQUESTS — rate limit exceeded
  *   500 INTERNAL_ERROR
  */
 export async function POST(request: Request) {
+  const headersList = await headers();
+  const ip = headersList.get('x-forwarded-for')?.split(',')[0].trim() ?? 'unknown';
+
+  const { blocked } = await checkRateLimit(ip);
+  if (blocked) return error429();
+
   let body: unknown;
   try {
     body = await request.json();
@@ -38,13 +46,12 @@ export async function POST(request: Request) {
 
   try {
     await verifyEmail(parsed.data.token);
+    await resetOnSuccess(ip);
     return successResponse({ verified: true }, 'Email verified successfully');
   } catch (e) {
-    if (e instanceof TokenExpiredError) {
-      return error400('Verification token has expired or already been used', ApiCode.TOKEN_EXPIRED);
-    }
-    if (e instanceof NotFoundError) {
-      return error404('Verification token not found', ApiCode.NOT_FOUND);
+    if (e instanceof TokenExpiredError || e instanceof NotFoundError) {
+      await recordFailedAttempt(ip);
+      return error400('Invalid or expired verification token.', ApiCode.TOKEN_EXPIRED);
     }
     if (e instanceof AppError) return fromAppError(e);
     return error500(e);
