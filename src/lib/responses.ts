@@ -112,6 +112,13 @@ export const error409 = (message = 'Conflict', code?: ApiCode) =>
   });
 
 /**
+ * Standard 413 Payload Too Large response.
+ * Defaults to `VALIDATION_FAILED` code.
+ */
+export const error413 = (message = 'File too large') =>
+  errorResponse(message, 413, { code: ApiCode.VALIDATION_FAILED });
+
+/**
  * Standard 500 Internal Server Error response.
  * Always uses `INTERNAL_ERROR` code and can include a dev-only `_dev` field when a dev error is passed.
  */
