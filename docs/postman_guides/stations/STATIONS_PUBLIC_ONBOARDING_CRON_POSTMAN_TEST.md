@@ -7,6 +7,7 @@ It covers:
 
 - **Public:** stations API (list, detail, join)
 - **Onboarding:** upload documents and submit (create station + user)
+- **Formats:** vehicle formats and pricing (GET by station, POST/PUT/PATCH/DELETE for connected station)
 - **Cron:** sync pending uploads (local files from onboarding)
 
 ---
@@ -26,7 +27,9 @@ Required for cron:
 - **`cron_secret`** (must match `CRON_SECRET` in `.env`)
 
 Optional:
-- **`station_id`** (for detail/join — set manually or from onboarding submit response)
+- **`station_id`** (for detail/join/formats — set manually or from onboarding submit response)
+- **`format_id`** (for PUT/PATCH/DELETE format — set from GET formats or POST format response)
+- **`access_token`** (station JWT for POST/PUT/PATCH/DELETE formats and other station-scoped endpoints)
 
 ---
 
@@ -71,9 +74,43 @@ Optional:
 
 ---
 
-## 3) Cron: sync pending uploads
+## 3) Formats (vehicle formats and pricing)
 
-### 3.1 Sync local → Cloudinary
+### 3.1 Get formats by station (public)
+
+- **Request:** `GET /api/v1/stations/{{station_id}}/formats`
+- **Auth:** None
+- **Expected:** `200` with `{ data: Array<Format> }` (id, station_id, label, price, is_active, created_at, updated_at)
+- **Negative tests:** invalid UUID → `400`; station not found or not active → `404`
+
+### 3.2 Create format (auth STATION)
+
+- **Request:** `POST /api/v1/station/formats`
+- **Auth:** `Authorization: Bearer {{access_token}}` (station JWT)
+- **Body:** `{ "label": "Petit", "price": 15.5, "is_active": true }` (label 1–100 chars, price > 0, is_active optional)
+- **Expected:** `201` with created format
+- **Negative tests:** validation → `400`; unauthorized → `401`; no station for user → `404`
+
+### 3.3 Update format — PUT (full) and PATCH (partial)
+
+- **Request:** `PUT /api/v1/station/formats/{{format_id}}` or `PATCH /api/v1/station/formats/{{format_id}}`
+- **Auth:** Bearer (station)
+- **Body (PUT):** full `{ label, price, is_active }`. **Body (PATCH):** at least one of `{ label?, price?, is_active? }`
+- **Expected:** `200` with updated format
+- **Negative tests:** invalid body → `400`; format not found or not owned by station → `404`/`403`
+
+### 3.4 Delete format
+
+- **Request:** `DELETE /api/v1/station/formats/{{format_id}}`
+- **Auth:** Bearer (station)
+- **Expected:** `200` with `{ data: { deleted: true } }`
+- **Negative tests:** format has reservations → `409 Conflict`; not found / wrong station → `404`/`403`
+
+---
+
+## 4) Cron: sync pending uploads
+
+### 4.1 Sync local → Cloudinary
 
 - **Request:** `GET /api/cron/sync-pending-uploads`
 - **Auth:** header `x-cron-secret: {{cron_secret}}` (or `Authorization: Bearer {{cron_secret}}`)

@@ -221,6 +221,48 @@ export type CreateSlotBody = z.infer<typeof createSlotBodySchema>;
 export type CreateSlotsBulkBody = z.infer<typeof createSlotsBulkBodySchema>;
 export type GenerateSlotsBody = z.infer<typeof generateSlotsBodySchema>;
 
+// ─── Vehicle format API ──────────────────────────────────────────────────────
+
+/** Path param id for PUT/PATCH/DELETE /station/formats/:id. */
+export const formatIdParamSchema = z.object({
+  id: z.string().uuid('Invalid format id (must be a valid UUID)'),
+});
+
+/** POST /station/formats: label 1–100 chars, price > 0, is_active optional default true. */
+export const createFormatBodySchema = z
+  .object({
+    label: z.string().trim().min(1, 'Label is required').max(100, 'Label must be at most 100 characters'),
+    price: z.number().positive('Price must be greater than 0'),
+    is_active: z.boolean().optional().default(true),
+  })
+  .strict();
+
+/** PUT /station/formats/:id: full update, all fields required. */
+export const updateFormatBodySchema = z
+  .object({
+    label: z.string().trim().min(1, 'Label is required').max(100, 'Label must be at most 100 characters'),
+    price: z.number().positive('Price must be greater than 0'),
+    is_active: z.boolean(),
+  })
+  .strict();
+
+/** PATCH /station/formats/:id: partial update, at least one field. */
+export const patchFormatBodySchema = z
+  .object({
+    label: z.string().trim().min(1, 'Label must be at least 1 character').max(100, 'Label must be at most 100 characters').optional(),
+    price: z.number().positive('Price must be greater than 0').optional(),
+    is_active: z.boolean().optional(),
+  })
+  .strict()
+  .refine((data) => data.label !== undefined || data.price !== undefined || data.is_active !== undefined, {
+    message: 'At least one field (label, price, is_active) is required',
+  });
+
+export type CreateFormatBody = z.infer<typeof createFormatBodySchema>;
+export type UpdateFormatBody = z.infer<typeof updateFormatBodySchema>;
+export type PatchFormatBody = z.infer<typeof patchFormatBodySchema>;
+export type FormatIdParam = z.infer<typeof formatIdParamSchema>;
+
 // ─── Public API (Card 1) ─────────────────────────────────────────────────────
 
 export type StationIdParam = z.infer<typeof stationIdParamSchema>;
