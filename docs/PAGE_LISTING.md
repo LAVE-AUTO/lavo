@@ -49,7 +49,6 @@ flowchart TD
 | `/[locale]/verify-email` | Verify email | Email verification via token | No | All | `MainLayout` |
 | `/[locale]/stations` | Stations | List and search stations | No | All | `SearchBar`, `StationCard` |
 | `/[locale]/stations/[id]` | Station details | Details, availability, formats, booking entry | No | All | `StationDetail` |
-| `/[locale]/stations/apply` | Station apply | Station application (KYC submission) | No | STATION | `MainLayout` |
 | `/[locale]/client/dashboard` | Client dashboard | Client overview and shortcuts | Yes | CLIENT | `ClientLayout` |
 | `/[locale]/client/reservations` | Client reservations | List of reservations and statuses | Yes | CLIENT | `ReservationCard` |
 | `/[locale]/client/reservations/new` | New reservation | Start a booking flow | Yes | CLIENT | `SlotPicker` |
@@ -84,7 +83,7 @@ flowchart TD
 
 ## Protected vs Public Routes
 
-- **Public**: `/[locale]`, `/[locale]/login`, `/[locale]/register`, `/[locale]/forgot-password`, `/[locale]/reset-password`, `/[locale]/verify-email`, `/[locale]/stations`, `/[locale]/stations/[id]`, `/[locale]/stations/apply`
+- **Public**: `/[locale]`, `/[locale]/login`, `/[locale]/register`, `/[locale]/forgot-password`, `/[locale]/reset-password`, `/[locale]/verify-email`, `/[locale]/stations`, `/[locale]/stations/[id]`
 - **Protected (CLIENT)**: `/[locale]/client/*`
 - **Protected (STATION)**: `/[locale]/station/*`
 - **Protected (SUPER_ADMIN)**: `/[locale]/admin/*`
