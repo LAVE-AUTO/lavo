@@ -36,8 +36,9 @@ const _step3Base = z.object({
   documents: z
     .array(
       z.object({
-        document_type: z.string().min(1).max(50),
-        file_url: z.string().url('Invalid file URL'),
+        document_type: z.string().trim().min(1, 'Document type is required').max(50),
+        file_url: z.string().trim().url('Invalid file URL'),
+        storage: z.enum(['cloudinary', 'local']).optional(),
       })
     )
     .min(1, 'At least one document is required'),
@@ -69,35 +70,6 @@ export const stationOnboardingSubmitSchema = _step1Base
     message: 'Passwords do not match',
     path: ['confirm_password'],
   });
-
-// ─── Station apply (multipart form: fields only; files validated in route) ─────
-
-/** Field names and types for POST /api/v1/stations/apply (multipart/form-data). */
-export const stationApplyFieldsSchema = z.object({
-  name: z.string().min(2).max(200),
-  legal_name: z.string().min(2).max(200).optional().or(z.literal('')),
-  registration_number: z.string().max(100).optional().or(z.literal('')),
-  address: z.string().min(5).max(500),
-  city: z.string().min(2).max(100),
-  latitude: z.preprocess(
-    (v) => (v === '' || v === undefined ? undefined : Number(v)),
-    z.number().min(-90).max(90).optional()
-  ),
-  longitude: z.preprocess(
-    (v) => (v === '' || v === undefined ? undefined : Number(v)),
-    z.number().min(-180).max(180).optional()
-  ),
-  wash_type: z.enum(['hand_wash', 'automatic', 'self_service']),
-  wash_post_count: z.coerce.number().int().min(1).max(100),
-  description: z.string().max(1000).optional().or(z.literal('')),
-  terms_accepted: z
-    .string()
-    .refine((v) => v === 'true' || v === '1', {
-      message: 'You must accept the terms and conditions',
-    })
-    .transform(() => true as const),
-});
-export type StationApplyFields = z.infer<typeof stationApplyFieldsSchema>;
 
 // ─── Admin ────────────────────────────────────────────────────────────────────
 
@@ -153,6 +125,103 @@ export const listStationsQuerySchema = z.object({
     })
     .optional(),
 });
+
+// ─── Station config API (Unit 2) ─────────────────────────────────────────────
+
+/** Time string HH:mm or HH:mm:ss (optional timezone suffix). */
+const timeStringSchema = z
+  .string()
+  .regex(/^([01]?\d|2[0-3]):[0-5]\d(:[0-5]\d)?(\+00|Z)?$/, 'Invalid time format (use HH:mm or HH:mm:ss)');
+
+const stationPostItemSchema = z.object({
+  position: z.number().int().min(1, 'Position must be at least 1'),
+  is_active: z.boolean(),
+});
+
+export const stationConfigBodySchema = z
+  .object({
+    opening_time: timeStringSchema.optional(),
+    closing_time: timeStringSchema.optional(),
+    break_start: timeStringSchema.nullable().optional(),
+    break_end: timeStringSchema.nullable().optional(),
+    wash_duration_minutes: z.number().int().min(1).max(480).optional(),
+    wash_post_count: z.number().int().min(1).max(100).optional(),
+    late_tolerance_minutes: z.number().int().min(0).max(120).optional(),
+    cancellation_delay_minutes: z.number().int().min(0).max(10080).optional(),
+    max_concurrent_posts: z.number().int().min(1).max(100).optional(),
+    margin_before_minutes: z.number().int().min(0).max(60).optional(),
+    margin_after_minutes: z.number().int().min(0).max(60).optional(),
+    posts: z.array(stationPostItemSchema).max(200, 'Too many posts').optional(),
+  })
+  .strict()
+  .refine(
+    (data) => {
+      if (!data.posts || data.posts.length === 0) return true;
+      const positions = data.posts.map((p) => p.position);
+      return new Set(positions).size === positions.length;
+    },
+    { message: 'Duplicate position in posts', path: ['posts'] }
+  );
+
+export type StationConfigBody = z.infer<typeof stationConfigBodySchema>;
+
+/** Single slot: start_time and end_time as ISO datetime strings; capacity 1–10000. */
+export const createSlotBodySchema = z
+  .object({
+    start_time: z.string().datetime({ message: 'start_time must be a valid ISO 8601 datetime' }),
+    end_time: z.string().datetime({ message: 'end_time must be a valid ISO 8601 datetime' }),
+    capacity: z.number().int().min(1, 'Capacity must be at least 1').max(10000, 'Capacity must be at most 10000'),
+  })
+  .refine((data) => new Date(data.start_time) < new Date(data.end_time), {
+    message: 'start_time must be before end_time',
+    path: ['end_time'],
+  });
+
+/** Bulk create slots. */
+export const createSlotsBulkBodySchema = z.object({
+  slots: z.array(createSlotBodySchema).min(1).max(500),
+});
+
+export const slotIdParamSchema = z.object({
+  id: z.string().uuid('Invalid slot id'),
+});
+
+export const deleteSlotsBodySchema = z
+  .object({
+    ids: z.array(z.string().uuid()).min(1).max(100),
+  })
+  .strict();
+
+/** Valid calendar date YYYY-MM-DD (rejects e.g. 2024-02-30). */
+function isValidCalendarDate(s: string): boolean {
+  const d = new Date(s + 'T00:00:00Z');
+  return !Number.isNaN(d.getTime()) && d.toISOString().slice(0, 10) === s;
+}
+
+/** Generate slots: date or date range; optional interval_minutes. */
+export const generateSlotsBodySchema = z
+  .object({
+    date: z
+      .string()
+      .regex(/^\d{4}-\d{2}-\d{2}$/, 'date must be YYYY-MM-DD')
+      .refine(isValidCalendarDate, { message: 'date must be a valid calendar date' }),
+    end_date: z
+      .string()
+      .regex(/^\d{4}-\d{2}-\d{2}$/, 'end_date must be YYYY-MM-DD')
+      .refine(isValidCalendarDate, { message: 'end_date must be a valid calendar date' })
+      .optional(),
+    interval_minutes: z.number().int().min(5).max(120).optional(),
+  })
+  .refine(
+    (data) => !data.end_date || data.end_date >= data.date,
+    { message: 'end_date must be on or after date', path: ['end_date'] }
+  );
+
+export type CreateSlotBody = z.infer<typeof createSlotBodySchema>;
+export type CreateSlotsBulkBody = z.infer<typeof createSlotsBulkBodySchema>;
+export type GenerateSlotsBody = z.infer<typeof generateSlotsBodySchema>;
+
+// ─── Public API (Card 1) ─────────────────────────────────────────────────────
 
 export type StationIdParam = z.infer<typeof stationIdParamSchema>;
 export type ListStationsQuery = z.infer<typeof listStationsQuerySchema>;
