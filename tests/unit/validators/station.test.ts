@@ -9,7 +9,16 @@ jest.mock('@/validators/shared', () => ({
 import {
   listStationsQuerySchema,
   stationIdParamSchema,
-  stationApplyFieldsSchema,
+  stationConfigBodySchema,
+  createSlotBodySchema,
+  createSlotsBulkBodySchema,
+  generateSlotsBodySchema,
+  deleteSlotsBodySchema,
+  slotIdParamSchema,
+  createFormatBodySchema,
+  updateFormatBodySchema,
+  patchFormatBodySchema,
+  formatIdParamSchema,
 } from '@/validators/station';
 
 describe('station validators', () => {
@@ -100,156 +109,233 @@ describe('station validators', () => {
   });
 
   // ---------------------------------------------------------------------------
-  // stationApplyFieldsSchema (POST /api/v1/stations/apply multipart fields)
+  // stationConfigBodySchema (PATCH /api/v1/station/config)
   // ---------------------------------------------------------------------------
-  const validApplyFields = {
-    name: 'Station Alpha',
-    address: '10 Rue de la Paix',
-    city: 'Paris',
-    wash_type: 'hand_wash',
-    wash_post_count: 4,
-    terms_accepted: 'true',
-  };
-
-  describe('stationApplyFieldsSchema', () => {
-    it('accepts valid fields (name, address, city, wash_type, wash_post_count, terms_accepted)', () => {
-      const r = stationApplyFieldsSchema.safeParse(validApplyFields);
-      expect(r.success).toBe(true);
-      if (r.success) {
-        expect(r.data.name).toBe('Station Alpha');
-        expect(r.data.address).toBe('10 Rue de la Paix');
-        expect(r.data.city).toBe('Paris');
-        expect(r.data.wash_type).toBe('hand_wash');
-        expect(r.data.wash_post_count).toBe(4);
-        expect(r.data.terms_accepted).toBe(true);
-      }
+  describe('stationConfigBodySchema', () => {
+    it('accepts empty object (all optional)', () => {
+      expect(stationConfigBodySchema.safeParse({}).success).toBe(true);
     });
 
-    it('accepts optional legal_name, registration_number, description', () => {
-      const r = stationApplyFieldsSchema.safeParse({
-        ...validApplyFields,
-        legal_name: 'Alpha SARL',
-        registration_number: 'FR123',
-        description: 'Nice station',
+    it('accepts valid time strings', () => {
+      expect(stationConfigBodySchema.safeParse({ opening_time: '08:00' }).success).toBe(true);
+      expect(stationConfigBodySchema.safeParse({ opening_time: '08:00:00' }).success).toBe(true);
+      expect(stationConfigBodySchema.safeParse({ closing_time: '20:00:00+00' }).success).toBe(true);
+    });
+
+    it('rejects invalid time format', () => {
+      expect(stationConfigBodySchema.safeParse({ opening_time: '25:00' }).success).toBe(false);
+      expect(stationConfigBodySchema.safeParse({ opening_time: '08:60' }).success).toBe(false);
+    });
+
+    it('accepts valid posts array', () => {
+      const r = stationConfigBodySchema.safeParse({
+        posts: [{ position: 1, is_active: true }, { position: 2, is_active: false }],
       });
       expect(r.success).toBe(true);
-      if (r.success) {
-        expect(r.data.legal_name).toBe('Alpha SARL');
-        expect(r.data.registration_number).toBe('FR123');
-        expect(r.data.description).toBe('Nice station');
-      }
     });
 
-    it('rejects missing required (name)', () => {
-      const { name: _, ...rest } = validApplyFields;
-      expect(stationApplyFieldsSchema.safeParse(rest).success).toBe(false);
+    it('rejects position < 1', () => {
+      expect(stationConfigBodySchema.safeParse({ posts: [{ position: 0, is_active: true }] }).success).toBe(false);
     });
 
-    it('rejects missing required (address)', () => {
-      const { address: _, ...rest } = validApplyFields;
-      expect(stationApplyFieldsSchema.safeParse(rest).success).toBe(false);
+    it('rejects duplicate positions in posts', () => {
+      const r = stationConfigBodySchema.safeParse({
+        posts: [
+          { position: 1, is_active: true },
+          { position: 2, is_active: true },
+          { position: 1, is_active: false },
+        ],
+      });
+      expect(r.success).toBe(false);
     });
 
-    it('rejects invalid wash_type', () => {
-      expect(
-        stationApplyFieldsSchema.safeParse({
-          ...validApplyFields,
-          wash_type: 'invalid',
-        }).success
-      ).toBe(false);
-      expect(
-        stationApplyFieldsSchema.safeParse({
-          ...validApplyFields,
-          wash_type: 'automatic_wash',
-        }).success
-      ).toBe(false);
+    it('rejects invalid time format (hostile)', () => {
+      expect(stationConfigBodySchema.safeParse({ opening_time: '24:00' }).success).toBe(false);
+      expect(stationConfigBodySchema.safeParse({ closing_time: '25:30' }).success).toBe(false);
     });
 
-    it('rejects terms_accepted false or not "true"/"1"', () => {
+    it('rejects negative capacity via createSlotBodySchema', () => {
       expect(
-        stationApplyFieldsSchema.safeParse({
-          ...validApplyFields,
-          terms_accepted: 'false',
-        }).success
-      ).toBe(false);
-      expect(
-        stationApplyFieldsSchema.safeParse({
-          ...validApplyFields,
-          terms_accepted: '',
-        }).success
-      ).toBe(false);
-      expect(
-        stationApplyFieldsSchema.safeParse({
-          ...validApplyFields,
-          terms_accepted: 'yes',
+        createSlotBodySchema.safeParse({
+          start_time: '2026-03-07T08:00:00.000Z',
+          end_time: '2026-03-07T08:30:00.000Z',
+          capacity: -1,
         }).success
       ).toBe(false);
     });
+  });
 
-    it('accepts terms_accepted "1"', () => {
-      const r = stationApplyFieldsSchema.safeParse({
-        ...validApplyFields,
-        terms_accepted: '1',
+  // ---------------------------------------------------------------------------
+  // createSlotBodySchema (POST /api/v1/station/slots)
+  // ---------------------------------------------------------------------------
+  describe('createSlotBodySchema', () => {
+    it('accepts valid slot', () => {
+      const r = createSlotBodySchema.safeParse({
+        start_time: '2026-03-07T08:00:00.000Z',
+        end_time: '2026-03-07T08:30:00.000Z',
+        capacity: 2,
       });
       expect(r.success).toBe(true);
-      if (r.success) expect(r.data.terms_accepted).toBe(true);
     });
 
-    it('rejects wash_post_count < 1', () => {
+    it('rejects start_time >= end_time', () => {
       expect(
-        stationApplyFieldsSchema.safeParse({
-          ...validApplyFields,
-          wash_post_count: 0,
-        }).success
-      ).toBe(false);
-      expect(
-        stationApplyFieldsSchema.safeParse({
-          ...validApplyFields,
-          wash_post_count: -1,
+        createSlotBodySchema.safeParse({
+          start_time: '2026-03-07T08:30:00.000Z',
+          end_time: '2026-03-07T08:00:00.000Z',
+          capacity: 1,
         }).success
       ).toBe(false);
     });
 
-    it('rejects wash_post_count > 100', () => {
+    it('rejects capacity < 1', () => {
       expect(
-        stationApplyFieldsSchema.safeParse({
-          ...validApplyFields,
-          wash_post_count: 101,
+        createSlotBodySchema.safeParse({
+          start_time: '2026-03-07T08:00:00.000Z',
+          end_time: '2026-03-07T08:30:00.000Z',
+          capacity: 0,
         }).success
       ).toBe(false);
     });
+  });
 
-    it('accepts wash_post_count 1 and 100', () => {
+  describe('createSlotsBulkBodySchema', () => {
+    it('accepts non-empty slots array', () => {
+      const r = createSlotsBulkBodySchema.safeParse({
+        slots: [
+          { start_time: '2026-03-07T08:00:00.000Z', end_time: '2026-03-07T08:30:00.000Z', capacity: 1 },
+        ],
+      });
+      expect(r.success).toBe(true);
+    });
+
+    it('rejects empty slots', () => {
+      expect(createSlotsBulkBodySchema.safeParse({ slots: [] }).success).toBe(false);
+    });
+  });
+
+  // ---------------------------------------------------------------------------
+  // generateSlotsBodySchema (POST /api/v1/station/slots/generate)
+  // ---------------------------------------------------------------------------
+  describe('generateSlotsBodySchema', () => {
+    it('accepts date only', () => {
+      expect(generateSlotsBodySchema.safeParse({ date: '2026-03-07' }).success).toBe(true);
+    });
+
+    it('accepts date and end_date', () => {
       expect(
-        stationApplyFieldsSchema.safeParse({
-          ...validApplyFields,
-          wash_post_count: 1,
-        }).success
+        generateSlotsBodySchema.safeParse({ date: '2026-03-07', end_date: '2026-03-10' }).success
       ).toBe(true);
-      expect(
-        stationApplyFieldsSchema.safeParse({
-          ...validApplyFields,
-          wash_post_count: 100,
-        }).success
-      ).toBe(true);
     });
 
-    it('rejects address over 500 characters', () => {
+    it('rejects end_date before date', () => {
       expect(
-        stationApplyFieldsSchema.safeParse({
-          ...validApplyFields,
-          address: 'a'.repeat(501),
-        }).success
+        generateSlotsBodySchema.safeParse({ date: '2026-03-10', end_date: '2026-03-07' }).success
       ).toBe(false);
     });
 
-    it('accepts address at exactly 500 characters', () => {
-      expect(
-        stationApplyFieldsSchema.safeParse({
-          ...validApplyFields,
-          address: 'a'.repeat(500),
-        }).success
-      ).toBe(true);
+    it('rejects invalid date format', () => {
+      expect(generateSlotsBodySchema.safeParse({ date: '03-07-2026' }).success).toBe(false);
+    });
+
+    it('rejects invalid calendar date', () => {
+      expect(generateSlotsBodySchema.safeParse({ date: '2024-02-30' }).success).toBe(false);
+    });
+
+    it('rejects interval_minutes below 5 or above 120', () => {
+      expect(generateSlotsBodySchema.safeParse({ date: '2026-03-07', interval_minutes: 4 }).success).toBe(false);
+      expect(generateSlotsBodySchema.safeParse({ date: '2026-03-07', interval_minutes: 121 }).success).toBe(false);
+    });
+
+    it('accepts interval_minutes within range', () => {
+      expect(generateSlotsBodySchema.safeParse({ date: '2026-03-07', interval_minutes: 5 }).success).toBe(true);
+      expect(generateSlotsBodySchema.safeParse({ date: '2026-03-07', interval_minutes: 120 }).success).toBe(true);
+    });
+  });
+
+  // ---------------------------------------------------------------------------
+  // deleteSlotsBodySchema (DELETE /api/v1/station/slots)
+  // ---------------------------------------------------------------------------
+  describe('deleteSlotsBodySchema', () => {
+    it('accepts ids array', () => {
+      const uuid = 'a1b2c3d4-e5f6-7890-abcd-ef1234567890';
+      expect(deleteSlotsBodySchema.safeParse({ ids: [uuid] }).success).toBe(true);
+    });
+
+    it('rejects empty ids', () => {
+      expect(deleteSlotsBodySchema.safeParse({ ids: [] }).success).toBe(false);
+    });
+
+    it('rejects non-UUID', () => {
+      expect(deleteSlotsBodySchema.safeParse({ ids: ['not-uuid'] }).success).toBe(false);
+    });
+  });
+
+  describe('slotIdParamSchema', () => {
+    it('accepts valid UUID', () => {
+      expect(slotIdParamSchema.safeParse({ id: 'a1b2c3d4-e5f6-7890-abcd-ef1234567890' }).success).toBe(true);
+    });
+
+    it('rejects non-UUID (hostile)', () => {
+      expect(slotIdParamSchema.safeParse({ id: 'x' }).success).toBe(false);
+      expect(slotIdParamSchema.safeParse({ id: '123' }).success).toBe(false);
+      expect(slotIdParamSchema.safeParse({ id: 'not-a-uuid' }).success).toBe(false);
+    });
+  });
+
+  describe('deleteSlotsBodySchema strict', () => {
+    it('rejects extra keys', () => {
+      const uuid = 'a1b2c3d4-e5f6-7890-abcd-ef1234567890';
+      expect(deleteSlotsBodySchema.safeParse({ ids: [uuid], extra: true }).success).toBe(false);
+    });
+  });
+
+  // ---------------------------------------------------------------------------
+  // Vehicle format validators
+  // ---------------------------------------------------------------------------
+  describe('formatIdParamSchema', () => {
+    it('accepts valid UUID', () => {
+      expect(formatIdParamSchema.safeParse({ id: 'a1b2c3d4-e5f6-7890-abcd-ef1234567890' }).success).toBe(true);
+    });
+    it('rejects non-UUID', () => {
+      expect(formatIdParamSchema.safeParse({ id: 'x' }).success).toBe(false);
+    });
+  });
+
+  describe('createFormatBodySchema', () => {
+    it('accepts label, price, optional is_active', () => {
+      const r = createFormatBodySchema.safeParse({ label: 'SUV', price: 25.5 });
+      expect(r.success).toBe(true);
+      if (r.success) {
+        expect(r.data.is_active).toBe(true);
+      }
+    });
+    it('rejects empty label', () => {
+      expect(createFormatBodySchema.safeParse({ label: '', price: 10 }).success).toBe(false);
+    });
+    it('rejects price <= 0', () => {
+      expect(createFormatBodySchema.safeParse({ label: 'X', price: 0 }).success).toBe(false);
+      expect(createFormatBodySchema.safeParse({ label: 'X', price: -1 }).success).toBe(false);
+    });
+    it('rejects label over 100 chars', () => {
+      expect(createFormatBodySchema.safeParse({ label: 'a'.repeat(101), price: 10 }).success).toBe(false);
+    });
+  });
+
+  describe('updateFormatBodySchema', () => {
+    it('requires label, price, is_active', () => {
+      expect(updateFormatBodySchema.safeParse({ label: 'X', price: 10, is_active: true }).success).toBe(true);
+      expect(updateFormatBodySchema.safeParse({ label: 'X', price: 10 }).success).toBe(false);
+    });
+  });
+
+  describe('patchFormatBodySchema', () => {
+    it('accepts at least one field', () => {
+      expect(patchFormatBodySchema.safeParse({ price: 15 }).success).toBe(true);
+      expect(patchFormatBodySchema.safeParse({ is_active: false }).success).toBe(true);
+    });
+    it('rejects empty object', () => {
+      expect(patchFormatBodySchema.safeParse({}).success).toBe(false);
     });
   });
 });

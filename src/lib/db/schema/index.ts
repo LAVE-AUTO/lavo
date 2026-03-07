@@ -15,6 +15,7 @@ import {
   pendingUploads,
   stationConfigs,
   stationDocuments,
+  stationPosts,
   stations,
   vehicleFormats,
 } from "./stations";
@@ -83,6 +84,7 @@ export const stationsRelations = relations(stations, ({ one, many }) => ({
     relationName: "stationApprover",
   }),
   stationConfig: one(stationConfigs),
+  stationPosts: many(stationPosts),
   documents: many(stationDocuments),
   vehicleFormats: many(vehicleFormats),
   timeSlots: many(timeSlots),
@@ -109,6 +111,13 @@ export const pendingUploadsRelations = relations(pendingUploads, ({ one }) => ({
 export const stationConfigsRelations = relations(stationConfigs, ({ one }) => ({
   station: one(stations, {
     fields: [stationConfigs.id],
+    references: [stations.id],
+  }),
+}));
+
+export const stationPostsRelations = relations(stationPosts, ({ one }) => ({
+  station: one(stations, {
+    fields: [stationPosts.station_id],
     references: [stations.id],
   }),
 }));

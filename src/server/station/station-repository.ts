@@ -1,15 +1,21 @@
-import { and, asc, desc, eq, ilike, or, sql } from 'drizzle-orm';
+import { and, asc, desc, eq, getTableColumns, ilike, or, sql } from 'drizzle-orm';
 import { db } from '@/lib/db';
 import { stations, timeSlots } from '@/lib/db/schema';
 
 export type Station = typeof stations.$inferSelect;
 export type NewStation = typeof stations.$inferInsert;
 
+/** Same expression as sort: sum of (capacity - booked_count) for future slots. */
+const availableSlotsExpr = sql`(SELECT COALESCE(SUM(${timeSlots.capacity} - ${timeSlots.booked_count}), 0)::bigint FROM time_slots WHERE time_slots.station_id = ${stations.id} AND time_slots.start_time > NOW())`;
+
 export type ListActiveStationsFilters = {
   search?: string;
   city?: string;
   sort?: 'slots_asc' | 'slots_desc' | 'name';
 };
+
+/** Row returned by listActiveStations: station columns plus available_slots (bigint from DB). */
+export type StationWithAvailableSlots = Station & { available_slots: string };
 
 export async function createStation(data: NewStation): Promise<Station> {
   const [station] = await db.insert(stations).values(data).returning();
@@ -23,10 +29,11 @@ export async function findStationById(id: string): Promise<Station | undefined> 
 /**
  * Lists stations with status 'active', optional search (q) on name/address/city,
  * optional city filter, and optional sort (by available slots or name).
+ * Each row includes available_slots (sum of capacity - booked_count for start_time > NOW()).
  */
 export async function listActiveStations(
   filters: ListActiveStationsFilters = {}
-): Promise<Station[]> {
+): Promise<StationWithAvailableSlots[]> {
   const { search, city, sort } = filters;
   const conditions = [eq(stations.status, 'active')];
   if (city) conditions.push(eq(stations.city, city));
@@ -43,7 +50,10 @@ export async function listActiveStations(
   const whereClause = conditions.length === 1 ? conditions[0] : and(...conditions);
 
   const baseQuery = db
-    .select()
+    .select({
+      ...getTableColumns(stations),
+      available_slots: availableSlotsExpr.as('available_slots'),
+    })
     .from(stations)
     .where(whereClause);
 
@@ -51,12 +61,10 @@ export async function listActiveStations(
     return baseQuery.orderBy(asc(stations.name));
   }
   if (sort === 'slots_desc') {
-    const slotsSubquery = sql`(SELECT COALESCE(SUM(${timeSlots.capacity} - ${timeSlots.booked_count}), 0)::bigint FROM time_slots WHERE time_slots.station_id = ${stations.id} AND time_slots.start_time > NOW())`;
-    return baseQuery.orderBy(desc(slotsSubquery));
+    return baseQuery.orderBy(desc(availableSlotsExpr));
   }
   if (sort === 'slots_asc') {
-    const slotsSubquery = sql`(SELECT COALESCE(SUM(${timeSlots.capacity} - ${timeSlots.booked_count}), 0)::bigint FROM time_slots WHERE time_slots.station_id = ${stations.id} AND time_slots.start_time > NOW())`;
-    return baseQuery.orderBy(asc(slotsSubquery));
+    return baseQuery.orderBy(asc(availableSlotsExpr));
   }
   return baseQuery;
 }

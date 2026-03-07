@@ -4,7 +4,7 @@ import { PublicFooter } from '@/components/layout/PublicFooter';
 import { BottomNav } from '@/components/layout/BottomNav';
 
 /**
- * Layout for all public station pages (list + detail + apply).
+ * Layout for all public station pages (list, detail, onboarding).
  * Desktop: sticky top navbar + page content + footer.
  * Mobile: sticky top navbar (logo/controls only) + page content + fixed bottom nav (no footer).
  */
