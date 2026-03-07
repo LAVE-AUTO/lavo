@@ -33,7 +33,7 @@ export const ALLOWED_IMAGE_TYPES = [
   'image/webp',
   'image/gif',
 ];
-/** MIME types allowed for station documents (apply + onboarding). */
+/** MIME types allowed for station documents (onboarding). */
 export const ALLOWED_DOCUMENT_TYPES = [
   'image/jpeg',
   'image/png',
