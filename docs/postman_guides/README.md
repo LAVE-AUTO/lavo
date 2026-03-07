@@ -10,7 +10,7 @@ This folder contains **importable Postman collections (.json)** and **step-by-st
    - Auth: `auth/lavo-auth.postman_collection.json`
    - Stations onboarding / station profile: `stations/lavo-stations.postman_collection.json`
    - Admin stations: `admin/lavo-admin.postman_collection.json`
-   - **Public + Onboarding + Cron (stations list/detail/join, onboarding upload/submit, sync pending uploads):** `stations/lavo-stations-public-onboarding-cron.postman_collection.json`
+   - **Public + Onboarding + Formats + Cron (stations list/detail/join, onboarding, vehicle formats CRUD, sync pending uploads):** `stations/lavo-stations-public-onboarding-cron.postman_collection.json`
 3. Set environment variables (at minimum):
    - `base_url` (example: `http://localhost:3000`)
    - `cron_secret` (must match `CRON_SECRET` in `.env`)

@@ -2,7 +2,7 @@
   "info": {
     "_postman_id": "2ef04412-e41a-4ece-97a7-12091ab0dd12",
     "name": "LAVO — Stations (Public + Onboarding + Cron)",
-    "description": "Collection:\n- Public: stations API (list, detail, join)\n- Onboarding: upload documents and submit (POST /api/v1/stations/onboarding/upload, POST /api/v1/stations/onboarding/submit)\n- Cron: sync pending uploads (local files from onboarding)\n\nRequired variable: base_url (e.g. http://localhost:3000)\nOptional: station_id, cron_secret (for cron)\nCron: cron_secret must match CRON_SECRET in .env\n\nNotes:\n- Public and onboarding upload are unauthenticated.\n- Cron requires x-cron-secret or Authorization: Bearer <CRON_SECRET>.",
+    "description": "Collection:\n- Public: stations API (list, detail, join)\n- Onboarding: upload documents and submit\n- Formats: vehicle formats CRUD (GET public, POST/PUT/PATCH/DELETE auth STATION)\n- Cron: sync pending uploads (local files from onboarding)\n\nRequired variable: base_url (e.g. http://localhost:3000)\nOptional: station_id, cron_secret (for cron)\nCron: cron_secret must match CRON_SECRET in .env\n\nNotes:\n- Public and onboarding upload are unauthenticated.\n- Cron requires x-cron-secret or Authorization: Bearer <CRON_SECRET>.",
     "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
   },
   "variable": [
@@ -18,6 +18,16 @@
     },
     {
       "key": "cron_secret",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "format_id",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "access_token",
       "value": "",
       "type": "string"
     }
@@ -288,6 +298,174 @@
               ]
             },
             "description": "POST /api/v1/stations/onboarding/submit — JSON body: step 1 (email, phone, password, confirm_password), step 2 (station_name, address, city, wash_post_count, wash_type, ...), step 3 (documents: [{ document_type, file_url, storage? }], terms_accepted: true). Replace file_url with URLs from onboarding upload. No auth."
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Formats (vehicle formats and pricing)",
+      "item": [
+        {
+          "name": "Get formats by station (200)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 200', () => pm.response.to.have.status(200));",
+                  "pm.test('Body has data array', () => {",
+                  "  const json = pm.response.json();",
+                  "  pm.expect(json).to.have.property('data');",
+                  "  pm.expect(Array.isArray(json.data)).to.be.true;",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/v1/stations/{{station_id}}/formats",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "stations", "{{station_id}}", "formats"]
+            },
+            "description": "GET /api/v1/stations/:id/formats — public. Returns list of vehicle formats (id, station_id, label, price, is_active, created_at, updated_at). 404 if station not found or not active."
+          },
+          "response": []
+        },
+        {
+          "name": "Create format (201)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 201', () => pm.response.to.have.status(201));",
+                  "pm.test('Body has format', () => {",
+                  "  const json = pm.response.json();",
+                  "  pm.expect(json.data).to.have.property('id');",
+                  "  pm.expect(json.data).to.have.property('label');",
+                  "  pm.expect(json.data).to.have.property('price');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{access_token}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"label\": \"Petit\",\n  \"price\": 15.5,\n  \"is_active\": true\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/v1/station/formats",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "station", "formats"]
+            },
+            "description": "POST /api/v1/station/formats — auth STATION (Bearer). Body: label (1–100 chars), price (> 0), is_active (optional, default true). Creates format for connected station."
+          },
+          "response": []
+        },
+        {
+          "name": "Update format PUT (200)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 200', () => pm.response.to.have.status(200));"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "PUT",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{access_token}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"label\": \"Petit\",\n  \"price\": 18,\n  \"is_active\": true\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/v1/station/formats/{{format_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "station", "formats", "{{format_id}}"]
+            },
+            "description": "PUT /api/v1/station/formats/:id — auth STATION. Full update: label, price, is_active. Format must belong to connected station."
+          },
+          "response": []
+        },
+        {
+          "name": "Update format PATCH (200)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 200', () => pm.response.to.have.status(200));"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "PATCH",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{access_token}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"is_active\": false\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/v1/station/formats/{{format_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "station", "formats", "{{format_id}}"]
+            },
+            "description": "PATCH /api/v1/station/formats/:id — auth STATION. Partial update: at least one of label, price, is_active."
+          },
+          "response": []
+        },
+        {
+          "name": "Delete format (200)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 200', () => pm.response.to.have.status(200));",
+                  "pm.test('Body has deleted', () => {",
+                  "  const json = pm.response.json();",
+                  "  pm.expect(json.data).to.have.property('deleted');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "DELETE",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{access_token}}" }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/station/formats/{{format_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "station", "formats", "{{format_id}}"]
+            },
+            "description": "DELETE /api/v1/station/formats/:id — auth STATION. Returns 409 if format has reservations; otherwise 200 with { data: { deleted: true } }."
           },
           "response": []
         }
