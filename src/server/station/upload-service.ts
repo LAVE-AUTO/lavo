@@ -25,6 +25,9 @@ export type UploadResult = {
 export function validateStationDocumentFile(
   file: { type: string; size: number }
 ): void {
+  if (file.size <= 0) {
+    throw new ValidationError('File is empty. Please upload a valid document.');
+  }
   if (!ALLOWED_DOCUMENT_TYPES.includes(file.type)) {
     throw new ValidationError(
       `Invalid file type. Allowed: images (JPEG, PNG, WebP, GIF) and PDF.`
