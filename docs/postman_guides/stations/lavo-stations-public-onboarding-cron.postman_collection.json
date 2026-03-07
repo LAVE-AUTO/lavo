@@ -1,8 +1,8 @@
 {
   "info": {
     "_postman_id": "2ef04412-e41a-4ece-97a7-12091ab0dd12",
-    "name": "LAVO — Stations (Public + Apply + Cron)",
-    "description": "Well-organized collection for:\n- Card 1: public stations API (list, detail, join)\n- Card 2: station apply (multipart/form-data) + cron sync pending uploads\n\nRequired variable: base_url (e.g. http://localhost:3000)\nOptional: station_id\nCron: cron_secret must match CRON_SECRET in .env\n\nNotes:\n- Public stations endpoints are public.\n- Cron endpoint requires x-cron-secret or Authorization: Bearer <CRON_SECRET>.\n- Apply uses multipart fields + file keys like document_<type> (example: document_kbis).",
+    "name": "LAVO — Stations (Public + Onboarding + Cron)",
+    "description": "Collection:\n- Public: stations API (list, detail, join)\n- Onboarding: upload documents and submit (POST /api/v1/stations/onboarding/upload, POST /api/v1/stations/onboarding/submit)\n- Cron: sync pending uploads (local files from onboarding)\n\nRequired variable: base_url (e.g. http://localhost:3000)\nOptional: station_id, cron_secret (for cron)\nCron: cron_secret must match CRON_SECRET in .env\n\nNotes:\n- Public and onboarding upload are unauthenticated.\n- Cron requires x-cron-secret or Authorization: Bearer <CRON_SECRET>.",
     "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
   },
   "variable": [
@@ -24,7 +24,7 @@
   ],
   "item": [
     {
-      "name": "Public — Stations (Card 1)",
+      "name": "Public — Stations",
       "item": [
         {
           "name": "List stations (200)",
@@ -72,7 +72,7 @@
                 }
               ]
             },
-            "description": "GET /api/v1/stations — lists active stations. Query: q, city, sort (name|slots_asc|slots_desc)."
+            "description": "GET /api/v1/stations — lists active stations. Query: q, city, sort (name|slots_asc|slots_desc). Response includes available and available_slots per station."
           },
           "response": []
         },
@@ -149,7 +149,7 @@
                 "{{station_id}}"
               ]
             },
-            "description": "GET /api/v1/stations/:id — station detail. Requires station_id to be set."
+            "description": "GET /api/v1/stations/:id — station detail. Requires station_id. Response includes available and available_slots."
           },
           "response": []
         },
@@ -194,20 +194,20 @@
       ]
     },
     {
-      "name": "Public — Station apply (Card 2)",
+      "name": "Onboarding",
       "item": [
         {
-          "name": "Apply (201) — multipart/form-data",
+          "name": "Upload document (201)",
           "event": [
             {
               "listen": "test",
               "script": {
                 "exec": [
                   "pm.test('Status 201', () => pm.response.to.have.status(201));",
-                  "pm.test('Body has station_id', () => {",
+                  "pm.test('Body has url and storage', () => {",
                   "  const json = pm.response.json();",
-                  "  pm.expect(json.data).to.have.property('station_id');",
-                  "  pm.collectionVariables.set('station_id', json.data.station_id);",
+                  "  pm.expect(json.data).to.have.property('url');",
+                  "  pm.expect(json.data).to.have.property('storage');",
                   "});"
                 ],
                 "type": "text/javascript"
@@ -221,59 +221,14 @@
               "mode": "formdata",
               "formdata": [
                 {
-                  "key": "name",
-                  "value": "LAVO Station Apply Demo",
-                  "type": "text"
-                },
-                {
-                  "key": "legal_name",
-                  "value": "LAVO Demo SARL",
-                  "type": "text"
-                },
-                {
-                  "key": "registration_number",
-                  "value": "FR123456789",
-                  "type": "text"
-                },
-                {
-                  "key": "address",
-                  "value": "10 Rue de la Paix",
-                  "type": "text"
-                },
-                {
-                  "key": "city",
-                  "value": "Paris",
-                  "type": "text"
-                },
-                {
-                  "key": "wash_type",
-                  "value": "hand_wash",
-                  "type": "text"
-                },
-                {
-                  "key": "wash_post_count",
-                  "value": "2",
-                  "type": "text"
-                },
-                {
-                  "key": "description",
-                  "value": "Station application submitted via Postman.",
-                  "type": "text"
-                },
-                {
-                  "key": "terms_accepted",
-                  "value": "true",
-                  "type": "text"
-                },
-                {
-                  "key": "document_kbis",
+                  "key": "file",
                   "type": "file",
-                  "src": "/ABSOLUTE/PATH/TO/your-document.pdf"
+                  "src": ""
                 }
               ]
             },
             "url": {
-              "raw": "{{base_url}}/api/v1/stations/apply",
+              "raw": "{{base_url}}/api/v1/stations/onboarding/upload",
               "host": [
                 "{{base_url}}"
               ],
@@ -281,24 +236,26 @@
                 "api",
                 "v1",
                 "stations",
-                "apply"
+                "onboarding",
+                "upload"
               ]
             },
-            "description": "POST /api/v1/stations/apply — multipart/form-data. File keys must be document_<type> (e.g. document_kbis). Replace the file src with a real path."
+            "description": "POST /api/v1/stations/onboarding/upload — multipart/form-data, field 'file'. No auth. Returns 201 with { data: { url, storage } }. Use url (and storage) in onboarding submit documents."
           },
           "response": []
         },
         {
-          "name": "Apply — missing name (400)",
+          "name": "Submit onboarding (201)",
           "event": [
             {
               "listen": "test",
               "script": {
                 "exec": [
-                  "pm.test('Status 400', () => pm.response.to.have.status(400));",
-                  "pm.test('VALIDATION_FAILED', () => {",
+                  "pm.test('Status 201', () => pm.response.to.have.status(201));",
+                  "pm.test('Body has user and station', () => {",
                   "  const json = pm.response.json();",
-                  "  pm.expect(json.code).to.eql('VALIDATION_FAILED');",
+                  "  pm.expect(json.data).to.have.property('user');",
+                  "  pm.expect(json.data).to.have.property('station');",
                   "});"
                 ],
                 "type": "text/javascript"
@@ -307,44 +264,18 @@
           ],
           "request": {
             "method": "POST",
-            "header": [],
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
             "body": {
-              "mode": "formdata",
-              "formdata": [
-                {
-                  "key": "address",
-                  "value": "10 Rue de la Paix",
-                  "type": "text"
-                },
-                {
-                  "key": "city",
-                  "value": "Paris",
-                  "type": "text"
-                },
-                {
-                  "key": "wash_type",
-                  "value": "hand_wash",
-                  "type": "text"
-                },
-                {
-                  "key": "wash_post_count",
-                  "value": "2",
-                  "type": "text"
-                },
-                {
-                  "key": "terms_accepted",
-                  "value": "true",
-                  "type": "text"
-                },
-                {
-                  "key": "document_kbis",
-                  "type": "file",
-                  "src": "/ABSOLUTE/PATH/TO/your-document.pdf"
-                }
-              ]
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"station@example.com\",\n  \"phone\": \"+33600000000\",\n  \"password\": \"Password1!\",\n  \"confirm_password\": \"Password1!\",\n  \"station_name\": \"Test Station\",\n  \"address\": \"1 rue Test\",\n  \"city\": \"Paris\",\n  \"wash_post_count\": 2,\n  \"wash_type\": \"hand_wash\",\n  \"documents\": [\n    { \"document_type\": \"kbis\", \"file_url\": \"https://example.com/doc.pdf\", \"storage\": \"cloudinary\" }\n  ],\n  \"terms_accepted\": true\n}"
             },
             "url": {
-              "raw": "{{base_url}}/api/v1/stations/apply",
+              "raw": "{{base_url}}/api/v1/stations/onboarding/submit",
               "host": [
                 "{{base_url}}"
               ],
@@ -352,17 +283,18 @@
                 "api",
                 "v1",
                 "stations",
-                "apply"
+                "onboarding",
+                "submit"
               ]
             },
-            "description": "Negative test: missing name -> 400 VALIDATION_FAILED."
+            "description": "POST /api/v1/stations/onboarding/submit — JSON body: step 1 (email, phone, password, confirm_password), step 2 (station_name, address, city, wash_post_count, wash_type, ...), step 3 (documents: [{ document_type, file_url, storage? }], terms_accepted: true). Replace file_url with URLs from onboarding upload. No auth."
           },
           "response": []
         }
       ]
     },
     {
-      "name": "Cron — Pending uploads sync (Card 2)",
+      "name": "Cron — Sync pending uploads",
       "item": [
         {
           "name": "Sync pending uploads (200)",
@@ -402,7 +334,7 @@
                 "sync-pending-uploads"
               ]
             },
-            "description": "GET /api/cron/sync-pending-uploads — requires x-cron-secret (or Authorization: Bearer <CRON_SECRET>)."
+            "description": "GET /api/cron/sync-pending-uploads — syncs local onboarding uploads to Cloudinary. Requires x-cron-secret (or Authorization: Bearer <CRON_SECRET>)."
           },
           "response": []
         },
@@ -441,4 +373,3 @@
     }
   ]
 }
-
