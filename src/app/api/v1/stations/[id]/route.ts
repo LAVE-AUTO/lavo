@@ -7,10 +7,12 @@ import { getStationDetailPublic } from '@/server/station/station-service';
 
 /**
  * GET /api/v1/stations/:id
- * Get a single active station with config, vehicle formats, and time slots (available slots).
+ * Get a single active station with config, vehicle formats, and time slots.
+ * Response includes available (boolean) and available_slots (number) from future slots.
  * Returns 404 if not found or station is not active.
  *
- * Responses: 200 { data: StationWithDetail }, 400 VALIDATION_FAILED, 404 NOT_FOUND, 500 INTERNAL_ERROR.
+ * Response 200: { data: StationWithDetail & { available: boolean; available_slots: number } }.
+ * Responses: 400 VALIDATION_FAILED, 404 NOT_FOUND, 500 INTERNAL_ERROR.
  */
 export async function GET(
   _request: Request,
