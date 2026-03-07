@@ -12,6 +12,7 @@ import {
   text,
   time,
   timestamp,
+  uniqueIndex,
   uuid,
   varchar,
 } from "drizzle-orm/pg-core";
@@ -78,6 +79,8 @@ export const stations = pgTable(
 /**
  * One-to-one operational config per station. id = station id.
  * break_start/break_end define a pause window; cancellation_delay_minutes is used for cancellation policy.
+ * max_concurrent_posts: max posts in service at once (defaults to wash_post_count at creation).
+ * margin_before_minutes / margin_after_minutes: prep and cleanup margins (Figma-aligned).
  */
 export const stationConfigs = pgTable("station_configs", {
   id: uuid("id")
@@ -91,6 +94,9 @@ export const stationConfigs = pgTable("station_configs", {
   wash_post_count: integer("wash_post_count").notNull(),
   late_tolerance_minutes: integer("late_tolerance_minutes").notNull(),
   cancellation_delay_minutes: integer("cancellation_delay_minutes").notNull(),
+  max_concurrent_posts: integer("max_concurrent_posts").notNull().default(1),
+  margin_before_minutes: integer("margin_before_minutes").notNull().default(5),
+  margin_after_minutes: integer("margin_after_minutes").notNull().default(10),
   updated_at: timestamp("updated_at", {
     mode: "date",
     withTimezone: true,
@@ -98,6 +104,37 @@ export const stationConfigs = pgTable("station_configs", {
     .notNull()
     .defaultNow(),
 });
+
+/**
+ * Per-station posts (wash bays) with 1-based position and active flag.
+ * Unique (station_id, position). Used for capacity and Figma-aligned post state.
+ */
+export const stationPosts = pgTable(
+  "station_posts",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    station_id: uuid("station_id")
+      .notNull()
+      .references(() => stations.id, { onDelete: "cascade" }),
+    position: integer("position").notNull(),
+    is_active: boolean("is_active").notNull().default(true),
+    created_at: timestamp("created_at", {
+      mode: "date",
+      withTimezone: true,
+    })
+      .notNull()
+      .defaultNow(),
+    updated_at: timestamp("updated_at", {
+      mode: "date",
+      withTimezone: true,
+    })
+      .notNull()
+      .defaultNow(),
+  },
+  (table) => [
+    uniqueIndex("station_posts_station_id_position_unique").on(table.station_id, table.position),
+  ]
+);
 
 /**
  * Per-station vehicle format and price (e.g. Petit, Moyen, SUV).

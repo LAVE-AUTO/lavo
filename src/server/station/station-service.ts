@@ -17,7 +17,6 @@ import {
   ConflictError,
   ForbiddenError,
   NotFoundError,
-  ValidationError,
 } from '@/lib/errors';
 import { findByEmail, findById, type SafeUser } from '@/server/auth/user-repository';
 import {
@@ -29,10 +28,9 @@ import {
   updateStationStatus,
   type ListActiveStationsFilters,
   type Station,
+  type StationWithAvailableSlots,
 } from './station-repository';
 import { findDocumentsByStationId } from './document-repository';
-import { uploadStationDocument, validateStationDocumentFile } from './upload-service';
-import type { StationApplyFields } from '@/validators/station';
 
 export type StationOnboardingDto = {
   // Step 1 — account credentials
@@ -50,8 +48,8 @@ export type StationOnboardingDto = {
   wash_post_count: number;
   wash_type: 'hand_wash' | 'automatic' | 'self_service';
   description?: string;
-  // Step 3 — documents + legal
-  documents: { document_type: string; file_url: string }[];
+  // Step 3 — documents + legal (storage from onboarding upload; default cloudinary)
+  documents: { document_type: string; file_url: string; storage?: 'cloudinary' | 'local' }[];
   terms_accepted: true;
 };
 
@@ -114,14 +112,26 @@ export async function completeStationOnboarding(
       })
       .returning();
 
-    await tx.insert(stationDocuments).values(
-      dto.documents.map((d) => ({
-        station_id: newStation.id,
-        document_type: d.document_type,
-        file_url: d.file_url,
-        terms_accepted: dto.terms_accepted,
-      }))
-    );
+    const docRows = await tx
+      .insert(stationDocuments)
+      .values(
+        dto.documents.map((d) => ({
+          station_id: newStation.id,
+          document_type: d.document_type,
+          file_url: d.file_url,
+          storage: d.storage ?? 'cloudinary',
+          terms_accepted: dto.terms_accepted,
+        }))
+      )
+      .returning();
+
+    for (const row of docRows) {
+      if (row.storage === 'local') {
+        await tx.insert(pendingUploads).values({
+          station_document_id: row.id,
+        });
+      }
+    }
 
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
     const { password_hash: _, ...safeUser } = newUser;
@@ -130,6 +140,8 @@ export async function completeStationOnboarding(
 
   // Fire-and-forget (station accounts have no first_name; use station name for greeting)
   sendVerificationEmail(user.email, dto.station_name ?? '', verificationToken).catch(() => void 0);
+
+  sendStationApplicationAdminNotification(station.name, station.id).catch(() => void 0);
 
   return { user, station };
 }
@@ -199,22 +211,52 @@ export async function getMyStation(userId: string): Promise<StationWithDocuments
 // ─── Public API (Card 1) ────────────────────────────────────────────────────
 
 /**
+ * List item for GET /api/v1/stations. Station row plus available (derived from slots)
+ * and available_slots (sum of capacity - booked_count for start_time > NOW()).
+ * Unavailability is derived only from slot availability; no API toggle for is_open.
+ * Figma shows Station ouverte/fermée toggles—backend does not expose them; front
+ * should use available and available_slots.
+ */
+export type StationListPublicItem = Omit<StationWithAvailableSlots, 'available_slots'> & {
+  available_slots: number;
+  available: boolean;
+};
+
+/**
  * Returns list of active stations with optional search, city filter, and sort.
+ * Each item includes available (true iff available_slots > 0) and available_slots.
  */
 export async function listStationsPublic(
   filters: ListActiveStationsFilters
-): Promise<Station[]> {
-  return listActiveStations(filters);
+): Promise<StationListPublicItem[]> {
+  const rows = await listActiveStations(filters);
+  return rows.map((row) => {
+    const available_slots = Math.max(0, Number(row.available_slots ?? 0));
+    const available = available_slots > 0;
+    const { available_slots: _raw, ...rest } = row;
+    return { ...rest, available_slots, available };
+  });
 }
 
 /**
  * Returns a single active station with config, vehicle formats, and time slots.
+ * Includes available and available_slots computed from timeSlots (start_time > NOW()).
  * Throws NotFoundError if station does not exist or is not active.
  */
 export async function getStationDetailPublic(id: string) {
   const station = await findActiveStationWithDetail(id);
   if (!station) throw new NotFoundError('Station not found');
-  return station;
+  const now = new Date();
+  const available_slots = (station.timeSlots ?? [])
+    .filter((s: { start_time: Date }) => s.start_time > now)
+    .reduce(
+      (sum: number, s: { capacity: number; booked_count: number }) =>
+        sum + Math.max(0, (s.capacity ?? 0) - (s.booked_count ?? 0)),
+      0
+    );
+  // Unavailability derived only from slot availability; no API toggle for is_open (Figma gap).
+  const available = available_slots > 0;
+  return { ...station, available_slots, available };
 }
 
 /**
@@ -235,91 +277,3 @@ export async function getStationJoinPublic(id: string): Promise<{ mapsUrl: strin
   return { mapsUrl };
 }
 
-// ─── Station apply (Card 2) ───────────────────────────────────────────────────
-
-export type StationApplyFile = { document_type: string; file: File };
-
-export type StationApplyResult = { station_id: string; message: string };
-
-/**
- * Handles station application: uploads files (Cloudinary or local), creates station
- * with status pending_admin_validation, documents, pending_uploads for local files,
- * and sends admin notification email.
- */
-export async function submitStationApplication(
-  fields: StationApplyFields,
-  files: StationApplyFile[]
-): Promise<StationApplyResult> {
-  if (files.length === 0) {
-    throw new ValidationError('At least one document is required');
-  }
-
-  for (const { file } of files) {
-    validateStationDocumentFile(file);
-  }
-
-  const uploads = await Promise.all(
-    files.map(async ({ document_type, file }) => {
-      const result = await uploadStationDocument(file);
-      return { document_type, file_url: result.file_url, storage: result.storage };
-    })
-  );
-
-  const station = await db.transaction(async (tx) => {
-    const [newStation] = await tx
-      .insert(stations)
-      .values({
-        user_id: null,
-        name: fields.name,
-        legal_name: fields.legal_name || null,
-        registration_number: fields.registration_number || null,
-        address: fields.address,
-        city: fields.city,
-        latitude:
-          fields.latitude != null && !Number.isNaN(fields.latitude)
-            ? String(fields.latitude)
-            : null,
-        longitude:
-          fields.longitude != null && !Number.isNaN(fields.longitude)
-            ? String(fields.longitude)
-            : null,
-        wash_type: fields.wash_type,
-        description: fields.description || null,
-        wash_post_count: fields.wash_post_count,
-        status: 'pending_admin_validation',
-      })
-      .returning();
-
-    const docRows = await tx
-      .insert(stationDocuments)
-      .values(
-        uploads.map((u) => ({
-          station_id: newStation.id,
-          document_type: u.document_type,
-          file_url: u.file_url,
-          storage: u.storage,
-          terms_accepted: fields.terms_accepted,
-        }))
-      )
-      .returning();
-
-    for (const row of docRows) {
-      if (row.storage === 'local') {
-        await tx.insert(pendingUploads).values({
-          station_document_id: row.id,
-        });
-      }
-    }
-
-    return newStation;
-  });
-
-  sendStationApplicationAdminNotification(station.name, station.id).catch(() =>
-    void 0
-  );
-
-  return {
-    station_id: station.id,
-    message: 'Station application submitted. We will review it shortly.',
-  };
-}

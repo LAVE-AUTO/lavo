@@ -10,17 +10,17 @@ This folder contains **importable Postman collections (.json)** and **step-by-st
    - Auth: `auth/lavo-auth.postman_collection.json`
    - Stations onboarding / station profile: `stations/lavo-stations.postman_collection.json`
    - Admin stations: `admin/lavo-admin.postman_collection.json`
-   - **Card 1 + Card 2 (public stations + apply + cron):** `stations/lavo-stations-public-apply-cron.postman_collection.json`
+   - **Public + Onboarding + Formats + Cron (stations list/detail/join, onboarding, vehicle formats CRUD, sync pending uploads):** `stations/lavo-stations-public-onboarding-cron.postman_collection.json`
 3. Set environment variables (at minimum):
    - `base_url` (example: `http://localhost:3000`)
    - `cron_secret` (must match `CRON_SECRET` in `.env`)
 4. Follow the corresponding `.md` guide for a full test flow:
    - `auth/AUTH_POSTMAN_TEST.md`
-   - `stations/STATIONS_PUBLIC_APPLY_CRON_POSTMAN_TEST.md`
+   - `stations/STATIONS_PUBLIC_ONBOARDING_CRON_POSTMAN_TEST.md`
    - `admin/ADMIN_POSTMAN_TEST.md`
 
 ### Notes
 
 - **Bearer + cookies:** this project intentionally supports **Authorization: Bearer** and **httpOnly cookies** (refresh token). Postman will automatically store and send cookies for the same `base_url`.
-- **File uploads:** the apply endpoint uses `multipart/form-data` with file field names like `document_<type>` (example: `document_kbis`). In the collection, the `src` value is a placeholder: update it to a real file path on your machine.
+- **File uploads:** onboarding upload uses `POST /api/v1/stations/onboarding/upload` with multipart field `file`. Authenticated upload uses `POST /api/v1/upload` with field `file`.
 

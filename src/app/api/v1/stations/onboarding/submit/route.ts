@@ -30,7 +30,7 @@ import { HTTP_STATUS } from '@/helpers/constants';
  *   station_name, legal_name?, registration_number?, address, city,
  *   latitude?, longitude?, wash_post_count, wash_type, description?,
  *   // Step 3
- *   documents: [{ document_type, file_url }], terms_accepted: true
+ *   documents: [{ document_type, file_url, storage?: 'cloudinary' | 'local' }], terms_accepted: true
  * }
  *
  * Responses:

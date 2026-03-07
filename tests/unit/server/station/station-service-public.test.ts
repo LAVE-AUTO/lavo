@@ -19,6 +19,7 @@ const mockStations = [
     longitude: 2.35,
     created_at: new Date(),
     updated_at: new Date(),
+    available_slots: '5',
   },
 ];
 
@@ -53,7 +54,7 @@ describe('station-service public API', () => {
   });
 
   describe('listStationsPublic', () => {
-    it('forwards filters to listActiveStations and returns result', async () => {
+    it('forwards filters to listActiveStations and returns items with available and available_slots', async () => {
       mockListActiveStations.mockResolvedValueOnce(mockStations);
       const result = await listStationsPublic({
         search: 'Paris',
@@ -65,23 +66,50 @@ describe('station-service public API', () => {
         city: 'Lyon',
         sort: 'name',
       });
-      expect(result).toEqual(mockStations);
+      expect(result).toHaveLength(1);
+      expect(result[0].available_slots).toBe(5);
+      expect(result[0].available).toBe(true);
+      expect(result[0].id).toBe(mockStations[0].id);
+      expect(result[0].name).toBe(mockStations[0].name);
     });
 
     it('passes empty object when no filters', async () => {
       mockListActiveStations.mockResolvedValueOnce([]);
-      await listStationsPublic({});
+      const result = await listStationsPublic({});
       expect(mockListActiveStations).toHaveBeenCalledWith({});
+      expect(result).toEqual([]);
+    });
+
+    it('when repository returns available_slots 0, maps to available_slots 0 and available false', async () => {
+      const rows = [{ ...mockStations[0], id: 'id-zero', available_slots: '0' }];
+      mockListActiveStations.mockResolvedValueOnce(rows);
+      const result = await listStationsPublic({});
+      expect(result).toHaveLength(1);
+      expect(result[0].available_slots).toBe(0);
+      expect(result[0].available).toBe(false);
+    });
+
+    it('when repository returns negative available_slots (e.g. overbooked), caps to 0 and available false', async () => {
+      const rows = [{ ...mockStations[0], id: 'id-neg', available_slots: '-2' }];
+      mockListActiveStations.mockResolvedValueOnce(rows);
+      const result = await listStationsPublic({});
+      expect(result).toHaveLength(1);
+      expect(result[0].available_slots).toBe(0);
+      expect(result[0].available).toBe(false);
     });
   });
 
   describe('getStationDetailPublic', () => {
-    it('returns station with detail when active', async () => {
+    it('returns station with detail and available/available_slots when active', async () => {
       mockFindActiveStationWithDetail.mockResolvedValueOnce(mockStationWithDetail);
       const id = 'a1b2c3d4-e5f6-7890-abcd-ef1234567890';
       const result = await getStationDetailPublic(id);
       expect(mockFindActiveStationWithDetail).toHaveBeenCalledWith(id);
-      expect(result).toEqual(mockStationWithDetail);
+      expect(result.available_slots).toBe(0);
+      expect(result.available).toBe(false);
+      expect(result.id).toBe(mockStationWithDetail.id);
+      expect(result.stationConfig).toBe(mockStationWithDetail.stationConfig);
+      expect(result.timeSlots).toEqual(mockStationWithDetail.timeSlots);
     });
 
     it('throws NotFoundError when station not found or inactive', async () => {

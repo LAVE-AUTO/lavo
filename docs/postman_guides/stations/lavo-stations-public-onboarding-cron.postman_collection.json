@@ -1,0 +1,553 @@
+{
+  "info": {
+    "_postman_id": "2ef04412-e41a-4ece-97a7-12091ab0dd12",
+    "name": "LAVO — Stations (Public + Onboarding + Cron)",
+    "description": "Collection:\n- Public: stations API (list, detail, join)\n- Onboarding: upload documents and submit\n- Formats: vehicle formats CRUD (GET public, POST/PUT/PATCH/DELETE auth STATION)\n- Cron: sync pending uploads (local files from onboarding)\n\nRequired variable: base_url (e.g. http://localhost:3000)\nOptional: station_id, cron_secret (for cron)\nCron: cron_secret must match CRON_SECRET in .env\n\nNotes:\n- Public and onboarding upload are unauthenticated.\n- Cron requires x-cron-secret or Authorization: Bearer <CRON_SECRET>.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    {
+      "key": "base_url",
+      "value": "http://localhost:3000",
+      "type": "string"
+    },
+    {
+      "key": "station_id",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "cron_secret",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "format_id",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "access_token",
+      "value": "",
+      "type": "string"
+    }
+  ],
+  "item": [
+    {
+      "name": "Public — Stations",
+      "item": [
+        {
+          "name": "List stations (200)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 200', () => pm.response.to.have.status(200));",
+                  "pm.test('Body has data array', () => {",
+                  "  const json = pm.response.json();",
+                  "  pm.expect(json).to.have.property('data');",
+                  "  pm.expect(Array.isArray(json.data)).to.be.true;",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/v1/stations?q=paris&city=&sort=name",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "stations"
+              ],
+              "query": [
+                {
+                  "key": "q",
+                  "value": "paris"
+                },
+                {
+                  "key": "city",
+                  "value": ""
+                },
+                {
+                  "key": "sort",
+                  "value": "name"
+                }
+              ]
+            },
+            "description": "GET /api/v1/stations — lists active stations. Query: q, city, sort (name|slots_asc|slots_desc). Response includes available and available_slots per station."
+          },
+          "response": []
+        },
+        {
+          "name": "List stations — invalid sort (400)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 400', () => pm.response.to.have.status(400));",
+                  "pm.test('VALIDATION_FAILED', () => {",
+                  "  const json = pm.response.json();",
+                  "  pm.expect(json.code).to.eql('VALIDATION_FAILED');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/v1/stations?sort=invalid_sort",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "stations"
+              ],
+              "query": [
+                {
+                  "key": "sort",
+                  "value": "invalid_sort"
+                }
+              ]
+            },
+            "description": "Negative test: invalid sort must return 400 VALIDATION_FAILED."
+          },
+          "response": []
+        },
+        {
+          "name": "Station detail (200)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 200', () => pm.response.to.have.status(200));",
+                  "pm.test('Body has station id', () => {",
+                  "  const json = pm.response.json();",
+                  "  pm.expect(json.data).to.have.property('id');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/v1/stations/{{station_id}}",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "stations",
+                "{{station_id}}"
+              ]
+            },
+            "description": "GET /api/v1/stations/:id — station detail. Requires station_id. Response includes available and available_slots."
+          },
+          "response": []
+        },
+        {
+          "name": "Join station (200)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 200', () => pm.response.to.have.status(200));",
+                  "pm.test('mapsUrl present', () => {",
+                  "  const json = pm.response.json();",
+                  "  pm.expect(json.data).to.have.property('mapsUrl');",
+                  "  pm.expect(json.data.mapsUrl).to.match(/^https:\\/\\/www\\.google\\.com\\/maps\\?q=/);",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/v1/stations/{{station_id}}/join",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "stations",
+                "{{station_id}}",
+                "join"
+              ]
+            },
+            "description": "POST /api/v1/stations/:id/join — returns a Google Maps URL."
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Onboarding",
+      "item": [
+        {
+          "name": "Upload document (201)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 201', () => pm.response.to.have.status(201));",
+                  "pm.test('Body has url and storage', () => {",
+                  "  const json = pm.response.json();",
+                  "  pm.expect(json.data).to.have.property('url');",
+                  "  pm.expect(json.data).to.have.property('storage');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                {
+                  "key": "file",
+                  "type": "file",
+                  "src": ""
+                }
+              ]
+            },
+            "url": {
+              "raw": "{{base_url}}/api/v1/stations/onboarding/upload",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "stations",
+                "onboarding",
+                "upload"
+              ]
+            },
+            "description": "POST /api/v1/stations/onboarding/upload — multipart/form-data, field 'file'. No auth. Returns 201 with { data: { url, storage } }. Use url (and storage) in onboarding submit documents."
+          },
+          "response": []
+        },
+        {
+          "name": "Submit onboarding (201)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 201', () => pm.response.to.have.status(201));",
+                  "pm.test('Body has user and station', () => {",
+                  "  const json = pm.response.json();",
+                  "  pm.expect(json.data).to.have.property('user');",
+                  "  pm.expect(json.data).to.have.property('station');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"station@example.com\",\n  \"phone\": \"+33600000000\",\n  \"password\": \"Password1!\",\n  \"confirm_password\": \"Password1!\",\n  \"station_name\": \"Test Station\",\n  \"address\": \"1 rue Test\",\n  \"city\": \"Paris\",\n  \"wash_post_count\": 2,\n  \"wash_type\": \"hand_wash\",\n  \"documents\": [\n    { \"document_type\": \"kbis\", \"file_url\": \"https://example.com/doc.pdf\", \"storage\": \"cloudinary\" }\n  ],\n  \"terms_accepted\": true\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/v1/stations/onboarding/submit",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "stations",
+                "onboarding",
+                "submit"
+              ]
+            },
+            "description": "POST /api/v1/stations/onboarding/submit — JSON body: step 1 (email, phone, password, confirm_password), step 2 (station_name, address, city, wash_post_count, wash_type, ...), step 3 (documents: [{ document_type, file_url, storage? }], terms_accepted: true). Replace file_url with URLs from onboarding upload. No auth."
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Formats (vehicle formats and pricing)",
+      "item": [
+        {
+          "name": "Get formats by station (200)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 200', () => pm.response.to.have.status(200));",
+                  "pm.test('Body has data array', () => {",
+                  "  const json = pm.response.json();",
+                  "  pm.expect(json).to.have.property('data');",
+                  "  pm.expect(Array.isArray(json.data)).to.be.true;",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/v1/stations/{{station_id}}/formats",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "stations", "{{station_id}}", "formats"]
+            },
+            "description": "GET /api/v1/stations/:id/formats — public. Returns list of vehicle formats (id, station_id, label, price, is_active, created_at, updated_at). 404 if station not found or not active."
+          },
+          "response": []
+        },
+        {
+          "name": "Create format (201)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 201', () => pm.response.to.have.status(201));",
+                  "pm.test('Body has format', () => {",
+                  "  const json = pm.response.json();",
+                  "  pm.expect(json.data).to.have.property('id');",
+                  "  pm.expect(json.data).to.have.property('label');",
+                  "  pm.expect(json.data).to.have.property('price');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{access_token}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"label\": \"Petit\",\n  \"price\": 15.5,\n  \"is_active\": true\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/v1/station/formats",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "station", "formats"]
+            },
+            "description": "POST /api/v1/station/formats — auth STATION (Bearer). Body: label (1–100 chars), price (> 0), is_active (optional, default true). Creates format for connected station."
+          },
+          "response": []
+        },
+        {
+          "name": "Update format PUT (200)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 200', () => pm.response.to.have.status(200));"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "PUT",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{access_token}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"label\": \"Petit\",\n  \"price\": 18,\n  \"is_active\": true\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/v1/station/formats/{{format_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "station", "formats", "{{format_id}}"]
+            },
+            "description": "PUT /api/v1/station/formats/:id — auth STATION. Full update: label, price, is_active. Format must belong to connected station."
+          },
+          "response": []
+        },
+        {
+          "name": "Update format PATCH (200)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 200', () => pm.response.to.have.status(200));"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "PATCH",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{access_token}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"is_active\": false\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/v1/station/formats/{{format_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "station", "formats", "{{format_id}}"]
+            },
+            "description": "PATCH /api/v1/station/formats/:id — auth STATION. Partial update: at least one of label, price, is_active."
+          },
+          "response": []
+        },
+        {
+          "name": "Delete format (200)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 200', () => pm.response.to.have.status(200));",
+                  "pm.test('Body has deleted', () => {",
+                  "  const json = pm.response.json();",
+                  "  pm.expect(json.data).to.have.property('deleted');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "DELETE",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{access_token}}" }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/station/formats/{{format_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "station", "formats", "{{format_id}}"]
+            },
+            "description": "DELETE /api/v1/station/formats/:id — auth STATION. Returns 409 if format has reservations; otherwise 200 with { data: { deleted: true } }."
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Cron — Sync pending uploads",
+      "item": [
+        {
+          "name": "Sync pending uploads (200)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 200', () => pm.response.to.have.status(200));",
+                  "pm.test('Body has processed/succeeded/failed', () => {",
+                  "  const json = pm.response.json();",
+                  "  pm.expect(json.data).to.have.property('processed');",
+                  "  pm.expect(json.data).to.have.property('succeeded');",
+                  "  pm.expect(json.data).to.have.property('failed');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "x-cron-secret",
+                "value": "{{cron_secret}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/cron/sync-pending-uploads",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "cron",
+                "sync-pending-uploads"
+              ]
+            },
+            "description": "GET /api/cron/sync-pending-uploads — syncs local onboarding uploads to Cloudinary. Requires x-cron-secret (or Authorization: Bearer <CRON_SECRET>)."
+          },
+          "response": []
+        },
+        {
+          "name": "Sync pending uploads — missing secret (401)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 401', () => pm.response.to.have.status(401));"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/cron/sync-pending-uploads",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "cron",
+                "sync-pending-uploads"
+              ]
+            },
+            "description": "Negative test: missing secret must return 401."
+          },
+          "response": []
+        }
+      ]
+    }
+  ]
+}
