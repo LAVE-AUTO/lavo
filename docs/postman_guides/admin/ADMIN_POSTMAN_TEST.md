@@ -30,5 +30,5 @@ Required:
 ### Notes
 
 - These endpoints require admin authorization on the backend (expect `403` if the token role is not admin).
-- If you create a station application via the **apply** endpoint (`POST /api/v1/stations/apply`), it will show up here as pending.
+- Stations created via **onboarding** (`POST /api/v1/stations/onboarding/submit`) show up here as pending when status is `pending_admin_validation`.
 
