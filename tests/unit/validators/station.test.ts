@@ -15,6 +15,10 @@ import {
   generateSlotsBodySchema,
   deleteSlotsBodySchema,
   slotIdParamSchema,
+  createFormatBodySchema,
+  updateFormatBodySchema,
+  patchFormatBodySchema,
+  formatIdParamSchema,
 } from '@/validators/station';
 
 describe('station validators', () => {
@@ -283,6 +287,55 @@ describe('station validators', () => {
     it('rejects extra keys', () => {
       const uuid = 'a1b2c3d4-e5f6-7890-abcd-ef1234567890';
       expect(deleteSlotsBodySchema.safeParse({ ids: [uuid], extra: true }).success).toBe(false);
+    });
+  });
+
+  // ---------------------------------------------------------------------------
+  // Vehicle format validators
+  // ---------------------------------------------------------------------------
+  describe('formatIdParamSchema', () => {
+    it('accepts valid UUID', () => {
+      expect(formatIdParamSchema.safeParse({ id: 'a1b2c3d4-e5f6-7890-abcd-ef1234567890' }).success).toBe(true);
+    });
+    it('rejects non-UUID', () => {
+      expect(formatIdParamSchema.safeParse({ id: 'x' }).success).toBe(false);
+    });
+  });
+
+  describe('createFormatBodySchema', () => {
+    it('accepts label, price, optional is_active', () => {
+      const r = createFormatBodySchema.safeParse({ label: 'SUV', price: 25.5 });
+      expect(r.success).toBe(true);
+      if (r.success) {
+        expect(r.data.is_active).toBe(true);
+      }
+    });
+    it('rejects empty label', () => {
+      expect(createFormatBodySchema.safeParse({ label: '', price: 10 }).success).toBe(false);
+    });
+    it('rejects price <= 0', () => {
+      expect(createFormatBodySchema.safeParse({ label: 'X', price: 0 }).success).toBe(false);
+      expect(createFormatBodySchema.safeParse({ label: 'X', price: -1 }).success).toBe(false);
+    });
+    it('rejects label over 100 chars', () => {
+      expect(createFormatBodySchema.safeParse({ label: 'a'.repeat(101), price: 10 }).success).toBe(false);
+    });
+  });
+
+  describe('updateFormatBodySchema', () => {
+    it('requires label, price, is_active', () => {
+      expect(updateFormatBodySchema.safeParse({ label: 'X', price: 10, is_active: true }).success).toBe(true);
+      expect(updateFormatBodySchema.safeParse({ label: 'X', price: 10 }).success).toBe(false);
+    });
+  });
+
+  describe('patchFormatBodySchema', () => {
+    it('accepts at least one field', () => {
+      expect(patchFormatBodySchema.safeParse({ price: 15 }).success).toBe(true);
+      expect(patchFormatBodySchema.safeParse({ is_active: false }).success).toBe(true);
+    });
+    it('rejects empty object', () => {
+      expect(patchFormatBodySchema.safeParse({}).success).toBe(false);
     });
   });
 });
