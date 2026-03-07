@@ -7,9 +7,11 @@ import { listStationsPublic } from '@/server/station/station-service';
 /**
  * GET /api/v1/stations
  * List active stations with optional search (q), city filter, and sort (e.g. slots_asc, slots_desc, name).
+ * Each station includes available (boolean, true iff available_slots > 0) and available_slots (number).
  *
  * Query params: q (search), city, sort.
- * Responses: 200 { data: Station[] }, 400 VALIDATION_FAILED, 500 INTERNAL_ERROR.
+ * Response 200: { data: Array<Station & { available: boolean; available_slots: number }> }.
+ * Responses: 400 VALIDATION_FAILED, 500 INTERNAL_ERROR.
  */
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
