@@ -14,6 +14,7 @@ const mockStations = [
     total_ratings: 0,
     created_at: new Date(),
     updated_at: new Date(),
+    available_slots: '3',
   },
 ];
 
