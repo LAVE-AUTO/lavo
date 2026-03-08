@@ -60,6 +60,7 @@ export function createAxiosInstance(
   const instance = axios.create({
     baseURL,
     timeout,
+    withCredentials: true,
     headers: {
       'Content-Type': 'application/json',
       ...headers,
