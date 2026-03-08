@@ -1,8 +1,8 @@
 /**
  * Data access for time_slots. Create, delete, and count reservations per slot.
  */
-import { eq, and, sql } from 'drizzle-orm';
-import { db } from '@/lib/db';
+import { eq, and, ne, sql } from 'drizzle-orm';
+import { db, type DbTransaction } from '@/lib/db';
 import { timeSlots } from '@/lib/db/schema';
 import { reservations } from '@/lib/db/schema';
 
@@ -80,13 +80,14 @@ export async function findSlotByIdAndStation(
 }
 
 /**
- * Counts reservations that reference this time_slot_id (any status).
+ * Counts active (non-cancelled) reservations that reference this time_slot_id.
  */
-export async function countReservationsBySlotId(slotId: string): Promise<number> {
-  const result = await db
+export async function countReservationsBySlotId(slotId: string, tx?: DbTransaction): Promise<number> {
+  const client = tx ?? db;
+  const result = await client
     .select({ count: sql<number>`count(*)::int` })
     .from(reservations)
-    .where(eq(reservations.time_slot_id, slotId));
+    .where(and(eq(reservations.time_slot_id, slotId), ne(reservations.status, 'cancelled')));
   return result[0]?.count ?? 0;
 }
 
@@ -100,12 +101,12 @@ export async function deleteSlotById(slotId: string): Promise<void> {
 /**
  * Increments booked_count for the slot by 1. Used when creating a reservation for the slot.
  */
-export async function incrementSlotBookedCount(slotId: string): Promise<void> {
-  await db
+export async function incrementSlotBookedCount(slotId: string, tx?: DbTransaction): Promise<void> {
+  const client = tx ?? db;
+  await client
     .update(timeSlots)
     .set({
       booked_count: sql`${timeSlots.booked_count} + 1`,
-      updated_at: new Date(),
     })
     .where(eq(timeSlots.id, slotId));
 }
@@ -113,12 +114,12 @@ export async function incrementSlotBookedCount(slotId: string): Promise<void> {
 /**
  * Decrements booked_count for the slot by 1. Used when cancelling or moving a reservation to queue.
  */
-export async function decrementSlotBookedCount(slotId: string): Promise<void> {
-  await db
+export async function decrementSlotBookedCount(slotId: string, tx?: DbTransaction): Promise<void> {
+  const client = tx ?? db;
+  await client
     .update(timeSlots)
     .set({
       booked_count: sql`GREATEST(0, ${timeSlots.booked_count} - 1)`,
-      updated_at: new Date(),
     })
     .where(eq(timeSlots.id, slotId));
 }
