@@ -5,6 +5,7 @@ import { useTranslations } from 'next-intl';
 import { Link } from '@/i18n/navigation';
 import { postWithApi } from '@/services/axios-service';
 import { validateEmail } from '@/helpers/validators';
+import { HTTP_STATUS } from '@/helpers/constants';
 import { Spinner } from '@/components/ui/Spinner';
 import { FormField } from './FormField';
 
@@ -59,7 +60,12 @@ export function ForgotPasswordForm() {
 
     setIsLoading(true);
     try {
-      await postWithApi('/auth/forgot-password', { email: email.trim() });
+      const [, response] = await postWithApi('/auth/forgot-password', { email: email.trim() }, { successStatus: HTTP_STATUS.OK });
+      const data = response as { code?: string };
+      if (data?.code === 'TOO_MANY_REQUESTS') {
+        setEmailError(t('error_rate_limit'));
+        return;
+      }
       // Always show success regardless of API response (prevent email enumeration)
       setSent(true);
     } catch {
