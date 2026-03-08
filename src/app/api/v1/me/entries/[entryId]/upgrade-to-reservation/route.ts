@@ -8,6 +8,7 @@ import { ApiCode } from '@/types/api-codes';
 import { entryIdParamSchema, upgradeToReservationBodySchema, mapZodErrors } from '@/validators/entry';
 import { upgradeQueueToReservation } from '@/server/reservations/reservation-service';
 import { findEntryByIdAndUser } from '@/server/reservations/entry-repository';
+import { serializeEntry } from '@/server/reservations/entry-serializer';
 import { AppError, ConflictError, NotFoundError } from '@/lib/errors';
 import type { NextResponse } from 'next/server';
 
@@ -52,28 +53,3 @@ export async function POST(request: Request, { params }: Params): Promise<NextRe
   }
 }
 
-function serializeEntry(entry: {
-  id: string;
-  entry_type: string;
-  time_slot_id: string | null;
-  station_id: string;
-  vehicle_format_id: string;
-  status: string;
-  queue_position: number | null;
-  amount_paid: string;
-  created_at: Date;
-  updated_at: Date;
-}) {
-  return {
-    id: entry.id,
-    entry_type: entry.entry_type,
-    time_slot_id: entry.time_slot_id,
-    station_id: entry.station_id,
-    vehicle_format_id: entry.vehicle_format_id,
-    status: entry.status,
-    queue_position: entry.queue_position,
-    amount_paid: entry.amount_paid,
-    created_at: entry.created_at,
-    updated_at: entry.updated_at,
-  };
-}
