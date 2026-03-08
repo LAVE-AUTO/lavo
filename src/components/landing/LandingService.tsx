@@ -14,24 +14,24 @@ export function LandingService() {
   const t = useTranslations('landing');
 
   return (
-    <section className="py-20 sm:py-28 landing-service-bg transition-colors">
+    <section className="py-16 sm:py-28 landing-service-bg transition-colors">
       <div className="max-w-6xl mx-auto px-4 sm:px-6">
-        <div className="grid lg:grid-cols-2 gap-12 lg:gap-16 items-center">
+        <div className="grid lg:grid-cols-2 gap-10 lg:gap-16 items-center">
           {/* Left: visual */}
           <ScrollReveal>
-            <div className="relative">
+            <div className="relative mb-8 sm:mb-0">
               <div className="rounded-2xl overflow-hidden shadow-2xl shadow-black/10">
                 {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img
                   src="https://images.unsplash.com/photo-1520340356584-f9917d1eea6f?w=800&q=80"
                   alt=""
-                  className="w-full h-[320px] sm:h-[400px] object-cover"
+                  className="w-full h-[260px] sm:h-[400px] object-cover"
                   loading="lazy"
                 />
               </div>
 
               {/* Floating badge */}
-              <div className="absolute -bottom-4 -right-4 sm:bottom-6 sm:right-6 rounded-xl bg-white dark:bg-dark-card border border-gold/20 px-4 py-3 shadow-lg animate-float-card">
+              <div className="absolute -bottom-5 right-3 sm:bottom-6 sm:right-6 rounded-xl bg-white dark:bg-dark-card border border-gold/20 px-4 py-3 shadow-lg animate-float-card">
                 <div className="flex items-center gap-2.5">
                   <div className="w-9 h-9 rounded-full bg-gold/15 flex items-center justify-center">
                     <svg
