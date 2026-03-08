@@ -5,6 +5,8 @@ import { useTranslations } from 'next-intl';
 import { Link } from '@/i18n/navigation';
 import { useToast } from '@/context/toast-context';
 import { postWithApi } from '@/services/axios-service';
+import { isPasswordValid } from '@/helpers/validators';
+import { HTTP_STATUS } from '@/helpers/constants';
 import { Spinner } from '@/components/ui/Spinner';
 import { FormField } from './FormField';
 import { PasswordRules } from './PasswordRules';
@@ -114,7 +116,11 @@ export function ResetPasswordForm({ token }: ResetPasswordFormProps) {
 
   const validate = (): boolean => {
     const next: { password?: string; confirmPassword?: string } = {};
-    if (!password)        next.password        = t('error_required');
+    if (!password) {
+      next.password = t('error_required');
+    } else if (!isPasswordValid(password)) {
+      next.password = t('error_password_invalid');
+    }
     if (!confirmPassword) next.confirmPassword  = t('error_required');
     else if (password !== confirmPassword) next.confirmPassword = t('error_password_mismatch');
     setErrors(next);
@@ -127,7 +133,11 @@ export function ResetPasswordForm({ token }: ResetPasswordFormProps) {
 
     setIsLoading(true);
     try {
-      const [ok, response] = await postWithApi('/auth/reset-password', { token, password });
+      const [ok, response] = await postWithApi('/auth/reset-password', {
+        token,
+        new_password: password,
+        confirm_new_password: confirmPassword,
+      }, { successStatus: HTTP_STATUS.OK });
 
       if (ok) {
         setSuccess(true);
@@ -135,7 +145,9 @@ export function ResetPasswordForm({ token }: ResetPasswordFormProps) {
       }
 
       const data = response as { code?: string };
-      if (data?.code === 'INVALID_TOKEN' || data?.code === 'TOKEN_EXPIRED') {
+      if (data?.code === 'TOO_MANY_REQUESTS') {
+        showError(t('error_rate_limit'));
+      } else if (data?.code === 'INVALID_TOKEN' || data?.code === 'TOKEN_EXPIRED') {
         showError(t('error_invalid_token'));
       } else {
         showError(t('error_generic'));
