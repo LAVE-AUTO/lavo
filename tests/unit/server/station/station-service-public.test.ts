@@ -35,11 +35,15 @@ const mockListActiveStationsGroup = jest.fn();
 const mockFindActiveStationWithDetail = jest.fn();
 const mockFindStationById = jest.fn();
 
+const mockGetCompletedCountForStation = jest.fn();
+
 jest.mock('@/server/station/station-repository', () => ({
   listActiveStations: (...args: unknown[]) => mockListActiveStations(...args),
   listActiveStationsGroup: (...args: unknown[]) => mockListActiveStationsGroup(...args),
   findActiveStationWithDetail: (...args: unknown[]) =>
     mockFindActiveStationWithDetail(...args),
+  getCompletedCountForStation: (...args: unknown[]) =>
+    mockGetCompletedCountForStation(...args),
   findStationById: (...args: unknown[]) => mockFindStationById(...args),
 }));
 
@@ -123,14 +127,26 @@ describe('station-service public API', () => {
   describe('getStationDetailPublic', () => {
     it('returns station with detail and available/available_slots when active', async () => {
       mockFindActiveStationWithDetail.mockResolvedValueOnce(mockStationWithDetail);
+      mockGetCompletedCountForStation.mockResolvedValueOnce(0);
       const id = 'a1b2c3d4-e5f6-7890-abcd-ef1234567890';
       const result = await getStationDetailPublic(id);
       expect(mockFindActiveStationWithDetail).toHaveBeenCalledWith(id);
+      expect(mockGetCompletedCountForStation).toHaveBeenCalledWith(id);
       expect(result.available_slots).toBe(0);
       expect(result.available).toBe(false);
+      expect(result.completed_count).toBe(0);
       expect(result.id).toBe(mockStationWithDetail.id);
       expect(result.stationConfig).toBe(mockStationWithDetail.stationConfig);
       expect(result.timeSlots).toEqual(mockStationWithDetail.timeSlots);
+    });
+
+    it('includes completed_count (Services terminés) from repository', async () => {
+      mockFindActiveStationWithDetail.mockResolvedValueOnce(mockStationWithDetail);
+      mockGetCompletedCountForStation.mockResolvedValueOnce(42);
+      const id = 'a1b2c3d4-e5f6-7890-abcd-ef1234567890';
+      const result = await getStationDetailPublic(id);
+      expect(mockGetCompletedCountForStation).toHaveBeenCalledWith(id);
+      expect(result.completed_count).toBe(42);
     });
 
     it('throws NotFoundError when station not found or inactive', async () => {
@@ -138,6 +154,7 @@ describe('station-service public API', () => {
       await expect(
         getStationDetailPublic('00000000-0000-0000-0000-000000000000')
       ).rejects.toThrow(NotFoundError);
+      expect(mockGetCompletedCountForStation).not.toHaveBeenCalled();
     });
   });
 
