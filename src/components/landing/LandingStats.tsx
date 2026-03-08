@@ -67,16 +67,16 @@ export function LandingStats() {
   const t = useTranslations('landing');
 
   return (
-    <section className="relative py-20 bg-[#0A0A14] overflow-hidden">
+    <section className="relative py-16 sm:py-20 bg-[#0A0A14] overflow-hidden">
       {/* Decorative */}
       <div className="absolute top-0 left-1/4 w-80 h-80 bg-gold/6 rounded-full blur-3xl" />
       <div className="absolute bottom-0 right-1/4 w-60 h-60 bg-gold/4 rounded-full blur-3xl" />
 
       <div className="relative z-10 max-w-6xl mx-auto px-4 sm:px-6">
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-8 lg:gap-12">
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-6 sm:gap-8 lg:gap-12">
           {STATS.map((stat) => (
             <div key={stat.key} className="text-center">
-              <p className="text-[36px] sm:text-[48px] font-black text-gold leading-none">
+              <p className="text-[28px] sm:text-[40px] lg:text-[48px] font-black text-gold leading-none">
                 <AnimatedNumber
                   target={stat.value}
                   suffix={stat.suffix}
@@ -84,7 +84,7 @@ export function LandingStats() {
                   decimal={'decimal' in stat ? stat.decimal : undefined}
                 />
               </p>
-              <p className="mt-3 text-[14px] font-semibold text-white/60 uppercase tracking-wider">
+              <p className="mt-2 sm:mt-3 text-[12px] sm:text-[14px] font-semibold text-white/60 uppercase tracking-wider">
                 {t(stat.key)}
               </p>
             </div>

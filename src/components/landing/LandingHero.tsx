@@ -16,7 +16,7 @@ export function LandingHero() {
     locale === 'fr' ? '/logo/logo2_2.png' : '/logo/logo_anglais_1.png';
 
   return (
-    <section className="relative overflow-hidden min-h-[92vh] flex items-center">
+    <section className="relative overflow-hidden min-h-[80vh] lg:min-h-[92vh] flex items-center">
       {/* Gradient background */}
       <div className="absolute inset-0 bg-gradient-to-br from-[#F8F7F2] via-[#F2F0E8] to-[#EBE8DC] dark:from-dark-bg dark:via-[#1E2A1A] dark:to-dark-bg transition-colors" />
 
@@ -41,9 +41,9 @@ export function LandingHero() {
       <div className="relative z-10 max-w-6xl mx-auto px-4 sm:px-6 w-full py-20 sm:py-0">
         <div className="grid lg:grid-cols-2 gap-12 lg:gap-16 items-center">
           {/* Left content */}
-          <div className="space-y-7 animate-fade-in-up">
+          <div className="space-y-7 animate-fade-in-up text-center lg:text-left">
             {/* Logo */}
-            <div className="mb-2">
+            <div className="mb-2 flex justify-center lg:justify-start">
               {isDark ? (
                 <div className="flex items-center gap-3">
                   <div className="rounded-xl bg-white/95 p-1 border border-gold/25 shadow-sm">
@@ -84,7 +84,7 @@ export function LandingHero() {
             </div>
 
             {/* Title */}
-            <h1 className="text-[42px] sm:text-[56px] lg:text-[64px] font-black leading-[1.05] tracking-tight text-[#0A0A14] dark:text-white">
+            <h1 className="text-[34px] sm:text-[48px] lg:text-[64px] font-black leading-[1.05] tracking-tight text-[#0A0A14] dark:text-white">
               {t('hero_title_1')}
               <br />
               <span className="hero-title-gradient">
@@ -93,7 +93,7 @@ export function LandingHero() {
             </h1>
 
             {/* Subtitle */}
-            <p className="text-[17px] sm:text-[19px] leading-relaxed text-[#555] dark:text-[#C0C0B0] max-w-lg">
+            <p className="text-[16px] sm:text-[19px] leading-relaxed text-[#555] dark:text-[#C0C0B0] max-w-lg mx-auto lg:mx-0">
               {t('hero_subtitle')}
             </p>
 
@@ -116,7 +116,7 @@ export function LandingHero() {
             </p>
 
             {/* CTAs */}
-            <div className="flex flex-col sm:flex-row gap-3 pt-1">
+            <div className="flex flex-col sm:flex-row gap-3 pt-1 items-center lg:items-start sm:justify-center lg:justify-start">
               <Link
                 href="/stations"
                 className="btn-shine inline-flex items-center justify-center gap-2 px-8 py-3.5 bg-gold hover:bg-gold-hover rounded-xl text-[16px] font-bold text-dark-bg transition-colors shadow-lg shadow-gold/20"
@@ -146,12 +146,22 @@ export function LandingHero() {
             </div>
           </div>
 
-          {/* Right: Phone mockup */}
+          {/* Right: Phone mockup — desktop */}
           <div
             className="hidden lg:flex items-center justify-center animate-fade-in"
             style={{ animationDelay: '0.35s' }}
           >
             <PhoneMockup />
+          </div>
+
+          {/* Phone mockup — mobile (scaled down, centered below text) */}
+          <div
+            className="flex lg:hidden items-center justify-center animate-fade-in mt-4"
+            style={{ animationDelay: '0.3s' }}
+          >
+            <div className="scale-[0.82] origin-top">
+              <PhoneMockup />
+            </div>
           </div>
         </div>
       </div>

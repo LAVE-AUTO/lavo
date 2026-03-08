@@ -14,10 +14,10 @@ export function LandingMerchantCTA() {
   const t = useTranslations('landing');
 
   return (
-    <section className="py-20 sm:py-28 bg-[#F4F3EE] dark:bg-dark-card/60 transition-colors">
+    <section className="py-16 sm:py-28 bg-[#F4F3EE] dark:bg-dark-card/60 transition-colors">
       <div className="max-w-6xl mx-auto px-4 sm:px-6">
         <ScrollReveal>
-          <div className="rounded-3xl bg-gradient-to-br from-[#0A0A14] to-[#1A1A2E] dark:from-dark-bg dark:to-[#1E2A1A] border border-[#1E1E2E] dark:border-tab-inactive p-10 sm:p-14 lg:p-20 relative overflow-hidden">
+          <div className="rounded-3xl bg-gradient-to-br from-[#0A0A14] to-[#1A1A2E] dark:from-dark-bg dark:to-[#1E2A1A] border border-[#1E1E2E] dark:border-tab-inactive p-8 sm:p-14 lg:p-20 relative overflow-hidden">
             {/* Decorative elements */}
             <div className="absolute top-0 right-0 w-96 h-96 bg-gold/8 rounded-full blur-3xl" />
             <div className="absolute bottom-0 left-0 w-72 h-72 bg-gold/5 rounded-full blur-3xl" />
@@ -92,7 +92,7 @@ export function LandingMerchantCTA() {
                 </div>
               </div>
 
-              {/* Dashboard preview */}
+              {/* Dashboard preview — desktop full */}
               <div className="hidden lg:block">
                 <div className="rounded-2xl bg-white/5 border border-white/10 p-6 backdrop-blur-sm">
                   {/* Header bar */}
@@ -109,7 +109,7 @@ export function LandingMerchantCTA() {
                   <div className="grid grid-cols-3 gap-3 mb-5">
                     {[
                       { label: 'Aujourd\'hui', val: '24', sub: 'reservations' },
-                      { label: 'Revenus', val: '€ 1,280', sub: 'ce mois' },
+                      { label: 'Revenus', val: '\u20AC 1,280', sub: 'ce mois' },
                       { label: 'Taux', val: '96%', sub: 'satisfaction' },
                     ].map((s) => (
                       <div
@@ -143,6 +143,39 @@ export function LandingMerchantCTA() {
                         />
                       ))}
                     </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Dashboard preview — mobile compact */}
+              <div className="lg:hidden mt-8">
+                <div className="rounded-xl bg-white/5 border border-white/10 p-4 backdrop-blur-sm">
+                  <div className="flex items-center gap-2 mb-4">
+                    <div className="w-2.5 h-2.5 rounded-full bg-red-400/80" />
+                    <div className="w-2.5 h-2.5 rounded-full bg-yellow-400/80" />
+                    <div className="w-2.5 h-2.5 rounded-full bg-green-400/80" />
+                    <span className="ml-2 text-[11px] text-white/30 font-mono">
+                      dashboard.slowtime.app
+                    </span>
+                  </div>
+                  <div className="grid grid-cols-3 gap-2">
+                    {[
+                      { label: 'Reservations', val: '24' },
+                      { label: 'Revenus', val: '\u20AC 1,280' },
+                      { label: 'Satisfaction', val: '96%' },
+                    ].map((s) => (
+                      <div
+                        key={s.label}
+                        className="rounded-lg bg-white/5 border border-white/5 p-2.5 text-center"
+                      >
+                        <p className="text-[16px] sm:text-[18px] font-black text-white leading-tight">
+                          {s.val}
+                        </p>
+                        <p className="text-[9px] sm:text-[10px] text-gold/70 mt-0.5 uppercase tracking-wider">
+                          {s.label}
+                        </p>
+                      </div>
+                    ))}
                   </div>
                 </div>
               </div>
