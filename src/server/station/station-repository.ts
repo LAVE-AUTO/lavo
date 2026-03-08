@@ -27,7 +27,7 @@ export type ListActiveStationsFilters = {
   groups?: ('available_now' | 'most_appreciated' | 'most_visited')[];
   /** Filter to stations that have at least one of these wash type ids. */
   wash_type_ids?: string[];
-  /** Accepted in API; ignored until Unit 5 (service_scope column). */
+  /** Filter to stations where service_scope equals this value (exterior | interior | both). */
   service_scope?: string;
 };
 
@@ -52,12 +52,14 @@ export async function findStationById(id: string): Promise<Station | undefined> 
  * Builds WHERE conditions for listActiveStations and listActiveStationsCount.
  * Shared so count and list use identical filters.
  * When washTypeIds is non-empty, restricts to stations that have at least one matching row in station_wash_types.
+ * When serviceScope is provided, restricts to stations where service_scope equals that value.
  */
 function listActiveStationsWhere(
   search: string | undefined,
   city: string | undefined,
   formatId: string | undefined,
-  washTypeIds: string[] | undefined
+  washTypeIds: string[] | undefined,
+  serviceScope: string | undefined
 ) {
   const conditions = [eq(stations.status, 'active')];
   if (city) conditions.push(eq(stations.city, city));
@@ -81,6 +83,9 @@ function listActiveStationsWhere(
     conditions.push(
       sql`EXISTS (SELECT 1 FROM ${stationWashTypes} WHERE ${stationWashTypes.station_id} = ${stations.id} AND ${inArray(stationWashTypes.wash_type_id, washTypeIds)})`
     );
+  }
+  if (serviceScope) {
+    conditions.push(eq(stations.service_scope, serviceScope));
   }
   return conditions.length === 1 ? conditions[0] : and(...conditions);
 }
@@ -125,15 +130,15 @@ function buildOrderBy(sort: StationSortCriterion[] | undefined, searchTerm: stri
 
 /**
  * Lists stations with status 'active', optional search (name/address/city/description with prioritization),
- * city filter, format_id filter, multi-criteria sort, and pagination.
- * Each row includes available_slots and completed_count. Filter by wash_type_ids when provided; service_scope ignored (Unit 5).
+ * city filter, format_id filter, service_scope filter, multi-criteria sort, and pagination.
+ * Each row includes available_slots and completed_count.
  */
 export async function listActiveStations(
   filters: ListActiveStationsFilters = {}
 ): Promise<ListActiveStationsResult> {
-  const { search, city, sort, page = 1, per_page = 20, format_id, wash_type_ids } = filters;
+  const { search, city, sort, page = 1, per_page = 20, format_id, wash_type_ids, service_scope } = filters;
   const searchTerm = search?.trim();
-  const whereClause = listActiveStationsWhere(search, city, format_id, wash_type_ids);
+  const whereClause = listActiveStationsWhere(search, city, format_id, wash_type_ids, service_scope);
 
   const limit = Math.min(Math.max(1, per_page ?? 20), 100);
   const offset = (Math.max(1, page ?? 1) - 1) * limit;
@@ -169,9 +174,9 @@ export async function listActiveStationsGroup(
   filters: ListActiveStationsFilters,
   limitPerGroup: number
 ): Promise<StationWithAvailableSlots[]> {
-  const { search, city, sort, format_id, wash_type_ids } = filters;
+  const { search, city, sort, format_id, wash_type_ids, service_scope } = filters;
   const searchTerm = search?.trim();
-  const whereClause = listActiveStationsWhere(search, city, format_id, wash_type_ids);
+  const whereClause = listActiveStationsWhere(search, city, format_id, wash_type_ids, service_scope);
 
   const groupOrder: StationSortCriterion[] =
     group === 'available_now'

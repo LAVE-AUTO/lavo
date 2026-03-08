@@ -55,6 +55,8 @@ export type StationOnboardingDto = {
   /** At least one wash type id (UUID from wash_types table). */
   wash_type_ids: string[];
   description?: string;
+  /** Type de prestation: optional; persisted as nullable on stations. */
+  service_scope?: 'exterior' | 'interior' | 'both';
   // Step 3 — documents + legal (storage from onboarding upload; default cloudinary)
   documents: { document_type: string; file_url: string; storage?: 'cloudinary' | 'local' }[];
   terms_accepted: true;
@@ -126,6 +128,7 @@ export async function completeStationOnboarding(
         longitude: dto.longitude?.toString(),
         description: dto.description,
         wash_post_count: dto.wash_post_count,
+        service_scope: dto.service_scope ?? null,
         status: 'pending_admin_validation',
       })
       .returning();

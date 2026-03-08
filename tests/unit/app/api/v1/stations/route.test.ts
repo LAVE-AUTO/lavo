@@ -229,18 +229,27 @@ describe('GET /api/v1/stations', () => {
     );
   });
 
-  it('passes service_scope to service', async () => {
+  it('passes service_scope to service when provided (exterior, interior, both)', async () => {
     mockListStationsPublic.mockResolvedValueOnce({
       data: { all: [] },
       meta: { total: 0, page: 1, per_page: 20, total_pages: 1 },
     });
-    const req = buildRequest('http://localhost/api/v1/stations?service_scope=interior');
-    const res = await GET(req);
-    expect(res.status).toBe(200);
+    const reqExterior = buildRequest('http://localhost/api/v1/stations?service_scope=exterior');
+    const resExterior = await GET(reqExterior);
+    expect(resExterior.status).toBe(200);
     expect(mockListStationsPublic).toHaveBeenCalledWith(
-      expect.objectContaining({
-        service_scope: 'interior',
-      })
+      expect.objectContaining({ service_scope: 'exterior' })
+    );
+
+    mockListStationsPublic.mockResolvedValueOnce({
+      data: { all: [] },
+      meta: { total: 0, page: 1, per_page: 20, total_pages: 1 },
+    });
+    const reqBoth = buildRequest('http://localhost/api/v1/stations?service_scope=both');
+    const resBoth = await GET(reqBoth);
+    expect(resBoth.status).toBe(200);
+    expect(mockListStationsPublic).toHaveBeenCalledWith(
+      expect.objectContaining({ service_scope: 'both' })
     );
   });
 
