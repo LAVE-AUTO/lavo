@@ -217,6 +217,32 @@ button,
     animation: progress-fill linear both;
 }
 
+@keyframes toast-progress {
+    from {
+        width: 100%;
+    }
+    to {
+        width: 0%;
+    }
+}
+
+
+/* Toast theme variables */
+
+:root {
+    --toast-bg: rgba(255, 255, 255, 0.97);
+    --toast-border: rgba(0, 0, 0, 0.08);
+    --toast-text: #1a1a1a;
+    --toast-close: #999;
+}
+
+.dark {
+    --toast-bg: rgba(30, 42, 26, 0.97);
+    --toast-border: rgba(255, 255, 255, 0.08);
+    --toast-text: #f0f0f0;
+    --toast-close: #888;
+}
+
 
 /* ------------------------------------------------------------------ */
 

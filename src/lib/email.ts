@@ -13,17 +13,17 @@ type Locale = 'fr' | 'en';
 const TEXTS = {
   verification: {
     fr: {
-      subject: 'Vérifiez votre compte LAVO',
+      subject: 'Vérifiez votre compte Slowtime',
       greeting: (name: string) => `Bonjour ${name},`,
-      body: 'Merci de vous être inscrit sur LAVO. Veuillez confirmer votre adresse e-mail en cliquant sur le bouton ci-dessous.',
+      body: 'Merci de vous être inscrit sur Slowtime. Veuillez confirmer votre adresse e-mail en cliquant sur le bouton ci-dessous.',
       cta: 'Vérifier mon compte',
       expiry: 'Ce lien expire dans 24 heures.',
       ignore: "Si vous n'avez pas créé de compte, vous pouvez ignorer cet e-mail.",
     },
     en: {
-      subject: 'Verify your LAVO account',
+      subject: 'Verify your Slowtime account',
       greeting: (name: string) => `Hi ${name},`,
-      body: 'Thank you for signing up for LAVO. Please confirm your email address by clicking the button below.',
+      body: 'Thank you for signing up for Slowtime. Please confirm your email address by clicking the button below.',
       cta: 'Verify my account',
       expiry: 'This link expires in 24 hours.',
       ignore: 'If you did not create an account, you can safely ignore this email.',
@@ -31,7 +31,7 @@ const TEXTS = {
   },
   passwordReset: {
     fr: {
-      subject: 'Réinitialisation de votre mot de passe LAVO',
+      subject: 'Réinitialisation de votre mot de passe Slowtime',
       greeting: (name: string) => `Bonjour ${name},`,
       body: 'Vous avez demandé la réinitialisation de votre mot de passe. Cliquez sur le bouton ci-dessous pour en définir un nouveau.',
       cta: 'Réinitialiser mon mot de passe',
@@ -39,7 +39,7 @@ const TEXTS = {
       ignore: "Si vous n'avez pas fait cette demande, vous pouvez ignorer cet e-mail.",
     },
     en: {
-      subject: 'Reset your LAVO password',
+      subject: 'Reset your Slowtime password',
       greeting: (name: string) => `Hi ${name},`,
       body: 'You requested a password reset. Click the button below to set a new password.',
       cta: 'Reset my password',
@@ -49,34 +49,34 @@ const TEXTS = {
   },
   stationApproval: {
     fr: {
-      subject: (name: string) => `[LAVO] Votre station ${name} a été approuvée`,
+      subject: (name: string) => `[Slowtime] Votre station ${name} a été approuvée`,
       greeting: 'Bonjour,',
       body: (name: string) =>
-        `Nous avons le plaisir de vous informer que votre station <strong>${name}</strong> a été approuvée et est maintenant active sur LAVO.`,
+        `Nous avons le plaisir de vous informer que votre station <strong>${name}</strong> a été approuvée et est maintenant active sur Slowtime.`,
       extra: 'Vous pouvez dès à présent vous connecter avec votre adresse e-mail et le mot de passe choisi lors de votre inscription.',
-      cta: 'Se connecter à LAVO',
-      closing: 'Bienvenue dans la communauté LAVO !',
+      cta: 'Se connecter à Slowtime',
+      closing: 'Bienvenue dans la communauté Slowtime !',
     },
     en: {
-      subject: (name: string) => `[LAVO] Your station ${name} has been approved`,
+      subject: (name: string) => `[Slowtime] Your station ${name} has been approved`,
       greeting: 'Hello,',
       body: (name: string) =>
-        `We are pleased to inform you that your station <strong>${name}</strong> has been approved and is now active on LAVO.`,
+        `We are pleased to inform you that your station <strong>${name}</strong> has been approved and is now active on Slowtime.`,
       extra: 'You can now log in using the email address and password you chose during registration.',
-      cta: 'Log in to LAVO',
-      closing: 'Welcome to the LAVO community!',
+      cta: 'Log in to Slowtime',
+      closing: 'Welcome to the Slowtime community!',
     },
   },
   footer: {
     fr: {
-      teamLine: "L'équipe LAVO",
+      teamLine: "L'équipe Slowtime",
       autoMessage: 'Cet e-mail a été envoyé automatiquement. Merci de ne pas y répondre.',
-      copyright: `© ${new Date().getFullYear()} LAVO. Tous droits réservés.`,
+      copyright: `© ${new Date().getFullYear()} Slowtime. Tous droits réservés.`,
     },
     en: {
-      teamLine: 'The LAVO Team',
+      teamLine: 'The Slowtime Team',
       autoMessage: 'This email was sent automatically. Please do not reply.',
-      copyright: `© ${new Date().getFullYear()} LAVO. All rights reserved.`,
+      copyright: `© ${new Date().getFullYear()} Slowtime. All rights reserved.`,
     },
   },
 } as const;
@@ -128,7 +128,7 @@ function brandedEmail(
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <meta http-equiv="X-UA-Compatible" content="IE=edge" />
-  <title>LAVO</title>
+  <title>Slowtime</title>
 </head>
 <body style="margin: 0; padding: 0; background-color: #f4f2ec; font-family: 'Rajdhani', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;">
   <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background-color: #f4f2ec; padding: 40px 16px;">
@@ -139,7 +139,7 @@ function brandedEmail(
           <!-- Logo header -->
           <tr>
             <td align="center" style="padding: 0 0 24px;">
-              <img src="${logoUrl}" alt="LAVO" width="48" height="48" style="display: block; border: 0; width: 48px; height: 48px;" />
+              <img src="${logoUrl}" alt="Slowtime" width="48" height="48" style="display: block; border: 0; width: 48px; height: 48px;" />
             </td>
           </tr>
 
@@ -299,7 +299,7 @@ export async function sendStationApplicationAdminNotification(
   await resend.emails.send({
     from: FROM,
     to: adminEmail,
-    subject: `[LAVO] New station application: ${stationName}`,
+    subject: `[Slowtime] New station application: ${stationName}`,
     html: brandedEmail('en', {
       greeting: 'New station application',
       bodyHtml: `

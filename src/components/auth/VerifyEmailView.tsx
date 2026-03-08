@@ -3,6 +3,7 @@
 import { useState, useEffect, type ChangeEvent, type FormEvent } from 'react';
 import { useTranslations } from 'next-intl';
 import { Link } from '@/i18n/navigation';
+import { useToast } from '@/context/toast-context';
 import { postWithApi } from '@/services/axios-service';
 import { validateEmail } from '@/helpers/validators';
 import { HTTP_STATUS } from '@/helpers/constants';
@@ -50,6 +51,7 @@ function MailIcon() {
  */
 export function VerifyEmailView({ token }: VerifyEmailViewProps) {
   const t = useTranslations('verify_email');
+  const { success: showSuccess, error: showError } = useToast();
 
   const [view, setView] = useState<ViewState>(() => (!token ? 'expired' : 'loading'));
   const [email, setEmail] = useState('');
@@ -63,13 +65,14 @@ export function VerifyEmailView({ token }: VerifyEmailViewProps) {
 
     postWithApi('/auth/verify-email', { token }).then(([ok]) => {
       if (cancelled) return;
+      if (ok) showSuccess(t('toast_success'));
       setView(ok ? 'success' : 'expired');
     });
 
     return () => {
       cancelled = true;
     };
-  }, [token]);
+  }, [token, showSuccess, t]);
 
   const handleEmailChange = (e: ChangeEvent<HTMLInputElement>) => {
     setEmail(e.target.value);
@@ -89,16 +92,20 @@ export function VerifyEmailView({ token }: VerifyEmailViewProps) {
     setResending(false);
 
     if (ok) {
+      showSuccess(t('toast_resend_success'));
       setView('resent');
     } else {
       const data = response as { code?: string };
       if (data?.code === 'TOO_MANY_REQUESTS') {
+        showError(t('error_rate_limit'));
         setEmailError(t('error_rate_limit'));
       } else if (data?.code === 'CONFLICT') {
+        showError(t('error_already_verified'));
         setEmailError(t('error_already_verified'));
       } else if (data?.code === 'NOT_FOUND') {
         setEmailError(t('error_email_not_found'));
       } else {
+        showError(t('error_generic'));
         setEmailError(t('error_generic'));
       }
     }
