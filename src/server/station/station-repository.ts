@@ -1,6 +1,6 @@
-import { and, asc, desc, eq, getTableColumns, ilike, or, sql } from 'drizzle-orm';
+import { and, asc, desc, eq, getTableColumns, ilike, isNotNull, or, sql } from 'drizzle-orm';
 import { db } from '@/lib/db';
-import { stations, timeSlots } from '@/lib/db/schema';
+import { reservations, stations, timeSlots } from '@/lib/db/schema';
 import type { StationSortCriterion } from '@/helpers/sort-stations';
 
 export type Station = typeof stations.$inferSelect;
@@ -9,7 +9,10 @@ export type NewStation = typeof stations.$inferInsert;
 /** Sum of (capacity - booked_count) for future slots. */
 const availableSlotsExpr = sql`(SELECT COALESCE(SUM(${timeSlots.capacity} - ${timeSlots.booked_count}), 0)::bigint FROM time_slots WHERE time_slots.station_id = ${stations.id} AND time_slots.start_time > NOW())`;
 
-/** Count of reservations with completed_at IS NOT NULL per station (for most_visited and sort). */
+/**
+ * Count of reservations with completed_at IS NOT NULL per station (for most_visited and sort).
+ * This is the "Services terminés" metric per plan Section 4.
+ */
 const completedCountExpr = sql`(SELECT COUNT(*)::bigint FROM reservations WHERE reservations.station_id = ${stations.id} AND reservations.completed_at IS NOT NULL)`;
 
 export type ListActiveStationsFilters = {
@@ -200,6 +203,18 @@ export async function findActiveStationWithDetail(id: string) {
       timeSlots: true,
     },
   });
+}
+
+/**
+ * Returns the number of reservations with completed_at IS NOT NULL for a station.
+ * Same predicate as completedCountExpr (Services terminés). Used for station detail.
+ */
+export async function getCompletedCountForStation(stationId: string): Promise<number> {
+  const rows = await db
+    .select({ count: sql<number>`count(*)::int` })
+    .from(reservations)
+    .where(and(eq(reservations.station_id, stationId), isNotNull(reservations.completed_at)));
+  return rows[0]?.count ?? 0;
 }
 
 export async function findStationByUserId(userId: string): Promise<Station | undefined> {
