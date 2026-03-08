@@ -39,6 +39,11 @@ jest.mock('@/server/reservations/entry-repository', () => ({
   updateEntry: (...args: unknown[]) => mockUpdateEntry(...args),
   shiftQueuePositions: jest.fn(),
 }));
+jest.mock('@/lib/db', () => ({
+  db: {
+    transaction: jest.fn(async (cb: (tx: object) => Promise<unknown>) => cb({})),
+  },
+}));
 
 import { createReservation, cancelEntry, listMyEntries } from '@/server/reservations/reservation-service';
 import { NotFoundError, ConflictError } from '@/lib/errors';
@@ -94,7 +99,7 @@ describe('reservation-service', () => {
 
       const result = await createReservation(userId, stationId, slotId, formatId);
       expect(result).toEqual(created);
-      expect(mockIncrementSlotBookedCount).toHaveBeenCalledWith(slotId);
+      expect(mockIncrementSlotBookedCount).toHaveBeenCalledWith(slotId, expect.anything());
       expect(mockNotifyEntry).toHaveBeenCalledWith(
         expect.objectContaining({ entryId, type: 'reservation_created' })
       );
@@ -120,8 +125,8 @@ describe('reservation-service', () => {
       mockFindEntryByIdAndUser.mockResolvedValue(entry);
       mockUpdateEntry.mockResolvedValue({ ...entry, status: 'cancelled' });
       await cancelEntry(entryId, userId);
-      expect(mockDecrementSlotBookedCount).toHaveBeenCalledWith(slotId);
-      expect(mockUpdateEntry).toHaveBeenCalledWith(entryId, expect.objectContaining({ status: 'cancelled' }));
+      expect(mockDecrementSlotBookedCount).toHaveBeenCalledWith(slotId, expect.anything());
+      expect(mockUpdateEntry).toHaveBeenCalledWith(entryId, expect.objectContaining({ status: 'cancelled' }), expect.anything());
     });
   });
 

@@ -45,7 +45,7 @@ describe('PATCH /api/v1/me/entries/:entryId/cancel', () => {
     const res = await PATCH(req, { params: buildParams(entryId) });
     expect(res.status).toBe(200);
     const data = await res.json();
-    expect(data.data.entry.status).toBe('cancelled');
+    expect(data.data.status).toBe('cancelled');
     expect(mockCancelEntry).toHaveBeenCalledWith(entryId, userAuth.sub);
   });
 
