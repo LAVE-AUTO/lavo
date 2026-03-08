@@ -2,6 +2,7 @@
 
 # project-specific
 .hidden/
+transcripts/
 
 # dependencies
 /node_modules

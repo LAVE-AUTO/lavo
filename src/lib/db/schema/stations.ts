@@ -7,7 +7,6 @@ import {
   decimal,
   index,
   integer,
-  pgEnum,
   pgTable,
   text,
   time,
@@ -18,15 +17,44 @@ import {
 } from "drizzle-orm/pg-core";
 import { users } from "./users";
 
-export const washTypeEnum = pgEnum("wash_type", [
-  "hand_wash",
-  "automatic",
-  "self_service",
-]);
+/**
+ * Reference table for wash types (e.g. hand_wash, automatic, self_service).
+ * Seeded by migration; admin CRUD out of scope for Unit 4.
+ */
+export const washTypes = pgTable("wash_types", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  code: varchar("code", { length: 50 }).notNull().unique(),
+  label: varchar("label", { length: 100 }).notNull(),
+  sort_order: integer("sort_order").notNull().default(0),
+  is_active: boolean("is_active").notNull().default(true),
+});
+
+/**
+ * Junction: stations can have multiple wash types.
+ * station_id references stations (cascade delete); wash_type_id references wash_types.
+ */
+export const stationWashTypes = pgTable(
+  "station_wash_types",
+  {
+    station_id: uuid("station_id")
+      .notNull()
+      .references(() => stations.id, { onDelete: "cascade" }),
+    wash_type_id: uuid("wash_type_id")
+      .notNull()
+      .references(() => washTypes.id, { onDelete: "cascade" }),
+  },
+  (table) => [
+    uniqueIndex("station_wash_types_station_id_wash_type_id_unique").on(
+      table.station_id,
+      table.wash_type_id
+    ),
+  ]
+);
 
 /**
  * Station identity, approval lifecycle, and operational flags.
  * user_id links to the managing user account (role = station).
+ * Wash types are stored in station_wash_types (many-to-many).
  */
 export const stations = pgTable(
   "stations",
@@ -41,8 +69,9 @@ export const stations = pgTable(
     city: varchar("city", { length: 100 }).notNull(),
     latitude: decimal("latitude", { precision: 10, scale: 7 }),
     longitude: decimal("longitude", { precision: 10, scale: 7 }),
-    wash_type: washTypeEnum("wash_type"),
     description: text("description"),
+    /** Type de prestation: exterior only, interior only, or both. Nullable for existing stations. */
+    service_scope: varchar("service_scope", { length: 20 }),
     wash_post_count: integer("wash_post_count"),
     status: varchar("status", { length: 30 }).notNull(),
     is_open: boolean("is_open").notNull().default(false),
@@ -73,6 +102,7 @@ export const stations = pgTable(
     index("stations_city_idx").on(table.city),
     index("stations_is_open_idx").on(table.is_open),
     index("stations_user_id_idx").on(table.user_id),
+    index("stations_service_scope_idx").on(table.service_scope),
   ]
 );
 
@@ -97,6 +127,11 @@ export const stationConfigs = pgTable("station_configs", {
   max_concurrent_posts: integer("max_concurrent_posts").notNull().default(1),
   margin_before_minutes: integer("margin_before_minutes").notNull().default(5),
   margin_after_minutes: integer("margin_after_minutes").notNull().default(10),
+  /** Reservation surcharge (format price + this = reservation total). Queue = format only. */
+  reservation_surcharge: decimal("reservation_surcharge", {
+    precision: 10,
+    scale: 2,
+  }),
   updated_at: timestamp("updated_at", {
     mode: "date",
     withTimezone: true,
