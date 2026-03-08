@@ -1,5 +1,6 @@
 import { headers } from 'next/headers';
 import { completeStationOnboarding } from '@/server/station/station-service';
+import { extractLocale } from '@/lib/email';
 import { stationOnboardingSubmitSchema, mapZodErrors } from '@/validators/station';
 import { checkRateLimit, recordFailedAttempt, resetOnSuccess } from '@/lib/rate-limiter';
 import {
@@ -65,7 +66,8 @@ export async function POST(request: Request) {
   const { confirm_password: _, ...dto } = parsed.data;
 
   try {
-    const result = await completeStationOnboarding(dto);
+    const locale = extractLocale(headersList.get('accept-language'));
+    const result = await completeStationOnboarding(dto, locale);
 
     await resetOnSuccess(ip);
 

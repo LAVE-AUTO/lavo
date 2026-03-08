@@ -1,6 +1,7 @@
 import { headers } from 'next/headers';
 import { resendVerificationEmail } from '@/server/auth/auth-service';
 import { resendEmailSchema, mapZodErrors } from '@/validators/auth';
+import { extractLocale } from '@/lib/email';
 import {
   successResponse,
   error400,
@@ -50,7 +51,8 @@ export async function POST(request: Request) {
   }
 
   try {
-    await resendVerificationEmail(parsed.data.email);
+    const locale = extractLocale(headersList.get('accept-language'));
+    await resendVerificationEmail(parsed.data.email, locale);
     await resetOnSuccess(ip);
     return successResponse({ sent: true }, 'Verification email sent');
   } catch (e) {

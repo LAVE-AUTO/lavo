@@ -9,7 +9,7 @@ import {
   type ReactNode,
 } from 'react';
 import { useLocale } from 'next-intl';
-import { initAxiosService, refreshAxiosService, postWithApi } from '@/services/axios-service';
+import { initAxiosService, refreshAxiosService, postWithApi, setAxiosLocale } from '@/services/axios-service';
 
 const AUTH_TOKEN_KEY = 'lavo_auth_token';
 const AUTH_USER_KEY = 'lavo_auth_user';
@@ -92,6 +92,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<AuthUser | null>(null);
   const [token, setToken] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+
+  // Keep axios Accept-Language in sync with the app locale
+  useEffect(() => {
+    setAxiosLocale(locale);
+  }, [locale]);
 
   const clearAuth = useCallback(() => {
     setStoredAuth(null, null);
