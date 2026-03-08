@@ -40,7 +40,7 @@ export function PublicNavbar() {
   const { resolvedTheme } = useTheme();
   const isDark   = resolvedTheme === 'dark';
 
-  const { user, isAuthenticated } = useAuth();
+  const { user, isAuthenticated, logout } = useAuth();
 
   const [scrolled, setScrolled]   = useState(false);
   const [menuOpen, setMenuOpen]   = useState(false);
@@ -146,6 +146,14 @@ export function PublicNavbar() {
                   <span className="text-[14px] font-semibold text-[#1A1A1A] dark:text-white">
                     {t('greeting')}, <span className="text-gold">{user.first_name ?? user.email.split('@')[0]}</span>
                   </span>
+                  <button
+                    type="button"
+                    onClick={logout}
+                    className="ml-1 px-3 py-1.5 rounded-lg text-[13px] font-bold text-lavo-error hover:bg-lavo-error/10 transition-colors cursor-pointer"
+                    title={t('logout')}
+                  >
+                    {t('logout')}
+                  </button>
                 </div>
               ) : (
                 <>
@@ -212,13 +220,20 @@ export function PublicNavbar() {
                       {(user.first_name?.[0] ?? user.email[0]).toUpperCase()}
                     </span>
                   </div>
-                  <div>
+                  <div className="flex-1">
                     <p className="text-[15px] font-bold text-[#1A1A1A] dark:text-white leading-tight">
                       {user.first_name ? `${user.first_name} ${user.last_name ?? ''}`.trim() : user.email}
                     </p>
                     <p className="text-[13px] text-[#555] dark:text-[#C0C0B0]">{user.email}</p>
                   </div>
                 </div>
+                <button
+                  type="button"
+                  onClick={logout}
+                  className="flex items-center justify-center py-3 rounded-xl border border-lavo-error/30 text-[14px] font-bold text-lavo-error hover:bg-lavo-error/10 transition-colors cursor-pointer"
+                >
+                  {t('logout')}
+                </button>
               ) : (
                 <>
                   <Link
