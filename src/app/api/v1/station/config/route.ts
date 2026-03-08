@@ -28,6 +28,7 @@ function serializeConfig(config: { [k: string]: unknown }) {
     max_concurrent_posts: config.max_concurrent_posts,
     margin_before_minutes: config.margin_before_minutes,
     margin_after_minutes: config.margin_after_minutes,
+    reservation_surcharge: config.reservation_surcharge,
     updated_at: config.updated_at,
   };
 }
@@ -93,6 +94,8 @@ export async function PATCH(request: Request): Promise<NextResponse> {
     configPayload.margin_before_minutes = configFields.margin_before_minutes;
   if (configFields.margin_after_minutes !== undefined)
     configPayload.margin_after_minutes = configFields.margin_after_minutes;
+  if (configFields.reservation_surcharge !== undefined)
+    configPayload.reservation_surcharge = configFields.reservation_surcharge;
 
   try {
     const { config, posts: updatedPosts } = await updateConfig(

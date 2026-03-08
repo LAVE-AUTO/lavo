@@ -244,6 +244,7 @@ export const stationConfigBodySchema = z
     max_concurrent_posts: z.number().int().min(1).max(100).optional(),
     margin_before_minutes: z.number().int().min(0).max(60).optional(),
     margin_after_minutes: z.number().int().min(0).max(60).optional(),
+    reservation_surcharge: z.number().min(0).max(99999.99).nullable().optional(),
     posts: z.array(stationPostItemSchema).max(200, 'Too many posts').optional(),
   })
   .strict()
