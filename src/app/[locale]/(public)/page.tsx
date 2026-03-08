@@ -2,6 +2,7 @@ import { setRequestLocale, getTranslations } from 'next-intl/server';
 import { PublicNavbar } from '@/components/layout/PublicNavbar';
 import { PublicFooter } from '@/components/layout/PublicFooter';
 import { BottomNav } from '@/components/layout/BottomNav';
+import { HomeRedirectGuard } from '@/components/home/HomeRedirectGuard';
 import { HeroSection } from '@/components/home/HeroSection';
 import { MarqueeBanner } from '@/components/home/MarqueeBanner';
 import { FeaturesSection } from '@/components/home/FeaturesSection';
@@ -10,7 +11,6 @@ import { StationsPreviewSection } from '@/components/home/StationsPreviewSection
 import { NotificationsSection } from '@/components/home/NotificationsSection';
 import { TestimonialsSection } from '@/components/home/TestimonialsSection';
 import { FaqSection } from '@/components/home/FaqSection';
-import { CtaSection } from '@/components/home/CtaSection';
 
 type Props = {
   params: Promise<{ locale: string }>;
@@ -31,6 +31,7 @@ export default async function LandingPage({ params }: Props) {
 
   return (
     <>
+      <HomeRedirectGuard />
       <PublicNavbar />
       <main className="min-h-screen bg-[#EDEDED] dark:bg-[#0d1f0f] transition-colors">
         <HeroSection />
@@ -41,7 +42,6 @@ export default async function LandingPage({ params }: Props) {
         <NotificationsSection />
         <TestimonialsSection />
         <FaqSection />
-        <CtaSection />
       </main>
       <div className="hidden sm:block">
         <PublicFooter />

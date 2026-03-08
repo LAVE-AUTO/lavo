@@ -15,7 +15,7 @@ export function HeroSection() {
         style={{ background: 'linear-gradient(to bottom, transparent, rgba(200,152,10,0.25) 30%, rgba(200,152,10,0.25) 70%, transparent)' }}
       />
 
-      <div className="mx-auto grid max-w-[1200px] min-h-screen grid-cols-1 lg:grid-cols-[52%_48%] px-6 lg:px-16">
+      <div className="mx-auto grid max-w-[1280px] min-h-screen grid-cols-1 lg:grid-cols-[52%_48%] px-6 lg:px-16">
         {/* Left column */}
         <div className="relative z-10 flex flex-col justify-center pb-20 pt-[120px] lg:pr-14">
           {/* Eyebrow */}
