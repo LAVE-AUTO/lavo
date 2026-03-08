@@ -5,6 +5,7 @@ import { useTranslations } from 'next-intl';
 import { Link } from '@/i18n/navigation';
 import { postWithApi } from '@/services/axios-service';
 import { validateEmail } from '@/helpers/validators';
+import { HTTP_STATUS } from '@/helpers/constants';
 import { Spinner } from '@/components/ui/Spinner';
 import { FormField } from './FormField';
 
@@ -84,13 +85,22 @@ export function VerifyEmailView({ token }: VerifyEmailViewProps) {
     }
 
     setResending(true);
-    const [ok] = await postWithApi('/auth/resend-verification-email', { email: email.trim() });
+    const [ok, response] = await postWithApi('/auth/resend-verification-email', { email: email.trim() }, { successStatus: HTTP_STATUS.OK });
     setResending(false);
 
     if (ok) {
       setView('resent');
     } else {
-      setEmailError(t('error_generic'));
+      const data = response as { code?: string };
+      if (data?.code === 'TOO_MANY_REQUESTS') {
+        setEmailError(t('error_rate_limit'));
+      } else if (data?.code === 'CONFLICT') {
+        setEmailError(t('error_already_verified'));
+      } else if (data?.code === 'NOT_FOUND') {
+        setEmailError(t('error_email_not_found'));
+      } else {
+        setEmailError(t('error_generic'));
+      }
     }
   };
 

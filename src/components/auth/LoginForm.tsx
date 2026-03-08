@@ -7,6 +7,7 @@ import { useToast } from '@/context/toast-context';
 import { useAuth, type AuthUser } from '@/context/auth-context';
 import { postWithApi } from '@/services/axios-service';
 import { validateEmail } from '@/helpers/validators';
+import { HTTP_STATUS } from '@/helpers/constants';
 import { Spinner } from '@/components/ui/Spinner';
 import { FormField } from './FormField';
 import { SocialButtons } from './SocialButtons';
@@ -85,25 +86,40 @@ export function LoginForm() {
         email:       formData.email.trim(),
         password:    formData.password,
         remember_me: rememberMe,
-      });
+      }, { successStatus: HTTP_STATUS.OK });
 
       if (success) {
-        const body = response as { data?: { user: AuthUser; access_token: string } };
+        const body = response as { data?: { user: Record<string, unknown>; access_token: string } };
         const data = body.data;
         if (!data?.user || !data?.access_token) {
           showError(t('error_generic'));
           return;
         }
-        auth.login(data.access_token, data.user);
 
-        if (data.user.role === 'STATION')          router.push('/station');
-        else if (data.user.role === 'SUPER_ADMIN') router.push('/admin');
+        const role = String(data.user.role || 'client');
+        const normalizedRole = role === 'admin' ? 'SUPER_ADMIN'
+          : role.toUpperCase() as 'CLIENT' | 'STATION' | 'SUPER_ADMIN';
+        const normalizedUser: AuthUser = { ...data.user, role: normalizedRole } as AuthUser;
+
+        auth.login(data.access_token, normalizedUser);
+
+        if (normalizedUser.force_password_change) {
+          router.push('/change-password');
+          return;
+        }
+
+        if (normalizedRole === 'STATION')          router.push('/station');
+        else if (normalizedRole === 'SUPER_ADMIN') router.push('/admin');
         else                                        router.push('/');
         return;
       }
 
       const data = response as { code?: string };
-      if (data?.code === 'INVALID_CREDENTIALS' || data?.code === 'UNAUTHORIZED') {
+      if (data?.code === 'TOO_MANY_REQUESTS') {
+        showError(t('error_rate_limit'));
+      } else if (data?.code === 'FORBIDDEN') {
+        showError(t('error_account_suspended'));
+      } else if (data?.code === 'INVALID_CREDENTIALS' || data?.code === 'UNAUTHORIZED') {
         setErrors({
           email:    t('error_invalid_credentials'),
           password: t('error_invalid_credentials'),
