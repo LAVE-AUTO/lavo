@@ -3,6 +3,7 @@ import { getTranslations, setRequestLocale } from 'next-intl/server';
 import { StationListView } from '@/components/stations/StationListView';
 import { StationsHero } from '@/components/stations/StationsHero';
 import { StationsStats } from '@/components/stations/StationsStats';
+import { AuthAwareHero } from '@/components/stations/AuthAwareHero';
 
 type Props = {
   params: Promise<{ locale: string }>;
@@ -27,8 +28,10 @@ export default async function PublicStationsPage({ params }: Props) {
 
   return (
     <main className="min-h-screen bg-[#EDEDED] dark:bg-dark-bg transition-colors">
-      <StationsHero />
-      <StationsStats />
+      <AuthAwareHero>
+        <StationsHero />
+        <StationsStats />
+      </AuthAwareHero>
 
       <section id="stations-list" className="max-w-6xl mx-auto px-4 sm:px-6 py-10">
         <Suspense fallback={<div className="py-20 text-center text-[#333333] dark:text-[#C0C0B0]">Chargement…</div>}>

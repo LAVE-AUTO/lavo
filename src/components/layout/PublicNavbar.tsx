@@ -177,11 +177,24 @@ export function PublicNavbar() {
                         </div>
                       </div>
 
+                      {/* Profile link */}
+                      <Link
+                        href="/profile"
+                        onClick={() => setDropdownOpen(false)}
+                        className="flex items-center gap-3 px-4 py-3 text-[13px] font-semibold text-[#4a6a4d] dark:text-[#7a9a7d] hover:text-[#c8980a] dark:hover:text-[#c8980a] hover:bg-[rgba(200,152,10,0.05)] transition-colors"
+                      >
+                        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                          <path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2" />
+                          <circle cx="12" cy="7" r="4" />
+                        </svg>
+                        {t('profile')}
+                      </Link>
+
                       {/* Logout */}
                       <button
                         type="button"
                         onClick={() => { logout(); setDropdownOpen(false); }}
-                        className="w-full flex items-center gap-3 px-4 py-3 text-[13px] font-semibold text-[#e8472a] hover:bg-[rgba(232,71,42,0.07)] transition-colors"
+                        className="w-full flex items-center gap-3 px-4 py-3 text-[13px] font-semibold text-[#e8472a] hover:bg-[rgba(232,71,42,0.07)] transition-colors border-t border-[rgba(200,152,10,0.12)]"
                       >
                         <LogoutIcon />
                         {t('logout')}
@@ -240,6 +253,17 @@ export function PublicNavbar() {
                       <p className="text-[12px] text-[#7a9a7d] truncate">{user.email}</p>
                     </div>
                   </div>
+                  <Link
+                    href="/profile"
+                    className="flex items-center justify-center gap-2.5 py-3 text-[14px] font-semibold text-[#4a6a4d] dark:text-[#7a9a7d] hover:text-[#c8980a] dark:hover:text-[#c8980a] border border-[rgba(200,152,10,0.3)] rounded-[2px] transition-colors"
+                    onClick={() => setMenuOpen(false)}
+                  >
+                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                      <path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2" />
+                      <circle cx="12" cy="7" r="4" />
+                    </svg>
+                    {t('profile')}
+                  </Link>
                   <button
                     type="button"
                     onClick={() => { logout(); setMenuOpen(false); }}

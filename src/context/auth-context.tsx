@@ -14,7 +14,7 @@ import { initAxiosService, refreshAxiosService } from '@/services/axios-service'
 const AUTH_TOKEN_KEY = 'lavo_auth_token';
 const AUTH_USER_KEY = 'lavo_auth_user';
 
-export type UserRole = 'CLIENT' | 'STATION' | 'SUPER_ADMIN';
+export type UserRole = 'client' | 'station' | 'admin';
 
 export interface AuthUser {
   id: string;
@@ -172,9 +172,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     login,
     logout,
     refetchUser,
-    isClient: user?.role === 'CLIENT',
-    isStation: user?.role === 'STATION',
-    isSuperAdmin: user?.role === 'SUPER_ADMIN',
+    isClient: user?.role === 'client',
+    isStation: user?.role === 'station',
+    isSuperAdmin: user?.role === 'admin',
   };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
