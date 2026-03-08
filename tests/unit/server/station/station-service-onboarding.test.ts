@@ -29,7 +29,6 @@ jest.mock('@/lib/db', () => {
           city: 'City',
           latitude: null,
           longitude: null,
-          wash_type: 'hand_wash',
           description: null,
           wash_post_count: 2,
           status: 'pending_admin_validation',
@@ -48,6 +47,7 @@ jest.mock('@/lib/db', () => {
               if (table === schema.stations) {
                 return Promise.resolve([{ ...newStation, name: (v as { name: string }).name }]);
               }
+              if (table === schema.stationWashTypes) return Promise.resolve([]);
               if (table === schema.stationDocuments) {
                 const arr = v as Array<{ storage?: string }>;
                 return Promise.resolve(
@@ -74,7 +74,13 @@ jest.mock('@/lib/db', () => {
             return result;
           },
         });
-        const tx = { insert };
+        // Mock select for wash_types validation (service checks ids exist and are active)
+        const select = () => ({
+          from: () => ({
+            where: () => Promise.resolve([{ id: 'a1b2c3d4-e5f6-7890-abcd-ef1234567890' }]),
+          }),
+        });
+        const tx = { insert, select };
         return cb(tx);
       },
     },
@@ -108,6 +114,7 @@ describe('completeStationOnboarding', () => {
   });
 
   it('calls sendStationApplicationAdminNotification with station name and id', async () => {
+    const washTypeId = 'a1b2c3d4-e5f6-7890-abcd-ef1234567890';
     const dto = {
       email: 'admin-test@example.com',
       phone: '+15551234567',
@@ -116,7 +123,7 @@ describe('completeStationOnboarding', () => {
       address: '456 Oak St',
       city: 'Toronto',
       wash_post_count: 1,
-      wash_type: 'self_service' as const,
+      wash_type_ids: [washTypeId],
       documents: [
         { document_type: 'license', file_url: 'https://example.com/a.pdf', storage: 'cloudinary' as const },
       ],
@@ -128,6 +135,7 @@ describe('completeStationOnboarding', () => {
   });
 
   it('creates pending_uploads rows only for documents with storage local', async () => {
+    const washTypeId = 'b2c3d4e5-f6a7-8901-bcde-f12345678901';
     const dto = {
       email: 'pending@example.com',
       phone: '+15559999999',
@@ -136,7 +144,7 @@ describe('completeStationOnboarding', () => {
       address: '789 Pine',
       city: 'Vancouver',
       wash_post_count: 2,
-      wash_type: 'automatic' as const,
+      wash_type_ids: [washTypeId],
       documents: [
         { document_type: 'license', file_url: 'https://example.com/c.pdf', storage: 'cloudinary' as const },
         { document_type: 'insurance', file_url: 'https://example.com/d.pdf', storage: 'local' as const },

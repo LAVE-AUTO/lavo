@@ -7,7 +7,6 @@ import {
   decimal,
   index,
   integer,
-  pgEnum,
   pgTable,
   text,
   time,
@@ -18,15 +17,44 @@ import {
 } from "drizzle-orm/pg-core";
 import { users } from "./users";
 
-export const washTypeEnum = pgEnum("wash_type", [
-  "hand_wash",
-  "automatic",
-  "self_service",
-]);
+/**
+ * Reference table for wash types (e.g. hand_wash, automatic, self_service).
+ * Seeded by migration; admin CRUD out of scope for Unit 4.
+ */
+export const washTypes = pgTable("wash_types", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  code: varchar("code", { length: 50 }).notNull().unique(),
+  label: varchar("label", { length: 100 }).notNull(),
+  sort_order: integer("sort_order").notNull().default(0),
+  is_active: boolean("is_active").notNull().default(true),
+});
+
+/**
+ * Junction: stations can have multiple wash types.
+ * station_id references stations (cascade delete); wash_type_id references wash_types.
+ */
+export const stationWashTypes = pgTable(
+  "station_wash_types",
+  {
+    station_id: uuid("station_id")
+      .notNull()
+      .references(() => stations.id, { onDelete: "cascade" }),
+    wash_type_id: uuid("wash_type_id")
+      .notNull()
+      .references(() => washTypes.id, { onDelete: "cascade" }),
+  },
+  (table) => [
+    uniqueIndex("station_wash_types_station_id_wash_type_id_unique").on(
+      table.station_id,
+      table.wash_type_id
+    ),
+  ]
+);
 
 /**
  * Station identity, approval lifecycle, and operational flags.
  * user_id links to the managing user account (role = station).
+ * Wash types are stored in station_wash_types (many-to-many).
  */
 export const stations = pgTable(
   "stations",
@@ -41,7 +69,6 @@ export const stations = pgTable(
     city: varchar("city", { length: 100 }).notNull(),
     latitude: decimal("latitude", { precision: 10, scale: 7 }),
     longitude: decimal("longitude", { precision: 10, scale: 7 }),
-    wash_type: washTypeEnum("wash_type"),
     description: text("description"),
     wash_post_count: integer("wash_post_count"),
     status: varchar("status", { length: 30 }).notNull(),

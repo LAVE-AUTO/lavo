@@ -91,13 +91,14 @@ describe('GET /api/v1/stations', () => {
     expect(body.data.all[1].available).toBe(false);
   });
 
-  it('passes groups, page, per_page, limit_per_group, format_id to service', async () => {
+  it('passes groups, page, per_page, limit_per_group, format_id, wash_type_ids to service', async () => {
     mockListStationsPublic.mockResolvedValueOnce({
       data: { all: [], available_now: [], most_visited: [] },
       meta: { total: 0, page: 2, per_page: 10, total_pages: 1 },
     });
+    const washTypeId = 'a1b2c3d4-e5f6-7890-abcd-ef1234567890';
     const req = buildRequest(
-      'http://localhost/api/v1/stations?groups=available_now,most_visited&page=2&per_page=10&limit_per_group=5&format_id=a1b2c3d4-e5f6-7890-abcd-ef1234567890'
+      `http://localhost/api/v1/stations?groups=available_now,most_visited&page=2&per_page=10&limit_per_group=5&format_id=${washTypeId}&wash_type_ids=${washTypeId}`
     );
     const res = await GET(req);
     expect(res.status).toBe(200);
@@ -107,7 +108,8 @@ describe('GET /api/v1/stations', () => {
         page: 2,
         per_page: 10,
         limit_per_group: 5,
-        format_id: 'a1b2c3d4-e5f6-7890-abcd-ef1234567890',
+        format_id: washTypeId,
+        wash_type_ids: [washTypeId],
       })
     );
   });
