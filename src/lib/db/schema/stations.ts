@@ -97,6 +97,11 @@ export const stationConfigs = pgTable("station_configs", {
   max_concurrent_posts: integer("max_concurrent_posts").notNull().default(1),
   margin_before_minutes: integer("margin_before_minutes").notNull().default(5),
   margin_after_minutes: integer("margin_after_minutes").notNull().default(10),
+  /** Reservation surcharge (format price + this = reservation total). Queue = format only. */
+  reservation_surcharge: decimal("reservation_surcharge", {
+    precision: 10,
+    scale: 2,
+  }),
   updated_at: timestamp("updated_at", {
     mode: "date",
     withTimezone: true,

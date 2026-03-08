@@ -96,3 +96,29 @@ export async function countReservationsBySlotId(slotId: string): Promise<number>
 export async function deleteSlotById(slotId: string): Promise<void> {
   await db.delete(timeSlots).where(eq(timeSlots.id, slotId));
 }
+
+/**
+ * Increments booked_count for the slot by 1. Used when creating a reservation for the slot.
+ */
+export async function incrementSlotBookedCount(slotId: string): Promise<void> {
+  await db
+    .update(timeSlots)
+    .set({
+      booked_count: sql`${timeSlots.booked_count} + 1`,
+      updated_at: new Date(),
+    })
+    .where(eq(timeSlots.id, slotId));
+}
+
+/**
+ * Decrements booked_count for the slot by 1. Used when cancelling or moving a reservation to queue.
+ */
+export async function decrementSlotBookedCount(slotId: string): Promise<void> {
+  await db
+    .update(timeSlots)
+    .set({
+      booked_count: sql`GREATEST(0, ${timeSlots.booked_count} - 1)`,
+      updated_at: new Date(),
+    })
+    .where(eq(timeSlots.id, slotId));
+}
