@@ -3,6 +3,8 @@
  * Uses entry repository, slot repo (booked_count), config (surcharge), payment and notification stubs.
  */
 import { NotFoundError, ConflictError } from '@/lib/errors';
+import { DEFAULT_COMMISSION_RATE } from '@/helpers/constants';
+import { db } from '@/lib/db';
 import { getConfigByStationId } from '@/server/station/config-repository';
 import { findFormatByIdAndStation } from '@/server/station/format-repository';
 import {
@@ -23,9 +25,7 @@ import {
   type Entry,
 } from './entry-repository';
 
-const DEFAULT_COMMISSION_RATE = '0.1000';
 const STATUS_PENDING = 'pending';
-const STATUS_CONFIRMED = 'confirmed';
 const STATUS_CANCELLED = 'cancelled';
 
 function toDecimal(v: string | number): string {
@@ -60,9 +60,11 @@ export async function createReservation(
   const amountTotal = formatPrice + surcharge;
   if (amountTotal <= 0) throw new ConflictError('Invalid amount');
 
-  const count = await countReservationsBySlotId(timeSlotId);
-  if (count >= (slot.capacity ?? 0)) throw new ConflictError('Slot is full');
+  // Pre-check capacity before charging to avoid billing for a full slot.
+  const prelimCount = await countReservationsBySlotId(timeSlotId);
+  if (prelimCount >= (slot.capacity ?? 0)) throw new ConflictError('Slot is full');
 
+  // Payment is an external side-effect — processed before the atomic write.
   const payment = await processPayment({
     amountCents: Math.round(amountTotal * 100),
     userId,
@@ -75,19 +77,30 @@ export async function createReservation(
   const commissionAmount = amountTotal * parseFloat(commissionRate);
   const stationPayout = amountTotal - commissionAmount;
 
-  const entry = await createReservationEntry({
-    user_id: userId,
-    station_id: stationId,
-    vehicle_format_id: vehicleFormatId,
-    time_slot_id: timeSlotId,
-    status: STATUS_PENDING,
-    amount_paid: toDecimal(amountTotal),
-    commission_rate: commissionRate,
-    commission_amount: toDecimal(commissionAmount),
-    station_payout: toDecimal(stationPayout),
-    stripe_payment_id: payment.stripePaymentId ?? null,
+  // Atomic: re-check capacity (race guard), insert entry, and increment booked_count.
+  const entry = await db.transaction(async (tx) => {
+    const count = await countReservationsBySlotId(timeSlotId, tx);
+    if (count >= (slot.capacity ?? 0)) throw new ConflictError('Slot is full');
+
+    const created = await createReservationEntry(
+      {
+        user_id: userId,
+        station_id: stationId,
+        vehicle_format_id: vehicleFormatId,
+        time_slot_id: timeSlotId,
+        status: STATUS_PENDING,
+        amount_paid: toDecimal(amountTotal),
+        commission_rate: commissionRate,
+        commission_amount: toDecimal(commissionAmount),
+        station_payout: toDecimal(stationPayout),
+        stripe_payment_id: payment.stripePaymentId ?? null,
+      },
+      tx
+    );
+    await incrementSlotBookedCount(timeSlotId, tx);
+    return created;
   });
-  await incrementSlotBookedCount(timeSlotId);
+
   await notifyEntry({
     entryId: entry.id,
     userId,
@@ -99,18 +112,27 @@ export async function createReservation(
 
 /**
  * Cancels an entry (reservation or queue). For reservations, decrements slot booked_count.
+ * For queue entries, shifts positions of entries behind it to fill the gap.
  */
 export async function cancelEntry(entryId: string, userId: string): Promise<Entry> {
   const entry = await findEntryByIdAndUser(entryId, userId);
   if (!entry) throw new NotFoundError('Entry not found');
   if (entry.status === STATUS_CANCELLED) throw new ConflictError('Entry already cancelled');
-  if (entry.entry_type === 'reservation' && entry.time_slot_id) {
-    await decrementSlotBookedCount(entry.time_slot_id);
-  }
-  const updated = await updateEntry(entryId, {
-    status: STATUS_CANCELLED,
-    updated_at: new Date(),
+
+  const updated = await db.transaction(async (tx) => {
+    const current = await findEntryByIdAndUser(entryId, userId, tx);
+    if (!current) throw new NotFoundError('Entry not found');
+    if (current.status === STATUS_CANCELLED) throw new ConflictError('Entry already cancelled');
+
+    if (current.entry_type === 'reservation' && current.time_slot_id) {
+      await decrementSlotBookedCount(current.time_slot_id, tx);
+    }
+    if (current.entry_type === 'queue' && current.queue_position != null) {
+      await shiftQueuePositions(current.station_id, current.queue_position + 1, -1, tx);
+    }
+    return updateEntry(entryId, { status: STATUS_CANCELLED }, tx);
   });
+
   await notifyEntry({
     entryId,
     userId,
@@ -162,16 +184,27 @@ export async function upgradeQueueToReservation(
     if (!payment.success) throw new ConflictError(payment.error ?? 'Payment failed');
   }
 
-  const oldPosition = entry.queue_position ?? 0;
-  await shiftQueuePositions(stationId, oldPosition, -1);
-  const updated = await updateEntry(entryId, {
-    entry_type: 'reservation',
-    time_slot_id: timeSlotId,
-    queue_position: null,
-    status: STATUS_PENDING,
-    updated_at: new Date(),
+  // Atomic: re-check capacity, shift queue, update entry, increment booked_count.
+  const updated = await db.transaction(async (tx) => {
+    const count = await countReservationsBySlotId(timeSlotId, tx);
+    if (count >= (slot.capacity ?? 0)) throw new ConflictError('Slot is full');
+
+    const oldPosition = entry.queue_position ?? 0;
+    await shiftQueuePositions(stationId, oldPosition + 1, -1, tx);
+    const result = await updateEntry(
+      entryId,
+      {
+        entry_type: 'reservation',
+        time_slot_id: timeSlotId,
+        queue_position: null,
+        status: STATUS_PENDING,
+      },
+      tx
+    );
+    await incrementSlotBookedCount(timeSlotId, tx);
+    return result;
   });
-  await incrementSlotBookedCount(timeSlotId);
+
   await notifyEntry({
     entryId,
     userId,

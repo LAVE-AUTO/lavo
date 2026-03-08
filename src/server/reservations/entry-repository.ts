@@ -3,7 +3,7 @@
  * Enforces entry_type constraints: reservation => time_slot_id set; queue => queue_position set.
  */
 import { and, asc, desc, eq, gte, sql } from 'drizzle-orm';
-import { db } from '@/lib/db';
+import { db, type DbTransaction } from '@/lib/db';
 import { reservations, timeSlots, stationConfigs } from '@/lib/db/schema';
 
 export type Entry = typeof reservations.$inferSelect;
@@ -41,9 +41,11 @@ export type CreateQueueEntryData = {
  * Creates a reservation entry. Caller must ensure slot exists and has capacity.
  */
 export async function createReservationEntry(
-  data: CreateReservationEntryData
+  data: CreateReservationEntryData,
+  tx?: DbTransaction
 ): Promise<Entry> {
-  const [row] = await db
+  const client = tx ?? db;
+  const [row] = await client
     .insert(reservations)
     .values({
       user_id: data.user_id,
@@ -103,9 +105,11 @@ export async function findEntryById(id: string): Promise<Entry | undefined> {
  */
 export async function findEntryByIdAndUser(
   id: string,
-  userId: string
+  userId: string,
+  tx?: DbTransaction
 ): Promise<Entry | undefined> {
-  return db.query.reservations.findFirst({
+  const client = tx ?? db;
+  return client.query.reservations.findFirst({
     where: and(eq(reservations.id, id), eq(reservations.user_id, userId)),
   });
 }
@@ -235,10 +239,12 @@ export async function updateEntry(
     completed_at: Date | null;
     cancellation_reason: string | null;
     updated_at: Date;
-  }>
+  }>,
+  tx?: DbTransaction
 ): Promise<Entry> {
+  const client = tx ?? db;
   const payload = { ...data, updated_at: data.updated_at ?? new Date() };
-  const [row] = await db
+  const [row] = await client
     .update(reservations)
     .set(payload as Record<string, unknown>)
     .where(eq(reservations.id, id))
@@ -254,10 +260,12 @@ export async function updateEntry(
 export async function shiftQueuePositions(
   stationId: string,
   fromPosition: number,
-  delta: number
+  delta: number,
+  tx?: DbTransaction
 ): Promise<void> {
   if (delta === 0) return;
-  await db
+  const client = tx ?? db;
+  await client
     .update(reservations)
     .set({
       queue_position: sql`${reservations.queue_position} + ${delta}`,
