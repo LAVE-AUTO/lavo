@@ -9,6 +9,7 @@ jest.mock('@/validators/shared', () => ({
 import {
   listStationsQuerySchema,
   stationIdParamSchema,
+  stationInfoSchema,
   stationConfigBodySchema,
   createSlotBodySchema,
   createSlotsBulkBodySchema,
@@ -46,6 +47,73 @@ describe('station validators', () => {
   });
 
   // ---------------------------------------------------------------------------
+  // stationInfoSchema (step2 onboarding)
+  // ---------------------------------------------------------------------------
+  describe('stationInfoSchema (step2)', () => {
+    const baseStep2 = {
+      station_name: 'Test Station',
+      address: '123 Main St',
+      city: 'Paris',
+      wash_post_count: 2,
+    };
+    const uuid = 'a1b2c3d4-e5f6-7890-abcd-ef1234567890';
+
+    it('accepts wash_type_ids array with at least one valid UUID', () => {
+      const r = stationInfoSchema.safeParse({ ...baseStep2, wash_type_ids: [uuid] });
+      expect(r.success).toBe(true);
+      if (r.success) expect(r.data.wash_type_ids).toEqual([uuid]);
+    });
+
+    it('accepts wash_type_ids with multiple UUIDs', () => {
+      const uuid2 = 'b2c3d4e5-f6a7-8901-bcde-f12345678901';
+      const r = stationInfoSchema.safeParse({ ...baseStep2, wash_type_ids: [uuid, uuid2] });
+      expect(r.success).toBe(true);
+      if (r.success) expect(r.data.wash_type_ids).toEqual([uuid, uuid2]);
+    });
+
+    it('rejects empty wash_type_ids', () => {
+      const r = stationInfoSchema.safeParse({ ...baseStep2, wash_type_ids: [] });
+      expect(r.success).toBe(false);
+    });
+
+    it('rejects when wash_type_ids is missing', () => {
+      const r = stationInfoSchema.safeParse(baseStep2);
+      expect(r.success).toBe(false);
+    });
+
+    it('rejects when one id is not a valid UUID', () => {
+      const r = stationInfoSchema.safeParse({ ...baseStep2, wash_type_ids: [uuid, 'not-a-uuid'] });
+      expect(r.success).toBe(false);
+    });
+
+    it('rejects wash_type_ids with more than 50 elements', () => {
+      const ids = Array(51).fill(uuid);
+      const r = stationInfoSchema.safeParse({ ...baseStep2, wash_type_ids: ids });
+      expect(r.success).toBe(false);
+    });
+
+    it('accepts optional service_scope (exterior, interior, both)', () => {
+      const withExterior = stationInfoSchema.safeParse({ ...baseStep2, wash_type_ids: [uuid], service_scope: 'exterior' });
+      expect(withExterior.success).toBe(true);
+      if (withExterior.success) expect(withExterior.data.service_scope).toBe('exterior');
+      const withBoth = stationInfoSchema.safeParse({ ...baseStep2, wash_type_ids: [uuid], service_scope: 'both' });
+      expect(withBoth.success).toBe(true);
+      if (withBoth.success) expect(withBoth.data.service_scope).toBe('both');
+    });
+
+    it('accepts step2 without service_scope (optional)', () => {
+      const r = stationInfoSchema.safeParse({ ...baseStep2, wash_type_ids: [uuid] });
+      expect(r.success).toBe(true);
+      if (r.success) expect(r.data.service_scope).toBeUndefined();
+    });
+
+    it('rejects invalid service_scope', () => {
+      const r = stationInfoSchema.safeParse({ ...baseStep2, wash_type_ids: [uuid], service_scope: 'invalid' });
+      expect(r.success).toBe(false);
+    });
+  });
+
+  // ---------------------------------------------------------------------------
   // listStationsQuerySchema (GET /api/v1/stations)
   // ---------------------------------------------------------------------------
   describe('listStationsQuerySchema', () => {
@@ -65,15 +133,22 @@ describe('station validators', () => {
       expect(r2.success).toBe(true);
     });
 
-    it('accepts valid sort values', () => {
-      expect(listStationsQuerySchema.safeParse({ sort: 'name' }).success).toBe(true);
+    it('accepts valid sort values (single and comma-separated)', () => {
+      expect(listStationsQuerySchema.safeParse({ sort: 'name_asc' }).success).toBe(true);
+      expect(listStationsQuerySchema.safeParse({ sort: 'name_desc' }).success).toBe(true);
       expect(listStationsQuerySchema.safeParse({ sort: 'slots_asc' }).success).toBe(true);
       expect(listStationsQuerySchema.safeParse({ sort: 'slots_desc' }).success).toBe(true);
+      expect(listStationsQuerySchema.safeParse({ sort: 'rating_asc,rating_desc' }).success).toBe(true);
+      expect(listStationsQuerySchema.safeParse({ sort: 'completed_count_desc,name_asc' }).success).toBe(true);
     });
 
     it('rejects invalid sort value', () => {
       const r = listStationsQuerySchema.safeParse({ sort: 'invalid_sort' });
       expect(r.success).toBe(false);
+    });
+
+    it('rejects invalid token in comma-separated sort', () => {
+      expect(listStationsQuerySchema.safeParse({ sort: 'name_asc,bad' }).success).toBe(false);
     });
 
     it('trims and accepts q and city within limits', () => {
@@ -105,6 +180,114 @@ describe('station validators', () => {
     it('accepts q and city at exactly max length', () => {
       expect(listStationsQuerySchema.safeParse({ q: 'a'.repeat(200) }).success).toBe(true);
       expect(listStationsQuerySchema.safeParse({ city: 'a'.repeat(100) }).success).toBe(true);
+    });
+
+    it('accepts groups (comma-separated)', () => {
+      const r = listStationsQuerySchema.safeParse({ groups: 'available_now,most_visited' });
+      expect(r.success).toBe(true);
+      if (r.success) expect(r.data.groups).toEqual(['available_now', 'most_visited']);
+    });
+
+    it('rejects invalid group token in groups', () => {
+      expect(listStationsQuerySchema.safeParse({ groups: 'available_now,invalid' }).success).toBe(false);
+      expect(listStationsQuerySchema.safeParse({ groups: 'unknown' }).success).toBe(false);
+    });
+
+    it('dedupes duplicate group tokens in groups', () => {
+      const r = listStationsQuerySchema.safeParse({ groups: 'available_now,available_now,most_visited' });
+      expect(r.success).toBe(true);
+      if (r.success) expect(r.data.groups).toEqual(['available_now', 'most_visited']);
+    });
+
+    it('accepts page and per_page', () => {
+      const r = listStationsQuerySchema.safeParse({ page: '1', per_page: '20' });
+      expect(r.success).toBe(true);
+      if (r.success) {
+        expect(r.data.page).toBe(1);
+        expect(r.data.per_page).toBe(20);
+      }
+    });
+
+    it('rejects page < 1 or > 10000', () => {
+      expect(listStationsQuerySchema.safeParse({ page: '0' }).success).toBe(false);
+      expect(listStationsQuerySchema.safeParse({ page: '-1' }).success).toBe(false);
+      expect(listStationsQuerySchema.safeParse({ page: '10001' }).success).toBe(false);
+    });
+
+    it('rejects per_page over 100', () => {
+      expect(listStationsQuerySchema.safeParse({ per_page: '101' }).success).toBe(false);
+    });
+
+    it('rejects limit_per_group < 1 or > 100', () => {
+      expect(listStationsQuerySchema.safeParse({ limit_per_group: '0' }).success).toBe(false);
+      expect(listStationsQuerySchema.safeParse({ limit_per_group: '101' }).success).toBe(false);
+    });
+
+    it('accepts limit_per_group, wash_type_ids, service_scope, format_id', () => {
+      const uuid = 'a1b2c3d4-e5f6-7890-abcd-ef1234567890';
+      const r = listStationsQuerySchema.safeParse({
+        limit_per_group: '5',
+        wash_type_ids: uuid,
+        service_scope: 'exterior',
+        format_id: uuid,
+      });
+      expect(r.success).toBe(true);
+      if (r.success) {
+        expect(r.data.limit_per_group).toBe(5);
+        expect(r.data.wash_type_ids).toEqual([uuid]);
+        expect(r.data.service_scope).toBe('exterior');
+        expect(r.data.format_id).toBe(uuid);
+      }
+    });
+
+    it('accepts service_scope exterior, interior, and both', () => {
+      expect(listStationsQuerySchema.safeParse({ service_scope: 'exterior' }).success).toBe(true);
+      expect(listStationsQuerySchema.safeParse({ service_scope: 'interior' }).success).toBe(true);
+      expect(listStationsQuerySchema.safeParse({ service_scope: 'both' }).success).toBe(true);
+    });
+
+    it('transforms empty service_scope to undefined', () => {
+      const r = listStationsQuerySchema.safeParse({ service_scope: '' });
+      expect(r.success).toBe(true);
+      if (r.success) expect(r.data.service_scope).toBeUndefined();
+    });
+
+    it('rejects invalid service_scope', () => {
+      expect(listStationsQuerySchema.safeParse({ service_scope: 'invalid' }).success).toBe(false);
+    });
+
+    it('rejects invalid format_id (non-UUID)', () => {
+      expect(listStationsQuerySchema.safeParse({ format_id: 'x' }).success).toBe(false);
+    });
+
+    it('rejects wash_type_ids when one token is not a UUID', () => {
+      const uuid = 'a1b2c3d4-e5f6-7890-abcd-ef1234567890';
+      expect(listStationsQuerySchema.safeParse({ wash_type_ids: `${uuid},not-a-uuid` }).success).toBe(false);
+      expect(listStationsQuerySchema.safeParse({ wash_type_ids: 'x,y' }).success).toBe(false);
+    });
+
+    it('accepts valid date YYYY-MM-DD', () => {
+      expect(listStationsQuerySchema.safeParse({ date: '2026-03-08' }).success).toBe(true);
+      expect(listStationsQuerySchema.safeParse({ date: '2024-01-01' }).success).toBe(true);
+    });
+
+    it('rejects invalid calendar date', () => {
+      expect(listStationsQuerySchema.safeParse({ date: '2024-02-30' }).success).toBe(false);
+      expect(listStationsQuerySchema.safeParse({ date: '2023-13-01' }).success).toBe(false);
+    });
+
+    it('rejects date with wrong format', () => {
+      expect(listStationsQuerySchema.safeParse({ date: '03-08-2026' }).success).toBe(false);
+      expect(listStationsQuerySchema.safeParse({ date: '2026/03/08' }).success).toBe(false);
+    });
+
+    it('accepts per_page 1 and 100 (boundaries)', () => {
+      expect(listStationsQuerySchema.safeParse({ per_page: '1' }).success).toBe(true);
+      expect(listStationsQuerySchema.safeParse({ per_page: '100' }).success).toBe(true);
+      const r1 = listStationsQuerySchema.safeParse({ per_page: '1' });
+      const r100 = listStationsQuerySchema.safeParse({ per_page: '100' });
+      if (r1.success) expect(r1.data.per_page).toBe(1);
+      if (r100.success) expect(r100.data.per_page).toBe(100);
     });
   });
 

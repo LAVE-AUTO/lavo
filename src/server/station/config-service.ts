@@ -69,6 +69,7 @@ export async function updateConfig(
     max_concurrent_posts: number;
     margin_before_minutes: number;
     margin_after_minutes: number;
+    reservation_surcharge: number | null;
   }>,
   postsPayload?: Array<{ position: number; is_active: boolean }>
 ): Promise<ConfigWithPosts> {

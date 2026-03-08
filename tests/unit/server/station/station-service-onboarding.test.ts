@@ -1,8 +1,10 @@
 /**
- * Unit tests for completeStationOnboarding: admin notification and
- * pending_uploads rows created only for documents with storage 'local'.
+ * Unit tests for completeStationOnboarding: admin notification,
+ * pending_uploads rows created only for documents with storage 'local',
+ * and optional service_scope persisted on station.
  */
 const pendingUploadsCalls: { station_document_id: string }[] = [];
+let lastStationInsertValues: Record<string, unknown> = {};
 
 jest.mock('@/lib/db', () => {
   const schema = jest.requireActual<typeof import('@/lib/db/schema')>('@/lib/db/schema');
@@ -29,7 +31,6 @@ jest.mock('@/lib/db', () => {
           city: 'City',
           latitude: null,
           longitude: null,
-          wash_type: 'hand_wash',
           description: null,
           wash_post_count: 2,
           status: 'pending_admin_validation',
@@ -46,8 +47,13 @@ jest.mock('@/lib/db', () => {
               }
               if (table === schema.emailVerificationTokens) return Promise.resolve([]);
               if (table === schema.stations) {
-                return Promise.resolve([{ ...newStation, name: (v as { name: string }).name }]);
+                const vals = v as Record<string, unknown>;
+                lastStationInsertValues = { ...vals };
+                return Promise.resolve([
+                  { ...newStation, name: vals.name, service_scope: vals.service_scope ?? null },
+                ]);
               }
+              if (table === schema.stationWashTypes) return Promise.resolve([]);
               if (table === schema.stationDocuments) {
                 const arr = v as Array<{ storage?: string }>;
                 return Promise.resolve(
@@ -74,7 +80,13 @@ jest.mock('@/lib/db', () => {
             return result;
           },
         });
-        const tx = { insert };
+        // Mock select for wash_types validation (service checks ids exist and are active)
+        const select = () => ({
+          from: () => ({
+            where: () => Promise.resolve([{ id: 'a1b2c3d4-e5f6-7890-abcd-ef1234567890' }]),
+          }),
+        });
+        const tx = { insert, select };
         return cb(tx);
       },
     },
@@ -105,9 +117,11 @@ describe('completeStationOnboarding', () => {
     jest.clearAllMocks();
     mockFindByEmail.mockResolvedValue(null);
     pendingUploadsCalls.length = 0;
+    lastStationInsertValues = {};
   });
 
   it('calls sendStationApplicationAdminNotification with station name and id', async () => {
+    const washTypeId = 'a1b2c3d4-e5f6-7890-abcd-ef1234567890';
     const dto = {
       email: 'admin-test@example.com',
       phone: '+15551234567',
@@ -116,7 +130,7 @@ describe('completeStationOnboarding', () => {
       address: '456 Oak St',
       city: 'Toronto',
       wash_post_count: 1,
-      wash_type: 'self_service' as const,
+      wash_type_ids: [washTypeId],
       documents: [
         { document_type: 'license', file_url: 'https://example.com/a.pdf', storage: 'cloudinary' as const },
       ],
@@ -128,6 +142,7 @@ describe('completeStationOnboarding', () => {
   });
 
   it('creates pending_uploads rows only for documents with storage local', async () => {
+    const washTypeId = 'b2c3d4e5-f6a7-8901-bcde-f12345678901';
     const dto = {
       email: 'pending@example.com',
       phone: '+15559999999',
@@ -136,7 +151,7 @@ describe('completeStationOnboarding', () => {
       address: '789 Pine',
       city: 'Vancouver',
       wash_post_count: 2,
-      wash_type: 'automatic' as const,
+      wash_type_ids: [washTypeId],
       documents: [
         { document_type: 'license', file_url: 'https://example.com/c.pdf', storage: 'cloudinary' as const },
         { document_type: 'insurance', file_url: 'https://example.com/d.pdf', storage: 'local' as const },
@@ -146,5 +161,48 @@ describe('completeStationOnboarding', () => {
     await completeStationOnboarding(dto);
     expect(pendingUploadsCalls).toHaveLength(1);
     expect(pendingUploadsCalls[0].station_document_id).toBe('doc-1');
+  });
+
+  it('persists service_scope on station when provided in dto', async () => {
+    const washTypeId = 'a1b2c3d4-e5f6-7890-abcd-ef1234567890';
+    const dto = {
+      email: 'scope@example.com',
+      phone: '+15550001111',
+      password: 'SecureP@ss1',
+      station_name: 'Scope Wash',
+      address: '100 Service Rd',
+      city: 'Montreal',
+      wash_post_count: 1,
+      wash_type_ids: [washTypeId],
+      service_scope: 'both' as const,
+      documents: [
+        { document_type: 'license', file_url: 'https://example.com/s.pdf', storage: 'cloudinary' as const },
+      ],
+      terms_accepted: true as const,
+    };
+    const result = await completeStationOnboarding(dto);
+    expect(result.station.service_scope).toBe('both');
+    expect(lastStationInsertValues.service_scope).toBe('both');
+  });
+
+  it('persists null service_scope when not provided in dto', async () => {
+    const washTypeId = 'a1b2c3d4-e5f6-7890-abcd-ef1234567890';
+    const dto = {
+      email: 'noscope@example.com',
+      phone: '+15550002222',
+      password: 'SecureP@ss1',
+      station_name: 'No Scope Wash',
+      address: '200 Main St',
+      city: 'Quebec',
+      wash_post_count: 1,
+      wash_type_ids: [washTypeId],
+      documents: [
+        { document_type: 'license', file_url: 'https://example.com/n.pdf', storage: 'cloudinary' as const },
+      ],
+      terms_accepted: true as const,
+    };
+    const result = await completeStationOnboarding(dto);
+    expect(result.station.service_scope).toBeNull();
+    expect(lastStationInsertValues.service_scope).toBeNull();
   });
 });
