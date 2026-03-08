@@ -28,6 +28,7 @@ Elle comprend :
 | Hash | Message |
 |---|---|
 | `d9e27f5` | feat(landing): rebuild home page as Slowtime landing page |
+| `107a78a` | refactor(landing): redesign navbar/footer, add redirect guard, widen layout |
 
 ---
 
@@ -43,7 +44,9 @@ Elle comprend :
 
 ### i18n (`messages/fr.json` + `messages/en.json`)
 - Namespace `home` entierement remplace par les cles de la landing page.
-- 9 sous-namespaces : `hero`, `marquee`, `features`, `steps`, `stations_preview`, `notifications`, `testimonials`, `faq`, `cta`.
+- 8 sous-namespaces : `hero`, `marquee`, `features`, `steps`, `stations_preview`, `notifications`, `testimonials`, `faq` (CtaSection retire pour v1).
+- Nouvelles cles `nav` : `how_it_works`, `reminders`, `faq`, `merchant_pill`.
+- Nouvelles cles `footer` : `app_col`, `help_col`, `legal_col` + tous les sous-liens (FR et EN).
 - Textes FR et EN complets, prets pour la production.
 
 ### Nouveaux composants (`src/components/home/`)
@@ -91,14 +94,31 @@ Elle comprend :
 - Grille 2 colonnes de 6 items accordeon (useState toggle).
 - Bouton `+` rotatif sur 45deg a l'ouverture.
 
-#### `CtaSection.tsx` (client)
-- Fond or plein avec texte fantome "Slowtime" en arriere-plan.
-- Formulaire email (preventDefault + reset).
-- 2 badges App Store / Google Play (liens vers `/register`).
+#### `CtaSection.tsx` (client) — NON INCLUS v1
+- Composant cree mais retire de la page pour la v1 (pas de telechargement app).
+
+#### `HomeRedirectGuard.tsx` (client)
+- Redirige les utilisateurs authentifies hors de la landing page.
+- CLIENT → `/stations`, STATION → `/station/dashboard`, SUPER_ADMIN → `/admin`.
+
+### Layout (`src/components/layout/`)
+
+#### `PublicNavbar.tsx` (client) — refonte complete
+- Fond verre sombre `rgba(13,31,15,0.92)` dark / creme light, `backdrop-blur`.
+- Logo Playfair Display "Slowtime" en or, `letter-spacing: 5px`.
+- Liens ancre : Comment ca marche, Les stations, Rappels, FAQ.
+- Actions : pill "Vous etes marchand ?" + Se connecter + S'inscrire (si non auth).
+- Suppression de la cloche de notifications.
+- Drawer tablette conserve.
+
+#### `PublicFooter.tsx` (serveur) — refonte complete
+- Suppression de la bande CTA pre-footer.
+- Grille 4 colonnes `2fr 1fr 1fr 1fr` : Brand | Application | Aide | Legal.
+- En-tetes colonnes DM Mono, liens en gris avec hover creme, bas de page simplifie.
 
 ### Page (`src/app/[locale]/(public)/page.tsx`)
 - Transformee en composant serveur avec `generateMetadata` et `setRequestLocale`.
-- Inclut `PublicNavbar`, 9 sections, `PublicFooter`, `BottomNav` directement.
+- Inclut `HomeRedirectGuard`, `PublicNavbar`, 8 sections, `PublicFooter`, `BottomNav`.
 - Pas de layout intermediaire necessaire.
 
 ---
@@ -107,7 +127,8 @@ Elle comprend :
 
 ```
 page.tsx (server)
-  PublicNavbar
+  HomeRedirectGuard (client)
+  PublicNavbar (client)
   main
     HeroSection (client)
       HeroPhoneMockup (client)
@@ -124,9 +145,8 @@ page.tsx (server)
       RevealOnScroll (client)
     FaqSection (client)
       RevealOnScroll (client)
-    CtaSection (client)
-  PublicFooter
-  BottomNav
+  PublicFooter (server)
+  BottomNav (client)
 ```
 
 ---
@@ -135,9 +155,13 @@ page.tsx (server)
 
 ### Structure
 - [x] Page remplacee (`/`) — server component avec generateMetadata
-- [x] 9 sections modulaires, aucune > 150 lignes
+- [x] 8 sections modulaires (CtaSection retire pour v1), aucune > 150 lignes
 - [x] Aucun fichier ne depasse les limites de taille
 - [x] Composants dans `src/components/home/`
+- [x] `HomeRedirectGuard` — redirection CLIENT/STATION/SUPER_ADMIN depuis la home
+- [x] Navbar et footer refondes pour correspondre exactement aux fichiers HTML de reference
+- [x] Layout elargi : `max-w-[1280px]` pour toutes les sections
+- [x] Marquee corrige : `whitespace-nowrap` sur le conteneur pour le ticker continu
 
 ### Design fidelite
 - [x] Inspiration fidele au fichier `lavo-client.html`
