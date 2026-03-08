@@ -8,6 +8,7 @@ import { ApiCode } from '@/types/api-codes';
 import { entryIdParamSchema, stationPatchPositionBodySchema, mapZodErrors } from '@/validators/entry';
 import { findStationByUserId } from '@/server/station/station-repository';
 import { updateEntryPosition } from '@/server/reservations/queue-service';
+import { serializeEntry } from '@/server/reservations/entry-serializer';
 import { AppError, ConflictError, NotFoundError } from '@/lib/errors';
 import type { NextResponse } from 'next/server';
 
@@ -51,26 +52,3 @@ export async function PATCH(request: Request, { params }: Params): Promise<NextR
   }
 }
 
-function serializeEntry(entry: {
-  id: string;
-  entry_type: string;
-  queue_position: number | null;
-  station_id: string;
-  vehicle_format_id: string;
-  status: string;
-  amount_paid: string;
-  created_at: Date;
-  updated_at: Date;
-}) {
-  return {
-    id: entry.id,
-    entry_type: entry.entry_type,
-    queue_position: entry.queue_position,
-    station_id: entry.station_id,
-    vehicle_format_id: entry.vehicle_format_id,
-    status: entry.status,
-    amount_paid: entry.amount_paid,
-    created_at: entry.created_at,
-    updated_at: entry.updated_at,
-  };
-}
