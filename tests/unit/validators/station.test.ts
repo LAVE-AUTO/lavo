@@ -91,6 +91,26 @@ describe('station validators', () => {
       const r = stationInfoSchema.safeParse({ ...baseStep2, wash_type_ids: ids });
       expect(r.success).toBe(false);
     });
+
+    it('accepts optional service_scope (exterior, interior, both)', () => {
+      const withExterior = stationInfoSchema.safeParse({ ...baseStep2, wash_type_ids: [uuid], service_scope: 'exterior' });
+      expect(withExterior.success).toBe(true);
+      if (withExterior.success) expect(withExterior.data.service_scope).toBe('exterior');
+      const withBoth = stationInfoSchema.safeParse({ ...baseStep2, wash_type_ids: [uuid], service_scope: 'both' });
+      expect(withBoth.success).toBe(true);
+      if (withBoth.success) expect(withBoth.data.service_scope).toBe('both');
+    });
+
+    it('accepts step2 without service_scope (optional)', () => {
+      const r = stationInfoSchema.safeParse({ ...baseStep2, wash_type_ids: [uuid] });
+      expect(r.success).toBe(true);
+      if (r.success) expect(r.data.service_scope).toBeUndefined();
+    });
+
+    it('rejects invalid service_scope', () => {
+      const r = stationInfoSchema.safeParse({ ...baseStep2, wash_type_ids: [uuid], service_scope: 'invalid' });
+      expect(r.success).toBe(false);
+    });
   });
 
   // ---------------------------------------------------------------------------
@@ -218,6 +238,18 @@ describe('station validators', () => {
         expect(r.data.service_scope).toBe('exterior');
         expect(r.data.format_id).toBe(uuid);
       }
+    });
+
+    it('accepts service_scope exterior, interior, and both', () => {
+      expect(listStationsQuerySchema.safeParse({ service_scope: 'exterior' }).success).toBe(true);
+      expect(listStationsQuerySchema.safeParse({ service_scope: 'interior' }).success).toBe(true);
+      expect(listStationsQuerySchema.safeParse({ service_scope: 'both' }).success).toBe(true);
+    });
+
+    it('transforms empty service_scope to undefined', () => {
+      const r = listStationsQuerySchema.safeParse({ service_scope: '' });
+      expect(r.success).toBe(true);
+      if (r.success) expect(r.data.service_scope).toBeUndefined();
     });
 
     it('rejects invalid service_scope', () => {

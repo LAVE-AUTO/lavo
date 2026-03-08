@@ -70,6 +70,8 @@ export const stations = pgTable(
     latitude: decimal("latitude", { precision: 10, scale: 7 }),
     longitude: decimal("longitude", { precision: 10, scale: 7 }),
     description: text("description"),
+    /** Type de prestation: exterior only, interior only, or both. Nullable for existing stations. */
+    service_scope: varchar("service_scope", { length: 20 }),
     wash_post_count: integer("wash_post_count"),
     status: varchar("status", { length: 30 }).notNull(),
     is_open: boolean("is_open").notNull().default(false),
@@ -100,6 +102,7 @@ export const stations = pgTable(
     index("stations_city_idx").on(table.city),
     index("stations_is_open_idx").on(table.is_open),
     index("stations_user_id_idx").on(table.user_id),
+    index("stations_service_scope_idx").on(table.service_scope),
   ]
 );
 
