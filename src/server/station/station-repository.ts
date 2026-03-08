@@ -1,6 +1,6 @@
-import { and, asc, desc, eq, getTableColumns, ilike, isNotNull, or, sql } from 'drizzle-orm';
+import { and, asc, desc, eq, getTableColumns, ilike, inArray, isNotNull, or, sql } from 'drizzle-orm';
 import { db } from '@/lib/db';
-import { reservations, stations, timeSlots } from '@/lib/db/schema';
+import { reservations, stationWashTypes, stations, timeSlots } from '@/lib/db/schema';
 import type { StationSortCriterion } from '@/helpers/sort-stations';
 
 export type Station = typeof stations.$inferSelect;
@@ -25,7 +25,7 @@ export type ListActiveStationsFilters = {
   format_id?: string;
   /** Requested group keys; used by service only. */
   groups?: ('available_now' | 'most_appreciated' | 'most_visited')[];
-  /** Accepted in API; ignored until Unit 4 (wash_types table). */
+  /** Filter to stations that have at least one of these wash type ids. */
   wash_type_ids?: string[];
   /** Accepted in API; ignored until Unit 5 (service_scope column). */
   service_scope?: string;
@@ -51,11 +51,13 @@ export async function findStationById(id: string): Promise<Station | undefined> 
 /**
  * Builds WHERE conditions for listActiveStations and listActiveStationsCount.
  * Shared so count and list use identical filters.
+ * When washTypeIds is non-empty, restricts to stations that have at least one matching row in station_wash_types.
  */
 function listActiveStationsWhere(
   search: string | undefined,
   city: string | undefined,
-  formatId: string | undefined
+  formatId: string | undefined,
+  washTypeIds: string[] | undefined
 ) {
   const conditions = [eq(stations.status, 'active')];
   if (city) conditions.push(eq(stations.city, city));
@@ -73,6 +75,11 @@ function listActiveStationsWhere(
   if (formatId) {
     conditions.push(
       sql`EXISTS (SELECT 1 FROM vehicle_formats WHERE vehicle_formats.station_id = ${stations.id} AND vehicle_formats.id = ${formatId})`
+    );
+  }
+  if (washTypeIds?.length) {
+    conditions.push(
+      sql`EXISTS (SELECT 1 FROM ${stationWashTypes} WHERE ${stationWashTypes.station_id} = ${stations.id} AND ${inArray(stationWashTypes.wash_type_id, washTypeIds)})`
     );
   }
   return conditions.length === 1 ? conditions[0] : and(...conditions);
@@ -119,14 +126,14 @@ function buildOrderBy(sort: StationSortCriterion[] | undefined, searchTerm: stri
 /**
  * Lists stations with status 'active', optional search (name/address/city/description with prioritization),
  * city filter, format_id filter, multi-criteria sort, and pagination.
- * Each row includes available_slots and completed_count. wash_type_ids and service_scope are ignored (Unit 4/5).
+ * Each row includes available_slots and completed_count. Filter by wash_type_ids when provided; service_scope ignored (Unit 5).
  */
 export async function listActiveStations(
   filters: ListActiveStationsFilters = {}
 ): Promise<ListActiveStationsResult> {
-  const { search, city, sort, page = 1, per_page = 20, format_id } = filters;
+  const { search, city, sort, page = 1, per_page = 20, format_id, wash_type_ids } = filters;
   const searchTerm = search?.trim();
-  const whereClause = listActiveStationsWhere(search, city, format_id);
+  const whereClause = listActiveStationsWhere(search, city, format_id, wash_type_ids);
 
   const limit = Math.min(Math.max(1, per_page ?? 20), 100);
   const offset = (Math.max(1, page ?? 1) - 1) * limit;
@@ -162,9 +169,9 @@ export async function listActiveStationsGroup(
   filters: ListActiveStationsFilters,
   limitPerGroup: number
 ): Promise<StationWithAvailableSlots[]> {
-  const { search, city, sort, format_id } = filters;
+  const { search, city, sort, format_id, wash_type_ids } = filters;
   const searchTerm = search?.trim();
-  const whereClause = listActiveStationsWhere(search, city, format_id);
+  const whereClause = listActiveStationsWhere(search, city, format_id, wash_type_ids);
 
   const groupOrder: StationSortCriterion[] =
     group === 'available_now'

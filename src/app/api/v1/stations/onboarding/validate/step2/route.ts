@@ -4,7 +4,7 @@
  * The frontend uses this to gate progression to step 3.
  *
  * Body: { station_name, legal_name?, registration_number?, address, city,
- *         latitude?, longitude?, wash_post_count, wash_type, description? }
+ *         latitude?, longitude?, wash_post_count, wash_type_ids: string[] (min 1 UUID), description? }
  *
  * Responses:
  *   200 { message }

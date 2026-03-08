@@ -28,7 +28,10 @@ const _step2Base = z.object({
   latitude: z.number().min(-90).max(90).optional(),
   longitude: z.number().min(-180).max(180).optional(),
   wash_post_count: z.number().int().min(1),
-  wash_type: z.enum(['hand_wash', 'automatic', 'self_service']),
+  wash_type_ids: z
+    .array(z.string().uuid('Each wash type id must be a valid UUID'))
+    .min(1, 'At least one wash type is required')
+    .max(50, 'At most 50 wash types allowed'),
   description: z.string().max(1000).optional(),
 });
 

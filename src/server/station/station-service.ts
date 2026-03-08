@@ -1,5 +1,6 @@
 import { randomUUID } from 'crypto';
 import bcrypt from 'bcrypt';
+import { and, eq, inArray } from 'drizzle-orm';
 import { db } from '@/lib/db';
 import {
   pendingUploads,
@@ -7,6 +8,8 @@ import {
   emailVerificationTokens,
   stations,
   stationDocuments,
+  stationWashTypes,
+  washTypes,
 } from '@/lib/db/schema';
 import {
   sendVerificationEmail,
@@ -17,6 +20,7 @@ import {
   ConflictError,
   ForbiddenError,
   NotFoundError,
+  ValidationError,
 } from '@/lib/errors';
 import { findByEmail, findById, type SafeUser } from '@/server/auth/user-repository';
 import {
@@ -48,7 +52,8 @@ export type StationOnboardingDto = {
   latitude?: number;
   longitude?: number;
   wash_post_count: number;
-  wash_type: 'hand_wash' | 'automatic' | 'self_service';
+  /** At least one wash type id (UUID from wash_types table). */
+  wash_type_ids: string[];
   description?: string;
   // Step 3 — documents + legal (storage from onboarding upload; default cloudinary)
   documents: { document_type: string; file_url: string; storage?: 'cloudinary' | 'local' }[];
@@ -77,7 +82,19 @@ export async function completeStationOnboarding(
   const password_hash = await bcrypt.hash(dto.password, 12);
   const verificationToken = randomUUID();
 
+  const uniqueWashTypeIds = [...new Set(dto.wash_type_ids)];
+
   const { user, station } = await db.transaction(async (tx) => {
+    if (uniqueWashTypeIds.length) {
+      const validRows = await tx
+        .select({ id: washTypes.id })
+        .from(washTypes)
+        .where(and(inArray(washTypes.id, uniqueWashTypeIds), eq(washTypes.is_active, true)));
+      if (validRows.length !== uniqueWashTypeIds.length) {
+        throw new ValidationError('Invalid or inactive wash type id(s)');
+      }
+    }
+
     const [newUser] = await tx
       .insert(users)
       .values({
@@ -107,12 +124,20 @@ export async function completeStationOnboarding(
         city: dto.city,
         latitude: dto.latitude?.toString(),
         longitude: dto.longitude?.toString(),
-        wash_type: dto.wash_type,
         description: dto.description,
         wash_post_count: dto.wash_post_count,
         status: 'pending_admin_validation',
       })
       .returning();
+
+    if (uniqueWashTypeIds.length) {
+      await tx.insert(stationWashTypes).values(
+        uniqueWashTypeIds.map((wash_type_id) => ({
+          station_id: newStation.id,
+          wash_type_id,
+        }))
+      );
+    }
 
     const docRows = await tx
       .insert(stationDocuments)
