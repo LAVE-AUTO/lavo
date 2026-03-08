@@ -50,7 +50,7 @@ function SuccessIcon() {
  */
 export function ResetPasswordForm({ token }: ResetPasswordFormProps) {
   const t = useTranslations('reset_password');
-  const { error: showError } = useToast();
+  const { error: showError, success: showSuccess } = useToast();
 
   const [password, setPassword]             = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
@@ -140,6 +140,7 @@ export function ResetPasswordForm({ token }: ResetPasswordFormProps) {
       }, { successStatus: HTTP_STATUS.OK });
 
       if (ok) {
+        showSuccess(t('toast_success'));
         setSuccess(true);
         return;
       }

@@ -3,6 +3,7 @@ import {
   DEFAULT_MAX_TEXT_FIELD_LENGTH,
   MIN_PASSWORD_LENGTH,
 } from './constants';
+import { isValidPhoneNumber } from 'libphonenumber-js';
 
 const ALLOWED_SPECIAL_CHARS = /[@$!%*#?&_\-+=]/;
 const ALLOWED_PASSWORD_CHARS = /^[A-Za-z0-9@$!%*#?&_\-+=]+$/;
@@ -131,14 +132,11 @@ export function validateName(name: string | null | undefined): boolean {
 }
 
 /**
- * Validates a phone number.
- * Strips formatting, requires 8-15 digits.
+ * Validates a phone number using libphonenumber-js (same library as server-side).
  */
 export function validatePhone(phone: string | null | undefined): boolean {
   if (!phone || typeof phone !== 'string') return false;
   const trimmed = phone.trim();
   if (!trimmed) return false;
-  const digitsOnly = trimmed.replace(/[\s\-()+ ]/g, '');
-  if (!/^\d+$/.test(digitsOnly)) return false;
-  return digitsOnly.length >= 8 && digitsOnly.length <= 15;
+  return isValidPhoneNumber(trimmed);
 }

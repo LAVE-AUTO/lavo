@@ -60,7 +60,7 @@ function EyeIcon({ open }: { open: boolean }) {
 export function RegisterForm() {
   const t = useTranslations('register');
   const router = useRouter();
-  const { error: showError } = useToast();
+  const { error: showError, success: showSuccess } = useToast();
   const auth = useAuth();
 
   const [formData, setFormData] = useState<RegisterFormData>(INITIAL_DATA);
@@ -153,17 +153,40 @@ export function RegisterForm() {
             : (data.user.role || '').toUpperCase() as 'CLIENT' | 'STATION' | 'SUPER_ADMIN';
           auth.login(data.access_token, { ...data.user, role: normalizedRole });
         }
+        showSuccess(t('toast_success'));
         router.push('/register/confirmation');
         return;
       }
 
-      const data = response as { code?: string };
+      const data = response as { code?: string; errors?: Array<{ field: string; message: string }> };
       if (data?.code === 'TOO_MANY_REQUESTS') {
         showError(t('error_rate_limit'));
       } else if (data?.code === 'EMAIL_ALREADY_EXISTS' || data?.code === 'CONFLICT') {
         showError(t('error_email_exists'));
-      } else if (data?.code === 'VALIDATION_FAILED') {
-        showError(t('error_validation'));
+      } else if (data?.code === 'VALIDATION_FAILED' && data.errors && data.errors.length > 0) {
+        const fieldMap: Record<string, keyof RegisterFormData> = {
+          first_name: 'firstName',
+          last_name: 'lastName',
+          email: 'email',
+          phone: 'phone',
+          password: 'password',
+          confirm_password: 'confirmPassword',
+        };
+        const serverErrors: FormErrors = {};
+        for (const err of data.errors) {
+          const formField = fieldMap[err.field];
+          if (formField) {
+            const translationKey = `error_${formField === 'phone' ? 'phone_invalid'
+              : formField === 'email' ? 'email_invalid'
+              : formField === 'password' ? 'password_invalid'
+              : 'required'}` as const;
+            serverErrors[formField] = t(translationKey);
+          }
+        }
+        if (Object.keys(serverErrors).length > 0) {
+          setErrors(serverErrors);
+        }
+        showError(data.errors[0].message || t('error_validation'));
       } else {
         showError(t('error_generic'));
       }

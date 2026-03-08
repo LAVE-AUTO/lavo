@@ -41,6 +41,8 @@
         "loading": "Vérification en cours...",
         "success_title": "Email vérifié !",
         "success_message": "Votre compte est maintenant actif. Vous pouvez vous connecter.",
+        "toast_success": "Email vérifié avec succès",
+        "toast_resend_success": "Email de vérification renvoyé",
         "back_to_login": "Se connecter",
         "error_title": "Lien expiré",
         "error_message": "Ce lien de vérification est invalide ou a expiré.",
@@ -74,7 +76,8 @@
         "error_generic": "Une erreur est survenue. Veuillez réessayer.",
         "error_account_suspended": "Votre compte est suspendu. Contactez le support.",
         "error_rate_limit": "Trop de tentatives. Veuillez réessayer dans quelques minutes.",
-        "error_password_change_required": "Vous devez changer votre mot de passe."
+        "error_password_change_required": "Vous devez changer votre mot de passe.",
+        "toast_success": "Connexion réussie"
     },
     "forgot_password": {
         "title": "Mot de passe oublié",
@@ -107,6 +110,7 @@
         "error_password_invalid": "Le mot de passe ne respecte pas les critères de sécurité.",
         "success_title": "Mot de passe mis à jour",
         "success_message": "Votre mot de passe a été réinitialisé avec succès. Vous pouvez maintenant vous connecter.",
+        "toast_success": "Mot de passe réinitialisé avec succès",
         "back_to_login": "Se connecter",
         "password_rule_min": "8 caractères minimum",
         "password_rule_upper": "Une lettre majuscule",
@@ -153,7 +157,8 @@
         "confirmation_title": "Vérifiez votre boîte mail",
         "confirmation_message": "Un email de confirmation a été envoyé à votre adresse. Cliquez sur le lien pour activer votre compte.",
         "confirmation_spam": "Vérifiez vos spams si vous ne le recevez pas dans quelques minutes.",
-        "confirmation_back": "Retour à la connexion"
+        "confirmation_back": "Retour à la connexion",
+        "toast_success": "Compte créé avec succès"
     },
     "nav": {
         "home": "Accueil",
@@ -292,6 +297,7 @@
         "error_generic": "Une erreur est survenue. Veuillez réessayer.",
         "success_title": "Mot de passe modifié",
         "success_message": "Votre mot de passe a été modifié avec succès.",
+        "toast_success": "Mot de passe modifié avec succès",
         "back_to_home": "Retour à l'accueil",
         "password_rule_min": "8 caractères minimum",
         "password_rule_upper": "Une lettre majuscule",
