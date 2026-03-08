@@ -332,7 +332,8 @@
     "logo_alt": "Slowtime",
     "greeting": "Hello",
     "my_account": "My account",
-    "dashboard": "Dashboard"
+    "dashboard": "Dashboard",
+    "logout": "Sign out"
   },
   "footer": {
     "tagline": "The booking and payment platform for car wash stations in Quebec.",

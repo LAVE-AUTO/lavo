@@ -332,7 +332,8 @@
     "logo_alt": "Slowtime",
     "greeting": "Bonjour",
     "my_account": "Mon compte",
-    "dashboard": "Tableau de bord"
+    "dashboard": "Tableau de bord",
+    "logout": "Déconnexion"
   },
   "footer": {
     "tagline": "La plateforme de réservation et de paiement pour les stations de lavage automobile au Québec.",
