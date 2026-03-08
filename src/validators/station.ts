@@ -19,6 +19,9 @@ const _step1Base = z.object({
   confirm_password: z.string().min(1, 'Password confirmation is required'),
 });
 
+/** Allowed values for type de prestation (exterior, interior, or both). */
+const serviceScopeEnum = z.enum(['exterior', 'interior', 'both']);
+
 const _step2Base = z.object({
   station_name: z.string().min(2).max(200),
   legal_name: z.string().min(2).max(200).optional(),
@@ -33,6 +36,8 @@ const _step2Base = z.object({
     .min(1, 'At least one wash type is required')
     .max(50, 'At most 50 wash types allowed'),
   description: z.string().max(1000).optional(),
+  /** Type de prestation: optional at onboarding; persisted as nullable on stations. */
+  service_scope: serviceScopeEnum.optional(),
 });
 
 const _step3Base = z.object({
@@ -197,7 +202,7 @@ export const listStationsQuerySchema = z.object({
     .optional()
     .transform((s) => (s === '' || s === undefined ? undefined : s))
     .refine(
-      (s) => s === undefined || ['exterior', 'interior', 'both'].includes(s),
+      (s) => s === undefined || serviceScopeEnum.safeParse(s).success,
       { message: 'service_scope must be exterior, interior, or both' }
     ),
   format_id: z
