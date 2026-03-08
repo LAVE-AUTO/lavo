@@ -6,6 +6,7 @@ import { Link } from '@/i18n/navigation';
 import { postWithApi } from '@/services/axios-service';
 import { useToast } from '@/context/toast-context';
 import { Spinner } from '@/components/ui/Spinner';
+import { useUserLocation, haversineKm } from './useUserLocation';
 import type { StationDetailData } from '@/types/station';
 
 interface StationCardProps {
@@ -22,6 +23,15 @@ export function StationCard({ station, unavailable = false }: StationCardProps) 
   const t = useTranslations('stations');
   const { success, error } = useToast();
   const [joining, setJoining] = useState(false);
+  const userLocation = useUserLocation();
+
+  /* Compute distance from user to station */
+  const distanceLabel = (() => {
+    if (!userLocation || !station.latitude || !station.longitude) return null;
+    const km = haversineKm(userLocation.latitude, userLocation.longitude, station.latitude, station.longitude);
+    if (km < 1) return t('distance_m', { distance: Math.round(km * 1000) });
+    return t('distance_km', { distance: km.toFixed(1) });
+  })();
 
   const handleJoin = async () => {
     setJoining(true);
@@ -52,7 +62,7 @@ export function StationCard({ station, unavailable = false }: StationCardProps) 
   return (
     <article
       className={[
-        'bg-[#C8C8B4] dark:bg-dark-card rounded-[14px] overflow-hidden border border-[#CCCCCC] dark:border-tab-inactive group hover:border-gold/30 transition-all duration-300',
+        'h-full flex flex-col bg-[#C8C8B4] dark:bg-dark-card rounded-[14px] overflow-hidden border border-[#CCCCCC] dark:border-tab-inactive group hover:border-gold/30 transition-all duration-300',
         unavailable ? 'opacity-50 grayscale pointer-events-none' : '',
       ].join(' ')}
     >
@@ -87,9 +97,13 @@ export function StationCard({ station, unavailable = false }: StationCardProps) 
           </span>
         )}
 
-        {!unavailable && station.availableSlots > 0 && (
-          <span className="absolute top-2 left-2 px-2 py-0.5 rounded-full bg-black/60 text-white text-[13px] font-bold">
-            {station.availableSlots}/{station.totalSlots} places
+        {!unavailable && distanceLabel && (
+          <span className="absolute top-2 left-2 px-2 py-0.5 rounded-full bg-black/60 text-white text-[13px] font-bold flex items-center gap-1">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+              <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z" />
+              <circle cx="12" cy="10" r="3" />
+            </svg>
+            {distanceLabel}
           </span>
         )}
 
@@ -103,7 +117,7 @@ export function StationCard({ station, unavailable = false }: StationCardProps) 
       </div>
 
       {/* Card body */}
-      <div className="p-4">
+      <div className="p-4 flex flex-col flex-1">
         {/* Name + price */}
         <div className="flex items-start justify-between gap-2 mb-2">
           <h3 className="text-[17px] font-bold text-[#0A0A14] dark:text-white leading-tight line-clamp-1">
@@ -154,7 +168,7 @@ export function StationCard({ station, unavailable = false }: StationCardProps) 
         )}
 
         {/* Action buttons */}
-        <div className="flex gap-2">
+        <div className="flex gap-2 mt-auto">
           {!unavailable && (
             <button
               type="button"

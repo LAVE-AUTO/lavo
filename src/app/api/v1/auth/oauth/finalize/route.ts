@@ -25,7 +25,7 @@ export async function GET() {
   }
 
   try {
-    const { tokens } = await findOrCreateOAuthUser({
+    const { tokens, user } = await findOrCreateOAuthUser({
       email: oauthEmail,
       firstName: typeof oauthFirstName === 'string' ? oauthFirstName : '',
       lastName: typeof oauthLastName === 'string' ? oauthLastName : '',
