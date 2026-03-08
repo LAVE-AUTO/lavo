@@ -14,7 +14,7 @@ export function MarqueeBanner() {
   ];
 
   return (
-    <div className="overflow-hidden bg-[#c8980a] py-3.5">
+    <div className="overflow-hidden bg-[#c8980a] py-3.5 whitespace-nowrap">
       <div className="animate-marquee">
         {items.map((item, i) => (
           <span

@@ -48,7 +48,7 @@ export function FaqSection() {
 
   return (
     <section className="landing-alt-bg px-6 py-28 lg:px-16" id="faq">
-      <div className="mx-auto max-w-[1160px]">
+      <div className="mx-auto max-w-[1280px]">
         <RevealOnScroll className="text-center mb-2">
           <div className="font-dm-mono mb-4 flex items-center justify-center gap-3 text-[11px] uppercase tracking-[3px] text-[#c8980a]">
             {t('tag')}
