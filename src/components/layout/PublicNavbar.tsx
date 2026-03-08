@@ -1,10 +1,12 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import Image from 'next/image';
 import { useTranslations, useLocale } from 'next-intl';
 import { Link, usePathname } from '@/i18n/navigation';
 import { ThemeToggle } from '@/components/auth/ThemeToggle';
 import { LangToggle } from '@/components/auth/LangToggle';
+import { useTheme } from '@/context/theme-context';
 import { useAuth } from '@/context';
 
 function MenuIcon() {
@@ -28,13 +30,16 @@ function CloseIcon() {
 
 /**
  * Sticky public navbar.
- * Dark glass bg (dark mode) / cream glass (light mode), Playfair Display logo.
- * Nav links anchor to landing sections; merchant pill + auth CTAs on the right.
+ * Dark glass bg (dark mode) / cream glass (light mode), site logo image.
+ * Nav links anchor to landing sections; merchant pill + auth CTAs on the right
+ * (merchant pill hidden when user is authenticated).
  */
 export function PublicNavbar() {
   const t        = useTranslations('nav');
   const locale   = useLocale();
   const pathname = usePathname();
+  const { resolvedTheme } = useTheme();
+  const isDark   = resolvedTheme === 'dark';
   const { user, isAuthenticated } = useAuth();
 
   const [menuOpen, setMenuOpen] = useState(false);
@@ -43,6 +48,8 @@ export function PublicNavbar() {
     const id = setTimeout(() => setMenuOpen(false), 0);
     return () => clearTimeout(id);
   }, [pathname]);
+
+  const lightLogoSrc = locale === 'fr' ? '/logo/logo2_2.png' : '/logo/logo_anglais_1.png';
 
   const linkClass =
     'text-[13px] font-medium tracking-[0.4px] text-[#4a6a4d] dark:text-[#7a9a7d] hover:text-[#c8980a] dark:hover:text-[#c8980a] transition-colors duration-300';
@@ -59,11 +66,20 @@ export function PublicNavbar() {
   return (
     <>
       <header className="fixed top-0 left-0 right-0 z-40 bg-[rgba(247,243,236,0.95)] dark:bg-[rgba(13,31,15,0.92)] backdrop-blur-[16px] border-b border-[rgba(200,152,10,0.18)]">
-        <div className="max-w-[1440px] mx-auto px-6 lg:px-16 flex items-center justify-between gap-6 py-[18px]">
+        <div className="max-w-[1440px] mx-auto px-6 lg:px-16 flex items-center justify-between gap-6 py-3">
 
           {/* Logo */}
-          <Link href="/" className="font-playfair text-[26px] font-black text-[#c8980a] tracking-[5px] shrink-0 leading-none" aria-label="Slowtime — Accueil">
-            Slowtime
+          <Link href="/" className="shrink-0" aria-label="Slowtime — Accueil">
+            {isDark ? (
+              <div className="flex items-center gap-2">
+                <div className="rounded-lg bg-white/95 p-0.5 border border-[rgba(200,152,10,0.25)] shadow-sm shrink-0">
+                  <Image src="/logo/frame2.png" alt="" width={28} height={28} className="w-7 h-7 object-contain" aria-hidden="true" />
+                </div>
+                <span className="font-playfair text-[18px] font-black text-[#c8980a] tracking-[3px]">Slowtime</span>
+              </div>
+            ) : (
+              <Image src={lightLogoSrc} alt={t('logo_alt')} width={130} height={34} className="h-9 w-auto object-contain" priority />
+            )}
           </Link>
 
           {/* Desktop nav links */}
@@ -86,17 +102,19 @@ export function PublicNavbar() {
 
             {/* Desktop actions */}
             <div className="hidden lg:flex items-center gap-2.5 ml-1">
-              <Link href="/stations/apply" className={pillClass}>
-                {t('merchant_pill')}
-              </Link>
               {isAuthenticated && user ? (
+                /* Authenticated: show only avatar */
                 <div className="w-[34px] h-[34px] rounded-full bg-[rgba(200,152,10,0.2)] border border-[rgba(200,152,10,0.4)] flex items-center justify-center shrink-0">
                   <span className="text-[13px] font-black text-[#c8980a] leading-none">
                     {(user.first_name?.[0] ?? user.email[0]).toUpperCase()}
                   </span>
                 </div>
               ) : (
+                /* Not authenticated: merchant pill + login + register */
                 <>
+                  <Link href="/stations/apply" className={pillClass}>
+                    {t('merchant_pill')}
+                  </Link>
                   <Link
                     href="/login"
                     className="text-[13px] font-medium tracking-[0.4px] text-[#4a6a4d] dark:text-[#7a9a7d] hover:text-[#c8980a] dark:hover:text-[#c8980a] transition-colors px-2"
@@ -131,12 +149,6 @@ export function PublicNavbar() {
             <a href={`/${locale}/#notifications`} className={drawerLinkClass}>{t('reminders')}</a>
             <a href={`/${locale}/#faq`} className={drawerLinkClass}>{t('faq')}</a>
             <div className="pt-4 border-t border-[rgba(200,152,10,0.18)] flex flex-col gap-2.5">
-              <Link
-                href="/stations/apply"
-                className="flex items-center justify-center py-3 border border-[rgba(200,152,10,0.45)] text-[14px] font-semibold tracking-[0.8px] uppercase text-[#c8980a] hover:bg-[#c8980a] hover:text-[#0d1f0f] transition-all rounded-[2px]"
-              >
-                {t('merchant_pill')}
-              </Link>
               {isAuthenticated && user ? (
                 <div className="flex items-center gap-3 px-2 py-2">
                   <div className="w-9 h-9 rounded-full bg-[rgba(200,152,10,0.2)] border border-[rgba(200,152,10,0.4)] flex items-center justify-center shrink-0">
@@ -150,6 +162,12 @@ export function PublicNavbar() {
                 </div>
               ) : (
                 <>
+                  <Link
+                    href="/stations/apply"
+                    className="flex items-center justify-center py-3 border border-[rgba(200,152,10,0.45)] text-[14px] font-semibold tracking-[0.8px] uppercase text-[#c8980a] hover:bg-[#c8980a] hover:text-[#0d1f0f] transition-all rounded-[2px]"
+                  >
+                    {t('merchant_pill')}
+                  </Link>
                   <Link
                     href="/login"
                     className="flex items-center justify-center py-3 text-[14px] font-medium text-[#4a6a4d] dark:text-[#7a9a7d] hover:text-[#c8980a] dark:hover:text-[#c8980a] transition-colors"
