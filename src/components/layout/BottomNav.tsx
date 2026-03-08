@@ -2,21 +2,49 @@
 
 import { useTranslations } from 'next-intl';
 import { Link, usePathname } from '@/i18n/navigation';
+import { useAuth } from '@/context';
 
 /**
- * Mobile-only bottom navigation bar matching the HTML mockup's bottom-nav.
- * Fixed at the bottom, hidden on sm: and above (desktop uses top navbar + footer).
+ * Mobile-only bottom navigation bar.
+ * Fixed at the bottom, hidden on sm: and above.
+ * Auth-aware: home icon and user slot adapt to the authenticated role.
+ *   - CLIENT      → home: /stations,        user: /client/reservations
+ *   - STATION     → home: /station/dashboard, user: /station/dashboard
+ *   - SUPER_ADMIN → home: /admin,            user: /admin
+ *   - Guest       → home: /,                 user: /login
  */
 export function BottomNav() {
   const t        = useTranslations('nav');
   const pathname = usePathname();
+  const { isAuthenticated, isClient, isStation, isSuperAdmin } = useAuth();
+
+  /* Resolve home and user hrefs based on auth state */
+  let homeHref = '/';
+  let userHref = '/login';
+  let userLabel = t('login');
+
+  if (isAuthenticated) {
+    if (isClient) {
+      homeHref = '/stations';
+      userHref = '/client/reservations';
+      userLabel = t('my_account');
+    } else if (isStation) {
+      homeHref = '/station/dashboard';
+      userHref = '/station/dashboard';
+      userLabel = t('dashboard');
+    } else if (isSuperAdmin) {
+      homeHref = '/admin';
+      userHref = '/admin';
+      userLabel = t('dashboard');
+    }
+  }
 
   const isActive = (href: string) =>
     href === '/' ? pathname === '/' : pathname.startsWith(href);
 
   const items = [
     {
-      href: '/',
+      href: homeHref,
       label: t('home'),
       icon: (active: boolean) => (
         <svg width="22" height="22" viewBox="0 0 24 24" fill="none" strokeLinecap="round" strokeLinejoin="round">
@@ -36,8 +64,8 @@ export function BottomNav() {
       ),
     },
     {
-      href: '/login',
-      label: t('login'),
+      href: userHref,
+      label: userLabel,
       icon: (active: boolean) => (
         <svg width="22" height="22" viewBox="0 0 24 24" fill="none" strokeLinecap="round" strokeLinejoin="round">
           <path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2" stroke={active ? '#C49A1E' : '#9A9A8A'} strokeWidth="2" />
@@ -66,15 +94,13 @@ export function BottomNav() {
         const active = isActive(href);
         return (
           <Link
-            key={href}
+            key={`${href}-${label}`}
             href={href}
             className="flex-1 flex flex-col items-center gap-1 py-2.5 cursor-pointer"
             aria-current={active ? 'page' : undefined}
           >
             {icon(active)}
-            <span
-              className={`text-[13px] font-bold tracking-wide ${active ? 'text-gold' : 'text-[#9A9A8A]'}`}
-            >
+            <span className={`text-[13px] font-bold tracking-wide ${active ? 'text-gold' : 'text-[#9A9A8A]'}`}>
               {label}
             </span>
           </Link>
