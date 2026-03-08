@@ -96,8 +96,8 @@ export function LoginForm() {
         }
         auth.login(data.access_token, data.user);
 
-        if (data.user.role === 'STATION')          router.push('/station');
-        else if (data.user.role === 'SUPER_ADMIN') router.push('/admin');
+        if (data.user.role === 'station')          router.push('/station');
+        else if (data.user.role === 'admin') router.push('/admin');
         else                                        router.push('/');
         return;
       }

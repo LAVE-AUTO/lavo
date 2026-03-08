@@ -1,111 +1,235 @@
 'use client';
 
+import { useState, useEffect, useRef } from 'react';
 import { useTranslations } from 'next-intl';
 import { Link, usePathname } from '@/i18n/navigation';
 import { useAuth } from '@/context';
 
+function HomeIcon({ active }: { active: boolean }) {
+  const c = active ? '#C49A1E' : '#9A9A8A';
+  return (
+    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      <path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z" stroke={c} strokeWidth="2" />
+      <polyline points="9 22 9 12 15 12 15 22" stroke={c} strokeWidth="2" />
+    </svg>
+  );
+}
+
+function ReservationsIcon({ active }: { active: boolean }) {
+  const c = active ? '#C49A1E' : '#9A9A8A';
+  return (
+    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      <rect x="3" y="4" width="18" height="18" rx="2" ry="2" stroke={c} strokeWidth="2" />
+      <line x1="16" y1="2" x2="16" y2="6" stroke={c} strokeWidth="2" />
+      <line x1="8" y1="2" x2="8" y2="6" stroke={c} strokeWidth="2" />
+      <line x1="3" y1="10" x2="21" y2="10" stroke={c} strokeWidth="2" />
+    </svg>
+  );
+}
+
+function FavoritesIcon({ active }: { active: boolean }) {
+  const c = active ? '#C49A1E' : '#9A9A8A';
+  return (
+    <svg width="22" height="22" viewBox="0 0 24 24" fill={active ? '#C49A1E' : 'none'} strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      <path d="M20.84 4.61a5.5 5.5 0 00-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 00-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 000-7.78z" stroke={c} strokeWidth="2" />
+    </svg>
+  );
+}
+
+function SearchIcon({ active }: { active: boolean }) {
+  const c = active ? '#C49A1E' : '#9A9A8A';
+  return (
+    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      <circle cx="11" cy="11" r="8" stroke={c} strokeWidth="2" />
+      <path d="m21 21-4.35-4.35" stroke={c} strokeWidth="2" />
+    </svg>
+  );
+}
+
+function MoreIcon({ active }: { active: boolean }) {
+  const c = active ? '#C49A1E' : '#9A9A8A';
+  return (
+    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+      <circle cx="12" cy="5" r="1.5" fill={c} />
+      <circle cx="12" cy="12" r="1.5" fill={c} />
+      <circle cx="12" cy="19" r="1.5" fill={c} />
+    </svg>
+  );
+}
+
+function UserIcon() {
+  return (
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      <path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2" />
+      <circle cx="12" cy="7" r="4" />
+    </svg>
+  );
+}
+
+function LogoutIcon() {
+  return (
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      <path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4" />
+      <polyline points="16 17 21 12 16 7" />
+      <line x1="21" y1="12" x2="9" y2="12" />
+    </svg>
+  );
+}
+
 /**
  * Mobile-only bottom navigation bar.
- * Fixed at the bottom, hidden on sm: and above.
- * Auth-aware: home icon and user slot adapt to the authenticated role.
- *   - CLIENT      → home: /stations,        user: /client/reservations
- *   - STATION     → home: /station/dashboard, user: /station/dashboard
- *   - SUPER_ADMIN → home: /admin,            user: /admin
- *   - Guest       → home: /,                 user: /login
+ * Guest: Accueil, Stations, Login, Favoris
+ * Authenticated CLIENT: Accueil, Reservations, Favoris, Plus (Profile + Deconnexion)
  */
 export function BottomNav() {
   const t        = useTranslations('nav');
   const pathname = usePathname();
-  const { isAuthenticated, isClient, isStation, isSuperAdmin } = useAuth();
+  const { isAuthenticated, isClient, isStation, isSuperAdmin, user, logout } = useAuth();
 
-  /* Resolve home and user hrefs based on auth state */
-  let homeHref = '/';
-  let userHref = '/login';
-  let userLabel = t('login');
+  const [moreOpen, setMoreOpen] = useState(false);
+  const moreRef = useRef<HTMLDivElement>(null);
 
-  if (isAuthenticated) {
-    if (isClient) {
-      homeHref = '/stations';
-      userHref = '/client/reservations';
-      userLabel = t('my_account');
-    } else if (isStation) {
-      homeHref = '/station/dashboard';
-      userHref = '/station/dashboard';
-      userLabel = t('dashboard');
-    } else if (isSuperAdmin) {
-      homeHref = '/admin';
-      userHref = '/admin';
-      userLabel = t('dashboard');
+  /* Close "More" menu on navigation */
+  const pathnameRef = useRef(pathname);
+  useEffect(() => {
+    if (pathnameRef.current !== pathname) {
+      pathnameRef.current = pathname;
+      const id = setTimeout(() => setMoreOpen(false), 0);
+      return () => clearTimeout(id);
     }
+  }, [pathname]);
+
+  /* Close on outside click */
+  useEffect(() => {
+    if (!moreOpen) return;
+    const handler = (e: MouseEvent) => {
+      if (moreRef.current && !moreRef.current.contains(e.target as Node)) {
+        setMoreOpen(false);
+      }
+    };
+    document.addEventListener('mousedown', handler);
+    return () => document.removeEventListener('mousedown', handler);
+  }, [moreOpen]);
+
+  /* Resolve home href based on auth state */
+  let homeHref = '/';
+  if (isAuthenticated) {
+    if (isClient) homeHref = '/stations';
+    else if (isStation) homeHref = '/station/dashboard';
+    else if (isSuperAdmin) homeHref = '/admin';
   }
 
   const isActive = (href: string) =>
     href === '/' ? pathname === '/' : pathname.startsWith(href);
 
-  const items = [
-    {
-      href: homeHref,
-      label: t('home'),
-      icon: (active: boolean) => (
-        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" strokeLinecap="round" strokeLinejoin="round">
-          <path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z" stroke={active ? '#C49A1E' : '#9A9A8A'} strokeWidth="2" />
-          <polyline points="9 22 9 12 15 12 15 22" stroke={active ? '#C49A1E' : '#9A9A8A'} strokeWidth="2" />
-        </svg>
-      ),
-    },
-    {
-      href: '/stations',
-      label: t('stations'),
-      icon: (active: boolean) => (
-        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" strokeLinecap="round" strokeLinejoin="round">
-          <circle cx="11" cy="11" r="8" stroke={active ? '#C49A1E' : '#9A9A8A'} strokeWidth="2" />
-          <path d="m21 21-4.35-4.35" stroke={active ? '#C49A1E' : '#9A9A8A'} strokeWidth="2" />
-        </svg>
-      ),
-    },
-    {
-      href: userHref,
-      label: userLabel,
-      icon: (active: boolean) => (
-        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" strokeLinecap="round" strokeLinejoin="round">
-          <path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2" stroke={active ? '#C49A1E' : '#9A9A8A'} strokeWidth="2" />
-          <circle cx="12" cy="7" r="4" stroke={active ? '#C49A1E' : '#9A9A8A'} strokeWidth="2" />
-        </svg>
-      ),
-    },
-    {
-      href: '/favorites',
-      label: t('favorites'),
-      icon: (active: boolean) => (
-        <svg width="22" height="22" viewBox="0 0 24 24" fill={active ? '#C49A1E' : 'none'} strokeLinecap="round" strokeLinejoin="round">
-          <path d="M20.84 4.61a5.5 5.5 0 00-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 00-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 000-7.78z" stroke={active ? '#C49A1E' : '#9A9A8A'} strokeWidth="2" />
-        </svg>
-      ),
-    },
+  const initial = user ? (user.first_name ? user.first_name[0] : user.email[0]).toUpperCase() : '';
+  const displayName = user
+    ? (user.first_name ? `${user.first_name} ${user.last_name || ''}`.trim() : user.email.split('@')[0])
+    : '';
+
+  /* Guest items */
+  const guestItems = [
+    { href: homeHref, label: t('home'), icon: (a: boolean) => <HomeIcon active={a} /> },
+    { href: '/stations', label: t('stations'), icon: (a: boolean) => <SearchIcon active={a} /> },
+    { href: '/login', label: t('login'), icon: () => <UserIcon /> },
+    { href: '/favorites', label: t('favorites'), icon: (a: boolean) => <FavoritesIcon active={a} /> },
   ];
 
+  /* Authenticated items (no "More" — handled separately) */
+  const authItems = [
+    { href: homeHref, label: t('home'), icon: (a: boolean) => <HomeIcon active={a} /> },
+    { href: '/client/reservations', label: t('reservations'), icon: (a: boolean) => <ReservationsIcon active={a} /> },
+    { href: '/favorites', label: t('favorites'), icon: (a: boolean) => <FavoritesIcon active={a} /> },
+  ];
+
+  const items = isAuthenticated ? authItems : guestItems;
+
   return (
-    <nav
-      className="sm:hidden fixed bottom-0 left-0 right-0 z-50 flex bg-[#1E2A1A] border-t border-[#2C3828]"
-      aria-label="Navigation principale"
-      style={{ paddingBottom: 'env(safe-area-inset-bottom)' }}
-    >
-      {items.map(({ href, label, icon }) => {
-        const active = isActive(href);
-        return (
-          <Link
-            key={`${href}-${label}`}
-            href={href}
-            className="flex-1 flex flex-col items-center gap-1 py-2.5 cursor-pointer"
-            aria-current={active ? 'page' : undefined}
-          >
-            {icon(active)}
-            <span className={`text-[13px] font-bold tracking-wide ${active ? 'text-gold' : 'text-[#9A9A8A]'}`}>
-              {label}
-            </span>
-          </Link>
-        );
-      })}
-    </nav>
+    <>
+      {/* "More" popup overlay */}
+      {moreOpen && (
+        <div className="sm:hidden fixed inset-0 z-40 bg-black/40 backdrop-blur-[2px]" onClick={() => setMoreOpen(false)} />
+      )}
+
+      <nav
+        className="sm:hidden fixed bottom-0 left-0 right-0 z-50 flex bg-[#1E2A1A] border-t border-[#2C3828]"
+        aria-label="Navigation principale"
+        style={{ paddingBottom: 'env(safe-area-inset-bottom)' }}
+      >
+        {items.map(({ href, label, icon }) => {
+          const active = isActive(href);
+          return (
+            <Link
+              key={`${href}-${label}`}
+              href={href}
+              className="flex-1 flex flex-col items-center gap-1 py-2.5 cursor-pointer"
+              aria-current={active ? 'page' : undefined}
+            >
+              {icon(active)}
+              <span className={`text-[11px] font-bold tracking-wide ${active ? 'text-gold' : 'text-[#9A9A8A]'}`}>
+                {label}
+              </span>
+            </Link>
+          );
+        })}
+
+        {/* "Plus" button for authenticated users */}
+        {isAuthenticated && (
+          <div ref={moreRef} className="flex-1 relative">
+            <button
+              type="button"
+              onClick={() => setMoreOpen((v) => !v)}
+              className="w-full flex flex-col items-center gap-1 py-2.5 cursor-pointer"
+              aria-label={t('more')}
+              aria-expanded={moreOpen}
+              aria-haspopup="true"
+            >
+              <MoreIcon active={moreOpen} />
+              <span className={`text-[11px] font-bold tracking-wide ${moreOpen ? 'text-gold' : 'text-[#9A9A8A]'}`}>
+                {t('more')}
+              </span>
+            </button>
+
+            {/* Popup menu */}
+            {moreOpen && (
+              <div className="absolute bottom-full right-2 mb-2 w-[220px] bg-[#1E2A1A] border border-[#2C3828] rounded-xl shadow-[0_-8px_32px_rgba(0,0,0,0.4)] overflow-hidden animate-fade-in-up z-50">
+                {/* User info */}
+                <div className="px-4 py-3 border-b border-[#2C3828]">
+                  <div className="flex items-center gap-3">
+                    <div className="w-9 h-9 rounded-full bg-gold/20 border border-gold/40 flex items-center justify-center shrink-0">
+                      <span className="text-[13px] font-black text-gold leading-none">{initial}</span>
+                    </div>
+                    <div className="overflow-hidden">
+                      <p className="text-[13px] font-bold text-white truncate leading-tight">{displayName}</p>
+                      <p className="text-[11px] text-[#7a9a7d] truncate">{user?.email}</p>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Profile link */}
+                <Link
+                  href="/profile"
+                  className="flex items-center gap-3 px-4 py-3 text-[14px] font-semibold text-[#A0B89A] hover:text-gold hover:bg-white/5 transition-colors"
+                  onClick={() => setMoreOpen(false)}
+                >
+                  <UserIcon />
+                  {t('profile')}
+                </Link>
+
+                {/* Logout */}
+                <button
+                  type="button"
+                  onClick={() => { logout(); setMoreOpen(false); }}
+                  className="w-full flex items-center gap-3 px-4 py-3 text-[14px] font-semibold text-[#e8472a] hover:bg-[rgba(232,71,42,0.07)] transition-colors border-t border-[#2C3828]"
+                >
+                  <LogoutIcon />
+                  {t('logout')}
+                </button>
+              </div>
+            )}
+          </div>
+        )}
+      </nav>
+    </>
   );
 }
