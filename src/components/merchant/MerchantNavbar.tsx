@@ -4,10 +4,10 @@ import { useState, useEffect } from 'react';
 import Image from 'next/image';
 import { useTranslations, useLocale } from 'next-intl';
 import { Link, usePathname } from '@/i18n/navigation';
-import { ThemeToggle } from '@/components/auth/ThemeToggle';
-import { LangToggle } from '@/components/auth/LangToggle';
 import { useTheme } from '@/context/theme-context';
 import { useAuth } from '@/context';
+import { ThemeToggle } from '@/components/auth/ThemeToggle';
+import { LangToggle } from '@/components/auth/LangToggle';
 
 function MenuIcon() {
   return (
@@ -28,20 +28,13 @@ function CloseIcon() {
   );
 }
 
-/**
- * Sticky public navbar.
- * Dark glass bg (dark mode) / cream glass (light mode), site logo image.
- * Nav links anchor to landing sections; merchant pill + auth CTAs on the right
- * (merchant pill hidden when user is authenticated).
- */
-export function PublicNavbar() {
-  const t        = useTranslations('nav');
-  const locale   = useLocale();
+export function MerchantNavbar() {
+  const t = useTranslations('merchant.nav');
+  const locale = useLocale();
   const pathname = usePathname();
   const { resolvedTheme } = useTheme();
-  const isDark   = resolvedTheme === 'dark';
+  const isDark = resolvedTheme === 'dark';
   const { user, isAuthenticated } = useAuth();
-
   const [menuOpen, setMenuOpen] = useState(false);
 
   useEffect(() => {
@@ -67,8 +60,6 @@ export function PublicNavbar() {
     <>
       <header className="fixed top-0 left-0 right-0 z-40 bg-[rgba(247,243,236,0.95)] dark:bg-[rgba(13,31,15,0.92)] backdrop-blur-[16px] border-b border-[rgba(200,152,10,0.18)]">
         <div className="max-w-[1440px] mx-auto px-6 lg:px-16 flex items-center justify-between gap-6 py-3">
-
-          {/* Logo */}
           <Link href="/" className="shrink-0" aria-label="Slowtime — Accueil">
             {isDark ? (
               <div className="flex items-center gap-2">
@@ -78,57 +69,40 @@ export function PublicNavbar() {
                 <span className="font-playfair text-[18px] font-black text-[#c8980a] tracking-[3px]">Slowtime</span>
               </div>
             ) : (
-              <Image src={lightLogoSrc} alt={t('logo_alt')} width={130} height={34} className="h-9 w-auto object-contain" priority />
+              <Image src={lightLogoSrc} alt="Slowtime" width={130} height={34} className="h-9 w-auto object-contain" priority />
             )}
           </Link>
 
-          {/* Desktop nav links */}
-          <nav className="hidden lg:flex items-center gap-8" aria-label="Navigation principale">
-            <a href={`/${locale}/#how-it-works`} className={linkClass}>{t('how_it_works')}</a>
-            <Link
-              href="/stations"
-              className={`${linkClass}${pathname.startsWith('/stations') ? ' !text-[#c8980a]' : ''}`}
-            >
-              {t('stations')}
-            </Link>
-            <a href={`/${locale}/#notifications`} className={linkClass}>{t('reminders')}</a>
-            <a href={`/${locale}/#faq`} className={linkClass}>{t('faq')}</a>
+          <nav className="hidden lg:flex items-center gap-8" aria-label="Navigation marchands">
+            <a href="#how-it-works" className={linkClass}>{t('how_it_works')}</a>
+            <a href="#features" className={linkClass}>{t('features')}</a>
+            <a href="#qr" className={linkClass}>{t('qr')}</a>
+            <a href="#testimonials" className={linkClass}>{t('testimonials')}</a>
           </nav>
 
-          {/* Controls */}
           <div className="flex items-center gap-2.5">
             <ThemeToggle />
             <LangToggle />
 
-            {/* Desktop actions */}
             <div className="hidden lg:flex items-center gap-2.5 ml-1">
               {isAuthenticated && user ? (
-                /* Authenticated: show only avatar */
                 <div className="w-[34px] h-[34px] rounded-full bg-[rgba(200,152,10,0.2)] border border-[rgba(200,152,10,0.4)] flex items-center justify-center shrink-0">
                   <span className="text-[13px] font-black text-[#c8980a] leading-none">
                     {(user.first_name?.[0] ?? user.email[0]).toUpperCase()}
                   </span>
                 </div>
               ) : (
-                /* Not authenticated: merchant pill + login + register */
                 <>
-                  <Link href="/merchant" className={pillClass}>
-                    {t('merchant_pill')}
-                  </Link>
-                  <Link
-                    href="/login"
-                    className="text-[13px] font-medium tracking-[0.4px] text-[#4a6a4d] dark:text-[#7a9a7d] hover:text-[#c8980a] dark:hover:text-[#c8980a] transition-colors px-2"
-                  >
-                    {t('login')}
+                  <Link href="/" className={pillClass}>
+                    {t('client_pill')}
                   </Link>
                   <Link href="/register" className={ctaClass}>
-                    {t('register')}
+                    {t('partner_cta')}
                   </Link>
                 </>
               )}
             </div>
 
-            {/* Hamburger — tablet only (mobile uses BottomNav) */}
             <button
               type="button"
               onClick={() => setMenuOpen((v) => !v)}
@@ -141,13 +115,12 @@ export function PublicNavbar() {
           </div>
         </div>
 
-        {/* Tablet drawer */}
         {menuOpen && (
           <div className="lg:hidden bg-[rgba(247,243,236,0.98)] dark:bg-[rgba(13,31,15,0.98)] border-t border-[rgba(200,152,10,0.18)] px-6 py-5 space-y-1 animate-fade-in">
-            <a href={`/${locale}/#how-it-works`} className={drawerLinkClass}>{t('how_it_works')}</a>
-            <Link href="/stations" className={drawerLinkClass}>{t('stations')}</Link>
-            <a href={`/${locale}/#notifications`} className={drawerLinkClass}>{t('reminders')}</a>
-            <a href={`/${locale}/#faq`} className={drawerLinkClass}>{t('faq')}</a>
+            <a href="#how-it-works" className={drawerLinkClass}>{t('how_it_works')}</a>
+            <a href="#features" className={drawerLinkClass}>{t('features')}</a>
+            <a href="#qr" className={drawerLinkClass}>{t('qr')}</a>
+            <a href="#testimonials" className={drawerLinkClass}>{t('testimonials')}</a>
             <div className="pt-4 border-t border-[rgba(200,152,10,0.18)] flex flex-col gap-2.5">
               {isAuthenticated && user ? (
                 <div className="flex items-center gap-3 px-2 py-2">
@@ -163,22 +136,16 @@ export function PublicNavbar() {
               ) : (
                 <>
                   <Link
-                    href="/merchant"
+                    href="/"
                     className="flex items-center justify-center py-3 border border-[rgba(200,152,10,0.45)] text-[14px] font-semibold tracking-[0.8px] uppercase text-[#c8980a] hover:bg-[#c8980a] hover:text-[#0d1f0f] transition-all rounded-[2px]"
                   >
-                    {t('merchant_pill')}
-                  </Link>
-                  <Link
-                    href="/login"
-                    className="flex items-center justify-center py-3 text-[14px] font-medium text-[#4a6a4d] dark:text-[#7a9a7d] hover:text-[#c8980a] dark:hover:text-[#c8980a] transition-colors"
-                  >
-                    {t('login')}
+                    {t('client_pill')}
                   </Link>
                   <Link
                     href="/register"
                     className="btn-shine flex items-center justify-center py-3 bg-[#c8980a] text-[#0d1f0f] text-[14px] font-bold tracking-[1px] uppercase rounded-[2px] transition-all hover:bg-[#e8b520]"
                   >
-                    {t('register')}
+                    {t('partner_cta')}
                   </Link>
                 </>
               )}
@@ -187,9 +154,7 @@ export function PublicNavbar() {
         )}
       </header>
 
-      {/* Spacer — push page content below fixed header */}
       <div className="h-[62px]" aria-hidden="true" />
-      {/* Extra spacer for mobile bottom nav */}
       <div className="sm:hidden h-16" aria-hidden="true" />
     </>
   );
