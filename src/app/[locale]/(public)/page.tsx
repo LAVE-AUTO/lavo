@@ -3,6 +3,9 @@ import { getTranslations, setRequestLocale } from 'next-intl/server';
 import { StationListView } from '@/components/stations/StationListView';
 import { StationsHero } from '@/components/stations/StationsHero';
 import { StationsStats } from '@/components/stations/StationsStats';
+import { PublicNavbar } from '@/components/layout/PublicNavbar';
+import { PublicFooter } from '@/components/layout/PublicFooter';
+import { BottomNav } from '@/components/layout/BottomNav';
 
 type Props = {
   params: Promise<{ locale: string }>;
@@ -22,16 +25,25 @@ export default async function HomePage({ params }: Props) {
   setRequestLocale(locale);
 
   return (
-    <main className="min-h-screen bg-[#EDEDED] dark:bg-dark-bg transition-colors">
-      <StationsHero />
-      <StationsStats />
+    <>
+      <PublicNavbar />
+      <div className="flex flex-col min-h-screen">
+        <main className="flex-1 bg-[#EDEDED] dark:bg-dark-bg transition-colors">
+          <StationsHero />
+          <StationsStats />
 
-      <section id="stations-list" className="max-w-6xl mx-auto px-4 sm:px-6 py-10">
-        <Suspense fallback={<div className="py-20 text-center text-[#333333] dark:text-[#C0C0B0]">Chargement...</div>}>
-          <StationListView />
-        </Suspense>
-      </section>
-    </main>
+          <section id="stations-list" className="max-w-6xl mx-auto px-4 sm:px-6 py-10">
+            <Suspense fallback={<div className="py-20 text-center text-[#333333] dark:text-[#C0C0B0]">Chargement...</div>}>
+              <StationListView />
+            </Suspense>
+          </section>
+        </main>
+        <div className="hidden sm:block">
+          <PublicFooter />
+        </div>
+      </div>
+      <BottomNav />
+    </>
   );
 }
 
