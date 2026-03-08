@@ -28,7 +28,7 @@ import { HTTP_STATUS } from '@/helpers/constants';
  *   email, phone, password, confirm_password,
  *   // Step 2
  *   station_name, legal_name?, registration_number?, address, city,
- *   latitude?, longitude?, wash_post_count, wash_type, description?,
+ *   latitude?, longitude?, wash_post_count, wash_type_ids: string[] (min 1 UUID), description?,
  *   // Step 3
  *   documents: [{ document_type, file_url, storage?: 'cloudinary' | 'local' }], terms_accepted: true
  * }

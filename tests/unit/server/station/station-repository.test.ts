@@ -133,6 +133,19 @@ describe('station repository', () => {
       expect(result).toEqual({ rows: [], total: 0 });
       expect(chain.where).toHaveBeenCalled();
     });
+
+    it('applies where when wash_type_ids provided (filter to stations with at least one matching type)', async () => {
+      const washTypeId = 'a1b2c3d4-e5f6-7890-abcd-ef1234567890';
+      const result = await listActiveStations({ wash_type_ids: [washTypeId] });
+      expect(result).toEqual({ rows: [], total: 0 });
+      expect(chain.where).toHaveBeenCalled();
+    });
+
+    it('does not add wash type filter when wash_type_ids empty or undefined', async () => {
+      await listActiveStations({});
+      await listActiveStations({ wash_type_ids: [] });
+      expect(chain.where).toHaveBeenCalled();
+    });
   });
 
   describe('listActiveStationsGroup', () => {
@@ -143,6 +156,12 @@ describe('station repository', () => {
       const result = await listActiveStationsGroup('most_visited', { sort: ['completed_count_desc'] }, 5);
       expect(result).toEqual(mockStations);
       expect(chain.limit).toHaveBeenCalledWith(5);
+    });
+
+    it('passes wash_type_ids to where clause when provided', async () => {
+      const washTypeId = 'a1b2c3d4-e5f6-7890-abcd-ef1234567890';
+      await listActiveStationsGroup('available_now', { wash_type_ids: [washTypeId] }, 3);
+      expect(chain.where).toHaveBeenCalled();
     });
   });
 

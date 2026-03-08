@@ -9,6 +9,7 @@ jest.mock('@/validators/shared', () => ({
 import {
   listStationsQuerySchema,
   stationIdParamSchema,
+  stationInfoSchema,
   stationConfigBodySchema,
   createSlotBodySchema,
   createSlotsBulkBodySchema,
@@ -42,6 +43,53 @@ describe('station validators', () => {
     it('rejects invalid UUID format', () => {
       expect(stationIdParamSchema.safeParse({ id: 'a1b2c3d4-e5f6-7890-abcd' }).success).toBe(false);
       expect(stationIdParamSchema.safeParse({ id: 'gggggggg-gggg-gggg-gggg-gggggggggggg' }).success).toBe(false);
+    });
+  });
+
+  // ---------------------------------------------------------------------------
+  // stationInfoSchema (step2 onboarding)
+  // ---------------------------------------------------------------------------
+  describe('stationInfoSchema (step2)', () => {
+    const baseStep2 = {
+      station_name: 'Test Station',
+      address: '123 Main St',
+      city: 'Paris',
+      wash_post_count: 2,
+    };
+    const uuid = 'a1b2c3d4-e5f6-7890-abcd-ef1234567890';
+
+    it('accepts wash_type_ids array with at least one valid UUID', () => {
+      const r = stationInfoSchema.safeParse({ ...baseStep2, wash_type_ids: [uuid] });
+      expect(r.success).toBe(true);
+      if (r.success) expect(r.data.wash_type_ids).toEqual([uuid]);
+    });
+
+    it('accepts wash_type_ids with multiple UUIDs', () => {
+      const uuid2 = 'b2c3d4e5-f6a7-8901-bcde-f12345678901';
+      const r = stationInfoSchema.safeParse({ ...baseStep2, wash_type_ids: [uuid, uuid2] });
+      expect(r.success).toBe(true);
+      if (r.success) expect(r.data.wash_type_ids).toEqual([uuid, uuid2]);
+    });
+
+    it('rejects empty wash_type_ids', () => {
+      const r = stationInfoSchema.safeParse({ ...baseStep2, wash_type_ids: [] });
+      expect(r.success).toBe(false);
+    });
+
+    it('rejects when wash_type_ids is missing', () => {
+      const r = stationInfoSchema.safeParse(baseStep2);
+      expect(r.success).toBe(false);
+    });
+
+    it('rejects when one id is not a valid UUID', () => {
+      const r = stationInfoSchema.safeParse({ ...baseStep2, wash_type_ids: [uuid, 'not-a-uuid'] });
+      expect(r.success).toBe(false);
+    });
+
+    it('rejects wash_type_ids with more than 50 elements', () => {
+      const ids = Array(51).fill(uuid);
+      const r = stationInfoSchema.safeParse({ ...baseStep2, wash_type_ids: ids });
+      expect(r.success).toBe(false);
     });
   });
 
