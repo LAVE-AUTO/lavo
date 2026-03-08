@@ -59,6 +59,7 @@ import {
   listActiveStations,
   listActiveStationsGroup,
   findActiveStationWithDetail,
+  getCompletedCountForStation,
 } from '@/server/station/station-repository';
 
 const mockSelect = db.select as jest.Mock;
@@ -166,6 +167,32 @@ describe('station repository', () => {
       mockFindFirst.mockResolvedValueOnce(undefined);
       const result = await findActiveStationWithDetail('00000000-0000-0000-0000-000000000000');
       expect(result).toBeUndefined();
+    });
+  });
+
+  describe('getCompletedCountForStation', () => {
+    it('returns count of reservations with completed_at set for the station', async () => {
+      const stationId = 'a1b2c3d4-e5f6-7890-abcd-ef1234567890';
+      const countChain = {
+        from: jest.fn().mockReturnThis(),
+        where: jest.fn().mockReturnValue(Promise.resolve([{ count: 7 }])),
+      };
+      mockSelect.mockReturnValueOnce(countChain);
+      const result = await getCompletedCountForStation(stationId);
+      expect(result).toBe(7);
+      expect(mockSelect).toHaveBeenCalled();
+      expect(countChain.from).toHaveBeenCalled();
+      expect(countChain.where).toHaveBeenCalled();
+    });
+
+    it('returns 0 when no rows', async () => {
+      const countChain = {
+        from: jest.fn().mockReturnThis(),
+        where: jest.fn().mockReturnValue(Promise.resolve([])),
+      };
+      mockSelect.mockReturnValueOnce(countChain);
+      const result = await getCompletedCountForStation('00000000-0000-0000-0000-000000000000');
+      expect(result).toBe(0);
     });
   });
 });

@@ -23,6 +23,7 @@ import {
   findStationById,
   findStationByUserId,
   findActiveStationWithDetail,
+  getCompletedCountForStation,
   listActiveStations,
   listActiveStationsGroup,
   listStationsByStatus,
@@ -291,6 +292,7 @@ export async function listStationsPublic(
 /**
  * Returns a single active station with config, vehicle formats, and time slots.
  * Includes available and available_slots computed from timeSlots (start_time > NOW()).
+ * Includes completed_count (Services terminés) from reservations with completed_at IS NOT NULL.
  * Throws NotFoundError if station does not exist or is not active.
  */
 export async function getStationDetailPublic(id: string) {
@@ -306,7 +308,8 @@ export async function getStationDetailPublic(id: string) {
     );
   // Unavailability derived only from slot availability; no API toggle for is_open (Figma gap).
   const available = available_slots > 0;
-  return { ...station, available_slots, available };
+  const completed_count = await getCompletedCountForStation(id);
+  return { ...station, available_slots, available, completed_count };
 }
 
 /**
