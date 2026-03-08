@@ -43,7 +43,7 @@ function EyeIcon({ open }: { open: boolean }) {
 export function LoginForm() {
   const t = useTranslations('login');
   const router = useRouter();
-  const { error: showError } = useToast();
+  const { error: showError, success: showSuccess } = useToast();
   const auth = useAuth();
 
   const [formData, setFormData]         = useState<LoginFormData>({ email: '', password: '' });
@@ -102,6 +102,7 @@ export function LoginForm() {
         const normalizedUser: AuthUser = { ...data.user, role: normalizedRole } as AuthUser;
 
         auth.login(data.access_token, normalizedUser);
+        showSuccess(t('toast_success'));
 
         if (normalizedUser.force_password_change) {
           router.push('/change-password');

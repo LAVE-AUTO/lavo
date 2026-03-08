@@ -40,7 +40,7 @@ function SuccessIcon() {
 
 export function ChangePasswordForm() {
   const t = useTranslations('change_password');
-  const { error: showError } = useToast();
+  const { error: showError, success: showSuccess } = useToast();
   const auth = useAuth();
 
   const [currentPassword, setCurrentPassword] = useState('');
@@ -128,6 +128,7 @@ export function ChangePasswordForm() {
 
       if (ok) {
         await auth.refetchUser();
+        showSuccess(t('toast_success'));
         setSuccess(true);
         return;
       }

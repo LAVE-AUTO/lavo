@@ -3,6 +3,7 @@
 import { useState, type ChangeEvent, type FormEvent } from 'react';
 import { useTranslations } from 'next-intl';
 import { Link } from '@/i18n/navigation';
+import { useToast } from '@/context/toast-context';
 import { postWithApi } from '@/services/axios-service';
 import { validateEmail } from '@/helpers/validators';
 import { HTTP_STATUS } from '@/helpers/constants';
@@ -34,6 +35,7 @@ function MailSentIcon() {
  */
 export function ForgotPasswordForm() {
   const t = useTranslations('forgot_password');
+  const { error: showError } = useToast();
 
   const [email, setEmail]       = useState('');
   const [emailError, setEmailError] = useState('');
@@ -63,7 +65,7 @@ export function ForgotPasswordForm() {
       const [, response] = await postWithApi('/auth/forgot-password', { email: email.trim() }, { successStatus: HTTP_STATUS.OK });
       const data = response as { code?: string };
       if (data?.code === 'TOO_MANY_REQUESTS') {
-        setEmailError(t('error_rate_limit'));
+        showError(t('error_rate_limit'));
         return;
       }
       // Always show success regardless of API response (prevent email enumeration)

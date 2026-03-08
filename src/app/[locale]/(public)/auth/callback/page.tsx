@@ -1,7 +1,6 @@
 'use client';
 
 import { useEffect, useRef } from 'react';
-import { useSearchParams } from 'next/navigation';
 import { useRouter } from '@/i18n/navigation';
 import { useAuth } from '@/context';
 import type { AuthUser } from '@/context/auth-context';
@@ -9,11 +8,11 @@ import { Spinner } from '@/components/ui/Spinner';
 
 /**
  * OAuth callback page.
- * Receives token + user data from the finalize route query params,
- * stores them in AuthContext and redirects by role.
+ * The finalize route sets a refresh cookie then redirects here.
+ * We call POST /auth/refresh to exchange the cookie for an access token + user,
+ * store them in AuthContext and redirect by role.
  */
 export default function OAuthCallbackPage() {
-  const searchParams = useSearchParams();
   const router = useRouter();
   const { login } = useAuth();
   const processed = useRef(false);
@@ -22,33 +21,41 @@ export default function OAuthCallbackPage() {
     if (processed.current) return;
     processed.current = true;
 
-    const token = searchParams.get('token');
-    const userParam = searchParams.get('user');
+    const baseUrl = process.env.NEXT_PUBLIC_API_URL || '/api/v1';
 
-    if (!token || !userParam) {
-      router.push('/login?error=oauth_failed');
-      return;
-    }
+    fetch(`${baseUrl}/auth/refresh`, {
+      method: 'POST',
+      credentials: 'include',
+    })
+      .then((res) => {
+        if (!res.ok) throw new Error('refresh_failed');
+        return res.json();
+      })
+      .then((json) => {
+        const data = json.data ?? json;
+        const token: string = data.access_token;
+        const user: AuthUser = data.user;
 
-    try {
-      const user = JSON.parse(userParam) as AuthUser;
-      login(token, user);
+        if (!token || !user) throw new Error('missing_data');
 
-      const role = (user.role || '').toUpperCase();
+        login(token, user);
 
-      if (user.force_password_change) {
-        router.push('/change-password');
-      } else if (role === 'STATION') {
-        router.push('/station');
-      } else if (role === 'SUPER_ADMIN') {
-        router.push('/admin');
-      } else {
-        router.push('/stations');
-      }
-    } catch {
-      router.push('/login?error=oauth_failed');
-    }
-  }, [searchParams, router, login]);
+        const role = (user.role || '').toUpperCase();
+
+        if (user.force_password_change) {
+          router.push('/change-password');
+        } else if (role === 'STATION') {
+          router.push('/station');
+        } else if (role === 'SUPER_ADMIN') {
+          router.push('/admin');
+        } else {
+          router.push('/stations');
+        }
+      })
+      .catch(() => {
+        router.push('/login?error=oauth_failed');
+      });
+  }, [router, login]);
 
   return (
     <div className="flex items-center justify-center min-h-[60vh]">
