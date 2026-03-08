@@ -17,7 +17,9 @@ import {
   stationDocuments,
   stationPosts,
   stations,
+  stationWashTypes,
   vehicleFormats,
+  washTypes,
 } from "./stations";
 import { supportTickets } from "./support";
 import { timeSlots } from "./slots";
@@ -85,12 +87,28 @@ export const stationsRelations = relations(stations, ({ one, many }) => ({
   }),
   stationConfig: one(stationConfigs),
   stationPosts: many(stationPosts),
+  stationWashTypes: many(stationWashTypes),
   documents: many(stationDocuments),
   vehicleFormats: many(vehicleFormats),
   timeSlots: many(timeSlots),
   reservations: many(reservations, { relationName: "stationReservations" }),
   ratings: many(ratings, { relationName: "stationRatings" }),
   notifications: many(notifications, { relationName: "stationNotifications" }),
+}));
+
+export const washTypesRelations = relations(washTypes, ({ many }) => ({
+  stationWashTypes: many(stationWashTypes),
+}));
+
+export const stationWashTypesRelations = relations(stationWashTypes, ({ one }) => ({
+  station: one(stations, {
+    fields: [stationWashTypes.station_id],
+    references: [stations.id],
+  }),
+  washType: one(washTypes, {
+    fields: [stationWashTypes.wash_type_id],
+    references: [washTypes.id],
+  }),
 }));
 
 export const stationDocumentsRelations = relations(stationDocuments, ({ one, many }) => ({
