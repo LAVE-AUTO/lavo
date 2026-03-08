@@ -1,11 +1,11 @@
-import { Suspense } from 'react';
 import { getTranslations, setRequestLocale } from 'next-intl/server';
-import { StationListView } from '@/components/stations/StationListView';
-import { StationsHero } from '@/components/stations/StationsHero';
-import { StationsStats } from '@/components/stations/StationsStats';
 import { PublicNavbar } from '@/components/layout/PublicNavbar';
 import { PublicFooter } from '@/components/layout/PublicFooter';
-import { BottomNav } from '@/components/layout/BottomNav';
+import { LandingHero } from '@/components/landing/LandingHero';
+import { HowItWorks } from '@/components/landing/HowItWorks';
+import { LandingFeatures } from '@/components/landing/LandingFeatures';
+import { LandingStats } from '@/components/landing/LandingStats';
+import { LandingMerchantCTA } from '@/components/landing/LandingMerchantCTA';
 
 type Props = {
   params: Promise<{ locale: string }>;
@@ -13,36 +13,28 @@ type Props = {
 
 export async function generateMetadata({ params }: Props) {
   const { locale } = await params;
-  const t = await getTranslations({ locale, namespace: 'stations' });
+  const t = await getTranslations({ locale, namespace: 'landing' });
   return {
-    title: `LAVO — ${t('page_title')}`,
-    description: t('page_subtitle'),
+    title: t('meta_title'),
+    description: t('meta_description'),
   };
 }
 
-export default async function HomePage({ params }: Props) {
+export default async function LandingPage({ params }: Props) {
   const { locale } = await params;
   setRequestLocale(locale);
 
   return (
     <>
       <PublicNavbar />
-      <div className="flex flex-col min-h-screen">
-        <main className="flex-1 bg-[#EDEDED] dark:bg-dark-bg transition-colors">
-          <StationsHero />
-          <StationsStats />
-
-          <section id="stations-list" className="max-w-6xl mx-auto px-4 sm:px-6 py-10">
-            <Suspense fallback={<div className="py-20 text-center text-[#333333] dark:text-[#C0C0B0]">Chargement...</div>}>
-              <StationListView />
-            </Suspense>
-          </section>
-        </main>
-        <div className="hidden sm:block">
-          <PublicFooter />
-        </div>
-      </div>
-      <BottomNav />
+      <main>
+        <LandingHero />
+        <HowItWorks />
+        <LandingFeatures />
+        <LandingStats />
+        <LandingMerchantCTA />
+      </main>
+      <PublicFooter />
     </>
   );
 }
