@@ -1,6 +1,9 @@
 'use client';
 
+import { useState } from 'react';
 import { useTranslations } from 'next-intl';
+import { signIn } from 'next-auth/react';
+import { Spinner } from '@/components/ui/Spinner';
 
 function GoogleIcon() {
   return (
@@ -30,13 +33,17 @@ interface SocialButtonsProps {
  */
 export function SocialButtons({ namespace = 'register' }: SocialButtonsProps) {
   const t = useTranslations(namespace);
+  const [loadingGoogle, setLoadingGoogle] = useState(false);
+  const [loadingFacebook, setLoadingFacebook] = useState(false);
 
   const handleGoogle = () => {
-    // TODO: implement Google OAuth redirect
+    setLoadingGoogle(true);
+    signIn('google');
   };
 
   const handleFacebook = () => {
-    // TODO: implement Facebook OAuth redirect
+    setLoadingFacebook(true);
+    signIn('facebook');
   };
 
   const btnClass = [
@@ -62,19 +69,21 @@ export function SocialButtons({ namespace = 'register' }: SocialButtonsProps) {
         <button
           type="button"
           onClick={handleGoogle}
-          className={`flex-1 ${btnClass}`}
+          disabled={loadingGoogle || loadingFacebook}
+          className={`flex-1 ${btnClass} cursor-pointer disabled:opacity-60`}
           aria-label="Continue with Google"
         >
-          <GoogleIcon />
+          {loadingGoogle ? <Spinner size="sm" /> : <GoogleIcon />}
           Google
         </button>
         <button
           type="button"
           onClick={handleFacebook}
-          className={`flex-1 ${btnClass}`}
+          disabled={loadingGoogle || loadingFacebook}
+          className={`flex-1 ${btnClass} cursor-pointer disabled:opacity-60`}
           aria-label="Continue with Facebook"
         >
-          <FacebookIcon />
+          {loadingFacebook ? <Spinner size="sm" /> : <FacebookIcon />}
           Facebook
         </button>
       </div>

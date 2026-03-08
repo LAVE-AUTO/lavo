@@ -9,7 +9,7 @@ import {
   type ReactNode,
 } from 'react';
 import { useLocale } from 'next-intl';
-import { initAxiosService, refreshAxiosService } from '@/services/axios-service';
+import { initAxiosService, refreshAxiosService, postWithApi, setAxiosLocale } from '@/services/axios-service';
 
 const AUTH_TOKEN_KEY = 'lavo_auth_token';
 const AUTH_USER_KEY = 'lavo_auth_user';
@@ -23,6 +23,7 @@ export interface AuthUser {
   last_name?: string;
   role: UserRole;
   station_id?: string | null;
+  force_password_change?: boolean;
 }
 
 interface AuthContextValue {
@@ -39,6 +40,20 @@ interface AuthContextValue {
 }
 
 const AuthContext = createContext<AuthContextValue | undefined>(undefined);
+
+function normalizeRole(role: string): UserRole {
+  const lower = role.toLowerCase();
+  if (lower === 'admin') return 'admin';
+  if (lower === 'station') return 'station';
+  return 'client';
+}
+
+function normalizeUser(raw: Record<string, unknown>): AuthUser {
+  return {
+    ...raw,
+    role: normalizeRole(String(raw.role || 'client')),
+  } as AuthUser;
+}
 
 function getStoredToken(): string | null {
   if (typeof window === 'undefined') return null;
@@ -78,14 +93,52 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [token, setToken] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
-  const handleUnauthorized = useCallback(() => {
+  // Keep axios Accept-Language in sync with the app locale
+  useEffect(() => {
+    setAxiosLocale(locale);
+  }, [locale]);
+
+  const clearAuth = useCallback(() => {
     setStoredAuth(null, null);
     setToken(null);
     setUser(null);
+    initAxiosService({
+      baseURL: process.env.NEXT_PUBLIC_API_URL || '/api/v1',
+    });
     if (typeof window !== 'undefined') {
       window.location.href = loginPath;
     }
   }, [loginPath]);
+
+  const handleUnauthorized = useCallback(async () => {
+    // Try to refresh the token before logging out
+    try {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || '/api/v1'}/auth/refresh`, {
+        method: 'POST',
+        credentials: 'include',
+        headers: { 'Content-Type': 'application/json' },
+      });
+      if (res.ok) {
+        const body = await res.json();
+        const data = body.data;
+        if (data && data.access_token && data.user) {
+          const normalized = normalizeUser(data.user);
+          setStoredAuth(data.access_token, normalized);
+          setToken(data.access_token);
+          setUser(normalized);
+          refreshAxiosService({
+            baseURL: process.env.NEXT_PUBLIC_API_URL || '/api/v1',
+            tokenGetter: () => getStoredToken(),
+            onUnauthorized: () => { clearAuth(); },
+          });
+          return;
+        }
+      }
+    } catch {
+      // Refresh failed, clear auth
+    }
+    clearAuth();
+  }, [clearAuth]);
 
   useEffect(() => {
     const storedToken = getStoredToken();
@@ -94,7 +147,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     const id = setTimeout(() => {
       if (storedToken) {
         setToken(storedToken);
-        setUser(storedUser);
+        if (storedUser) {
+          const normalized = normalizeUser(storedUser as unknown as Record<string, unknown>);
+          setUser(normalized);
+        }
 
         refreshAxiosService({
           baseURL: process.env.NEXT_PUBLIC_API_URL || '/api/v1',
@@ -114,22 +170,25 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, [handleUnauthorized, loginPath]);
 
   const login = useCallback((newToken: string, newUser: AuthUser) => {
-    setStoredAuth(newToken, newUser);
+    const normalized = normalizeUser(newUser as unknown as Record<string, unknown>);
+    setStoredAuth(newToken, normalized);
     setToken(newToken);
-    setUser(newUser);
+    setUser(normalized);
     refreshAxiosService({
       baseURL: process.env.NEXT_PUBLIC_API_URL || '/api/v1',
       tokenGetter: () => getStoredToken(),
       onUnauthorized: () => {
-        setStoredAuth(null, null);
-        setToken(null);
-        setUser(null);
-        if (typeof window !== 'undefined') window.location.href = loginPath;
+        clearAuth();
       },
     });
-  }, [loginPath]);
+  }, [clearAuth]);
 
-  const logout = useCallback(() => {
+  const logout = useCallback(async () => {
+    try {
+      await postWithApi('/auth/logout', null, { successStatus: 200 });
+    } catch {
+      // Logout API failure is non-blocking
+    }
     setStoredAuth(null, null);
     setToken(null);
     setUser(null);
@@ -146,6 +205,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     try {
       const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || '/api/v1'}/auth/me`, {
         headers: { Authorization: `Bearer ${token}` },
+        credentials: 'include',
       });
       if (res.status === 401) {
         handleUnauthorized();
@@ -155,8 +215,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         const data = await res.json();
         const u = data?.data ?? data?.user;
         if (u) {
-          setUser(u);
-          setStoredAuth(token, u);
+          const normalized = normalizeUser(u);
+          setUser(normalized);
+          setStoredAuth(token, normalized);
         }
       }
     } catch {

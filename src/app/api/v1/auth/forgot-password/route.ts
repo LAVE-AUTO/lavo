@@ -1,6 +1,7 @@
 import { headers } from 'next/headers';
 import { forgotPassword } from '@/server/auth/auth-service';
 import { forgotPasswordSchema, mapZodErrors } from '@/validators/auth';
+import { extractLocale } from '@/lib/email';
 import { successResponse, error400, error429, error500 } from '@/lib/responses';
 import { ApiCode } from '@/types/api-codes';
 import { checkRateLimit, recordFailedAttempt } from '@/lib/rate-limiter';
@@ -39,7 +40,8 @@ export async function POST(request: Request) {
   await recordFailedAttempt(ip);
 
   try {
-    await forgotPassword(parsed.data.email);
+    const locale = extractLocale(headersList.get('accept-language'));
+    await forgotPassword(parsed.data.email, locale);
     return successResponse({ sent: true }, 'If an account exists, a reset email has been sent');
   } catch {
     return error500();

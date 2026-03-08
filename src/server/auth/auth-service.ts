@@ -75,7 +75,7 @@ async function issueTokenPair(
   return { accessJwt, rawRefreshToken, expiresIn: ACCESS_TOKEN_MAX_AGE };
 }
 
-export async function registerWithPassword(dto: RegisterDto): Promise<AuthResult> {
+export async function registerWithPassword(dto: RegisterDto, locale: 'fr' | 'en' = 'fr'): Promise<AuthResult> {
   const existing = await findByEmail(dto.email);
   if (existing) throw new ConflictError('Email already in use');
 
@@ -99,7 +99,7 @@ export async function registerWithPassword(dto: RegisterDto): Promise<AuthResult
   });
 
   // Fire-and-forget: do not block registration on email failure
-  sendVerificationEmail(user.email, user.first_name ?? '', token.token).catch(
+  sendVerificationEmail(user.email, user.first_name ?? '', token.token, locale).catch(
     () => void 0
   );
 
@@ -121,7 +121,7 @@ export async function verifyEmail(token: string): Promise<void> {
   await markTokenUsed(record.id);
 }
 
-export async function resendVerificationEmail(email: string): Promise<void> {
+export async function resendVerificationEmail(email: string, locale: 'fr' | 'en' = 'fr'): Promise<void> {
   const user = await findByEmail(email);
   if (!user) throw new NotFoundError('No account found with this email address');
   if (user.status === 'active') throw new ConflictError('Email is already verified');
@@ -133,7 +133,7 @@ export async function resendVerificationEmail(email: string): Promise<void> {
     expires_at: new Date(Date.now() + 24 * 60 * 60 * 1000),
   });
 
-  await sendVerificationEmail(user.email, user.first_name ?? '', token.token);
+  await sendVerificationEmail(user.email, user.first_name ?? '', token.token, locale);
 }
 
 export async function findOrCreateOAuthUser(data: {
@@ -217,7 +217,7 @@ export async function changePassword(
   await updateForcePasswordChange(userId, false);
 }
 
-export async function forgotPassword(email: string): Promise<void> {
+export async function forgotPassword(email: string, locale: 'fr' | 'en' = 'fr'): Promise<void> {
   const user = await findByEmail(email);
 
   // Always return silently to prevent email enumeration
@@ -231,7 +231,7 @@ export async function forgotPassword(email: string): Promise<void> {
   });
 
   // Fire-and-forget: do not fail silently in case of email error
-  sendPasswordResetEmail(user.email, user.first_name ?? '', token.token).catch(
+  sendPasswordResetEmail(user.email, user.first_name ?? '', token.token, locale).catch(
     () => void 0
   );
 }
