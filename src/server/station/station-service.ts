@@ -24,6 +24,7 @@ import {
   findStationByUserId,
   findActiveStationWithDetail,
   listActiveStations,
+  listActiveStationsGroup,
   listStationsByStatus,
   updateStationStatus,
   type ListActiveStationsFilters,
@@ -211,31 +212,80 @@ export async function getMyStation(userId: string): Promise<StationWithDocuments
 // ─── Public API (Card 1) ────────────────────────────────────────────────────
 
 /**
- * List item for GET /api/v1/stations. Station row plus available (derived from slots)
- * and available_slots (sum of capacity - booked_count for start_time > NOW()).
- * Unavailability is derived only from slot availability; no API toggle for is_open.
- * Figma shows Station ouverte/fermée toggles—backend does not expose them; front
- * should use available and available_slots.
+ * List item for GET /api/v1/stations. Station row plus available (derived from slots),
+ * available_slots, and optional completed_count for display.
  */
-export type StationListPublicItem = Omit<StationWithAvailableSlots, 'available_slots'> & {
+export type StationListPublicItem = Omit<StationWithAvailableSlots, 'available_slots' | 'completed_count'> & {
   available_slots: number;
   available: boolean;
+  completed_count?: number;
+};
+
+export type ListStationsPublicMeta = {
+  total: number;
+  page: number;
+  per_page: number;
+  total_pages: number;
+};
+
+export type ListStationsPublicData = {
+  all: StationListPublicItem[];
+  available_now?: StationListPublicItem[];
+  most_appreciated?: StationListPublicItem[];
+  most_visited?: StationListPublicItem[];
+};
+
+export type ListStationsPublicResult = {
+  data: ListStationsPublicData;
+  meta: ListStationsPublicMeta;
 };
 
 /**
- * Returns list of active stations with optional search, city filter, and sort.
- * Each item includes available (true iff available_slots > 0) and available_slots.
+ * Maps repository row to public list item (available_slots and completed_count as numbers).
+ */
+function toListPublicItem(row: StationWithAvailableSlots): StationListPublicItem {
+  const available_slots = Math.max(0, Number(row.available_slots ?? 0));
+  const available = available_slots > 0;
+  const completed_count = row.completed_count != null ? Number(row.completed_count) : undefined;
+  const { available_slots: _s, completed_count: _c, ...rest } = row;
+  return { ...rest, available_slots, available, ...(completed_count !== undefined && { completed_count }) };
+}
+
+/**
+ * Returns paginated list of active stations and optional group arrays (available_now, most_appreciated, most_visited).
+ * Response shape: { data: { all, ...groups }, meta: { total, page, per_page, total_pages } }.
+ * Backward compatible: when no groups param, only data.all and meta are set.
  */
 export async function listStationsPublic(
   filters: ListActiveStationsFilters
-): Promise<StationListPublicItem[]> {
-  const rows = await listActiveStations(filters);
-  return rows.map((row) => {
-    const available_slots = Math.max(0, Number(row.available_slots ?? 0));
-    const available = available_slots > 0;
-    const { available_slots: _raw, ...rest } = row;
-    return { ...rest, available_slots, available };
-  });
+): Promise<ListStationsPublicResult> {
+  const page = Math.max(1, filters.page ?? 1);
+  const per_page = Math.min(100, Math.max(1, filters.per_page ?? 20));
+  const { rows, total } = await listActiveStations({ ...filters, page, per_page });
+  const total_pages = Math.max(1, Math.ceil(total / per_page));
+
+  const data: ListStationsPublicData = {
+    all: rows.map(toListPublicItem),
+  };
+
+  const groups = filters.groups;
+  const limitPerGroup = filters.limit_per_group ?? 50;
+  if (groups?.length) {
+    const groupPromises = groups.map((group) =>
+      listActiveStationsGroup(group, filters, limitPerGroup).then((r) => r.map(toListPublicItem))
+    );
+    const results = await Promise.all(groupPromises);
+    groups.forEach((g, i) => {
+      if (g === 'available_now') data.available_now = results[i];
+      else if (g === 'most_appreciated') data.most_appreciated = results[i];
+      else if (g === 'most_visited') data.most_visited = results[i];
+    });
+  }
+
+  return {
+    data,
+    meta: { total, page, per_page, total_pages },
+  };
 }
 
 /**
