@@ -3,6 +3,7 @@
  * Uses entry repository, queue-position helper, slot repo (decrement booked_count), notification stub.
  */
 import { NotFoundError, ConflictError } from '@/lib/errors';
+import { DEFAULT_COMMISSION_RATE } from '@/helpers/constants';
 import { findFormatByIdAndStation } from '@/server/station/format-repository';
 import { decrementSlotBookedCount } from '@/server/station/slot-repository';
 import { processPayment } from '@/server/payments/payment-service';
@@ -19,7 +20,6 @@ import {
   type Entry,
 } from './entry-repository';
 
-const DEFAULT_COMMISSION_RATE = '0.1000';
 const STATUS_PENDING = 'pending';
 const STATUS_LATE = 'late';
 
@@ -106,11 +106,7 @@ export async function moveReservationToQueue(entryId: string): Promise<Entry> {
     existingQueueCount: existingCount,
   });
 
-  if (newPosition === 1) {
-    await shiftQueuePositions(stationId, 1, 1);
-  } else {
-    await shiftQueuePositions(stationId, newPosition, 1);
-  }
+  await shiftQueuePositions(stationId, newPosition, 1);
   await updateEntry(entryId, {
     entry_type: 'queue',
     time_slot_id: null,
