@@ -6,6 +6,8 @@ const DEFAULT_BASE_URL =
   '/api/v1';
 const DEFAULT_TIMEOUT = API_TIMEOUT;
 
+let currentLocale = 'fr';
+
 /**
  * Token getter type for auth injection.
  * Can be sync (localStorage) or async (AsyncStorage).
@@ -69,6 +71,7 @@ export function createAxiosInstance(
 
   instance.interceptors.request.use(
     async (config) => {
+      config.headers['Accept-Language'] = currentLocale;
       if (tokenGetter) {
         const token = await Promise.resolve(tokenGetter());
         if (token) {
@@ -133,6 +136,13 @@ export function setBaseURL(newBaseURL: string): void {
     baseURL: newBaseURL,
     timeout: DEFAULT_TIMEOUT,
   });
+}
+
+/**
+ * Update the locale sent via Accept-Language on every request.
+ */
+export function setAxiosLocale(locale: string): void {
+  currentLocale = locale;
 }
 
 /**
