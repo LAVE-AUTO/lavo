@@ -110,7 +110,7 @@ export function LoginForm() {
 
         if (normalizedRole === 'STATION')          router.push('/station');
         else if (normalizedRole === 'SUPER_ADMIN') router.push('/admin');
-        else                                        router.push('/');
+        else                                        router.push('/stations');
         return;
       }
 
