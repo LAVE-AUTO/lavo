@@ -26,6 +26,9 @@ describe("seed-data", () => {
       expect(typeof SEED_ADMIN_PASSWORD_DEFAULT).toBe("string");
       expect(SEED_ADMIN_PASSWORD_DEFAULT.length).toBeGreaterThan(0);
     });
+    it("matches demo admin password", () => {
+      expect(SEED_ADMIN_PASSWORD_DEFAULT).toBe("@Admin2026");
+    });
   });
 
   // ---------------------------------------------------------------------------
@@ -69,11 +72,11 @@ describe("seed-data", () => {
   // Station defaults
   // ---------------------------------------------------------------------------
   describe("seed station constants", () => {
-    it("SEED_STATION_NAME is set", () => {
-      expect(SEED_STATION_NAME).toBe("LAVO Seed Station");
+    it("SEED_STATION_NAME is set (legacy: first station)", () => {
+      expect(SEED_STATION_NAME).toBe("LAVO Paris Centre");
     });
     it("SEED_STATION_ADDRESS is set", () => {
-      expect(SEED_STATION_ADDRESS).toBe("1 Place du Lavage");
+      expect(SEED_STATION_ADDRESS).toBe("12 rue de Rivoli");
     });
     it("SEED_STATION_CITY is set", () => {
       expect(SEED_STATION_CITY).toBe("Paris");
