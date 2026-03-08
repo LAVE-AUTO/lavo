@@ -24,7 +24,7 @@
     /* LAVO brand colors */
     --color-gold: #af8408;
     --color-gold-hover: #D4A820;
-    --color-dark-bg: #1A2116;
+    --color-dark-bg: #001201;
     --color-dark-card: #1E2A1A;
     --color-dark-surface: #243020;
     --color-tab-inactive: #2C3828;
@@ -33,7 +33,7 @@
     --color-lavo-muted: #A0A0A0;
     /* LAVO fonts */
     --font-rajdhani: 'Rajdhani', sans-serif;
-    --font-roboto-mono: 'Roboto Mono', monospace;
+    --font-roboto-mono: 'Bebas Neue', monospace;
 }
 
 @media (prefers-color-scheme: dark) {
@@ -769,4 +769,90 @@ button,
 
 .dark .lavo-country-select__empty {
     color: #4A5A46;
+}
+
+
+/* ------------------------------------------------------------------ */
+
+
+/* Landing page                                                         */
+
+
+/* ------------------------------------------------------------------ */
+
+@keyframes count-up {
+    from {
+        opacity: 0;
+        transform: translateY(12px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+@keyframes reveal {
+    from {
+        opacity: 0;
+        transform: translateY(32px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+@keyframes reveal-scale {
+    from {
+        opacity: 0;
+        transform: scale(0.92);
+    }
+    to {
+        opacity: 1;
+        transform: scale(1);
+    }
+}
+
+@keyframes pulse-ring {
+    0% {
+        transform: scale(0.9);
+        opacity: 0.6;
+    }
+    50% {
+        transform: scale(1.15);
+        opacity: 0;
+    }
+    100% {
+        transform: scale(0.9);
+        opacity: 0;
+    }
+}
+
+.animate-reveal {
+    opacity: 0;
+    animation: reveal 0.7s ease-out forwards;
+}
+
+.animate-reveal-scale {
+    opacity: 0;
+    animation: reveal-scale 0.6s ease-out forwards;
+}
+
+.animate-pulse-ring {
+    animation: pulse-ring 2.5s ease-in-out infinite;
+}
+
+.landing-service-bg {
+    background-image: linear-gradient(135deg, rgba(244, 241, 234, 0.97) 0%, rgba(238, 234, 224, 0.92) 100%), url('https://images.unsplash.com/photo-1520340356584-f9917d1eea6f?w=1600&q=80');
+    background-size: cover;
+    background-position: center;
+}
+
+.dark .landing-service-bg {
+    background-image: linear-gradient(135deg, rgba(26, 33, 22, 0.97) 0%, rgba(30, 42, 26, 0.95) 100%), url('https://images.unsplash.com/photo-1520340356584-f9917d1eea6f?w=1600&q=80');
+    background-size: cover;
+    background-position: center;
+}
+
+
 }

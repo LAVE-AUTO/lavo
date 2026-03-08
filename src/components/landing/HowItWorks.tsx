@@ -1,6 +1,7 @@
 'use client';
 
 import { useTranslations } from 'next-intl';
+import { ScrollReveal } from './ScrollReveal';
 
 const STEPS = [
   {
@@ -11,6 +12,8 @@ const STEPS = [
         <path d="m21 21-4.35-4.35" />
       </svg>
     ),
+    color: 'bg-blue-500/10 text-blue-500 dark:bg-blue-400/10 dark:text-blue-400',
+    numColor: 'bg-blue-500 dark:bg-blue-400',
   },
   {
     key: 'step_2',
@@ -22,6 +25,8 @@ const STEPS = [
         <line x1="3" y1="10" x2="21" y2="10" />
       </svg>
     ),
+    color: 'bg-gold/10 text-gold',
+    numColor: 'bg-gold',
   },
   {
     key: 'step_3',
@@ -30,6 +35,8 @@ const STEPS = [
         <polyline points="20 6 9 17 4 12" />
       </svg>
     ),
+    color: 'bg-lavo-success/10 text-lavo-success',
+    numColor: 'bg-lavo-success',
   },
 ] as const;
 
@@ -40,43 +47,41 @@ export function HowItWorks() {
     <section className="py-20 sm:py-28 bg-white dark:bg-dark-bg transition-colors">
       <div className="max-w-6xl mx-auto px-4 sm:px-6">
         {/* Header */}
-        <div className="text-center mb-16 animate-fade-in-up">
+        <ScrollReveal className="text-center mb-16">
           <h2 className="text-[32px] sm:text-[40px] font-black text-[#0A0A14] dark:text-white leading-tight">
             {t('how_title')}
           </h2>
           <p className="mt-3 text-[17px] text-[#666] dark:text-[#C0C0B0] max-w-md mx-auto">
             {t('how_subtitle')}
           </p>
-        </div>
+        </ScrollReveal>
 
         {/* Steps */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8 lg:gap-12">
           {STEPS.map((step, i) => (
-            <div
-              key={step.key}
-              className="relative text-center group animate-fade-in-up"
-              style={{ animationDelay: `${i * 0.15}s` }}
-            >
-              {/* Connector line (not on last) */}
-              {i < STEPS.length - 1 && (
-                <div className="hidden md:block absolute top-10 left-[60%] w-[80%] h-px bg-[#E0E0D0] dark:bg-tab-inactive" />
-              )}
+            <ScrollReveal key={step.key} delay={i * 0.12}>
+              <div className="relative text-center group">
+                {/* Connector line (not on last) */}
+                {i < STEPS.length - 1 && (
+                  <div className="hidden md:block absolute top-10 left-[60%] w-[80%] h-px bg-gradient-to-r from-[#E0E0D0] to-transparent dark:from-tab-inactive dark:to-transparent" />
+                )}
 
-              {/* Step number + icon */}
-              <div className="relative mx-auto w-20 h-20 rounded-2xl bg-gold/10 border border-gold/20 flex items-center justify-center text-gold mb-6 group-hover:bg-gold/15 transition-colors">
-                {step.icon}
-                <span className="absolute -top-2 -right-2 w-7 h-7 rounded-full bg-gold text-dark-bg text-[13px] font-black flex items-center justify-center">
-                  {i + 1}
-                </span>
+                {/* Step number + icon */}
+                <div className={`relative mx-auto w-20 h-20 rounded-2xl ${step.color} flex items-center justify-center mb-6 group-hover:scale-105 transition-transform`}>
+                  {step.icon}
+                  <span className={`absolute -top-2 -right-2 w-7 h-7 rounded-full ${step.numColor} text-white text-[13px] font-black flex items-center justify-center shadow-md`}>
+                    {i + 1}
+                  </span>
+                </div>
+
+                <h3 className="text-[19px] font-bold text-[#0A0A14] dark:text-white mb-2">
+                  {t(`${step.key}_title`)}
+                </h3>
+                <p className="text-[15px] text-[#666] dark:text-[#C0C0B0] leading-relaxed max-w-xs mx-auto">
+                  {t(`${step.key}_desc`)}
+                </p>
               </div>
-
-              <h3 className="text-[19px] font-bold text-[#0A0A14] dark:text-white mb-2">
-                {t(`${step.key}_title`)}
-              </h3>
-              <p className="text-[15px] text-[#666] dark:text-[#C0C0B0] leading-relaxed max-w-xs mx-auto">
-                {t(`${step.key}_desc`)}
-              </p>
-            </div>
+            </ScrollReveal>
           ))}
         </div>
       </div>
