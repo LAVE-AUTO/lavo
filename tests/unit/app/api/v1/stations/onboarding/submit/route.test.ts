@@ -29,6 +29,7 @@ jest.mock('next/headers', () => ({
 import { ConflictError } from '@/lib/errors';
 import { POST } from '@/app/api/v1/stations/onboarding/submit/route';
 
+const washTypeId = 'a1b2c3d4-e5f6-7890-abcd-ef1234567890';
 const validBody = {
   email: 'station@example.com',
   phone: '+15551234567',
@@ -38,7 +39,7 @@ const validBody = {
   address: '123 Main St',
   city: 'Montreal',
   wash_post_count: 2,
-  wash_type: 'hand_wash' as const,
+  wash_type_ids: [washTypeId],
   documents: [
     { document_type: 'license', file_url: 'https://example.com/a.pdf', storage: 'cloudinary' as const },
     { document_type: 'insurance', file_url: 'https://example.com/b.pdf', storage: 'local' as const },
@@ -73,6 +74,7 @@ describe('POST /api/v1/stations/onboarding/submit', () => {
     expect(mockCompleteStationOnboarding).toHaveBeenCalledTimes(1);
     const dto = mockCompleteStationOnboarding.mock.calls[0][0];
     expect(dto.email).toBe(validBody.email);
+    expect(dto.wash_type_ids).toEqual([washTypeId]);
     expect(dto.documents).toHaveLength(2);
     expect(dto.documents[0].storage).toBe('cloudinary');
     expect(dto.documents[1].storage).toBe('local');
@@ -101,7 +103,7 @@ describe('POST /api/v1/stations/onboarding/submit', () => {
       address: '123',
       city: 'Y',
       wash_post_count: 1,
-      wash_type: 'hand_wash',
+      wash_type_ids: [washTypeId],
       documents: [{ document_type: 'x', file_url: 'https://example.com/x.pdf' }],
       terms_accepted: true,
     });

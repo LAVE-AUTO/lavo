@@ -31,6 +31,7 @@ describe('GET /api/v1/stations/:id', () => {
       timeSlots: [],
       available_slots: 1,
       available: true,
+      completed_count: 5,
     };
     mockGetStationDetailPublic.mockResolvedValueOnce(station);
     const req = new Request('http://localhost/api/v1/stations/1');
@@ -40,6 +41,7 @@ describe('GET /api/v1/stations/:id', () => {
     expect(body.data).toEqual(station);
     expect(body.data.available_slots).toBe(1);
     expect(body.data.available).toBe(true);
+    expect(body.data.completed_count).toBe(5);
     expect(mockGetStationDetailPublic).toHaveBeenCalledWith(station.id);
   });
 

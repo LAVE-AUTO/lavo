@@ -11,7 +11,7 @@ import { getStationDetailPublic } from '@/server/station/station-service';
  * Response includes available (boolean) and available_slots (number) from future slots.
  * Returns 404 if not found or station is not active.
  *
- * Response 200: { data: StationWithDetail & { available: boolean; available_slots: number } }.
+ * Response 200: { data: StationWithDetail & { available: boolean; available_slots: number; completed_count: number } }.
  * Responses: 400 VALIDATION_FAILED, 404 NOT_FOUND, 500 INTERNAL_ERROR.
  */
 export async function GET(
