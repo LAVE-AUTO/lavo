@@ -65,3 +65,6 @@ export const JWT_DEFAULT_MAX_AGE = 24 * 60 * 60;
 export const JWT_REMEMBER_MAX_AGE = 30 * 24 * 60 * 60;
 export const RATE_LIMIT_MAX_ATTEMPTS = 5;
 export const RATE_LIMIT_BLOCK_MINUTES = 15;
+
+/** Default platform commission rate applied to reservations (10%). */
+export const DEFAULT_COMMISSION_RATE = '0.1000';

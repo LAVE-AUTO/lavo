@@ -19,6 +19,9 @@ const _step1Base = z.object({
   confirm_password: z.string().min(1, 'Password confirmation is required'),
 });
 
+/** Allowed values for type de prestation (exterior, interior, or both). */
+const serviceScopeEnum = z.enum(['exterior', 'interior', 'both']);
+
 const _step2Base = z.object({
   station_name: z.string().min(2).max(200),
   legal_name: z.string().min(2).max(200).optional(),
@@ -28,8 +31,13 @@ const _step2Base = z.object({
   latitude: z.number().min(-90).max(90).optional(),
   longitude: z.number().min(-180).max(180).optional(),
   wash_post_count: z.number().int().min(1),
-  wash_type: z.enum(['hand_wash', 'automatic', 'self_service']),
+  wash_type_ids: z
+    .array(z.string().uuid('Each wash type id must be a valid UUID'))
+    .min(1, 'At least one wash type is required')
+    .max(50, 'At most 50 wash types allowed'),
   description: z.string().max(1000).optional(),
+  /** Type de prestation: optional at onboarding; persisted as nullable on stations. */
+  service_scope: serviceScopeEnum.optional(),
 });
 
 const _step3Base = z.object({
@@ -120,10 +128,103 @@ export const listStationsQuerySchema = z.object({
       message: 'City must be at most 100 characters',
     }),
   sort: z
-    .enum(['slots_asc', 'slots_desc', 'name'], {
-      errorMap: () => ({ message: 'Invalid sort value. Use slots_asc, slots_desc, or name' }),
+    .string()
+    .optional()
+    .transform((s) => (typeof s === 'string' ? s.trim() : undefined) || undefined)
+    .refine(
+      (s) => {
+        if (!s) return true;
+        const tokens = s.split(',').map((t) => t.trim()).filter(Boolean);
+        return tokens.every((t) =>
+          ['slots_asc', 'slots_desc', 'name_asc', 'name_desc', 'rating_asc', 'rating_desc', 'total_ratings_asc', 'total_ratings_desc', 'completed_count_asc', 'completed_count_desc'].includes(t)
+        );
+      },
+      { message: 'Invalid sort value(s). Use comma-separated: slots_asc, slots_desc, name_asc, name_desc, rating_asc, rating_desc, total_ratings_asc, total_ratings_desc, completed_count_asc, completed_count_desc' }
+    ),
+  groups: z
+    .string()
+    .optional()
+    .refine(
+      (s) => {
+        if (!s || typeof s !== 'string') return true;
+        const allowed = new Set(['available_now', 'most_appreciated', 'most_visited']);
+        const tokens = s.split(',').map((t) => t.trim()).filter(Boolean);
+        return tokens.every((t) => allowed.has(t));
+      },
+      { message: 'groups must be comma-separated: available_now, most_appreciated, most_visited' }
+    )
+    .transform((s) => {
+      if (!s || typeof s !== 'string') return undefined;
+      const allowed = new Set(['available_now', 'most_appreciated', 'most_visited']);
+      const arr = s.split(',').map((t) => t.trim()).filter((t) => allowed.has(t));
+      const unique = arr.length ? [...new Set(arr)] as ('available_now' | 'most_appreciated' | 'most_visited')[] : undefined;
+      return unique;
+    }),
+  page: z
+    .string()
+    .optional()
+    .transform((s) => (s ? parseInt(s, 10) : undefined))
+    .refine(
+      (n) => n === undefined || (Number.isInteger(n) && n >= 1 && n <= 10_000),
+      { message: 'page must be an integer between 1 and 10000' }
+    ),
+  per_page: z
+    .string()
+    .optional()
+    .transform((s) => (s ? parseInt(s, 10) : undefined))
+    .refine((n) => n === undefined || (Number.isInteger(n) && n >= 1 && n <= 100), { message: 'per_page must be an integer between 1 and 100' }),
+  limit_per_group: z
+    .string()
+    .optional()
+    .transform((s) => (s ? parseInt(s, 10) : undefined))
+    .refine(
+      (n) => n === undefined || (Number.isInteger(n) && n >= 1 && n <= 100),
+      { message: 'limit_per_group must be an integer between 1 and 100' }
+    ),
+  wash_type_ids: z
+    .string()
+    .optional()
+    .transform((s) => {
+      if (!s) return undefined;
+      return s.split(',').map((t) => t.trim()).filter(Boolean);
     })
-    .optional(),
+    .optional()
+    .refine(
+      (arr) =>
+        arr === undefined ||
+        (Array.isArray(arr) &&
+          arr.length <= 50 &&
+          arr.every((id) => z.string().uuid().safeParse(id).success)),
+      { message: 'wash_type_ids must be comma-separated UUIDs (max 50)' }
+    ),
+  service_scope: z
+    .string()
+    .optional()
+    .transform((s) => (s === '' || s === undefined ? undefined : s))
+    .refine(
+      (s) => s === undefined || serviceScopeEnum.safeParse(s).success,
+      { message: 'service_scope must be exterior, interior, or both' }
+    ),
+  format_id: z
+    .string()
+    .optional()
+    .transform((s) => (s === '' || s === undefined ? undefined : s))
+    .refine(
+      (s) => s === undefined || z.string().uuid().safeParse(s).success,
+      { message: 'format_id must be a valid UUID' }
+    ),
+  date: z
+    .string()
+    .regex(/^\d{4}-\d{2}-\d{2}$/, 'date must be YYYY-MM-DD')
+    .optional()
+    .refine(
+      (s) => {
+        if (!s) return true;
+        const d = new Date(s + 'T00:00:00Z');
+        return !Number.isNaN(d.getTime()) && d.toISOString().slice(0, 10) === s;
+      },
+      { message: 'date must be a valid calendar date' }
+    ),
 });
 
 // ─── Station config API (Unit 2) ─────────────────────────────────────────────
@@ -151,6 +252,7 @@ export const stationConfigBodySchema = z
     max_concurrent_posts: z.number().int().min(1).max(100).optional(),
     margin_before_minutes: z.number().int().min(0).max(60).optional(),
     margin_after_minutes: z.number().int().min(0).max(60).optional(),
+    reservation_surcharge: z.number().min(0).max(99999.99).nullable().optional(),
     posts: z.array(stationPostItemSchema).max(200, 'Too many posts').optional(),
   })
   .strict()

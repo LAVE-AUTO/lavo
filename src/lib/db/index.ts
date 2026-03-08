@@ -18,3 +18,6 @@ if (process.env.NODE_ENV !== "production") {
 
 export const db = drizzle(pool, { schema });
 
+/** Transaction object type — use as optional param in repository functions. */
+export type DbTransaction = Parameters<Parameters<typeof db.transaction>[0]>[0];
+
