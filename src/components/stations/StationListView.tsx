@@ -186,8 +186,8 @@ export function StationListView() {
 
   return (
     <div className="animate-fade-in">
-      {/* -- Search + filter toggle -- */}
-      <div className="mb-4 space-y-3">
+      {/* -- Search + filter toggle (sticky below navbar) -- */}
+      <div className="sticky top-16 z-30 bg-[#EDEDED] dark:bg-dark-bg pb-3 -mx-4 px-4 sm:-mx-6 sm:px-6 pt-3 space-y-3">
         <div className="flex gap-2">
           <div className="flex-1">
             <SearchBar value={query} onChange={setQuery} placeholder={t('search_placeholder')} />
