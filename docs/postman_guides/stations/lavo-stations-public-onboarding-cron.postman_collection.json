@@ -2,7 +2,7 @@
   "info": {
     "_postman_id": "2ef04412-e41a-4ece-97a7-12091ab0dd12",
     "name": "LAVO — Stations (Public + Onboarding + Cron)",
-    "description": "Collection:\n- Public: stations API (list, detail, join)\n- Onboarding: upload documents and submit\n- Formats: vehicle formats CRUD (GET public, POST/PUT/PATCH/DELETE auth STATION)\n- Cron: sync pending uploads (local files from onboarding)\n\nRequired variable: base_url (e.g. http://localhost:3000)\nOptional: station_id, cron_secret (for cron)\nCron: cron_secret must match CRON_SECRET in .env\n\nNotes:\n- Public and onboarding upload are unauthenticated.\n- Cron requires x-cron-secret or Authorization: Bearer <CRON_SECRET>.",
+    "description": "Collection:\n- Public: stations API (list with groups/pagination/filters, detail with completed_count, join)\n- Client: queue/join, me/entries, cancel, upgrade-to-reservation; create reservation\n- Station: entries list, PATCH entry status/position; reservations list by station\n- Onboarding: upload and submit (wash_type_ids array, optional service_scope)\n- Formats: vehicle formats CRUD\n- Cron: sync pending uploads, downgrade-late-reservations\n\nRequired: base_url. Optional: station_id, format_id, entry_id, time_slot_id, access_token (client or station), cron_secret.",
     "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
   },
   "variable": [
@@ -30,6 +30,16 @@
       "key": "access_token",
       "value": "",
       "type": "string"
+    },
+    {
+      "key": "entry_id",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "time_slot_id",
+      "value": "",
+      "type": "string"
     }
   ],
   "item": [
@@ -44,10 +54,13 @@
               "script": {
                 "exec": [
                   "pm.test('Status 200', () => pm.response.to.have.status(200));",
-                  "pm.test('Body has data array', () => {",
+                  "pm.test('Body has data.all and meta', () => {",
                   "  const json = pm.response.json();",
                   "  pm.expect(json).to.have.property('data');",
-                  "  pm.expect(Array.isArray(json.data)).to.be.true;",
+                  "  pm.expect(json.data).to.have.property('all');",
+                  "  pm.expect(Array.isArray(json.data.all)).to.be.true;",
+                  "  pm.expect(json).to.have.property('meta');",
+                  "  pm.expect(json.meta).to.have.property('total');",
                   "});"
                 ],
                 "type": "text/javascript"
@@ -58,7 +71,7 @@
             "method": "GET",
             "header": [],
             "url": {
-              "raw": "{{base_url}}/api/v1/stations?q=paris&city=&sort=name",
+              "raw": "{{base_url}}/api/v1/stations?q=paris&page=1&per_page=20&sort=name_asc",
               "host": [
                 "{{base_url}}"
               ],
@@ -68,21 +81,49 @@
                 "stations"
               ],
               "query": [
-                {
-                  "key": "q",
-                  "value": "paris"
-                },
-                {
-                  "key": "city",
-                  "value": ""
-                },
-                {
-                  "key": "sort",
-                  "value": "name"
-                }
+                { "key": "q", "value": "paris" },
+                { "key": "page", "value": "1" },
+                { "key": "per_page", "value": "20" },
+                { "key": "sort", "value": "name_asc" }
               ]
             },
-            "description": "GET /api/v1/stations — lists active stations. Query: q, city, sort (name|slots_asc|slots_desc). Response includes available and available_slots per station."
+            "description": "GET /api/v1/stations — list active stations. Response: data.all (array), data.available_now? etc. if groups=..., meta (total, page, per_page, total_pages). Query: q, city, sort, page, per_page, limit_per_group, wash_type_ids, service_scope, format_id."
+          },
+          "response": []
+        },
+        {
+          "name": "List stations with groups (200)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 200', () => pm.response.to.have.status(200));",
+                  "pm.test('Body has groups when requested', () => {",
+                  "  const json = pm.response.json();",
+                  "  pm.expect(json.data).to.have.property('all');",
+                  "  pm.expect(json.data).to.have.property('available_now');",
+                  "  pm.expect(json.data).to.have.property('most_appreciated');",
+                  "  pm.expect(json.data).to.have.property('most_visited');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/v1/stations?groups=available_now,most_appreciated,most_visited&per_page=10",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "stations"],
+              "query": [
+                { "key": "groups", "value": "available_now,most_appreciated,most_visited" },
+                { "key": "per_page", "value": "10" }
+              ]
+            },
+            "description": "GET /api/v1/stations with groups — returns data.all plus data.available_now, data.most_appreciated, data.most_visited."
           },
           "response": []
         },
@@ -159,7 +200,7 @@
                 "{{station_id}}"
               ]
             },
-            "description": "GET /api/v1/stations/:id — station detail. Requires station_id. Response includes available and available_slots."
+            "description": "GET /api/v1/stations/:id — station detail. Requires station_id. Response includes available, available_slots, completed_count (services terminés)."
           },
           "response": []
         },
@@ -282,7 +323,7 @@
             ],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"email\": \"station@example.com\",\n  \"phone\": \"+33600000000\",\n  \"password\": \"Password1!\",\n  \"confirm_password\": \"Password1!\",\n  \"station_name\": \"Test Station\",\n  \"address\": \"1 rue Test\",\n  \"city\": \"Paris\",\n  \"wash_post_count\": 2,\n  \"wash_type\": \"hand_wash\",\n  \"documents\": [\n    { \"document_type\": \"kbis\", \"file_url\": \"https://example.com/doc.pdf\", \"storage\": \"cloudinary\" }\n  ],\n  \"terms_accepted\": true\n}"
+              "raw": "{\n  \"email\": \"station@example.com\",\n  \"phone\": \"+33600000000\",\n  \"password\": \"Password1!\",\n  \"confirm_password\": \"Password1!\",\n  \"station_name\": \"Test Station\",\n  \"address\": \"1 rue Test\",\n  \"city\": \"Paris\",\n  \"wash_post_count\": 2,\n  \"wash_type_ids\": [\"<uuid from wash_types table>\"],\n  \"service_scope\": \"both\",\n  \"documents\": [\n    { \"document_type\": \"kbis\", \"file_url\": \"https://example.com/doc.pdf\", \"storage\": \"cloudinary\" }\n  ],\n  \"terms_accepted\": true\n}"
             },
             "url": {
               "raw": "{{base_url}}/api/v1/stations/onboarding/submit",
@@ -297,7 +338,7 @@
                 "submit"
               ]
             },
-            "description": "POST /api/v1/stations/onboarding/submit — JSON body: step 1 (email, phone, password, confirm_password), step 2 (station_name, address, city, wash_post_count, wash_type, ...), step 3 (documents: [{ document_type, file_url, storage? }], terms_accepted: true). Replace file_url with URLs from onboarding upload. No auth."
+            "description": "POST /api/v1/stations/onboarding/submit — step 2 uses wash_type_ids (array of UUIDs from wash_types), optional service_scope (exterior|interior|both). Replace wash_type_ids with real UUIDs from DB. No auth."
           },
           "response": []
         }
@@ -472,6 +513,146 @@
       ]
     },
     {
+      "name": "Client — Queue & entries",
+      "item": [
+        {
+          "name": "Join queue (201)",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{access_token}}" }
+            ],
+            "body": { "mode": "raw", "raw": "{\"vehicle_format_id\": \"{{format_id}}\"}" },
+            "url": { "raw": "{{base_url}}/api/v1/stations/{{station_id}}/queue/join", "host": ["{{base_url}}"], "path": ["api", "v1", "stations", "{{station_id}}", "queue", "join"] }
+          },
+          "response": [],
+          "description": "POST /api/v1/stations/:id/queue/join — auth client. Body: vehicle_format_id. Creates queue entry."
+        },
+        {
+          "name": "Get queue (200)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": { "raw": "{{base_url}}/api/v1/stations/{{station_id}}/queue", "host": ["{{base_url}}"], "path": ["api", "v1", "stations", "{{station_id}}", "queue"] }
+          },
+          "response": [],
+          "description": "GET /api/v1/stations/:id/queue — list queue entries (public or auth)."
+        },
+        {
+          "name": "My entries (200)",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{access_token}}" }],
+            "url": { "raw": "{{base_url}}/api/v1/me/entries", "host": ["{{base_url}}"], "path": ["api", "v1", "me", "entries"] }
+          },
+          "response": [],
+          "description": "GET /api/v1/me/entries — auth client. Reservations + queue entries. Set entry_id from response for cancel/upgrade."
+        },
+        {
+          "name": "Cancel entry (200)",
+          "request": {
+            "method": "PATCH",
+            "header": [{ "key": "Authorization", "value": "Bearer {{access_token}}" }],
+            "url": { "raw": "{{base_url}}/api/v1/me/entries/{{entry_id}}/cancel", "host": ["{{base_url}}"], "path": ["api", "v1", "me", "entries", "{{entry_id}}", "cancel"] }
+          },
+          "response": [],
+          "description": "PATCH /api/v1/me/entries/:entryId/cancel — auth client."
+        },
+        {
+          "name": "Upgrade to reservation (200)",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{access_token}}" }
+            ],
+            "body": { "mode": "raw", "raw": "{\"time_slot_id\": \"{{time_slot_id}}\"}" },
+            "url": { "raw": "{{base_url}}/api/v1/me/entries/{{entry_id}}/upgrade-to-reservation", "host": ["{{base_url}}"], "path": ["api", "v1", "me", "entries", "{{entry_id}}", "upgrade-to-reservation"] }
+          },
+          "response": [],
+          "description": "POST /api/v1/me/entries/:entryId/upgrade-to-reservation — auth client. Body: time_slot_id."
+        }
+      ]
+    },
+    {
+      "name": "Client — Create reservation",
+      "item": [
+        {
+          "name": "Create reservation (201)",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{access_token}}" }
+            ],
+            "body": { "mode": "raw", "raw": "{\"time_slot_id\": \"{{time_slot_id}}\", \"vehicle_format_id\": \"{{format_id}}\"}" },
+            "url": { "raw": "{{base_url}}/api/v1/stations/{{station_id}}/reservations", "host": ["{{base_url}}"], "path": ["api", "v1", "stations", "{{station_id}}", "reservations"] }
+          },
+          "response": [],
+          "description": "POST /api/v1/stations/:id/reservations — auth client. Body: time_slot_id, vehicle_format_id."
+        }
+      ]
+    },
+    {
+      "name": "Station — Entries",
+      "item": [
+        {
+          "name": "List entries (200)",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{access_token}}" }],
+            "url": { "raw": "{{base_url}}/api/v1/station/entries", "host": ["{{base_url}}"], "path": ["api", "v1", "station", "entries"] }
+          },
+          "response": [],
+          "description": "GET /api/v1/station/entries — auth STATION. All entries (reservations + queue) for connected station."
+        },
+        {
+          "name": "PATCH entry status (200)",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{access_token}}" }
+            ],
+            "body": { "mode": "raw", "raw": "{\"status\": \"completed\"}" },
+            "url": { "raw": "{{base_url}}/api/v1/station/entries/{{entry_id}}", "host": ["{{base_url}}"], "path": ["api", "v1", "station", "entries", "{{entry_id}}"] }
+          },
+          "response": [],
+          "description": "PATCH /api/v1/station/entries/:id — auth STATION. Body: status (in_progress|completed|cancelled)."
+        },
+        {
+          "name": "PATCH entry position (200)",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{access_token}}" }
+            ],
+            "body": { "mode": "raw", "raw": "{\"queue_position\": 1}" },
+            "url": { "raw": "{{base_url}}/api/v1/station/entries/{{entry_id}}/position", "host": ["{{base_url}}"], "path": ["api", "v1", "station", "entries", "{{entry_id}}", "position"] }
+          },
+          "response": [],
+          "description": "PATCH /api/v1/station/entries/:id/position — auth STATION. Body: queue_position (queue entries only)."
+        }
+      ]
+    },
+    {
+      "name": "Station — Reservations list",
+      "item": [
+        {
+          "name": "List reservations by station (200)",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{access_token}}" }],
+            "url": { "raw": "{{base_url}}/api/v1/stations/{{station_id}}/reservations", "host": ["{{base_url}}"], "path": ["api", "v1", "stations", "{{station_id}}", "reservations"] }
+          },
+          "response": [],
+          "description": "GET /api/v1/stations/:id/reservations — auth STATION. Entries for this station (must be connected station)."
+        }
+      ]
+    },
+    {
       "name": "Cron — Sync pending uploads",
       "item": [
         {
@@ -546,6 +727,30 @@
             "description": "Negative test: missing secret must return 401."
           },
           "response": []
+        },
+        {
+          "name": "Downgrade late reservations (200)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 200', () => pm.response.to.have.status(200));"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "x-cron-secret", "value": "{{cron_secret}}" }],
+            "url": {
+              "raw": "{{base_url}}/api/cron/downgrade-late-reservations",
+              "host": ["{{base_url}}"],
+              "path": ["api", "cron", "downgrade-late-reservations"]
+            }
+          },
+          "description": "GET /api/cron/downgrade-late-reservations — moves unconfirmed reservations past tolerance into queue. Requires x-cron-secret or Bearer CRON_SECRET."
         }
       ]
     }
