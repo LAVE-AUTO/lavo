@@ -53,7 +53,8 @@ body {
     font-size: var(--font-size-base);
 }
 
-button, [role="button"] {
+button,
+[role="button"] {
     cursor: pointer;
 }
 
@@ -134,14 +135,26 @@ button, [role="button"] {
 }
 
 @keyframes float-orb {
-    0%, 100% { transform: translateY(0px) scale(1); }
-    50%       { transform: translateY(-40px) scale(1.04); }
+    0%,
+    100% {
+        transform: translateY(0px) scale(1);
+    }
+    50% {
+        transform: translateY(-40px) scale(1.04);
+    }
 }
 
 @keyframes float-card {
-    0%, 100% { transform: translateY(0px); }
-    40%      { transform: translateY(-11px); }
-    70%      { transform: translateY(-5px); }
+    0%,
+    100% {
+        transform: translateY(0px);
+    }
+    40% {
+        transform: translateY(-11px);
+    }
+    70% {
+        transform: translateY(-5px);
+    }
 }
 
 .animate-float-orb {
@@ -282,4 +295,478 @@ button, [role="button"] {
     background-image: radial-gradient(ellipse at 60% 40%, rgba(196, 154, 30, 0.18) 0%, transparent 60%), linear-gradient(160deg, rgba(26, 33, 22, 0.97) 0%, rgba(36, 48, 32, 0.95) 50%, rgba(26, 33, 22, 0.97) 100%), url('https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=1600&q=80');
     background-size: auto, auto, cover;
     background-position: center, center, center;
+}
+
+
+/* ------------------------------------------------------------------ */
+
+
+/* react-phone-number-input + custom country select                    */
+
+
+/* ------------------------------------------------------------------ */
+
+
+/* -- Layout -------------------------------------------------------- */
+
+.lavo-phone-input.PhoneInput {
+    display: flex;
+    align-items: stretch;
+    gap: 0;
+}
+
+
+/* Hide the library's default country wrapper (we use our own) */
+
+.lavo-phone-input .PhoneInputCountry {
+    display: none;
+}
+
+
+/* -- Phone number text input -------------------------------------- */
+
+.lavo-phone-input .PhoneInputInput {
+    width: 100%;
+    padding: 12px 16px;
+    background: #ffffff;
+    border: 1.5px solid #CCCCCC;
+    border-left: none;
+    border-radius: 0 8px 8px 0;
+    font-size: 16px;
+    font-family: 'Rajdhani', sans-serif;
+    color: #1A1A1A;
+    outline: none;
+    transition: border-color 0.15s, box-shadow 0.15s;
+}
+
+.lavo-phone-input .PhoneInputInput::placeholder {
+    color: #AAAAAA;
+}
+
+.lavo-phone-input .PhoneInputInput:focus {
+    border-color: #af8408;
+    box-shadow: 0 0 0 3px rgba(196, 154, 30, 0.18);
+}
+
+
+/* Error */
+
+.lavo-phone-input--error .PhoneInputInput {
+    border-color: #E8472A;
+    background: #FFF8F7;
+}
+
+.lavo-phone-input--error .PhoneInputInput:focus {
+    box-shadow: 0 0 0 3px rgba(232, 71, 42, 0.2);
+}
+
+
+/* Dark */
+
+.dark .lavo-phone-input .PhoneInputInput {
+    background: #1E2A1A;
+    border-color: #2C3828;
+    color: #ffffff;
+}
+
+.dark .lavo-phone-input .PhoneInputInput::placeholder {
+    color: #4A5A46;
+}
+
+.dark .lavo-phone-input .PhoneInputInput:focus {
+    border-color: #af8408;
+    box-shadow: 0 0 0 3px rgba(196, 154, 30, 0.15);
+}
+
+
+/* Dark + error */
+
+.dark .lavo-phone-input--error .PhoneInputInput {
+    border-color: #E8472A;
+    background: #2A1A18;
+}
+
+
+/* -- Custom country select trigger -------------------------------- */
+
+.lavo-country-select {
+    position: relative;
+    display: flex;
+    flex-shrink: 0;
+}
+
+.lavo-country-select__trigger {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 0 12px;
+    background: #ffffff;
+    border: 1.5px solid #CCCCCC;
+    border-right: none;
+    border-radius: 8px 0 0 8px;
+    cursor: pointer;
+    outline: none;
+    transition: border-color 0.15s, background-color 0.15s;
+    min-height: 48px;
+}
+
+.lavo-country-select__trigger:hover {
+    background: #f9f6ee;
+}
+
+.lavo-country-select__trigger:focus-visible {
+    border-color: #af8408;
+}
+
+.lavo-phone-input--error .lavo-country-select__trigger {
+    border-color: #E8472A;
+    background: #FFF8F7;
+}
+
+
+/* Flag inside trigger */
+
+.lavo-country-select__flag {
+    display: flex;
+    align-items: center;
+}
+
+.lavo-country-select__flag .PhoneInputCountryIcon {
+    width: 24px;
+    height: 18px;
+    border-radius: 3px;
+    overflow: hidden;
+    box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.08);
+}
+
+.lavo-country-select__flag .PhoneInputCountryIcon--border {
+    box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.08);
+    background-color: transparent;
+}
+
+.lavo-country-select__flag .PhoneInputCountryIconImg {
+    display: block;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+
+/* Dial code */
+
+.lavo-country-select__dial {
+    font-family: 'Rajdhani', sans-serif;
+    font-size: 15px;
+    font-weight: 600;
+    color: #1A1A1A;
+    letter-spacing: 0.02em;
+    min-width: 28px;
+}
+
+
+/* Chevron */
+
+.lavo-country-select__chevron {
+    color: #888;
+    transition: transform 0.2s ease;
+    flex-shrink: 0;
+}
+
+.lavo-country-select__chevron--open {
+    transform: rotate(180deg);
+}
+
+
+/* -- Dropdown panel ----------------------------------------------- */
+
+.lavo-country-select__dropdown {
+    position: absolute;
+    top: calc(100% + 6px);
+    left: 0;
+    width: min(320px, calc(100vw - 48px));
+    max-height: 340px;
+    background: #ffffff;
+    border: 1px solid #e0e0e0;
+    border-radius: 12px;
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.06), 0 12px 24px -4px rgba(0, 0, 0, 0.1);
+    z-index: 50;
+    overflow: hidden;
+    animation: lavo-dropdown-enter 0.18s ease-out;
+}
+
+@keyframes lavo-dropdown-enter {
+    from {
+        opacity: 0;
+        transform: translateY(-6px) scale(0.98);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+    }
+}
+
+
+/* Search wrapper */
+
+.lavo-country-select__search-wrap {
+    position: relative;
+    padding: 10px 12px 8px;
+    border-bottom: 1px solid #f0f0f0;
+}
+
+.lavo-country-select__search-icon {
+    position: absolute;
+    left: 22px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: #aaa;
+    pointer-events: none;
+}
+
+.lavo-country-select__search {
+    width: 100%;
+    padding: 9px 12px 9px 34px;
+    font-family: 'Rajdhani', sans-serif;
+    font-size: 14px;
+    color: #1A1A1A;
+    background: #f8f8f8;
+    border: 1.5px solid #e8e8e8;
+    border-radius: 8px;
+    outline: none;
+    transition: border-color 0.15s, box-shadow 0.15s;
+}
+
+.lavo-country-select__search::placeholder {
+    color: #bbb;
+}
+
+.lavo-country-select__search:focus {
+    border-color: #af8408;
+    box-shadow: 0 0 0 2px rgba(196, 154, 30, 0.12);
+    background: #ffffff;
+}
+
+
+/* Options list */
+
+.lavo-country-select__list {
+    list-style: none;
+    margin: 0;
+    padding: 4px 0;
+    overflow-y: auto;
+    max-height: 260px;
+    scrollbar-width: thin;
+    scrollbar-color: #d4d4d4 transparent;
+}
+
+.lavo-country-select__list::-webkit-scrollbar {
+    width: 5px;
+}
+
+.lavo-country-select__list::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+.lavo-country-select__list::-webkit-scrollbar-thumb {
+    background: #d4d4d4;
+    border-radius: 4px;
+}
+
+
+/* Single option row */
+
+.lavo-country-select__option {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    width: 100%;
+    padding: 8px 14px;
+    font-family: 'Rajdhani', sans-serif;
+    font-size: 14px;
+    color: #1A1A1A;
+    background: transparent;
+    border: none;
+    cursor: pointer;
+    text-align: left;
+    transition: background-color 0.1s;
+}
+
+.lavo-country-select__option:hover {
+    background: rgba(175, 132, 8, 0.08);
+}
+
+.lavo-country-select__option--selected {
+    background: rgba(175, 132, 8, 0.1);
+    font-weight: 600;
+}
+
+.lavo-country-select__option--selected:hover {
+    background: rgba(175, 132, 8, 0.14);
+}
+
+
+/* Flag in option */
+
+.lavo-country-select__option-flag {
+    display: flex;
+    align-items: center;
+    flex-shrink: 0;
+}
+
+.lavo-country-select__option-flag .PhoneInputCountryIcon {
+    width: 22px;
+    height: 16px;
+    border-radius: 2px;
+    overflow: hidden;
+    box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.08);
+}
+
+.lavo-country-select__option-flag .PhoneInputCountryIcon--border {
+    box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.08);
+    background-color: transparent;
+}
+
+.lavo-country-select__option-flag .PhoneInputCountryIconImg {
+    display: block;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+
+/* Country name */
+
+.lavo-country-select__option-label {
+    flex: 1;
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+
+/* Dial code in option */
+
+.lavo-country-select__option-dial {
+    flex-shrink: 0;
+    font-size: 13px;
+    font-weight: 500;
+    color: #888;
+    font-variant-numeric: tabular-nums;
+}
+
+
+/* Empty state */
+
+.lavo-country-select__empty {
+    padding: 20px 14px;
+    text-align: center;
+    font-size: 14px;
+    color: #aaa;
+}
+
+
+/* -- Dark mode overrides ------------------------------------------ */
+
+.dark .lavo-country-select__trigger {
+    background: #1E2A1A;
+    border-color: #2C3828;
+}
+
+.dark .lavo-country-select__trigger:hover {
+    background: #243020;
+}
+
+.dark .lavo-country-select__trigger:focus-visible {
+    border-color: #af8408;
+}
+
+.dark .lavo-phone-input--error .lavo-country-select__trigger {
+    border-color: #E8472A;
+    background: #2A1A18;
+}
+
+.dark .lavo-country-select__dial {
+    color: #ffffff;
+}
+
+.dark .lavo-country-select__chevron {
+    color: #A0A0A0;
+}
+
+.dark .lavo-country-select__flag .PhoneInputCountryIcon {
+    box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.1);
+}
+
+.dark .lavo-country-select__flag .PhoneInputCountryIcon--border {
+    box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.1);
+}
+
+
+/* Dark dropdown */
+
+.dark .lavo-country-select__dropdown {
+    background: #1E2A1A;
+    border-color: #2C3828;
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.2), 0 12px 24px -4px rgba(0, 0, 0, 0.4);
+}
+
+.dark .lavo-country-select__search-wrap {
+    border-bottom-color: #2C3828;
+}
+
+.dark .lavo-country-select__search {
+    background: #162012;
+    border-color: #2C3828;
+    color: #ffffff;
+}
+
+.dark .lavo-country-select__search::placeholder {
+    color: #4A5A46;
+}
+
+.dark .lavo-country-select__search:focus {
+    border-color: #af8408;
+    box-shadow: 0 0 0 2px rgba(196, 154, 30, 0.15);
+    background: #1A2816;
+}
+
+.dark .lavo-country-select__search-icon {
+    color: #4A5A46;
+}
+
+.dark .lavo-country-select__list::-webkit-scrollbar-thumb {
+    background: #3a4a36;
+}
+
+.dark .lavo-country-select__option {
+    color: #ffffff;
+}
+
+.dark .lavo-country-select__option:hover {
+    background: rgba(175, 132, 8, 0.12);
+}
+
+.dark .lavo-country-select__option--selected {
+    background: rgba(175, 132, 8, 0.15);
+}
+
+.dark .lavo-country-select__option--selected:hover {
+    background: rgba(175, 132, 8, 0.2);
+}
+
+.dark .lavo-country-select__option-flag .PhoneInputCountryIcon {
+    box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.1);
+}
+
+.dark .lavo-country-select__option-flag .PhoneInputCountryIcon--border {
+    box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.1);
+}
+
+.dark .lavo-country-select__option-dial {
+    color: #A0A0A0;
+}
+
+.dark .lavo-country-select__empty {
+    color: #4A5A46;
 }
