@@ -62,7 +62,7 @@ export function StationCard({ station, unavailable = false }: StationCardProps) 
   return (
     <article
       className={[
-        'bg-[#C8C8B4] dark:bg-dark-card rounded-[14px] overflow-hidden border border-[#CCCCCC] dark:border-tab-inactive group hover:border-gold/30 transition-all duration-300',
+        'h-full flex flex-col bg-[#C8C8B4] dark:bg-dark-card rounded-[14px] overflow-hidden border border-[#CCCCCC] dark:border-tab-inactive group hover:border-gold/30 transition-all duration-300',
         unavailable ? 'opacity-50 grayscale pointer-events-none' : '',
       ].join(' ')}
     >
@@ -117,7 +117,7 @@ export function StationCard({ station, unavailable = false }: StationCardProps) 
       </div>
 
       {/* Card body */}
-      <div className="p-4">
+      <div className="p-4 flex flex-col flex-1">
         {/* Name + price */}
         <div className="flex items-start justify-between gap-2 mb-2">
           <h3 className="text-[17px] font-bold text-[#0A0A14] dark:text-white leading-tight line-clamp-1">
@@ -168,7 +168,7 @@ export function StationCard({ station, unavailable = false }: StationCardProps) 
         )}
 
         {/* Action buttons */}
-        <div className="flex gap-2">
+        <div className="flex gap-2 mt-auto">
           {!unavailable && (
             <button
               type="button"
