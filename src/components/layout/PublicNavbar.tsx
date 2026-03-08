@@ -214,26 +214,28 @@ export function PublicNavbar() {
             ))}
             <div className="pt-3 border-t border-[#E0E0D0] dark:border-tab-inactive flex flex-col gap-2">
               {isAuthenticated && user ? (
-                <div className="flex items-center gap-3 px-2 py-2">
-                  <div className="w-9 h-9 rounded-full bg-gold/20 border border-gold/40 flex items-center justify-center shrink-0">
-                    <span className="text-[14px] font-black text-gold leading-none">
-                      {(user.first_name?.[0] ?? user.email[0]).toUpperCase()}
-                    </span>
+                <>
+                  <div className="flex items-center gap-3 px-2 py-2">
+                    <div className="w-9 h-9 rounded-full bg-gold/20 border border-gold/40 flex items-center justify-center shrink-0">
+                      <span className="text-[14px] font-black text-gold leading-none">
+                        {(user.first_name?.[0] ?? user.email[0]).toUpperCase()}
+                      </span>
+                    </div>
+                    <div className="flex-1">
+                      <p className="text-[15px] font-bold text-[#1A1A1A] dark:text-white leading-tight">
+                        {user.first_name ? `${user.first_name} ${user.last_name ?? ''}`.trim() : user.email}
+                      </p>
+                      <p className="text-[13px] text-[#555] dark:text-[#C0C0B0]">{user.email}</p>
+                    </div>
                   </div>
-                  <div className="flex-1">
-                    <p className="text-[15px] font-bold text-[#1A1A1A] dark:text-white leading-tight">
-                      {user.first_name ? `${user.first_name} ${user.last_name ?? ''}`.trim() : user.email}
-                    </p>
-                    <p className="text-[13px] text-[#555] dark:text-[#C0C0B0]">{user.email}</p>
-                  </div>
-                </div>
-                <button
-                  type="button"
-                  onClick={logout}
-                  className="flex items-center justify-center py-3 rounded-xl border border-lavo-error/30 text-[14px] font-bold text-lavo-error hover:bg-lavo-error/10 transition-colors cursor-pointer"
-                >
-                  {t('logout')}
-                </button>
+                  <button
+                    type="button"
+                    onClick={logout}
+                    className="flex items-center justify-center py-3 rounded-xl border border-lavo-error/30 text-[14px] font-bold text-lavo-error hover:bg-lavo-error/10 transition-colors cursor-pointer"
+                  >
+                    {t('logout')}
+                  </button>
+                </>
               ) : (
                 <>
                   <Link
