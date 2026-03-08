@@ -7,6 +7,7 @@ import { MOCK_STATIONS } from '@/data/stations-mock';
 import { SearchBar } from './SearchBar';
 import { StationCard } from './StationCard';
 import type { StationDetailData } from '@/types/station';
+import { Link } from '@/i18n/navigation';
 
 type SortKey = 'default' | 'price_asc' | 'best_rated';
 
@@ -142,8 +143,13 @@ export function StationListView() {
     return results;
   }, [query, onlyAvail, sort, cityInput, price, selectedCategories, selectedVehicles, selectedServices, timeFrom, timeTo]);
 
-  const available   = filtered.filter((s) => s.availableSlots > 0);
-  const unavailable = filtered.filter((s) => s.availableSlots === 0);
+  /* ── Derived section lists ── */
+  const availableNow   = useMemo(() => filtered.filter((s) => s.availableSlots > 0), [filtered]);
+  const topRated       = useMemo(() => [...filtered].sort((a, b) => b.rating - a.rating), [filtered]);
+  const mostRevisited  = useMemo(() => [...filtered].sort((a, b) => b.reviewCount - a.reviewCount), [filtered]);
+
+  /* ── Expanded state per section ── */
+  const [expandedSections, setExpandedSections] = useState<Record<string, boolean>>({});
 
   const sortChips: { key: SortKey; label: string }[] = [
     { key: 'default',    label: t('filter_all') },
@@ -180,8 +186,8 @@ export function StationListView() {
 
   return (
     <div className="animate-fade-in">
-      {/* -- Search + filter toggle -- */}
-      <div className="mb-4 space-y-3">
+      {/* -- Search + filter toggle (sticky below navbar) -- */}
+      <div className="sticky top-16 z-30 bg-[#EDEDED] dark:bg-dark-bg pb-3 -mx-4 px-4 sm:-mx-6 sm:px-6 pt-3 space-y-3">
         <div className="flex gap-2">
           <div className="flex-1">
             <SearchBar value={query} onChange={setQuery} placeholder={t('search_placeholder')} />
@@ -481,17 +487,38 @@ export function StationListView() {
         <EmptyState title={t('empty_title')} desc={t('empty_desc')} />
       ) : (
         <div className="space-y-10">
-          {available.length > 0 && (
-            <section>
-              <SectionLabel label={t('available_section')} count={available.length} accent />
-              <StationGrid stations={available} unavailable={false} />
-            </section>
+          {availableNow.length > 0 && (
+            <StationSection
+              id="available_now"
+              label={t('section_available_now')}
+              stations={availableNow}
+              expanded={!!expandedSections['available_now']}
+              onToggle={() => setExpandedSections((s) => ({ ...s, available_now: !s['available_now'] }))}
+              seeMoreLabel={t('see_more')}
+              accent
+            />
           )}
-          {unavailable.length > 0 && !onlyAvail && (
-            <section>
-              <SectionLabel label={t('unavailable_section')} count={unavailable.length} />
-              <StationGrid stations={unavailable} unavailable />
-            </section>
+          {topRated.length > 0 && (
+            <StationSection
+              id="top_rated"
+              label={t('section_top_rated')}
+              stations={topRated}
+              expanded={!!expandedSections['top_rated']}
+              onToggle={() => setExpandedSections((s) => ({ ...s, top_rated: !s['top_rated'] }))}
+              seeMoreLabel={t('see_more')}
+              accent
+            />
+          )}
+          {mostRevisited.length > 0 && (
+            <StationSection
+              id="most_revisited"
+              label={t('section_most_revisited')}
+              stations={mostRevisited}
+              expanded={!!expandedSections['most_revisited']}
+              onToggle={() => setExpandedSections((s) => ({ ...s, most_revisited: !s['most_revisited'] }))}
+              seeMoreLabel={t('see_more')}
+              accent
+            />
           )}
         </div>
       )}
@@ -503,25 +530,54 @@ export function StationListView() {
 /* Internal sub-components                                              */
 /* ------------------------------------------------------------------ */
 
-function SectionLabel({ label, count, accent = false }: { label: string; count: number; accent?: boolean }) {
-  return (
-    <div className="flex items-center gap-3 mb-4">
-      {accent && <span className="w-1 h-4 rounded-full bg-gold shrink-0" />}
-      <span className="text-[16px] font-black text-[#1A1A1A] dark:text-white uppercase tracking-widest">{label}</span>
-      <span className="text-[13px] text-[#555] dark:text-[#B0B0A0] font-semibold bg-[#E0E0D0] dark:bg-dark-card px-2 py-0.5 rounded-full">
-        {count}
-      </span>
-    </div>
-  );
+interface StationSectionProps {
+  id: string;
+  label: string;
+  stations: StationDetailData[];
+  expanded: boolean;
+  onToggle: () => void;
+  seeMoreLabel: string;
+  accent?: boolean;
 }
 
-function StationGrid({ stations, unavailable }: { stations: StationDetailData[]; unavailable: boolean }) {
+function StationSection({ label, stations, expanded, onToggle, seeMoreLabel, accent = false }: StationSectionProps) {
   return (
-    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-      {stations.map((station) => (
-        <StationCard key={station.id} station={station} unavailable={unavailable} />
-      ))}
-    </div>
+    <section>
+      <div className="flex items-center justify-between mb-4">
+        <div className="flex items-center gap-3">
+          {accent && <span className="w-1 h-4 rounded-full bg-gold shrink-0" />}
+          <span className="text-[16px] font-black text-[#1A1A1A] dark:text-white uppercase tracking-widest">{label}</span>
+          <span className="text-[13px] text-[#555] dark:text-[#B0B0A0] font-semibold bg-[#E0E0D0] dark:bg-dark-card px-2 py-0.5 rounded-full">
+            {stations.length}
+          </span>
+        </div>
+        {stations.length > 3 && (
+          <button
+            type="button"
+            onClick={onToggle}
+            className="text-[14px] font-bold text-gold hover:text-gold-hover transition-colors cursor-pointer"
+          >
+            {seeMoreLabel}
+          </button>
+        )}
+      </div>
+
+      {expanded ? (
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+          {stations.map((station) => (
+            <StationCard key={station.id} station={station} />
+          ))}
+        </div>
+      ) : (
+        <div className="flex gap-4 overflow-x-auto pb-2 scrollbar-none snap-x snap-mandatory">
+          {stations.map((station) => (
+            <div key={station.id} className="w-[280px] sm:w-[300px] shrink-0 snap-start">
+              <StationCard station={station} />
+            </div>
+          ))}
+        </div>
+      )}
+    </section>
   );
 }
 

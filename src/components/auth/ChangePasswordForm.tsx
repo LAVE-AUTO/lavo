@@ -4,17 +4,13 @@ import { useState, type ChangeEvent, type FormEvent } from 'react';
 import { useTranslations } from 'next-intl';
 import { Link } from '@/i18n/navigation';
 import { useToast } from '@/context/toast-context';
+import { useAuth } from '@/context/auth-context';
 import { postWithApi } from '@/services/axios-service';
 import { isPasswordValid } from '@/helpers/validators';
 import { HTTP_STATUS } from '@/helpers/constants';
 import { Spinner } from '@/components/ui/Spinner';
 import { FormField } from './FormField';
 import { PasswordRules } from './PasswordRules';
-
-interface ResetPasswordFormProps {
-  /** Token extracted from the URL search params by the server page. */
-  token: string | null;
-}
 
 function EyeIcon({ open }: { open: boolean }) {
   if (open) {
@@ -42,46 +38,33 @@ function SuccessIcon() {
   );
 }
 
-/**
- * Reset password form.
- * Reads token from props (passed by the server page via searchParams).
- * Shows an invalid-token card if token is missing.
- * Shows a success card after a successful reset.
- */
-export function ResetPasswordForm({ token }: ResetPasswordFormProps) {
-  const t = useTranslations('reset_password');
+export function ChangePasswordForm() {
+  const t = useTranslations('change_password');
   const { error: showError, success: showSuccess } = useToast();
+  const auth = useAuth();
 
-  const [password, setPassword]             = useState('');
+  const [currentPassword, setCurrentPassword] = useState('');
+  const [newPassword, setNewPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
-  const [errors, setErrors]                 = useState<{ password?: string; confirmPassword?: string }>({});
-  const [isLoading, setIsLoading]           = useState(false);
-  const [showPassword, setShowPassword]     = useState(false);
-  const [showConfirm, setShowConfirm]       = useState(false);
-  const [success, setSuccess]               = useState(false);
+  const [errors, setErrors] = useState<{ currentPassword?: string; newPassword?: string; confirmPassword?: string }>({});
+  const [isLoading, setIsLoading] = useState(false);
+  const [showCurrent, setShowCurrent] = useState(false);
+  const [showNew, setShowNew] = useState(false);
+  const [showConfirm, setShowConfirm] = useState(false);
+  const [success, setSuccess] = useState(false);
 
-  // No token → invalid link
-  if (!token) {
+  if (!auth.isAuthenticated) {
     return (
       <div className="px-8 pb-8 text-center animate-fade-in">
-        <div className="w-16 h-16 rounded-full bg-lavo-error/10 border border-lavo-error/20 flex items-center justify-center mx-auto mb-5">
-          <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#E8472A" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-            <circle cx="12" cy="12" r="10" />
-            <line x1="12" y1="8" x2="12" y2="12" />
-            <line x1="12" y1="16" x2="12.01" y2="16" />
-          </svg>
-        </div>
-        <p className="text-[16px] text-dark-bg dark:text-white font-semibold mb-2">
-          {t('error_invalid_token')}
+        <p className="text-[15px] text-[#555] dark:text-lavo-muted mb-6">
+          {t('error_generic')}
         </p>
-        <div className="mt-6">
-          <Link
-            href="/forgot-password"
-            className="btn-shine block w-full py-3.5 bg-gold hover:bg-gold-hover rounded-[10px] text-[16px] font-bold text-dark-bg tracking-wide transition-colors duration-150 text-center"
-          >
-            {t('back_to_login')}
-          </Link>
-        </div>
+        <Link
+          href="/login"
+          className="btn-shine block w-full py-3.5 bg-gold hover:bg-gold-hover rounded-[10px] text-[16px] font-bold text-dark-bg tracking-wide transition-colors duration-150 text-center"
+        >
+          {t('back_to_home')}
+        </Link>
       </div>
     );
   }
@@ -99,30 +82,34 @@ export function ResetPasswordForm({ token }: ResetPasswordFormProps) {
           {t('success_message')}
         </p>
         <Link
-          href="/login"
+          href="/"
           className="btn-shine block w-full py-3.5 bg-gold hover:bg-gold-hover rounded-[10px] text-[16px] font-bold text-dark-bg tracking-wide transition-colors duration-150 text-center"
         >
-          {t('back_to_login')}
+          {t('back_to_home')}
         </Link>
       </div>
     );
   }
 
   const handleBlurConfirm = () => {
-    if (confirmPassword && password !== confirmPassword) {
+    if (confirmPassword && newPassword !== confirmPassword) {
       setErrors((prev) => ({ ...prev, confirmPassword: t('error_password_mismatch') }));
     }
   };
 
   const validate = (): boolean => {
-    const next: { password?: string; confirmPassword?: string } = {};
-    if (!password) {
-      next.password = t('error_required');
-    } else if (!isPasswordValid(password)) {
-      next.password = t('error_password_invalid');
+    const next: { currentPassword?: string; newPassword?: string; confirmPassword?: string } = {};
+    if (!currentPassword) next.currentPassword = t('error_required');
+    if (!newPassword) {
+      next.newPassword = t('error_required');
+    } else if (!isPasswordValid(newPassword)) {
+      next.newPassword = t('error_password_invalid');
     }
-    if (!confirmPassword) next.confirmPassword  = t('error_required');
-    else if (password !== confirmPassword) next.confirmPassword = t('error_password_mismatch');
+    if (!confirmPassword) {
+      next.confirmPassword = t('error_required');
+    } else if (newPassword !== confirmPassword) {
+      next.confirmPassword = t('error_password_mismatch');
+    }
     setErrors(next);
     return Object.keys(next).length === 0;
   };
@@ -133,23 +120,22 @@ export function ResetPasswordForm({ token }: ResetPasswordFormProps) {
 
     setIsLoading(true);
     try {
-      const [ok, response] = await postWithApi('/auth/reset-password', {
-        token,
-        new_password: password,
+      const [ok, response] = await postWithApi('/auth/change-password', {
+        current_password: currentPassword,
+        new_password: newPassword,
         confirm_new_password: confirmPassword,
       }, { successStatus: HTTP_STATUS.OK });
 
       if (ok) {
+        await auth.refetchUser();
         showSuccess(t('toast_success'));
         setSuccess(true);
         return;
       }
 
       const data = response as { code?: string };
-      if (data?.code === 'TOO_MANY_REQUESTS') {
-        showError(t('error_rate_limit'));
-      } else if (data?.code === 'INVALID_TOKEN' || data?.code === 'TOKEN_EXPIRED') {
-        showError(t('error_invalid_token'));
+      if (data?.code === 'UNAUTHORIZED') {
+        setErrors((prev) => ({ ...prev, currentPassword: t('error_current_password_incorrect') }));
       } else {
         showError(t('error_generic'));
       }
@@ -174,21 +160,36 @@ export function ResetPasswordForm({ token }: ResetPasswordFormProps) {
   return (
     <form onSubmit={handleSubmit} noValidate className="px-8 pb-8">
       <FormField
-        label={t('password')}
+        label={t('current_password')}
         required
-        type={showPassword ? 'text' : 'password'}
-        placeholder={t('password_placeholder')}
-        value={password}
+        type={showCurrent ? 'text' : 'password'}
+        placeholder={t('current_password_placeholder')}
+        value={currentPassword}
         onChange={(e: ChangeEvent<HTMLInputElement>) => {
-          setPassword(e.target.value);
-          if (errors.password) setErrors((prev) => ({ ...prev, password: undefined }));
+          setCurrentPassword(e.target.value);
+          if (errors.currentPassword) setErrors((prev) => ({ ...prev, currentPassword: undefined }));
         }}
-        error={errors.password}
-        autoComplete="new-password"
+        error={errors.currentPassword}
+        autoComplete="current-password"
         autoFocus
-        rightIcon={eyeBtn(showPassword, () => setShowPassword((v) => !v), showPassword ? 'Hide' : 'Show')}
+        rightIcon={eyeBtn(showCurrent, () => setShowCurrent((v) => !v), showCurrent ? 'Hide' : 'Show')}
       />
-      <PasswordRules password={password} namespace="reset_password" />
+
+      <FormField
+        label={t('new_password')}
+        required
+        type={showNew ? 'text' : 'password'}
+        placeholder={t('new_password_placeholder')}
+        value={newPassword}
+        onChange={(e: ChangeEvent<HTMLInputElement>) => {
+          setNewPassword(e.target.value);
+          if (errors.newPassword) setErrors((prev) => ({ ...prev, newPassword: undefined }));
+        }}
+        error={errors.newPassword}
+        autoComplete="new-password"
+        rightIcon={eyeBtn(showNew, () => setShowNew((v) => !v), showNew ? 'Hide' : 'Show')}
+      />
+      <PasswordRules password={newPassword} namespace="change_password" />
 
       <FormField
         label={t('confirm_password')}

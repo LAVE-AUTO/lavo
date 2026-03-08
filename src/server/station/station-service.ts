@@ -76,7 +76,8 @@ export type StationWithDocuments = Station & {
  * transaction. No DB writes happen until all three steps have been submitted.
  */
 export async function completeStationOnboarding(
-  dto: StationOnboardingDto
+  dto: StationOnboardingDto,
+  locale: 'fr' | 'en' = 'fr'
 ): Promise<StationOnboardingResult> {
   const existing = await findByEmail(dto.email);
   if (existing) throw new ConflictError('Email already in use');
@@ -169,7 +170,7 @@ export async function completeStationOnboarding(
   });
 
   // Fire-and-forget (station accounts have no first_name; use station name for greeting)
-  sendVerificationEmail(user.email, dto.station_name ?? '', verificationToken).catch(() => void 0);
+  sendVerificationEmail(user.email, dto.station_name ?? '', verificationToken, locale).catch(() => void 0);
 
   sendStationApplicationAdminNotification(station.name, station.id).catch(() => void 0);
 
