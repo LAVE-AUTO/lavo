@@ -154,7 +154,7 @@ export function BookingFlow({ station, category, forfait, onClose }: BookingFlow
     <>
       {/* Desktop: Modal overlay */}
       <div className="hidden md:flex fixed inset-0 z-50 items-center justify-center bg-black/50 backdrop-blur-sm">
-        <div className="relative w-full max-w-lg bg-[#F5F5E6] dark:bg-[#1A1A18] rounded-2xl shadow-2xl flex flex-col max-h-[90vh]">
+        <div className="relative w-full max-w-2xl bg-[#F5F5E6] dark:bg-[#1A1A18] rounded-2xl shadow-2xl flex flex-col max-h-[90vh]">
           {/* Header */}
           <div className="p-5 pb-4 border-b border-[#D0D0C0] dark:border-tab-inactive">
             <div className="flex items-center justify-between mb-4">
@@ -189,7 +189,7 @@ export function BookingFlow({ station, category, forfait, onClose }: BookingFlow
           </div>
 
           {/* Content */}
-          <div className="flex-1 overflow-hidden p-5">
+          <div className="flex-1 min-h-0 overflow-y-auto p-5">
             {renderStep()}
           </div>
         </div>
@@ -231,7 +231,7 @@ export function BookingFlow({ station, category, forfait, onClose }: BookingFlow
         </div>
 
         {/* Content */}
-        <div className="flex-1 overflow-hidden p-4">
+        <div className="flex-1 min-h-0 overflow-y-auto p-4">
           {renderStep()}
         </div>
       </div>
