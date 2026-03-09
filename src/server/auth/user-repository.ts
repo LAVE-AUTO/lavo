@@ -22,6 +22,10 @@ export async function findById(id: string): Promise<SafeUser | undefined> {
   return user ? stripPasswordHash(user) : undefined;
 }
 
+export async function findByIdWithPassword(id: string): Promise<User | undefined> {
+  return db.query.users.findFirst({ where: eq(users.id, id) });
+}
+
 export async function createUser(data: NewUser): Promise<SafeUser> {
   const [user] = await db.insert(users).values(data).returning();
   return stripPasswordHash(user);

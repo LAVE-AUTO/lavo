@@ -87,6 +87,7 @@ export async function POST(request: Request) {
     );
     return response;
   } catch (e) {
+    await recordFailedAttempt(ip);
     if (e instanceof ConflictError) {
       return error409('Email already in use', ApiCode.EMAIL_ALREADY_EXISTS);
     }

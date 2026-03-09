@@ -56,6 +56,7 @@ export async function POST(request: Request) {
     await resetOnSuccess(ip);
     return successResponse({ sent: true }, 'Verification email sent');
   } catch (e) {
+    await recordFailedAttempt(ip);
     if (e instanceof NotFoundError) {
       return error404('No account found with this email address', ApiCode.NOT_FOUND);
     }

@@ -2,7 +2,7 @@
 
 import { useState, useMemo } from 'react';
 import type { ReactNode } from 'react';
-import { useTranslations } from 'next-intl';
+import { useTranslations, useLocale } from 'next-intl';
 import { Link, useRouter } from '@/i18n/navigation';
 import { useParams } from 'next/navigation';
 import { useToast } from '@/context/toast-context';
@@ -12,6 +12,7 @@ export default function ReservationDetailPage() {
   const t = useTranslations('coupons');
   const router = useRouter();
   const params = useParams();
+  const locale = useLocale();
   const id = params.id as string;
 
   const reservation = useMemo(() => MOCK_RESERVATIONS.find((r) => r.id === id), [id]);
@@ -40,7 +41,7 @@ export default function ReservationDetailPage() {
   const isUpcoming = reservation.status === 'confirmed' && minutesUntilSlot > 0;
   const isPast = reservation.status === 'completed' || reservation.status === 'cancelled';
 
-  const dateLabel = slotDateTime.toLocaleDateString('fr-CA', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
+  const dateLabel = slotDateTime.toLocaleDateString(locale === 'en' ? 'en-CA' : 'fr-CA', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
 
   const statusColors: Record<string, string> = {
     confirmed: 'bg-lavo-success/15 text-lavo-success',
@@ -50,7 +51,8 @@ export default function ReservationDetailPage() {
   };
 
   const handleStartNavigation = () => {
-    const url = `https://www.google.com/maps/dir/?api=1&destination=${reservation.stationLatitude},${reservation.stationLongitude}`;
+    const destination = encodeURIComponent(`${reservation.stationLatitude},${reservation.stationLongitude}`);
+    const url = `https://www.google.com/maps/dir/?api=1&destination=${destination}`;
     window.open(url, '_blank', 'noopener,noreferrer');
   };
 
@@ -84,7 +86,7 @@ export default function ReservationDetailPage() {
             <h1 className="text-[20px] font-black text-white drop-shadow">{reservation.stationName}</h1>
             <p className="text-[13px] text-white/80">{reservation.stationAddress}</p>
           </div>
-          <span className={`absolute top-3 right-3 px-3 py-1 rounded-full text-[12px] font-bold ${statusColors[reservation.status] || ''}`}>
+          <span className={`absolute top-3 right-3 px-3 py-1 rounded-full text-[12px] font-bold ${statusColors[reservation.status] || 'bg-gray-200 text-gray-600'}`}>
             {t(`status_${reservation.status}`)}
           </span>
         </div>
