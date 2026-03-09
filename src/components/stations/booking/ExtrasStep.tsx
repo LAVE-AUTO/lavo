@@ -22,13 +22,14 @@ export function ExtrasStep({ forfait, extras, selectedExtras, onToggleExtra, onC
   const totalDuration = forfait.duration + extrasDuration;
 
   return (
-    <div className="flex flex-col h-full">
+    <div>
       {/* Extras grid */}
-      <div className="flex-1 overflow-y-auto px-1 space-y-3 pb-4">
-        <p className="text-[14px] text-[#555] dark:text-[#B0B0A0] mb-2">
+      <div className="px-1 pb-4">
+        <p className="text-[14px] text-[#555] dark:text-[#B0B0A0] mb-3">
           {t('extras_subtitle')}
         </p>
 
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
         {extras.map((extra) => {
           const checked = selectedExtras.includes(extra.id);
           return (
@@ -71,10 +72,11 @@ export function ExtrasStep({ forfait, extras, selectedExtras, onToggleExtra, onC
             </button>
           );
         })}
+        </div>
       </div>
 
       {/* Ticket summary */}
-      <div className="border-t border-[#D0D0C0] dark:border-tab-inactive pt-4 space-y-3">
+      <div className="border-t border-[#D0D0C0] dark:border-tab-inactive pt-4 space-y-3 px-1">
         <div className="bg-[#E8E8D8] dark:bg-dark-bg/60 rounded-xl p-4 space-y-2">
           <h4 className="text-[13px] font-bold text-[#555] dark:text-[#A0A090] uppercase tracking-wider mb-2">{t('ticket_title')}</h4>
 
