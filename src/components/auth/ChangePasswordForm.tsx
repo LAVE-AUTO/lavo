@@ -53,6 +53,14 @@ export function ChangePasswordForm() {
   const [showConfirm, setShowConfirm] = useState(false);
   const [success, setSuccess] = useState(false);
 
+  if (auth.isLoading) {
+    return (
+      <div className="px-8 pb-8 flex justify-center">
+        <Spinner label={t('loading') || undefined} />
+      </div>
+    );
+  }
+
   if (!auth.isAuthenticated) {
     return (
       <div className="px-8 pb-8 text-center animate-fade-in">

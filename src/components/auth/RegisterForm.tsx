@@ -184,7 +184,7 @@ export function RegisterForm() {
         if (Object.keys(serverErrors).length > 0) {
           setErrors(serverErrors);
         }
-        showError(data.errors[0].message || t('error_validation'));
+        showError(t('error_validation'));
       } else {
         showError(t('error_generic'));
       }
