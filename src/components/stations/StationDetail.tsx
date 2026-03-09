@@ -53,9 +53,9 @@ export function StationDetail({ id }: StationDetailProps) {
 
   return (
     <>
-      <div className="min-h-screen bg-[#EDEDED] dark:bg-dark-bg transition-colors animate-fade-in">
+      <div className="min-h-screen bg-[#F5F5E6] dark:bg-dark-bg transition-colors animate-fade-in">
         {/* ── Hero ── */}
-        <div className="relative h-[220px] sm:h-[300px] lg:h-[340px] bg-linear-to-br from-[#D5D5C5] to-[#EDEDED] dark:from-tab-inactive dark:to-dark-bg overflow-hidden">
+        <div className="relative h-[240px] sm:h-[320px] lg:h-[360px] bg-linear-to-br from-[#D5D5C5] to-[#EDEDED] dark:from-tab-inactive dark:to-dark-bg overflow-hidden">
           {station.imageUrl ? (
             <img src={station.imageUrl} alt={station.name} className="w-full h-full object-cover" />
           ) : (
@@ -101,7 +101,7 @@ export function StationDetail({ id }: StationDetailProps) {
         </div>
 
         {/* ── Content ── */}
-        <div className="max-w-3xl mx-auto px-4 sm:px-6 py-5 pb-36 sm:pb-28 space-y-5">
+        <div className="max-w-3xl mx-auto px-4 sm:px-6 py-6 pb-36 sm:pb-28 space-y-6">
 
           {/* Title + rating + meta */}
           <div>
@@ -134,7 +134,7 @@ export function StationDetail({ id }: StationDetailProps) {
                     className={`shrink-0 px-4 py-2.5 rounded-xl text-[14px] font-bold transition-all cursor-pointer ${
                       idx === selectedCategoryIdx
                         ? 'bg-gold text-dark-bg shadow-md'
-                        : 'bg-[#C8C8B4] dark:bg-dark-card text-[#333] dark:text-[#C0C0B0] border border-[#CCC] dark:border-tab-inactive hover:border-gold/40'
+                        : 'bg-[#E8E8D8] dark:bg-dark-card text-[#333] dark:text-[#C0C0B0] border border-[#D0D0C0] dark:border-tab-inactive hover:border-gold/40'
                     }`}
                   >
                     {cat.label}
@@ -146,7 +146,7 @@ export function StationDetail({ id }: StationDetailProps) {
 
           {/* Category description + forfaits */}
           {currentCategory && (
-            <div className="bg-[#C8C8B4] dark:bg-dark-card rounded-xl p-4 sm:p-5 transition-colors space-y-4">
+            <div className="bg-[#E8E8D8] dark:bg-dark-card rounded-xl p-4 sm:p-5 transition-colors space-y-4">
               <p className="text-[14px] text-[#555] dark:text-[#B0B0A0] leading-relaxed">
                 {currentCategory.description}
               </p>
@@ -192,7 +192,7 @@ export function StationDetail({ id }: StationDetailProps) {
 
           {/* Queue banner */}
           {hasSlots && (
-            <div className="bg-[#C8C8B4] dark:bg-dark-card rounded-xl p-4 transition-colors">
+            <div className="bg-[#E8E8D8] dark:bg-dark-card rounded-xl p-4 transition-colors">
               <div className="flex items-center gap-2 text-[13px] font-black text-[#000C1F] dark:text-[#FFF8EC] tracking-wider uppercase mb-3">
                 <span className="w-2 h-2 rounded-full bg-lavo-success animate-pulse shrink-0" />
                 {t('detail_queue')}
@@ -229,7 +229,7 @@ export function StationDetail({ id }: StationDetailProps) {
             href={mapsUrl}
             target="_blank"
             rel="noopener noreferrer"
-            className="flex items-center gap-3 bg-[#C8C8B4] dark:bg-dark-card rounded-xl px-4 py-4 transition-colors hover:border-gold/30 border border-[#CCC] dark:border-tab-inactive group/loc"
+            className="flex items-center gap-3 bg-[#E8E8D8] dark:bg-dark-card rounded-xl px-4 py-4 transition-colors hover:border-gold/30 border border-[#D0D0C0] dark:border-tab-inactive group/loc"
           >
             <div className="w-10 h-10 rounded-full bg-gold/15 flex items-center justify-center shrink-0">
               <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#C49A1E" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -256,7 +256,7 @@ export function StationDetail({ id }: StationDetailProps) {
         </div>
 
         {/* ── Sticky footer CTA ── */}
-        <div className="fixed bottom-16 sm:bottom-0 left-0 right-0 bg-[#EDEDED]/95 dark:bg-dark-bg/95 backdrop-blur-md border-t border-[#CCCCCC] dark:border-tab-inactive px-4 py-3 z-40 transition-colors">
+        <div className="fixed bottom-16 sm:bottom-0 left-0 right-0 bg-[#F5F5E6]/95 dark:bg-dark-bg/95 backdrop-blur-md border-t border-[#D0D0C0] dark:border-tab-inactive px-4 py-3 z-40 transition-colors">
           <div className="max-w-3xl mx-auto flex items-center gap-3">
             <div>
               <div className="text-[20px] font-black text-[#000C1F] dark:text-[#FFF8EC] leading-none">

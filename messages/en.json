@@ -767,6 +767,12 @@
         "payment_expiry": "Expiration",
         "payment_cvc": "CVC",
         "payment_processing": "Processing...",
-        "payment_confirm": "Confirm and pay {amount}$"
+        "payment_confirm": "Confirm and pay {amount}$",
+        "result_success_title": "Payment successful!",
+        "result_success_desc": "Your booking has been confirmed. You will receive a confirmation email shortly.",
+        "result_error_title": "Payment failed",
+        "result_error_desc": "An error occurred while processing your payment. Please try again.",
+        "result_done": "Done",
+        "result_retry": "Try again"
     }
 }

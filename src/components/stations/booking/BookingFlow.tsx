@@ -25,6 +25,9 @@ export function BookingFlow({ station, category, forfait, onClose }: BookingFlow
   const [step, setStep] = useState<Step>('extras');
   const stepIndex = STEPS.indexOf(step);
 
+  // Payment result
+  const [paymentResult, setPaymentResult] = useState<'success' | 'error' | null>(null);
+
   // Extras state
   const [selectedExtraIds, setSelectedExtraIds] = useState<string[]>([]);
 
@@ -82,9 +85,14 @@ export function BookingFlow({ station, category, forfait, onClose }: BookingFlow
   }, []);
 
   const handlePaymentConfirm = useCallback(() => {
-    // For now, close the flow (replace with success screen / redirect)
-    onClose();
-  }, [onClose]);
+    // Simulate: 90% success, 10% failure
+    const success = Math.random() > 0.1;
+    setPaymentResult(success ? 'success' : 'error');
+  }, []);
+
+  const handleRetryPayment = useCallback(() => {
+    setPaymentResult(null);
+  }, []);
 
   // Step labels for progress indicator
   const stepLabels = [
@@ -150,10 +158,87 @@ export function BookingFlow({ station, category, forfait, onClose }: BookingFlow
     }
   };
 
+  // Payment result screen
+  const renderResultScreen = () => {
+    const isSuccess = paymentResult === 'success';
+    return (
+      <div className="flex flex-col items-center justify-center text-center px-6 py-12 gap-5">
+        {/* Icon */}
+        <div className={`w-20 h-20 rounded-full flex items-center justify-center ${isSuccess ? 'bg-lavo-success/15' : 'bg-lavo-error/15'}`}>
+          {isSuccess ? (
+            <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="#22C55E" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12" /></svg>
+          ) : (
+            <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="#EF4444" strokeWidth="2.5" strokeLinecap="round"><line x1="18" y1="6" x2="6" y2="18" /><line x1="6" y1="6" x2="18" y2="18" /></svg>
+          )}
+        </div>
+
+        <h3 className="text-[22px] font-black text-[#000C1F] dark:text-[#FFF8EC]">
+          {isSuccess ? t('result_success_title') : t('result_error_title')}
+        </h3>
+        <p className="text-[15px] text-[#555] dark:text-[#B0B0A0] max-w-sm leading-relaxed">
+          {isSuccess ? t('result_success_desc') : t('result_error_desc')}
+        </p>
+
+        {isSuccess && (
+          <div className="bg-gold/10 dark:bg-gold/5 border-2 border-gold rounded-xl px-5 py-3 mt-2">
+            <span className="text-[18px] font-black text-gold">{grandTotal}$</span>
+          </div>
+        )}
+
+        <div className="flex gap-3 w-full max-w-xs mt-4">
+          {isSuccess ? (
+            <button
+              type="button"
+              onClick={onClose}
+              className="flex-1 py-3 bg-gold hover:bg-gold-hover rounded-xl text-[15px] font-black text-dark-bg transition-colors cursor-pointer"
+            >
+              {t('result_done')}
+            </button>
+          ) : (
+            <>
+              <button
+                type="button"
+                onClick={onClose}
+                className="flex-1 py-3 border-2 border-gold rounded-xl text-[15px] font-bold text-gold hover:bg-gold/10 transition-colors cursor-pointer"
+              >
+                {t('close')}
+              </button>
+              <button
+                type="button"
+                onClick={handleRetryPayment}
+                className="flex-1 py-3 bg-gold hover:bg-gold-hover rounded-xl text-[15px] font-black text-dark-bg transition-colors cursor-pointer"
+              >
+                {t('result_retry')}
+              </button>
+            </>
+          )}
+        </div>
+      </div>
+    );
+  };
+
+  // If payment result is shown, render the result screen
+  if (paymentResult) {
+    return (
+      <>
+        {/* Desktop */}
+        <div className="hidden md:flex fixed inset-0 z-[60] items-center justify-center bg-black/50 backdrop-blur-sm">
+          <div className="relative w-full max-w-md bg-[#F5F5E6] dark:bg-[#1A1A18] rounded-2xl shadow-2xl">
+            {renderResultScreen()}
+          </div>
+        </div>
+        {/* Mobile */}
+        <div className="md:hidden fixed inset-0 z-[60] bg-[#F5F5E6] dark:bg-[#1A1A18] flex items-center justify-center">
+          {renderResultScreen()}
+        </div>
+      </>
+    );
+  }
+
   return (
     <>
       {/* Desktop: Modal overlay */}
-      <div className="hidden md:flex fixed inset-0 z-50 items-center justify-center bg-black/50 backdrop-blur-sm">
+      <div className="hidden md:flex fixed inset-0 z-[60] items-center justify-center bg-black/50 backdrop-blur-sm">
         <div className="relative w-full max-w-2xl bg-[#F5F5E6] dark:bg-[#1A1A18] rounded-2xl shadow-2xl flex flex-col max-h-[90vh]">
           {/* Header */}
           <div className="p-5 pb-4 border-b border-[#D0D0C0] dark:border-tab-inactive">
@@ -196,7 +281,7 @@ export function BookingFlow({ station, category, forfait, onClose }: BookingFlow
       </div>
 
       {/* Mobile: Full screen */}
-      <div className="md:hidden fixed inset-0 z-50 bg-[#F5F5E6] dark:bg-[#1A1A18] flex flex-col">
+      <div className="md:hidden fixed inset-0 z-[60] bg-[#F5F5E6] dark:bg-[#1A1A18] flex flex-col">
         {/* Header */}
         <div className="px-4 pt-4 pb-3 border-b border-[#D0D0C0] dark:border-tab-inactive safe-area-top">
           <div className="flex items-center justify-between mb-3">
@@ -231,7 +316,7 @@ export function BookingFlow({ station, category, forfait, onClose }: BookingFlow
         </div>
 
         {/* Content */}
-        <div className="flex-1 min-h-0 overflow-y-auto p-4">
+        <div className="flex-1 min-h-0 overflow-y-auto p-4 pb-6">
           {renderStep()}
         </div>
       </div>
