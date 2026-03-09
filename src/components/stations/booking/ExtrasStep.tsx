@@ -115,7 +115,7 @@ export function ExtrasStep({ forfait, extras, selectedExtras, onToggleExtra, onC
         </div>
 
         {/* Actions */}
-        <div className="flex gap-3">
+        <div className="flex gap-3 pb-2">
           <button
             type="button"
             onClick={onSkip}
