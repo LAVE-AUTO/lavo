@@ -2,6 +2,7 @@
 
 import { useState, useCallback, useEffect } from 'react';
 import { useTranslations } from 'next-intl';
+import { Link } from '@/i18n/navigation';
 import { ExtrasStep } from './ExtrasStep';
 import { ArrivalStep } from './ArrivalStep';
 import { SummaryStep } from './SummaryStep';
@@ -185,15 +186,23 @@ export function BookingFlow({ station, category, forfait, onClose }: BookingFlow
           </div>
         )}
 
-        <div className="flex gap-3 w-full max-w-xs mt-4">
+        <div className="flex flex-col gap-3 w-full max-w-xs mt-4">
           {isSuccess ? (
-            <button
-              type="button"
-              onClick={onClose}
-              className="flex-1 py-3 bg-gold hover:bg-gold-hover rounded-xl text-[15px] font-black text-dark-bg transition-colors cursor-pointer"
-            >
-              {t('result_done')}
-            </button>
+            <>
+              <Link
+                href="/client/reservations"
+                className="block w-full py-3 bg-gold hover:bg-gold-hover rounded-xl text-[15px] font-black text-dark-bg text-center transition-colors cursor-pointer"
+              >
+                {t('result_view_coupons')}
+              </Link>
+              <button
+                type="button"
+                onClick={onClose}
+                className="w-full py-3 border-2 border-gold rounded-xl text-[15px] font-bold text-gold hover:bg-gold/10 transition-colors cursor-pointer"
+              >
+                {t('result_done')}
+              </button>
+            </>
           ) : (
             <>
               <button

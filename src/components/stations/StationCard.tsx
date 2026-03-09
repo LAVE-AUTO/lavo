@@ -36,12 +36,12 @@ export function StationCard({ station, unavailable = false }: StationCardProps) 
   return (
     <article
       className={[
-        'h-full flex flex-col bg-[#C8C8B4] dark:bg-dark-card rounded-[14px] overflow-hidden border border-[#CCCCCC] dark:border-tab-inactive group hover:border-gold/30 transition-all duration-300',
+        'h-full flex flex-col bg-[#E8E8D8] dark:bg-dark-card rounded-[14px] overflow-hidden border border-[#D0D0C0] dark:border-tab-inactive group hover:border-gold/30 transition-all duration-300',
         unavailable ? 'opacity-50 grayscale pointer-events-none' : '',
       ].join(' ')}
     >
       {/* Photo */}
-      <div className="relative h-[140px] sm:h-[160px] bg-[#B8B8A4] dark:bg-tab-inactive flex items-center justify-center overflow-hidden">
+      <div className="relative h-[140px] sm:h-[160px] bg-[#D0D0C0] dark:bg-tab-inactive flex items-center justify-center overflow-hidden">
         {station.imageUrl ? (
           <img
             src={station.imageUrl}
@@ -110,11 +110,11 @@ export function StationCard({ station, unavailable = false }: StationCardProps) 
 
         {/* Stats grid: places | wait | status */}
         <div className="grid grid-cols-3 mb-3 text-center">
-          <div className="border-r border-[#CCCCCC] dark:border-tab-inactive pr-2">
+          <div className="border-r border-[#C8C8B4] dark:border-tab-inactive pr-2">
             <div className="text-[17px] font-black text-[#0A0A14] dark:text-white leading-none">{station.availableSlots}</div>
             <div className="text-[14px] text-[#111111] dark:text-[#D8D8C8] mt-1">{t('places_dispo')}</div>
           </div>
-          <div className="border-r border-[#CCCCCC] dark:border-tab-inactive px-2">
+          <div className="border-r border-[#C8C8B4] dark:border-tab-inactive px-2">
             <div className="text-[17px] font-black text-[#0A0A14] dark:text-white leading-none">
               {station.estimatedWaitMinutes > 0 ? `${station.estimatedWaitMinutes}` : '\u2014'}
             </div>
