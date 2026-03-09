@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useMemo } from 'react';
-import { useTranslations } from 'next-intl';
+import { useTranslations, useLocale } from 'next-intl';
 import { Link } from '@/i18n/navigation';
 import { MOCK_RESERVATIONS, MOCK_QUEUE_ENTRIES } from '@/data/reservations-mock';
 
@@ -9,6 +9,7 @@ type Tab = 'reservations' | 'queue';
 
 export default function CouponsPage() {
   const t = useTranslations('coupons');
+  const locale = useLocale();
   const [tab, setTab] = useState<Tab>('reservations');
 
   const upcoming = useMemo(
@@ -63,7 +64,7 @@ export default function CouponsPage() {
                 </h2>
                 <div className="space-y-3">
                   {upcoming.map((res) => (
-                    <ReservationCard key={res.id} reservation={res} t={t} />
+                    <ReservationCard key={res.id} reservation={res} t={t} locale={locale} />
                   ))}
                 </div>
               </section>
@@ -77,7 +78,7 @@ export default function CouponsPage() {
                 </h2>
                 <div className="space-y-3">
                   {past.map((res) => (
-                    <ReservationCard key={res.id} reservation={res} t={t} />
+                    <ReservationCard key={res.id} reservation={res} t={t} locale={locale} />
                   ))}
                 </div>
               </section>
@@ -102,9 +103,9 @@ export default function CouponsPage() {
 }
 
 /* ---- Reservation Card ---- */
-function ReservationCard({ reservation: r, t }: { reservation: typeof MOCK_RESERVATIONS[0]; t: ReturnType<typeof useTranslations> }) {
+function ReservationCard({ reservation: r, t, locale }: { reservation: typeof MOCK_RESERVATIONS[0]; t: ReturnType<typeof useTranslations>; locale: string }) {
   const dateObj = new Date(`${r.date}T${r.timeSlot}`);
-  const dateLabel = dateObj.toLocaleDateString('fr-CA', { weekday: 'short', day: 'numeric', month: 'short' });
+  const dateLabel = dateObj.toLocaleDateString(locale === 'en' ? 'en-CA' : 'fr-CA', { weekday: 'short', day: 'numeric', month: 'short' });
 
   const statusColors: Record<string, string> = {
     confirmed: 'bg-lavo-success/15 text-lavo-success',
@@ -132,7 +133,7 @@ function ReservationCard({ reservation: r, t }: { reservation: typeof MOCK_RESER
             <h3 className="text-[15px] font-bold text-[#0A0A14] dark:text-white leading-tight truncate">
               {r.stationName}
             </h3>
-            <span className={`shrink-0 px-2 py-0.5 rounded-full text-[11px] font-bold ${statusColors[r.status] || ''}`}>
+            <span className={`shrink-0 px-2 py-0.5 rounded-full text-[11px] font-bold ${statusColors[r.status] || 'bg-gray-200 text-gray-600'}`}>
               {t(`status_${r.status}`)}
             </span>
           </div>

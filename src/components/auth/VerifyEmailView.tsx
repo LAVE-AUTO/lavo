@@ -67,6 +67,8 @@ export function VerifyEmailView({ token }: VerifyEmailViewProps) {
       if (cancelled) return;
       if (ok) showSuccess(t('toast_success'));
       setView(ok ? 'success' : 'expired');
+    }).catch(() => {
+      if (!cancelled) setView('expired');
     });
 
     return () => {
