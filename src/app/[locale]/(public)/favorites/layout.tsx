@@ -2,7 +2,7 @@ import type { ReactNode } from 'react';
 import { PublicNavbar } from '@/components/layout/PublicNavbar';
 import { BottomNav } from '@/components/layout/BottomNav';
 
-export default function ClientLayout({ children }: { children: ReactNode }) {
+export default function FavoritesLayout({ children }: { children: ReactNode }) {
   return (
     <>
       <PublicNavbar />
@@ -13,4 +13,3 @@ export default function ClientLayout({ children }: { children: ReactNode }) {
     </>
   );
 }
-

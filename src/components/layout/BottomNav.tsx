@@ -15,14 +15,12 @@ function HomeIcon({ active }: { active: boolean }) {
   );
 }
 
-function ReservationsIcon({ active }: { active: boolean }) {
+function CouponsIcon({ active }: { active: boolean }) {
   const c = active ? '#C49A1E' : '#9A9A8A';
   return (
     <svg width="22" height="22" viewBox="0 0 24 24" fill="none" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-      <rect x="3" y="4" width="18" height="18" rx="2" ry="2" stroke={c} strokeWidth="2" />
-      <line x1="16" y1="2" x2="16" y2="6" stroke={c} strokeWidth="2" />
-      <line x1="8" y1="2" x2="8" y2="6" stroke={c} strokeWidth="2" />
-      <line x1="3" y1="10" x2="21" y2="10" stroke={c} strokeWidth="2" />
+      <path d="M2 9a2 2 0 012-2h16a2 2 0 012 2v1a2 2 0 010 4v1a2 2 0 01-2 2H4a2 2 0 01-2-2v-1a2 2 0 010-4V9z" stroke={c} strokeWidth="2" />
+      <path d="M9 7v10" stroke={c} strokeWidth="2" strokeDasharray="2 2" />
     </svg>
   );
 }
@@ -138,7 +136,7 @@ export function BottomNav() {
   /* Authenticated items (no "More" — handled separately) */
   const authItems = [
     { href: homeHref, label: t('home'), icon: (a: boolean) => <HomeIcon active={a} /> },
-    { href: '/client/reservations', label: t('reservations'), icon: (a: boolean) => <ReservationsIcon active={a} /> },
+    { href: '/client/reservations', label: t('coupons'), icon: (a: boolean) => <CouponsIcon active={a} /> },
     { href: '/favorites', label: t('favorites'), icon: (a: boolean) => <FavoritesIcon active={a} /> },
   ];
 
