@@ -19,12 +19,16 @@ interface PriceRange {
 const ALL_VEHICLE_TYPES = ['Berline', 'SUV', 'Moto', 'Camionette'];
 const HOURS = Array.from({ length: 24 }, (_, i) => i);
 
-/** Parse "07h00 – 20h00" → { open: 7, close: 20 } */
+/** Parse "07h00 – 20h00" or "07:00 - 20:00" → { open: 7, close: 20 } */
 function parseOpeningHours(oh: string): { open: number; close: number } | null {
-  const parts = oh.split('–').map((s) => s.trim());
+  const timeRegex = /(\d{1,2})[:h]/;
+  const parts = oh.split(/[–\-]/).map((s) => s.trim());
   if (parts.length !== 2) return null;
-  const open  = parseInt(parts[0].split('h')[0], 10);
-  const close = parseInt(parts[1].split('h')[0], 10);
+  const openMatch = parts[0].match(timeRegex);
+  const closeMatch = parts[1].match(timeRegex);
+  if (!openMatch || !closeMatch) return null;
+  const open  = parseInt(openMatch[1], 10);
+  const close = parseInt(closeMatch[1], 10);
   return isNaN(open) || isNaN(close) ? null : { open, close };
 }
 

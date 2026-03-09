@@ -40,13 +40,13 @@ export default function OAuthCallbackPage() {
 
         login(token, user);
 
-        const role = (user.role || '').toUpperCase();
+        const role = (user.role || '').toLowerCase();
 
         if (user.force_password_change) {
           router.push('/change-password');
-        } else if (role === 'STATION') {
+        } else if (role === 'station') {
           router.push('/station');
-        } else if (role === 'SUPER_ADMIN') {
+        } else if (role === 'admin') {
           router.push('/admin');
         } else {
           router.push('/stations');

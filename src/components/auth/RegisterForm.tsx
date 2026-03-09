@@ -149,9 +149,7 @@ export function RegisterForm() {
         const body = response as { data?: { user: { id: string; email: string; role: string }; access_token: string } };
         const data = body.data;
         if (data && data.user && data.access_token) {
-          const normalizedRole = data.user.role === 'admin' ? 'SUPER_ADMIN'
-            : (data.user.role || '').toUpperCase() as 'CLIENT' | 'STATION' | 'SUPER_ADMIN';
-          auth.login(data.access_token, { ...data.user, role: normalizedRole });
+          auth.login(data.access_token, { ...data.user, role: data.user.role as 'client' | 'station' | 'admin' });
         }
         showSuccess(t('toast_success'));
         router.push('/register/confirmation');

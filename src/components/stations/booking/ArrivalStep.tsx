@@ -1,7 +1,7 @@
 'use client';
 
 import { useMemo } from 'react';
-import { useTranslations } from 'next-intl';
+import { useTranslations, useLocale } from 'next-intl';
 import type { StationDetailData, TimeSlot } from '@/types/station';
 
 type ArrivalMode = 'queue_now' | 'queue_later' | 'book_slot';
@@ -20,15 +20,16 @@ interface ArrivalStepProps {
   onBack: () => void;
 }
 
-function generateDates(count: number): { key: string; dayShort: string; dateNum: number; full: string }[] {
+function generateDates(count: number, appLocale: string): { key: string; dayShort: string; dateNum: number; full: string }[] {
   const days: { key: string; dayShort: string; dateNum: number; full: string }[] = [];
   const now = new Date();
+  const dateFmtLocale = appLocale === 'en' ? 'en-CA' : 'fr-FR';
   for (let i = 0; i < count; i++) {
     const d = new Date(now);
     d.setDate(now.getDate() + i);
     const key = d.toISOString().split('T')[0];
-    const dayShort = d.toLocaleDateString('fr-FR', { weekday: 'short' }).slice(0, 3);
-    days.push({ key, dayShort, dateNum: d.getDate(), full: d.toLocaleDateString('fr-FR', { weekday: 'long', day: 'numeric', month: 'long' }) });
+    const dayShort = d.toLocaleDateString(dateFmtLocale, { weekday: 'short' }).slice(0, 3);
+    days.push({ key, dayShort, dateNum: d.getDate(), full: d.toLocaleDateString(dateFmtLocale, { weekday: 'long', day: 'numeric', month: 'long' }) });
   }
   return days;
 }
@@ -50,7 +51,8 @@ const LATER_SUGGESTIONS = ['14:00', '15:00', '16:00', '17:00'];
 
 export function ArrivalStep({ station, arrivalMode, selectedDate, selectedSlot, laterTime, onSetMode, onSetDate, onSetSlot, onSetLaterTime, onContinue, onBack }: ArrivalStepProps) {
   const t = useTranslations('booking');
-  const dates = useMemo(() => generateDates(7), []);
+  const locale = useLocale();
+  const dates = useMemo(() => generateDates(7, locale), [locale]);
   const timeSlots = useMemo(() => generateTimeSlots(), []);
 
   const canContinue = arrivalMode === 'queue_now'

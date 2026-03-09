@@ -353,7 +353,7 @@ export async function getStationJoinPublic(id: string): Promise<{ mapsUrl: strin
   const lng = station.longitude != null ? String(station.longitude) : null;
   const q =
     lat != null && lng != null
-      ? `${lat},${lng}`
+      ? encodeURIComponent(`${lat},${lng}`)
       : encodeURIComponent([station.address, station.city].filter(Boolean).join(', '));
   const mapsUrl = `https://www.google.com/maps?q=${q}`;
   return { mapsUrl };

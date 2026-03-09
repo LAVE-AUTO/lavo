@@ -1,9 +1,10 @@
 'use client';
 
-import { useState, useRef } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { useTranslations } from 'next-intl';
 import { useAuth } from '@/context';
 import { useToast } from '@/context/toast-context';
+import { isPasswordValid } from '@/helpers/validators';
 
 export default function ProfilePage() {
   const t = useTranslations('profile');
@@ -28,10 +29,18 @@ export default function ProfilePage() {
   const handlePhotoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files && e.target.files[0];
     if (file) {
+      if (photoUrl) URL.revokeObjectURL(photoUrl);
       const url = URL.createObjectURL(file);
       setPhotoUrl(url);
     }
   };
+
+  useEffect(() => {
+    return () => {
+      if (photoUrl) URL.revokeObjectURL(photoUrl);
+    };
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   return (
     <main className="min-h-screen bg-[#F5F5E6] dark:bg-[#0F0F0D] pb-24 sm:pb-8">
@@ -171,7 +180,7 @@ function PasswordModal({ onClose, onSuccess }: { onClose: () => void; onSuccess:
       setError(t('error_mismatch'));
       return;
     }
-    if (newPwd.length < 8) {
+    if (!isPasswordValid(newPwd)) {
       setError(t('error_too_short'));
       return;
     }

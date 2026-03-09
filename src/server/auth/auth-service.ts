@@ -13,6 +13,7 @@ import { ACCESS_TOKEN_MAX_AGE, JWT_DEFAULT_MAX_AGE, JWT_REMEMBER_MAX_AGE } from 
 import {
   findByEmail,
   findById,
+  findByIdWithPassword,
   createUser,
   updateEmailVerified,
   updatePassword,
@@ -199,10 +200,7 @@ export async function changePassword(
   currentPassword: string,
   newPassword: string
 ): Promise<void> {
-  const user = await findByEmail(
-    // findById strips password_hash, so we need to fetch with password
-    (await findById(userId))?.email ?? ''
-  );
+  const user = await findByIdWithPassword(userId);
 
   if (!user) throw new NotFoundError('User not found');
 
