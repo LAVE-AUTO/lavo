@@ -1,11 +1,11 @@
 'use client';
 
-import { useState, useMemo } from 'react';
+import { useState, useEffect } from 'react';
 import { useTranslations } from 'next-intl';
 import { Link } from '@/i18n/navigation';
 import { StationReviews } from './StationReviews';
 import { BookingFlow } from './booking/BookingFlow';
-import { MOCK_STATIONS } from '@/data/stations-mock';
+import { fetchStationById } from '@/services/station-api';
 import type { StationDetailData, ServiceCategory, ServiceForfait } from '@/types/station';
 
 interface StationDetailProps {
@@ -15,14 +15,29 @@ interface StationDetailProps {
 export function StationDetail({ id }: StationDetailProps) {
   const t = useTranslations('stations');
 
-  const station: StationDetailData | undefined = useMemo(
-    () => MOCK_STATIONS.find((s) => s.id === id),
-    [id]
-  );
+  const [station, setStation] = useState<StationDetailData | null | undefined>(undefined);
+
+  useEffect(() => {
+    let cancelled = false;
+    fetchStationById(id).then((result) => {
+      if (!cancelled) setStation(result);
+    }).catch(() => {
+      if (!cancelled) setStation(null);
+    });
+    return () => { cancelled = true; };
+  }, [id]);
 
   const [selectedCategoryIdx, setSelectedCategoryIdx] = useState(0);
   const [selectedForfaitIdx, setSelectedForfaitIdx] = useState(0);
   const [bookingOpen, setBookingOpen] = useState(false);
+
+  if (station === undefined) {
+    return (
+      <div className="flex justify-center py-32">
+        <div className="w-8 h-8 border-3 border-gold border-t-transparent rounded-full animate-spin" />
+      </div>
+    );
+  }
 
   if (!station) {
     return (
