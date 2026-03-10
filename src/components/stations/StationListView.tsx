@@ -3,7 +3,7 @@
 import { useState, useMemo, useRef, useEffect, useId } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { useTranslations } from 'next-intl';
-import { MOCK_STATIONS } from '@/data/stations-mock';
+import { fetchStations, type FetchStationsResult } from '@/services/station-api';
 import { SearchBar } from './SearchBar';
 import { StationCard } from './StationCard';
 import type { StationDetailData } from '@/types/station';
@@ -53,6 +53,29 @@ export function StationListView() {
   const [timeFrom,           setTimeFrom]           = useState('');
   const [timeTo,             setTimeTo]             = useState('');
 
+  /* ── API-fetched stations ── */
+  const [allStations, setAllStations] = useState<StationDetailData[]>([]);
+  const [apiGroups, setApiGroups] = useState<FetchStationsResult['groups']>({
+    available_now: [],
+    most_appreciated: [],
+    most_visited: [],
+  });
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    let cancelled = false;
+    setLoading(true);
+    fetchStations().then((result) => {
+      if (cancelled) return;
+      setAllStations(result.stations);
+      setApiGroups(result.groups);
+      setLoading(false);
+    }).catch(() => {
+      if (!cancelled) setLoading(false);
+    });
+    return () => { cancelled = true; };
+  }, []);
+
   /* ── Sync query from URL param (?q=) without synchronous setState in effect ── */
   useEffect(() => {
     const q = searchParams.get('q');
@@ -85,12 +108,12 @@ export function StationListView() {
 
   /* ── Derived filter options ── */
   const allCategories = useMemo(
-    () => [...new Set(MOCK_STATIONS.flatMap((s) => s.tags))].sort(),
-    []
+    () => [...new Set(allStations.flatMap((s) => s.tags))].sort(),
+    [allStations]
   );
   const allServices = useMemo(
-    () => [...new Set(MOCK_STATIONS.flatMap((s) => s.services))].sort(),
-    []
+    () => [...new Set(allStations.flatMap((s) => s.services))].sort(),
+    [allStations]
   );
   const allVehicleTypes = useMemo(
     () => [
@@ -119,7 +142,7 @@ export function StationListView() {
     const fromH   = timeFrom !== '' ? parseInt(timeFrom, 10) : null;
     const toH     = timeTo   !== '' ? parseInt(timeTo,   10) : null;
 
-    let results = MOCK_STATIONS.filter((s) => {
+    let results = allStations.filter((s) => {
       const matchesQuery =
         !q ||
         s.name.toLowerCase().includes(q) ||
@@ -152,12 +175,15 @@ export function StationListView() {
     if (sort === 'best_rated') results = [...results].sort((a, b) => b.rating - a.rating);
 
     return results;
-  }, [query, onlyAvail, sort, cityInput, price, selectedCategories, selectedVehicles, selectedServices, timeFrom, timeTo]);
+  }, [query, onlyAvail, sort, cityInput, price, selectedCategories, selectedVehicles, selectedServices, timeFrom, timeTo, allStations]);
 
   /* ── Derived section lists ── */
-  const availableNow   = useMemo(() => filtered.filter((s) => s.availableSlots > 0), [filtered]);
-  const topRated       = useMemo(() => [...filtered].sort((a, b) => b.rating - a.rating), [filtered]);
-  const mostRevisited  = useMemo(() => [...filtered].sort((a, b) => b.reviewCount - a.reviewCount), [filtered]);
+  const hasFilters = query.trim() || onlyAvail || cityInput.trim() || price.min !== '' || price.max !== ''
+    || selectedCategories.length > 0 || selectedVehicles.length > 0 || selectedServices.length > 0
+    || timeFrom !== '' || timeTo !== '';
+  const availableNow   = useMemo(() => hasFilters ? filtered.filter((s) => s.availableSlots > 0) : apiGroups.available_now, [filtered, hasFilters, apiGroups]);
+  const topRated       = useMemo(() => hasFilters ? [...filtered].sort((a, b) => b.rating - a.rating) : apiGroups.most_appreciated, [filtered, hasFilters, apiGroups]);
+  const mostRevisited  = useMemo(() => hasFilters ? [...filtered].sort((a, b) => b.reviewCount - a.reviewCount) : apiGroups.most_visited, [filtered, hasFilters, apiGroups]);
 
   /* ── Expanded state per section ── */
   const [expandedSections, setExpandedSections] = useState<Record<string, boolean>>({});
@@ -494,7 +520,11 @@ export function StationListView() {
       </div>
 
       {/* ── Results ── */}
-      {filtered.length === 0 ? (
+      {loading ? (
+        <div className="flex justify-center py-20">
+          <div className="w-8 h-8 border-3 border-gold border-t-transparent rounded-full animate-spin" />
+        </div>
+      ) : filtered.length === 0 ? (
         <EmptyState title={t('empty_title')} desc={t('empty_desc')} />
       ) : (
         <div className="space-y-10">
