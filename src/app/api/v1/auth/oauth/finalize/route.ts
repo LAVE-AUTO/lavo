@@ -12,9 +12,11 @@ import { REFRESH_COOKIE_NAME } from '@/helpers/constants';
  *
  * This route is the redirect target configured in auth.ts.
  */
-export async function GET() {
+export async function GET(request: Request) {
   const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? 'http://localhost:3000';
-  const loginUrl = `${appUrl}/fr/login?error=oauth_failed`;
+  const acceptLang = request.headers.get('accept-language') ?? '';
+  const locale = acceptLang.startsWith('en') ? 'en' : 'fr';
+  const loginUrl = `${appUrl}/${locale}/login?error=oauth_failed`;
 
   const session = await auth();
   const { oauthEmail, oauthFirstName, oauthLastName } =
@@ -31,7 +33,7 @@ export async function GET() {
       lastName: typeof oauthLastName === 'string' ? oauthLastName : '',
     });
 
-    const response = NextResponse.redirect(`${appUrl}/fr/auth/callback`);
+    const response = NextResponse.redirect(`${appUrl}/${locale}/auth/callback`);
     response.cookies.set(
       REFRESH_COOKIE_NAME,
       tokens.rawRefreshToken,

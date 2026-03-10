@@ -25,7 +25,7 @@ export default async function RegisterPage({ params }: Props) {
 
   return (
     <AuthPageLayout>
-      <div className="w-full max-w-lg animate-fade-in">
+      <div className="w-full max-w-xl animate-fade-in">
         <AuthHeader
           title={t('welcome_title')}
           subtitle={t('welcome_subtitle')}

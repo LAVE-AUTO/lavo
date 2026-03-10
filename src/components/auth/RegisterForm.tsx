@@ -4,10 +4,12 @@ import { useState, type ChangeEvent, type FormEvent } from 'react';
 import { useTranslations } from 'next-intl';
 import { useRouter } from '@/i18n/navigation';
 import { useToast } from '@/context/toast-context';
+import { useAuth } from '@/context/auth-context';
 import { postWithApi } from '@/services/axios-service';
-import { validateEmail } from '@/helpers/validators';
+import { validateEmail, validateName, validatePhone, isPasswordValid } from '@/helpers/validators';
 import { Spinner } from '@/components/ui/Spinner';
 import { FormField } from './FormField';
+import { PhoneInput } from './PhoneInput';
 import { PasswordRules } from './PasswordRules';
 import { SocialButtons } from './SocialButtons';
 
@@ -58,7 +60,8 @@ function EyeIcon({ open }: { open: boolean }) {
 export function RegisterForm() {
   const t = useTranslations('register');
   const router = useRouter();
-  const { error: showError } = useToast();
+  const { error: showError, success: showSuccess } = useToast();
+  const auth = useAuth();
 
   const [formData, setFormData] = useState<RegisterFormData>(INITIAL_DATA);
   const [errors, setErrors] = useState<FormErrors>({});
@@ -87,8 +90,17 @@ export function RegisterForm() {
   const validate = (): boolean => {
     const next: FormErrors = {};
 
-    if (!formData.firstName.trim()) next.firstName = t('error_required');
-    if (!formData.lastName.trim())  next.lastName  = t('error_required');
+    if (!formData.firstName.trim()) {
+      next.firstName = t('error_required');
+    } else if (!validateName(formData.firstName)) {
+      next.firstName = t('error_name_invalid');
+    }
+
+    if (!formData.lastName.trim()) {
+      next.lastName = t('error_required');
+    } else if (!validateName(formData.lastName)) {
+      next.lastName = t('error_name_invalid');
+    }
 
     if (!formData.email.trim()) {
       next.email = t('error_required');
@@ -96,8 +108,16 @@ export function RegisterForm() {
       next.email = t('error_email_invalid');
     }
 
+    if (!formData.phone.trim()) {
+      next.phone = t('error_phone_required');
+    } else if (!validatePhone(formData.phone)) {
+      next.phone = t('error_phone_invalid');
+    }
+
     if (!formData.password) {
       next.password = t('error_required');
+    } else if (!isPasswordValid(formData.password)) {
+      next.password = t('error_password_invalid');
     }
 
     if (!formData.confirmPassword) {
@@ -120,18 +140,51 @@ export function RegisterForm() {
         first_name: formData.firstName.trim(),
         last_name:  formData.lastName.trim(),
         email:      formData.email.trim(),
-        phone:      formData.phone.trim() || undefined,
+        phone:      formData.phone.trim(),
         password:   formData.password,
+        confirm_password: formData.confirmPassword,
       });
 
       if (success) {
+        const body = response as { data?: { user: { id: string; email: string; role: string }; access_token: string } };
+        const data = body.data;
+        if (data && data.user && data.access_token) {
+          auth.login(data.access_token, { ...data.user, role: data.user.role as 'client' | 'station' | 'admin' });
+        }
+        showSuccess(t('toast_success'));
         router.push('/register/confirmation');
         return;
       }
 
-      const data = response as { code?: string };
-      if (data?.code === 'EMAIL_ALREADY_EXISTS' || data?.code === 'CONFLICT') {
+      const data = response as { code?: string; errors?: Array<{ field: string; message: string }> };
+      if (data?.code === 'TOO_MANY_REQUESTS') {
+        showError(t('error_rate_limit'));
+      } else if (data?.code === 'EMAIL_ALREADY_EXISTS' || data?.code === 'CONFLICT') {
         showError(t('error_email_exists'));
+      } else if (data?.code === 'VALIDATION_FAILED' && data.errors && data.errors.length > 0) {
+        const fieldMap: Record<string, keyof RegisterFormData> = {
+          first_name: 'firstName',
+          last_name: 'lastName',
+          email: 'email',
+          phone: 'phone',
+          password: 'password',
+          confirm_password: 'confirmPassword',
+        };
+        const serverErrors: FormErrors = {};
+        for (const err of data.errors) {
+          const formField = fieldMap[err.field];
+          if (formField) {
+            const translationKey = `error_${formField === 'phone' ? 'phone_invalid'
+              : formField === 'email' ? 'email_invalid'
+              : formField === 'password' ? 'password_invalid'
+              : 'required'}` as const;
+            serverErrors[formField] = t(translationKey);
+          }
+        }
+        if (Object.keys(serverErrors).length > 0) {
+          setErrors(serverErrors);
+        }
+        showError(t('error_validation'));
       } else {
         showError(t('error_generic'));
       }
@@ -178,28 +231,31 @@ export function RegisterForm() {
         />
       </div>
 
-      {/* Email + Phone row */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-4">
-        <FormField
-          label={t('email')}
-          required
-          type="email"
-          placeholder={t('email_placeholder')}
-          value={formData.email}
-          onChange={handleChange('email')}
-          onBlur={handleBlur('email')}
-          error={errors.email}
-          autoComplete="email"
-        />
-        <FormField
-          label={t('phone')}
-          type="tel"
-          placeholder={t('phone_placeholder')}
-          value={formData.phone}
-          onChange={handleChange('phone')}
-          autoComplete="tel"
-        />
-      </div>
+      {/* Email */}
+      <FormField
+        label={t('email')}
+        required
+        type="email"
+        placeholder={t('email_placeholder')}
+        value={formData.email}
+        onChange={handleChange('email')}
+        onBlur={handleBlur('email')}
+        error={errors.email}
+        autoComplete="email"
+      />
+
+      {/* Phone — full width for the country selector */}
+      <PhoneInput
+        label={t('phone')}
+        required
+        placeholder={t('phone_placeholder')}
+        value={formData.phone}
+        onChange={(val) => {
+          setFormData((prev) => ({ ...prev, phone: val }));
+          if (errors.phone) setErrors((prev) => ({ ...prev, phone: undefined }));
+        }}
+        error={errors.phone}
+      />
 
       {/* Password */}
       <FormField
