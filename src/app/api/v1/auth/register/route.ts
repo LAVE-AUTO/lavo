@@ -8,6 +8,7 @@ import {
   recordFailedAttempt,
   resetOnSuccess,
 } from '@/lib/rate-limiter';
+import { getClientRateLimitKey } from '@/lib/request-ip';
 import {
   successResponse,
   error400,
@@ -36,8 +37,7 @@ import { buildRefreshCookieOptions } from '@/lib/jwt';
  */
 export async function POST(request: Request) {
   const headersList = await headers();
-  const ip =
-    headersList.get('x-forwarded-for')?.split(',')[0].trim() ?? 'unknown';
+  const ip = getClientRateLimitKey(headersList as unknown as Headers);
 
   const { blocked, retryAfter } = await checkRateLimit(ip);
   if (blocked) return error429();

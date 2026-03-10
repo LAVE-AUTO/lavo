@@ -1,6 +1,7 @@
 import { getTranslations, setRequestLocale } from 'next-intl/server';
 import { Link } from '@/i18n/navigation';
 import { AuthPageLayout } from '@/components/auth/AuthPageLayout';
+import { AuthRedirectGuard } from '@/components/auth/AuthRedirectGuard';
 
 type Props = {
   params: Promise<{ locale: string }>;
@@ -44,7 +45,9 @@ export default async function RegisterConfirmationPage({ params }: Props) {
   const t = await getTranslations({ locale, namespace: 'register' });
 
   return (
-    <AuthPageLayout>
+    <>
+      <AuthRedirectGuard />
+      <AuthPageLayout>
       <div className="w-full max-w-lg animate-fade-in">
         <div className="bg-white dark:bg-dark-card rounded-2xl shadow-[0_4px_24px_rgba(0,0,0,0.08),_0_1px_2px_rgba(0,0,0,0.04)] dark:shadow-[0_8px_40px_rgba(0,0,0,0.5)] dark:ring-1 dark:ring-gold/10 p-10 text-center">
           {/* Icon */}
@@ -71,5 +74,6 @@ export default async function RegisterConfirmationPage({ params }: Props) {
         </div>
       </div>
     </AuthPageLayout>
+    </>
   );
 }

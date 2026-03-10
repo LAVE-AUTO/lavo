@@ -248,7 +248,43 @@ button, [role="button"] {
 /* ------------------------------------------------------------------ */
 
 
-/* Auth form side background                                            */
+/* Scrollbar utilities                                                 */
+
+
+/* ------------------------------------------------------------------ */
+
+/**
+ * Hide scrollbars while keeping scrolling behaviour.
+ * Used for horizontal carousels (station rows, testimonials, etc.).
+ * Works across WebKit/Blink, Firefox, and old Edge/IE.
+ */
+.scrollbar-none {
+    /* Firefox */
+    scrollbar-width: none;
+    /* IE 10+ */
+    -ms-overflow-style: none;
+}
+
+.scrollbar-none::-webkit-scrollbar {
+    /* Chrome/Safari/Edge */
+    display: none;
+}
+
+/* Backwards-compatible alias used in some components */
+.scrollbar-hide {
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+}
+
+.scrollbar-hide::-webkit-scrollbar {
+    display: none;
+}
+
+
+/* ------------------------------------------------------------------ */
+
+
+/* Auth form side background                                          */
 
 
 /* ------------------------------------------------------------------ */

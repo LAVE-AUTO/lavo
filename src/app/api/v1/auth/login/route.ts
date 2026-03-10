@@ -14,6 +14,7 @@ import {
 import { ApiCode } from '@/types/api-codes';
 import { AppError, ForbiddenError, UnauthorizedError } from '@/lib/errors';
 import { checkRateLimit, recordFailedAttempt, resetOnSuccess } from '@/lib/rate-limiter';
+import { getClientRateLimitKey } from '@/lib/request-ip';
 import { buildRefreshCookieOptions } from '@/lib/jwt';
 import { REFRESH_COOKIE_NAME } from '@/helpers/constants';
 
@@ -33,8 +34,7 @@ import { REFRESH_COOKIE_NAME } from '@/helpers/constants';
  */
 export async function POST(request: Request) {
   const headersList = await headers();
-  const ip =
-    headersList.get('x-forwarded-for')?.split(',')[0].trim() ?? 'unknown';
+  const ip = getClientRateLimitKey(headersList as unknown as Headers);
 
   const { blocked } = await checkRateLimit(ip);
   if (blocked) return error429();

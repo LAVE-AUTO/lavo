@@ -5,6 +5,7 @@ import { extractLocale } from '@/lib/email';
 import { successResponse, error400, error429, error500 } from '@/lib/responses';
 import { ApiCode } from '@/types/api-codes';
 import { checkRateLimit, recordFailedAttempt } from '@/lib/rate-limiter';
+import { getClientRateLimitKey } from '@/lib/request-ip';
 
 /**
  * POST /api/v1/auth/forgot-password
@@ -20,7 +21,7 @@ import { checkRateLimit, recordFailedAttempt } from '@/lib/rate-limiter';
  */
 export async function POST(request: Request) {
   const headersList = await headers();
-  const ip = headersList.get('x-forwarded-for')?.split(',')[0].trim() ?? 'unknown';
+  const ip = getClientRateLimitKey(headersList as unknown as Headers);
 
   const { blocked } = await checkRateLimit(ip);
   if (blocked) return error429();
