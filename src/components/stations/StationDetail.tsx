@@ -47,9 +47,10 @@ export function StationDetail({ id }: StationDetailProps) {
     setSelectedForfaitIdx(0);
   };
 
-  const mapsUrl = station.latitude && station.longitude
-    ? `https://www.google.com/maps/dir/?api=1&destination=${station.latitude},${station.longitude}`
-    : `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(`${station.name}, ${station.address}, ${station.city}`)}`;
+  const mapsUrl =
+    station.latitude != null && station.longitude != null
+      ? `https://www.google.com/maps/dir/?api=1&destination=${station.latitude},${station.longitude}`
+      : `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(`${station.name}, ${station.address}, ${station.city}`)}`;
 
   return (
     <>
@@ -112,9 +113,9 @@ export function StationDetail({ id }: StationDetailProps) {
               <span className="flex items-center gap-1">
                 <span className="text-gold text-[16px]">&#9733;</span>
                 <span className="text-[#000C1F] dark:text-[#FFF8EC] font-bold">{station.rating.toFixed(1)}</span>
-                <span>({station.reviewCount} {t('reviews_count', { count: station.reviewCount }).replace(/\d+ /, '')})</span>
+                <span>{t('reviews_count', { count: station.reviewCount })}</span>
               </span>
-              <span>&#183; {station.availableSlots} {t('places_dispo').toLowerCase()}</span>
+              <span>&#183; {station.availableSlots} {t('places_dispo')}</span>
               {station.openingHours && <span>&#183; {station.openingHours}</span>}
             </div>
           </div>
@@ -206,7 +207,7 @@ export function StationDetail({ id }: StationDetailProps) {
                   <div className={`text-[22px] font-black leading-none ${station.estimatedWaitMinutes > 20 ? 'text-lavo-error' : 'text-[#000C1F] dark:text-[#FFF8EC]'}`}>
                     {station.estimatedWaitMinutes > 0 ? `${station.estimatedWaitMinutes}` : '\u2014'}
                   </div>
-                  <div className="text-[13px] text-[#555] dark:text-[#C0C0B0] mt-1">Minutes</div>
+                  <div className="text-[13px] text-[#555] dark:text-[#C0C0B0] mt-1">{t('min_attente')}</div>
                 </div>
                 <div>
                   <div className="text-[22px] font-black text-[#000C1F] dark:text-[#FFF8EC] leading-none">{station.availableSlots}</div>

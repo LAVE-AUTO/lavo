@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect, useRef } from 'react';
 import type { ReactNode } from 'react';
 import { useTranslations, useLocale } from 'next-intl';
 import { Link, useRouter } from '@/i18n/navigation';
@@ -17,7 +17,36 @@ export default function ReservationDetailPage() {
 
   const reservation = useMemo(() => MOCK_RESERVATIONS.find((r) => r.id === id), [id]);
   const [showCancelModal, setShowCancelModal] = useState(false);
+  const cancelDialogRef = useRef<HTMLDivElement | null>(null);
   const { success: showSuccess } = useToast();
+
+  useEffect(() => {
+    if (!showCancelModal) return;
+
+    const previouslyFocused = document.activeElement as HTMLElement | null;
+    const dialogEl = cancelDialogRef.current;
+
+    if (dialogEl) {
+      const focusable = dialogEl.querySelector<HTMLElement>(
+        'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])',
+      );
+      focusable?.focus();
+    }
+
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') {
+        event.preventDefault();
+        setShowCancelModal(false);
+      }
+    };
+
+    document.addEventListener('keydown', handleKeyDown);
+
+    return () => {
+      document.removeEventListener('keydown', handleKeyDown);
+      previouslyFocused?.focus();
+    };
+  }, [showCancelModal]);
 
   if (!reservation) {
     return (
@@ -170,14 +199,26 @@ export default function ReservationDetailPage() {
       {/* Cancel confirmation modal */}
       {showCancelModal && (
         <>
-          <div className="fixed inset-0 z-[60] bg-black/50 backdrop-blur-sm" onClick={() => setShowCancelModal(false)} />
+          <div
+            className="fixed inset-0 z-[60] bg-black/50 backdrop-blur-sm"
+            onClick={() => setShowCancelModal(false)}
+          />
           <div className="fixed inset-0 z-[60] flex items-center justify-center p-4">
-            <div className="bg-[#F5F5E6] dark:bg-[#1A1A18] rounded-2xl shadow-2xl w-full max-w-sm p-6 space-y-4">
+            <div
+              ref={cancelDialogRef}
+              role="dialog"
+              aria-modal="true"
+              aria-labelledby="cancel-reservation-title"
+              className="bg-[#F5F5E6] dark:bg-[#1A1A18] rounded-2xl shadow-2xl w-full max-w-sm p-6 space-y-4"
+            >
               <div className="w-14 h-14 rounded-full bg-lavo-error/15 flex items-center justify-center mx-auto">
                 <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#EF4444" strokeWidth="2" strokeLinecap="round"><circle cx="12" cy="12" r="10" /><line x1="12" y1="8" x2="12" y2="12" /><line x1="12" y1="16" x2="12.01" y2="16" /></svg>
               </div>
 
-              <h3 className="text-[18px] font-black text-[#0A0A14] dark:text-white text-center">
+              <h3
+                id="cancel-reservation-title"
+                className="text-[18px] font-black text-[#0A0A14] dark:text-white text-center"
+              >
                 {t('cancel_modal_title')}
               </h3>
               <p className="text-[14px] text-[#555] dark:text-[#B0B0A0] text-center leading-relaxed">

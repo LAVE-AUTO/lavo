@@ -358,7 +358,7 @@
         "my_account": "My account",
         "dashboard": "Dashboard",
         "reservations": "Reservations",
-        "coupons": "Coupons",
+        "coupons": "Reservations",
         "more": "More",
         "profile": "My profile",
         "logout": "Sign out"
@@ -486,7 +486,14 @@
         "status_closed": "Closed",
         "status_label": "Status",
         "service_type": "Service type",
-        "continue": "Continue"
+        "continue": "Continue",
+        "vehicle_type_sedan": "Sedan",
+        "vehicle_type_suv": "SUV",
+        "vehicle_type_motorcycle": "Motorcycle",
+        "vehicle_type_van": "Pickup / van",
+        "filter_categories_placeholder": "All categories",
+        "filter_vehicle_placeholder": "All vehicle types",
+        "filter_service_placeholder": "All services"
     },
     "merchant": {
         "meta_title": "Slowtime — Merchant portal",
@@ -775,10 +782,10 @@
         "result_error_desc": "An error occurred while processing your payment. Please try again.",
         "result_done": "Done",
         "result_retry": "Try again",
-        "result_view_coupons": "View my coupons"
+        "result_view_coupons": "View my reservations"
     },
     "coupons": {
-        "title": "My coupons",
+      "title": "My reservations",
         "tab_reservations": "Reservations",
         "tab_queue": "Queue",
         "upcoming": "Upcoming",
@@ -793,7 +800,7 @@
         "queue_in_progress": "In progress",
         "queue_position": "Position: {position}",
         "not_found": "Reservation not found",
-        "back_to_coupons": "Back to coupons",
+      "back_to_coupons": "Back to reservations",
         "detail_summary": "Summary",
         "detail_date": "Date",
         "detail_time": "Time",
@@ -812,7 +819,9 @@
         "cancel_modal_confirm": "Cancel",
         "past_completed": "This reservation is completed.",
         "past_cancelled": "This reservation was cancelled.",
-        "toast_cancel_success": "Reservation cancelled successfully"
+      "toast_cancel_success": "Reservation cancelled successfully",
+      "confirm_title": "Reservation confirmation",
+      "confirm_id_label": "ID"
     },
     "favorites": {
         "title": "My favorites",

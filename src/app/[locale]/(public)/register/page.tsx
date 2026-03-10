@@ -3,6 +3,7 @@ import { AuthPageLayout } from '@/components/auth/AuthPageLayout';
 import { AuthHeader } from '@/components/auth/AuthHeader';
 import { TabSwitcher } from '@/components/auth/TabSwitcher';
 import { RegisterForm } from '@/components/auth/RegisterForm';
+import { AuthRedirectGuard } from '@/components/auth/AuthRedirectGuard';
 
 type Props = {
   params: Promise<{ locale: string }>;
@@ -24,7 +25,9 @@ export default async function RegisterPage({ params }: Props) {
   const t = await getTranslations({ locale, namespace: 'register' });
 
   return (
-    <AuthPageLayout>
+    <>
+      <AuthRedirectGuard />
+      <AuthPageLayout>
       <div className="w-full max-w-xl animate-fade-in">
         <AuthHeader
           title={t('welcome_title')}
@@ -44,5 +47,6 @@ export default async function RegisterPage({ params }: Props) {
         </div>
       </div>
     </AuthPageLayout>
+    </>
   );
 }

@@ -357,8 +357,8 @@
         "greeting": "Bonjour",
         "my_account": "Mon compte",
         "dashboard": "Tableau de bord",
-        "reservations": "Reservation",
-        "coupons": "Coupons",
+        "reservations": "Réservations",
+        "coupons": "Réservations",
         "more": "Plus",
         "profile": "Mon profil",
         "logout": "Se deconnecter"
@@ -486,7 +486,14 @@
         "status_closed": "Fermé",
         "status_label": "Statut",
         "service_type": "Type de service",
-        "continue": "Continuer"
+        "continue": "Continuer",
+        "vehicle_type_sedan": "Berline",
+        "vehicle_type_suv": "SUV",
+        "vehicle_type_motorcycle": "Moto",
+        "vehicle_type_van": "Camionnette",
+        "filter_categories_placeholder": "Toutes les catégories",
+        "filter_vehicle_placeholder": "Tous les véhicules",
+        "filter_service_placeholder": "Tous les services"
     },
     "merchant": {
         "meta_title": "Slowtime — Espace marchand",
@@ -775,10 +782,10 @@
         "result_error_desc": "Une erreur est survenue lors du traitement de votre paiement. Veuillez réessayer.",
         "result_done": "Terminé",
         "result_retry": "Réessayer",
-        "result_view_coupons": "Voir mes coupons"
+        "result_view_coupons": "Voir mes réservations"
     },
     "coupons": {
-        "title": "Mes coupons",
+      "title": "Mes réservations",
         "tab_reservations": "Réservations",
         "tab_queue": "File d'attente",
         "upcoming": "À venir",
@@ -793,7 +800,7 @@
         "queue_in_progress": "En cours",
         "queue_position": "Position : {position}",
         "not_found": "Réservation introuvable",
-        "back_to_coupons": "Retour aux coupons",
+      "back_to_coupons": "Retour aux réservations",
         "detail_summary": "Récapitulatif",
         "detail_date": "Date",
         "detail_time": "Heure",
@@ -812,7 +819,9 @@
         "cancel_modal_confirm": "Annuler",
         "past_completed": "Cette réservation est terminée.",
         "past_cancelled": "Cette réservation a été annulée.",
-        "toast_cancel_success": "Réservation annulée avec succès"
+      "toast_cancel_success": "Réservation annulée avec succès",
+      "confirm_title": "Confirmation de réservation",
+      "confirm_id_label": "ID"
     },
     "favorites": {
         "title": "Mes favoris",

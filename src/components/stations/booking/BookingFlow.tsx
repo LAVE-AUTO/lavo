@@ -1,13 +1,13 @@
 'use client';
 
-import { useState, useCallback, useEffect } from 'react';
+import { useState, useCallback, useEffect, useRef } from 'react';
 import { useTranslations } from 'next-intl';
 import { Link } from '@/i18n/navigation';
 import { ExtrasStep } from './ExtrasStep';
 import { ArrivalStep } from './ArrivalStep';
 import { SummaryStep } from './SummaryStep';
 import { PaymentStep } from './PaymentStep';
-import type { StationDetailData, ServiceCategory, ServiceForfait, ServiceExtra, TimeSlot } from '@/types/station';
+import type { StationDetailData, ServiceCategory, ServiceForfait, TimeSlot } from '@/types/station';
 
 type ArrivalMode = 'queue_now' | 'queue_later' | 'book_slot';
 
@@ -25,6 +25,7 @@ export function BookingFlow({ station, category, forfait, onClose }: BookingFlow
   const t = useTranslations('booking');
   const [step, setStep] = useState<Step>('extras');
   const stepIndex = STEPS.indexOf(step);
+  const dialogRootRef = useRef<HTMLDivElement | null>(null);
 
   // Payment result
   const [paymentResult, setPaymentResult] = useState<'success' | 'error' | null>(null);
@@ -44,11 +45,32 @@ export function BookingFlow({ station, category, forfait, onClose }: BookingFlow
   const grandTotal = forfait.price + extrasTotal;
   const totalDuration = forfait.duration + extrasDuration;
 
-  // Lock body scroll
+  // Lock body scroll and basic keyboard handling (Escape + initial focus)
   useEffect(() => {
     document.body.style.overflow = 'hidden';
-    return () => { document.body.style.overflow = ''; };
-  }, []);
+
+    const dialogEl = dialogRootRef.current;
+    if (dialogEl) {
+      const focusable = dialogEl.querySelector<HTMLElement>(
+        'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])',
+      );
+      focusable?.focus();
+    }
+
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') {
+        event.preventDefault();
+        onClose();
+      }
+    };
+
+    document.addEventListener('keydown', handleKeyDown);
+
+    return () => {
+      document.body.style.overflow = '';
+      document.removeEventListener('keydown', handleKeyDown);
+    };
+  }, [onClose]);
 
   const toggleExtra = useCallback((id: string) => {
     setSelectedExtraIds((prev) =>
@@ -173,7 +195,10 @@ export function BookingFlow({ station, category, forfait, onClose }: BookingFlow
           )}
         </div>
 
-        <h3 className="text-[22px] font-black text-[#000C1F] dark:text-[#FFF8EC]">
+        <h3
+          id="booking-result-title"
+          className="text-[22px] font-black text-[#000C1F] dark:text-[#FFF8EC]"
+        >
           {isSuccess ? t('result_success_title') : t('result_error_title')}
         </h3>
         <p className="text-[15px] text-[#555] dark:text-[#B0B0A0] max-w-sm leading-relaxed">
@@ -232,7 +257,12 @@ export function BookingFlow({ station, category, forfait, onClose }: BookingFlow
       <>
         {/* Desktop */}
         <div className="hidden md:flex fixed inset-0 z-[60] items-center justify-center bg-black/50 backdrop-blur-sm">
-          <div className="relative w-full max-w-md bg-[#F5F5E6] dark:bg-[#1A1A18] rounded-2xl shadow-2xl">
+          <div
+            className="relative w-full max-w-md bg-[#F5F5E6] dark:bg-[#1A1A18] rounded-2xl shadow-2xl"
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="booking-result-title"
+          >
             {renderResultScreen()}
           </div>
         </div>
@@ -247,19 +277,28 @@ export function BookingFlow({ station, category, forfait, onClose }: BookingFlow
   return (
     <>
       {/* Desktop: Modal overlay */}
-      <div className="hidden md:flex fixed inset-0 z-[60] items-center justify-center bg-black/50 backdrop-blur-sm">
-        <div className="relative w-full max-w-2xl bg-[#F5F5E6] dark:bg-[#1A1A18] rounded-2xl shadow-2xl flex flex-col max-h-[90vh]">
+        <div className="hidden md:flex fixed inset-0 z-[60] items-center justify-center bg-black/50 backdrop-blur-sm">
+          <div
+            ref={dialogRootRef}
+            className="relative w-full max-w-2xl bg-[#F5F5E6] dark:bg-[#1A1A18] rounded-2xl shadow-2xl flex flex-col max-h-[90vh]"
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="booking-dialog-title-desktop"
+          >
           {/* Header */}
           <div className="p-5 pb-4 border-b border-[#D0D0C0] dark:border-tab-inactive">
             <div className="flex items-center justify-between mb-4">
-              <h2 className="text-[18px] font-black text-[#000C1F] dark:text-[#FFF8EC]">
+              <h2
+                id="booking-dialog-title-desktop"
+                className="text-[18px] font-black text-[#000C1F] dark:text-[#FFF8EC]"
+              >
                 {t('booking_title')}
               </h2>
               <button
                 type="button"
                 onClick={onClose}
                 className="w-8 h-8 rounded-full bg-[#E8E8D8] dark:bg-tab-inactive flex items-center justify-center hover:bg-[#D0D0C0] transition-colors cursor-pointer"
-                aria-label="Close"
+                aria-label={t('close')}
               >
                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"><line x1="18" y1="6" x2="6" y2="18" /><line x1="6" y1="6" x2="18" y2="18" /></svg>
               </button>
@@ -290,7 +329,12 @@ export function BookingFlow({ station, category, forfait, onClose }: BookingFlow
       </div>
 
       {/* Mobile: Full screen */}
-      <div className="md:hidden fixed inset-0 z-[60] bg-[#F5F5E6] dark:bg-[#1A1A18] flex flex-col">
+      <div
+        className="md:hidden fixed inset-0 z-[60] bg-[#F5F5E6] dark:bg-[#1A1A18] flex flex-col"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="booking-dialog-title-mobile"
+      >
         {/* Header */}
         <div className="px-4 pt-4 pb-3 border-b border-[#D0D0C0] dark:border-tab-inactive safe-area-top">
           <div className="flex items-center justify-between mb-3">
@@ -319,7 +363,10 @@ export function BookingFlow({ station, category, forfait, onClose }: BookingFlow
             ))}
           </div>
 
-          <h2 className="text-[17px] font-black text-[#000C1F] dark:text-[#FFF8EC] mt-3">
+          <h2
+            id="booking-dialog-title-mobile"
+            className="text-[17px] font-black text-[#000C1F] dark:text-[#FFF8EC] mt-3"
+          >
             {stepLabels[stepIndex]}
           </h2>
         </div>

@@ -1,6 +1,6 @@
 /**
  * GET /api/v1/me/entries
- * List current user's entries (reservations and queue). Auth: user.
+ * List current user's entries (reservations and queue). Auth: client.
  */
 import { requireRole } from '@/lib/require-role';
 import { successResponse, error500, fromAppError } from '@/lib/responses';
@@ -10,7 +10,7 @@ import { AppError } from '@/lib/errors';
 import type { NextResponse } from 'next/server';
 
 export async function GET(): Promise<NextResponse> {
-  const auth = await requireRole('user');
+  const auth = await requireRole('client');
   if (auth instanceof Response) return auth as NextResponse;
 
   try {
