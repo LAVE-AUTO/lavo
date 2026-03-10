@@ -11,6 +11,13 @@ export interface RateLimitResult {
   retryAfter?: number;
 }
 
+export function normalizeRateLimitKey(rawKey: string | null | undefined): string {
+  if (!rawKey) return 'unknown';
+  const trimmed = rawKey.trim();
+  if (!trimmed) return 'unknown';
+  return trimmed.toLowerCase();
+}
+
 export async function checkRateLimit(key: string): Promise<RateLimitResult> {
   const row = await db.query.authRateLimits.findFirst({
     where: eq(authRateLimits.key, key),

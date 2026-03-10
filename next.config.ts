@@ -28,8 +28,10 @@ function buildCsp(): string {
     "frame-ancestors 'none'",
     "object-src 'none'",
     "img-src 'self' data: https:",
+    // Keep 'unsafe-inline' for styles to avoid breaking Next.js/Tailwind class injection,
+    // but avoid it for scripts in production to reduce XSS risk.
     "style-src 'self' 'unsafe-inline'",
-    "script-src 'self' 'unsafe-inline'",
+    "script-src 'self'",
     "connect-src 'self' https:",
     "upgrade-insecure-requests",
   ].join("; ");
