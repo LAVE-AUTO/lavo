@@ -11,6 +11,7 @@ interface PaymentStepProps {
 
 export function PaymentStep({ grandTotal, onConfirm, onBack }: PaymentStepProps) {
   const t = useTranslations('booking');
+  const mockCardEnabled = process.env.NEXT_PUBLIC_ENABLE_CARD_MOCK === 'true';
   const [cardNumber, setCardNumber] = useState('');
   const [expiry, setExpiry] = useState('');
   const [cvc, setCvc] = useState('');
@@ -32,9 +33,11 @@ export function PaymentStep({ grandTotal, onConfirm, onBack }: PaymentStepProps)
     && cvc.length >= 3;
 
   const handlePay = async () => {
-    if (!isValid) return;
+    if (mockCardEnabled && !isValid) return;
     setProcessing(true);
-    // Simulate Stripe payment (replace with real Stripe integration)
+    // In mock mode, simulate a Stripe payment on the client.
+    // In production, this component must be backed by a real PSP integration
+    // (e.g. Stripe Elements) that never exposes PAN/expiry/CVC to React state.
     await new Promise((resolve) => setTimeout(resolve, 2000));
     setProcessing(false);
     onConfirm();
@@ -45,61 +48,76 @@ export function PaymentStep({ grandTotal, onConfirm, onBack }: PaymentStepProps)
       <div className="flex-1 overflow-y-auto px-1 space-y-5 pb-4">
         <p className="text-[14px] text-[#555] dark:text-[#B0B0A0]">{t('payment_subtitle')}</p>
 
-        {/* Stripe-style card form */}
-        <div className="bg-[#E8E8D8] dark:bg-dark-bg/60 rounded-xl p-5 space-y-4">
-          <div className="flex items-center gap-2 mb-2">
-            <svg width="28" height="18" viewBox="0 0 28 18" fill="none"><rect width="28" height="18" rx="3" fill="#635BFF" /><text x="5" y="13" fontSize="10" fill="white" fontWeight="bold">S</text></svg>
-            <span className="text-[13px] font-bold text-[#555] dark:text-[#A0A090]">{t('payment_secured')}</span>
-          </div>
+        {mockCardEnabled ? (
+          // Mock-only Stripe-style card form for non-production environments.
+          <div className="bg-[#E8E8D8] dark:bg-dark-bg/60 rounded-xl p-5 space-y-4">
+            <div className="flex items-center gap-2 mb-2">
+              <svg width="28" height="18" viewBox="0 0 28 18" fill="none"><rect width="28" height="18" rx="3" fill="#635BFF" /><text x="5" y="13" fontSize="10" fill="white" fontWeight="bold">S</text></svg>
+              <span className="text-[13px] font-bold text-[#555] dark:text-[#A0A090]">{t('payment_secured')}</span>
+            </div>
 
-          {/* Card number */}
-          <div>
-            <label className="block text-[12px] font-bold text-[#555] dark:text-[#A0A090] uppercase tracking-wider mb-1.5">
-              {t('payment_card_number')}
-            </label>
-            <input
-              type="text"
-              inputMode="numeric"
-              autoComplete="cc-number"
-              value={cardNumber}
-              onChange={(e) => setCardNumber(formatCardNumber(e.target.value))}
-              placeholder="4242 4242 4242 4242"
-              className="w-full px-4 py-3 rounded-lg border-2 border-[#D0D0C0] dark:border-tab-inactive bg-white dark:bg-dark-bg text-[15px] text-[#000C1F] dark:text-[#FFF8EC] placeholder:text-[#BBB] focus:border-gold focus:outline-none transition-colors"
-            />
-          </div>
-
-          {/* Expiry + CVC */}
-          <div className="flex gap-3">
-            <div className="flex-1">
+            {/* Card number */}
+            <div>
               <label className="block text-[12px] font-bold text-[#555] dark:text-[#A0A090] uppercase tracking-wider mb-1.5">
-                {t('payment_expiry')}
+                {t('payment_card_number')}
               </label>
               <input
                 type="text"
                 inputMode="numeric"
-                autoComplete="cc-exp"
-                value={expiry}
-                onChange={(e) => setExpiry(formatExpiry(e.target.value))}
-                placeholder="MM/YY"
+                autoComplete="cc-number"
+                value={cardNumber}
+                onChange={(e) => setCardNumber(formatCardNumber(e.target.value))}
+                placeholder="4242 4242 4242 4242"
                 className="w-full px-4 py-3 rounded-lg border-2 border-[#D0D0C0] dark:border-tab-inactive bg-white dark:bg-dark-bg text-[15px] text-[#000C1F] dark:text-[#FFF8EC] placeholder:text-[#BBB] focus:border-gold focus:outline-none transition-colors"
               />
             </div>
-            <div className="flex-1">
-              <label className="block text-[12px] font-bold text-[#555] dark:text-[#A0A090] uppercase tracking-wider mb-1.5">
-                {t('payment_cvc')}
-              </label>
-              <input
-                type="text"
-                inputMode="numeric"
-                autoComplete="cc-csc"
-                value={cvc}
-                onChange={(e) => setCvc(e.target.value.replace(/\D/g, '').slice(0, 4))}
-                placeholder="123"
-                className="w-full px-4 py-3 rounded-lg border-2 border-[#D0D0C0] dark:border-tab-inactive bg-white dark:bg-dark-bg text-[15px] text-[#000C1F] dark:text-[#FFF8EC] placeholder:text-[#BBB] focus:border-gold focus:outline-none transition-colors"
-              />
+
+            {/* Expiry + CVC */}
+            <div className="flex gap-3">
+              <div className="flex-1">
+                <label className="block text-[12px] font-bold text-[#555] dark:text-[#A0A090] uppercase tracking-wider mb-1.5">
+                  {t('payment_expiry')}
+                </label>
+                <input
+                  type="text"
+                  inputMode="numeric"
+                  autoComplete="cc-exp"
+                  value={expiry}
+                  onChange={(e) => setExpiry(formatExpiry(e.target.value))}
+                  placeholder="MM/YY"
+                  className="w-full px-4 py-3 rounded-lg border-2 border-[#D0D0C0] dark:border-tab-inactive bg-white dark:bg-dark-bg text-[15px] text-[#000C1F] dark:text-[#FFF8EC] placeholder:text-[#BBB] focus:border-gold focus:outline-none transition-colors"
+                />
+              </div>
+              <div className="flex-1">
+                <label className="block text-[12px] font-bold text-[#555] dark:text-[#A0A090] uppercase tracking-wider mb-1.5">
+                  {t('payment_cvc')}
+                </label>
+                <input
+                  type="text"
+                  inputMode="numeric"
+                  autoComplete="cc-csc"
+                  value={cvc}
+                  onChange={(e) => setCvc(e.target.value.replace(/\D/g, '').slice(0, 4))}
+                  placeholder="123"
+                  className="w-full px-4 py-3 rounded-lg border-2 border-[#D0D0C0] dark:border-tab-inactive bg-white dark:bg-dark-bg text-[15px] text-[#000C1F] dark:text-[#FFF8EC] placeholder:text-[#BBB] focus:border-gold focus:outline-none transition-colors"
+                />
+              </div>
             </div>
           </div>
-        </div>
+        ) : (
+          // Production-safe placeholder: real payment is handled by a PSP integration.
+          <div className="bg-[#E8E8D8] dark:bg-dark-bg/60 rounded-xl p-5 space-y-3">
+            <div className="flex items-center gap-2 mb-2">
+              <svg width="28" height="18" viewBox="0 0 28 18" fill="none"><rect width="28" height="18" rx="3" fill="#635BFF" /><text x="5" y="13" fontSize="10" fill="white" fontWeight="bold">S</text></svg>
+              <span className="text-[13px] font-bold text-[#555] dark:text-[#A0A090]">
+                {t('payment_psp_placeholder')}
+              </span>
+            </div>
+            <p className="text-[13px] text-[#555] dark:text-[#B0B0A0]">
+              {t('payment_psp_explainer')}
+            </p>
+          </div>
+        )}
 
         {/* Total reminder */}
         <div className="bg-gold/10 dark:bg-gold/5 border-2 border-gold rounded-xl p-4 flex justify-between items-center">
@@ -120,7 +138,7 @@ export function PaymentStep({ grandTotal, onConfirm, onBack }: PaymentStepProps)
         </button>
         <button
           type="button"
-          disabled={!isValid || processing}
+          disabled={mockCardEnabled ? !isValid || processing : processing}
           onClick={handlePay}
           className={`flex-1 py-3 rounded-xl text-[15px] font-black transition-colors cursor-pointer ${
             isValid && !processing

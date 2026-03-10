@@ -10,9 +10,11 @@ export interface ModalProps {
 export function Modal({ open, title, children, footer }: ModalProps) {
   if (!open) return null;
 
+  const labelledBy = title ? 'modal-title' : undefined;
+
   return (
-    <div>
-      {title && <h2>{title}</h2>}
+    <div role="dialog" aria-modal="true" aria-labelledby={labelledBy}>
+      {title && <h2 id={labelledBy}>{title}</h2>}
       <div>{children}</div>
       {footer && <div>{footer}</div>}
     </div>

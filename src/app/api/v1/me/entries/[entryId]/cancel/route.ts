@@ -1,6 +1,6 @@
 /**
  * PATCH /api/v1/me/entries/:entryId/cancel
- * Cancel a reservation or leave the queue. Auth: user.
+ * Cancel a reservation or leave the queue. Auth: client.
  */
 import { requireRole } from '@/lib/require-role';
 import { successResponse, error400, error404, error409, error500, fromAppError } from '@/lib/responses';
@@ -14,7 +14,7 @@ import type { NextResponse } from 'next/server';
 type Params = { params: Promise<{ entryId: string }> };
 
 export async function PATCH(_request: Request, { params }: Params): Promise<NextResponse> {
-  const auth = await requireRole('user');
+  const auth = await requireRole('client');
   if (auth instanceof Response) return auth as NextResponse;
 
   const { entryId } = await params;

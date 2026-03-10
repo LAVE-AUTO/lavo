@@ -11,6 +11,7 @@ import {
 import { ApiCode } from '@/types/api-codes';
 import { AppError, NotFoundError, TokenExpiredError } from '@/lib/errors';
 import { checkRateLimit, recordFailedAttempt, resetOnSuccess } from '@/lib/rate-limiter';
+import { getClientRateLimitKey } from '@/lib/request-ip';
 
 /**
  * POST /api/v1/auth/verify-email
@@ -27,7 +28,7 @@ import { checkRateLimit, recordFailedAttempt, resetOnSuccess } from '@/lib/rate-
  */
 export async function POST(request: Request) {
   const headersList = await headers();
-  const ip = headersList.get('x-forwarded-for')?.split(',')[0].trim() ?? 'unknown';
+  const ip = getClientRateLimitKey(headersList as unknown as Headers);
 
   const { blocked } = await checkRateLimit(ip);
   if (blocked) return error429();
