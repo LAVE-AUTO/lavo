@@ -20,7 +20,13 @@ export function StationCard({ station, unavailable = false }: StationCardProps) 
   const userLocation = useUserLocation();
 
   const distanceLabel = (() => {
-    if (!userLocation || !station.latitude || !station.longitude) return null;
+    if (
+      !userLocation ||
+      station.latitude == null ||
+      station.longitude == null
+    ) {
+      return null;
+    }
     const km = haversineKm(userLocation.latitude, userLocation.longitude, station.latitude, station.longitude);
     if (km < 1) return t('distance_m', { distance: Math.round(km * 1000) });
     return t('distance_km', { distance: km.toFixed(1) });
@@ -105,7 +111,7 @@ export function StationCard({ station, unavailable = false }: StationCardProps) 
         <div className="flex items-center gap-1.5 mb-3 text-[15px]">
           <span className="text-gold text-[17px]">&#9733;</span>
           <span className="text-[#0A0A14] dark:text-white font-semibold">{station.rating.toFixed(1)}</span>
-          <span className="text-gold">({station.reviewCount} {t('reviews_count', { count: station.reviewCount }).replace(/\d+ /, '')})</span>
+          <span className="text-gold">{t('reviews_count', { count: station.reviewCount })}</span>
         </div>
 
         {/* Stats grid: places | wait | status */}

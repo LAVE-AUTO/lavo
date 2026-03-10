@@ -1,6 +1,6 @@
 /**
  * POST /api/v1/stations/:id/queue/join
- * Join the queue at the station. Auth: user. Body: vehicle_format_id.
+ * Join the queue at the station. Auth: client. Body: vehicle_format_id.
  */
 import { requireRole } from '@/lib/require-role';
 import { successResponse, error400, error404, error409, error500, fromAppError } from '@/lib/responses';
@@ -16,7 +16,7 @@ import type { NextResponse } from 'next/server';
 type Params = { params: Promise<{ id: string }> };
 
 export async function POST(request: Request, { params }: Params): Promise<NextResponse> {
-  const auth = await requireRole('user');
+  const auth = await requireRole('client');
   if (auth instanceof Response) return auth as NextResponse;
 
   const { id: stationId } = await params;

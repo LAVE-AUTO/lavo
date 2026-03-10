@@ -3,6 +3,7 @@ import { AuthPageLayout } from '@/components/auth/AuthPageLayout';
 import { AuthHeader } from '@/components/auth/AuthHeader';
 import { TabSwitcher } from '@/components/auth/TabSwitcher';
 import { LoginForm } from '@/components/auth/LoginForm';
+import { AuthRedirectGuard } from '@/components/auth/AuthRedirectGuard';
 
 type Props = {
   params: Promise<{ locale: string }>;
@@ -24,7 +25,9 @@ export default async function LoginPage({ params }: Props) {
   const t = await getTranslations({ locale, namespace: 'login' });
 
   return (
-    <AuthPageLayout>
+    <>
+      <AuthRedirectGuard />
+      <AuthPageLayout>
       <div className="w-full max-w-lg animate-fade-in">
         <AuthHeader
           title={t('welcome_title')}
@@ -44,5 +47,6 @@ export default async function LoginPage({ params }: Props) {
         </div>
       </div>
     </AuthPageLayout>
+    </>
   );
 }

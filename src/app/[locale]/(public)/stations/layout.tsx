@@ -11,9 +11,11 @@ import { BottomNav } from '@/components/layout/BottomNav';
 export default function StationsLayout({ children }: { children: ReactNode }) {
   return (
     <>
-      <PublicNavbar />
-      <div className="flex flex-col min-h-screen">
-        <div className="flex-1">{children}</div>
+      {/* Stations handle spacing themselves to avoid an extra bar under the navbar on mobile */}
+      <PublicNavbar withTopSpacer={false} withMobileScrollSpacer={false} />
+      <div className="flex flex-col min-h-screen pt-[62px]">
+        {/* Bottom padding on mobile so content doesn't sit under the fixed BottomNav */}
+        <div className="flex-1 pb-16 sm:pb-0">{children}</div>
         {/* Footer: desktop only */}
         <div className="hidden sm:block">
           <PublicFooter />

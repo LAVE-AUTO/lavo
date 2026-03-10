@@ -1,6 +1,6 @@
 /**
  * POST /api/v1/me/entries/:entryId/upgrade-to-reservation
- * Upgrade a queue entry to a reservation (assign time slot). Auth: user. Body: time_slot_id.
+ * Upgrade a queue entry to a reservation (assign time slot). Auth: client. Body: time_slot_id.
  */
 import { requireRole } from '@/lib/require-role';
 import { successResponse, error400, error404, error409, error500, fromAppError } from '@/lib/responses';
@@ -15,7 +15,7 @@ import type { NextResponse } from 'next/server';
 type Params = { params: Promise<{ entryId: string }> };
 
 export async function POST(request: Request, { params }: Params): Promise<NextResponse> {
-  const auth = await requireRole('user');
+  const auth = await requireRole('client');
   if (auth instanceof Response) return auth as NextResponse;
 
   const { entryId } = await params;
