@@ -6,10 +6,10 @@ import { useRouter } from '@/i18n/navigation';
 import { useToast } from '@/context/toast-context';
 import { useAuth } from '@/context/auth-context';
 import { postWithApi } from '@/services/axios-service';
-import { validateEmail, validateName, validatePhone, isPasswordValid } from '@/helpers/validators';
+import { validateEmail, validateName, validatePhone, isPasswordValid, joinPhoneNumber } from '@/helpers/validators';
 import { Spinner } from '@/components/ui/Spinner';
 import { FormField } from './FormField';
-import { PhoneInput } from './PhoneInput';
+import { PhoneInput, type PhoneInputValue } from './PhoneInput';
 import { PasswordRules } from './PasswordRules';
 import { SocialButtons } from './SocialButtons';
 
@@ -17,7 +17,7 @@ interface RegisterFormData {
   firstName: string;
   lastName: string;
   email: string;
-  phone: string;
+  phone: PhoneInputValue;
   password: string;
   confirmPassword: string;
 }
@@ -28,7 +28,7 @@ const INITIAL_DATA: RegisterFormData = {
   firstName: '',
   lastName: '',
   email: '',
-  phone: '',
+  phone: { country: 'CA', localNumber: '' },
   password: '',
   confirmPassword: '',
 };
@@ -108,9 +108,9 @@ export function RegisterForm() {
       next.email = t('error_email_invalid');
     }
 
-    if (!formData.phone.trim()) {
+    if (!formData.phone.localNumber.trim()) {
       next.phone = t('error_phone_required');
-    } else if (!validatePhone(formData.phone)) {
+    } else if (!validatePhone(joinPhoneNumber(formData.phone.country, formData.phone.localNumber))) {
       next.phone = t('error_phone_invalid');
     }
 
@@ -140,7 +140,7 @@ export function RegisterForm() {
         first_name: formData.firstName.trim(),
         last_name:  formData.lastName.trim(),
         email:      formData.email.trim(),
-        phone:      formData.phone.trim(),
+        phone:      joinPhoneNumber(formData.phone.country, formData.phone.localNumber),
         password:   formData.password,
         confirm_password: formData.confirmPassword,
       });
