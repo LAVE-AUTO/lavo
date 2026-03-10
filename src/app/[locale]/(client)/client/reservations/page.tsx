@@ -7,7 +7,7 @@ import { MOCK_RESERVATIONS, MOCK_QUEUE_ENTRIES } from '@/data/reservations-mock'
 
 type Tab = 'reservations' | 'queue';
 
-export default function CouponsPage() {
+export default function ClientReservationsPage() {
   const t = useTranslations('coupons');
   const locale = useLocale();
   const [tab, setTab] = useState<Tab>('reservations');

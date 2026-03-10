@@ -2,6 +2,7 @@ import { getTranslations, setRequestLocale } from 'next-intl/server';
 import { AuthPageLayout } from '@/components/auth/AuthPageLayout';
 import { AuthHeader } from '@/components/auth/AuthHeader';
 import { VerifyEmailView } from '@/components/auth/VerifyEmailView';
+import { AuthRedirectGuard } from '@/components/auth/AuthRedirectGuard';
 
 type Props = {
   params: Promise<{ locale: string }>;
@@ -26,7 +27,9 @@ export default async function VerifyEmailPage({ params, searchParams }: Props) {
   const t = await getTranslations({ locale, namespace: 'verify_email' });
 
   return (
-    <AuthPageLayout>
+    <>
+      <AuthRedirectGuard />
+      <AuthPageLayout>
       <div className="w-full max-w-lg animate-fade-in">
         <AuthHeader
           title={t('title')}
@@ -41,5 +44,6 @@ export default async function VerifyEmailPage({ params, searchParams }: Props) {
         </div>
       </div>
     </AuthPageLayout>
+    </>
   );
 }

@@ -38,18 +38,31 @@ function LogoutIcon() {
   );
 }
 
+type PublicNavbarProps = {
+  /** Whether to render the top spacer that pushes content below the fixed header. */
+  withTopSpacer?: boolean;
+  /**
+   * Extra spacer used to ensure scrollable content isn't hidden behind the
+   * fixed BottomNav on mobile. Defaults to true for backwards compatibility.
+   */
+  withMobileScrollSpacer?: boolean;
+};
+
 /**
  * Sticky public navbar.
  * Authenticated users see avatar + name; clicking opens a dropdown with
  * profile info and a logout button.
  */
-export function PublicNavbar() {
+export function PublicNavbar({
+  withTopSpacer = true,
+  withMobileScrollSpacer = true,
+}: PublicNavbarProps) {
   const t        = useTranslations('nav');
   const locale   = useLocale();
   const pathname = usePathname();
   const { resolvedTheme } = useTheme();
   const isDark   = resolvedTheme === 'dark';
-  const { user, isAuthenticated, logout } = useAuth();
+  const { user, isAuthenticated, isLoading, logout } = useAuth();
 
   const [menuOpen,     setMenuOpen]     = useState(false);
   const [dropdownOpen, setDropdownOpen] = useState(false);
@@ -132,7 +145,7 @@ export function PublicNavbar() {
 
             {/* Desktop actions */}
             <div className="hidden lg:flex items-center gap-2.5 ml-1">
-              {isAuthenticated && user ? (
+              {((isAuthenticated && user) || (isLoading && user)) ? (
                 /* Authenticated — avatar + name trigger + dropdown */
                 <div ref={dropdownRef} className="relative">
                   <button
@@ -242,7 +255,7 @@ export function PublicNavbar() {
             <a href={`/${locale}/#notifications`} className={drawerLinkClass}>{t('reminders')}</a>
             <a href={`/${locale}/#faq`} className={drawerLinkClass}>{t('faq')}</a>
             <div className="pt-4 border-t border-[rgba(200,152,10,0.18)] flex flex-col gap-2.5">
-              {isAuthenticated && user ? (
+              {((isAuthenticated && user) || (isLoading && user)) ? (
                 <>
                   <div className="flex items-center gap-3 px-2 py-2">
                     <div className="w-9 h-9 rounded-full bg-[rgba(200,152,10,0.2)] border border-[rgba(200,152,10,0.4)] flex items-center justify-center shrink-0">
@@ -300,10 +313,10 @@ export function PublicNavbar() {
         )}
       </header>
 
-      {/* Spacer — push page content below fixed header */}
-      <div className="h-[62px]" aria-hidden="true" />
-      {/* Extra spacer for mobile bottom nav */}
-      <div className="sm:hidden h-16" aria-hidden="true" />
+      {/* Spacer — push page content below fixed header (can be disabled per-layout) */}
+      {withTopSpacer && <div className="h-[62px]" aria-hidden="true" />}
+      {/* Extra spacer for mobile bottom nav (can be disabled per-layout) */}
+      {withMobileScrollSpacer && <div className="sm:hidden h-16" aria-hidden="true" />}
     </>
   );
 }

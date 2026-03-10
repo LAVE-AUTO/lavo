@@ -1,13 +1,12 @@
 'use client';
 
-import { useState, useMemo, useRef, useEffect } from 'react';
+import { useState, useMemo, useRef, useEffect, useId } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { useTranslations } from 'next-intl';
 import { MOCK_STATIONS } from '@/data/stations-mock';
 import { SearchBar } from './SearchBar';
 import { StationCard } from './StationCard';
 import type { StationDetailData } from '@/types/station';
-import { Link } from '@/i18n/navigation';
 
 type SortKey = 'default' | 'price_asc' | 'best_rated';
 
@@ -16,7 +15,6 @@ interface PriceRange {
   max: string;
 }
 
-const ALL_VEHICLE_TYPES = ['Berline', 'SUV', 'Moto', 'Camionette'];
 const HOURS = Array.from({ length: 24 }, (_, i) => i);
 
 /** Parse "07h00 – 20h00" or "07:00 - 20:00" → { open: 7, close: 20 } */
@@ -93,6 +91,15 @@ export function StationListView() {
   const allServices = useMemo(
     () => [...new Set(MOCK_STATIONS.flatMap((s) => s.services))].sort(),
     []
+  );
+  const allVehicleTypes = useMemo(
+    () => [
+      t('vehicle_type_sedan'),
+      t('vehicle_type_suv'),
+      t('vehicle_type_motorcycle'),
+      t('vehicle_type_van'),
+    ],
+    [t],
   );
 
   /* ── Toggle helpers ── */
@@ -370,7 +377,7 @@ export function StationListView() {
                 options={allCategories}
                 selected={selectedCategories}
                 onToggle={toggleCategory}
-                placeholder="Toutes les catégories"
+                placeholder={t('filter_categories_placeholder')}
               />
             </div>
 
@@ -380,10 +387,10 @@ export function StationListView() {
                 {t('filter_vehicle_label')}
               </p>
               <CustomMultiSelect
-                options={ALL_VEHICLE_TYPES}
+                options={allVehicleTypes}
                 selected={selectedVehicles}
                 onToggle={toggleVehicle}
-                placeholder="Tous les véhicules"
+                placeholder={t('filter_vehicle_placeholder')}
               />
             </div>
 
@@ -396,7 +403,7 @@ export function StationListView() {
                 options={allServices}
                 selected={selectedServices}
                 onToggle={toggleService}
-                placeholder="Tous les services"
+                placeholder={t('filter_service_placeholder')}
               />
             </div>
 
@@ -614,14 +621,31 @@ interface CustomMultiSelectProps {
 function CustomMultiSelect({ options, selected, onToggle, placeholder }: CustomMultiSelectProps) {
   const [open, setOpen] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
+  const listboxId = useId();
 
   useEffect(() => {
     if (!open) return;
-    const handler = (e: MouseEvent) => {
-      if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false);
+
+    const handleMouseDown = (e: MouseEvent) => {
+      if (ref.current && !ref.current.contains(e.target as Node)) {
+        setOpen(false);
+      }
     };
-    document.addEventListener('mousedown', handler);
-    return () => document.removeEventListener('mousedown', handler);
+
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        e.preventDefault();
+        setOpen(false);
+      }
+    };
+
+    document.addEventListener('mousedown', handleMouseDown);
+    document.addEventListener('keydown', handleKeyDown);
+
+    return () => {
+      document.removeEventListener('mousedown', handleMouseDown);
+      document.removeEventListener('keydown', handleKeyDown);
+    };
   }, [open]);
 
   const triggerLabel =
@@ -636,6 +660,9 @@ function CustomMultiSelect({ options, selected, onToggle, placeholder }: CustomM
       <button
         type="button"
         onClick={() => setOpen((v) => !v)}
+        aria-haspopup="listbox"
+        aria-expanded={open}
+        aria-controls={listboxId}
         className={[
           'w-full flex items-center justify-between px-3.5 py-2.5 rounded-lg border text-[15px] font-semibold transition-all duration-150 select-none',
           isActive
@@ -655,7 +682,12 @@ function CustomMultiSelect({ options, selected, onToggle, placeholder }: CustomM
       </button>
 
       {open && (
-        <div className="absolute top-[calc(100%+6px)] left-0 right-0 bg-white dark:bg-dark-surface border border-[#E0E0D0] dark:border-tab-inactive rounded-xl shadow-[0_8px_32px_rgba(0,0,0,0.12)] dark:shadow-[0_8px_32px_rgba(0,0,0,0.4)] z-50 max-h-52 overflow-y-auto animate-fade-in">
+        <div
+          id={listboxId}
+          role="listbox"
+          aria-multiselectable="true"
+          className="absolute top-[calc(100%+6px)] left-0 right-0 bg-white dark:bg-dark-surface border border-[#E0E0D0] dark:border-tab-inactive rounded-xl shadow-[0_8px_32px_rgba(0,0,0,0.12)] dark:shadow-[0_8px_32px_rgba(0,0,0,0.4)] z-50 max-h-52 overflow-y-auto animate-fade-in"
+        >
           {options.map((opt) => {
             const isSel = selected.includes(opt);
             return (
@@ -663,6 +695,8 @@ function CustomMultiSelect({ options, selected, onToggle, placeholder }: CustomM
                 key={opt}
                 type="button"
                 onClick={() => onToggle(opt)}
+                role="option"
+                aria-selected={isSel}
                 className={[
                   'w-full flex items-center justify-between px-3.5 py-2.5 text-[14px] font-semibold text-left transition-colors duration-100',
                   isSel
@@ -695,14 +729,31 @@ interface CustomSelectProps {
 function CustomSelect({ options, value, onChange, placeholder }: CustomSelectProps) {
   const [open, setOpen] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
+  const listboxId = useId();
 
   useEffect(() => {
     if (!open) return;
-    const handler = (e: MouseEvent) => {
-      if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false);
+
+    const handleMouseDown = (e: MouseEvent) => {
+      if (ref.current && !ref.current.contains(e.target as Node)) {
+        setOpen(false);
+      }
     };
-    document.addEventListener('mousedown', handler);
-    return () => document.removeEventListener('mousedown', handler);
+
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        e.preventDefault();
+        setOpen(false);
+      }
+    };
+
+    document.addEventListener('mousedown', handleMouseDown);
+    document.addEventListener('keydown', handleKeyDown);
+
+    return () => {
+      document.removeEventListener('mousedown', handleMouseDown);
+      document.removeEventListener('keydown', handleKeyDown);
+    };
   }, [open]);
 
   const display = value
@@ -716,6 +767,9 @@ function CustomSelect({ options, value, onChange, placeholder }: CustomSelectPro
       <button
         type="button"
         onClick={() => setOpen((v) => !v)}
+        aria-haspopup="listbox"
+        aria-expanded={open}
+        aria-controls={listboxId}
         className={[
           'w-full flex items-center justify-between px-3.5 py-2.5 rounded-lg border text-[15px] font-semibold transition-all duration-150 select-none',
           isActive
@@ -735,7 +789,11 @@ function CustomSelect({ options, value, onChange, placeholder }: CustomSelectPro
       </button>
 
       {open && (
-        <div className="absolute top-[calc(100%+6px)] left-0 right-0 bg-white dark:bg-dark-surface border border-[#E0E0D0] dark:border-tab-inactive rounded-xl shadow-[0_8px_32px_rgba(0,0,0,0.12)] dark:shadow-[0_8px_32px_rgba(0,0,0,0.4)] z-50 max-h-52 overflow-y-auto animate-fade-in">
+        <div
+          id={listboxId}
+          role="listbox"
+          className="absolute top-[calc(100%+6px)] left-0 right-0 bg-white dark:bg-dark-surface border border-[#E0E0D0] dark:border-tab-inactive rounded-xl shadow-[0_8px_32px_rgba(0,0,0,0.12)] dark:shadow-[0_8px_32px_rgba(0,0,0,0.4)] z-50 max-h-52 overflow-y-auto animate-fade-in"
+        >
           <button
             type="button"
             onClick={() => { onChange(''); setOpen(false); }}
@@ -748,6 +806,8 @@ function CustomSelect({ options, value, onChange, placeholder }: CustomSelectPro
               key={opt.value}
               type="button"
               onClick={() => { onChange(opt.value); setOpen(false); }}
+              role="option"
+              aria-selected={value === opt.value}
               className={[
                 'w-full flex items-center justify-between px-3.5 py-2.5 text-[14px] font-semibold text-left transition-colors duration-100',
                 value === opt.value

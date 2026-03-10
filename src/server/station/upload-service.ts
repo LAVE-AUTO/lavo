@@ -1,6 +1,8 @@
 /**
  * Station document upload: Cloudinary with local fallback.
  * Validates file type (image/*, application/pdf) and size (max 10MB) before upload.
+ * In production, configure UPLOAD_LOCAL_PATH to a directory outside the webroot so
+ * local files are never served directly over HTTP.
  */
 import { writeFile, mkdir } from 'fs/promises';
 import path from 'path';
@@ -12,7 +14,7 @@ import {
 import { ValidationError } from '@/lib/errors';
 
 const UPLOAD_LOCAL_PATH =
-  process.env.UPLOAD_LOCAL_PATH ?? 'public/uploads';
+  process.env.UPLOAD_LOCAL_PATH ?? '.uploads/station-docs';
 
 export type UploadResult = {
   file_url: string;
@@ -49,6 +51,7 @@ export async function uploadStationDocument(
   file: { arrayBuffer: () => Promise<ArrayBuffer>; type: string; name: string }
 ): Promise<UploadResult> {
   const buffer = Buffer.from(await file.arrayBuffer());
+  validateMagicBytes(buffer, file.type);
   const cloudResult = await tryCloudinaryUpload(buffer, file.type, file.name);
   if (cloudResult) return cloudResult;
   const localResult = await writeToLocal(buffer, file.type, file.name);
@@ -114,6 +117,65 @@ async function tryCloudinaryUpload(
     return null;
   }
   return null;
+}
+
+function validateMagicBytes(buffer: Buffer, mimeType: string): void {
+  if (buffer.length < 4) {
+    throw new ValidationError('File is too small or corrupted.');
+  }
+
+  const header = buffer.subarray(0, 8);
+
+  if (mimeType === 'application/pdf') {
+    // %PDF
+    if (!(header[0] === 0x25 && header[1] === 0x50 && header[2] === 0x44 && header[3] === 0x46)) {
+      throw new ValidationError('File content does not match a valid PDF document.');
+    }
+    return;
+  }
+
+  // JPEG: FF D8 FF
+  if (mimeType === 'image/jpeg') {
+    if (!(header[0] === 0xff && header[1] === 0xd8 && header[2] === 0xff)) {
+      throw new ValidationError('File content does not match a valid JPEG image.');
+    }
+    return;
+  }
+
+  // PNG: 89 50 4E 47 0D 0A 1A 0A
+  if (mimeType === 'image/png') {
+    const pngSig = [0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a];
+    if (!pngSig.every((b, i) => header[i] === b)) {
+      throw new ValidationError('File content does not match a valid PNG image.');
+    }
+    return;
+  }
+
+  // WebP: "RIFF"...."WEBP"
+  if (mimeType === 'image/webp') {
+    if (
+      !(header[0] === 0x52 && header[1] === 0x49 && header[2] === 0x46 && header[3] === 0x46) ||
+      !(header[8 - 4] === 0x57 && header[8 - 3] === 0x45 && header[8 - 2] === 0x42 && header[8 - 1] === 0x50)
+    ) {
+      throw new ValidationError('File content does not match a valid WebP image.');
+    }
+    return;
+  }
+
+  // GIF: "GIF87a" or "GIF89a"
+  if (mimeType === 'image/gif') {
+    const sig = String.fromCharCode(
+      header[0],
+      header[1],
+      header[2],
+      header[3],
+      header[4],
+      header[5]
+    );
+    if (sig !== 'GIF87a' && sig !== 'GIF89a') {
+      throw new ValidationError('File content does not match a valid GIF image.');
+    }
+  }
 }
 
 function getExtensionFromMime(mime: string): string {
