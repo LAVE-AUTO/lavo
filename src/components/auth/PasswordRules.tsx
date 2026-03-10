@@ -19,12 +19,12 @@ const PASSWORD_RULES: Rule[] = [
   { key: 'password_rule_upper',   test: (p) => /[A-Z]/.test(p) },
   { key: 'password_rule_lower',   test: (p) => /[a-z]/.test(p) },
   { key: 'password_rule_number',  test: (p) => /[0-9]/.test(p) },
-  { key: 'password_rule_special', test: (p) => /[!@#$%^&*(),.?":{}|<>]/.test(p) },
+  { key: 'password_rule_special', test: (p) => /[@$!%*#?&_\-+=]/.test(p) },
 ];
 
 interface PasswordRulesProps {
   password: string;
-  namespace?: 'register' | 'reset_password';
+  namespace?: 'register' | 'reset_password' | 'change_password';
 }
 
 /**

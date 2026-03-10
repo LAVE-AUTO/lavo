@@ -1,11 +1,8 @@
 'use client';
 
-import { useState } from 'react';
 import { useTranslations } from 'next-intl';
 import { Link } from '@/i18n/navigation';
-import { postWithApi } from '@/services/axios-service';
-import { useToast } from '@/context/toast-context';
-import { Spinner } from '@/components/ui/Spinner';
+import { useUserLocation, haversineKm } from './useUserLocation';
 import type { StationDetailData } from '@/types/station';
 
 interface StationCardProps {
@@ -15,49 +12,36 @@ interface StationCardProps {
 
 /**
  * Station card for the public list page.
- * Matches the result-card design from the HTML mockup:
- * dark card, photo, name/price row, rating, 3-col stats, tags, gold buttons.
+ * Photo, name/price, rating, 3-col stats (places, wait, open/closed),
+ * forfait tags, single "Voir" CTA.
  */
 export function StationCard({ station, unavailable = false }: StationCardProps) {
   const t = useTranslations('stations');
-  const { success, error } = useToast();
-  const [joining, setJoining] = useState(false);
+  const userLocation = useUserLocation();
 
-  const handleJoin = async () => {
-    setJoining(true);
-    const [ok] = await postWithApi(`/stations/${station.id}/join`, {});
-    setJoining(false);
+  const distanceLabel = (() => {
+    if (!userLocation || !station.latitude || !station.longitude) return null;
+    const km = haversineKm(userLocation.latitude, userLocation.longitude, station.latitude, station.longitude);
+    if (km < 1) return t('distance_m', { distance: Math.round(km * 1000) });
+    return t('distance_km', { distance: km.toFixed(1) });
+  })();
 
-    if (ok) {
-      success(t('join_success'));
-      if (station.latitude && station.longitude) {
-        window.open(
-          `https://www.google.com/maps/dir/?api=1&destination=${station.latitude},${station.longitude}`,
-          '_blank',
-          'noopener,noreferrer'
-        );
-      } else {
-        const encoded = encodeURIComponent(`${station.name}, ${station.address}, ${station.city}`);
-        window.open(
-          `https://www.google.com/maps/search/?api=1&query=${encoded}`,
-          '_blank',
-          'noopener,noreferrer'
-        );
-      }
-    } else {
-      error(t('join_error'));
-    }
-  };
+  /* Collect unique forfait names across all service categories */
+  const forfaitNames = station.serviceCategories
+    ? [...new Set(station.serviceCategories.flatMap((c) => c.forfaits.map((f) => f.name)))]
+    : station.tags;
+
+  const isOpen = station.isOpen !== false;
 
   return (
     <article
       className={[
-        'bg-[#C8C8B4] dark:bg-dark-card rounded-[14px] overflow-hidden border border-[#CCCCCC] dark:border-tab-inactive group hover:border-gold/30 transition-all duration-300',
+        'h-full flex flex-col bg-[#E8E8D8] dark:bg-dark-card rounded-[14px] overflow-hidden border border-[#D0D0C0] dark:border-tab-inactive group hover:border-gold/30 transition-all duration-300',
         unavailable ? 'opacity-50 grayscale pointer-events-none' : '',
       ].join(' ')}
     >
-      {/* Photo area */}
-      <div className="relative h-[140px] sm:h-[160px] bg-[#B8B8A4] dark:bg-tab-inactive flex items-center justify-center overflow-hidden">
+      {/* Photo */}
+      <div className="relative h-[140px] sm:h-[160px] bg-[#D0D0C0] dark:bg-tab-inactive flex items-center justify-center overflow-hidden">
         {station.imageUrl ? (
           <img
             src={station.imageUrl}
@@ -74,7 +58,6 @@ export function StationCard({ station, unavailable = false }: StationCardProps) 
           </svg>
         )}
 
-        {/* Gradient overlay at bottom with station name */}
         <div className="absolute inset-x-0 bottom-0 h-14 bg-linear-to-t from-black/60 to-transparent pt-6 flex items-end px-3 pb-2 pointer-events-none">
           <span className="text-white text-[15px] font-bold leading-tight line-clamp-1 drop-shadow">
             {station.name}
@@ -87,9 +70,13 @@ export function StationCard({ station, unavailable = false }: StationCardProps) 
           </span>
         )}
 
-        {!unavailable && station.availableSlots > 0 && (
-          <span className="absolute top-2 left-2 px-2 py-0.5 rounded-full bg-black/60 text-white text-[13px] font-bold">
-            {station.availableSlots}/{station.totalSlots} places
+        {!unavailable && distanceLabel && (
+          <span className="absolute top-2 left-2 px-2 py-0.5 rounded-full bg-black/60 text-white text-[13px] font-bold flex items-center gap-1">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+              <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z" />
+              <circle cx="12" cy="10" r="3" />
+            </svg>
+            {distanceLabel}
           </span>
         )}
 
@@ -103,7 +90,7 @@ export function StationCard({ station, unavailable = false }: StationCardProps) 
       </div>
 
       {/* Card body */}
-      <div className="p-4">
+      <div className="p-4 flex flex-col flex-1">
         {/* Name + price */}
         <div className="flex items-start justify-between gap-2 mb-2">
           <h3 className="text-[17px] font-bold text-[#0A0A14] dark:text-white leading-tight line-clamp-1">
@@ -116,58 +103,53 @@ export function StationCard({ station, unavailable = false }: StationCardProps) 
 
         {/* Rating */}
         <div className="flex items-center gap-1.5 mb-3 text-[15px]">
-          <span className="text-gold text-[17px]">★</span>
+          <span className="text-gold text-[17px]">&#9733;</span>
           <span className="text-[#0A0A14] dark:text-white font-semibold">{station.rating.toFixed(1)}</span>
           <span className="text-gold">({station.reviewCount} {t('reviews_count', { count: station.reviewCount }).replace(/\d+ /, '')})</span>
         </div>
 
-        {/* Stats grid with dividers */}
+        {/* Stats grid: places | wait | status */}
         <div className="grid grid-cols-3 mb-3 text-center">
-          <div className="border-r border-[#CCCCCC] dark:border-tab-inactive pr-2">
+          <div className="border-r border-[#C8C8B4] dark:border-tab-inactive pr-2">
             <div className="text-[17px] font-black text-[#0A0A14] dark:text-white leading-none">{station.availableSlots}</div>
             <div className="text-[14px] text-[#111111] dark:text-[#D8D8C8] mt-1">{t('places_dispo')}</div>
           </div>
-          <div className="border-r border-[#CCCCCC] dark:border-tab-inactive px-2">
+          <div className="border-r border-[#C8C8B4] dark:border-tab-inactive px-2">
             <div className="text-[17px] font-black text-[#0A0A14] dark:text-white leading-none">
               {station.estimatedWaitMinutes > 0 ? `${station.estimatedWaitMinutes}` : '\u2014'}
             </div>
             <div className="text-[14px] text-[#111111] dark:text-[#D8D8C8] mt-1">{t('min_attente')}</div>
           </div>
           <div className="pl-2">
-            <div className="text-[17px] font-black text-[#0A0A14] dark:text-white leading-none">{station.services.length}</div>
-            <div className="text-[14px] text-[#111111] dark:text-[#D8D8C8] mt-1">Services</div>
+            <div className="flex items-center justify-center gap-1">
+              <span className={`w-2 h-2 rounded-full ${isOpen ? 'bg-lavo-success' : 'bg-lavo-error'}`} />
+              <span className={`text-[14px] font-bold ${isOpen ? 'text-lavo-success' : 'text-lavo-error'}`}>
+                {isOpen ? t('status_open') : t('status_closed')}
+              </span>
+            </div>
+            <div className="text-[14px] text-[#111111] dark:text-[#D8D8C8] mt-1">{t('status_label')}</div>
           </div>
         </div>
 
-        {/* Tags */}
-        {station.tags.length > 0 && (
+        {/* Forfait tags */}
+        {forfaitNames.length > 0 && (
           <div className="flex flex-wrap gap-1.5 mb-4">
-            {station.tags.slice(0, 3).map((tag) => (
+            {forfaitNames.slice(0, 4).map((name) => (
               <span
-                key={tag}
-                className="py-1 px-2.5 rounded-full text-[14px] font-bold bg-[#E8E8D8] dark:bg-tab-inactive text-[#000000] dark:text-[#F0F0E8] border border-[#D0D0C0] dark:border-tab-inactive"
+                key={name}
+                className="py-1 px-2.5 rounded-full text-[13px] font-bold bg-[#E8E8D8] dark:bg-tab-inactive text-[#000000] dark:text-[#F0F0E8] border border-[#D0D0C0] dark:border-tab-inactive"
               >
-                {tag}
+                {name}
               </span>
             ))}
           </div>
         )}
 
-        {/* Action buttons */}
-        <div className="flex gap-2">
-          {!unavailable && (
-            <button
-              type="button"
-              onClick={handleJoin}
-              disabled={joining}
-              className="flex-1 py-2.5 border-2 border-gold rounded-lg text-[15px] font-bold text-gold text-center hover:bg-gold/10 transition-colors disabled:opacity-60 flex items-center justify-center gap-1"
-            >
-              {joining ? <Spinner size="sm" /> : t('join')}
-            </button>
-          )}
+        {/* Single CTA */}
+        <div className="mt-auto">
           <Link
             href={`/stations/${station.id}`}
-            className="flex-1 py-2.5 bg-gold hover:bg-gold-hover rounded-lg text-[15px] font-bold text-dark-bg text-center transition-colors"
+            className="block w-full py-2.5 bg-gold hover:bg-gold-hover rounded-lg text-[15px] font-bold text-dark-bg text-center transition-colors"
           >
             {t('details')}
           </Link>

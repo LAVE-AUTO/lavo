@@ -2,6 +2,7 @@ import { headers } from 'next/headers';
 import { NextResponse } from 'next/server';
 import { registerSchema, mapZodErrors } from '@/validators/auth';
 import { registerWithPassword } from '@/server/auth/auth-service';
+import { extractLocale } from '@/lib/email';
 import {
   checkRateLimit,
   recordFailedAttempt,
@@ -62,7 +63,8 @@ export async function POST(request: Request) {
   try {
     // eslint-disable-next-line @typescript-eslint/no-unused-vars -- strip confirm_password for service
     const { confirm_password: _, ...dto } = parsed.data;
-    const { user, tokens } = await registerWithPassword(dto);
+    const locale = extractLocale(headersList.get('accept-language'));
+    const { user, tokens } = await registerWithPassword(dto, locale);
 
     await resetOnSuccess(ip);
 
@@ -85,6 +87,7 @@ export async function POST(request: Request) {
     );
     return response;
   } catch (e) {
+    await recordFailedAttempt(ip);
     if (e instanceof ConflictError) {
       return error409('Email already in use', ApiCode.EMAIL_ALREADY_EXISTS);
     }

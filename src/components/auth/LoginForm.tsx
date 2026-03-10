@@ -4,9 +4,10 @@ import { useState, type ChangeEvent, type FormEvent } from 'react';
 import { useTranslations } from 'next-intl';
 import { useRouter, Link } from '@/i18n/navigation';
 import { useToast } from '@/context/toast-context';
-import { useAuth, type AuthUser } from '@/context/auth-context';
+import { useAuth, type AuthUser, type UserRole } from '@/context/auth-context';
 import { postWithApi } from '@/services/axios-service';
 import { validateEmail } from '@/helpers/validators';
+import { HTTP_STATUS } from '@/helpers/constants';
 import { Spinner } from '@/components/ui/Spinner';
 import { FormField } from './FormField';
 import { SocialButtons } from './SocialButtons';
@@ -42,7 +43,7 @@ function EyeIcon({ open }: { open: boolean }) {
 export function LoginForm() {
   const t = useTranslations('login');
   const router = useRouter();
-  const { error: showError } = useToast();
+  const { error: showError, success: showSuccess } = useToast();
   const auth = useAuth();
 
   const [formData, setFormData]         = useState<LoginFormData>({ email: '', password: '' });
@@ -85,25 +86,39 @@ export function LoginForm() {
         email:       formData.email.trim(),
         password:    formData.password,
         remember_me: rememberMe,
-      });
+      }, { successStatus: HTTP_STATUS.OK });
 
       if (success) {
-        const body = response as { data?: { user: AuthUser; access_token: string } };
+        const body = response as { data?: { user: Record<string, unknown>; access_token: string } };
         const data = body.data;
         if (!data?.user || !data?.access_token) {
           showError(t('error_generic'));
           return;
         }
-        auth.login(data.access_token, data.user);
 
-        if (data.user.role === 'STATION')          router.push('/station');
-        else if (data.user.role === 'SUPER_ADMIN') router.push('/admin');
-        else                                        router.push('/');
+        const userRole = String(data.user.role || 'client') as UserRole;
+        const authUser: AuthUser = { ...data.user, role: userRole } as AuthUser;
+
+        auth.login(data.access_token, authUser);
+        showSuccess(t('toast_success'));
+
+        if (authUser.force_password_change) {
+          router.push('/change-password');
+          return;
+        }
+
+        if (userRole === 'station')          router.push('/station');
+        else if (userRole === 'admin') router.push('/admin');
+        else                                        router.push('/stations');
         return;
       }
 
       const data = response as { code?: string };
-      if (data?.code === 'INVALID_CREDENTIALS' || data?.code === 'UNAUTHORIZED') {
+      if (data?.code === 'TOO_MANY_REQUESTS') {
+        showError(t('error_rate_limit'));
+      } else if (data?.code === 'FORBIDDEN') {
+        showError(t('error_account_suspended'));
+      } else if (data?.code === 'INVALID_CREDENTIALS' || data?.code === 'UNAUTHORIZED') {
         setErrors({
           email:    t('error_invalid_credentials'),
           password: t('error_invalid_credentials'),
