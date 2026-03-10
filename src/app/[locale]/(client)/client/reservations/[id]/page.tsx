@@ -1,17 +1,229 @@
-interface ClientReservationDetailPageProps {
-  params: {
-    id: string;
-  };
-}
+'use client';
 
-export default function ClientReservationDetailPage({
-  params,
-}: ClientReservationDetailPageProps) {
+import { useState, useMemo } from 'react';
+import type { ReactNode } from 'react';
+import { useTranslations, useLocale } from 'next-intl';
+import { Link, useRouter } from '@/i18n/navigation';
+import { useParams } from 'next/navigation';
+import { useToast } from '@/context/toast-context';
+import { MOCK_RESERVATIONS } from '@/data/reservations-mock';
+
+export default function ReservationDetailPage() {
+  const t = useTranslations('coupons');
+  const router = useRouter();
+  const params = useParams();
+  const locale = useLocale();
+  const id = params.id as string;
+
+  const reservation = useMemo(() => MOCK_RESERVATIONS.find((r) => r.id === id), [id]);
+  const [showCancelModal, setShowCancelModal] = useState(false);
+  const { success: showSuccess } = useToast();
+
+  if (!reservation) {
+    return (
+      <main className="min-h-screen bg-[#F5F5E6] dark:bg-[#0F0F0D] flex items-center justify-center pb-20">
+        <div className="text-center">
+          <p className="text-[18px] font-bold text-[#555] dark:text-[#B0B0A0]">{t('not_found')}</p>
+          <Link href="/client/reservations" className="mt-4 inline-block text-gold font-bold">{t('back_to_coupons')}</Link>
+        </div>
+      </main>
+    );
+  }
+
+  const slotDateTime = new Date(`${reservation.date}T${reservation.timeSlot}`);
+  const now = new Date();
+  const minutesUntilSlot = (slotDateTime.getTime() - now.getTime()) / 60000;
+
+  /* Start button: active 30–45 min before slot time */
+  const canStart = minutesUntilSlot >= 0 && minutesUntilSlot <= 45;
+  /* Cancel warning: if less than 1h before slot, warn about fees */
+  const cancelHasFees = minutesUntilSlot < 60 && minutesUntilSlot >= 0;
+  const isUpcoming = reservation.status === 'confirmed' && minutesUntilSlot > 0;
+  const isPast = reservation.status === 'completed' || reservation.status === 'cancelled';
+
+  const dateLabel = slotDateTime.toLocaleDateString(locale === 'en' ? 'en-CA' : 'fr-CA', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
+
+  const statusColors: Record<string, string> = {
+    confirmed: 'bg-lavo-success/15 text-lavo-success',
+    in_progress: 'bg-gold/15 text-gold',
+    completed: 'bg-[#999]/15 text-[#666]',
+    cancelled: 'bg-lavo-error/15 text-lavo-error',
+  };
+
+  const handleStartNavigation = () => {
+    const destination = encodeURIComponent(`${reservation.stationLatitude},${reservation.stationLongitude}`);
+    const url = `https://www.google.com/maps/dir/?api=1&destination=${destination}`;
+    window.open(url, '_blank', 'noopener,noreferrer');
+  };
+
+  const handleConfirmCancel = () => {
+    setShowCancelModal(false);
+    showSuccess(t('toast_cancel_success'));
+    router.push('/client/reservations');
+  };
+
   return (
-    <main className="p-6">
-      <h1 className="text-xl font-semibold">Détail réservation</h1>
-      <p className="mt-2 text-sm text-zinc-600">ID: {params.id}</p>
+    <main className="min-h-screen bg-[#F5F5E6] dark:bg-[#0F0F0D] pb-24 sm:pb-8">
+      {/* Back header */}
+      <div className="px-4 pt-4 pb-2 max-w-2xl mx-auto">
+        <Link
+          href="/client/reservations"
+          className="inline-flex items-center gap-2 text-[14px] font-bold text-gold hover:text-gold-hover transition-colors"
+        >
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="15 18 9 12 15 6" /></svg>
+          {t('back_to_coupons')}
+        </Link>
+      </div>
+
+      <div className="px-4 max-w-2xl mx-auto space-y-4">
+        {/* Hero image */}
+        <div className="relative h-[180px] rounded-xl overflow-hidden bg-[#D0D0C0] dark:bg-[#1A1A18]">
+          {reservation.stationImageUrl && (
+            <img src={reservation.stationImageUrl} alt={reservation.stationName} className="w-full h-full object-cover" />
+          )}
+          <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
+          <div className="absolute bottom-3 left-4 right-4">
+            <h1 className="text-[20px] font-black text-white drop-shadow">{reservation.stationName}</h1>
+            <p className="text-[13px] text-white/80">{reservation.stationAddress}</p>
+          </div>
+          <span className={`absolute top-3 right-3 px-3 py-1 rounded-full text-[12px] font-bold ${statusColors[reservation.status] || 'bg-gray-200 text-gray-600'}`}>
+            {t(`status_${reservation.status}`)}
+          </span>
+        </div>
+
+        {/* Details card */}
+        <div className="bg-[#E8E8D8] dark:bg-[#1A1A18] rounded-xl border border-[#D0D0C0] dark:border-tab-inactive p-5 space-y-4">
+          <h2 className="text-[16px] font-black text-[#0A0A14] dark:text-white">{t('detail_summary')}</h2>
+
+          <div className="space-y-3">
+            <DetailRow icon="calendar" label={t('detail_date')} value={dateLabel} />
+            <DetailRow icon="clock" label={t('detail_time')} value={reservation.timeSlot} />
+            <DetailRow icon="tag" label={t('detail_forfait')} value={`${reservation.forfaitName} (${reservation.categoryLabel})`} />
+            <DetailRow icon="timer" label={t('detail_duration')} value={`${reservation.duration} min`} />
+
+            {reservation.extras.length > 0 && (
+              <div className="flex items-start gap-3">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#9A9A8A" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="mt-0.5 shrink-0"><circle cx="12" cy="12" r="10" /><line x1="12" y1="8" x2="12" y2="16" /><line x1="8" y1="12" x2="16" y2="12" /></svg>
+                <div>
+                  <p className="text-[13px] text-[#999] dark:text-[#888]">{t('detail_extras')}</p>
+                  <p className="text-[14px] font-semibold text-[#0A0A14] dark:text-white">{reservation.extras.join(', ')}</p>
+                </div>
+              </div>
+            )}
+
+            <div className="pt-3 border-t border-[#D0D0C0] dark:border-tab-inactive flex items-center justify-between">
+              <span className="text-[15px] font-bold text-[#0A0A14] dark:text-white">{t('detail_total')}</span>
+              <span className="text-[20px] font-black text-gold">{reservation.totalPrice}$</span>
+            </div>
+          </div>
+        </div>
+
+        {/* Action buttons (only for upcoming reservations) */}
+        {isUpcoming && (
+          <div className="space-y-3">
+            {/* Start now */}
+            <button
+              type="button"
+              onClick={canStart ? handleStartNavigation : undefined}
+              disabled={!canStart}
+              className={[
+                'w-full py-3.5 rounded-xl text-[15px] font-black text-center transition-all flex items-center justify-center gap-2',
+                canStart
+                  ? 'bg-gold hover:bg-gold-hover text-dark-bg cursor-pointer'
+                  : 'bg-[#D0D0C0] dark:bg-[#2A2A28] text-[#999] dark:text-[#666] cursor-not-allowed',
+              ].join(' ')}
+            >
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polygon points="3 11 22 2 13 21 11 13 3 11" /></svg>
+              {t('start_now')}
+            </button>
+            {!canStart && minutesUntilSlot > 45 && (
+              <p className="text-[12px] text-[#999] dark:text-[#777] text-center">
+                {t('start_available_in', { minutes: Math.ceil(minutesUntilSlot - 45) })}
+              </p>
+            )}
+            {canStart && (
+              <p className="text-[12px] text-lavo-success text-center font-semibold">
+                {t('start_ready')}
+              </p>
+            )}
+
+            {/* Cancel */}
+            <button
+              type="button"
+              onClick={() => setShowCancelModal(true)}
+              className="w-full py-3.5 rounded-xl text-[15px] font-bold text-lavo-error border-2 border-lavo-error/30 hover:bg-lavo-error/5 transition-colors cursor-pointer"
+            >
+              {t('cancel_reservation')}
+            </button>
+          </div>
+        )}
+
+        {isPast && (
+          <div className="bg-[#E8E8D8] dark:bg-[#1A1A18] rounded-xl border border-[#D0D0C0] dark:border-tab-inactive p-4 text-center">
+            <p className="text-[14px] text-[#666] dark:text-[#B0B0A0]">
+              {reservation.status === 'completed' ? t('past_completed') : t('past_cancelled')}
+            </p>
+          </div>
+        )}
+      </div>
+
+      {/* Cancel confirmation modal */}
+      {showCancelModal && (
+        <>
+          <div className="fixed inset-0 z-[60] bg-black/50 backdrop-blur-sm" onClick={() => setShowCancelModal(false)} />
+          <div className="fixed inset-0 z-[60] flex items-center justify-center p-4">
+            <div className="bg-[#F5F5E6] dark:bg-[#1A1A18] rounded-2xl shadow-2xl w-full max-w-sm p-6 space-y-4">
+              <div className="w-14 h-14 rounded-full bg-lavo-error/15 flex items-center justify-center mx-auto">
+                <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#EF4444" strokeWidth="2" strokeLinecap="round"><circle cx="12" cy="12" r="10" /><line x1="12" y1="8" x2="12" y2="12" /><line x1="12" y1="16" x2="12.01" y2="16" /></svg>
+              </div>
+
+              <h3 className="text-[18px] font-black text-[#0A0A14] dark:text-white text-center">
+                {t('cancel_modal_title')}
+              </h3>
+              <p className="text-[14px] text-[#555] dark:text-[#B0B0A0] text-center leading-relaxed">
+                {cancelHasFees ? t('cancel_modal_fees_warning') : t('cancel_modal_desc')}
+              </p>
+
+              <div className="flex gap-3 pt-2">
+                <button
+                  type="button"
+                  onClick={() => setShowCancelModal(false)}
+                  className="flex-1 py-3 border-2 border-[#D0D0C0] dark:border-tab-inactive rounded-xl text-[14px] font-bold text-[#555] dark:text-[#B0B0A0] hover:bg-[#E0E0D0] transition-colors cursor-pointer"
+                >
+                  {t('cancel_modal_keep')}
+                </button>
+                <button
+                  type="button"
+                  onClick={handleConfirmCancel}
+                  className="flex-1 py-3 bg-lavo-error hover:bg-lavo-error/90 rounded-xl text-[14px] font-bold text-white transition-colors cursor-pointer"
+                >
+                  {t('cancel_modal_confirm')}
+                </button>
+              </div>
+            </div>
+          </div>
+        </>
+      )}
     </main>
   );
 }
 
+/* ---- Detail Row ---- */
+function DetailRow({ icon, label, value }: { icon: string; label: string; value: string }) {
+  const icons: Record<string, ReactNode> = {
+    calendar: <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#9A9A8A" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" /><line x1="16" y1="2" x2="16" y2="6" /><line x1="8" y1="2" x2="8" y2="6" /><line x1="3" y1="10" x2="21" y2="10" /></svg>,
+    clock: <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#9A9A8A" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10" /><polyline points="12 6 12 12 16 14" /></svg>,
+    tag: <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#9A9A8A" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M20.59 13.41l-7.17 7.17a2 2 0 01-2.83 0L2 12V2h10l8.59 8.59a2 2 0 010 2.82z" /><line x1="7" y1="7" x2="7.01" y2="7" /></svg>,
+    timer: <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#9A9A8A" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10" /><polyline points="12 6 12 12 16 14" /></svg>,
+  };
+
+  return (
+    <div className="flex items-start gap-3">
+      <span className="mt-0.5 shrink-0">{icons[icon]}</span>
+      <div>
+        <p className="text-[13px] text-[#999] dark:text-[#888]">{label}</p>
+        <p className="text-[14px] font-semibold text-[#0A0A14] dark:text-white">{value}</p>
+      </div>
+    </div>
+  );
+}
