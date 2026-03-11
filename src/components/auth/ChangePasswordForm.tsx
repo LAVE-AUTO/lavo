@@ -8,7 +8,7 @@ import { useAuth } from '@/context/auth-context';
 import { postWithApi } from '@/services/axios-service';
 import { isPasswordValid } from '@/helpers/validators';
 import { HTTP_STATUS } from '@/helpers/constants';
-import { Spinner } from '@/components/ui/Spinner';
+import { Button } from '@/components/ui/Button';
 import { FormField } from './FormField';
 import { PasswordRules } from './PasswordRules';
 
@@ -215,20 +215,9 @@ export function ChangePasswordForm() {
         rightIcon={eyeBtn(showConfirm, () => setShowConfirm((v) => !v), showConfirm ? 'Hide' : 'Show')}
       />
 
-      <button
-        type="submit"
-        disabled={isLoading}
-        className="btn-shine w-full py-3.5 mt-2 bg-gold hover:bg-gold-hover active:scale-[0.98] disabled:opacity-70 rounded-[10px] text-[16px] font-bold text-dark-bg tracking-wide transition-all duration-150 flex items-center justify-center gap-2"
-      >
-        {isLoading ? (
-          <>
-            <Spinner size="sm" />
-            {t('loading')}
-          </>
-        ) : (
-          t('submit')
-        )}
-      </button>
+      <Button type="submit" fullWidth loading={isLoading} className="mt-2">
+        {isLoading ? t('loading') : t('submit')}
+      </Button>
     </form>
   );
 }
