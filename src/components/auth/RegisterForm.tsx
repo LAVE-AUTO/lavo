@@ -7,7 +7,7 @@ import { useToast } from '@/context/toast-context';
 import { useAuth } from '@/context/auth-context';
 import { postWithApi } from '@/services/axios-service';
 import { validateEmail, validateName, validatePhone, isPasswordValid, joinPhoneNumber } from '@/helpers/validators';
-import { Spinner } from '@/components/ui/Spinner';
+import { Button } from '@/components/ui/Button';
 import { FormField } from './FormField';
 import { PhoneInput, type PhoneInputValue } from './PhoneInput';
 import { PasswordRules } from './PasswordRules';
@@ -294,20 +294,9 @@ export function RegisterForm() {
       />
 
       {/* Submit */}
-      <button
-        type="submit"
-        disabled={isLoading}
-        className="btn-shine w-full py-3.5 mt-2 bg-gold hover:bg-gold-hover active:scale-[0.98] disabled:opacity-70 rounded-[10px] text-[16px] font-bold text-dark-bg tracking-wide transition-all duration-150 flex items-center justify-center gap-2"
-      >
-        {isLoading ? (
-          <>
-            <Spinner size="sm" />
-            {t('loading')}
-          </>
-        ) : (
-          t('submit')
-        )}
-      </button>
+      <Button type="submit" fullWidth loading={isLoading} className="mt-2">
+        {isLoading ? t('loading') : t('submit')}
+      </Button>
 
       <SocialButtons />
     </form>
