@@ -787,7 +787,7 @@
         "result_view_coupons": "Voir mes réservations"
     },
     "coupons": {
-      "title": "Mes réservations",
+        "title": "Mes réservations",
         "tab_reservations": "Réservations",
         "tab_queue": "File d'attente",
         "upcoming": "À venir",
@@ -802,7 +802,7 @@
         "queue_in_progress": "En cours",
         "queue_position": "Position : {position}",
         "not_found": "Réservation introuvable",
-      "back_to_coupons": "Retour aux réservations",
+        "back_to_coupons": "Retour aux réservations",
         "detail_summary": "Récapitulatif",
         "detail_date": "Date",
         "detail_time": "Heure",
@@ -821,9 +821,9 @@
         "cancel_modal_confirm": "Annuler",
         "past_completed": "Cette réservation est terminée.",
         "past_cancelled": "Cette réservation a été annulée.",
-      "toast_cancel_success": "Réservation annulée avec succès",
-      "confirm_title": "Confirmation de réservation",
-      "confirm_id_label": "ID"
+        "toast_cancel_success": "Réservation annulée avec succès",
+        "confirm_title": "Confirmation de réservation",
+        "confirm_id_label": "ID"
     },
     "favorites": {
         "title": "Mes favoris",
