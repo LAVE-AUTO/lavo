@@ -508,9 +508,13 @@ export function StationListView() {
       </div>
 
       {/* ── Results ── */}
+      {/* hasAnyContent est vrai si au moins une section affichable a du contenu,
+          qu'on soit en mode filtre (sections = resultats filtrés) ou non
+          (sections = groupes API). Remplace filtered.length === 0 qui ne
+          detectait pas le cas : groupes vides mais allStations non vide. */}
       {loading ? (
         <PageSpinner py="py-20" />
-      ) : filtered.length === 0 ? (
+      ) : availableNow.length === 0 && topRated.length === 0 && mostRevisited.length === 0 ? (
         <EmptyState
           title={t('empty_title')}
           description={t('empty_desc')}
