@@ -1,6 +1,6 @@
 'use client';
 
-import { useTranslations, useLocale } from 'next-intl';
+import { useTranslations } from 'next-intl';
 import { RevealOnScroll } from '@/components/home/RevealOnScroll';
 
 const QR_ICONS = [
@@ -64,7 +64,6 @@ function QrCodePlaceholder() {
 
 export function MerchantQrSection() {
   const t = useTranslations('merchant.qr');
-  const locale = useLocale();
 
   const uses = [
     { title: t('use_1_title'), desc: t('use_1_desc') },
