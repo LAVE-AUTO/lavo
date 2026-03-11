@@ -78,14 +78,15 @@ export function Toast() {
   const [exiting, setExiting] = useState(false);
 
   useEffect(() => {
-    if (currentToast) {
-      setExiting(false);
-      // Small delay to trigger CSS transition
-      const raf = requestAnimationFrame(() => setVisible(true));
-      return () => cancelAnimationFrame(raf);
-    } else {
-      setVisible(false);
-    }
+    const raf = requestAnimationFrame(() => {
+      if (currentToast) {
+        setExiting(false);
+        setVisible(true);
+      } else {
+        setVisible(false);
+      }
+    });
+    return () => cancelAnimationFrame(raf);
   }, [currentToast]);
 
   const handleDismiss = () => {

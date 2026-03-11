@@ -21,7 +21,7 @@ interface BookingFlowProps {
 const STEPS = ['extras', 'arrival', 'summary', 'payment'] as const;
 type Step = (typeof STEPS)[number];
 
-export function BookingFlow({ station, category, forfait, onClose }: BookingFlowProps) {
+export function BookingFlow({ station, forfait, onClose }: BookingFlowProps) {
   const t = useTranslations('booking');
   const [step, setStep] = useState<Step>('extras');
   const stepIndex = STEPS.indexOf(step);

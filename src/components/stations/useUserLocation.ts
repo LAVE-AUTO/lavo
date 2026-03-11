@@ -45,10 +45,7 @@ export function useUserLocation(): UserLocation | null {
     const [location, setLocation] = useState<UserLocation | null>(cachedLocation);
 
     useEffect(() => {
-        if (cachedLocation) {
-            setLocation(cachedLocation);
-            return;
-        }
+        if (cachedLocation) return;
         if (!locationPromise) {
             locationPromise = requestLocation();
         }
