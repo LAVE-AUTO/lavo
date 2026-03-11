@@ -234,7 +234,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       }
       if (res.ok) {
         const data = await res.json();
-        const u = data?.data?.user;
+        const u = data?.data;
         if (u) {
           const normalized = normalizeUser(u);
           setUser(normalized);

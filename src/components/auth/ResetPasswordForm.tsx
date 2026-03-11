@@ -7,7 +7,7 @@ import { useToast } from '@/context/toast-context';
 import { postWithApi } from '@/services/axios-service';
 import { isPasswordValid } from '@/helpers/validators';
 import { HTTP_STATUS } from '@/helpers/constants';
-import { Spinner } from '@/components/ui/Spinner';
+import { Button } from '@/components/ui/Button';
 import { FormField } from './FormField';
 import { PasswordRules } from './PasswordRules';
 
@@ -148,7 +148,7 @@ export function ResetPasswordForm({ token }: ResetPasswordFormProps) {
       const data = response as { code?: string };
       if (data?.code === 'TOO_MANY_REQUESTS') {
         showError(t('error_rate_limit'));
-      } else if (data?.code === 'INVALID_TOKEN' || data?.code === 'TOKEN_EXPIRED') {
+      } else if (data?.code === 'TOKEN_EXPIRED') {
         showError(t('error_invalid_token'));
       } else {
         showError(t('error_generic'));
@@ -206,20 +206,9 @@ export function ResetPasswordForm({ token }: ResetPasswordFormProps) {
         rightIcon={eyeBtn(showConfirm, () => setShowConfirm((v) => !v), showConfirm ? 'Hide' : 'Show')}
       />
 
-      <button
-        type="submit"
-        disabled={isLoading}
-        className="btn-shine w-full py-3.5 mt-2 bg-gold hover:bg-gold-hover active:scale-[0.98] disabled:opacity-70 rounded-[10px] text-[16px] font-bold text-dark-bg tracking-wide transition-all duration-150 flex items-center justify-center gap-2"
-      >
-        {isLoading ? (
-          <>
-            <Spinner size="sm" />
-            {t('loading')}
-          </>
-        ) : (
-          t('submit')
-        )}
-      </button>
+      <Button type="submit" fullWidth loading={isLoading} className="mt-2">
+        {isLoading ? t('loading') : t('submit')}
+      </Button>
     </form>
   );
 }

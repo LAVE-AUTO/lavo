@@ -36,14 +36,22 @@ export function SocialButtons({ namespace = 'register' }: SocialButtonsProps) {
   const [loadingGoogle, setLoadingGoogle] = useState(false);
   const [loadingFacebook, setLoadingFacebook] = useState(false);
 
-  const handleGoogle = () => {
+  const handleGoogle = async () => {
     setLoadingGoogle(true);
-    signIn('google');
+    try {
+      await signIn('google');
+    } catch {
+      setLoadingGoogle(false);
+    }
   };
 
-  const handleFacebook = () => {
+  const handleFacebook = async () => {
     setLoadingFacebook(true);
-    signIn('facebook');
+    try {
+      await signIn('facebook');
+    } catch {
+      setLoadingFacebook(false);
+    }
   };
 
   const btnClass = [

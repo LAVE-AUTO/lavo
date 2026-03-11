@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, type ReactElement } from 'react';
 import { useToast, type ToastType } from '@/context/toast-context';
 
 const DEFAULT_DURATION = 4000;
@@ -55,7 +55,7 @@ function CloseIcon() {
   );
 }
 
-const ICONS: Record<ToastType, () => JSX.Element> = {
+const ICONS: Record<ToastType, () => ReactElement> = {
   success: SuccessIcon,
   error: ErrorIcon,
   warning: WarningIcon,
@@ -78,14 +78,15 @@ export function Toast() {
   const [exiting, setExiting] = useState(false);
 
   useEffect(() => {
-    if (currentToast) {
-      setExiting(false);
-      // Small delay to trigger CSS transition
-      const raf = requestAnimationFrame(() => setVisible(true));
-      return () => cancelAnimationFrame(raf);
-    } else {
-      setVisible(false);
-    }
+    const raf = requestAnimationFrame(() => {
+      if (currentToast) {
+        setExiting(false);
+        setVisible(true);
+      } else {
+        setVisible(false);
+      }
+    });
+    return () => cancelAnimationFrame(raf);
   }, [currentToast]);
 
   const handleDismiss = () => {

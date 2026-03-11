@@ -1,5 +1,5 @@
 import { getTranslations, setRequestLocale } from 'next-intl/server';
-import { MOCK_STATIONS } from '@/data/stations-mock';
+import { getStationDetailPublic } from '@/server/station/station-service';
 import { StationDetail } from '@/components/stations/StationDetail';
 
 type Props = {
@@ -8,12 +8,21 @@ type Props = {
 
 export async function generateMetadata({ params }: Props) {
   const { locale, id } = await params;
-  const t       = await getTranslations({ locale, namespace: 'stations' });
-  const station = MOCK_STATIONS.find((s) => s.id === id);
-  const name    = station ? station.name : t('page_title');
+  const t = await getTranslations({ locale, namespace: 'stations' });
+  let name = t('page_title');
+  let description = t('page_subtitle');
+  try {
+    const station = await getStationDetailPublic(id);
+    if (station) {
+      name = station.name;
+      if (station.description) description = station.description;
+    }
+  } catch {
+    // fallback to defaults
+  }
   return {
     title: `LAVO — ${name}`,
-    description: station?.description ?? t('page_subtitle'),
+    description,
   };
 }
 

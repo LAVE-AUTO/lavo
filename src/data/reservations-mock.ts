@@ -48,10 +48,8 @@ const nextWeek = new Date(today);
 nextWeek.setDate(nextWeek.getDate() + 5);
 const nextWeekStr = nextWeek.toISOString().split('T')[0];
 
-/* Build a time 40 minutes from now for the "startable" reservation */
-const soon = new Date(today);
-soon.setMinutes(soon.getMinutes() + 40);
-const soonTime = `${String(soon.getHours()).padStart(2, '0')}:${String(soon.getMinutes()).padStart(2, '0')}`;
+/* Static time for the "startable" reservation (avoids hydration mismatch) */
+const soonTime = '14:30';
 
 export const MOCK_RESERVATIONS: MockReservation[] = [
     {
