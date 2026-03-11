@@ -771,6 +771,8 @@
         "proceed_to_payment": "Passer au paiement",
         "payment_subtitle": "Entrez vos informations de paiement.",
         "payment_secured": "Paiement sécurisé par Stripe",
+        "payment_psp_placeholder": "Paiement sécurisé",
+        "payment_psp_explainer": "Vous serez redirigé vers notre prestataire de paiement sécurisé pour finaliser votre transaction.",
         "payment_card_number": "Numéro de carte",
         "payment_expiry": "Expiration",
         "payment_cvc": "CVC",
