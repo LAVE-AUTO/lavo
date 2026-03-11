@@ -787,7 +787,7 @@
         "result_view_coupons": "View my reservations"
     },
     "coupons": {
-      "title": "My reservations",
+        "title": "My reservations",
         "tab_reservations": "Reservations",
         "tab_queue": "Queue",
         "upcoming": "Upcoming",
@@ -802,7 +802,7 @@
         "queue_in_progress": "In progress",
         "queue_position": "Position: {position}",
         "not_found": "Reservation not found",
-      "back_to_coupons": "Back to reservations",
+        "back_to_coupons": "Back to reservations",
         "detail_summary": "Summary",
         "detail_date": "Date",
         "detail_time": "Time",
@@ -821,9 +821,9 @@
         "cancel_modal_confirm": "Cancel",
         "past_completed": "This reservation is completed.",
         "past_cancelled": "This reservation was cancelled.",
-      "toast_cancel_success": "Reservation cancelled successfully",
-      "confirm_title": "Reservation confirmation",
-      "confirm_id_label": "ID"
+        "toast_cancel_success": "Reservation cancelled successfully",
+        "confirm_title": "Reservation confirmation",
+        "confirm_id_label": "ID"
     },
     "favorites": {
         "title": "My favorites",
