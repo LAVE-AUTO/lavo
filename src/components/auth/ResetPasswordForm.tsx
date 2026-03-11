@@ -148,7 +148,7 @@ export function ResetPasswordForm({ token }: ResetPasswordFormProps) {
       const data = response as { code?: string };
       if (data?.code === 'TOO_MANY_REQUESTS') {
         showError(t('error_rate_limit'));
-      } else if (data?.code === 'INVALID_TOKEN' || data?.code === 'TOKEN_EXPIRED') {
+      } else if (data?.code === 'TOKEN_EXPIRED') {
         showError(t('error_invalid_token'));
       } else {
         showError(t('error_generic'));
