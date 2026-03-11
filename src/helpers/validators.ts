@@ -4,6 +4,7 @@ import {
   MIN_PASSWORD_LENGTH,
 } from './constants';
 import { isValidPhoneNumber } from 'libphonenumber-js';
+import { getCountryCallingCode, type Country } from 'react-phone-number-input';
 
 const ALLOWED_SPECIAL_CHARS = /[@$!%*#?&_\-+=]/;
 const ALLOWED_PASSWORD_CHARS = /^[A-Za-z0-9@$!%*#?&_\-+=]+$/;
@@ -139,4 +140,14 @@ export function validatePhone(phone: string | null | undefined): boolean {
   const trimmed = phone.trim();
   if (!trimmed) return false;
   return isValidPhoneNumber(trimmed);
+}
+
+/**
+ * Joins a country code and a local number into a full E.164 phone string.
+ */
+export function joinPhoneNumber(country: Country, localNumber: string): string {
+  const digits = localNumber.replace(/[^0-9]/g, '');
+  if (!digits) return '';
+  const dialCode = getCountryCallingCode(country);
+  return `+${dialCode}${digits}`;
 }

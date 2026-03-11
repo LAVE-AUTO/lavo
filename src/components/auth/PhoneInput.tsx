@@ -6,46 +6,41 @@ import {
   useEffect,
   useCallback,
   useMemo,
-  type ElementType,
+  type ChangeEvent,
 } from 'react';
-import PhoneInputLib, {
+import {
+  getCountries,
   getCountryCallingCode,
-  type Value,
   type Country,
 } from 'react-phone-number-input';
-import 'react-phone-number-input/style.css';
+import flags from 'react-phone-number-input/flags';
+import labels from 'react-phone-number-input/locale/en.json';
 
 /* ------------------------------------------------------------------ */
-/*  Custom country select (replaces the ugly native <select>)          */
+/*  Country select dropdown                                            */
 /* ------------------------------------------------------------------ */
 
-interface CountryOption {
-  value?: string;
-  label?: string;
-  divider?: boolean;
-}
-
-interface CountrySelectProps {
-  value?: string;
-  onChange: (value: string | undefined) => void;
-  options: CountryOption[];
-  iconComponent: ElementType;
-  className?: string;
-  disabled?: boolean;
-  readOnly?: boolean;
-}
-
-function LavorCountrySelect({
+function CountrySelect({
   value,
   onChange,
-  options,
-  iconComponent: Icon,
-}: CountrySelectProps) {
+  hasError,
+}: {
+  value: Country;
+  onChange: (country: Country) => void;
+  hasError: boolean;
+}) {
   const [isOpen, setIsOpen] = useState(false);
   const [search, setSearch] = useState('');
   const containerRef = useRef<HTMLDivElement>(null);
   const searchRef = useRef<HTMLInputElement>(null);
-  const listRef = useRef<HTMLUListElement>(null);
+
+  const countries = useMemo(() => {
+    return getCountries().map((code) => ({
+      code,
+      name: (labels as Record<string, string>)[code] || code,
+      dial: `+${getCountryCallingCode(code)}`,
+    }));
+  }, []);
 
   // Close on outside click
   useEffect(() => {
@@ -86,49 +81,54 @@ function LavorCountrySelect({
   }, []);
 
   const handleSelect = useCallback(
-    (code: string | undefined) => {
+    (code: Country) => {
       onChange(code);
       setIsOpen(false);
       setSearch('');
     },
-    [onChange]
+    [onChange],
   );
 
-  const dialCode = value ? `+${getCountryCallingCode(value as Country)}` : '';
+  const dialCode = `+${getCountryCallingCode(value)}`;
+  const FlagIcon = flags[value];
 
   const filtered = useMemo(() => {
-    if (!search) return options.filter((o) => !o.divider);
+    if (!search) return countries;
     const q = search.toLowerCase();
-    return options.filter((o) => {
-      if (o.divider || !o.value) return false;
-      const labelMatch = (o.label || '').toLowerCase().includes(q);
-      let dialMatch = false;
-      try {
-        dialMatch = `+${getCountryCallingCode(o.value as Country)}`.includes(q);
-      } catch { /* skip */ }
-      return labelMatch || dialMatch || o.value.toLowerCase().includes(q);
-    });
-  }, [options, search]);
+    return countries.filter(
+      (c) =>
+        c.name.toLowerCase().includes(q) ||
+        c.dial.includes(q) ||
+        c.code.toLowerCase().includes(q),
+    );
+  }, [countries, search]);
+
+  const triggerClasses = [
+    'flex items-center gap-1.5 px-3 py-3 bg-white dark:bg-dark-card border-[1.5px] rounded-lg',
+    'outline-none transition-all duration-150 whitespace-nowrap',
+    hasError
+      ? 'border-lavo-error bg-[#FFF8F7] dark:bg-[#2A1A18]'
+      : 'border-[#CCCCCC] dark:border-tab-inactive focus:border-gold dark:focus:border-gold focus:shadow-[0_0_0_3px_rgba(196,154,30,0.18)] dark:focus:shadow-[0_0_0_3px_rgba(196,154,30,0.15)]',
+  ].join(' ');
 
   return (
-    <div className="lavo-country-select" ref={containerRef}>
-      {/* Trigger button */}
+    <div className="relative" ref={containerRef}>
       <button
         type="button"
         onClick={toggle}
-        className="lavo-country-select__trigger"
+        className={triggerClasses}
         aria-expanded={isOpen}
         aria-haspopup="listbox"
         aria-label="Select country"
       >
-        <span className="lavo-country-select__flag">
-          {value ? <Icon country={value} label="" /> : <Icon label="International" />}
+        <span className="w-5 h-4 inline-flex items-center">
+          {FlagIcon && <FlagIcon title="" />}
         </span>
-        <span className="lavo-country-select__dial">{dialCode}</span>
+        <span className="text-[15px] font-medium text-[#1A1A1A] dark:text-white">
+          {dialCode}
+        </span>
         <svg
-          className={`lavo-country-select__chevron ${isOpen ? 'lavo-country-select__chevron--open' : ''}`}
-          width="10"
-          height="10"
+          className={`w-2.5 h-2.5 text-[#888] transition-transform duration-150 ${isOpen ? 'rotate-180' : ''}`}
           viewBox="0 0 24 24"
           fill="none"
           stroke="currentColor"
@@ -141,15 +141,12 @@ function LavorCountrySelect({
         </svg>
       </button>
 
-      {/* Dropdown panel */}
       {isOpen && (
-        <div className="lavo-country-select__dropdown">
+        <div className="absolute top-full left-0 z-50 mt-1 w-72 bg-white dark:bg-dark-card border border-[#CCCCCC] dark:border-tab-inactive rounded-lg shadow-lg overflow-hidden">
           {/* Search bar */}
-          <div className="lavo-country-select__search-wrap">
+          <div className="flex items-center gap-2 px-3 py-2 border-b border-[#EEEEEE] dark:border-tab-inactive">
             <svg
-              className="lavo-country-select__search-icon"
-              width="14"
-              height="14"
+              className="w-3.5 h-3.5 text-[#888] shrink-0"
               viewBox="0 0 24 24"
               fill="none"
               stroke="currentColor"
@@ -166,39 +163,46 @@ function LavorCountrySelect({
               type="text"
               value={search}
               onChange={(e) => setSearch(e.target.value)}
-              className="lavo-country-select__search"
+              className="w-full bg-transparent text-[14px] text-[#1A1A1A] dark:text-white placeholder-[#AAAAAA] outline-none"
               placeholder="Search country..."
               autoComplete="off"
             />
           </div>
 
           {/* Country list */}
-          <ul ref={listRef} className="lavo-country-select__list" role="listbox">
-            {filtered.map((opt) => {
-              if (!opt.value) return null;
-              let code = '';
-              try {
-                code = `+${getCountryCallingCode(opt.value as Country)}`;
-              } catch { /* skip */ }
-              const selected = opt.value === value;
+          <ul className="max-h-56 overflow-y-auto" role="listbox">
+            {filtered.map((c) => {
+              const selected = c.code === value;
+              const ItemFlag = flags[c.code];
               return (
-                <li key={opt.value} role="option" aria-selected={selected}>
+                <li key={c.code} role="option" aria-selected={selected}>
                   <button
                     type="button"
-                    onClick={() => handleSelect(opt.value)}
-                    className={`lavo-country-select__option ${selected ? 'lavo-country-select__option--selected' : ''}`}
+                    onClick={() => handleSelect(c.code)}
+                    className={[
+                      'w-full flex items-center gap-2.5 px-3 py-2 text-left transition-colors',
+                      selected
+                        ? 'bg-[#F5F0E0] dark:bg-dark-surface font-semibold'
+                        : 'hover:bg-[#F8F8F6] dark:hover:bg-dark-surface',
+                    ].join(' ')}
                   >
-                    <span className="lavo-country-select__option-flag">
-                      <Icon country={opt.value} label="" />
+                    <span className="w-5 h-4 inline-flex items-center shrink-0">
+                      {ItemFlag && <ItemFlag title="" />}
                     </span>
-                    <span className="lavo-country-select__option-label">{opt.label}</span>
-                    <span className="lavo-country-select__option-dial">{code}</span>
+                    <span className="flex-1 text-[14px] text-[#1A1A1A] dark:text-white truncate">
+                      {c.name}
+                    </span>
+                    <span className="text-[13px] text-[#888] dark:text-[#999] tabular-nums">
+                      {c.dial}
+                    </span>
                   </button>
                 </li>
               );
             })}
             {filtered.length === 0 && (
-              <li className="lavo-country-select__empty">No results</li>
+              <li className="px-3 py-3 text-[13px] text-[#888] text-center">
+                No results
+              </li>
             )}
           </ul>
         </div>
@@ -208,15 +212,20 @@ function LavorCountrySelect({
 }
 
 /* ------------------------------------------------------------------ */
-/*  PhoneInput wrapper                                                 */
+/*  PhoneInput — country select + local number input, side by side     */
 /* ------------------------------------------------------------------ */
+
+export interface PhoneInputValue {
+  country: Country;
+  localNumber: string;
+}
 
 interface PhoneInputProps {
   label: string;
   required?: boolean;
   placeholder?: string;
-  value: string;
-  onChange: (fullPhone: string) => void;
+  value: PhoneInputValue;
+  onChange: (value: PhoneInputValue) => void;
   error?: string;
 }
 
@@ -228,6 +237,29 @@ export function PhoneInput({
   onChange,
   error,
 }: PhoneInputProps) {
+  const handleCountryChange = useCallback(
+    (country: Country) => {
+      onChange({ ...value, country });
+    },
+    [value, onChange],
+  );
+
+  const handleNumberChange = useCallback(
+    (e: ChangeEvent<HTMLInputElement>) => {
+      onChange({ ...value, localNumber: e.target.value });
+    },
+    [value, onChange],
+  );
+
+  const inputClasses = [
+    'w-full px-4 py-3 bg-white dark:bg-dark-card border-[1.5px] rounded-lg',
+    'text-[16px] text-[#1A1A1A] dark:text-white placeholder-[#AAAAAA] dark:placeholder-[#4A5A46]',
+    'outline-none transition-all duration-150',
+    error
+      ? 'border-lavo-error bg-[#FFF8F7] dark:bg-[#2A1A18] focus:shadow-[0_0_0_3px_rgba(232,71,42,0.2)]'
+      : 'border-[#CCCCCC] dark:border-tab-inactive focus:border-gold dark:focus:border-gold focus:shadow-[0_0_0_3px_rgba(196,154,30,0.18)] dark:focus:shadow-[0_0_0_3px_rgba(196,154,30,0.15)]',
+  ].join(' ');
+
   return (
     <div className="mb-4">
       <label className="block text-[15px] font-semibold text-[#1A1A1A] dark:text-white mb-1.5 tracking-wide">
@@ -235,18 +267,21 @@ export function PhoneInput({
         {required && <span className="text-gold ml-0.5">*</span>}
       </label>
 
-      <PhoneInputLib
-        international
-        defaultCountry="CA"
-        placeholder={placeholder}
-        value={(value || undefined) as Value | undefined}
-        onChange={(val) => onChange(val || '')}
-        countrySelectComponent={LavorCountrySelect}
-        className={[
-          'lavo-phone-input',
-          error ? 'lavo-phone-input--error' : '',
-        ].join(' ')}
-      />
+      <div className="flex gap-2">
+        <CountrySelect
+          value={value.country}
+          onChange={handleCountryChange}
+          hasError={!!error}
+        />
+        <input
+          type="tel"
+          value={value.localNumber}
+          onChange={handleNumberChange}
+          placeholder={placeholder}
+          className={inputClasses}
+          autoComplete="tel-national"
+        />
+      </div>
 
       {error && (
         <p className="mt-1.5 text-[13px] font-medium text-lavo-error flex items-center gap-1">

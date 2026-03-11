@@ -6,10 +6,10 @@ import { useRouter } from '@/i18n/navigation';
 import { useToast } from '@/context/toast-context';
 import { useAuth } from '@/context/auth-context';
 import { postWithApi } from '@/services/axios-service';
-import { validateEmail, validateName, validatePhone, isPasswordValid } from '@/helpers/validators';
-import { Spinner } from '@/components/ui/Spinner';
+import { validateEmail, validateName, validatePhone, isPasswordValid, joinPhoneNumber } from '@/helpers/validators';
+import { Button } from '@/components/ui/Button';
 import { FormField } from './FormField';
-import { PhoneInput } from './PhoneInput';
+import { PhoneInput, type PhoneInputValue } from './PhoneInput';
 import { PasswordRules } from './PasswordRules';
 import { SocialButtons } from './SocialButtons';
 
@@ -17,7 +17,7 @@ interface RegisterFormData {
   firstName: string;
   lastName: string;
   email: string;
-  phone: string;
+  phone: PhoneInputValue;
   password: string;
   confirmPassword: string;
 }
@@ -28,7 +28,7 @@ const INITIAL_DATA: RegisterFormData = {
   firstName: '',
   lastName: '',
   email: '',
-  phone: '',
+  phone: { country: 'CA', localNumber: '' },
   password: '',
   confirmPassword: '',
 };
@@ -108,9 +108,9 @@ export function RegisterForm() {
       next.email = t('error_email_invalid');
     }
 
-    if (!formData.phone.trim()) {
+    if (!formData.phone.localNumber.trim()) {
       next.phone = t('error_phone_required');
-    } else if (!validatePhone(formData.phone)) {
+    } else if (!validatePhone(joinPhoneNumber(formData.phone.country, formData.phone.localNumber))) {
       next.phone = t('error_phone_invalid');
     }
 
@@ -140,7 +140,7 @@ export function RegisterForm() {
         first_name: formData.firstName.trim(),
         last_name:  formData.lastName.trim(),
         email:      formData.email.trim(),
-        phone:      formData.phone.trim(),
+        phone:      joinPhoneNumber(formData.phone.country, formData.phone.localNumber),
         password:   formData.password,
         confirm_password: formData.confirmPassword,
       });
@@ -294,20 +294,9 @@ export function RegisterForm() {
       />
 
       {/* Submit */}
-      <button
-        type="submit"
-        disabled={isLoading}
-        className="btn-shine w-full py-3.5 mt-2 bg-gold hover:bg-gold-hover active:scale-[0.98] disabled:opacity-70 rounded-[10px] text-[16px] font-bold text-dark-bg tracking-wide transition-all duration-150 flex items-center justify-center gap-2"
-      >
-        {isLoading ? (
-          <>
-            <Spinner size="sm" />
-            {t('loading')}
-          </>
-        ) : (
-          t('submit')
-        )}
-      </button>
+      <Button type="submit" fullWidth loading={isLoading} className="mt-2">
+        {isLoading ? t('loading') : t('submit')}
+      </Button>
 
       <SocialButtons />
     </form>

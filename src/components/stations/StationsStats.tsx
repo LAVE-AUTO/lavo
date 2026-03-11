@@ -1,5 +1,5 @@
 import { getLocale } from 'next-intl/server';
-import { MOCK_STATIONS } from '@/data/stations-mock';
+import { listStationsPublic } from '@/server/station/station-service';
 
 function StatItem({
   value,
@@ -31,10 +31,21 @@ export async function StationsStats() {
   const locale = await getLocale();
   const isFr   = locale === 'fr';
 
-  const total     = MOCK_STATIONS.length;
-  const available = MOCK_STATIONS.filter((s) => s.availableSlots > 0).length;
-  const cities    = [...new Set(MOCK_STATIONS.map((s) => s.city))].length;
-  const reviews   = MOCK_STATIONS.reduce((acc, s) => acc + s.reviewCount, 0);
+  let total = 0;
+  let available = 0;
+  let cities = 0;
+  let reviews = 0;
+
+  try {
+    const result = await listStationsPublic({ per_page: 200 });
+    const stations = result.data.all;
+    total = result.meta.total;
+    available = stations.filter((s) => s.available).length;
+    cities = new Set(stations.map((s) => s.city)).size;
+    reviews = stations.reduce((acc, s) => acc + (s.total_ratings || 0), 0);
+  } catch {
+    // fallback to zeros on error
+  }
 
   return (
     <div className="bg-[#C8C8B4] dark:bg-dark-card border-b border-[#CCCCCC] dark:border-tab-inactive transition-colors" id="stations-list">

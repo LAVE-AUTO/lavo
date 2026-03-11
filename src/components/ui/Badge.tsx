@@ -1,10 +1,60 @@
-import type { ReactNode } from 'react';
+import { type ReactNode } from 'react';
+
+export type BadgeVariant =
+  | 'tag'
+  | 'status-open'
+  | 'status-closed'
+  | 'status-pending'
+  | 'status-active'
+  | 'status-rejected'
+  | 'status-suspended'
+  | 'distance'
+  | 'verified'
+  | 'pill';
 
 export interface BadgeProps {
+  variant?: BadgeVariant;
   children?: ReactNode;
+  className?: string;
 }
 
-export function Badge({ children }: BadgeProps) {
-  return <span>{children}</span>;
-}
+const VARIANT_CLASSES: Record<BadgeVariant, string> = {
+  tag:
+    'bg-[#E8E8D8] dark:bg-dark-surface text-[#444] dark:text-lavo-muted ' +
+    'text-[11px] font-medium px-2.5 py-0.5 rounded-full',
+  'status-open':
+    'bg-lavo-success/15 text-lavo-success text-[11px] font-semibold px-2.5 py-0.5 rounded-full',
+  'status-closed':
+    'bg-lavo-error/15 text-lavo-error text-[11px] font-semibold px-2.5 py-0.5 rounded-full',
+  'status-pending':
+    'bg-yellow-400/15 text-yellow-600 dark:text-yellow-400 text-[11px] font-semibold px-2.5 py-0.5 rounded-full',
+  'status-active':
+    'bg-lavo-success/15 text-lavo-success text-[11px] font-semibold px-2.5 py-0.5 rounded-full',
+  'status-rejected':
+    'bg-lavo-error/15 text-lavo-error text-[11px] font-semibold px-2.5 py-0.5 rounded-full',
+  'status-suspended':
+    'bg-orange-400/15 text-orange-600 dark:text-orange-400 text-[11px] font-semibold px-2.5 py-0.5 rounded-full',
+  distance:
+    'bg-[#1A1A1A]/60 text-white text-[11px] font-medium px-2 py-0.5 rounded-md',
+  verified:
+    'bg-gold/15 text-gold text-[11px] font-semibold px-2.5 py-0.5 rounded-full',
+  pill:
+    'bg-gold text-dark-bg text-[11px] font-bold px-2.5 py-0.5 rounded-full',
+};
 
+/**
+ * Compact label badge with semantic variant presets.
+ *
+ * @param variant - Visual preset (default: 'tag')
+ */
+export function Badge({ variant = 'tag', className = '', children }: BadgeProps) {
+  return (
+    <span
+      className={['inline-flex items-center', VARIANT_CLASSES[variant], className]
+        .filter(Boolean)
+        .join(' ')}
+    >
+      {children}
+    </span>
+  );
+}

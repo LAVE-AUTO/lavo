@@ -1,11 +1,14 @@
 'use client';
 
-import { useState, useMemo } from 'react';
+import { useState, useEffect } from 'react';
 import { useTranslations } from 'next-intl';
 import { Link } from '@/i18n/navigation';
 import { StationReviews } from './StationReviews';
 import { BookingFlow } from './booking/BookingFlow';
-import { MOCK_STATIONS } from '@/data/stations-mock';
+import { fetchStationById } from '@/services/station-api';
+import { PageSpinner } from '@/components/ui/PageSpinner';
+import { Button } from '@/components/ui/Button';
+import { Badge } from '@/components/ui/Badge';
 import type { StationDetailData, ServiceCategory, ServiceForfait } from '@/types/station';
 
 interface StationDetailProps {
@@ -15,14 +18,25 @@ interface StationDetailProps {
 export function StationDetail({ id }: StationDetailProps) {
   const t = useTranslations('stations');
 
-  const station: StationDetailData | undefined = useMemo(
-    () => MOCK_STATIONS.find((s) => s.id === id),
-    [id]
-  );
+  const [station, setStation] = useState<StationDetailData | null | undefined>(undefined);
+
+  useEffect(() => {
+    let cancelled = false;
+    fetchStationById(id).then((result) => {
+      if (!cancelled) setStation(result);
+    }).catch(() => {
+      if (!cancelled) setStation(null);
+    });
+    return () => { cancelled = true; };
+  }, [id]);
 
   const [selectedCategoryIdx, setSelectedCategoryIdx] = useState(0);
   const [selectedForfaitIdx, setSelectedForfaitIdx] = useState(0);
   const [bookingOpen, setBookingOpen] = useState(false);
+
+  if (station === undefined) {
+    return <PageSpinner />;
+  }
 
   if (!station) {
     return (
@@ -86,17 +100,15 @@ export function StationDetail({ id }: StationDetailProps) {
 
           {/* Status badges on hero */}
           <div className="absolute bottom-3 left-3 flex items-center gap-2">
-            {/* Open / Closed */}
-            <span className={`px-3 py-1 rounded-full text-[13px] font-bold flex items-center gap-1.5 backdrop-blur-sm ${isOpen ? 'bg-lavo-success/20 text-lavo-success border border-lavo-success/30' : 'bg-lavo-error/20 text-lavo-error border border-lavo-error/30'}`}>
-              <span className={`w-2 h-2 rounded-full ${isOpen ? 'bg-lavo-success animate-pulse' : 'bg-lavo-error'}`} />
+            <Badge variant={isOpen ? 'status-open' : 'status-closed'} className="backdrop-blur-sm border border-current/30 px-3 py-1 text-[13px]">
+              <span className={`w-2 h-2 rounded-full mr-1.5 ${isOpen ? 'bg-lavo-success animate-pulse' : 'bg-lavo-error'}`} />
               {isOpen ? t('status_open') : t('status_closed')}
-            </span>
-            {/* Verified */}
+            </Badge>
             {station.verified && (
-              <span className="px-3 py-1 rounded-full bg-lavo-success/20 border border-lavo-success/30 text-lavo-success text-[13px] font-bold flex items-center gap-1.5 backdrop-blur-sm">
-                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12" /></svg>
+              <Badge variant="verified" className="backdrop-blur-sm border border-gold/30 px-3 py-1 text-[13px]">
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" className="mr-1"><polyline points="20 6 9 17 4 12" /></svg>
                 {t('detail_verified')}
-              </span>
+              </Badge>
             )}
           </div>
         </div>
@@ -269,13 +281,13 @@ export function StationDetail({ id }: StationDetailProps) {
               </div>
             </div>
             {hasSlots ? (
-              <button
-                type="button"
+              <Button
+                className="flex-1"
+                size="md"
                 onClick={() => setBookingOpen(true)}
-                className="flex-1 py-3 bg-gold hover:bg-gold-hover rounded-[10px] text-[16px] font-black text-dark-bg transition-colors flex items-center justify-center gap-2 cursor-pointer"
               >
                 {t('continue')}
-              </button>
+              </Button>
             ) : (
               <div className="flex-1 py-3 bg-[#E0E0D0] dark:bg-tab-inactive rounded-[10px] text-[16px] font-bold text-[#444] dark:text-[#C0C0B0] text-center transition-colors">
                 {t('no_slots')}

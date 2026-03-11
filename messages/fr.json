@@ -771,6 +771,8 @@
         "proceed_to_payment": "Passer au paiement",
         "payment_subtitle": "Entrez vos informations de paiement.",
         "payment_secured": "Paiement sécurisé par Stripe",
+        "payment_psp_placeholder": "Paiement sécurisé",
+        "payment_psp_explainer": "Vous serez redirigé vers notre prestataire de paiement sécurisé pour finaliser votre transaction.",
         "payment_card_number": "Numéro de carte",
         "payment_expiry": "Expiration",
         "payment_cvc": "CVC",
@@ -785,7 +787,7 @@
         "result_view_coupons": "Voir mes réservations"
     },
     "coupons": {
-      "title": "Mes réservations",
+        "title": "Mes réservations",
         "tab_reservations": "Réservations",
         "tab_queue": "File d'attente",
         "upcoming": "À venir",
@@ -800,7 +802,7 @@
         "queue_in_progress": "En cours",
         "queue_position": "Position : {position}",
         "not_found": "Réservation introuvable",
-      "back_to_coupons": "Retour aux réservations",
+        "back_to_coupons": "Retour aux réservations",
         "detail_summary": "Récapitulatif",
         "detail_date": "Date",
         "detail_time": "Heure",
@@ -819,9 +821,9 @@
         "cancel_modal_confirm": "Annuler",
         "past_completed": "Cette réservation est terminée.",
         "past_cancelled": "Cette réservation a été annulée.",
-      "toast_cancel_success": "Réservation annulée avec succès",
-      "confirm_title": "Confirmation de réservation",
-      "confirm_id_label": "ID"
+        "toast_cancel_success": "Réservation annulée avec succès",
+        "confirm_title": "Confirmation de réservation",
+        "confirm_id_label": "ID"
     },
     "favorites": {
         "title": "Mes favoris",
