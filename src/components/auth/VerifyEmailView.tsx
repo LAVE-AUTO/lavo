@@ -8,6 +8,7 @@ import { postWithApi } from '@/services/axios-service';
 import { validateEmail } from '@/helpers/validators';
 import { HTTP_STATUS } from '@/helpers/constants';
 import { Button } from '@/components/ui/Button';
+import { Spinner } from '@/components/ui/Spinner';
 import { FormField } from './FormField';
 
 interface VerifyEmailViewProps {

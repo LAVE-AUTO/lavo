@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, type ReactElement } from 'react';
 import { useToast, type ToastType } from '@/context/toast-context';
 
 const DEFAULT_DURATION = 4000;
@@ -55,7 +55,7 @@ function CloseIcon() {
   );
 }
 
-const ICONS: Record<ToastType, () => JSX.Element> = {
+const ICONS: Record<ToastType, () => ReactElement> = {
   success: SuccessIcon,
   error: ErrorIcon,
   warning: WarningIcon,
