@@ -33,7 +33,7 @@ export function Toggle({ checked, onChange, label, disabled = false, id }: Toggl
         type="button"
         aria-checked={checked}
         disabled={disabled}
-        onClick={() => !disabled && onChange(!checked)}
+        onClick={() => onChange(!checked)}
         className={[
           'relative w-11 h-6 rounded-full transition-colors duration-200 focus:outline-none',
           'focus-visible:ring-2 focus-visible:ring-gold/50',
