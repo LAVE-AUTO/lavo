@@ -9,6 +9,7 @@ import { postWithApi } from '@/services/axios-service';
 import { isPasswordValid } from '@/helpers/validators';
 import { HTTP_STATUS } from '@/helpers/constants';
 import { Button } from '@/components/ui/Button';
+import { Spinner } from '@/components/ui/Spinner';
 import { FormField } from './FormField';
 import { PasswordRules } from './PasswordRules';
 
