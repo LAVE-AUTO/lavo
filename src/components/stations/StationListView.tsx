@@ -6,6 +6,10 @@ import { useTranslations } from 'next-intl';
 import { fetchStations, type FetchStationsResult } from '@/services/station-api';
 import { SearchBar } from './SearchBar';
 import { StationCard } from './StationCard';
+import { PageSpinner } from '@/components/ui/PageSpinner';
+import { Toggle } from '@/components/ui/Toggle';
+import { EmptyState } from '@/components/ui/EmptyState';
+import { SectionHeader } from '@/components/ui/SectionHeader';
 import type { StationDetailData } from '@/types/station';
 
 type SortKey = 'default' | 'price_asc' | 'best_rated';
@@ -497,23 +501,7 @@ export function StationListView() {
               <span className="text-[15px] font-semibold text-[#1A1A1A] dark:text-white leading-snug">
                 {t('filter_available_only')}
               </span>
-              <button
-                type="button"
-                role="switch"
-                aria-checked={onlyAvail}
-                onClick={() => setOnlyAvail((v) => !v)}
-                className={[
-                  'relative shrink-0 w-11 h-6 rounded-full transition-colors duration-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-gold',
-                  onlyAvail ? 'bg-gold' : 'bg-[#9A9A8A] dark:bg-tab-inactive',
-                ].join(' ')}
-              >
-                <span
-                  className={[
-                    'absolute top-[3px] left-0 w-[18px] h-[18px] rounded-full bg-white shadow transition-transform duration-200',
-                    onlyAvail ? 'translate-x-[22px]' : 'translate-x-[3px]',
-                  ].join(' ')}
-                />
-              </button>
+              <Toggle checked={onlyAvail} onChange={setOnlyAvail} />
             </div>
           </div>
         )}
@@ -521,11 +509,18 @@ export function StationListView() {
 
       {/* ── Results ── */}
       {loading ? (
-        <div className="flex justify-center py-20">
-          <div className="w-8 h-8 border-3 border-gold border-t-transparent rounded-full animate-spin" />
-        </div>
+        <PageSpinner py="py-20" />
       ) : filtered.length === 0 ? (
-        <EmptyState title={t('empty_title')} desc={t('empty_desc')} />
+        <EmptyState
+          title={t('empty_title')}
+          description={t('empty_desc')}
+          icon={
+            <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+              <circle cx="11" cy="11" r="8" />
+              <line x1="21" y1="21" x2="16.65" y2="16.65" />
+            </svg>
+          }
+        />
       ) : (
         <div className="space-y-10">
           {availableNow.length > 0 && (
@@ -584,24 +579,23 @@ interface StationSectionProps {
 function StationSection({ label, stations, expanded, onToggle, seeMoreLabel, accent = false }: StationSectionProps) {
   return (
     <section>
-      <div className="flex items-center justify-between mb-4">
-        <div className="flex items-center gap-3">
-          {accent && <span className="w-1 h-4 rounded-full bg-gold shrink-0" />}
-          <span className="text-[16px] font-black text-[#1A1A1A] dark:text-white uppercase tracking-widest">{label}</span>
-          <span className="text-[13px] text-[#555] dark:text-[#B0B0A0] font-semibold bg-[#E0E0D0] dark:bg-dark-card px-2 py-0.5 rounded-full">
-            {stations.length}
-          </span>
-        </div>
-        {stations.length > 3 && (
-          <button
-            type="button"
-            onClick={onToggle}
-            className="text-[14px] font-bold text-gold hover:text-gold-hover transition-colors cursor-pointer"
-          >
-            {seeMoreLabel}
-          </button>
-        )}
-      </div>
+      <SectionHeader
+        title={label}
+        count={stations.length}
+        accentBar={accent}
+        className="mb-4 uppercase tracking-widest"
+        action={
+          stations.length > 3 ? (
+            <button
+              type="button"
+              onClick={onToggle}
+              className="text-[14px] font-bold text-gold hover:text-gold-hover transition-colors cursor-pointer"
+            >
+              {seeMoreLabel}
+            </button>
+          ) : undefined
+        }
+      />
 
       {expanded ? (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -619,21 +613,6 @@ function StationSection({ label, stations, expanded, onToggle, seeMoreLabel, acc
         </div>
       )}
     </section>
-  );
-}
-
-function EmptyState({ title, desc }: { title: string; desc: string }) {
-  return (
-    <div className="flex flex-col items-center justify-center py-24 gap-4 text-center animate-fade-in">
-      <div className="w-16 h-16 rounded-full bg-[#E0E0D0] dark:bg-dark-card flex items-center justify-center">
-        <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#9A9A8A" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-          <circle cx="11" cy="11" r="8" />
-          <line x1="21" y1="21" x2="16.65" y2="16.65" />
-        </svg>
-      </div>
-      <p className="text-[18px] font-black text-[#1A1A1A] dark:text-white">{title}</p>
-      <p className="text-[15px] text-[#555] dark:text-[#C0C0B0] max-w-xs leading-relaxed">{desc}</p>
-    </div>
   );
 }
 
