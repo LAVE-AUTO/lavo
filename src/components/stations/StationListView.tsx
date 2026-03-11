@@ -68,7 +68,6 @@ export function StationListView() {
 
   useEffect(() => {
     let cancelled = false;
-    setLoading(true);
     fetchStations().then((result) => {
       if (cancelled) return;
       setAllStations(result.stations);
