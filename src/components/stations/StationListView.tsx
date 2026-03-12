@@ -19,34 +19,42 @@ interface PriceRange {
   max: string;
 }
 
-const HOURS = Array.from({ length: 24 }, (_, i) => i);
+/** Parse "HH:MM" → hour integer. */
+function parseTimeHour(value: string): number | null {
+  if (!value) return null;
+  const h = parseInt(value.split(':')[0], 10);
+  return isNaN(h) ? null : h;
+}
 
 /** Parse "07h00 – 20h00" or "07:00 - 20:00" → { open: 7, close: 20 } */
 function parseOpeningHours(oh: string): { open: number; close: number } | null {
   const timeRegex = /(\d{1,2})[:h]/;
   const parts = oh.split(/[–\-]/).map((s) => s.trim());
   if (parts.length !== 2) return null;
-  const openMatch = parts[0].match(timeRegex);
+  const openMatch  = parts[0].match(timeRegex);
   const closeMatch = parts[1].match(timeRegex);
   if (!openMatch || !closeMatch) return null;
-  const open  = parseInt(openMatch[1], 10);
+  const open  = parseInt(openMatch[1],  10);
   const close = parseInt(closeMatch[1], 10);
   return isNaN(open) || isNaN(close) ? null : { open, close };
 }
 
 /**
  * Client-side station list view.
- * Dark/light mode aware. Filter panel uses text inputs (city, price range) and
- * a proper toggle switch for availability. Sort chips stay in the quick row.
+ * Main search bar filters by city. Filter panel allows filtering by merchant name.
+ * Time range uses native <input type="time"> for keyboard + clock-picker support.
  */
 export function StationListView() {
   const t            = useTranslations('stations');
   const searchParams = useSearchParams();
 
-  const [query,              setQuery]              = useState('');
-  const [onlyAvail,         setOnlyAvail]          = useState(false);
+  /* Main search: city */
+  const [cityQuery, setCityQuery] = useState('');
+
+  /* Filter panel fields */
+  const [nameSearch,         setNameSearch]         = useState('');
+  const [onlyAvail,          setOnlyAvail]          = useState(false);
   const [sort,               setSort]               = useState<SortKey>('default');
-  const [cityInput,          setCityInput]          = useState('');
   const [price,              setPrice]              = useState<PriceRange>({ min: '', max: '' });
   const [priceErrors,        setPriceErrors]        = useState({ min: '', max: '' });
   const [panelOpen,          setPanelOpen]          = useState(false);
@@ -57,12 +65,12 @@ export function StationListView() {
   const [timeFrom,           setTimeFrom]           = useState('');
   const [timeTo,             setTimeTo]             = useState('');
 
-  /* ── API-fetched stations ── */
+  /* API-fetched stations */
   const [allStations, setAllStations] = useState<StationDetailData[]>([]);
   const [apiGroups, setApiGroups] = useState<FetchStationsResult['groups']>({
-    available_now: [],
+    available_now:    [],
     most_appreciated: [],
-    most_visited: [],
+    most_visited:     [],
   });
   const [loading, setLoading] = useState(true);
 
@@ -79,15 +87,15 @@ export function StationListView() {
     return () => { cancelled = true; };
   }, []);
 
-  /* ── Sync query from URL param (?q=) without synchronous setState in effect ── */
+  /* Sync city query from URL param (?q=) */
   useEffect(() => {
     const q = searchParams.get('q');
     if (q == null) return;
-    const id = setTimeout(() => setQuery(q), 0);
+    const id = setTimeout(() => setCityQuery(q), 0);
     return () => clearTimeout(id);
   }, [searchParams]);
 
-  /* ── Price validation ── */
+  /* Price validation */
   const validateAndSetMin = (val: string) => {
     setPrice((p) => ({ ...p, min: val }));
     const num = parseFloat(val);
@@ -109,14 +117,14 @@ export function StationListView() {
     }
   };
 
-  /* ── Derived filter options ── */
+  /* Derived filter options */
   const allCategories = useMemo(
     () => [...new Set(allStations.flatMap((s) => s.tags))].sort(),
-    [allStations]
+    [allStations],
   );
   const allServices = useMemo(
     () => [...new Set(allStations.flatMap((s) => s.services))].sort(),
-    [allStations]
+    [allStations],
   );
   const allVehicleTypes = useMemo(
     () => [
@@ -128,7 +136,7 @@ export function StationListView() {
     [t],
   );
 
-  /* ── Toggle helpers ── */
+  /* Toggle helpers */
   const toggleCategory = (c: string) =>
     setSelectedCategories((prev) => prev.includes(c) ? prev.filter((x) => x !== c) : [...prev, c]);
   const toggleVehicle = (v: string) =>
@@ -136,30 +144,24 @@ export function StationListView() {
   const toggleService = (s: string) =>
     setSelectedServices((prev) => prev.includes(s) ? prev.filter((x) => x !== s) : [...prev, s]);
 
-  /* ── Filtered + sorted results ── */
+  /* Filtered + sorted results */
   const filtered = useMemo(() => {
-    const q       = query.trim().toLowerCase();
-    const city    = cityInput.trim().toLowerCase();
-    const minNum  = parseFloat(price.min);
-    const maxNum  = parseFloat(price.max);
-    const fromH   = timeFrom !== '' ? parseInt(timeFrom, 10) : null;
-    const toH     = timeTo   !== '' ? parseInt(timeTo,   10) : null;
+    const cityQ  = cityQuery.trim().toLowerCase();
+    const nameQ  = nameSearch.trim().toLowerCase();
+    const minNum = parseFloat(price.min);
+    const maxNum = parseFloat(price.max);
+    const fromH  = parseTimeHour(timeFrom);
+    const toH    = parseTimeHour(timeTo);
 
     let results = allStations.filter((s) => {
-      const matchesQuery =
-        !q ||
-        s.name.toLowerCase().includes(q) ||
-        s.address.toLowerCase().includes(q) ||
-        s.city.toLowerCase().includes(q) ||
-        s.tags.some((tag) => tag.toLowerCase().includes(q));
-
+      const matchesCity = !cityQ || s.city.toLowerCase().includes(cityQ) || s.address.toLowerCase().includes(cityQ);
+      const matchesName = !nameQ || s.name.toLowerCase().includes(nameQ) || s.tags.some((tag) => tag.toLowerCase().includes(nameQ));
       const matchesAvail      = !onlyAvail || s.availableSlots > 0;
-      const matchesCity       = !city || s.city.toLowerCase().includes(city);
       const matchesMin        = isNaN(minNum) || price.min === '' || s.priceFrom >= minNum;
       const matchesMax        = isNaN(maxNum) || price.max === '' || s.priceFrom <= maxNum;
       const matchesCategories = !selectedCategories.length || selectedCategories.some((c) => s.tags.includes(c));
-      const matchesVehicles   = !selectedVehicles.length || selectedVehicles.some((v) => s.vehicleTypes?.includes(v));
-      const matchesServices   = !selectedServices.length || selectedServices.some((sv) => s.services.includes(sv));
+      const matchesVehicles   = !selectedVehicles.length  || selectedVehicles.some((v) => s.vehicleTypes?.includes(v));
+      const matchesServices   = !selectedServices.length  || selectedServices.some((sv) => s.services.includes(sv));
       const matchesTime       = (() => {
         if (fromH === null && toH === null) return true;
         if (!s.openingHours) return true;
@@ -170,7 +172,7 @@ export function StationListView() {
         return parsed.open <= effectiveTo && parsed.close >= effectiveFrom;
       })();
 
-      return matchesQuery && matchesAvail && matchesCity && matchesMin && matchesMax
+      return matchesCity && matchesName && matchesAvail && matchesMin && matchesMax
         && matchesCategories && matchesVehicles && matchesServices && matchesTime;
     });
 
@@ -178,17 +180,16 @@ export function StationListView() {
     if (sort === 'best_rated') results = [...results].sort((a, b) => b.rating - a.rating);
 
     return results;
-  }, [query, onlyAvail, sort, cityInput, price, selectedCategories, selectedVehicles, selectedServices, timeFrom, timeTo, allStations]);
+  }, [cityQuery, nameSearch, onlyAvail, sort, price, selectedCategories, selectedVehicles, selectedServices, timeFrom, timeTo, allStations]);
 
-  /* ── Derived section lists ── */
-  const hasFilters = query.trim() || onlyAvail || cityInput.trim() || price.min !== '' || price.max !== ''
+  /* Derived section lists */
+  const hasFilters = cityQuery.trim() || nameSearch.trim() || onlyAvail || price.min !== '' || price.max !== ''
     || selectedCategories.length > 0 || selectedVehicles.length > 0 || selectedServices.length > 0
     || timeFrom !== '' || timeTo !== '';
-  const availableNow   = useMemo(() => hasFilters ? filtered.filter((s) => s.availableSlots > 0) : apiGroups.available_now, [filtered, hasFilters, apiGroups]);
-  const topRated       = useMemo(() => hasFilters ? [...filtered].sort((a, b) => b.rating - a.rating) : apiGroups.most_appreciated, [filtered, hasFilters, apiGroups]);
-  const mostRevisited  = useMemo(() => hasFilters ? [...filtered].sort((a, b) => b.reviewCount - a.reviewCount) : apiGroups.most_visited, [filtered, hasFilters, apiGroups]);
+  const availableNow  = useMemo(() => hasFilters ? filtered.filter((s) => s.availableSlots > 0) : apiGroups.available_now,    [filtered, hasFilters, apiGroups]);
+  const topRated      = useMemo(() => hasFilters ? [...filtered].sort((a, b) => b.rating - a.rating)          : apiGroups.most_appreciated, [filtered, hasFilters, apiGroups]);
+  const mostRevisited = useMemo(() => hasFilters ? [...filtered].sort((a, b) => b.reviewCount - a.reviewCount) : apiGroups.most_visited,     [filtered, hasFilters, apiGroups]);
 
-  /* ── Expanded state per section ── */
   const [expandedSections, setExpandedSections] = useState<Record<string, boolean>>({});
 
   const sortChips: { key: SortKey; label: string }[] = [
@@ -197,10 +198,9 @@ export function StationListView() {
     { key: 'best_rated', label: t('filter_best_rated') },
   ];
 
-  /* Active filter count */
   const activeCount =
     (onlyAvail ? 1 : 0) +
-    (cityInput.trim() ? 1 : 0) +
+    (nameSearch.trim() ? 1 : 0) +
     (sort !== 'default' ? 1 : 0) +
     (price.min !== '' || price.max !== '' ? 1 : 0) +
     (selectedCategories.length ? 1 : 0) +
@@ -212,7 +212,7 @@ export function StationListView() {
   const handleReset = () => {
     setOnlyAvail(false);
     setSort('default');
-    setCityInput('');
+    setNameSearch('');
     setPrice({ min: '', max: '' });
     setPriceErrors({ min: '', max: '' });
     setSelectedCategories([]);
@@ -230,7 +230,7 @@ export function StationListView() {
       <div className="sticky top-16 z-30 bg-[#EDEDED] dark:bg-dark-bg pb-3 -mx-4 px-4 sm:-mx-6 sm:px-6 pt-3 space-y-3">
         <div className="flex gap-2">
           <div className="flex-1">
-            <SearchBar value={query} onChange={setQuery} placeholder={t('search_placeholder')} />
+            <SearchBar value={cityQuery} onChange={setCityQuery} placeholder={t('search_city_placeholder')} />
           </div>
 
           {/* Filter toggle */}
@@ -278,7 +278,6 @@ export function StationListView() {
             </button>
           ))}
 
-          {/* Quick available toggle chip */}
           <button
             type="button"
             onClick={() => setOnlyAvail((v) => !v)}
@@ -299,39 +298,39 @@ export function StationListView() {
 
             {/* Header */}
             <div className="flex items-center justify-between">
-              <span className="text-[15px] font-black text-[#1A1A1A] dark:text-white uppercase tracking-wider">
+              <span className="text-[13px] sm:text-[15px] font-black text-[#1A1A1A] dark:text-white uppercase tracking-wider">
                 {t('filter_panel_title')}
               </span>
               {activeCount > 0 && (
                 <button
                   type="button"
                   onClick={handleReset}
-                  className="text-[14px] font-bold text-gold hover:text-gold-hover transition-colors"
+                  className="text-[13px] sm:text-[14px] font-bold text-gold hover:text-gold-hover transition-colors"
                 >
                   {t('filter_reset')}
                 </button>
               )}
             </div>
 
-            {/* Row 1: City + Available only */}
+            {/* Row 1: Merchant name + Available only */}
             <div className="grid grid-cols-2 gap-3">
               <div>
-                <label className="block text-[13px] font-bold text-[#333333] dark:text-[#C0C0B0] uppercase tracking-wider mb-1.5">
-                  {t('filter_city_label')}
+                <label className="block text-[11px] sm:text-[13px] font-bold text-[#333333] dark:text-[#C0C0B0] uppercase tracking-wider mb-1.5">
+                  {t('filter_name_label')}
                 </label>
                 <input
                   type="text"
-                  value={cityInput}
-                  onChange={(e) => setCityInput(e.target.value)}
-                  placeholder={t('filter_city_placeholder')}
-                  className="w-full px-3 py-2 rounded-lg bg-[#F5F5EE] dark:bg-tab-inactive border border-[#E0E0D0] dark:border-tab-inactive text-[14px] text-[#1A1A1A] dark:text-white placeholder-[#9A9A8A] outline-none focus:border-gold transition-colors"
+                  value={nameSearch}
+                  onChange={(e) => setNameSearch(e.target.value)}
+                  placeholder={t('filter_name_placeholder')}
+                  className="w-full px-2.5 sm:px-3 py-2 rounded-lg bg-[#F5F5EE] dark:bg-tab-inactive border border-[#E0E0D0] dark:border-tab-inactive text-[13px] sm:text-[14px] text-[#1A1A1A] dark:text-white placeholder-[#9A9A8A] outline-none focus:border-gold transition-colors"
                 />
               </div>
               <div>
-                <p className="text-[13px] font-bold text-[#333333] dark:text-[#C0C0B0] uppercase tracking-wider mb-1.5">
+                <p className="text-[11px] sm:text-[13px] font-bold text-[#333333] dark:text-[#C0C0B0] uppercase tracking-wider mb-1.5">
                   {t('filter_available_only')}
                 </p>
-                <div className="h-[34px] flex items-center px-3 rounded-lg border border-[#E0E0D0] dark:border-tab-inactive bg-[#F5F5EE] dark:bg-tab-inactive">
+                <div className="h-[34px] flex items-center px-2.5 sm:px-3 rounded-lg border border-[#E0E0D0] dark:border-tab-inactive bg-[#F5F5EE] dark:bg-tab-inactive">
                   <Toggle checked={onlyAvail} onChange={setOnlyAvail} />
                 </div>
               </div>
@@ -339,7 +338,7 @@ export function StationListView() {
 
             {/* Row 2: Price range */}
             <div>
-              <label className="block text-[13px] font-bold text-[#333333] dark:text-[#C0C0B0] uppercase tracking-wider mb-1.5">
+              <label className="block text-[11px] sm:text-[13px] font-bold text-[#333333] dark:text-[#C0C0B0] uppercase tracking-wider mb-1.5">
                 {t('filter_price_label')}
               </label>
               <div className="flex gap-2 items-start">
@@ -351,14 +350,14 @@ export function StationListView() {
                     onChange={(e) => validateAndSetMin(e.target.value)}
                     placeholder={t('filter_price_min_placeholder')}
                     className={[
-                      'w-full px-3 py-2 rounded-lg bg-[#F5F5EE] dark:bg-tab-inactive border text-[14px] text-[#1A1A1A] dark:text-white placeholder-[#9A9A8A] outline-none transition-colors',
+                      'w-full px-2.5 sm:px-3 py-2 rounded-lg bg-[#F5F5EE] dark:bg-tab-inactive border text-[13px] sm:text-[14px] text-[#1A1A1A] dark:text-white placeholder-[#9A9A8A] outline-none transition-colors',
                       priceErrors.min
                         ? 'border-lavo-error focus:border-lavo-error'
                         : 'border-[#E0E0D0] dark:border-tab-inactive focus:border-gold',
                     ].join(' ')}
                   />
                   {priceErrors.min && (
-                    <p className="text-[12px] text-lavo-error mt-1">{priceErrors.min}</p>
+                    <p className="text-[11px] text-lavo-error mt-1">{priceErrors.min}</p>
                   )}
                 </div>
                 <div className="pt-2 text-[#555] dark:text-[#B0B0A0] text-[13px] font-bold">&mdash;</div>
@@ -370,14 +369,14 @@ export function StationListView() {
                     onChange={(e) => validateAndSetMax(e.target.value)}
                     placeholder={t('filter_price_max_placeholder')}
                     className={[
-                      'w-full px-3 py-2 rounded-lg bg-[#F5F5EE] dark:bg-tab-inactive border text-[14px] text-[#1A1A1A] dark:text-white placeholder-[#9A9A8A] outline-none transition-colors',
+                      'w-full px-2.5 sm:px-3 py-2 rounded-lg bg-[#F5F5EE] dark:bg-tab-inactive border text-[13px] sm:text-[14px] text-[#1A1A1A] dark:text-white placeholder-[#9A9A8A] outline-none transition-colors',
                       priceErrors.max
                         ? 'border-lavo-error focus:border-lavo-error'
                         : 'border-[#E0E0D0] dark:border-tab-inactive focus:border-gold',
                     ].join(' ')}
                   />
                   {priceErrors.max && (
-                    <p className="text-[12px] text-lavo-error mt-1">{priceErrors.max}</p>
+                    <p className="text-[11px] text-lavo-error mt-1">{priceErrors.max}</p>
                   )}
                 </div>
               </div>
@@ -386,7 +385,7 @@ export function StationListView() {
             {/* Row 3: Categories + Vehicles */}
             <div className="grid grid-cols-2 gap-3">
               <div>
-                <p className="text-[13px] font-bold text-[#333333] dark:text-[#C0C0B0] uppercase tracking-wider mb-1.5">
+                <p className="text-[11px] sm:text-[13px] font-bold text-[#333333] dark:text-[#C0C0B0] uppercase tracking-wider mb-1.5">
                   {t('filter_categories_label')}
                 </p>
                 <CustomMultiSelect
@@ -397,7 +396,7 @@ export function StationListView() {
                 />
               </div>
               <div>
-                <p className="text-[13px] font-bold text-[#333333] dark:text-[#C0C0B0] uppercase tracking-wider mb-1.5">
+                <p className="text-[11px] sm:text-[13px] font-bold text-[#333333] dark:text-[#C0C0B0] uppercase tracking-wider mb-1.5">
                   {t('filter_vehicle_label')}
                 </p>
                 <CustomMultiSelect
@@ -412,7 +411,7 @@ export function StationListView() {
             {/* Row 4: Services + Date */}
             <div className="grid grid-cols-2 gap-3">
               <div>
-                <p className="text-[13px] font-bold text-[#333333] dark:text-[#C0C0B0] uppercase tracking-wider mb-1.5">
+                <p className="text-[11px] sm:text-[13px] font-bold text-[#333333] dark:text-[#C0C0B0] uppercase tracking-wider mb-1.5">
                   {t('filter_service_label')}
                 </p>
                 <CustomMultiSelect
@@ -423,7 +422,7 @@ export function StationListView() {
                 />
               </div>
               <div>
-                <label className="block text-[13px] font-bold text-[#333333] dark:text-[#C0C0B0] uppercase tracking-wider mb-1.5">
+                <label className="block text-[11px] sm:text-[13px] font-bold text-[#333333] dark:text-[#C0C0B0] uppercase tracking-wider mb-1.5">
                   {t('filter_date_label')}
                 </label>
                 <input
@@ -431,7 +430,7 @@ export function StationListView() {
                   value={date}
                   onChange={(e) => setDate(e.target.value)}
                   className={[
-                    'w-full px-3 py-2 rounded-lg border text-[14px] outline-none transition-all duration-150 cursor-pointer',
+                    'w-full px-2.5 sm:px-3 py-2 rounded-lg border text-[13px] sm:text-[14px] outline-none transition-all duration-150 cursor-pointer',
                     date
                       ? 'border-gold bg-gold/5 dark:bg-gold/10 text-[#1A1A1A] dark:text-white'
                       : 'border-[#E0E0D0] dark:border-tab-inactive bg-[#F5F5EE] dark:bg-tab-inactive text-[#1A1A1A] dark:text-white',
@@ -440,15 +439,14 @@ export function StationListView() {
               </div>
             </div>
 
-            {/* Row 5: Time range */}
+            {/* Row 5: Time range — native time inputs */}
             <div>
-              <p className="text-[13px] font-bold text-[#333333] dark:text-[#C0C0B0] uppercase tracking-wider mb-1.5">
+              <p className="text-[11px] sm:text-[13px] font-bold text-[#333333] dark:text-[#C0C0B0] uppercase tracking-wider mb-1.5">
                 {t('filter_time_label')}
               </p>
               <div className="flex items-center gap-2">
                 <div className="flex-1">
-                  <CustomSelect
-                    options={HOURS.map((h) => ({ value: String(h), label: `${String(h).padStart(2, '0')}h00` }))}
+                  <TimeInput
                     value={timeFrom}
                     onChange={setTimeFrom}
                     placeholder={t('filter_time_from')}
@@ -456,8 +454,7 @@ export function StationListView() {
                 </div>
                 <span className="text-[#555] dark:text-[#B0B0A0] text-[13px] font-bold">&mdash;</span>
                 <div className="flex-1">
-                  <CustomSelect
-                    options={HOURS.map((h) => ({ value: String(h), label: `${String(h).padStart(2, '0')}h00` }))}
+                  <TimeInput
                     value={timeTo}
                     onChange={setTimeTo}
                     placeholder={t('filter_time_to')}
@@ -470,11 +467,7 @@ export function StationListView() {
         )}
       </div>
 
-      {/* ── Results ── */}
-      {/* hasAnyContent est vrai si au moins une section affichable a du contenu,
-          qu'on soit en mode filtre (sections = resultats filtrés) ou non
-          (sections = groupes API). Remplace filtered.length === 0 qui ne
-          detectait pas le cas : groupes vides mais allStations non vide. */}
+      {/* Results */}
       {loading ? (
         <PageSpinner py="py-20" />
       ) : availableNow.length === 0 && topRated.length === 0 && mostRevisited.length === 0 ? (
@@ -530,7 +523,7 @@ export function StationListView() {
 }
 
 /* ------------------------------------------------------------------ */
-/* Internal sub-components                                              */
+/* Station section                                                      */
 /* ------------------------------------------------------------------ */
 
 interface StationSectionProps {
@@ -584,7 +577,43 @@ function StationSection({ label, stations, expanded, onToggle, seeMoreLabel, acc
 }
 
 /* ------------------------------------------------------------------ */
-/* Custom select components                                             */
+/* Time input — native HTML5 time picker                               */
+/* ------------------------------------------------------------------ */
+
+interface TimeInputProps {
+  value: string;
+  onChange: (val: string) => void;
+  placeholder: string;
+}
+
+function TimeInput({ value, onChange, placeholder }: TimeInputProps) {
+  const isActive = value !== '';
+
+  return (
+    <div className="relative">
+      <input
+        type="time"
+        value={value}
+        onChange={(e) => onChange(e.target.value)}
+        className={[
+          'w-full px-2.5 sm:px-3 py-2 rounded-lg border text-[13px] sm:text-[14px] font-semibold outline-none transition-all duration-150 cursor-pointer appearance-none',
+          isActive
+            ? 'border-gold bg-gold/5 dark:bg-gold/10 text-[#1A1A1A] dark:text-white'
+            : 'border-[#E0E0D0] dark:border-tab-inactive bg-[#F5F5EE] dark:bg-tab-inactive text-[#555] dark:text-[#C0C0B0]',
+        ].join(' ')}
+        aria-label={placeholder}
+      />
+      {!value && (
+        <span className="absolute inset-0 flex items-center px-2.5 sm:px-3 pointer-events-none text-[13px] sm:text-[14px] font-semibold text-[#9A9A8A]">
+          {placeholder}
+        </span>
+      )}
+    </div>
+  );
+}
+
+/* ------------------------------------------------------------------ */
+/* Custom multi-select                                                  */
 /* ------------------------------------------------------------------ */
 
 interface CustomMultiSelectProps {
@@ -596,28 +625,19 @@ interface CustomMultiSelectProps {
 
 function CustomMultiSelect({ options, selected, onToggle, placeholder }: CustomMultiSelectProps) {
   const [open, setOpen] = useState(false);
-  const ref = useRef<HTMLDivElement>(null);
+  const ref       = useRef<HTMLDivElement>(null);
   const listboxId = useId();
 
   useEffect(() => {
     if (!open) return;
-
     const handleMouseDown = (e: MouseEvent) => {
-      if (ref.current && !ref.current.contains(e.target as Node)) {
-        setOpen(false);
-      }
+      if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false);
     };
-
     const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') {
-        e.preventDefault();
-        setOpen(false);
-      }
+      if (e.key === 'Escape') { e.preventDefault(); setOpen(false); }
     };
-
     document.addEventListener('mousedown', handleMouseDown);
     document.addEventListener('keydown', handleKeyDown);
-
     return () => {
       document.removeEventListener('mousedown', handleMouseDown);
       document.removeEventListener('keydown', handleKeyDown);
@@ -640,18 +660,18 @@ function CustomMultiSelect({ options, selected, onToggle, placeholder }: CustomM
         aria-expanded={open}
         aria-controls={listboxId}
         className={[
-          'w-full flex items-center justify-between px-3.5 py-2.5 rounded-lg border text-[15px] font-semibold transition-all duration-150 select-none',
+          'w-full flex items-center justify-between px-2.5 sm:px-3.5 py-2 sm:py-2.5 rounded-lg border text-[13px] sm:text-[14px] font-semibold transition-all duration-150 select-none',
           isActive
             ? 'border-gold bg-gold/5 dark:bg-gold/10 text-[#1A1A1A] dark:text-white'
             : 'border-[#E0E0D0] dark:border-tab-inactive bg-[#F5F5EE] dark:bg-tab-inactive text-[#555] dark:text-[#C0C0B0]',
         ].join(' ')}
       >
-        <span className={selected.length > 0 ? 'text-[#1A1A1A] dark:text-white' : ''}>{triggerLabel}</span>
+        <span className={`truncate ${selected.length > 0 ? 'text-[#1A1A1A] dark:text-white' : ''}`}>{triggerLabel}</span>
         <svg
-          width="16" height="16" viewBox="0 0 24 24" fill="none"
+          width="14" height="14" viewBox="0 0 24 24" fill="none"
           stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"
           aria-hidden="true"
-          className={`shrink-0 transition-transform duration-200 ${open ? 'rotate-180 text-gold' : ''}`}
+          className={`shrink-0 ml-1 transition-transform duration-200 ${open ? 'rotate-180 text-gold' : ''}`}
         >
           <polyline points="6 9 12 15 18 9" />
         </svg>
@@ -689,116 +709,6 @@ function CustomMultiSelect({ options, selected, onToggle, placeholder }: CustomM
               </button>
             );
           })}
-        </div>
-      )}
-    </div>
-  );
-}
-
-interface CustomSelectProps {
-  options: { value: string; label: string }[];
-  value: string;
-  onChange: (val: string) => void;
-  placeholder: string;
-}
-
-function CustomSelect({ options, value, onChange, placeholder }: CustomSelectProps) {
-  const [open, setOpen] = useState(false);
-  const ref = useRef<HTMLDivElement>(null);
-  const listboxId = useId();
-
-  useEffect(() => {
-    if (!open) return;
-
-    const handleMouseDown = (e: MouseEvent) => {
-      if (ref.current && !ref.current.contains(e.target as Node)) {
-        setOpen(false);
-      }
-    };
-
-    const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') {
-        e.preventDefault();
-        setOpen(false);
-      }
-    };
-
-    document.addEventListener('mousedown', handleMouseDown);
-    document.addEventListener('keydown', handleKeyDown);
-
-    return () => {
-      document.removeEventListener('mousedown', handleMouseDown);
-      document.removeEventListener('keydown', handleKeyDown);
-    };
-  }, [open]);
-
-  const display = value
-    ? (options.find((o) => o.value === value)?.label ?? value)
-    : placeholder;
-
-  const isActive = open || value !== '';
-
-  return (
-    <div ref={ref} className="relative">
-      <button
-        type="button"
-        onClick={() => setOpen((v) => !v)}
-        aria-haspopup="listbox"
-        aria-expanded={open}
-        aria-controls={listboxId}
-        className={[
-          'w-full flex items-center justify-between px-3.5 py-2.5 rounded-lg border text-[15px] font-semibold transition-all duration-150 select-none',
-          isActive
-            ? 'border-gold bg-gold/5 dark:bg-gold/10 text-[#1A1A1A] dark:text-white'
-            : 'border-[#E0E0D0] dark:border-tab-inactive bg-[#F5F5EE] dark:bg-tab-inactive text-[#555] dark:text-[#C0C0B0]',
-        ].join(' ')}
-      >
-        <span className={value ? 'text-[#1A1A1A] dark:text-white' : ''}>{display}</span>
-        <svg
-          width="16" height="16" viewBox="0 0 24 24" fill="none"
-          stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"
-          aria-hidden="true"
-          className={`shrink-0 transition-transform duration-200 ${open ? 'rotate-180 text-gold' : ''}`}
-        >
-          <polyline points="6 9 12 15 18 9" />
-        </svg>
-      </button>
-
-      {open && (
-        <div
-          id={listboxId}
-          role="listbox"
-          className="absolute top-[calc(100%+6px)] left-0 right-0 bg-white dark:bg-dark-surface border border-[#E0E0D0] dark:border-tab-inactive rounded-xl shadow-[0_8px_32px_rgba(0,0,0,0.12)] dark:shadow-[0_8px_32px_rgba(0,0,0,0.4)] z-50 max-h-52 overflow-y-auto animate-fade-in"
-        >
-          <button
-            type="button"
-            onClick={() => { onChange(''); setOpen(false); }}
-            className="w-full px-3.5 py-2.5 text-[14px] font-semibold text-left text-[#9A9A8A] hover:bg-[#F5F5EE] dark:hover:bg-tab-inactive transition-colors duration-100"
-          >
-            {placeholder}
-          </button>
-          {options.map((opt) => (
-            <button
-              key={opt.value}
-              type="button"
-              onClick={() => { onChange(opt.value); setOpen(false); }}
-              role="option"
-              aria-selected={value === opt.value}
-              className={[
-                'w-full flex items-center justify-between px-3.5 py-2.5 text-[14px] font-semibold text-left transition-colors duration-100',
-                value === opt.value
-                  ? 'text-gold bg-gold/5 dark:bg-gold/10'
-                  : 'text-[#1A1A1A] dark:text-white hover:bg-[#F5F5EE] dark:hover:bg-tab-inactive',
-              ].join(' ')}
-            >
-              <span>{opt.label}</span>
-              {value === opt.value && (
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true" className="shrink-0 text-gold">
-                  <polyline points="20 6 9 17 4 12" />
-                </svg>
-              )}
-            </button>
-          ))}
         </div>
       )}
     </div>
