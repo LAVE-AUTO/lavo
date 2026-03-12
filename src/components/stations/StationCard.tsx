@@ -12,27 +12,22 @@ interface StationCardProps {
 
 /**
  * Station card for the public list page.
- * Photo, name/price, rating, 3-col stats (places, wait, open/closed),
- * forfait tags, single "Voir" CTA.
+ * Shows distance from user, estimated wait, open/closed status, forfait tags, CTA.
  */
 export function StationCard({ station, unavailable = false }: StationCardProps) {
-  const t = useTranslations('stations');
+  const t            = useTranslations('stations');
   const userLocation = useUserLocation();
 
   const distanceLabel = (() => {
-    if (
-      !userLocation ||
-      station.latitude == null ||
-      station.longitude == null
-    ) {
-      return null;
-    }
-    const km = haversineKm(userLocation.latitude, userLocation.longitude, station.latitude, station.longitude);
+    if (!userLocation || station.latitude == null || station.longitude == null) return null;
+    const km = haversineKm(
+      userLocation.latitude, userLocation.longitude,
+      station.latitude,      station.longitude,
+    );
     if (km < 1) return t('distance_m', { distance: Math.round(km * 1000) });
     return t('distance_km', { distance: km.toFixed(1) });
   })();
 
-  /* Collect unique forfait names across all service categories */
   const forfaitNames = station.serviceCategories
     ? [...new Set(station.serviceCategories.flatMap((c) => c.forfaits.map((f) => f.name)))]
     : station.tags;
@@ -114,18 +109,25 @@ export function StationCard({ station, unavailable = false }: StationCardProps) 
           <span className="text-gold">{t('reviews_count', { count: station.reviewCount })}</span>
         </div>
 
-        {/* Stats grid: places | wait | status */}
+        {/* Stats grid: distance | wait | status */}
         <div className="grid grid-cols-3 mb-3 text-center">
+          {/* Distance */}
           <div className="border-r border-[#C8C8B4] dark:border-tab-inactive pr-2">
-            <div className="text-[17px] font-black text-[#0A0A14] dark:text-white leading-none">{station.availableSlots}</div>
-            <div className="text-[14px] text-[#111111] dark:text-[#D8D8C8] mt-1">{t('places_dispo')}</div>
+            <div className="text-[17px] font-black text-[#0A0A14] dark:text-white leading-none truncate">
+              {distanceLabel ?? '--'}
+            </div>
+            <div className="text-[13px] text-[#555] dark:text-[#D8D8C8] mt-1">{t('stat_distance')}</div>
           </div>
+
+          {/* Wait time */}
           <div className="border-r border-[#C8C8B4] dark:border-tab-inactive px-2">
             <div className="text-[17px] font-black text-[#0A0A14] dark:text-white leading-none">
               {station.estimatedWaitMinutes > 0 ? `${station.estimatedWaitMinutes}` : '\u2014'}
             </div>
-            <div className="text-[14px] text-[#111111] dark:text-[#D8D8C8] mt-1">{t('min_attente')}</div>
+            <div className="text-[13px] text-[#555] dark:text-[#D8D8C8] mt-1">{t('min_attente')}</div>
           </div>
+
+          {/* Status */}
           <div className="pl-2">
             <div className="flex items-center justify-center gap-1">
               <span className={`w-2 h-2 rounded-full ${isOpen ? 'bg-lavo-success' : 'bg-lavo-error'}`} />
@@ -133,7 +135,7 @@ export function StationCard({ station, unavailable = false }: StationCardProps) 
                 {isOpen ? t('status_open') : t('status_closed')}
               </span>
             </div>
-            <div className="text-[14px] text-[#111111] dark:text-[#D8D8C8] mt-1">{t('status_label')}</div>
+            <div className="text-[13px] text-[#555] dark:text-[#D8D8C8] mt-1">{t('status_label')}</div>
           </div>
         </div>
 
@@ -151,7 +153,7 @@ export function StationCard({ station, unavailable = false }: StationCardProps) 
           </div>
         )}
 
-        {/* Single CTA */}
+        {/* CTA */}
         <div className="mt-auto">
           <Link
             href={`/stations/${station.id}`}

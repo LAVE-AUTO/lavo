@@ -493,7 +493,8 @@
         "vehicle_type_van": "Pickup / van",
         "filter_categories_placeholder": "All categories",
         "filter_vehicle_placeholder": "All vehicle types",
-        "filter_service_placeholder": "All services"
+        "filter_service_placeholder": "All services",
+        "stat_distance": "Distance"
     },
     "merchant": {
         "meta_title": "Slowtime — Merchant portal",
