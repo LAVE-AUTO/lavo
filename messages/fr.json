@@ -838,6 +838,20 @@
         "confirm_title": "Confirmation de réservation",
         "confirm_id_label": "ID"
     },
+    "queue_detail": {
+        "title": "Ma file d'attente",
+        "back": "Retour",
+        "status_waiting": "En attente",
+        "status_in_progress": "En cours de lavage",
+        "your_position": "Votre position",
+        "wait_minutes": "min d'attente",
+        "next_up": "C'est presque votre tour !",
+        "summary": "Récapitulatif",
+        "service": "Service",
+        "extras": "Extras",
+        "total": "Total",
+        "open_maps": "Ouvrir l'itinéraire"
+    },
     "favorites": {
         "title": "Mes favoris",
         "subtitle": "Vos stations préférées, toujours à portée de main.",

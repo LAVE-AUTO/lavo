@@ -838,6 +838,20 @@
         "confirm_title": "Reservation confirmation",
         "confirm_id_label": "ID"
     },
+    "queue_detail": {
+        "title": "My queue",
+        "back": "Back",
+        "status_waiting": "Waiting",
+        "status_in_progress": "Being washed",
+        "your_position": "Your position",
+        "wait_minutes": "min wait",
+        "next_up": "You're almost up!",
+        "summary": "Summary",
+        "service": "Service",
+        "extras": "Extras",
+        "total": "Total",
+        "open_maps": "Get directions"
+    },
     "favorites": {
         "title": "My favorites",
         "subtitle": "Your favorite stations, always at hand.",
