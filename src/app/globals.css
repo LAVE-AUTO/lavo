@@ -206,6 +206,55 @@ button, [role="button"] {
     animation: progress-fill linear both;
 }
 
+@keyframes toast-progress {
+    from { width: 100%; }
+    to   { width: 0%; }
+}
+
+@keyframes toast-enter-top {
+    from {
+        opacity: 0;
+        transform: translateY(-16px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+@keyframes toast-exit-top {
+    from {
+        opacity: 1;
+        transform: translateY(0);
+    }
+    to {
+        opacity: 0;
+        transform: translateY(-16px);
+    }
+}
+
+@keyframes toast-enter-right {
+    from {
+        opacity: 0;
+        transform: translateX(110%);
+    }
+    to {
+        opacity: 1;
+        transform: translateX(0);
+    }
+}
+
+@keyframes toast-exit-right {
+    from {
+        opacity: 1;
+        transform: translateX(0);
+    }
+    to {
+        opacity: 0;
+        transform: translateX(110%);
+    }
+}
+
 
 /* ------------------------------------------------------------------ */
 

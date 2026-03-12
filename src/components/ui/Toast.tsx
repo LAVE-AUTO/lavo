@@ -57,108 +57,171 @@ function CloseIcon() {
 
 const ICONS: Record<ToastType, () => ReactElement> = {
   success: SuccessIcon,
-  error: ErrorIcon,
+  error:   ErrorIcon,
   warning: WarningIcon,
-  info: InfoIcon,
+  info:    InfoIcon,
 };
 
 const ACCENT_COLORS: Record<ToastType, string> = {
   success: '#00C851',
-  error: '#E8472A',
+  error:   '#E8472A',
   warning: '#F59E0B',
-  info: '#3B82F6',
+  info:    '#3B82F6',
 };
 
 /**
- * Premium toast notification — top-center, slide-down entry, progress bar.
+ * Toast notification.
+ * Mobile: slides down from top-center.
+ * Desktop (sm+): slides in from the right side.
  */
 export function Toast() {
   const { currentToast, dismiss } = useToast();
-  const [visible, setVisible] = useState(false);
-  const [exiting, setExiting] = useState(false);
+  const [phase, setPhase] = useState<'hidden' | 'entering' | 'visible' | 'exiting'>('hidden');
 
   useEffect(() => {
-    const raf = requestAnimationFrame(() => {
-      if (currentToast) {
-        setExiting(false);
-        setVisible(true);
-      } else {
-        setVisible(false);
+    if (currentToast) {
+      setPhase('entering');
+      const id = setTimeout(() => setPhase('visible'), 20);
+      return () => clearTimeout(id);
+    } else {
+      if (phase !== 'hidden') {
+        setPhase('exiting');
+        const id = setTimeout(() => setPhase('hidden'), 300);
+        return () => clearTimeout(id);
       }
-    });
-    return () => cancelAnimationFrame(raf);
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [currentToast]);
 
   const handleDismiss = () => {
-    setExiting(true);
-    setVisible(false);
-    setTimeout(dismiss, 250);
+    setPhase('exiting');
+    setTimeout(dismiss, 300);
   };
 
-  if (!currentToast && !exiting) return null;
+  if (phase === 'hidden') return null;
 
-  const Icon = ICONS[currentToast?.type || 'info'];
+  const Icon   = ICONS[currentToast?.type || 'info'];
   const accent = ACCENT_COLORS[currentToast?.type || 'info'];
   const duration = currentToast?.duration || DEFAULT_DURATION;
 
+  const isEntering = phase === 'entering';
+  const isExiting  = phase === 'exiting';
+
   return (
-    <div
-      className="fixed top-0 left-0 right-0 z-50 flex justify-center pointer-events-none px-4"
-      style={{ paddingTop: '20px' }}
-    >
+    <>
+      {/* Mobile: top-center, slide from top */}
       <div
-        role="alert"
-        aria-live="polite"
-        className="pointer-events-auto w-full max-w-md transition-all duration-300 ease-out"
-        style={{
-          opacity: visible ? 1 : 0,
-          transform: visible ? 'translateY(0)' : 'translateY(-20px)',
-        }}
+        className="sm:hidden fixed top-0 left-0 right-0 z-[70] flex justify-center px-4"
+        style={{ paddingTop: '16px' }}
       >
         <div
-          className="relative overflow-hidden rounded-xl shadow-2xl backdrop-blur-sm border"
+          role="alert"
+          aria-live="polite"
+          className="w-full max-w-md"
           style={{
-            background: 'var(--toast-bg, rgba(255,255,255,0.97))',
-            borderColor: 'var(--toast-border, rgba(0,0,0,0.08))',
-            boxShadow: `0 8px 32px -4px rgba(0,0,0,0.12), 0 2px 8px -2px rgba(0,0,0,0.08), 0 0 0 1px ${accent}15`,
+            animation: isExiting
+              ? 'toast-exit-top 0.28s ease-in both'
+              : 'toast-enter-top 0.32s ease-out both',
           }}
         >
-          {/* Left accent bar */}
-          <div
-            className="absolute left-0 top-0 bottom-0 w-[3px] rounded-l-xl"
-            style={{ background: accent }}
+          <ToastCard
+            Icon={Icon}
+            accent={accent}
+            message={currentToast?.message ?? ''}
+            duration={duration}
+            onDismiss={handleDismiss}
+            isExiting={isExiting || isEntering}
           />
-
-          {/* Content */}
-          <div className="flex items-start gap-3 pl-5 pr-3 py-3.5">
-            <div className="shrink-0 mt-0.5">
-              <Icon />
-            </div>
-            <p className="flex-1 text-[14px] font-medium leading-snug" style={{ color: 'var(--toast-text, #1a1a1a)' }}>
-              {currentToast?.message}
-            </p>
-            <button
-              type="button"
-              onClick={handleDismiss}
-              className="shrink-0 p-1 rounded-lg transition-colors hover:bg-black/5 dark:hover:bg-white/10"
-              style={{ color: 'var(--toast-close, #999)' }}
-              aria-label="Fermer"
-            >
-              <CloseIcon />
-            </button>
-          </div>
-
-          {/* Progress bar */}
-          <div className="h-[2px] w-full" style={{ background: `${accent}15` }}>
-            <div
-              className="h-full rounded-full"
-              style={{
-                background: accent,
-                animation: `toast-progress ${duration}ms linear forwards`,
-              }}
-            />
-          </div>
         </div>
+      </div>
+
+      {/* Desktop: bottom-right (or top-right), slide from right */}
+      <div
+        className="hidden sm:block fixed bottom-6 right-6 z-[70] w-full max-w-[360px]"
+      >
+        <div
+          role="alert"
+          aria-live="polite"
+          style={{
+            animation: isExiting
+              ? 'toast-exit-right 0.28s ease-in both'
+              : 'toast-enter-right 0.32s ease-out both',
+          }}
+        >
+          <ToastCard
+            Icon={Icon}
+            accent={accent}
+            message={currentToast?.message ?? ''}
+            duration={duration}
+            onDismiss={handleDismiss}
+            isExiting={isExiting || isEntering}
+          />
+        </div>
+      </div>
+    </>
+  );
+}
+
+/* ------------------------------------------------------------------ */
+/* Internal card                                                        */
+/* ------------------------------------------------------------------ */
+
+interface ToastCardProps {
+  Icon: () => ReactElement;
+  accent: string;
+  message: string;
+  duration: number;
+  onDismiss: () => void;
+  isExiting: boolean;
+}
+
+function ToastCard({ Icon, accent, message, duration, onDismiss }: ToastCardProps) {
+  return (
+    <div
+      className="relative overflow-hidden rounded-xl shadow-2xl backdrop-blur-sm border"
+      style={{
+        background:   'var(--toast-bg, rgba(255,255,255,0.97))',
+        borderColor:  `${accent}25`,
+        boxShadow:    `0 8px 32px -4px rgba(0,0,0,0.14), 0 2px 8px -2px rgba(0,0,0,0.08), 0 0 0 1px ${accent}18`,
+      }}
+    >
+      {/* Left accent bar */}
+      <div
+        className="absolute left-0 top-0 bottom-0 w-[3px] rounded-l-xl"
+        style={{ background: accent }}
+      />
+
+      {/* Content */}
+      <div className="flex items-start gap-3 pl-5 pr-3 py-3.5">
+        <div className="shrink-0 mt-0.5">
+          <Icon />
+        </div>
+        <p
+          className="flex-1 text-[14px] font-medium leading-snug"
+          style={{ color: 'var(--toast-text, #1a1a1a)' }}
+        >
+          {message}
+        </p>
+        <button
+          type="button"
+          onClick={onDismiss}
+          className="shrink-0 p-1 rounded-lg transition-colors hover:bg-black/5 dark:hover:bg-white/10 cursor-pointer"
+          style={{ color: 'var(--toast-close, #999)' }}
+          aria-label="Fermer"
+        >
+          <CloseIcon />
+        </button>
+      </div>
+
+      {/* Progress bar */}
+      <div className="h-[2px] w-full" style={{ background: `${accent}18` }}>
+        <div
+          className="h-full rounded-full"
+          style={{
+            background: accent,
+            animation:  `toast-progress ${duration}ms linear forwards`,
+          }}
+        />
       </div>
     </div>
   );
