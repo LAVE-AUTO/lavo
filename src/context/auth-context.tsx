@@ -21,6 +21,7 @@ export interface AuthUser {
   email: string;
   first_name?: string;
   last_name?: string;
+  phone?: string;
   role: UserRole;
   station_id?: string | null;
   force_password_change?: boolean;
