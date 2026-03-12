@@ -62,7 +62,7 @@ export function PublicNavbar({
   const pathname = usePathname();
   const { resolvedTheme } = useTheme();
   const isDark   = resolvedTheme === 'dark';
-  const { user, isAuthenticated, isLoading, logout } = useAuth();
+  const { user, isAuthenticated, isLoading, logout, isClient, isStation, isSuperAdmin } = useAuth();
 
   const [menuOpen,     setMenuOpen]     = useState(false);
   const [dropdownOpen, setDropdownOpen] = useState(false);
@@ -94,6 +94,32 @@ export function PublicNavbar({
 
   const initial = user ? (user.first_name?.[0] ?? user.email[0]).toUpperCase() : '';
 
+  /* Logo destination depends on auth state */
+  const logoHref = isAuthenticated
+    ? (isClient ? '/stations' : isStation ? '/station/dashboard' : isSuperAdmin ? '/admin' : '/')
+    : '/';
+
+  /* Nav links shown to logged-in users (desktop) */
+  const authNavLinks = isClient
+    ? [
+        { href: '/stations',             label: t('stations') },
+        { href: '/client/reservations',  label: t('reservations') },
+        { href: '/favorites',            label: t('favorites') },
+      ]
+    : isStation
+    ? [
+        { href: '/station/dashboard',    label: t('dashboard') },
+        { href: '/station/queue',        label: t('queue') },
+        { href: '/station/config',       label: t('config') },
+      ]
+    : isSuperAdmin
+    ? [
+        { href: '/admin',                label: t('dashboard') },
+        { href: '/admin/stations',       label: t('stations') },
+        { href: '/admin/clients',        label: t('clients') },
+      ]
+    : [];
+
   const linkClass =
     'text-[13px] font-medium tracking-[0.4px] text-[#4a6a4d] dark:text-[#7a9a7d] hover:text-[#c8980a] dark:hover:text-[#c8980a] transition-colors duration-300';
 
@@ -112,7 +138,7 @@ export function PublicNavbar({
         <div className="max-w-[1440px] mx-auto px-6 lg:px-16 flex items-center justify-between gap-6 py-3">
 
           {/* Logo */}
-          <Link href="/" className="shrink-0" aria-label="Slowtime — Accueil">
+          <Link href={logoHref} className="shrink-0" aria-label="Slowtime — Accueil">
             {isDark ? (
               <div className="flex items-center gap-2">
                 <div className="rounded-lg bg-white/95 p-0.5 border border-[rgba(200,152,10,0.25)] shadow-sm shrink-0">
@@ -127,15 +153,30 @@ export function PublicNavbar({
 
           {/* Desktop nav links */}
           <nav className="hidden lg:flex items-center gap-8" aria-label="Navigation principale">
-            <a href={`/${locale}/#how-it-works`} className={linkClass}>{t('how_it_works')}</a>
-            <Link
-              href="/stations"
-              className={`${linkClass}${pathname.startsWith('/stations') ? ' !text-[#c8980a]' : ''}`}
-            >
-              {t('stations')}
-            </Link>
-            <a href={`/${locale}/#notifications`} className={linkClass}>{t('reminders')}</a>
-            <a href={`/${locale}/#faq`} className={linkClass}>{t('faq')}</a>
+            {isAuthenticated
+              ? authNavLinks.map(({ href, label }) => (
+                  <Link
+                    key={href}
+                    href={href as Parameters<typeof Link>[0]['href']}
+                    className={`${linkClass}${pathname.startsWith(href) ? ' !text-[#c8980a]' : ''}`}
+                  >
+                    {label}
+                  </Link>
+                ))
+              : (
+                <>
+                  <a href={`/${locale}/#how-it-works`} className={linkClass}>{t('how_it_works')}</a>
+                  <Link
+                    href="/stations"
+                    className={`${linkClass}${pathname.startsWith('/stations') ? ' !text-[#c8980a]' : ''}`}
+                  >
+                    {t('stations')}
+                  </Link>
+                  <a href={`/${locale}/#notifications`} className={linkClass}>{t('reminders')}</a>
+                  <a href={`/${locale}/#faq`} className={linkClass}>{t('faq')}</a>
+                </>
+              )
+            }
           </nav>
 
           {/* Controls */}

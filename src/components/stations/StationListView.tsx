@@ -445,20 +445,18 @@ export function StationListView() {
                 {t('filter_time_label')}
               </p>
               <div className="flex items-center gap-2">
+                <span className="text-[12px] sm:text-[13px] font-semibold text-[#555] dark:text-[#B0B0A0] shrink-0">
+                  {t('filter_time_from')}
+                </span>
                 <div className="flex-1">
-                  <TimeInput
-                    value={timeFrom}
-                    onChange={setTimeFrom}
-                    placeholder={t('filter_time_from')}
-                  />
+                  <TimeInput value={timeFrom} onChange={setTimeFrom} />
                 </div>
-                <span className="text-[#555] dark:text-[#B0B0A0] text-[13px] font-bold">&mdash;</span>
+                <span className="text-[#AAA] dark:text-[#555] text-[13px] font-bold shrink-0">—</span>
+                <span className="text-[12px] sm:text-[13px] font-semibold text-[#555] dark:text-[#B0B0A0] shrink-0">
+                  {t('filter_time_to')}
+                </span>
                 <div className="flex-1">
-                  <TimeInput
-                    value={timeTo}
-                    onChange={setTimeTo}
-                    placeholder={t('filter_time_to')}
-                  />
+                  <TimeInput value={timeTo} onChange={setTimeTo} />
                 </div>
               </div>
             </div>
@@ -583,32 +581,21 @@ function StationSection({ label, stations, expanded, onToggle, seeMoreLabel, acc
 interface TimeInputProps {
   value: string;
   onChange: (val: string) => void;
-  placeholder: string;
 }
 
-function TimeInput({ value, onChange, placeholder }: TimeInputProps) {
-  const isActive = value !== '';
-
+function TimeInput({ value, onChange }: TimeInputProps) {
   return (
-    <div className="relative">
-      <input
-        type="time"
-        value={value}
-        onChange={(e) => onChange(e.target.value)}
-        className={[
-          'w-full px-2.5 sm:px-3 py-2 rounded-lg border text-[13px] sm:text-[14px] font-semibold outline-none transition-all duration-150 cursor-pointer appearance-none',
-          isActive
-            ? 'border-gold bg-gold/5 dark:bg-gold/10 text-[#1A1A1A] dark:text-white'
-            : 'border-[#E0E0D0] dark:border-tab-inactive bg-[#F5F5EE] dark:bg-tab-inactive text-[#555] dark:text-[#C0C0B0]',
-        ].join(' ')}
-        aria-label={placeholder}
-      />
-      {!value && (
-        <span className="absolute inset-0 flex items-center px-2.5 sm:px-3 pointer-events-none text-[13px] sm:text-[14px] font-semibold text-[#9A9A8A]">
-          {placeholder}
-        </span>
-      )}
-    </div>
+    <input
+      type="time"
+      value={value}
+      onChange={(e) => onChange(e.target.value)}
+      className={[
+        'w-full px-2 py-2 rounded-lg border text-[13px] sm:text-[14px] font-semibold outline-none transition-all duration-150 cursor-pointer',
+        value
+          ? 'border-gold bg-gold/5 dark:bg-gold/10 text-[#1A1A1A] dark:text-white'
+          : 'border-[#E0E0D0] dark:border-tab-inactive bg-[#F5F5EE] dark:bg-tab-inactive text-[#555] dark:text-[#C0C0B0]',
+      ].join(' ')}
+    />
   );
 }
 

@@ -361,7 +361,11 @@
         "coupons": "Reservations",
         "more": "More",
         "profile": "My profile",
-        "logout": "Sign out"
+        "logout": "Sign out",
+        "dashboard": "Dashboard",
+        "queue": "Queue",
+        "config": "Configuration",
+        "clients": "Clients"
     },
     "footer": {
         "tagline": "The booking and payment platform for car wash stations across Canada.",

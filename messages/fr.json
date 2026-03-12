@@ -361,7 +361,11 @@
         "coupons": "Réservations",
         "more": "Plus",
         "profile": "Mon profil",
-        "logout": "Se deconnecter"
+        "logout": "Se deconnecter",
+        "dashboard": "Tableau de bord",
+        "queue": "File d'attente",
+        "config": "Configuration",
+        "clients": "Clients"
     },
     "footer": {
         "tagline": "La plateforme de réservation et de paiement pour vos stations de lavage automobile au Canada.",
