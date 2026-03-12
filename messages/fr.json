@@ -471,6 +471,7 @@
         "back_to_list": "Retour aux stations",
         "detail_verified_label": "Vérifié",
         "detail_add_favorite": "Ajouter aux favoris",
+        "detail_remove_favorite": "Retirer des favoris",
         "detail_slots_available": "{count} créneau(x) disponible(s)",
         "detail_wait_est": "Attente estimée : {min} min",
         "detail_leave_now": "Partez maintenant pour arriver",

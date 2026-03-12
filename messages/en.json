@@ -471,6 +471,7 @@
         "back_to_list": "Back to stations",
         "detail_verified_label": "Verified",
         "detail_add_favorite": "Add to favorites",
+        "detail_remove_favorite": "Remove from favorites",
         "detail_slots_available": "{count} slot(s) available",
         "detail_wait_est": "Estimated wait: {min} min",
         "detail_leave_now": "Leave now to arrive",

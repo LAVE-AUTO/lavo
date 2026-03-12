@@ -6,6 +6,7 @@ import { Link } from '@/i18n/navigation';
 import { StationReviews } from './StationReviews';
 import { BookingFlow } from './booking/BookingFlow';
 import { fetchStationById } from '@/services/station-api';
+import { useFavorites } from './useFavorites';
 import { PageSpinner } from '@/components/ui/PageSpinner';
 import { Button } from '@/components/ui/Button';
 import { Badge } from '@/components/ui/Badge';
@@ -17,6 +18,7 @@ interface StationDetailProps {
 
 export function StationDetail({ id }: StationDetailProps) {
   const t = useTranslations('stations');
+  const { isFavorite, toggle } = useFavorites();
 
   const [station, setStation] = useState<StationDetailData | null | undefined>(undefined);
 
@@ -90,10 +92,11 @@ export function StationDetail({ id }: StationDetailProps) {
 
           <button
             type="button"
+            onClick={() => toggle(id)}
             className="absolute top-3 right-3 w-10 h-10 rounded-full bg-black/50 backdrop-blur-sm flex items-center justify-center hover:bg-black/70 transition-colors cursor-pointer"
-            aria-label={t('detail_add_favorite')}
+            aria-label={isFavorite(id) ? t('detail_remove_favorite') : t('detail_add_favorite')}
           >
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill={isFavorite(id) ? '#C49A1E' : 'none'} stroke={isFavorite(id) ? '#C49A1E' : '#fff'} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
               <path d="M20.84 4.61a5.5 5.5 0 00-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 00-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 000-7.78z" />
             </svg>
           </button>
@@ -114,7 +117,8 @@ export function StationDetail({ id }: StationDetailProps) {
         </div>
 
         {/* ── Content ── */}
-        <div className="max-w-3xl mx-auto px-4 sm:px-6 py-6 pb-36 sm:pb-28 space-y-6">
+        <div className="max-w-[1440px] mx-auto px-6 lg:px-16 py-6 pb-36 sm:pb-28">
+          <div className="max-w-3xl space-y-6">
 
           {/* Title + rating + meta */}
           <div>
@@ -266,11 +270,12 @@ export function StationDetail({ id }: StationDetailProps) {
             </h2>
             <StationReviews reviews={station.reviews} />
           </div>
+          </div>
         </div>
 
         {/* ── Sticky footer CTA ── */}
-        <div className="fixed bottom-16 sm:bottom-0 left-0 right-0 bg-[#F5F5E6]/95 dark:bg-dark-bg/95 backdrop-blur-md border-t border-[#D0D0C0] dark:border-tab-inactive px-4 py-3 z-40 transition-colors">
-          <div className="max-w-3xl mx-auto flex items-center gap-3">
+        <div className="fixed bottom-16 sm:bottom-0 left-0 right-0 bg-[#F5F5E6]/95 dark:bg-dark-bg/95 backdrop-blur-md border-t border-[#D0D0C0] dark:border-tab-inactive py-3 z-40 transition-colors">
+          <div className="max-w-[1440px] mx-auto px-6 lg:px-16 flex items-center gap-3">
             <div>
               <div className="text-[20px] font-black text-[#000C1F] dark:text-[#FFF8EC] leading-none">
                 {currentForfait ? currentForfait.price : station.priceFrom}
