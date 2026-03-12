@@ -792,7 +792,12 @@
         "result_error_desc": "An error occurred while processing your payment. Please try again.",
         "result_done": "Done",
         "result_retry": "Try again",
-        "result_view_coupons": "View my reservations"
+        "result_view_coupons": "View my reservations",
+        "result_view_reservations": "View my reservations",
+        "result_open_maps": "Get directions",
+        "result_queue_now_desc": "You joined the queue! Follow the route to the station.",
+        "result_queue_position_label": "Your position in the queue",
+        "result_queue_arrival_time": "Expected arrival time: {time}"
     },
     "coupons": {
         "title": "My reservations",

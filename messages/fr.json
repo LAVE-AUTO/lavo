@@ -792,7 +792,12 @@
         "result_error_desc": "Une erreur est survenue lors du traitement de votre paiement. Veuillez réessayer.",
         "result_done": "Terminé",
         "result_retry": "Réessayer",
-        "result_view_coupons": "Voir mes réservations"
+        "result_view_coupons": "Voir mes réservations",
+        "result_view_reservations": "Voir mes réservations",
+        "result_open_maps": "Suivre l'itinéraire",
+        "result_queue_now_desc": "Vous avez rejoint la file ! Suivez l'itinéraire vers la station.",
+        "result_queue_position_label": "Votre position dans la file",
+        "result_queue_arrival_time": "Heure d'arrivée prévue : {time}"
     },
     "coupons": {
         "title": "Mes réservations",
