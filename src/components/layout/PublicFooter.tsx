@@ -17,17 +17,17 @@ export async function PublicFooter() {
   ];
 
   const helpLinks = [
-    { href: `/${locale}/#faq`, label: t('help_faq') },
-    { href: '#',               label: t('help_cancel') },
-    { href: '#',               label: t('help_support') },
-    { href: '#',               label: t('help_contact') },
+    { href: '/faq',                  label: t('help_faq') },
+    { href: '/politique-annulation', label: t('help_cancel') },
+    { href: '/support',              label: t('help_support') },
+    { href: '/nous-contacter',       label: t('help_contact') },
   ];
 
   const legalLinks = [
-    { href: '#', label: t('legal_tos') },
-    { href: '#', label: t('legal_privacy') },
-    { href: '#', label: t('legal_law25') },
-    { href: '#', label: t('legal_cookies') },
+    { href: '/cgu',  label: t('legal_tos') },
+    { href: '#',     label: t('legal_privacy') },
+    { href: '#',     label: t('legal_law25') },
+    { href: '#',     label: t('legal_cookies') },
   ];
 
   return (
@@ -76,9 +76,9 @@ export async function PublicFooter() {
             <ul className="flex flex-col gap-[9px]">
               {helpLinks.map(({ href, label }) => (
                 <li key={label}>
-                  <a href={href} className="text-[13px] text-[#7a9a7d] hover:text-[#fef9e7] transition-colors duration-300">
+                  <Link href={href as Parameters<typeof Link>[0]['href']} className="text-[13px] text-[#7a9a7d] hover:text-[#fef9e7] transition-colors duration-300">
                     {label}
-                  </a>
+                  </Link>
                 </li>
               ))}
             </ul>
@@ -92,9 +92,9 @@ export async function PublicFooter() {
             <ul className="flex flex-col gap-[9px]">
               {legalLinks.map(({ href, label }) => (
                 <li key={label}>
-                  <a href={href} className="text-[13px] text-[#7a9a7d] hover:text-[#fef9e7] transition-colors duration-300">
+                  <Link href={href as Parameters<typeof Link>[0]['href']} className="text-[13px] text-[#7a9a7d] hover:text-[#fef9e7] transition-colors duration-300">
                     {label}
-                  </a>
+                  </Link>
                 </li>
               ))}
             </ul>
@@ -110,9 +110,9 @@ export async function PublicFooter() {
             <a href="#" className="text-[11px] text-[#7a9a7d] hover:text-[#c8980a] transition-colors duration-300">
               {t('legal_privacy')}
             </a>
-            <a href="#" className="text-[11px] text-[#7a9a7d] hover:text-[#c8980a] transition-colors duration-300">
+            <Link href="/cgu" className="text-[11px] text-[#7a9a7d] hover:text-[#c8980a] transition-colors duration-300">
               {t('legal_tos')}
-            </a>
+            </Link>
             <a href="#" className="text-[11px] text-[#7a9a7d] hover:text-[#c8980a] transition-colors duration-300">
               {t('legal_cookies')}
             </a>
