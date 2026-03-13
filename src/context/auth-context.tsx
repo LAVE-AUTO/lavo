@@ -192,7 +192,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         credentials: 'include',
       });
       if (res.status === 401) {
-        handleUnauthorized();
+        await handleUnauthorized();
         return;
       }
       if (res.ok) {
