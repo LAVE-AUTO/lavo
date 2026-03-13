@@ -843,6 +843,7 @@
         "past_completed": "This reservation is completed.",
         "past_cancelled": "This reservation was cancelled.",
         "toast_cancel_success": "Reservation cancelled successfully",
+        "toast_cancel_error": "Unable to cancel the reservation. Please try again.",
         "confirm_title": "Reservation confirmation",
         "confirm_id_label": "ID"
     },
