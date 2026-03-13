@@ -186,7 +186,7 @@ export function ResetPasswordForm({ token }: ResetPasswordFormProps) {
         error={errors.password}
         autoComplete="new-password"
         autoFocus
-        rightIcon={eyeBtn(showPassword, () => setShowPassword((v) => !v), showPassword ? 'Hide' : 'Show')}
+        rightIcon={eyeBtn(showPassword, () => setShowPassword((v) => !v), showPassword ? 'Hide password' : 'Show password')}
       />
       <PasswordRules password={password} namespace="reset_password" />
 
@@ -203,7 +203,7 @@ export function ResetPasswordForm({ token }: ResetPasswordFormProps) {
         onBlur={handleBlurConfirm}
         error={errors.confirmPassword}
         autoComplete="new-password"
-        rightIcon={eyeBtn(showConfirm, () => setShowConfirm((v) => !v), showConfirm ? 'Hide' : 'Show')}
+        rightIcon={eyeBtn(showConfirm, () => setShowConfirm((v) => !v), showConfirm ? 'Hide password' : 'Show password')}
       />
 
       <Button type="submit" fullWidth loading={isLoading} className="mt-2">
