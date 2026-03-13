@@ -7,7 +7,8 @@ type RuleKey =
   | 'password_rule_upper'
   | 'password_rule_lower'
   | 'password_rule_number'
-  | 'password_rule_special';
+  | 'password_rule_special'
+  | 'password_rule_chars';
 
 interface Rule {
   key: RuleKey;
@@ -20,6 +21,7 @@ const PASSWORD_RULES: Rule[] = [
   { key: 'password_rule_lower',   test: (p) => /[a-z]/.test(p) },
   { key: 'password_rule_number',  test: (p) => /[0-9]/.test(p) },
   { key: 'password_rule_special', test: (p) => /[@$!%*#?&_\-+=]/.test(p) },
+  { key: 'password_rule_chars',   test: (p) => /^[A-Za-z0-9@$!%*#?&_\-+=]+$/.test(p) },
 ];
 
 interface PasswordRulesProps {

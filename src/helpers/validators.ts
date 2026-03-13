@@ -2,6 +2,7 @@ import {
   MIN_USERNAME_LENGTH,
   DEFAULT_MAX_TEXT_FIELD_LENGTH,
   MIN_PASSWORD_LENGTH,
+  MAX_PASSWORD_LENGTH,
 } from './constants';
 import { isValidPhoneNumber } from 'libphonenumber-js';
 import { getCountryCallingCode, type Country } from 'react-phone-number-input';
@@ -41,15 +42,38 @@ export function validateText(
 }
 
 /**
- * Validates email format (RFC-compliant basic check).
+ * Validates email format with length limits and consecutive-dot check.
+ *
+ * Rules enforced:
+ * - Total length: max 320 characters
+ * - Local part (before @): max 64 characters
+ * - Domain part (after @): max 255 characters
+ * - No consecutive dots
+ * - Exactly one @ symbol
+ * - TLD must be at least 2 alphabetical characters
  *
  * @param email - The email to validate
  * @returns True if valid format
  */
 export function validateEmail(email: string | null | undefined): boolean {
   if (!email || typeof email !== 'string') return false;
-  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-  return emailRegex.test(email.trim());
+  const trimmed = email.trim();
+
+  if (trimmed.length > 320) return false;
+  if (trimmed.includes('..')) return false;
+
+  const atIdx = trimmed.indexOf('@');
+  const lastAtIdx = trimmed.lastIndexOf('@');
+  if (atIdx < 1 || atIdx !== lastAtIdx) return false;
+
+  const localPart = trimmed.slice(0, atIdx);
+  const domainPart = trimmed.slice(atIdx + 1);
+
+  if (localPart.length > 64) return false;
+  if (domainPart.length > 255) return false;
+
+  const emailRegex = /^[a-zA-Z0-9._+\-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
+  return emailRegex.test(trimmed);
 }
 
 /**
@@ -89,9 +113,11 @@ export function validateNumber(
 
 /**
  * Returns an object indicating which password rules are satisfied.
+ * Includes max length check (128 characters) and exhaustive allowed-char check.
  */
 export function validatePasswordStrength(password: string): {
   minLength: boolean;
+  maxLength: boolean;
   hasUpper: boolean;
   hasLower: boolean;
   hasNumber: boolean;
@@ -100,6 +126,7 @@ export function validatePasswordStrength(password: string): {
 } {
   return {
     minLength: password.length >= MIN_PASSWORD_LENGTH,
+    maxLength: password.length <= MAX_PASSWORD_LENGTH,
     hasUpper: /[A-Z]/.test(password),
     hasLower: /[a-z]/.test(password),
     hasNumber: /[0-9]/.test(password),
@@ -110,11 +137,13 @@ export function validatePasswordStrength(password: string): {
 
 /**
  * Returns true if the password meets all strength requirements.
+ * Checks: min 8 chars, max 128 chars, uppercase, lowercase, number,
+ * at least one allowed special char, and no disallowed characters.
  */
 export function isPasswordValid(password: string | null | undefined): boolean {
   if (!password) return false;
   const s = validatePasswordStrength(password);
-  return s.minLength && s.hasUpper && s.hasLower && s.hasNumber && s.hasSpecial && s.validChars;
+  return s.minLength && s.maxLength && s.hasUpper && s.hasLower && s.hasNumber && s.hasSpecial && s.validChars;
 }
 
 /**

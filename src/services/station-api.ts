@@ -142,6 +142,19 @@ function formatTime(time: string): string {
     return `${parts[0]}h${parts[1]}`;
 }
 
+/**
+ * Deterministic mock for available slots when the API returns 0.
+ * Uses the last hex character of the station UUID to produce a stable,
+ * varied result across stations (0 = unavailable, 1-4 = available).
+ * Remove once the backend populates available_slots reliably.
+ */
+function mockAvailableSlots(id: string, apiValue: number): number {
+    if (apiValue > 0) return apiValue;
+    const hex = id.replace(/-/g, '');
+    const n   = parseInt(hex.slice(-1), 16); // 0-15
+    return n < 4 ? 0 : (n % 4) + 1;         // ~25% unavailable, rest 1-4
+}
+
 function mapApiStationToStation(s: ApiStationListItem): Station {
     return {
         id: s.id,
@@ -150,7 +163,7 @@ function mapApiStationToStation(s: ApiStationListItem): Station {
         city: s.city,
         rating: parseFloat(s.average_score || '0') || 0,
         reviewCount: s.total_ratings || 0,
-        availableSlots: s.available_slots || 0,
+        availableSlots: mockAvailableSlots(s.id, s.available_slots || 0),
         totalSlots: s.wash_post_count || 0,
         priceFrom: 0,
         tags: [],

@@ -7,15 +7,21 @@ export { mapZodErrors };
 // ─── Base objects (reused in the submit schema) ──────────────────────────────
 
 const _step1Base = z.object({
-  email: z.string().email('Invalid email address'),
+  email: z
+    .string()
+    .email('Invalid email address')
+    .max(320, 'Email must not exceed 320 characters')
+    .refine((s) => !s.includes('..'), { message: 'Email cannot contain consecutive dots' }),
   phone: phoneSchema,
   password: z
     .string()
     .min(8, 'Password must be at least 8 characters')
+    .max(128, 'Password must not exceed 128 characters')
     .regex(/[A-Z]/, 'Password must contain at least one uppercase letter')
     .regex(/[a-z]/, 'Password must contain at least one lowercase letter')
     .regex(/[0-9]/, 'Password must contain at least one number')
-    .regex(/[^A-Za-z0-9]/, 'Password must contain at least one special character'),
+    .regex(/[@$!%*#?&_\-+=]/, 'Password must contain at least one special character. Allowed: @ $ ! % * # ? & _ - + =')
+    .regex(/^[A-Za-z0-9@$!%*#?&_\-+=]+$/, 'Password contains invalid characters. Only letters, numbers, and these special characters are allowed: @ $ ! % * # ? & _ - + ='),
   confirm_password: z.string().min(1, 'Password confirmation is required'),
 });
 
@@ -89,14 +95,16 @@ export const rejectStationSchema = z.object({
 // Auth: change password
 export const changePasswordSchema = z
   .object({
-    current_password: z.string().min(1, 'Current password is required'),
+    current_password: z.string().min(1, 'Current password is required').max(128, 'Password must not exceed 128 characters'),
     new_password: z
       .string()
       .min(8, 'Password must be at least 8 characters')
+      .max(128, 'Password must not exceed 128 characters')
       .regex(/[A-Z]/, 'Password must contain at least one uppercase letter')
       .regex(/[a-z]/, 'Password must contain at least one lowercase letter')
       .regex(/[0-9]/, 'Password must contain at least one number')
-      .regex(/[^A-Za-z0-9]/, 'Password must contain at least one special character'),
+      .regex(/[@$!%*#?&_\-+=]/, 'Password must contain at least one special character. Allowed: @ $ ! % * # ? & _ - + =')
+      .regex(/^[A-Za-z0-9@$!%*#?&_\-+=]+$/, 'Password contains invalid characters. Only letters, numbers, and these special characters are allowed: @ $ ! % * # ? & _ - + ='),
     confirm_new_password: z.string().min(1, 'Password confirmation is required'),
   })
   .refine((data) => data.new_password === data.confirm_new_password, {

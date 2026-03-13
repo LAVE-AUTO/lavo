@@ -297,6 +297,7 @@
         "password_rule_lower": "Une lettre minuscule",
         "password_rule_number": "Un chiffre",
         "password_rule_special": "Un caractère spécial",
+        "password_rule_chars": "Caractères valides uniquement",
         "error_rate_limit": "Trop de tentatives. Veuillez réessayer dans quelques minutes.",
         "error_password_invalid": "Le mot de passe ne respecte pas les critères de sécurité.",
         "toast_success": "Mot de passe réinitialisé avec succès"
@@ -330,6 +331,7 @@
         "password_rule_lower": "Une lettre minuscule",
         "password_rule_number": "Un chiffre",
         "password_rule_special": "Un caractère spécial",
+        "password_rule_chars": "Caractères valides uniquement",
         "loading": "Inscription en cours...",
         "confirmation_title": "Vérifiez votre boîte mail",
         "confirmation_message": "Un email de confirmation a été envoyé à votre adresse. Cliquez sur le lien pour activer votre compte.",
@@ -442,6 +444,7 @@
         "filter_time_to": "À",
         "available_slots": "{count} créneau(x) disponible(s)",
         "no_slots": "Indisponible",
+        "detail_unavailable_notice": "Cette station ne dispose d'aucun créneau disponible pour le moment.",
         "join": "Rejoindre",
         "details": "Voir",
         "reviews_count": "{count} avis",
@@ -673,7 +676,8 @@
         "password_rule_upper": "Une lettre majuscule",
         "password_rule_lower": "Une lettre minuscule",
         "password_rule_number": "Un chiffre",
-        "password_rule_special": "Un caractère spécial"
+        "password_rule_special": "Un caractère spécial",
+        "password_rule_chars": "Caractères valides uniquement"
     },
     "landing": {
         "meta_title": "Slowtime — Votre temps est précieux",
@@ -917,6 +921,7 @@
         "help_cgu": "Conditions d'utilisation",
         "help_privacy": "Politique de confidentialité",
         "error_required": "Tous les champs sont requis",
+        "error_name_invalid": "Le nom doit contenir au moins 2 lettres (lettres, espaces, tirets et apostrophes uniquement)",
         "error_mismatch": "Les mots de passe ne correspondent pas",
         "error_too_short": "Le mot de passe doit faire au moins 8 caractères",
         "danger_zone": "Zone de danger",

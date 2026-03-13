@@ -79,6 +79,12 @@ export function RegisterForm() {
 
   /** Validate specific fields on blur for immediate inline feedback. */
   const handleBlur = (field: keyof RegisterFormData) => () => {
+    if (field === 'firstName' && formData.firstName && !validateName(formData.firstName)) {
+      setErrors((prev) => ({ ...prev, firstName: t('error_name_invalid') }));
+    }
+    if (field === 'lastName' && formData.lastName && !validateName(formData.lastName)) {
+      setErrors((prev) => ({ ...prev, lastName: t('error_name_invalid') }));
+    }
     if (field === 'email' && formData.email && !validateEmail(formData.email)) {
       setErrors((prev) => ({ ...prev, email: t('error_email_invalid') }));
     }
@@ -216,6 +222,7 @@ export function RegisterForm() {
           placeholder={t('first_name_placeholder')}
           value={formData.firstName}
           onChange={handleChange('firstName')}
+          onBlur={handleBlur('firstName')}
           error={errors.firstName}
           autoComplete="given-name"
           autoFocus
@@ -226,6 +233,7 @@ export function RegisterForm() {
           placeholder={t('last_name_placeholder')}
           value={formData.lastName}
           onChange={handleChange('lastName')}
+          onBlur={handleBlur('lastName')}
           error={errors.lastName}
           autoComplete="family-name"
         />

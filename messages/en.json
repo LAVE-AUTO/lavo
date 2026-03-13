@@ -297,6 +297,7 @@
         "password_rule_lower": "One lowercase letter",
         "password_rule_number": "One number",
         "password_rule_special": "One special character",
+        "password_rule_chars": "Allowed characters only",
         "error_rate_limit": "Too many attempts. Please try again in a few minutes.",
         "error_password_invalid": "Password does not meet security requirements.",
         "toast_success": "Password reset successfully"
@@ -330,6 +331,7 @@
         "password_rule_lower": "One lowercase letter",
         "password_rule_number": "One number",
         "password_rule_special": "One special character",
+        "password_rule_chars": "Allowed characters only",
         "loading": "Creating account...",
         "confirmation_title": "Check your inbox",
         "confirmation_message": "A confirmation email has been sent to your address. Click the link to activate your account.",
@@ -442,6 +444,7 @@
         "filter_time_to": "To",
         "available_slots": "{count} slot(s) available",
         "no_slots": "Unavailable",
+        "detail_unavailable_notice": "This station has no available slots at the moment.",
         "join": "Join",
         "details": "View",
         "reviews_count": "{count} reviews",
@@ -673,7 +676,8 @@
         "password_rule_upper": "One uppercase letter",
         "password_rule_lower": "One lowercase letter",
         "password_rule_number": "One number",
-        "password_rule_special": "One special character"
+        "password_rule_special": "One special character",
+        "password_rule_chars": "Allowed characters only"
     },
     "landing": {
         "meta_title": "Slowtime — Your time matters",
@@ -917,6 +921,7 @@
         "help_cgu": "Terms of use",
         "help_privacy": "Privacy policy",
         "error_required": "All fields are required",
+        "error_name_invalid": "Name must contain at least 2 letters (letters, spaces, hyphens and apostrophes only)",
         "error_mismatch": "Passwords do not match",
         "error_too_short": "Password must be at least 8 characters",
         "danger_zone": "Danger zone",
