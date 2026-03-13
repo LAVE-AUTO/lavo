@@ -843,6 +843,7 @@
         "past_completed": "Cette réservation est terminée.",
         "past_cancelled": "Cette réservation a été annulée.",
         "toast_cancel_success": "Réservation annulée avec succès",
+        "toast_cancel_error": "Impossible d'annuler la réservation. Veuillez réessayer.",
         "confirm_title": "Confirmation de réservation",
         "confirm_id_label": "ID"
     },
