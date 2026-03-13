@@ -5,7 +5,7 @@ import { useTranslations } from 'next-intl';
 import { Link } from '@/i18n/navigation';
 import { useAuth } from '@/context';
 import { useToast } from '@/context/toast-context';
-import { isPasswordValid } from '@/helpers/validators';
+import { isPasswordValid, validateName } from '@/helpers/validators';
 
 /* ─── Toggle switch ─── */
 function Toggle({ checked, onChange }: { checked: boolean; onChange: () => void }) {
@@ -368,8 +368,24 @@ function EditProfileModal({ user, onClose, onSuccess }: { user: ReturnType<typeo
   const [firstName, setFirstName] = useState(user?.first_name || '');
   const [lastName,  setLastName]  = useState(user?.last_name  || '');
   const [phone,     setPhone]     = useState(user?.phone      || '');
+  const [fieldErrors, setFieldErrors] = useState<{ firstName?: string; lastName?: string }>({});
 
   const handleSave = () => {
+    const errs: { firstName?: string; lastName?: string } = {};
+    if (!firstName.trim()) {
+      errs.firstName = t('error_required');
+    } else if (!validateName(firstName)) {
+      errs.firstName = t('error_name_invalid');
+    }
+    if (!lastName.trim()) {
+      errs.lastName = t('error_required');
+    } else if (!validateName(lastName)) {
+      errs.lastName = t('error_name_invalid');
+    }
+    if (Object.keys(errs).length > 0) {
+      setFieldErrors(errs);
+      return;
+    }
     onSuccess();
     onClose();
   };
@@ -382,11 +398,27 @@ function EditProfileModal({ user, onClose, onSuccess }: { user: ReturnType<typeo
       <div className="space-y-4">
         <div>
           <label className="block text-[12px] font-bold uppercase tracking-wider text-[#555] dark:text-[#888] mb-1.5">{t('first_name')}</label>
-          <input type="text" value={firstName} onChange={(e) => setFirstName(e.target.value)} className={inputClass} />
+          <input
+            type="text"
+            value={firstName}
+            onChange={(e) => { setFirstName(e.target.value); if (fieldErrors.firstName) setFieldErrors((prev) => ({ ...prev, firstName: undefined })); }}
+            aria-invalid={fieldErrors.firstName ? 'true' : undefined}
+            aria-describedby={fieldErrors.firstName ? 'edit-firstName-error' : undefined}
+            className={`${inputClass}${fieldErrors.firstName ? ' border-lavo-error' : ''}`}
+          />
+          {fieldErrors.firstName && <p id="edit-firstName-error" role="alert" className="mt-1 text-[12px] text-lavo-error font-medium">! {fieldErrors.firstName}</p>}
         </div>
         <div>
           <label className="block text-[12px] font-bold uppercase tracking-wider text-[#555] dark:text-[#888] mb-1.5">{t('last_name')}</label>
-          <input type="text" value={lastName} onChange={(e) => setLastName(e.target.value)} className={inputClass} />
+          <input
+            type="text"
+            value={lastName}
+            onChange={(e) => { setLastName(e.target.value); if (fieldErrors.lastName) setFieldErrors((prev) => ({ ...prev, lastName: undefined })); }}
+            aria-invalid={fieldErrors.lastName ? 'true' : undefined}
+            aria-describedby={fieldErrors.lastName ? 'edit-lastName-error' : undefined}
+            className={`${inputClass}${fieldErrors.lastName ? ' border-lavo-error' : ''}`}
+          />
+          {fieldErrors.lastName && <p id="edit-lastName-error" role="alert" className="mt-1 text-[12px] text-lavo-error font-medium">! {fieldErrors.lastName}</p>}
         </div>
         <div>
           <label className="block text-[12px] font-bold uppercase tracking-wider text-[#555] dark:text-[#888] mb-1.5">{t('phone')}</label>
