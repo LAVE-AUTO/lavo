@@ -10,8 +10,9 @@ interface ReceiptModalProps {
 }
 
 /**
- * Receipt modal for a completed reservation.
- * The "Download" button opens a standalone print window — no external dependencies.
+ * Receipt modal for a reservation entry.
+ * Completed entries show a "Download" button that opens a print-ready
+ * standalone HTML document in a new tab (PDF via browser print dialog).
  */
 export function ReceiptModal({ entry: e, locale, onClose }: ReceiptModalProps) {
   const t = useTranslations('history');
@@ -24,60 +25,319 @@ export function ReceiptModal({ entry: e, locale, onClose }: ReceiptModalProps) {
   const isCompleted = e.status === 'completed';
 
   const handlePrint = () => {
-    const extrasRow = e.extras.length > 0
-      ? `<div class="row"><span class="lbl">${t('receipt_extras')}</span><span class="val">${e.extras.join(', ')}</span></div>`
+    const extrasLines = e.extras.length > 0
+      ? e.extras.map((ex) => `<li>${ex}</li>`).join('')
       : '';
 
-    const win = window.open('', '_blank', 'width=640,height=900');
+    const extrasBlock = e.extras.length > 0 ? `
+      <div class="section-title">${t('receipt_extras')}</div>
+      <ul class="extras-list">${extrasLines}</ul>
+    ` : '';
+
+    const win = window.open('', '_blank', 'width=680,height=960');
     if (!win) return;
 
     win.document.write(`<!DOCTYPE html>
 <html lang="${locale}">
 <head>
   <meta charset="utf-8">
-  <title>LAVO — ${e.id}</title>
+  <title>Slowtime — ${t('receipt_title')} ${e.id.toUpperCase()}</title>
   <style>
-    *{box-sizing:border-box;margin:0;padding:0}
-    body{font-family:system-ui,sans-serif;padding:48px 40px;color:#0A0A14;background:#fff;max-width:560px;margin:0 auto}
-    .logo{font-size:30px;font-weight:900;color:#af8408;letter-spacing:4px}
-    .logo-sub{font-size:11px;color:#999;margin-top:4px;margin-bottom:28px}
-    .sep{border:none;border-top:2px solid #af8408;margin:0 0 20px}
-    .title{font-size:17px;font-weight:700;margin-bottom:16px}
-    .row{display:flex;justify-content:space-between;align-items:flex-start;padding:8px 0;border-bottom:1px solid #eee;gap:16px}
-    .lbl{font-size:13px;color:#666;font-weight:600;white-space:nowrap}
-    .val{font-size:13px;font-weight:700;text-align:right;word-break:break-word;max-width:60%}
-    .total{display:flex;justify-content:space-between;align-items:center;padding:14px 0 0;border-top:2px solid #af8408;margin-top:8px}
-    .total-lbl{font-size:17px;font-weight:900}
-    .total-val{font-size:20px;font-weight:900;color:#af8408}
-    .footer{margin-top:36px;font-size:11px;color:#bbb;text-align:center;border-top:1px solid #eee;padding-top:16px}
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;900&display=swap');
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: 'Inter', system-ui, sans-serif;
+      background: #f4f4f0;
+      padding: 40px 20px;
+      color: #111;
+    }
+
+    .page {
+      max-width: 560px;
+      margin: 0 auto;
+      background: #fff;
+      border-radius: 12px;
+      overflow: hidden;
+      box-shadow: 0 4px 24px rgba(0,0,0,.10);
+    }
+
+    /* ── Header ── */
+    .header {
+      background: #0f1a0e;
+      padding: 32px 36px 28px;
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 16px;
+    }
+    .brand-name {
+      font-size: 26px;
+      font-weight: 900;
+      color: #af8408;
+      letter-spacing: 3px;
+      text-transform: uppercase;
+    }
+    .brand-sub {
+      font-size: 11px;
+      color: #7a9a7d;
+      margin-top: 4px;
+      letter-spacing: .5px;
+    }
+    .receipt-badge {
+      background: #af8408;
+      color: #0f1a0e;
+      font-size: 10px;
+      font-weight: 900;
+      letter-spacing: 1.5px;
+      text-transform: uppercase;
+      padding: 5px 12px;
+      border-radius: 20px;
+      white-space: nowrap;
+      margin-top: 4px;
+    }
+
+    /* ── Meta bar ── */
+    .meta-bar {
+      background: #f8f8f4;
+      border-bottom: 1px solid #e8e8e0;
+      padding: 16px 36px;
+      display: flex;
+      gap: 32px;
+    }
+    .meta-item .meta-label {
+      font-size: 10px;
+      font-weight: 700;
+      color: #999;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      margin-bottom: 3px;
+    }
+    .meta-item .meta-value {
+      font-size: 13px;
+      font-weight: 700;
+      color: #111;
+    }
+
+    /* ── Body ── */
+    .body { padding: 28px 36px; }
+
+    .section-title {
+      font-size: 10px;
+      font-weight: 900;
+      color: #af8408;
+      text-transform: uppercase;
+      letter-spacing: 1.5px;
+      margin-bottom: 10px;
+      margin-top: 24px;
+    }
+    .section-title:first-child { margin-top: 0; }
+
+    .info-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 0;
+      border: 1px solid #e8e8e0;
+      border-radius: 8px;
+      overflow: hidden;
+    }
+    .info-cell {
+      padding: 11px 14px;
+      border-bottom: 1px solid #e8e8e0;
+      border-right: 1px solid #e8e8e0;
+    }
+    .info-cell:nth-child(2n) { border-right: none; }
+    .info-cell:nth-last-child(-n+2) { border-bottom: none; }
+    .info-cell.full-width {
+      grid-column: 1 / -1;
+      border-right: none;
+    }
+    .cell-label {
+      font-size: 10px;
+      font-weight: 700;
+      color: #999;
+      text-transform: uppercase;
+      letter-spacing: .8px;
+      margin-bottom: 3px;
+    }
+    .cell-value {
+      font-size: 13px;
+      font-weight: 600;
+      color: #111;
+      word-break: break-word;
+    }
+
+    .extras-list {
+      list-style: none;
+      border: 1px solid #e8e8e0;
+      border-radius: 8px;
+      overflow: hidden;
+    }
+    .extras-list li {
+      padding: 9px 14px;
+      font-size: 13px;
+      font-weight: 600;
+      color: #333;
+      border-bottom: 1px solid #f0f0e8;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .extras-list li:last-child { border-bottom: none; }
+    .extras-list li::before {
+      content: '';
+      display: inline-block;
+      width: 6px;
+      height: 6px;
+      background: #af8408;
+      border-radius: 50%;
+      flex-shrink: 0;
+    }
+
+    /* ── Total ── */
+    .total-block {
+      margin-top: 28px;
+      background: #0f1a0e;
+      border-radius: 10px;
+      padding: 20px 24px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    .total-label {
+      font-size: 13px;
+      font-weight: 700;
+      color: #7a9a7d;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+    }
+    .total-amount {
+      font-size: 28px;
+      font-weight: 900;
+      color: #af8408;
+      letter-spacing: -0.5px;
+    }
+
+    /* ── Status chip ── */
+    .status-chip {
+      display: inline-block;
+      padding: 3px 10px;
+      border-radius: 20px;
+      font-size: 11px;
+      font-weight: 700;
+    }
+    .status-completed { background: #e8f7ee; color: #1a7a40; }
+    .status-cancelled { background: #fdecea; color: #c0392b; }
+
+    /* ── Footer ── */
+    .footer {
+      margin-top: 0;
+      border-top: 1px dashed #ddd;
+      padding: 20px 36px;
+      text-align: center;
+    }
+    .footer p {
+      font-size: 12px;
+      color: #aaa;
+      line-height: 1.6;
+    }
+    .footer .thank-you {
+      font-size: 13px;
+      font-weight: 700;
+      color: #555;
+      margin-bottom: 4px;
+    }
+
+    @media print {
+      body { background: #fff; padding: 0; }
+      .page { box-shadow: none; border-radius: 0; }
+    }
   </style>
 </head>
 <body>
-  <div class="logo">LAVO</div>
-  <div class="logo-sub">lavo.app</div>
-  <hr class="sep">
-  <div class="title">${t('receipt_title')}</div>
-  <div class="row"><span class="lbl">${t('receipt_ref')}</span><span class="val">#${e.id.toUpperCase()}</span></div>
-  <div class="row"><span class="lbl">${t('receipt_station')}</span><span class="val">${e.stationName}</span></div>
-  <div class="row"><span class="lbl">${t('receipt_address')}</span><span class="val">${e.stationAddress}</span></div>
-  <div class="row"><span class="lbl">${t('receipt_date')}</span><span class="val">${dateLabel}</span></div>
-  <div class="row"><span class="lbl">${t('receipt_time')}</span><span class="val">${e.timeSlot}</span></div>
-  <div class="row"><span class="lbl">${t('receipt_forfait')}</span><span class="val">${e.forfaitName}</span></div>
-  <div class="row"><span class="lbl">${t('receipt_category')}</span><span class="val">${e.categoryLabel}</span></div>
-  ${extrasRow}
-  <div class="row"><span class="lbl">${t('receipt_duration')}</span><span class="val">${e.duration} min</span></div>
-  <div class="row"><span class="lbl">${t('receipt_status')}</span><span class="val">${t(`status_${e.status}`)}</span></div>
-  <div class="total">
-    <span class="total-lbl">${t('receipt_total')}</span>
-    <span class="total-val">${e.totalPrice}$</span>
+  <div class="page">
+
+    <div class="header">
+      <div>
+        <div class="brand-name">Slowtime</div>
+        <div class="brand-sub">slowtime.app — Lavage auto simplifié</div>
+      </div>
+      <div class="receipt-badge">${t('receipt_title')}</div>
+    </div>
+
+    <div class="meta-bar">
+      <div class="meta-item">
+        <div class="meta-label">${t('receipt_ref')}</div>
+        <div class="meta-value">#${e.id.toUpperCase()}</div>
+      </div>
+      <div class="meta-item">
+        <div class="meta-label">${t('receipt_date')}</div>
+        <div class="meta-value">${dateLabel}</div>
+      </div>
+      <div class="meta-item">
+        <div class="meta-label">${t('receipt_time')}</div>
+        <div class="meta-value">${e.timeSlot}</div>
+      </div>
+    </div>
+
+    <div class="body">
+
+      <div class="section-title">${t('receipt_station')}</div>
+      <div class="info-grid">
+        <div class="info-cell full-width">
+          <div class="cell-label">${t('receipt_station')}</div>
+          <div class="cell-value">${e.stationName}</div>
+        </div>
+        <div class="info-cell full-width">
+          <div class="cell-label">${t('receipt_address')}</div>
+          <div class="cell-value">${e.stationAddress}</div>
+        </div>
+      </div>
+
+      <div class="section-title">${t('receipt_forfait')}</div>
+      <div class="info-grid">
+        <div class="info-cell">
+          <div class="cell-label">${t('receipt_forfait')}</div>
+          <div class="cell-value">${e.forfaitName}</div>
+        </div>
+        <div class="info-cell">
+          <div class="cell-label">${t('receipt_category')}</div>
+          <div class="cell-value">${e.categoryLabel}</div>
+        </div>
+        <div class="info-cell">
+          <div class="cell-label">${t('receipt_duration')}</div>
+          <div class="cell-value">${e.duration} min</div>
+        </div>
+        <div class="info-cell">
+          <div class="cell-label">${t('receipt_status')}</div>
+          <div class="cell-value">
+            <span class="status-chip status-${e.status}">${t(`status_${e.status}`)}</span>
+          </div>
+        </div>
+      </div>
+
+      ${extrasBlock}
+
+      <div class="total-block">
+        <span class="total-label">${t('receipt_total')}</span>
+        <span class="total-amount">${e.totalPrice}$</span>
+      </div>
+
+    </div>
+
+    <div class="footer">
+      <p class="thank-you">${t('receipt_footer')}</p>
+      <p>Slowtime inc. &mdash; slowtime.app</p>
+    </div>
+
   </div>
-  <div class="footer">${t('receipt_footer')}</div>
 </body>
 </html>`);
 
     win.document.close();
     win.focus();
-    setTimeout(() => { win.print(); }, 400);
+    setTimeout(() => { win.print(); }, 500);
   };
 
   return (
@@ -85,13 +345,23 @@ export function ReceiptModal({ entry: e, locale, onClose }: ReceiptModalProps) {
       className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/60 backdrop-blur-sm animate-fade-in"
       onClick={onClose}
     >
+      {/*
+        On mobile the sheet slides up from the bottom.
+        mb-14 offsets the BottomNav (sm:hidden, ~56px) so the action buttons
+        are never hidden behind it.
+      */}
       <div
-        className="w-full sm:max-w-md bg-[#F5F5E6] dark:bg-dark-surface rounded-t-2xl sm:rounded-2xl shadow-2xl overflow-hidden animate-fade-in-up"
+        className="w-full sm:max-w-md bg-[#F5F5E6] dark:bg-dark-surface rounded-t-2xl sm:rounded-2xl shadow-2xl overflow-hidden animate-fade-in-up mb-14 sm:mb-0"
         onClick={(ev) => ev.stopPropagation()}
       >
         {/* Header */}
         <div className="flex items-center justify-between px-5 py-4 border-b border-[#D0D0C0] dark:border-tab-inactive">
-          <h2 className="text-[17px] font-black text-[#0A0A14] dark:text-white">{t('receipt_title')}</h2>
+          <div>
+            <h2 className="text-[17px] font-black text-[#0A0A14] dark:text-white">{t('receipt_title')}</h2>
+            <p className="text-[12px] text-[#666] dark:text-[#999] mt-0.5 font-semibold tracking-wide">
+              Slowtime &mdash; #{e.id.toUpperCase()}
+            </p>
+          </div>
           <button
             type="button"
             onClick={onClose}
@@ -104,41 +374,84 @@ export function ReceiptModal({ entry: e, locale, onClose }: ReceiptModalProps) {
           </button>
         </div>
 
-        {/* Receipt preview */}
-        <div className="overflow-y-auto max-h-[65vh] px-5 py-4 space-y-0">
-          {/* Logo row */}
-          <div className="mb-4">
-            <div className="text-[22px] font-black text-gold tracking-widest">LAVO</div>
+        {/* Receipt preview — scrollable */}
+        <div className="overflow-y-auto max-h-[55vh] sm:max-h-[60vh]">
+
+          {/* Brand strip */}
+          <div className="bg-[#0f1a0e] px-5 py-4 flex items-center justify-between">
+            <div>
+              <div className="text-[18px] font-black text-gold tracking-widest uppercase">Slowtime</div>
+              <div className="text-[11px] text-[#7a9a7d] mt-0.5">slowtime.app</div>
+            </div>
+            <span className="text-[10px] font-black text-[#0f1a0e] bg-gold px-3 py-1 rounded-full tracking-wider uppercase">
+              {t('receipt_title')}
+            </span>
           </div>
 
-          <div className="border-t-2 border-gold mb-4" />
+          {/* Meta row */}
+          <div className="grid grid-cols-3 border-b border-[#E0E0D0] dark:border-tab-inactive bg-[#FAFAF6] dark:bg-dark-bg/40">
+            {[
+              { label: t('receipt_ref'),  value: `#${e.id.toUpperCase()}` },
+              { label: t('receipt_date'), value: new Date(e.date).toLocaleDateString(locale === 'en' ? 'en-CA' : 'fr-CA', { day: 'numeric', month: 'short', year: 'numeric' }) },
+              { label: t('receipt_time'), value: e.timeSlot },
+            ].map(({ label, value }) => (
+              <div key={label} className="px-4 py-3 border-r border-[#E0E0D0] dark:border-tab-inactive last:border-r-0">
+                <div className="text-[10px] font-bold text-[#999] uppercase tracking-wider mb-1">{label}</div>
+                <div className="text-[12px] font-bold text-[#0A0A14] dark:text-white truncate">{value}</div>
+              </div>
+            ))}
+          </div>
 
-          <div className="space-y-0">
-            <ReceiptRow label={t('receipt_ref')}      value={`#${e.id.toUpperCase()}`} />
-            <ReceiptRow label={t('receipt_station')}  value={e.stationName} />
-            <ReceiptRow label={t('receipt_address')}  value={e.stationAddress} />
-            <ReceiptRow label={t('receipt_date')}     value={dateLabel} />
-            <ReceiptRow label={t('receipt_time')}     value={e.timeSlot} />
-            <ReceiptRow label={t('receipt_forfait')}  value={e.forfaitName} />
-            <ReceiptRow label={t('receipt_category')} value={e.categoryLabel} />
+          <div className="px-5 py-4 space-y-4">
+            {/* Station */}
+            <div>
+              <p className="text-[10px] font-black text-gold uppercase tracking-widest mb-2">{t('receipt_station')}</p>
+              <div className="rounded-lg border border-[#E0E0D0] dark:border-tab-inactive overflow-hidden">
+                <ReceiptRow label={t('receipt_station')} value={e.stationName}  />
+                <ReceiptRow label={t('receipt_address')} value={e.stationAddress} noBorder />
+              </div>
+            </div>
+
+            {/* Service */}
+            <div>
+              <p className="text-[10px] font-black text-gold uppercase tracking-widest mb-2">{t('receipt_forfait')}</p>
+              <div className="rounded-lg border border-[#E0E0D0] dark:border-tab-inactive overflow-hidden">
+                <div className="grid grid-cols-2">
+                  <ReceiptRowGrid label={t('receipt_forfait')}  value={e.forfaitName}      borderRight />
+                  <ReceiptRowGrid label={t('receipt_category')} value={e.categoryLabel}                />
+                  <ReceiptRowGrid label={t('receipt_duration')} value={`${e.duration} min`} borderRight borderTop />
+                  <ReceiptRowGrid label={t('receipt_status')}   value={t(`status_${e.status}`)} borderTop chip={e.status} />
+                </div>
+              </div>
+            </div>
+
+            {/* Extras */}
             {e.extras.length > 0 && (
-              <ReceiptRow label={t('receipt_extras')} value={e.extras.join(', ')} />
+              <div>
+                <p className="text-[10px] font-black text-gold uppercase tracking-widest mb-2">{t('receipt_extras')}</p>
+                <div className="rounded-lg border border-[#E0E0D0] dark:border-tab-inactive overflow-hidden">
+                  {e.extras.map((ex, i) => (
+                    <div key={ex} className={`flex items-center gap-2.5 px-3.5 py-2.5 ${i < e.extras.length - 1 ? 'border-b border-[#E0E0D0] dark:border-tab-inactive' : ''}`}>
+                      <span className="w-1.5 h-1.5 rounded-full bg-gold shrink-0" />
+                      <span className="text-[13px] font-semibold text-[#0A0A14] dark:text-white">{ex}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
             )}
-            <ReceiptRow label={t('receipt_duration')} value={`${e.duration} min`} />
-            <ReceiptRow label={t('receipt_status')}   value={t(`status_${e.status}`)} />
-          </div>
 
-          {/* Total */}
-          <div className="flex items-center justify-between pt-3 border-t-2 border-gold mt-2">
-            <span className="text-[16px] font-black text-[#0A0A14] dark:text-white">{t('receipt_total')}</span>
-            <span className="text-[20px] font-black text-gold">{e.totalPrice}$</span>
-          </div>
+            {/* Total */}
+            <div className="flex items-center justify-between bg-[#0f1a0e] rounded-xl px-4 py-4">
+              <span className="text-[12px] font-bold text-[#7a9a7d] uppercase tracking-widest">{t('receipt_total')}</span>
+              <span className="text-[26px] font-black text-gold leading-none">{e.totalPrice}$</span>
+            </div>
 
-          <p className="text-[11px] text-[#AAA] text-center mt-5 pb-1">{t('receipt_footer')}</p>
+            <p className="text-[11px] text-[#AAA] text-center pb-1">{t('receipt_footer')}</p>
+          </div>
         </div>
 
         {/* Actions */}
-        <div className="px-5 py-4 border-t border-[#D0D0C0] dark:border-tab-inactive flex gap-3">
+        <div className="px-5 py-4 border-t border-[#D0D0C0] dark:border-tab-inactive flex gap-3 bg-[#F5F5E6] dark:bg-dark-surface">
           <button
             type="button"
             onClick={onClose}
@@ -166,11 +479,46 @@ export function ReceiptModal({ entry: e, locale, onClose }: ReceiptModalProps) {
   );
 }
 
-function ReceiptRow({ label, value }: { label: string; value: string }) {
+/* ------------------------------------------------------------------ */
+/* Sub-components                                                       */
+/* ------------------------------------------------------------------ */
+
+function ReceiptRow({ label, value, noBorder }: { label: string; value: string; noBorder?: boolean }) {
   return (
-    <div className="flex items-start justify-between gap-4 py-2 border-b border-[#E0E0D0] dark:border-tab-inactive">
-      <span className="text-[13px] text-[#666] dark:text-[#999] font-semibold whitespace-nowrap">{label}</span>
-      <span className="text-[13px] font-bold text-[#0A0A14] dark:text-white text-right break-words max-w-[55%]">{value}</span>
+    <div className={`flex items-start justify-between gap-4 px-3.5 py-2.5 ${noBorder ? '' : 'border-b border-[#E0E0D0] dark:border-tab-inactive'}`}>
+      <span className="text-[11px] font-bold text-[#999] uppercase tracking-wide whitespace-nowrap">{label}</span>
+      <span className="text-[13px] font-bold text-[#0A0A14] dark:text-white text-right">{value}</span>
+    </div>
+  );
+}
+
+function ReceiptRowGrid({
+  label, value, borderRight, borderTop, chip,
+}: {
+  label: string;
+  value: string;
+  borderRight?: boolean;
+  borderTop?: boolean;
+  chip?: string;
+}) {
+  const chipClass = chip === 'completed'
+    ? 'bg-lavo-success/15 text-lavo-success'
+    : chip === 'cancelled'
+    ? 'bg-lavo-error/15 text-lavo-error'
+    : '';
+
+  return (
+    <div className={[
+      'px-3.5 py-2.5',
+      borderRight ? 'border-r border-[#E0E0D0] dark:border-tab-inactive' : '',
+      borderTop   ? 'border-t border-[#E0E0D0] dark:border-tab-inactive' : '',
+    ].join(' ')}>
+      <div className="text-[10px] font-bold text-[#999] uppercase tracking-wide mb-1">{label}</div>
+      {chip ? (
+        <span className={`text-[11px] font-bold px-2 py-0.5 rounded-full ${chipClass}`}>{value}</span>
+      ) : (
+        <div className="text-[13px] font-bold text-[#0A0A14] dark:text-white">{value}</div>
+      )}
     </div>
   );
 }
