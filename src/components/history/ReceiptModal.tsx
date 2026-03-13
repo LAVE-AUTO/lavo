@@ -3,6 +3,18 @@
 import { useTranslations } from 'next-intl';
 import type { MockReservation } from '@/data/reservations-mock';
 
+/**
+ * Escapes HTML special characters to prevent XSS when interpolating
+ * user-controlled strings into document.write() content.
+ */
+function escapeHtml(s: string): string {
+  return String(s)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;');
+}
+
 interface ReceiptModalProps {
   entry: MockReservation;
   locale: string;
@@ -26,7 +38,7 @@ export function ReceiptModal({ entry: e, locale, onClose }: ReceiptModalProps) {
 
   const handlePrint = () => {
     const extrasLines = e.extras.length > 0
-      ? e.extras.map((ex) => `<li>${ex}</li>`).join('')
+      ? e.extras.map((ex) => `<li>${escapeHtml(ex)}</li>`).join('')
       : '';
 
     const extrasBlock = e.extras.length > 0 ? `
@@ -41,7 +53,7 @@ export function ReceiptModal({ entry: e, locale, onClose }: ReceiptModalProps) {
 <html lang="${locale}">
 <head>
   <meta charset="utf-8">
-  <title>Slowtime — ${t('receipt_title')} ${e.id.toUpperCase()}</title>
+  <title>Slowtime — ${t('receipt_title')} ${escapeHtml(e.id.toUpperCase())}</title>
   <style>
     @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;900&display=swap');
 
@@ -311,7 +323,7 @@ export function ReceiptModal({ entry: e, locale, onClose }: ReceiptModalProps) {
     <div class="meta-bar">
       <div class="meta-item">
         <div class="meta-label">${t('receipt_ref')}</div>
-        <div class="meta-value">#${e.id.toUpperCase()}</div>
+        <div class="meta-value">#${escapeHtml(e.id.toUpperCase())}</div>
       </div>
       <div class="meta-item">
         <div class="meta-label">${t('receipt_date')}</div>
@@ -319,7 +331,7 @@ export function ReceiptModal({ entry: e, locale, onClose }: ReceiptModalProps) {
       </div>
       <div class="meta-item">
         <div class="meta-label">${t('receipt_time')}</div>
-        <div class="meta-value">${e.timeSlot}</div>
+        <div class="meta-value">${escapeHtml(e.timeSlot)}</div>
       </div>
     </div>
 
@@ -329,11 +341,11 @@ export function ReceiptModal({ entry: e, locale, onClose }: ReceiptModalProps) {
       <div class="info-grid">
         <div class="info-cell full-width">
           <div class="cell-label">${t('receipt_station')}</div>
-          <div class="cell-value">${e.stationName}</div>
+          <div class="cell-value">${escapeHtml(e.stationName)}</div>
         </div>
         <div class="info-cell full-width">
           <div class="cell-label">${t('receipt_address')}</div>
-          <div class="cell-value">${e.stationAddress}</div>
+          <div class="cell-value">${escapeHtml(e.stationAddress)}</div>
         </div>
       </div>
 
@@ -341,11 +353,11 @@ export function ReceiptModal({ entry: e, locale, onClose }: ReceiptModalProps) {
       <div class="info-grid">
         <div class="info-cell">
           <div class="cell-label">${t('receipt_forfait')}</div>
-          <div class="cell-value">${e.forfaitName}</div>
+          <div class="cell-value">${escapeHtml(e.forfaitName)}</div>
         </div>
         <div class="info-cell">
           <div class="cell-label">${t('receipt_category')}</div>
-          <div class="cell-value">${e.categoryLabel}</div>
+          <div class="cell-value">${escapeHtml(e.categoryLabel)}</div>
         </div>
         <div class="info-cell">
           <div class="cell-label">${t('receipt_duration')}</div>

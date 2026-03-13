@@ -181,7 +181,7 @@ export function ChangePasswordForm() {
         error={errors.currentPassword}
         autoComplete="current-password"
         autoFocus
-        rightIcon={eyeBtn(showCurrent, () => setShowCurrent((v) => !v), showCurrent ? 'Hide' : 'Show')}
+        rightIcon={eyeBtn(showCurrent, () => setShowCurrent((v) => !v), showCurrent ? 'Hide password' : 'Show password')}
       />
 
       <FormField
@@ -196,7 +196,7 @@ export function ChangePasswordForm() {
         }}
         error={errors.newPassword}
         autoComplete="new-password"
-        rightIcon={eyeBtn(showNew, () => setShowNew((v) => !v), showNew ? 'Hide' : 'Show')}
+        rightIcon={eyeBtn(showNew, () => setShowNew((v) => !v), showNew ? 'Hide password' : 'Show password')}
       />
       <PasswordRules password={newPassword} namespace="change_password" />
 
@@ -213,7 +213,7 @@ export function ChangePasswordForm() {
         onBlur={handleBlurConfirm}
         error={errors.confirmPassword}
         autoComplete="new-password"
-        rightIcon={eyeBtn(showConfirm, () => setShowConfirm((v) => !v), showConfirm ? 'Hide' : 'Show')}
+        rightIcon={eyeBtn(showConfirm, () => setShowConfirm((v) => !v), showConfirm ? 'Hide password' : 'Show password')}
       />
 
       <Button type="submit" fullWidth loading={isLoading} className="mt-2">
