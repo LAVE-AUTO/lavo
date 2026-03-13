@@ -6,18 +6,21 @@ export const registerSchema = z
   .object({
     first_name: z.string().min(2).max(100),
     last_name: z.string().min(2).max(100),
-    email: z.string().email(),
+    email: z
+      .string()
+      .email()
+      .max(320, 'Email must not exceed 320 characters')
+      .refine((s) => !s.includes('..'), { message: 'Email cannot contain consecutive dots' }),
     phone: phoneSchema,
     password: z
       .string()
       .min(8, 'Password must be at least 8 characters')
+      .max(128, 'Password must not exceed 128 characters')
       .regex(/[A-Z]/, 'Password must contain at least one uppercase letter')
       .regex(/[a-z]/, 'Password must contain at least one lowercase letter')
       .regex(/[0-9]/, 'Password must contain at least one number')
-      .regex(
-        /[^A-Za-z0-9]/,
-        'Password must contain at least one special character'
-      ),
+      .regex(/[@$!%*#?&_\-+=]/, 'Password must contain at least one special character. Allowed: @ $ ! % * # ? & _ - + =')
+      .regex(/^[A-Za-z0-9@$!%*#?&_\-+=]+$/, 'Password contains invalid characters. Only letters, numbers, and these special characters are allowed: @ $ ! % * # ? & _ - + ='),
     confirm_password: z.string().min(1, 'Password confirmation is required'),
     remember_me: z.boolean().optional().default(false),
   })
@@ -39,14 +42,16 @@ export const resendEmailSchema = z.object({
 const passwordSchema = z
   .string()
   .min(8, 'Password must be at least 8 characters')
+  .max(128, 'Password must not exceed 128 characters')
   .regex(/[A-Z]/, 'Password must contain at least one uppercase letter')
   .regex(/[a-z]/, 'Password must contain at least one lowercase letter')
   .regex(/[0-9]/, 'Password must contain at least one number')
-  .regex(/[^A-Za-z0-9]/, 'Password must contain at least one special character');
+  .regex(/[@$!%*#?&_\-+=]/, 'Password must contain at least one special character. Allowed: @ $ ! % * # ? & _ - + =')
+  .regex(/^[A-Za-z0-9@$!%*#?&_\-+=]+$/, 'Password contains invalid characters. Only letters, numbers, and these special characters are allowed: @ $ ! % * # ? & _ - + =');
 
 export const loginSchema = z.object({
-  email: z.string().email('Invalid email address'),
-  password: z.string().min(1, 'Password is required'),
+  email: z.string().email('Invalid email address').max(320, 'Email must not exceed 320 characters'),
+  password: z.string().min(1, 'Password is required').max(128, 'Password must not exceed 128 characters'),
   remember_me: z.boolean().optional().default(false),
 });
 
