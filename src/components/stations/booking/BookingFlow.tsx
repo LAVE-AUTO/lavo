@@ -7,6 +7,7 @@ import { ExtrasStep } from './ExtrasStep';
 import { ArrivalStep } from './ArrivalStep';
 import { SummaryStep } from './SummaryStep';
 import { PaymentStep } from './PaymentStep';
+import { useUserLocation } from '../useUserLocation';
 import type { StationDetailData, ServiceCategory, ServiceForfait, TimeSlot } from '@/types/station';
 
 type ArrivalMode = 'queue_now' | 'queue_later' | 'book_slot';
@@ -23,6 +24,7 @@ type Step = (typeof STEPS)[number];
 
 export function BookingFlow({ station, forfait, onClose }: BookingFlowProps) {
   const t = useTranslations('booking');
+  const userLocation = useUserLocation();
   const [step, setStep] = useState<Step>('extras');
   const stepIndex = STEPS.indexOf(step);
   const dialogRootRef = useRef<HTMLDivElement | null>(null);
@@ -181,17 +183,32 @@ export function BookingFlow({ station, forfait, onClose }: BookingFlowProps) {
     }
   };
 
-  // Payment result screen
+  // Google Maps itinerary URL
+  const mapsUrl = (() => {
+    const dest =
+      station.latitude != null && station.longitude != null
+        ? `${station.latitude},${station.longitude}`
+        : encodeURIComponent(`${station.name}, ${station.address}, ${station.city}`);
+    const origin =
+      userLocation
+        ? `&origin=${userLocation.latitude},${userLocation.longitude}`
+        : '';
+    return `https://www.google.com/maps/dir/?api=1&destination=${dest}${origin}`;
+  })();
+
+  // Payment result screen (context-aware on success)
   const renderResultScreen = () => {
     const isSuccess = paymentResult === 'success';
+    const isQueueNow = arrivalMode === 'queue_now';
+
     return (
       <div className="flex flex-col items-center justify-center text-center px-6 py-12 gap-5">
         {/* Icon */}
         <div className={`w-20 h-20 rounded-full flex items-center justify-center ${isSuccess ? 'bg-lavo-success/15' : 'bg-lavo-error/15'}`}>
           {isSuccess ? (
-            <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="#22C55E" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12" /></svg>
+            <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="#00C851" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12" /></svg>
           ) : (
-            <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="#EF4444" strokeWidth="2.5" strokeLinecap="round"><line x1="18" y1="6" x2="6" y2="18" /><line x1="6" y1="6" x2="18" y2="18" /></svg>
+            <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="#E8472A" strokeWidth="2.5" strokeLinecap="round"><line x1="18" y1="6" x2="6" y2="18" /><line x1="6" y1="6" x2="18" y2="18" /></svg>
           )}
         </div>
 
@@ -202,47 +219,85 @@ export function BookingFlow({ station, forfait, onClose }: BookingFlowProps) {
           {isSuccess ? t('result_success_title') : t('result_error_title')}
         </h3>
         <p className="text-[15px] text-[#555] dark:text-[#B0B0A0] max-w-sm leading-relaxed">
-          {isSuccess ? t('result_success_desc') : t('result_error_desc')}
+          {isSuccess
+            ? isQueueNow ? t('result_queue_now_desc') : t('result_success_desc')
+            : t('result_error_desc')}
         </p>
 
+        {/* Amount badge */}
         {isSuccess && (
-          <div className="bg-gold/10 dark:bg-gold/5 border-2 border-gold rounded-xl px-5 py-3 mt-2">
+          <div className="bg-gold/10 dark:bg-gold/5 border-2 border-gold rounded-xl px-5 py-3">
             <span className="text-[18px] font-black text-gold">{grandTotal}$</span>
           </div>
         )}
 
-        <div className="flex flex-col gap-3 w-full max-w-xs mt-4">
+        {/* Queue position info for non-now queue */}
+        {isSuccess && !isQueueNow && arrivalMode === 'queue_later' && (
+          <div className="bg-[#E8E8D8] dark:bg-dark-surface rounded-xl px-5 py-4 w-full max-w-xs text-left border border-[#D0D0C0] dark:border-tab-inactive">
+            <div className="text-[13px] font-bold text-[#555] dark:text-[#A0A090] uppercase tracking-wider mb-2">
+              {t('result_queue_position_label')}
+            </div>
+            <div className="text-[26px] font-black text-gold leading-none">#{station.queueCount + 1}</div>
+            <div className="text-[13px] text-[#555] dark:text-[#B0B0A0] mt-1">{t('result_queue_arrival_time', { time: laterTime ?? '' })}</div>
+          </div>
+        )}
+
+        <div className="flex flex-col gap-3 w-full max-w-xs mt-2">
           {isSuccess ? (
-            <>
-              <Link
-                href="/client/reservations"
-                className="block w-full py-3 bg-gold hover:bg-gold-hover rounded-xl text-[15px] font-black text-dark-bg text-center transition-colors cursor-pointer"
-              >
-                {t('result_view_coupons')}
-              </Link>
-              <button
-                type="button"
-                onClick={onClose}
-                className="w-full py-3 border-2 border-gold rounded-xl text-[15px] font-bold text-gold hover:bg-gold/10 transition-colors cursor-pointer"
-              >
-                {t('result_done')}
-              </button>
-            </>
+            isQueueNow ? (
+              <>
+                <a
+                  href={mapsUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="flex items-center justify-center gap-2 w-full py-3 bg-gold hover:bg-gold-hover rounded-xl text-[15px] font-black text-dark-bg text-center transition-colors"
+                >
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                    <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z" />
+                    <circle cx="12" cy="10" r="3" />
+                  </svg>
+                  {t('result_open_maps')}
+                </a>
+                <button
+                  type="button"
+                  onClick={onClose}
+                  className="w-full py-3 border-2 border-gold rounded-xl text-[15px] font-bold text-gold hover:bg-gold/10 transition-colors cursor-pointer"
+                >
+                  {t('result_done')}
+                </button>
+              </>
+            ) : (
+              <>
+                <Link
+                  href="/client/reservations"
+                  className="block w-full py-3 bg-gold hover:bg-gold-hover rounded-xl text-[15px] font-black text-dark-bg text-center transition-colors"
+                >
+                  {t('result_view_reservations')}
+                </Link>
+                <button
+                  type="button"
+                  onClick={onClose}
+                  className="w-full py-3 border-2 border-gold rounded-xl text-[15px] font-bold text-gold hover:bg-gold/10 transition-colors cursor-pointer"
+                >
+                  {t('result_done')}
+                </button>
+              </>
+            )
           ) : (
             <>
-              <button
-                type="button"
-                onClick={onClose}
-                className="flex-1 py-3 border-2 border-gold rounded-xl text-[15px] font-bold text-gold hover:bg-gold/10 transition-colors cursor-pointer"
-              >
-                {t('close')}
-              </button>
               <button
                 type="button"
                 onClick={handleRetryPayment}
                 className="flex-1 py-3 bg-gold hover:bg-gold-hover rounded-xl text-[15px] font-black text-dark-bg transition-colors cursor-pointer"
               >
                 {t('result_retry')}
+              </button>
+              <button
+                type="button"
+                onClick={onClose}
+                className="flex-1 py-3 border-2 border-gold rounded-xl text-[15px] font-bold text-gold hover:bg-gold/10 transition-colors cursor-pointer"
+              >
+                {t('close')}
               </button>
             </>
           )}
@@ -258,7 +313,7 @@ export function BookingFlow({ station, forfait, onClose }: BookingFlowProps) {
         {/* Desktop */}
         <div className="hidden md:flex fixed inset-0 z-[60] items-center justify-center bg-black/50 backdrop-blur-sm">
           <div
-            className="relative w-full max-w-md bg-[#F5F5E6] dark:bg-[#1A1A18] rounded-2xl shadow-2xl"
+            className="relative w-full max-w-md bg-[#F5F5E6] dark:bg-dark-card rounded-2xl shadow-2xl"
             role="dialog"
             aria-modal="true"
             aria-labelledby="booking-result-title"
@@ -267,7 +322,7 @@ export function BookingFlow({ station, forfait, onClose }: BookingFlowProps) {
           </div>
         </div>
         {/* Mobile */}
-        <div className="md:hidden fixed inset-0 z-[60] bg-[#F5F5E6] dark:bg-[#1A1A18] flex items-center justify-center">
+        <div className="md:hidden fixed inset-0 z-[60] bg-[#F5F5E6] dark:bg-dark-card flex items-center justify-center">
           {renderResultScreen()}
         </div>
       </>
@@ -280,7 +335,7 @@ export function BookingFlow({ station, forfait, onClose }: BookingFlowProps) {
         <div className="hidden md:flex fixed inset-0 z-[60] items-center justify-center bg-black/50 backdrop-blur-sm">
           <div
             ref={dialogRootRef}
-            className="relative w-full max-w-2xl bg-[#F5F5E6] dark:bg-[#1A1A18] rounded-2xl shadow-2xl flex flex-col max-h-[90vh]"
+            className="relative w-full max-w-2xl bg-[#F5F5E6] dark:bg-dark-card rounded-2xl shadow-2xl flex flex-col max-h-[90vh]"
             role="dialog"
             aria-modal="true"
             aria-labelledby="booking-dialog-title-desktop"
@@ -330,7 +385,7 @@ export function BookingFlow({ station, forfait, onClose }: BookingFlowProps) {
 
       {/* Mobile: Full screen */}
       <div
-        className="md:hidden fixed inset-0 z-[60] bg-[#F5F5E6] dark:bg-[#1A1A18] flex flex-col"
+        className="md:hidden fixed inset-0 z-[60] bg-[#F5F5E6] dark:bg-dark-card flex flex-col"
         role="dialog"
         aria-modal="true"
         aria-labelledby="booking-dialog-title-mobile"

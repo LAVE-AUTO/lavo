@@ -55,7 +55,8 @@ body {
     font-size: var(--font-size-base);
 }
 
-button, [role="button"] {
+button,
+[role="button"] {
     cursor: pointer;
 }
 
@@ -136,14 +137,26 @@ button, [role="button"] {
 }
 
 @keyframes float-orb {
-    0%, 100% { transform: translateY(0px) scale(1); }
-    50%       { transform: translateY(-40px) scale(1.04); }
+    0%,
+    100% {
+        transform: translateY(0px) scale(1);
+    }
+    50% {
+        transform: translateY(-40px) scale(1.04);
+    }
 }
 
 @keyframes float-card {
-    0%, 100% { transform: translateY(0px); }
-    40%      { transform: translateY(-11px); }
-    70%      { transform: translateY(-5px); }
+    0%,
+    100% {
+        transform: translateY(0px);
+    }
+    40% {
+        transform: translateY(-11px);
+    }
+    70% {
+        transform: translateY(-5px);
+    }
 }
 
 .animate-float-orb {
@@ -206,6 +219,59 @@ button, [role="button"] {
     animation: progress-fill linear both;
 }
 
+@keyframes toast-progress {
+    from {
+        width: 100%;
+    }
+    to {
+        width: 0%;
+    }
+}
+
+@keyframes toast-enter-top {
+    from {
+        opacity: 0;
+        transform: translateY(-16px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+@keyframes toast-exit-top {
+    from {
+        opacity: 1;
+        transform: translateY(0);
+    }
+    to {
+        opacity: 0;
+        transform: translateY(-16px);
+    }
+}
+
+@keyframes toast-enter-right {
+    from {
+        opacity: 0;
+        transform: translateX(110%);
+    }
+    to {
+        opacity: 1;
+        transform: translateX(0);
+    }
+}
+
+@keyframes toast-exit-right {
+    from {
+        opacity: 1;
+        transform: translateX(0);
+    }
+    to {
+        opacity: 0;
+        transform: translateX(110%);
+    }
+}
+
 
 /* ------------------------------------------------------------------ */
 
@@ -253,11 +319,13 @@ button, [role="button"] {
 
 /* ------------------------------------------------------------------ */
 
+
 /**
  * Hide scrollbars while keeping scrolling behaviour.
  * Used for horizontal carousels (station rows, testimonials, etc.).
  * Works across WebKit/Blink, Firefox, and old Edge/IE.
  */
+
 .scrollbar-none {
     /* Firefox */
     scrollbar-width: none;
@@ -270,7 +338,9 @@ button, [role="button"] {
     display: none;
 }
 
+
 /* Backwards-compatible alias used in some components */
+
 .scrollbar-hide {
     scrollbar-width: none;
     -ms-overflow-style: none;
@@ -332,8 +402,12 @@ button, [role="button"] {
 /* ------------------------------------------------------------------ */
 
 @keyframes marquee-scroll {
-    from { transform: translateX(0); }
-    to   { transform: translateX(-50%); }
+    from {
+        transform: translateX(0);
+    }
+    to {
+        transform: translateX(-50%);
+    }
 }
 
 .animate-marquee {
@@ -350,22 +424,22 @@ button, [role="button"] {
     font-family: 'DM Mono', monospace;
 }
 
+
 /* Landing hero background (light / dark) */
+
 .landing-hero-bg {
     background: #f7f3ec;
-    background-image:
-        radial-gradient(ellipse 65% 70% at 95% 45%, rgba(192, 154, 24, 0.07) 0%, transparent 60%),
-        radial-gradient(ellipse 50% 60% at 0% 80%, rgba(200, 220, 200, 0.4) 0%, transparent 50%);
+    background-image: radial-gradient(ellipse 65% 70% at 95% 45%, rgba(192, 154, 24, 0.07) 0%, transparent 60%), radial-gradient(ellipse 50% 60% at 0% 80%, rgba(200, 220, 200, 0.4) 0%, transparent 50%);
 }
 
 .dark .landing-hero-bg {
     background: #0d1f0f;
-    background-image:
-        radial-gradient(ellipse 65% 70% at 95% 45%, rgba(200, 152, 10, 0.07) 0%, transparent 60%),
-        radial-gradient(ellipse 50% 60% at 0% 80%, rgba(22, 34, 24, 0.6) 0%, transparent 50%);
+    background-image: radial-gradient(ellipse 65% 70% at 95% 45%, rgba(200, 152, 10, 0.07) 0%, transparent 60%), radial-gradient(ellipse 50% 60% at 0% 80%, rgba(22, 34, 24, 0.6) 0%, transparent 50%);
 }
 
+
 /* Landing section alternating background */
+
 .landing-alt-bg {
     background: #efefea;
     border-top: 1px solid rgba(192, 154, 24, 0.1);
@@ -378,7 +452,9 @@ button, [role="button"] {
     border-bottom: 1px solid rgba(200, 152, 10, 0.1);
 }
 
+
 /* Landing card style */
+
 .landing-card {
     background: #e8e2d4;
     border: 1px solid rgba(192, 154, 24, 0.15);
@@ -388,7 +464,9 @@ button, [role="button"] {
     background: #f5edd6;
 }
 
+
 /* Scroll reveal */
+
 .reveal {
     opacity: 0;
     transform: translateY(36px);

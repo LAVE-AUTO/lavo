@@ -4,6 +4,8 @@ import { useState, useEffect, useRef } from 'react';
 import { useTranslations } from 'next-intl';
 import { Link, usePathname } from '@/i18n/navigation';
 import { useAuth } from '@/context';
+import { ThemeToggle } from '@/components/auth/ThemeToggle';
+import { LangToggle } from '@/components/auth/LangToggle';
 
 function HomeIcon({ active }: { active: boolean }) {
   const c = active ? '#C49A1E' : '#9A9A8A';
@@ -213,6 +215,15 @@ export function BottomNav() {
                   <UserIcon />
                   {t('profile')}
                 </Link>
+
+                {/* Theme + Lang row */}
+                <div className="flex items-center justify-between px-4 py-3 border-t border-[#2C3828]">
+                  <span className="text-[12px] font-semibold text-[#7a9a7d]">Apparence</span>
+                  <div className="flex items-center gap-2">
+                    <ThemeToggle />
+                    <LangToggle />
+                  </div>
+                </div>
 
                 {/* Logout */}
                 <button

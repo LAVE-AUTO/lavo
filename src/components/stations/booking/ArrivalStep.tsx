@@ -1,6 +1,6 @@
 'use client';
 
-import { useMemo } from 'react';
+import { useMemo, useState } from 'react';
 import { useTranslations, useLocale } from 'next-intl';
 import type { StationDetailData, TimeSlot } from '@/types/station';
 
@@ -49,133 +49,239 @@ function generateTimeSlots(): TimeSlot[] {
 
 const LATER_SUGGESTIONS = ['14:00', '15:00', '16:00', '17:00'];
 
+function ChevronIcon({ open }: { open: boolean }) {
+  return (
+    <svg
+      width="16" height="16" viewBox="0 0 24 24" fill="none"
+      stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"
+      className={`transition-transform duration-200 ${open ? 'rotate-180' : ''}`}
+      aria-hidden="true"
+    >
+      <polyline points="6 9 12 15 18 9" />
+    </svg>
+  );
+}
+
 export function ArrivalStep({ station, arrivalMode, selectedDate, selectedSlot, laterTime, onSetMode, onSetDate, onSetSlot, onSetLaterTime, onContinue, onBack }: ArrivalStepProps) {
   const t = useTranslations('booking');
   const locale = useLocale();
   const dates = useMemo(() => generateDates(7, locale), [locale]);
   const timeSlots = useMemo(() => generateTimeSlots(), []);
 
+  /* Track which accordion section is open independently of selected mode */
+  const [openSection, setOpenSection] = useState<'queue' | 'book' | null>(() => {
+    if (arrivalMode === 'book_slot') return 'book';
+    if (arrivalMode === 'queue_now' || arrivalMode === 'queue_later') return 'queue';
+    return null;
+  });
+
+  const toggleSection = (section: 'queue' | 'book') => {
+    setOpenSection((prev) => (prev === section ? null : section));
+  };
+
+  const isQueueOpen = openSection === 'queue';
+  const isBookOpen  = openSection === 'book';
+
   const canContinue = arrivalMode === 'queue_now'
     || (arrivalMode === 'queue_later' && laterTime)
     || (arrivalMode === 'book_slot' && selectedDate && selectedSlot);
 
+  const myQueuePosition = station.queueCount + 1;
+
   return (
     <div className="flex flex-col h-full">
-      <div className="flex-1 overflow-y-auto px-1 space-y-4 pb-4">
+      <div className="flex-1 overflow-y-auto px-1 space-y-3 pb-4">
         <p className="text-[14px] text-[#555] dark:text-[#B0B0A0]">{t('arrival_subtitle')}</p>
 
-        {/* Option 1: Queue */}
-        <div className="space-y-3">
-          <h3 className="text-[15px] font-bold text-[#000C1F] dark:text-[#FFF8EC]">{t('arrival_queue_title')}</h3>
-
-          {/* Now */}
+        {/* ── Section 1: Queue ── */}
+        <div className="rounded-xl border-2 overflow-hidden transition-colors border-[#D0D0C0] dark:border-tab-inactive">
+          {/* Header */}
           <button
             type="button"
-            onClick={() => onSetMode('queue_now')}
-            className={`w-full text-left p-4 rounded-xl border-2 transition-all cursor-pointer ${
-              arrivalMode === 'queue_now'
-                ? 'border-gold bg-gold/10 dark:bg-gold/5'
-                : 'border-[#D0D0C0] dark:border-tab-inactive bg-white/40 dark:bg-dark-bg/40 hover:border-gold/30'
+            onClick={() => toggleSection('queue')}
+            className={`w-full flex items-center justify-between px-4 py-3.5 cursor-pointer transition-colors ${
+              isQueueOpen
+                ? 'bg-gold/10 dark:bg-gold/5'
+                : 'bg-white/40 dark:bg-dark-bg/40 hover:bg-gold/5'
             }`}
           >
-            <div className="flex items-center justify-between">
-              <div>
-                <span className="text-[15px] font-bold text-[#000C1F] dark:text-[#FFF8EC]">{t('arrival_now')}</span>
-                <p className="text-[13px] text-[#555] dark:text-[#B0B0A0] mt-0.5">
-                  {t('arrival_queue_position', { position: station.queueCount })}
-                </p>
-              </div>
-              <span className={`w-5 h-5 rounded-full border-2 flex items-center justify-center shrink-0 ${
-                arrivalMode === 'queue_now' ? 'border-gold bg-gold' : 'border-[#BBB] dark:border-[#555]'
+            <div className="flex items-center gap-2.5">
+              <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center shrink-0 transition-colors ${
+                (arrivalMode === 'queue_now' || arrivalMode === 'queue_later')
+                  ? 'border-gold bg-gold'
+                  : 'border-[#BBB] dark:border-[#555]'
               }`}>
-                {arrivalMode === 'queue_now' && <span className="w-2.5 h-2.5 rounded-full bg-[#1a1a1a]" />}
+                {(arrivalMode === 'queue_now' || arrivalMode === 'queue_later') && (
+                  <span className="w-2.5 h-2.5 rounded-full bg-[#1a1a1a]" />
+                )}
+              </div>
+              <span className="text-[15px] font-bold text-[#000C1F] dark:text-[#FFF8EC]">
+                {t('arrival_queue_title')}
               </span>
             </div>
+            <span className={isQueueOpen ? 'text-gold' : 'text-[#888]'}>
+              <ChevronIcon open={isQueueOpen} />
+            </span>
           </button>
 
-          {/* Later */}
-          <button
-            type="button"
-            onClick={() => onSetMode('queue_later')}
-            className={`w-full text-left p-4 rounded-xl border-2 transition-all cursor-pointer ${
-              arrivalMode === 'queue_later'
-                ? 'border-gold bg-gold/10 dark:bg-gold/5'
-                : 'border-[#D0D0C0] dark:border-tab-inactive bg-white/40 dark:bg-dark-bg/40 hover:border-gold/30'
-            }`}
-          >
-            <span className="text-[15px] font-bold text-[#000C1F] dark:text-[#FFF8EC]">{t('arrival_later')}</span>
-            <p className="text-[13px] text-[#555] dark:text-[#B0B0A0] mt-0.5">{t('arrival_later_desc')}</p>
-          </button>
+          {/* Body */}
+          {isQueueOpen && (
+            <div className="px-4 pb-4 pt-3 space-y-3 bg-white/20 dark:bg-dark-bg/20">
 
-          {/* Time suggestions for later */}
-          {arrivalMode === 'queue_later' && (
-            <div className="flex gap-2 flex-wrap ml-2">
-              {LATER_SUGGESTIONS.map((time) => (
-                <button
-                  key={time}
-                  type="button"
-                    onClick={() => onSetLaterTime(time)}
-                  className={`px-4 py-2 rounded-lg text-[14px] font-bold border-2 transition-colors cursor-pointer ${
-                    laterTime === time
-                      ? 'bg-gold border-gold text-dark-bg'
-                      : 'border-[#D0D0C0] dark:border-tab-inactive text-[#000C1F] dark:text-[#FFF8EC] hover:border-gold/40'
-                  }`}
-                >
-                  {time}
-                </button>
-              ))}
+              {/* Queue position card */}
+              <div className="rounded-xl bg-[#E8E8D8] dark:bg-dark-card border border-[#D0D0C0] dark:border-tab-inactive p-4">
+                <div className="flex items-center gap-2 mb-3">
+                  <span className="w-2 h-2 rounded-full bg-lavo-success animate-pulse shrink-0" />
+                  <span className="text-[12px] font-bold text-[#555] dark:text-[#A0A090] uppercase tracking-wider">
+                    {t('arrival_queue_status')}
+                  </span>
+                </div>
+                <div className="grid grid-cols-2 gap-3 text-center">
+                  <div className="bg-white/50 dark:bg-dark-bg/40 rounded-lg p-3">
+                    <div className="text-[26px] font-black text-[#000C1F] dark:text-[#FFF8EC] leading-none">
+                      {station.queueCount}
+                    </div>
+                    <div className="text-[12px] text-[#555] dark:text-[#B0B0A0] mt-1">
+                      {t('arrival_queue_waiting')}
+                    </div>
+                  </div>
+                  <div className="bg-gold/10 dark:bg-gold/8 rounded-lg p-3 border border-gold/20">
+                    <div className="text-[26px] font-black text-gold leading-none">
+                      #{myQueuePosition}
+                    </div>
+                    <div className="text-[12px] text-[#555] dark:text-[#B0B0A0] mt-1">
+                      {t('arrival_queue_your_position')}
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Now option */}
+              <button
+                type="button"
+                onClick={() => onSetMode('queue_now')}
+                className={`w-full text-left px-4 py-3 rounded-xl border-2 transition-all cursor-pointer ${
+                  arrivalMode === 'queue_now'
+                    ? 'border-gold bg-gold/10 dark:bg-gold/5'
+                    : 'border-[#D0D0C0] dark:border-tab-inactive bg-white/40 dark:bg-dark-bg/40 hover:border-gold/30'
+                }`}
+              >
+                <div className="flex items-center justify-between">
+                  <div>
+                    <span className="text-[15px] font-bold text-[#000C1F] dark:text-[#FFF8EC]">{t('arrival_now')}</span>
+                    <p className="text-[13px] text-[#555] dark:text-[#B0B0A0] mt-0.5">
+                      {t('arrival_queue_position', { position: myQueuePosition })}
+                    </p>
+                  </div>
+                  <span className={`w-5 h-5 rounded-full border-2 flex items-center justify-center shrink-0 ${
+                    arrivalMode === 'queue_now' ? 'border-gold bg-gold' : 'border-[#BBB] dark:border-[#555]'
+                  }`}>
+                    {arrivalMode === 'queue_now' && <span className="w-2.5 h-2.5 rounded-full bg-[#1a1a1a]" />}
+                  </span>
+                </div>
+              </button>
+
+              {/* Later option */}
+              <button
+                type="button"
+                onClick={() => onSetMode('queue_later')}
+                className={`w-full text-left px-4 py-3 rounded-xl border-2 transition-all cursor-pointer ${
+                  arrivalMode === 'queue_later'
+                    ? 'border-gold bg-gold/10 dark:bg-gold/5'
+                    : 'border-[#D0D0C0] dark:border-tab-inactive bg-white/40 dark:bg-dark-bg/40 hover:border-gold/30'
+                }`}
+              >
+                <div className="flex items-center justify-between">
+                  <div>
+                    <span className="text-[15px] font-bold text-[#000C1F] dark:text-[#FFF8EC]">{t('arrival_later')}</span>
+                    <p className="text-[13px] text-[#555] dark:text-[#B0B0A0] mt-0.5">{t('arrival_later_desc')}</p>
+                  </div>
+                  <span className={`w-5 h-5 rounded-full border-2 flex items-center justify-center shrink-0 ${
+                    arrivalMode === 'queue_later' ? 'border-gold bg-gold' : 'border-[#BBB] dark:border-[#555]'
+                  }`}>
+                    {arrivalMode === 'queue_later' && <span className="w-2.5 h-2.5 rounded-full bg-[#1a1a1a]" />}
+                  </span>
+                </div>
+              </button>
+
+              {/* Time suggestions for later */}
+              {arrivalMode === 'queue_later' && (
+                <div className="flex gap-2 flex-wrap ml-1">
+                  {LATER_SUGGESTIONS.map((time) => (
+                    <button
+                      key={time}
+                      type="button"
+                      onClick={() => onSetLaterTime(time)}
+                      className={`px-4 py-2 rounded-lg text-[14px] font-bold border-2 transition-colors cursor-pointer ${
+                        laterTime === time
+                          ? 'bg-gold border-gold text-dark-bg'
+                          : 'border-[#D0D0C0] dark:border-tab-inactive text-[#000C1F] dark:text-[#FFF8EC] hover:border-gold/40'
+                      }`}
+                    >
+                      {time}
+                    </button>
+                  ))}
+                </div>
+              )}
             </div>
           )}
         </div>
 
-        {/* Divider */}
-        <div className="flex items-center gap-3">
-          <div className="flex-1 h-px bg-[#D0D0C0] dark:bg-tab-inactive" />
-          <span className="text-[13px] font-bold text-[#888]">{t('arrival_or')}</span>
-          <div className="flex-1 h-px bg-[#D0D0C0] dark:bg-tab-inactive" />
-        </div>
-
-        {/* Option 2: Book a slot */}
-        <div className="space-y-3">
-          <h3 className="text-[15px] font-bold text-[#000C1F] dark:text-[#FFF8EC]">{t('arrival_book_title')}</h3>
-
+        {/* ── Section 2: Book a slot ── */}
+        <div className="rounded-xl border-2 overflow-hidden transition-colors border-[#D0D0C0] dark:border-tab-inactive">
+          {/* Header */}
           <button
             type="button"
-            onClick={() => onSetMode('book_slot')}
-            className={`w-full text-left p-4 rounded-xl border-2 transition-all cursor-pointer ${
-              arrivalMode === 'book_slot'
-                ? 'border-gold bg-gold/10 dark:bg-gold/5'
-                : 'border-[#D0D0C0] dark:border-tab-inactive bg-white/40 dark:bg-dark-bg/40 hover:border-gold/30'
+            onClick={() => toggleSection('book')}
+            className={`w-full flex items-center justify-between px-4 py-3.5 cursor-pointer transition-colors ${
+              isBookOpen
+                ? 'bg-gold/10 dark:bg-gold/5'
+                : 'bg-white/40 dark:bg-dark-bg/40 hover:bg-gold/5'
             }`}
           >
-            <span className="text-[15px] font-bold text-[#000C1F] dark:text-[#FFF8EC]">{t('arrival_book_slot')}</span>
-            <p className="text-[13px] text-[#555] dark:text-[#B0B0A0] mt-0.5">{t('arrival_book_desc')}</p>
+            <div className="flex items-center gap-2.5">
+              <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center shrink-0 transition-colors ${
+                arrivalMode === 'book_slot' ? 'border-gold bg-gold' : 'border-[#BBB] dark:border-[#555]'
+              }`}>
+                {arrivalMode === 'book_slot' && <span className="w-2.5 h-2.5 rounded-full bg-[#1a1a1a]" />}
+              </div>
+              <span className="text-[15px] font-bold text-[#000C1F] dark:text-[#FFF8EC]">
+                {t('arrival_book_title')}
+              </span>
+            </div>
+            <span className={isBookOpen ? 'text-gold' : 'text-[#888]'}>
+              <ChevronIcon open={isBookOpen} />
+            </span>
           </button>
 
-          {/* Date scroller + Time slots */}
-          {arrivalMode === 'book_slot' && (
-            <div className="space-y-3">
+          {/* Body */}
+          {isBookOpen && (
+            <div className="px-4 pb-4 pt-3 space-y-3 bg-white/20 dark:bg-dark-bg/20">
+              <p className="text-[13px] text-[#555] dark:text-[#B0B0A0]">{t('arrival_book_desc')}</p>
+
               {/* Horizontal date scroller */}
               <div className="flex gap-2 overflow-x-auto pb-2 scrollbar-hide">
                 {dates.map((d) => (
                   <button
                     key={d.key}
                     type="button"
-                    onClick={() => onSetDate(d.key)}
+                    onClick={() => { onSetDate(d.key); onSetMode('book_slot'); }}
                     className={`flex flex-col items-center min-w-[58px] py-2 px-3 rounded-xl border-2 transition-colors cursor-pointer ${
-                      selectedDate === d.key
+                      selectedDate === d.key && arrivalMode === 'book_slot'
                         ? 'bg-gold border-gold text-dark-bg'
                         : 'border-[#D0D0C0] dark:border-tab-inactive text-[#000C1F] dark:text-[#FFF8EC] hover:border-gold/40'
                     }`}
                   >
-                    <span className={`text-[11px] font-bold uppercase ${selectedDate === d.key ? 'text-dark-bg' : 'text-[#888]'}`}>{d.dayShort}</span>
+                    <span className={`text-[11px] font-bold uppercase ${selectedDate === d.key && arrivalMode === 'book_slot' ? 'text-dark-bg' : 'text-[#888]'}`}>
+                      {d.dayShort}
+                    </span>
                     <span className="text-[18px] font-black">{d.dateNum}</span>
                   </button>
                 ))}
               </div>
 
               {/* Time slots grid */}
-              {selectedDate && (
+              {selectedDate && arrivalMode === 'book_slot' && (
                 <div className="grid grid-cols-3 gap-2">
                   {timeSlots.map((slot) => (
                     <button

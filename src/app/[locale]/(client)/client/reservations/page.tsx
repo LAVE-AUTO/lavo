@@ -30,7 +30,7 @@ export default function ClientReservationsPage() {
 
       {/* Tabs */}
       <div className="px-4 max-w-2xl mx-auto">
-        <div className="flex bg-[#E0E0D0] dark:bg-[#1A1A18] rounded-xl p-1 mb-6">
+        <div className="flex bg-[#E0E0D0] dark:bg-dark-card rounded-xl p-1 mb-6">
           {(['reservations', 'queue'] as const).map((key) => (
             <button
               key={key}
@@ -117,7 +117,7 @@ function ReservationCard({ reservation: r, t, locale }: { reservation: typeof MO
   return (
     <Link
       href={`/client/reservations/${r.id}`}
-      className="block bg-[#E8E8D8] dark:bg-[#1A1A18] rounded-xl border border-[#D0D0C0] dark:border-tab-inactive p-4 hover:border-gold/30 transition-colors"
+      className="block bg-[#E8E8D8] dark:bg-dark-card rounded-xl border border-[#D0D0C0] dark:border-tab-inactive p-4 hover:border-gold/30 transition-colors"
     >
       <div className="flex gap-3">
         {/* Image */}
@@ -161,7 +161,10 @@ function ReservationCard({ reservation: r, t, locale }: { reservation: typeof MO
 function QueueCard({ entry: q, t }: { entry: typeof MOCK_QUEUE_ENTRIES[0]; t: ReturnType<typeof useTranslations> }) {
   const isActive = q.status === 'in_progress';
   return (
-    <div className="bg-[#E8E8D8] dark:bg-[#1A1A18] rounded-xl border border-[#D0D0C0] dark:border-tab-inactive p-4">
+    <Link
+      href={`/client/reservations/queue/${q.id}`}
+      className="block bg-[#E8E8D8] dark:bg-dark-card rounded-xl border border-[#D0D0C0] dark:border-tab-inactive p-4 hover:border-gold/30 transition-colors"
+    >
       <div className="flex gap-3">
         <div className="w-16 h-16 rounded-lg overflow-hidden shrink-0 bg-[#D0D0C0] dark:bg-tab-inactive">
           {q.stationImageUrl && (
@@ -193,7 +196,7 @@ function QueueCard({ entry: q, t }: { entry: typeof MOCK_QUEUE_ENTRIES[0]; t: Re
           </div>
         </div>
       </div>
-    </div>
+    </Link>
   );
 }
 
@@ -201,7 +204,7 @@ function QueueCard({ entry: q, t }: { entry: typeof MOCK_QUEUE_ENTRIES[0]; t: Re
 function EmptyState({ message }: { message: string }) {
   return (
     <div className="flex flex-col items-center justify-center py-16 gap-4 text-center">
-      <div className="w-16 h-16 rounded-full bg-[#E0E0D0] dark:bg-[#1A1A18] flex items-center justify-center">
+      <div className="w-16 h-16 rounded-full bg-[#E0E0D0] dark:bg-dark-card flex items-center justify-center">
         <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#9A9A8A" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
           <path d="M2 9a2 2 0 012-2h16a2 2 0 012 2v1a2 2 0 010 4v1a2 2 0 01-2 2H4a2 2 0 01-2-2v-1a2 2 0 010-4V9z" />
           <path d="M9 7v10" strokeDasharray="2 2" />
