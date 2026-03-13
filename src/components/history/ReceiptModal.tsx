@@ -250,8 +250,50 @@ export function ReceiptModal({ entry: e, locale, onClose }: ReceiptModalProps) {
     }
 
     @media print {
-      body { background: #fff; padding: 0; }
-      .page { box-shadow: none; border-radius: 0; }
+      @page { size: A4 portrait; margin: 10mm; }
+
+      html, body {
+        background: #fff !important;
+        padding: 0 !important;
+        margin: 0 !important;
+        height: 100%;
+      }
+
+      .page {
+        box-shadow: none !important;
+        border-radius: 0 !important;
+        max-width: 100% !important;
+        width: 100% !important;
+        page-break-inside: avoid;
+      }
+
+      .header { padding: 16px 24px 14px !important; }
+      .brand-name { font-size: 20px !important; }
+      .brand-sub { font-size: 9px !important; }
+      .receipt-badge { font-size: 9px !important; padding: 4px 10px !important; }
+
+      .meta-bar { padding: 10px 24px !important; gap: 20px !important; }
+      .meta-item .meta-label { font-size: 8px !important; }
+      .meta-item .meta-value { font-size: 11px !important; }
+
+      .body { padding: 14px 24px !important; }
+
+      .section-title { font-size: 8px !important; margin-top: 14px !important; margin-bottom: 6px !important; }
+      .section-title:first-child { margin-top: 0 !important; }
+
+      .info-cell { padding: 7px 10px !important; }
+      .cell-label { font-size: 8px !important; margin-bottom: 2px !important; }
+      .cell-value { font-size: 11px !important; }
+
+      .extras-list li { padding: 6px 10px !important; font-size: 11px !important; }
+
+      .total-block { margin-top: 14px !important; padding: 14px 18px !important; }
+      .total-label { font-size: 11px !important; }
+      .total-amount { font-size: 22px !important; }
+
+      .footer { padding: 12px 24px !important; }
+      .footer p { font-size: 10px !important; }
+      .footer .thank-you { font-size: 11px !important; }
     }
   </style>
 </head>
