@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect, useRef } from 'react';
 import { useTranslations, useLocale } from 'next-intl';
 import { Link } from '@/i18n/navigation';
 import { MOCK_RESERVATIONS, MOCK_QUEUE_ENTRIES, type MockReservation } from '@/data/reservations-mock';
@@ -74,7 +74,7 @@ export default function ClientReservationsPage() {
             >
               {t(`tab_${key}`)}
               <span className="ml-1.5 text-[12px] font-semibold opacity-70">
-                ({key === 'reservations' ? reservations.length : MOCK_QUEUE_ENTRIES.length})
+                ({key === 'reservations' ? upcoming.length : MOCK_QUEUE_ENTRIES.length})
               </span>
             </button>
           ))}
@@ -255,6 +255,22 @@ function CancelModal({
   onConfirm: () => void;
   onClose: () => void;
 }) {
+  const dialogRef = useRef<HTMLDivElement | null>(null);
+
+  useEffect(() => {
+    const previouslyFocused = document.activeElement as HTMLElement | null;
+    dialogRef.current?.querySelector<HTMLElement>('button')?.focus();
+
+    const onKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') { e.preventDefault(); onClose(); }
+    };
+    document.addEventListener('keydown', onKeyDown);
+    return () => {
+      document.removeEventListener('keydown', onKeyDown);
+      previouslyFocused?.focus();
+    };
+  }, [onClose]);
+
   const showFeesWarning = isWithinOneHour(r.date, r.timeSlot);
   const dateLabel = new Date(`${r.date}T${r.timeSlot}`).toLocaleDateString(
     locale === 'en' ? 'en-CA' : 'fr-CA',
@@ -267,12 +283,16 @@ function CancelModal({
       onClick={onClose}
     >
       <div
+        ref={dialogRef}
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="cancel-modal-title"
         className="w-full sm:max-w-sm bg-[#F5F5E6] dark:bg-dark-surface rounded-t-2xl sm:rounded-2xl shadow-2xl overflow-hidden animate-fade-in-up mb-14 sm:mb-0"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Header */}
         <div className="px-5 py-4 border-b border-[#D0D0C0] dark:border-tab-inactive">
-          <h2 className="text-[17px] font-black text-[#0A0A14] dark:text-white">{t('cancel_modal_title')}</h2>
+          <h2 id="cancel-modal-title" className="text-[17px] font-black text-[#0A0A14] dark:text-white">{t('cancel_modal_title')}</h2>
         </div>
 
         {/* Body */}
