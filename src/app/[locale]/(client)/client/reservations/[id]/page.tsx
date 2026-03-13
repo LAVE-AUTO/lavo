@@ -6,6 +6,7 @@ import { useTranslations, useLocale } from 'next-intl';
 import { Link, useRouter } from '@/i18n/navigation';
 import { useParams } from 'next/navigation';
 import { useToast } from '@/context/toast-context';
+import { patchWithApi } from '@/services/axios-service';
 import { MOCK_RESERVATIONS } from '@/data/reservations-mock';
 
 export default function ReservationDetailPage() {
@@ -17,8 +18,9 @@ export default function ReservationDetailPage() {
 
   const reservation = useMemo(() => MOCK_RESERVATIONS.find((r) => r.id === id), [id]);
   const [showCancelModal, setShowCancelModal] = useState(false);
+  const [cancelLoading, setCancelLoading] = useState(false);
   const cancelDialogRef = useRef<HTMLDivElement | null>(null);
-  const { success: showSuccess } = useToast();
+  const { success: showSuccess, error: showError } = useToast();
 
   useEffect(() => {
     if (!showCancelModal) return;
@@ -85,10 +87,18 @@ export default function ReservationDetailPage() {
     window.open(url, '_blank', 'noopener,noreferrer');
   };
 
-  const handleConfirmCancel = () => {
-    setShowCancelModal(false);
-    showSuccess(t('toast_cancel_success'));
-    router.push('/client/reservations');
+  const handleConfirmCancel = async () => {
+    if (!reservation) return;
+    setCancelLoading(true);
+    const [ok] = await patchWithApi(`/me/entries/${reservation.id}/cancel`, {});
+    setCancelLoading(false);
+    if (ok) {
+      setShowCancelModal(false);
+      showSuccess(t('toast_cancel_success'));
+      router.push('/client/reservations');
+    } else {
+      showError(t('toast_cancel_error'));
+    }
   };
 
   return (
@@ -222,22 +232,42 @@ export default function ReservationDetailPage() {
                 {t('cancel_modal_title')}
               </h3>
               <p className="text-[14px] text-[#555] dark:text-[#B0B0A0] text-center leading-relaxed">
-                {cancelHasFees ? t('cancel_modal_fees_warning') : t('cancel_modal_desc')}
+                {t('cancel_modal_desc')}
               </p>
+
+              {cancelHasFees && (
+                <div className="flex gap-2.5 bg-lavo-error/10 border border-lavo-error/20 rounded-xl px-3.5 py-3 text-left">
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#E8472A" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="shrink-0 mt-0.5" aria-hidden="true">
+                    <path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z" />
+                    <line x1="12" y1="9" x2="12" y2="13" />
+                    <line x1="12" y1="17" x2="12.01" y2="17" />
+                  </svg>
+                  <p className="text-[12px] font-semibold text-lavo-error leading-relaxed">
+                    {t('cancel_modal_fees_warning')}
+                  </p>
+                </div>
+              )}
 
               <div className="flex gap-3 pt-2">
                 <button
                   type="button"
                   onClick={() => setShowCancelModal(false)}
-                  className="flex-1 py-3 border-2 border-[#D0D0C0] dark:border-tab-inactive rounded-xl text-[14px] font-bold text-[#555] dark:text-[#B0B0A0] hover:bg-[#E0E0D0] transition-colors cursor-pointer"
+                  disabled={cancelLoading}
+                  className="flex-1 py-3 border-2 border-[#D0D0C0] dark:border-tab-inactive rounded-xl text-[14px] font-bold text-[#555] dark:text-[#B0B0A0] hover:bg-[#E0E0D0] transition-colors cursor-pointer disabled:opacity-50"
                 >
                   {t('cancel_modal_keep')}
                 </button>
                 <button
                   type="button"
                   onClick={handleConfirmCancel}
-                  className="flex-1 py-3 bg-lavo-error hover:bg-lavo-error/90 rounded-xl text-[14px] font-bold text-white transition-colors cursor-pointer"
+                  disabled={cancelLoading}
+                  className="flex-1 py-3 bg-lavo-error hover:bg-lavo-error/90 rounded-xl text-[14px] font-bold text-white transition-colors cursor-pointer disabled:opacity-50 flex items-center justify-center gap-2"
                 >
+                  {cancelLoading && (
+                    <svg className="animate-spin" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" aria-hidden="true">
+                      <path d="M21 12a9 9 0 11-6.219-8.56" />
+                    </svg>
+                  )}
                   {t('cancel_modal_confirm')}
                 </button>
               </div>
