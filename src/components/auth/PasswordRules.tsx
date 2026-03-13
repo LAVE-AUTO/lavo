@@ -26,7 +26,7 @@ const PASSWORD_RULES: Rule[] = [
 
 interface PasswordRulesProps {
   password: string;
-  namespace?: 'register' | 'reset_password' | 'change_password';
+  namespace?: 'register' | 'reset_password' | 'change_password' | 'station_apply';
 }
 
 /**
