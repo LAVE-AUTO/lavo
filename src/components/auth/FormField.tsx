@@ -27,6 +27,7 @@ export function FormField({
   ...inputProps
 }: FormFieldProps) {
   const inputId = id ?? `field-${label.toLowerCase().replace(/\s+/g, '-')}`;
+  const errorId = `${inputId}-error`;
 
   return (
     <div className="mb-4">
@@ -41,6 +42,8 @@ export function FormField({
       <div className="relative">
         <input
           id={inputId}
+          aria-invalid={error ? 'true' : undefined}
+          aria-describedby={error ? errorId : undefined}
           className={[
             'w-full px-4 py-3 bg-white dark:bg-dark-card border-[1.5px] rounded-lg',
             'text-[16px] text-[#1A1A1A] dark:text-white placeholder-[#AAAAAA] dark:placeholder-[#4A5A46]',
@@ -63,7 +66,7 @@ export function FormField({
       </div>
 
       {error && (
-        <p className="mt-1.5 text-[13px] font-medium text-lavo-error flex items-center gap-1">
+        <p id={errorId} role="alert" className="mt-1.5 text-[13px] font-medium text-lavo-error flex items-center gap-1">
           <span aria-hidden="true">!</span>
           {error}
         </p>
