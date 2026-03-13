@@ -366,7 +366,8 @@
         "dashboard": "Dashboard",
         "queue": "Queue",
         "config": "Configuration",
-        "clients": "Clients"
+        "clients": "Clients",
+        "history": "History"
     },
     "footer": {
         "tagline": "The booking and payment platform for car wash stations across Canada.",
