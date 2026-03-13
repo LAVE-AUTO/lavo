@@ -151,7 +151,7 @@ function formatTime(time: string): string {
 function mockAvailableSlots(id: string, apiValue: number): number {
     if (apiValue > 0) return apiValue;
     const hex = id.replace(/-/g, '');
-    const n   = parseInt(hex.slice(-1), 16); // 0-15
+    const n = parseInt(hex.slice(-1), 16); // 0-15
     return n < 4 ? 0 : (n % 4) + 1;         // ~25% unavailable, rest 1-4
 }
 
@@ -163,7 +163,7 @@ function mapApiStationToStation(s: ApiStationListItem): Station {
         city: s.city,
         rating: parseFloat(s.average_score || '0') || 0,
         reviewCount: s.total_ratings || 0,
-        availableSlots: mockAvailableSlots(s.id, s.available_slots || 0),
+        availableSlots: process.env.NODE_ENV === 'production' ? (s.available_slots || 0) : mockAvailableSlots(s.id, s.available_slots || 0),
         totalSlots: s.wash_post_count || 0,
         priceFrom: 0,
         tags: [],
