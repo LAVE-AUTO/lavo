@@ -186,7 +186,10 @@ export function StationListView() {
   const hasFilters = cityQuery.trim() || nameSearch.trim() || onlyAvail || price.min !== '' || price.max !== ''
     || selectedCategories.length > 0 || selectedVehicles.length > 0 || selectedServices.length > 0
     || timeFrom !== '' || timeTo !== '';
-  const availableNow  = useMemo(() => hasFilters ? filtered.filter((s) => s.availableSlots > 0) : apiGroups.available_now,    [filtered, hasFilters, apiGroups]);
+  const availableNow  = useMemo(
+    () => (hasFilters ? filtered : apiGroups.available_now).filter((s) => s.availableSlots > 0),
+    [filtered, hasFilters, apiGroups],
+  );
   const topRated      = useMemo(() => hasFilters ? [...filtered].sort((a, b) => b.rating - a.rating)          : apiGroups.most_appreciated, [filtered, hasFilters, apiGroups]);
   const mostRevisited = useMemo(() => hasFilters ? [...filtered].sort((a, b) => b.reviewCount - a.reviewCount) : apiGroups.most_visited,     [filtered, hasFilters, apiGroups]);
 
