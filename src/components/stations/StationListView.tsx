@@ -535,6 +535,12 @@ interface StationSectionProps {
 }
 
 function StationSection({ label, stations, expanded, onToggle, seeMoreLabel, accent = false }: StationSectionProps) {
+  /* Unavailable stations (no slots) are pushed to the bottom of each section. */
+  const sorted = useMemo(
+    () => [...stations].sort((a, b) => (a.availableSlots > 0 ? 0 : 1) - (b.availableSlots > 0 ? 0 : 1)),
+    [stations],
+  );
+
   return (
     <section>
       <SectionHeader
@@ -557,15 +563,15 @@ function StationSection({ label, stations, expanded, onToggle, seeMoreLabel, acc
 
       {expanded ? (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-          {stations.map((station) => (
-            <StationCard key={station.id} station={station} />
+          {sorted.map((station) => (
+            <StationCard key={station.id} station={station} unavailable={station.availableSlots === 0} />
           ))}
         </div>
       ) : (
         <div className="flex gap-4 overflow-x-auto pb-2 scrollbar-none snap-x snap-mandatory">
-          {stations.map((station) => (
+          {sorted.map((station) => (
             <div key={station.id} className="w-[280px] sm:w-[300px] shrink-0 snap-start">
-              <StationCard station={station} />
+              <StationCard station={station} unavailable={station.availableSlots === 0} />
             </div>
           ))}
         </div>

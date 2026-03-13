@@ -85,8 +85,8 @@ export function StationDetail({ id }: StationDetailProps) {
         </Badge>
       </div>
 
-      {/* Category selector */}
-      {categories.length > 0 && (
+      {/* Slot picker — hidden when station has no available slots */}
+      {hasSlots && categories.length > 0 && (
         <div>
           <label className="block text-[11px] font-bold text-[#555] dark:text-[#A0A090] uppercase tracking-wider mb-2">
             {t('service_type')}
@@ -110,8 +110,8 @@ export function StationDetail({ id }: StationDetailProps) {
         </div>
       )}
 
-      {/* Category description + forfait cards */}
-      {currentCategory && (
+      {/* Forfait cards — hidden when station has no available slots */}
+      {hasSlots && currentCategory && (
         <div className="space-y-3">
           {currentCategory.description && (
             <p className="text-[13px] text-[#555] dark:text-[#B0B0A0] leading-relaxed">
@@ -151,6 +151,13 @@ export function StationDetail({ id }: StationDetailProps) {
               </button>
             ))}
           </div>
+        </div>
+      )}
+
+      {/* Unavailable notice — shown when station has no available slots */}
+      {!hasSlots && (
+        <div className="rounded-xl border border-[#D0D0C0] dark:border-tab-inactive bg-[#F0F0E2] dark:bg-dark-bg/50 px-4 py-4 text-[14px] text-[#555] dark:text-[#B0B0A0] text-center leading-relaxed">
+          {t('detail_unavailable_notice')}
         </div>
       )}
 
