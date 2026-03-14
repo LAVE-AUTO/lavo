@@ -1206,7 +1206,7 @@
     "already_member": "Already have an account?",
     "login_link": "Sign in"
   },
-  "merchant_panel": {
+  "station_panel": {
     "headline": "Manage your station,",
     "headline_accent": "effortlessly.",
     "subtitle": "Automated bookings, instant payments and daily payouts — all from one platform.",
@@ -1219,7 +1219,7 @@
     "feature_stats_label": "Real-time dashboard",
     "feature_stats_sub": "Revenue, fill rate, reviews — everything at a glance."
   },
-  "merchant_login": {
+  "station_login": {
     "meta_title": "Merchant sign in",
     "welcome_title": "Merchant portal",
     "welcome_subtitle": "Sign in to access your station dashboard.",

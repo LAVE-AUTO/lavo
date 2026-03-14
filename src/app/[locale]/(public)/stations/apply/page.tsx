@@ -3,7 +3,7 @@ import { eq } from 'drizzle-orm';
 import { db } from '@/lib/db';
 import { washTypes } from '@/lib/db/schema';
 import { StationApplyForm } from '@/components/stations/apply/StationApplyForm';
-import { MerchantBrandPanel } from '@/components/stations/apply/MerchantBrandPanel';
+import { StationBrandPanel } from '@/components/stations/apply/StationBrandPanel';
 
 type Props = { params: Promise<{ locale: string }> };
 
@@ -36,7 +36,7 @@ export default async function StationApplyPage({ params }: Props) {
     <div className="min-h-screen flex">
       {/* Left brand panel — desktop only */}
       <aside className="hidden lg:block lg:w-[42%] xl:w-[45%] shrink-0 sticky top-0 h-screen">
-        <MerchantBrandPanel />
+        <StationBrandPanel />
       </aside>
 
       {/* Right form panel */}
@@ -58,7 +58,7 @@ export default async function StationApplyPage({ params }: Props) {
           <p className="text-center mt-6 text-[14px] text-[#666] dark:text-lavo-muted">
             {t('already_member')}{' '}
             <a
-              href={`/${locale}/merchant/login`}
+              href={`/${locale}/station/login`}
               className="text-gold font-semibold hover:underline"
             >
               {t('login_link')}

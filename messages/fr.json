@@ -1206,7 +1206,7 @@
     "already_member": "Vous avez déjà un compte ?",
     "login_link": "Se connecter"
   },
-  "merchant_panel": {
+  "station_panel": {
     "headline": "Gérez votre station,",
     "headline_accent": "sans effort.",
     "subtitle": "Réservations automatisées, paiements instantanés et virements quotidiens — tout depuis une seule plateforme.",
@@ -1219,7 +1219,7 @@
     "feature_stats_label": "Tableau de bord en temps réel",
     "feature_stats_sub": "Revenus, taux de remplissage, évaluations — tout en un coup d'oeil."
   },
-  "merchant_login": {
+  "station_login": {
     "meta_title": "Connexion marchands",
     "welcome_title": "Espace marchands",
     "welcome_subtitle": "Connectez-vous pour accéder à votre tableau de bord station.",

@@ -158,15 +158,15 @@ function StationMockup({ isDark }: { isDark: boolean }) {
 }
 
 /* ------------------------------------------------------------------ */
-/* MerchantBrandPanel                                                   */
+/* StationBrandPanel                                                    */
 /* ------------------------------------------------------------------ */
 
 /**
- * Left-side branding panel for station apply and merchant login pages.
- * Uses station/merchant-specific features carousel.
+ * Left-side branding panel for station apply and station login pages.
+ * Uses station-specific features carousel.
  */
-export function MerchantBrandPanel() {
-  const t      = useTranslations('merchant_panel');
+export function StationBrandPanel() {
+  const t      = useTranslations('station_panel');
   const locale = useLocale();
   const { resolvedTheme } = useTheme();
   const isDark = resolvedTheme === 'dark';

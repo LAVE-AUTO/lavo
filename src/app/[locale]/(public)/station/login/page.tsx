@@ -1,5 +1,5 @@
 import { getTranslations, setRequestLocale } from 'next-intl/server';
-import { MerchantBrandPanel } from '@/components/stations/apply/MerchantBrandPanel';
+import { StationBrandPanel } from '@/components/stations/apply/StationBrandPanel';
 import { LoginForm } from '@/components/auth/LoginForm';
 import { AuthRedirectGuard } from '@/components/auth/AuthRedirectGuard';
 
@@ -9,20 +9,20 @@ type Props = {
 
 export async function generateMetadata({ params }: Props) {
   const { locale } = await params;
-  const t = await getTranslations({ locale, namespace: 'merchant_login' });
+  const t = await getTranslations({ locale, namespace: 'station_login' });
   return { title: `Slowtime — ${t('meta_title')}` };
 }
 
 /**
- * Merchant login page — split-screen layout.
- * Left: animated merchant brand panel (desktop only).
+ * Station login page — split-screen layout.
+ * Left: animated station brand panel (desktop only).
  * Right: shared LoginForm.
  */
-export default async function MerchantLoginPage({ params }: Props) {
+export default async function StationLoginPage({ params }: Props) {
   const { locale } = await params;
   setRequestLocale(locale);
 
-  const t = await getTranslations({ locale, namespace: 'merchant_login' });
+  const t = await getTranslations({ locale, namespace: 'station_login' });
 
   return (
     <>
@@ -30,7 +30,7 @@ export default async function MerchantLoginPage({ params }: Props) {
       <div className="min-h-screen flex">
         {/* Left brand panel — desktop only */}
         <aside className="hidden lg:block lg:w-[42%] xl:w-[45%] shrink-0 sticky top-0 h-screen">
-          <MerchantBrandPanel />
+          <StationBrandPanel />
         </aside>
 
         {/* Right form panel */}
