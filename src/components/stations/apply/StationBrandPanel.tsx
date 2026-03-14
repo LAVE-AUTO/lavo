@@ -53,11 +53,35 @@ function ChartIcon() {
   );
 }
 
+function AccountIcon() {
+  return (
+    <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      <path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/>
+      <circle cx="12" cy="7" r="4"/>
+    </svg>
+  );
+}
+
+function ShieldIcon() {
+  return (
+    <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+      <polyline points="9 12 11 14 15 10"/>
+    </svg>
+  );
+}
+
 const FEATURE_ICONS = [
   <CalendarIcon key="calendar" />,
   <PaymentIcon key="payment" />,
   <QrIcon key="qr" />,
   <ChartIcon key="chart" />,
+];
+
+const STEP_FEATURE_ICONS = [
+  <AccountIcon key="account" />,
+  <CalendarIcon key="calendar" />,
+  <ShieldIcon key="shield" />,
 ];
 
 const FEATURE_KEYS = [
@@ -67,8 +91,20 @@ const FEATURE_KEYS = [
   { label: 'feature_stats_label',   sub: 'feature_stats_sub' },
 ] as const;
 
+const STEP_FEATURE_KEYS = [
+  { label: 'feature_account_label', sub: 'feature_account_sub' },
+  { label: 'feature_booking_label', sub: 'feature_booking_sub' },
+  { label: 'feature_kyc_label',     sub: 'feature_kyc_sub' },
+] as const;
+
+const STEP_HEADLINE_KEYS = [
+  { headline: 'step1_headline', accent: 'step1_headline_accent', subtitle: 'step1_subtitle' },
+  { headline: 'step2_headline', accent: 'step2_headline_accent', subtitle: 'step2_subtitle' },
+  { headline: 'step3_headline', accent: 'step3_headline_accent', subtitle: 'step3_subtitle' },
+] as const;
+
 /* ------------------------------------------------------------------ */
-/* Station mockup illustration                                          */
+/* Mockup illustrations                                                 */
 /* ------------------------------------------------------------------ */
 
 function StationMockup({ isDark }: { isDark: boolean }) {
@@ -86,12 +122,10 @@ function StationMockup({ isDark }: { isDark: boolean }) {
 
   return (
     <div className="w-full max-w-[280px] animate-float" aria-hidden="true">
-      {/* Card header */}
       <div
         className="rounded-2xl overflow-hidden shadow-[0_20px_60px_rgba(0,0,0,0.35)]"
         style={{ background: cardBg, border: `1.5px solid ${borderC}` }}
       >
-        {/* Top bar */}
         <div style={{ background: goldC, padding: '10px 16px' }} className="flex items-center justify-between">
           <span className="text-[12px] font-bold tracking-[1.5px] uppercase text-[#0d1f0f]">
             Agenda · Aujourd'hui
@@ -99,7 +133,6 @@ function StationMockup({ isDark }: { isDark: boolean }) {
           <span className="text-[11px] font-semibold text-[#0d1f0f] opacity-70">3 rendez-vous</span>
         </div>
 
-        {/* Slots */}
         <div className="p-4 flex flex-col gap-2.5">
           {slots.map((slot) => (
             <div
@@ -136,7 +169,6 @@ function StationMockup({ isDark }: { isDark: boolean }) {
           ))}
         </div>
 
-        {/* Footer kpi */}
         <div
           className="flex items-center justify-around px-4 py-3"
           style={{ borderTop: `1px solid ${borderC}` }}
@@ -157,15 +189,176 @@ function StationMockup({ isDark }: { isDark: boolean }) {
   );
 }
 
+function AccountSetupMockup({ isDark }: { isDark: boolean }) {
+  const cardBg  = isDark ? '#1E2A1A' : '#F5F0E4';
+  const borderC = isDark ? '#2E3E2A' : '#D4C88A';
+  const textCol = isDark ? '#FFF8EC' : '#1A2116';
+  const mutedC  = isDark ? '#7A9A7D' : '#6B7A64';
+  const goldC   = '#C8980A';
+
+  const fields = [
+    { label: 'Email professionnel', filled: true },
+    { label: 'Telephone', filled: true },
+    { label: 'Mot de passe', filled: false },
+  ];
+
+  return (
+    <div className="w-full max-w-[280px] animate-float" aria-hidden="true">
+      <div
+        className="rounded-2xl overflow-hidden shadow-[0_20px_60px_rgba(0,0,0,0.35)]"
+        style={{ background: cardBg, border: `1.5px solid ${borderC}` }}
+      >
+        <div style={{ background: goldC, padding: '10px 16px' }} className="flex items-center gap-2">
+          <div className="w-6 h-6 rounded-full bg-[rgba(0,0,0,0.15)] flex items-center justify-center">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2.5"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+          </div>
+          <span className="text-[12px] font-bold tracking-[1.5px] uppercase text-[#0d1f0f]">Creation de compte</span>
+        </div>
+        <div className="p-4 flex flex-col gap-3">
+          {fields.map((f) => (
+            <div key={f.label}>
+              <p className="text-[10px] font-semibold mb-1" style={{ color: mutedC }}>{f.label}</p>
+              <div
+                className="h-9 rounded-lg flex items-center px-3"
+                style={{
+                  background: f.filled ? (isDark ? 'rgba(200,152,10,0.12)' : 'rgba(200,152,10,0.10)') : (isDark ? 'rgba(255,255,255,0.04)' : 'rgba(0,0,0,0.04)'),
+                  border: `1px solid ${f.filled ? 'rgba(200,152,10,0.4)' : borderC}`,
+                }}
+              >
+                {f.filled && (
+                  <div className="flex items-center gap-1.5">
+                    <div className="w-3 h-3 rounded-full" style={{ background: '#00C851' }} />
+                    <span className="text-[11px]" style={{ color: textCol }}>••••••••••</span>
+                  </div>
+                )}
+              </div>
+            </div>
+          ))}
+          <div
+            className="mt-1 h-9 rounded-lg flex items-center justify-center"
+            style={{ background: goldC }}
+          >
+            <span className="text-[12px] font-bold text-[#0d1f0f] tracking-wider">Continuer</span>
+          </div>
+        </div>
+        <div
+          className="flex items-center justify-center gap-2 px-4 py-3"
+          style={{ borderTop: `1px solid ${borderC}` }}
+        >
+          {[1, 2, 3].map((n, i) => (
+            <div
+              key={n}
+              className="h-1.5 rounded-full transition-all"
+              style={{
+                width: i === 0 ? 24 : 8,
+                background: i === 0 ? goldC : (isDark ? 'rgba(255,255,255,0.15)' : 'rgba(0,0,0,0.15)'),
+              }}
+            />
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function KycMockup({ isDark }: { isDark: boolean }) {
+  const cardBg  = isDark ? '#1E2A1A' : '#F5F0E4';
+  const borderC = isDark ? '#2E3E2A' : '#D4C88A';
+  const mutedC  = isDark ? '#7A9A7D' : '#6B7A64';
+  const goldC   = '#C8980A';
+
+  const steps = [
+    { label: 'Documents envoyes',    done: true,  active: false },
+    { label: 'Verification en cours', done: false, active: true  },
+    { label: 'Compte active',        done: false, active: false },
+  ];
+
+  return (
+    <div className="w-full max-w-[280px] animate-float" aria-hidden="true">
+      <div
+        className="rounded-2xl overflow-hidden shadow-[0_20px_60px_rgba(0,0,0,0.35)]"
+        style={{ background: cardBg, border: `1.5px solid ${borderC}` }}
+      >
+        <div style={{ background: goldC, padding: '10px 16px' }} className="flex items-center gap-2">
+          <div className="w-6 h-6 rounded-full bg-[rgba(0,0,0,0.15)] flex items-center justify-center">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2.5"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2h11"/></svg>
+          </div>
+          <span className="text-[12px] font-bold tracking-[1.5px] uppercase text-[#0d1f0f]">Verification KYC</span>
+        </div>
+        <div className="p-4 flex flex-col gap-0">
+          {steps.map((s, i) => (
+            <div key={s.label} className="flex gap-3">
+              <div className="flex flex-col items-center">
+                <div
+                  className="w-7 h-7 rounded-full flex items-center justify-center shrink-0"
+                  style={{
+                    background: s.done ? '#00C851' : s.active ? goldC : (isDark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.08)'),
+                    border: `2px solid ${s.done ? '#00C851' : s.active ? goldC : borderC}`,
+                  }}
+                >
+                  {s.done ? (
+                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="3"><polyline points="20 6 9 17 4 12"/></svg>
+                  ) : s.active ? (
+                    <div className="w-2.5 h-2.5 rounded-full bg-[#0d1f0f] animate-pulse" />
+                  ) : (
+                    <div className="w-2 h-2 rounded-full" style={{ background: mutedC }} />
+                  )}
+                </div>
+                {i < steps.length - 1 && (
+                  <div
+                    className="w-0.5 h-7 mt-0.5"
+                    style={{ background: s.done ? '#00C851' : borderC }}
+                  />
+                )}
+              </div>
+              <div className="pt-1 pb-3">
+                <p
+                  className="text-[12px] font-semibold"
+                  style={{ color: s.done ? '#00C851' : s.active ? goldC : mutedC }}
+                >
+                  {s.label}
+                </p>
+                {s.active && (
+                  <p className="text-[10px] mt-0.5" style={{ color: mutedC }}>24-48 heures</p>
+                )}
+              </div>
+            </div>
+          ))}
+        </div>
+        <div
+          className="flex items-center justify-around px-4 py-3"
+          style={{ borderTop: `1px solid ${borderC}` }}
+        >
+          {[
+            { val: '1/3', label: 'Documents' },
+            { val: '48h', label: 'Delai' },
+            { val: '100%', label: 'Securise' },
+          ].map(({ val, label }) => (
+            <div key={label} className="text-center">
+              <p className="text-[15px] font-bold" style={{ color: goldC }}>{val}</p>
+              <p className="text-[10px]" style={{ color: mutedC }}>{label}</p>
+            </div>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+}
+
 /* ------------------------------------------------------------------ */
 /* StationBrandPanel                                                    */
 /* ------------------------------------------------------------------ */
 
+interface StationBrandPanelProps {
+  step?: 1 | 2 | 3;
+}
+
 /**
  * Left-side branding panel for station apply and station login pages.
- * Uses station-specific features carousel.
+ * When a step prop is provided (apply page), content animates per step.
+ * When no step is provided (login page), the existing feature carousel runs.
  */
-export function StationBrandPanel() {
+export function StationBrandPanel({ step }: StationBrandPanelProps) {
   const t      = useTranslations('station_panel');
   const locale = useLocale();
   const { resolvedTheme } = useTheme();
@@ -173,24 +366,33 @@ export function StationBrandPanel() {
 
   const lightLogoSrc = locale === 'fr' ? '/logo/logo2_2.png' : '/logo/logo_anglais_1.png';
 
+  /* Carousel state (only active when no step prop) */
   const [activeIdx, setActiveIdx]     = useState(0);
   const [progressKey, setProgressKey] = useState(0);
   const intervalRef                   = useRef<ReturnType<typeof setInterval> | null>(null);
 
+  const isControlled = step !== undefined;
+
   const startInterval = useCallback(() => {
+    if (isControlled) return;
     if (intervalRef.current) clearInterval(intervalRef.current);
     intervalRef.current = setInterval(() => {
       setActiveIdx((prev) => (prev + 1) % FEATURE_KEYS.length);
       setProgressKey((prev) => prev + 1);
     }, INTERVAL_MS);
-  }, []);
+  }, [isControlled]);
 
   useEffect(() => {
+    if (isControlled) {
+      if (intervalRef.current) clearInterval(intervalRef.current);
+      return;
+    }
     startInterval();
     return () => { if (intervalRef.current) clearInterval(intervalRef.current); };
-  }, [startInterval]);
+  }, [startInterval, isControlled]);
 
   const handleDotClick = (idx: number) => {
+    if (isControlled) return;
     setActiveIdx(idx);
     setProgressKey((prev) => prev + 1);
     startInterval();
@@ -201,6 +403,20 @@ export function StationBrandPanel() {
   const trackColor    = isDark ? 'bg-white/10'         : 'bg-black/10';
   const inactiveDot   = isDark ? 'bg-white/20 hover:bg-white/40' : 'bg-black/20 hover:bg-black/40';
   const featureCardBg = isDark ? 'bg-white/5 border border-white/8' : 'bg-black/5 border border-black/6';
+
+  /* Step-controlled values */
+  const stepIdx        = isControlled ? step - 1 : activeIdx;
+  const stepKeys       = isControlled ? STEP_HEADLINE_KEYS[stepIdx] : null;
+  const stepFeatureKey = isControlled ? STEP_FEATURE_KEYS[stepIdx]  : FEATURE_KEYS[activeIdx];
+  const stepIcon       = isControlled ? STEP_FEATURE_ICONS[stepIdx] : FEATURE_ICONS[activeIdx];
+
+  const currentMockup = isControlled
+    ? [
+        <AccountSetupMockup key="account" isDark={isDark} />,
+        <StationMockup key="station" isDark={isDark} />,
+        <KycMockup key="kyc" isDark={isDark} />,
+      ][stepIdx]
+    : <StationMockup isDark={isDark} />;
 
   return (
     <div
@@ -228,88 +444,123 @@ export function StationBrandPanel() {
       {/* Content */}
       <div className="relative z-10 flex flex-col justify-between h-full p-10 xl:p-14">
 
-        {/* Logo */}
-        <div className="animate-fade-in">
-          {isDark ? (
-            <div className="flex items-center gap-2.5">
-              <div className="rounded-xl bg-white/95 p-1 border border-[rgba(200,152,10,0.25)] shadow-sm shrink-0">
-                <Image src="/logo/frame2.png" alt="" width={36} height={36} className="w-9 h-9 object-contain" aria-hidden="true" />
+        {/* Logo row with optional step indicator */}
+        <div className="flex items-start justify-between animate-fade-in">
+          <div>
+            {isDark ? (
+              <div className="flex items-center gap-2.5">
+                <div className="rounded-xl bg-white/95 p-1 border border-[rgba(200,152,10,0.25)] shadow-sm shrink-0">
+                  <Image src="/logo/frame2.png" alt="" width={36} height={36} className="w-9 h-9 object-contain" aria-hidden="true" />
+                </div>
+                <div>
+                  <span className="text-xl font-bold text-white tracking-wide">Slowtime</span>
+                  <p className="text-[10px] font-semibold tracking-[2px] uppercase text-[#C8980A] leading-none">Marchands</p>
+                </div>
               </div>
+            ) : (
               <div>
-                <span className="text-xl font-bold text-white tracking-wide">Slowtime</span>
-                <p className="text-[10px] font-semibold tracking-[2px] uppercase text-[#C8980A] leading-none">Marchands</p>
+                <Image src={lightLogoSrc} alt="Slowtime" width={160} height={44} className="object-contain h-9 w-auto" />
+                <p className="text-[10px] font-semibold tracking-[2px] uppercase text-[#C8980A] mt-1">Espace Marchands</p>
               </div>
-            </div>
-          ) : (
-            <div>
-              <Image src={lightLogoSrc} alt="Slowtime" width={160} height={44} className="object-contain h-9 w-auto" />
-              <p className="text-[10px] font-semibold tracking-[2px] uppercase text-[#C8980A] mt-1">Espace Marchands</p>
+            )}
+          </div>
+
+          {/* Step progress indicator */}
+          {isControlled && (
+            <div className="flex items-center gap-1.5 mt-2">
+              {[1, 2, 3].map((n) => (
+                <div
+                  key={n}
+                  className="transition-all duration-300 rounded-full"
+                  style={{
+                    width: n === step ? 20 : 6,
+                    height: 6,
+                    background: n === step ? '#C8980A' : (isDark ? 'rgba(255,255,255,0.2)' : 'rgba(0,0,0,0.15)'),
+                  }}
+                />
+              ))}
             </div>
           )}
         </div>
 
-        {/* Station mockup + headline */}
-        <div className="flex flex-col items-center text-center gap-6">
-          <StationMockup isDark={isDark} />
+        {/* Mockup + headline — keyed on step to trigger fade-in on change */}
+        <div
+          key={isControlled ? step : 'static'}
+          className="flex flex-col items-center text-center gap-6 animate-fade-in"
+        >
+          {currentMockup}
           <div>
-            <h2 className={`text-3xl xl:text-[2.4rem] font-bold leading-tight animate-fade-in-up animation-delay-100 ${textPrimary}`}>
-              {t('headline')}{' '}
-              <span className="text-[#C8980A]">{t('headline_accent')}</span>
+            <h2 className={`text-3xl xl:text-[2.4rem] font-bold leading-tight ${textPrimary}`}>
+              {stepKeys ? (
+                <>
+                  {t(stepKeys.headline)}{' '}
+                  <span className="text-[#C8980A]">{t(stepKeys.accent)}</span>
+                </>
+              ) : (
+                <>
+                  {t('headline')}{' '}
+                  <span className="text-[#C8980A]">{t('headline_accent')}</span>
+                </>
+              )}
             </h2>
-            <p className={`mt-3 text-[15px] leading-relaxed animate-fade-in-up animation-delay-200 ${textSecondary}`}>
-              {t('subtitle')}
+            <p className={`mt-3 text-[15px] leading-relaxed ${textSecondary}`}>
+              {stepKeys ? t(stepKeys.subtitle) : t('subtitle')}
             </p>
           </div>
         </div>
 
-        {/* Feature carousel */}
+        {/* Feature carousel / step feature card */}
         <div className="flex flex-col gap-3">
-          <div className="flex items-center gap-3">
-            <div className="h-px w-8 bg-[rgba(200,152,10,0.6)]" />
-            <span className={`text-[11px] font-bold tracking-[0.2em] uppercase ${isDark ? 'text-[rgba(200,152,10,0.8)]' : 'text-[#C8980A]'}`}>
-              {String(activeIdx + 1).padStart(2, '0')} / {String(FEATURE_KEYS.length).padStart(2, '0')}
-            </span>
-          </div>
+          {!isControlled && (
+            <div className="flex items-center gap-3">
+              <div className="h-px w-8 bg-[rgba(200,152,10,0.6)]" />
+              <span className={`text-[11px] font-bold tracking-[0.2em] uppercase ${isDark ? 'text-[rgba(200,152,10,0.8)]' : 'text-[#C8980A]'}`}>
+                {String(activeIdx + 1).padStart(2, '0')} / {String(FEATURE_KEYS.length).padStart(2, '0')}
+              </span>
+            </div>
+          )}
 
           <div
-            key={activeIdx}
+            key={isControlled ? `step-feature-${step}` : activeIdx}
             className={`flex items-center gap-5 animate-fade-in-up rounded-2xl p-5 ${featureCardBg}`}
           >
             <div className="w-14 h-14 rounded-2xl bg-[rgba(200,152,10,0.2)] border-2 border-[rgba(200,152,10,0.4)] flex items-center justify-center text-[#C8980A] shrink-0">
-              {FEATURE_ICONS[activeIdx]}
+              {stepIcon}
             </div>
             <div>
               <p className={`text-[19px] font-bold leading-tight ${textPrimary}`}>
-                {t(FEATURE_KEYS[activeIdx].label)}
+                {t(stepFeatureKey.label)}
               </p>
               <p className={`text-[13px] mt-1.5 leading-relaxed ${textSecondary}`}>
-                {t(FEATURE_KEYS[activeIdx].sub)}
+                {t(stepFeatureKey.sub)}
               </p>
             </div>
           </div>
 
-          <div className="flex items-center gap-4">
-            <div className={`flex-1 h-[3px] rounded-full ${trackColor}`}>
-              <div
-                key={progressKey}
-                className="h-full bg-[#C8980A] rounded-full animate-progress-fill"
-                style={{ animationDuration: `${INTERVAL_MS}ms` }}
-              />
-            </div>
-            <div className="flex items-center gap-2 shrink-0">
-              {FEATURE_KEYS.map((_, i) => (
-                <button
-                  key={i}
-                  type="button"
-                  onClick={() => handleDotClick(i)}
-                  aria-label={`Feature ${i + 1}`}
-                  className={`rounded-full transition-all duration-300 ${
-                    i === activeIdx ? 'w-6 h-2.5 bg-[#C8980A]' : `w-2.5 h-2.5 ${inactiveDot}`
-                  }`}
+          {!isControlled && (
+            <div className="flex items-center gap-4">
+              <div className={`flex-1 h-[3px] rounded-full ${trackColor}`}>
+                <div
+                  key={progressKey}
+                  className="h-full bg-[#C8980A] rounded-full animate-progress-fill"
+                  style={{ animationDuration: `${INTERVAL_MS}ms` }}
                 />
-              ))}
+              </div>
+              <div className="flex items-center gap-2 shrink-0">
+                {FEATURE_KEYS.map((_, i) => (
+                  <button
+                    key={i}
+                    type="button"
+                    onClick={() => handleDotClick(i)}
+                    aria-label={`Feature ${i + 1}`}
+                    className={`rounded-full transition-all duration-300 ${
+                      i === activeIdx ? 'w-6 h-2.5 bg-[#C8980A]' : `w-2.5 h-2.5 ${inactiveDot}`
+                    }`}
+                  />
+                ))}
+              </div>
             </div>
-          </div>
+          )}
         </div>
 
       </div>

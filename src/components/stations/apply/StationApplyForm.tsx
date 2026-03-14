@@ -14,6 +14,7 @@ import { ApplySuccess } from './ApplySuccess';
 
 interface StationApplyFormProps {
   washTypes: WashTypeOption[];
+  onStepChange?: (step: Step) => void;
 }
 
 type Step = 1 | 2 | 3;
@@ -49,11 +50,16 @@ const DEFAULT_STEP3: Step3Data = {
  * Orchestrates three steps (Account → Commerce → Documents) and submits
  * the full payload to POST /stations/onboarding/submit.
  */
-export function StationApplyForm({ washTypes }: StationApplyFormProps) {
+export function StationApplyForm({ washTypes, onStepChange }: StationApplyFormProps) {
   const t = useTranslations('station_apply');
   const { error: showError } = useToast();
 
   const [currentStep, setCurrentStep] = useState<Step>(1);
+
+  function goToStep(step: Step) {
+    setCurrentStep(step);
+    onStepChange?.(step);
+  }
   const [isLoading, setIsLoading]     = useState(false);
   const [success, setSuccess]         = useState(false);
 
@@ -76,7 +82,7 @@ export function StationApplyForm({ washTypes }: StationApplyFormProps) {
       }, { successStatus: HTTP_STATUS.OK });
 
       if (ok) {
-        setCurrentStep(2);
+        goToStep(2);
         return;
       }
 
@@ -118,7 +124,7 @@ export function StationApplyForm({ washTypes }: StationApplyFormProps) {
       });
 
       if (ok) {
-        setCurrentStep(3);
+        goToStep(3);
         return;
       }
 
@@ -184,7 +190,7 @@ export function StationApplyForm({ washTypes }: StationApplyFormProps) {
 
       const res = data as { code?: string };
       if (res?.code === 'EMAIL_ALREADY_EXISTS') {
-        setCurrentStep(1);
+        goToStep(1);
         setErrors1({ email: t('error_email_taken') });
       } else if (res?.code === 'TOO_MANY_REQUESTS') {
         showError(t('error_rate_limit'));
@@ -224,7 +230,7 @@ export function StationApplyForm({ washTypes }: StationApplyFormProps) {
           onChange={setStep2}
           onErrors={setErrors2}
           onNext={handleStep2Next}
-          onPrev={() => setCurrentStep(1)}
+          onPrev={() => goToStep(1)}
         />
       )}
 
@@ -236,7 +242,7 @@ export function StationApplyForm({ washTypes }: StationApplyFormProps) {
           onChange={setStep3}
           onErrors={setErrors3}
           onSubmit={handleSubmit}
-          onPrev={() => setCurrentStep(2)}
+          onPrev={() => goToStep(2)}
         />
       )}
     </>
