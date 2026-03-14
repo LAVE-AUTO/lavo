@@ -3,6 +3,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useTranslations } from 'next-intl';
 import { getFromApi } from '@/services';
+import { useAuth } from '@/context/auth-context';
 import { StationConfigForm, type StationConfig, type StationPost } from './StationConfigForm';
 import { StationSlotList } from './StationSlotList';
 import { SlotModal, type CreatedSlot } from './SlotModal';
@@ -16,6 +17,7 @@ function todayISO() {
 
 export function StationConfigPage() {
   const t = useTranslations('station_config');
+  const { isLoading: authLoading } = useAuth();
 
   const [config, setConfig] = useState<StationConfig | null>(null);
   const [posts, setPosts] = useState<StationPost[]>([]);
@@ -37,7 +39,9 @@ export function StationConfigPage() {
     setLoading(false);
   }, []);
 
-  useEffect(() => { loadConfig(); }, [loadConfig]);
+  useEffect(() => {
+    if (!authLoading) loadConfig();
+  }, [authLoading, loadConfig]);
 
   function handleSaved(newConfig: StationConfig, newPosts: StationPost[]) {
     setConfig(newConfig);
