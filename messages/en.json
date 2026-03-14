@@ -1217,7 +1217,26 @@
     "feature_qr_label": "Instant QR scan",
     "feature_qr_sub": "Generate a unique QR code. Clients scan and pay in seconds.",
     "feature_stats_label": "Real-time dashboard",
-    "feature_stats_sub": "Revenue, fill rate, reviews — everything at a glance."
+    "feature_stats_sub": "Revenue, fill rate, reviews — everything at a glance.",
+    "step1_headline": "Create your",
+    "step1_headline_accent": "merchant space.",
+    "step1_subtitle": "Join hundreds of partner stations. Quick sign-up, no paperwork.",
+    "step2_headline": "Manage your station,",
+    "step2_headline_accent": "effortlessly.",
+    "step2_subtitle": "Automated bookings, instant payments and daily payouts — all from one platform.",
+    "step3_headline": "Validated in",
+    "step3_headline_accent": "48 hours.",
+    "step3_subtitle": "Our team reviews your documents quickly. Once validated, your page goes live.",
+    "feature_account_label": "Secure space",
+    "feature_account_sub": "Protected professional account. Encrypted data, fully compliant.",
+    "feature_kyc_label": "Fast activation",
+    "feature_kyc_sub": "Our team validates your documents in 24-48h. You can launch your activity immediately."
+  },
+  "auth_switch": {
+    "merchant_label": "Do you own a car wash station?",
+    "merchant_action": "Merchant space",
+    "client_label": "Are you a customer?",
+    "client_action": "Client space"
   },
   "station_login": {
     "meta_title": "Merchant sign in",

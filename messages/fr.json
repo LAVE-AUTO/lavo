@@ -1217,7 +1217,26 @@
     "feature_qr_label": "Scan QR instantané",
     "feature_qr_sub": "Générez un QR code unique. Vos clients scannent et paient en quelques secondes.",
     "feature_stats_label": "Tableau de bord en temps réel",
-    "feature_stats_sub": "Revenus, taux de remplissage, évaluations — tout en un coup d'oeil."
+    "feature_stats_sub": "Revenus, taux de remplissage, évaluations — tout en un coup d'oeil.",
+    "step1_headline": "Créez votre",
+    "step1_headline_accent": "espace marchand.",
+    "step1_subtitle": "Rejoignez des centaines de stations partenaires. Inscription rapide, sans paperasse.",
+    "step2_headline": "Gérez votre station,",
+    "step2_headline_accent": "sans effort.",
+    "step2_subtitle": "Réservations automatisées, paiements instantanés et virements quotidiens — tout depuis une seule plateforme.",
+    "step3_headline": "Validation en",
+    "step3_headline_accent": "48 heures.",
+    "step3_subtitle": "Notre équipe examine vos documents rapidement. Dès la validation, votre page est en ligne.",
+    "feature_account_label": "Espace securise",
+    "feature_account_sub": "Compte professionnel protege. Donnees chiffrees et conformes aux normes.",
+    "feature_kyc_label": "Activation rapide",
+    "feature_kyc_sub": "Notre equipe valide vos documents en 24-48h. Vous pouvez lancer votre activite immediatement."
+  },
+  "auth_switch": {
+    "merchant_label": "Vous avez une station de lavage ?",
+    "merchant_action": "Espace marchand",
+    "client_label": "Vous etes client ?",
+    "client_action": "Espace client"
   },
   "station_login": {
     "meta_title": "Connexion marchands",
