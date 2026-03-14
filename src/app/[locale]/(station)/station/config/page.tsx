@@ -1,8 +1,9 @@
 export default function StationConfigPage() {
   return (
-    <main className="p-6">
-      <h1 className="text-xl font-semibold">Configuration station</h1>
-    </main>
+    <div className="flex flex-1 items-center justify-center" style={{ background: '#0C1209' }}>
+      <p className="text-[14px]" style={{ color: '#8A8A7A' }}>
+        Section en cours de développement
+      </p>
+    </div>
   );
 }
-
