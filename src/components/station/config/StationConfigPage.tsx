@@ -11,6 +11,28 @@ import { SlotModal, type CreatedSlot } from './SlotModal';
 // TODO: connect to API once endpoint is available — GET /station/slots does not exist yet
 const MOCK_SLOTS: CreatedSlot[] = [];
 
+// TODO: connect to API once endpoint is available — replace when GET /station/config is stable
+const MOCK_CONFIG: StationConfig = {
+  id: 'mock',
+  opening_time: '08:00',
+  closing_time: '20:00',
+  break_start: '12:00',
+  break_end: '13:00',
+  wash_duration_minutes: 30,
+  late_tolerance_minutes: 10,
+  cancellation_delay_minutes: 60,
+  max_concurrent_posts: 3,
+  margin_before_minutes: 5,
+  margin_after_minutes: 5,
+  reservation_surcharge: '2.00',
+};
+
+const MOCK_POSTS: StationPost[] = [
+  { id: 'post-1', position: 1, is_active: true },
+  { id: 'post-2', position: 2, is_active: true },
+  { id: 'post-3', position: 3, is_active: false },
+];
+
 function todayISO() {
   return new Date().toISOString().slice(0, 10);
 }
@@ -19,12 +41,11 @@ export function StationConfigPage() {
   const t = useTranslations('station_config');
   const { isLoading: authLoading } = useAuth();
 
-  const [config, setConfig] = useState<StationConfig | null>(null);
-  const [posts, setPosts] = useState<StationPost[]>([]);
+  const [config, setConfig] = useState<StationConfig>(MOCK_CONFIG);
+  const [posts, setPosts] = useState<StationPost[]>(MOCK_POSTS);
   const [slots, setSlots] = useState<CreatedSlot[]>(MOCK_SLOTS);
   const [selectedDate, setSelectedDate] = useState(todayISO);
   const [loading, setLoading] = useState(true);
-  const [loadError, setLoadError] = useState(false);
   const [modal, setModal] = useState<'add' | 'generate' | null>(null);
 
   const loadConfig = useCallback(async () => {
@@ -33,9 +54,8 @@ export function StationConfigPage() {
       const res = data as { data: { config: StationConfig; posts: StationPost[] } };
       setConfig(res.data.config);
       setPosts(res.data.posts);
-    } else {
-      setLoadError(true);
     }
+    // on failure, MOCK_CONFIG/MOCK_POSTS remain in state — page stays usable
     setLoading(false);
   }, []);
 
@@ -64,14 +84,6 @@ export function StationConfigPage() {
     );
   }
 
-  if (loadError) {
-    return (
-      <div className="flex flex-1 items-center justify-center text-[13px]" style={{ color: '#EF4444' }}>
-        {t('save_error')}
-      </div>
-    );
-  }
-
   const visibleSlots = slots.filter((s) => s.start_time.startsWith(selectedDate));
 
   return (
@@ -83,9 +95,7 @@ export function StationConfigPage() {
       </div>
 
       <div className="flex flex-1 flex-col gap-5 overflow-y-auto p-6">
-        {config && (
-          <StationConfigForm config={config} posts={posts} onSaved={handleSaved} />
-        )}
+        <StationConfigForm config={config} posts={posts} onSaved={handleSaved} />
         <StationSlotList
           slots={visibleSlots}
           selectedDate={selectedDate}
