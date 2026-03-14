@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import { getFromApi, patchWithApi } from '@/services';
+import { useAuth } from '@/context/auth-context';
 import { DashboardKpiRow, type KpiData } from './DashboardKpiRow';
 import { DashboardDateNav } from './DashboardDateNav';
 import { DashboardQueuePanel } from './DashboardQueuePanel';
@@ -64,6 +65,7 @@ function buildPosts(rawConfig: RawConfig, rawEntries: RawEntry[]): Post[] {
 }
 
 export function StationDashboard() {
+  const { isLoading: authLoading } = useAuth();
   const [selectedDate, setSelectedDate] = useState(() => new Date());
   const [view, setView] = useState<'weekly' | 'monthly'>('weekly');
   const [queueEntries, setQueueEntries] = useState<QueueEntry[]>([]);
@@ -83,7 +85,9 @@ export function StationDashboard() {
     setLoading(false);
   }, []);
 
-  useEffect(() => { loadData(); }, [loadData]);
+  useEffect(() => {
+    if (!authLoading) loadData();
+  }, [authLoading, loadData]);
 
   async function handleCall(id: string) {
     await patchWithApi(`/station/entries/${id}`, { status: 'in_progress' });
