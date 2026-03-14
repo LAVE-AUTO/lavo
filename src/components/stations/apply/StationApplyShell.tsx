@@ -1,7 +1,8 @@
 'use client';
 
 import { useState } from 'react';
-import { useTranslations, useLocale } from 'next-intl';
+import { useTranslations } from 'next-intl';
+import { Link } from '@/i18n/navigation';
 import { StationBrandPanel } from './StationBrandPanel';
 import { StationApplyForm } from './StationApplyForm';
 import { AuthModeSwitcher } from '@/components/auth/AuthModeSwitcher';
@@ -18,8 +19,7 @@ interface StationApplyShellProps {
  * Manages shared step state so the brand panel can animate per-step.
  */
 export function StationApplyShell({ washTypes }: StationApplyShellProps) {
-  const t      = useTranslations('station_apply');
-  const locale = useLocale();
+  const t = useTranslations('station_apply');
   const [currentStep, setCurrentStep] = useState<1 | 2 | 3>(1);
 
   return (
@@ -64,12 +64,12 @@ export function StationApplyShell({ washTypes }: StationApplyShellProps) {
 
           <p className="text-center mt-6 text-[14px] text-[#666] dark:text-lavo-muted">
             {t('already_member')}{' '}
-            <a
-              href={`/${locale}/station/login`}
+            <Link
+              href="/station/login"
               className="text-gold font-semibold hover:underline"
             >
               {t('login_link')}
-            </a>
+            </Link>
           </p>
         </div>
       </main>
