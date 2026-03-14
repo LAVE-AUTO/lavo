@@ -35,15 +35,15 @@ function EntryBlock({ entry, onComplete, onCancel, onStart }: {
   const t = useTranslations('station_dashboard');
 
   const styleMap = {
-    done: { bg: '#E8E5CC', border: '#CCCCAA', badgeBg: '#DDD', badgeColor: '#555', badgeLabel: `\u2713 ${t('status_done')}` },
-    active: { bg: '#E8F8EE', border: '#2ECC71', badgeBg: '#2ECC71', badgeColor: '#fff', badgeLabel: `\u23F1 ${t('status_active')}` },
-    waiting: { bg: '#EDE9CC', border: '#3B82F6', badgeBg: '#F59E0B', badgeColor: '#fff', badgeLabel: t('status_waiting') },
+    done: { bg: 'bg-[#E8E5CC]', border: 'border-[#CCCCAA]', badgeBg: '#DDD', badgeColor: '#555', badgeLabel: `\u2713 ${t('status_done')}` },
+    active: { bg: 'bg-[#E8F8EE]', border: 'border-[#2ECC71]', badgeBg: '#2ECC71', badgeColor: '#fff', badgeLabel: `\u23F1 ${t('status_active')}` },
+    waiting: { bg: 'bg-[#EDE9CC]', border: 'border-[#3B82F6]', badgeBg: '#F59E0B', badgeColor: '#fff', badgeLabel: t('status_waiting') },
   }[entry.status];
 
   return (
-    <div className="rounded-xl p-3" style={{ background: styleMap.bg, border: `1.5px solid ${styleMap.border}` }}>
+    <div className={`rounded-xl border p-3 ${styleMap.bg} ${styleMap.border}`}>
       <div className="mb-2 flex items-center gap-2">
-        <span className="font-mono text-[9px] font-bold" style={{ color: '#555' }}>
+        <span className="font-mono text-[9px] font-bold text-[#555]">
           {entry.timeRange}
         </span>
         <span className="rounded-full px-2 py-0.5 text-[9px] font-bold" style={{ background: styleMap.badgeBg, color: styleMap.badgeColor }}>
@@ -53,8 +53,7 @@ function EntryBlock({ entry, onComplete, onCancel, onStart }: {
           <button
             type="button"
             onClick={onComplete}
-            className="ml-auto rounded-md px-2 py-0.5 text-[9px] font-black"
-            style={{ background: '#C49A1E', color: '#0C1209' }}
+            className="ml-auto rounded-md bg-[#C49A1E] px-2 py-0.5 text-[9px] font-black text-[#0C1209]"
           >
             {t('btn_add_time')}
           </button>
@@ -63,30 +62,28 @@ function EntryBlock({ entry, onComplete, onCancel, onStart }: {
           <button
             type="button"
             onClick={onCancel}
-            className="ml-auto rounded-md border px-2 py-0.5 text-[9px] font-bold"
-            style={{ background: 'rgba(239,68,68,0.1)', border: '1px solid #EF4444', color: '#EF4444' }}
+            className="ml-auto rounded-md border border-[#EF4444] bg-[rgba(239,68,68,0.1)] px-2 py-0.5 text-[9px] font-bold text-[#EF4444]"
           >
             ! {t('btn_cancel')}
           </button>
         )}
       </div>
-      <div className="mb-0.5 text-[11px] font-black" style={{ color: '#1A1A0A' }}>
+      <div className="mb-0.5 text-[11px] font-black text-[#1A1A0A]">
         {entry.serviceLabel}{entry.price ? ` • ${entry.price}$` : ''}
       </div>
       {entry.clientName && (
-        <div className="mb-1 text-[10px]" style={{ color: '#666' }}>{entry.clientName}</div>
+        <div className="mb-1 text-[10px] text-[#666]">{entry.clientName}</div>
       )}
       {entry.marginText && (
-        <div className="text-[9px]" style={{ color: '#2ECC71' }}>{entry.marginText}</div>
+        <div className="text-[9px] text-[#2ECC71]">{entry.marginText}</div>
       )}
       {entry.status === 'active' && (
         <button
           type="button"
           onClick={onComplete}
-          className="mt-2 flex w-full items-center justify-center gap-2 rounded-lg py-2 text-[11px] font-black transition-opacity hover:opacity-80"
-          style={{ background: '#C49A1E', color: '#0C1209' }}
+          className="mt-2 flex w-full items-center justify-center gap-2 rounded-lg bg-[#C49A1E] py-2 text-[11px] font-black text-[#0C1209] transition-opacity hover:opacity-80"
         >
-          <span className="flex h-5 w-5 items-center justify-center rounded-full" style={{ background: 'rgba(0,0,0,0.15)' }}>&gt;&gt;</span>
+          <span className="flex h-5 w-5 items-center justify-center rounded-full bg-black/10">&gt;&gt;</span>
           {t('btn_slide_complete')}
         </button>
       )}
@@ -94,8 +91,7 @@ function EntryBlock({ entry, onComplete, onCancel, onStart }: {
         <button
           type="button"
           onClick={onStart}
-          className="mt-2 flex w-full items-center justify-center gap-2 rounded-lg border py-2 text-[11px] font-bold transition-opacity hover:opacity-80"
-          style={{ border: '1.5px solid #C49A1E', color: '#C49A1E' }}
+          className="mt-2 flex w-full items-center justify-center gap-2 rounded-lg border border-[#C49A1E] py-2 text-[11px] font-bold text-[#C49A1E] transition-opacity hover:opacity-80"
         >
           &#9654; {t('btn_start')}
         </button>
@@ -109,7 +105,7 @@ export function DashboardPostGrid({ posts, onCompleteEntry, onCancelEntry, onSta
 
   if (posts.length === 0) {
     return (
-      <div className="flex flex-1 items-center justify-center text-[13px]" style={{ color: '#8A8A7A' }}>
+      <div className="flex flex-1 items-center justify-center text-[13px] text-[#666] dark:text-[#8A8A7A]">
         {t('empty_post')}
       </div>
     );
@@ -121,12 +117,12 @@ export function DashboardPostGrid({ posts, onCompleteEntry, onCancelEntry, onSta
         {posts.map((post) => (
           <div
             key={post.id}
-            className="flex flex-1 flex-col border-l"
-            style={{ borderColor: '#1A2A14', minWidth: 180 }}
+            className="flex flex-1 flex-col border-l border-[#E0DCD0] dark:border-[#1A2A14]"
+            style={{ minWidth: 180 }}
           >
             {/* Post header */}
-            <div className="border-b px-3 py-2.5 text-center" style={{ borderColor: '#1A2A14', background: '#0C1209' }}>
-              <div className="text-[13px] font-black" style={{ color: '#F0EDD4' }}>
+            <div className="border-b border-[#E0DCD0] bg-[#F0EDE0] px-3 py-2.5 text-center dark:border-[#1A2A14] dark:bg-[#0C1209]">
+              <div className="text-[13px] font-black text-[#1A1A0A] dark:text-[#F0EDD4]">
                 {t('filter_post', { n: post.position })}
               </div>
               <div className="mt-0.5 flex items-center justify-center gap-1 text-[10px] font-semibold">
@@ -143,7 +139,7 @@ export function DashboardPostGrid({ posts, onCompleteEntry, onCancelEntry, onSta
             {/* Entries */}
             <div className="flex flex-1 flex-col gap-2 overflow-y-auto p-2">
               {post.entries.length === 0 ? (
-                <div className="flex flex-1 items-center justify-center text-[18px]" style={{ color: '#2A3A20' }}>
+                <div className="flex flex-1 items-center justify-center text-[18px] text-[#CCC] dark:text-[#2A3A20]">
                   {t('add_entry')}
                 </div>
               ) : (

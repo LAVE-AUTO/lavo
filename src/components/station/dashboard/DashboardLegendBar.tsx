@@ -20,12 +20,9 @@ export function DashboardLegendBar() {
   ];
 
   return (
-    <div
-      className="flex h-9 flex-shrink-0 items-center gap-5 border-t px-5"
-      style={{ background: '#111A0E', borderColor: '#1A2A14' }}
-    >
+    <div className="flex h-9 flex-shrink-0 items-center gap-5 border-t border-[#E0DCD0] bg-white px-5 dark:border-[#1A2A14] dark:bg-[#111A0E]">
       {items.map((item) => (
-        <div key={item.labelKey} className="flex items-center gap-1.5 text-[11px] font-semibold" style={{ color: '#8A8A7A' }}>
+        <div key={item.labelKey} className="flex items-center gap-1.5 text-[11px] font-semibold text-[#666] dark:text-[#8A8A7A]">
           <div
             className="rounded-[3px]"
             style={{

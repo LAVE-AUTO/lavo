@@ -10,10 +10,7 @@ interface StationShellProps {
 
 export function StationShell({ children, stationName, notifCount }: StationShellProps) {
   return (
-    <div
-      className="flex h-screen flex-col overflow-hidden"
-      style={{ background: '#0C1209' }}
-    >
+    <div className="flex h-screen flex-col overflow-hidden bg-[#F5F5EE] dark:bg-[#0C1209]">
       <StationTopNav stationName={stationName} notifCount={notifCount} />
       <div className="flex flex-1 overflow-hidden">
         <StationSidebar />

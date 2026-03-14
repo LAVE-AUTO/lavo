@@ -69,21 +69,18 @@ export function StationSidebar() {
   ];
 
   return (
-    <aside
-      className="flex w-[180px] flex-shrink-0 flex-col gap-1.5 border-r p-3"
-      style={{ background: '#111A0E', borderColor: '#1A2A14' }}
-    >
+    <aside className="flex w-[180px] flex-shrink-0 flex-col gap-1.5 border-r border-[#E0DCD0] bg-[#F0EDE0] p-3 dark:border-[#1A2A14] dark:bg-[#111A0E]">
       {navItems.map((item) => {
         const isActive = pathname.includes(item.href);
         return (
           <Link
             key={item.href}
             href={item.href as Parameters<typeof Link>[0]['href']}
-            className="flex items-center gap-2 rounded-lg px-3 py-2.5 text-[13px] font-semibold transition-all duration-150"
-            style={{
-              background: isActive ? '#C49A1E' : 'transparent',
-              color: isActive ? '#0C1209' : '#8A8A7A',
-            }}
+            className={
+              isActive
+                ? 'flex items-center gap-2 rounded-lg px-3 py-2.5 text-[13px] font-semibold bg-[#C49A1E] text-[#0C1209]'
+                : 'flex items-center gap-2 rounded-lg px-3 py-2.5 text-[13px] font-semibold text-[#666] hover:bg-[#E8E4D8] dark:text-[#8A8A7A] dark:hover:bg-[#182214] transition-colors duration-150'
+            }
           >
             {item.icon}
             {t(item.labelKey)}

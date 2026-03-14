@@ -50,12 +50,9 @@ export function DashboardDateNav({ selectedDate, onDateChange, view, onViewChang
   }
 
   return (
-    <div
-      className="flex flex-shrink-0 items-center gap-3 border-b px-5 py-3"
-      style={{ background: '#111A0E', borderColor: '#1A2A14' }}
-    >
+    <div className="flex flex-shrink-0 items-center gap-3 border-b border-[#E0DCD0] bg-white px-5 py-3 dark:border-[#1A2A14] dark:bg-[#111A0E]">
       {/* Month bubble */}
-      <div className="rounded-full px-4 py-1.5 text-[14px] font-bold" style={{ background: '#EDE9CC', color: '#1A1A0A' }}>
+      <div className="rounded-full bg-[#EDE9CC] px-4 py-1.5 text-[14px] font-bold text-[#1A1A0A]">
         {MONTH_NAMES_FR[selectedDate.getMonth()]}
       </div>
 
@@ -63,8 +60,7 @@ export function DashboardDateNav({ selectedDate, onDateChange, view, onViewChang
       <button
         type="button"
         onClick={() => shiftWeek(-1)}
-        className="flex h-7 w-7 flex-shrink-0 items-center justify-center rounded-full text-[14px] transition-opacity hover:opacity-70"
-        style={{ background: '#1A2A14', color: '#F0EDD4' }}
+        className="flex h-7 w-7 flex-shrink-0 items-center justify-center rounded-full bg-[#E8E4D8] text-[14px] text-[#1A1A0A] transition-opacity hover:opacity-70 dark:bg-[#1A2A14] dark:text-[#F0EDD4]"
         aria-label="Semaine précédente"
       >
         &#8249;
@@ -77,11 +73,11 @@ export function DashboardDateNav({ selectedDate, onDateChange, view, onViewChang
             key={chip.date.toISOString()}
             type="button"
             onClick={() => onDateChange(chip.date)}
-            className="min-w-[52px] rounded-lg px-3 py-2 text-center transition-all"
-            style={{
-              background: chip.isActive ? '#C49A1E' : '#1E2A18',
-              color: chip.isActive ? '#0C1209' : '#F0EDD4',
-            }}
+            className={
+              chip.isActive
+                ? 'min-w-[52px] rounded-lg px-3 py-2 text-center bg-[#C49A1E] text-[#0C1209]'
+                : 'min-w-[52px] rounded-lg px-3 py-2 text-center bg-[#E8E4D8] text-[#1A1A0A] dark:bg-[#1E2A18] dark:text-[#F0EDD4] transition-colors'
+            }
           >
             <div className="text-[9px] font-bold tracking-[0.06em]">{chip.name}</div>
             <div className="text-[16px] font-black">{chip.num}</div>
@@ -93,25 +89,24 @@ export function DashboardDateNav({ selectedDate, onDateChange, view, onViewChang
       <button
         type="button"
         onClick={() => shiftWeek(1)}
-        className="flex h-7 w-7 flex-shrink-0 items-center justify-center rounded-full text-[14px] transition-opacity hover:opacity-70"
-        style={{ background: '#1A2A14', color: '#F0EDD4' }}
+        className="flex h-7 w-7 flex-shrink-0 items-center justify-center rounded-full bg-[#E8E4D8] text-[14px] text-[#1A1A0A] transition-opacity hover:opacity-70 dark:bg-[#1A2A14] dark:text-[#F0EDD4]"
         aria-label="Semaine suivante"
       >
         &#8250;
       </button>
 
       {/* View toggle */}
-      <div className="ml-auto flex rounded-lg p-[3px] gap-[3px]" style={{ background: '#1A2A14' }}>
+      <div className="ml-auto flex gap-[3px] rounded-lg bg-[#E8E4D8] p-[3px] dark:bg-[#1A2A14]">
         {(['weekly', 'monthly'] as const).map((v) => (
           <button
             key={v}
             type="button"
             onClick={() => onViewChange(v)}
-            className="rounded-md px-3.5 py-1.5 text-[12px] font-bold transition-all"
-            style={{
-              background: view === v ? '#C49A1E' : 'transparent',
-              color: view === v ? '#0C1209' : '#8A8A7A',
-            }}
+            className={
+              view === v
+                ? 'rounded-md px-3.5 py-1.5 text-[12px] font-bold bg-[#C49A1E] text-[#0C1209]'
+                : 'rounded-md px-3.5 py-1.5 text-[12px] font-bold text-[#666] dark:text-[#8A8A7A] transition-colors'
+            }
           >
             {t(v === 'weekly' ? 'view_weekly' : 'view_monthly')}
           </button>

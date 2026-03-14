@@ -22,12 +22,12 @@ function KpiCard({ icon, value, label, trend, trendType }: KpiCardProps) {
     trendType === 'up' ? '#2ECC71' : trendType === 'down' ? '#EF4444' : '#3B82F6';
 
   return (
-    <div className="rounded-xl p-4" style={{ background: '#EDE9CC' }}>
+    <div className="rounded-xl bg-white p-4 dark:bg-[#EDE9CC]">
       <div className="mb-2 text-[22px] leading-none">{icon}</div>
-      <div className="mb-0.5 text-[26px] font-black leading-none" style={{ color: '#1A1A0A' }}>
+      <div className="mb-0.5 text-[26px] font-black leading-none text-[#1A1A0A]">
         {value}
       </div>
-      <div className="text-[11px] font-medium" style={{ color: '#666' }}>
+      <div className="text-[11px] font-medium text-[#666]">
         {label}
       </div>
       <div className="mt-1 text-[10px] font-bold" style={{ color: trendColor }}>
@@ -102,10 +102,7 @@ export function DashboardKpiRow({ data }: DashboardKpiRowProps) {
   ];
 
   return (
-    <div
-      className="grid grid-cols-4 gap-3 border-b px-5 py-4"
-      style={{ background: '#111A0E', borderColor: '#1A2A14' }}
-    >
+    <div className="grid grid-cols-4 gap-3 border-b border-[#E0DCD0] bg-white px-5 py-4 dark:border-[#1A2A14] dark:bg-[#111A0E]">
       {cards.map((card) => (
         <KpiCard key={card.label} {...card} />
       ))}

@@ -38,29 +38,34 @@ export default function StationReservationsPage() {
   useEffect(() => { load(); }, [load]);
 
   return (
-    <div className="flex flex-1 flex-col overflow-hidden" style={{ background: '#0C1209' }}>
-      <div className="border-b px-6 py-4" style={{ borderColor: '#1A2A14', background: '#111A0E' }}>
-        <h1 className="text-[18px] font-black" style={{ color: '#F0EDD4' }}>{t('nav_reservations')}</h1>
-        <p className="text-[12px]" style={{ color: '#8A8A7A' }}>{entries.length} réservation{entries.length !== 1 ? 's' : ''}</p>
+    <div className="flex flex-1 flex-col overflow-hidden bg-[#F5F5EE] dark:bg-[#0C1209]">
+      <div className="border-b border-[#E0DCD0] bg-white px-6 py-4 dark:border-[#1A2A14] dark:bg-[#111A0E]">
+        <h1 className="text-[18px] font-black text-[#1A1A0A] dark:text-[#F0EDD4]">{t('nav_reservations')}</h1>
+        <p className="text-[12px] text-[#666] dark:text-[#8A8A7A]">
+          {entries.length} réservation{entries.length !== 1 ? 's' : ''}
+        </p>
       </div>
 
       <div className="flex-1 overflow-y-auto p-5">
         {loading ? (
-          <div className="flex h-full items-center justify-center text-[13px]" style={{ color: '#8A8A7A' }}>Chargement...</div>
+          <div className="flex h-full items-center justify-center text-[13px] text-[#666] dark:text-[#8A8A7A]">Chargement...</div>
         ) : entries.length === 0 ? (
-          <div className="flex h-full items-center justify-center text-[13px]" style={{ color: '#8A8A7A' }}>Aucune réservation</div>
+          <div className="flex h-full items-center justify-center text-[13px] text-[#666] dark:text-[#8A8A7A]">Aucune réservation</div>
         ) : (
           <div className="flex flex-col gap-3">
             {entries.map((entry) => {
               const st = STATUS_LABEL[entry.status] ?? STATUS_LABEL.pending;
               const date = new Date(entry.created_at).toLocaleDateString('fr-CA', { day: 'numeric', month: 'short', year: 'numeric' });
               return (
-                <div key={entry.id} className="flex items-center justify-between rounded-xl p-4" style={{ background: '#111A0E', border: '1px solid #1A2A14' }}>
+                <div
+                  key={entry.id}
+                  className="flex items-center justify-between rounded-xl border border-[#E0DCD0] bg-white p-4 dark:border-[#1A2A14] dark:bg-[#111A0E]"
+                >
                   <div>
-                    <div className="text-[13px] font-bold" style={{ color: '#F0EDD4' }}>
+                    <div className="text-[13px] font-bold text-[#1A1A0A] dark:text-[#F0EDD4]">
                       Client #{entry.user_id.slice(0, 8)}
                     </div>
-                    <div className="mt-0.5 text-[11px]" style={{ color: '#8A8A7A' }}>
+                    <div className="mt-0.5 text-[11px] text-[#666] dark:text-[#8A8A7A]">
                       {date} {entry.amount_paid ? `• ${parseFloat(entry.amount_paid)}$` : ''}
                     </div>
                   </div>
