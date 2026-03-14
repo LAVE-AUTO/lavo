@@ -1235,7 +1235,7 @@
   "auth_switch": {
     "merchant_label": "Vous avez une station de lavage ?",
     "merchant_action": "Espace marchand",
-    "client_label": "Vous etes client ?",
+    "client_label": "Vous êtes client ?",
     "client_action": "Espace client"
   },
   "station_login": {

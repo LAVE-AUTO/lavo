@@ -5,6 +5,8 @@ import { useTranslations, useLocale } from 'next-intl';
 import { StationBrandPanel } from './StationBrandPanel';
 import { StationApplyForm } from './StationApplyForm';
 import { AuthModeSwitcher } from '@/components/auth/AuthModeSwitcher';
+import { ThemeToggle } from '@/components/auth/ThemeToggle';
+import { LangToggle } from '@/components/auth/LangToggle';
 import { type WashTypeOption } from './StepCommerce';
 
 interface StationApplyShellProps {
@@ -30,6 +32,21 @@ export function StationApplyShell({ washTypes }: StationApplyShellProps) {
       {/* Right form panel */}
       <main className="flex-1 flex flex-col items-center justify-center min-h-screen auth-form-bg overflow-y-auto scroll-smooth px-6 py-10">
         <div className="w-full max-w-lg animate-fade-in">
+          {/* Desktop controls */}
+          <div className="hidden lg:flex justify-end gap-2 mb-4">
+            <ThemeToggle />
+            <LangToggle />
+          </div>
+
+          {/* Mobile top bar */}
+          <div className="flex items-center justify-between mb-5 lg:hidden">
+            <span className="text-[16px] font-bold text-dark-bg dark:text-white tracking-wide">Slowtime</span>
+            <div className="flex items-center gap-2">
+              <ThemeToggle />
+              <LangToggle />
+            </div>
+          </div>
+
           <div className="text-center mb-6">
             <h1 className="text-[26px] sm:text-[30px] font-bold text-dark-bg dark:text-white mb-2">
               {t('heading')}

@@ -198,7 +198,7 @@ function AccountSetupMockup({ isDark }: { isDark: boolean }) {
 
   const fields = [
     { label: 'Email professionnel', filled: true },
-    { label: 'Telephone', filled: true },
+    { label: 'Téléphone', filled: true },
     { label: 'Mot de passe', filled: false },
   ];
 
@@ -212,7 +212,7 @@ function AccountSetupMockup({ isDark }: { isDark: boolean }) {
           <div className="w-6 h-6 rounded-full bg-[rgba(0,0,0,0.15)] flex items-center justify-center">
             <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2.5"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
           </div>
-          <span className="text-[12px] font-bold tracking-[1.5px] uppercase text-[#0d1f0f]">Creation de compte</span>
+          <span className="text-[12px] font-bold tracking-[1.5px] uppercase text-[#0d1f0f]">Création de compte</span>
         </div>
         <div className="p-4 flex flex-col gap-3">
           {fields.map((f) => (
@@ -268,9 +268,9 @@ function KycMockup({ isDark }: { isDark: boolean }) {
   const goldC   = '#C8980A';
 
   const steps = [
-    { label: 'Documents envoyes',    done: true,  active: false },
-    { label: 'Verification en cours', done: false, active: true  },
-    { label: 'Compte active',        done: false, active: false },
+    { label: 'Documents envoyés',    done: true,  active: false },
+    { label: 'Vérification en cours', done: false, active: true  },
+    { label: 'Compte activé',        done: false, active: false },
   ];
 
   return (
@@ -283,7 +283,7 @@ function KycMockup({ isDark }: { isDark: boolean }) {
           <div className="w-6 h-6 rounded-full bg-[rgba(0,0,0,0.15)] flex items-center justify-center">
             <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2.5"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2h11"/></svg>
           </div>
-          <span className="text-[12px] font-bold tracking-[1.5px] uppercase text-[#0d1f0f]">Verification KYC</span>
+          <span className="text-[12px] font-bold tracking-[1.5px] uppercase text-[#0d1f0f]">Vérification KYC</span>
         </div>
         <div className="p-4 flex flex-col gap-0">
           {steps.map((s, i) => (
@@ -331,8 +331,8 @@ function KycMockup({ isDark }: { isDark: boolean }) {
         >
           {[
             { val: '1/3', label: 'Documents' },
-            { val: '48h', label: 'Delai' },
-            { val: '100%', label: 'Securise' },
+            { val: '48h', label: 'Délai' },
+            { val: '100%', label: 'Sécurisé' },
           ].map(({ val, label }) => (
             <div key={label} className="text-center">
               <p className="text-[15px] font-bold" style={{ color: goldC }}>{val}</p>
