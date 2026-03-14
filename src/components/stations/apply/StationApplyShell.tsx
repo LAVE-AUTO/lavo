@@ -31,7 +31,7 @@ export function StationApplyShell({ washTypes }: StationApplyShellProps) {
 
       {/* Right form panel */}
       <main className="flex-1 flex flex-col items-center justify-center min-h-screen auth-form-bg overflow-y-auto scroll-smooth px-6 py-10">
-        <div className="w-full max-w-lg animate-fade-in">
+        <div className="w-full max-w-2xl animate-fade-in">
           {/* Desktop controls */}
           <div className="hidden lg:flex justify-end gap-2 mb-4">
             <ThemeToggle />
