@@ -18,22 +18,28 @@ export async function GET(request: Request) {
   const locale = acceptLang.startsWith('en') ? 'en' : 'fr';
   const loginUrl = `${appUrl}/${locale}/login?error=oauth_failed`;
 
-  const session = await auth();
-  const { oauthEmail, oauthFirstName, oauthLastName } =
-    (session as unknown) as Record<string, unknown>;
-
-  if (!oauthEmail || typeof oauthEmail !== 'string') {
-    return NextResponse.redirect(loginUrl);
-  }
-
   try {
+    const session = await auth();
+    const { oauthEmail, oauthFirstName, oauthLastName } =
+      (session as unknown) as Record<string, unknown>;
+
+    if (!oauthEmail || typeof oauthEmail !== 'string') {
+      return NextResponse.redirect(loginUrl);
+    }
+
     const { tokens } = await findOrCreateOAuthUser({
       email: oauthEmail,
       firstName: typeof oauthFirstName === 'string' ? oauthFirstName : '',
       lastName: typeof oauthLastName === 'string' ? oauthLastName : '',
     });
 
-    const response = NextResponse.redirect(`${appUrl}/${locale}/auth/callback`);
+    const params = new URLSearchParams({
+      access_token: tokens.accessJwt,
+      token_type: 'Bearer',
+      expires_in: String(tokens.expiresIn),
+    });
+
+    const response = NextResponse.redirect(`${appUrl}/${locale}/auth/callback?${params}`);
     response.cookies.set(
       REFRESH_COOKIE_NAME,
       tokens.rawRefreshToken,
