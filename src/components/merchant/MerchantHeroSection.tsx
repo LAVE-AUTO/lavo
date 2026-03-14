@@ -1,12 +1,11 @@
 'use client';
 
-import Link from 'next/link';
-import { useTranslations, useLocale } from 'next-intl';
+import { useTranslations } from 'next-intl';
+import { Link } from '@/i18n/navigation';
 import { MerchantAgendaMockup } from './MerchantAgendaMockup';
 
 export function MerchantHeroSection() {
   const t = useTranslations('merchant.hero');
-  const locale = useLocale();
 
   return (
     <section className="landing-hero-bg relative min-h-screen overflow-hidden">
@@ -37,7 +36,7 @@ export function MerchantHeroSection() {
 
           <div className="animate-fade-in-up animation-delay-400 mb-14 flex flex-wrap gap-3.5">
             <Link
-              href={`/${locale}/stations/apply`}
+              href="/stations/apply"
               className="btn-shine inline-block rounded-[2px] bg-[#c8980a] px-9 py-[15px] text-[13px] font-bold uppercase tracking-[1.5px] text-[#0d1f0f] transition-all duration-300 hover:-translate-y-0.5 hover:shadow-[0_10px_32px_rgba(200,152,10,0.45)]"
             >
               {t('btn_primary')}

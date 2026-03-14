@@ -1,4 +1,5 @@
 import { getTranslations, setRequestLocale } from 'next-intl/server';
+import { Link } from '@/i18n/navigation';
 import { StationBrandPanel } from '@/components/stations/apply/StationBrandPanel';
 import { LoginForm } from '@/components/auth/LoginForm';
 import { AuthRedirectGuard } from '@/components/auth/AuthRedirectGuard';
@@ -71,12 +72,12 @@ export default async function StationLoginPage({ params }: Props) {
 
             <p className="text-center mt-6 text-[14px] text-[#666] dark:text-lavo-muted">
               {t('no_account')}{' '}
-              <a
-                href={`/${locale}/stations/apply`}
+              <Link
+                href="/stations/apply"
                 className="text-gold font-semibold hover:underline"
               >
                 {t('register_link')}
-              </a>
+              </Link>
             </p>
           </div>
         </main>

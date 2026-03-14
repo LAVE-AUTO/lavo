@@ -1,7 +1,7 @@
 'use client';
 
-import Link from 'next/link';
-import { useTranslations, useLocale } from 'next-intl';
+import { useTranslations } from 'next-intl';
+import { Link } from '@/i18n/navigation';
 import { RevealOnScroll } from '@/components/home/RevealOnScroll';
 
 const PROBLEM_ICONS = [
@@ -27,7 +27,6 @@ const PROBLEM_ICONS = [
 
 export function MerchantProblemSection() {
   const t = useTranslations('merchant.problem');
-  const locale = useLocale();
 
   const cards = [
     { title: t('card_1_title'), desc: t('card_1_desc') },
@@ -55,7 +54,7 @@ export function MerchantProblemSection() {
                 {t('desc')}
               </p>
               <Link
-                href={`/${locale}/register`}
+                href="/stations/apply"
                 className="btn-shine inline-block rounded-[2px] bg-[#c8980a] px-9 py-[15px] text-[13px] font-bold uppercase tracking-[1.5px] text-[#0d1f0f] transition-all duration-300 hover:-translate-y-0.5 hover:shadow-[0_10px_32px_rgba(200,152,10,0.45)]"
               >
                 {t('btn')}
