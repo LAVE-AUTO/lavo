@@ -42,11 +42,13 @@ export function SlotModal({ mode, selectedDate, onClose, onCreated }: SlotModalP
   const [capacity, setCapacity] = useState('1');
   const [date, setDate] = useState(selectedDate);
   const [endDate, setEndDate] = useState('');
-  const [interval, setInterval] = useState('');
+  const [intervalMin, setIntervalMin] = useState('');
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(false);
 
   async function handleConfirm() {
     setLoading(true);
+    setError(false);
 
     if (mode === 'add') {
       const startISO = `${date}T${startTime}:00`;
@@ -61,17 +63,21 @@ export function SlotModal({ mode, selectedDate, onClose, onCreated }: SlotModalP
         const res = data as { data: CreatedSlot };
         onCreated([res.data]);
         onClose();
+      } else {
+        setError(true);
       }
     } else {
       const body: Record<string, unknown> = { date };
       if (endDate) body.end_date = endDate;
-      if (interval) body.interval_minutes = Number(interval);
+      if (intervalMin) body.interval_minutes = Number(intervalMin);
       const [ok, data] = await postWithApi('/station/slots/generate', body);
       setLoading(false);
       if (ok) {
         const res = data as { data: CreatedSlot[] };
         onCreated(res.data ?? []);
         onClose();
+      } else {
+        setError(true);
       }
     }
   }
@@ -112,11 +118,17 @@ export function SlotModal({ mode, selectedDate, onClose, onCreated }: SlotModalP
                 <input type="date" className={inputClass} value={endDate} onChange={(e) => setEndDate(e.target.value)} />
               </Field>
               <Field label={t('modal_field_interval')}>
-                <input type="number" min={1} className={inputClass} placeholder="30" value={interval} onChange={(e) => setInterval(e.target.value)} />
+                <input type="number" min={1} className={inputClass} placeholder="30" value={intervalMin} onChange={(e) => setIntervalMin(e.target.value)} />
               </Field>
             </>
           )}
         </div>
+
+        {error && (
+          <p className="mt-4 text-[11px] font-semibold" style={{ color: '#EF4444' }}>
+            {t('save_error')}
+          </p>
+        )}
 
         <div className="mt-6 flex gap-3">
           <button

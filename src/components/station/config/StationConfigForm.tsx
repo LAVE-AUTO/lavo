@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useTranslations } from 'next-intl';
 import { patchWithApi } from '@/services';
 
@@ -71,6 +71,10 @@ export function StationConfigForm({ config, posts, onSaved }: StationConfigFormP
   const [postStates, setPostStates] = useState<Record<string, boolean>>(
     Object.fromEntries(posts.map((p) => [p.id, p.is_active]))
   );
+
+  useEffect(() => {
+    setPostStates(Object.fromEntries(posts.map((p) => [p.id, p.is_active])));
+  }, [posts]);
 
   const [saving, setSaving] = useState(false);
   const [feedback, setFeedback] = useState<{ ok: boolean; msg: string } | null>(null);

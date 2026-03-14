@@ -37,9 +37,9 @@ export function StationSlotList({
 
   async function handleDelete(id: string) {
     setDeletingId(id);
-    await deleteWithApi(`/station/slots/${id}`);
+    const [ok] = await deleteWithApi(`/station/slots/${id}`);
     setDeletingId(null);
-    onDeleted(id);
+    if (ok) onDeleted(id);
   }
 
   const statusLabel: Record<string, string> = {
@@ -100,7 +100,7 @@ export function StationSlotList({
                   {fmt(slot.start_time)} – {fmt(slot.end_time)}
                 </span>
                 <span className="text-[11px] text-[#666] dark:text-[#8A8A7A]">
-                  {slot.booked_count}/{slot.capacity} réservé
+                  {t('slot_booked', { n: slot.booked_count, total: slot.capacity })}
                 </span>
               </div>
               <div className="flex items-center gap-3">

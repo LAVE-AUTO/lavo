@@ -22,6 +22,7 @@ export function StationConfigPage() {
   const [slots, setSlots] = useState<CreatedSlot[]>(MOCK_SLOTS);
   const [selectedDate, setSelectedDate] = useState(todayISO);
   const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState(false);
   const [modal, setModal] = useState<'add' | 'generate' | null>(null);
 
   const loadConfig = useCallback(async () => {
@@ -30,6 +31,8 @@ export function StationConfigPage() {
       const res = data as { data: { config: StationConfig; posts: StationPost[] } };
       setConfig(res.data.config);
       setPosts(res.data.posts);
+    } else {
+      setLoadError(true);
     }
     setLoading(false);
   }, []);
@@ -53,6 +56,14 @@ export function StationConfigPage() {
     return (
       <div className="flex flex-1 items-center justify-center text-[13px] text-[#666] dark:text-[#8A8A7A]">
         {t('loading')}
+      </div>
+    );
+  }
+
+  if (loadError) {
+    return (
+      <div className="flex flex-1 items-center justify-center text-[13px]" style={{ color: '#EF4444' }}>
+        {t('save_error')}
       </div>
     );
   }
