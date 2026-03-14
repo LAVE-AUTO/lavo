@@ -93,10 +93,10 @@ export function MerchantNavbar() {
                 </div>
               ) : (
                 <>
-                  <Link href="/" className={pillClass}>
-                    {t('client_pill')}
+                  <Link href="/station/login" className={pillClass}>
+                    {t('login_pill')}
                   </Link>
-                  <Link href="/register" className={ctaClass}>
+                  <Link href="/stations/apply" className={ctaClass}>
                     {t('partner_cta')}
                   </Link>
                 </>
@@ -136,13 +136,13 @@ export function MerchantNavbar() {
               ) : (
                 <>
                   <Link
-                    href="/"
+                    href="/station/login"
                     className="flex items-center justify-center py-3 border border-[rgba(200,152,10,0.45)] text-[14px] font-semibold tracking-[0.8px] uppercase text-[#c8980a] hover:bg-[#c8980a] hover:text-[#0d1f0f] transition-all rounded-[2px]"
                   >
-                    {t('client_pill')}
+                    {t('login_pill')}
                   </Link>
                   <Link
-                    href="/register"
+                    href="/stations/apply"
                     className="btn-shine flex items-center justify-center py-3 bg-[#c8980a] text-[#0d1f0f] text-[14px] font-bold tracking-[1px] uppercase rounded-[2px] transition-all hover:bg-[#e8b520]"
                   >
                     {t('partner_cta')}

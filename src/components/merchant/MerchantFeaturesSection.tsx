@@ -75,7 +75,7 @@ export function MerchantFeaturesSection() {
                   {/* Subscription box */}
                   <div className="rounded-lg border border-[rgba(200,152,10,0.2)] bg-[rgba(254,249,231,0.04)] p-4">
                     <div className="font-dm-mono mb-1 text-[10px] uppercase tracking-[1px] text-[#7a9a7d]">{t('rev_sub_name')}</div>
-                    <div className="font-rajdhani text-[24px] font-bold leading-none text-[#fef9e7] dark:text-[#fef9e7] text-[#1a1a1a]">{t('rev_sub_price')}</div>
+                    <div className="font-rajdhani text-[24px] font-bold leading-none text-[#1a1a1a] dark:text-[#fef9e7]">{t('rev_sub_price')}</div>
                     <div className="mt-2 text-[11px] leading-[1.6] text-[#4a6a4d] dark:text-[#7a9a7d]">{t('rev_sub_desc')}</div>
                   </div>
                 </div>
