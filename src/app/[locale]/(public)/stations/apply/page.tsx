@@ -16,9 +16,9 @@ export async function generateMetadata({ params }: Props) {
 }
 
 /**
- * Station onboarding application page.
+ * Station onboarding application page — URL: /stations/apply.
  * Delegates rendering to StationApplyShell (client) to enable per-step brand panel animation.
- * Placed under /station/ (outside stations layout) to avoid the navbar wrapper.
+ * Lives outside the (stations-shell) route group so it does not inherit the stations navbar layout.
  */
 export default async function StationApplyPage({ params }: Props) {
   const { locale } = await params;
