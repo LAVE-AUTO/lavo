@@ -36,11 +36,16 @@ function EyeIcon({ open }: { open: boolean }) {
   );
 }
 
+interface LoginFormProps {
+  /** Override the forgot-password link destination (e.g. /station/forgot-password). Defaults to /forgot-password. */
+  forgotPasswordHref?: string;
+}
+
 /**
  * Login form — email + password + remember me + forgot-password link + social buttons.
  * On success: persists session via AuthContext and redirects by role.
  */
-export function LoginForm() {
+export function LoginForm({ forgotPasswordHref = '/forgot-password' }: LoginFormProps) {
   const t = useTranslations('login');
   const router = useRouter();
   const { error: showError, success: showSuccess } = useToast();
@@ -134,7 +139,7 @@ export function LoginForm() {
   };
 
   return (
-    <form onSubmit={handleSubmit} noValidate className="px-8 pb-8">
+    <form onSubmit={handleSubmit} noValidate className="px-8 pt-6 pb-8">
       <FormField
         label={t('email')}
         required
@@ -184,7 +189,7 @@ export function LoginForm() {
         </label>
 
         <Link
-          href="/forgot-password"
+          href={forgotPasswordHref}
           className="text-[14px] font-semibold text-gold hover:text-gold-hover transition-colors"
         >
           {t('forgot_password')}

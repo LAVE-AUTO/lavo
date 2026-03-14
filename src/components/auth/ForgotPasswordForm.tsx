@@ -29,11 +29,16 @@ function MailSentIcon() {
   );
 }
 
+interface ForgotPasswordFormProps {
+  /** Destination for "back to login" links. Defaults to /login. */
+  backHref?: string;
+}
+
 /**
  * Forgot password form.
  * Submits email and always shows the success card (prevents email enumeration).
  */
-export function ForgotPasswordForm() {
+export function ForgotPasswordForm({ backHref = '/login' }: ForgotPasswordFormProps) {
   const t = useTranslations('forgot_password');
   const { error: showError } = useToast();
 
@@ -94,7 +99,7 @@ export function ForgotPasswordForm() {
           {t('success_spam')}
         </p>
         <Link
-          href="/login"
+          href={backHref}
           className="block w-full py-3.5 bg-gold hover:bg-gold-hover rounded-[10px] text-[16px] font-bold text-dark-bg tracking-wide transition-colors duration-150 text-center btn-shine"
         >
           {t('back_to_login')}
@@ -124,7 +129,7 @@ export function ForgotPasswordForm() {
 
       <div className="mt-5 text-center">
         <Link
-          href="/login"
+          href={backHref}
           className="text-[14px] font-semibold text-gold hover:text-gold-hover transition-colors"
         >
           ← {t('back_to_login')}

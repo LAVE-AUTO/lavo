@@ -2,7 +2,6 @@
 
 import { useRef, useState, type ChangeEvent, type DragEvent } from 'react';
 import { useTranslations } from 'next-intl';
-import { postWithApi } from '@/services/axios-service';
 
 export interface UploadedFile {
   url: string;
@@ -52,13 +51,16 @@ export function FileUploadZone({ label, hint, required, value, onChange, error }
       const formData = new FormData();
       formData.append('file', file);
 
-      const [ok, data] = await postWithApi<{ url: string; storage: string }>(
-        '/stations/onboarding/upload',
-        formData,
-        { successStatus: 201 }
-      );
+      // Use fetch directly — axios default Content-Type: application/json
+      // would override the multipart boundary for FormData.
+      const response = await fetch('/api/v1/stations/onboarding/upload', {
+        method: 'POST',
+        body: formData,
+        credentials: 'include',
+      });
 
-      if (ok && data && 'url' in data) {
+      if (response.ok) {
+        const data = await response.json() as { url: string; storage: string };
         onChange({ url: data.url, storage: data.storage as 'cloudinary' | 'local', name: file.name });
       } else {
         setLocalError(t('error_upload_failed'));

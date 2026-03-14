@@ -3,6 +3,7 @@
 import { type ChangeEvent } from 'react';
 import { useTranslations } from 'next-intl';
 import { FormField } from '@/components/auth/FormField';
+import { CityAutocomplete } from './CityAutocomplete';
 import { Button } from '@/components/ui/Button';
 
 export interface WashTypeOption {
@@ -88,11 +89,10 @@ export function StepCommerce({ data, errors, isLoading, washTypes, onChange, onE
     }
   }
 
-  const SERVICE_SCOPES = [
-    { value: '' as const,         label: '—' },
-    { value: 'exterior' as const, label: t('service_scope_exterior') },
-    { value: 'interior' as const, label: t('service_scope_interior') },
-    { value: 'both' as const,     label: t('service_scope_both') },
+  const SERVICE_SCOPES: { value: Step2Data['serviceScope']; label: string }[] = [
+    { value: 'exterior', label: t('service_scope_exterior') },
+    { value: 'interior', label: t('service_scope_interior') },
+    { value: 'both',     label: t('service_scope_both') },
   ];
 
   return (
@@ -142,14 +142,12 @@ export function StepCommerce({ data, errors, isLoading, washTypes, onChange, onE
             error={errors.address}
           />
         </div>
-        <FormField
+        <CityAutocomplete
           label={t('city')}
           required
-          type="text"
-          placeholder={t('city_placeholder')}
           value={data.city}
-          onChange={(e: ChangeEvent<HTMLInputElement>) => {
-            onChange({ ...data, city: e.target.value });
+          onChange={(city) => {
+            onChange({ ...data, city });
             if (errors.city) onErrors({ ...errors, city: undefined });
           }}
           error={errors.city}
@@ -209,19 +207,30 @@ export function StepCommerce({ data, errors, isLoading, washTypes, onChange, onE
       </div>
 
       <div className="mb-4">
-        <label className="block text-[15px] font-semibold text-[#1A1A1A] dark:text-white mb-1.5 tracking-wide" htmlFor="service-scope">
+        <p className="text-[15px] font-semibold text-[#1A1A1A] dark:text-white mb-2 tracking-wide">
           {t('service_scope')}
-        </label>
-        <select
-          id="service-scope"
-          value={data.serviceScope}
-          onChange={(e) => onChange({ ...data, serviceScope: e.target.value as Step2Data['serviceScope'] })}
-          className="w-full px-4 py-3 bg-white dark:bg-dark-card border-[1.5px] border-[#CCCCCC] dark:border-tab-inactive rounded-lg text-[16px] text-[#1A1A1A] dark:text-white outline-none focus:border-gold dark:focus:border-gold transition-colors duration-150"
-        >
-          {SERVICE_SCOPES.map((s) => (
-            <option key={s.value} value={s.value}>{s.label}</option>
-          ))}
-        </select>
+        </p>
+        <div className="grid grid-cols-3 gap-2">
+          {SERVICE_SCOPES.map((s) => {
+            const selected = data.serviceScope === s.value;
+            return (
+              <button
+                key={s.value}
+                type="button"
+                onClick={() => onChange({ ...data, serviceScope: selected ? '' : s.value })}
+                aria-pressed={selected}
+                className={[
+                  'py-2.5 px-3 rounded-lg border-[1.5px] text-[13px] font-semibold text-center transition-all duration-150',
+                  selected
+                    ? 'bg-gold border-gold text-dark-bg shadow-[0_2px_8px_rgba(175,132,8,0.3)]'
+                    : 'bg-white dark:bg-dark-card border-[#CCCCCC] dark:border-tab-inactive text-[#444] dark:text-white hover:border-gold hover:text-gold dark:hover:border-gold dark:hover:text-gold',
+                ].join(' ')}
+              >
+                {s.label}
+              </button>
+            );
+          })}
+        </div>
       </div>
 
       <div className="mb-4">
