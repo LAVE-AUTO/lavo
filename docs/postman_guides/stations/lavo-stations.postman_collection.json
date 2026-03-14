@@ -436,6 +436,314 @@
       ]
     },
     {
+      "name": "Station — Historique",
+      "description": "GET /api/v1/history/station — historique d'activite pagine de la station authentifiee. Combine reservations et donnees financieres (commission, pourboire, payout). Auth: role station + station active.",
+      "item": [
+        {
+          "name": "Historique station — succes sans filtres (200)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 200', () => pm.response.to.have.status(200));",
+                  "pm.test('Body has items and meta', () => {",
+                  "  const json = pm.response.json();",
+                  "  pm.expect(json.data).to.have.property('items').that.is.an('array');",
+                  "  pm.expect(json.data).to.have.property('meta');",
+                  "  pm.expect(json.data.meta).to.have.all.keys('total', 'page', 'limit', 'total_pages');",
+                  "  pm.expect(json.data.meta.page).to.eql(1);",
+                  "  pm.expect(json.data.meta.limit).to.eql(20);",
+                  "});",
+                  "pm.test('Items have expected shape', () => {",
+                  "  const json = pm.response.json();",
+                  "  if (json.data.items.length > 0) {",
+                  "    const item = json.data.items[0];",
+                  "    pm.expect(item).to.have.property('id');",
+                  "    pm.expect(item).to.have.property('date');",
+                  "    pm.expect(item).to.have.property('status');",
+                  "    pm.expect(item).to.have.property('amount_paid');",
+                  "    pm.expect(item).to.have.property('reservation_ref');",
+                  "    pm.expect(item).to.not.have.property('password_hash');",
+                  "  }",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "response": [],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/v1/history/station",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "history", "station"]
+            },
+            "description": "Retourne la premiere page (20 elements) de l'historique complet. Auth: cookie JWT station active."
+          }
+        },
+        {
+          "name": "Historique station — avec pagination (200)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 200', () => pm.response.to.have.status(200));",
+                  "pm.test('Pagination correcte', () => {",
+                  "  const json = pm.response.json();",
+                  "  pm.expect(json.data.meta.page).to.eql(2);",
+                  "  pm.expect(json.data.meta.limit).to.eql(5);",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "response": [],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/v1/history/station?page=2&limit=5",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "history", "station"],
+              "query": [
+                { "key": "page", "value": "2" },
+                { "key": "limit", "value": "5" }
+              ]
+            },
+            "description": "Page 2 avec 5 elements par page. Verifie que page et limit sont bien repercutes dans meta."
+          }
+        },
+        {
+          "name": "Historique station — filtres date + statut (200)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 200', () => pm.response.to.have.status(200));",
+                  "pm.test('Body valide', () => {",
+                  "  const json = pm.response.json();",
+                  "  pm.expect(json.data.items).to.be.an('array');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "response": [],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/v1/history/station?from=2026-01-01&to=2026-03-31&status=completed",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "history", "station"],
+              "query": [
+                { "key": "from", "value": "2026-01-01" },
+                { "key": "to", "value": "2026-03-31" },
+                { "key": "status", "value": "completed" }
+              ]
+            },
+            "description": "Filtre par periode (from/to inclusif) et statut completed."
+          }
+        },
+        {
+          "name": "Historique station — filtres montant (200)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 200', () => pm.response.to.have.status(200));",
+                  "pm.test('Body valide', () => {",
+                  "  const json = pm.response.json();",
+                  "  pm.expect(json.data.items).to.be.an('array');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "response": [],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/v1/history/station?amount_min=10&amount_max=50",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "history", "station"],
+              "query": [
+                { "key": "amount_min", "value": "10" },
+                { "key": "amount_max", "value": "50" }
+              ]
+            },
+            "description": "Filtre par montant min (10) et max (50) — inclusif. Cast SQL ::numeric applique cote serveur."
+          }
+        },
+        {
+          "name": "Historique station — page invalide (400)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 400', () => pm.response.to.have.status(400));",
+                  "pm.test('Code VALIDATION_FAILED + champ page', () => {",
+                  "  const json = pm.response.json();",
+                  "  pm.expect(json.code).to.eql('VALIDATION_FAILED');",
+                  "  pm.expect(json.errors.some(e => e.field === 'page')).to.be.true;",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "response": [],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/v1/history/station?page=0",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "history", "station"],
+              "query": [{ "key": "page", "value": "0" }]
+            },
+            "description": "400 VALIDATION_FAILED — page=0 invalide (min: 1)."
+          }
+        },
+        {
+          "name": "Historique station — from > to (400)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 400', () => pm.response.to.have.status(400));",
+                  "pm.test('Code VALIDATION_FAILED + champ from', () => {",
+                  "  const json = pm.response.json();",
+                  "  pm.expect(json.code).to.eql('VALIDATION_FAILED');",
+                  "  pm.expect(json.errors.some(e => e.field === 'from')).to.be.true;",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "response": [],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/v1/history/station?from=2026-12-31&to=2026-01-01",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "history", "station"],
+              "query": [
+                { "key": "from", "value": "2026-12-31" },
+                { "key": "to", "value": "2026-01-01" }
+              ]
+            },
+            "description": "400 VALIDATION_FAILED — from posterieur a to."
+          }
+        },
+        {
+          "name": "Historique station — amount_min > amount_max (400)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 400', () => pm.response.to.have.status(400));",
+                  "pm.test('Code VALIDATION_FAILED + champ amount_min', () => {",
+                  "  const json = pm.response.json();",
+                  "  pm.expect(json.code).to.eql('VALIDATION_FAILED');",
+                  "  pm.expect(json.errors.some(e => e.field === 'amount_min')).to.be.true;",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "response": [],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/v1/history/station?amount_min=100&amount_max=10",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "history", "station"],
+              "query": [
+                { "key": "amount_min", "value": "100" },
+                { "key": "amount_max", "value": "10" }
+              ]
+            },
+            "description": "400 VALIDATION_FAILED — amount_min superieur a amount_max."
+          }
+        },
+        {
+          "name": "Historique station — non authentifiee (401)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 401', () => pm.response.to.have.status(401));",
+                  "pm.test('Code UNAUTHORIZED', () => {",
+                  "  pm.expect(pm.response.json().code).to.eql('UNAUTHORIZED');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "response": [],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/v1/history/station",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "history", "station"]
+            },
+            "description": "401 UNAUTHORIZED — aucun cookie JWT. Requete sans session."
+          }
+        },
+        {
+          "name": "Historique station — mauvais role (403)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 403', () => pm.response.to.have.status(403));",
+                  "pm.test('Code FORBIDDEN ou BUSINESS_NOT_APPROVED', () => {",
+                  "  const code = pm.response.json().code;",
+                  "  pm.expect(['FORBIDDEN', 'BUSINESS_NOT_APPROVED']).to.include(code);",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "response": [],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/v1/history/station",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "history", "station"]
+            },
+            "description": "403 FORBIDDEN — session client (role != station) ou station non approuvee (BUSINESS_NOT_APPROVED)."
+          }
+        }
+      ]
+    },
+    {
       "name": "Station — Profil",
       "item": [
         {
