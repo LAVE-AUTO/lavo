@@ -18,8 +18,10 @@ interface FileUploadZoneProps {
   error?: string;
 }
 
-const ACCEPTED_MIME = ['image/jpeg', 'image/png', 'image/heic', 'image/heif', 'application/pdf'];
+// Must match ALLOWED_DOCUMENT_TYPES in src/helpers/constants.ts
+const ACCEPTED_MIME = ['image/jpeg', 'image/png', 'image/webp', 'image/gif', 'application/pdf'];
 const MAX_BYTES = 10 * 1024 * 1024; // 10 MB
+const UPLOAD_TIMEOUT_MS = 30_000; // 30 s
 
 /**
  * Single-file drag-and-drop upload zone for station onboarding documents.
@@ -47,6 +49,9 @@ export function FileUploadZone({ label, hint, required, value, onChange, error }
     }
 
     setIsUploading(true);
+    const controller = new AbortController();
+    const timer = setTimeout(() => controller.abort(), UPLOAD_TIMEOUT_MS);
+
     try {
       const formData = new FormData();
       formData.append('file', file);
@@ -57,15 +62,22 @@ export function FileUploadZone({ label, hint, required, value, onChange, error }
         method: 'POST',
         body: formData,
         credentials: 'include',
+        signal: controller.signal,
       });
 
+      clearTimeout(timer);
+
       if (response.ok) {
-        const data = await response.json() as { url: string; storage: string };
-        onChange({ url: data.url, storage: data.storage as 'cloudinary' | 'local', name: file.name });
+        // API returns { data: { url, storage } } via successResponse helper
+        const body = await response.json() as { data: { url: string; storage: string } };
+        const { url, storage } = body.data;
+        onChange({ url, storage: storage as 'cloudinary' | 'local', name: file.name });
       } else {
-        setLocalError(t('error_upload_failed'));
+        const body = await response.json().catch(() => null) as { message?: string } | null;
+        setLocalError(body?.message ?? t('error_upload_failed'));
       }
     } catch {
+      clearTimeout(timer);
       setLocalError(t('error_upload_failed'));
     } finally {
       setIsUploading(false);
@@ -164,7 +176,7 @@ export function FileUploadZone({ label, hint, required, value, onChange, error }
       <input
         ref={inputRef}
         type="file"
-        accept=".pdf,.jpg,.jpeg,.png,.heic,.heif"
+        accept=".pdf,.jpg,.jpeg,.png,.webp,.gif"
         onChange={handleInputChange}
         className="sr-only"
         aria-hidden="true"
