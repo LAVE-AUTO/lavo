@@ -2,6 +2,7 @@ import { getTranslations, setRequestLocale } from 'next-intl/server';
 import { StationBrandPanel } from '@/components/stations/apply/StationBrandPanel';
 import { LoginForm } from '@/components/auth/LoginForm';
 import { AuthRedirectGuard } from '@/components/auth/AuthRedirectGuard';
+import { AuthModeSwitcher } from '@/components/auth/AuthModeSwitcher';
 
 type Props = {
   params: Promise<{ locale: string }>;
@@ -36,7 +37,7 @@ export default async function StationLoginPage({ params }: Props) {
         {/* Right form panel */}
         <main className="flex-1 flex flex-col items-center justify-center min-h-screen auth-form-bg overflow-y-auto scroll-smooth px-6 py-10">
           <div className="w-full max-w-lg animate-fade-in">
-            <div className="text-center mb-8">
+            <div className="text-center mb-6">
               <h1 className="text-[26px] sm:text-[30px] font-bold text-dark-bg dark:text-white mb-2">
                 {t('welcome_title')}
               </h1>
@@ -45,6 +46,8 @@ export default async function StationLoginPage({ params }: Props) {
               </p>
             </div>
 
+            <AuthModeSwitcher mode="merchant" />
+
             <div className="bg-white dark:bg-dark-card rounded-2xl shadow-[0_4px_24px_rgba(0,0,0,0.08),_0_1px_2px_rgba(0,0,0,0.04)] dark:shadow-[0_8px_40px_rgba(0,0,0,0.5)] dark:ring-1 dark:ring-gold/10 overflow-hidden animate-fade-in-up">
               <LoginForm />
             </div>
@@ -52,7 +55,7 @@ export default async function StationLoginPage({ params }: Props) {
             <p className="text-center mt-6 text-[14px] text-[#666] dark:text-lavo-muted">
               {t('no_account')}{' '}
               <a
-                href={`/${locale}/stations/apply`}
+                href={`/${locale}/station/apply`}
                 className="text-gold font-semibold hover:underline"
               >
                 {t('register_link')}
