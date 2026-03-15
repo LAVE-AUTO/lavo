@@ -35,7 +35,7 @@ export function ServiceCard({ service, onEdit, onDeleted, onToggled }: Props) {
   }
 
   const activeEntries = service.vehicle_entries.filter((e) => e.is_active);
-  const durations = activeEntries.map((e) => e.duration_min).filter(Boolean);
+  const durations = activeEntries.map((e) => e.duration_min).filter((d) => d > 0);
   const minDur = durations.length ? Math.min(...durations) : null;
   const maxDur = durations.length ? Math.max(...durations) : null;
   const durationLabel = minDur !== null
