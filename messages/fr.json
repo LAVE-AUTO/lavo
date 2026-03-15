@@ -1373,6 +1373,19 @@
     "geolocating": "Localisation en cours...",
     "geo_error": "Impossible de recuperer votre position",
     "location_save_success": "Localisation mise a jour",
-    "location_save_error": "Erreur lors de la mise a jour de la localisation"
+    "location_save_error": "Erreur lors de la mise a jour de la localisation",
+    "section_extras": "Extras par type de service",
+    "extras_tab_exterior": "Exterieur",
+    "extras_tab_interior": "Interieur",
+    "extras_tab_both": "Ext. & Int.",
+    "extras_empty": "Aucun extra configure pour ce service",
+    "extras_btn_add": "Ajouter un extra",
+    "extras_btn_remove": "Supprimer",
+    "extras_placeholder_label": "Nom de l'extra (ex: Desinfection)",
+    "extras_placeholder_price": "Prix ($)",
+    "extras_active": "Actif",
+    "extras_inactive": "Inactif",
+    "extras_save_success": "Extras enregistres",
+    "extras_save_error": "Erreur lors de l'enregistrement"
   }
 }

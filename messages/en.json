@@ -1373,6 +1373,19 @@
     "geolocating": "Getting location...",
     "geo_error": "Unable to retrieve your location",
     "location_save_success": "Location updated",
-    "location_save_error": "Error updating location"
+    "location_save_error": "Error updating location",
+    "section_extras": "Extras by service type",
+    "extras_tab_exterior": "Exterior",
+    "extras_tab_interior": "Interior",
+    "extras_tab_both": "Ext. & Int.",
+    "extras_empty": "No extras configured for this service",
+    "extras_btn_add": "Add an extra",
+    "extras_btn_remove": "Remove",
+    "extras_placeholder_label": "Extra name (e.g. Disinfection)",
+    "extras_placeholder_price": "Price ($)",
+    "extras_active": "Active",
+    "extras_inactive": "Inactive",
+    "extras_save_success": "Extras saved",
+    "extras_save_error": "Error saving extras"
   }
 }
