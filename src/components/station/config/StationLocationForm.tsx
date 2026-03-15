@@ -16,14 +16,12 @@ interface Props {
 }
 
 const inputClass =
-  'w-full rounded-lg border border-[#E0DCD0] bg-white px-3 py-2 text-[13px] text-[#1A1A0A] outline-none focus:border-[#C49A1E] dark:border-[#1A2A14] dark:bg-[#182214] dark:text-[#F0EDD4]';
+  'w-full rounded-[8px] border border-[#D8D4C8] bg-[#F7F6F2] px-3 py-2.5 text-[13px] text-[#1A1A0A] outline-none transition-colors duration-150 placeholder:text-[#BBBBAA] focus:border-[#C49A1E] focus:bg-white focus:shadow-[0_0_0_3px_rgba(196,154,30,0.12)] dark:border-[#243020] dark:bg-[#0F1A0C] dark:text-[#F0EDD4] dark:placeholder:text-[#4A4A3A] dark:focus:border-[#C49A1E] dark:focus:bg-[#182214]';
 
 function Field({ label, children }: { label: string; children: React.ReactNode }) {
   return (
-    <div className="flex flex-col gap-1">
-      <label className="text-[11px] font-semibold uppercase tracking-wide text-[#888] dark:text-[#8A8A7A]">
-        {label}
-      </label>
+    <div className="flex flex-col gap-1.5">
+      <label className="text-[12px] font-medium text-[#5A5A4A] dark:text-[#9A9A8A]">{label}</label>
       {children}
     </div>
   );
@@ -52,14 +50,35 @@ export function StationLocationForm({ location, onSaved }: Props) {
   const [saving, setSaving] = useState(false);
   const [feedback, setFeedback] = useState<{ ok: boolean; msg: string } | null>(null);
 
+  async function reverseGeocode(latitude: number, longitude: number) {
+    try {
+      const res = await fetch(
+        `https://nominatim.openstreetmap.org/reverse?lat=${latitude}&lon=${longitude}&format=json`,
+        { headers: { 'Accept-Language': 'fr' } }
+      );
+      const data = await res.json();
+      if (data?.address) {
+        const { house_number, road, city: c, town, village, suburb } = data.address;
+        const street = [house_number, road].filter(Boolean).join(' ');
+        if (street) setAddress(street);
+        const cityName = c || town || village || suburb || '';
+        if (cityName) setCity(cityName);
+      }
+    } catch {
+      // Reverse geocoding failed — coordinates remain set
+    }
+  }
+
   function handleGeolocate() {
     if (!navigator.geolocation) return;
     setGeoLoading(true);
     setGeoError(false);
     navigator.geolocation.getCurrentPosition(
-      (pos) => {
-        setLat(pos.coords.latitude.toFixed(7));
-        setLng(pos.coords.longitude.toFixed(7));
+      async (pos) => {
+        const { latitude, longitude } = pos.coords;
+        setLat(latitude.toFixed(7));
+        setLng(longitude.toFixed(7));
+        await reverseGeocode(latitude, longitude);
         setGeoLoading(false);
       },
       () => {
@@ -84,81 +103,53 @@ export function StationLocationForm({ location, onSaved }: Props) {
 
   return (
     <form onSubmit={handleSubmit}>
-      <section className="rounded-xl border border-[#E0DCD0] bg-white p-5 dark:border-[#1A2A14] dark:bg-[#182214]">
-        <div className="mb-4 text-[13px] font-black text-[#1A1A0A] dark:text-[#F0EDD4]">
-          {t('section_location')}
+      <section className="rounded-xl border border-[#E8E4DC] bg-white shadow-sm dark:border-[#1A2A14] dark:bg-[#182214]">
+        <div className="flex items-center gap-2.5 border-b border-[#F0EDE4] px-5 py-3.5 dark:border-[#1A2A14]">
+          <span className="h-4 w-[3px] rounded-full bg-[#C49A1E]" />
+          <span className="text-[13px] font-bold text-[#1A1A0A] dark:text-[#F0EDD4]">{t('section_location')}</span>
         </div>
-        <div className="grid grid-cols-2 gap-4">
-          <div className="col-span-2">
-            <Field label={t('field_address')}>
-              <input
-                type="text"
-                className={inputClass}
-                value={address}
-                onChange={(e) => setAddress(e.target.value)}
-              />
+        <div className="p-5">
+          <div className="grid grid-cols-2 gap-4">
+            <div className="col-span-2">
+              <Field label={t('field_address')}>
+                <input type="text" className={inputClass} value={address} onChange={(e) => setAddress(e.target.value)} />
+              </Field>
+            </div>
+            <Field label={t('field_city')}>
+              <input type="text" className={inputClass} value={city} onChange={(e) => setCity(e.target.value)} />
             </Field>
+            <div />
+            <Field label={t('field_latitude')}>
+              <input type="text" className={inputClass + ' font-mono'} value={lat} onChange={(e) => setLat(e.target.value)} placeholder="45.5017000" />
+            </Field>
+            <Field label={t('field_longitude')}>
+              <input type="text" className={inputClass + ' font-mono'} value={lng} onChange={(e) => setLng(e.target.value)} placeholder="-73.5673000" />
+            </Field>
+            <div className="col-span-2 flex flex-col gap-1">
+              <button
+                type="button"
+                onClick={handleGeolocate}
+                disabled={geoLoading}
+                className="flex w-fit items-center gap-2 rounded-[8px] border border-[#C49A1E] px-4 py-2 text-[12px] font-semibold text-[#C49A1E] transition-colors hover:bg-[#C49A1E] hover:text-[#0C1209] disabled:opacity-50"
+              >
+                <GeoIcon />
+                {geoLoading ? t('geolocating') : t('btn_geolocate')}
+              </button>
+              {geoError && (
+                <p className="text-[11px] font-semibold" style={{ color: '#EF4444' }}>{t('geo_error')}</p>
+              )}
+            </div>
           </div>
-          <Field label={t('field_city')}>
-            <input
-              type="text"
-              className={inputClass}
-              value={city}
-              onChange={(e) => setCity(e.target.value)}
-            />
-          </Field>
-          <div />
-          <Field label={t('field_latitude')}>
-            <input
-              type="text"
-              className={inputClass}
-              value={lat}
-              onChange={(e) => setLat(e.target.value)}
-              placeholder="45.5017000"
-            />
-          </Field>
-          <Field label={t('field_longitude')}>
-            <input
-              type="text"
-              className={inputClass}
-              value={lng}
-              onChange={(e) => setLng(e.target.value)}
-              placeholder="-73.5673000"
-            />
-          </Field>
-          <div className="col-span-2 flex flex-col gap-1">
-            <button
-              type="button"
-              onClick={handleGeolocate}
-              disabled={geoLoading}
-              className="flex w-fit items-center gap-2 rounded-lg border border-[#C49A1E] px-4 py-2 text-[12px] font-semibold text-[#C49A1E] transition-colors hover:bg-[#C49A1E] hover:text-[#0C1209] disabled:opacity-50"
-            >
-              <GeoIcon />
-              {geoLoading ? t('geolocating') : t('btn_geolocate')}
-            </button>
-            {geoError && (
-              <p className="text-[11px] font-semibold" style={{ color: '#EF4444' }}>
-                {t('geo_error')}
-              </p>
+          <div className="mt-5 flex items-center justify-between">
+            {feedback && (
+              <span className="text-[12px] font-semibold" style={{ color: feedback.ok ? '#00C851' : '#EF4444' }}>
+                {feedback.msg}
+              </span>
             )}
+            <button type="submit" disabled={saving} className="ml-auto rounded-[10px] bg-[#C49A1E] px-6 py-2.5 text-[13px] font-bold text-[#0C1209] transition-opacity hover:opacity-80 disabled:opacity-50">
+              {saving ? t('btn_saving') : t('btn_save')}
+            </button>
           </div>
-        </div>
-        <div className="mt-5 flex items-center justify-between">
-          {feedback && (
-            <span
-              className="text-[12px] font-semibold"
-              style={{ color: feedback.ok ? '#2ECC71' : '#EF4444' }}
-            >
-              {feedback.msg}
-            </span>
-          )}
-          <button
-            type="submit"
-            disabled={saving}
-            className="ml-auto rounded-lg bg-[#C49A1E] px-6 py-2.5 text-[13px] font-black text-[#0C1209] transition-opacity hover:opacity-80 disabled:opacity-50"
-          >
-            {saving ? t('btn_saving') : t('btn_save')}
-          </button>
         </div>
       </section>
     </form>
