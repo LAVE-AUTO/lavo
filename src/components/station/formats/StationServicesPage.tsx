@@ -48,14 +48,22 @@ export function StationServicesPage() {
     if (!authLoading) loadData();
   }, [authLoading, loadData]);
 
-  function handleServiceSaved(saved: Service) {
+  const handleServiceSaved = useCallback((saved: Service) => {
     setServices((prev) => {
       const idx = prev.findIndex((s) => s.id === saved.id);
       if (idx !== -1) { const next = [...prev]; next[idx] = saved; return next; }
       return [...prev, saved];
     });
     setServiceModal(null);
-  }
+  }, []);
+
+  const handleServiceDeleted = useCallback((id: string) => {
+    setServices((prev) => prev.filter((s) => s.id !== id));
+  }, []);
+
+  const handleServiceToggled = useCallback((updated: Service) => {
+    setServices((prev) => prev.map((s) => (s.id === updated.id ? updated : s)));
+  }, []);
 
   const activeCount = services.filter((s) => s.is_active).length;
 
@@ -152,9 +160,9 @@ export function StationServicesPage() {
                   <ServiceCard
                     key={service.id}
                     service={service}
-                    onEdit={(s) => setServiceModal(s)}
-                    onDeleted={(id) => setServices((prev) => prev.filter((s) => s.id !== id))}
-                    onToggled={(updated) => setServices((prev) => prev.map((s) => (s.id === updated.id ? updated : s)))}
+                    onEdit={setServiceModal}
+                    onDeleted={handleServiceDeleted}
+                    onToggled={handleServiceToggled}
                   />
                 ))}
               </div>
