@@ -1263,6 +1263,7 @@
     "nav_config": "Settings",
     "nav_history": "History",
     "nav_support": "Support",
+    "nav_logout": "Log out",
     "nav_queue": "Queue",
     "kpi_revenue": "Today's revenue",
     "kpi_clients": "Clients served",
