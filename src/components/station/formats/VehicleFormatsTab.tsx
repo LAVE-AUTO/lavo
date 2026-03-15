@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useRef, useEffect } from 'react';
 import { useTranslations, useLocale } from 'next-intl';
 import { patchWithApi, deleteWithApi } from '@/services';
 import { ConfirmDialog } from '@/components/ui/ConfirmDialog';
@@ -42,14 +42,19 @@ export function VehicleFormatsTab({ formats, onAdd, onUpdate, onDelete }: Props)
   /* Toggle confirm state */
   const [toggleState, setToggleState] = useState<ToggleState | null>(null);
 
+  /* Guard against setState after unmount */
+  const mountedRef = useRef(true);
+  useEffect(() => { mountedRef.current = true; return () => { mountedRef.current = false; }; }, []);
+
   /* ── Delete flow ── */
-  async function confirmDelete() {
+  const confirmDelete = useCallback(async () => {
     if (!deleteState) return;
     const { format } = deleteState;
     setDeleteState({ format, loading: true });
     setDeleteError(null);
 
     const [ok, data] = await deleteWithApi(`/station/formats/${format.id}`);
+    if (!mountedRef.current) return;
     setDeleteState(null);
 
     if (ok) {
@@ -61,7 +66,7 @@ export function VehicleFormatsTab({ formats, onAdd, onUpdate, onDelete }: Props)
         msg: err?.code === 'CONFLICT' ? t('format_delete_conflict') : t('format_delete_error'),
       });
     }
-  }
+  }, [deleteState, onDelete, t]);
 
   /* ── Toggle flow ── */
   const confirmToggle = useCallback(async () => {
