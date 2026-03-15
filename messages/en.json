@@ -1353,6 +1353,26 @@
     "modal_generating": "Generating...",
     "delete_confirm": "Delete this slot?",
     "deleting": "Deleting...",
-    "loading": "Loading..."
+    "loading": "Loading...",
+    "section_profile": "Station profile",
+    "field_email": "Email address",
+    "field_station_name": "Station name",
+    "field_description": "Description",
+    "field_service_scope": "Service type",
+    "service_scope_exterior": "Exterior wash only",
+    "service_scope_interior": "Interior wash only",
+    "service_scope_both": "Exterior and interior",
+    "profile_save_success": "Profile updated",
+    "profile_save_error": "Error updating profile",
+    "section_location": "Location",
+    "field_address": "Address",
+    "field_city": "City",
+    "field_latitude": "Latitude",
+    "field_longitude": "Longitude",
+    "btn_geolocate": "Use my current location",
+    "geolocating": "Getting location...",
+    "geo_error": "Unable to retrieve your location",
+    "location_save_success": "Location updated",
+    "location_save_error": "Error updating location"
   }
 }

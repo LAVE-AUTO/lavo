@@ -1353,6 +1353,26 @@
     "modal_generating": "Génération...",
     "delete_confirm": "Supprimer ce créneau ?",
     "deleting": "Suppression...",
-    "loading": "Chargement..."
+    "loading": "Chargement...",
+    "section_profile": "Profil de la station",
+    "field_email": "Adresse e-mail",
+    "field_station_name": "Nom de la station",
+    "field_description": "Description",
+    "field_service_scope": "Type de service",
+    "service_scope_exterior": "Lavage exterieur uniquement",
+    "service_scope_interior": "Lavage interieur uniquement",
+    "service_scope_both": "Exterieur et interieur",
+    "profile_save_success": "Profil mis a jour",
+    "profile_save_error": "Erreur lors de la mise a jour du profil",
+    "section_location": "Localisation",
+    "field_address": "Adresse",
+    "field_city": "Ville",
+    "field_latitude": "Latitude",
+    "field_longitude": "Longitude",
+    "btn_geolocate": "Utiliser ma position actuelle",
+    "geolocating": "Localisation en cours...",
+    "geo_error": "Impossible de recuperer votre position",
+    "location_save_success": "Localisation mise a jour",
+    "location_save_error": "Erreur lors de la mise a jour de la localisation"
   }
 }
