@@ -1259,7 +1259,7 @@
     "nav_home": "Accueil",
     "nav_availability": "Disponibilité",
     "nav_reservations": "Réservations",
-    "nav_formats": "Tarifs",
+    "nav_formats": "Services",
     "nav_config": "Paramètres",
     "nav_history": "Historique",
     "nav_support": "Support",
@@ -1434,6 +1434,22 @@
     "btn_saving": "Enregistrement...",
     "btn_cancel": "Annuler",
     "save_error": "Erreur lors de l'enregistrement",
-    "no_formats": "Aucun format de véhicule configuré. Ajoutez des formats dans les paramètres d'abord."
+    "no_formats": "Aucun format de véhicule configuré. Ajoutez des formats dans l'onglet Formats d'abord.",
+    "tab_services": "Services",
+    "tab_formats": "Formats de véhicule",
+    "tab_extras": "Extras",
+    "btn_new_format": "Nouveau Format",
+    "formats_hint": "Les formats de véhicule définissent la base tarifaire par service (Berline, SUV, Camion...).",
+    "formats_empty": "Aucun format de véhicule configuré",
+    "formats_empty_hint": "Ajoutez vos types de véhicules pour pouvoir définir vos tarifs par service.",
+    "format_modal_new": "Nouveau Format de Véhicule",
+    "format_modal_edit": "Modifier le Format",
+    "format_field_label": "Nom du format",
+    "format_placeholder_label": "Ex : Berline, SUV, Camion...",
+    "format_field_price": "Prix de base (CAD)",
+    "format_save_error": "Erreur lors de l'enregistrement",
+    "format_delete_confirm": "Supprimer ce format de véhicule ?",
+    "format_delete_error": "Impossible de supprimer ce format",
+    "format_delete_conflict": "Ce format est lié à des réservations existantes"
   }
 }

@@ -1259,7 +1259,7 @@
     "nav_home": "Home",
     "nav_availability": "Availability",
     "nav_reservations": "Reservations",
-    "nav_formats": "Pricing",
+    "nav_formats": "Services",
     "nav_config": "Settings",
     "nav_history": "History",
     "nav_support": "Support",
@@ -1434,6 +1434,22 @@
     "btn_saving": "Saving...",
     "btn_cancel": "Cancel",
     "save_error": "Error saving service",
-    "no_formats": "No vehicle formats configured. Add formats in station settings first."
+    "no_formats": "No vehicle formats configured. Add formats in the Formats tab first.",
+    "tab_services": "Services",
+    "tab_formats": "Vehicle Formats",
+    "tab_extras": "Extras",
+    "btn_new_format": "New Format",
+    "formats_hint": "Vehicle formats define the pricing base for each service (Sedan, SUV, Truck...).",
+    "formats_empty": "No vehicle formats configured",
+    "formats_empty_hint": "Add your vehicle types so you can set pricing per service.",
+    "format_modal_new": "New Vehicle Format",
+    "format_modal_edit": "Edit Vehicle Format",
+    "format_field_label": "Format name",
+    "format_placeholder_label": "e.g. Sedan, SUV, Truck...",
+    "format_field_price": "Base price (CAD)",
+    "format_save_error": "Error saving format",
+    "format_delete_confirm": "Delete this vehicle format?",
+    "format_delete_error": "Unable to delete this format",
+    "format_delete_conflict": "This format is linked to existing reservations"
   }
 }
