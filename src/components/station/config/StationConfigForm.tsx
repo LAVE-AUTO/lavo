@@ -100,6 +100,22 @@ export function StationConfigForm({ config, posts, onSaved }: StationConfigFormP
   );
 
   useEffect(() => {
+    setForm({
+      opening_time: config.opening_time ?? '',
+      closing_time: config.closing_time ?? '',
+      break_start: config.break_start ?? '',
+      break_end: config.break_end ?? '',
+      wash_duration_minutes: config.wash_duration_minutes ?? '',
+      late_tolerance_minutes: config.late_tolerance_minutes ?? '',
+      cancellation_delay_minutes: config.cancellation_delay_minutes ?? '',
+      max_concurrent_posts: config.max_concurrent_posts ?? '',
+      margin_before_minutes: config.margin_before_minutes ?? '',
+      margin_after_minutes: config.margin_after_minutes ?? '',
+      reservation_surcharge: config.reservation_surcharge ?? '',
+    });
+  }, [config]);
+
+  useEffect(() => {
     setPostStates(Object.fromEntries(posts.map((p) => [p.id, p.is_active])));
   }, [posts]);
 
@@ -205,7 +221,7 @@ export function StationConfigForm({ config, posts, onSaved }: StationConfigFormP
                 <button
                   key={post.id}
                   type="button"
-                  onClick={() => setPostStates((prev) => ({ ...prev, [post.id]: !prev[post.id] }))}
+                  onClick={() => setPostStates((prev) => ({ ...prev, [post.id]: !(prev[post.id] ?? post.is_active) }))}
                   className={`group flex items-center gap-2.5 rounded-[10px] border px-4 py-2.5 text-[12px] font-semibold transition-all duration-150 ${
                     active
                       ? 'border-[#C49A1E] bg-[#C49A1E] text-[#0C1209] shadow-sm'

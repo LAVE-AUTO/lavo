@@ -45,6 +45,22 @@ export function SlotModal({ mode, selectedDate, onClose, onCreated }: SlotModalP
   const [error, setError] = useState(false);
 
   async function handleConfirm() {
+    if (mode === 'add') {
+      if (!date || !startTime || !endTime) {
+        setError(true);
+        return;
+      }
+      if (endTime <= startTime) {
+        setError(true);
+        return;
+      }
+      const cap = Number(capacity);
+      if (!cap || cap < 1) {
+        setError(true);
+        return;
+      }
+    }
+
     setLoading(true);
     setError(false);
 
