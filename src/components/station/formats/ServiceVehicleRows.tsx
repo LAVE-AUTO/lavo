@@ -65,7 +65,7 @@ export function ServiceVehicleRows({ formats, entries, onChange }: Props) {
               min="1"
               step="1"
               value={entry.duration_min}
-              onChange={(e) => update(entry.vehicle_format_id, 'duration_min', parseInt(e.target.value) || 0)}
+              onChange={(e) => { const n = parseInt(e.target.value, 10); update(entry.vehicle_format_id, 'duration_min', isNaN(n) ? 1 : n); }}
               disabled={!entry.is_active}
               className={inputClass + ' disabled:opacity-40'}
             />
@@ -81,7 +81,7 @@ export function ServiceVehicleRows({ formats, entries, onChange }: Props) {
               min="0"
               step="1"
               value={entry.staff_required}
-              onChange={(e) => update(entry.vehicle_format_id, 'staff_required', parseInt(e.target.value) || 0)}
+              onChange={(e) => { const n = parseInt(e.target.value, 10); update(entry.vehicle_format_id, 'staff_required', isNaN(n) ? 0 : n); }}
               disabled={!entry.is_active}
               className={inputClass + ' disabled:opacity-40'}
             />
