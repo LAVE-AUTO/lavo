@@ -1,7 +1,9 @@
 'use client';
 
-import { useTranslations } from 'next-intl';
+import Image from 'next/image';
+import { useTranslations, useLocale } from 'next-intl';
 import { useAuth } from '@/context/auth-context';
+import { useTheme } from '@/context/theme-context';
 import { ThemeToggle } from '@/components/auth/ThemeToggle';
 import { LangToggle } from '@/components/auth/LangToggle';
 
@@ -13,22 +15,43 @@ interface StationTopNavProps {
 export function StationTopNav({ stationName, notifCount = 0 }: StationTopNavProps) {
   const t = useTranslations('station_dashboard');
   const { user } = useAuth();
+  const { resolvedTheme } = useTheme();
+  const locale = useLocale();
 
+  const isDark = resolvedTheme === 'dark';
   const displayName = stationName ?? user?.first_name ?? 'Station';
+  const lightLogoSrc = locale === 'fr' ? '/logo/logo2_2.png' : '/logo/logo_anglais_1.png';
 
   return (
     <header className="flex h-14 flex-shrink-0 items-center justify-between border-b border-[#E0DCD0] bg-white px-6 dark:border-[#1A2A14] dark:bg-[#111A0E]">
-      {/* Logo + station name */}
-      <div>
-        <div className="font-playfair text-[22px] font-black leading-none tracking-[-0.02em] text-[#C49A1E]">
-          Slowtime
-        </div>
+
+      {/* Logo */}
+      <div className="flex flex-col justify-center">
+        {isDark ? (
+          <div className="flex items-center gap-2">
+            <div className="shrink-0 rounded-lg border border-[rgba(200,152,10,0.25)] bg-white/95 p-0.5 shadow-sm">
+              <Image src="/logo/frame2.png" alt="" width={24} height={24} className="h-6 w-6 object-contain" aria-hidden="true" />
+            </div>
+            <span className="font-playfair text-[18px] font-black leading-none tracking-[3px] text-[#C49A1E]">
+              Slowtime
+            </span>
+          </div>
+        ) : (
+          <Image
+            src={lightLogoSrc}
+            alt="Slowtime"
+            width={110}
+            height={30}
+            className="h-8 w-auto object-contain"
+            priority
+          />
+        )}
         <div className="mt-0.5 text-[10px] font-medium text-[#666] dark:text-[#8A8A7A]">
           {displayName}
         </div>
       </div>
 
-      {/* Right controls — theme toggle, language toggle, notification bell */}
+      {/* Right controls */}
       <div className="flex items-center gap-2">
         <ThemeToggle />
         <LangToggle />
