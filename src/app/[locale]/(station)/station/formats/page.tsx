@@ -1,5 +1,5 @@
-import { StationFormatsPage } from '@/components/station/formats/StationFormatsPage';
+import { StationServicesPage } from '@/components/station/formats/StationServicesPage';
 
 export default function StationFormatsRoute() {
-  return <StationFormatsPage />;
+  return <StationServicesPage />;
 }
