@@ -1392,5 +1392,33 @@
     "extras_inactive": "Inactif",
     "extras_save_success": "Extras enregistres",
     "extras_save_error": "Erreur lors de l'enregistrement"
+  },
+  "station_formats": {
+    "page_title": "Tarifs par format de vehicule",
+    "btn_add": "Nouveau format",
+    "loading": "Chargement...",
+    "empty": "Aucun format configure",
+    "empty_hint": "Ajoutez des formats de vehicule pour definir vos tarifs.",
+    "col_label": "Format",
+    "col_price": "Prix",
+    "col_status": "Statut",
+    "active": "Actif",
+    "inactive": "Inactif",
+    "modal_title_add": "Nouveau format",
+    "modal_title_edit": "Modifier le format",
+    "field_label": "Libelle du format",
+    "field_price": "Prix (CAD)",
+    "placeholder_label": "Ex : Berline, SUV, Camion...",
+    "placeholder_price": "0.00",
+    "btn_save": "Enregistrer",
+    "btn_saving": "Enregistrement...",
+    "btn_cancel": "Annuler",
+    "save_success": "Format enregistre",
+    "save_error": "Erreur lors de l'enregistrement",
+    "delete_confirm": "Supprimer ce format ?",
+    "deleting": "Suppression...",
+    "delete_error": "Impossible de supprimer ce format",
+    "delete_error_conflict": "Ce format est lie a des reservations existantes",
+    "toggle_error": "Erreur lors de la mise a jour"
   }
 }
