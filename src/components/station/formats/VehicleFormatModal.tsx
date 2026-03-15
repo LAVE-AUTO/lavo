@@ -57,7 +57,7 @@ export function VehicleFormatModal({ format, existingFormats, onClose, onSaved }
     ? existingFormats.filter((f) => f.id !== format.id).map((f) => f.label)
     : existingFormats.map((f) => f.label);
 
-  const canSubmit = label.trim().length > 0 && price.length > 0 && !isDuplicate && !saving;
+  const canSubmit = label.trim().length > 0 && parseFloat(price) > 0 && !isDuplicate && !saving;
 
   /* For CREATE: submit directly. For EDIT: open confirmation first. */
   function handleSaveClick(e: React.FormEvent) {
@@ -77,7 +77,7 @@ export function VehicleFormatModal({ format, existingFormats, onClose, onSaved }
     setApiError(null);
 
     const payload = { label: label.trim(), price: parseFloat(price) };
-    const [ok, data] = isEdit
+    const [ok, data] = (isEdit && format)
       ? await updateWithApi(`/station/formats/${format.id}`, { ...payload, is_active: format.is_active })
       : await postWithApi('/station/formats', payload);
 
