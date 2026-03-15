@@ -153,6 +153,7 @@ export function VehicleFormatsTab({ formats, onAdd, onUpdate, onDelete }: Props)
       {modal !== null && (
         <VehicleFormatModal
           format={modal === 'new' ? null : modal}
+          existingFormats={formats}
           onClose={() => setModal(null)}
           onSaved={handleSaved}
         />
