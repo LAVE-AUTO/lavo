@@ -56,7 +56,9 @@ export function ConfirmDialog({
 
   /* Focus cancel button on open (safer default) */
   useEffect(() => {
-    if (open) setTimeout(() => cancelRef.current?.focus(), 30);
+    if (!open) return;
+    const id = setTimeout(() => cancelRef.current?.focus(), 30);
+    return () => clearTimeout(id);
   }, [open]);
 
   /* Close on Escape */
