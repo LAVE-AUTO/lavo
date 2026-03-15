@@ -1,8 +1,9 @@
 'use client';
 
-import { useState } from 'react';
-import { useTranslations } from 'next-intl';
+import { useState, useCallback } from 'react';
+import { useTranslations, useLocale } from 'next-intl';
 import { patchWithApi, deleteWithApi } from '@/services';
+import { ConfirmDialog } from '@/components/ui/ConfirmDialog';
 import type { VehicleFormat } from './types';
 import { VehicleFormatModal } from './VehicleFormatModal';
 
@@ -25,26 +26,32 @@ const TrashIcon = () => (
   </svg>
 );
 
+interface DeleteState { format: VehicleFormat; loading: boolean }
+interface ToggleState { format: VehicleFormat }
+
 export function VehicleFormatsTab({ formats, onAdd, onUpdate, onDelete }: Props) {
   const t = useTranslations('station_services');
+  const locale = useLocale();
   const [modal, setModal] = useState<VehicleFormat | null | 'new'>(null);
   const [toggling, setToggling] = useState<string | null>(null);
-  const [deleting, setDeleting] = useState<string | null>(null);
+
+  /* Delete confirm state */
+  const [deleteState, setDeleteState] = useState<DeleteState | null>(null);
   const [deleteError, setDeleteError] = useState<{ id: string; msg: string } | null>(null);
 
-  async function handleToggle(format: VehicleFormat) {
-    setToggling(format.id);
-    const [ok, data] = await patchWithApi(`/station/formats/${format.id}`, { is_active: !format.is_active });
-    setToggling(null);
-    if (ok) onUpdate((data as { data: VehicleFormat }).data);
-  }
+  /* Toggle confirm state */
+  const [toggleState, setToggleState] = useState<ToggleState | null>(null);
 
-  async function handleDelete(format: VehicleFormat) {
-    if (!window.confirm(t('format_delete_confirm'))) return;
-    setDeleting(format.id);
+  /* ── Delete flow ── */
+  async function confirmDelete() {
+    if (!deleteState) return;
+    const { format } = deleteState;
+    setDeleteState({ format, loading: true });
     setDeleteError(null);
+
     const [ok, data] = await deleteWithApi(`/station/formats/${format.id}`);
-    setDeleting(null);
+    setDeleteState(null);
+
     if (ok) {
       onDelete(format.id);
     } else {
@@ -56,6 +63,17 @@ export function VehicleFormatsTab({ formats, onAdd, onUpdate, onDelete }: Props)
     }
   }
 
+  /* ── Toggle flow ── */
+  const confirmToggle = useCallback(async () => {
+    if (!toggleState) return;
+    const { format } = toggleState;
+    setToggleState(null);
+    setToggling(format.id);
+    const [ok, data] = await patchWithApi(`/station/formats/${format.id}`, { is_active: !format.is_active });
+    setToggling(null);
+    if (ok) onUpdate((data as { data: VehicleFormat }).data);
+  }, [toggleState, onUpdate]);
+
   function handleSaved(saved: VehicleFormat) {
     const isNew = !formats.find((f) => f.id === saved.id);
     if (isNew) onAdd(saved);
@@ -63,9 +81,11 @@ export function VehicleFormatsTab({ formats, onAdd, onUpdate, onDelete }: Props)
     setModal(null);
   }
 
+  const isLoading = (id: string) => toggling === id || deleteState?.format.id === id;
+
   return (
     <>
-      {/* Section header with hint + add button */}
+      {/* Section header */}
       <div className="mb-4 flex items-center justify-between">
         <p className="text-[12px] text-[#888] dark:text-[#6A6A5A]">{t('formats_hint')}</p>
         <button
@@ -86,31 +106,32 @@ export function VehicleFormatsTab({ formats, onAdd, onUpdate, onDelete }: Props)
       ) : (
         <div className="flex flex-col gap-2">
           {formats.map((format) => {
-            const isDeleting = deleting === format.id;
-            const isToggling = toggling === format.id;
+            const busy = isLoading(format.id);
             const err = deleteError?.id === format.id ? deleteError.msg : null;
 
             return (
               <div
                 key={format.id}
-                className="flex items-center gap-3 rounded-xl border border-[#E8E4DC] bg-white px-4 py-3.5 shadow-sm dark:border-[#1A2A14] dark:bg-[#182214]"
+                className="flex items-center gap-3 rounded-xl border border-[#E8E4DC] bg-white px-4 py-3.5 shadow-sm transition-opacity dark:border-[#1A2A14] dark:bg-[#182214]"
+                style={{ opacity: busy ? 0.6 : 1 }}
               >
-                <span
-                  className={`h-2 w-2 shrink-0 rounded-full ${
-                    format.is_active ? 'bg-[#00C851]' : 'bg-[#D0D0C0] dark:bg-[#3A3A2A]'
-                  }`}
-                />
+                <span className={`h-2 w-2 shrink-0 rounded-full ${
+                  format.is_active ? 'bg-[#00C851]' : 'bg-[#D0D0C0] dark:bg-[#3A3A2A]'
+                }`} />
+
                 <span className="min-w-0 flex-1 truncate text-[13px] font-semibold text-[#1A1A0A] dark:text-[#F0EDD4]">
                   {format.label}
                 </span>
+
                 <span className="shrink-0 font-mono text-[14px] font-bold text-[#C49A1E]">
                   {parseFloat(format.price).toFixed(2)} $
                 </span>
 
+                {/* Toggle active/inactive */}
                 <button
                   type="button"
-                  onClick={() => handleToggle(format)}
-                  disabled={isToggling}
+                  onClick={() => setToggleState({ format })}
+                  disabled={busy}
                   className={`shrink-0 rounded-[6px] px-2.5 py-1 text-[11px] font-semibold transition-all disabled:opacity-50 ${
                     format.is_active
                       ? 'bg-[#E8F8EE] text-[#009A3A] dark:bg-[#0A2A14] dark:text-[#00C851]'
@@ -120,36 +141,42 @@ export function VehicleFormatsTab({ formats, onAdd, onUpdate, onDelete }: Props)
                   {format.is_active ? t('badge_active') : t('badge_inactive')}
                 </button>
 
+                {/* Edit */}
                 <button
                   type="button"
                   onClick={() => setModal(format)}
-                  className="shrink-0 rounded-[8px] border border-[#D8D4C8] p-1.5 text-[#888] transition-colors hover:border-[#C49A1E] hover:text-[#C49A1E] dark:border-[#243020] dark:text-[#6A6A5A]"
-                  aria-label="Edit"
+                  disabled={busy}
+                  className="shrink-0 rounded-[8px] border border-[#D8D4C8] p-1.5 text-[#888] transition-colors hover:border-[#C49A1E] hover:text-[#C49A1E] disabled:opacity-40 dark:border-[#243020] dark:text-[#6A6A5A]"
+                  aria-label="Modifier"
                 >
                   <PencilIcon />
                 </button>
 
+                {/* Delete */}
                 <button
                   type="button"
-                  onClick={() => handleDelete(format)}
-                  disabled={isDeleting}
+                  onClick={() => setDeleteState({ format, loading: false })}
+                  disabled={busy}
                   className="shrink-0 rounded-[8px] border border-[#D8D4C8] p-1.5 text-[#888] transition-colors hover:border-[#EF4444] hover:text-[#EF4444] disabled:opacity-40 dark:border-[#243020] dark:text-[#6A6A5A]"
-                  aria-label="Delete"
+                  aria-label="Supprimer"
                 >
-                  {isDeleting ? (
+                  {deleteState?.format.id === format.id && deleteState.loading ? (
                     <span className="block h-3.5 w-3.5 animate-spin rounded-full border-2 border-current border-t-transparent" />
                   ) : (
                     <TrashIcon />
                   )}
                 </button>
 
-                {err && <span className="ml-1 text-[11px] font-semibold text-[#EF4444]">{err}</span>}
+                {err && (
+                  <span className="ml-1 shrink-0 text-[11px] font-semibold text-[#EF4444]">{err}</span>
+                )}
               </div>
             );
           })}
         </div>
       )}
 
+      {/* Format modal */}
       {modal !== null && (
         <VehicleFormatModal
           format={modal === 'new' ? null : modal}
@@ -158,6 +185,49 @@ export function VehicleFormatsTab({ formats, onAdd, onUpdate, onDelete }: Props)
           onSaved={handleSaved}
         />
       )}
+
+      {/* Delete confirmation */}
+      <ConfirmDialog
+        open={deleteState !== null}
+        title={locale === 'en' ? 'Delete this format?' : 'Supprimer ce format ?'}
+        message={deleteState
+          ? (locale === 'en'
+            ? `"${deleteState.format.label}" will be permanently deleted.`
+            : `"${deleteState.format.label}" sera définitivement supprimé.`)
+          : ''}
+        confirmLabel={locale === 'en' ? 'Delete' : 'Supprimer'}
+        cancelLabel={t('btn_cancel')}
+        variant="danger"
+        loading={deleteState?.loading ?? false}
+        onConfirm={confirmDelete}
+        onCancel={() => setDeleteState(null)}
+      />
+
+      {/* Toggle confirmation */}
+      <ConfirmDialog
+        open={toggleState !== null}
+        title={toggleState
+          ? (toggleState.format.is_active
+            ? (locale === 'en' ? 'Deactivate this format?' : 'Désactiver ce format ?')
+            : (locale === 'en' ? 'Activate this format?' : 'Activer ce format ?'))
+          : ''}
+        message={toggleState
+          ? (toggleState.format.is_active
+            ? (locale === 'en'
+              ? `"${toggleState.format.label}" will no longer appear in services.`
+              : `"${toggleState.format.label}" ne sera plus proposé dans les services.`)
+            : (locale === 'en'
+              ? `"${toggleState.format.label}" will be available again in services.`
+              : `"${toggleState.format.label}" sera à nouveau disponible dans les services.`))
+          : ''}
+        confirmLabel={toggleState?.format.is_active
+          ? (locale === 'en' ? 'Deactivate' : 'Désactiver')
+          : (locale === 'en' ? 'Activate' : 'Activer')}
+        cancelLabel={t('btn_cancel')}
+        variant={toggleState?.format.is_active ? 'warning' : 'default'}
+        onConfirm={confirmToggle}
+        onCancel={() => setToggleState(null)}
+      />
     </>
   );
 }
