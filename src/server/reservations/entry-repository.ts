@@ -2,7 +2,7 @@
  * Data access for station entries (reservations and queue) in the single reservations table.
  * Enforces entry_type constraints: reservation => time_slot_id set; queue => queue_position set.
  */
-import { and, asc, desc, eq, gte, sql } from 'drizzle-orm';
+import { and, asc, desc, eq, gte, inArray, lte, ne, sql } from 'drizzle-orm';
 import { db, type DbTransaction } from '@/lib/db';
 import { reservations, timeSlots, stationConfigs } from '@/lib/db/schema';
 
@@ -223,6 +223,154 @@ export async function listEntriesByUser(userId: string): Promise<Entry[]> {
   });
 }
 
+/** Non-terminal statuses considered "active" for duplicate reservation checks. */
+const ACTIVE_STATUSES = ['pending_payment', 'pending', 'confirmed', 'in_progress'];
+
+/**
+ * Returns true if the user already has an active reservation or queue entry at this station.
+ */
+export async function hasActiveEntryAtStation(
+  userId: string,
+  stationId: string,
+  tx?: DbTransaction
+): Promise<boolean> {
+  const client = tx ?? db;
+  const row = await client
+    .select({ id: reservations.id })
+    .from(reservations)
+    .where(
+      and(
+        eq(reservations.user_id, userId),
+        eq(reservations.station_id, stationId),
+        inArray(reservations.status, ACTIVE_STATUSES)
+      )
+    )
+    .limit(1);
+  return row.length > 0;
+}
+
+/**
+ * Finds an entry by its Stripe payment ID. Used by webhook handler.
+ */
+export async function findEntryByStripePaymentId(
+  stripePaymentId: string
+): Promise<Entry | undefined> {
+  return db.query.reservations.findFirst({
+    where: eq(reservations.stripe_payment_id, stripePaymentId),
+  });
+}
+
+/** Pagination + filter options for entry listing. */
+export type ListEntriesFilters = {
+  status?: string;
+  from?: Date;
+  to?: Date;
+  page?: number;
+  per_page?: number;
+};
+
+export type PaginatedEntries = {
+  rows: Entry[];
+  total: number;
+  page: number;
+  per_page: number;
+};
+
+/**
+ * Lists entries for a user with pagination and optional status/date filters.
+ */
+export async function listEntriesByUserPaginated(
+  userId: string,
+  filters: ListEntriesFilters = {}
+): Promise<PaginatedEntries> {
+  const { status, from, to, page = 1, per_page = 20 } = filters;
+  const limit = Math.min(Math.max(1, per_page), 100);
+  const offset = (Math.max(1, page) - 1) * limit;
+
+  const conditions = [eq(reservations.user_id, userId)];
+  if (status) conditions.push(eq(reservations.status, status));
+  if (from) conditions.push(gte(reservations.created_at, from));
+  if (to) conditions.push(lte(reservations.created_at, to));
+
+  const where = and(...conditions);
+
+  const [countRows, rows] = await Promise.all([
+    db.select({ count: sql<number>`count(*)::int` }).from(reservations).where(where),
+    db.query.reservations.findMany({
+      where,
+      orderBy: (r, { desc }) => [desc(r.created_at)],
+      limit,
+      offset,
+    }),
+  ]);
+
+  return { rows, total: countRows[0]?.count ?? 0, page, per_page: limit };
+}
+
+/**
+ * Lists entries for a station with pagination and optional status/date filters.
+ */
+export async function listEntriesByStationPaginated(
+  stationId: string,
+  filters: ListEntriesFilters = {}
+): Promise<PaginatedEntries> {
+  const { status, from, to, page = 1, per_page = 20 } = filters;
+  const limit = Math.min(Math.max(1, per_page), 100);
+  const offset = (Math.max(1, page) - 1) * limit;
+
+  const conditions = [eq(reservations.station_id, stationId)];
+  if (status) conditions.push(eq(reservations.status, status));
+  if (from) conditions.push(gte(reservations.created_at, from));
+  if (to) conditions.push(lte(reservations.created_at, to));
+
+  const where = and(...conditions);
+
+  const [countRows, rows] = await Promise.all([
+    db.select({ count: sql<number>`count(*)::int` }).from(reservations).where(where),
+    db
+      .select({
+        id: reservations.id,
+        user_id: reservations.user_id,
+        entry_type: reservations.entry_type,
+        time_slot_id: reservations.time_slot_id,
+        station_id: reservations.station_id,
+        vehicle_format_id: reservations.vehicle_format_id,
+        status: reservations.status,
+        queue_position: reservations.queue_position,
+        amount_paid: reservations.amount_paid,
+        commission_rate: reservations.commission_rate,
+        commission_amount: reservations.commission_amount,
+        station_payout: reservations.station_payout,
+        tip_amount: reservations.tip_amount,
+        stripe_payment_id: reservations.stripe_payment_id,
+        stripe_transfer_id: reservations.stripe_transfer_id,
+        cancellation_reason: reservations.cancellation_reason,
+        penalty_amount: reservations.penalty_amount,
+        confirmed_at: reservations.confirmed_at,
+        completed_at: reservations.completed_at,
+        created_at: reservations.created_at,
+        updated_at: reservations.updated_at,
+      })
+      .from(reservations)
+      .leftJoin(timeSlots, eq(reservations.time_slot_id, timeSlots.id))
+      .where(where)
+      .orderBy(
+        desc(reservations.entry_type),
+        asc(timeSlots.start_time),
+        asc(reservations.queue_position)
+      )
+      .limit(limit)
+      .offset(offset),
+  ]);
+
+  return {
+    rows: rows as Entry[],
+    total: countRows[0]?.count ?? 0,
+    page,
+    per_page: limit,
+  };
+}
+
 /**
  * Updates an entry. Respects entry_type: when setting entry_type to 'reservation', time_slot_id
  * must be set and queue_position cleared; when setting to 'queue', queue_position must be set
@@ -238,6 +386,7 @@ export async function updateEntry(
     confirmed_at: Date | null;
     completed_at: Date | null;
     cancellation_reason: string | null;
+    stripe_payment_id: string | null;
     updated_at: Date;
   }>,
   tx?: DbTransaction
