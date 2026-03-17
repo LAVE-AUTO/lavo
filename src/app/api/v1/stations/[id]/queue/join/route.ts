@@ -1,6 +1,7 @@
 /**
  * POST /api/v1/stations/:id/queue/join
- * Join the queue at the station. Auth: client. Body: vehicle_format_id.
+ * Join the walk-in queue at the station. Auth: client. Body: vehicle_format_id.
+ * No payment required — walk-in queue is free of charge.
  */
 import { requireRole } from '@/lib/require-role';
 import { successResponse, error400, error404, error409, error500, fromAppError } from '@/lib/responses';

@@ -1,13 +1,12 @@
 /**
  * Queue business logic: join queue, list queue, move reservation to queue (cron).
  * Uses entry repository, queue-position helper, slot repo (decrement booked_count), notification stub.
+ * Walk-in queue entries are free of charge — payment only applies to reservations.
  */
 import { NotFoundError, ConflictError } from '@/lib/errors';
-import { DEFAULT_COMMISSION_RATE } from '@/helpers/constants';
 import { db } from '@/lib/db';
 import { findFormatByIdAndStation } from '@/server/station/format-repository';
 import { decrementSlotBookedCount } from '@/server/station/slot-repository';
-import { processPayment } from '@/server/payments/payment-service';
 import { notifyEntry } from '@/server/notifications/notification-service';
 import { getQueuePositionWhenMovingFromReservation } from './queue-position-helper';
 import {
@@ -24,18 +23,8 @@ import {
 const STATUS_PENDING = 'pending';
 const STATUS_LATE = 'late';
 
-function toDecimal(v: string | number): string {
-  return typeof v === 'number' ? v.toFixed(2) : String(v);
-}
-
-function parseDecimal(s: string | null | undefined): number {
-  if (s == null) return 0;
-  const n = parseFloat(String(s));
-  return Number.isFinite(n) ? n : 0;
-}
-
 /**
- * Joins the queue at the station for the given vehicle format. Charges format price only.
+ * Joins the walk-in queue at the station for the given vehicle format. No payment required.
  * Assigns queue_position at end of queue.
  */
 export async function joinQueue(
@@ -48,20 +37,6 @@ export async function joinQueue(
   if (!format.is_active) throw new ConflictError('Format is not active');
 
   const nextPos = await getNextQueuePosition(stationId);
-  const amountTotal = parseDecimal(String(format.price));
-  if (amountTotal <= 0) throw new ConflictError('Invalid format price');
-
-  const payment = await processPayment({
-    amountCents: Math.round(amountTotal * 100),
-    userId,
-    stationId,
-    metadata: { vehicle_format_id: vehicleFormatId, queue_position: String(nextPos) },
-  });
-  if (!payment.success) throw new ConflictError(payment.error ?? 'Payment failed');
-
-  const commissionRate = DEFAULT_COMMISSION_RATE;
-  const commissionAmount = amountTotal * parseFloat(commissionRate);
-  const stationPayout = amountTotal - commissionAmount;
 
   const entry = await createQueueEntry({
     user_id: userId,
@@ -69,11 +44,11 @@ export async function joinQueue(
     vehicle_format_id: vehicleFormatId,
     queue_position: nextPos,
     status: STATUS_PENDING,
-    amount_paid: toDecimal(amountTotal),
-    commission_rate: commissionRate,
-    commission_amount: toDecimal(commissionAmount),
-    station_payout: toDecimal(stationPayout),
-    stripe_payment_id: payment.stripePaymentId ?? null,
+    amount_paid: '0.00',
+    commission_rate: '0.00',
+    commission_amount: '0.00',
+    station_payout: '0.00',
+    stripe_payment_id: null,
   });
   await notifyEntry({
     entryId: entry.id,

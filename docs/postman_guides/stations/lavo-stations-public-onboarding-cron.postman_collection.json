@@ -410,7 +410,7 @@
                 "join"
               ]
             },
-            "description": "POST /api/v1/stations/:id/queue/join — auth client. Body: vehicle_format_id. Cree une entree en file d'attente."
+            "description": "POST /api/v1/stations/:id/queue/join — auth client. Body: vehicle_format_id. Rejoint la file d'attente walk-in. Aucun paiement requis."
           },
           "response": []
         },
