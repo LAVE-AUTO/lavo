@@ -23,6 +23,7 @@ import { notifyEntry } from '@/server/notifications/notification-service';
 import { refundPaymentIntent } from '@/server/payments/payment-service';
 import {
   findReservationWithSlot,
+  findEntryByIdAndUser,
   updateEntry,
   type Entry,
 } from '@/server/reservations/entry-repository';
@@ -77,6 +78,13 @@ export async function cancelReservation(
   const refundedAmount = Math.round((amountPaid - penaltyAmount) * 100) / 100;
 
   const updated = await db.transaction(async (tx) => {
+    // Re-read inside the transaction to prevent double-cancel race condition.
+    const current = await findEntryByIdAndUser(reservationId, userId, tx);
+    if (!current) throw new NotFoundError('Reservation not found');
+    if (!(CANCELLABLE_STATUSES as readonly string[]).includes(current.status)) {
+      throw new ConflictError(`Reservation cannot be cancelled from status '${current.status}'`);
+    }
+
     const entry = await updateEntry(
       reservationId,
       {

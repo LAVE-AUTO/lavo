@@ -39,10 +39,9 @@ export async function POST(request: Request, { params }: Params): Promise<NextRe
 
   let body: unknown = {};
   try {
-    const text = await request.text();
-    if (text) body = JSON.parse(text);
+    body = await request.json();
   } catch {
-    return error400('Invalid JSON body', ApiCode.VALIDATION_FAILED);
+    // Empty body is valid — no reason provided
   }
 
   const bodyParsed = cancelReservationBodySchema.safeParse(body);

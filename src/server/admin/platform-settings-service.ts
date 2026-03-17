@@ -41,11 +41,11 @@ export async function getCancellationPolicy(): Promise<CancellationPolicy> {
   ]);
 
   const freeWindowMinutes = windowRaw ? parseInt(windowRaw, 10) : DEFAULTS.freeWindowMinutes;
-  // DB stores as percentage (e.g. "20"), convert to rate (0.20)
-  const penaltyRate = percentRaw ? parseFloat(percentRaw) / 100 : DEFAULTS.penaltyRate;
+  // DB stores as percentage (e.g. "20"), convert to rate (0.20), clamped to [0, 1].
+  const rawRate = percentRaw ? parseFloat(percentRaw) / 100 : DEFAULTS.penaltyRate;
 
   return {
-    freeWindowMinutes: Number.isFinite(freeWindowMinutes) ? freeWindowMinutes : DEFAULTS.freeWindowMinutes,
-    penaltyRate: Number.isFinite(penaltyRate) ? penaltyRate : DEFAULTS.penaltyRate,
+    freeWindowMinutes: Number.isFinite(freeWindowMinutes) && freeWindowMinutes > 0 ? freeWindowMinutes : DEFAULTS.freeWindowMinutes,
+    penaltyRate: Number.isFinite(rawRate) ? Math.min(1, Math.max(0, rawRate)) : DEFAULTS.penaltyRate,
   };
 }
