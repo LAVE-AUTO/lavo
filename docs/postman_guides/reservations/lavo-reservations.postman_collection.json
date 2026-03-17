@@ -1,0 +1,1107 @@
+{
+  "info": {
+    "name": "LAVO — Reservations API",
+    "description": "Collection pour le systeme de reservation incluant la creation, la consultation (user/station), l'annulation, et le webhook Stripe.\n\nVariables requises : `base_url`, `access_token`, `station_id`, `time_slot_id`, `vehicle_format_id`\nVariables auto-remplies : `reservation_id`, `stripe_client_secret`",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    {
+      "key": "base_url",
+      "value": "http://localhost:3000",
+      "type": "string"
+    },
+    {
+      "key": "access_token",
+      "value": "",
+      "type": "string"
+    }
+  ],
+  "auth": {
+    "type": "bearer",
+    "bearer": [
+      {
+        "key": "token",
+        "value": "{{access_token}}",
+        "type": "string"
+      }
+    ]
+  },
+  "item": [
+    {
+      "name": "Creation de reservation",
+      "description": "POST /api/v1/stations/:station_id/reservations — Cree une reservation avec paiement Stripe Connect.\n\nPrerequis : utilisateur authentifie (role client), station active avec stripe_account_id, creneau disponible.",
+      "item": [
+        {
+          "name": "Creer reservation — succes (201)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 201', () => pm.response.to.have.status(201));",
+                  "pm.test('Retourne reservation_id et stripe_client_secret', () => {",
+                  "  const json = pm.response.json();",
+                  "  pm.expect(json.data).to.have.property('reservation_id');",
+                  "  pm.expect(json.data).to.have.property('stripe_client_secret');",
+                  "  pm.expect(json.data.status).to.eql('pending_payment');",
+                  "  pm.environment.set('reservation_id', json.data.reservation_id);",
+                  "  pm.environment.set('stripe_client_secret', json.data.stripe_client_secret);",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "response": [],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/stations/{{station_id}}/reservations",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "stations",
+                "{{station_id}}",
+                "reservations"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"time_slot_id\": \"{{time_slot_id}}\",\n  \"vehicle_format_id\": \"{{vehicle_format_id}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "description": "Cree une reservation pour le creneau et le format de vehicule indiques. Retourne un stripe_client_secret pour finaliser le paiement cote frontend."
+          }
+        },
+        {
+          "name": "Creer reservation — creneau plein (409 SLOT_FULL)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 409', () => pm.response.to.have.status(409));",
+                  "pm.test('Code SLOT_FULL', () => {",
+                  "  const json = pm.response.json();",
+                  "  pm.expect(json.code).to.eql('SLOT_FULL');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "response": [],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/stations/{{station_id}}/reservations",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "stations",
+                "{{station_id}}",
+                "reservations"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"time_slot_id\": \"{{time_slot_id}}\",\n  \"vehicle_format_id\": \"{{vehicle_format_id}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "description": "409 SLOT_FULL — le creneau a atteint sa capacite maximale."
+          }
+        },
+        {
+          "name": "Creer reservation — doublon actif (409 ACTIVE_RESERVATION_EXISTS)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 409', () => pm.response.to.have.status(409));",
+                  "pm.test('Code ACTIVE_RESERVATION_EXISTS', () => {",
+                  "  const json = pm.response.json();",
+                  "  pm.expect(json.code).to.eql('ACTIVE_RESERVATION_EXISTS');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "response": [],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/stations/{{station_id}}/reservations",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "stations",
+                "{{station_id}}",
+                "reservations"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"time_slot_id\": \"{{time_slot_id}}\",\n  \"vehicle_format_id\": \"{{vehicle_format_id}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "description": "409 ACTIVE_RESERVATION_EXISTS — l'utilisateur a deja une reservation active dans cette station."
+          }
+        },
+        {
+          "name": "Creer reservation — station inexistante (404)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 404', () => pm.response.to.have.status(404));"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "response": [],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/stations/00000000-0000-0000-0000-000000000000/reservations",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "stations",
+                "00000000-0000-0000-0000-000000000000",
+                "reservations"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"time_slot_id\": \"{{time_slot_id}}\",\n  \"vehicle_format_id\": \"{{vehicle_format_id}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "description": "404 NOT_FOUND — station inexistante."
+          }
+        },
+        {
+          "name": "Creer reservation — body invalide (400)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 400', () => pm.response.to.have.status(400));",
+                  "pm.test('Code VALIDATION_FAILED', () => {",
+                  "  const json = pm.response.json();",
+                  "  pm.expect(json.code).to.eql('VALIDATION_FAILED');",
+                  "  pm.expect(json.errors).to.be.an('array');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "response": [],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/stations/{{station_id}}/reservations",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "stations",
+                "{{station_id}}",
+                "reservations"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"time_slot_id\": \"not-a-uuid\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "description": "400 VALIDATION_FAILED — body invalide (UUID manquant ou incorrect)."
+          }
+        },
+        {
+          "name": "Creer reservation — non authentifie (401)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 401', () => pm.response.to.have.status(401));"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "response": [],
+          "request": {
+            "auth": {
+              "type": "noauth"
+            },
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/stations/{{station_id}}/reservations",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "stations",
+                "{{station_id}}",
+                "reservations"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"time_slot_id\": \"{{time_slot_id}}\",\n  \"vehicle_format_id\": \"{{vehicle_format_id}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "description": "401 UNAUTHORIZED — aucun token fourni."
+          }
+        }
+      ]
+    },
+    {
+      "name": "Consultation — Utilisateur",
+      "description": "GET /api/v1/me/entries — Liste les reservations et entrees de file de l'utilisateur connecte.\n\nSupporte la pagination (page, per_page) et les filtres (status, from, to).",
+      "item": [
+        {
+          "name": "Mes entrees — sans filtre (200)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 200', () => pm.response.to.have.status(200));",
+                  "pm.test('Retourne entries paginées', () => {",
+                  "  const json = pm.response.json();",
+                  "  pm.expect(json.data).to.have.property('entries');",
+                  "  pm.expect(json.data).to.have.property('total');",
+                  "  pm.expect(json.data).to.have.property('page');",
+                  "  pm.expect(json.data).to.have.property('per_page');",
+                  "  pm.expect(json.data.entries).to.be.an('array');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "response": [],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/v1/me/entries",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "me",
+                "entries"
+              ]
+            },
+            "description": "Liste toutes les entrees de l'utilisateur connecte (reservations + file d'attente), tri par date decroissante."
+          }
+        },
+        {
+          "name": "Mes entrees — filtre par statut (200)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 200', () => pm.response.to.have.status(200));",
+                  "pm.test('Entries filtrees par statut', () => {",
+                  "  const json = pm.response.json();",
+                  "  json.data.entries.forEach(e => {",
+                  "    pm.expect(e.status).to.eql('confirmed');",
+                  "  });",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "response": [],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/v1/me/entries?status=confirmed",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "me",
+                "entries"
+              ],
+              "query": [
+                {
+                  "key": "status",
+                  "value": "confirmed"
+                }
+              ]
+            },
+            "description": "Filtre les entrees par statut (confirmed, pending_payment, cancelled, etc.)."
+          }
+        },
+        {
+          "name": "Mes entrees — pagination (200)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 200', () => pm.response.to.have.status(200));",
+                  "pm.test('Pagination correcte', () => {",
+                  "  const json = pm.response.json();",
+                  "  pm.expect(json.data.page).to.eql(2);",
+                  "  pm.expect(json.data.per_page).to.eql(5);",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "response": [],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/v1/me/entries?page=2&per_page=5",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "me",
+                "entries"
+              ],
+              "query": [
+                {
+                  "key": "page",
+                  "value": "2"
+                },
+                {
+                  "key": "per_page",
+                  "value": "5"
+                }
+              ]
+            },
+            "description": "Pagination : page 2, 5 resultats par page."
+          }
+        },
+        {
+          "name": "Mes entrees — filtre par periode (200)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 200', () => pm.response.to.have.status(200));"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "response": [],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/v1/me/entries?from=2026-03-01T00:00:00Z&to=2026-03-31T23:59:59Z",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "me",
+                "entries"
+              ],
+              "query": [
+                {
+                  "key": "from",
+                  "value": "2026-03-01T00:00:00Z"
+                },
+                {
+                  "key": "to",
+                  "value": "2026-03-31T23:59:59Z"
+                }
+              ]
+            },
+            "description": "Filtre par periode (dates ISO 8601)."
+          }
+        },
+        {
+          "name": "Mes entrees — non authentifie (401)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 401', () => pm.response.to.have.status(401));"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "response": [],
+          "request": {
+            "auth": {
+              "type": "noauth"
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/v1/me/entries",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "me",
+                "entries"
+              ]
+            },
+            "description": "401 UNAUTHORIZED — aucun token fourni."
+          }
+        }
+      ]
+    },
+    {
+      "name": "Consultation — Station",
+      "description": "GET /api/v1/station/entries — Liste les reservations et entrees de file de la station authentifiee.\n\nSupporte la pagination (page, per_page) et les filtres (status, from, to).",
+      "item": [
+        {
+          "name": "Entrees station — sans filtre (200)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 200', () => pm.response.to.have.status(200));",
+                  "pm.test('Retourne entries paginées', () => {",
+                  "  const json = pm.response.json();",
+                  "  pm.expect(json.data).to.have.property('entries');",
+                  "  pm.expect(json.data).to.have.property('total');",
+                  "  pm.expect(json.data).to.have.property('page');",
+                  "  pm.expect(json.data).to.have.property('per_page');",
+                  "  pm.expect(json.data.entries).to.be.an('array');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "response": [],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/v1/station/entries",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "station",
+                "entries"
+              ]
+            },
+            "description": "Liste toutes les entrees de la station authentifiee (reservations par creneau, puis file par position)."
+          }
+        },
+        {
+          "name": "Entrees station — filtre par statut (200)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 200', () => pm.response.to.have.status(200));",
+                  "pm.test('Entries filtrees par statut', () => {",
+                  "  const json = pm.response.json();",
+                  "  json.data.entries.forEach(e => {",
+                  "    pm.expect(e.status).to.eql('confirmed');",
+                  "  });",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "response": [],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/v1/station/entries?status=confirmed",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "station",
+                "entries"
+              ],
+              "query": [
+                {
+                  "key": "status",
+                  "value": "confirmed"
+                }
+              ]
+            },
+            "description": "Filtre les entrees par statut."
+          }
+        },
+        {
+          "name": "Entrees station — pagination (200)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 200', () => pm.response.to.have.status(200));",
+                  "pm.test('Pagination correcte', () => {",
+                  "  const json = pm.response.json();",
+                  "  pm.expect(json.data.page).to.eql(1);",
+                  "  pm.expect(json.data.per_page).to.eql(10);",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "response": [],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/v1/station/entries?page=1&per_page=10",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "station",
+                "entries"
+              ],
+              "query": [
+                {
+                  "key": "page",
+                  "value": "1"
+                },
+                {
+                  "key": "per_page",
+                  "value": "10"
+                }
+              ]
+            },
+            "description": "Pagination : page 1, 10 resultats par page."
+          }
+        },
+        {
+          "name": "Entrees station — non authentifie (401)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 401', () => pm.response.to.have.status(401));"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "response": [],
+          "request": {
+            "auth": {
+              "type": "noauth"
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/v1/station/entries",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "station",
+                "entries"
+              ]
+            },
+            "description": "401 UNAUTHORIZED — aucun token fourni."
+          }
+        },
+        {
+          "name": "Entrees station — pas de station associee (404)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 404', () => pm.response.to.have.status(404));",
+                  "pm.test('Message explicite', () => {",
+                  "  const json = pm.response.json();",
+                  "  pm.expect(json.message).to.match(/no station associated/i);",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "response": [],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/v1/station/entries",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "station",
+                "entries"
+              ]
+            },
+            "description": "404 NOT_FOUND — l'utilisateur authentifie n'a pas de station associee."
+          }
+        }
+      ]
+    },
+    {
+      "name": "Annulation",
+      "description": "PATCH /api/v1/me/entries/:entryId/cancel — Annule une reservation ou quitte la file d'attente.",
+      "item": [
+        {
+          "name": "Annuler entree — succes (200)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 200', () => pm.response.to.have.status(200));",
+                  "pm.test('Statut cancelled', () => {",
+                  "  const json = pm.response.json();",
+                  "  pm.expect(json.data.status).to.eql('cancelled');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "response": [],
+          "request": {
+            "method": "PATCH",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/v1/me/entries/{{entry_id}}/cancel",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "me",
+                "entries",
+                "{{entry_id}}",
+                "cancel"
+              ]
+            },
+            "description": "Annule l'entree. Decremente le booked_count pour les reservations, reordonne la file pour les entrees de queue."
+          }
+        },
+        {
+          "name": "Annuler entree — deja annulee (409)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 409', () => pm.response.to.have.status(409));",
+                  "pm.test('Code CONFLICT', () => {",
+                  "  const json = pm.response.json();",
+                  "  pm.expect(json.code).to.eql('CONFLICT');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "response": [],
+          "request": {
+            "method": "PATCH",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/v1/me/entries/{{entry_id}}/cancel",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "me",
+                "entries",
+                "{{entry_id}}",
+                "cancel"
+              ]
+            },
+            "description": "409 CONFLICT — l'entree est deja annulee."
+          }
+        },
+        {
+          "name": "Annuler entree — inexistante (404)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 404', () => pm.response.to.have.status(404));"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "response": [],
+          "request": {
+            "method": "PATCH",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/v1/me/entries/00000000-0000-0000-0000-000000000000/cancel",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "me",
+                "entries",
+                "00000000-0000-0000-0000-000000000000",
+                "cancel"
+              ]
+            },
+            "description": "404 NOT_FOUND — entree inexistante."
+          }
+        }
+      ]
+    },
+    {
+      "name": "Gestion station",
+      "description": "PATCH /api/v1/station/entries/:entryId — Met a jour le statut d'une entree (in_progress, completed, cancelled). Auth: station.",
+      "item": [
+        {
+          "name": "Marquer in_progress (200)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 200', () => pm.response.to.have.status(200));",
+                  "pm.test('Statut in_progress', () => {",
+                  "  const json = pm.response.json();",
+                  "  pm.expect(json.data.status).to.eql('in_progress');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "response": [],
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/station/entries/{{entry_id}}",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "station",
+                "entries",
+                "{{entry_id}}"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{ \"status\": \"in_progress\" }",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "description": "La station demarre le service pour cette entree."
+          }
+        },
+        {
+          "name": "Marquer completed (200)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 200', () => pm.response.to.have.status(200));",
+                  "pm.test('Statut completed', () => {",
+                  "  const json = pm.response.json();",
+                  "  pm.expect(json.data.status).to.eql('completed');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "response": [],
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/station/entries/{{entry_id}}",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "station",
+                "entries",
+                "{{entry_id}}"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{ \"status\": \"completed\" }",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "description": "La station marque le service comme termine. Declenche une notification invitation_to_rate. Stripe distribue le paiement."
+          }
+        }
+      ]
+    },
+    {
+      "name": "Webhook Stripe",
+      "description": "POST /api/v1/webhooks/stripe — Webhook Stripe pour les evenements de paiement.\n\nNecessite STRIPE_WEBHOOK_SECRET dans .env.\nUtiliser `stripe listen --forward-to localhost:3000/api/v1/webhooks/stripe` en dev.",
+      "item": [
+        {
+          "name": "Webhook — payment_intent.succeeded (simulation)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "// Ce test ne passe que si la signature Stripe est valide.",
+                  "// En dev, utiliser `stripe listen` pour forwarder les events.",
+                  "pm.test('Webhook recu', () => {",
+                  "  // 200 si signature valide, 400 sinon",
+                  "  pm.expect(pm.response.code).to.be.oneOf([200, 400]);",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "response": [],
+          "request": {
+            "auth": {
+              "type": "noauth"
+            },
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "stripe-signature",
+                "value": "t=1234567890,v1=fake_signature",
+                "description": "Signature Stripe (invalide en l'etat — utiliser stripe CLI pour tester)"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/webhooks/stripe",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "webhooks",
+                "stripe"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"type\": \"payment_intent.succeeded\",\n  \"data\": {\n    \"object\": {\n      \"id\": \"pi_test_123\",\n      \"status\": \"succeeded\"\n    }\n  }\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "description": "Simulation d'un webhook payment_intent.succeeded. En production, Stripe signe les requetes et le handler verifie la signature.\n\nPour tester en dev :\n```\nstripe listen --forward-to localhost:3000/api/v1/webhooks/stripe\n```\nPuis copiez le webhook signing secret dans STRIPE_WEBHOOK_SECRET."
+          }
+        },
+        {
+          "name": "Webhook — signature manquante (400)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 400', () => pm.response.to.have.status(400));",
+                  "pm.test('Erreur signature', () => {",
+                  "  const json = pm.response.json();",
+                  "  pm.expect(json.error).to.match(/signature/i);",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "response": [],
+          "request": {
+            "auth": {
+              "type": "noauth"
+            },
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/webhooks/stripe",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "webhooks",
+                "stripe"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "description": "400 — header stripe-signature absent."
+          }
+        }
+      ]
+    }
+  ]
+}

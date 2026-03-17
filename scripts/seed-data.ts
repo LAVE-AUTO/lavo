@@ -39,6 +39,13 @@ export const PLATFORM_SETTINGS: Array<{ key: string; value: string }> = [
 
 export const SEED_COMMISSION_RATE = "0.1000";
 
+/**
+ * Stripe test connected account ID for seed stations.
+ * Set via SEED_STRIPE_ACCOUNT_ID env var or update here after creating a test account:
+ *   stripe accounts create --type=express --country=FR
+ */
+export const SEED_STRIPE_ACCOUNT_ID = process.env.SEED_STRIPE_ACCOUNT_ID ?? "";
+
 /** Base vehicle format labels/prices; stations can use these or slight variants. */
 export const SEED_VEHICLE_FORMATS: Array<{ label: string; price: string }> = [
   { label: "Petit", price: "8.00" },
