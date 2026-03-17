@@ -20,7 +20,7 @@ import { db } from '@/lib/db';
 import { ConflictError, NotFoundError } from '@/lib/errors';
 import { getCancellationPolicy } from '@/server/admin/platform-settings-service';
 import { notifyEntry } from '@/server/notifications/notification-service';
-import { refundPaymentIntent } from '@/server/payments/payment-service';
+import { refundPaymentIntent, distributePenalty } from '@/server/payments/payment-service';
 import {
   findReservationWithSlot,
   findEntryByIdAndUser,
@@ -111,6 +111,19 @@ export async function cancelReservation(
       await updateEntry(reservationId, { stripe_refund_id: refundId });
     } catch (e) {
       console.error('Stripe refund failed for reservation', reservationId, e);
+    }
+  }
+
+  // Distribute the penalty between platform and station via transfer reversal.
+  if (reservation.stripe_payment_id && penaltyAmount > 0) {
+    try {
+      await distributePenalty(
+        reservation.stripe_payment_id,
+        Math.round(penaltyAmount * 100),
+        policy.stationPenaltyShare
+      );
+    } catch (e) {
+      console.error('Stripe penalty distribution failed for reservation', reservationId, e);
     }
   }
 

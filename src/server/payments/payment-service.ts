@@ -102,6 +102,8 @@ export async function cancelPaymentIntent(paymentIntentId: string): Promise<void
 
 /**
  * Issues a Stripe refund for a PaymentIntent.
+ * Uses reverse_transfer: false so the refund comes from the platform balance.
+ * The station's transfer is handled separately via distributePenalty.
  * If amountCents is provided, issues a partial refund; otherwise refunds the full amount.
  * Returns the Stripe refund ID for tracking.
  */
@@ -111,7 +113,44 @@ export async function refundPaymentIntent(
 ): Promise<string> {
   const refund = await stripe.refunds.create({
     payment_intent: paymentIntentId,
+    reverse_transfer: false,
     ...(amountCents !== undefined && { amount: amountCents }),
   });
   return refund.id;
+}
+
+/**
+ * Distributes the penalty amount between platform and station after a late cancellation.
+ * Claws back the platform's share from the station via a Stripe transfer reversal.
+ *
+ * Mechanics:
+ *   - The client refund (reverse_transfer: false) already came from the platform balance.
+ *   - This function reverses (penalty - station_share) from the station's transfer.
+ *   - Result: platform nets its penalty share, station nets its penalty share.
+ *
+ * Returns the Stripe transfer reversal ID, or null if no transfer exists or nothing to claw back.
+ */
+export async function distributePenalty(
+  paymentIntentId: string,
+  penaltyCents: number,
+  stationPenaltyShare: number // fraction [0, 1]
+): Promise<string | null> {
+  if (penaltyCents <= 0) return null;
+
+  const pi = await stripe.paymentIntents.retrieve(paymentIntentId);
+  const chargeId = typeof pi.latest_charge === 'string' ? pi.latest_charge : pi.latest_charge?.id;
+  if (!chargeId) return null;
+
+  const charge = await stripe.charges.retrieve(chargeId);
+  const transferId = typeof charge.transfer === 'string' ? charge.transfer : charge.transfer?.id;
+  if (!transferId) return null;
+
+  const stationKeepsCents = Math.round(penaltyCents * stationPenaltyShare);
+  const clawbackCents = penaltyCents - stationKeepsCents;
+  if (clawbackCents <= 0) return null;
+
+  const reversal = await stripe.transfers.createReversal(transferId, {
+    amount: clawbackCents,
+  });
+  return reversal.id;
 }
