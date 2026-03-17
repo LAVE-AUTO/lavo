@@ -763,7 +763,7 @@
     },
     {
       "name": "Annulation reservation (remboursement Stripe)",
-      "description": "POST /api/v1/reservations/:id/cancel — Annule une reservation confirmed ou pending avec remboursement Stripe.\n\nPolitique : remboursement integral si >= 60 min avant le service, sinon penalite de 20% retenue par la plateforme.\n\nPrerequis : reservation au statut confirmed ou pending, auth client.",
+      "description": "POST /api/v1/reservations/:id/cancel — Annule une reservation confirmed ou pending avec remboursement Stripe et distribution automatique de la penalite.\n\nPolitique :\n- Remboursement integral si >= 60 min avant le service (pas de penalite).\n- Penalite 20% si < 60 min avant le service, distribuee entre plateforme (70%) et station (30%) via Stripe transfer reversal.\n\nDistribution de la penalite (ex. reservation €10) :\n- Client remboursé : €8\n- Plateforme garde : €1 (commission) + €1.40 (70% penalite) = €2.40\n- Station garde : €0.60 (30% penalite)\n\nConfig modifiable en DB (settings, type=admin) :\n- cancellation_free_window_minutes (defaut: 60)\n- cancellation_penalty_percent (defaut: 20)\n- cancellation_penalty_platform_rate (defaut: 70)\n- cancellation_penalty_station_rate (defaut: 30)\n\nPrerequis : reservation au statut confirmed ou pending, auth client.",
       "item": [
         {
           "name": "Annuler reservation — sans penalite (200)",
