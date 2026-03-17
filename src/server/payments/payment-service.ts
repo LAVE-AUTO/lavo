@@ -99,3 +99,19 @@ export async function createPaymentIntent(
 export async function cancelPaymentIntent(paymentIntentId: string): Promise<void> {
   await stripe.paymentIntents.cancel(paymentIntentId);
 }
+
+/**
+ * Issues a Stripe refund for a PaymentIntent.
+ * If amountCents is provided, issues a partial refund; otherwise refunds the full amount.
+ * Returns the Stripe refund ID for tracking.
+ */
+export async function refundPaymentIntent(
+  paymentIntentId: string,
+  amountCents?: number
+): Promise<string> {
+  const refund = await stripe.refunds.create({
+    payment_intent: paymentIntentId,
+    ...(amountCents !== undefined && { amount: amountCents }),
+  });
+  return refund.id;
+}

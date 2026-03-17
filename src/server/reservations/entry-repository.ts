@@ -114,6 +114,50 @@ export async function findEntryByIdAndUser(
   });
 }
 
+export type EntryWithSlot = Entry & {
+  slotStartTime: Date | null;
+};
+
+/**
+ * Returns a reservation entry with its time_slot start_time. Used for cancellation policy checks.
+ */
+export async function findReservationWithSlot(
+  id: string,
+  userId: string
+): Promise<EntryWithSlot | undefined> {
+  const rows = await db
+    .select({
+      id: reservations.id,
+      user_id: reservations.user_id,
+      entry_type: reservations.entry_type,
+      time_slot_id: reservations.time_slot_id,
+      station_id: reservations.station_id,
+      vehicle_format_id: reservations.vehicle_format_id,
+      status: reservations.status,
+      queue_position: reservations.queue_position,
+      amount_paid: reservations.amount_paid,
+      commission_rate: reservations.commission_rate,
+      commission_amount: reservations.commission_amount,
+      station_payout: reservations.station_payout,
+      tip_amount: reservations.tip_amount,
+      stripe_payment_id: reservations.stripe_payment_id,
+      stripe_transfer_id: reservations.stripe_transfer_id,
+      stripe_refund_id: reservations.stripe_refund_id,
+      cancellation_reason: reservations.cancellation_reason,
+      penalty_amount: reservations.penalty_amount,
+      confirmed_at: reservations.confirmed_at,
+      completed_at: reservations.completed_at,
+      created_at: reservations.created_at,
+      updated_at: reservations.updated_at,
+      slotStartTime: timeSlots.start_time,
+    })
+    .from(reservations)
+    .leftJoin(timeSlots, eq(reservations.time_slot_id, timeSlots.id))
+    .where(and(eq(reservations.id, id), eq(reservations.user_id, userId)))
+    .limit(1);
+  return rows[0] as EntryWithSlot | undefined;
+}
+
 /**
  * Returns the entry by id only if it belongs to the given station.
  */
@@ -386,7 +430,9 @@ export async function updateEntry(
     confirmed_at: Date | null;
     completed_at: Date | null;
     cancellation_reason: string | null;
+    penalty_amount: string | null;
     stripe_payment_id: string | null;
+    stripe_refund_id: string | null;
     updated_at: Date;
   }>,
   tx?: DbTransaction
