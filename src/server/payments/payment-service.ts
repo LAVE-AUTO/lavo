@@ -80,7 +80,7 @@ export async function createPaymentIntent(
       user_id: params.userId,
       station_id: params.stationId,
     },
-    automatic_payment_methods: { enabled: true },
+    automatic_payment_methods: { enabled: true, allow_redirects: 'never' },
   });
 
   if (!paymentIntent.client_secret) {
