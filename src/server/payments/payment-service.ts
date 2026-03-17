@@ -92,3 +92,10 @@ export async function createPaymentIntent(
     clientSecret: paymentIntent.client_secret,
   };
 }
+
+/**
+ * Cancels a Stripe PaymentIntent. Used when a reservation is cancelled while still pending payment.
+ */
+export async function cancelPaymentIntent(paymentIntentId: string): Promise<void> {
+  await stripe.paymentIntents.cancel(paymentIntentId);
+}

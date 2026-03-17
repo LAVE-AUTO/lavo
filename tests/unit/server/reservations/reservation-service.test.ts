@@ -7,6 +7,7 @@ const mockLockSlotForUpdate = jest.fn();
 const mockCountReservationsBySlotId = jest.fn();
 const mockIncrementSlotBookedCount = jest.fn();
 const mockCreatePaymentIntent = jest.fn();
+const mockCancelPaymentIntent = jest.fn();
 const mockNotifyEntry = jest.fn();
 const mockCreateReservationEntry = jest.fn();
 const mockFindEntryByIdAndUser = jest.fn();
@@ -29,6 +30,7 @@ jest.mock('@/server/station/slot-repository', () => ({
 }));
 jest.mock('@/server/payments/payment-service', () => ({
   createPaymentIntent: (...args: unknown[]) => mockCreatePaymentIntent(...args),
+  cancelPaymentIntent: (...args: unknown[]) => mockCancelPaymentIntent(...args),
 }));
 jest.mock('@/server/notifications/notification-service', () => ({
   notifyEntry: (...args: unknown[]) => mockNotifyEntry(...args),
@@ -129,6 +131,23 @@ describe('reservation-service', () => {
       expect(mockNotifyEntry).toHaveBeenCalledWith(
         expect.objectContaining({ entryId, type: 'reservation_created' })
       );
+    });
+
+    it('rolls back entry and decrements slot when Stripe fails', async () => {
+      mockFindFormatByIdAndStation.mockResolvedValue({ id: formatId, price: '10', is_active: true });
+      mockGetConfigByStationId.mockResolvedValue({ reservation_surcharge: '2' });
+      mockLockSlotForUpdate.mockResolvedValue({ id: slotId, capacity: 2 });
+      mockCountReservationsBySlotId.mockResolvedValue(0);
+      const created = { id: entryId, entry_type: 'reservation', time_slot_id: slotId, stripe_payment_id: null };
+      mockCreateReservationEntry.mockResolvedValue(created);
+      mockCreatePaymentIntent.mockRejectedValue(new Error('Stripe unavailable'));
+      mockUpdateEntry.mockResolvedValue({ ...created, status: 'cancelled' });
+
+      await expect(
+        createReservation(userId, stationId, stripeAccountId, slotId, formatId)
+      ).rejects.toThrow('Stripe unavailable');
+      expect(mockUpdateEntry).toHaveBeenCalledWith(entryId, expect.objectContaining({ status: 'cancelled' }));
+      expect(mockDecrementSlotBookedCount).toHaveBeenCalledWith(slotId);
     });
   });
 

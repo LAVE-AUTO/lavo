@@ -14,7 +14,7 @@ import {
   incrementSlotBookedCount,
   decrementSlotBookedCount,
 } from '@/server/station/slot-repository';
-import { createPaymentIntent } from '@/server/payments/payment-service';
+import { createPaymentIntent, cancelPaymentIntent } from '@/server/payments/payment-service';
 import { notifyEntry } from '@/server/notifications/notification-service';
 import {
   createReservationEntry,
@@ -78,16 +78,16 @@ export async function createReservation(
   const amountTotal = formatPrice + surcharge;
   if (amountTotal <= 0) throw new ConflictError('Invalid amount');
 
-  // Check duplicate active reservation at this station
-  const hasActive = await hasActiveEntryAtStation(userId, stationId);
-  if (hasActive) throw new ConflictError('You already have an active reservation at this station');
-
   const commissionRate = DEFAULT_COMMISSION_RATE;
   const commissionAmount = amountTotal * parseFloat(commissionRate);
   const stationPayout = amountTotal - commissionAmount;
 
-  // Atomic: lock slot (SELECT FOR UPDATE), verify capacity, insert entry, increment booked_count
+  // Atomic: check duplicate, lock slot (SELECT FOR UPDATE), verify capacity, insert entry, increment booked_count
   const entry = await db.transaction(async (tx) => {
+    // Duplicate check inside transaction to prevent TOCTOU race
+    const hasActive = await hasActiveEntryAtStation(userId, stationId, tx);
+    if (hasActive) throw new ConflictError('You already have an active reservation at this station');
+
     const slot = await lockSlotForUpdate(timeSlotId, stationId, tx);
     if (!slot) throw new NotFoundError('Time slot not found or does not belong to this station');
 
@@ -114,21 +114,33 @@ export async function createReservation(
   });
 
   // Create Stripe PaymentIntent (outside transaction — Stripe is an external side-effect)
+  // If Stripe fails, rollback the DB entry to avoid orphaned pending_payment entries
   const amountCents = Math.round(amountTotal * 100);
   const commissionCents = Math.round(commissionAmount * 100);
 
-  const { paymentIntentId, clientSecret } = await createPaymentIntent({
-    amountCents,
-    userId,
-    stationId,
-    stationStripeAccountId,
-    commissionCents,
-    metadata: {
-      reservation_id: entry.id,
-      time_slot_id: timeSlotId,
-      vehicle_format_id: vehicleFormatId,
-    },
-  });
+  let paymentIntentId: string;
+  let clientSecret: string;
+  try {
+    const result = await createPaymentIntent({
+      amountCents,
+      userId,
+      stationId,
+      stationStripeAccountId,
+      commissionCents,
+      metadata: {
+        reservation_id: entry.id,
+        time_slot_id: timeSlotId,
+        vehicle_format_id: vehicleFormatId,
+      },
+    });
+    paymentIntentId = result.paymentIntentId;
+    clientSecret = result.clientSecret;
+  } catch (stripeError) {
+    // Rollback: cancel entry and decrement slot to avoid orphaned pending_payment
+    await updateEntry(entry.id, { status: STATUS_CANCELLED, cancellation_reason: 'Payment setup failed' });
+    await decrementSlotBookedCount(timeSlotId);
+    throw stripeError;
+  }
 
   // Persist stripe payment ID on the entry
   await updateEntry(entry.id, { stripe_payment_id: paymentIntentId });
@@ -165,6 +177,15 @@ export async function cancelEntry(entryId: string, userId: string): Promise<Entr
     }
     return updateEntry(entryId, { status: STATUS_CANCELLED }, tx);
   });
+
+  // Cancel Stripe PaymentIntent if entry was pending payment
+  if (entry.status === STATUS_PENDING_PAYMENT && entry.stripe_payment_id) {
+    try {
+      await cancelPaymentIntent(entry.stripe_payment_id);
+    } catch (e) {
+      console.error('Failed to cancel Stripe PaymentIntent:', entry.stripe_payment_id, e);
+    }
+  }
 
   await notifyEntry({
     entryId,

@@ -55,15 +55,13 @@ export const stationPatchPositionBodySchema = z
   .strict();
 
 /** Query params for paginated entry listing (GET /me/entries, GET /station/entries). */
-export const listEntriesQuerySchema = z
-  .object({
-    status: z.string().optional(),
-    from: z.string().datetime({ message: 'from must be an ISO 8601 date' }).optional(),
-    to: z.string().datetime({ message: 'to must be an ISO 8601 date' }).optional(),
-    page: z.coerce.number().int().min(1).optional().default(1),
-    per_page: z.coerce.number().int().min(1).max(100).optional().default(20),
-  })
-  .strict();
+export const listEntriesQuerySchema = z.object({
+  status: z.string().optional(),
+  from: z.string().datetime({ message: 'from must be an ISO 8601 date' }).optional(),
+  to: z.string().datetime({ message: 'to must be an ISO 8601 date' }).optional(),
+  page: z.coerce.number().int().min(1).optional().default(1),
+  per_page: z.coerce.number().int().min(1).max(100).optional().default(20),
+});
 
 export type ListEntriesQuery = z.infer<typeof listEntriesQuerySchema>;
 

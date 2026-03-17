@@ -9,6 +9,7 @@
  */
 import { NextResponse } from 'next/server';
 import { stripe } from '@/lib/stripe';
+import { db } from '@/lib/db';
 import {
   findEntryByStripePaymentId,
   updateEntry,
@@ -40,15 +41,20 @@ export async function POST(request: Request): Promise<NextResponse> {
     return NextResponse.json({ error: 'Invalid signature' }, { status: 400 });
   }
 
-  switch (event.type) {
-    case 'payment_intent.succeeded':
-      await handlePaymentSucceeded(event.data.object.id);
-      break;
-    case 'payment_intent.payment_failed':
-      await handlePaymentFailed(event.data.object.id);
-      break;
-    default:
-      break;
+  // Wrap handlers in try/catch — always return 200 to prevent Stripe retries on transient errors
+  try {
+    switch (event.type) {
+      case 'payment_intent.succeeded':
+        await handlePaymentSucceeded(event.data.object.id);
+        break;
+      case 'payment_intent.payment_failed':
+        await handlePaymentFailed(event.data.object.id);
+        break;
+      default:
+        break;
+    }
+  } catch (err) {
+    console.error('Stripe webhook handler error:', event.type, err);
   }
 
   return NextResponse.json({ received: true });
@@ -82,7 +88,7 @@ async function handlePaymentSucceeded(paymentIntentId: string): Promise<void> {
 
 /**
  * Cancels the reservation when payment fails.
- * Sets status to 'cancelled' and decrements slot booked_count.
+ * Sets status to 'cancelled' and decrements slot booked_count atomically.
  */
 async function handlePaymentFailed(paymentIntentId: string): Promise<void> {
   const entry = await findEntryByStripePaymentId(paymentIntentId);
@@ -93,14 +99,16 @@ async function handlePaymentFailed(paymentIntentId: string): Promise<void> {
 
   if (entry.status !== 'pending_payment') return;
 
-  await updateEntry(entry.id, {
-    status: 'cancelled',
-    cancellation_reason: 'Payment failed',
-  });
+  await db.transaction(async (tx) => {
+    await updateEntry(entry.id, {
+      status: 'cancelled',
+      cancellation_reason: 'Payment failed',
+    }, tx);
 
-  if (entry.time_slot_id) {
-    await decrementSlotBookedCount(entry.time_slot_id);
-  }
+    if (entry.time_slot_id) {
+      await decrementSlotBookedCount(entry.time_slot_id, tx);
+    }
+  });
 
   await notifyEntry({
     entryId: entry.id,
