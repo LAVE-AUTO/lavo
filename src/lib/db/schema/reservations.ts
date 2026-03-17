@@ -6,6 +6,7 @@
  * NOT NULL; queue => queue_position NOT NULL.
  */
 import {
+  boolean,
   decimal,
   index,
   integer,
@@ -51,6 +52,7 @@ export const reservations = pgTable(
     stripe_payment_id: varchar("stripe_payment_id", { length: 200 }),
     stripe_transfer_id: varchar("stripe_transfer_id", { length: 200 }),
     stripe_refund_id: varchar("stripe_refund_id", { length: 200 }),
+    client_confirmed: boolean("client_confirmed").notNull().default(false),
     cancellation_reason: text("cancellation_reason"),
     penalty_amount: decimal("penalty_amount", { precision: 10, scale: 2 }),
     confirmed_at: timestamp("confirmed_at", {

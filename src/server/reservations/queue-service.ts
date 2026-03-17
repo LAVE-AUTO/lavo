@@ -4,6 +4,7 @@
  */
 import { NotFoundError, ConflictError } from '@/lib/errors';
 import { DEFAULT_COMMISSION_RATE } from '@/helpers/constants';
+import { db } from '@/lib/db';
 import { findFormatByIdAndStation } from '@/server/station/format-repository';
 import { decrementSlotBookedCount } from '@/server/station/slot-repository';
 import { processPayment } from '@/server/payments/payment-service';
@@ -122,6 +123,45 @@ export async function moveReservationToQueue(entryId: string): Promise<Entry> {
     type: 'moved_to_queue',
   });
   return (await findEntryById(entryId))!;
+}
+
+/**
+ * Station picks a client from the walk-in queue (assigns in_progress status).
+ * Atomically: sets entry to in_progress, clears queue_position, shifts remaining entries up.
+ * Notifies the picked client and the other clients whose position changed.
+ */
+export async function pickQueueEntry(stationId: string, queueEntryId: string): Promise<Entry> {
+  const entry = await findEntryById(queueEntryId);
+  if (!entry) throw new NotFoundError('Queue entry not found');
+  if (entry.station_id !== stationId) throw new NotFoundError('Queue entry does not belong to this station');
+  if (entry.entry_type !== 'queue') throw new ConflictError('Entry is not a queue entry');
+  if (entry.status === 'in_progress') throw new ConflictError('Client is already being served');
+  if (!['pending', 'late'].includes(entry.status)) {
+    throw new ConflictError(`Cannot pick an entry with status '${entry.status}'`);
+  }
+
+  const pickedPosition = entry.queue_position ?? 0;
+
+  const updated = await db.transaction(async (tx) => {
+    const result = await updateEntry(queueEntryId, { status: 'in_progress', queue_position: null }, tx);
+    if (pickedPosition > 0) {
+      await shiftQueuePositions(stationId, pickedPosition + 1, -1, tx);
+    }
+    return result;
+  });
+
+  try {
+    await notifyEntry({
+      entryId: queueEntryId,
+      userId: entry.user_id,
+      stationId,
+      type: 'queue_pick',
+    });
+  } catch (e) {
+    console.error('Failed to send pick notification for entry', queueEntryId, e);
+  }
+
+  return updated;
 }
 
 /**

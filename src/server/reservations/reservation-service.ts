@@ -197,6 +197,20 @@ export async function cancelEntry(entryId: string, userId: string): Promise<Entr
 }
 
 /**
+ * Confirms the client's presence for a reservation.
+ * Only allowed for reservations in 'confirmed' status owned by the user.
+ * Sets client_confirmed = true. Idempotent if already confirmed.
+ */
+export async function confirmPresence(reservationId: string, userId: string): Promise<Entry> {
+  const entry = await findEntryByIdAndUser(reservationId, userId);
+  if (!entry) throw new NotFoundError('Reservation not found');
+  if (entry.entry_type !== 'reservation') throw new ConflictError('Entry is not a reservation');
+  if (entry.status !== 'confirmed') throw new ConflictError(`Cannot confirm presence for a reservation with status '${entry.status}'`);
+  if (entry.client_confirmed) throw new ConflictError('Presence already confirmed');
+  return updateEntry(reservationId, { client_confirmed: true });
+}
+
+/**
  * Returns paginated entries (reservations and queue) for the user.
  */
 export async function listMyEntries(

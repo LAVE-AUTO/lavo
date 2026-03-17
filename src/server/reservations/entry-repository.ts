@@ -2,7 +2,7 @@
  * Data access for station entries (reservations and queue) in the single reservations table.
  * Enforces entry_type constraints: reservation => time_slot_id set; queue => queue_position set.
  */
-import { and, asc, desc, eq, gte, inArray, lte, ne, sql } from 'drizzle-orm';
+import { and, asc, desc, eq, gte, inArray, lte, sql } from 'drizzle-orm';
 import { db, type DbTransaction } from '@/lib/db';
 import { reservations, timeSlots, stationConfigs } from '@/lib/db/schema';
 
@@ -429,6 +429,7 @@ export async function updateEntry(
     queue_position: number | null;
     confirmed_at: Date | null;
     completed_at: Date | null;
+    client_confirmed: boolean;
     cancellation_reason: string | null;
     penalty_amount: string | null;
     stripe_payment_id: string | null;
@@ -476,8 +477,8 @@ export async function shiftQueuePositions(
 }
 
 /**
- * Lists reservation entries that are past the station's late_tolerance (unconfirmed).
- * Used by cron to downgrade them to queue. Joins time_slots and station_configs.
+ * Lists confirmed reservations whose slot start_time + late_tolerance is in the past
+ * and client has not confirmed presence. Used by cron to downgrade them to queue.
  */
 export async function listLateUnconfirmedReservations(): Promise<Entry[]> {
   const now = new Date();
@@ -498,6 +499,8 @@ export async function listLateUnconfirmedReservations(): Promise<Entry[]> {
       tip_amount: reservations.tip_amount,
       stripe_payment_id: reservations.stripe_payment_id,
       stripe_transfer_id: reservations.stripe_transfer_id,
+      stripe_refund_id: reservations.stripe_refund_id,
+      client_confirmed: reservations.client_confirmed,
       cancellation_reason: reservations.cancellation_reason,
       penalty_amount: reservations.penalty_amount,
       confirmed_at: reservations.confirmed_at,
@@ -511,9 +514,38 @@ export async function listLateUnconfirmedReservations(): Promise<Entry[]> {
     .where(
       and(
         eq(reservations.entry_type, 'reservation'),
-        eq(reservations.status, 'pending'),
+        eq(reservations.status, 'confirmed'),
+        eq(reservations.client_confirmed, false),
         sql`(${timeSlots.start_time} + (${stationConfigs.late_tolerance_minutes} * interval '1 minute')) < ${now}`
       )
     );
   return rows as Entry[];
+}
+
+/**
+ * Lists confirmed reservations whose slot start_time falls within a time window
+ * centered windowMinutes from now, within ±toleranceMinutes.
+ * Used by reminder cron to send push notifications (5h and 30min before service).
+ */
+export async function listReservationsForReminder(
+  windowMinutes: number,
+  toleranceMinutes: number
+): Promise<Entry[]> {
+  const now = new Date();
+  const windowStart = new Date(now.getTime() + (windowMinutes - toleranceMinutes) * 60_000);
+  const windowEnd = new Date(now.getTime() + (windowMinutes + toleranceMinutes) * 60_000);
+  const rows = await db
+    .select()
+    .from(reservations)
+    .innerJoin(timeSlots, eq(reservations.time_slot_id, timeSlots.id))
+    .where(
+      and(
+        eq(reservations.entry_type, 'reservation'),
+        eq(reservations.status, 'confirmed'),
+        eq(reservations.client_confirmed, false),
+        gte(timeSlots.start_time, windowStart),
+        lte(timeSlots.start_time, windowEnd)
+      )
+    );
+  return rows.map((r) => r.reservations);
 }
