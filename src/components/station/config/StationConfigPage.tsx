@@ -5,13 +5,16 @@ import { useTranslations } from 'next-intl';
 import { getFromApi } from '@/services';
 import { useAuth } from '@/context/auth-context';
 import { StationConfigForm, type StationConfig, type StationPost } from './StationConfigForm';
+import { StationProfileForm, type StationProfile } from './StationProfileForm';
+import { StationLocationForm, type StationLocation } from './StationLocationForm';
 import { StationSlotList } from './StationSlotList';
 import { SlotModal, type CreatedSlot } from './SlotModal';
+import { StationExtrasForm, type StationExtras } from './StationExtrasForm';
 
 // TODO: connect to API once endpoint is available — GET /station/slots does not exist yet
 const MOCK_SLOTS: CreatedSlot[] = [];
 
-// TODO: connect to API once endpoint is available — replace when GET /station/config is stable
+// Fallback config used when GET /station/config is unavailable
 const MOCK_CONFIG: StationConfig = {
   id: 'mock',
   opening_time: '08:00',
@@ -33,8 +36,24 @@ const MOCK_POSTS: StationPost[] = [
   { id: 'post-3', position: 3, is_active: false },
 ];
 
+const MOCK_PROFILE: StationProfile = { name: 'Station', description: null, service_scope: null };
+const MOCK_LOCATION: StationLocation = { address: '', city: '', latitude: null, longitude: null };
+const MOCK_EXTRAS: StationExtras = { exterior: [], interior: [], both: [] };
+
 function todayISO() {
   return new Date().toISOString().slice(0, 10);
+}
+
+interface StationMeData {
+  data: {
+    name: string;
+    description: string | null;
+    service_scope: string | null;
+    address: string;
+    city: string;
+    latitude: string | null;
+    longitude: string | null;
+  };
 }
 
 export function StationConfigPage() {
@@ -43,38 +62,44 @@ export function StationConfigPage() {
 
   const [config, setConfig] = useState<StationConfig>(MOCK_CONFIG);
   const [posts, setPosts] = useState<StationPost[]>(MOCK_POSTS);
+  const [profile, setProfile] = useState<StationProfile>(MOCK_PROFILE);
+  const [location, setLocation] = useState<StationLocation>(MOCK_LOCATION);
+  const [extras, setExtras] = useState<StationExtras>(MOCK_EXTRAS);
   const [slots, setSlots] = useState<CreatedSlot[]>(MOCK_SLOTS);
   const [selectedDate, setSelectedDate] = useState(todayISO);
   const [loading, setLoading] = useState(true);
   const [modal, setModal] = useState<'add' | 'generate' | null>(null);
 
-  const loadConfig = useCallback(async () => {
-    const [ok, data] = await getFromApi('/station/config');
-    if (ok) {
-      const res = data as { data: { config: StationConfig; posts: StationPost[] } };
+  const loadData = useCallback(async () => {
+    const [configOk, configData] = await getFromApi('/station/config');
+    if (configOk) {
+      const res = configData as { data: { config: StationConfig; posts: StationPost[] } };
       setConfig(res.data.config);
       setPosts(res.data.posts);
     }
-    // on failure, MOCK_CONFIG/MOCK_POSTS remain in state — page stays usable
+
+    const [meOk, meData] = await getFromApi('/station/me');
+    if (meOk) {
+      const res = meData as StationMeData;
+      setProfile({
+        name: res.data.name,
+        description: res.data.description,
+        service_scope: res.data.service_scope,
+      });
+      setLocation({
+        address: res.data.address,
+        city: res.data.city,
+        latitude: res.data.latitude,
+        longitude: res.data.longitude,
+      });
+    }
+
     setLoading(false);
   }, []);
 
   useEffect(() => {
-    if (!authLoading) loadConfig();
-  }, [authLoading, loadConfig]);
-
-  function handleSaved(newConfig: StationConfig, newPosts: StationPost[]) {
-    setConfig(newConfig);
-    setPosts(newPosts);
-  }
-
-  function handleDeleted(id: string) {
-    setSlots((prev) => prev.filter((s) => s.id !== id));
-  }
-
-  function handleCreated(newSlots: CreatedSlot[]) {
-    setSlots((prev) => [...prev, ...newSlots]);
-  }
+    if (!authLoading) loadData();
+  }, [authLoading, loadData]);
 
   if (loading) {
     return (
@@ -95,12 +120,22 @@ export function StationConfigPage() {
       </div>
 
       <div className="flex flex-1 flex-col gap-5 overflow-y-auto p-6">
-        <StationConfigForm config={config} posts={posts} onSaved={handleSaved} />
+        <StationProfileForm profile={profile} onSaved={setProfile} />
+        <StationLocationForm location={location} onSaved={setLocation} />
+        <StationConfigForm
+          config={config}
+          posts={posts}
+          onSaved={(c, p) => {
+            setConfig(c);
+            setPosts(p);
+          }}
+        />
+        <StationExtrasForm extras={extras} onSaved={setExtras} />
         <StationSlotList
           slots={visibleSlots}
           selectedDate={selectedDate}
           onDateChange={setSelectedDate}
-          onDeleted={handleDeleted}
+          onDeleted={(id) => setSlots((prev) => prev.filter((s) => s.id !== id))}
           onAddSlot={() => setModal('add')}
           onGenerate={() => setModal('generate')}
         />
@@ -111,7 +146,7 @@ export function StationConfigPage() {
           mode={modal}
           selectedDate={selectedDate}
           onClose={() => setModal(null)}
-          onCreated={handleCreated}
+          onCreated={(newSlots) => setSlots((prev) => [...prev, ...newSlots])}
         />
       )}
     </div>

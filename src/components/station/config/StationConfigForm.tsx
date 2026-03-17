@@ -31,25 +31,52 @@ interface StationConfigFormProps {
   onSaved: (config: StationConfig, posts: StationPost[]) => void;
 }
 
-function Field({
-  label,
-  children,
-}: {
-  label: string;
-  children: React.ReactNode;
-}) {
+const inputClass =
+  'w-full rounded-[8px] border border-[#D8D4C8] bg-[#F7F6F2] px-3 py-2.5 text-[13px] text-[#1A1A0A] outline-none transition-colors duration-150 placeholder:text-[#BBBBAA] focus:border-[#C49A1E] focus:bg-white focus:shadow-[0_0_0_3px_rgba(196,154,30,0.12)] dark:border-[#243020] dark:bg-[#0F1A0C] dark:text-[#F0EDD4] dark:placeholder:text-[#4A4A3A] dark:focus:border-[#C49A1E] dark:focus:bg-[#182214]';
+
+function Field({ label, children }: { label: string; children: React.ReactNode }) {
   return (
-    <div className="flex flex-col gap-1">
-      <label className="text-[11px] font-semibold uppercase tracking-wide text-[#888] dark:text-[#8A8A7A]">
-        {label}
-      </label>
+    <div className="flex flex-col gap-1.5">
+      <label className="text-[12px] font-medium text-[#5A5A4A] dark:text-[#9A9A8A]">{label}</label>
       {children}
     </div>
   );
 }
 
-const inputClass =
-  'w-full rounded-lg border border-[#E0DCD0] bg-white px-3 py-2 text-[13px] text-[#1A1A0A] outline-none focus:border-[#C49A1E] dark:border-[#1A2A14] dark:bg-[#182214] dark:text-[#F0EDD4]';
+function SectionHeader({ title }: { title: string }) {
+  return (
+    <div className="flex items-center gap-2.5 border-b border-[#F0EDE4] px-5 py-3.5 dark:border-[#1A2A14]">
+      <span className="h-4 w-[3px] rounded-full bg-[#C49A1E]" />
+      <span className="text-[13px] font-bold text-[#1A1A0A] dark:text-[#F0EDD4]">{title}</span>
+    </div>
+  );
+}
+
+function NumberInput({ value, onChange, min, step, unit }: {
+  value: string | number;
+  onChange: (v: string) => void;
+  min?: number;
+  step?: number;
+  unit?: string;
+}) {
+  return (
+    <div className="relative">
+      <input
+        type="number"
+        min={min}
+        step={step}
+        value={value}
+        onChange={(e) => onChange(e.target.value)}
+        className={inputClass + (unit ? ' pr-12' : '')}
+      />
+      {unit && (
+        <span className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 select-none text-[11px] font-semibold text-[#BBBBAA] dark:text-[#4A4A3A]">
+          {unit}
+        </span>
+      )}
+    </div>
+  );
+}
 
 export function StationConfigForm({ config, posts, onSaved }: StationConfigFormProps) {
   const t = useTranslations('station_config');
@@ -73,6 +100,22 @@ export function StationConfigForm({ config, posts, onSaved }: StationConfigFormP
   );
 
   useEffect(() => {
+    setForm({
+      opening_time: config.opening_time ?? '',
+      closing_time: config.closing_time ?? '',
+      break_start: config.break_start ?? '',
+      break_end: config.break_end ?? '',
+      wash_duration_minutes: config.wash_duration_minutes ?? '',
+      late_tolerance_minutes: config.late_tolerance_minutes ?? '',
+      cancellation_delay_minutes: config.cancellation_delay_minutes ?? '',
+      max_concurrent_posts: config.max_concurrent_posts ?? '',
+      margin_before_minutes: config.margin_before_minutes ?? '',
+      margin_after_minutes: config.margin_after_minutes ?? '',
+      reservation_surcharge: config.reservation_surcharge ?? '',
+    });
+  }, [config]);
+
+  useEffect(() => {
     setPostStates(Object.fromEntries(posts.map((p) => [p.id, p.is_active])));
   }, [posts]);
 
@@ -81,10 +124,6 @@ export function StationConfigForm({ config, posts, onSaved }: StationConfigFormP
 
   function set(key: string, value: string) {
     setForm((prev) => ({ ...prev, [key]: value }));
-  }
-
-  function togglePost(id: string) {
-    setPostStates((prev) => ({ ...prev, [id]: !prev[id] }));
   }
 
   async function handleSubmit(e: React.FormEvent) {
@@ -104,7 +143,6 @@ export function StationConfigForm({ config, posts, onSaved }: StationConfigFormP
     if (form.margin_before_minutes !== '') payload.margin_before_minutes = Number(form.margin_before_minutes);
     if (form.margin_after_minutes !== '') payload.margin_after_minutes = Number(form.margin_after_minutes);
     if (form.reservation_surcharge !== '') payload.reservation_surcharge = form.reservation_surcharge;
-
     payload.posts = posts.map((p) => ({ id: p.id, is_active: postStates[p.id] ?? p.is_active }));
 
     const [ok, data] = await patchWithApi('/station/config', payload);
@@ -120,106 +158,96 @@ export function StationConfigForm({ config, posts, onSaved }: StationConfigFormP
   }
 
   return (
-    <form onSubmit={handleSubmit} className="flex flex-col gap-6">
+    <form onSubmit={handleSubmit} className="flex flex-col gap-5">
       {/* Hours */}
-      <section className="rounded-xl border border-[#E0DCD0] bg-white p-5 dark:border-[#1A2A14] dark:bg-[#182214]">
-        <div className="mb-4 text-[13px] font-black text-[#1A1A0A] dark:text-[#F0EDD4]">
-          {t('section_hours')}
-        </div>
-        <div className="grid grid-cols-2 gap-4">
-          <Field label={t('field_opening_time')}>
-            <input type="time" className={inputClass} value={form.opening_time} onChange={(e) => set('opening_time', e.target.value)} />
-          </Field>
-          <Field label={t('field_closing_time')}>
-            <input type="time" className={inputClass} value={form.closing_time} onChange={(e) => set('closing_time', e.target.value)} />
-          </Field>
-          <Field label={t('field_break_start')}>
-            <input type="time" className={inputClass} value={form.break_start} onChange={(e) => set('break_start', e.target.value)} />
-          </Field>
-          <Field label={t('field_break_end')}>
-            <input type="time" className={inputClass} value={form.break_end} onChange={(e) => set('break_end', e.target.value)} />
-          </Field>
+      <section className="rounded-xl border border-[#E8E4DC] bg-white shadow-sm dark:border-[#1A2A14] dark:bg-[#182214]">
+        <SectionHeader title={t('section_hours')} />
+        <div className="p-5">
+          <div className="grid grid-cols-2 gap-4 sm:grid-cols-4">
+            <Field label={t('field_opening_time')}>
+              <input type="time" className={inputClass} value={form.opening_time} onChange={(e) => set('opening_time', e.target.value)} />
+            </Field>
+            <Field label={t('field_closing_time')}>
+              <input type="time" className={inputClass} value={form.closing_time} onChange={(e) => set('closing_time', e.target.value)} />
+            </Field>
+            <Field label={t('field_break_start')}>
+              <input type="time" className={inputClass} value={form.break_start} onChange={(e) => set('break_start', e.target.value)} />
+            </Field>
+            <Field label={t('field_break_end')}>
+              <input type="time" className={inputClass} value={form.break_end} onChange={(e) => set('break_end', e.target.value)} />
+            </Field>
+          </div>
         </div>
       </section>
 
       {/* Wash & delays */}
-      <section className="rounded-xl border border-[#E0DCD0] bg-white p-5 dark:border-[#1A2A14] dark:bg-[#182214]">
-        <div className="mb-4 text-[13px] font-black text-[#1A1A0A] dark:text-[#F0EDD4]">
-          {t('section_wash')}
-        </div>
-        <div className="grid grid-cols-2 gap-4">
-          <Field label={t('field_wash_duration')}>
-            <input type="number" min={1} className={inputClass} value={form.wash_duration_minutes} onChange={(e) => set('wash_duration_minutes', e.target.value)} />
-          </Field>
-          <Field label={t('field_max_concurrent')}>
-            <input type="number" min={1} className={inputClass} value={form.max_concurrent_posts} onChange={(e) => set('max_concurrent_posts', e.target.value)} />
-          </Field>
-          <Field label={t('field_margin_before')}>
-            <input type="number" min={0} className={inputClass} value={form.margin_before_minutes} onChange={(e) => set('margin_before_minutes', e.target.value)} />
-          </Field>
-          <Field label={t('field_margin_after')}>
-            <input type="number" min={0} className={inputClass} value={form.margin_after_minutes} onChange={(e) => set('margin_after_minutes', e.target.value)} />
-          </Field>
-          <Field label={t('field_late_tolerance')}>
-            <input type="number" min={0} className={inputClass} value={form.late_tolerance_minutes} onChange={(e) => set('late_tolerance_minutes', e.target.value)} />
-          </Field>
-          <Field label={t('field_cancellation_delay')}>
-            <input type="number" min={0} className={inputClass} value={form.cancellation_delay_minutes} onChange={(e) => set('cancellation_delay_minutes', e.target.value)} />
-          </Field>
-          <Field label={t('field_surcharge')}>
-            <input type="number" min={0} step={0.01} className={inputClass} value={form.reservation_surcharge} onChange={(e) => set('reservation_surcharge', e.target.value)} />
-          </Field>
+      <section className="rounded-xl border border-[#E8E4DC] bg-white shadow-sm dark:border-[#1A2A14] dark:bg-[#182214]">
+        <SectionHeader title={t('section_wash')} />
+        <div className="p-5">
+          <div className="grid grid-cols-2 gap-4 sm:grid-cols-3">
+            <Field label={t('field_wash_duration')}>
+              <NumberInput value={form.wash_duration_minutes} onChange={(v) => set('wash_duration_minutes', v)} min={1} unit="min" />
+            </Field>
+            <Field label={t('field_late_tolerance')}>
+              <NumberInput value={form.late_tolerance_minutes} onChange={(v) => set('late_tolerance_minutes', v)} min={0} unit="min" />
+            </Field>
+            <Field label={t('field_cancellation_delay')}>
+              <NumberInput value={form.cancellation_delay_minutes} onChange={(v) => set('cancellation_delay_minutes', v)} min={0} unit="min" />
+            </Field>
+            <Field label={t('field_margin_before')}>
+              <NumberInput value={form.margin_before_minutes} onChange={(v) => set('margin_before_minutes', v)} min={0} unit="min" />
+            </Field>
+            <Field label={t('field_margin_after')}>
+              <NumberInput value={form.margin_after_minutes} onChange={(v) => set('margin_after_minutes', v)} min={0} unit="min" />
+            </Field>
+            <Field label={t('field_max_concurrent')}>
+              <NumberInput value={form.max_concurrent_posts} onChange={(v) => set('max_concurrent_posts', v)} min={1} unit={t('unit_posts')} />
+            </Field>
+            <Field label={t('field_surcharge')}>
+              <NumberInput value={form.reservation_surcharge} onChange={(v) => set('reservation_surcharge', v)} min={0} step={0.01} unit="$" />
+            </Field>
+          </div>
         </div>
       </section>
 
       {/* Posts */}
-      <section className="rounded-xl border border-[#E0DCD0] bg-white p-5 dark:border-[#1A2A14] dark:bg-[#182214]">
-        <div className="mb-4 text-[13px] font-black text-[#1A1A0A] dark:text-[#F0EDD4]">
-          {t('section_posts')}
-        </div>
-        <div className="flex flex-wrap gap-3">
-          {posts.map((post) => {
-            const active = postStates[post.id] ?? post.is_active;
-            return (
-              <button
-                key={post.id}
-                type="button"
-                onClick={() => togglePost(post.id)}
-                className={`flex items-center gap-2 rounded-lg px-4 py-2.5 text-[12px] font-bold transition-colors ${
-                  active
-                    ? 'bg-[#C49A1E] text-[#0C1209]'
-                    : 'border border-[#E0DCD0] bg-[#F5F5EE] text-[#888] dark:border-[#1A2A14] dark:bg-[#0C1209] dark:text-[#8A8A7A]'
-                }`}
-              >
-                <span
-                  className="h-2 w-2 rounded-full"
-                  style={{ background: active ? '#0C1209' : '#888' }}
-                />
-                {t('post_label', { n: post.position })}
-                <span className="text-[10px]">
-                  {active ? t('post_active') : t('post_inactive')}
-                </span>
-              </button>
-            );
-          })}
+      <section className="rounded-xl border border-[#E8E4DC] bg-white shadow-sm dark:border-[#1A2A14] dark:bg-[#182214]">
+        <SectionHeader title={t('section_posts')} />
+        <div className="p-5">
+          <div className="flex flex-wrap gap-2.5">
+            {posts.map((post) => {
+              const active = postStates[post.id] ?? post.is_active;
+              return (
+                <button
+                  key={post.id}
+                  type="button"
+                  onClick={() => setPostStates((prev) => ({ ...prev, [post.id]: !(prev[post.id] ?? post.is_active) }))}
+                  className={`group flex items-center gap-2.5 rounded-[10px] border px-4 py-2.5 text-[12px] font-semibold transition-all duration-150 ${
+                    active
+                      ? 'border-[#C49A1E] bg-[#C49A1E] text-[#0C1209] shadow-sm'
+                      : 'border-[#D8D4C8] bg-[#F7F6F2] text-[#888] dark:border-[#243020] dark:bg-[#0F1A0C] dark:text-[#6A6A5A]'
+                  }`}
+                >
+                  <span className={`h-1.5 w-1.5 rounded-full transition-colors ${active ? 'bg-[#0C1209]' : 'bg-[#D0D0C0] dark:bg-[#3A3A2A]'}`} />
+                  {t('post_label', { n: post.position })}
+                  <span className={`text-[10px] ${active ? 'opacity-60' : 'opacity-50'}`}>
+                    {active ? t('post_active') : t('post_inactive')}
+                  </span>
+                </button>
+              );
+            })}
+          </div>
         </div>
       </section>
 
       {/* Actions */}
       <div className="flex items-center justify-between">
-        {feedback && (
-          <span
-            className="text-[12px] font-semibold"
-            style={{ color: feedback.ok ? '#2ECC71' : '#EF4444' }}
-          >
+        {feedback ? (
+          <span className="text-[12px] font-semibold" style={{ color: feedback.ok ? '#00C851' : '#EF4444' }}>
             {feedback.msg}
           </span>
-        )}
-        <button
-          type="submit"
-          disabled={saving}
-          className="ml-auto rounded-lg bg-[#C49A1E] px-6 py-2.5 text-[13px] font-black text-[#0C1209] transition-opacity hover:opacity-80 disabled:opacity-50"
-        >
+        ) : <span />}
+        <button type="submit" disabled={saving} className="rounded-[10px] bg-[#C49A1E] px-6 py-2.5 text-[13px] font-bold text-[#0C1209] transition-opacity hover:opacity-80 disabled:opacity-50">
           {saving ? t('btn_saving') : t('btn_save')}
         </button>
       </div>
