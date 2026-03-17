@@ -2,7 +2,7 @@
   "info": {
     "_postman_id": "2ef04412-e41a-4ece-97a7-12091ab0dd12",
     "name": "LAVO — Stations (Queue + Formats + Cron)",
-    "description": "Collection pour les endpoints non couverts par lavo-stations et lavo-reservations :\n- **Stations Publiques** : join station (get maps URL)\n- **Onboarding** : upload document (multipart)\n- **Formats** : CRUD formats de vehicule (public GET + station auth PUT/PATCH/DELETE)\n- **Client — File d'attente** : rejoindre la file, voir la file, upgrade vers reservation\n- **Station — Entries** : repositionner une entree dans la file (queue_position)\n- **Cron** : sync uploads, downgrade reservations tardives\n\nNOTE : Liste des stations et detail → lavo-stations (Stations Publiques)\nNOTE : Creation reservation, consultation, annulation, gestion statut → lavo-reservations\n\nRequired: base_url. Optional: station_id, format_id, entry_id, time_slot_id, access_token, cron_secret.",
+    "description": "Collection pour les endpoints non couverts par lavo-stations et lavo-reservations :\n- **Stations Publiques** : join station (get maps URL)\n- **Onboarding** : upload document (multipart)\n- **Formats** : CRUD formats de vehicule (public GET + station auth PUT/PATCH/DELETE)\n- **Client — File d'attente** : rejoindre la file, voir la file, upgrade vers reservation\n- **Station — Entries** : repositionner une entree dans la file (queue_position), picker un client walk-in\n- **Cron** : sync uploads, downgrade reservations tardives, rappels reservation (5h et 30min)\n\nNOTE : Liste des stations et detail → lavo-stations (Stations Publiques)\nNOTE : Creation reservation, consultation, annulation, confirmation presence → lavo-reservations\n\nRequired: base_url. Optional: station_id, format_id, entry_id, queue_entry_id, time_slot_id, access_token, cron_secret.",
     "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
   },
   "variable": [
@@ -40,6 +40,11 @@
       "key": "time_slot_id",
       "value": "",
       "type": "string"
+    },
+    {
+      "key": "queue_entry_id",
+      "value": "",
+      "type": "string"
     }
   ],
   "item": [
@@ -70,8 +75,16 @@
             "header": [],
             "url": {
               "raw": "{{base_url}}/api/v1/stations/{{station_id}}/join",
-              "host": ["{{base_url}}"],
-              "path": ["api", "v1", "stations", "{{station_id}}", "join"]
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "stations",
+                "{{station_id}}",
+                "join"
+              ]
             },
             "description": "POST /api/v1/stations/:id/join — retourne un lien Google Maps vers la station."
           },
@@ -116,8 +129,16 @@
             },
             "url": {
               "raw": "{{base_url}}/api/v1/stations/onboarding/upload",
-              "host": ["{{base_url}}"],
-              "path": ["api", "v1", "stations", "onboarding", "upload"]
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "stations",
+                "onboarding",
+                "upload"
+              ]
             },
             "description": "POST /api/v1/stations/onboarding/upload — multipart/form-data, champ 'file'. Sans auth. Retourne 201 avec { data: { url, storage } }. Utilisez url dans le body de submit (documents[].file_url)."
           },
@@ -151,8 +172,16 @@
             "header": [],
             "url": {
               "raw": "{{base_url}}/api/v1/stations/{{station_id}}/formats",
-              "host": ["{{base_url}}"],
-              "path": ["api", "v1", "stations", "{{station_id}}", "formats"]
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "stations",
+                "{{station_id}}",
+                "formats"
+              ]
             },
             "description": "GET /api/v1/stations/:id/formats — public. Retourne la liste des formats de vehicule (id, station_id, label, price, is_active). 404 si la station n'existe pas ou n'est pas active."
           },
@@ -180,8 +209,14 @@
           "request": {
             "method": "POST",
             "header": [
-              { "key": "Content-Type", "value": "application/json" },
-              { "key": "Authorization", "value": "Bearer {{access_token}}" }
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}"
+              }
             ],
             "body": {
               "mode": "raw",
@@ -189,8 +224,15 @@
             },
             "url": {
               "raw": "{{base_url}}/api/v1/station/formats",
-              "host": ["{{base_url}}"],
-              "path": ["api", "v1", "station", "formats"]
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "station",
+                "formats"
+              ]
             },
             "description": "POST /api/v1/station/formats — auth STATION (Bearer). Body: label (1-100 chars), price (> 0), is_active (optionnel, defaut true). Cree un format pour la station connectee."
           },
@@ -212,8 +254,14 @@
           "request": {
             "method": "PUT",
             "header": [
-              { "key": "Content-Type", "value": "application/json" },
-              { "key": "Authorization", "value": "Bearer {{access_token}}" }
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}"
+              }
             ],
             "body": {
               "mode": "raw",
@@ -221,8 +269,16 @@
             },
             "url": {
               "raw": "{{base_url}}/api/v1/station/formats/{{format_id}}",
-              "host": ["{{base_url}}"],
-              "path": ["api", "v1", "station", "formats", "{{format_id}}"]
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "station",
+                "formats",
+                "{{format_id}}"
+              ]
             },
             "description": "PUT /api/v1/station/formats/:id — auth STATION. Mise a jour complete : label, price, is_active. Le format doit appartenir a la station connectee."
           },
@@ -244,8 +300,14 @@
           "request": {
             "method": "PATCH",
             "header": [
-              { "key": "Content-Type", "value": "application/json" },
-              { "key": "Authorization", "value": "Bearer {{access_token}}" }
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}"
+              }
             ],
             "body": {
               "mode": "raw",
@@ -253,8 +315,16 @@
             },
             "url": {
               "raw": "{{base_url}}/api/v1/station/formats/{{format_id}}",
-              "host": ["{{base_url}}"],
-              "path": ["api", "v1", "station", "formats", "{{format_id}}"]
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "station",
+                "formats",
+                "{{format_id}}"
+              ]
             },
             "description": "PATCH /api/v1/station/formats/:id — auth STATION. Mise a jour partielle : au moins un des champs label, price, is_active."
           },
@@ -280,12 +350,23 @@
           "request": {
             "method": "DELETE",
             "header": [
-              { "key": "Authorization", "value": "Bearer {{access_token}}" }
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}"
+              }
             ],
             "url": {
               "raw": "{{base_url}}/api/v1/station/formats/{{format_id}}",
-              "host": ["{{base_url}}"],
-              "path": ["api", "v1", "station", "formats", "{{format_id}}"]
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "station",
+                "formats",
+                "{{format_id}}"
+              ]
             },
             "description": "DELETE /api/v1/station/formats/:id — auth STATION. Retourne 409 si le format a des reservations ; sinon 200 avec { data: { deleted: true } }."
           },
@@ -302,14 +383,32 @@
           "request": {
             "method": "POST",
             "header": [
-              { "key": "Content-Type", "value": "application/json" },
-              { "key": "Authorization", "value": "Bearer {{access_token}}" }
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}"
+              }
             ],
-            "body": { "mode": "raw", "raw": "{\"vehicle_format_id\": \"{{format_id}}\"}" },
+            "body": {
+              "mode": "raw",
+              "raw": "{\"vehicle_format_id\": \"{{format_id}}\"}"
+            },
             "url": {
               "raw": "{{base_url}}/api/v1/stations/{{station_id}}/queue/join",
-              "host": ["{{base_url}}"],
-              "path": ["api", "v1", "stations", "{{station_id}}", "queue", "join"]
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "stations",
+                "{{station_id}}",
+                "queue",
+                "join"
+              ]
             },
             "description": "POST /api/v1/stations/:id/queue/join — auth client. Body: vehicle_format_id. Cree une entree en file d'attente."
           },
@@ -322,8 +421,16 @@
             "header": [],
             "url": {
               "raw": "{{base_url}}/api/v1/stations/{{station_id}}/queue",
-              "host": ["{{base_url}}"],
-              "path": ["api", "v1", "stations", "{{station_id}}", "queue"]
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "stations",
+                "{{station_id}}",
+                "queue"
+              ]
             },
             "description": "GET /api/v1/stations/:id/queue — liste les entrees en file d'attente pour une station."
           },
@@ -334,14 +441,32 @@
           "request": {
             "method": "POST",
             "header": [
-              { "key": "Content-Type", "value": "application/json" },
-              { "key": "Authorization", "value": "Bearer {{access_token}}" }
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}"
+              }
             ],
-            "body": { "mode": "raw", "raw": "{\"time_slot_id\": \"{{time_slot_id}}\"}" },
+            "body": {
+              "mode": "raw",
+              "raw": "{\"time_slot_id\": \"{{time_slot_id}}\"}"
+            },
             "url": {
               "raw": "{{base_url}}/api/v1/me/entries/{{entry_id}}/upgrade-to-reservation",
-              "host": ["{{base_url}}"],
-              "path": ["api", "v1", "me", "entries", "{{entry_id}}", "upgrade-to-reservation"]
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "me",
+                "entries",
+                "{{entry_id}}",
+                "upgrade-to-reservation"
+              ]
             },
             "description": "POST /api/v1/me/entries/:entryId/upgrade-to-reservation — auth client. Convertit une entree file d'attente en reservation. Body: time_slot_id."
           },
@@ -358,23 +483,79 @@
           "request": {
             "method": "PATCH",
             "header": [
-              { "key": "Content-Type", "value": "application/json" },
-              { "key": "Authorization", "value": "Bearer {{access_token}}" }
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}"
+              }
             ],
-            "body": { "mode": "raw", "raw": "{\"queue_position\": 1}" },
+            "body": {
+              "mode": "raw",
+              "raw": "{\"queue_position\": 1}"
+            },
             "url": {
               "raw": "{{base_url}}/api/v1/station/entries/{{entry_id}}/position",
-              "host": ["{{base_url}}"],
-              "path": ["api", "v1", "station", "entries", "{{entry_id}}", "position"]
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "station",
+                "entries",
+                "{{entry_id}}",
+                "position"
+              ]
             },
             "description": "PATCH /api/v1/station/entries/:id/position — auth STATION. Repositionne une entree dans la file. Body: queue_position (entrees queue uniquement)."
+          },
+          "response": []
+        },
+        {
+          "name": "Pick client file d'attente (200)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 200', () => pm.response.to.have.status(200));",
+                  "pm.test('Entry status = in_progress', () => {",
+                  "  const json = pm.response.json();",
+                  "  pm.expect(json.data.entry.status).to.eql('in_progress');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/v1/stations/queue/{{queue_entry_id}}/pick",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "stations",
+                "queue",
+                "{{queue_entry_id}}",
+                "pick"
+              ]
+            },
+            "description": "POST /api/v1/stations/queue/:queueId/pick — Auth STATION. Selectionne un client walk-in de la file pour le servir immediatement. Passe le statut a in_progress et compacte les positions restantes."
           },
           "response": []
         }
       ]
     },
     {
-      "name": "Cron — Sync pending uploads",
+      "name": "Cron — Sync / Downgrade / Rappels",
       "item": [
         {
           "name": "Sync pending uploads (200)",
@@ -398,12 +579,21 @@
           "request": {
             "method": "GET",
             "header": [
-              { "key": "x-cron-secret", "value": "{{cron_secret}}" }
+              {
+                "key": "x-cron-secret",
+                "value": "{{cron_secret}}"
+              }
             ],
             "url": {
               "raw": "{{base_url}}/api/cron/sync-pending-uploads",
-              "host": ["{{base_url}}"],
-              "path": ["api", "cron", "sync-pending-uploads"]
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "cron",
+                "sync-pending-uploads"
+              ]
             },
             "description": "GET /api/cron/sync-pending-uploads — synchronise les uploads locaux vers Cloudinary. Requiert x-cron-secret (ou Authorization: Bearer <CRON_SECRET>)."
           },
@@ -427,8 +617,14 @@
             "header": [],
             "url": {
               "raw": "{{base_url}}/api/cron/sync-pending-uploads",
-              "host": ["{{base_url}}"],
-              "path": ["api", "cron", "sync-pending-uploads"]
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "cron",
+                "sync-pending-uploads"
+              ]
             },
             "description": "Test negatif : secret manquant doit retourner 401."
           },
@@ -449,13 +645,98 @@
           ],
           "request": {
             "method": "GET",
-            "header": [{ "key": "x-cron-secret", "value": "{{cron_secret}}" }],
+            "header": [
+              {
+                "key": "x-cron-secret",
+                "value": "{{cron_secret}}"
+              }
+            ],
             "url": {
               "raw": "{{base_url}}/api/cron/downgrade-late-reservations",
-              "host": ["{{base_url}}"],
-              "path": ["api", "cron", "downgrade-late-reservations"]
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "cron",
+                "downgrade-late-reservations"
+              ]
             },
             "description": "GET /api/cron/downgrade-late-reservations — redeplace en file d'attente les reservations non confirmees depassant la tolerance. Requiert x-cron-secret ou Bearer CRON_SECRET."
+          },
+          "response": []
+        },
+        {
+          "name": "Rappels reservation (200)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 200', () => pm.response.to.have.status(200));",
+                  "pm.test('Retourne reminders_5h et reminders_30min', () => {",
+                  "  const json = pm.response.json();",
+                  "  pm.expect(json.data).to.have.property('reminders_5h');",
+                  "  pm.expect(json.data).to.have.property('reminders_30min');",
+                  "  pm.expect(json.data.reminders_5h).to.have.property('processed');",
+                  "  pm.expect(json.data.reminders_30min).to.have.property('processed');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "x-cron-secret",
+                "value": "{{cron_secret}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/cron/send-reservation-reminders",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "cron",
+                "send-reservation-reminders"
+              ]
+            },
+            "description": "GET /api/cron/send-reservation-reminders — Envoie des notifications push aux clients ayant une reservation confirmee dans 5h ou 30min. Planifier toutes les 10 minutes. Requiert x-cron-secret ou Bearer CRON_SECRET."
+          },
+          "response": []
+        },
+        {
+          "name": "Rappels reservation — secret manquant (401)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 401', () => pm.response.to.have.status(401));"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/cron/send-reservation-reminders",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "cron",
+                "send-reservation-reminders"
+              ]
+            },
+            "description": "401 — Secret manquant ou invalide."
           },
           "response": []
         }

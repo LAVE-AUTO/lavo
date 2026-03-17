@@ -1,7 +1,7 @@
 {
   "info": {
     "name": "LAVO — Reservations API",
-    "description": "Collection pour le systeme de reservation incluant la creation, la consultation (user/station), l'annulation, et le webhook Stripe.\n\nVariables requises : `base_url`, `access_token`, `station_id`, `time_slot_id`, `vehicle_format_id`\nVariables auto-remplies : `reservation_id`, `stripe_client_secret`",
+    "description": "Collection pour le systeme de reservation incluant la creation, la consultation (user/station), l'annulation, la confirmation de presence, et le webhook Stripe.\n\nVariables requises : `base_url`, `access_token`, `station_id`, `time_slot_id`, `vehicle_format_id`\nVariables auto-remplies : `reservation_id`, `stripe_client_secret`",
     "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
   },
   "variable": [
@@ -789,17 +789,32 @@
           "request": {
             "method": "POST",
             "header": [
-              { "key": "Content-Type", "value": "application/json" }
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
             ],
             "url": {
               "raw": "{{base_url}}/api/v1/reservations/{{reservation_id}}/cancel",
-              "host": ["{{base_url}}"],
-              "path": ["api", "v1", "reservations", "{{reservation_id}}", "cancel"]
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "reservations",
+                "{{reservation_id}}",
+                "cancel"
+              ]
             },
             "body": {
               "mode": "raw",
               "raw": "{\n  \"reason\": \"Plans changed\"\n}",
-              "options": { "raw": { "language": "json" } }
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
             },
             "description": "Annulation >= 60 min avant le service : remboursement integral, penalite = 0.\n\nPour tester sans penalite, assurez-vous que le creneau est dans plus de 60 minutes."
           }
@@ -829,17 +844,32 @@
           "request": {
             "method": "POST",
             "header": [
-              { "key": "Content-Type", "value": "application/json" }
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
             ],
             "url": {
               "raw": "{{base_url}}/api/v1/reservations/{{reservation_id}}/cancel",
-              "host": ["{{base_url}}"],
-              "path": ["api", "v1", "reservations", "{{reservation_id}}", "cancel"]
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "reservations",
+                "{{reservation_id}}",
+                "cancel"
+              ]
             },
             "body": {
               "mode": "raw",
               "raw": "{\n  \"reason\": \"Emergency\"\n}",
-              "options": { "raw": { "language": "json" } }
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
             },
             "description": "Annulation < 60 min avant le service : penalite 20% retenue, remboursement partiel.\n\nPour simuler, utilisez un creneau dans moins de 60 minutes."
           }
@@ -867,13 +897,25 @@
             "header": [],
             "url": {
               "raw": "{{base_url}}/api/v1/reservations/{{reservation_id}}/cancel",
-              "host": ["{{base_url}}"],
-              "path": ["api", "v1", "reservations", "{{reservation_id}}", "cancel"]
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "reservations",
+                "{{reservation_id}}",
+                "cancel"
+              ]
             },
             "body": {
               "mode": "raw",
               "raw": "{}",
-              "options": { "raw": { "language": "json" } }
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
             },
             "description": "Annulation sans raison — le champ reason est optionnel."
           }
@@ -901,13 +943,25 @@
             "header": [],
             "url": {
               "raw": "{{base_url}}/api/v1/reservations/{{reservation_id}}/cancel",
-              "host": ["{{base_url}}"],
-              "path": ["api", "v1", "reservations", "{{reservation_id}}", "cancel"]
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "reservations",
+                "{{reservation_id}}",
+                "cancel"
+              ]
             },
             "body": {
               "mode": "raw",
               "raw": "{}",
-              "options": { "raw": { "language": "json" } }
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
             },
             "description": "409 CONFLICT — la reservation est deja annulee ou dans un statut non annulable (completed, in_progress, pending_payment)."
           }
@@ -931,13 +985,25 @@
             "header": [],
             "url": {
               "raw": "{{base_url}}/api/v1/reservations/00000000-0000-0000-0000-000000000000/cancel",
-              "host": ["{{base_url}}"],
-              "path": ["api", "v1", "reservations", "00000000-0000-0000-0000-000000000000", "cancel"]
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "reservations",
+                "00000000-0000-0000-0000-000000000000",
+                "cancel"
+              ]
             },
             "body": {
               "mode": "raw",
               "raw": "{}",
-              "options": { "raw": { "language": "json" } }
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
             },
             "description": "404 NOT_FOUND — reservation inexistante ou appartenant a un autre utilisateur."
           }
@@ -957,18 +1023,32 @@
           ],
           "response": [],
           "request": {
-            "auth": { "type": "noauth" },
+            "auth": {
+              "type": "noauth"
+            },
             "method": "POST",
             "header": [],
             "url": {
               "raw": "{{base_url}}/api/v1/reservations/{{reservation_id}}/cancel",
-              "host": ["{{base_url}}"],
-              "path": ["api", "v1", "reservations", "{{reservation_id}}", "cancel"]
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "reservations",
+                "{{reservation_id}}",
+                "cancel"
+              ]
             },
             "body": {
               "mode": "raw",
               "raw": "{}",
-              "options": { "raw": { "language": "json" } }
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
             },
             "description": "401 UNAUTHORIZED — aucun token fourni."
           }
@@ -1196,6 +1276,117 @@
             },
             "description": "La station marque le service comme termine. Declenche une notification invitation_to_rate. Stripe distribue le paiement."
           }
+        }
+      ]
+    },
+    {
+      "name": "Confirmation de presence",
+      "description": "POST /api/v1/reservations/:id/confirm-presence — Le client confirme sa presence avant le debut du service.\nDoit etre appele avant l'expiration de la tolerance (heure du creneau + late_tolerance_minutes).\nAuth : client.",
+      "item": [
+        {
+          "name": "Confirmer presence — succes (200)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 200', () => pm.response.to.have.status(200));",
+                  "pm.test('client_confirmed est true', () => {",
+                  "  const json = pm.response.json();",
+                  "  pm.expect(json.data.entry.client_confirmed).to.be.true;",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/v1/reservations/{{reservation_id}}/confirm-presence",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "reservations",
+                "{{reservation_id}}",
+                "confirm-presence"
+              ]
+            },
+            "description": "Confirme la presence du client pour une reservation confirmee (status=confirmed). Idempotent si deja confirme."
+          },
+          "response": []
+        },
+        {
+          "name": "Confirmer presence — deja confirme (409)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 409', () => pm.response.to.have.status(409));"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/v1/reservations/{{reservation_id}}/confirm-presence",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "reservations",
+                "{{reservation_id}}",
+                "confirm-presence"
+              ]
+            },
+            "description": "409 — La presence est deja confirmee (client_confirmed = true)."
+          },
+          "response": []
+        },
+        {
+          "name": "Confirmer presence — non autorise (403)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 403 ou 404', () => {",
+                  "  pm.expect(pm.response.code).to.be.oneOf([403, 404]);",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/v1/reservations/00000000-0000-0000-0000-000000000000/confirm-presence",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "reservations",
+                "00000000-0000-0000-0000-000000000000",
+                "confirm-presence"
+              ]
+            },
+            "description": "404 — Reservation introuvable ou n'appartient pas au client authentifie."
+          },
+          "response": []
         }
       ]
     },
