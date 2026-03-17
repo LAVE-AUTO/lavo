@@ -1,6 +1,7 @@
 /**
  * Reservation business logic: create reservation, cancel, list my entries, upgrade queue to reservation.
- * Uses entry repository, slot repo (booked_count), config (surcharge), payment and notification stubs.
+ * Uses entry repository, slot repo (booked_count + SELECT FOR UPDATE), config (surcharge),
+ * Stripe PaymentIntent (Connect), and notification stubs.
  */
 import { NotFoundError, ConflictError } from '@/lib/errors';
 import { DEFAULT_COMMISSION_RATE } from '@/helpers/constants';
@@ -8,24 +9,28 @@ import { db } from '@/lib/db';
 import { getConfigByStationId } from '@/server/station/config-repository';
 import { findFormatByIdAndStation } from '@/server/station/format-repository';
 import {
-  findSlotByIdAndStation,
+  lockSlotForUpdate,
   countReservationsBySlotId,
   incrementSlotBookedCount,
   decrementSlotBookedCount,
 } from '@/server/station/slot-repository';
-import { processPayment } from '@/server/payments/payment-service';
+import { createPaymentIntent, cancelPaymentIntent } from '@/server/payments/payment-service';
 import { notifyEntry } from '@/server/notifications/notification-service';
 import {
   createReservationEntry,
   findEntryByIdAndUser,
   findEntryByIdAndStation,
-  listEntriesByUser,
+  hasActiveEntryAtStation,
   updateEntry,
   shiftQueuePositions,
   type Entry,
+  type ListEntriesFilters,
+  type PaginatedEntries,
+  listEntriesByUserPaginated,
+  listEntriesByStationPaginated,
 } from './entry-repository';
 
-const STATUS_PENDING = 'pending';
+const STATUS_PENDING_PAYMENT = 'pending_payment';
 const STATUS_CANCELLED = 'cancelled';
 
 function toDecimal(v: string | number): string {
@@ -38,20 +43,33 @@ function parseDecimal(s: string | null | undefined): number {
   return Number.isFinite(n) ? n : 0;
 }
 
+/** Result of createReservation: entry + Stripe client_secret for frontend payment. */
+export type CreateReservationResult = {
+  entry: Entry;
+  clientSecret: string;
+};
+
 /**
- * Creates a reservation for the given slot and format. Validates slot capacity and applies
- * format price + reservation surcharge. Processes payment stub and increments slot booked_count.
+ * Creates a reservation for the given slot and format.
+ *
+ * Flow:
+ * 1. Validate format and station config
+ * 2. Check no active entry exists for user at this station
+ * 3. Atomic transaction: SELECT FOR UPDATE on slot, verify capacity, create entry, increment booked_count
+ * 4. Create Stripe PaymentIntent (Connect) — after DB commit to avoid charging for failed inserts
+ * 5. Update entry with Stripe payment ID
+ * 6. Return entry + client_secret for frontend payment confirmation
  */
 export async function createReservation(
   userId: string,
   stationId: string,
+  stationStripeAccountId: string,
   timeSlotId: string,
   vehicleFormatId: string
-): Promise<Entry> {
-  const slot = await findSlotByIdAndStation(timeSlotId, stationId);
-  if (!slot) throw new NotFoundError('Time slot not found or does not belong to this station');
+): Promise<CreateReservationResult> {
   const format = await findFormatByIdAndStation(vehicleFormatId, stationId);
   if (!format) throw new NotFoundError('Vehicle format not found');
+
   const config = await getConfigByStationId(stationId);
   const surcharge = config?.reservation_surcharge
     ? parseDecimal(String(config.reservation_surcharge))
@@ -60,25 +78,19 @@ export async function createReservation(
   const amountTotal = formatPrice + surcharge;
   if (amountTotal <= 0) throw new ConflictError('Invalid amount');
 
-  // Pre-check capacity before charging to avoid billing for a full slot.
-  const prelimCount = await countReservationsBySlotId(timeSlotId);
-  if (prelimCount >= (slot.capacity ?? 0)) throw new ConflictError('Slot is full');
-
-  // Payment is an external side-effect — processed before the atomic write.
-  const payment = await processPayment({
-    amountCents: Math.round(amountTotal * 100),
-    userId,
-    stationId,
-    metadata: { time_slot_id: timeSlotId, vehicle_format_id: vehicleFormatId },
-  });
-  if (!payment.success) throw new ConflictError(payment.error ?? 'Payment failed');
-
   const commissionRate = DEFAULT_COMMISSION_RATE;
   const commissionAmount = amountTotal * parseFloat(commissionRate);
   const stationPayout = amountTotal - commissionAmount;
 
-  // Atomic: re-check capacity (race guard), insert entry, and increment booked_count.
+  // Atomic: check duplicate, lock slot (SELECT FOR UPDATE), verify capacity, insert entry, increment booked_count
   const entry = await db.transaction(async (tx) => {
+    // Duplicate check inside transaction to prevent TOCTOU race
+    const hasActive = await hasActiveEntryAtStation(userId, stationId, tx);
+    if (hasActive) throw new ConflictError('You already have an active reservation at this station');
+
+    const slot = await lockSlotForUpdate(timeSlotId, stationId, tx);
+    if (!slot) throw new NotFoundError('Time slot not found or does not belong to this station');
+
     const count = await countReservationsBySlotId(timeSlotId, tx);
     if (count >= (slot.capacity ?? 0)) throw new ConflictError('Slot is full');
 
@@ -88,12 +100,12 @@ export async function createReservation(
         station_id: stationId,
         vehicle_format_id: vehicleFormatId,
         time_slot_id: timeSlotId,
-        status: STATUS_PENDING,
+        status: STATUS_PENDING_PAYMENT,
         amount_paid: toDecimal(amountTotal),
         commission_rate: commissionRate,
         commission_amount: toDecimal(commissionAmount),
         station_payout: toDecimal(stationPayout),
-        stripe_payment_id: payment.stripePaymentId ?? null,
+        stripe_payment_id: null,
       },
       tx
     );
@@ -101,13 +113,46 @@ export async function createReservation(
     return created;
   });
 
+  // Create Stripe PaymentIntent (outside transaction — Stripe is an external side-effect)
+  // If Stripe fails, rollback the DB entry to avoid orphaned pending_payment entries
+  const amountCents = Math.round(amountTotal * 100);
+  const commissionCents = Math.round(commissionAmount * 100);
+
+  let paymentIntentId: string;
+  let clientSecret: string;
+  try {
+    const result = await createPaymentIntent({
+      amountCents,
+      userId,
+      stationId,
+      stationStripeAccountId,
+      commissionCents,
+      metadata: {
+        reservation_id: entry.id,
+        time_slot_id: timeSlotId,
+        vehicle_format_id: vehicleFormatId,
+      },
+    });
+    paymentIntentId = result.paymentIntentId;
+    clientSecret = result.clientSecret;
+  } catch (stripeError) {
+    // Rollback: cancel entry and decrement slot to avoid orphaned pending_payment
+    await updateEntry(entry.id, { status: STATUS_CANCELLED, cancellation_reason: 'Payment setup failed' });
+    await decrementSlotBookedCount(timeSlotId);
+    throw stripeError;
+  }
+
+  // Persist stripe payment ID on the entry
+  await updateEntry(entry.id, { stripe_payment_id: paymentIntentId });
+
   await notifyEntry({
     entryId: entry.id,
     userId,
     stationId,
     type: 'reservation_created',
   });
-  return entry;
+
+  return { entry: { ...entry, stripe_payment_id: paymentIntentId }, clientSecret };
 }
 
 /**
@@ -133,6 +178,15 @@ export async function cancelEntry(entryId: string, userId: string): Promise<Entr
     return updateEntry(entryId, { status: STATUS_CANCELLED }, tx);
   });
 
+  // Cancel Stripe PaymentIntent if entry was pending payment
+  if (entry.status === STATUS_PENDING_PAYMENT && entry.stripe_payment_id) {
+    try {
+      await cancelPaymentIntent(entry.stripe_payment_id);
+    } catch (e) {
+      console.error('Failed to cancel Stripe PaymentIntent:', entry.stripe_payment_id, e);
+    }
+  }
+
   await notifyEntry({
     entryId,
     userId,
@@ -143,10 +197,23 @@ export async function cancelEntry(entryId: string, userId: string): Promise<Entr
 }
 
 /**
- * Returns all entries (reservations and queue) for the user, most recent first.
+ * Returns paginated entries (reservations and queue) for the user.
  */
-export async function listMyEntries(userId: string): Promise<Entry[]> {
-  return listEntriesByUser(userId);
+export async function listMyEntries(
+  userId: string,
+  filters?: ListEntriesFilters
+): Promise<PaginatedEntries> {
+  return listEntriesByUserPaginated(userId, filters);
+}
+
+/**
+ * Returns paginated entries for the station.
+ */
+export async function listStationEntries(
+  stationId: string,
+  filters?: ListEntriesFilters
+): Promise<PaginatedEntries> {
+  return listEntriesByStationPaginated(stationId, filters);
 }
 
 /**
@@ -164,28 +231,11 @@ export async function upgradeQueueToReservation(
   if (entry.entry_type !== 'queue') throw new ConflictError('Entry is not a queue entry');
   if (entry.station_id !== stationId) throw new NotFoundError('Entry does not belong to this station');
 
-  const slot = await findSlotByIdAndStation(timeSlotId, stationId);
-  if (!slot) throw new NotFoundError('Time slot not found or does not belong to this station');
-  const count = await countReservationsBySlotId(timeSlotId);
-  if (count >= (slot.capacity ?? 0)) throw new ConflictError('Slot is full');
-
-  const config = await getConfigByStationId(stationId);
-  const surcharge = config?.reservation_surcharge
-    ? parseDecimal(String(config.reservation_surcharge))
-    : 0;
-  if (surcharge > 0) {
-    const payment = await processPayment({
-      amountCents: Math.round(surcharge * 100),
-      userId,
-      stationId,
-      entryId,
-      metadata: { time_slot_id: timeSlotId },
-    });
-    if (!payment.success) throw new ConflictError(payment.error ?? 'Payment failed');
-  }
-
-  // Atomic: re-check capacity, shift queue, update entry, increment booked_count.
+  // Atomic: lock slot, verify capacity, shift queue, update entry, increment booked_count.
   const updated = await db.transaction(async (tx) => {
+    const slot = await lockSlotForUpdate(timeSlotId, stationId, tx);
+    if (!slot) throw new NotFoundError('Time slot not found or does not belong to this station');
+
     const count = await countReservationsBySlotId(timeSlotId, tx);
     if (count >= (slot.capacity ?? 0)) throw new ConflictError('Slot is full');
 
@@ -197,7 +247,7 @@ export async function upgradeQueueToReservation(
         entry_type: 'reservation',
         time_slot_id: timeSlotId,
         queue_position: null,
-        status: STATUS_PENDING,
+        status: 'pending',
       },
       tx
     );

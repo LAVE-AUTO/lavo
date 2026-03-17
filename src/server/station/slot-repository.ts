@@ -92,6 +92,23 @@ export async function countReservationsBySlotId(slotId: string, tx?: DbTransacti
 }
 
 /**
+ * Locks a time slot row using SELECT FOR UPDATE within a transaction.
+ * Returns the locked row or undefined if not found.
+ */
+export async function lockSlotForUpdate(
+  slotId: string,
+  stationId: string,
+  tx: DbTransaction
+): Promise<TimeSlot | undefined> {
+  const rows = await tx
+    .select()
+    .from(timeSlots)
+    .where(and(eq(timeSlots.id, slotId), eq(timeSlots.station_id, stationId)))
+    .for('update');
+  return rows[0];
+}
+
+/**
  * Deletes the slot by id. Caller must ensure slot belongs to station and has no reservations.
  */
 export async function deleteSlotById(slotId: string): Promise<void> {

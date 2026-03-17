@@ -1,6 +1,7 @@
 /**
  * POST /api/v1/stations/:id/reservations
  * Create a reservation for the station. Auth: client. Body: time_slot_id, vehicle_format_id.
+ * Returns reservation_id + stripe_client_secret for frontend payment confirmation.
  */
 import { requireRole } from '@/lib/require-role';
 import { successResponse, error400, error404, error409, error500, fromAppError } from '@/lib/responses';
@@ -37,20 +38,36 @@ export async function POST(request: Request, { params }: Params): Promise<NextRe
 
   const station = await findStationById(paramParsed.data.id);
   if (!station || station.status !== 'active') return error404('Station not found or not active');
+  if (!station.stripe_account_id) return error409('Station has no payment account configured', ApiCode.CONFLICT);
 
   try {
-    const entry = await createReservation(
+    const { entry, clientSecret } = await createReservation(
       auth.sub,
       paramParsed.data.id,
+      station.stripe_account_id,
       bodyParsed.data.time_slot_id,
       bodyParsed.data.vehicle_format_id
     );
-    return successResponse(serializeEntry(entry), undefined, 201);
+    return successResponse(
+      {
+        reservation_id: entry.id,
+        stripe_client_secret: clientSecret,
+        ...serializeEntry(entry),
+      },
+      undefined,
+      201
+    );
   } catch (e) {
     if (e instanceof NotFoundError) return error404(e.message);
-    if (e instanceof ConflictError) return error409(e.message, ApiCode.CONFLICT);
+    if (e instanceof ConflictError) {
+      const code = e.message.includes('active reservation')
+        ? ApiCode.ACTIVE_RESERVATION_EXISTS
+        : e.message.includes('full')
+          ? ApiCode.SLOT_FULL
+          : ApiCode.CONFLICT;
+      return error409(e.message, code);
+    }
     if (e instanceof AppError) return fromAppError(e);
     return error500(e);
   }
 }
-

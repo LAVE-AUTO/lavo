@@ -51,6 +51,7 @@ import {
   SEED_CLIENTS,
   SEED_CLIENT_EMAILS,
   SEED_STATION_MANAGER_EMAILS,
+  SEED_STRIPE_ACCOUNT_ID,
 } from "./seed-data";
 
 function getPasswordHash(
@@ -290,6 +291,7 @@ async function seed(): Promise<void> {
             service_scope: station.service_scope,
             status: "active",
             is_open: true,
+            stripe_account_id: SEED_STRIPE_ACCOUNT_ID || null,
             approved_by: adminId,
             approved_at: new Date(),
           })

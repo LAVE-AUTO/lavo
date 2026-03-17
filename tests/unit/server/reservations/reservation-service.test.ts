@@ -3,14 +3,16 @@
  */
 const mockGetConfigByStationId = jest.fn();
 const mockFindFormatByIdAndStation = jest.fn();
-const mockFindSlotByIdAndStation = jest.fn();
+const mockLockSlotForUpdate = jest.fn();
 const mockCountReservationsBySlotId = jest.fn();
 const mockIncrementSlotBookedCount = jest.fn();
-const mockProcessPayment = jest.fn();
+const mockCreatePaymentIntent = jest.fn();
+const mockCancelPaymentIntent = jest.fn();
 const mockNotifyEntry = jest.fn();
 const mockCreateReservationEntry = jest.fn();
 const mockFindEntryByIdAndUser = jest.fn();
-const mockListEntriesByUser = jest.fn();
+const mockListEntriesByUserPaginated = jest.fn();
+const mockHasActiveEntryAtStation = jest.fn();
 const mockUpdateEntry = jest.fn();
 const mockDecrementSlotBookedCount = jest.fn();
 
@@ -21,13 +23,14 @@ jest.mock('@/server/station/format-repository', () => ({
   findFormatByIdAndStation: (...args: unknown[]) => mockFindFormatByIdAndStation(...args),
 }));
 jest.mock('@/server/station/slot-repository', () => ({
-  findSlotByIdAndStation: (...args: unknown[]) => mockFindSlotByIdAndStation(...args),
+  lockSlotForUpdate: (...args: unknown[]) => mockLockSlotForUpdate(...args),
   countReservationsBySlotId: (...args: unknown[]) => mockCountReservationsBySlotId(...args),
   incrementSlotBookedCount: (...args: unknown[]) => mockIncrementSlotBookedCount(...args),
   decrementSlotBookedCount: (...args: unknown[]) => mockDecrementSlotBookedCount(...args),
 }));
 jest.mock('@/server/payments/payment-service', () => ({
-  processPayment: (...args: unknown[]) => mockProcessPayment(...args),
+  createPaymentIntent: (...args: unknown[]) => mockCreatePaymentIntent(...args),
+  cancelPaymentIntent: (...args: unknown[]) => mockCancelPaymentIntent(...args),
 }));
 jest.mock('@/server/notifications/notification-service', () => ({
   notifyEntry: (...args: unknown[]) => mockNotifyEntry(...args),
@@ -35,7 +38,10 @@ jest.mock('@/server/notifications/notification-service', () => ({
 jest.mock('@/server/reservations/entry-repository', () => ({
   createReservationEntry: (...args: unknown[]) => mockCreateReservationEntry(...args),
   findEntryByIdAndUser: (...args: unknown[]) => mockFindEntryByIdAndUser(...args),
-  listEntriesByUser: (...args: unknown[]) => mockListEntriesByUser(...args),
+  findEntryByIdAndStation: jest.fn(),
+  hasActiveEntryAtStation: (...args: unknown[]) => mockHasActiveEntryAtStation(...args),
+  listEntriesByUserPaginated: (...args: unknown[]) => mockListEntriesByUserPaginated(...args),
+  listEntriesByStationPaginated: jest.fn(),
   updateEntry: (...args: unknown[]) => mockUpdateEntry(...args),
   shiftQueuePositions: jest.fn(),
 }));
@@ -50,6 +56,7 @@ import { NotFoundError, ConflictError } from '@/lib/errors';
 
 const userId = 'user-1';
 const stationId = 'station-1';
+const stripeAccountId = 'acct_station1';
 const slotId = 'slot-1';
 const formatId = 'format-1';
 const entryId = 'entry-1';
@@ -57,52 +64,90 @@ const entryId = 'entry-1';
 describe('reservation-service', () => {
   beforeEach(() => {
     jest.clearAllMocks();
+    mockHasActiveEntryAtStation.mockResolvedValue(false);
   });
 
   describe('createReservation', () => {
-    it('throws NotFoundError when slot not found', async () => {
-      mockFindSlotByIdAndStation.mockResolvedValue(undefined);
+    it('throws NotFoundError when format not found', async () => {
+      mockFindFormatByIdAndStation.mockResolvedValue(undefined);
       await expect(
-        createReservation(userId, stationId, slotId, formatId)
+        createReservation(userId, stationId, stripeAccountId, slotId, formatId)
       ).rejects.toThrow(NotFoundError);
       expect(mockCreateReservationEntry).not.toHaveBeenCalled();
     });
 
-    it('throws NotFoundError when format not found', async () => {
-      mockFindSlotByIdAndStation.mockResolvedValue({ id: slotId, capacity: 2 });
-      mockFindFormatByIdAndStation.mockResolvedValue(undefined);
+    it('throws ConflictError when user has active entry at station', async () => {
+      mockFindFormatByIdAndStation.mockResolvedValue({ id: formatId, price: '10', is_active: true });
+      mockGetConfigByStationId.mockResolvedValue({ reservation_surcharge: '2' });
+      mockHasActiveEntryAtStation.mockResolvedValue(true);
       await expect(
-        createReservation(userId, stationId, slotId, formatId)
+        createReservation(userId, stationId, stripeAccountId, slotId, formatId)
+      ).rejects.toThrow(ConflictError);
+      expect(mockCreateReservationEntry).not.toHaveBeenCalled();
+    });
+
+    it('throws NotFoundError when slot not found (inside transaction)', async () => {
+      mockFindFormatByIdAndStation.mockResolvedValue({ id: formatId, price: '10', is_active: true });
+      mockGetConfigByStationId.mockResolvedValue({ reservation_surcharge: '2' });
+      mockLockSlotForUpdate.mockResolvedValue(undefined);
+      await expect(
+        createReservation(userId, stationId, stripeAccountId, slotId, formatId)
       ).rejects.toThrow(NotFoundError);
       expect(mockCreateReservationEntry).not.toHaveBeenCalled();
     });
 
     it('throws ConflictError when slot is full', async () => {
-      mockFindSlotByIdAndStation.mockResolvedValue({ id: slotId, capacity: 1 });
       mockFindFormatByIdAndStation.mockResolvedValue({ id: formatId, price: '10', is_active: true });
       mockGetConfigByStationId.mockResolvedValue({ reservation_surcharge: '2' });
+      mockLockSlotForUpdate.mockResolvedValue({ id: slotId, capacity: 1 });
       mockCountReservationsBySlotId.mockResolvedValue(1);
       await expect(
-        createReservation(userId, stationId, slotId, formatId)
+        createReservation(userId, stationId, stripeAccountId, slotId, formatId)
       ).rejects.toThrow(ConflictError);
       expect(mockCreateReservationEntry).not.toHaveBeenCalled();
     });
 
-    it('creates entry and increments slot when payment succeeds', async () => {
-      mockFindSlotByIdAndStation.mockResolvedValue({ id: slotId, capacity: 2 });
+    it('creates entry with pending_payment status and returns client_secret', async () => {
       mockFindFormatByIdAndStation.mockResolvedValue({ id: formatId, price: '10', is_active: true });
       mockGetConfigByStationId.mockResolvedValue({ reservation_surcharge: '2' });
+      mockLockSlotForUpdate.mockResolvedValue({ id: slotId, capacity: 2 });
       mockCountReservationsBySlotId.mockResolvedValue(0);
-      mockProcessPayment.mockResolvedValue({ success: true, stripePaymentId: 'pi_1' });
-      const created = { id: entryId, entry_type: 'reservation', time_slot_id: slotId };
+      const created = { id: entryId, entry_type: 'reservation', time_slot_id: slotId, stripe_payment_id: null };
       mockCreateReservationEntry.mockResolvedValue(created);
+      mockCreatePaymentIntent.mockResolvedValue({
+        paymentIntentId: 'pi_123',
+        clientSecret: 'pi_123_secret_abc',
+      });
+      mockUpdateEntry.mockResolvedValue({ ...created, stripe_payment_id: 'pi_123' });
 
-      const result = await createReservation(userId, stationId, slotId, formatId);
-      expect(result).toEqual(created);
+      const result = await createReservation(userId, stationId, stripeAccountId, slotId, formatId);
+      expect(result.clientSecret).toBe('pi_123_secret_abc');
+      expect(result.entry.stripe_payment_id).toBe('pi_123');
       expect(mockIncrementSlotBookedCount).toHaveBeenCalledWith(slotId, expect.anything());
+      expect(mockCreateReservationEntry).toHaveBeenCalledWith(
+        expect.objectContaining({ status: 'pending_payment' }),
+        expect.anything()
+      );
       expect(mockNotifyEntry).toHaveBeenCalledWith(
         expect.objectContaining({ entryId, type: 'reservation_created' })
       );
+    });
+
+    it('rolls back entry and decrements slot when Stripe fails', async () => {
+      mockFindFormatByIdAndStation.mockResolvedValue({ id: formatId, price: '10', is_active: true });
+      mockGetConfigByStationId.mockResolvedValue({ reservation_surcharge: '2' });
+      mockLockSlotForUpdate.mockResolvedValue({ id: slotId, capacity: 2 });
+      mockCountReservationsBySlotId.mockResolvedValue(0);
+      const created = { id: entryId, entry_type: 'reservation', time_slot_id: slotId, stripe_payment_id: null };
+      mockCreateReservationEntry.mockResolvedValue(created);
+      mockCreatePaymentIntent.mockRejectedValue(new Error('Stripe unavailable'));
+      mockUpdateEntry.mockResolvedValue({ ...created, status: 'cancelled' });
+
+      await expect(
+        createReservation(userId, stationId, stripeAccountId, slotId, formatId)
+      ).rejects.toThrow('Stripe unavailable');
+      expect(mockUpdateEntry).toHaveBeenCalledWith(entryId, expect.objectContaining({ status: 'cancelled' }));
+      expect(mockDecrementSlotBookedCount).toHaveBeenCalledWith(slotId);
     });
   });
 
@@ -131,12 +176,12 @@ describe('reservation-service', () => {
   });
 
   describe('listMyEntries', () => {
-    it('returns list from repository', async () => {
-      const entries = [{ id: entryId, entry_type: 'reservation' }];
-      mockListEntriesByUser.mockResolvedValue(entries);
+    it('returns paginated list from repository', async () => {
+      const paginated = { rows: [{ id: entryId }], total: 1, page: 1, per_page: 20 };
+      mockListEntriesByUserPaginated.mockResolvedValue(paginated);
       const result = await listMyEntries(userId);
-      expect(result).toEqual(entries);
-      expect(mockListEntriesByUser).toHaveBeenCalledWith(userId);
+      expect(result).toEqual(paginated);
+      expect(mockListEntriesByUserPaginated).toHaveBeenCalledWith(userId, undefined);
     });
   });
 });
