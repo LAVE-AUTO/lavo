@@ -87,3 +87,13 @@ export class TokenExpiredError extends AppError {
     super(message, HTTP_STATUS.BAD_REQUEST);
   }
 }
+
+/**
+ * Not implemented error (501).
+ * Used for endpoints or service methods that are stubs pending implementation.
+ */
+export class NotImplementedError extends AppError {
+  constructor(message = 'Not implemented') {
+    super(message, HTTP_STATUS.NOT_IMPLEMENTED);
+  }
+}

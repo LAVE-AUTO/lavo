@@ -3,9 +3,17 @@
  * Stripe webhook handler for payment events.
  * Validates signature, then dispatches to the appropriate handler.
  *
+ * Payment flow with capture_method: 'manual':
+ *   1. Client confirms payment on frontend → Stripe authorizes (blocks) the funds.
+ *   2. payment_intent.amount_capturable_updated → reservation confirmed (funds blocked, not yet captured).
+ *   3. Station marks service complete (or cron detects late client) → our code calls capture().
+ *   4. payment_intent.succeeded → fires after capture; funds distributed. No action needed here.
+ *
  * Handled events:
- * - payment_intent.succeeded → confirm reservation (status: confirmed)
+ * - payment_intent.amount_capturable_updated → confirm reservation (status: confirmed)
  * - payment_intent.payment_failed → cancel reservation, decrement booked_count
+ * - payment_intent.canceled → cancel reservation, decrement booked_count
+ * - payment_intent.succeeded → no-op (capture already handled by service layer)
  */
 import { NextResponse } from 'next/server';
 import { stripe } from '@/lib/stripe';
@@ -44,11 +52,18 @@ export async function POST(request: Request): Promise<NextResponse> {
   // Wrap handlers in try/catch — always return 200 to prevent Stripe retries on transient errors
   try {
     switch (event.type) {
-      case 'payment_intent.succeeded':
-        await handlePaymentSucceeded(event.data.object.id);
+      case 'payment_intent.amount_capturable_updated':
+        await handlePaymentAuthorized(event.data.object.id);
         break;
       case 'payment_intent.payment_failed':
-        await handlePaymentFailed(event.data.object.id);
+        await handlePaymentCancelled(event.data.object.id, 'Payment failed');
+        break;
+      case 'payment_intent.canceled':
+        await handlePaymentCancelled(event.data.object.id, 'Payment cancelled');
+        break;
+      case 'payment_intent.succeeded':
+        // Fired after our manual capture — distribution is already handled by Stripe.
+        // No action needed; captured as a no-op for observability.
         break;
       default:
         break;
@@ -61,10 +76,11 @@ export async function POST(request: Request): Promise<NextResponse> {
 }
 
 /**
- * Confirms the reservation when payment succeeds.
- * Sets status to 'confirmed' and records confirmed_at timestamp.
+ * Confirms the reservation when the client's card authorization succeeds.
+ * Fires on payment_intent.amount_capturable_updated — funds are blocked on the client's card
+ * but not yet captured. Capture happens later when the station marks the service complete.
  */
-async function handlePaymentSucceeded(paymentIntentId: string): Promise<void> {
+async function handlePaymentAuthorized(paymentIntentId: string): Promise<void> {
   const entry = await findEntryByStripePaymentId(paymentIntentId);
   if (!entry) {
     console.warn(`Webhook: no entry found for PaymentIntent ${paymentIntentId}`);
@@ -87,10 +103,10 @@ async function handlePaymentSucceeded(paymentIntentId: string): Promise<void> {
 }
 
 /**
- * Cancels the reservation when payment fails.
+ * Cancels the reservation when the payment fails or is cancelled by Stripe.
  * Sets status to 'cancelled' and decrements slot booked_count atomically.
  */
-async function handlePaymentFailed(paymentIntentId: string): Promise<void> {
+async function handlePaymentCancelled(paymentIntentId: string, reason: string): Promise<void> {
   const entry = await findEntryByStripePaymentId(paymentIntentId);
   if (!entry) {
     console.warn(`Webhook: no entry found for PaymentIntent ${paymentIntentId}`);
@@ -102,7 +118,7 @@ async function handlePaymentFailed(paymentIntentId: string): Promise<void> {
   await db.transaction(async (tx) => {
     await updateEntry(entry.id, {
       status: 'cancelled',
-      cancellation_reason: 'Payment failed',
+      cancellation_reason: reason,
     }, tx);
 
     if (entry.time_slot_id) {

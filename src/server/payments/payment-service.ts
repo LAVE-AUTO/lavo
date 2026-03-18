@@ -4,6 +4,7 @@
  * The station's stripe_account_id is used as the connected account (destination).
  */
 import { stripe } from '@/lib/stripe';
+import { NotImplementedError } from '@/lib/errors';
 
 // ─── Legacy queue payment (immediate charge) ────────────────────────────────
 
@@ -24,16 +25,14 @@ export type ProcessPaymentResult = {
 
 /**
  * Processes an immediate payment for queue entries.
- * Creates and immediately confirms a PaymentIntent (no client_secret flow).
  * TODO: Wire real Stripe confirm flow when queue payment UX is defined.
+ * Until then, this throws NotImplementedError so the join-queue endpoint
+ * returns a 501 instead of silently accepting unpaid entries.
  */
 export async function processPayment(
   _params: ProcessPaymentParams
 ): Promise<ProcessPaymentResult> {
-  return {
-    success: true,
-    stripePaymentId: `pi_stub_${Date.now()}`,
-  };
+  throw new NotImplementedError('Queue payment is not yet implemented');
 }
 
 // ─── Reservation payment (Stripe Connect with client_secret) ─────────────────
@@ -54,8 +53,11 @@ export type CreatePaymentIntentResult = {
 };
 
 /**
- * Creates a Stripe Connect PaymentIntent with automatic transfer to the station's connected account.
- * The platform keeps the application_fee_amount (commission).
+ * Creates a Stripe Connect PaymentIntent with manual capture.
+ * The client's card is authorized (funds blocked) at booking time.
+ * The actual capture — which transfers (amount - application_fee) to the station and retains
+ * the commission for the platform — is triggered only when the service is marked as completed
+ * or when the client is detected as late (no refund in the late case).
  */
 export async function createPaymentIntent(
   params: CreatePaymentIntentParams
@@ -71,6 +73,7 @@ export async function createPaymentIntent(
   const paymentIntent = await stripe.paymentIntents.create({
     amount: amountCents,
     currency,
+    capture_method: 'manual',
     application_fee_amount: commissionCents,
     transfer_data: {
       destination: stationStripeAccountId,
@@ -91,6 +94,16 @@ export async function createPaymentIntent(
     paymentIntentId: paymentIntent.id,
     clientSecret: paymentIntent.client_secret,
   };
+}
+
+/**
+ * Captures a previously authorized PaymentIntent.
+ * Triggers fund distribution: station receives (amount - application_fee), platform retains the commission.
+ * Called when a reservation is marked as completed by the station, or when a client is detected as late
+ * (no refund — distribution proceeds as if the service was rendered).
+ */
+export async function capturePaymentIntent(paymentIntentId: string): Promise<void> {
+  await stripe.paymentIntents.capture(paymentIntentId);
 }
 
 /**

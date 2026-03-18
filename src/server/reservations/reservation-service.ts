@@ -4,7 +4,7 @@
  * Stripe PaymentIntent (Connect), and notification stubs.
  */
 import { NotFoundError, ConflictError } from '@/lib/errors';
-import { DEFAULT_COMMISSION_RATE } from '@/helpers/constants';
+import { DEFAULT_COMMISSION_RATE, MAX_ADVANCE_BOOKING_DAYS } from '@/helpers/constants';
 import { db } from '@/lib/db';
 import { getConfigByStationId } from '@/server/station/config-repository';
 import { findFormatByIdAndStation } from '@/server/station/format-repository';
@@ -14,7 +14,7 @@ import {
   incrementSlotBookedCount,
   decrementSlotBookedCount,
 } from '@/server/station/slot-repository';
-import { createPaymentIntent, cancelPaymentIntent } from '@/server/payments/payment-service';
+import { createPaymentIntent, cancelPaymentIntent, capturePaymentIntent } from '@/server/payments/payment-service';
 import { notifyEntry } from '@/server/notifications/notification-service';
 import {
   createReservationEntry,
@@ -90,6 +90,12 @@ export async function createReservation(
 
     const slot = await lockSlotForUpdate(timeSlotId, stationId, tx);
     if (!slot) throw new NotFoundError('Time slot not found or does not belong to this station');
+
+    // Stripe card authorizations expire after 7 days — reject bookings beyond this window.
+    const maxAdvanceMs = MAX_ADVANCE_BOOKING_DAYS * 24 * 60 * 60 * 1000;
+    if (slot.start_time.getTime() - Date.now() > maxAdvanceMs) {
+      throw new ConflictError(`Reservations cannot be made more than ${MAX_ADVANCE_BOOKING_DAYS} days in advance`);
+    }
 
     const count = await countReservationsBySlotId(timeSlotId, tx);
     if (count >= (slot.capacity ?? 0)) throw new ConflictError('Slot is full');
@@ -280,7 +286,11 @@ export async function upgradeQueueToReservation(
 
 /**
  * Updates an entry's status (station only). Used by PATCH /station/entries/:entryId.
- * On status completed, triggers invitation_to_rate notification.
+ * On status completed:
+ *   - Captures the Stripe PaymentIntent (reservation entries only) to distribute funds.
+ *   - Triggers invitation_to_rate notification.
+ * If the Stripe capture fails, the entry is still marked completed and the error is logged
+ * for manual resolution (the service was rendered).
  */
 export async function setEntryStatusByStation(
   entryId: string,
@@ -295,6 +305,19 @@ export async function setEntryStatusByStation(
     updated_at: new Date(),
   });
   if (status === 'completed') {
+    // Capture the payment for reservation entries (distributes funds to station + platform).
+    // Queue (walk-in) entries have no stripe_payment_id and are skipped.
+    if (entry.entry_type === 'reservation' && entry.stripe_payment_id) {
+      try {
+        await capturePaymentIntent(entry.stripe_payment_id);
+      } catch (e) {
+        console.error('[CAPTURE_FAILED] Service completed but Stripe capture failed — manual resolution required', {
+          entryId,
+          stripe_payment_id: entry.stripe_payment_id,
+          error: e instanceof Error ? e.message : String(e),
+        });
+      }
+    }
     await notifyEntry({
       entryId,
       userId: entry.user_id,

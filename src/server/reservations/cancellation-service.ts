@@ -110,7 +110,13 @@ export async function cancelReservation(
       );
       await updateEntry(reservationId, { stripe_refund_id: refundId });
     } catch (e) {
-      console.error('Stripe refund failed for reservation', reservationId, e);
+      // Cancellation is already committed — log for manual resolution.
+      console.error('[REFUND_FAILED]', {
+        reservationId,
+        stripe_payment_id: reservation.stripe_payment_id,
+        refunded_amount_cents: Math.round(refundedAmount * 100),
+        error: e instanceof Error ? e.message : String(e),
+      });
     }
   }
 
@@ -123,7 +129,12 @@ export async function cancelReservation(
         policy.stationPenaltyShare
       );
     } catch (e) {
-      console.error('Stripe penalty distribution failed for reservation', reservationId, e);
+      console.error('[PENALTY_DISTRIBUTION_FAILED]', {
+        reservationId,
+        stripe_payment_id: reservation.stripe_payment_id,
+        penalty_amount_cents: Math.round(penaltyAmount * 100),
+        error: e instanceof Error ? e.message : String(e),
+      });
     }
   }
 

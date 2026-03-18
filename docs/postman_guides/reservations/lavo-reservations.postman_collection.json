@@ -1392,10 +1392,10 @@
     },
     {
       "name": "Webhook Stripe",
-      "description": "POST /api/v1/webhooks/stripe — Webhook Stripe pour les evenements de paiement.\n\nNecessite STRIPE_WEBHOOK_SECRET dans .env.\nUtiliser `stripe listen --forward-to localhost:3000/api/v1/webhooks/stripe` en dev.",
+      "description": "POST /api/v1/webhooks/stripe — Webhook Stripe pour les evenements de paiement.\n\nFlux avec capture_method: 'manual' :\n  1. Client confirme le paiement cote frontend → autorisation carte (fonds bloques).\n  2. payment_intent.amount_capturable_updated → reservation confirmee (status: confirmed).\n  3. Station marque le service comme complete (ou cron late) → notre code appelle capture().\n  4. payment_intent.succeeded → fonds distribues par Stripe. Aucune action de notre cote.\n\nNecessite STRIPE_WEBHOOK_SECRET dans .env.\nUtiliser `stripe listen --forward-to localhost:3000/api/v1/webhooks/stripe` en dev.",
       "item": [
         {
-          "name": "Webhook — payment_intent.succeeded (simulation)",
+          "name": "Webhook — payment_intent.amount_capturable_updated (confirmation)",
           "event": [
             {
               "listen": "test",
@@ -1443,6 +1443,62 @@
             },
             "body": {
               "mode": "raw",
+              "raw": "{\n  \"type\": \"payment_intent.amount_capturable_updated\",\n  \"data\": {\n    \"object\": {\n      \"id\": \"pi_test_123\",\n      \"status\": \"requires_capture\",\n      \"amount_capturable\": 2000\n    }\n  }\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "description": "Declenche quand le client a autorise le paiement (carte debitee en attente). La reservation passe en status 'confirmed'.\n\nAvec capture_method: 'manual', les fonds sont bloques sur la carte mais pas encore captures. La capture (et donc la distribution des fonds) n'a lieu que quand la station marque le service comme complete.\n\nPour tester en dev :\n```\nstripe listen --forward-to localhost:3000/api/v1/webhooks/stripe\n```\nPuis copiez le webhook signing secret dans STRIPE_WEBHOOK_SECRET."
+          }
+        },
+        {
+          "name": "Webhook — payment_intent.succeeded (capture effectuee — no-op)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Webhook recu', () => {",
+                  "  pm.expect(pm.response.code).to.be.oneOf([200, 400]);",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "response": [],
+          "request": {
+            "auth": {
+              "type": "noauth"
+            },
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "stripe-signature",
+                "value": "t=1234567890,v1=fake_signature",
+                "description": "Signature Stripe (invalide en l'etat — utiliser stripe CLI pour tester)"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/webhooks/stripe",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "webhooks",
+                "stripe"
+              ]
+            },
+            "body": {
+              "mode": "raw",
               "raw": "{\n  \"type\": \"payment_intent.succeeded\",\n  \"data\": {\n    \"object\": {\n      \"id\": \"pi_test_123\",\n      \"status\": \"succeeded\"\n    }\n  }\n}",
               "options": {
                 "raw": {
@@ -1450,7 +1506,7 @@
                 }
               }
             },
-            "description": "Simulation d'un webhook payment_intent.succeeded. En production, Stripe signe les requetes et le handler verifie la signature.\n\nPour tester en dev :\n```\nstripe listen --forward-to localhost:3000/api/v1/webhooks/stripe\n```\nPuis copiez le webhook signing secret dans STRIPE_WEBHOOK_SECRET."
+            "description": "Declenche apres la capture manuelle effectuee par notre code (service complete ou client late). Les fonds sont distribues par Stripe automatiquement (station reçoit le payout, plateforme conserve la commission).\n\nAucune action de notre cote — cet evenement est reçu a titre informatif uniquement."
           }
         },
         {

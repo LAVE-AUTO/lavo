@@ -54,6 +54,7 @@ export const HTTP_STATUS = {
   CONFLICT: 409,
   TOO_MANY_REQUESTS: 429,
   SERVER_ERROR: 500,
+  NOT_IMPLEMENTED: 501,
 } as const;
 
 export const ACCESS_COOKIE_NAME = 'access_token';
@@ -69,3 +70,10 @@ export const RATE_LIMIT_BLOCK_MINUTES = 15;
 
 /** Default platform commission rate applied to reservations (10%). */
 export const DEFAULT_COMMISSION_RATE = '0.1000';
+
+/**
+ * Maximum number of days in advance a reservation can be booked.
+ * Stripe card authorizations expire after 7 days — bookings beyond this window
+ * would result in an expired authorization before service completion.
+ */
+export const MAX_ADVANCE_BOOKING_DAYS = 7;

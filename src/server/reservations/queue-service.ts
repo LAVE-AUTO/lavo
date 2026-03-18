@@ -7,6 +7,7 @@ import { NotFoundError, ConflictError } from '@/lib/errors';
 import { db } from '@/lib/db';
 import { findFormatByIdAndStation } from '@/server/station/format-repository';
 import { decrementSlotBookedCount } from '@/server/station/slot-repository';
+import { capturePaymentIntent } from '@/server/payments/payment-service';
 import { notifyEntry } from '@/server/notifications/notification-service';
 import { getQueuePositionWhenMovingFromReservation } from './queue-position-helper';
 import {
@@ -69,6 +70,10 @@ export async function listQueue(stationId: string): Promise<Entry[]> {
 /**
  * Moves a reservation to the queue (downgrade). Used by cron for late unconfirmed reservations.
  * Uses queue-position helper for new position; shifts existing queue entries; decrements slot booked_count.
+ *
+ * Payment policy for late clients: no refund — the Stripe PaymentIntent is captured immediately so
+ * funds are distributed between the station and the platform as if the service had been rendered.
+ * The client is moved to the walk-in queue and handled later by the station.
  */
 export async function moveReservationToQueue(entryId: string): Promise<Entry> {
   const entry = await findEntryById(entryId);
@@ -91,6 +96,21 @@ export async function moveReservationToQueue(entryId: string): Promise<Entry> {
     updated_at: new Date(),
   });
   await decrementSlotBookedCount(entry.time_slot_id);
+
+  // Capture the payment immediately — no refund for late clients.
+  // Distribution (station payout + platform commission) happens at capture time.
+  if (entry.stripe_payment_id) {
+    try {
+      await capturePaymentIntent(entry.stripe_payment_id);
+    } catch (e) {
+      console.error('[CAPTURE_FAILED] Late entry moved to queue but Stripe capture failed — manual resolution required', {
+        entryId,
+        stripe_payment_id: entry.stripe_payment_id,
+        error: e instanceof Error ? e.message : String(e),
+      });
+    }
+  }
+
   await notifyEntry({
     entryId,
     userId: entry.user_id,
