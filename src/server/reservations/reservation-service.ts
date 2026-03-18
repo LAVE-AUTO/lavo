@@ -4,7 +4,8 @@
  * Stripe PaymentIntent (Connect), and notification stubs.
  */
 import { NotFoundError, ConflictError } from '@/lib/errors';
-import { DEFAULT_COMMISSION_RATE, MAX_ADVANCE_BOOKING_DAYS } from '@/helpers/constants';
+import { MAX_ADVANCE_BOOKING_DAYS } from '@/helpers/constants';
+import { getActiveCommissionRate } from '@/server/admin/platform-settings-service';
 import { db } from '@/lib/db';
 import { getConfigByStationId } from '@/server/station/config-repository';
 import { findFormatByIdAndStation } from '@/server/station/format-repository';
@@ -91,7 +92,7 @@ export async function createReservation(
   const amountTotal = formatPrice + surcharge;
   if (amountTotal <= 0) throw new ConflictError('Invalid amount');
 
-  const commissionRate = DEFAULT_COMMISSION_RATE;
+  const commissionRate = await getActiveCommissionRate();
   const commissionAmount = amountTotal * parseFloat(commissionRate);
   const stationPayout = amountTotal - commissionAmount;
 
@@ -315,7 +316,7 @@ export async function upgradeQueueToReservation(
   const amountTotal = formatPrice + surcharge;
   if (amountTotal <= 0) throw new ConflictError('Invalid amount');
 
-  const commissionRate = DEFAULT_COMMISSION_RATE;
+  const commissionRate = await getActiveCommissionRate();
   const commissionAmount = amountTotal * parseFloat(commissionRate);
   const stationPayout = amountTotal - commissionAmount;
 
