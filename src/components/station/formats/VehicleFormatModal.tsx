@@ -41,7 +41,7 @@ export function VehicleFormatModal({ format, existingFormats, onClose, onSaved }
   function validatePrice(v: string): boolean {
     const n = parseFloat(v);
     if (!v || isNaN(n) || n <= 0) {
-      setPriceError(locale === 'en' ? 'Price must be greater than 0' : 'Le prix doit être supérieur à 0');
+      setPriceError(t('price_error_positive'));
       return false;
     }
     setPriceError(null);
@@ -106,7 +106,7 @@ export function VehicleFormatModal({ format, existingFormats, onClose, onSaved }
               </div>
               {!isEdit && (
                 <div className="mt-0.5 text-[11px] text-[#BBBBAA] dark:text-[#4A4A3A]">
-                  {locale === 'en' ? 'Choose a vehicle type and set its base price' : 'Choisissez un type de véhicule et définissez son prix de base'}
+                  {t('format_choose_vehicle')}
                 </div>
               )}
             </div>
@@ -114,7 +114,7 @@ export function VehicleFormatModal({ format, existingFormats, onClose, onSaved }
               type="button"
               onClick={onClose}
               className="flex h-7 w-7 items-center justify-center rounded-full text-[#999] transition-colors hover:bg-[#F0EDE4] hover:text-[#333] dark:text-[#5A5A4A] dark:hover:bg-[#243020] dark:hover:text-[#F0EDD4]"
-              aria-label="Fermer"
+              aria-label={t('aria_close')}
             >
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.5}>
                 <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
@@ -141,7 +141,7 @@ export function VehicleFormatModal({ format, existingFormats, onClose, onSaved }
                   <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.5}>
                     <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v4m0 4h.01M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z" />
                   </svg>
-                  {locale === 'en' ? 'This format already exists' : 'Ce format existe déjà'}
+                  {t('format_already_exists')}
                 </p>
               )}
             </div>
@@ -221,10 +221,8 @@ export function VehicleFormatModal({ format, existingFormats, onClose, onSaved }
       {/* Confirmation dialog for edits */}
       <ConfirmDialog
         open={confirmOpen}
-        title={locale === 'en' ? 'Save changes?' : 'Enregistrer les modifications ?'}
-        message={locale === 'en'
-          ? `Update "${label.trim()}" to $${parseFloat(price || '0').toFixed(2)} CAD?`
-          : `Mettre à jour "${label.trim()}" à ${parseFloat(price || '0').toFixed(2)} $ CAD ?`}
+        title={t('confirm_save_title')}
+        message={t('confirm_save_message', { name: label.trim(), price: parseFloat(price || '0').toFixed(2) })}
         confirmLabel={t('btn_save')}
         cancelLabel={t('btn_cancel')}
         variant="default"

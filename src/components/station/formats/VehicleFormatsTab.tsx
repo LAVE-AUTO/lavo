@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useCallback, useRef, useEffect } from 'react';
-import { useTranslations, useLocale } from 'next-intl';
+import { useTranslations } from 'next-intl';
 import { patchWithApi, deleteWithApi } from '@/services';
 import { ConfirmDialog } from '@/components/ui/ConfirmDialog';
 import type { VehicleFormat } from './types';
@@ -31,7 +31,6 @@ interface ToggleState { format: VehicleFormat }
 
 export function VehicleFormatsTab({ formats, onAdd, onUpdate, onDelete }: Props) {
   const t = useTranslations('station_services');
-  const locale = useLocale();
   const [modal, setModal] = useState<VehicleFormat | null | 'new'>(null);
   const [toggling, setToggling] = useState<string | null>(null);
 
@@ -152,7 +151,7 @@ export function VehicleFormatsTab({ formats, onAdd, onUpdate, onDelete }: Props)
                   onClick={() => setModal(format)}
                   disabled={busy}
                   className="shrink-0 rounded-[8px] border border-[#D8D4C8] p-1.5 text-[#888] transition-colors hover:border-[#C49A1E] hover:text-[#C49A1E] disabled:opacity-40 dark:border-[#243020] dark:text-[#6A6A5A]"
-                  aria-label="Modifier"
+                  aria-label={t('aria_edit')}
                 >
                   <PencilIcon />
                 </button>
@@ -163,7 +162,7 @@ export function VehicleFormatsTab({ formats, onAdd, onUpdate, onDelete }: Props)
                   onClick={() => setDeleteState({ format, loading: false })}
                   disabled={busy}
                   className="shrink-0 rounded-[8px] border border-[#D8D4C8] p-1.5 text-[#888] transition-colors hover:border-[#EF4444] hover:text-[#EF4444] disabled:opacity-40 dark:border-[#243020] dark:text-[#6A6A5A]"
-                  aria-label="Supprimer"
+                  aria-label={t('aria_delete')}
                 >
                   {deleteState?.format.id === format.id && deleteState.loading ? (
                     <span className="block h-3.5 w-3.5 animate-spin rounded-full border-2 border-current border-t-transparent" />
@@ -194,13 +193,9 @@ export function VehicleFormatsTab({ formats, onAdd, onUpdate, onDelete }: Props)
       {/* Delete confirmation */}
       <ConfirmDialog
         open={deleteState !== null}
-        title={locale === 'en' ? 'Delete this format?' : 'Supprimer ce format ?'}
-        message={deleteState
-          ? (locale === 'en'
-            ? `"${deleteState.format.label}" will be permanently deleted.`
-            : `"${deleteState.format.label}" sera définitivement supprimé.`)
-          : ''}
-        confirmLabel={locale === 'en' ? 'Delete' : 'Supprimer'}
+        title={t('confirm_delete_format_title')}
+        message={deleteState ? t('confirm_delete_format_message', { name: deleteState.format.label }) : ''}
+        confirmLabel={t('confirm_delete_format_label')}
         cancelLabel={t('btn_cancel')}
         variant="danger"
         loading={deleteState?.loading ?? false}
@@ -212,22 +207,14 @@ export function VehicleFormatsTab({ formats, onAdd, onUpdate, onDelete }: Props)
       <ConfirmDialog
         open={toggleState !== null}
         title={toggleState
-          ? (toggleState.format.is_active
-            ? (locale === 'en' ? 'Deactivate this format?' : 'Désactiver ce format ?')
-            : (locale === 'en' ? 'Activate this format?' : 'Activer ce format ?'))
+          ? (toggleState.format.is_active ? t('confirm_deactivate_format_title') : t('confirm_activate_format_title'))
           : ''}
         message={toggleState
           ? (toggleState.format.is_active
-            ? (locale === 'en'
-              ? `"${toggleState.format.label}" will no longer appear in services.`
-              : `"${toggleState.format.label}" ne sera plus proposé dans les services.`)
-            : (locale === 'en'
-              ? `"${toggleState.format.label}" will be available again in services.`
-              : `"${toggleState.format.label}" sera à nouveau disponible dans les services.`))
+            ? t('confirm_deactivate_format_message', { name: toggleState.format.label })
+            : t('confirm_activate_format_message', { name: toggleState.format.label }))
           : ''}
-        confirmLabel={toggleState?.format.is_active
-          ? (locale === 'en' ? 'Deactivate' : 'Désactiver')
-          : (locale === 'en' ? 'Activate' : 'Activer')}
+        confirmLabel={toggleState?.format.is_active ? t('confirm_deactivate_format_label') : t('confirm_activate_format_label')}
         cancelLabel={t('btn_cancel')}
         variant={toggleState?.format.is_active ? 'warning' : 'default'}
         onConfirm={confirmToggle}

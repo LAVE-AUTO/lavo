@@ -68,7 +68,10 @@ export function ServiceModal({ service, vehicleFormats, onClose, onSaved }: Prop
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
-    if (!name.trim()) return;
+    if (!name.trim()) {
+      setError(t('name_required'));
+      return;
+    }
     setSaving(true);
     setError(null);
 
@@ -99,7 +102,7 @@ export function ServiceModal({ service, vehicleFormats, onClose, onSaved }: Prop
             type="button"
             onClick={onClose}
             className="flex h-7 w-7 items-center justify-center rounded-full text-[#999] transition-colors hover:bg-[#F0EDE4] hover:text-[#333] dark:text-[#5A5A4A] dark:hover:bg-[#243020] dark:hover:text-[#F0EDD4]"
-            aria-label="Fermer"
+            aria-label={t('aria_close')}
           >
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.5}>
               <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />

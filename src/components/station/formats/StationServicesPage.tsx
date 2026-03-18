@@ -32,15 +32,22 @@ export function StationServicesPage() {
   const [formats, setFormats] = useState<VehicleFormat[]>([]);
   const [extras, setExtras] = useState<StationExtras>(INITIAL_EXTRAS);
   const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState(false);
   const [serviceModal, setServiceModal] = useState<Service | null | 'new'>(null);
 
   const loadData = useCallback(async () => {
+    setLoading(true);
+    setLoadError(false);
     const [meOk, meData] = await getFromApi('/station/me');
-    if (meOk) {
-      const stationId = (meData as StationMeData).data.id;
-      const [formatsOk, formatsData] = await getFromApi(`/stations/${stationId}/formats`);
-      if (formatsOk) setFormats((formatsData as FormatsData).data);
+    if (!meOk) {
+      setLoadError(true);
+      setLoading(false);
+      return;
     }
+    const stationId = (meData as StationMeData).data.id;
+    const [formatsOk, formatsData] = await getFromApi(`/stations/${stationId}/formats`);
+    if (formatsOk) setFormats((formatsData as FormatsData).data);
+    else setLoadError(true);
     setLoading(false);
   }, []);
 
@@ -77,6 +84,21 @@ export function StationServicesPage() {
     return (
       <div className="flex flex-1 items-center justify-center text-[13px] text-[#666] dark:text-[#8A8A7A]">
         {t('loading')}
+      </div>
+    );
+  }
+
+  if (loadError) {
+    return (
+      <div className="flex flex-1 flex-col items-center justify-center gap-3 text-center">
+        <span className="text-[14px] font-semibold text-[#999] dark:text-[#6A6A5A]">{t('load_error')}</span>
+        <button
+          type="button"
+          onClick={loadData}
+          className="rounded-[10px] border border-[#C49A1E]/50 px-4 py-2 text-[13px] font-semibold text-[#C49A1E] transition-all hover:border-[#C49A1E] hover:bg-[#FDF8EC] dark:hover:bg-[#1A1A08]"
+        >
+          {t('btn_retry')}
+        </button>
       </div>
     );
   }

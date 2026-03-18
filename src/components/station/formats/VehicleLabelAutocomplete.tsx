@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useRef, useEffect, useCallback } from 'react';
+import { useTranslations } from 'next-intl';
 
 const SUGGESTIONS_FR = [
   'Micro / Mini', 'Compact', 'Berline', 'Coupé', 'Décapotable',
@@ -31,6 +32,7 @@ interface Props {
 export function VehicleLabelAutocomplete({
   value, onChange, onEnter, existingLabels, locale, placeholder,
 }: Props) {
+  const t = useTranslations('station_services');
   const [open, setOpen] = useState(false);
   const [highlighted, setHighlighted] = useState(-1);
   const inputRef = useRef<HTMLInputElement>(null);
@@ -128,7 +130,7 @@ export function VehicleLabelAutocomplete({
                 <span className="font-medium">{s}</span>
                 {isUsed(s) && (
                   <span className="text-[10px] text-[#BBBBAA] dark:text-[#4A4A3A]">
-                    {locale === 'en' ? 'added' : 'ajouté'}
+                    {t('label_added')}
                   </span>
                 )}
               </button>
@@ -141,7 +143,7 @@ export function VehicleLabelAutocomplete({
       {showChips && (
         <div className="absolute left-0 right-0 top-full z-20 mt-1 rounded-[10px] border border-[#E8E4DC] bg-white p-3 shadow-lg dark:border-[#243020] dark:bg-[#182214]">
           <p className="mb-2 text-[10px] font-bold tracking-[.07em] text-[#BBBBAA] uppercase dark:text-[#4A4A3A]">
-            {locale === 'en' ? 'Common types' : 'Types courants'}
+            {t('label_common_types')}
           </p>
           <div className="flex flex-wrap gap-1.5">
             {quicks.map((q) => (
@@ -159,7 +161,7 @@ export function VehicleLabelAutocomplete({
             ))}
           </div>
           <p className="mt-2 text-[10px] text-[#CCCCBB] dark:text-[#3A3A2A]">
-            {locale === 'en' ? 'Or type a custom name' : 'Ou saisissez un nom personnalisé'}
+            {t('label_custom_name')}
           </p>
         </div>
       )}

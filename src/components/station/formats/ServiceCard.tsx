@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { useTranslations, useLocale } from 'next-intl';
+import { useTranslations } from 'next-intl';
 import { ConfirmDialog } from '@/components/ui/ConfirmDialog';
 import type { Service } from './types';
 
@@ -14,23 +14,22 @@ interface Props {
 
 export function ServiceCard({ service, onEdit, onDeleted, onToggled }: Props) {
   const t = useTranslations('station_services');
-  const locale = useLocale();
   const [deleteOpen, setDeleteOpen] = useState(false);
   const [deleting, setDeleting] = useState(false);
   const [toggleOpen, setToggleOpen] = useState(false);
 
+  // TODO: connect to API once endpoint is available (local-only for now)
   async function confirmDelete() {
     setDeleting(true);
-    // TODO: connect to API once endpoint is available
     await new Promise((r) => setTimeout(r, 200));
     setDeleting(false);
     setDeleteOpen(false);
     onDeleted(service.id);
   }
 
+  // TODO: connect to API once endpoint is available (local-only for now)
   function confirmToggle() {
     setToggleOpen(false);
-    // TODO: connect to API once endpoint is available
     onToggled({ ...service, is_active: !service.is_active });
   }
 
@@ -126,11 +125,9 @@ export function ServiceCard({ service, onEdit, onDeleted, onToggled }: Props) {
       {/* Delete confirmation */}
       <ConfirmDialog
         open={deleteOpen}
-        title={locale === 'en' ? 'Delete this service?' : 'Supprimer ce service ?'}
-        message={locale === 'en'
-          ? `"${service.name}" will be permanently deleted.`
-          : `"${service.name}" sera définitivement supprimé.`}
-        confirmLabel={locale === 'en' ? 'Delete' : 'Supprimer'}
+        title={t('confirm_delete_title')}
+        message={t('confirm_delete_message', { name: service.name })}
+        confirmLabel={t('confirm_delete_label')}
         cancelLabel={t('btn_cancel')}
         variant="danger"
         loading={deleting}
@@ -141,19 +138,11 @@ export function ServiceCard({ service, onEdit, onDeleted, onToggled }: Props) {
       {/* Toggle confirmation */}
       <ConfirmDialog
         open={toggleOpen}
-        title={service.is_active
-          ? (locale === 'en' ? 'Deactivate this service?' : 'Désactiver ce service ?')
-          : (locale === 'en' ? 'Activate this service?' : 'Activer ce service ?')}
+        title={service.is_active ? t('confirm_deactivate_title') : t('confirm_activate_title')}
         message={service.is_active
-          ? (locale === 'en'
-            ? `"${service.name}" will be hidden from clients.`
-            : `"${service.name}" ne sera plus visible par les clients.`)
-          : (locale === 'en'
-            ? `"${service.name}" will be visible to clients again.`
-            : `"${service.name}" sera à nouveau visible par les clients.`)}
-        confirmLabel={service.is_active
-          ? (locale === 'en' ? 'Deactivate' : 'Désactiver')
-          : (locale === 'en' ? 'Activate' : 'Activer')}
+          ? t('confirm_deactivate_message', { name: service.name })
+          : t('confirm_activate_message', { name: service.name })}
+        confirmLabel={service.is_active ? t('confirm_deactivate_label') : t('confirm_activate_label')}
         cancelLabel={t('btn_cancel')}
         variant={service.is_active ? 'warning' : 'default'}
         onConfirm={confirmToggle}
