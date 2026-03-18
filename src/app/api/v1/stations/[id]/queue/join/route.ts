@@ -38,6 +38,7 @@ export async function POST(request: Request, { params }: Params): Promise<NextRe
 
   const station = await findStationById(paramParsed.data.id);
   if (!station || station.status !== 'active') return error404('Station not found or not active');
+  if (!station.is_open) return error409('Station is currently closed for walk-ins', ApiCode.CONFLICT);
 
   try {
     const entry = await joinQueue(auth.sub, paramParsed.data.id, bodyParsed.data.vehicle_format_id);
