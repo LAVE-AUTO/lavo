@@ -274,25 +274,61 @@ export async function listStationEntries(
   return listEntriesByStationPaginated(stationId, filters);
 }
 
+/** Result of upgradeQueueToReservation: updated entry + Stripe client_secret for frontend payment. */
+export type UpgradeToReservationResult = {
+  entry: Entry;
+  clientSecret: string;
+};
+
 /**
- * Upgrades a queue entry to a reservation by assigning a time slot. Charges reservation surcharge
- * if configured, then updates the entry and increments slot booked_count. Shifts queue positions.
+ * Upgrades a queue entry to a reservation by assigning a time slot and initiating payment.
+ *
+ * Flow:
+ * 1. Validate entry is a queue entry belonging to the user at the given station.
+ * 2. Resolve price: vehicle format price + optional reservation surcharge.
+ * 3. Atomic transaction: lock slot, verify capacity, shift queue positions, convert entry to
+ *    reservation (pending_payment), increment slot booked_count.
+ * 4. Create Stripe PaymentIntent (manual capture) — outside the transaction.
+ * 5. Persist stripe_payment_id on the entry.
+ * 6. Return entry + client_secret for frontend payment confirmation.
  */
 export async function upgradeQueueToReservation(
   entryId: string,
   userId: string,
   timeSlotId: string,
-  stationId: string
-): Promise<Entry> {
+  stationId: string,
+  stationStripeAccountId: string
+): Promise<UpgradeToReservationResult> {
   const entry = await findEntryByIdAndUser(entryId, userId);
   if (!entry) throw new NotFoundError('Entry not found');
   if (entry.entry_type !== 'queue') throw new ConflictError('Entry is not a queue entry');
   if (entry.station_id !== stationId) throw new NotFoundError('Entry does not belong to this station');
 
-  // Atomic: lock slot, verify capacity, shift queue, update entry, increment booked_count.
+  const format = await findFormatByIdAndStation(entry.vehicle_format_id, stationId);
+  if (!format) throw new NotFoundError('Vehicle format not found');
+
+  const config = await getConfigByStationId(stationId);
+  const surcharge = config?.reservation_surcharge
+    ? parseDecimal(String(config.reservation_surcharge))
+    : 0;
+  const formatPrice = parseDecimal(String(format.price));
+  const amountTotal = formatPrice + surcharge;
+  if (amountTotal <= 0) throw new ConflictError('Invalid amount');
+
+  const commissionRate = DEFAULT_COMMISSION_RATE;
+  const commissionAmount = amountTotal * parseFloat(commissionRate);
+  const stationPayout = amountTotal - commissionAmount;
+
+  // Atomic: lock slot, verify capacity, shift queue, convert entry, increment booked_count.
   const updated = await db.transaction(async (tx) => {
     const slot = await lockSlotForUpdate(timeSlotId, stationId, tx);
     if (!slot) throw new NotFoundError('Time slot not found or does not belong to this station');
+
+    // Stripe card authorizations expire after 7 days.
+    const maxAdvanceMs = MAX_ADVANCE_BOOKING_DAYS * 24 * 60 * 60 * 1000;
+    if (slot.start_time.getTime() - Date.now() > maxAdvanceMs) {
+      throw new ConflictError(`Reservations cannot be made more than ${MAX_ADVANCE_BOOKING_DAYS} days in advance`);
+    }
 
     const count = await countReservationsBySlotId(timeSlotId, tx);
     if (count >= (slot.capacity ?? 0)) throw new ConflictError('Slot is full');
@@ -305,7 +341,12 @@ export async function upgradeQueueToReservation(
         entry_type: 'reservation',
         time_slot_id: timeSlotId,
         queue_position: null,
-        status: 'pending',
+        status: STATUS_PENDING_PAYMENT,
+        amount_paid: toDecimal(amountTotal),
+        commission_rate: commissionRate,
+        commission_amount: toDecimal(commissionAmount),
+        station_payout: toDecimal(stationPayout),
+        stripe_payment_id: null,
       },
       tx
     );
@@ -313,13 +354,58 @@ export async function upgradeQueueToReservation(
     return result;
   });
 
+  // Create Stripe PaymentIntent outside transaction (external side-effect).
+  const amountCents = Math.round(amountTotal * 100);
+  const commissionCents = Math.round(commissionAmount * 100);
+
+  let paymentIntentId: string;
+  let clientSecret: string;
+  try {
+    const result = await createPaymentIntent({
+      amountCents,
+      userId,
+      stationId,
+      stationStripeAccountId,
+      commissionCents,
+      metadata: {
+        reservation_id: entryId,
+        time_slot_id: timeSlotId,
+        vehicle_format_id: entry.vehicle_format_id,
+        upgraded_from_queue: 'true',
+      },
+    });
+    paymentIntentId = result.paymentIntentId;
+    clientSecret = result.clientSecret;
+  } catch (stripeError) {
+    // Rollback: revert entry to queue to avoid an orphaned pending_payment reservation.
+    await updateEntry(entryId, {
+      entry_type: 'queue',
+      time_slot_id: null,
+      queue_position: entry.queue_position,
+      status: 'pending',
+      amount_paid: '0.00',
+      commission_rate: '0.00',
+      commission_amount: '0.00',
+      station_payout: '0.00',
+    });
+    await decrementSlotBookedCount(timeSlotId);
+    // Restore queue positions: shift back entries that were shifted up.
+    if ((entry.queue_position ?? 0) > 0) {
+      await shiftQueuePositions(stationId, entry.queue_position! + 1, 1);
+    }
+    throw stripeError;
+  }
+
+  await updateEntry(entryId, { stripe_payment_id: paymentIntentId });
+
   await notifyEntry({
     entryId,
     userId,
     stationId,
     type: 'reservation_created',
   });
-  return updated;
+
+  return { entry: { ...updated, stripe_payment_id: paymentIntentId }, clientSecret };
 }
 
 /**

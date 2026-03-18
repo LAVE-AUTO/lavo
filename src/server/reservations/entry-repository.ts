@@ -427,6 +427,10 @@ export async function updateEntry(
     entry_type: 'reservation' | 'queue';
     time_slot_id: string | null;
     queue_position: number | null;
+    amount_paid: string;
+    commission_rate: string;
+    commission_amount: string;
+    station_payout: string;
     confirmed_at: Date | null;
     completed_at: Date | null;
     client_confirmed: boolean;
