@@ -8,19 +8,26 @@
  *
  * Flow:
  *   1. Load reservation + time_slot start_time.
- *   2. Check ownership and cancellable status.
+ *   2. Check ownership and cancellable status (confirmed only).
  *   3. Read platform cancellation policy.
  *   4. Calculate penalty and refund amount.
  *   5. Atomic transaction: update status + penalty_amount + cancellation_reason + decrement slot.
- *   6. Issue Stripe refund (after transaction to avoid holding locks during API call).
- *   7. Save stripe_refund_id.
- *   8. Send notifications to client and station.
+ *   6. Stripe (after transaction to avoid holding locks during API calls):
+ *      - Free cancellation: cancelPaymentIntent — releases the authorization, no charge.
+ *      - Late cancellation: capturePaymentIntent (materialise charge), then partial refund,
+ *        then distributePenalty to claw back platform's share from the station's transfer.
+ *   7. Send notifications to client and station.
  */
 import { db } from '@/lib/db';
 import { ConflictError, NotFoundError } from '@/lib/errors';
 import { getCancellationPolicy } from '@/server/admin/platform-settings-service';
 import { notifyEntry } from '@/server/notifications/notification-service';
-import { refundPaymentIntent, distributePenalty } from '@/server/payments/payment-service';
+import {
+  capturePaymentIntent,
+  cancelPaymentIntent,
+  refundPaymentIntent,
+  distributePenalty,
+} from '@/server/payments/payment-service';
 import {
   findReservationWithSlot,
   findEntryByIdAndUser,
@@ -29,7 +36,7 @@ import {
 } from '@/server/reservations/entry-repository';
 import { decrementSlotBookedCount } from '@/server/station/slot-repository';
 
-const CANCELLABLE_STATUSES = ['confirmed', 'pending'] as const;
+const CANCELLABLE_STATUSES = ['confirmed'] as const;
 
 export type CancelReservationResult = {
   entry: Entry;
@@ -102,39 +109,68 @@ export async function cancelReservation(
     return entry;
   });
 
-  if (reservation.stripe_payment_id && refundedAmount > 0) {
-    try {
-      const refundId = await refundPaymentIntent(
-        reservation.stripe_payment_id,
-        Math.round(refundedAmount * 100)
-      );
-      await updateEntry(reservationId, { stripe_refund_id: refundId });
-    } catch (e) {
-      // Cancellation is already committed — log for manual resolution.
-      console.error('[REFUND_FAILED]', {
-        reservationId,
-        stripe_payment_id: reservation.stripe_payment_id,
-        refunded_amount_cents: Math.round(refundedAmount * 100),
-        error: e instanceof Error ? e.message : String(e),
-      });
-    }
-  }
+  if (reservation.stripe_payment_id) {
+    if (!isLateCancellation) {
+      // Free cancellation: the PaymentIntent was authorized but never captured.
+      // Cancelling it releases the hold on the client's card — no charge at all.
+      try {
+        await cancelPaymentIntent(reservation.stripe_payment_id);
+      } catch (e) {
+        console.error('[CANCEL_PAYMENT_INTENT_FAILED]', {
+          reservationId,
+          stripe_payment_id: reservation.stripe_payment_id,
+          error: e instanceof Error ? e.message : String(e),
+        });
+      }
+    } else {
+      // Late cancellation: capture the full amount first (materialises the charge),
+      // then issue a partial refund for the refundable portion,
+      // then claw back the platform's penalty share from the station's transfer.
+      let captured = false;
+      try {
+        await capturePaymentIntent(reservation.stripe_payment_id);
+        captured = true;
+      } catch (e) {
+        console.error('[CAPTURE_FAILED_FOR_LATE_CANCELLATION]', {
+          reservationId,
+          stripe_payment_id: reservation.stripe_payment_id,
+          error: e instanceof Error ? e.message : String(e),
+        });
+      }
 
-  // Distribute the penalty between platform and station via transfer reversal.
-  if (reservation.stripe_payment_id && penaltyAmount > 0) {
-    try {
-      await distributePenalty(
-        reservation.stripe_payment_id,
-        Math.round(penaltyAmount * 100),
-        policy.stationPenaltyShare
-      );
-    } catch (e) {
-      console.error('[PENALTY_DISTRIBUTION_FAILED]', {
-        reservationId,
-        stripe_payment_id: reservation.stripe_payment_id,
-        penalty_amount_cents: Math.round(penaltyAmount * 100),
-        error: e instanceof Error ? e.message : String(e),
-      });
+      if (captured && refundedAmount > 0) {
+        try {
+          const refundId = await refundPaymentIntent(
+            reservation.stripe_payment_id,
+            Math.round(refundedAmount * 100)
+          );
+          await updateEntry(reservationId, { stripe_refund_id: refundId });
+        } catch (e) {
+          console.error('[REFUND_FAILED]', {
+            reservationId,
+            stripe_payment_id: reservation.stripe_payment_id,
+            refunded_amount_cents: Math.round(refundedAmount * 100),
+            error: e instanceof Error ? e.message : String(e),
+          });
+        }
+      }
+
+      if (captured && penaltyAmount > 0) {
+        try {
+          await distributePenalty(
+            reservation.stripe_payment_id,
+            Math.round(penaltyAmount * 100),
+            policy.stationPenaltyShare
+          );
+        } catch (e) {
+          console.error('[PENALTY_DISTRIBUTION_FAILED]', {
+            reservationId,
+            stripe_payment_id: reservation.stripe_payment_id,
+            penalty_amount_cents: Math.round(penaltyAmount * 100),
+            error: e instanceof Error ? e.message : String(e),
+          });
+        }
+      }
     }
   }
 
