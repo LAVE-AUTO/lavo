@@ -15,6 +15,7 @@ import {
   decrementSlotBookedCount,
 } from '@/server/station/slot-repository';
 import { createPaymentIntent, cancelPaymentIntent, capturePaymentIntent } from '@/server/payments/payment-service';
+import { cancelReservation } from '@/server/reservations/cancellation-service';
 import { notifyEntry } from '@/server/notifications/notification-service';
 import {
   createReservationEntry,
@@ -32,6 +33,7 @@ import {
 
 const STATUS_PENDING_PAYMENT = 'pending_payment';
 const STATUS_CANCELLED = 'cancelled';
+const STATUS_CONFIRMED = 'confirmed';
 
 function toDecimal(v: string | number): string {
   return typeof v === 'number' ? v.toFixed(2) : String(v);
@@ -47,6 +49,17 @@ function parseDecimal(s: string | null | undefined): number {
 export type CreateReservationResult = {
   entry: Entry;
   clientSecret: string;
+};
+
+/**
+ * Result of cancelEntry. Financial fields are only present for confirmed reservations
+ * that triggered a Stripe refund (refundedAmount >= 0) or a late cancellation penalty.
+ */
+export type CancelEntryResult = {
+  entry: Entry;
+  refundedAmount?: number;
+  penaltyAmount?: number;
+  isLateCancellation?: boolean;
 };
 
 /**
@@ -162,14 +175,35 @@ export async function createReservation(
 }
 
 /**
- * Cancels an entry (reservation or queue). For reservations, decrements slot booked_count.
- * For queue entries, shifts positions of entries behind it to fill the gap.
+ * Unified entry cancellation for PATCH /me/entries/:entryId/cancel.
+ * Handles all entry types and statuses:
+ *
+ * - Confirmed reservation (paid): delegates to cancelReservation() for full Stripe refund
+ *   + penalty policy. Returns financial details in the result.
+ * - Pending payment reservation: cancels the Stripe PaymentIntent, decrements slot.
+ * - Queue entry: shifts positions, no Stripe interaction.
  */
-export async function cancelEntry(entryId: string, userId: string): Promise<Entry> {
+export async function cancelEntry(
+  entryId: string,
+  userId: string,
+  reason?: string
+): Promise<CancelEntryResult> {
   const entry = await findEntryByIdAndUser(entryId, userId);
   if (!entry) throw new NotFoundError('Entry not found');
   if (entry.status === STATUS_CANCELLED) throw new ConflictError('Entry already cancelled');
 
+  // Confirmed reservations: full cancellation with Stripe refund and penalty policy.
+  if (entry.entry_type === 'reservation' && entry.status === STATUS_CONFIRMED) {
+    const result = await cancelReservation(entryId, userId, reason);
+    return {
+      entry: result.entry,
+      refundedAmount: result.refundedAmount,
+      penaltyAmount: result.penaltyAmount,
+      isLateCancellation: result.isLateCancellation,
+    };
+  }
+
+  // Queue entries and pending_payment reservations: simple cancellation.
   const updated = await db.transaction(async (tx) => {
     const current = await findEntryByIdAndUser(entryId, userId, tx);
     if (!current) throw new NotFoundError('Entry not found');
@@ -184,12 +218,16 @@ export async function cancelEntry(entryId: string, userId: string): Promise<Entr
     return updateEntry(entryId, { status: STATUS_CANCELLED }, tx);
   });
 
-  // Cancel Stripe PaymentIntent if entry was pending payment
+  // Cancel Stripe PaymentIntent if the reservation was awaiting payment.
   if (entry.status === STATUS_PENDING_PAYMENT && entry.stripe_payment_id) {
     try {
       await cancelPaymentIntent(entry.stripe_payment_id);
     } catch (e) {
-      console.error('Failed to cancel Stripe PaymentIntent:', entry.stripe_payment_id, e);
+      console.error('[CANCEL_PAYMENT_INTENT_FAILED]', {
+        entryId,
+        stripe_payment_id: entry.stripe_payment_id,
+        error: e instanceof Error ? e.message : String(e),
+      });
     }
   }
 
@@ -199,7 +237,7 @@ export async function cancelEntry(entryId: string, userId: string): Promise<Entr
     stationId: entry.station_id,
     type: 'entry_cancelled',
   });
-  return updated;
+  return { entry: updated };
 }
 
 /**

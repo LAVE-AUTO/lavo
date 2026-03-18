@@ -40,8 +40,13 @@ export const joinQueueBodySchema = z
   })
   .strict();
 
-/** PATCH /me/entries/:entryId/cancel — no body required. */
-export const cancelEntryBodySchema = z.object({}).strict().optional();
+/** PATCH /me/entries/:entryId/cancel — optional cancellation reason (used for confirmed reservations). */
+export const cancelEntryBodySchema = z
+  .object({
+    reason: z.string().max(500).optional(),
+  })
+  .strict()
+  .optional();
 
 /** POST /me/entries/:entryId/upgrade-to-reservation — upgrade queue to reservation. */
 export const upgradeToReservationBodySchema = z
