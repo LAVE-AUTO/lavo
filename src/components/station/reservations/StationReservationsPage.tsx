@@ -6,7 +6,7 @@ import { getFromApi, patchWithApi } from '@/services';
 import { ConfirmDialog } from '@/components/ui/ConfirmDialog';
 import { StatusTabs } from './StatusTabs';
 import { ReservationCard } from './ReservationCard';
-import type { ReservationEntry, StatusTab } from './types';
+import type { ReservationEntry, StatusTab, EntryStatus } from './types';
 import { MOCK_RESERVATIONS } from './mock-data';
 
 type ActionType = 'validate' | 'start' | 'cancel';
@@ -15,6 +15,18 @@ interface PendingAction {
   type: ActionType;
   entryId: string;
   clientLabel: string;
+}
+
+const STATUS_PRIORITY: Record<string, number> = {
+  in_progress: 0, confirmed: 1, pending: 1, late: 2,
+  pending_payment: 3, completed: 4, cancelled: 5,
+};
+
+function sortEntries(a: ReservationEntry, b: ReservationEntry): number {
+  const pa = STATUS_PRIORITY[a.status] ?? 9;
+  const pb = STATUS_PRIORITY[b.status] ?? 9;
+  if (pa !== pb) return pa - pb;
+  return new Date(a.created_at).getTime() - new Date(b.created_at).getTime();
 }
 
 function todayRange(): { from: string; to: string } {
@@ -53,29 +65,40 @@ export function StationReservationsPage() {
 
   useEffect(() => { loadData(); }, [loadData]);
 
-  /* Filter entries by active tab */
   const filtered = useMemo(() => {
-    if (activeTab === 'all') return entries;
-    return entries.filter((e) => e.status === activeTab);
+    const base = activeTab === 'all' ? entries : entries.filter((e) => {
+      if (activeTab === 'confirmed') return e.status === 'confirmed' || e.status === 'pending';
+      return e.status === activeTab;
+    });
+    return [...base].sort(sortEntries);
   }, [entries, activeTab]);
 
-  /* Counts for tabs */
   const counts = useMemo(() => {
     const c: Record<StatusTab, number> = {
-      all: entries.length,
-      confirmed: 0, in_progress: 0, completed: 0, cancelled: 0, late: 0,
+      all: entries.length, confirmed: 0, in_progress: 0, completed: 0, cancelled: 0, late: 0,
     };
     for (const e of entries) {
-      if (e.status in c) c[e.status as StatusTab]++;
-      if (e.status === 'pending') c.confirmed++;
+      if (e.status === 'pending' || e.status === 'confirmed') c.confirmed++;
+      else if (e.status in c) c[e.status as StatusTab]++;
     }
     return c;
   }, [entries]);
 
-  /* Action handlers */
+  const kpis = useMemo(() => {
+    let revenue = 0;
+    let active = 0;
+    let done = 0;
+    for (const e of entries) {
+      if (e.amount_paid && e.status !== 'cancelled') revenue += parseFloat(e.amount_paid);
+      if (e.status === 'in_progress') active++;
+      if (e.status === 'completed') done++;
+    }
+    return { revenue, active, done, total: entries.length };
+  }, [entries]);
+
   function requestAction(type: ActionType, entryId: string) {
     const entry = entries.find((e) => e.id === entryId);
-    const clientLabel = entry ? `Client #${entry.user_id.slice(0, 8)}` : '';
+    const clientLabel = entry ? `${t('client_label')} #${entry.user_id.slice(0, 8)}` : '';
     setPending({ type, entryId, clientLabel });
     setActionError(null);
   }
@@ -86,15 +109,10 @@ export function StationReservationsPage() {
     setActionError(null);
 
     const statusMap: Record<ActionType, string> = {
-      validate: 'completed',
-      start: 'in_progress',
-      cancel: 'cancelled',
+      validate: 'completed', start: 'in_progress', cancel: 'cancelled',
     };
-
     const newStatus = statusMap[pending.type];
-    const [ok] = await patchWithApi(`/station/entries/${pending.entryId}`, {
-      status: newStatus,
-    });
+    const [ok] = await patchWithApi(`/station/entries/${pending.entryId}`, { status: newStatus });
 
     setActionLoading(false);
     if (ok) {
@@ -105,7 +123,7 @@ export function StationReservationsPage() {
       setEntries((prev) =>
         prev.map((e) =>
           e.id === pending.entryId
-            ? { ...e, status: newStatus as ReservationEntry['status'], completed_at: newStatus === 'completed' ? new Date().toISOString() : e.completed_at }
+            ? { ...e, status: newStatus as EntryStatus, completed_at: newStatus === 'completed' ? new Date().toISOString() : e.completed_at }
             : e,
         ),
       );
@@ -113,7 +131,6 @@ export function StationReservationsPage() {
     }
   }
 
-  /* Confirm dialog props */
   function getConfirmProps() {
     if (!pending) return { title: '', message: '', variant: 'default' as const };
     const map: Record<ActionType, { titleKey: string; msgKey: string; variant: 'default' | 'danger' }> = {
@@ -122,14 +139,9 @@ export function StationReservationsPage() {
       cancel:   { titleKey: 'confirm_cancel_title',   msgKey: 'confirm_cancel_message',   variant: 'danger' },
     };
     const cfg = map[pending.type];
-    return {
-      title: t(cfg.titleKey),
-      message: t(cfg.msgKey, { client: pending.clientLabel }),
-      variant: cfg.variant,
-    };
+    return { title: t(cfg.titleKey), message: t(cfg.msgKey, { client: pending.clientLabel }), variant: cfg.variant };
   }
 
-  /* Loading state */
   if (loading) {
     return (
       <div className="flex flex-1 items-center justify-center">
@@ -138,18 +150,11 @@ export function StationReservationsPage() {
     );
   }
 
-  /* Error state */
   if (loadError) {
     return (
       <div className="flex flex-1 flex-col items-center justify-center gap-3 text-center">
-        <span className="text-[14px] font-semibold text-[#999] dark:text-[#6A6A5A]">
-          {t('error_load')}
-        </span>
-        <button
-          type="button"
-          onClick={loadData}
-          className="rounded-[10px] border border-[#C49A1E]/50 px-4 py-2 text-[13px] font-semibold text-[#C49A1E] transition-colors hover:bg-[#C49A1E]/10"
-        >
+        <span className="text-[14px] font-semibold text-[#999] dark:text-[#6A6A5A]">{t('error_load')}</span>
+        <button type="button" onClick={loadData} className="rounded-[10px] border border-[#C49A1E]/50 px-4 py-2 text-[13px] font-semibold text-[#C49A1E] transition-colors hover:bg-[#C49A1E]/10">
           {t('btn_retry')}
         </button>
       </div>
@@ -161,14 +166,22 @@ export function StationReservationsPage() {
   return (
     <div className="flex flex-1 flex-col overflow-hidden bg-[#F5F5EE] dark:bg-[#0C1209]">
       {/* Header */}
-      <div className="border-b border-[#E0DCD0] bg-white px-6 py-4 dark:border-[#1A2A14] dark:bg-[#111A0E]">
-        <div className="flex items-baseline gap-3">
-          <h1 className="text-[18px] font-black text-[#1A1A0A] dark:text-[#F0EDD4]">
-            {t('page_title')}
-          </h1>
-          <span className="text-[12px] text-[#888] dark:text-[#6A6A5A]">
-            {t('page_subtitle', { count: entries.length })}
-          </span>
+      <div className="border-b border-[#E0DCD0] bg-white px-5 pb-4 pt-5 dark:border-[#1A2A14] dark:bg-[#111A0E]">
+        <div className="flex items-center justify-between gap-4">
+          <div className="min-w-0">
+            <h1 className="text-[18px] font-black text-[#1A1A0A] dark:text-[#F0EDD4]">
+              {t('page_title')}
+            </h1>
+            <p className="mt-0.5 text-[12px] text-[#888] dark:text-[#6A6A5A]">
+              {t('page_subtitle', { count: entries.length })}
+            </p>
+          </div>
+          {/* Mini KPI row */}
+          <div className="hidden shrink-0 items-center gap-2 sm:flex">
+            <KpiChip value={kpis.active} color="#00C851" label={t('tab_in_progress')} />
+            <KpiChip value={kpis.done} color="#6366F1" label={t('tab_completed')} />
+            <KpiChip value={`${kpis.revenue.toFixed(0)}$`} color="#C49A1E" label={t('amount_label')} />
+          </div>
         </div>
         <div className="mt-3">
           <StatusTabs active={activeTab} counts={counts} onChange={setActiveTab} />
@@ -176,13 +189,16 @@ export function StationReservationsPage() {
       </div>
 
       {/* Entry list */}
-      <div className="flex-1 overflow-y-auto p-5">
+      <div className="flex-1 overflow-y-auto p-4">
         {filtered.length === 0 ? (
-          <div className="flex h-full items-center justify-center text-[13px] text-[#888] dark:text-[#6A6A5A]">
-            {activeTab === 'all' ? t('empty_state') : t('empty_filtered')}
+          <div className="flex flex-col items-center justify-center gap-2 py-16 text-center">
+            <EmptyIcon />
+            <span className="text-[13px] font-semibold text-[#999] dark:text-[#6A6A5A]">
+              {activeTab === 'all' ? t('empty_state') : t('empty_filtered')}
+            </span>
           </div>
         ) : (
-          <div className="flex flex-col gap-3">
+          <div className="grid grid-cols-1 gap-2.5 xl:grid-cols-2">
             {filtered.map((entry) => (
               <ReservationCard
                 key={entry.id}
@@ -196,7 +212,6 @@ export function StationReservationsPage() {
         )}
       </div>
 
-      {/* Confirm dialog */}
       <ConfirmDialog
         open={pending !== null}
         title={confirm.title}
@@ -210,3 +225,22 @@ export function StationReservationsPage() {
     </div>
   );
 }
+
+function KpiChip({ value, color, label }: { value: string | number; color: string; label: string }) {
+  return (
+    <div className="flex items-center gap-1.5 rounded-lg bg-[#F7F6F2] px-2.5 py-1.5 dark:bg-[#0F1A0C]">
+      <span className="inline-block h-1.5 w-1.5 rounded-full" style={{ background: color }} />
+      <span className="font-mono text-[13px] font-bold text-[#1A1A0A] dark:text-[#F0EDD4]">{value}</span>
+      <span className="text-[9px] font-semibold text-[#888] dark:text-[#6A6A5A]">{label}</span>
+    </div>
+  );
+}
+
+const EmptyIcon = () => (
+  <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1} strokeLinecap="round" strokeLinejoin="round" className="text-[#D8D4C8] dark:text-[#243020]">
+    <rect x="3" y="4" width="18" height="18" rx="2" />
+    <line x1="16" y1="2" x2="16" y2="6" /><line x1="8" y1="2" x2="8" y2="6" />
+    <line x1="3" y1="10" x2="21" y2="10" />
+    <path d="M8 14h.01M12 14h.01M16 14h.01M8 18h.01M12 18h.01" />
+  </svg>
+);

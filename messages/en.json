@@ -1342,7 +1342,16 @@
     "btn_retry": "Retry",
     "loading": "Loading...",
     "today": "Today",
-    "no_amount": "—"
+    "no_amount": "—",
+    "detail_entry_type": "Type",
+    "detail_created_at": "Created at",
+    "detail_updated_at": "Updated at",
+    "detail_vehicle_format": "Vehicle format",
+    "detail_queue_position": "Queue position",
+    "detail_entry_id": "ID",
+    "detail_slot": "Time slot",
+    "detail_completed_at": "Completed at",
+    "detail_no_slot": "No slot"
   },
   "station_config": {
     "page_title": "Station settings",

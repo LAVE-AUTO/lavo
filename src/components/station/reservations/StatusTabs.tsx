@@ -9,7 +9,14 @@ interface Props {
   onChange: (tab: StatusTab) => void;
 }
 
-const TABS: StatusTab[] = ['all', 'confirmed', 'in_progress', 'completed', 'cancelled', 'late'];
+const TABS: { key: StatusTab; dot: string }[] = [
+  { key: 'all',         dot: '#C49A1E' },
+  { key: 'confirmed',   dot: '#3B82F6' },
+  { key: 'in_progress', dot: '#00C851' },
+  { key: 'completed',   dot: '#6366F1' },
+  { key: 'cancelled',   dot: '#EF4444' },
+  { key: 'late',        dot: '#FF8800' },
+];
 
 export function StatusTabs({ active, counts, onChange }: Props) {
   const t = useTranslations('station_reservations');
@@ -24,27 +31,33 @@ export function StatusTabs({ active, counts, onChange }: Props) {
   };
 
   return (
-    <div className="flex gap-1.5 overflow-x-auto pb-1">
-      {TABS.map((tab) => {
-        const isActive = active === tab;
-        const count = counts[tab];
+    <div className="flex gap-1 overflow-x-auto">
+      {TABS.map(({ key, dot }) => {
+        const isActive = active === key;
+        const count = counts[key];
         return (
           <button
-            key={tab}
+            key={key}
             type="button"
-            onClick={() => onChange(tab)}
-            className={`flex shrink-0 items-center gap-1.5 rounded-full px-3.5 py-1.5 text-[12px] font-semibold transition-colors ${
+            onClick={() => onChange(key)}
+            className={`flex shrink-0 items-center gap-1.5 rounded-lg px-3 py-1.5 text-[12px] font-semibold transition-all ${
               isActive
-                ? 'bg-[#C49A1E] text-[#0C1209]'
-                : 'bg-[#F0EDE4] text-[#666] hover:bg-[#E8E4D8] dark:bg-[#1A2A14] dark:text-[#8A8A7A] dark:hover:bg-[#243020]'
+                ? 'bg-[#1A1A0A] text-white shadow-sm dark:bg-[#F0EDD4] dark:text-[#0C1209]'
+                : 'text-[#666] hover:bg-[#F0EDE4] dark:text-[#8A8A7A] dark:hover:bg-[#1A2A14]'
             }`}
           >
-            {labelMap[tab]}
+            {key !== 'all' && (
+              <span
+                className="inline-block h-2 w-2 rounded-full"
+                style={{ background: isActive ? 'currentColor' : dot, opacity: isActive ? 0.5 : 0.7 }}
+              />
+            )}
+            {labelMap[key]}
             {count > 0 && (
-              <span className={`rounded-full px-1.5 py-0.5 text-[10px] font-bold leading-none ${
+              <span className={`min-w-[18px] rounded-full px-1 py-[1px] text-center text-[10px] font-bold leading-tight ${
                 isActive
-                  ? 'bg-[#0C1209]/15 text-[#0C1209]'
-                  : 'bg-[#D8D4C8] text-[#5A5A4A] dark:bg-[#243020] dark:text-[#8A8A7A]'
+                  ? 'bg-white/20 text-white dark:bg-[#0C1209]/20 dark:text-[#0C1209]'
+                  : 'bg-[#E8E4DC] text-[#888] dark:bg-[#243020] dark:text-[#6A6A5A]'
               }`}>
                 {count}
               </span>

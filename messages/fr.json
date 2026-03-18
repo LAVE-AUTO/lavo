@@ -1342,7 +1342,16 @@
     "btn_retry": "Reessayer",
     "loading": "Chargement...",
     "today": "Aujourd'hui",
-    "no_amount": "—"
+    "no_amount": "—",
+    "detail_entry_type": "Type",
+    "detail_created_at": "Cree le",
+    "detail_updated_at": "Mis a jour",
+    "detail_vehicle_format": "Format vehicule",
+    "detail_queue_position": "Position file",
+    "detail_entry_id": "ID",
+    "detail_slot": "Creneau",
+    "detail_completed_at": "Termine a",
+    "detail_no_slot": "Sans creneau"
   },
   "station_config": {
     "page_title": "Paramètres de la station",
