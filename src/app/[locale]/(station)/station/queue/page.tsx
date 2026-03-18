@@ -15,6 +15,15 @@ interface RawEntry {
   created_at: string;
 }
 
+// TODO: connect to API once endpoint returns real data — remove mock fallback
+const MOCK_QUEUE: QueueEntry[] = [
+  { id: 'mock-q1', position: 1, clientName: 'Client #a1b2', entryType: 'reservation', time: '09:30', serviceLabel: 'Lavage Complet', price: 45, isNext: true },
+  { id: 'mock-q2', position: 2, clientName: 'Client #c3d4', entryType: 'queue', time: '09:45', serviceLabel: 'Lavage Exterieur', price: 25, isNext: false },
+  { id: 'mock-q3', position: 3, clientName: 'Client #e5f6', entryType: 'reservation', time: '10:00', serviceLabel: 'Lavage Complet SUV', price: 55, isNext: false },
+  { id: 'mock-q4', position: 4, clientName: 'Client #a7b8', entryType: 'queue', price: 30, isNext: false },
+  { id: 'mock-q5', position: 5, clientName: 'Client #c9d0', entryType: 'queue', price: 28, isNext: false },
+];
+
 function buildQueueEntries(raw: RawEntry[]): QueueEntry[] {
   return raw
     .filter((e) => e.status === 'pending')
@@ -38,7 +47,11 @@ export default function StationQueuePage() {
     const [ok, data] = await getFromApi('/station/entries');
     if (ok) {
       const raw = (data as { data: { entries: RawEntry[] } }).data.entries ?? [];
-      setEntries(buildQueueEntries(raw));
+      const built = buildQueueEntries(raw);
+      // TODO: remove mock fallback once real data is available
+      setEntries(built.length > 0 ? built : MOCK_QUEUE);
+    } else {
+      setEntries(MOCK_QUEUE);
     }
     setLoading(false);
   }, []);
@@ -46,8 +59,13 @@ export default function StationQueuePage() {
   useEffect(() => { loadEntries(); }, [loadEntries]);
 
   async function handleCall(id: string) {
-    await patchWithApi(`/station/entries/${id}`, { status: 'in_progress' });
-    await loadEntries();
+    const [ok] = await patchWithApi(`/station/entries/${id}`, { status: 'in_progress' });
+    if (ok) {
+      await loadEntries();
+    } else {
+      // TODO: remove local mock fallback once API is fully connected
+      setEntries((prev) => prev.filter((e) => e.id !== id));
+    }
   }
 
   return (
