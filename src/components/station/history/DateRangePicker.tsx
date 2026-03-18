@@ -67,11 +67,22 @@ export function DateRangePicker({ value, onChange }: Props) {
 
   function applyPreset(key: typeof PRESET_KEYS[number]) {
     const to = startOfDay(new Date());
-    const from = new Date(to);
-    if (key === 'week')    from.setDate(to.getDate() - 7);
-    if (key === 'month')   from.setMonth(to.getMonth() - 1);
-    if (key === '3months') from.setMonth(to.getMonth() - 3);
-    if (key === 'year')    from.setFullYear(to.getFullYear() - 1);
+    let targetYear = to.getFullYear();
+    let targetMonth = to.getMonth();
+    const day = to.getDate();
+
+    if (key === 'week') {
+      onChange({ from: new Date(targetYear, targetMonth, day - 7), to });
+      setOpen(false);
+      return;
+    }
+    if (key === 'month')   targetMonth -= 1;
+    if (key === '3months') targetMonth -= 3;
+    if (key === 'year')    targetYear -= 1;
+
+    // Clamp day to avoid month overflow (e.g. Mar 31 -> Feb 28)
+    const maxDay = getDaysInMonth(targetYear, targetMonth);
+    const from = new Date(targetYear, targetMonth, Math.min(day, maxDay));
     onChange({ from, to });
     setOpen(false);
   }
@@ -157,7 +168,7 @@ interface CalendarGridProps {
 
 function CalendarGrid({ locale, range, onChange }: CalendarGridProps) {
   const t = useTranslations('station_history');
-  const today = startOfDay(new Date());
+  const today = useMemo(() => startOfDay(new Date()), []);
   const [viewDate, setViewDate] = useState(() => range.from ?? today);
   const [selecting, setSelecting] = useState<'from' | 'to'>(!range.from ? 'from' : 'to');
 

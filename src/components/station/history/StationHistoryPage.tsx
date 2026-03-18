@@ -1,7 +1,7 @@
 'use client';
 
-import { useState, useMemo, useEffect, useCallback } from 'react';
-import { useTranslations, useLocale } from 'next-intl';
+import { useState, useMemo, useEffect, useCallback, useRef } from 'react';
+import { useTranslations } from 'next-intl';
 import { getFromApi } from '@/services/axios-service';
 import { HistoryCard } from './HistoryCard';
 import { DateRangePicker } from './DateRangePicker';
@@ -17,7 +17,6 @@ interface DateRange {
 
 export function StationHistoryPage() {
   const t = useTranslations('station_history');
-  const locale = useLocale();
 
   const [entries, setEntries] = useState<StationHistoryEntry[]>([]);
   const [meta, setMeta] = useState<StationHistoryMeta | null>(null);
@@ -26,10 +25,13 @@ export function StationHistoryPage() {
   const [dateRange, setDateRange] = useState<DateRange>({ from: null, to: null });
   const [status, setStatus] = useState<StatusFilter>('all');
 
-  const fetchHistory = useCallback(async () => {
+  // Track previous filter values to detect filter changes and reset page
+  const prevFiltersRef = useRef({ dateRange, status });
+
+  const fetchHistory = useCallback(async (fetchPage: number) => {
     setLoading(true);
     const params = new URLSearchParams();
-    params.set('page', String(page));
+    params.set('page', String(fetchPage));
     params.set('limit', String(PAGE_LIMIT));
     if (dateRange.from) params.set('from', dateRange.from.toISOString());
     if (dateRange.to) params.set('to', dateRange.to.toISOString());
@@ -57,15 +59,24 @@ export function StationHistoryPage() {
       .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
 
     const total = filtered.length;
-    const sliced = filtered.slice((page - 1) * PAGE_LIMIT, page * PAGE_LIMIT);
+    const sliced = filtered.slice((fetchPage - 1) * PAGE_LIMIT, fetchPage * PAGE_LIMIT);
     setEntries(sliced);
-    setMeta({ total, page, limit: PAGE_LIMIT, total_pages: Math.ceil(total / PAGE_LIMIT) });
+    setMeta({ total, page: fetchPage, limit: PAGE_LIMIT, total_pages: Math.ceil(total / PAGE_LIMIT) });
     setLoading(false);
-  }, [page, dateRange, status]);
+  }, [dateRange, status]);
 
-  useEffect(() => { fetchHistory(); }, [fetchHistory]);
+  useEffect(() => {
+    const prev = prevFiltersRef.current;
+    const filtersChanged = prev.dateRange !== dateRange || prev.status !== status;
+    prevFiltersRef.current = { dateRange, status };
 
-  useEffect(() => { setPage(1); }, [dateRange, status]);
+    if (filtersChanged && page !== 1) {
+      // Reset page to 1; the subsequent render will trigger this effect again with page=1
+      setPage(1);
+      return;
+    }
+    fetchHistory(page);
+  }, [fetchHistory, page, dateRange, status]);
 
   const stats = useMemo(() => {
     const completed = entries.filter((e) => e.status === 'completed');
