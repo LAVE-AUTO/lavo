@@ -21,5 +21,4 @@ export interface StationHistoryMeta {
   total_pages: number;
 }
 
-export type PeriodKey = 'all' | 'week' | 'month' | '3months' | 'year';
 export type StatusFilter = 'all' | 'completed' | 'cancelled';

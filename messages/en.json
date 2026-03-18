@@ -1401,7 +1401,11 @@
     "pagination_prev": "Previous",
     "pagination_next": "Next",
     "pagination_page": "Page {page} of {total}",
-    "no_amount": "—"
+    "no_amount": "—",
+    "calendar_from": "From",
+    "calendar_select_start": "Select start date",
+    "calendar_select_end": "Select end date",
+    "calendar_clear": "Clear"
   },
   "station_config": {
     "page_title": "Station settings",

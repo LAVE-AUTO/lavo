@@ -4,20 +4,15 @@ import { useState, useMemo, useEffect, useCallback } from 'react';
 import { useTranslations, useLocale } from 'next-intl';
 import { getFromApi } from '@/services/axios-service';
 import { HistoryCard } from './HistoryCard';
+import { DateRangePicker } from './DateRangePicker';
 import { MOCK_HISTORY } from './mock-data';
-import type { StationHistoryEntry, StationHistoryMeta, PeriodKey, StatusFilter } from './types';
+import type { StationHistoryEntry, StationHistoryMeta, StatusFilter } from './types';
 
 const PAGE_LIMIT = 10;
 
-function getPeriodRange(period: PeriodKey): { from?: string; to?: string } {
-  if (period === 'all') return {};
-  const now = new Date();
-  const from = new Date();
-  if (period === 'week')    from.setDate(now.getDate() - 7);
-  if (period === 'month')   from.setMonth(now.getMonth() - 1);
-  if (period === '3months') from.setMonth(now.getMonth() - 3);
-  if (period === 'year')    from.setFullYear(now.getFullYear() - 1);
-  return { from: from.toISOString(), to: now.toISOString() };
+interface DateRange {
+  from: Date | null;
+  to: Date | null;
 }
 
 export function StationHistoryPage() {
@@ -28,17 +23,16 @@ export function StationHistoryPage() {
   const [meta, setMeta] = useState<StationHistoryMeta | null>(null);
   const [loading, setLoading] = useState(true);
   const [page, setPage] = useState(1);
-  const [period, setPeriod] = useState<PeriodKey>('all');
+  const [dateRange, setDateRange] = useState<DateRange>({ from: null, to: null });
   const [status, setStatus] = useState<StatusFilter>('all');
 
   const fetchHistory = useCallback(async () => {
     setLoading(true);
-    const range = getPeriodRange(period);
     const params = new URLSearchParams();
     params.set('page', String(page));
     params.set('limit', String(PAGE_LIMIT));
-    if (range.from) params.set('from', range.from);
-    if (range.to) params.set('to', range.to);
+    if (dateRange.from) params.set('from', dateRange.from.toISOString());
+    if (dateRange.to) params.set('to', dateRange.to.toISOString());
     if (status !== 'all') params.set('status', status);
 
     const [ok, data] = await getFromApi<{ items: StationHistoryEntry[]; meta: StationHistoryMeta }>(
@@ -56,10 +50,10 @@ export function StationHistoryPage() {
     }
 
     // TODO: connect to API once endpoint returns real data — remove mock fallback
-    const start = getPeriodRange(period);
     const filtered = MOCK_HISTORY
       .filter((e) => status === 'all' || e.status === status)
-      .filter((e) => !start.from || new Date(e.date) >= new Date(start.from))
+      .filter((e) => !dateRange.from || new Date(e.date) >= dateRange.from)
+      .filter((e) => !dateRange.to || new Date(e.date) <= new Date(dateRange.to.getTime() + 86400000))
       .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
 
     const total = filtered.length;
@@ -67,11 +61,11 @@ export function StationHistoryPage() {
     setEntries(sliced);
     setMeta({ total, page, limit: PAGE_LIMIT, total_pages: Math.ceil(total / PAGE_LIMIT) });
     setLoading(false);
-  }, [page, period, status]);
+  }, [page, dateRange, status]);
 
   useEffect(() => { fetchHistory(); }, [fetchHistory]);
 
-  useEffect(() => { setPage(1); }, [period, status]);
+  useEffect(() => { setPage(1); }, [dateRange, status]);
 
   const stats = useMemo(() => {
     const completed = entries.filter((e) => e.status === 'completed');
@@ -80,14 +74,6 @@ export function StationHistoryPage() {
     const commission = completed.reduce((s, e) => s + parseFloat(e.commission_amount ?? '0'), 0);
     return { count: meta?.total ?? entries.length, revenue, payouts, commission };
   }, [entries, meta]);
-
-  const PERIODS: { key: PeriodKey; label: string }[] = [
-    { key: 'all',     label: t('period_all') },
-    { key: 'week',    label: t('period_week') },
-    { key: 'month',   label: t('period_month') },
-    { key: '3months', label: t('period_3months') },
-    { key: 'year',    label: t('period_year') },
-  ];
 
   const STATUSES: { key: StatusFilter; label: string; color?: string }[] = [
     { key: 'all',       label: t('status_all') },
@@ -134,27 +120,12 @@ export function StationHistoryPage() {
 
         {/* Filters */}
         <div className="mt-4 flex flex-col gap-3 sm:flex-row sm:items-end sm:gap-6">
-          {/* Period */}
-          <div className="flex-1">
+          {/* Period — calendar */}
+          <div>
             <p className="mb-1.5 text-[10px] font-bold uppercase tracking-wider text-[#000717]/40 dark:text-[#FFFFF0]/35">
               {t('filter_period')}
             </p>
-            <div className="flex flex-wrap gap-1.5">
-              {PERIODS.map(({ key, label }) => (
-                <button
-                  key={key}
-                  type="button"
-                  onClick={() => setPeriod(key)}
-                  className={`rounded-[8px] px-3 py-1.5 text-[12px] font-bold transition-all active:scale-[0.97] ${
-                    period === key
-                      ? 'bg-[#C09A18] text-[#1A2116] shadow-sm'
-                      : 'bg-[#C8C8B4] text-[#000717]/60 hover:bg-[#BDBDA8] dark:bg-[#1E2A1A] dark:text-[#FFFFF0]/60 dark:hover:bg-[#2A3626]'
-                  }`}
-                >
-                  {label}
-                </button>
-              ))}
-            </div>
+            <DateRangePicker value={dateRange} onChange={setDateRange} />
           </div>
 
           {/* Status */}
