@@ -37,7 +37,7 @@ export default function StationQueuePage() {
   const loadEntries = useCallback(async () => {
     const [ok, data] = await getFromApi('/station/entries');
     if (ok) {
-      const raw = (data as { data: RawEntry[] }).data ?? [];
+      const raw = (data as { data: { entries: RawEntry[] } }).data.entries ?? [];
       setEntries(buildQueueEntries(raw));
     }
     setLoading(false);
