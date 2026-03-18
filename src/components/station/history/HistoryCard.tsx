@@ -9,11 +9,11 @@ interface Props {
 }
 
 const STATUS_BADGE: Record<string, { bg: string; text: string }> = {
-  completed: { bg: '#00C851', text: '#FFFFFF' },
-  cancelled: { bg: '#FF2525', text: '#FFFFFF' },
-  pending:   { bg: '#FF8800', text: '#FFFFFF' },
+  completed:   { bg: '#00C851', text: '#FFFFFF' },
+  cancelled:   { bg: '#FF2525', text: '#FFFFFF' },
+  pending:     { bg: '#FF8800', text: '#FFFFFF' },
   in_progress: { bg: '#00C851', text: '#FFFFFF' },
-  late:      { bg: '#FF8800', text: '#FFFFFF' },
+  late:        { bg: '#FF8800', text: '#FFFFFF' },
 };
 
 const ACCENT: Record<string, string> = {
@@ -34,12 +34,19 @@ export function HistoryCard({ entry }: Props) {
     ? `${entry.client.first_name} ${entry.client.last_name}`
     : t('client_anonymous');
 
-  const dateLabel = new Date(entry.date).toLocaleDateString(
+  const dateObj = new Date(entry.date);
+  const dayNum = dateObj.getDate();
+  const monthShort = dateObj.toLocaleDateString(
+    locale === 'en' ? 'en-CA' : 'fr-CA',
+    { month: 'short' },
+  ).toUpperCase().replace('.', '');
+
+  const dateLabel = dateObj.toLocaleDateString(
     locale === 'en' ? 'en-CA' : 'fr-CA',
     { day: 'numeric', month: 'short', year: 'numeric' },
   );
 
-  const timeLabel = new Date(entry.date).toLocaleTimeString(
+  const timeLabel = dateObj.toLocaleTimeString(
     locale === 'en' ? 'en-CA' : 'fr-CA',
     { hour: '2-digit', minute: '2-digit' },
   );
@@ -54,12 +61,12 @@ export function HistoryCard({ entry }: Props) {
       <button
         type="button"
         onClick={() => setExpanded(!expanded)}
-        className="flex w-full items-center gap-4 p-4 pl-5 text-left"
+        className="flex w-full items-center gap-3 p-4 pl-5 text-left sm:gap-4"
       >
         {/* Date block */}
-        <div className="flex h-10 w-16 shrink-0 flex-col items-center justify-center rounded-lg bg-white/60 dark:bg-[#243020]">
-          <span className="text-[10px] font-semibold text-[#000717]/50 dark:text-[#FFFFF0]/50">{dateLabel.split(' ')[1]?.toUpperCase()}</span>
-          <span className="font-mono text-[14px] font-bold leading-none text-[#000C1F] dark:text-[#FFF8EC]">{new Date(entry.date).getDate()}</span>
+        <div className="flex h-11 w-14 shrink-0 flex-col items-center justify-center rounded-lg bg-white/60 dark:bg-[#243020]">
+          <span className="text-[9px] font-bold tracking-wide text-[#000717]/40 dark:text-[#FFFFF0]/40">{monthShort}</span>
+          <span className="font-mono text-[16px] font-bold leading-none text-[#000C1F] dark:text-[#FFF8EC]">{dayNum}</span>
         </div>
 
         {/* Client + service */}
@@ -78,12 +85,17 @@ export function HistoryCard({ entry }: Props) {
           </div>
           <div className="mt-0.5 flex items-center gap-2 text-[11px] text-[#000717]/50 dark:text-[#FFFFF0]/50">
             <span className="font-mono font-semibold">{timeLabel}</span>
-            {entry.vehicle_format_label && <span>{entry.vehicle_format_label}</span>}
+            {entry.vehicle_format_label && (
+              <>
+                <span className="text-[#000717]/20 dark:text-[#FFFFF0]/20">|</span>
+                <span>{entry.vehicle_format_label}</span>
+              </>
+            )}
           </div>
         </div>
 
         {/* Amount */}
-        <span className="shrink-0 font-mono text-[14px] font-bold text-[#C09A18]">
+        <span className="shrink-0 font-mono text-[15px] font-bold text-[#C09A18]">
           {parseFloat(entry.amount_paid).toFixed(2)}$
         </span>
 
@@ -105,30 +117,40 @@ export function HistoryCard({ entry }: Props) {
       >
         <div className="overflow-hidden">
           <div className="border-t border-[#B8B8A4] px-5 pb-4 pt-3 dark:border-[#3A4A36]">
+            {/* Info section */}
             <div className="grid grid-cols-2 gap-x-6 gap-y-2 text-[12px] sm:grid-cols-3">
               <DetailRow label={t('detail_entry_id')} value={`#${entry.id.slice(0, 8)}`} mono />
               <DetailRow label={t('col_date')} value={dateLabel} />
               <DetailRow label={t('col_type')} value={isReservation ? t('type_reservation') : t('type_queue')} />
-              <DetailRow label={t('col_amount')} value={`${parseFloat(entry.amount_paid).toFixed(2)}$`} gold />
-              {entry.station_payout && (
-                <DetailRow label={t('col_payout')} value={`${parseFloat(entry.station_payout).toFixed(2)}$`} gold />
-              )}
-              {entry.commission_amount && (
-                <DetailRow label={t('col_commission')} value={`${parseFloat(entry.commission_amount).toFixed(2)}$`} />
-              )}
-              <DetailRow label={t('detail_commission_rate')} value={`${(parseFloat(entry.commission_rate) * 100).toFixed(0)}%`} />
-              {entry.tip_amount && parseFloat(entry.tip_amount) > 0 && (
-                <DetailRow label={t('col_tip')} value={`${parseFloat(entry.tip_amount).toFixed(2)}$`} gold />
-              )}
-              {entry.penalty_amount && parseFloat(entry.penalty_amount) > 0 && (
-                <DetailRow label={t('col_penalty')} value={`${parseFloat(entry.penalty_amount).toFixed(2)}$`} danger />
-              )}
               {entry.vehicle_format_label && (
                 <DetailRow label={t('col_service')} value={entry.vehicle_format_label} />
               )}
               {entry.reservation_ref && (
                 <DetailRow label={t('col_ref')} value={`#${entry.reservation_ref.slice(0, 12)}`} mono />
               )}
+            </div>
+
+            {/* Financial section */}
+            <div className="mt-3 rounded-xl bg-white/40 p-3 dark:bg-[#243020]/60">
+              <p className="mb-2 text-[10px] font-bold uppercase tracking-wider text-[#000717]/35 dark:text-[#FFFFF0]/30">
+                {t('col_amount')}
+              </p>
+              <div className="grid grid-cols-2 gap-x-6 gap-y-1.5 text-[12px] sm:grid-cols-3">
+                <DetailRow label={t('col_amount')} value={`${parseFloat(entry.amount_paid).toFixed(2)}$`} gold />
+                {entry.station_payout && (
+                  <DetailRow label={t('col_payout')} value={`${parseFloat(entry.station_payout).toFixed(2)}$`} gold />
+                )}
+                <DetailRow label={t('detail_commission_rate')} value={`${(parseFloat(entry.commission_rate) * 100).toFixed(0)}%`} />
+                {entry.commission_amount && (
+                  <DetailRow label={t('col_commission')} value={`${parseFloat(entry.commission_amount).toFixed(2)}$`} />
+                )}
+                {entry.tip_amount && parseFloat(entry.tip_amount) > 0 && (
+                  <DetailRow label={t('col_tip')} value={`+${parseFloat(entry.tip_amount).toFixed(2)}$`} gold />
+                )}
+                {entry.penalty_amount && parseFloat(entry.penalty_amount) > 0 && (
+                  <DetailRow label={t('col_penalty')} value={`-${parseFloat(entry.penalty_amount).toFixed(2)}$`} danger />
+                )}
+              </div>
             </div>
           </div>
         </div>
@@ -137,10 +159,12 @@ export function HistoryCard({ entry }: Props) {
   );
 }
 
-function DetailRow({ label, value, mono, gold, danger }: { label: string; value: string; mono?: boolean; gold?: boolean; danger?: boolean }) {
+function DetailRow({ label, value, mono, gold, danger }: {
+  label: string; value: string; mono?: boolean; gold?: boolean; danger?: boolean;
+}) {
   return (
     <div className="flex items-baseline justify-between gap-2">
-      <span className="text-[#000717]/60 dark:text-[#FFFFF0]/50">{label}</span>
+      <span className="text-[#000717]/50 dark:text-[#FFFFF0]/45">{label}</span>
       <span className={`text-right font-semibold ${
         gold ? 'text-[#C09A18]' :
         danger ? 'text-[#FF2525]' :
