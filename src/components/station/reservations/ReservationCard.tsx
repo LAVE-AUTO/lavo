@@ -17,7 +17,6 @@ interface StatusDef {
   text: string;
 }
 
-/* Status badges: solid bg + white text per graphic charter section 5.3 */
 const STATUS_MAP: Record<string, StatusDef> = {
   pending_payment: { i18nKey: 'status_pending_payment', bg: '#888888', text: '#FFFFFF' },
   pending:         { i18nKey: 'status_pending',         bg: '#FF8800', text: '#FFFFFF' },
@@ -28,7 +27,6 @@ const STATUS_MAP: Record<string, StatusDef> = {
   late:            { i18nKey: 'status_late',             bg: '#FF8800', text: '#FFFFFF' },
 };
 
-/* Left accent uses same color as badge bg */
 const ACCENT_MAP: Record<string, string> = {
   pending_payment: '#888888', pending: '#FF8800', confirmed: '#0044FF',
   in_progress: '#00C851', completed: '#0044FF', cancelled: '#FF2525', late: '#FF8800',
@@ -60,12 +58,10 @@ export function ReservationCard({ entry, onValidate, onStart, onCancel }: Props)
         onClick={() => setExpanded(!expanded)}
         className="flex w-full items-center gap-4 p-4 pl-5 text-left"
       >
-        {/* Time block */}
         <div className="flex h-10 w-14 shrink-0 items-center justify-center rounded-lg bg-white/60 dark:bg-[#243020]">
           <span className="font-mono text-[13px] font-bold text-[#000C1F] dark:text-[#FFF8EC]">{time}</span>
         </div>
 
-        {/* Client + meta */}
         <div className="min-w-0 flex-1">
           <div className="flex items-center gap-2">
             <span className="truncate text-[14px] font-semibold text-[#000C1F] dark:text-[#FFF8EC]">
@@ -86,7 +82,6 @@ export function ReservationCard({ entry, onValidate, onStart, onCancel }: Props)
           )}
         </div>
 
-        {/* Status badge — solid bg, white text */}
         <span
           className="shrink-0 rounded-md px-2.5 py-1 text-[10px] font-bold"
           style={{ background: st.bg, color: st.text }}
@@ -97,67 +92,72 @@ export function ReservationCard({ entry, onValidate, onStart, onCancel }: Props)
         <ChevronIcon expanded={expanded} />
       </button>
 
-      {/* Expanded detail panel */}
-      {expanded && (
-        <div className="border-t border-[#B8B8A4] px-5 pb-4 pt-3 dark:border-[#3A4A36]">
-          <div className="mb-3 grid grid-cols-2 gap-x-6 gap-y-2 text-[12px]">
-            <DetailRow label={t('detail_entry_type')} value={isReservation ? t('type_reservation') : t('type_queue')} />
-            <DetailRow label={t('detail_entry_id')} value={`#${entry.id.slice(0, 8)}`} mono />
-            <DetailRow label={t('detail_created_at')} value={formatTime(entry.created_at)} />
-            <DetailRow label={t('detail_updated_at')} value={formatTime(entry.updated_at)} />
-            {entry.time_slot_id && (
-              <DetailRow label={t('detail_slot')} value={`#${entry.time_slot_id.slice(0, 8)}`} mono />
-            )}
-            {!entry.time_slot_id && entry.entry_type === 'queue' && (
-              <DetailRow label={t('detail_slot')} value={t('detail_no_slot')} muted />
-            )}
-            {entry.queue_position && (
-              <DetailRow label={t('detail_queue_position')} value={`#${entry.queue_position}`} />
-            )}
-            {entry.completed_at && (
-              <DetailRow label={t('detail_completed_at')} value={formatTime(entry.completed_at)} />
-            )}
-            {entry.amount_paid && (
-              <DetailRow label={t('amount_label')} value={`${parseFloat(entry.amount_paid).toFixed(2)}$`} gold />
-            )}
-          </div>
-
-          {hasActions && (
-            <div className="flex flex-wrap items-center gap-2">
-              {canDoValidate(entry.status) && (
-                <button
-                  type="button"
-                  onClick={(e) => { e.stopPropagation(); onValidate(entry.id); }}
-                  className="flex items-center gap-1.5 rounded-[10px] bg-[#00C851] px-4 py-2 text-[12px] font-bold text-white transition-all hover:opacity-90 active:scale-[0.98]"
-                >
-                  <CheckIcon />
-                  {t('btn_validate')}
-                </button>
+      {/* Animated detail panel — always in DOM, height animated via grid-rows */}
+      <div
+        className="grid transition-[grid-template-rows] duration-200 ease-out"
+        style={{ gridTemplateRows: expanded ? '1fr' : '0fr' }}
+      >
+        <div className="overflow-hidden">
+          <div className="border-t border-[#B8B8A4] px-5 pb-4 pt-3 dark:border-[#3A4A36]">
+            <div className="mb-3 grid grid-cols-2 gap-x-6 gap-y-2 text-[12px]">
+              <DetailRow label={t('detail_entry_type')} value={isReservation ? t('type_reservation') : t('type_queue')} />
+              <DetailRow label={t('detail_entry_id')} value={`#${entry.id.slice(0, 8)}`} mono />
+              <DetailRow label={t('detail_created_at')} value={formatTime(entry.created_at)} />
+              <DetailRow label={t('detail_updated_at')} value={formatTime(entry.updated_at)} />
+              {entry.time_slot_id && (
+                <DetailRow label={t('detail_slot')} value={`#${entry.time_slot_id.slice(0, 8)}`} mono />
               )}
-              {canDoStart(entry.status) && (
-                <button
-                  type="button"
-                  onClick={(e) => { e.stopPropagation(); onStart(entry.id); }}
-                  className="flex items-center gap-1.5 rounded-[10px] bg-[#C09A18] px-4 py-2 text-[12px] font-bold text-[#1A2116] transition-all hover:bg-[#D4A820] active:scale-[0.98]"
-                >
-                  <PlayIcon />
-                  {t('btn_start_service')}
-                </button>
+              {!entry.time_slot_id && entry.entry_type === 'queue' && (
+                <DetailRow label={t('detail_slot')} value={t('detail_no_slot')} muted />
               )}
-              {canDoCancel(entry.status) && (
-                <button
-                  type="button"
-                  onClick={(e) => { e.stopPropagation(); onCancel(entry.id); }}
-                  className="flex items-center gap-1.5 rounded-[10px] border-[1.5px] border-[#FF2525]/30 px-3 py-2 text-[12px] font-semibold text-[#FF2525] transition-all hover:bg-[#FF2525]/10 active:scale-[0.98]"
-                >
-                  <CancelIcon />
-                  {t('btn_cancel_entry')}
-                </button>
+              {entry.queue_position && (
+                <DetailRow label={t('detail_queue_position')} value={`#${entry.queue_position}`} />
+              )}
+              {entry.completed_at && (
+                <DetailRow label={t('detail_completed_at')} value={formatTime(entry.completed_at)} />
+              )}
+              {entry.amount_paid && (
+                <DetailRow label={t('amount_label')} value={`${parseFloat(entry.amount_paid).toFixed(2)}$`} gold />
               )}
             </div>
-          )}
+
+            {hasActions && (
+              <div className="flex flex-wrap items-center gap-2">
+                {canDoValidate(entry.status) && (
+                  <button
+                    type="button"
+                    onClick={(e) => { e.stopPropagation(); onValidate(entry.id); }}
+                    className="flex items-center gap-1.5 rounded-[10px] bg-[#00C851] px-4 py-2 text-[12px] font-bold text-white transition-all hover:opacity-90 active:scale-[0.98]"
+                  >
+                    <CheckIcon />
+                    {t('btn_validate')}
+                  </button>
+                )}
+                {canDoStart(entry.status) && (
+                  <button
+                    type="button"
+                    onClick={(e) => { e.stopPropagation(); onStart(entry.id); }}
+                    className="flex items-center gap-1.5 rounded-[10px] bg-[#C09A18] px-4 py-2 text-[12px] font-bold text-[#1A2116] transition-all hover:bg-[#D4A820] active:scale-[0.98]"
+                  >
+                    <PlayIcon />
+                    {t('btn_start_service')}
+                  </button>
+                )}
+                {canDoCancel(entry.status) && (
+                  <button
+                    type="button"
+                    onClick={(e) => { e.stopPropagation(); onCancel(entry.id); }}
+                    className="flex items-center gap-1.5 rounded-[10px] border-[1.5px] border-[#FF2525]/30 px-3 py-2 text-[12px] font-semibold text-[#FF2525] transition-all hover:bg-[#FF2525]/10 active:scale-[0.98]"
+                  >
+                    <CancelIcon />
+                    {t('btn_cancel_entry')}
+                  </button>
+                )}
+              </div>
+            )}
+          </div>
         </div>
-      )}
+      </div>
     </div>
   );
 }
@@ -184,7 +184,7 @@ function DetailRow({ label, value, mono, gold, muted }: { label: string; value: 
 const ChevronIcon = ({ expanded }: { expanded: boolean }) => (
   <svg
     width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round"
-    className={`shrink-0 text-[#000C1F]/30 transition-transform dark:text-[#FFF8EC]/30 ${expanded ? 'rotate-180' : ''}`}
+    className={`shrink-0 text-[#000C1F]/30 transition-transform duration-200 dark:text-[#FFF8EC]/30 ${expanded ? 'rotate-180' : ''}`}
   >
     <polyline points="6 9 12 15 18 9" />
   </svg>
