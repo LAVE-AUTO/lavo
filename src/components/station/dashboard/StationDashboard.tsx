@@ -77,7 +77,7 @@ export function StationDashboard() {
     const [configOk, configData] = await getFromApi('/station/config');
 
     if (entriesOk && configOk) {
-      const raw = (entriesData as { data: RawEntry[] }).data ?? [];
+      const raw = (entriesData as { data: { entries: RawEntry[] } }).data.entries ?? [];
       const config = (configData as { data: RawConfig }).data;
       setQueueEntries(buildQueueEntries(raw));
       setPosts(buildPosts(config, raw));
