@@ -408,8 +408,18 @@ export async function upgradeQueueToReservation(
   return { entry: { ...updated, stripe_payment_id: paymentIntentId }, clientSecret };
 }
 
+const VALID_STATION_TRANSITIONS: Record<string, readonly string[]> = {
+  confirmed: ['in_progress', 'cancelled'],
+  in_progress: ['completed', 'cancelled'],
+};
+
 /**
  * Updates an entry's status (station only). Used by PATCH /station/entries/:entryId.
+ * Enforces valid status transitions:
+ *   confirmed   → in_progress | cancelled
+ *   in_progress → completed   | cancelled
+ * Any other transition is rejected with a ConflictError.
+ *
  * On status completed:
  *   - Captures the Stripe PaymentIntent (reservation entries only) to distribute funds.
  *   - Triggers invitation_to_rate notification.
@@ -423,6 +433,14 @@ export async function setEntryStatusByStation(
 ): Promise<Entry> {
   const entry = await findEntryByIdAndStation(entryId, stationId);
   if (!entry) throw new NotFoundError('Entry not found');
+
+  const allowed = VALID_STATION_TRANSITIONS[entry.status];
+  if (!allowed || !allowed.includes(status)) {
+    throw new ConflictError(
+      `Cannot transition entry from '${entry.status}' to '${status}'`
+    );
+  }
+
   const updated = await updateEntry(entryId, {
     status,
     completed_at: status === 'completed' ? new Date() : undefined,
