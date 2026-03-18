@@ -9,12 +9,13 @@ interface Props {
   onChange: (tab: StatusTab) => void;
 }
 
+/* Colors aligned with graphic charter state colors */
 const TABS: { key: StatusTab; dot: string }[] = [
-  { key: 'all',         dot: '#C49A1E' },
-  { key: 'confirmed',   dot: '#3B82F6' },
+  { key: 'all',         dot: '#C09A18' },
+  { key: 'confirmed',   dot: '#0044FF' },
   { key: 'in_progress', dot: '#00C851' },
-  { key: 'completed',   dot: '#6366F1' },
-  { key: 'cancelled',   dot: '#EF4444' },
+  { key: 'completed',   dot: '#0044FF' },
+  { key: 'cancelled',   dot: '#FF2525' },
   { key: 'late',        dot: '#FF8800' },
 ];
 
@@ -31,7 +32,7 @@ export function StatusTabs({ active, counts, onChange }: Props) {
   };
 
   return (
-    <div className="flex gap-1 overflow-x-auto">
+    <div className="flex gap-1.5 overflow-x-auto">
       {TABS.map(({ key, dot }) => {
         const isActive = active === key;
         const count = counts[key];
@@ -40,24 +41,24 @@ export function StatusTabs({ active, counts, onChange }: Props) {
             key={key}
             type="button"
             onClick={() => onChange(key)}
-            className={`flex shrink-0 items-center gap-1.5 rounded-lg px-3 py-1.5 text-[12px] font-semibold transition-all ${
+            className={`flex shrink-0 items-center gap-1.5 rounded-[8px] px-3 py-1.5 text-[12px] font-semibold transition-all ${
               isActive
-                ? 'bg-[#1A1A0A] text-white shadow-sm dark:bg-[#F0EDD4] dark:text-[#0C1209]'
-                : 'text-[#666] hover:bg-[#F0EDE4] dark:text-[#8A8A7A] dark:hover:bg-[#1A2A14]'
+                ? 'bg-[#C09A18] text-[#1A2116]'
+                : 'text-[#000717]/60 hover:bg-[#B8B8A4]/50 dark:text-[#FFFFF0]/60 dark:hover:bg-[#243020]'
             }`}
           >
             {key !== 'all' && (
               <span
                 className="inline-block h-2 w-2 rounded-full"
-                style={{ background: isActive ? 'currentColor' : dot, opacity: isActive ? 0.5 : 0.7 }}
+                style={{ background: isActive ? '#1A2116' : dot, opacity: isActive ? 0.4 : 0.8 }}
               />
             )}
             {labelMap[key]}
             {count > 0 && (
-              <span className={`min-w-[18px] rounded-full px-1 py-[1px] text-center text-[10px] font-bold leading-tight ${
+              <span className={`min-w-[18px] rounded px-1 py-[1px] text-center text-[10px] font-bold leading-tight ${
                 isActive
-                  ? 'bg-white/20 text-white dark:bg-[#0C1209]/20 dark:text-[#0C1209]'
-                  : 'bg-[#E8E4DC] text-[#888] dark:bg-[#243020] dark:text-[#6A6A5A]'
+                  ? 'bg-[#1A2116]/15 text-[#1A2116]'
+                  : 'bg-[#000C1F]/8 text-[#000717]/50 dark:bg-[#FFF8EC]/10 dark:text-[#FFF8EC]/50'
               }`}>
                 {count}
               </span>

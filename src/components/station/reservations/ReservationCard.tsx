@@ -13,19 +13,25 @@ interface Props {
 
 interface StatusDef {
   i18nKey: string;
-  color: string;
   bg: string;
-  accent: string;
+  text: string;
 }
 
+/* Status badges: solid bg + white text per graphic charter section 5.3 */
 const STATUS_MAP: Record<string, StatusDef> = {
-  pending_payment: { i18nKey: 'status_pending_payment', color: '#888',    bg: 'rgba(136,136,136,0.08)',  accent: '#888' },
-  pending:         { i18nKey: 'status_pending',         color: '#F59E0B', bg: 'rgba(245,158,11,0.08)',   accent: '#F59E0B' },
-  confirmed:       { i18nKey: 'status_confirmed',       color: '#3B82F6', bg: 'rgba(59,130,246,0.08)',   accent: '#3B82F6' },
-  in_progress:     { i18nKey: 'status_in_progress',     color: '#00C851', bg: 'rgba(0,200,81,0.08)',     accent: '#00C851' },
-  completed:       { i18nKey: 'status_completed',       color: '#6366F1', bg: 'rgba(99,102,241,0.08)',   accent: '#6366F1' },
-  cancelled:       { i18nKey: 'status_cancelled',       color: '#EF4444', bg: 'rgba(239,68,68,0.08)',    accent: '#EF4444' },
-  late:            { i18nKey: 'status_late',             color: '#FF8800', bg: 'rgba(255,136,0,0.08)',    accent: '#FF8800' },
+  pending_payment: { i18nKey: 'status_pending_payment', bg: '#888888', text: '#FFFFFF' },
+  pending:         { i18nKey: 'status_pending',         bg: '#FF8800', text: '#FFFFFF' },
+  confirmed:       { i18nKey: 'status_confirmed',       bg: '#0044FF', text: '#FFFFFF' },
+  in_progress:     { i18nKey: 'status_in_progress',     bg: '#00C851', text: '#FFFFFF' },
+  completed:       { i18nKey: 'status_completed',       bg: '#0044FF', text: '#FFFFFF' },
+  cancelled:       { i18nKey: 'status_cancelled',       bg: '#FF2525', text: '#FFFFFF' },
+  late:            { i18nKey: 'status_late',             bg: '#FF8800', text: '#FFFFFF' },
+};
+
+/* Left accent uses same color as badge bg */
+const ACCENT_MAP: Record<string, string> = {
+  pending_payment: '#888888', pending: '#FF8800', confirmed: '#0044FF',
+  in_progress: '#00C851', completed: '#0044FF', cancelled: '#FF2525', late: '#FF8800',
 };
 
 function canDoStart(s: EntryStatus) { return s === 'confirmed' || s === 'pending'; }
@@ -37,69 +43,68 @@ export function ReservationCard({ entry, onValidate, onStart, onCancel }: Props)
   const [expanded, setExpanded] = useState(false);
 
   const st = STATUS_MAP[entry.status] ?? STATUS_MAP.pending;
+  const accent = ACCENT_MAP[entry.status] ?? '#888888';
   const clientLabel = `${t('client_label')} #${entry.user_id.slice(0, 8)}`;
   const time = new Date(entry.created_at).toLocaleTimeString('fr-CA', { hour: '2-digit', minute: '2-digit' });
   const isReservation = entry.entry_type === 'reservation';
   const hasActions = canDoStart(entry.status) || canDoValidate(entry.status) || canDoCancel(entry.status);
 
   return (
-    <div className="relative overflow-hidden rounded-xl border border-[#E8E4DC] bg-white transition-all hover:shadow-md dark:border-[#1A2A14] dark:bg-[#111A0E]">
+    <div className="relative overflow-hidden rounded-2xl bg-[#C8C8B4] transition-shadow hover:shadow-md dark:bg-[#1E2A1A]">
       {/* Left accent bar */}
-      <div className="absolute inset-y-0 left-0 w-[3px]" style={{ background: st.accent }} />
+      <div className="absolute inset-y-0 left-0 w-1" style={{ background: accent }} />
 
-      {/* Clickable header row */}
+      {/* Clickable header */}
       <button
         type="button"
         onClick={() => setExpanded(!expanded)}
-        className="flex w-full items-center gap-3 py-3 pl-5 pr-4 text-left"
+        className="flex w-full items-center gap-4 p-4 pl-5 text-left"
       >
-        {/* Time pill */}
-        <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-[#F7F6F2] dark:bg-[#0F1A0C]">
-          <span className="font-mono text-[11px] font-bold text-[#1A1A0A] dark:text-[#F0EDD4]">{time}</span>
+        {/* Time block */}
+        <div className="flex h-10 w-14 shrink-0 items-center justify-center rounded-lg bg-white/60 dark:bg-[#243020]">
+          <span className="font-mono text-[13px] font-bold text-[#000C1F] dark:text-[#FFF8EC]">{time}</span>
         </div>
 
         {/* Client + meta */}
         <div className="min-w-0 flex-1">
           <div className="flex items-center gap-2">
-            <span className="truncate text-[13px] font-bold text-[#1A1A0A] dark:text-[#F0EDD4]">
+            <span className="truncate text-[14px] font-semibold text-[#000C1F] dark:text-[#FFF8EC]">
               {clientLabel}
             </span>
-            <span
-              className="shrink-0 rounded-full px-2 py-[2px] text-[9px] font-bold uppercase tracking-wide"
-              style={{ background: isReservation ? 'rgba(59,130,246,0.1)' : 'rgba(245,158,11,0.1)', color: isReservation ? '#3B82F6' : '#F59E0B' }}
-            >
+            <span className={`shrink-0 rounded px-1.5 py-[1px] text-[9px] font-bold uppercase tracking-wide ${
+              isReservation
+                ? 'bg-[#0044FF]/15 text-[#0044FF] dark:bg-[#0044FF]/25 dark:text-[#7CC4F8]'
+                : 'bg-[#FF8800]/15 text-[#FF8800] dark:bg-[#FF8800]/25 dark:text-[#FFB84D]'
+            }`}>
               {isReservation ? t('type_reservation') : t('type_queue')}
             </span>
           </div>
           {entry.amount_paid && (
-            <span className="mt-0.5 block font-mono text-[11px] font-semibold text-[#C49A1E]">
+            <span className="mt-0.5 block font-mono text-[12px] font-bold text-[#C09A18]">
               {parseFloat(entry.amount_paid).toFixed(2)}$
             </span>
           )}
         </div>
 
-        {/* Status badge */}
+        {/* Status badge — solid bg, white text */}
         <span
-          className="shrink-0 rounded-full px-2.5 py-1 text-[10px] font-bold"
-          style={{ background: st.bg, color: st.color }}
+          className="shrink-0 rounded-md px-2.5 py-1 text-[10px] font-bold"
+          style={{ background: st.bg, color: st.text }}
         >
-          <span className="mr-1 inline-block h-1.5 w-1.5 rounded-full" style={{ background: st.color }} />
           {t(st.i18nKey)}
         </span>
 
-        {/* Chevron */}
         <ChevronIcon expanded={expanded} />
       </button>
 
       {/* Expanded detail panel */}
       {expanded && (
-        <div className="border-t border-[#F0EDE4] px-5 pb-3.5 pt-3 dark:border-[#1A2A14]">
-          {/* Detail grid */}
-          <div className="mb-3 grid grid-cols-2 gap-x-4 gap-y-2 text-[11px]">
+        <div className="border-t border-[#B8B8A4] px-5 pb-4 pt-3 dark:border-[#3A4A36]">
+          <div className="mb-3 grid grid-cols-2 gap-x-6 gap-y-2 text-[12px]">
             <DetailRow label={t('detail_entry_type')} value={isReservation ? t('type_reservation') : t('type_queue')} />
             <DetailRow label={t('detail_entry_id')} value={`#${entry.id.slice(0, 8)}`} mono />
-            <DetailRow label={t('detail_created_at')} value={formatDateTime(entry.created_at)} />
-            <DetailRow label={t('detail_updated_at')} value={formatDateTime(entry.updated_at)} />
+            <DetailRow label={t('detail_created_at')} value={formatTime(entry.created_at)} />
+            <DetailRow label={t('detail_updated_at')} value={formatTime(entry.updated_at)} />
             {entry.time_slot_id && (
               <DetailRow label={t('detail_slot')} value={`#${entry.time_slot_id.slice(0, 8)}`} mono />
             )}
@@ -110,21 +115,20 @@ export function ReservationCard({ entry, onValidate, onStart, onCancel }: Props)
               <DetailRow label={t('detail_queue_position')} value={`#${entry.queue_position}`} />
             )}
             {entry.completed_at && (
-              <DetailRow label={t('detail_completed_at')} value={formatDateTime(entry.completed_at)} />
+              <DetailRow label={t('detail_completed_at')} value={formatTime(entry.completed_at)} />
             )}
             {entry.amount_paid && (
               <DetailRow label={t('amount_label')} value={`${parseFloat(entry.amount_paid).toFixed(2)}$`} gold />
             )}
           </div>
 
-          {/* Actions */}
           {hasActions && (
-            <div className="flex items-center gap-2">
+            <div className="flex flex-wrap items-center gap-2">
               {canDoValidate(entry.status) && (
                 <button
                   type="button"
                   onClick={(e) => { e.stopPropagation(); onValidate(entry.id); }}
-                  className="flex items-center gap-1.5 rounded-lg bg-[#00C851] px-3.5 py-2 text-[12px] font-bold text-white shadow-sm transition-all hover:bg-[#00B347] active:scale-[0.97]"
+                  className="flex items-center gap-1.5 rounded-[10px] bg-[#00C851] px-4 py-2 text-[12px] font-bold text-white transition-all hover:opacity-90 active:scale-[0.98]"
                 >
                   <CheckIcon />
                   {t('btn_validate')}
@@ -134,7 +138,7 @@ export function ReservationCard({ entry, onValidate, onStart, onCancel }: Props)
                 <button
                   type="button"
                   onClick={(e) => { e.stopPropagation(); onStart(entry.id); }}
-                  className="flex items-center gap-1.5 rounded-lg bg-[#C49A1E] px-3.5 py-2 text-[12px] font-bold text-[#0C1209] shadow-sm transition-all hover:opacity-90 active:scale-[0.97]"
+                  className="flex items-center gap-1.5 rounded-[10px] bg-[#C09A18] px-4 py-2 text-[12px] font-bold text-[#1A2116] transition-all hover:bg-[#D4A820] active:scale-[0.98]"
                 >
                   <PlayIcon />
                   {t('btn_start_service')}
@@ -144,7 +148,7 @@ export function ReservationCard({ entry, onValidate, onStart, onCancel }: Props)
                 <button
                   type="button"
                   onClick={(e) => { e.stopPropagation(); onCancel(entry.id); }}
-                  className="flex items-center gap-1.5 rounded-lg border border-[#EF4444]/20 px-3 py-2 text-[12px] font-semibold text-[#EF4444] transition-all hover:bg-[#EF4444]/5 active:scale-[0.97]"
+                  className="flex items-center gap-1.5 rounded-[10px] border-[1.5px] border-[#FF2525]/30 px-3 py-2 text-[12px] font-semibold text-[#FF2525] transition-all hover:bg-[#FF2525]/10 active:scale-[0.98]"
                 >
                   <CancelIcon />
                   {t('btn_cancel_entry')}
@@ -158,21 +162,18 @@ export function ReservationCard({ entry, onValidate, onStart, onCancel }: Props)
   );
 }
 
-/* Helpers */
-
-function formatDateTime(iso: string): string {
-  const d = new Date(iso);
-  return d.toLocaleTimeString('fr-CA', { hour: '2-digit', minute: '2-digit' });
+function formatTime(iso: string): string {
+  return new Date(iso).toLocaleTimeString('fr-CA', { hour: '2-digit', minute: '2-digit' });
 }
 
 function DetailRow({ label, value, mono, gold, muted }: { label: string; value: string; mono?: boolean; gold?: boolean; muted?: boolean }) {
   return (
     <div className="flex items-baseline justify-between gap-2">
-      <span className="text-[#888] dark:text-[#6A6A5A]">{label}</span>
+      <span className="text-[#000717]/60 dark:text-[#FFFFF0]/50">{label}</span>
       <span className={`text-right font-semibold ${
-        gold ? 'text-[#C49A1E]' :
-        muted ? 'text-[#BBB] dark:text-[#555]' :
-        'text-[#1A1A0A] dark:text-[#F0EDD4]'
+        gold ? 'text-[#C09A18]' :
+        muted ? 'text-[#000717]/40 dark:text-[#FFFFF0]/30' :
+        'text-[#000C1F] dark:text-[#FFF8EC]'
       } ${mono ? 'font-mono' : ''}`}>
         {value}
       </span>
@@ -180,12 +181,10 @@ function DetailRow({ label, value, mono, gold, muted }: { label: string; value: 
   );
 }
 
-/* Icons */
-
 const ChevronIcon = ({ expanded }: { expanded: boolean }) => (
   <svg
     width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round"
-    className={`shrink-0 text-[#BBB] transition-transform dark:text-[#555] ${expanded ? 'rotate-180' : ''}`}
+    className={`shrink-0 text-[#000C1F]/30 transition-transform dark:text-[#FFF8EC]/30 ${expanded ? 'rotate-180' : ''}`}
   >
     <polyline points="6 9 12 15 18 9" />
   </svg>

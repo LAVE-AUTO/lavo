@@ -145,7 +145,7 @@ export function StationReservationsPage() {
   if (loading) {
     return (
       <div className="flex flex-1 items-center justify-center">
-        <div className="h-8 w-8 animate-spin rounded-full border-[3px] border-[#C49A1E] border-t-transparent" />
+        <div className="h-8 w-8 animate-spin rounded-full border-[3px] border-[#C09A18] border-t-transparent" />
       </div>
     );
   }
@@ -153,8 +153,8 @@ export function StationReservationsPage() {
   if (loadError) {
     return (
       <div className="flex flex-1 flex-col items-center justify-center gap-3 text-center">
-        <span className="text-[14px] font-semibold text-[#999] dark:text-[#6A6A5A]">{t('error_load')}</span>
-        <button type="button" onClick={loadData} className="rounded-[10px] border border-[#C49A1E]/50 px-4 py-2 text-[13px] font-semibold text-[#C49A1E] transition-colors hover:bg-[#C49A1E]/10">
+        <span className="text-[14px] font-semibold text-[#000C1F]/50 dark:text-[#FFF8EC]/40">{t('error_load')}</span>
+        <button type="button" onClick={loadData} className="rounded-[10px] border-[1.5px] border-[#C09A18]/50 px-4 py-2 text-[13px] font-semibold text-[#C09A18] transition-colors hover:bg-[#C09A18]/10">
           {t('btn_retry')}
         </button>
       </div>
@@ -164,26 +164,26 @@ export function StationReservationsPage() {
   const confirm = getConfirmProps();
 
   return (
-    <div className="flex flex-1 flex-col overflow-hidden bg-[#F5F5EE] dark:bg-[#0C1209]">
+    <div className="flex flex-1 flex-col overflow-hidden bg-[#EDEDED] dark:bg-[#1A2116]">
       {/* Header */}
-      <div className="border-b border-[#E0DCD0] bg-white px-5 pb-4 pt-5 dark:border-[#1A2A14] dark:bg-[#111A0E]">
+      <div className="border-b border-[#CCCCCC] bg-[#E0E0D0] px-6 pb-4 pt-5 dark:border-[#3A4A36] dark:bg-[#243020]">
         <div className="flex items-center justify-between gap-4">
           <div className="min-w-0">
-            <h1 className="text-[18px] font-black text-[#1A1A0A] dark:text-[#F0EDD4]">
+            <h1 className="text-[20px] font-bold text-[#000C1F] dark:text-[#FFF8EC]">
               {t('page_title')}
             </h1>
-            <p className="mt-0.5 text-[12px] text-[#888] dark:text-[#6A6A5A]">
+            <p className="mt-0.5 text-[12px] text-[#000717]/50 dark:text-[#FFFFF0]/50">
               {t('page_subtitle', { count: entries.length })}
             </p>
           </div>
           {/* Mini KPI row */}
           <div className="hidden shrink-0 items-center gap-2 sm:flex">
             <KpiChip value={kpis.active} color="#00C851" label={t('tab_in_progress')} />
-            <KpiChip value={kpis.done} color="#6366F1" label={t('tab_completed')} />
-            <KpiChip value={`${kpis.revenue.toFixed(0)}$`} color="#C49A1E" label={t('amount_label')} />
+            <KpiChip value={kpis.done} color="#0044FF" label={t('tab_completed')} />
+            <KpiChip value={`${kpis.revenue.toFixed(0)}$`} color="#C09A18" label={t('amount_label')} />
           </div>
         </div>
-        <div className="mt-3">
+        <div className="mt-4">
           <StatusTabs active={activeTab} counts={counts} onChange={setActiveTab} />
         </div>
       </div>
@@ -191,14 +191,14 @@ export function StationReservationsPage() {
       {/* Entry list */}
       <div className="flex-1 overflow-y-auto p-4">
         {filtered.length === 0 ? (
-          <div className="flex flex-col items-center justify-center gap-2 py-16 text-center">
+          <div className="flex flex-col items-center justify-center gap-3 py-16 text-center">
             <EmptyIcon />
-            <span className="text-[13px] font-semibold text-[#999] dark:text-[#6A6A5A]">
+            <span className="text-[13px] font-semibold text-[#000C1F]/40 dark:text-[#FFF8EC]/30">
               {activeTab === 'all' ? t('empty_state') : t('empty_filtered')}
             </span>
           </div>
         ) : (
-          <div className="grid grid-cols-1 gap-2.5 xl:grid-cols-2">
+          <div className="grid grid-cols-1 gap-3 xl:grid-cols-2">
             {filtered.map((entry) => (
               <ReservationCard
                 key={entry.id}
@@ -228,16 +228,16 @@ export function StationReservationsPage() {
 
 function KpiChip({ value, color, label }: { value: string | number; color: string; label: string }) {
   return (
-    <div className="flex items-center gap-1.5 rounded-lg bg-[#F7F6F2] px-2.5 py-1.5 dark:bg-[#0F1A0C]">
-      <span className="inline-block h-1.5 w-1.5 rounded-full" style={{ background: color }} />
-      <span className="font-mono text-[13px] font-bold text-[#1A1A0A] dark:text-[#F0EDD4]">{value}</span>
-      <span className="text-[9px] font-semibold text-[#888] dark:text-[#6A6A5A]">{label}</span>
+    <div className="flex items-center gap-1.5 rounded-[8px] bg-[#C8C8B4] px-3 py-1.5 dark:bg-[#1E2A1A]">
+      <span className="inline-block h-2 w-2 rounded-full" style={{ background: color }} />
+      <span className="font-mono text-[14px] font-bold text-[#000C1F] dark:text-[#FFF8EC]">{value}</span>
+      <span className="text-[10px] font-semibold text-[#000717]/50 dark:text-[#FFFFF0]/50">{label}</span>
     </div>
   );
 }
 
 const EmptyIcon = () => (
-  <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1} strokeLinecap="round" strokeLinejoin="round" className="text-[#D8D4C8] dark:text-[#243020]">
+  <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1} strokeLinecap="round" strokeLinejoin="round" className="text-[#000C1F]/15 dark:text-[#FFF8EC]/15">
     <rect x="3" y="4" width="18" height="18" rx="2" />
     <line x1="16" y1="2" x2="16" y2="6" /><line x1="8" y1="2" x2="8" y2="6" />
     <line x1="3" y1="10" x2="21" y2="10" />
