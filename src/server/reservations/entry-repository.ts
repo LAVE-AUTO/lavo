@@ -225,8 +225,9 @@ export async function listQueueByStation(stationId: string): Promise<Entry[]> {
 /**
  * Returns the count of queue entries for the station (for queue-position helper context).
  */
-export async function countQueueByStation(stationId: string): Promise<number> {
-  const result = await db
+export async function countQueueByStation(stationId: string, tx?: DbTransaction): Promise<number> {
+  const client = tx ?? db;
+  const result = await client
     .select({ count: sql<number>`count(*)::int` })
     .from(reservations)
     .where(

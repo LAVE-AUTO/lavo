@@ -82,23 +82,27 @@ export async function moveReservationToQueue(entryId: string): Promise<Entry> {
   if (!entry.time_slot_id) throw new ConflictError('Reservation has no time slot');
 
   const stationId = entry.station_id;
-  const existingCount = await countQueueByStation(stationId);
-  const newPosition = getQueuePositionWhenMovingFromReservation(stationId, {
-    existingQueueCount: existingCount,
-  });
 
-  await shiftQueuePositions(stationId, newPosition, 1);
-  await updateEntry(entryId, {
-    entry_type: 'queue',
-    time_slot_id: null,
-    queue_position: newPosition,
-    status: STATUS_LATE,
-    updated_at: new Date(),
+  // Atomic: compute new position, shift queue, convert entry, decrement slot — all or nothing.
+  await db.transaction(async (tx) => {
+    const existingCount = await countQueueByStation(stationId, tx);
+    const newPosition = getQueuePositionWhenMovingFromReservation(stationId, {
+      existingQueueCount: existingCount,
+    });
+    await shiftQueuePositions(stationId, newPosition, 1, tx);
+    await updateEntry(entryId, {
+      entry_type: 'queue',
+      time_slot_id: null,
+      queue_position: newPosition,
+      status: STATUS_LATE,
+      updated_at: new Date(),
+    }, tx);
+    await decrementSlotBookedCount(entry.time_slot_id!, tx);
   });
-  await decrementSlotBookedCount(entry.time_slot_id);
 
   // Capture the payment immediately — no refund for late clients.
   // Distribution (station payout + platform commission) happens at capture time.
+  // Kept outside the transaction: Stripe is an external call and must not hold DB locks.
   if (entry.stripe_payment_id) {
     try {
       await capturePaymentIntent(entry.stripe_payment_id);
@@ -176,14 +180,13 @@ export async function updateEntryPosition(
   const oldPosition = entry.queue_position ?? 0;
   if (oldPosition === newPosition) return entry;
 
-  if (newPosition < oldPosition) {
-    await shiftQueuePositions(stationId, newPosition, 1);
-  } else if (newPosition > oldPosition) {
-    await shiftQueuePositions(stationId, oldPosition + 1, -1);
-  }
-  const updated = await updateEntry(entryId, {
-    queue_position: newPosition,
-    updated_at: new Date(),
+  // Atomic: shift affected entries and update this entry's position in one transaction.
+  return db.transaction(async (tx) => {
+    if (newPosition < oldPosition) {
+      await shiftQueuePositions(stationId, newPosition, 1, tx);
+    } else {
+      await shiftQueuePositions(stationId, oldPosition + 1, -1, tx);
+    }
+    return updateEntry(entryId, { queue_position: newPosition, updated_at: new Date() }, tx);
   });
-  return updated;
 }
