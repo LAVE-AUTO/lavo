@@ -244,7 +244,7 @@ export async function cancelEntry(
 /**
  * Confirms the client's presence for a reservation.
  * Only allowed for reservations in 'confirmed' status owned by the user.
- * Sets client_confirmed = true. Idempotent if already confirmed.
+ * Sets client_confirmed = true. Returns 409 if already confirmed.
  */
 export async function confirmPresence(reservationId: string, userId: string): Promise<Entry> {
   const entry = await findEntryByIdAndUser(reservationId, userId);
