@@ -16,6 +16,7 @@ import {
   listQueueByStation,
   countQueueByStation,
   getNextQueuePosition,
+  hasActiveEntryAtStation,
   updateEntry,
   shiftQueuePositions,
   type Entry,
@@ -37,20 +38,27 @@ export async function joinQueue(
   if (!format) throw new NotFoundError('Vehicle format not found');
   if (!format.is_active) throw new ConflictError('Format is not active');
 
-  const nextPos = await getNextQueuePosition(stationId);
+  // Atomic: check duplicate and allocate position inside transaction to prevent race conditions.
+  const entry = await db.transaction(async (tx) => {
+    const hasActive = await hasActiveEntryAtStation(userId, stationId, tx);
+    if (hasActive) throw new ConflictError('You already have an active entry at this station');
 
-  const entry = await createQueueEntry({
-    user_id: userId,
-    station_id: stationId,
-    vehicle_format_id: vehicleFormatId,
-    queue_position: nextPos,
-    status: STATUS_PENDING,
-    amount_paid: '0.00',
-    commission_rate: '0.00',
-    commission_amount: '0.00',
-    station_payout: '0.00',
-    stripe_payment_id: null,
+    const nextPos = await getNextQueuePosition(stationId, tx);
+
+    return createQueueEntry({
+      user_id: userId,
+      station_id: stationId,
+      vehicle_format_id: vehicleFormatId,
+      queue_position: nextPos,
+      status: STATUS_PENDING,
+      amount_paid: '0.00',
+      commission_rate: '0.00',
+      commission_amount: '0.00',
+      station_payout: '0.00',
+      stripe_payment_id: null,
+    }, tx);
   });
+
   await notifyEntry({
     entryId: entry.id,
     userId,
@@ -84,13 +92,13 @@ export async function moveReservationToQueue(entryId: string): Promise<Entry> {
   const stationId = entry.station_id;
 
   // Atomic: compute new position, shift queue, convert entry, decrement slot — all or nothing.
-  await db.transaction(async (tx) => {
+  const updated = await db.transaction(async (tx) => {
     const existingCount = await countQueueByStation(stationId, tx);
     const newPosition = getQueuePositionWhenMovingFromReservation(stationId, {
       existingQueueCount: existingCount,
     });
     await shiftQueuePositions(stationId, newPosition, 1, tx);
-    await updateEntry(entryId, {
+    const result = await updateEntry(entryId, {
       entry_type: 'queue',
       time_slot_id: null,
       queue_position: newPosition,
@@ -98,6 +106,7 @@ export async function moveReservationToQueue(entryId: string): Promise<Entry> {
       updated_at: new Date(),
     }, tx);
     await decrementSlotBookedCount(entry.time_slot_id!, tx);
+    return result;
   });
 
   // Capture the payment immediately — no refund for late clients.
@@ -121,7 +130,7 @@ export async function moveReservationToQueue(entryId: string): Promise<Entry> {
     stationId,
     type: 'moved_to_queue',
   });
-  return (await findEntryById(entryId))!;
+  return updated;
 }
 
 /**

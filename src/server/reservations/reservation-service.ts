@@ -378,22 +378,24 @@ export async function upgradeQueueToReservation(
     paymentIntentId = result.paymentIntentId;
     clientSecret = result.clientSecret;
   } catch (stripeError) {
-    // Rollback: revert entry to queue to avoid an orphaned pending_payment reservation.
-    await updateEntry(entryId, {
-      entry_type: 'queue',
-      time_slot_id: null,
-      queue_position: entry.queue_position,
-      status: 'pending',
-      amount_paid: '0.00',
-      commission_rate: '0.00',
-      commission_amount: '0.00',
-      station_payout: '0.00',
+    // Rollback: revert entry to queue and restore positions atomically to avoid partial state.
+    await db.transaction(async (tx) => {
+      await updateEntry(entryId, {
+        entry_type: 'queue',
+        time_slot_id: null,
+        queue_position: entry.queue_position,
+        status: 'pending',
+        amount_paid: '0.00',
+        commission_rate: '0.00',
+        commission_amount: '0.00',
+        station_payout: '0.00',
+      }, tx);
+      await decrementSlotBookedCount(timeSlotId, tx);
+      // Restore queue positions: shift back entries that were shifted up.
+      if ((entry.queue_position ?? 0) > 0) {
+        await shiftQueuePositions(stationId, entry.queue_position! + 1, 1, tx);
+      }
     });
-    await decrementSlotBookedCount(timeSlotId);
-    // Restore queue positions: shift back entries that were shifted up.
-    if ((entry.queue_position ?? 0) > 0) {
-      await shiftQueuePositions(stationId, entry.queue_position! + 1, 1);
-    }
     throw stripeError;
   }
 

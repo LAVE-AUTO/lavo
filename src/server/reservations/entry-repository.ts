@@ -69,8 +69,9 @@ export async function createReservationEntry(
 /**
  * Creates a queue entry. Caller must ensure queue_position is the next available (e.g. end of queue).
  */
-export async function createQueueEntry(data: CreateQueueEntryData): Promise<Entry> {
-  const [row] = await db
+export async function createQueueEntry(data: CreateQueueEntryData, tx?: DbTransaction): Promise<Entry> {
+  const client = tx ?? db;
+  const [row] = await client
     .insert(reservations)
     .values({
       user_id: data.user_id,
@@ -143,6 +144,7 @@ export async function findReservationWithSlot(
       stripe_payment_id: reservations.stripe_payment_id,
       stripe_transfer_id: reservations.stripe_transfer_id,
       stripe_refund_id: reservations.stripe_refund_id,
+      client_confirmed: reservations.client_confirmed,
       cancellation_reason: reservations.cancellation_reason,
       penalty_amount: reservations.penalty_amount,
       confirmed_at: reservations.confirmed_at,
@@ -191,6 +193,8 @@ export async function listEntriesByStation(stationId: string): Promise<Entry[]> 
       tip_amount: reservations.tip_amount,
       stripe_payment_id: reservations.stripe_payment_id,
       stripe_transfer_id: reservations.stripe_transfer_id,
+      stripe_refund_id: reservations.stripe_refund_id,
+      client_confirmed: reservations.client_confirmed,
       cancellation_reason: reservations.cancellation_reason,
       penalty_amount: reservations.penalty_amount,
       confirmed_at: reservations.confirmed_at,
@@ -240,10 +244,12 @@ export async function countQueueByStation(stationId: string, tx?: DbTransaction)
 }
 
 /**
- * Returns the max queue_position for the station, or 0 if no queue entries.
+ * Returns the next available queue_position for the station (max + 1, or 1 if empty).
+ * Accepts an optional transaction so the read is consistent with surrounding writes.
  */
-export async function getNextQueuePosition(stationId: string): Promise<number> {
-  const result = await db
+export async function getNextQueuePosition(stationId: string, tx?: DbTransaction): Promise<number> {
+  const client = tx ?? db;
+  const result = await client
     .select({
       max: sql<number | null>`max(${reservations.queue_position})::int`,
     })
@@ -389,6 +395,8 @@ export async function listEntriesByStationPaginated(
         tip_amount: reservations.tip_amount,
         stripe_payment_id: reservations.stripe_payment_id,
         stripe_transfer_id: reservations.stripe_transfer_id,
+        stripe_refund_id: reservations.stripe_refund_id,
+        client_confirmed: reservations.client_confirmed,
         cancellation_reason: reservations.cancellation_reason,
         penalty_amount: reservations.penalty_amount,
         confirmed_at: reservations.confirmed_at,
