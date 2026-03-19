@@ -49,6 +49,13 @@ const HistoryIcon = () => (
   </svg>
 );
 
+const QrIcon = () => (
+  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <rect x="2" y="2" width="8" height="8" rx="1" /><rect x="14" y="2" width="8" height="8" rx="1" />
+    <rect x="2" y="14" width="8" height="8" rx="1" /><path d="M14 14h3v3h-3zM20 14v3h-3M14 20h3M20 20h0" />
+  </svg>
+);
+
 const SupportIcon = () => (
   <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
     <circle cx="12" cy="12" r="10" /><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3" /><line x1="12" y1="17" x2="12.01" y2="17" />
@@ -75,6 +82,7 @@ export function StationSidebar() {
     { href: '/station/formats',      labelKey: 'nav_formats',      icon: <FormatsIcon /> },
     { href: '/station/config',       labelKey: 'nav_config',       icon: <ConfigIcon /> },
     { href: '/station/history',      labelKey: 'nav_history',      icon: <HistoryIcon /> },
+    { href: '/station/qr',           labelKey: 'nav_qr',           icon: <QrIcon /> },
     { href: '/station/support',      labelKey: 'nav_support',      icon: <SupportIcon /> },
   ];
 

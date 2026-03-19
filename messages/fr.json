@@ -1265,6 +1265,7 @@
     "nav_support": "Support",
     "nav_logout": "Se déconnecter",
     "nav_queue": "File d'attente",
+    "nav_qr": "QR Code",
     "kpi_revenue": "Revenus aujourd'hui",
     "kpi_clients": "Clients servis",
     "kpi_late_fees": "Frais de retard",
@@ -1484,5 +1485,22 @@
     "aria_close": "Fermer",
     "aria_edit": "Modifier",
     "aria_delete": "Supprimer"
+  },
+  "station_qr": {
+    "page_title": "QR Code de votre station",
+    "page_subtitle": "Affichez ce code dans votre station pour que vos clients puissent scanner et acceder a votre page.",
+    "station_name_label": "Station",
+    "station_url_label": "Lien public",
+    "download_png": "Telecharger PNG",
+    "download_svg": "Telecharger SVG",
+    "copy_link": "Copier le lien",
+    "link_copied": "Lien copie !",
+    "share": "Partager",
+    "share_title": "QR Code — {name}",
+    "share_text": "Scannez ce QR code pour acceder a la station {name} sur Slowtime.",
+    "loading": "Chargement...",
+    "error_load": "Impossible de charger les informations de la station.",
+    "btn_retry": "Reessayer",
+    "print_hint": "Imprimez ce QR code et placez-le a l'entree de votre station."
   }
 }
