@@ -762,8 +762,222 @@
       ]
     },
     {
-      "name": "Annulation",
-      "description": "PATCH /api/v1/me/entries/:entryId/cancel — Annule une reservation ou quitte la file d'attente.",
+      "name": "Annulation reservation (remboursement Stripe)",
+      "description": "POST /api/v1/reservations/:id/cancel — Annule une reservation confirmed ou pending avec remboursement Stripe et distribution automatique de la penalite.\n\nPolitique :\n- Remboursement integral si >= 60 min avant le service (pas de penalite).\n- Penalite 20% si < 60 min avant le service, distribuee entre plateforme (70%) et station (30%) via Stripe transfer reversal.\n\nDistribution de la penalite (ex. reservation €10) :\n- Client remboursé : €8\n- Plateforme garde : €1 (commission) + €1.40 (70% penalite) = €2.40\n- Station garde : €0.60 (30% penalite)\n\nConfig modifiable en DB (settings, type=admin) :\n- cancellation_free_window_minutes (defaut: 60)\n- cancellation_penalty_percent (defaut: 20)\n- cancellation_penalty_platform_rate (defaut: 70)\n- cancellation_penalty_station_rate (defaut: 30)\n\nPrerequis : reservation au statut confirmed ou pending, auth client.",
+      "item": [
+        {
+          "name": "Annuler reservation — sans penalite (200)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 200', () => pm.response.to.have.status(200));",
+                  "pm.test('Remboursement integral, pas de penalite', () => {",
+                  "  const json = pm.response.json();",
+                  "  pm.expect(json.data.penalty_amount).to.eql(0);",
+                  "  pm.expect(json.data.is_late_cancellation).to.eql(false);",
+                  "  pm.expect(json.data.refunded_amount).to.be.above(0);",
+                  "  pm.expect(json.data.entry.status).to.eql('cancelled');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "response": [],
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/reservations/{{reservation_id}}/cancel",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "reservations", "{{reservation_id}}", "cancel"]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"reason\": \"Plans changed\"\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "description": "Annulation >= 60 min avant le service : remboursement integral, penalite = 0.\n\nPour tester sans penalite, assurez-vous que le creneau est dans plus de 60 minutes."
+          }
+        },
+        {
+          "name": "Annuler reservation — avec penalite 20% (200)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 200', () => pm.response.to.have.status(200));",
+                  "pm.test('Penalite appliquee, remboursement partiel', () => {",
+                  "  const json = pm.response.json();",
+                  "  pm.expect(json.data.is_late_cancellation).to.eql(true);",
+                  "  pm.expect(json.data.penalty_amount).to.be.above(0);",
+                  "  pm.expect(json.data.refunded_amount).to.be.above(0);",
+                  "  pm.expect(json.data.refunded_amount).to.be.below(json.data.entry.amount_paid);",
+                  "  pm.expect(json.data.entry.status).to.eql('cancelled');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "response": [],
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/reservations/{{reservation_id}}/cancel",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "reservations", "{{reservation_id}}", "cancel"]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"reason\": \"Emergency\"\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "description": "Annulation < 60 min avant le service : penalite 20% retenue, remboursement partiel.\n\nPour simuler, utilisez un creneau dans moins de 60 minutes."
+          }
+        },
+        {
+          "name": "Annuler reservation — sans raison (200)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 200', () => pm.response.to.have.status(200));",
+                  "pm.test('Statut cancelled', () => {",
+                  "  const json = pm.response.json();",
+                  "  pm.expect(json.data.entry.status).to.eql('cancelled');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "response": [],
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/v1/reservations/{{reservation_id}}/cancel",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "reservations", "{{reservation_id}}", "cancel"]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "description": "Annulation sans raison — le champ reason est optionnel."
+          }
+        },
+        {
+          "name": "Annuler reservation — deja annulee (409)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 409', () => pm.response.to.have.status(409));",
+                  "pm.test('Code CONFLICT', () => {",
+                  "  const json = pm.response.json();",
+                  "  pm.expect(json.code).to.eql('CONFLICT');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "response": [],
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/v1/reservations/{{reservation_id}}/cancel",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "reservations", "{{reservation_id}}", "cancel"]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "description": "409 CONFLICT — la reservation est deja annulee ou dans un statut non annulable (completed, in_progress, pending_payment)."
+          }
+        },
+        {
+          "name": "Annuler reservation — inexistante (404)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 404', () => pm.response.to.have.status(404));"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "response": [],
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/v1/reservations/00000000-0000-0000-0000-000000000000/cancel",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "reservations", "00000000-0000-0000-0000-000000000000", "cancel"]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "description": "404 NOT_FOUND — reservation inexistante ou appartenant a un autre utilisateur."
+          }
+        },
+        {
+          "name": "Annuler reservation — non authentifie (401)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 401', () => pm.response.to.have.status(401));"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "response": [],
+          "request": {
+            "auth": { "type": "noauth" },
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/v1/reservations/{{reservation_id}}/cancel",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "reservations", "{{reservation_id}}", "cancel"]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "description": "401 UNAUTHORIZED — aucun token fourni."
+          }
+        }
+      ]
+    },
+    {
+      "name": "Annulation entree (file / pending_payment)",
+      "description": "PATCH /api/v1/me/entries/:entryId/cancel — Annule une entree de file d'attente ou une reservation en attente de paiement.\n\nPas de remboursement Stripe : annule le PaymentIntent si pending_payment, reordonne la file si queue.\nPour les reservations confirmed, utiliser POST /reservations/:id/cancel.",
       "item": [
         {
           "name": "Annuler entree — succes (200)",

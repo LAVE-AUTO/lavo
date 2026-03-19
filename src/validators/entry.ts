@@ -13,6 +13,18 @@ export const entryIdParamSchema = z.object({
   entryId: z.string().uuid('Invalid entry id'),
 });
 
+/** Path param: reservation id (for POST /reservations/:id/cancel). */
+export const reservationIdParamSchema = z.object({
+  id: z.string().uuid('Invalid reservation id'),
+});
+
+/** POST /reservations/:id/cancel — optional cancellation reason. */
+export const cancelReservationBodySchema = z
+  .object({
+    reason: z.string().max(500).optional(),
+  })
+  .strict();
+
 /** POST /stations/:id/reservations — create reservation. */
 export const createReservationBodySchema = z
   .object({
