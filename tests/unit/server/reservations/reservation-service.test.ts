@@ -146,8 +146,8 @@ describe('reservation-service', () => {
       await expect(
         createReservation(userId, stationId, stripeAccountId, slotId, formatId)
       ).rejects.toThrow('Stripe unavailable');
-      expect(mockUpdateEntry).toHaveBeenCalledWith(entryId, expect.objectContaining({ status: 'cancelled' }));
-      expect(mockDecrementSlotBookedCount).toHaveBeenCalledWith(slotId);
+      expect(mockUpdateEntry).toHaveBeenCalledWith(entryId, expect.objectContaining({ status: 'cancelled' }), expect.anything());
+      expect(mockDecrementSlotBookedCount).toHaveBeenCalledWith(slotId, expect.anything());
     });
   });
 

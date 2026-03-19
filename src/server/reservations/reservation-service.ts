@@ -3,7 +3,7 @@
  * Uses entry repository, slot repo (booked_count + SELECT FOR UPDATE), config (surcharge),
  * Stripe PaymentIntent (Connect), and notification stubs.
  */
-import { NotFoundError, ConflictError } from '@/lib/errors';
+import { NotFoundError, ConflictError, SlotFullError, ActiveReservationExistsError } from '@/lib/errors';
 import { DEFAULT_COMMISSION_RATE } from '@/helpers/constants';
 import { db } from '@/lib/db';
 import { getConfigByStationId } from '@/server/station/config-repository';
@@ -86,13 +86,13 @@ export async function createReservation(
   const entry = await db.transaction(async (tx) => {
     // Duplicate check inside transaction to prevent TOCTOU race
     const hasActive = await hasActiveEntryAtStation(userId, stationId, tx);
-    if (hasActive) throw new ConflictError('You already have an active reservation at this station');
+    if (hasActive) throw new ActiveReservationExistsError();
 
     const slot = await lockSlotForUpdate(timeSlotId, stationId, tx);
     if (!slot) throw new NotFoundError('Time slot not found or does not belong to this station');
 
     const count = await countReservationsBySlotId(timeSlotId, tx);
-    if (count >= (slot.capacity ?? 0)) throw new ConflictError('Slot is full');
+    if (count >= (slot.capacity ?? 0)) throw new SlotFullError();
 
     const created = await createReservationEntry(
       {
@@ -136,9 +136,11 @@ export async function createReservation(
     paymentIntentId = result.paymentIntentId;
     clientSecret = result.clientSecret;
   } catch (stripeError) {
-    // Rollback: cancel entry and decrement slot to avoid orphaned pending_payment
-    await updateEntry(entry.id, { status: STATUS_CANCELLED, cancellation_reason: 'Payment setup failed' });
-    await decrementSlotBookedCount(timeSlotId);
+    // Rollback: atomically cancel entry and decrement slot to avoid orphaned pending_payment
+    await db.transaction(async (tx) => {
+      await updateEntry(entry.id, { status: STATUS_CANCELLED, cancellation_reason: 'Payment setup failed' }, tx);
+      await decrementSlotBookedCount(timeSlotId, tx);
+    });
     throw stripeError;
   }
 
@@ -237,7 +239,7 @@ export async function upgradeQueueToReservation(
     if (!slot) throw new NotFoundError('Time slot not found or does not belong to this station');
 
     const count = await countReservationsBySlotId(timeSlotId, tx);
-    if (count >= (slot.capacity ?? 0)) throw new ConflictError('Slot is full');
+    if (count >= (slot.capacity ?? 0)) throw new SlotFullError();
 
     const oldPosition = entry.queue_position ?? 0;
     await shiftQueuePositions(stationId, oldPosition + 1, -1, tx);

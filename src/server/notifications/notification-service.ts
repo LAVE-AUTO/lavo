@@ -7,7 +7,7 @@ export type NotifyEntryParams = {
   entryId: string;
   userId: string;
   stationId: string;
-  type: 'reservation_created' | 'reservation_confirmed' | 'payment_failed' | 'queue_joined' | 'moved_to_queue' | 'entry_cancelled' | 'invitation_to_rate';
+  type: 'reservation_created' | 'reservation_confirmed' | 'payment_failed' | 'queue_joined' | 'moved_to_queue' | 'entry_cancelled' | 'reservation_cancelled' | 'invitation_to_rate';
   payload?: Record<string, unknown>;
 };
 

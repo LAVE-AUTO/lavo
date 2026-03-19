@@ -87,3 +87,24 @@ export class TokenExpiredError extends AppError {
     super(message, HTTP_STATUS.BAD_REQUEST);
   }
 }
+
+/**
+ * Slot full error (409) — raised when a time slot has no remaining capacity.
+ * Distinct from ConflictError to allow typed routing to ApiCode.SLOT_FULL.
+ */
+export class SlotFullError extends ConflictError {
+  constructor(message = 'Slot is full') {
+    super(message);
+  }
+}
+
+/**
+ * Active reservation exists error (409) — raised when the user already has an
+ * active reservation at the same station.
+ * Distinct from ConflictError to allow typed routing to ApiCode.ACTIVE_RESERVATION_EXISTS.
+ */
+export class ActiveReservationExistsError extends ConflictError {
+  constructor(message = 'You already have an active reservation at this station') {
+    super(message);
+  }
+}
