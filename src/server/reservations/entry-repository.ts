@@ -463,6 +463,23 @@ export async function updateEntry(
 }
 
 /**
+ * Updates entry to confirmed only if current status is pending_payment.
+ * Returns the updated entry, or undefined if no row matched (race: already cancelled/confirmed).
+ */
+export async function confirmEntryIfPendingPayment(id: string): Promise<Entry | undefined> {
+  const [row] = await db
+    .update(reservations)
+    .set({
+      status: 'confirmed',
+      confirmed_at: new Date(),
+      updated_at: new Date(),
+    })
+    .where(and(eq(reservations.id, id), eq(reservations.status, 'pending_payment')))
+    .returning();
+  return row;
+}
+
+/**
  * Shifts queue positions for a station: entries with queue_position >= fromPosition get +delta.
  * Used when inserting at a specific position (e.g. middle_of_queue) or reordering.
  */

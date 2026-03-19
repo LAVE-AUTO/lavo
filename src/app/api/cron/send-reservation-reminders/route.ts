@@ -11,6 +11,7 @@
  *   500 INTERNAL_ERROR
  */
 import { headers } from 'next/headers';
+import { verifyCronSecret } from '@/lib/verify-cron-secret';
 import { runSendReservationReminders } from '@/jobs/send-reservation-reminders';
 import { successResponse, error401, error500 } from '@/lib/responses';
 import { HTTP_STATUS } from '@/helpers/constants';
@@ -20,9 +21,9 @@ export async function GET() {
   const auth = headersList.get('authorization');
   const bearerToken = auth?.match(/^Bearer\s*(.*)$/i)?.[1]?.trim() ?? '';
   const secret = headersList.get('x-cron-secret') ?? bearerToken;
-  const expected = process.env.CRON_SECRET;
+  const expected = process.env.CRON_SECRET ?? '';
 
-  if (!expected || secret !== expected) {
+  if (!verifyCronSecret(secret, expected)) {
     return error401('Missing or invalid cron secret');
   }
 

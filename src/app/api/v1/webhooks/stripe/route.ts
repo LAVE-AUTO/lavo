@@ -20,6 +20,7 @@ import { stripe } from '@/lib/stripe';
 import { db } from '@/lib/db';
 import {
   findEntryByStripePaymentId,
+  confirmEntryIfPendingPayment,
   updateEntry,
 } from '@/server/reservations/entry-repository';
 import { decrementSlotBookedCount } from '@/server/station/slot-repository';
@@ -90,12 +91,8 @@ async function handlePaymentAuthorized(paymentIntentId: string): Promise<void> {
     return;
   }
 
-  if (entry.status !== 'pending_payment') return;
-
-  await updateEntry(entry.id, {
-    status: 'confirmed',
-    confirmed_at: new Date(),
-  });
+  const updated = await confirmEntryIfPendingPayment(entry.id);
+  if (!updated) return;
 
   try {
     await notifyEntry({
@@ -120,7 +117,7 @@ async function handlePaymentCancelled(paymentIntentId: string, reason: string): 
     return;
   }
 
-  if (entry.status !== 'pending_payment') return;
+  if (!['pending_payment', 'confirmed'].includes(entry.status)) return;
 
   await db.transaction(async (tx) => {
     await updateEntry(entry.id, {

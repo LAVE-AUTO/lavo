@@ -3,7 +3,7 @@
  * Uses entry repository, slot repo (booked_count + SELECT FOR UPDATE), config (surcharge),
  * Stripe PaymentIntent (Connect), and notification stubs.
  */
-import { NotFoundError, ConflictError } from '@/lib/errors';
+import { NotFoundError, ConflictError, ActiveReservationExistsError, SlotFullError } from '@/lib/errors';
 import { MAX_ADVANCE_BOOKING_DAYS } from '@/helpers/constants';
 import { getActiveCommissionRate } from '@/server/admin/platform-settings-service';
 import { db } from '@/lib/db';
@@ -393,9 +393,9 @@ export async function upgradeQueueToReservation(
         station_payout: '0.00',
       }, tx);
       await decrementSlotBookedCount(timeSlotId, tx);
-      // Restore queue positions: shift back entries that were shifted up.
+      // Restore queue positions: shift from oldPosition to make room for restored entry.
       if ((entry.queue_position ?? 0) > 0) {
-        await shiftQueuePositions(stationId, entry.queue_position! + 1, 1, tx);
+        await shiftQueuePositions(stationId, entry.queue_position!, 1, tx);
       }
     });
     throw stripeError;

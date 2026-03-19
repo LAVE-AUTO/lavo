@@ -97,3 +97,21 @@ export class NotImplementedError extends AppError {
     super(message, HTTP_STATUS.NOT_IMPLEMENTED);
   }
 }
+
+/**
+ * User already has an active reservation or queue entry at this station (409).
+ */
+export class ActiveReservationExistsError extends AppError {
+  constructor(message = 'You already have an active reservation or queue entry at this station') {
+    super(message, HTTP_STATUS.CONFLICT);
+  }
+}
+
+/**
+ * Time slot has no remaining capacity (409).
+ */
+export class SlotFullError extends AppError {
+  constructor(message = 'This time slot is full') {
+    super(message, HTTP_STATUS.CONFLICT);
+  }
+}

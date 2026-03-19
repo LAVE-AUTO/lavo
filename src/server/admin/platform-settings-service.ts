@@ -34,10 +34,15 @@ const DEFAULTS: CancellationPolicy = {
   stationPenaltyShare: 0.3,  // 30%
 };
 
+/** Commission rate must be in [0, 1] to avoid negative payouts or invalid splits. */
+const COMMISSION_RATE_MIN = 0;
+const COMMISSION_RATE_MAX = 1;
+
 /**
  * Returns the active platform commission rate as a decimal string (e.g. '0.1000').
  * Reads the most recent commissionSettings row with effective_at <= now().
  * Falls back to DEFAULT_COMMISSION_RATE if no row is configured yet.
+ * Clamps rate to [0, 1] to prevent injection of invalid values from DB.
  */
 export async function getActiveCommissionRate(): Promise<string> {
   const row = await db
@@ -46,7 +51,11 @@ export async function getActiveCommissionRate(): Promise<string> {
     .where(lte(commissionSettings.effective_at, new Date()))
     .orderBy(desc(commissionSettings.effective_at))
     .limit(1);
-  return row[0]?.rate ?? DEFAULT_COMMISSION_RATE;
+  const raw = row[0]?.rate ?? DEFAULT_COMMISSION_RATE;
+  const parsed = parseFloat(String(raw));
+  if (!Number.isFinite(parsed)) return DEFAULT_COMMISSION_RATE;
+  const clamped = Math.min(COMMISSION_RATE_MAX, Math.max(COMMISSION_RATE_MIN, parsed));
+  return clamped.toFixed(4);
 }
 
 /**
