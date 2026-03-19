@@ -10,7 +10,7 @@ export async function MerchantFooter() {
     { href: `/${locale}/merchant#how-it-works`, label: t('marchands_how'), external: true },
     { href: `/${locale}/merchant#features`, label: t('marchands_features'), external: true },
     { href: `/${locale}/merchant#features`, label: t('marchands_pricing'), external: true },
-    { href: '/register', label: t('marchands_join'), external: false },
+    { href: '/stations/apply', label: t('marchands_join'), external: false },
   ];
 
   const resourceLinks = [

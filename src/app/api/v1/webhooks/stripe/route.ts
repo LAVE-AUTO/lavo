@@ -49,7 +49,9 @@ export async function POST(request: Request): Promise<NextResponse> {
     return NextResponse.json({ error: 'Invalid signature' }, { status: 400 });
   }
 
-  // Wrap handlers in try/catch — always return 200 to prevent Stripe retries on transient errors
+  // On infrastructure errors (DB failures), return 500 so Stripe retries automatically.
+  // Handlers are idempotent: they check entry status before acting, so retries are safe.
+  // Expected non-error cases (entry not found, wrong status) are handled with early returns — no throw.
   try {
     switch (event.type) {
       case 'payment_intent.amount_capturable_updated':
@@ -70,6 +72,7 @@ export async function POST(request: Request): Promise<NextResponse> {
     }
   } catch (err) {
     console.error('Stripe webhook handler error:', event.type, err);
+    return NextResponse.json({ error: 'Handler failed' }, { status: 500 });
   }
 
   return NextResponse.json({ received: true });
@@ -94,12 +97,16 @@ async function handlePaymentAuthorized(paymentIntentId: string): Promise<void> {
     confirmed_at: new Date(),
   });
 
-  await notifyEntry({
-    entryId: entry.id,
-    userId: entry.user_id,
-    stationId: entry.station_id,
-    type: 'reservation_confirmed',
-  });
+  try {
+    await notifyEntry({
+      entryId: entry.id,
+      userId: entry.user_id,
+      stationId: entry.station_id,
+      type: 'reservation_confirmed',
+    });
+  } catch (err) {
+    console.error('Webhook: notification failed for reservation_confirmed', entry.id, err);
+  }
 }
 
 /**
@@ -126,10 +133,14 @@ async function handlePaymentCancelled(paymentIntentId: string, reason: string): 
     }
   });
 
-  await notifyEntry({
-    entryId: entry.id,
-    userId: entry.user_id,
-    stationId: entry.station_id,
-    type: 'payment_failed',
-  });
+  try {
+    await notifyEntry({
+      entryId: entry.id,
+      userId: entry.user_id,
+      stationId: entry.station_id,
+      type: 'entry_cancelled',
+    });
+  } catch (err) {
+    console.error('Webhook: notification failed for payment_failed', entry.id, err);
+  }
 }

@@ -11,7 +11,7 @@ import { createReservationBodySchema, mapZodErrors as mapEntryZodErrors } from '
 import { createReservation } from '@/server/reservations/reservation-service';
 import { findStationById } from '@/server/station/station-repository';
 import { serializeEntry } from '@/server/reservations/entry-serializer';
-import { AppError, ConflictError, NotFoundError } from '@/lib/errors';
+import { AppError, ConflictError, NotFoundError, SlotFullError, ActiveReservationExistsError } from '@/lib/errors';
 import type { NextResponse } from 'next/server';
 
 type Params = { params: Promise<{ id: string }> };
@@ -59,14 +59,9 @@ export async function POST(request: Request, { params }: Params): Promise<NextRe
     );
   } catch (e) {
     if (e instanceof NotFoundError) return error404(e.message);
-    if (e instanceof ConflictError) {
-      const code = e.message.includes('active reservation')
-        ? ApiCode.ACTIVE_RESERVATION_EXISTS
-        : e.message.includes('full')
-          ? ApiCode.SLOT_FULL
-          : ApiCode.CONFLICT;
-      return error409(e.message, code);
-    }
+    if (e instanceof ActiveReservationExistsError) return error409(e.message, ApiCode.ACTIVE_RESERVATION_EXISTS);
+    if (e instanceof SlotFullError) return error409(e.message, ApiCode.SLOT_FULL);
+    if (e instanceof ConflictError) return error409(e.message, ApiCode.CONFLICT);
     if (e instanceof AppError) return fromAppError(e);
     return error500(e);
   }
