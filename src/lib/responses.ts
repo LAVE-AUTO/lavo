@@ -48,6 +48,7 @@ function defaultCodeForStatus(status: number): ApiCode | undefined {
   if (status === HTTP_STATUS.FORBIDDEN) return ApiCode.FORBIDDEN;
   if (status === HTTP_STATUS.NOT_FOUND) return ApiCode.NOT_FOUND;
   if (status === HTTP_STATUS.CONFLICT) return ApiCode.CONFLICT;
+  if (status === HTTP_STATUS.NOT_IMPLEMENTED) return ApiCode.NOT_IMPLEMENTED;
   if (status >= 500) return ApiCode.INTERNAL_ERROR;
   return undefined;
 }

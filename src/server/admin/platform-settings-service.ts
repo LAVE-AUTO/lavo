@@ -15,9 +15,10 @@
  *   2. Reverse the station transfer for (penalty - station_share) to claw back platform's portion.
  *   Result: platform nets its penalty share, station nets its penalty share.
  */
-import { eq, and, isNull } from 'drizzle-orm';
+import { eq, and, isNull, lte, desc } from 'drizzle-orm';
 import { db } from '@/lib/db';
-import { settings } from '@/lib/db/schema';
+import { settings, commissionSettings } from '@/lib/db/schema';
+import { DEFAULT_COMMISSION_RATE } from '@/helpers/constants';
 
 export type CancellationPolicy = {
   freeWindowMinutes: number;
@@ -32,6 +33,21 @@ const DEFAULTS: CancellationPolicy = {
   platformPenaltyShare: 0.7, // 70%
   stationPenaltyShare: 0.3,  // 30%
 };
+
+/**
+ * Returns the active platform commission rate as a decimal string (e.g. '0.1000').
+ * Reads the most recent commissionSettings row with effective_at <= now().
+ * Falls back to DEFAULT_COMMISSION_RATE if no row is configured yet.
+ */
+export async function getActiveCommissionRate(): Promise<string> {
+  const row = await db
+    .select({ rate: commissionSettings.rate })
+    .from(commissionSettings)
+    .where(lte(commissionSettings.effective_at, new Date()))
+    .orderBy(desc(commissionSettings.effective_at))
+    .limit(1);
+  return row[0]?.rate ?? DEFAULT_COMMISSION_RATE;
+}
 
 /**
  * Reads a global admin setting by key. Returns null if not found.

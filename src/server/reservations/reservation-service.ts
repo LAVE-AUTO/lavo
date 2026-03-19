@@ -3,8 +3,9 @@
  * Uses entry repository, slot repo (booked_count + SELECT FOR UPDATE), config (surcharge),
  * Stripe PaymentIntent (Connect), and notification stubs.
  */
-import { NotFoundError, ConflictError, SlotFullError, ActiveReservationExistsError } from '@/lib/errors';
-import { DEFAULT_COMMISSION_RATE } from '@/helpers/constants';
+import { NotFoundError, ConflictError } from '@/lib/errors';
+import { MAX_ADVANCE_BOOKING_DAYS } from '@/helpers/constants';
+import { getActiveCommissionRate } from '@/server/admin/platform-settings-service';
 import { db } from '@/lib/db';
 import { getConfigByStationId } from '@/server/station/config-repository';
 import { findFormatByIdAndStation } from '@/server/station/format-repository';
@@ -14,7 +15,8 @@ import {
   incrementSlotBookedCount,
   decrementSlotBookedCount,
 } from '@/server/station/slot-repository';
-import { createPaymentIntent, cancelPaymentIntent } from '@/server/payments/payment-service';
+import { createPaymentIntent, cancelPaymentIntent, capturePaymentIntent } from '@/server/payments/payment-service';
+import { cancelReservation } from '@/server/reservations/cancellation-service';
 import { notifyEntry } from '@/server/notifications/notification-service';
 import {
   createReservationEntry,
@@ -32,6 +34,7 @@ import {
 
 const STATUS_PENDING_PAYMENT = 'pending_payment';
 const STATUS_CANCELLED = 'cancelled';
+const STATUS_CONFIRMED = 'confirmed';
 
 function toDecimal(v: string | number): string {
   return typeof v === 'number' ? v.toFixed(2) : String(v);
@@ -47,6 +50,17 @@ function parseDecimal(s: string | null | undefined): number {
 export type CreateReservationResult = {
   entry: Entry;
   clientSecret: string;
+};
+
+/**
+ * Result of cancelEntry. Financial fields are only present for confirmed reservations
+ * that triggered a Stripe refund (refundedAmount >= 0) or a late cancellation penalty.
+ */
+export type CancelEntryResult = {
+  entry: Entry;
+  refundedAmount?: number;
+  penaltyAmount?: number;
+  isLateCancellation?: boolean;
 };
 
 /**
@@ -78,7 +92,7 @@ export async function createReservation(
   const amountTotal = formatPrice + surcharge;
   if (amountTotal <= 0) throw new ConflictError('Invalid amount');
 
-  const commissionRate = DEFAULT_COMMISSION_RATE;
+  const commissionRate = await getActiveCommissionRate();
   const commissionAmount = amountTotal * parseFloat(commissionRate);
   const stationPayout = amountTotal - commissionAmount;
 
@@ -90,6 +104,12 @@ export async function createReservation(
 
     const slot = await lockSlotForUpdate(timeSlotId, stationId, tx);
     if (!slot) throw new NotFoundError('Time slot not found or does not belong to this station');
+
+    // Stripe card authorizations expire after 7 days — reject bookings beyond this window.
+    const maxAdvanceMs = MAX_ADVANCE_BOOKING_DAYS * 24 * 60 * 60 * 1000;
+    if (slot.start_time.getTime() - Date.now() > maxAdvanceMs) {
+      throw new ConflictError(`Reservations cannot be made more than ${MAX_ADVANCE_BOOKING_DAYS} days in advance`);
+    }
 
     const count = await countReservationsBySlotId(timeSlotId, tx);
     if (count >= (slot.capacity ?? 0)) throw new SlotFullError();
@@ -158,14 +178,35 @@ export async function createReservation(
 }
 
 /**
- * Cancels an entry (reservation or queue). For reservations, decrements slot booked_count.
- * For queue entries, shifts positions of entries behind it to fill the gap.
+ * Unified entry cancellation for PATCH /me/entries/:entryId/cancel.
+ * Handles all entry types and statuses:
+ *
+ * - Confirmed reservation (paid): delegates to cancelReservation() for full Stripe refund
+ *   + penalty policy. Returns financial details in the result.
+ * - Pending payment reservation: cancels the Stripe PaymentIntent, decrements slot.
+ * - Queue entry: shifts positions, no Stripe interaction.
  */
-export async function cancelEntry(entryId: string, userId: string): Promise<Entry> {
+export async function cancelEntry(
+  entryId: string,
+  userId: string,
+  reason?: string
+): Promise<CancelEntryResult> {
   const entry = await findEntryByIdAndUser(entryId, userId);
   if (!entry) throw new NotFoundError('Entry not found');
   if (entry.status === STATUS_CANCELLED) throw new ConflictError('Entry already cancelled');
 
+  // Confirmed reservations: full cancellation with Stripe refund and penalty policy.
+  if (entry.entry_type === 'reservation' && entry.status === STATUS_CONFIRMED) {
+    const result = await cancelReservation(entryId, userId, reason);
+    return {
+      entry: result.entry,
+      refundedAmount: result.refundedAmount,
+      penaltyAmount: result.penaltyAmount,
+      isLateCancellation: result.isLateCancellation,
+    };
+  }
+
+  // Queue entries and pending_payment reservations: simple cancellation.
   const updated = await db.transaction(async (tx) => {
     const current = await findEntryByIdAndUser(entryId, userId, tx);
     if (!current) throw new NotFoundError('Entry not found');
@@ -180,12 +221,16 @@ export async function cancelEntry(entryId: string, userId: string): Promise<Entr
     return updateEntry(entryId, { status: STATUS_CANCELLED }, tx);
   });
 
-  // Cancel Stripe PaymentIntent if entry was pending payment
+  // Cancel Stripe PaymentIntent if the reservation was awaiting payment.
   if (entry.status === STATUS_PENDING_PAYMENT && entry.stripe_payment_id) {
     try {
       await cancelPaymentIntent(entry.stripe_payment_id);
     } catch (e) {
-      console.error('Failed to cancel Stripe PaymentIntent:', entry.stripe_payment_id, e);
+      console.error('[CANCEL_PAYMENT_INTENT_FAILED]', {
+        entryId,
+        stripe_payment_id: entry.stripe_payment_id,
+        error: e instanceof Error ? e.message : String(e),
+      });
     }
   }
 
@@ -195,7 +240,21 @@ export async function cancelEntry(entryId: string, userId: string): Promise<Entr
     stationId: entry.station_id,
     type: 'entry_cancelled',
   });
-  return updated;
+  return { entry: updated };
+}
+
+/**
+ * Confirms the client's presence for a reservation.
+ * Only allowed for reservations in 'confirmed' status owned by the user.
+ * Sets client_confirmed = true. Returns 409 if already confirmed.
+ */
+export async function confirmPresence(reservationId: string, userId: string): Promise<Entry> {
+  const entry = await findEntryByIdAndUser(reservationId, userId);
+  if (!entry) throw new NotFoundError('Reservation not found');
+  if (entry.entry_type !== 'reservation') throw new ConflictError('Entry is not a reservation');
+  if (entry.status !== 'confirmed') throw new ConflictError(`Cannot confirm presence for a reservation with status '${entry.status}'`);
+  if (entry.client_confirmed) throw new ConflictError('Presence already confirmed');
+  return updateEntry(reservationId, { client_confirmed: true });
 }
 
 /**
@@ -218,25 +277,61 @@ export async function listStationEntries(
   return listEntriesByStationPaginated(stationId, filters);
 }
 
+/** Result of upgradeQueueToReservation: updated entry + Stripe client_secret for frontend payment. */
+export type UpgradeToReservationResult = {
+  entry: Entry;
+  clientSecret: string;
+};
+
 /**
- * Upgrades a queue entry to a reservation by assigning a time slot. Charges reservation surcharge
- * if configured, then updates the entry and increments slot booked_count. Shifts queue positions.
+ * Upgrades a queue entry to a reservation by assigning a time slot and initiating payment.
+ *
+ * Flow:
+ * 1. Validate entry is a queue entry belonging to the user at the given station.
+ * 2. Resolve price: vehicle format price + optional reservation surcharge.
+ * 3. Atomic transaction: lock slot, verify capacity, shift queue positions, convert entry to
+ *    reservation (pending_payment), increment slot booked_count.
+ * 4. Create Stripe PaymentIntent (manual capture) — outside the transaction.
+ * 5. Persist stripe_payment_id on the entry.
+ * 6. Return entry + client_secret for frontend payment confirmation.
  */
 export async function upgradeQueueToReservation(
   entryId: string,
   userId: string,
   timeSlotId: string,
-  stationId: string
-): Promise<Entry> {
+  stationId: string,
+  stationStripeAccountId: string
+): Promise<UpgradeToReservationResult> {
   const entry = await findEntryByIdAndUser(entryId, userId);
   if (!entry) throw new NotFoundError('Entry not found');
   if (entry.entry_type !== 'queue') throw new ConflictError('Entry is not a queue entry');
   if (entry.station_id !== stationId) throw new NotFoundError('Entry does not belong to this station');
 
-  // Atomic: lock slot, verify capacity, shift queue, update entry, increment booked_count.
+  const format = await findFormatByIdAndStation(entry.vehicle_format_id, stationId);
+  if (!format) throw new NotFoundError('Vehicle format not found');
+
+  const config = await getConfigByStationId(stationId);
+  const surcharge = config?.reservation_surcharge
+    ? parseDecimal(String(config.reservation_surcharge))
+    : 0;
+  const formatPrice = parseDecimal(String(format.price));
+  const amountTotal = formatPrice + surcharge;
+  if (amountTotal <= 0) throw new ConflictError('Invalid amount');
+
+  const commissionRate = await getActiveCommissionRate();
+  const commissionAmount = amountTotal * parseFloat(commissionRate);
+  const stationPayout = amountTotal - commissionAmount;
+
+  // Atomic: lock slot, verify capacity, shift queue, convert entry, increment booked_count.
   const updated = await db.transaction(async (tx) => {
     const slot = await lockSlotForUpdate(timeSlotId, stationId, tx);
     if (!slot) throw new NotFoundError('Time slot not found or does not belong to this station');
+
+    // Stripe card authorizations expire after 7 days.
+    const maxAdvanceMs = MAX_ADVANCE_BOOKING_DAYS * 24 * 60 * 60 * 1000;
+    if (slot.start_time.getTime() - Date.now() > maxAdvanceMs) {
+      throw new ConflictError(`Reservations cannot be made more than ${MAX_ADVANCE_BOOKING_DAYS} days in advance`);
+    }
 
     const count = await countReservationsBySlotId(timeSlotId, tx);
     if (count >= (slot.capacity ?? 0)) throw new SlotFullError();
@@ -249,7 +344,12 @@ export async function upgradeQueueToReservation(
         entry_type: 'reservation',
         time_slot_id: timeSlotId,
         queue_position: null,
-        status: 'pending',
+        status: STATUS_PENDING_PAYMENT,
+        amount_paid: toDecimal(amountTotal),
+        commission_rate: commissionRate,
+        commission_amount: toDecimal(commissionAmount),
+        station_payout: toDecimal(stationPayout),
+        stripe_payment_id: null,
       },
       tx
     );
@@ -257,18 +357,79 @@ export async function upgradeQueueToReservation(
     return result;
   });
 
+  // Create Stripe PaymentIntent outside transaction (external side-effect).
+  const amountCents = Math.round(amountTotal * 100);
+  const commissionCents = Math.round(commissionAmount * 100);
+
+  let paymentIntentId: string;
+  let clientSecret: string;
+  try {
+    const result = await createPaymentIntent({
+      amountCents,
+      userId,
+      stationId,
+      stationStripeAccountId,
+      commissionCents,
+      metadata: {
+        reservation_id: entryId,
+        time_slot_id: timeSlotId,
+        vehicle_format_id: entry.vehicle_format_id,
+        upgraded_from_queue: 'true',
+      },
+    });
+    paymentIntentId = result.paymentIntentId;
+    clientSecret = result.clientSecret;
+  } catch (stripeError) {
+    // Rollback: revert entry to queue and restore positions atomically to avoid partial state.
+    await db.transaction(async (tx) => {
+      await updateEntry(entryId, {
+        entry_type: 'queue',
+        time_slot_id: null,
+        queue_position: entry.queue_position,
+        status: 'pending',
+        amount_paid: '0.00',
+        commission_rate: '0.00',
+        commission_amount: '0.00',
+        station_payout: '0.00',
+      }, tx);
+      await decrementSlotBookedCount(timeSlotId, tx);
+      // Restore queue positions: shift back entries that were shifted up.
+      if ((entry.queue_position ?? 0) > 0) {
+        await shiftQueuePositions(stationId, entry.queue_position! + 1, 1, tx);
+      }
+    });
+    throw stripeError;
+  }
+
+  await updateEntry(entryId, { stripe_payment_id: paymentIntentId });
+
   await notifyEntry({
     entryId,
     userId,
     stationId,
     type: 'reservation_created',
   });
-  return updated;
+
+  return { entry: { ...updated, stripe_payment_id: paymentIntentId }, clientSecret };
 }
+
+const VALID_STATION_TRANSITIONS: Record<string, readonly string[]> = {
+  confirmed: ['in_progress', 'cancelled'],
+  in_progress: ['completed', 'cancelled'],
+};
 
 /**
  * Updates an entry's status (station only). Used by PATCH /station/entries/:entryId.
- * On status completed, triggers invitation_to_rate notification.
+ * Enforces valid status transitions:
+ *   confirmed   → in_progress | cancelled
+ *   in_progress → completed   | cancelled
+ * Any other transition is rejected with a ConflictError.
+ *
+ * On status completed:
+ *   - Captures the Stripe PaymentIntent (reservation entries only) to distribute funds.
+ *   - Triggers invitation_to_rate notification.
+ * If the Stripe capture fails, the entry is still marked completed and the error is logged
+ * for manual resolution (the service was rendered).
  */
 export async function setEntryStatusByStation(
   entryId: string,
@@ -277,12 +438,33 @@ export async function setEntryStatusByStation(
 ): Promise<Entry> {
   const entry = await findEntryByIdAndStation(entryId, stationId);
   if (!entry) throw new NotFoundError('Entry not found');
+
+  const allowed = VALID_STATION_TRANSITIONS[entry.status];
+  if (!allowed || !allowed.includes(status)) {
+    throw new ConflictError(
+      `Cannot transition entry from '${entry.status}' to '${status}'`
+    );
+  }
+
   const updated = await updateEntry(entryId, {
     status,
     completed_at: status === 'completed' ? new Date() : undefined,
     updated_at: new Date(),
   });
   if (status === 'completed') {
+    // Capture the payment for reservation entries (distributes funds to station + platform).
+    // Queue (walk-in) entries have no stripe_payment_id and are skipped.
+    if (entry.entry_type === 'reservation' && entry.stripe_payment_id) {
+      try {
+        await capturePaymentIntent(entry.stripe_payment_id);
+      } catch (e) {
+        console.error('[CAPTURE_FAILED] Service completed but Stripe capture failed — manual resolution required', {
+          entryId,
+          stripe_payment_id: entry.stripe_payment_id,
+          error: e instanceof Error ? e.message : String(e),
+        });
+      }
+    }
     await notifyEntry({
       entryId,
       userId: entry.user_id,
