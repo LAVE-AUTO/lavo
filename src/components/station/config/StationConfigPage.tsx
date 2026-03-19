@@ -9,7 +9,6 @@ import { StationProfileForm, type StationProfile } from './StationProfileForm';
 import { StationLocationForm, type StationLocation } from './StationLocationForm';
 import { StationSlotList } from './StationSlotList';
 import { SlotModal, type CreatedSlot } from './SlotModal';
-import { StationExtrasForm, type StationExtras } from './StationExtrasForm';
 
 // TODO: connect to API once endpoint is available — GET /station/slots does not exist yet
 const MOCK_SLOTS: CreatedSlot[] = [];
@@ -38,7 +37,6 @@ const MOCK_POSTS: StationPost[] = [
 
 const MOCK_PROFILE: StationProfile = { name: 'Station', description: null, service_scope: null };
 const MOCK_LOCATION: StationLocation = { address: '', city: '', latitude: null, longitude: null };
-const MOCK_EXTRAS: StationExtras = { exterior: [], interior: [], both: [] };
 
 function todayISO() {
   return new Date().toISOString().slice(0, 10);
@@ -64,7 +62,6 @@ export function StationConfigPage() {
   const [posts, setPosts] = useState<StationPost[]>(MOCK_POSTS);
   const [profile, setProfile] = useState<StationProfile>(MOCK_PROFILE);
   const [location, setLocation] = useState<StationLocation>(MOCK_LOCATION);
-  const [extras, setExtras] = useState<StationExtras>(MOCK_EXTRAS);
   const [slots, setSlots] = useState<CreatedSlot[]>(MOCK_SLOTS);
   const [selectedDate, setSelectedDate] = useState(todayISO);
   const [loading, setLoading] = useState(true);
@@ -130,7 +127,6 @@ export function StationConfigPage() {
             setPosts(p);
           }}
         />
-        <StationExtrasForm extras={extras} onSaved={setExtras} />
         <StationSlotList
           slots={visibleSlots}
           selectedDate={selectedDate}

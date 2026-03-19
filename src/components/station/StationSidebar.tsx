@@ -3,6 +3,7 @@
 import { useTranslations } from 'next-intl';
 import { usePathname } from 'next/navigation';
 import { Link } from '@/i18n/navigation';
+import { useAuth } from '@/context/auth-context';
 
 interface NavItem {
   href: string;
@@ -54,39 +55,62 @@ const SupportIcon = () => (
   </svg>
 );
 
+const LogoutIcon = () => (
+  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" />
+    <polyline points="16 17 21 12 16 7" />
+    <line x1="21" y1="12" x2="9" y2="12" />
+  </svg>
+);
+
 export function StationSidebar() {
   const t = useTranslations('station_dashboard');
   const pathname = usePathname();
+  const { logout } = useAuth();
 
   const navItems: NavItem[] = [
-    { href: '/station/dashboard', labelKey: 'nav_home', icon: <HomeIcon /> },
-    { href: '/station/queue', labelKey: 'nav_queue', icon: <QueueIcon /> },
+    { href: '/station/dashboard',    labelKey: 'nav_home',         icon: <HomeIcon /> },
+    { href: '/station/queue',        labelKey: 'nav_queue',        icon: <QueueIcon /> },
     { href: '/station/reservations', labelKey: 'nav_reservations', icon: <ReservationsIcon /> },
-    { href: '/station/formats', labelKey: 'nav_formats', icon: <FormatsIcon /> },
-    { href: '/station/config', labelKey: 'nav_config', icon: <ConfigIcon /> },
-    { href: '/station/history', labelKey: 'nav_history', icon: <HistoryIcon /> },
-    { href: '/station/support', labelKey: 'nav_support', icon: <SupportIcon /> },
+    { href: '/station/formats',      labelKey: 'nav_formats',      icon: <FormatsIcon /> },
+    { href: '/station/config',       labelKey: 'nav_config',       icon: <ConfigIcon /> },
+    { href: '/station/history',      labelKey: 'nav_history',      icon: <HistoryIcon /> },
+    { href: '/station/support',      labelKey: 'nav_support',      icon: <SupportIcon /> },
   ];
 
+  const linkBase = 'flex items-center gap-2 rounded-lg px-3 py-2.5 text-[13px] font-semibold transition-colors duration-150';
+  const linkActive = `${linkBase} bg-[#C49A1E] text-[#0C1209]`;
+  const linkIdle = `${linkBase} text-[#666] hover:bg-[#E8E4D8] dark:text-[#8A8A7A] dark:hover:bg-[#182214]`;
+
   return (
-    <aside className="flex w-[180px] flex-shrink-0 flex-col gap-1.5 border-r border-[#E0DCD0] bg-[#F0EDE0] p-3 dark:border-[#1A2A14] dark:bg-[#111A0E]">
-      {navItems.map((item) => {
-        const isActive = pathname.includes(item.href);
-        return (
+    <aside className="flex w-[180px] flex-shrink-0 flex-col border-r border-[#E0DCD0] bg-[#F0EDE0] p-3 dark:border-[#1A2A14] dark:bg-[#111A0E]">
+
+      {/* Navigation items */}
+      <nav className="flex flex-col gap-1.5">
+        {navItems.map((item) => (
           <Link
             key={item.href}
             href={item.href as Parameters<typeof Link>[0]['href']}
-            className={
-              isActive
-                ? 'flex items-center gap-2 rounded-lg px-3 py-2.5 text-[13px] font-semibold bg-[#C49A1E] text-[#0C1209]'
-                : 'flex items-center gap-2 rounded-lg px-3 py-2.5 text-[13px] font-semibold text-[#666] hover:bg-[#E8E4D8] dark:text-[#8A8A7A] dark:hover:bg-[#182214] transition-colors duration-150'
-            }
+            className={pathname.includes(item.href) ? linkActive : linkIdle}
           >
             {item.icon}
             {t(item.labelKey)}
           </Link>
-        );
-      })}
+        ))}
+      </nav>
+
+      {/* Logout — pushed to bottom */}
+      <div className="mt-auto pt-3">
+        <div className="mb-3 h-px bg-[#E0DCD0] dark:bg-[#1A2A14]" />
+        <button
+          type="button"
+          onClick={() => logout()}
+          className="flex w-full items-center gap-2 rounded-lg px-3 py-2.5 text-[13px] font-semibold text-[#888] transition-colors duration-150 hover:bg-[#FEF2F2] hover:text-[#EF4444] dark:text-[#6A6A5A] dark:hover:bg-[#2A0A0A] dark:hover:text-[#FF8A80]"
+        >
+          <LogoutIcon />
+          {t('nav_logout')}
+        </button>
+      </div>
     </aside>
   );
 }
