@@ -7,7 +7,6 @@ import { ConfirmDialog } from '@/components/ui/ConfirmDialog';
 import { StatusTabs } from './StatusTabs';
 import { ReservationCard } from './ReservationCard';
 import type { ReservationEntry, StatusTab, EntryStatus } from './types';
-import { MOCK_RESERVATIONS } from './mock-data';
 
 type ActionType = 'validate' | 'start' | 'cancel';
 
@@ -59,8 +58,7 @@ export function StationReservationsPage() {
     if (ok) {
       const res = data as { data: { entries: ReservationEntry[] } };
       const fetched = res?.data?.entries ?? [];
-      // TODO: connect to API once endpoint returns real data — remove mock fallback
-      setEntries(fetched.length > 0 ? fetched : MOCK_RESERVATIONS);
+      setEntries(fetched);
     } else {
       setLoadError(true);
     }
