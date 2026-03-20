@@ -183,7 +183,7 @@ export function VehicleFormatModal({ format, existingFormats, onClose, onSaved }
               )}
             </div>
 
-            {/* API error — shows actual server message */}
+            {/* API error — i18n-mapped message only, never raw server output */}
             {apiError && (
               <div className="flex items-start gap-2 rounded-[8px] border border-[#FECACA] bg-[#FFF2F0] px-3 py-2.5 dark:border-[#4A0A0A] dark:bg-[#2A0A0A]">
                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} className="mt-0.5 shrink-0 text-[#EF4444]">

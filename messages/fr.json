@@ -1605,7 +1605,7 @@
     "share_text": "Scannez ce QR code pour acceder a la station {name} sur Slowtime.",
     "loading": "Chargement...",
     "error_load": "Impossible de charger les informations de la station.",
-    "btn_retry": "Reessayer",
+    "btn_retry": "Réessayer",
     "print_hint": "Imprimez ce QR code et placez-le a l'entree de votre station."
   }
 }

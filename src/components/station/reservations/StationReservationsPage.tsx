@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useCallback, useMemo } from 'react';
+import { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import { useTranslations } from 'next-intl';
 import { getFromApi, patchWithApi } from '@/services';
 import { ConfirmDialog } from '@/components/ui/ConfirmDialog';
@@ -42,6 +42,9 @@ export function StationReservationsPage() {
   const [entries, setEntries] = useState<ReservationEntry[]>([]);
   const [loading, setLoading] = useState(true);
   const [loadError, setLoadError] = useState(false);
+  const mountedRef = useRef(true);
+  useEffect(() => { mountedRef.current = true; return () => { mountedRef.current = false; }; }, []);
+
   const [activeTab, setActiveTab] = useState<StatusTab>('all');
   const [pending, setPending] = useState<PendingAction | null>(null);
   const [actionLoading, setActionLoading] = useState(false);
@@ -52,6 +55,7 @@ export function StationReservationsPage() {
     setLoadError(false);
     const { from, to } = todayRange();
     const [ok, data] = await getFromApi(`/station/entries?from=${from}&to=${to}&per_page=100`);
+    if (!mountedRef.current) return;
     if (ok) {
       const res = data as { data: { entries: ReservationEntry[] } };
       const fetched = res?.data?.entries ?? [];
@@ -89,7 +93,7 @@ export function StationReservationsPage() {
     let active = 0;
     let done = 0;
     for (const e of entries) {
-      if (e.amount_paid && e.status !== 'cancelled') revenue += parseFloat(e.amount_paid);
+      if (e.amount_paid && e.status !== 'cancelled') { const n = parseFloat(e.amount_paid); if (!isNaN(n)) revenue += n; }
       if (e.status === 'in_progress') active++;
       if (e.status === 'completed') done++;
     }
@@ -113,6 +117,7 @@ export function StationReservationsPage() {
     };
     const newStatus = statusMap[pending.type];
     const [ok] = await patchWithApi(`/station/entries/${pending.entryId}`, { status: newStatus });
+    if (!mountedRef.current) return;
 
     setActionLoading(false);
     if (ok) {
