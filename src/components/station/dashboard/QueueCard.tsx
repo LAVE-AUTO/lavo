@@ -20,9 +20,12 @@ export interface QueueEntry {
 interface QueueCardProps {
   entry: QueueEntry;
   onCall: (id: string) => void;
+  onPick?: (id: string) => void;
+  onMoveUp?: () => void;
+  onMoveDown?: () => void;
 }
 
-export function QueueCard({ entry, onCall }: QueueCardProps) {
+export function QueueCard({ entry, onCall, onPick, onMoveUp, onMoveDown }: QueueCardProps) {
   const t = useTranslations('station_dashboard');
   const [expanded, setExpanded] = useState(false);
 
@@ -71,7 +74,7 @@ export function QueueCard({ entry, onCall }: QueueCardProps) {
           )}
 
           {/* Margin progress bar */}
-          {entry.marginMin !== undefined && entry.marginMax !== undefined && (
+          {entry.marginMin !== undefined && entry.marginMax !== undefined && entry.marginMax > 0 && (
             <div className="mb-4 flex items-center gap-2 text-[10px] text-[#000717]/60 dark:text-[#FFFFF0]/60">
               <span className="h-2 w-2 shrink-0 rounded-full bg-[#00C851]" />
               <span>{t('queue_margin')}</span>
@@ -142,11 +145,48 @@ export function QueueCard({ entry, onCall }: QueueCardProps) {
         <div className="overflow-hidden">
           <div className="border-t border-[#B8B8A4] px-4 pb-3.5 pt-3 dark:border-[#3A4A36]">
             <div className="grid grid-cols-2 gap-x-4 gap-y-2 text-[11px]">
-              {entry.time && <DetailRow label="Heure" value={entry.time} />}
-              {entry.serviceLabel && <DetailRow label="Service" value={entry.serviceLabel} />}
-              {entry.price !== undefined && <DetailRow label="Prix" value={`${entry.price}$`} gold />}
-              {entry.postLabel && <DetailRow label="Poste" value={entry.postLabel} />}
+              {entry.time && <DetailRow label={t('queue_detail_time')} value={entry.time} />}
+              {entry.serviceLabel && <DetailRow label={t('queue_detail_service')} value={entry.serviceLabel} />}
+              {entry.price !== undefined && <DetailRow label={t('queue_detail_price')} value={`${entry.price}$`} gold />}
+              {entry.postLabel && <DetailRow label={t('queue_detail_post')} value={entry.postLabel} />}
             </div>
+
+            {/* Position reorder + pick actions */}
+            {(onMoveUp || onMoveDown || onPick) && (
+              <div className="mt-3 flex items-center gap-2">
+                {(onMoveUp || onMoveDown) && (
+                  <div className="flex gap-1">
+                    <button
+                      type="button"
+                      disabled={!onMoveUp}
+                      onClick={onMoveUp}
+                      title={t('queue_move_up')}
+                      className="flex h-7 w-7 items-center justify-center rounded-lg border border-[#B8B8A4] text-[#000717]/50 transition-colors hover:border-[#C09A18] hover:text-[#C09A18] disabled:opacity-30 disabled:cursor-not-allowed dark:border-[#3A4A36] dark:text-[#FFFFF0]/50"
+                    >
+                      <ArrowUpIcon />
+                    </button>
+                    <button
+                      type="button"
+                      disabled={!onMoveDown}
+                      onClick={onMoveDown}
+                      title={t('queue_move_down')}
+                      className="flex h-7 w-7 items-center justify-center rounded-lg border border-[#B8B8A4] text-[#000717]/50 transition-colors hover:border-[#C09A18] hover:text-[#C09A18] disabled:opacity-30 disabled:cursor-not-allowed dark:border-[#3A4A36] dark:text-[#FFFFF0]/50"
+                    >
+                      <ArrowDownIcon />
+                    </button>
+                  </div>
+                )}
+                {onPick && (
+                  <button
+                    type="button"
+                    onClick={() => onPick(entry.id)}
+                    className="rounded-lg bg-[#C09A18] px-3 py-1.5 text-[11px] font-bold text-[#1A2116] transition-opacity hover:opacity-80"
+                  >
+                    {t('queue_pick_now')}
+                  </button>
+                )}
+              </div>
+            )}
           </div>
         </div>
       </div>
@@ -183,5 +223,17 @@ const ClockMini = () => (
 const PlayTriangle = () => (
   <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor">
     <polygon points="5 3 19 12 5 21 5 3" />
+  </svg>
+);
+
+const ArrowUpIcon = () => (
+  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.5} strokeLinecap="round" strokeLinejoin="round">
+    <polyline points="18 15 12 9 6 15" />
+  </svg>
+);
+
+const ArrowDownIcon = () => (
+  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.5} strokeLinecap="round" strokeLinejoin="round">
+    <polyline points="6 9 12 15 18 9" />
   </svg>
 );

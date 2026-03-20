@@ -1,45 +1,139 @@
 'use client';
 
-import { use, useEffect, useState } from 'react';
+import { use, useEffect, useState, useCallback, useRef } from 'react';
 import { useTranslations } from 'next-intl';
 import { Link } from '@/i18n/navigation';
-import { MOCK_QUEUE_ENTRIES } from '@/data/reservations-mock';
+import { getFromApi } from '@/services/axios-service';
 import { notFound } from 'next/navigation';
+
+/* ------------------------------------------------------------------ */
+/* API shapes                                                           */
+/* ------------------------------------------------------------------ */
+
+interface ApiEntry {
+  id: string;
+  entry_type: 'reservation' | 'queue';
+  station_id: string;
+  vehicle_format_id: string | null;
+  status: string;
+  queue_position: number | null;
+  amount_paid: string | null;
+  created_at: string;
+}
+
+interface ApiVehicleFormat { id: string; label: string }
+interface ApiStation {
+  id: string;
+  name: string;
+  address: string;
+  city: string;
+  latitude: string | null;
+  longitude: string | null;
+  vehicleFormats: ApiVehicleFormat[];
+}
+
+interface QueueEntry {
+  id: string;
+  stationName: string;
+  stationAddress: string;
+  stationLatitude: number;
+  stationLongitude: number;
+  forfaitName: string;
+  position: number;
+  totalPrice: number;
+  status: 'waiting' | 'in_progress';
+}
+
+/* ------------------------------------------------------------------ */
+/* Simulate real-time position by decrementing every 30s               */
+/* ------------------------------------------------------------------ */
+
+function useRealtimePosition(initial: number) {
+  const [position, setPosition] = useState(initial);
+  useEffect(() => {
+    if (position <= 1) return;
+    const id = setInterval(() => setPosition((p) => (p > 1 ? p - 1 : p)), 30_000);
+    return () => clearInterval(id);
+  }, [position]);
+  return position;
+}
+
+/* ------------------------------------------------------------------ */
+/* Page                                                                 */
+/* ------------------------------------------------------------------ */
 
 interface PageProps {
   params: Promise<{ id: string }>;
-}
-
-/* Simulate real-time position by randomly decrementing every 30s */
-function useRealtimePosition(initial: number) {
-  const [position, setPosition] = useState(initial);
-
-  useEffect(() => {
-    if (position <= 1) return;
-    const id = setInterval(() => {
-      setPosition((p) => (p > 1 ? p - 1 : p));
-    }, 30_000);
-    return () => clearInterval(id);
-  }, [position]);
-
-  return position;
 }
 
 export default function QueueDetailPage({ params }: PageProps) {
   const { id } = use(params);
   const t = useTranslations('queue_detail');
 
-  const entry = MOCK_QUEUE_ENTRIES.find((q) => q.id === id);
-  if (!entry) notFound();
+  const mountedRef = useRef(true);
+  useEffect(() => { mountedRef.current = true; return () => { mountedRef.current = false; }; }, []);
 
-  const position = useRealtimePosition(entry.position);
-  const waitMinutes = Math.max(1, Math.round(position * (entry.estimatedWaitMinutes / entry.position)));
-  const isActive = entry.status === 'in_progress';
+  const [entry, setEntry]   = useState<QueueEntry | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [missing, setMissing] = useState(false);
 
-  const mapsUrl =
-    entry.stationLatitude != null && entry.stationLongitude != null
-      ? `https://www.google.com/maps/dir/?api=1&destination=${entry.stationLatitude},${entry.stationLongitude}`
-      : `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(`${entry.stationName}, ${entry.stationAddress}`)}`;
+  const loadEntry = useCallback(async () => {
+    setLoading(true);
+
+    const [ok, data] = await getFromApi('/me/entries?per_page=100');
+    if (!mountedRef.current) return;
+
+    if (!ok) { setMissing(true); setLoading(false); return; }
+
+    const res = data as { data: { entries: ApiEntry[] } };
+    const found = (res?.data?.entries ?? []).find((e) => e.id === id && e.entry_type === 'queue');
+
+    if (!found) { setMissing(true); setLoading(false); return; }
+
+    const [stationOk, stationData] = await getFromApi(`/stations/${found.station_id}`);
+    if (!mountedRef.current) return;
+
+    const station = stationOk && stationData
+      ? (stationData as { data: ApiStation }).data
+      : null;
+
+    const format = station?.vehicleFormats.find((f) => f.id === found.vehicle_format_id);
+
+    setEntry({
+      id: found.id,
+      stationName: station?.name ?? `#${found.station_id.slice(0, 8)}`,
+      stationAddress: station ? `${station.address}, ${station.city}` : '',
+      stationLatitude: parseFloat(station?.latitude ?? '0'),
+      stationLongitude: parseFloat(station?.longitude ?? '0'),
+      forfaitName: format?.label ?? '—',
+      position: found.queue_position ?? 0,
+      totalPrice: parseFloat(found.amount_paid ?? '0'),
+      status: found.status === 'in_progress' ? 'in_progress' : 'waiting',
+    });
+    setLoading(false);
+  }, [id]);
+
+  useEffect(() => { loadEntry(); }, [loadEntry]);
+
+  if (loading) {
+    return (
+      <main className="min-h-screen bg-[#F5F5E6] dark:bg-dark-bg flex items-center justify-center pb-24">
+        <div className="h-8 w-8 animate-spin rounded-full border-[3px] border-gold border-t-transparent" />
+      </main>
+    );
+  }
+
+  /* useRealtimePosition must be called unconditionally (rules of hooks) */
+  const position = useRealtimePosition(entry?.position ?? 0);
+
+  if (missing || !entry) notFound();
+
+  const q        = entry;
+  const isActive = q.status === 'in_progress';
+
+  const mapsUrl = q.stationLatitude !== 0
+    ? `https://www.google.com/maps/dir/?api=1&destination=${q.stationLatitude},${q.stationLongitude}`
+    : `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(`${q.stationName}, ${q.stationAddress}`)}`;
 
   return (
     <main className="min-h-screen bg-[#F5F5E6] dark:bg-dark-bg pb-24 sm:pb-8">
@@ -58,38 +152,28 @@ export default function QueueDetailPage({ params }: PageProps) {
       <div className="px-4 max-w-2xl mx-auto space-y-4">
 
         {/* Station card */}
-        <div className="bg-[#E8E8D8] dark:bg-dark-card rounded-xl border border-[#D0D0C0] dark:border-tab-inactive overflow-hidden">
-          {entry.stationImageUrl && (
-            <div className="h-[140px] overflow-hidden">
-              <img src={entry.stationImageUrl} alt={entry.stationName} className="w-full h-full object-cover" />
-            </div>
-          )}
-          <div className="p-4">
-            <h2 className="text-[17px] font-black text-[#0A0A14] dark:text-white">{entry.stationName}</h2>
-            <p className="text-[13px] text-[#666] dark:text-[#B0B0A0] mt-0.5">{entry.stationAddress}</p>
-            <p className="text-[13px] text-[#666] dark:text-[#B0B0A0] mt-1">{entry.forfaitName} — {entry.categoryLabel}</p>
-          </div>
+        <div className="bg-[#E8E8D8] dark:bg-dark-card rounded-xl border border-[#D0D0C0] dark:border-tab-inactive p-4">
+          <h2 className="text-[17px] font-black text-[#0A0A14] dark:text-white">{q.stationName}</h2>
+          <p className="text-[13px] text-[#666] dark:text-[#B0B0A0] mt-0.5">{q.stationAddress}</p>
+          <p className="text-[13px] text-[#666] dark:text-[#B0B0A0] mt-1">{q.forfaitName}</p>
         </div>
 
         {/* Live position panel */}
         <div className="bg-[#E8E8D8] dark:bg-dark-card rounded-xl border border-[#D0D0C0] dark:border-tab-inactive p-5">
           <div className="flex items-center gap-2 mb-4">
-            <span className={`w-2.5 h-2.5 rounded-full shrink-0 ${isActive ? 'bg-gold animate-pulse' : 'bg-lavo-success animate-pulse'}`} />
+            <span className={`w-2.5 h-2.5 rounded-full shrink-0 animate-pulse ${isActive ? 'bg-gold' : 'bg-lavo-success'}`} />
             <span className="text-[12px] font-bold text-[#555] dark:text-[#A0A090] uppercase tracking-wider">
               {isActive ? t('status_in_progress') : t('status_waiting')}
             </span>
           </div>
 
           <div className="grid grid-cols-2 gap-4 text-center">
-            {/* Position */}
             <div className="bg-white/50 dark:bg-dark-bg/40 rounded-xl py-5">
               <div className="text-[44px] font-black text-gold leading-none">#{position}</div>
               <div className="text-[13px] text-[#555] dark:text-[#B0B0A0] mt-2 font-semibold">{t('your_position')}</div>
             </div>
-
-            {/* Wait time */}
             <div className="bg-white/50 dark:bg-dark-bg/40 rounded-xl py-5">
-              <div className="text-[44px] font-black text-[#0A0A14] dark:text-white leading-none">{waitMinutes}</div>
+              <div className="text-[44px] font-black text-[#0A0A14] dark:text-white leading-none">{position}</div>
               <div className="text-[13px] text-[#555] dark:text-[#B0B0A0] mt-2 font-semibold">{t('wait_minutes')}</div>
             </div>
           </div>
@@ -104,22 +188,13 @@ export default function QueueDetailPage({ params }: PageProps) {
         {/* Service summary */}
         <div className="bg-[#E8E8D8] dark:bg-dark-card rounded-xl border border-[#D0D0C0] dark:border-tab-inactive p-4 space-y-2">
           <h3 className="text-[14px] font-black text-[#555] dark:text-[#A0A090] uppercase tracking-wider mb-3">{t('summary')}</h3>
-
           <div className="flex justify-between text-[14px]">
             <span className="text-[#555] dark:text-[#B0B0A0]">{t('service')}</span>
-            <span className="font-bold text-[#0A0A14] dark:text-white">{entry.forfaitName}</span>
+            <span className="font-bold text-[#0A0A14] dark:text-white">{q.forfaitName}</span>
           </div>
-
-          {entry.extras.length > 0 && (
-            <div className="flex justify-between text-[14px]">
-              <span className="text-[#555] dark:text-[#B0B0A0]">{t('extras')}</span>
-              <span className="font-bold text-[#0A0A14] dark:text-white text-right max-w-[60%]">{entry.extras.join(', ')}</span>
-            </div>
-          )}
-
           <div className="flex justify-between text-[14px] pt-2 border-t border-[#D0D0C0] dark:border-tab-inactive">
             <span className="font-bold text-[#0A0A14] dark:text-white">{t('total')}</span>
-            <span className="text-[17px] font-black text-gold">{entry.totalPrice}$</span>
+            <span className="text-[17px] font-black text-gold">{q.totalPrice.toFixed(2)}$</span>
           </div>
         </div>
 

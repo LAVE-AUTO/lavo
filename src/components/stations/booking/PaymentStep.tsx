@@ -5,13 +5,18 @@ import { useTranslations } from 'next-intl';
 
 interface PaymentStepProps {
   grandTotal: number;
-  onConfirm: () => void;
+  onConfirm: () => Promise<void>;
   onBack: () => void;
 }
 
 export function PaymentStep({ grandTotal, onConfirm, onBack }: PaymentStepProps) {
   const t = useTranslations('booking');
-  const mockCardEnabled = process.env.NEXT_PUBLIC_ENABLE_CARD_MOCK === 'true';
+  // Mock card form is only allowed in non-production environments.
+  // Even if NEXT_PUBLIC_ENABLE_CARD_MOCK is set, disable it in production to prevent
+  // raw PAN/expiry/CVC from being stored in React state.
+  const mockCardEnabled =
+    process.env.NODE_ENV !== 'production' &&
+    process.env.NEXT_PUBLIC_ENABLE_CARD_MOCK === 'true';
   const [cardNumber, setCardNumber] = useState('');
   const [expiry, setExpiry] = useState('');
   const [cvc, setCvc] = useState('');
@@ -39,8 +44,8 @@ export function PaymentStep({ grandTotal, onConfirm, onBack }: PaymentStepProps)
     // In production, this component must be backed by a real PSP integration
     // (e.g. Stripe Elements) that never exposes PAN/expiry/CVC to React state.
     await new Promise((resolve) => setTimeout(resolve, 2000));
+    await onConfirm();
     setProcessing(false);
-    onConfirm();
   };
 
   return (
@@ -141,7 +146,7 @@ export function PaymentStep({ grandTotal, onConfirm, onBack }: PaymentStepProps)
           disabled={mockCardEnabled ? !isValid || processing : processing}
           onClick={handlePay}
           className={`flex-1 py-3 rounded-xl text-[15px] font-black transition-colors cursor-pointer ${
-            isValid && !processing
+            (!mockCardEnabled || isValid) && !processing
               ? 'bg-gold hover:bg-gold-hover text-dark-bg'
               : 'bg-[#D0D0C0] dark:bg-tab-inactive text-[#888] cursor-not-allowed'
           }`}

@@ -10,8 +10,7 @@ import { StationLocationForm, type StationLocation } from './StationLocationForm
 import { StationSlotList } from './StationSlotList';
 import { SlotModal, type CreatedSlot } from './SlotModal';
 
-// TODO: connect to API once endpoint is available — GET /station/slots does not exist yet
-const MOCK_SLOTS: CreatedSlot[] = [];
+const INITIAL_SLOTS: CreatedSlot[] = [];
 
 // Fallback config used when GET /station/config is unavailable
 const MOCK_CONFIG: StationConfig = {
@@ -62,10 +61,10 @@ export function StationConfigPage() {
   const [posts, setPosts] = useState<StationPost[]>(MOCK_POSTS);
   const [profile, setProfile] = useState<StationProfile>(MOCK_PROFILE);
   const [location, setLocation] = useState<StationLocation>(MOCK_LOCATION);
-  const [slots, setSlots] = useState<CreatedSlot[]>(MOCK_SLOTS);
+  const [slots, setSlots] = useState<CreatedSlot[]>(INITIAL_SLOTS);
   const [selectedDate, setSelectedDate] = useState(todayISO);
   const [loading, setLoading] = useState(true);
-  const [modal, setModal] = useState<'add' | 'generate' | null>(null);
+  const [modal, setModal] = useState<'add' | 'generate' | 'bulk' | null>(null);
 
   const loadData = useCallback(async () => {
     const [configOk, configData] = await getFromApi('/station/config');
@@ -89,6 +88,12 @@ export function StationConfigPage() {
         latitude: res.data.latitude,
         longitude: res.data.longitude,
       });
+    }
+
+    const [slotsOk, slotsData] = await getFromApi('/station/slots');
+    if (slotsOk) {
+      const res = slotsData as { data: CreatedSlot[] };
+      setSlots(res.data ?? []);
     }
 
     setLoading(false);
@@ -134,6 +139,7 @@ export function StationConfigPage() {
           onDeleted={(id) => setSlots((prev) => prev.filter((s) => s.id !== id))}
           onAddSlot={() => setModal('add')}
           onGenerate={() => setModal('generate')}
+          onBulk={() => setModal('bulk')}
         />
       </div>
 

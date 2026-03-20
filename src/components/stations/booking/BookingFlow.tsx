@@ -8,6 +8,7 @@ import { ArrivalStep } from './ArrivalStep';
 import { SummaryStep } from './SummaryStep';
 import { PaymentStep } from './PaymentStep';
 import { useUserLocation } from '../useUserLocation';
+import { postWithApi } from '@/services/axios-service';
 import type { StationDetailData, ServiceCategory, ServiceForfait, TimeSlot } from '@/types/station';
 
 type ArrivalMode = 'queue_now' | 'queue_later' | 'book_slot';
@@ -28,6 +29,7 @@ export function BookingFlow({ station, forfait, onClose }: BookingFlowProps) {
   const [step, setStep] = useState<Step>('extras');
   const stepIndex = STEPS.indexOf(step);
   const dialogRootRef = useRef<HTMLDivElement | null>(null);
+  const mountedRef = useRef(true);
 
   // Payment result
   const [paymentResult, setPaymentResult] = useState<'success' | 'error' | null>(null);
@@ -46,6 +48,10 @@ export function BookingFlow({ station, forfait, onClose }: BookingFlowProps) {
   const extrasDuration = selectedExtras.reduce((sum, e) => sum + e.duration, 0);
   const grandTotal = forfait.price + extrasTotal;
   const totalDuration = forfait.duration + extrasDuration;
+
+  useEffect(() => {
+    return () => { mountedRef.current = false; };
+  }, []);
 
   // Lock body scroll and basic keyboard handling (Escape + initial focus)
   useEffect(() => {
@@ -109,11 +115,23 @@ export function BookingFlow({ station, forfait, onClose }: BookingFlowProps) {
     setSelectedSlot(null);
   }, []);
 
-  const handlePaymentConfirm = useCallback(() => {
-    // Simulate: 90% success, 10% failure
-    const success = Math.random() > 0.1;
-    setPaymentResult(success ? 'success' : 'error');
-  }, []);
+  const handlePaymentConfirm = useCallback(async (): Promise<void> => {
+    if (arrivalMode === 'queue_now' || arrivalMode === 'queue_later') {
+      const [ok] = await postWithApi(`/stations/${station.id}/queue/join`, {
+        vehicle_format_id: forfait.id,
+      });
+      if (!mountedRef.current) return;
+      setPaymentResult(ok ? 'success' : 'error');
+    } else if (arrivalMode === 'book_slot' && selectedSlot) {
+      const [ok] = await postWithApi(`/stations/${station.id}/reservations`, {
+        time_slot_id: selectedSlot.id,
+        vehicle_format_id: forfait.id,
+      });
+      if (!mountedRef.current) return;
+      // TODO: confirm Stripe payment intent with stripe_client_secret once Stripe Elements are integrated
+      setPaymentResult(ok ? 'success' : 'error');
+    }
+  }, [arrivalMode, station.id, forfait.id, selectedSlot]);
 
   const handleRetryPayment = useCallback(() => {
     setPaymentResult(null);

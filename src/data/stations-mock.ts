@@ -74,6 +74,7 @@ export const MOCK_STATIONS: StationDetailData[] = [
     serviceCategories: [handWashCategory, automaticWashCategory, exteriorWashCategory],
     extras: sharedExtras,
     queueCount: 2,
+    timeSlots: [],
     estimatedWaitMinutes: 15,
     reviews: [
       { id: 'r1', authorName: 'Jean-Pierre M.', rating: 5, comment: 'Service impeccable, voiture comme neuve. Personnel très professionnel.', date: '12 fév. 2026' },
@@ -104,6 +105,7 @@ export const MOCK_STATIONS: StationDetailData[] = [
     serviceCategories: [automaticWashCategory, exteriorWashCategory],
     extras: sharedExtras.slice(0, 4),
     queueCount: 1,
+    timeSlots: [],
     estimatedWaitMinutes: 10,
     reviews: [
       { id: 'r4', authorName: 'Nadège K.', rating: 5, comment: 'Rapide et efficace ! Parfait avant une réunion.', date: '20 janv. 2026' },
@@ -133,6 +135,7 @@ export const MOCK_STATIONS: StationDetailData[] = [
     serviceCategories: [handWashCategory, automaticWashCategory, exteriorWashCategory],
     extras: sharedExtras,
     queueCount: 3,
+    timeSlots: [],
     estimatedWaitMinutes: 20,
     reviews: [
       { id: 'r6', authorName: 'Hermine B.', rating: 5, comment: 'Mon SUV brille comme un miroir. Personnel aux petits soins.', date: '25 fév. 2026' },
@@ -163,6 +166,7 @@ export const MOCK_STATIONS: StationDetailData[] = [
     serviceCategories: [automaticWashCategory, exteriorWashCategory],
     extras: sharedExtras.slice(0, 3),
     queueCount: 0,
+    timeSlots: [],
     estimatedWaitMinutes: 5,
     reviews: [
       { id: 'r9', authorName: 'Bruno E.', rating: 4, comment: 'Service rapide, je reviens régulièrement.', date: '14 fév. 2026' },
@@ -192,6 +196,7 @@ export const MOCK_STATIONS: StationDetailData[] = [
     serviceCategories: [handWashCategory, exteriorWashCategory],
     extras: sharedExtras.slice(0, 5),
     queueCount: 1,
+    timeSlots: [],
     estimatedWaitMinutes: 12,
     reviews: [
       { id: 'r11', authorName: 'Diane P.', rating: 5, comment: 'Enfin une station qui respecte l\'environnement ! Résultat parfait.', date: '22 fév. 2026' },
@@ -222,6 +227,7 @@ export const MOCK_STATIONS: StationDetailData[] = [
     serviceCategories: [automaticWashCategory, exteriorWashCategory],
     extras: sharedExtras.slice(0, 2),
     queueCount: 0,
+    timeSlots: [],
     estimatedWaitMinutes: 0,
     reviews: [
       { id: 'r13', authorName: 'Romuald D.', rating: 4, comment: 'Pratique pour la rive-sud, dommage que ce soit souvent complet.', date: '10 janv. 2026' },
@@ -250,6 +256,7 @@ export const MOCK_STATIONS: StationDetailData[] = [
     serviceCategories: [handWashCategory, automaticWashCategory, exteriorWashCategory],
     extras: sharedExtras,
     queueCount: 0,
+    timeSlots: [],
     estimatedWaitMinutes: 0,
     reviews: [
       { id: 'r14', authorName: 'Brice O.', rating: 5, comment: 'Qualité irréprochable, mon véhicule comme au premier jour.', date: '28 janv. 2026' },
@@ -279,6 +286,7 @@ export const MOCK_STATIONS: StationDetailData[] = [
     serviceCategories: [automaticWashCategory, exteriorWashCategory],
     extras: sharedExtras.slice(0, 3),
     queueCount: 0,
+    timeSlots: [],
     estimatedWaitMinutes: 0,
     reviews: [
       { id: 'r16', authorName: 'Serge K.', rating: 4, comment: 'Bon service dans l\'ensemble, j\'y reviens souvent.', date: '02 fév. 2026' },

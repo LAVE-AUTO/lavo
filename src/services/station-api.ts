@@ -1,5 +1,5 @@
 import { getFromApi } from './axios-service';
-import type { Station, StationDetailData, ServiceCategory, ServiceExtra } from '@/types/station';
+import type { Station, StationDetailData, ServiceCategory, ServiceExtra, TimeSlot } from '@/types/station';
 
 /* ------------------------------------------------------------------ */
 /*  API response shapes (snake_case, matching backend output)          */
@@ -41,10 +41,19 @@ interface ApiVehicleFormat {
     [key: string]: unknown;
 }
 
+interface ApiTimeSlot {
+    id: string;
+    start_time: string; // ISO date string
+    end_time: string;
+    capacity: number;
+    booked_count: number;
+    status: string;
+}
+
 interface ApiStationDetail extends ApiStationListItem {
     stationConfig: ApiStationConfig | null;
     vehicleFormats: ApiVehicleFormat[];
-    timeSlots: unknown[];
+    timeSlots: ApiTimeSlot[];
 }
 
 interface ApiStationListResponse {
@@ -182,6 +191,7 @@ function mapApiStationToDetail(s: ApiStationListItem): StationDetailData {
         services: [],
         serviceCategories: MOCK_SERVICE_CATEGORIES,
         extras: MOCK_EXTRAS,
+        timeSlots: [],
         queueCount: 0,
         estimatedWaitMinutes: 0,
     };
@@ -200,16 +210,56 @@ function mapApiDetailToStationDetail(s: ApiStationDetail): StationDetailData {
         openingHours = `${formatTime(s.stationConfig.opening_time)} - ${formatTime(s.stationConfig.closing_time)}`;
     }
 
+    /* Map vehicle formats to service forfaits so forfait.id is a real UUID
+     * sent as vehicle_format_id to POST /stations/:id/reservations.
+     * Falls back to MOCK_SERVICE_CATEGORIES when no formats are configured yet. */
+    const serviceCategories: ServiceCategory[] = activeFormats.length > 0 ? [
+        {
+            type: 'hand_wash',
+            label: 'Format de vehicule',
+            description: 'Choisissez le format correspondant a votre vehicule.',
+            forfaits: activeFormats.map((f) => ({
+                id: f.id,
+                name: f.label,
+                description: f.label,
+                price: parseFloat(f.price),
+                duration: s.stationConfig?.wash_duration_minutes ?? 30,
+            })),
+        },
+    ] : MOCK_SERVICE_CATEGORIES;
+
+    /* Map real time slots: only future, non-blocked, available slots. */
+    const now = new Date();
+    const timeSlots: TimeSlot[] = (s.timeSlots || [])
+        .filter((slot) => {
+            const startTime = new Date(slot.start_time);
+            return startTime > now && slot.status !== 'blocked' && slot.booked_count < slot.capacity;
+        })
+        .map((slot) => {
+            const startTime = new Date(slot.start_time);
+            const year = startTime.getFullYear();
+            const month = String(startTime.getMonth() + 1).padStart(2, '0');
+            const day = String(startTime.getDate()).padStart(2, '0');
+            const hours = String(startTime.getHours()).padStart(2, '0');
+            const minutes = String(startTime.getMinutes()).padStart(2, '0');
+            return {
+                id: slot.id,
+                date: `${year}-${month}-${day}`,
+                time: `${hours}:${minutes}`,
+                available: true,
+            };
+        });
+
     return {
         ...base,
         priceFrom,
         vehicleTypes,
         openingHours,
-        verified: true,
         reviews: [],
         services: [],
-        serviceCategories: MOCK_SERVICE_CATEGORIES,
+        serviceCategories,
         extras: MOCK_EXTRAS,
+        timeSlots,
         queueCount: 0,
         estimatedWaitMinutes: 0,
     };

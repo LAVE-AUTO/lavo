@@ -5,7 +5,6 @@ import { useTranslations } from 'next-intl';
 import { getFromApi } from '@/services/axios-service';
 import { HistoryCard } from './HistoryCard';
 import { DateRangePicker } from './DateRangePicker';
-import { MOCK_HISTORY } from './mock-data';
 import type { StationHistoryEntry, StationHistoryMeta, StatusFilter } from './types';
 
 const PAGE_LIMIT = 10;
@@ -86,17 +85,9 @@ export function StationHistoryPage() {
       return;
     }
 
-    // TODO: connect to API once endpoint returns real data — remove mock fallback
-    const filtered = MOCK_HISTORY
-      .filter((e) => status === 'all' || e.status === status)
-      .filter((e) => !dateRange.from || new Date(e.date) >= dateRange.from)
-      .filter((e) => !dateRange.to || new Date(e.date) <= new Date(dateRange.to.getTime() + 86400000))
-      .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
-
-    const total = filtered.length;
-    const sliced = filtered.slice((fetchPage - 1) * PAGE_LIMIT, fetchPage * PAGE_LIMIT);
-    setEntries(sliced);
-    setMeta({ total, page: fetchPage, limit: PAGE_LIMIT, total_pages: Math.ceil(total / PAGE_LIMIT) });
+    // API returned ok but unexpected shape — show empty state
+    setEntries([]);
+    setMeta(null);
     setLoading(false);
   }, [dateRange, status]);
 
