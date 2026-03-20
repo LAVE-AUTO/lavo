@@ -70,6 +70,12 @@ export async function createPaymentIntent(
     metadata = {},
   } = params;
 
+  const mergedMetadata: Record<string, string> = {
+    ...metadata,
+    user_id: params.userId,
+    station_id: params.stationId,
+  };
+
   const paymentIntent = await stripe.paymentIntents.create({
     amount: amountCents,
     currency,
@@ -77,12 +83,9 @@ export async function createPaymentIntent(
     application_fee_amount: commissionCents,
     transfer_data: {
       destination: stationStripeAccountId,
+      metadata: mergedMetadata,
     },
-    metadata: {
-      ...metadata,
-      user_id: params.userId,
-      station_id: params.stationId,
-    },
+    metadata: mergedMetadata,
     automatic_payment_methods: { enabled: true, allow_redirects: 'never' },
   });
 

@@ -18,11 +18,16 @@ import {
 import { createPaymentIntent, cancelPaymentIntent, capturePaymentIntent } from '@/server/payments/payment-service';
 import { cancelReservation } from '@/server/reservations/cancellation-service';
 import { notifyEntry } from '@/server/notifications/notification-service';
+import { sendPushNotification } from '@/server/notifications/fcm-service';
+import { getPlatformSetting } from '@/server/admin/platform-settings-service';
+import { eq } from 'drizzle-orm';
+import { stations, users } from '@/lib/db/schema';
 import {
   createReservationEntry,
   findEntryByIdAndUser,
   findEntryByIdAndStation,
   hasActiveEntryAtStation,
+  setStripePaymentSucceededNotifiedAtIfMissing,
   updateEntry,
   shiftQueuePositions,
   type Entry,
@@ -418,6 +423,10 @@ const VALID_STATION_TRANSITIONS: Record<string, readonly string[]> = {
   in_progress: ['completed', 'cancelled'],
 };
 
+function isTrueSetting(value: string | null): boolean {
+  return value?.trim().toLowerCase() === 'true';
+}
+
 /**
  * Updates an entry's status (station only). Used by PATCH /station/entries/:entryId.
  * Enforces valid status transitions:
@@ -427,7 +436,8 @@ const VALID_STATION_TRANSITIONS: Record<string, readonly string[]> = {
  *
  * On status completed:
  *   - Captures the Stripe PaymentIntent (reservation entries only) to distribute funds.
- *   - Triggers invitation_to_rate notification.
+ *   - Invitation_to_rate is triggered later by the Stripe webhook (payment_intent.succeeded)
+ *     to align notifications with escrow release and ensure idempotence.
  * If the Stripe capture fails, the entry is still marked completed and the error is logged
  * for manual resolution (the service was rendered).
  */
@@ -465,12 +475,75 @@ export async function setEntryStatusByStation(
         });
       }
     }
-    await notifyEntry({
-      entryId,
-      userId: entry.user_id,
-      stationId,
-      type: 'invitation_to_rate',
-    });
+
+    // Fallback for cases where Stripe succeeded webhook arrived before station marks "completed"
+    // (e.g. late capture). If succeededAt is already present and notifications weren't sent yet,
+    // send invitation_to_rate now.
+    if (entry.entry_type === 'reservation' && entry.stripe_payment_succeeded_at) {
+      try {
+        const claimed = await setStripePaymentSucceededNotifiedAtIfMissing(
+          entry.id,
+          entry.stripe_payment_succeeded_at
+        );
+        if (claimed) {
+          await notifyEntry({
+            entryId: entry.id,
+            userId: entry.user_id,
+            stationId,
+            type: 'invitation_to_rate',
+          });
+
+          const stationPushEnabled = isTrueSetting(
+            await getPlatformSetting('enable_station_push_on_escrow_released')
+          );
+          const adminPushEnabled = isTrueSetting(
+            await getPlatformSetting('enable_admin_push_on_escrow_released')
+          );
+
+          if (stationPushEnabled) {
+            try {
+              const station = await db.query.stations.findFirst({
+                where: eq(stations.id, entry.station_id),
+                columns: { user_id: true },
+              });
+              if (station?.user_id) {
+                await sendPushNotification(station.user_id, {
+                  title: 'Service completed',
+                  body: 'Payment captured and escrow released successfully.',
+                  data: {
+                    entry_id: entry.id,
+                    station_id: entry.station_id,
+                    type: 'escrow_released',
+                  },
+                });
+              }
+            } catch (err) {
+              console.error('[ESCROW_FALLBACK] Station push failed', err);
+            }
+          }
+
+          if (adminPushEnabled) {
+            try {
+              const adminUsers = await db.query.users.findMany({
+                where: eq(users.role, 'admin'),
+                columns: { id: true },
+              });
+              for (const adminUser of adminUsers) {
+                await sendPushNotification(adminUser.id, {
+                  title: 'Escrow released',
+                  body: 'A reservation escrow has been released successfully.',
+                  data: { entry_id: entry.id, station_id: entry.station_id, type: 'escrow_released_admin' },
+                });
+              }
+            } catch (err) {
+              console.error('[ESCROW_FALLBACK] Admin push failed', err);
+            }
+          }
+        }
+      } catch (err) {
+        console.error('[ESCROW_FALLBACK] Failed to send completed escrow notifications', err);
+      }
+    }
   }
   return updated;
 }

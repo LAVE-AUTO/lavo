@@ -18,13 +18,20 @@
 import { NextResponse } from 'next/server';
 import { stripe } from '@/lib/stripe';
 import { db } from '@/lib/db';
+import { eq } from 'drizzle-orm';
 import {
   findEntryByStripePaymentId,
   confirmEntryIfPendingPayment,
   updateEntry,
+  setStripeTransferIdIfMissing,
+  setStripePaymentSucceededAtIfMissing,
+  setStripePaymentSucceededNotifiedAtIfMissing,
 } from '@/server/reservations/entry-repository';
+import { stations, users } from '@/lib/db/schema';
 import { decrementSlotBookedCount } from '@/server/station/slot-repository';
 import { notifyEntry } from '@/server/notifications/notification-service';
+import { sendPushNotification } from '@/server/notifications/fcm-service';
+import { getPlatformSetting } from '@/server/admin/platform-settings-service';
 
 const webhookSecret = process.env.STRIPE_WEBHOOK_SECRET;
 
@@ -55,6 +62,9 @@ export async function POST(request: Request): Promise<NextResponse> {
   // Expected non-error cases (entry not found, wrong status) are handled with early returns — no throw.
   try {
     switch (event.type) {
+      case 'transfer.created':
+        await handleTransferCreated(event.data.object);
+        break;
       case 'payment_intent.amount_capturable_updated':
         await handlePaymentAuthorized(event.data.object.id);
         break;
@@ -65,8 +75,7 @@ export async function POST(request: Request): Promise<NextResponse> {
         await handlePaymentCancelled(event.data.object.id, 'Payment cancelled');
         break;
       case 'payment_intent.succeeded':
-        // Fired after our manual capture — distribution is already handled by Stripe.
-        // No action needed; captured as a no-op for observability.
+        await handlePaymentSucceeded(event.data.object.id, event.data.object.created);
         break;
       default:
         break;
@@ -77,6 +86,120 @@ export async function POST(request: Request): Promise<NextResponse> {
   }
 
   return NextResponse.json({ received: true });
+}
+
+function isTrueSetting(value: string | null): boolean {
+  return value?.trim().toLowerCase() === 'true';
+}
+
+/**
+ * Maps Stripe transfer.created to the corresponding reservation (via transfer.metadata).
+ * Stores reservations.stripe_transfer_id idempotently.
+ *
+ * We ensure metadata propagation by setting transfer_data.metadata in createPaymentIntent.
+ */
+async function handleTransferCreated(transfer: any): Promise<void> {
+  const transferId = transfer?.id;
+  const reservationId = transfer?.metadata?.reservation_id;
+  if (typeof transferId !== 'string') return;
+  if (typeof reservationId !== 'string') {
+    console.warn('[WEBHOOK transfer.created] Missing transfer.metadata.reservation_id', {
+      transferId,
+    });
+    return;
+  }
+
+  await setStripeTransferIdIfMissing(reservationId, transferId);
+}
+
+/**
+ * Sends escrow finalization notifications after capture succeeds:
+ * - Client push: invitation_to_rate
+ * - Optional station/admin push based on platform settings
+ *
+ * Idempotence:
+ * - sets stripe_payment_succeeded_at once
+ * - sends notifications only once via stripe_payment_succeeded_notified_at
+ */
+async function handlePaymentSucceeded(paymentIntentId: string, created: number | undefined): Promise<void> {
+  const entry = await findEntryByStripePaymentId(paymentIntentId);
+  if (!entry) {
+    console.warn(`Webhook: no entry found for PaymentIntent ${paymentIntentId}`);
+    return;
+  }
+
+  const succeededAt = new Date(
+    typeof created === 'number' ? created * 1000 : Date.now()
+  );
+
+  await setStripePaymentSucceededAtIfMissing(entry.id, succeededAt);
+
+  // Only notify on the moment the station has marked the service complete.
+  if (entry.status !== 'completed') return;
+
+  const shouldNotify = await setStripePaymentSucceededNotifiedAtIfMissing(
+    entry.id,
+    succeededAt
+  );
+  if (!shouldNotify) return;
+
+  // Notifications should not fail the webhook handler.
+  try {
+    await notifyEntry({
+      entryId: entry.id,
+      userId: entry.user_id,
+      stationId: entry.station_id,
+      type: 'invitation_to_rate',
+    });
+  } catch (err) {
+    console.error('[WEBHOOK payment_intent.succeeded] Client notification failed', err);
+  }
+
+  // Optional station/admin push (platform settings)
+  const stationPushEnabled = isTrueSetting(
+    await getPlatformSetting('enable_station_push_on_escrow_released')
+  );
+  const adminPushEnabled = isTrueSetting(
+    await getPlatformSetting('enable_admin_push_on_escrow_released')
+  );
+
+  if (stationPushEnabled) {
+    try {
+      const station = await db.query.stations.findFirst({
+        where: eq(stations.id, entry.station_id),
+        columns: { user_id: true },
+      });
+
+      if (station?.user_id) {
+        await sendPushNotification(station.user_id, {
+          title: 'Service completed',
+          body: 'Payment captured and escrow released successfully.',
+          data: { entry_id: entry.id, station_id: entry.station_id, type: 'escrow_released' },
+        });
+      }
+    } catch (err) {
+      console.error('[WEBHOOK payment_intent.succeeded] Station notification failed', err);
+    }
+  }
+
+  if (adminPushEnabled) {
+    try {
+      const adminUsers = await db.query.users.findMany({
+        where: eq(users.role, 'admin'),
+        columns: { id: true },
+      });
+
+      for (const adminUser of adminUsers) {
+        await sendPushNotification(adminUser.id, {
+          title: 'Escrow released',
+          body: 'A reservation escrow has been released successfully.',
+          data: { entry_id: entry.id, station_id: entry.station_id, type: 'escrow_released_admin' },
+        });
+      }
+    } catch (err) {
+      console.error('[WEBHOOK payment_intent.succeeded] Admin notification failed', err);
+    }
+  }
 }
 
 /**

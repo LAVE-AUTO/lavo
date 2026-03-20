@@ -325,3 +325,99 @@ export function extractLocale(headerValue: string | null): Locale {
   if (primary.startsWith('en')) return 'en';
   return 'fr';
 }
+
+export type WeeklyEscrowTransactionRow = {
+  reservationId: string;
+  reservationStatus: string;
+  succeededAt: Date;
+  clientEmail: string;
+  stationName: string;
+  amountPaid: string; // decimal as string from DB
+  commissionAmount: string | null;
+  stationPayout: string | null;
+  stripePaymentId: string | null;
+  stripeTransferId: string | null;
+};
+
+function formatMoneyEUR(amount: string | number | null | undefined): string {
+  const n = amount == null ? 0 : typeof amount === 'string' ? parseFloat(amount) : amount;
+  const safe = Number.isFinite(n) ? n : 0;
+  return `${safe.toFixed(2)} EUR`;
+}
+
+export async function sendWeeklyEscrowTransactionsReportEmail(
+  to: string,
+  params: {
+    locale: Locale;
+    weekStart: Date;
+    weekEnd: Date;
+    rows: WeeklyEscrowTransactionRow[];
+  }
+): Promise<void> {
+  const { locale, weekStart, weekEnd, rows } = params;
+
+  const subjectFr = `Rapport hebdomadaire — Transactions escrow (${weekStart.toLocaleDateString('fr-FR')} → ${weekEnd.toLocaleDateString('fr-FR')})`;
+  const subjectEn = `Weekly escrow transactions report (${weekStart.toLocaleDateString('en-GB')} → ${weekEnd.toLocaleDateString('en-GB')})`;
+  const subject = locale === 'en' ? subjectEn : subjectFr;
+
+  const totalAmount = rows.reduce((acc, r) => acc + (parseFloat(r.amountPaid) || 0), 0);
+  const totalCommission = rows.reduce((acc, r) => acc + (parseFloat(r.commissionAmount ?? '0') || 0), 0);
+  const totalPayout = rows.reduce((acc, r) => acc + (parseFloat(r.stationPayout ?? '0') || 0), 0);
+
+  const tableRowsHtml =
+    rows.length === 0
+      ? `<tr><td colspan="9" style="padding: 10px 8px; color: #888;">Aucune transaction sur la période.</td></tr>`
+      : rows
+          .map((r) => {
+            return `<tr>
+              <td style="padding: 8px 8px; border-bottom: 1px solid #eee;">${r.succeededAt.toLocaleString(locale === 'en' ? 'en-GB' : 'fr-FR')}</td>
+              <td style="padding: 8px 8px; border-bottom: 1px solid #eee;"><strong>${r.stationName}</strong></td>
+              <td style="padding: 8px 8px; border-bottom: 1px solid #eee;">${r.clientEmail}</td>
+              <td style="padding: 8px 8px; border-bottom: 1px solid #eee;">${r.reservationId}</td>
+              <td style="padding: 8px 8px; border-bottom: 1px solid #eee;">${r.reservationStatus}</td>
+              <td style="padding: 8px 8px; border-bottom: 1px solid #eee; text-align:right;">${formatMoneyEUR(r.amountPaid)}</td>
+              <td style="padding: 8px 8px; border-bottom: 1px solid #eee; text-align:right;">${formatMoneyEUR(r.commissionAmount)}</td>
+              <td style="padding: 8px 8px; border-bottom: 1px solid #eee; text-align:right;">${formatMoneyEUR(r.stationPayout)}</td>
+              <td style="padding: 8px 8px; border-bottom: 1px solid #eee;">${r.stripeTransferId ?? ''}</td>
+            </tr>`;
+          })
+          .join('');
+
+  const bodyHtml = `
+    <p style="margin: 0 0 12px;">${locale === 'en' ? 'Here is the weekly summary of escrow transactions captured through Stripe.' : 'Voici le récapitulatif hebdomadaire des transactions escrow capturées via Stripe.'}</p>
+    <div style="margin: 0 0 12px; color: #444;">
+      <div><strong>${locale === 'en' ? 'Transactions:' : 'Transactions :'} </strong>${rows.length}</div>
+      <div><strong>${locale === 'en' ? 'Total paid:' : 'Total payé :'} </strong>${formatMoneyEUR(totalAmount)}</div>
+      <div><strong>${locale === 'en' ? 'Total commission:' : 'Total commission :'} </strong>${formatMoneyEUR(totalCommission)}</div>
+      <div><strong>${locale === 'en' ? 'Total station payout:' : 'Total payout station :'} </strong>${formatMoneyEUR(totalPayout)}</div>
+    </div>
+    <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="border-collapse: collapse; font-size: 14px;">
+      <thead>
+        <tr>
+          <th align="left" style="padding: 8px 8px; border-bottom: 1px solid #e8e4da;">${locale === 'en' ? 'Succeeded at' : 'Date réussite'}</th>
+          <th align="left" style="padding: 8px 8px; border-bottom: 1px solid #e8e4da;">${locale === 'en' ? 'Station' : 'Station'}</th>
+          <th align="left" style="padding: 8px 8px; border-bottom: 1px solid #e8e4da;">${locale === 'en' ? 'Client' : 'Client'}</th>
+          <th align="left" style="padding: 8px 8px; border-bottom: 1px solid #e8e4da;">${locale === 'en' ? 'Reservation ID' : 'ID réservation'}</th>
+          <th align="left" style="padding: 8px 8px; border-bottom: 1px solid #e8e4da;">${locale === 'en' ? 'Status' : 'Statut'}</th>
+          <th align="right" style="padding: 8px 8px; border-bottom: 1px solid #e8e4da;">${locale === 'en' ? 'Paid' : 'Payé'}</th>
+          <th align="right" style="padding: 8px 8px; border-bottom: 1px solid #e8e4da;">${locale === 'en' ? 'Commission' : 'Commission'}</th>
+          <th align="right" style="padding: 8px 8px; border-bottom: 1px solid #e8e4da;">${locale === 'en' ? 'Payout' : 'Payout'}</th>
+          <th align="left" style="padding: 8px 8px; border-bottom: 1px solid #e8e4da;">${locale === 'en' ? 'Transfer ID' : 'Transfer ID'}</th>
+        </tr>
+      </thead>
+      <tbody>
+        ${tableRowsHtml}
+      </tbody>
+    </table>
+  `;
+
+  await resend.emails.send({
+    from: FROM,
+    to,
+    subject,
+    html: brandedEmail(locale, {
+      greeting: locale === 'en' ? 'Weekly escrow report' : 'Rapport hebdomadaire escrow',
+      bodyHtml,
+    }),
+  });
+}
