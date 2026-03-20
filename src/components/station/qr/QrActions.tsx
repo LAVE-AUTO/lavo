@@ -9,9 +9,19 @@ interface Props {
   stationName: string;
 }
 
+// Sanitize a station name for use in a filename — removes path-traversal chars and limits length
+function sanitizeFilename(name: string): string {
+  return name
+    .toLowerCase()
+    .replace(/\s+/g, '-')
+    .replace(/[^a-z0-9\-_]/g, '')
+    .slice(0, 50) || 'station';
+}
+
 export function QrActions({ url, stationName }: Props) {
   const t = useTranslations('station_qr');
   const [copied, setCopied] = useState(false);
+  const [copyError, setCopyError] = useState(false);
   const [canShare, setCanShare] = useState(false);
 
   useEffect(() => {
@@ -28,7 +38,7 @@ export function QrActions({ url, stationName }: Props) {
     });
     const a = document.createElement('a');
     a.href = dataUrl;
-    a.download = `qr-${stationName.replace(/\s+/g, '-').toLowerCase()}.png`;
+    a.download = `qr-${sanitizeFilename(stationName)}.png`;
     a.click();
   }, [url, stationName]);
 
@@ -42,18 +52,26 @@ export function QrActions({ url, stationName }: Props) {
       errorCorrectionLevel: 'H',
     });
     const blob = new Blob([svgStr], { type: 'image/svg+xml' });
+    const objectUrl = URL.createObjectURL(blob);
     const a = document.createElement('a');
-    a.href = URL.createObjectURL(blob);
-    a.download = `qr-${stationName.replace(/\s+/g, '-').toLowerCase()}.svg`;
+    a.href = objectUrl;
+    a.download = `qr-${sanitizeFilename(stationName)}.svg`;
     a.click();
-    URL.revokeObjectURL(a.href);
+    // Delay revoke to let the browser finish reading the blob URL
+    setTimeout(() => URL.revokeObjectURL(objectUrl), 100);
   }, [url, stationName]);
 
   /* Copy link */
   const copyLink = useCallback(async () => {
-    await navigator.clipboard.writeText(url);
-    setCopied(true);
-    setTimeout(() => setCopied(false), 2000);
+    try {
+      await navigator.clipboard.writeText(url);
+      setCopied(true);
+      setCopyError(false);
+      setTimeout(() => setCopied(false), 2000);
+    } catch {
+      setCopyError(true);
+      setTimeout(() => setCopyError(false), 3000);
+    }
   }, [url]);
 
   /* Share (Web Share API if available) */
@@ -102,7 +120,7 @@ export function QrActions({ url, stationName }: Props) {
           className={`${btnBase} flex-1 border border-[#D8D4C8] text-[#5A5A4A] hover:bg-[#F0EDE4] dark:border-[#243020] dark:text-[#9A9A8A] dark:hover:bg-[#1A2A14]`}
         >
           {copied ? <CheckIcon /> : <CopyIcon />}
-          {copied ? t('link_copied') : t('copy_link')}
+          {copied ? t('link_copied') : copyError ? t('copy_error') : t('copy_link')}
         </button>
       </div>
 

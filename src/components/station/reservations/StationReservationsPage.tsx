@@ -54,11 +54,11 @@ export function StationReservationsPage() {
     const [ok, data] = await getFromApi(`/station/entries?from=${from}&to=${to}&per_page=100`);
     if (ok) {
       const res = data as { data: { entries: ReservationEntry[] } };
-      const fetched = res.data.entries ?? [];
+      const fetched = res?.data?.entries ?? [];
       // TODO: connect to API once endpoint returns real data — remove mock fallback
       setEntries(fetched.length > 0 ? fetched : MOCK_RESERVATIONS);
     } else {
-      setEntries(MOCK_RESERVATIONS);
+      setLoadError(true);
     }
     setLoading(false);
   }, []);
@@ -119,15 +119,8 @@ export function StationReservationsPage() {
       setPending(null);
       await loadData();
     } else {
-      // TODO: remove local mock fallback once API is fully connected
-      setEntries((prev) =>
-        prev.map((e) =>
-          e.id === pending.entryId
-            ? { ...e, status: newStatus as EntryStatus, completed_at: newStatus === 'completed' ? new Date().toISOString() : e.completed_at }
-            : e,
-        ),
-      );
-      setPending(null);
+      // Keep dialog open and show error — do not update local state on failure
+      setActionError(t('error_action'));
     }
   }
 
@@ -219,6 +212,7 @@ export function StationReservationsPage() {
         variant={confirm.variant}
         loading={actionLoading}
         confirmLabel={pending?.type === 'cancel' ? t('btn_cancel_entry') : pending?.type === 'validate' ? t('btn_validate') : t('btn_start_service')}
+        cancelLabel={t('btn_cancel')}
         onConfirm={executeAction}
         onCancel={() => setPending(null)}
       />

@@ -15,40 +15,75 @@ interface DateRange {
   to: Date | null;
 }
 
+// Returns YYYY-MM-DD in local time to avoid UTC-offset shifts
+function toLocalDateStr(d: Date): string {
+  const y = d.getFullYear();
+  const m = String(d.getMonth() + 1).padStart(2, '0');
+  const day = String(d.getDate()).padStart(2, '0');
+  return `${y}-${m}-${day}`;
+}
+
+function safeFloat(value: string | null | undefined): number {
+  const n = parseFloat(value ?? '');
+  return isNaN(n) ? 0 : n;
+}
+
 export function StationHistoryPage() {
   const t = useTranslations('station_history');
 
   const [entries, setEntries] = useState<StationHistoryEntry[]>([]);
   const [meta, setMeta] = useState<StationHistoryMeta | null>(null);
   const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState(false);
   const [page, setPage] = useState(1);
   const [dateRange, setDateRange] = useState<DateRange>({ from: null, to: null });
   const [status, setStatus] = useState<StatusFilter>('all');
 
   // Track previous filter values to detect filter changes and reset page
   const prevFiltersRef = useRef({ dateRange, status });
+  const mountedRef = useRef(true);
+  useEffect(() => { mountedRef.current = true; return () => { mountedRef.current = false; }; }, []);
 
   const fetchHistory = useCallback(async (fetchPage: number) => {
     setLoading(true);
+    setLoadError(false);
     const params = new URLSearchParams();
     params.set('page', String(fetchPage));
     params.set('limit', String(PAGE_LIMIT));
-    if (dateRange.from) params.set('from', dateRange.from.toISOString());
-    if (dateRange.to) params.set('to', dateRange.to.toISOString());
+    // Use local date string (YYYY-MM-DD) — backend expects this format, and toISOString() shifts UTC
+    if (dateRange.from) params.set('from', toLocalDateStr(dateRange.from));
+    if (dateRange.to) params.set('to', toLocalDateStr(dateRange.to));
     if (status !== 'all') params.set('status', status);
 
-    const [ok, data] = await getFromApi<{ items: StationHistoryEntry[]; meta: StationHistoryMeta }>(
+    const [ok, data] = await getFromApi<{ data: { items: StationHistoryEntry[]; meta: StationHistoryMeta } }>(
       `/history/station?${params.toString()}`,
     );
 
-    if (ok && data && typeof data === 'object' && 'items' in data) {
-      const resp = data as { items: StationHistoryEntry[]; meta: StationHistoryMeta };
-      if (Array.isArray(resp.items) && resp.items.length > 0) {
-        setEntries(resp.items);
-        setMeta(resp.meta ?? null);
+    if (!mountedRef.current) return;
+
+    // API response is wrapped: { data: { items, meta } }
+    if (ok && data && typeof data === 'object' && 'data' in data) {
+      const inner = (data as { data: { items?: StationHistoryEntry[]; meta?: StationHistoryMeta } }).data;
+      if (Array.isArray(inner?.items) && inner.items.length > 0) {
+        setEntries(inner.items);
+        setMeta(inner.meta ?? null);
         setLoading(false);
         return;
       }
+      // API succeeded but returned empty — show empty state (not error)
+      if (Array.isArray(inner?.items)) {
+        setEntries([]);
+        setMeta(inner.meta ?? null);
+        setLoading(false);
+        return;
+      }
+    }
+
+    // API failed — show error screen instead of silently falling back to mock
+    if (!ok) {
+      setLoadError(true);
+      setLoading(false);
+      return;
     }
 
     // TODO: connect to API once endpoint returns real data — remove mock fallback
@@ -80,9 +115,9 @@ export function StationHistoryPage() {
 
   const stats = useMemo(() => {
     const completed = entries.filter((e) => e.status === 'completed');
-    const revenue = completed.reduce((s, e) => s + parseFloat(e.amount_paid), 0);
-    const payouts = completed.reduce((s, e) => s + parseFloat(e.station_payout ?? '0'), 0);
-    const commission = completed.reduce((s, e) => s + parseFloat(e.commission_amount ?? '0'), 0);
+    const revenue = completed.reduce((s, e) => s + safeFloat(e.amount_paid), 0);
+    const payouts = completed.reduce((s, e) => s + safeFloat(e.station_payout), 0);
+    const commission = completed.reduce((s, e) => s + safeFloat(e.commission_amount), 0);
     return { count: meta?.total ?? entries.length, revenue, payouts, commission };
   }, [entries, meta]);
 
@@ -96,6 +131,21 @@ export function StationHistoryPage() {
     return (
       <div className="flex flex-1 items-center justify-center bg-[#EDEDED] dark:bg-[#1A2116]">
         <div className="h-8 w-8 animate-spin rounded-full border-[3px] border-[#C09A18] border-t-transparent" />
+      </div>
+    );
+  }
+
+  if (loadError) {
+    return (
+      <div className="flex flex-1 flex-col items-center justify-center gap-3 text-center">
+        <span className="text-[14px] font-semibold text-[#000C1F]/50 dark:text-[#FFF8EC]/40">{t('error_load')}</span>
+        <button
+          type="button"
+          onClick={() => fetchHistory(page)}
+          className="rounded-[10px] border-[1.5px] border-[#C09A18]/50 px-4 py-2 text-[13px] font-semibold text-[#C09A18] transition-colors hover:bg-[#C09A18]/10"
+        >
+          {t('btn_retry')}
+        </button>
       </div>
     );
   }

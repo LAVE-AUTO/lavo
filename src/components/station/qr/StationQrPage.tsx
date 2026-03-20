@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { useTranslations, useLocale } from 'next-intl';
 import { getFromApi } from '@/services';
 import { QrDisplay } from './QrDisplay';
@@ -24,6 +24,8 @@ export function StationQrPage() {
   const [error, setError] = useState(false);
 
   const [origin, setOrigin] = useState('');
+  const mountedRef = useRef(true);
+  useEffect(() => { mountedRef.current = true; return () => { mountedRef.current = false; }; }, []);
 
   useEffect(() => { setOrigin(window.location.origin); }, []);
 
@@ -35,8 +37,15 @@ export function StationQrPage() {
     setLoading(true);
     setError(false);
     const [ok, data] = await getFromApi('/station/me');
+    if (!mountedRef.current) return;
     if (ok) {
       const res = data as StationMe;
+      // Validate the response shape before using it
+      if (!res?.data?.id || !res?.data?.name) {
+        setError(true);
+        setLoading(false);
+        return;
+      }
       setStationId(res.data.id);
       setStationName(res.data.name);
     } else {

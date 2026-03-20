@@ -85,8 +85,9 @@ export function VehicleFormatModal({ format, existingFormats, onClose, onSaved }
     if (ok) {
       onSaved((data as { data: VehicleFormat }).data);
     } else {
-      const err = data as { message?: string; code?: string };
-      setApiError(err?.message || t('format_save_error'));
+      // Never expose raw server messages — map known codes to i18n strings only
+      const err = data as { code?: string };
+      setApiError(err?.code === 'CONFLICT' ? t('format_label_conflict') : t('format_save_error'));
     }
   }
 
