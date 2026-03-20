@@ -1,13 +1,75 @@
 'use client';
 
-import { useState, useMemo, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import type { ReactNode } from 'react';
 import { useTranslations, useLocale } from 'next-intl';
 import { Link, useRouter } from '@/i18n/navigation';
 import { useParams } from 'next/navigation';
 import { useToast } from '@/context/toast-context';
-import { patchWithApi } from '@/services/axios-service';
-import { MOCK_RESERVATIONS } from '@/data/reservations-mock';
+import { getFromApi, patchWithApi } from '@/services/axios-service';
+
+/* ------------------------------------------------------------------ */
+/* API shapes                                                           */
+/* ------------------------------------------------------------------ */
+
+interface ApiEntry {
+  id: string;
+  entry_type: 'reservation' | 'queue';
+  time_slot_id: string | null;
+  station_id: string;
+  vehicle_format_id: string | null;
+  status: string;
+  queue_position: number | null;
+  amount_paid: string | null;
+  created_at: string;
+}
+
+interface ApiVehicleFormat { id: string; label: string; price: string; is_active: boolean }
+interface ApiTimeSlot { id: string; start_time: string }
+interface ApiStation {
+  id: string;
+  name: string;
+  address: string;
+  city: string;
+  latitude: string | null;
+  longitude: string | null;
+  vehicleFormats: ApiVehicleFormat[];
+  timeSlots: ApiTimeSlot[];
+  stationConfig?: { wash_duration_minutes: number } | null;
+}
+
+/* ------------------------------------------------------------------ */
+/* Enriched reservation shape                                           */
+/* ------------------------------------------------------------------ */
+
+interface EnrichedReservation {
+  id: string;
+  stationName: string;
+  stationAddress: string;
+  stationImageUrl: string;
+  stationLatitude: number;
+  stationLongitude: number;
+  forfaitName: string;
+  date: string;
+  timeSlot: string;
+  duration: number;
+  totalPrice: number;
+  status: string;
+}
+
+function slotToDateParts(startTime: string): { date: string; timeSlot: string } {
+  const d = new Date(startTime);
+  const yyyy = d.getFullYear();
+  const mm = String(d.getMonth() + 1).padStart(2, '0');
+  const dd = String(d.getDate()).padStart(2, '0');
+  const h = String(d.getHours()).padStart(2, '0');
+  const m = String(d.getMinutes()).padStart(2, '0');
+  return { date: `${yyyy}-${mm}-${dd}`, timeSlot: `${h}:${m}` };
+}
+
+/* ------------------------------------------------------------------ */
+/* Page                                                                 */
+/* ------------------------------------------------------------------ */
 
 export default function ReservationDetailPage() {
   const t = useTranslations('coupons');
@@ -16,18 +78,79 @@ export default function ReservationDetailPage() {
   const locale = useLocale();
   const id = params.id as string;
 
-  const reservation = useMemo(() => MOCK_RESERVATIONS.find((r) => r.id === id), [id]);
+  const mountedRef = useRef(true);
+  useEffect(() => { mountedRef.current = true; return () => { mountedRef.current = false; }; }, []);
+
+  const [reservation, setReservation] = useState<EnrichedReservation | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [notFound, setNotFound] = useState(false);
   const [showCancelModal, setShowCancelModal] = useState(false);
   const [cancelLoading, setCancelLoading] = useState(false);
   const cancelDialogRef = useRef<HTMLDivElement | null>(null);
   const { success: showSuccess, error: showError } = useToast();
+
+  const loadReservation = useCallback(async () => {
+    setLoading(true);
+    const [ok, data] = await getFromApi('/me/entries?per_page=100');
+    if (!mountedRef.current) return;
+
+    if (!ok) {
+      setNotFound(true);
+      setLoading(false);
+      return;
+    }
+
+    const res = data as { data: { entries: ApiEntry[] } };
+    const entries: ApiEntry[] = res?.data?.entries ?? [];
+    const entry = entries.find((e) => e.id === id);
+
+    if (!entry) {
+      setNotFound(true);
+      setLoading(false);
+      return;
+    }
+
+    /* Fetch station to enrich */
+    const [stationOk, stationData] = await getFromApi(`/stations/${entry.station_id}`);
+    if (!mountedRef.current) return;
+
+    const station = stationOk && stationData
+      ? (stationData as { data: ApiStation }).data
+      : null;
+
+    const format = station?.vehicleFormats.find((f) => f.id === entry.vehicle_format_id);
+    const slot = entry.time_slot_id
+      ? station?.timeSlots.find((s) => s.id === entry.time_slot_id)
+      : undefined;
+
+    const { date, timeSlot } = slot
+      ? slotToDateParts(slot.start_time)
+      : { date: entry.created_at.split('T')[0], timeSlot: '00:00' };
+
+    setReservation({
+      id: entry.id,
+      stationName: station?.name ?? `#${entry.station_id.slice(0, 8)}`,
+      stationAddress: station ? `${station.address}, ${station.city}` : '',
+      stationImageUrl: '',
+      stationLatitude: parseFloat(station?.latitude ?? '0'),
+      stationLongitude: parseFloat(station?.longitude ?? '0'),
+      forfaitName: format?.label ?? '—',
+      date,
+      timeSlot,
+      duration: station?.stationConfig?.wash_duration_minutes ?? 30,
+      totalPrice: parseFloat(entry.amount_paid ?? '0'),
+      status: entry.status,
+    });
+    setLoading(false);
+  }, [id]);
+
+  useEffect(() => { loadReservation(); }, [loadReservation]);
 
   useEffect(() => {
     if (!showCancelModal) return;
 
     const previouslyFocused = document.activeElement as HTMLElement | null;
     const dialogEl = cancelDialogRef.current;
-
     if (dialogEl) {
       const focusable = dialogEl.querySelector<HTMLElement>(
         'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])',
@@ -36,21 +159,26 @@ export default function ReservationDetailPage() {
     }
 
     const handleKeyDown = (event: KeyboardEvent) => {
-      if (event.key === 'Escape') {
-        event.preventDefault();
-        setShowCancelModal(false);
-      }
+      if (event.key === 'Escape') { event.preventDefault(); setShowCancelModal(false); }
     };
-
     document.addEventListener('keydown', handleKeyDown);
-
     return () => {
       document.removeEventListener('keydown', handleKeyDown);
       previouslyFocused?.focus();
     };
   }, [showCancelModal]);
 
-  if (!reservation) {
+  /* Loading */
+  if (loading) {
+    return (
+      <main className="min-h-screen bg-[#F5F5E6] dark:bg-[#0F0F0D] flex items-center justify-center pb-20">
+        <div className="h-8 w-8 animate-spin rounded-full border-[3px] border-gold border-t-transparent" />
+      </main>
+    );
+  }
+
+  /* Not found */
+  if (notFound || !reservation) {
     return (
       <main className="min-h-screen bg-[#F5F5E6] dark:bg-[#0F0F0D] flex items-center justify-center pb-20">
         <div className="text-center">
@@ -72,13 +200,17 @@ export default function ReservationDetailPage() {
   const isUpcoming = reservation.status === 'confirmed' && minutesUntilSlot > 0;
   const isPast = reservation.status === 'completed' || reservation.status === 'cancelled';
 
-  const dateLabel = slotDateTime.toLocaleDateString(locale === 'en' ? 'en-CA' : 'fr-CA', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
+  const dateLabel = slotDateTime.toLocaleDateString(locale === 'en' ? 'en-CA' : 'fr-CA', {
+    weekday: 'long', day: 'numeric', month: 'long', year: 'numeric',
+  });
 
   const statusColors: Record<string, string> = {
-    confirmed: 'bg-lavo-success/15 text-lavo-success',
-    in_progress: 'bg-gold/15 text-gold',
-    completed: 'bg-[#999]/15 text-[#666]',
-    cancelled: 'bg-lavo-error/15 text-lavo-error',
+    confirmed:       'bg-lavo-success/15 text-lavo-success',
+    in_progress:     'bg-gold/15 text-gold',
+    completed:       'bg-[#999]/15 text-[#666]',
+    cancelled:       'bg-lavo-error/15 text-lavo-error',
+    pending:         'bg-blue-500/15 text-blue-500',
+    pending_payment: 'bg-[#999]/15 text-[#888]',
   };
 
   const handleStartNavigation = () => {
@@ -137,22 +269,12 @@ export default function ReservationDetailPage() {
           <div className="space-y-3">
             <DetailRow icon="calendar" label={t('detail_date')} value={dateLabel} />
             <DetailRow icon="clock" label={t('detail_time')} value={reservation.timeSlot} />
-            <DetailRow icon="tag" label={t('detail_forfait')} value={`${reservation.forfaitName} (${reservation.categoryLabel})`} />
+            <DetailRow icon="tag" label={t('detail_forfait')} value={reservation.forfaitName} />
             <DetailRow icon="timer" label={t('detail_duration')} value={`${reservation.duration} min`} />
-
-            {reservation.extras.length > 0 && (
-              <div className="flex items-start gap-3">
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#9A9A8A" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="mt-0.5 shrink-0"><circle cx="12" cy="12" r="10" /><line x1="12" y1="8" x2="12" y2="16" /><line x1="8" y1="12" x2="16" y2="12" /></svg>
-                <div>
-                  <p className="text-[13px] text-[#999] dark:text-[#888]">{t('detail_extras')}</p>
-                  <p className="text-[14px] font-semibold text-[#0A0A14] dark:text-white">{reservation.extras.join(', ')}</p>
-                </div>
-              </div>
-            )}
 
             <div className="pt-3 border-t border-[#D0D0C0] dark:border-tab-inactive flex items-center justify-between">
               <span className="text-[15px] font-bold text-[#0A0A14] dark:text-white">{t('detail_total')}</span>
-              <span className="text-[20px] font-black text-gold">{reservation.totalPrice}$</span>
+              <span className="text-[20px] font-black text-gold">{reservation.totalPrice.toFixed(2)}$</span>
             </div>
           </div>
         </div>
@@ -160,7 +282,6 @@ export default function ReservationDetailPage() {
         {/* Action buttons (only for upcoming reservations) */}
         {isUpcoming && (
           <div className="space-y-3">
-            {/* Start now */}
             <button
               type="button"
               onClick={canStart ? handleStartNavigation : undefined}
@@ -181,12 +302,9 @@ export default function ReservationDetailPage() {
               </p>
             )}
             {canStart && (
-              <p className="text-[12px] text-lavo-success text-center font-semibold">
-                {t('start_ready')}
-              </p>
+              <p className="text-[12px] text-lavo-success text-center font-semibold">{t('start_ready')}</p>
             )}
 
-            {/* Cancel */}
             <button
               type="button"
               onClick={() => setShowCancelModal(true)}
@@ -239,8 +357,7 @@ export default function ReservationDetailPage() {
                 <div className="flex gap-2.5 bg-lavo-error/10 border border-lavo-error/20 rounded-xl px-3.5 py-3 text-left">
                   <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#E8472A" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="shrink-0 mt-0.5" aria-hidden="true">
                     <path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z" />
-                    <line x1="12" y1="9" x2="12" y2="13" />
-                    <line x1="12" y1="17" x2="12.01" y2="17" />
+                    <line x1="12" y1="9" x2="12" y2="13" /><line x1="12" y1="17" x2="12.01" y2="17" />
                   </svg>
                   <p className="text-[12px] font-semibold text-lavo-error leading-relaxed">
                     {t('cancel_modal_fees_warning')}
@@ -283,9 +400,9 @@ export default function ReservationDetailPage() {
 function DetailRow({ icon, label, value }: { icon: string; label: string; value: string }) {
   const icons: Record<string, ReactNode> = {
     calendar: <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#9A9A8A" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" /><line x1="16" y1="2" x2="16" y2="6" /><line x1="8" y1="2" x2="8" y2="6" /><line x1="3" y1="10" x2="21" y2="10" /></svg>,
-    clock: <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#9A9A8A" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10" /><polyline points="12 6 12 12 16 14" /></svg>,
-    tag: <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#9A9A8A" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M20.59 13.41l-7.17 7.17a2 2 0 01-2.83 0L2 12V2h10l8.59 8.59a2 2 0 010 2.82z" /><line x1="7" y1="7" x2="7.01" y2="7" /></svg>,
-    timer: <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#9A9A8A" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M5 22h14M5 2h14M17 22v-4.172a2 2 0 00-.586-1.414L12 12l-4.414 4.414A2 2 0 007 17.828V22M7 2v4.172a2 2 0 00.586 1.414L12 12l4.414-4.414A2 2 0 0017 6.172V2" /></svg>,
+    clock:    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#9A9A8A" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10" /><polyline points="12 6 12 12 16 14" /></svg>,
+    tag:      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#9A9A8A" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M20.59 13.41l-7.17 7.17a2 2 0 01-2.83 0L2 12V2h10l8.59 8.59a2 2 0 010 2.82z" /><line x1="7" y1="7" x2="7.01" y2="7" /></svg>,
+    timer:    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#9A9A8A" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M5 22h14M5 2h14M17 22v-4.172a2 2 0 00-.586-1.414L12 12l-4.414 4.414A2 2 0 007 17.828V22M7 2v4.172a2 2 0 00.586 1.414L12 12l4.414-4.414A2 2 0 0017 6.172V2" /></svg>,
   };
 
   return (

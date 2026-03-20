@@ -846,7 +846,11 @@
     "toast_cancel_success": "Reservation cancelled successfully",
     "toast_cancel_error": "Unable to cancel the reservation. Please try again.",
     "confirm_title": "Reservation confirmation",
-    "confirm_id_label": "ID"
+    "confirm_id_label": "ID",
+    "status_pending": "Pending",
+    "status_pending_payment": "Awaiting payment",
+    "error_load": "Unable to load your reservations.",
+    "btn_retry": "Retry"
   },
   "queue_detail": {
     "title": "My queue",
