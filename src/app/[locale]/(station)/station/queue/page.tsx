@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useCallback, useMemo } from 'react';
 import { useTranslations } from 'next-intl';
-import { getFromApi, patchWithApi } from '@/services';
+import { getFromApi, patchWithApi, postWithApi } from '@/services';
 import { QueueCard, type QueueEntry } from '@/components/station/dashboard/QueueCard';
 
 interface RawEntry {
@@ -53,7 +53,7 @@ export default function StationQueuePage() {
   }
 
   async function handlePick(id: string) {
-    const [ok] = await patchWithApi(`/station/entries/${id}`, { status: 'in_progress' });
+    const [ok] = await postWithApi(`/stations/queue/${id}/pick`, {});
     if (ok) await loadEntries();
   }
 
