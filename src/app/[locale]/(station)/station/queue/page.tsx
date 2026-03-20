@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useCallback, useMemo } from 'react';
 import { useTranslations } from 'next-intl';
-import { getFromApi, patchWithApi } from '@/services';
+import { getFromApi, patchWithApi, postWithApi } from '@/services';
 import { QueueCard, type QueueEntry } from '@/components/station/dashboard/QueueCard';
 
 interface RawEntry {
@@ -14,15 +14,6 @@ interface RawEntry {
   amount_paid: string | null;
   created_at: string;
 }
-
-// TODO: connect to API once endpoint returns real data — remove mock fallback
-const MOCK_QUEUE: QueueEntry[] = [
-  { id: 'mock-q1', position: 1, clientName: 'Client #a1b2', entryType: 'reservation', time: '09:30', serviceLabel: 'Lavage Complet', price: 45, isNext: true },
-  { id: 'mock-q2', position: 2, clientName: 'Client #c3d4', entryType: 'queue', time: '09:45', serviceLabel: 'Lavage Exterieur', price: 25, isNext: false },
-  { id: 'mock-q3', position: 3, clientName: 'Client #e5f6', entryType: 'reservation', time: '10:00', serviceLabel: 'Lavage SUV', price: 55, isNext: false },
-  { id: 'mock-q4', position: 4, clientName: 'Client #a7b8', entryType: 'queue', price: 30, isNext: false },
-  { id: 'mock-q5', position: 5, clientName: 'Client #c9d0', entryType: 'queue', price: 28, isNext: false },
-];
 
 function buildQueueEntries(raw: RawEntry[]): QueueEntry[] {
   return raw
@@ -47,11 +38,9 @@ export default function StationQueuePage() {
     const [ok, data] = await getFromApi('/station/entries');
     if (ok) {
       const raw = (data as { data: { entries: RawEntry[] } }).data.entries ?? [];
-      const built = buildQueueEntries(raw);
-      // TODO: remove mock fallback once real data is available
-      setEntries(built.length > 0 ? built : MOCK_QUEUE);
+      setEntries(buildQueueEntries(raw));
     } else {
-      setEntries(MOCK_QUEUE);
+      setEntries([]);
     }
     setLoading(false);
   }, []);
@@ -60,12 +49,17 @@ export default function StationQueuePage() {
 
   async function handleCall(id: string) {
     const [ok] = await patchWithApi(`/station/entries/${id}`, { status: 'in_progress' });
-    if (ok) {
-      await loadEntries();
-    } else {
-      // TODO: remove local mock fallback once API is fully connected
-      setEntries((prev) => prev.filter((e) => e.id !== id));
-    }
+    if (ok) await loadEntries();
+  }
+
+  async function handlePick(id: string) {
+    const [ok] = await postWithApi(`/stations/queue/${id}/pick`, {});
+    if (ok) await loadEntries();
+  }
+
+  async function handleReorder(id: string, newPosition: number) {
+    const [ok] = await patchWithApi(`/station/entries/${id}/position`, { queue_position: newPosition });
+    if (ok) await loadEntries();
   }
 
   const nextEntry = useMemo(() => entries.find((e) => e.isNext), [entries]);
@@ -118,8 +112,15 @@ export default function StationQueuePage() {
             {/* Right: rest of the queue */}
             {restEntries.length > 0 && (
               <div className="flex flex-1 flex-col gap-2.5">
-                {restEntries.map((entry) => (
-                  <QueueCard key={entry.id} entry={entry} onCall={handleCall} />
+                {restEntries.map((entry, idx) => (
+                  <QueueCard
+                    key={entry.id}
+                    entry={entry}
+                    onCall={handleCall}
+                    onPick={entry.entryType === 'queue' ? handlePick : undefined}
+                    onMoveUp={idx > 0 ? () => handleReorder(entry.id, entry.position - 1) : undefined}
+                    onMoveDown={idx < restEntries.length - 1 ? () => handleReorder(entry.id, entry.position + 1) : undefined}
+                  />
                 ))}
               </div>
             )}

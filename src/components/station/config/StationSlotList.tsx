@@ -12,6 +12,7 @@ interface StationSlotListProps {
   onDeleted: (id: string) => void;
   onAddSlot: () => void;
   onGenerate: () => void;
+  onBulk: () => void;
 }
 
 function fmt(iso: string) {
@@ -31,6 +32,7 @@ export function StationSlotList({
   onDeleted,
   onAddSlot,
   onGenerate,
+  onBulk,
 }: StationSlotListProps) {
   const t = useTranslations('station_config');
   const [deletingId, setDeletingId] = useState<string | null>(null);
@@ -68,6 +70,13 @@ export function StationSlotList({
             className="rounded-lg border border-[#C49A1E] px-3 py-1.5 text-[11px] font-bold text-[#C49A1E] transition-colors hover:bg-[#C49A1E] hover:text-[#0C1209]"
           >
             {t('btn_add_slot')}
+          </button>
+          <button
+            type="button"
+            onClick={onBulk}
+            className="rounded-lg border border-[#C49A1E] px-3 py-1.5 text-[11px] font-bold text-[#C49A1E] transition-colors hover:bg-[#C49A1E] hover:text-[#0C1209]"
+          >
+            {t('btn_bulk_slot')}
           </button>
           <button
             type="button"

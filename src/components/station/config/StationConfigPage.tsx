@@ -65,7 +65,7 @@ export function StationConfigPage() {
   const [slots, setSlots] = useState<CreatedSlot[]>(MOCK_SLOTS);
   const [selectedDate, setSelectedDate] = useState(todayISO);
   const [loading, setLoading] = useState(true);
-  const [modal, setModal] = useState<'add' | 'generate' | null>(null);
+  const [modal, setModal] = useState<'add' | 'generate' | 'bulk' | null>(null);
 
   const loadData = useCallback(async () => {
     const [configOk, configData] = await getFromApi('/station/config');
@@ -134,6 +134,7 @@ export function StationConfigPage() {
           onDeleted={(id) => setSlots((prev) => prev.filter((s) => s.id !== id))}
           onAddSlot={() => setModal('add')}
           onGenerate={() => setModal('generate')}
+          onBulk={() => setModal('bulk')}
         />
       </div>
 

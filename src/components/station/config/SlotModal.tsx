@@ -13,8 +13,14 @@ export interface CreatedSlot {
   status: string;
 }
 
+interface BulkRow {
+  startTime: string;
+  endTime: string;
+  capacity: string;
+}
+
 interface SlotModalProps {
-  mode: 'add' | 'generate';
+  mode: 'add' | 'generate' | 'bulk';
   selectedDate: string;
   onClose: () => void;
   onCreated: (slots: CreatedSlot[]) => void;
@@ -41,8 +47,27 @@ export function SlotModal({ mode, selectedDate, onClose, onCreated }: SlotModalP
   const [date, setDate] = useState(selectedDate);
   const [endDate, setEndDate] = useState('');
   const [intervalMin, setIntervalMin] = useState('');
+  const [bulkRows, setBulkRows] = useState<BulkRow[]>([
+    { startTime: '08:00', endTime: '09:00', capacity: '1' },
+    { startTime: '09:00', endTime: '10:00', capacity: '1' },
+  ]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(false);
+
+  function updateBulkRow(idx: number, field: keyof BulkRow, value: string) {
+    setBulkRows((prev) => prev.map((r, i) => i === idx ? { ...r, [field]: value } : r));
+  }
+
+  function addBulkRow() {
+    setBulkRows((prev) => {
+      const last = prev[prev.length - 1];
+      return [...prev, { startTime: last?.endTime ?? '08:00', endTime: last?.endTime ?? '09:00', capacity: '1' }];
+    });
+  }
+
+  function removeBulkRow(idx: number) {
+    setBulkRows((prev) => prev.filter((_, i) => i !== idx));
+  }
 
   async function handleConfirm() {
     if (mode === 'add') {
@@ -80,7 +105,7 @@ export function SlotModal({ mode, selectedDate, onClose, onCreated }: SlotModalP
       } else {
         setError(true);
       }
-    } else {
+    } else if (mode === 'generate') {
       const body: Record<string, unknown> = { date };
       if (endDate) body.end_date = endDate;
       if (intervalMin) body.interval_minutes = Number(intervalMin);
@@ -93,12 +118,29 @@ export function SlotModal({ mode, selectedDate, onClose, onCreated }: SlotModalP
       } else {
         setError(true);
       }
+    } else {
+      // bulk mode
+      const [ok, data] = await postWithApi('/station/slots/bulk', {
+        slots: bulkRows.map((row) => ({
+          start_time: `${date}T${row.startTime}:00`,
+          end_time: `${date}T${row.endTime}:00`,
+          capacity: Number(row.capacity) || 1,
+        })),
+      });
+      setLoading(false);
+      if (ok) {
+        const res = data as { data: CreatedSlot[] };
+        onCreated(res.data ?? []);
+        onClose();
+      } else {
+        setError(true);
+      }
     }
   }
 
-  const title = mode === 'add' ? t('modal_add_title') : t('modal_generate_title');
+  const title = mode === 'add' ? t('modal_add_title') : mode === 'generate' ? t('modal_generate_title') : t('modal_bulk_title');
   const btnLabel = loading
-    ? mode === 'add' ? t('modal_creating') : t('modal_generating')
+    ? mode === 'generate' ? t('modal_generating') : t('modal_creating')
     : t('modal_btn_confirm');
 
   return (
@@ -137,6 +179,25 @@ export function SlotModal({ mode, selectedDate, onClose, onCreated }: SlotModalP
                 <input type="number" min={1} className={inputClass} placeholder="30" value={intervalMin} onChange={(e) => setIntervalMin(e.target.value)} />
               </Field>
             </>
+          )}
+
+          {mode === 'bulk' && (
+            <div className="flex flex-col gap-2 max-h-56 overflow-y-auto pr-1">
+              {bulkRows.map((row, idx) => (
+                <div key={idx} className="flex items-center gap-1.5">
+                  <input type="time" className={`${inputClass} flex-1`} value={row.startTime} onChange={(e) => updateBulkRow(idx, 'startTime', e.target.value)} />
+                  <span className="text-[11px] text-[#888]">–</span>
+                  <input type="time" className={`${inputClass} flex-1`} value={row.endTime} onChange={(e) => updateBulkRow(idx, 'endTime', e.target.value)} />
+                  <input type="number" min={1} className={`${inputClass} w-16`} value={row.capacity} onChange={(e) => updateBulkRow(idx, 'capacity', e.target.value)} />
+                  {bulkRows.length > 1 && (
+                    <button type="button" onClick={() => removeBulkRow(idx)} className="shrink-0 rounded px-1.5 py-1 text-[11px] font-bold text-[#EF4444] hover:bg-[#FEE2E2] dark:hover:bg-[#3A1A1A]">×</button>
+                  )}
+                </div>
+              ))}
+              <button type="button" onClick={addBulkRow} className="mt-1 self-start rounded-lg border border-[#C49A1E] px-3 py-1 text-[11px] font-bold text-[#C49A1E] hover:bg-[#C49A1E] hover:text-[#0C1209] transition-colors">
+                + {t('modal_bulk_add_row')}
+              </button>
+            </div>
           )}
 
           {error && (
