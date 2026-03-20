@@ -57,6 +57,9 @@ export const HTTP_STATUS = {
   NOT_IMPLEMENTED: 501,
 } as const;
 
+// SERVER-ONLY constants below. These are used exclusively by src/app/api/ and src/server/.
+// Do NOT import them in any client component (src/components/, src/app/[locale]/, src/context/, src/services/).
+// They are co-located here for a single source of truth but must not be referenced by frontend code.
 export const ACCESS_COOKIE_NAME = 'access_token';
 export const REFRESH_COOKIE_NAME = 'refresh_token';
 export const ACCESS_TOKEN_EXPIRY = '15m';
@@ -68,7 +71,7 @@ export const JWT_REMEMBER_MAX_AGE = 30 * 24 * 60 * 60;
 export const RATE_LIMIT_MAX_ATTEMPTS = 5;
 export const RATE_LIMIT_BLOCK_MINUTES = 15;
 
-/** Default platform commission rate applied to reservations (10%). */
+/** Default platform commission rate applied to reservations (10%). Server-only. */
 export const DEFAULT_COMMISSION_RATE = '0.1000';
 
 /**

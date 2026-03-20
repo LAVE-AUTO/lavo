@@ -11,7 +11,12 @@ interface PaymentStepProps {
 
 export function PaymentStep({ grandTotal, onConfirm, onBack }: PaymentStepProps) {
   const t = useTranslations('booking');
-  const mockCardEnabled = process.env.NEXT_PUBLIC_ENABLE_CARD_MOCK === 'true';
+  // Mock card form is only allowed in non-production environments.
+  // Even if NEXT_PUBLIC_ENABLE_CARD_MOCK is set, disable it in production to prevent
+  // raw PAN/expiry/CVC from being stored in React state.
+  const mockCardEnabled =
+    process.env.NODE_ENV !== 'production' &&
+    process.env.NEXT_PUBLIC_ENABLE_CARD_MOCK === 'true';
   const [cardNumber, setCardNumber] = useState('');
   const [expiry, setExpiry] = useState('');
   const [cvc, setCvc] = useState('');

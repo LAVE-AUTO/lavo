@@ -49,13 +49,15 @@ export function ReceiptModal({ entry: e, locale, onClose }: ReceiptModalProps) {
     const win = window.open('', '_blank', 'width=680,height=960');
     if (!win) return;
 
+    // dateLabel is locale-formatted and does not contain user-controlled input, but escape for safety
+    const safeDateLabel = escapeHtml(dateLabel);
+
     win.document.write(`<!DOCTYPE html>
-<html lang="${locale}">
+<html lang="${escapeHtml(locale)}">
 <head>
   <meta charset="utf-8">
   <title>Slowtime — ${t('receipt_title')} ${escapeHtml(e.id.toUpperCase())}</title>
   <style>
-    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;900&display=swap');
 
     * { box-sizing: border-box; margin: 0; padding: 0; }
 
@@ -327,7 +329,7 @@ export function ReceiptModal({ entry: e, locale, onClose }: ReceiptModalProps) {
       </div>
       <div class="meta-item">
         <div class="meta-label">${t('receipt_date')}</div>
-        <div class="meta-value">${dateLabel}</div>
+        <div class="meta-value">${safeDateLabel}</div>
       </div>
       <div class="meta-item">
         <div class="meta-label">${t('receipt_time')}</div>
