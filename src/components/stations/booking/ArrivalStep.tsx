@@ -34,19 +34,6 @@ function generateDates(count: number, appLocale: string): { key: string; dayShor
   return days;
 }
 
-function generateTimeSlots(): TimeSlot[] {
-  const slots: TimeSlot[] = [];
-  for (let h = 8; h <= 18; h++) {
-    for (const m of [0, 30]) {
-      if (h === 18 && m === 30) break;
-      const time = `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}`;
-      const available = Math.random() > 0.3;
-      slots.push({ time, available });
-    }
-  }
-  return slots;
-}
-
 const LATER_SUGGESTIONS = ['14:00', '15:00', '16:00', '17:00'];
 
 function ChevronIcon({ open }: { open: boolean }) {
@@ -66,7 +53,12 @@ export function ArrivalStep({ station, arrivalMode, selectedDate, selectedSlot, 
   const t = useTranslations('booking');
   const locale = useLocale();
   const dates = useMemo(() => generateDates(7, locale), [locale]);
-  const timeSlots = useMemo(() => generateTimeSlots(), []);
+
+  /* Filter real time slots by selected date (only used when arrivalMode === 'book_slot') */
+  const timeSlots = useMemo(() => {
+    if (!selectedDate || arrivalMode !== 'book_slot') return station.timeSlots;
+    return station.timeSlots.filter((s) => s.date === selectedDate);
+  }, [station.timeSlots, selectedDate, arrivalMode]);
 
   /* Track which accordion section is open independently of selected mode */
   const [openSection, setOpenSection] = useState<'queue' | 'book' | null>(() => {

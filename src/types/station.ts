@@ -65,7 +65,9 @@ export interface ServiceExtra {
 
 /** Available time slot for booking */
 export interface TimeSlot {
-  time: string;       // e.g. "09:00"
+  id: string;         // UUID — sent as time_slot_id to POST /stations/:id/reservations
+  date: string;       // YYYY-MM-DD (local time) — used to filter slots by selected date
+  time: string;       // HH:MM (local time) — displayed in the grid
   available: boolean;
 }
 
@@ -77,6 +79,7 @@ export interface StationDetailData extends Station {
   services: string[];
   serviceCategories: ServiceCategory[];
   extras: ServiceExtra[];
+  timeSlots: TimeSlot[];
   queueCount: number;
   estimatedWaitMinutes: number;
 }

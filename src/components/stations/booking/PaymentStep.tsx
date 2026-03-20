@@ -5,7 +5,7 @@ import { useTranslations } from 'next-intl';
 
 interface PaymentStepProps {
   grandTotal: number;
-  onConfirm: () => void;
+  onConfirm: () => Promise<void>;
   onBack: () => void;
 }
 
