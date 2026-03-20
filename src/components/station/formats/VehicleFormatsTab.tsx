@@ -74,6 +74,7 @@ export function VehicleFormatsTab({ formats, onAdd, onUpdate, onDelete }: Props)
     setToggleState(null);
     setToggling(format.id);
     const [ok, data] = await patchWithApi(`/station/formats/${format.id}`, { is_active: !format.is_active });
+    if (!mountedRef.current) return;
     setToggling(null);
     if (ok) onUpdate((data as { data: VehicleFormat }).data);
   }, [toggleState, onUpdate]);
@@ -128,7 +129,7 @@ export function VehicleFormatsTab({ formats, onAdd, onUpdate, onDelete }: Props)
                 </span>
 
                 <span className="shrink-0 font-mono text-[14px] font-bold text-[#C49A1E]">
-                  {parseFloat(format.price).toFixed(2)} $
+                  {(isNaN(parseFloat(format.price)) ? 0 : parseFloat(format.price)).toFixed(2)} $
                 </span>
 
                 {/* Toggle active/inactive */}

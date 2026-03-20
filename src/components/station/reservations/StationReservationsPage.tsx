@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useCallback, useMemo } from 'react';
+import { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import { useTranslations } from 'next-intl';
 import { getFromApi, patchWithApi } from '@/services';
 import { ConfirmDialog } from '@/components/ui/ConfirmDialog';
@@ -42,6 +42,9 @@ export function StationReservationsPage() {
   const [entries, setEntries] = useState<ReservationEntry[]>([]);
   const [loading, setLoading] = useState(true);
   const [loadError, setLoadError] = useState(false);
+  const mountedRef = useRef(true);
+  useEffect(() => { mountedRef.current = true; return () => { mountedRef.current = false; }; }, []);
+
   const [activeTab, setActiveTab] = useState<StatusTab>('all');
   const [pending, setPending] = useState<PendingAction | null>(null);
   const [actionLoading, setActionLoading] = useState(false);
@@ -52,13 +55,14 @@ export function StationReservationsPage() {
     setLoadError(false);
     const { from, to } = todayRange();
     const [ok, data] = await getFromApi(`/station/entries?from=${from}&to=${to}&per_page=100`);
+    if (!mountedRef.current) return;
     if (ok) {
       const res = data as { data: { entries: ReservationEntry[] } };
-      const fetched = res.data.entries ?? [];
+      const fetched = res?.data?.entries ?? [];
       // TODO: connect to API once endpoint returns real data — remove mock fallback
       setEntries(fetched.length > 0 ? fetched : MOCK_RESERVATIONS);
     } else {
-      setEntries(MOCK_RESERVATIONS);
+      setLoadError(true);
     }
     setLoading(false);
   }, []);
@@ -89,7 +93,7 @@ export function StationReservationsPage() {
     let active = 0;
     let done = 0;
     for (const e of entries) {
-      if (e.amount_paid && e.status !== 'cancelled') revenue += parseFloat(e.amount_paid);
+      if (e.amount_paid && e.status !== 'cancelled') { const n = parseFloat(e.amount_paid); if (!isNaN(n)) revenue += n; }
       if (e.status === 'in_progress') active++;
       if (e.status === 'completed') done++;
     }
@@ -113,21 +117,15 @@ export function StationReservationsPage() {
     };
     const newStatus = statusMap[pending.type];
     const [ok] = await patchWithApi(`/station/entries/${pending.entryId}`, { status: newStatus });
+    if (!mountedRef.current) return;
 
     setActionLoading(false);
     if (ok) {
       setPending(null);
       await loadData();
     } else {
-      // TODO: remove local mock fallback once API is fully connected
-      setEntries((prev) =>
-        prev.map((e) =>
-          e.id === pending.entryId
-            ? { ...e, status: newStatus as EntryStatus, completed_at: newStatus === 'completed' ? new Date().toISOString() : e.completed_at }
-            : e,
-        ),
-      );
-      setPending(null);
+      // Keep dialog open and show error — do not update local state on failure
+      setActionError(t('error_action'));
     }
   }
 
@@ -219,6 +217,7 @@ export function StationReservationsPage() {
         variant={confirm.variant}
         loading={actionLoading}
         confirmLabel={pending?.type === 'cancel' ? t('btn_cancel_entry') : pending?.type === 'validate' ? t('btn_validate') : t('btn_start_service')}
+        cancelLabel={t('btn_cancel')}
         onConfirm={executeAction}
         onCancel={() => setPending(null)}
       />

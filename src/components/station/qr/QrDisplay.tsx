@@ -23,7 +23,12 @@ export function QrDisplay({ url }: Props) {
       margin: 2,
       color: { dark: QR_COLOR_DARK, light: QR_COLOR_LIGHT },
       errorCorrectionLevel: 'H',
-    }).then(() => setReady(true));
+    })
+      .then(() => setReady(true))
+      .catch(() => {
+        // QR generation failed silently — canvas stays blank, pulse animation stops
+        setReady(true);
+      });
   }, [url]);
 
   return (
