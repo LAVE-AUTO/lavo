@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useTranslations } from 'next-intl';
 import { deleteWithApi } from '@/services';
 import type { CreatedSlot } from './SlotModal';
@@ -36,10 +36,13 @@ export function StationSlotList({
 }: StationSlotListProps) {
   const t = useTranslations('station_config');
   const [deletingId, setDeletingId] = useState<string | null>(null);
+  const mountedRef = useRef(true);
+  useEffect(() => { mountedRef.current = true; return () => { mountedRef.current = false; }; }, []);
 
   async function handleDelete(id: string) {
     setDeletingId(id);
     const [ok] = await deleteWithApi(`/station/slots/${id}`);
+    if (!mountedRef.current) return;
     setDeletingId(null);
     if (ok) onDeleted(id);
   }

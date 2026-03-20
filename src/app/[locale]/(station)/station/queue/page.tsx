@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useCallback, useMemo } from 'react';
 import { useTranslations } from 'next-intl';
-import { getFromApi, patchWithApi, postWithApi } from '@/services';
+import { getFromApi, patchWithApi } from '@/services';
 import { QueueCard, type QueueEntry } from '@/components/station/dashboard/QueueCard';
 
 interface RawEntry {
@@ -53,7 +53,7 @@ export default function StationQueuePage() {
   }
 
   async function handlePick(id: string) {
-    const [ok] = await postWithApi(`/stations/queue/${id}/pick`, {});
+    const [ok] = await patchWithApi(`/station/entries/${id}`, { status: 'in_progress' });
     if (ok) await loadEntries();
   }
 
@@ -64,8 +64,8 @@ export default function StationQueuePage() {
 
   const nextEntry = useMemo(() => entries.find((e) => e.isNext), [entries]);
   const restEntries = useMemo(() => entries.filter((e) => !e.isNext), [entries]);
-  const reservedCount = entries.filter((e) => e.entryType === 'reservation').length;
-  const walkInCount = entries.filter((e) => e.entryType === 'queue').length;
+  const reservedCount = useMemo(() => entries.filter((e) => e.entryType === 'reservation').length, [entries]);
+  const walkInCount = useMemo(() => entries.filter((e) => e.entryType === 'queue').length, [entries]);
 
   return (
     <div className="flex flex-1 flex-col overflow-hidden bg-[#EDEDED] dark:bg-[#1A2116]">

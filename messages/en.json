@@ -1310,7 +1310,11 @@
     "view_monthly": "Monthly",
     "notif_tooltip": "Notifications",
     "empty_post": "Available",
-    "add_entry": "+"
+    "add_entry": "+",
+    "queue_detail_time": "Time",
+    "queue_detail_service": "Service",
+    "queue_detail_price": "Price",
+    "queue_detail_post": "Bay"
   },
   "station_reservations": {
     "page_title": "Today's reservations",

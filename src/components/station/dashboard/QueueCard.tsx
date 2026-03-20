@@ -74,7 +74,7 @@ export function QueueCard({ entry, onCall, onPick, onMoveUp, onMoveDown }: Queue
           )}
 
           {/* Margin progress bar */}
-          {entry.marginMin !== undefined && entry.marginMax !== undefined && (
+          {entry.marginMin !== undefined && entry.marginMax !== undefined && entry.marginMax > 0 && (
             <div className="mb-4 flex items-center gap-2 text-[10px] text-[#000717]/60 dark:text-[#FFFFF0]/60">
               <span className="h-2 w-2 shrink-0 rounded-full bg-[#00C851]" />
               <span>{t('queue_margin')}</span>
@@ -145,10 +145,10 @@ export function QueueCard({ entry, onCall, onPick, onMoveUp, onMoveDown }: Queue
         <div className="overflow-hidden">
           <div className="border-t border-[#B8B8A4] px-4 pb-3.5 pt-3 dark:border-[#3A4A36]">
             <div className="grid grid-cols-2 gap-x-4 gap-y-2 text-[11px]">
-              {entry.time && <DetailRow label="Heure" value={entry.time} />}
-              {entry.serviceLabel && <DetailRow label="Service" value={entry.serviceLabel} />}
-              {entry.price !== undefined && <DetailRow label="Prix" value={`${entry.price}$`} gold />}
-              {entry.postLabel && <DetailRow label="Poste" value={entry.postLabel} />}
+              {entry.time && <DetailRow label={t('queue_detail_time')} value={entry.time} />}
+              {entry.serviceLabel && <DetailRow label={t('queue_detail_service')} value={entry.serviceLabel} />}
+              {entry.price !== undefined && <DetailRow label={t('queue_detail_price')} value={`${entry.price}$`} gold />}
+              {entry.postLabel && <DetailRow label={t('queue_detail_post')} value={entry.postLabel} />}
             </div>
 
             {/* Position reorder + pick actions */}

@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useRef } from 'react';
 import { useTranslations } from 'next-intl';
 import { postWithApi } from '@/services';
 
@@ -14,6 +14,7 @@ export interface CreatedSlot {
 }
 
 interface BulkRow {
+  key: number;
   startTime: string;
   endTime: string;
   capacity: string;
@@ -47,21 +48,23 @@ export function SlotModal({ mode, selectedDate, onClose, onCreated }: SlotModalP
   const [date, setDate] = useState(selectedDate);
   const [endDate, setEndDate] = useState('');
   const [intervalMin, setIntervalMin] = useState('');
+  const bulkRowCounter = useRef(2);
   const [bulkRows, setBulkRows] = useState<BulkRow[]>([
-    { startTime: '08:00', endTime: '09:00', capacity: '1' },
-    { startTime: '09:00', endTime: '10:00', capacity: '1' },
+    { key: 0, startTime: '08:00', endTime: '09:00', capacity: '1' },
+    { key: 1, startTime: '09:00', endTime: '10:00', capacity: '1' },
   ]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(false);
 
-  function updateBulkRow(idx: number, field: keyof BulkRow, value: string) {
+  function updateBulkRow(idx: number, field: keyof Omit<BulkRow, 'key'>, value: string) {
     setBulkRows((prev) => prev.map((r, i) => i === idx ? { ...r, [field]: value } : r));
   }
 
   function addBulkRow() {
+    const newKey = bulkRowCounter.current++;
     setBulkRows((prev) => {
       const last = prev[prev.length - 1];
-      return [...prev, { startTime: last?.endTime ?? '08:00', endTime: last?.endTime ?? '09:00', capacity: '1' }];
+      return [...prev, { key: newKey, startTime: last?.endTime ?? '08:00', endTime: last?.endTime ?? '09:00', capacity: '1' }];
     });
   }
 
@@ -81,6 +84,22 @@ export function SlotModal({ mode, selectedDate, onClose, onCreated }: SlotModalP
       }
       const cap = Number(capacity);
       if (!cap || cap < 1) {
+        setError(true);
+        return;
+      }
+    } else if (mode === 'generate') {
+      if (!date) {
+        setError(true);
+        return;
+      }
+    } else {
+      // bulk mode: require at least one row and validate each row
+      if (bulkRows.length === 0) {
+        setError(true);
+        return;
+      }
+      const invalid = bulkRows.some((row) => !row.startTime || !row.endTime || row.endTime <= row.startTime);
+      if (invalid) {
         setError(true);
         return;
       }
@@ -121,10 +140,10 @@ export function SlotModal({ mode, selectedDate, onClose, onCreated }: SlotModalP
     } else {
       // bulk mode
       const [ok, data] = await postWithApi('/station/slots/bulk', {
-        slots: bulkRows.map((row) => ({
-          start_time: `${date}T${row.startTime}:00`,
-          end_time: `${date}T${row.endTime}:00`,
-          capacity: Number(row.capacity) || 1,
+        slots: bulkRows.map(({ startTime, endTime, capacity }) => ({
+          start_time: `${date}T${startTime}:00`,
+          end_time: `${date}T${endTime}:00`,
+          capacity: Number(capacity) || 1,
         })),
       });
       setLoading(false);
@@ -184,7 +203,7 @@ export function SlotModal({ mode, selectedDate, onClose, onCreated }: SlotModalP
           {mode === 'bulk' && (
             <div className="flex flex-col gap-2 max-h-56 overflow-y-auto pr-1">
               {bulkRows.map((row, idx) => (
-                <div key={idx} className="flex items-center gap-1.5">
+                <div key={row.key} className="flex items-center gap-1.5">
                   <input type="time" className={`${inputClass} flex-1`} value={row.startTime} onChange={(e) => updateBulkRow(idx, 'startTime', e.target.value)} />
                   <span className="text-[11px] text-[#888]">–</span>
                   <input type="time" className={`${inputClass} flex-1`} value={row.endTime} onChange={(e) => updateBulkRow(idx, 'endTime', e.target.value)} />

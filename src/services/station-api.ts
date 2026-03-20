@@ -255,7 +255,6 @@ function mapApiDetailToStationDetail(s: ApiStationDetail): StationDetailData {
         priceFrom,
         vehicleTypes,
         openingHours,
-        verified: true,
         reviews: [],
         services: [],
         serviceCategories,

@@ -1310,7 +1310,11 @@
     "view_monthly": "Mensuel",
     "notif_tooltip": "Notifications",
     "empty_post": "Disponible",
-    "add_entry": "+"
+    "add_entry": "+",
+    "queue_detail_time": "Heure",
+    "queue_detail_service": "Service",
+    "queue_detail_price": "Prix",
+    "queue_detail_post": "Poste"
   },
   "station_reservations": {
     "page_title": "Réservations du jour",

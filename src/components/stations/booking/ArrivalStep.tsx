@@ -20,6 +20,13 @@ interface ArrivalStepProps {
   onBack: () => void;
 }
 
+function toLocalDateKey(d: Date): string {
+  const y = d.getFullYear();
+  const m = String(d.getMonth() + 1).padStart(2, '0');
+  const day = String(d.getDate()).padStart(2, '0');
+  return `${y}-${m}-${day}`;
+}
+
 function generateDates(count: number, appLocale: string): { key: string; dayShort: string; dateNum: number; full: string }[] {
   const days: { key: string; dayShort: string; dateNum: number; full: string }[] = [];
   const now = new Date();
@@ -27,7 +34,8 @@ function generateDates(count: number, appLocale: string): { key: string; dayShor
   for (let i = 0; i < count; i++) {
     const d = new Date(now);
     d.setDate(now.getDate() + i);
-    const key = d.toISOString().split('T')[0];
+    // Use local date components to avoid UTC offset shifting the date
+    const key = toLocalDateKey(d);
     const dayShort = d.toLocaleDateString(dateFmtLocale, { weekday: 'short' }).slice(0, 3);
     days.push({ key, dayShort, dateNum: d.getDate(), full: d.toLocaleDateString(dateFmtLocale, { weekday: 'long', day: 'numeric', month: 'long' }) });
   }

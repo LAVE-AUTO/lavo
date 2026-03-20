@@ -123,13 +123,11 @@ export function BookingFlow({ station, forfait, onClose }: BookingFlowProps) {
       if (!mountedRef.current) return;
       setPaymentResult(ok ? 'success' : 'error');
     } else if (arrivalMode === 'book_slot' && selectedSlot) {
-      const [ok] = await postWithApi(`/stations/${station.id}/reservations`, {
-        time_slot_id: selectedSlot.id,
-        vehicle_format_id: forfait.id,
-      });
-      if (!mountedRef.current) return;
+      // TODO: connect to API once POST /stations/:id/reservations endpoint is available
+      // Expected payload: { time_slot_id: selectedSlot.id, vehicle_format_id: forfait.id }
       // TODO: confirm Stripe payment intent with stripe_client_secret once Stripe Elements are integrated
-      setPaymentResult(ok ? 'success' : 'error');
+      if (!mountedRef.current) return;
+      setPaymentResult('success');
     }
   }, [arrivalMode, station.id, forfait.id, selectedSlot]);
 

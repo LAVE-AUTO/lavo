@@ -39,8 +39,8 @@ export function PaymentStep({ grandTotal, onConfirm, onBack }: PaymentStepProps)
     // In production, this component must be backed by a real PSP integration
     // (e.g. Stripe Elements) that never exposes PAN/expiry/CVC to React state.
     await new Promise((resolve) => setTimeout(resolve, 2000));
+    await onConfirm();
     setProcessing(false);
-    onConfirm();
   };
 
   return (
@@ -141,7 +141,7 @@ export function PaymentStep({ grandTotal, onConfirm, onBack }: PaymentStepProps)
           disabled={mockCardEnabled ? !isValid || processing : processing}
           onClick={handlePay}
           className={`flex-1 py-3 rounded-xl text-[15px] font-black transition-colors cursor-pointer ${
-            isValid && !processing
+            (!mockCardEnabled || isValid) && !processing
               ? 'bg-gold hover:bg-gold-hover text-dark-bg'
               : 'bg-[#D0D0C0] dark:bg-tab-inactive text-[#888] cursor-not-allowed'
           }`}

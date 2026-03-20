@@ -53,7 +53,8 @@ export function StationReservationsPage() {
     setLoading(true);
     setLoadError(false);
     const { from, to } = todayRange();
-    const [ok, data] = await getFromApi(`/station/entries?from=${from}&to=${to}&per_page=100`);
+    const params = new URLSearchParams({ from, to, per_page: '100' });
+    const [ok, data] = await getFromApi(`/station/entries?${params.toString()}`);
     if (!mountedRef.current) return;
     if (ok) {
       const res = data as { data: { entries: ReservationEntry[] } };
