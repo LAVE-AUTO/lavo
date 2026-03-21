@@ -1,14 +1,90 @@
 import { Resend } from 'resend';
 import { APP_URL } from '@/helpers/constants';
 
-const resend = new Resend(process.env.RESEND_API_KEY);
+
+
+
 const FROM = process.env.EMAIL_FROM ?? 'noreply@lavo.app';
 
 type Locale = 'fr' | 'en';
 
-/* ------------------------------------------------------------------ */
-/*  i18n text maps                                                      */
-/* ------------------------------------------------------------------ */
+let warnedResendApiKeyMissing = false;
+let resendClient: Resend | null | undefined;
+
+
+// %%%%% MODULE — Resend client %%%%%
+// Lazy singleton; never pass undefined to the SDK.
+
+/** Returns a Resend client when `RESEND_API_KEY` is set; otherwise null. */
+function getResendClient(): Resend | null {
+  if (resendClient !== undefined) return resendClient;
+  const key = process.env.RESEND_API_KEY?.trim();
+  if (!key) {
+    resendClient = null;
+    return null;
+  }
+  resendClient = new Resend(key);
+  return resendClient;
+}
+
+
+/** Logs a single warning when Resend is not configured (skipped in test). */
+function warnResendMissingOnce(context: string): void {
+  if (process.env.NODE_ENV === 'test' || warnedResendApiKeyMissing) return;
+  warnedResendApiKeyMissing = true;
+  console.warn(`${context}: RESEND_API_KEY not set, skipping email`);
+}
+
+
+// %%%%% END - MODULE — Resend client %%%%%
+
+
+// %%%%% MODULE — Email payload safety %%%%%
+// HTML escape, snippet truncation, http(s) hrefs, recipient sanity.
+
+function escapeHtmlPlain(text: string): string {
+  return text
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;');
+}
+
+/** Strip newlines to reduce header / log injection in subjects and snippets. */
+function safePlainTextSnippet(text: string, maxLen: number): string {
+  return text.replace(/\r|\n/g, ' ').trim().slice(0, maxLen);
+}
+
+/**
+ * Only allow http(s) URLs in email CTAs (mitigates javascript:/data: in href if a caller passes untrusted input).
+ */
+function safeHttpUrlForEmailHref(href: string | undefined): string | undefined {
+  if (!href) return undefined;
+  const trimmed = href.trim();
+  if (!trimmed) return undefined;
+  try {
+    const u = new URL(trimmed);
+    if (u.protocol !== 'http:' && u.protocol !== 'https:') return undefined;
+    return u.href;
+  } catch {
+    return undefined;
+  }
+}
+
+/** Minimal sanity check before sending (avoids logging odd payloads to third parties). */
+function isReasonableRecipientEmail(to: string): boolean {
+  const t = to.trim();
+  if (t.length < 3 || t.length > 320) return false;
+  if (!t.includes('@')) return false;
+  return true;
+}
+
+
+// %%%%% END - MODULE — Email payload safety %%%%%
+
+
+// %%%%% MODULE — i18n copy (TEXTS) %%%%%
+// Subjects, bodies, and footer strings per locale.
 
 const TEXTS = {
   verification: {
@@ -67,6 +143,42 @@ const TEXTS = {
       closing: 'Welcome to the Slowtime community!',
     },
   },
+  paymentSuccess: {
+    fr: {
+      subject: 'Paiement confirmé — Slowtime',
+      greeting: 'Bonjour,',
+      lead: 'Votre paiement a bien été prélevé et votre prestation est terminée.',
+      stationPrefix: 'Station :',
+      refPrefix: 'Référence réservation :',
+      closing: "Merci d'avoir choisi Slowtime.",
+      cta: 'Ouvrir Slowtime',
+    },
+    en: {
+      subject: 'Payment confirmed — Slowtime',
+      greeting: 'Hello,',
+      lead: 'Your payment has been captured and your service is complete.',
+      stationPrefix: 'Station:',
+      refPrefix: 'Reservation reference:',
+      closing: 'Thank you for choosing Slowtime.',
+      cta: 'Open Slowtime',
+    },
+  },
+  paymentFailed: {
+    fr: {
+      subject: 'Paiement non abouti — Slowtime',
+      greeting: 'Bonjour,',
+      body: "Nous n'avons pas pu finaliser votre paiement. Votre réservation a été annulée. Vous pouvez réessayer depuis l'application lorsque vous le souhaitez.",
+      reasonLabel: 'Motif indiqué :',
+      cta: 'Réessayer sur Slowtime',
+    },
+    en: {
+      subject: 'Payment could not be completed — Slowtime',
+      greeting: 'Hello,',
+      body: 'We could not complete your payment. Your reservation has been cancelled. You can try again from the app whenever you are ready.',
+      reasonLabel: 'Details:',
+      cta: 'Try again on Slowtime',
+    },
+  },
   footer: {
     fr: {
       teamLine: "L'équipe Slowtime",
@@ -81,9 +193,12 @@ const TEXTS = {
   },
 } as const;
 
-/* ------------------------------------------------------------------ */
-/*  Branded HTML layout                                                 */
-/* ------------------------------------------------------------------ */
+
+// %%%%% END - MODULE — i18n copy (TEXTS) %%%%%
+
+
+// %%%%% MODULE — Branded HTML layout %%%%%
+// Table-based template; optional CTA and footnote.
 
 function brandedEmail(
   locale: Locale,
@@ -98,11 +213,13 @@ function brandedEmail(
   const f = TEXTS.footer[locale];
   const logoUrl = `${APP_URL}/logo/frame2.png`;
 
-  const ctaBlock = opts.ctaUrl && opts.ctaLabel
-    ? `
+  const safeCtaHref = safeHttpUrlForEmailHref(opts.ctaUrl);
+  const ctaBlock =
+    safeCtaHref && opts.ctaLabel
+      ? `
       <tr>
         <td align="center" style="padding: 28px 0 8px;">
-          <a href="${opts.ctaUrl}" target="_blank" rel="noopener" style="
+          <a href="${safeCtaHref}" target="_blank" rel="noopener noreferrer" style="
             display: inline-block;
             background-color: #af8408;
             color: #ffffff;
@@ -113,10 +230,10 @@ function brandedEmail(
             padding: 14px 40px;
             border-radius: 8px;
             letter-spacing: 0.03em;
-          ">${opts.ctaLabel}</a>
+          ">${escapeHtmlPlain(opts.ctaLabel)}</a>
         </td>
       </tr>`
-    : '';
+      : '';
 
   const footNoteBlock = opts.footNote
     ? `<tr><td style="padding: 8px 0 0; font-size: 14px; color: #888888; line-height: 1.6;">${opts.footNote}</td></tr>`
@@ -160,7 +277,7 @@ function brandedEmail(
                     color: #1A1A1A;
                     padding-bottom: 16px;
                     line-height: 1.4;
-                  ">${opts.greeting}</td>
+                  ">${escapeHtmlPlain(opts.greeting)}</td>
                 </tr>
 
                 <!-- Body -->
@@ -210,9 +327,12 @@ function brandedEmail(
 </html>`;
 }
 
-/* ------------------------------------------------------------------ */
-/*  Public email functions                                              */
-/* ------------------------------------------------------------------ */
+
+// %%%%% END - MODULE — Branded HTML layout %%%%%
+
+
+// %%%%% MODULE — Transactional sends %%%%%
+// Verification, password reset, station lifecycle, payment notices.
 
 export async function sendVerificationEmail(
   to: string,
@@ -220,22 +340,33 @@ export async function sendVerificationEmail(
   token: string,
   locale: Locale = 'fr'
 ): Promise<void> {
-  const t = TEXTS.verification[locale];
-  const link = `${APP_URL}/${locale}/verify-email?token=${token}`;
+  const client = getResendClient();
+  if (!client) {
+    warnResendMissingOnce('sendVerificationEmail');
+    return;
+  }
+  if (!isReasonableRecipientEmail(to)) return;
 
-  await resend.emails.send({
+  const t = TEXTS.verification[locale];
+  const link =
+    safeHttpUrlForEmailHref(
+      `${APP_URL}/${locale}/verify-email?token=${encodeURIComponent(token)}`
+    ) ?? '';
+
+  await client.emails.send({
     from: FROM,
     to,
     subject: t.subject,
     html: brandedEmail(locale, {
       greeting: t.greeting(firstName || (locale === 'fr' ? 'cher utilisateur' : 'there')),
       bodyHtml: t.body,
-      ctaUrl: link,
+      ctaUrl: link || undefined,
       ctaLabel: t.cta,
       footNote: `${t.expiry}<br/>${t.ignore}`,
     }),
   });
 }
+
 
 export async function sendPasswordResetEmail(
   to: string,
@@ -243,44 +374,65 @@ export async function sendPasswordResetEmail(
   token: string,
   locale: Locale = 'fr'
 ): Promise<void> {
-  const t = TEXTS.passwordReset[locale];
-  const link = `${APP_URL}/${locale}/reset-password?token=${token}`;
+  const client = getResendClient();
+  if (!client) {
+    warnResendMissingOnce('sendPasswordResetEmail');
+    return;
+  }
+  if (!isReasonableRecipientEmail(to)) return;
 
-  await resend.emails.send({
+  const t = TEXTS.passwordReset[locale];
+  const link =
+    safeHttpUrlForEmailHref(
+      `${APP_URL}/${locale}/reset-password?token=${encodeURIComponent(token)}`
+    ) ?? '';
+
+  await client.emails.send({
     from: FROM,
     to,
     subject: t.subject,
     html: brandedEmail(locale, {
       greeting: t.greeting(firstName || (locale === 'fr' ? 'cher utilisateur' : 'there')),
       bodyHtml: t.body,
-      ctaUrl: link,
+      ctaUrl: link || undefined,
       ctaLabel: t.cta,
       footNote: `${t.expiry}<br/>${t.ignore}`,
     }),
   });
 }
 
+
 export async function sendStationApprovalEmail(
   to: string,
   stationName: string,
   locale: Locale = 'fr'
 ): Promise<void> {
-  const t = TEXTS.stationApproval[locale];
-  const loginUrl = `${APP_URL}/${locale}/login`;
+  const client = getResendClient();
+  if (!client) {
+    warnResendMissingOnce('sendStationApprovalEmail');
+    return;
+  }
+  if (!isReasonableRecipientEmail(to)) return;
 
-  await resend.emails.send({
+  const t = TEXTS.stationApproval[locale];
+  const loginUrl = safeHttpUrlForEmailHref(`${APP_URL}/${locale}/login`) ?? '';
+  const subjectName = safePlainTextSnippet(stationName, 200);
+  const escapedName = escapeHtmlPlain(safePlainTextSnippet(stationName, 500));
+
+  await client.emails.send({
     from: FROM,
     to,
-    subject: t.subject(stationName),
+    subject: t.subject(subjectName),
     html: brandedEmail(locale, {
       greeting: t.greeting,
-      bodyHtml: `${t.body(stationName)}<br/><br/>${t.extra}`,
-      ctaUrl: loginUrl,
+      bodyHtml: `${t.body(escapedName)}<br/><br/>${t.extra}`,
+      ctaUrl: loginUrl || undefined,
       ctaLabel: t.cta,
       footNote: t.closing,
     }),
   });
 }
+
 
 export async function sendStationApplicationAdminNotification(
   stationName: string,
@@ -296,35 +448,130 @@ export async function sendStationApplicationAdminNotification(
     return;
   }
 
-  await resend.emails.send({
+  const client = getResendClient();
+  if (!client) {
+    warnResendMissingOnce('sendStationApplicationAdminNotification');
+    return;
+  }
+  if (!isReasonableRecipientEmail(adminEmail)) return;
+
+  const safeName = escapeHtmlPlain(safePlainTextSnippet(stationName, 500));
+  const safeId = escapeHtmlPlain(safePlainTextSnippet(stationId, 128));
+
+  await client.emails.send({
     from: FROM,
     to: adminEmail,
-    subject: `[Slowtime] New station application: ${stationName}`,
+    subject: `[Slowtime] New station application: ${safePlainTextSnippet(stationName, 120)}`,
     html: brandedEmail('en', {
       greeting: 'New station application',
       bodyHtml: `
-        <p style="margin: 0 0 8px;"><strong>Station name:</strong> ${stationName}</p>
-        <p style="margin: 0;"><strong>Station ID:</strong> ${stationId}</p>
+        <p style="margin: 0 0 8px;"><strong>Station name:</strong> ${safeName}</p>
+        <p style="margin: 0;"><strong>Station ID:</strong> ${safeId}</p>
       `,
       footNote: 'Please review the application in the admin panel.',
     }),
   });
 }
 
-/* ------------------------------------------------------------------ */
-/*  Locale helper for API routes                                        */
-/* ------------------------------------------------------------------ */
 
-/**
- * Extract locale from the Accept-Language header.
- * Returns 'fr' or 'en' (defaults to 'fr').
- */
+/** Payment captured / service complete (Stripe path). No-op without Resend; send errors logged only. */
+export async function sendPaymentSuccessEmail(params: {
+  to: string;
+  locale?: Locale;
+  stationName?: string;
+  entryId?: string;
+}): Promise<void> {
+  const { to, locale = 'fr', stationName, entryId } = params;
+  const client = getResendClient();
+  if (!client) {
+    warnResendMissingOnce('sendPaymentSuccessEmail');
+    return;
+  }
+  if (!isReasonableRecipientEmail(to)) return;
+
+  const t = TEXTS.paymentSuccess[locale];
+  const stationLine =
+    stationName?.trim()
+      ? `<br/><br/><strong>${t.stationPrefix}</strong> ${escapeHtmlPlain(stationName.trim())}`
+      : '';
+  const refLine = entryId?.trim()
+    ? `<br/><br/><span style="font-size:14px;color:#666;">${t.refPrefix} <code style="font-size:13px;">${escapeHtmlPlain(entryId.trim())}</code></span>`
+    : '';
+  const bodyHtml = `${t.lead}${stationLine}${refLine}<br/><br/>${t.closing}`;
+  const homeUrl = safeHttpUrlForEmailHref(`${APP_URL}/${locale}`) ?? '';
+
+  try {
+    await client.emails.send({
+      from: FROM,
+      to,
+      subject: t.subject,
+      html: brandedEmail(locale, {
+        greeting: t.greeting,
+        bodyHtml,
+        ctaUrl: homeUrl || undefined,
+        ctaLabel: t.cta,
+      }),
+    });
+  } catch {
+    console.error('sendPaymentSuccessEmail: Resend send failed');
+  }
+}
+
+
+/** Payment failed or cancelled; reservation voided. No-op without Resend; send errors logged only. */
+export async function sendPaymentFailedEmail(params: {
+  to: string;
+  locale?: Locale;
+  reason?: string;
+}): Promise<void> {
+  const { to, locale = 'fr', reason } = params;
+  const client = getResendClient();
+  if (!client) {
+    warnResendMissingOnce('sendPaymentFailedEmail');
+    return;
+  }
+  if (!isReasonableRecipientEmail(to)) return;
+
+  const t = TEXTS.paymentFailed[locale];
+  const reasonTrim = reason?.trim();
+  const reasonBlock = reasonTrim
+    ? `<br/><br/><span style="font-size:14px;color:#666;">${t.reasonLabel} ${escapeHtmlPlain(reasonTrim.slice(0, 500))}</span>`
+    : '';
+  const bodyHtml = `${t.body}${reasonBlock}`;
+  const homeUrl = safeHttpUrlForEmailHref(`${APP_URL}/${locale}`) ?? '';
+
+  try {
+    await client.emails.send({
+      from: FROM,
+      to,
+      subject: t.subject,
+      html: brandedEmail(locale, {
+        greeting: t.greeting,
+        bodyHtml,
+        ctaUrl: homeUrl || undefined,
+        ctaLabel: t.cta,
+      }),
+    });
+  } catch {
+    console.error('sendPaymentFailedEmail: Resend send failed');
+  }
+}
+
+
+// %%%%% END - MODULE — Transactional sends %%%%%
+
+
+// %%%%% MODULE — Weekly escrow report & locale %%%%%
+// Admin table email and Accept-Language parsing.
+
+/** Parses `Accept-Language`; returns `fr` or `en` (default `fr`). */
 export function extractLocale(headerValue: string | null): Locale {
   if (!headerValue) return 'fr';
   const primary = headerValue.split(',')[0].trim().toLowerCase();
   if (primary.startsWith('en')) return 'en';
   return 'fr';
 }
+
 
 export type WeeklyEscrowTransactionRow = {
   reservationId: string;
@@ -339,11 +586,13 @@ export type WeeklyEscrowTransactionRow = {
   stripeTransferId: string | null;
 };
 
+
 function formatMoneyEUR(amount: string | number | null | undefined): string {
   const n = amount == null ? 0 : typeof amount === 'string' ? parseFloat(amount) : amount;
   const safe = Number.isFinite(n) ? n : 0;
   return `${safe.toFixed(2)} EUR`;
 }
+
 
 export async function sendWeeklyEscrowTransactionsReportEmail(
   to: string,
@@ -364,21 +613,31 @@ export async function sendWeeklyEscrowTransactionsReportEmail(
   const totalCommission = rows.reduce((acc, r) => acc + (parseFloat(r.commissionAmount ?? '0') || 0), 0);
   const totalPayout = rows.reduce((acc, r) => acc + (parseFloat(r.stationPayout ?? '0') || 0), 0);
 
+  const emptyRowMessage =
+    locale === 'en' ? 'No transactions in this period.' : 'Aucune transaction sur la période.';
   const tableRowsHtml =
     rows.length === 0
-      ? `<tr><td colspan="9" style="padding: 10px 8px; color: #888;">Aucune transaction sur la période.</td></tr>`
+      ? `<tr><td colspan="9" style="padding: 10px 8px; color: #888;">${emptyRowMessage}</td></tr>`
       : rows
           .map((r) => {
+            const at = escapeHtmlPlain(
+              r.succeededAt.toLocaleString(locale === 'en' ? 'en-GB' : 'fr-FR')
+            );
+            const stName = escapeHtmlPlain(safePlainTextSnippet(r.stationName, 500));
+            const cEmail = escapeHtmlPlain(safePlainTextSnippet(r.clientEmail, 320));
+            const resId = escapeHtmlPlain(safePlainTextSnippet(r.reservationId, 128));
+            const resStat = escapeHtmlPlain(safePlainTextSnippet(r.reservationStatus, 64));
+            const xfer = escapeHtmlPlain(safePlainTextSnippet(r.stripeTransferId ?? '', 128));
             return `<tr>
-              <td style="padding: 8px 8px; border-bottom: 1px solid #eee;">${r.succeededAt.toLocaleString(locale === 'en' ? 'en-GB' : 'fr-FR')}</td>
-              <td style="padding: 8px 8px; border-bottom: 1px solid #eee;"><strong>${r.stationName}</strong></td>
-              <td style="padding: 8px 8px; border-bottom: 1px solid #eee;">${r.clientEmail}</td>
-              <td style="padding: 8px 8px; border-bottom: 1px solid #eee;">${r.reservationId}</td>
-              <td style="padding: 8px 8px; border-bottom: 1px solid #eee;">${r.reservationStatus}</td>
+              <td style="padding: 8px 8px; border-bottom: 1px solid #eee;">${at}</td>
+              <td style="padding: 8px 8px; border-bottom: 1px solid #eee;"><strong>${stName}</strong></td>
+              <td style="padding: 8px 8px; border-bottom: 1px solid #eee;">${cEmail}</td>
+              <td style="padding: 8px 8px; border-bottom: 1px solid #eee;">${resId}</td>
+              <td style="padding: 8px 8px; border-bottom: 1px solid #eee;">${resStat}</td>
               <td style="padding: 8px 8px; border-bottom: 1px solid #eee; text-align:right;">${formatMoneyEUR(r.amountPaid)}</td>
               <td style="padding: 8px 8px; border-bottom: 1px solid #eee; text-align:right;">${formatMoneyEUR(r.commissionAmount)}</td>
               <td style="padding: 8px 8px; border-bottom: 1px solid #eee; text-align:right;">${formatMoneyEUR(r.stationPayout)}</td>
-              <td style="padding: 8px 8px; border-bottom: 1px solid #eee;">${r.stripeTransferId ?? ''}</td>
+              <td style="padding: 8px 8px; border-bottom: 1px solid #eee;">${xfer}</td>
             </tr>`;
           })
           .join('');
@@ -411,7 +670,14 @@ export async function sendWeeklyEscrowTransactionsReportEmail(
     </table>
   `;
 
-  await resend.emails.send({
+  const client = getResendClient();
+  if (!client) {
+    warnResendMissingOnce('sendWeeklyEscrowTransactionsReportEmail');
+    return;
+  }
+  if (!isReasonableRecipientEmail(to)) return;
+
+  await client.emails.send({
     from: FROM,
     to,
     subject,
@@ -421,3 +687,6 @@ export async function sendWeeklyEscrowTransactionsReportEmail(
     }),
   });
 }
+
+
+// %%%%% END - MODULE — Weekly escrow report & locale %%%%%

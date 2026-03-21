@@ -6,9 +6,14 @@ import { ValidationError } from '@/lib/errors';
 import { STATION_DOC_MAX_SIZE } from '@/helpers/constants';
 
 const mockUploadStreamEnd = jest.fn();
-const mockUploadStream = jest.fn((callback: (err: Error | null, res?: { secure_url?: string }) => void, _opts: unknown) => ({
-  end: (buffer: Buffer) => mockUploadStreamEnd(buffer, callback),
-}));
+const mockUploadStream = jest.fn(
+  (
+    _opts: unknown,
+    callback: (err: Error | undefined, res?: { secure_url?: string }) => void
+  ) => ({
+    end: (buffer: Buffer) => mockUploadStreamEnd(buffer, callback),
+  })
+);
 
 jest.mock('cloudinary', () => ({
   v2: {
@@ -108,8 +113,9 @@ describe('upload-service', () => {
   });
 
   describe('uploadStationDocument', () => {
+    const jpegMagic = new Uint8Array([0xff, 0xd8, 0xff, 0xe0, 0, 0, 0, 0]).buffer;
     const createFile = (overrides: Partial<{ type: string; name: string }> = {}) => ({
-      arrayBuffer: () => Promise.resolve(new ArrayBuffer(0)),
+      arrayBuffer: () => Promise.resolve(jpegMagic),
       type: 'image/jpeg',
       name: 'test.jpg',
       ...overrides,
@@ -153,7 +159,7 @@ describe('upload-service', () => {
       process.env.CLOUDINARY_API_SECRET = 'secret';
 
       mockUploadStreamEnd.mockImplementation(
-        (callback: (err: Error) => void) => {
+        (_buffer: Buffer, callback: (err: Error) => void) => {
           callback(new Error('Network error'));
         }
       );
@@ -173,7 +179,7 @@ describe('upload-service', () => {
       process.env.CLOUDINARY_API_SECRET = 'secret';
 
       mockUploadStreamEnd.mockImplementation(
-        (callback: (err: null, res?: { secure_url?: string }) => void) => {
+        (_buffer: Buffer, callback: (err: null, res?: { secure_url?: string }) => void) => {
           callback(null, {});
         }
       );

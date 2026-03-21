@@ -1,39 +1,38 @@
 /**
- * POST /api/v1/webhooks/stripe
- * Stripe webhook handler for payment events.
- * Validates signature, then dispatches to the appropriate handler.
- *
- * Payment flow with capture_method: 'manual':
- *   1. Client confirms payment on frontend → Stripe authorizes (blocks) the funds.
- *   2. payment_intent.amount_capturable_updated → reservation confirmed (funds blocked, not yet captured).
- *   3. Station marks service complete (or cron detects late client) → our code calls capture().
- *   4. payment_intent.succeeded → fires after capture; funds distributed. No action needed here.
- *
- * Handled events:
- * - payment_intent.amount_capturable_updated → confirm reservation (status: confirmed)
- * - payment_intent.payment_failed → cancel reservation, decrement booked_count
- * - payment_intent.canceled → cancel reservation, decrement booked_count
- * - payment_intent.succeeded → no-op (capture already handled by service layer)
+ * POST `/api/v1/webhooks/stripe` — signature verification, then idempotent handlers.
+ * Manual capture: authorize → confirm entry → capture on completion → `succeeded` (push + success email).
+ * Events: `amount_capturable_updated`, `payment_failed` / `canceled`, `succeeded`, `transfer.created`.
  */
 import { NextResponse } from 'next/server';
 import { stripe } from '@/lib/stripe';
+import type Stripe from 'stripe';
 import { db } from '@/lib/db';
 import { eq } from 'drizzle-orm';
+import { sendPaymentFailedEmail, sendPaymentSuccessEmail } from '@/lib/email';
 import {
-  findEntryByStripePaymentId,
+  cancelEntryForStripePaymentFailureIfEligible,
   confirmEntryIfPendingPayment,
-  updateEntry,
-  setStripeTransferIdIfMissing,
+  findEntryByStripePaymentId,
   setStripePaymentSucceededAtIfMissing,
   setStripePaymentSucceededNotifiedAtIfMissing,
+  setStripeTransferIdIfMissing,
 } from '@/server/reservations/entry-repository';
 import { stations, users } from '@/lib/db/schema';
 import { decrementSlotBookedCount } from '@/server/station/slot-repository';
 import { notifyEntry } from '@/server/notifications/notification-service';
 import { sendPushNotification } from '@/server/notifications/fcm-service';
-import { getPlatformSetting } from '@/server/admin/platform-settings-service';
+import { getPlatformSetting, isAdminEscrowPushEnabled } from '@/server/admin/platform-settings-service';
+
+
+
 
 const webhookSecret = process.env.STRIPE_WEBHOOK_SECRET;
+const STRIPE_ID_PATTERN = /^[a-zA-Z0-9_]+$/;
+const OPAQUE_ID_PATTERN = /^[a-zA-Z0-9_-]+$/;
+
+
+// %%%%% ROUTE — POST handler %%%%%
+// Verifies Stripe signature; dispatches by event type; 500 only on infra errors (Stripe retries).
 
 export async function POST(request: Request): Promise<NextResponse> {
   if (!webhookSecret) {
@@ -48,7 +47,7 @@ export async function POST(request: Request): Promise<NextResponse> {
     return NextResponse.json({ error: 'Missing stripe-signature header' }, { status: 400 });
   }
 
-  let event;
+  let event: Stripe.Event;
   try {
     event = stripe.webhooks.constructEvent(body, signature, webhookSecret);
   } catch (err) {
@@ -65,62 +64,164 @@ export async function POST(request: Request): Promise<NextResponse> {
       case 'transfer.created':
         await handleTransferCreated(event.data.object);
         break;
-      case 'payment_intent.amount_capturable_updated':
-        await handlePaymentAuthorized(event.data.object.id);
+
+      case 'payment_intent.amount_capturable_updated': {
+        const pi = sanitizeStripeId((event.data.object as { id?: unknown })?.id, 'pi_');
+        if (!pi) {
+          console.warn('[WEBHOOK] Ignoring payment_intent event: invalid or missing id');
+          break;
+        }
+        await handlePaymentAuthorized(pi);
         break;
-      case 'payment_intent.payment_failed':
-        await handlePaymentCancelled(event.data.object.id, 'Payment failed');
+      }
+
+      case 'payment_intent.payment_failed': {
+        const pi = sanitizeStripeId((event.data.object as { id?: unknown })?.id, 'pi_');
+        if (!pi) {
+          console.warn('[WEBHOOK] Ignoring payment_intent.payment_failed: invalid or missing id');
+          break;
+        }
+        await handlePaymentCancelled(pi, 'Payment failed');
         break;
-      case 'payment_intent.canceled':
-        await handlePaymentCancelled(event.data.object.id, 'Payment cancelled');
+      }
+
+      case 'payment_intent.canceled': {
+        const pi = sanitizeStripeId((event.data.object as { id?: unknown })?.id, 'pi_');
+        if (!pi) {
+          console.warn('[WEBHOOK] Ignoring payment_intent.canceled: invalid or missing id');
+          break;
+        }
+        await handlePaymentCancelled(pi, 'Payment cancelled');
         break;
-      case 'payment_intent.succeeded':
-        await handlePaymentSucceeded(event.data.object.id, event.data.object.created);
+      }
+
+      case 'payment_intent.succeeded': {
+        const pi = sanitizeStripeId((event.data.object as { id?: unknown })?.id, 'pi_');
+        if (!pi) {
+          console.warn('[WEBHOOK] Ignoring payment_intent.succeeded: invalid or missing id');
+          break;
+        }
+        await handlePaymentSucceeded(
+          pi,
+          typeof event.data.object?.created === 'number' ? event.data.object.created : undefined
+        );
         break;
+      }
+
       default:
         break;
     }
   } catch (err) {
-    console.error('Stripe webhook handler error:', event.type, err);
+    const error = err instanceof Error ? err.message : String(err);
+    console.error('Stripe webhook handler error:', { eventType: event.type, error });
     return NextResponse.json({ error: 'Handler failed' }, { status: 500 });
   }
 
   return NextResponse.json({ received: true });
 }
 
+
+// %%%%% END - ROUTE — POST handler %%%%%
+
+
+// %%%%% MODULE — ID sanitizers %%%%%
+// Stripe and opaque IDs for logs and DB lookups.
+
 function isTrueSetting(value: string | null): boolean {
   return value?.trim().toLowerCase() === 'true';
 }
 
-/**
- * Maps Stripe transfer.created to the corresponding reservation (via transfer.metadata).
- * Stores reservations.stripe_transfer_id idempotently.
- *
- * We ensure metadata propagation by setting transfer_data.metadata in createPaymentIntent.
- */
-async function handleTransferCreated(transfer: any): Promise<void> {
-  const transferId = transfer?.id;
-  const reservationId = transfer?.metadata?.reservation_id;
-  if (typeof transferId !== 'string') return;
-  if (typeof reservationId !== 'string') {
-    console.warn('[WEBHOOK transfer.created] Missing transfer.metadata.reservation_id', {
+function sanitizeStripeId(value: unknown, expectedPrefix?: string): string | null {
+  if (typeof value !== 'string') return null;
+  const normalized = value.trim();
+  if (!normalized || normalized.length > 255) return null;
+  if (!STRIPE_ID_PATTERN.test(normalized)) return null;
+  if (expectedPrefix && !normalized.startsWith(expectedPrefix)) return null;
+  return normalized;
+}
+
+function sanitizeOpaqueId(value: unknown): string | null {
+  if (typeof value !== 'string') return null;
+  const normalized = value.trim();
+  if (!normalized || normalized.length > 128) return null;
+  return OPAQUE_ID_PATTERN.test(normalized) ? normalized : null;
+}
+
+
+// %%%%% END - MODULE — ID sanitizers %%%%%
+
+
+// %%%%% HANDLER — transfer.created %%%%%
+// Maps transfer to reservation: metadata.reservation_id, else charge → payment_intent → entry.
+
+/** Persists `stripe_transfer_id` idempotently; logs and returns on missing mapping. */
+async function handleTransferCreated(transfer: Stripe.Transfer | Record<string, unknown>): Promise<void> {
+  const transferId = sanitizeStripeId((transfer as { id?: unknown })?.id, 'tr_');
+  if (!transferId) return;
+
+  const metadata = (transfer as { metadata?: { reservation_id?: unknown } })?.metadata;
+  const reservationIdFromMetadata = sanitizeOpaqueId(metadata?.reservation_id);
+  if (reservationIdFromMetadata) {
+    await setStripeTransferIdIfMissing(reservationIdFromMetadata, transferId);
+    return;
+  }
+
+  const sourceTransactionId = sanitizeStripeId(
+    (transfer as { source_transaction?: unknown })?.source_transaction,
+    'ch_'
+  );
+  if (!sourceTransactionId) {
+    console.warn('[WEBHOOK transfer.created] Missing mapping data: metadata.reservation_id and source_transaction', {
       transferId,
     });
     return;
   }
 
-  await setStripeTransferIdIfMissing(reservationId, transferId);
+  try {
+    const charge = await stripe.charges.retrieve(sourceTransactionId);
+    const piRaw = charge.payment_intent;
+    const paymentIntentId =
+      typeof piRaw === 'string'
+        ? sanitizeStripeId(piRaw, 'pi_')
+        : piRaw && typeof piRaw === 'object' && piRaw !== null && 'id' in piRaw
+          ? sanitizeStripeId((piRaw as { id: unknown }).id, 'pi_')
+          : null;
+
+    if (!paymentIntentId) {
+      console.warn('[WEBHOOK transfer.created] Charge has no payment_intent', {
+        transferId,
+        sourceTransactionId,
+      });
+      return;
+    }
+
+    const entry = await findEntryByStripePaymentId(paymentIntentId);
+    if (!entry) {
+      console.warn('[WEBHOOK transfer.created] No reservation found for payment_intent', {
+        transferId,
+        paymentIntentId,
+      });
+      return;
+    }
+
+    await setStripeTransferIdIfMissing(entry.id, transferId);
+  } catch (err) {
+    console.error('[WEBHOOK transfer.created] Fallback mapping failed; acking without retry', {
+      transferId,
+      sourceTransactionId,
+      error: err instanceof Error ? err.message : String(err),
+    });
+  }
 }
 
-/**
- * Sends escrow finalization notifications after capture succeeds:
- * - Client push: invitation_to_rate
- * - Optional station/admin push based on platform settings
- *
- * Idempotence:
- * - sets stripe_payment_succeeded_at once
- * - sends notifications only once via stripe_payment_succeeded_notified_at
- */
+
+// %%%%% END - HANDLER — transfer.created %%%%%
+
+
+// %%%%% HANDLER — payment_intent.succeeded %%%%%
+// Idempotent: succeeded_at + notified_at; client push, success email, optional station/admin push.
+
+/** When entry is `completed`, notifies once and sends transactional success email. */
 async function handlePaymentSucceeded(paymentIntentId: string, created: number | undefined): Promise<void> {
   const entry = await findEntryByStripePaymentId(paymentIntentId);
   if (!entry) {
@@ -152,16 +253,37 @@ async function handlePaymentSucceeded(paymentIntentId: string, created: number |
       type: 'invitation_to_rate',
     });
   } catch (err) {
-    console.error('[WEBHOOK payment_intent.succeeded] Client notification failed', err);
+    const error = err instanceof Error ? err.message : String(err);
+    console.error('[WEBHOOK payment_intent.succeeded] Client notification failed', { error });
+  }
+
+  try {
+    const userRow = await db.query.users.findFirst({
+      where: eq(users.id, entry.user_id),
+      columns: { email: true },
+    });
+    const emailTo = userRow?.email?.trim();
+    if (emailTo) {
+      const stationRow = await db.query.stations.findFirst({
+        where: eq(stations.id, entry.station_id),
+        columns: { name: true },
+      });
+      await sendPaymentSuccessEmail({
+        to: emailTo,
+        stationName: stationRow?.name,
+        entryId: entry.id,
+      });
+    }
+  } catch {
+    // Do not log provider/DB error bodies (may echo recipient or other PII).
+    console.error('[WEBHOOK payment_intent.succeeded] Client success email failed');
   }
 
   // Optional station/admin push (platform settings)
   const stationPushEnabled = isTrueSetting(
     await getPlatformSetting('enable_station_push_on_escrow_released')
   );
-  const adminPushEnabled = isTrueSetting(
-    await getPlatformSetting('enable_admin_push_on_escrow_released')
-  );
+  const adminPushEnabled = await isAdminEscrowPushEnabled();
 
   if (stationPushEnabled) {
     try {
@@ -178,7 +300,8 @@ async function handlePaymentSucceeded(paymentIntentId: string, created: number |
         });
       }
     } catch (err) {
-      console.error('[WEBHOOK payment_intent.succeeded] Station notification failed', err);
+      const error = err instanceof Error ? err.message : String(err);
+      console.error('[WEBHOOK payment_intent.succeeded] Station notification failed', { error });
     }
   }
 
@@ -189,7 +312,7 @@ async function handlePaymentSucceeded(paymentIntentId: string, created: number |
         columns: { id: true },
       });
 
-      for (const adminUser of adminUsers) {
+      for (const adminUser of adminUsers ?? []) {
         await sendPushNotification(adminUser.id, {
           title: 'Escrow released',
           body: 'A reservation escrow has been released successfully.',
@@ -197,16 +320,20 @@ async function handlePaymentSucceeded(paymentIntentId: string, created: number |
         });
       }
     } catch (err) {
-      console.error('[WEBHOOK payment_intent.succeeded] Admin notification failed', err);
+      const error = err instanceof Error ? err.message : String(err);
+      console.error('[WEBHOOK payment_intent.succeeded] Admin notification failed', { error });
     }
   }
 }
 
-/**
- * Confirms the reservation when the client's card authorization succeeds.
- * Fires on payment_intent.amount_capturable_updated — funds are blocked on the client's card
- * but not yet captured. Capture happens later when the station marks the service complete.
- */
+
+// %%%%% END - HANDLER — payment_intent.succeeded %%%%%
+
+
+// %%%%% HANDLER — payment_intent.amount_capturable_updated %%%%%
+// Confirms pending_payment entry after card authorization (funds held, not captured).
+
+/** Confirms reservation; push `reservation_confirmed`. */
 async function handlePaymentAuthorized(paymentIntentId: string): Promise<void> {
   const entry = await findEntryByStripePaymentId(paymentIntentId);
   if (!entry) {
@@ -225,14 +352,19 @@ async function handlePaymentAuthorized(paymentIntentId: string): Promise<void> {
       type: 'reservation_confirmed',
     });
   } catch (err) {
-    console.error('Webhook: notification failed for reservation_confirmed', entry.id, err);
+    const error = err instanceof Error ? err.message : String(err);
+    console.error('Webhook: notification failed for reservation_confirmed', { entryId: entry.id, error });
   }
 }
 
-/**
- * Cancels the reservation when the payment fails or is cancelled by Stripe.
- * Sets status to 'cancelled' and decrements slot booked_count atomically.
- */
+
+// %%%%% END - HANDLER — payment_intent.amount_capturable_updated %%%%%
+
+
+// %%%%% HANDLER — payment_intent failed / canceled %%%%%
+// Cancels entry, decrements slot, push + failure email.
+
+/** Cancels eligible entry and notifies client (push + email). */
 async function handlePaymentCancelled(paymentIntentId: string, reason: string): Promise<void> {
   const entry = await findEntryByStripePaymentId(paymentIntentId);
   if (!entry) {
@@ -240,27 +372,43 @@ async function handlePaymentCancelled(paymentIntentId: string, reason: string): 
     return;
   }
 
-  if (!['pending_payment', 'confirmed'].includes(entry.status)) return;
-
+  let cancelled: Awaited<ReturnType<typeof cancelEntryForStripePaymentFailureIfEligible>> | undefined;
   await db.transaction(async (tx) => {
-    await updateEntry(entry.id, {
-      status: 'cancelled',
-      cancellation_reason: reason,
-    }, tx);
-
-    if (entry.time_slot_id) {
-      await decrementSlotBookedCount(entry.time_slot_id, tx);
+    cancelled = await cancelEntryForStripePaymentFailureIfEligible(entry.id, reason, tx);
+    if (cancelled?.time_slot_id) {
+      await decrementSlotBookedCount(cancelled.time_slot_id, tx);
     }
   });
 
+  if (!cancelled) return;
+
   try {
     await notifyEntry({
-      entryId: entry.id,
-      userId: entry.user_id,
-      stationId: entry.station_id,
+      entryId: cancelled.id,
+      userId: cancelled.user_id,
+      stationId: cancelled.station_id,
       type: 'entry_cancelled',
     });
   } catch (err) {
-    console.error('Webhook: notification failed for payment_failed', entry.id, err);
+    const error = err instanceof Error ? err.message : String(err);
+    console.error('Webhook: notification failed for payment_failed', { entryId: cancelled.id, error });
+  }
+
+  try {
+    const userRow = await db.query.users.findFirst({
+      where: eq(users.id, cancelled.user_id),
+      columns: { email: true },
+    });
+    const emailTo = userRow?.email?.trim();
+    if (emailTo) {
+      await sendPaymentFailedEmail({ to: emailTo, reason });
+    }
+  } catch {
+    console.error('[WEBHOOK payment_intent cancel/fail] Client failure email failed', {
+      entryId: cancelled.id,
+    });
   }
 }
+
+
+// %%%%% END - HANDLER — payment_intent failed / canceled %%%%%

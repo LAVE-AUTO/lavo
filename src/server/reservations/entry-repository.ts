@@ -300,6 +300,7 @@ export async function hasActiveEntryAtStation(
   return row.length > 0;
 }
 
+
 /**
  * Finds an entry by its Stripe payment ID. Used by webhook handler.
  */
@@ -546,6 +547,32 @@ export async function confirmEntryIfPendingPayment(id: string): Promise<Entry | 
       updated_at: new Date(),
     })
     .where(and(eq(reservations.id, id), eq(reservations.status, 'pending_payment')))
+    .returning();
+  return row;
+}
+
+const STRIPE_PAYMENT_CANCEL_STATUSES = ['pending_payment', 'confirmed'] as const;
+
+/**
+ * Cancels an entry for Stripe payment_failed / canceled webhooks only while status is still
+ * pending_payment or confirmed. Returns the updated row if a row matched; otherwise undefined.
+ * Callers must run slot decrement in the same transaction so webhook replays cannot double-decrement.
+ */
+export async function cancelEntryForStripePaymentFailureIfEligible(
+  id: string,
+  reason: string,
+  tx: DbTransaction
+): Promise<Entry | undefined> {
+  const [row] = await tx
+    .update(reservations)
+    .set({
+      status: 'cancelled',
+      cancellation_reason: reason,
+      updated_at: new Date(),
+    })
+    .where(
+      and(eq(reservations.id, id), inArray(reservations.status, STRIPE_PAYMENT_CANCEL_STATUSES))
+    )
     .returning();
   return row;
 }

@@ -31,7 +31,11 @@ describe('POST /api/v1/stations/:id/queue/join', () => {
   beforeEach(() => {
     jest.clearAllMocks();
     mockRequireRole.mockResolvedValue(userAuth);
-    mockFindStationById.mockResolvedValue({ id: stationId, status: 'active' });
+    mockFindStationById.mockResolvedValue({
+      id: stationId,
+      status: 'active',
+      is_open: true,
+    });
     mockJoinQueue.mockResolvedValue({
       id: 'entry-1',
       entry_type: 'queue',

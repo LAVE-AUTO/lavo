@@ -68,6 +68,24 @@ export async function getPlatformSetting(key: string): Promise<string | null> {
   return row?.value ?? null;
 }
 
+/** True when the stored value is the string "true" (case-insensitive). */
+function isTruthyAdminSetting(value: string | null): boolean {
+  return value?.trim().toLowerCase() === 'true';
+}
+
+/**
+ * Whether admin FCM push on escrow release is enabled.
+ * Canonical key: stripe_admin_notifications_enabled.
+ * Legacy fallback: enable_admin_push_on_escrow_released (when canonical row is absent).
+ */
+export async function isAdminEscrowPushEnabled(): Promise<boolean> {
+  const canonical = await getPlatformSetting('stripe_admin_notifications_enabled');
+  if (canonical !== null) return isTruthyAdminSetting(canonical);
+
+  const legacy = await getPlatformSetting('enable_admin_push_on_escrow_released');
+  return isTruthyAdminSetting(legacy);
+}
+
 /**
  * Returns the active cancellation policy from platform settings.
  * Falls back to defaults if settings are not configured.

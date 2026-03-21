@@ -5,7 +5,11 @@
  */
 import { NotFoundError, ConflictError, ActiveReservationExistsError, SlotFullError } from '@/lib/errors';
 import { MAX_ADVANCE_BOOKING_DAYS } from '@/helpers/constants';
-import { getActiveCommissionRate } from '@/server/admin/platform-settings-service';
+import {
+  getActiveCommissionRate,
+  getPlatformSetting,
+  isAdminEscrowPushEnabled,
+} from '@/server/admin/platform-settings-service';
 import { db } from '@/lib/db';
 import { getConfigByStationId } from '@/server/station/config-repository';
 import { findFormatByIdAndStation } from '@/server/station/format-repository';
@@ -17,9 +21,9 @@ import {
 } from '@/server/station/slot-repository';
 import { createPaymentIntent, cancelPaymentIntent, capturePaymentIntent } from '@/server/payments/payment-service';
 import { cancelReservation } from '@/server/reservations/cancellation-service';
+import { sendPaymentSuccessEmail } from '@/lib/email';
 import { notifyEntry } from '@/server/notifications/notification-service';
 import { sendPushNotification } from '@/server/notifications/fcm-service';
-import { getPlatformSetting } from '@/server/admin/platform-settings-service';
 import { eq } from 'drizzle-orm';
 import { stations, users } from '@/lib/db/schema';
 import {
@@ -231,10 +235,10 @@ export async function cancelEntry(
     try {
       await cancelPaymentIntent(entry.stripe_payment_id);
     } catch (e) {
+      const error = e instanceof Error ? e.message : String(e);
       console.error('[CANCEL_PAYMENT_INTENT_FAILED]', {
         entryId,
-        stripe_payment_id: entry.stripe_payment_id,
-        error: e instanceof Error ? e.message : String(e),
+        error,
       });
     }
   }
@@ -418,6 +422,7 @@ export async function upgradeQueueToReservation(
   return { entry: { ...updated, stripe_payment_id: paymentIntentId }, clientSecret };
 }
 
+
 const VALID_STATION_TRANSITIONS: Record<string, readonly string[]> = {
   confirmed: ['in_progress', 'cancelled'],
   in_progress: ['completed', 'cancelled'],
@@ -436,8 +441,9 @@ function isTrueSetting(value: string | null): boolean {
  *
  * On status completed:
  *   - Captures the Stripe PaymentIntent (reservation entries only) to distribute funds.
- *   - Invitation_to_rate is triggered later by the Stripe webhook (payment_intent.succeeded)
+ *   - Invitation_to_rate push is triggered later by Stripe webhook (payment_intent.succeeded)
  *     to align notifications with escrow release and ensure idempotence.
+ *   - No per-transaction escrow email is sent here; admin email reporting is weekly (cron).
  * If the Stripe capture fails, the entry is still marked completed and the error is logged
  * for manual resolution (the service was rendered).
  */
@@ -468,42 +474,65 @@ export async function setEntryStatusByStation(
       try {
         await capturePaymentIntent(entry.stripe_payment_id);
       } catch (e) {
+        const error = e instanceof Error ? e.message : String(e);
         console.error('[CAPTURE_FAILED] Service completed but Stripe capture failed — manual resolution required', {
           entryId,
-          stripe_payment_id: entry.stripe_payment_id,
-          error: e instanceof Error ? e.message : String(e),
+          error,
         });
       }
     }
 
-    // Fallback for cases where Stripe succeeded webhook arrived before station marks "completed"
-    // (e.g. late capture). If succeededAt is already present and notifications weren't sent yet,
-    // send invitation_to_rate now.
-    if (entry.entry_type === 'reservation' && entry.stripe_payment_succeeded_at) {
+    // %%%%% ESCROW FALLBACK — webhook before "completed" %%%%%
+    // Late capture: `updated` reflects RETURNING row (not stale `entry`) for succeeded_at / notify flag.
+    if (updated.entry_type === 'reservation' && updated.stripe_payment_succeeded_at) {
       try {
         const claimed = await setStripePaymentSucceededNotifiedAtIfMissing(
-          entry.id,
-          entry.stripe_payment_succeeded_at
+          updated.id,
+          updated.stripe_payment_succeeded_at
         );
+
         if (claimed) {
           await notifyEntry({
-            entryId: entry.id,
-            userId: entry.user_id,
+            entryId: updated.id,
+            userId: updated.user_id,
             stationId,
             type: 'invitation_to_rate',
           });
 
+          // Client success email (same path as webhook; errors must not fail status update).
+          try {
+            const userRow = await db.query.users.findFirst({
+              where: eq(users.id, updated.user_id),
+              columns: { email: true },
+            });
+            const emailTo = userRow?.email?.trim();
+
+            if (emailTo) {
+              const stationRow = await db.query.stations.findFirst({
+                where: eq(stations.id, updated.station_id),
+                columns: { name: true },
+              });
+
+              await sendPaymentSuccessEmail({
+                to: emailTo,
+                stationName: stationRow?.name,
+                entryId: updated.id,
+              });
+            }
+          } catch {
+            console.error('[ESCROW_FALLBACK] Client success email failed');
+          }
+
           const stationPushEnabled = isTrueSetting(
             await getPlatformSetting('enable_station_push_on_escrow_released')
           );
-          const adminPushEnabled = isTrueSetting(
-            await getPlatformSetting('enable_admin_push_on_escrow_released')
-          );
+          const adminPushEnabled = await isAdminEscrowPushEnabled();
+
 
           if (stationPushEnabled) {
             try {
               const station = await db.query.stations.findFirst({
-                where: eq(stations.id, entry.station_id),
+                where: eq(stations.id, updated.station_id),
                 columns: { user_id: true },
               });
               if (station?.user_id) {
@@ -511,16 +540,18 @@ export async function setEntryStatusByStation(
                   title: 'Service completed',
                   body: 'Payment captured and escrow released successfully.',
                   data: {
-                    entry_id: entry.id,
-                    station_id: entry.station_id,
+                    entry_id: updated.id,
+                    station_id: updated.station_id,
                     type: 'escrow_released',
                   },
                 });
               }
             } catch (err) {
-              console.error('[ESCROW_FALLBACK] Station push failed', err);
+              const msg = err instanceof Error ? err.message : String(err);
+              console.error('[ESCROW_FALLBACK] Station push failed', { error: msg });
             }
           }
+
 
           if (adminPushEnabled) {
             try {
@@ -528,21 +559,29 @@ export async function setEntryStatusByStation(
                 where: eq(users.role, 'admin'),
                 columns: { id: true },
               });
-              for (const adminUser of adminUsers) {
+              for (const adminUser of adminUsers ?? []) {
                 await sendPushNotification(adminUser.id, {
                   title: 'Escrow released',
                   body: 'A reservation escrow has been released successfully.',
-                  data: { entry_id: entry.id, station_id: entry.station_id, type: 'escrow_released_admin' },
+                  data: {
+                    entry_id: updated.id,
+                    station_id: updated.station_id,
+                    type: 'escrow_released_admin',
+                  },
                 });
               }
             } catch (err) {
-              console.error('[ESCROW_FALLBACK] Admin push failed', err);
+              const msg = err instanceof Error ? err.message : String(err);
+              console.error('[ESCROW_FALLBACK] Admin push failed', { error: msg });
             }
           }
         }
       } catch (err) {
-        console.error('[ESCROW_FALLBACK] Failed to send completed escrow notifications', err);
+        const msg = err instanceof Error ? err.message : String(err);
+        console.error('[ESCROW_FALLBACK] Failed to send completed escrow notifications', { error: msg });
       }
+
+      // %%%%% END - ESCROW FALLBACK — webhook before "completed" %%%%%
     }
   }
   return updated;

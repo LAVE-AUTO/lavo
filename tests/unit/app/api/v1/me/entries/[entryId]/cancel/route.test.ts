@@ -27,16 +27,18 @@ describe('PATCH /api/v1/me/entries/:entryId/cancel', () => {
     jest.clearAllMocks();
     mockRequireRole.mockResolvedValue(userAuth);
     mockCancelEntry.mockResolvedValue({
-      id: entryId,
-      entry_type: 'reservation',
-      time_slot_id: 'slot-1',
-      station_id: 'station-1',
-      vehicle_format_id: 'format-1',
-      status: 'cancelled',
-      queue_position: null,
-      amount_paid: '12.00',
-      created_at: new Date(),
-      updated_at: new Date(),
+      entry: {
+        id: entryId,
+        entry_type: 'reservation',
+        time_slot_id: 'slot-1',
+        station_id: 'station-1',
+        vehicle_format_id: 'format-1',
+        status: 'cancelled',
+        queue_position: null,
+        amount_paid: '12.00',
+        created_at: new Date(),
+        updated_at: new Date(),
+      },
     });
   });
 
@@ -46,7 +48,7 @@ describe('PATCH /api/v1/me/entries/:entryId/cancel', () => {
     expect(res.status).toBe(200);
     const data = await res.json();
     expect(data.data.status).toBe('cancelled');
-    expect(mockCancelEntry).toHaveBeenCalledWith(entryId, userAuth.sub);
+    expect(mockCancelEntry).toHaveBeenCalledWith(entryId, userAuth.sub, undefined);
   });
 
   it('returns 400 for invalid entryId (non-UUID)', async () => {
@@ -83,7 +85,7 @@ describe('PATCH /api/v1/me/entries/:entryId/cancel', () => {
     expect(res.status).toBe(404);
     const body = await res.json();
     expect(body.message).toBe('Entry not found');
-    expect(mockCancelEntry).toHaveBeenCalledWith(entryId, userAuth.sub);
+    expect(mockCancelEntry).toHaveBeenCalledWith(entryId, userAuth.sub, undefined);
   });
 
   it('returns 409 when entry already cancelled', async () => {

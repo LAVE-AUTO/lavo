@@ -1,5 +1,6 @@
 /**
  * Unit tests for queue-service: joinQueue, listQueue, moveReservationToQueue (mocked deps).
+ * @jest-environment node
  */
 const mockFindFormatByIdAndStation = jest.fn();
 const mockProcessPayment = jest.fn();
@@ -32,6 +33,13 @@ jest.mock('@/server/reservations/entry-repository', () => ({
   updateEntry: (...args: unknown[]) => mockUpdateEntry(...args),
   shiftQueuePositions: (...args: unknown[]) => mockShiftQueuePositions(...args),
   getNextQueuePosition: jest.fn().mockResolvedValue(1),
+  hasActiveEntryAtStation: jest.fn().mockResolvedValue(false),
+}));
+
+jest.mock('@/lib/db', () => ({
+  db: {
+    transaction: jest.fn(async (cb: (tx: object) => Promise<unknown>) => cb({})),
+  },
 }));
 
 import { joinQueue, listQueue, moveReservationToQueue } from '@/server/reservations/queue-service';
@@ -116,7 +124,7 @@ describe('queue-service', () => {
       mockCountQueueByStation.mockResolvedValue(0);
       mockUpdateEntry.mockResolvedValue({});
       await moveReservationToQueue(entryId);
-      expect(mockShiftQueuePositions).toHaveBeenCalledWith(stationId, 1, 1);
+      expect(mockShiftQueuePositions).toHaveBeenCalledWith(stationId, 1, 1, expect.anything());
       expect(mockUpdateEntry).toHaveBeenCalledWith(
         entryId,
         expect.objectContaining({
@@ -124,9 +132,10 @@ describe('queue-service', () => {
           time_slot_id: null,
           queue_position: 1,
           status: 'late',
-        })
+        }),
+        expect.anything()
       );
-      expect(mockDecrementSlotBookedCount).toHaveBeenCalledWith(slotId);
+      expect(mockDecrementSlotBookedCount).toHaveBeenCalledWith(slotId, expect.anything());
       expect(mockNotifyEntry).toHaveBeenCalledWith(
         expect.objectContaining({ type: 'moved_to_queue' })
       );

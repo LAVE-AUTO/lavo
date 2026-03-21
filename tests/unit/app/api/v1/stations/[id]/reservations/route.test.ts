@@ -32,18 +32,25 @@ describe('POST /api/v1/stations/:id/reservations', () => {
   beforeEach(() => {
     jest.clearAllMocks();
     mockRequireRole.mockResolvedValue(userAuth);
-    mockFindStationById.mockResolvedValue({ id: stationId, status: 'active' });
+    mockFindStationById.mockResolvedValue({
+      id: stationId,
+      status: 'active',
+      stripe_account_id: 'acct_test_123',
+    });
     mockCreateReservation.mockResolvedValue({
-      id: 'entry-1',
-      entry_type: 'reservation',
-      time_slot_id: slotId,
-      station_id: stationId,
-      vehicle_format_id: formatId,
-      status: 'pending',
-      queue_position: null,
-      amount_paid: '12.00',
-      created_at: new Date(),
-      updated_at: new Date(),
+      entry: {
+        id: 'entry-1',
+        entry_type: 'reservation',
+        time_slot_id: slotId,
+        station_id: stationId,
+        vehicle_format_id: formatId,
+        status: 'pending',
+        queue_position: null,
+        amount_paid: '12.00',
+        created_at: new Date(),
+        updated_at: new Date(),
+      },
+      clientSecret: 'pi_test_secret',
     });
   });
 
@@ -64,6 +71,7 @@ describe('POST /api/v1/stations/:id/reservations', () => {
     expect(mockCreateReservation).toHaveBeenCalledWith(
       userAuth.sub,
       stationId,
+      'acct_test_123',
       slotId,
       formatId
     );

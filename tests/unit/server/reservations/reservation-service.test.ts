@@ -16,6 +16,12 @@ const mockHasActiveEntryAtStation = jest.fn();
 const mockUpdateEntry = jest.fn();
 const mockDecrementSlotBookedCount = jest.fn();
 
+jest.mock('@/server/admin/platform-settings-service', () => ({
+  getActiveCommissionRate: jest.fn().mockResolvedValue('0.10'),
+  getPlatformSetting: jest.fn().mockResolvedValue(null),
+  isAdminEscrowPushEnabled: jest.fn().mockResolvedValue(false),
+}));
+
 jest.mock('@/server/station/config-repository', () => ({
   getConfigByStationId: (...args: unknown[]) => mockGetConfigByStationId(...args),
 }));
@@ -52,7 +58,12 @@ jest.mock('@/lib/db', () => ({
 }));
 
 import { createReservation, cancelEntry, listMyEntries } from '@/server/reservations/reservation-service';
-import { NotFoundError, ConflictError } from '@/lib/errors';
+import {
+  NotFoundError,
+  ConflictError,
+  ActiveReservationExistsError,
+  SlotFullError,
+} from '@/lib/errors';
 
 const userId = 'user-1';
 const stationId = 'station-1';
@@ -76,13 +87,13 @@ describe('reservation-service', () => {
       expect(mockCreateReservationEntry).not.toHaveBeenCalled();
     });
 
-    it('throws ConflictError when user has active entry at station', async () => {
+    it('throws ActiveReservationExistsError when user has active entry at station', async () => {
       mockFindFormatByIdAndStation.mockResolvedValue({ id: formatId, price: '10', is_active: true });
       mockGetConfigByStationId.mockResolvedValue({ reservation_surcharge: '2' });
       mockHasActiveEntryAtStation.mockResolvedValue(true);
       await expect(
         createReservation(userId, stationId, stripeAccountId, slotId, formatId)
-      ).rejects.toThrow(ConflictError);
+      ).rejects.toThrow(ActiveReservationExistsError);
       expect(mockCreateReservationEntry).not.toHaveBeenCalled();
     });
 
@@ -96,21 +107,29 @@ describe('reservation-service', () => {
       expect(mockCreateReservationEntry).not.toHaveBeenCalled();
     });
 
-    it('throws ConflictError when slot is full', async () => {
+    it('throws SlotFullError when slot is full', async () => {
       mockFindFormatByIdAndStation.mockResolvedValue({ id: formatId, price: '10', is_active: true });
       mockGetConfigByStationId.mockResolvedValue({ reservation_surcharge: '2' });
-      mockLockSlotForUpdate.mockResolvedValue({ id: slotId, capacity: 1 });
+      mockLockSlotForUpdate.mockResolvedValue({
+        id: slotId,
+        capacity: 1,
+        start_time: new Date(),
+      });
       mockCountReservationsBySlotId.mockResolvedValue(1);
       await expect(
         createReservation(userId, stationId, stripeAccountId, slotId, formatId)
-      ).rejects.toThrow(ConflictError);
+      ).rejects.toThrow(SlotFullError);
       expect(mockCreateReservationEntry).not.toHaveBeenCalled();
     });
 
     it('creates entry with pending_payment status and returns client_secret', async () => {
       mockFindFormatByIdAndStation.mockResolvedValue({ id: formatId, price: '10', is_active: true });
       mockGetConfigByStationId.mockResolvedValue({ reservation_surcharge: '2' });
-      mockLockSlotForUpdate.mockResolvedValue({ id: slotId, capacity: 2 });
+      mockLockSlotForUpdate.mockResolvedValue({
+        id: slotId,
+        capacity: 2,
+        start_time: new Date(),
+      });
       mockCountReservationsBySlotId.mockResolvedValue(0);
       const created = { id: entryId, entry_type: 'reservation', time_slot_id: slotId, stripe_payment_id: null };
       mockCreateReservationEntry.mockResolvedValue(created);
@@ -136,7 +155,11 @@ describe('reservation-service', () => {
     it('rolls back entry and decrements slot when Stripe fails', async () => {
       mockFindFormatByIdAndStation.mockResolvedValue({ id: formatId, price: '10', is_active: true });
       mockGetConfigByStationId.mockResolvedValue({ reservation_surcharge: '2' });
-      mockLockSlotForUpdate.mockResolvedValue({ id: slotId, capacity: 2 });
+      mockLockSlotForUpdate.mockResolvedValue({
+        id: slotId,
+        capacity: 2,
+        start_time: new Date(),
+      });
       mockCountReservationsBySlotId.mockResolvedValue(0);
       const created = { id: entryId, entry_type: 'reservation', time_slot_id: slotId, stripe_payment_id: null };
       mockCreateReservationEntry.mockResolvedValue(created);
