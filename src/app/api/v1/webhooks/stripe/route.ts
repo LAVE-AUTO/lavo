@@ -8,23 +8,22 @@ import { stripe } from '@/lib/stripe';
 import type Stripe from 'stripe';
 import { db } from '@/lib/db';
 import { eq } from 'drizzle-orm';
-import { sendPaymentFailedEmail, sendPaymentSuccessEmail } from '@/lib/email';
+import { sendPaymentFailedEmail } from '@/lib/email';
+import { error400, errorResponse, error500 } from '@/lib/responses';
+import { ApiCode } from '@/types/api-codes';
 import {
   cancelEntryForStripePaymentFailureIfEligible,
+  clearStripePaymentSucceededNotifiedAt,
   confirmEntryIfPendingPayment,
   findEntryByStripePaymentId,
   setStripePaymentSucceededAtIfMissing,
   setStripePaymentSucceededNotifiedAtIfMissing,
   setStripeTransferIdIfMissing,
 } from '@/server/reservations/entry-repository';
-import { stations, users } from '@/lib/db/schema';
+import { users } from '@/lib/db/schema';
 import { decrementSlotBookedCount } from '@/server/station/slot-repository';
 import { notifyEntry } from '@/server/notifications/notification-service';
-import { sendPushNotification } from '@/server/notifications/fcm-service';
-import { getPlatformSetting, isAdminEscrowPushEnabled } from '@/server/admin/platform-settings-service';
-
-
-
+import { sendEscrowReleasedNotificationsForEntry } from '@/server/notifications/escrow-released-notifications';
 
 const webhookSecret = process.env.STRIPE_WEBHOOK_SECRET;
 const STRIPE_ID_PATTERN = /^[a-zA-Z0-9_]+$/;
@@ -37,14 +36,14 @@ const OPAQUE_ID_PATTERN = /^[a-zA-Z0-9_-]+$/;
 export async function POST(request: Request): Promise<NextResponse> {
   if (!webhookSecret) {
     console.error('STRIPE_WEBHOOK_SECRET is not configured');
-    return NextResponse.json({ error: 'Webhook not configured' }, { status: 500 });
+    return errorResponse('Webhook not configured', 500, { code: ApiCode.INTERNAL_ERROR });
   }
 
   const body = await request.text();
   const signature = request.headers.get('stripe-signature');
 
   if (!signature) {
-    return NextResponse.json({ error: 'Missing stripe-signature header' }, { status: 400 });
+    return error400('Missing stripe-signature header');
   }
 
   let event: Stripe.Event;
@@ -53,7 +52,7 @@ export async function POST(request: Request): Promise<NextResponse> {
   } catch (err) {
     const message = err instanceof Error ? err.message : 'Unknown error';
     console.error('Stripe webhook signature verification failed:', message);
-    return NextResponse.json({ error: 'Invalid signature' }, { status: 400 });
+    return error400('Invalid signature');
   }
 
   // On infrastructure errors (DB failures), return 500 so Stripe retries automatically.
@@ -114,7 +113,7 @@ export async function POST(request: Request): Promise<NextResponse> {
   } catch (err) {
     const error = err instanceof Error ? err.message : String(err);
     console.error('Stripe webhook handler error:', { eventType: event.type, error });
-    return NextResponse.json({ error: 'Handler failed' }, { status: 500 });
+    return error500(err);
   }
 
   return NextResponse.json({ received: true });
@@ -126,10 +125,6 @@ export async function POST(request: Request): Promise<NextResponse> {
 
 // %%%%% MODULE — ID sanitizers %%%%%
 // Stripe and opaque IDs for logs and DB lookups.
-
-function isTrueSetting(value: string | null): boolean {
-  return value?.trim().toLowerCase() === 'true';
-}
 
 function sanitizeStripeId(value: unknown, expectedPrefix?: string): string | null {
   if (typeof value !== 'string') return null;
@@ -244,85 +239,13 @@ async function handlePaymentSucceeded(paymentIntentId: string, created: number |
   );
   if (!shouldNotify) return;
 
-  // Notifications should not fail the webhook handler.
   try {
-    await notifyEntry({
-      entryId: entry.id,
-      userId: entry.user_id,
-      stationId: entry.station_id,
-      type: 'invitation_to_rate',
-    });
+    await sendEscrowReleasedNotificationsForEntry(entry, succeededAt);
   } catch (err) {
+    await clearStripePaymentSucceededNotifiedAt(entry.id);
     const error = err instanceof Error ? err.message : String(err);
-    console.error('[WEBHOOK payment_intent.succeeded] Client notification failed', { error });
-  }
-
-  try {
-    const userRow = await db.query.users.findFirst({
-      where: eq(users.id, entry.user_id),
-      columns: { email: true },
-    });
-    const emailTo = userRow?.email?.trim();
-    if (emailTo) {
-      const stationRow = await db.query.stations.findFirst({
-        where: eq(stations.id, entry.station_id),
-        columns: { name: true },
-      });
-      await sendPaymentSuccessEmail({
-        to: emailTo,
-        stationName: stationRow?.name,
-        entryId: entry.id,
-      });
-    }
-  } catch {
-    // Do not log provider/DB error bodies (may echo recipient or other PII).
-    console.error('[WEBHOOK payment_intent.succeeded] Client success email failed');
-  }
-
-  // Optional station/admin push (platform settings)
-  const stationPushEnabled = isTrueSetting(
-    await getPlatformSetting('enable_station_push_on_escrow_released')
-  );
-  const adminPushEnabled = await isAdminEscrowPushEnabled();
-
-  if (stationPushEnabled) {
-    try {
-      const station = await db.query.stations.findFirst({
-        where: eq(stations.id, entry.station_id),
-        columns: { user_id: true },
-      });
-
-      if (station?.user_id) {
-        await sendPushNotification(station.user_id, {
-          title: 'Service completed',
-          body: 'Payment captured and escrow released successfully.',
-          data: { entry_id: entry.id, station_id: entry.station_id, type: 'escrow_released' },
-        });
-      }
-    } catch (err) {
-      const error = err instanceof Error ? err.message : String(err);
-      console.error('[WEBHOOK payment_intent.succeeded] Station notification failed', { error });
-    }
-  }
-
-  if (adminPushEnabled) {
-    try {
-      const adminUsers = await db.query.users.findMany({
-        where: eq(users.role, 'admin'),
-        columns: { id: true },
-      });
-
-      for (const adminUser of adminUsers ?? []) {
-        await sendPushNotification(adminUser.id, {
-          title: 'Escrow released',
-          body: 'A reservation escrow has been released successfully.',
-          data: { entry_id: entry.id, station_id: entry.station_id, type: 'escrow_released_admin' },
-        });
-      }
-    } catch (err) {
-      const error = err instanceof Error ? err.message : String(err);
-      console.error('[WEBHOOK payment_intent.succeeded] Admin notification failed', { error });
-    }
+    console.error('[WEBHOOK payment_intent.succeeded] Escrow released notifications failed', { error });
+    throw err;
   }
 }
 
@@ -403,9 +326,11 @@ async function handlePaymentCancelled(paymentIntentId: string, reason: string): 
     if (emailTo) {
       await sendPaymentFailedEmail({ to: emailTo, reason });
     }
-  } catch {
+  } catch (err) {
+    const error = err instanceof Error ? err.message : String(err);
     console.error('[WEBHOOK payment_intent cancel/fail] Client failure email failed', {
       entryId: cancelled.id,
+      error,
     });
   }
 }

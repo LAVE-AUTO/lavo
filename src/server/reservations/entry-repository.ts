@@ -144,6 +144,8 @@ export async function findReservationWithSlot(
       stripe_payment_id: reservations.stripe_payment_id,
       stripe_transfer_id: reservations.stripe_transfer_id,
       stripe_refund_id: reservations.stripe_refund_id,
+      stripe_payment_succeeded_at: reservations.stripe_payment_succeeded_at,
+      stripe_payment_succeeded_notified_at: reservations.stripe_payment_succeeded_notified_at,
       client_confirmed: reservations.client_confirmed,
       cancellation_reason: reservations.cancellation_reason,
       penalty_amount: reservations.penalty_amount,
@@ -157,7 +159,8 @@ export async function findReservationWithSlot(
     .leftJoin(timeSlots, eq(reservations.time_slot_id, timeSlots.id))
     .where(and(eq(reservations.id, id), eq(reservations.user_id, userId)))
     .limit(1);
-  return rows[0] as EntryWithSlot | undefined;
+  const row = rows[0];
+  return row;
 }
 
 /**
@@ -194,6 +197,8 @@ export async function listEntriesByStation(stationId: string): Promise<Entry[]> 
       stripe_payment_id: reservations.stripe_payment_id,
       stripe_transfer_id: reservations.stripe_transfer_id,
       stripe_refund_id: reservations.stripe_refund_id,
+      stripe_payment_succeeded_at: reservations.stripe_payment_succeeded_at,
+      stripe_payment_succeeded_notified_at: reservations.stripe_payment_succeeded_notified_at,
       client_confirmed: reservations.client_confirmed,
       cancellation_reason: reservations.cancellation_reason,
       penalty_amount: reservations.penalty_amount,
@@ -210,7 +215,7 @@ export async function listEntriesByStation(stationId: string): Promise<Entry[]> 
       asc(timeSlots.start_time),
       asc(reservations.queue_position)
     );
-  return rows as Entry[];
+  return rows;
 }
 
 /**
@@ -383,6 +388,24 @@ export async function setStripePaymentSucceededNotifiedAtIfMissing(
   return Boolean(row);
 }
 
+/**
+ * Clears `stripe_payment_succeeded_notified_at` so a later Stripe webhook retry (or fallback)
+ * can reclaim and re-run notification side effects after a failed delivery post-claim.
+ */
+export async function clearStripePaymentSucceededNotifiedAt(
+  entryId: string,
+  tx?: DbTransaction
+): Promise<void> {
+  const client = tx ?? db;
+  await client
+    .update(reservations)
+    .set({
+      stripe_payment_succeeded_notified_at: null,
+      updated_at: new Date(),
+    })
+    .where(eq(reservations.id, entryId));
+}
+
 /** Pagination + filter options for entry listing. */
 export type ListEntriesFilters = {
   status?: string;
@@ -468,6 +491,8 @@ export async function listEntriesByStationPaginated(
         stripe_payment_id: reservations.stripe_payment_id,
         stripe_transfer_id: reservations.stripe_transfer_id,
         stripe_refund_id: reservations.stripe_refund_id,
+        stripe_payment_succeeded_at: reservations.stripe_payment_succeeded_at,
+        stripe_payment_succeeded_notified_at: reservations.stripe_payment_succeeded_notified_at,
         client_confirmed: reservations.client_confirmed,
         cancellation_reason: reservations.cancellation_reason,
         penalty_amount: reservations.penalty_amount,
@@ -489,7 +514,7 @@ export async function listEntriesByStationPaginated(
   ]);
 
   return {
-    rows: rows as Entry[],
+    rows,
     total: countRows[0]?.count ?? 0,
     page,
     per_page: limit,
@@ -571,7 +596,7 @@ export async function cancelEntryForStripePaymentFailureIfEligible(
       updated_at: new Date(),
     })
     .where(
-      and(eq(reservations.id, id), inArray(reservations.status, STRIPE_PAYMENT_CANCEL_STATUSES))
+      and(eq(reservations.id, id), inArray(reservations.status, [...STRIPE_PAYMENT_CANCEL_STATUSES]))
     )
     .returning();
   return row;
@@ -628,6 +653,8 @@ export async function listLateUnconfirmedReservations(): Promise<Entry[]> {
       stripe_payment_id: reservations.stripe_payment_id,
       stripe_transfer_id: reservations.stripe_transfer_id,
       stripe_refund_id: reservations.stripe_refund_id,
+      stripe_payment_succeeded_at: reservations.stripe_payment_succeeded_at,
+      stripe_payment_succeeded_notified_at: reservations.stripe_payment_succeeded_notified_at,
       client_confirmed: reservations.client_confirmed,
       cancellation_reason: reservations.cancellation_reason,
       penalty_amount: reservations.penalty_amount,
@@ -638,6 +665,7 @@ export async function listLateUnconfirmedReservations(): Promise<Entry[]> {
     })
     .from(reservations)
     .innerJoin(timeSlots, eq(reservations.time_slot_id, timeSlots.id))
+    // `station_configs.id` is the station id (row is 1:1 with `stations`); the table has no `station_id` column.
     .innerJoin(stationConfigs, eq(reservations.station_id, stationConfigs.id))
     .where(
       and(
@@ -647,7 +675,7 @@ export async function listLateUnconfirmedReservations(): Promise<Entry[]> {
         sql`(${timeSlots.start_time} + (${stationConfigs.late_tolerance_minutes} * interval '1 minute')) < ${now}`
       )
     );
-  return rows as Entry[];
+  return rows;
 }
 
 /**

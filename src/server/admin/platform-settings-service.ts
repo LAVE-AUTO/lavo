@@ -19,6 +19,7 @@ import { eq, and, isNull, lte, desc } from 'drizzle-orm';
 import { db } from '@/lib/db';
 import { settings, commissionSettings } from '@/lib/db/schema';
 import { DEFAULT_COMMISSION_RATE } from '@/helpers/constants';
+import { isTruePlatformSetting } from '@/helpers/platform-setting-boolean';
 
 export type CancellationPolicy = {
   freeWindowMinutes: number;
@@ -68,11 +69,6 @@ export async function getPlatformSetting(key: string): Promise<string | null> {
   return row?.value ?? null;
 }
 
-/** True when the stored value is the string "true" (case-insensitive). */
-function isTruthyAdminSetting(value: string | null): boolean {
-  return value?.trim().toLowerCase() === 'true';
-}
-
 /**
  * Whether admin FCM push on escrow release is enabled.
  * Canonical key: stripe_admin_notifications_enabled.
@@ -80,10 +76,10 @@ function isTruthyAdminSetting(value: string | null): boolean {
  */
 export async function isAdminEscrowPushEnabled(): Promise<boolean> {
   const canonical = await getPlatformSetting('stripe_admin_notifications_enabled');
-  if (canonical !== null) return isTruthyAdminSetting(canonical);
+  if (canonical !== null) return isTruePlatformSetting(canonical);
 
   const legacy = await getPlatformSetting('enable_admin_push_on_escrow_released');
-  return isTruthyAdminSetting(legacy);
+  return isTruePlatformSetting(legacy);
 }
 
 /**

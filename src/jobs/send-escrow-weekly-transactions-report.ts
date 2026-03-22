@@ -4,6 +4,8 @@
  * The report aggregates Stripe PaymentIntent captures released through escrow:
  * - uses reservations.stripe_payment_succeeded_at (set on payment_intent.succeeded webhook)
  * - includes all reservations with succeeded_at in the last 7 days window
+ *
+ * Email copy locale: `WEEKLY_REPORT_LOCALE` (`fr` | `en`, default `fr`) — see `.env.example`.
  */
 import { and, eq, gte, isNotNull, lt } from 'drizzle-orm';
 import { db } from '@/lib/db';
@@ -12,6 +14,7 @@ import {
   sendWeeklyEscrowTransactionsReportEmail,
   type WeeklyEscrowTransactionRow,
 } from '@/lib/email';
+import { validateEmail } from '@/helpers/validators';
 
 export type SendEscrowWeeklyTransactionsReportResult = {
   processed: number;
@@ -20,8 +23,15 @@ export type SendEscrowWeeklyTransactionsReportResult = {
   weekEndISO: string;
 };
 
-function defaultLocale() {
-  return 'fr' as const;
+type WeeklyReportLocale = 'fr' | 'en';
+
+/**
+ * Resolves email template locale; default `fr` matches app primary locale (next-intl) and operator expectations.
+ */
+function resolveWeeklyReportLocale(): WeeklyReportLocale {
+  const raw = process.env.WEEKLY_REPORT_LOCALE?.trim().toLowerCase();
+  if (raw === 'en') return 'en';
+  return 'fr';
 }
 
 export async function runSendEscrowWeeklyTransactionsReport(): Promise<SendEscrowWeeklyTransactionsReportResult> {
@@ -37,6 +47,18 @@ export async function runSendEscrowWeeklyTransactionsReport(): Promise<SendEscro
   if (!recipient) {
     console.warn(
       '[send-escrow-weekly-transactions-report] Missing WEEKLY_TRANSACTIONS_REPORT_EMAIL (or ADMIN_NOTIFICATION_EMAIL). Skipping email.'
+    );
+    return {
+      processed: 0,
+      emailSent: false,
+      weekStartISO: weekStart.toISOString(),
+      weekEndISO: weekEnd.toISOString(),
+    };
+  }
+
+  if (!validateEmail(recipient)) {
+    console.warn(
+      '[send-escrow-weekly-transactions-report] Invalid WEEKLY_TRANSACTIONS_REPORT_EMAIL or ADMIN_NOTIFICATION_EMAIL (not a valid email). Skipping email.'
     );
     return {
       processed: 0,
@@ -72,21 +94,31 @@ export async function runSendEscrowWeeklyTransactionsReport(): Promise<SendEscro
     )
     .orderBy(reservations.stripe_payment_succeeded_at);
 
-  const rows: WeeklyEscrowTransactionRow[] = rawRows.map((r) => ({
-    reservationId: r.reservationId,
-    reservationStatus: r.reservationStatus,
-    succeededAt: r.succeededAt as Date,
-    clientEmail: r.clientEmail,
-    stationName: r.stationName,
-    amountPaid: r.amountPaid,
-    commissionAmount: r.commissionAmount,
-    stationPayout: r.stationPayout,
-    stripePaymentId: r.stripePaymentId,
-    stripeTransferId: r.stripeTransferId,
-  }));
+  const rows: WeeklyEscrowTransactionRow[] = [];
+  for (const r of rawRows) {
+    const succeededAt = r.succeededAt;
+    if (!(succeededAt instanceof Date) || Number.isNaN(succeededAt.getTime())) {
+      console.warn('[send-escrow-weekly-transactions-report] Skipping row with invalid succeededAt', {
+        reservationId: r.reservationId,
+      });
+      continue;
+    }
+    rows.push({
+      reservationId: r.reservationId,
+      reservationStatus: r.reservationStatus,
+      succeededAt,
+      clientEmail: r.clientEmail,
+      stationName: r.stationName,
+      amountPaid: r.amountPaid,
+      commissionAmount: r.commissionAmount,
+      stationPayout: r.stationPayout,
+      stripePaymentId: r.stripePaymentId,
+      stripeTransferId: r.stripeTransferId,
+    });
+  }
 
   await sendWeeklyEscrowTransactionsReportEmail(recipient, {
-    locale: defaultLocale(),
+    locale: resolveWeeklyReportLocale(),
     weekStart,
     weekEnd,
     rows,

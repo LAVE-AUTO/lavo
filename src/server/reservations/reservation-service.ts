@@ -5,11 +5,7 @@
  */
 import { NotFoundError, ConflictError, ActiveReservationExistsError, SlotFullError } from '@/lib/errors';
 import { MAX_ADVANCE_BOOKING_DAYS } from '@/helpers/constants';
-import {
-  getActiveCommissionRate,
-  getPlatformSetting,
-  isAdminEscrowPushEnabled,
-} from '@/server/admin/platform-settings-service';
+import { getActiveCommissionRate } from '@/server/admin/platform-settings-service';
 import { db } from '@/lib/db';
 import { getConfigByStationId } from '@/server/station/config-repository';
 import { findFormatByIdAndStation } from '@/server/station/format-repository';
@@ -21,16 +17,14 @@ import {
 } from '@/server/station/slot-repository';
 import { createPaymentIntent, cancelPaymentIntent, capturePaymentIntent } from '@/server/payments/payment-service';
 import { cancelReservation } from '@/server/reservations/cancellation-service';
-import { sendPaymentSuccessEmail } from '@/lib/email';
 import { notifyEntry } from '@/server/notifications/notification-service';
-import { sendPushNotification } from '@/server/notifications/fcm-service';
-import { eq } from 'drizzle-orm';
-import { stations, users } from '@/lib/db/schema';
+import { sendEscrowReleasedNotificationsForEntry } from '@/server/notifications/escrow-released-notifications';
 import {
   createReservationEntry,
   findEntryByIdAndUser,
   findEntryByIdAndStation,
   hasActiveEntryAtStation,
+  clearStripePaymentSucceededNotifiedAt,
   setStripePaymentSucceededNotifiedAtIfMissing,
   updateEntry,
   shiftQueuePositions,
@@ -428,10 +422,6 @@ const VALID_STATION_TRANSITIONS: Record<string, readonly string[]> = {
   in_progress: ['completed', 'cancelled'],
 };
 
-function isTrueSetting(value: string | null): boolean {
-  return value?.trim().toLowerCase() === 'true';
-}
-
 /**
  * Updates an entry's status (station only). Used by PATCH /station/entries/:entryId.
  * Enforces valid status transitions:
@@ -492,88 +482,15 @@ export async function setEntryStatusByStation(
         );
 
         if (claimed) {
-          await notifyEntry({
-            entryId: updated.id,
-            userId: updated.user_id,
-            stationId,
-            type: 'invitation_to_rate',
-          });
-
-          // Client success email (same path as webhook; errors must not fail status update).
           try {
-            const userRow = await db.query.users.findFirst({
-              where: eq(users.id, updated.user_id),
-              columns: { email: true },
-            });
-            const emailTo = userRow?.email?.trim();
-
-            if (emailTo) {
-              const stationRow = await db.query.stations.findFirst({
-                where: eq(stations.id, updated.station_id),
-                columns: { name: true },
-              });
-
-              await sendPaymentSuccessEmail({
-                to: emailTo,
-                stationName: stationRow?.name,
-                entryId: updated.id,
-              });
-            }
-          } catch {
-            console.error('[ESCROW_FALLBACK] Client success email failed');
-          }
-
-          const stationPushEnabled = isTrueSetting(
-            await getPlatformSetting('enable_station_push_on_escrow_released')
-          );
-          const adminPushEnabled = await isAdminEscrowPushEnabled();
-
-
-          if (stationPushEnabled) {
-            try {
-              const station = await db.query.stations.findFirst({
-                where: eq(stations.id, updated.station_id),
-                columns: { user_id: true },
-              });
-              if (station?.user_id) {
-                await sendPushNotification(station.user_id, {
-                  title: 'Service completed',
-                  body: 'Payment captured and escrow released successfully.',
-                  data: {
-                    entry_id: updated.id,
-                    station_id: updated.station_id,
-                    type: 'escrow_released',
-                  },
-                });
-              }
-            } catch (err) {
-              const msg = err instanceof Error ? err.message : String(err);
-              console.error('[ESCROW_FALLBACK] Station push failed', { error: msg });
-            }
-          }
-
-
-          if (adminPushEnabled) {
-            try {
-              const adminUsers = await db.query.users.findMany({
-                where: eq(users.role, 'admin'),
-                columns: { id: true },
-              });
-              for (const adminUser of adminUsers ?? []) {
-                await sendPushNotification(adminUser.id, {
-                  title: 'Escrow released',
-                  body: 'A reservation escrow has been released successfully.',
-                  data: {
-                    entry_id: updated.id,
-                    station_id: updated.station_id,
-                    type: 'escrow_released_admin',
-                  },
-                });
-              }
-            } catch (err) {
-              const msg = err instanceof Error ? err.message : String(err);
-              console.error('[ESCROW_FALLBACK] Admin push failed', { error: msg });
-            }
+            await sendEscrowReleasedNotificationsForEntry(
+              updated,
+              updated.stripe_payment_succeeded_at
+            );
+          } catch (err) {
+            await clearStripePaymentSucceededNotifiedAt(updated.id);
+            const msg = err instanceof Error ? err.message : String(err);
+            console.error('[ESCROW_FALLBACK] Escrow released notifications failed', { error: msg });
           }
         }
       } catch (err) {

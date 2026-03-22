@@ -10,6 +10,8 @@ const mockUpdateEntry = jest.fn();
 const mockSetStripeTransferIdIfMissing = jest.fn();
 const mockSetStripePaymentSucceededAtIfMissing = jest.fn();
 const mockSetStripePaymentSucceededNotifiedAtIfMissing = jest.fn();
+const mockClearStripePaymentSucceededNotifiedAt = jest.fn();
+const mockSendEscrowReleasedNotificationsForEntry = jest.fn();
 const mockCancelEntryForStripePaymentFailureIfEligible = jest.fn();
 const mockNotifyEntry = jest.fn();
 const mockSendPushNotification = jest.fn();
@@ -28,6 +30,11 @@ jest.mock('@/lib/stripe', () => ({
   },
 }));
 
+jest.mock('@/server/notifications/escrow-released-notifications', () => ({
+  sendEscrowReleasedNotificationsForEntry: (...args: unknown[]) =>
+    mockSendEscrowReleasedNotificationsForEntry(...args),
+}));
+
 jest.mock('@/server/reservations/entry-repository', () => ({
   findEntryByStripePaymentId: (...args: unknown[]) => mockFindEntryByStripePaymentId(...args),
   confirmEntryIfPendingPayment: (...args: unknown[]) => mockConfirmEntryIfPendingPayment(...args),
@@ -35,6 +42,7 @@ jest.mock('@/server/reservations/entry-repository', () => ({
   setStripeTransferIdIfMissing: (...args: unknown[]) => mockSetStripeTransferIdIfMissing(...args),
   setStripePaymentSucceededAtIfMissing: (...args: unknown[]) => mockSetStripePaymentSucceededAtIfMissing(...args),
   setStripePaymentSucceededNotifiedAtIfMissing: (...args: unknown[]) => mockSetStripePaymentSucceededNotifiedAtIfMissing(...args),
+  clearStripePaymentSucceededNotifiedAt: (...args: unknown[]) => mockClearStripePaymentSucceededNotifiedAt(...args),
   cancelEntryForStripePaymentFailureIfEligible: (...args: unknown[]) =>
     mockCancelEntryForStripePaymentFailureIfEligible(...args),
 }));
@@ -117,6 +125,13 @@ const originalEnv = process.env;
 describe('POST /api/v1/webhooks/stripe', () => {
   beforeEach(() => {
     jest.clearAllMocks();
+    const actualEscrow = jest.requireActual<
+      typeof import('@/server/notifications/escrow-released-notifications')
+    >('@/server/notifications/escrow-released-notifications');
+    mockSendEscrowReleasedNotificationsForEntry.mockImplementation(
+      actualEscrow.sendEscrowReleasedNotificationsForEntry
+    );
+    mockClearStripePaymentSucceededNotifiedAt.mockResolvedValue(undefined);
     process.env = { ...originalEnv, STRIPE_WEBHOOK_SECRET: 'whsec_test' };
     mockGetPlatformSetting.mockResolvedValue('false');
     mockSendPaymentSuccessEmail.mockResolvedValue(undefined);
@@ -469,6 +484,27 @@ describe('POST /api/v1/webhooks/stripe', () => {
       expect(mockSetStripePaymentSucceededNotifiedAtIfMissing).not.toHaveBeenCalled();
       expect(mockNotifyEntry).not.toHaveBeenCalled();
       expect(mockSendPaymentSuccessEmail).not.toHaveBeenCalled();
+    });
+
+    it('réinitialise notified_at et renvoie 500 si sendEscrowReleased lève (retry Stripe)', async () => {
+      const POST = await importRoute();
+      mockConstructEvent.mockReturnValue({
+        type: 'payment_intent.succeeded',
+        data: { object: { id: 'pi_123', created: 1710000000 } },
+      });
+      mockFindEntryByStripePaymentId.mockResolvedValue({
+        id: 'entry_1',
+        user_id: 'user_1',
+        station_id: 'station_1',
+        status: 'completed',
+      });
+      mockSetStripePaymentSucceededNotifiedAtIfMissing.mockResolvedValue(true);
+      mockSendEscrowReleasedNotificationsForEntry.mockRejectedValueOnce(new Error('downstream'));
+
+      const res = await POST(makeRequest());
+
+      expect(res.status).toBe(500);
+      expect(mockClearStripePaymentSucceededNotifiedAt).toHaveBeenCalledWith('entry_1');
     });
 
     it('n’envoie pas l’email succès si l’utilisateur n’a pas d’email', async () => {

@@ -8,7 +8,12 @@ const mockCountReservationsBySlotId = jest.fn();
 const mockIncrementSlotBookedCount = jest.fn();
 const mockCreatePaymentIntent = jest.fn();
 const mockCancelPaymentIntent = jest.fn();
+const mockCapturePaymentIntent = jest.fn();
 const mockNotifyEntry = jest.fn();
+const mockFindEntryByIdAndStation = jest.fn();
+const mockSetStripePaymentSucceededNotifiedAtIfMissing = jest.fn();
+const mockClearStripePaymentSucceededNotifiedAt = jest.fn();
+const mockSendEscrowReleasedNotificationsForEntry = jest.fn();
 const mockCreateReservationEntry = jest.fn();
 const mockFindEntryByIdAndUser = jest.fn();
 const mockListEntriesByUserPaginated = jest.fn();
@@ -37,6 +42,11 @@ jest.mock('@/server/station/slot-repository', () => ({
 jest.mock('@/server/payments/payment-service', () => ({
   createPaymentIntent: (...args: unknown[]) => mockCreatePaymentIntent(...args),
   cancelPaymentIntent: (...args: unknown[]) => mockCancelPaymentIntent(...args),
+  capturePaymentIntent: (...args: unknown[]) => mockCapturePaymentIntent(...args),
+}));
+jest.mock('@/server/notifications/escrow-released-notifications', () => ({
+  sendEscrowReleasedNotificationsForEntry: (...args: unknown[]) =>
+    mockSendEscrowReleasedNotificationsForEntry(...args),
 }));
 jest.mock('@/server/notifications/notification-service', () => ({
   notifyEntry: (...args: unknown[]) => mockNotifyEntry(...args),
@@ -44,12 +54,16 @@ jest.mock('@/server/notifications/notification-service', () => ({
 jest.mock('@/server/reservations/entry-repository', () => ({
   createReservationEntry: (...args: unknown[]) => mockCreateReservationEntry(...args),
   findEntryByIdAndUser: (...args: unknown[]) => mockFindEntryByIdAndUser(...args),
-  findEntryByIdAndStation: jest.fn(),
+  findEntryByIdAndStation: (...args: unknown[]) => mockFindEntryByIdAndStation(...args),
   hasActiveEntryAtStation: (...args: unknown[]) => mockHasActiveEntryAtStation(...args),
   listEntriesByUserPaginated: (...args: unknown[]) => mockListEntriesByUserPaginated(...args),
   listEntriesByStationPaginated: jest.fn(),
   updateEntry: (...args: unknown[]) => mockUpdateEntry(...args),
   shiftQueuePositions: jest.fn(),
+  setStripePaymentSucceededNotifiedAtIfMissing: (...args: unknown[]) =>
+    mockSetStripePaymentSucceededNotifiedAtIfMissing(...args),
+  clearStripePaymentSucceededNotifiedAt: (...args: unknown[]) =>
+    mockClearStripePaymentSucceededNotifiedAt(...args),
 }));
 jest.mock('@/lib/db', () => ({
   db: {
@@ -57,7 +71,12 @@ jest.mock('@/lib/db', () => ({
   },
 }));
 
-import { createReservation, cancelEntry, listMyEntries } from '@/server/reservations/reservation-service';
+import {
+  createReservation,
+  cancelEntry,
+  listMyEntries,
+  setEntryStatusByStation,
+} from '@/server/reservations/reservation-service';
 import {
   NotFoundError,
   ConflictError,
@@ -205,6 +224,126 @@ describe('reservation-service', () => {
       const result = await listMyEntries(userId);
       expect(result).toEqual(paginated);
       expect(mockListEntriesByUserPaginated).toHaveBeenCalledWith(userId, undefined);
+    });
+  });
+
+  describe('setEntryStatusByStation (escrow fallback)', () => {
+    const succeededAt = new Date('2024-06-01T12:00:00.000Z');
+
+    beforeEach(() => {
+      mockCapturePaymentIntent.mockResolvedValue(undefined);
+      mockSetStripePaymentSucceededNotifiedAtIfMissing.mockReset();
+      mockClearStripePaymentSucceededNotifiedAt.mockReset().mockResolvedValue(undefined);
+      mockSendEscrowReleasedNotificationsForEntry.mockReset().mockResolvedValue(undefined);
+    });
+
+    it('calls escrow notifications when completed, reservation had webhook succeeded_at first, and notify slot is claimed', async () => {
+      mockFindEntryByIdAndStation.mockResolvedValue({
+        id: entryId,
+        user_id: userId,
+        station_id: stationId,
+        entry_type: 'reservation',
+        status: 'in_progress',
+        stripe_payment_id: 'pi_123',
+        stripe_payment_succeeded_at: null,
+      });
+      const updated = {
+        id: entryId,
+        user_id: userId,
+        station_id: stationId,
+        entry_type: 'reservation' as const,
+        status: 'completed' as const,
+        stripe_payment_id: 'pi_123',
+        stripe_payment_succeeded_at: succeededAt,
+      };
+      mockUpdateEntry.mockResolvedValue(updated);
+      mockSetStripePaymentSucceededNotifiedAtIfMissing.mockResolvedValue(true);
+
+      await setEntryStatusByStation(entryId, stationId, 'completed');
+
+      expect(mockCapturePaymentIntent).toHaveBeenCalledWith('pi_123');
+      expect(mockSetStripePaymentSucceededNotifiedAtIfMissing).toHaveBeenCalledWith(
+        entryId,
+        succeededAt
+      );
+      expect(mockSendEscrowReleasedNotificationsForEntry).toHaveBeenCalledTimes(1);
+      expect(mockSendEscrowReleasedNotificationsForEntry).toHaveBeenCalledWith(updated, succeededAt);
+    });
+
+    it('does not send escrow notifications when notify flag was already set (idempotent)', async () => {
+      mockFindEntryByIdAndStation.mockResolvedValue({
+        id: entryId,
+        user_id: userId,
+        station_id: stationId,
+        entry_type: 'reservation',
+        status: 'in_progress',
+        stripe_payment_id: 'pi_123',
+      });
+      mockUpdateEntry.mockResolvedValue({
+        id: entryId,
+        user_id: userId,
+        station_id: stationId,
+        entry_type: 'reservation' as const,
+        status: 'completed' as const,
+        stripe_payment_id: 'pi_123',
+        stripe_payment_succeeded_at: succeededAt,
+      });
+      mockSetStripePaymentSucceededNotifiedAtIfMissing.mockResolvedValue(false);
+
+      await setEntryStatusByStation(entryId, stationId, 'completed');
+
+      expect(mockSendEscrowReleasedNotificationsForEntry).not.toHaveBeenCalled();
+    });
+
+    it('efface notified_at si sendEscrowReleased échoue après claim (pas de retry Stripe côté station)', async () => {
+      mockFindEntryByIdAndStation.mockResolvedValue({
+        id: entryId,
+        user_id: userId,
+        station_id: stationId,
+        entry_type: 'reservation',
+        status: 'in_progress',
+        stripe_payment_id: 'pi_123',
+      });
+      mockUpdateEntry.mockResolvedValue({
+        id: entryId,
+        user_id: userId,
+        station_id: stationId,
+        entry_type: 'reservation' as const,
+        status: 'completed' as const,
+        stripe_payment_id: 'pi_123',
+        stripe_payment_succeeded_at: succeededAt,
+      });
+      mockSetStripePaymentSucceededNotifiedAtIfMissing.mockResolvedValue(true);
+      mockSendEscrowReleasedNotificationsForEntry.mockRejectedValue(new Error('notify failed'));
+
+      await setEntryStatusByStation(entryId, stationId, 'completed');
+
+      expect(mockClearStripePaymentSucceededNotifiedAt).toHaveBeenCalledWith(entryId);
+    });
+
+    it('skips escrow fallback when stripe_payment_succeeded_at is still null on completed row', async () => {
+      mockFindEntryByIdAndStation.mockResolvedValue({
+        id: entryId,
+        user_id: userId,
+        station_id: stationId,
+        entry_type: 'reservation',
+        status: 'in_progress',
+        stripe_payment_id: 'pi_123',
+      });
+      mockUpdateEntry.mockResolvedValue({
+        id: entryId,
+        user_id: userId,
+        station_id: stationId,
+        entry_type: 'reservation' as const,
+        status: 'completed' as const,
+        stripe_payment_id: 'pi_123',
+        stripe_payment_succeeded_at: null,
+      });
+
+      await setEntryStatusByStation(entryId, stationId, 'completed');
+
+      expect(mockSetStripePaymentSucceededNotifiedAtIfMissing).not.toHaveBeenCalled();
+      expect(mockSendEscrowReleasedNotificationsForEntry).not.toHaveBeenCalled();
     });
   });
 });

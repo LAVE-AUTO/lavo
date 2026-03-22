@@ -376,5 +376,13 @@ describe('entry-repository', () => {
         expect.objectContaining({ stripe_payment_succeeded_notified_at: notifiedAt })
       );
     });
+
+    it('clearStripePaymentSucceededNotifiedAt remet notified_at à null', async () => {
+      const { clearStripePaymentSucceededNotifiedAt } = require('@/server/reservations/entry-repository');
+      await clearStripePaymentSucceededNotifiedAt(validUuid);
+      expect(mockUpdateSet).toHaveBeenCalledWith(
+        expect.objectContaining({ stripe_payment_succeeded_notified_at: null })
+      );
+    });
   });
 });

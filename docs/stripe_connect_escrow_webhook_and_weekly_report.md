@@ -53,11 +53,12 @@ Période:
 Email:
 - destinataire: `WEEKLY_TRANSACTIONS_REPORT_EMAIL`
 - fallback: `ADMIN_NOTIFICATION_EMAIL`
+- locale du corps / sujet: `WEEKLY_REPORT_LOCALE` (`fr` ou `en`, défaut **`fr`** — aligné sur l’app next-intl et le public cible)
 - envoi via Resend (`src/lib/email.ts`).
 
 ## Notes d’intégration
 
 - Pour que `transfer.created` puisse mapper correctement:
-  - `createPaymentIntent` propage les metadata en `transfer_data.metadata`.
+  - les métadonnées métier (`reservation_id`, etc.) sont sur le **PaymentIntent** (`payment_intent.metadata`) ; l’objet Transfer Stripe n’expose pas de `transfer_data.metadata` (seulement `destination` / montant côté API). Le mapping utilise `transfer.metadata` si Stripe le renvoie, sinon **charge → payment_intent** puis `reservations.stripe_payment_id`.
 - Pour l’idempotence indispensable aux webhooks Stripe:
   - ne pas s’appuyer uniquement sur le statut en cours: utiliser `stripe_payment_succeeded_notified_at` côté DB.
