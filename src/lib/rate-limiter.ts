@@ -6,6 +6,12 @@ import {
   RATE_LIMIT_BLOCK_MINUTES,
 } from '@/helpers/constants';
 
+if (RATE_LIMIT_MAX_ATTEMPTS < 2) {
+  throw new Error(
+    `RATE_LIMIT_MAX_ATTEMPTS must be at least 2 (imported from @/helpers/constants); got ${RATE_LIMIT_MAX_ATTEMPTS}. Values below 2 break atomic failed-attempt accounting.`
+  );
+}
+
 export interface RateLimitResult {
   blocked: boolean;
   retryAfter?: number;
@@ -39,6 +45,7 @@ export async function checkRateLimit(key: string): Promise<RateLimitResult> {
  * Records one failed auth attempt in a single atomic statement (insert or increment).
  * When the post-increment count reaches the threshold, resets attempts and sets `blocked_until`
  * in the same row update — avoids read-then-write TOCTOU races under concurrency.
+ * `RATE_LIMIT_MAX_ATTEMPTS` from `@/helpers/constants` must be at least 2 (asserted at module load).
  */
 export async function recordFailedAttempt(key: string): Promise<void> {
   await db

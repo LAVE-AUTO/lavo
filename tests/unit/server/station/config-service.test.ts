@@ -41,17 +41,21 @@ describe('config-service', () => {
 
     it('creates default config when none exists and returns it with empty posts', async () => {
       mockGetConfigByStationId.mockResolvedValue(undefined);
-      mockGetStationWashPostCount.mockResolvedValue(2);
       const created = { id: stationId, wash_post_count: 2, max_concurrent_posts: 2 } as any;
       mockUpsertConfig.mockResolvedValue(created);
 
       const result = await getOrCreateConfig(stationId);
       expect(result.config).toEqual(created);
       expect(result.posts).toEqual([]);
-      expect(mockUpsertConfig).toHaveBeenCalledWith(stationId, expect.any(Object));
+      expect(mockGetStationWashPostCount).not.toHaveBeenCalled();
+      expect(mockUpsertConfig).toHaveBeenCalledWith(
+        stationId,
+        expect.any(Object),
+        { existing: undefined }
+      );
       const payload = mockUpsertConfig.mock.calls[0][1];
-      expect(payload.wash_post_count).toBe(2);
-      expect(payload.max_concurrent_posts).toBe(2);
+      expect(payload.wash_post_count).toBeUndefined();
+      expect(payload.max_concurrent_posts).toBeUndefined();
     });
   });
 

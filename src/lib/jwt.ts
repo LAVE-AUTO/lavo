@@ -60,9 +60,10 @@ export async function signJwt(payload: JwtPayload): Promise<string> {
 }
 
 /**
- * Verifies the access JWT. Tokens without `iss`/`aud` still validate (legacy).
+ * Verifies the access JWT. Tokens without `iss`/`aud` still validate (legacy) when env omits issuer/audience.
  * When `JWT_ISSUER` is set and the token includes `iss`, it must match.
- * When `JWT_AUDIENCE` (or derived audience from `NEXT_PUBLIC_APP_URL`) is set and the token includes `aud`, it must match.
+ * When `JWT_AUDIENCE` (or derived audience from `NEXT_PUBLIC_APP_URL`) is set, the token must include `aud`
+ * and it must match the expected audience.
  */
 export async function verifyJwt(token: string): Promise<JwtPayload | null> {
   try {
@@ -72,8 +73,8 @@ export async function verifyJwt(token: string): Promise<JwtPayload | null> {
       return null;
     }
     const expectedAud = getOptionalJwtAudience();
-    if (expectedAud && payload.aud !== undefined) {
-      const audList = Array.isArray(payload.aud) ? payload.aud : [payload.aud];
+    if (expectedAud) {
+      const audList = Array.isArray(payload.aud) ? payload.aud : payload.aud ? [payload.aud] : [];
       if (!audList.includes(expectedAud)) return null;
     }
     return payload as unknown as JwtPayload;
