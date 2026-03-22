@@ -17,7 +17,7 @@ import type { NextResponse } from 'next/server';
 type Params = { params: Promise<{ id: string }> };
 
 export async function POST(request: Request, { params }: Params): Promise<NextResponse> {
-  const auth = await requireRole('client');
+  const auth = await requireRole(request, 'client');
   if (auth instanceof Response) return auth as NextResponse;
 
   const { id: stationId } = await params;

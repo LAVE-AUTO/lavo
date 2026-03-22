@@ -2,7 +2,7 @@
  * Data access for station_configs and station_posts.
  * Used by config-service for GET/PATCH station config API.
  */
-import { eq, inArray } from 'drizzle-orm';
+import { eq, inArray, sql } from 'drizzle-orm';
 import { db } from '@/lib/db';
 import { stationConfigs, stationPosts, stations } from '@/lib/db/schema';
 
@@ -22,6 +22,7 @@ export const DEFAULT_MARGIN_AFTER_MINUTES = 10;
 
 /**
  * Returns the station config row for the given station id, or undefined.
+ * `station_configs.id` is the station identifier (PK = FK to `stations.id`, 1:1); there is no separate `station_id` column.
  */
 export async function getConfigByStationId(stationId: string): Promise<StationConfig | undefined> {
   const row = await db.query.stationConfigs.findFirst({
@@ -58,14 +59,24 @@ export async function upsertConfig(
       .returning();
     return updated;
   }
-  const [inserted] = await db
-    .insert(stationConfigs)
-    .values({
-      id: stationId,
-      ...data,
-      updated_at: now,
-    })
-    .returning();
+  const washPostCount = await getStationWashPostCount(stationId);
+  const insertValues: StationConfigInsert = {
+    id: stationId,
+    opening_time: data.opening_time ?? DEFAULT_OPENING_TIME,
+    closing_time: data.closing_time ?? DEFAULT_CLOSING_TIME,
+    break_start: data.break_start ?? null,
+    break_end: data.break_end ?? null,
+    wash_duration_minutes: data.wash_duration_minutes ?? DEFAULT_WASH_DURATION_MINUTES,
+    wash_post_count: data.wash_post_count ?? washPostCount,
+    late_tolerance_minutes: data.late_tolerance_minutes ?? DEFAULT_LATE_TOLERANCE_MINUTES,
+    cancellation_delay_minutes: data.cancellation_delay_minutes ?? DEFAULT_CANCELLATION_DELAY_MINUTES,
+    max_concurrent_posts: data.max_concurrent_posts ?? washPostCount,
+    margin_before_minutes: data.margin_before_minutes ?? DEFAULT_MARGIN_BEFORE_MINUTES,
+    margin_after_minutes: data.margin_after_minutes ?? DEFAULT_MARGIN_AFTER_MINUTES,
+    reservation_surcharge: data.reservation_surcharge,
+    updated_at: now,
+  };
+  const [inserted] = await db.insert(stationConfigs).values(insertValues).returning();
   return inserted;
 }
 
@@ -102,11 +113,26 @@ export async function upsertPosts(
   if (toInsert.length > 0) {
     await db.insert(stationPosts).values(toInsert);
   }
-  for (const { id, is_active } of toUpdate) {
+  if (toUpdate.length > 0) {
+    const whenBranches = sql.join(
+      toUpdate.map(
+        ({ id, is_active }) =>
+          sql`WHEN ${stationPosts.id} = ${id} THEN ${is_active}`
+      ),
+      sql` `
+    );
     await db
       .update(stationPosts)
-      .set({ is_active, updated_at: now })
-      .where(eq(stationPosts.id, id));
+      .set({
+        is_active: sql`CASE ${whenBranches} ELSE ${stationPosts.is_active} END`,
+        updated_at: now,
+      })
+      .where(
+        inArray(
+          stationPosts.id,
+          toUpdate.map((u) => u.id)
+        )
+      );
   }
 
   const toDelete = existing.filter((p) => !posts.some((q) => q.position === p.position));

@@ -27,7 +27,7 @@ import type { NextResponse } from 'next/server';
  *   500 INTERNAL_ERROR
  */
 export async function POST(request: Request) {
-  const auth = await requireAuth();
+  const auth = await requireAuth(request);
   if (auth instanceof Response) return auth as NextResponse;
 
   let formData: FormData;

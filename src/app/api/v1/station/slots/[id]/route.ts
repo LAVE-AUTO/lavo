@@ -14,7 +14,7 @@ import type { NextResponse } from 'next/server';
 type Params = { params: Promise<{ id: string }> };
 
 export async function DELETE(_request: Request, { params }: Params): Promise<NextResponse> {
-  const auth = await requireRole('station');
+  const auth = await requireRole(_request, 'station');
   if (auth instanceof Response) return auth as NextResponse;
 
   const { id } = await params;

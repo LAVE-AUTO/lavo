@@ -35,31 +35,30 @@ export async function checkRateLimit(key: string): Promise<RateLimitResult> {
   return { blocked: false };
 }
 
+/**
+ * Records one failed auth attempt in a single atomic statement (insert or increment).
+ * When the post-increment count reaches the threshold, resets attempts and sets `blocked_until`
+ * in the same row update — avoids read-then-write TOCTOU races under concurrency.
+ */
 export async function recordFailedAttempt(key: string): Promise<void> {
   await db
     .insert(authRateLimits)
-    .values({ key, attempts: 1 })
+    .values({ key, attempts: 1, updated_at: new Date() })
     .onConflictDoUpdate({
       target: authRateLimits.key,
       set: {
-        attempts: sql`${authRateLimits.attempts} + 1`,
+        attempts: sql`CASE
+          WHEN (${authRateLimits.attempts} + 1) >= ${RATE_LIMIT_MAX_ATTEMPTS} THEN 0
+          ELSE ${authRateLimits.attempts} + 1
+        END`,
+        blocked_until: sql`CASE
+          WHEN (${authRateLimits.attempts} + 1) >= ${RATE_LIMIT_MAX_ATTEMPTS}
+          THEN NOW() + (${sql.raw(String(RATE_LIMIT_BLOCK_MINUTES))} * INTERVAL '1 minute')
+          ELSE ${authRateLimits.blocked_until}
+        END`,
         updated_at: new Date(),
       },
     });
-
-  const row = await db.query.authRateLimits.findFirst({
-    where: eq(authRateLimits.key, key),
-  });
-
-  if (row && row.attempts >= RATE_LIMIT_MAX_ATTEMPTS) {
-    const blockedUntil = new Date(
-      Date.now() + RATE_LIMIT_BLOCK_MINUTES * 60 * 1000
-    );
-    await db
-      .update(authRateLimits)
-      .set({ attempts: 0, blocked_until: blockedUntil, updated_at: new Date() })
-      .where(eq(authRateLimits.key, key));
-  }
 }
 
 export async function resetOnSuccess(key: string): Promise<void> {

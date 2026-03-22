@@ -11,7 +11,7 @@ jest.mock('@/jobs/sync-pending-uploads', () => ({
 }));
 
 const CRON_SECRET = 'test-cron-secret';
-const mockHeadersGet = jest.fn((key: string) => {
+const mockHeadersGet = jest.fn((key: string): string | null => {
   if (key === 'x-cron-secret') return CRON_SECRET;
   if (key === 'authorization') return null;
   return null;

@@ -69,11 +69,18 @@ export async function updateConfig(
     max_concurrent_posts: number;
     margin_before_minutes: number;
     margin_after_minutes: number;
+    /** API may send a number; persisted as Drizzle `decimal` (string) in DB. */
     reservation_surcharge: number | null;
   }>,
   postsPayload?: Array<{ position: number; is_active: boolean }>
 ): Promise<ConfigWithPosts> {
-  const config = await upsertConfig(stationId, configPayload);
+  const { reservation_surcharge, ...restConfig } = configPayload;
+  const dbConfig: Parameters<typeof upsertConfig>[1] = { ...restConfig };
+  if (reservation_surcharge !== undefined) {
+    dbConfig.reservation_surcharge =
+      reservation_surcharge === null ? null : String(reservation_surcharge);
+  }
+  const config = await upsertConfig(stationId, dbConfig);
   if (postsPayload !== undefined) {
     await upsertPosts(stationId, postsPayload);
   }

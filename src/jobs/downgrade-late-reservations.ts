@@ -16,6 +16,26 @@ export type DowngradeLateReservationsResult = {
 /**
  * Finds all late unconfirmed reservations, moves each to queue, and returns counts.
  */
+const DOWNGRADE_CONCURRENCY = 8;
+
+/**
+ * Runs async work in fixed-size batches with Promise.allSettled (bounded concurrency).
+ */
+async function runWithConcurrencyLimit<T>(
+  items: T[],
+  concurrency: number,
+  fn: (item: T) => Promise<void>
+): Promise<PromiseSettledResult<void>[]> {
+  const results: PromiseSettledResult<void>[] = [];
+  const limit = Math.max(1, Math.min(concurrency, 10));
+  for (let i = 0; i < items.length; i += limit) {
+    const chunk = items.slice(i, i + limit);
+    const settled = await Promise.allSettled(chunk.map((item) => fn(item)));
+    results.push(...settled);
+  }
+  return results;
+}
+
 export async function runDowngradeLateReservations(): Promise<DowngradeLateReservationsResult> {
   const entries = await listLateUnconfirmedReservations();
   const result: DowngradeLateReservationsResult = {
@@ -24,17 +44,22 @@ export async function runDowngradeLateReservations(): Promise<DowngradeLateReser
     failed: 0,
     errors: [],
   };
-  for (const entry of entries) {
-    try {
-      await moveReservationToQueue(entry.id);
+  const settled = await runWithConcurrencyLimit(entries, DOWNGRADE_CONCURRENCY, async (entry) => {
+    await moveReservationToQueue(entry.id);
+  });
+  settled.forEach((outcome, index) => {
+    const entry = entries[index];
+    if (!entry) return;
+    if (outcome.status === 'fulfilled') {
       result.succeeded += 1;
-    } catch (e) {
+    } else {
       result.failed += 1;
+      const reason = outcome.reason;
       result.errors.push({
         entryId: entry.id,
-        error: e instanceof Error ? e.message : String(e),
+        error: reason instanceof Error ? reason.message : String(reason),
       });
     }
-  }
+  });
   return result;
 }

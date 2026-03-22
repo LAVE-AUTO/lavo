@@ -30,8 +30,9 @@ export type ProcessPaymentResult = {
  * returns a 501 instead of silently accepting unpaid entries.
  */
 export async function processPayment(
-  _params: ProcessPaymentParams
+  params: ProcessPaymentParams
 ): Promise<ProcessPaymentResult> {
+  void params;
   throw new NotImplementedError('Queue payment is not yet implemented');
 }
 
@@ -76,7 +77,7 @@ export async function createPaymentIntent(
   if (!Number.isInteger(commissionCents) || commissionCents < 0 || commissionCents > amountCents) {
     throw new ValidationError('Invalid commission amount');
   }
-  const destination = (stationStripeAccountId ?? '').trim();
+  const destination = stationStripeAccountId.trim();
   if (!destination.startsWith('acct_')) {
     throw new ValidationError('Invalid connected account');
   }

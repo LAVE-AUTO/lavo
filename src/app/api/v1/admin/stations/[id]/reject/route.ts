@@ -32,7 +32,7 @@ export async function POST(
   request: Request,
   { params }: { params: Promise<{ id: string }> }
 ) {
-  const auth = await requireRole('admin');
+  const auth = await requireRole(request, 'admin');
   if (auth instanceof Response) return auth as NextResponse;
 
   const { id } = await params;

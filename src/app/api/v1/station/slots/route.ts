@@ -15,7 +15,7 @@ import { AppError, NotFoundError, ConflictError } from '@/lib/errors';
 import type { NextResponse } from 'next/server';
 
 export async function DELETE(request: Request): Promise<NextResponse> {
-  const auth = await requireRole('station');
+  const auth = await requireRole(request, 'station');
   if (auth instanceof Response) return auth as NextResponse;
 
   let body: unknown;
@@ -51,7 +51,7 @@ export async function DELETE(request: Request): Promise<NextResponse> {
 }
 
 export async function POST(request: Request): Promise<NextResponse> {
-  const auth = await requireRole('station');
+  const auth = await requireRole(request, 'station');
   if (auth instanceof Response) return auth as NextResponse;
 
   let body: unknown;

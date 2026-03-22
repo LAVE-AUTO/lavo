@@ -15,14 +15,17 @@ import type { NextResponse } from 'next/server';
  * For any role: if force_password_change is true, returns 403 PASSWORD_CHANGE_REQUIRED.
  *
  * Usage:
- *   const result = await requireRole('admin');
+ *   const result = await requireRole(request, 'admin');
  *   if (result instanceof NextResponse) return result;
  *   const { sub, role } = result;
+ *
+ * For GET handlers without a Request in scope, pass `undefined` as the first argument.
  */
 export async function requireRole(
+  request: Request | undefined,
   ...allowedRoles: string[]
 ): Promise<JwtPayload | NextResponse> {
-  const auth = await requireAuth();
+  const auth = await requireAuth(request);
   if (auth instanceof Response) return auth as NextResponse;
 
   // Block access until password is changed
@@ -59,8 +62,10 @@ export async function requireRole(
  * Convenience: require authentication only, but still enforce force_password_change.
  * Equivalent to requireRole with any role accepted, but still checks password change flag.
  */
-export async function requireAuthWithPasswordCheck(): Promise<JwtPayload | NextResponse> {
-  const auth = await requireAuth();
+export async function requireAuthWithPasswordCheck(
+  request?: Request
+): Promise<JwtPayload | NextResponse> {
+  const auth = await requireAuth(request);
   if (auth instanceof Response) return auth as NextResponse;
 
   if (auth.force_password_change) {

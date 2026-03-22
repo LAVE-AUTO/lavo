@@ -37,7 +37,7 @@ import { buildRefreshCookieOptions } from '@/lib/jwt';
  */
 export async function POST(request: Request) {
   const headersList = await headers();
-  const ip = getClientRateLimitKey(headersList as unknown as Headers);
+  const ip = getClientRateLimitKey(headersList as Headers);
 
   const { blocked, retryAfter } = await checkRateLimit(ip);
   if (blocked) return error429();
@@ -52,7 +52,6 @@ export async function POST(request: Request) {
 
   const parsed = registerSchema.safeParse(body);
   if (!parsed.success) {
-    await recordFailedAttempt(ip);
     return error400(
       'Validation failed',
       ApiCode.VALIDATION_FAILED,

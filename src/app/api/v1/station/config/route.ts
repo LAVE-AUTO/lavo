@@ -38,7 +38,7 @@ function serializePost(post: { id: string; station_id: string; position: number;
 }
 
 export async function GET(): Promise<NextResponse> {
-  const auth = await requireRole('station');
+  const auth = await requireRole(undefined, 'station');
   if (auth instanceof Response) return auth as NextResponse;
 
   try {
@@ -57,7 +57,7 @@ export async function GET(): Promise<NextResponse> {
 }
 
 export async function PATCH(request: Request): Promise<NextResponse> {
-  const auth = await requireRole('station');
+  const auth = await requireRole(request, 'station');
   if (auth instanceof Response) return auth as NextResponse;
 
   let body: unknown;
@@ -76,7 +76,7 @@ export async function PATCH(request: Request): Promise<NextResponse> {
   if (!station) return error404('No station associated with this account');
 
   const { posts, ...configFields } = parsed.data;
-  const configPayload: Parameters<typeof updateConfig>[2] = {};
+  const configPayload: Parameters<typeof updateConfig>[1] = {};
   if (configFields.opening_time !== undefined) configPayload.opening_time = configFields.opening_time;
   if (configFields.closing_time !== undefined) configPayload.closing_time = configFields.closing_time;
   if (configFields.break_start !== undefined) configPayload.break_start = configFields.break_start;

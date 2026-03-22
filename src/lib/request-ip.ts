@@ -1,4 +1,3 @@
-import type { Headers } from 'next/dist/server/web/spec-extension/adapters/headers';
 import { normalizeRateLimitKey } from './rate-limiter';
 
 function isValidIp(ip: string): boolean {
@@ -12,6 +11,7 @@ function isValidIp(ip: string): boolean {
   return ipv4.test(trimmed) || ipv6.test(trimmed);
 }
 
+/** Uses the standard web `Headers` type; Next.js `headers()` is compatible at runtime. */
 export function getClientRateLimitKey(headersList: Headers): string {
   // Prefer x-real-ip if set by a trusted reverse proxy.
   const xRealIp = headersList.get('x-real-ip');

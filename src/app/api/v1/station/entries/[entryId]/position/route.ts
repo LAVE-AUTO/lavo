@@ -15,7 +15,7 @@ import type { NextResponse } from 'next/server';
 type Params = { params: Promise<{ entryId: string }> };
 
 export async function PATCH(request: Request, { params }: Params): Promise<NextResponse> {
-  const auth = await requireRole('station');
+  const auth = await requireRole(request, 'station');
   if (auth instanceof Response) return auth as NextResponse;
 
   const station = await findStationByUserId(auth.sub);

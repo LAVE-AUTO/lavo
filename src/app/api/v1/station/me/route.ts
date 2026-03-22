@@ -17,7 +17,7 @@ import type { NextResponse } from 'next/server';
  *   500 INTERNAL_ERROR
  */
 export async function GET() {
-  const auth = await requireRole('station');
+  const auth = await requireRole(undefined, 'station');
   if (auth instanceof Response) return auth as NextResponse;
 
   try {

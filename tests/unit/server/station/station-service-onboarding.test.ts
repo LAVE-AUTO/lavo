@@ -115,7 +115,7 @@ const mockSendAdminNotification = sendStationApplicationAdminNotification as jes
 describe('completeStationOnboarding', () => {
   beforeEach(() => {
     jest.clearAllMocks();
-    mockFindByEmail.mockResolvedValue(null);
+    mockFindByEmail.mockResolvedValue(undefined);
     pendingUploadsCalls.length = 0;
     lastStationInsertValues = {};
   });
