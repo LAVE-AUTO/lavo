@@ -1684,6 +1684,10 @@
     "label_forfait": "Forfait",
     "label_station": "Station",
     "new_slot_label": "Nouveau créneau",
-    "available_slots_count": "{count} créneau(x) disponible(s)"
+    "available_slots_count": "{count} créneau(x) disponible(s)",
+    "confirm_modal_title": "Confirmer le report ?",
+    "confirm_modal_desc": "Votre réservation sera déplacée vers le créneau suivant :",
+    "confirm_modal_keep": "Annuler",
+    "confirm_modal_confirm": "Confirmer"
   }
 }

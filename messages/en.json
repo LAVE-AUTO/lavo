@@ -1684,6 +1684,10 @@
     "label_forfait": "Package",
     "label_station": "Station",
     "new_slot_label": "New slot",
-    "available_slots_count": "{count} slot(s) available"
+    "available_slots_count": "{count} slot(s) available",
+    "confirm_modal_title": "Confirm reschedule?",
+    "confirm_modal_desc": "Your reservation will be moved to the following slot:",
+    "confirm_modal_keep": "Cancel",
+    "confirm_modal_confirm": "Confirm"
   }
 }

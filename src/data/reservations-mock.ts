@@ -1,3 +1,6 @@
+// TODO: set to false and remove once booking flow is connected to Stripe
+export const RESERVATIONS_MOCK_ENABLED = true;
+
 export type ReservationStatus = 'confirmed' | 'in_progress' | 'completed' | 'cancelled';
 export type QueueStatus = 'waiting' | 'in_progress';
 
@@ -216,6 +219,14 @@ export const MOCK_RESERVATIONS: MockReservation[] = [
         createdAt: '2025-10-21T16:00:00Z',
     },
 ];
+
+export function findMockReservation(id: string): MockReservation | undefined {
+  return MOCK_RESERVATIONS.find((r) => r.id === id);
+}
+
+export function findMockQueueEntry(id: string): MockQueueEntry | undefined {
+  return MOCK_QUEUE_ENTRIES.find((q) => q.id === id);
+}
 
 export const MOCK_QUEUE_ENTRIES: MockQueueEntry[] = [
     {

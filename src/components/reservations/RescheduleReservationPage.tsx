@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useRef, useCallback } from 'react';
+import { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 import { useTranslations, useLocale } from 'next-intl';
 import { Link } from '@/i18n/navigation';
 import { useParams } from 'next/navigation';
@@ -82,6 +82,8 @@ export default function RescheduleReservationPage() {
   const [stationName, setStationName]         = useState('');
   const [amount, setAmount]                   = useState(0);
   const [hasFee, setHasFee]                   = useState(false);
+  const [showConfirmModal, setShowConfirmModal] = useState(false);
+  const confirmDialogRef = useRef<HTMLDivElement | null>(null);
 
   const loadData = useCallback(async () => {
     setLoading(true);
@@ -106,12 +108,21 @@ export default function RescheduleReservationPage() {
       setStationName(mock.stationName);
       setAmount(mock.totalPrice);
 
-      /* Créneaux fictifs disponibles pour tester la sélection */
-      const baseMs = slotDate.getTime();
-      const mockSlots: AvailableSlot[] = [1, 2, 3, 4].map((offset) => {
-        const t = new Date(baseMs + offset * 30 * 60 * 1000);
-        return { id: `mock-slot-${offset}`, startTime: t.toISOString(), isFull: false };
-      });
+      /* Créneaux fictifs disponibles sur les 5 prochains jours */
+      const hours = [8, 9, 10, 11, 14, 15, 16, 17];
+      const fullSlots = new Set([1, 4, 6]); /* indices marqués complets pour réalisme */
+      const mockSlots: AvailableSlot[] = [];
+      let idx = 0;
+      for (let day = 1; day <= 5; day++) {
+        const base = new Date(now);
+        base.setDate(base.getDate() + day);
+        for (const hour of hours) {
+          const s = new Date(base);
+          s.setHours(hour, 0, 0, 0);
+          mockSlots.push({ id: `mock-slot-${idx}`, startTime: s.toISOString(), isFull: fullSlots.has(idx) });
+          idx++;
+        }
+      }
       setAvailableSlots(mockSlots);
       setLoading(false);
       return;
@@ -171,8 +182,48 @@ export default function RescheduleReservationPage() {
 
   useEffect(() => { loadData(); }, [loadData]);
 
-  const handleConfirm = async () => {
+  /* Libellé du créneau sélectionné pour la modale de confirmation */
+  const selectedSlotLabel = useMemo(() => {
+    const slot = availableSlots.find((s) => s.id === selectedSlotId);
+    if (!slot) return '';
+    const d = new Date(slot.startTime);
+    const datePart = d.toLocaleDateString(locale === 'en' ? 'en-CA' : 'fr-CA', {
+      weekday: 'long', day: 'numeric', month: 'long',
+    });
+    const h = String(d.getHours()).padStart(2, '0');
+    const m = String(d.getMinutes()).padStart(2, '0');
+    return `${datePart} — ${h}:${m}`;
+  }, [selectedSlotId, availableSlots, locale]);
+
+  /* Focus trap pour la modale de confirmation */
+  useEffect(() => {
+    if (!showConfirmModal) return;
+    const previouslyFocused = document.activeElement as HTMLElement | null;
+    const dialogEl = confirmDialogRef.current;
+    if (dialogEl) {
+      const focusable = dialogEl.querySelector<HTMLElement>(
+        'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])',
+      );
+      focusable?.focus();
+    }
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') { e.preventDefault(); setShowConfirmModal(false); }
+    };
+    document.addEventListener('keydown', handleKeyDown);
+    return () => {
+      document.removeEventListener('keydown', handleKeyDown);
+      previouslyFocused?.focus();
+    };
+  }, [showConfirmModal]);
+
+  const handleConfirm = () => {
     if (!selectedSlotId || submitting) return;
+    setShowConfirmModal(true);
+  };
+
+  const handleSubmitReschedule = async () => {
+    if (!selectedSlotId || submitting) return;
+    setShowConfirmModal(false);
     setSubmitting(true);
 
     // TODO: connect to API once endpoint is available
@@ -277,6 +328,75 @@ export default function RescheduleReservationPage() {
           />
         )}
       </div>
+
+      {/* Modale de confirmation */}
+      {showConfirmModal && (
+        <>
+          <div
+            className="fixed inset-0 z-[60] bg-black/50 backdrop-blur-sm"
+            onClick={() => setShowConfirmModal(false)}
+          />
+          <div className="fixed inset-0 z-[60] flex items-center justify-center p-4">
+            <div
+              ref={confirmDialogRef}
+              role="dialog"
+              aria-modal="true"
+              aria-labelledby="confirm-reschedule-title"
+              className="bg-[#F5F5E6] dark:bg-[#1A1A18] rounded-2xl shadow-2xl w-full max-w-sm p-6 space-y-4"
+            >
+              <div className="w-14 h-14 rounded-full bg-gold/15 flex items-center justify-center mx-auto">
+                <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#af8408" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <rect x="3" y="4" width="18" height="18" rx="2" /><line x1="16" y1="2" x2="16" y2="6" /><line x1="8" y1="2" x2="8" y2="6" /><line x1="3" y1="10" x2="21" y2="10" />
+                </svg>
+              </div>
+
+              <h3
+                id="confirm-reschedule-title"
+                className="text-[18px] font-black text-[#0A0A14] dark:text-white text-center"
+              >
+                {t('confirm_modal_title')}
+              </h3>
+              <p className="text-[14px] text-[#555] dark:text-[#B0B0A0] text-center leading-relaxed">
+                {t('confirm_modal_desc')}
+              </p>
+              <div className="bg-gold/10 border border-gold/30 rounded-xl px-4 py-3 text-center">
+                <p className="text-[14px] font-black text-gold leading-snug">{selectedSlotLabel}</p>
+              </div>
+
+              {hasFee && (
+                <div className="flex justify-between text-[14px] px-1">
+                  <span className="text-[#999] dark:text-[#888]">{t('fee_label')}</span>
+                  <span className="font-bold text-[#FF8800]">+{RESCHEDULE_FEE.toFixed(2)}$</span>
+                </div>
+              )}
+
+              <div className="flex gap-3 pt-1">
+                <button
+                  type="button"
+                  onClick={() => setShowConfirmModal(false)}
+                  disabled={submitting}
+                  className="flex-1 py-3 border-2 border-[#D0D0C0] dark:border-tab-inactive rounded-xl text-[14px] font-bold text-[#555] dark:text-[#B0B0A0] hover:bg-[#E0E0D0] dark:hover:bg-dark-surface transition-colors cursor-pointer disabled:opacity-50"
+                >
+                  {t('confirm_modal_keep')}
+                </button>
+                <button
+                  type="button"
+                  onClick={handleSubmitReschedule}
+                  disabled={submitting}
+                  className="flex-1 py-3 bg-gold hover:bg-gold-hover rounded-xl text-[14px] font-black text-dark-bg transition-colors cursor-pointer disabled:opacity-50 flex items-center justify-center gap-2"
+                >
+                  {submitting && (
+                    <svg className="animate-spin" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" aria-hidden="true">
+                      <path d="M21 12a9 9 0 11-6.219-8.56" />
+                    </svg>
+                  )}
+                  {t('confirm_modal_confirm')}
+                </button>
+              </div>
+            </div>
+          </div>
+        </>
+      )}
     </main>
   );
 }
