@@ -850,7 +850,8 @@
     "status_pending": "Pending",
     "status_pending_payment": "Awaiting payment",
     "error_load": "Unable to load your reservations.",
-    "btn_retry": "Retry"
+    "btn_retry": "Retry",
+    "reschedule_btn": "Reschedule"
   },
   "queue_detail": {
     "title": "My queue",

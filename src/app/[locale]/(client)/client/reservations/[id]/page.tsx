@@ -305,6 +305,13 @@ export default function ReservationDetailPage() {
               <p className="text-[12px] text-lavo-success text-center font-semibold">{t('start_ready')}</p>
             )}
 
+            <Link
+              href={`/client/reservations/${id}/reschedule`}
+              className="block w-full py-3.5 rounded-xl text-[15px] font-bold text-center text-[#0A0A14] dark:text-white border-2 border-[#D0D0C0] dark:border-tab-inactive hover:border-gold/50 hover:bg-[#E8E8D8] dark:hover:bg-dark-card transition-colors"
+            >
+              {t('reschedule_btn')}
+            </Link>
+
             <button
               type="button"
               onClick={() => setShowCancelModal(true)}
