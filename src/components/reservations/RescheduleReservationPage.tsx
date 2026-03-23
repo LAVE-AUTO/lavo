@@ -6,6 +6,7 @@ import { Link } from '@/i18n/navigation';
 import { useParams } from 'next/navigation';
 import { useToast } from '@/context/toast-context';
 import { getFromApi } from '@/services/axios-service';
+import { RESERVATIONS_MOCK_ENABLED, findMockReservation } from '@/data/reservations-mock';
 import SlotPicker, { type AvailableSlot } from '@/components/reservations/SlotPicker';
 import RescheduleSuccessView from '@/components/reservations/RescheduleSuccessView';
 
@@ -85,6 +86,36 @@ export default function RescheduleReservationPage() {
   const loadData = useCallback(async () => {
     setLoading(true);
     setLoadError(false);
+
+    // TODO: remove mock block once booking flow is connected to Stripe
+    if (RESERVATIONS_MOCK_ENABLED) {
+      const mock = findMockReservation(id);
+      if (!mock) { setLoadError(true); setLoading(false); return; }
+
+      const now = Date.now();
+      const slotDate = new Date(`${mock.date}T${mock.timeSlot}`);
+      const label = slotDate.toLocaleDateString(locale === 'en' ? 'en-CA' : 'fr-CA', {
+        weekday: 'short', day: 'numeric', month: 'short',
+      }) + ' ' + mock.timeSlot;
+      setCurrentLabel(label);
+
+      const minutesUntil = (slotDate.getTime() - now) / 60000;
+      setHasFee(minutesUntil > 0 && minutesUntil < LATE_RESCHEDULE_THRESHOLD_MINUTES);
+
+      setForfaitLabel(mock.forfaitName);
+      setStationName(mock.stationName);
+      setAmount(mock.totalPrice);
+
+      /* Créneaux fictifs disponibles pour tester la sélection */
+      const baseMs = slotDate.getTime();
+      const mockSlots: AvailableSlot[] = [1, 2, 3, 4].map((offset) => {
+        const t = new Date(baseMs + offset * 30 * 60 * 1000);
+        return { id: `mock-slot-${offset}`, startTime: t.toISOString(), isFull: false };
+      });
+      setAvailableSlots(mockSlots);
+      setLoading(false);
+      return;
+    }
 
     const [entriesOk, entriesData] = await getFromApi('/me/entries?per_page=100');
     if (!mountedRef.current) return;
