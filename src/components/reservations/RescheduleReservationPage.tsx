@@ -7,7 +7,7 @@ import { useParams } from 'next/navigation';
 import { useToast } from '@/context/toast-context';
 import { getFromApi } from '@/services/axios-service';
 import { RESERVATIONS_MOCK_ENABLED, findMockReservation } from '@/data/reservations-mock';
-import SlotPicker, { type AvailableSlot } from '@/components/reservations/SlotPicker';
+import type { AvailableSlot } from '@/components/reservations/SlotPicker';
 import RescheduleSuccessView from '@/components/reservations/RescheduleSuccessView';
 
 /* ------------------------------------------------------------------ */
@@ -42,6 +42,17 @@ interface ApiStation {
 }
 
 /* ------------------------------------------------------------------ */
+/* Helpers                                                              */
+/* ------------------------------------------------------------------ */
+
+function toLocalDateKey(d: Date): string {
+  const y = d.getFullYear();
+  const m = String(d.getMonth() + 1).padStart(2, '0');
+  const day = String(d.getDate()).padStart(2, '0');
+  return `${y}-${m}-${day}`;
+}
+
+/* ------------------------------------------------------------------ */
 /* Constantes                                                           */
 /* ------------------------------------------------------------------ */
 
@@ -63,7 +74,7 @@ export default function RescheduleReservationPage() {
   const locale = useLocale();
   const params = useParams();
   const id     = params.id as string;
-  const { error: showError } = useToast();
+  useToast();
 
   const mountedRef = useRef(true);
   useEffect(() => {
@@ -75,6 +86,7 @@ export default function RescheduleReservationPage() {
   const [loadError, setLoadError]             = useState(false);
   const [submitting, setSubmitting]           = useState(false);
   const [done, setDone]                       = useState(false);
+  const [selectedDate, setSelectedDate]       = useState<string | null>(null);
   const [selectedSlotId, setSelectedSlotId]   = useState<string | null>(null);
   const [availableSlots, setAvailableSlots]   = useState<AvailableSlot[]>([]);
   const [currentLabel, setCurrentLabel]       = useState('');
@@ -182,6 +194,40 @@ export default function RescheduleReservationPage() {
 
   useEffect(() => { loadData(); }, [loadData]);
 
+  /* Dates disponibles — une entrée par jour ayant au moins un créneau */
+  const availableDates = useMemo(() => {
+    const seen = new Set<string>();
+    const result: { key: string; dayShort: string; dateNum: number }[] = [];
+    const fmtLocale = locale === 'en' ? 'en-CA' : 'fr-FR';
+    for (const slot of availableSlots) {
+      const d = new Date(slot.startTime);
+      const key = toLocalDateKey(d);
+      if (!seen.has(key)) {
+        seen.add(key);
+        result.push({
+          key,
+          dayShort: d.toLocaleDateString(fmtLocale, { weekday: 'short' }).slice(0, 3),
+          dateNum: d.getDate(),
+        });
+      }
+    }
+    return result;
+  }, [availableSlots, locale]);
+
+  /* Créneaux pour la date sélectionnée, enrichis d'un champ time HH:MM */
+  const slotsForDate = useMemo(() => {
+    if (!selectedDate) return [];
+    return availableSlots
+      .filter((s) => toLocalDateKey(new Date(s.startTime)) === selectedDate)
+      .map((s) => {
+        const d = new Date(s.startTime);
+        return {
+          ...s,
+          time: String(d.getHours()).padStart(2, '0') + ':' + String(d.getMinutes()).padStart(2, '0'),
+        };
+      });
+  }, [availableSlots, selectedDate]);
+
   /* Libellé du créneau sélectionné pour la modale de confirmation */
   const selectedSlotLabel = useMemo(() => {
     const slot = availableSlots.find((s) => s.id === selectedSlotId);
@@ -215,6 +261,11 @@ export default function RescheduleReservationPage() {
       previouslyFocused?.focus();
     };
   }, [showConfirmModal]);
+
+  const handleSelectDate = (key: string) => {
+    setSelectedDate(key);
+    setSelectedSlotId(null);
+  };
 
   const handleConfirm = () => {
     if (!selectedSlotId || submitting) return;
@@ -299,19 +350,64 @@ export default function RescheduleReservationPage() {
         {hasFee && <FeeWarningBanner fee={RESCHEDULE_FEE} t={t} />}
 
         {/* Sélecteur de créneau */}
-        <section className="bg-[#E8E8D8] dark:bg-dark-card rounded-xl border border-[#D0D0C0] dark:border-tab-inactive p-5">
-          <h2 className="text-[16px] font-black text-[#0A0A14] dark:text-white mb-4">
+        <section className="bg-[#E8E8D8] dark:bg-dark-card rounded-xl border border-[#D0D0C0] dark:border-tab-inactive p-5 space-y-4">
+          <h2 className="text-[16px] font-black text-[#0A0A14] dark:text-white">
             {t('select_slot')}
           </h2>
-          {availableSlots.length === 0 ? (
+
+          {availableDates.length === 0 ? (
             <p className="text-[14px] text-[#666] dark:text-[#B0B0A0]">{t('no_slots')}</p>
           ) : (
-            <SlotPicker
-              slots={availableSlots}
-              selectedSlotId={selectedSlotId}
-              onSelect={setSelectedSlotId}
-              locale={locale}
-            />
+            <>
+              {/* Sélecteur de date — défilement horizontal */}
+              <div className="flex gap-2 overflow-x-auto pb-1 scrollbar-hide">
+                {availableDates.map((d) => (
+                  <button
+                    key={d.key}
+                    type="button"
+                    onClick={() => handleSelectDate(d.key)}
+                    className={[
+                      'flex flex-col items-center min-w-[58px] py-2 px-3 rounded-xl border-2 transition-colors cursor-pointer shrink-0',
+                      selectedDate === d.key
+                        ? 'bg-gold border-gold text-dark-bg'
+                        : 'border-[#D0D0C0] dark:border-tab-inactive text-[#0A0A14] dark:text-[#FFF8EC] hover:border-gold/40',
+                    ].join(' ')}
+                  >
+                    <span className={`text-[11px] font-bold uppercase ${selectedDate === d.key ? 'text-dark-bg' : 'text-[#888]'}`}>
+                      {d.dayShort}
+                    </span>
+                    <span className="text-[18px] font-black leading-snug">{d.dateNum}</span>
+                  </button>
+                ))}
+              </div>
+
+              {/* Grille des créneaux horaires pour la date sélectionnée */}
+              {selectedDate && (
+                <div className="grid grid-cols-3 gap-2 sm:grid-cols-4">
+                  {slotsForDate.map((slot) => {
+                    const isSelected = slot.id === selectedSlotId;
+                    return (
+                      <button
+                        key={slot.id}
+                        type="button"
+                        disabled={slot.isFull}
+                        onClick={() => setSelectedSlotId(slot.id)}
+                        className={[
+                          'py-2.5 rounded-[10px] text-[14px] font-bold border transition-all font-[family-name:var(--font-roboto-mono)]',
+                          slot.isFull
+                            ? 'border-[#D0D0C0] dark:border-tab-inactive text-[#CCC] dark:text-[#555] cursor-not-allowed opacity-50'
+                            : isSelected
+                              ? 'border-gold bg-gold text-dark-bg shadow-sm cursor-pointer'
+                              : 'border-[#D0D0C0] dark:border-tab-inactive text-[#0A0A14] dark:text-white hover:border-gold/60 cursor-pointer',
+                        ].join(' ')}
+                      >
+                        {slot.time}
+                      </button>
+                    );
+                  })}
+                </div>
+              )}
+            </>
           )}
         </section>
 
