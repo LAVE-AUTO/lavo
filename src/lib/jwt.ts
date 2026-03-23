@@ -17,6 +17,24 @@ export interface JwtPayload {
 
 const MIN_JWT_SECRET_BYTES = 32; // 256-bit minimum for HS256
 
+/** Optional `iss` / `aud` from env; when unset, new tokens omit the claim and verification stays backward-compatible. */
+function getOptionalJwtIssuer(): string | undefined {
+  const v = process.env.JWT_ISSUER?.trim();
+  return v || undefined;
+}
+
+function getOptionalJwtAudience(): string | undefined {
+  const explicit = process.env.JWT_AUDIENCE?.trim();
+  if (explicit) return explicit;
+  const app = process.env.NEXT_PUBLIC_APP_URL?.trim();
+  if (!app) return undefined;
+  try {
+    return new URL(app).origin;
+  } catch {
+    return undefined;
+  }
+}
+
 function getSecret(): Uint8Array {
   const secret = process.env.JWT_SECRET;
   if (!secret) throw new Error('JWT_SECRET is not set');
@@ -30,16 +48,35 @@ function getSecret(): Uint8Array {
 }
 
 export async function signJwt(payload: JwtPayload): Promise<string> {
-  return new SignJWT({ ...payload })
+  let tokenBuilder = new SignJWT({ ...payload })
     .setProtectedHeader({ alg: 'HS256' })
     .setIssuedAt()
-    .setExpirationTime(ACCESS_TOKEN_EXPIRY)
-    .sign(getSecret());
+    .setExpirationTime(ACCESS_TOKEN_EXPIRY);
+  const iss = getOptionalJwtIssuer();
+  if (iss) tokenBuilder = tokenBuilder.setIssuer(iss);
+  const aud = getOptionalJwtAudience();
+  if (aud) tokenBuilder = tokenBuilder.setAudience(aud);
+  return tokenBuilder.sign(getSecret());
 }
 
+/**
+ * Verifies the access JWT. Tokens without `iss`/`aud` still validate (legacy) when env omits issuer/audience.
+ * When `JWT_ISSUER` is set and the token includes `iss`, it must match.
+ * When `JWT_AUDIENCE` (or derived audience from `NEXT_PUBLIC_APP_URL`) is set, the token must include `aud`
+ * and it must match the expected audience.
+ */
 export async function verifyJwt(token: string): Promise<JwtPayload | null> {
   try {
     const { payload } = await jwtVerify(token, getSecret());
+    const expectedIss = getOptionalJwtIssuer();
+    if (expectedIss && payload.iss !== undefined && payload.iss !== expectedIss) {
+      return null;
+    }
+    const expectedAud = getOptionalJwtAudience();
+    if (expectedAud) {
+      const audList = Array.isArray(payload.aud) ? payload.aud : payload.aud ? [payload.aud] : [];
+      if (!audList.includes(expectedAud)) return null;
+    }
     return payload as unknown as JwtPayload;
   } catch {
     return null;
@@ -48,7 +85,11 @@ export async function verifyJwt(token: string): Promise<JwtPayload | null> {
 
 /**
  * Returns the options for the httpOnly refresh token cookie.
- * path is scoped to /api/v1/auth so the cookie is only sent to refresh/logout endpoints.
+ *
+ * `path: '/api/v1/auth'` is a prefix: the cookie is sent to every route under that segment
+ * (register, login, refresh, logout, etc.), not only refresh/logout. Narrowing to
+ * `/api/v1/auth/refresh` would reduce exposure but can break clients if logout or rotation
+ * expectations change; keep the shared auth prefix unless all call sites are audited.
  */
 export function buildRefreshCookieOptions(rememberMe = false): Partial<ResponseCookie> {
   return {

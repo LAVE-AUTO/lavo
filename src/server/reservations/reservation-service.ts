@@ -18,11 +18,14 @@ import {
 import { createPaymentIntent, cancelPaymentIntent, capturePaymentIntent } from '@/server/payments/payment-service';
 import { cancelReservation } from '@/server/reservations/cancellation-service';
 import { notifyEntry } from '@/server/notifications/notification-service';
+import { sendEscrowReleasedNotificationsForEntry } from '@/server/notifications/escrow-released-notifications';
 import {
   createReservationEntry,
   findEntryByIdAndUser,
   findEntryByIdAndStation,
   hasActiveEntryAtStation,
+  clearStripePaymentSucceededNotifiedAt,
+  setStripePaymentSucceededNotifiedAtIfMissing,
   updateEntry,
   shiftQueuePositions,
   type Entry,
@@ -226,10 +229,10 @@ export async function cancelEntry(
     try {
       await cancelPaymentIntent(entry.stripe_payment_id);
     } catch (e) {
+      const error = e instanceof Error ? e.message : String(e);
       console.error('[CANCEL_PAYMENT_INTENT_FAILED]', {
         entryId,
-        stripe_payment_id: entry.stripe_payment_id,
-        error: e instanceof Error ? e.message : String(e),
+        error,
       });
     }
   }
@@ -413,6 +416,7 @@ export async function upgradeQueueToReservation(
   return { entry: { ...updated, stripe_payment_id: paymentIntentId }, clientSecret };
 }
 
+
 const VALID_STATION_TRANSITIONS: Record<string, readonly string[]> = {
   confirmed: ['in_progress', 'cancelled'],
   in_progress: ['completed', 'cancelled'],
@@ -427,7 +431,9 @@ const VALID_STATION_TRANSITIONS: Record<string, readonly string[]> = {
  *
  * On status completed:
  *   - Captures the Stripe PaymentIntent (reservation entries only) to distribute funds.
- *   - Triggers invitation_to_rate notification.
+ *   - Invitation_to_rate push is triggered later by Stripe webhook (payment_intent.succeeded)
+ *     to align notifications with escrow release and ensure idempotence.
+ *   - No per-transaction escrow email is sent here; admin email reporting is weekly (cron).
  * If the Stripe capture fails, the entry is still marked completed and the error is logged
  * for manual resolution (the service was rendered).
  */
@@ -458,19 +464,42 @@ export async function setEntryStatusByStation(
       try {
         await capturePaymentIntent(entry.stripe_payment_id);
       } catch (e) {
+        const error = e instanceof Error ? e.message : String(e);
         console.error('[CAPTURE_FAILED] Service completed but Stripe capture failed — manual resolution required', {
           entryId,
-          stripe_payment_id: entry.stripe_payment_id,
-          error: e instanceof Error ? e.message : String(e),
+          error,
         });
       }
     }
-    await notifyEntry({
-      entryId,
-      userId: entry.user_id,
-      stationId,
-      type: 'invitation_to_rate',
-    });
+
+    // %%%%% ESCROW FALLBACK — webhook before "completed" %%%%%
+    // Late capture: `updated` reflects RETURNING row (not stale `entry`) for succeeded_at / notify flag.
+    if (updated.entry_type === 'reservation' && updated.stripe_payment_succeeded_at) {
+      try {
+        const claimed = await setStripePaymentSucceededNotifiedAtIfMissing(
+          updated.id,
+          updated.stripe_payment_succeeded_at
+        );
+
+        if (claimed) {
+          try {
+            await sendEscrowReleasedNotificationsForEntry(
+              updated,
+              updated.stripe_payment_succeeded_at
+            );
+          } catch (err) {
+            await clearStripePaymentSucceededNotifiedAt(updated.id);
+            const msg = err instanceof Error ? err.message : String(err);
+            console.error('[ESCROW_FALLBACK] Escrow released notifications failed', { error: msg });
+          }
+        }
+      } catch (err) {
+        const msg = err instanceof Error ? err.message : String(err);
+        console.error('[ESCROW_FALLBACK] Failed to send completed escrow notifications', { error: msg });
+      }
+
+      // %%%%% END - ESCROW FALLBACK — webhook before "completed" %%%%%
+    }
   }
   return updated;
 }

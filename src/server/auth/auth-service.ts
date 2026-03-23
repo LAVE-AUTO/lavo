@@ -100,9 +100,9 @@ export async function registerWithPassword(dto: RegisterDto, locale: 'fr' | 'en'
   });
 
   // Fire-and-forget: do not block registration on email failure
-  sendVerificationEmail(user.email, user.first_name ?? '', token.token, locale).catch(
-    () => void 0
-  );
+  sendVerificationEmail(user.email, user.first_name ?? '', token.token, locale).catch((err) => {
+    console.error('[sendVerificationEmail failed]', err);
+  });
 
   const tokens = await issueTokenPair(user, dto.remember_me);
   return { user, tokens, rememberMe: dto.remember_me };
@@ -229,9 +229,9 @@ export async function forgotPassword(email: string, locale: 'fr' | 'en' = 'fr'):
   });
 
   // Fire-and-forget: do not fail silently in case of email error
-  sendPasswordResetEmail(user.email, user.first_name ?? '', token.token, locale).catch(
-    () => void 0
-  );
+  sendPasswordResetEmail(user.email, user.first_name ?? '', token.token, locale).catch((err) => {
+    console.error('[sendPasswordResetEmail failed]', err);
+  });
 }
 
 export async function resetPassword(token: string, newPassword: string): Promise<void> {

@@ -10,6 +10,7 @@ const mockValidateStationDocumentFile = jest.fn();
 const mockUploadStationDocument = jest.fn();
 
 jest.mock('@/lib/rate-limiter', () => ({
+  normalizeRateLimitKey: (k: string) => k,
   checkRateLimit: (...args: unknown[]) => mockCheckRateLimit(...args),
   recordFailedAttempt: (...args: unknown[]) => mockRecordFailedAttempt(...args),
   resetOnSuccess: (...args: unknown[]) => mockResetOnSuccess(...args),
@@ -74,7 +75,7 @@ describe('POST /api/v1/stations/onboarding/upload', () => {
     expect(body.data).toEqual({ url: '/uploads/abc.jpg', storage: 'local' });
     expect(mockValidateStationDocumentFile).toHaveBeenCalledTimes(1);
     expect(mockUploadStationDocument).toHaveBeenCalledTimes(1);
-    expect(mockResetOnSuccess).toHaveBeenCalledWith('192.168.1.1');
+    expect(mockResetOnSuccess).toHaveBeenCalledWith('ip:192.168.1.1');
     expect(mockRecordFailedAttempt).not.toHaveBeenCalled();
   });
 
@@ -91,7 +92,7 @@ describe('POST /api/v1/stations/onboarding/upload', () => {
     expect(body.code).toBe('VALIDATION_FAILED');
     expect(mockValidateStationDocumentFile).not.toHaveBeenCalled();
     expect(mockUploadStationDocument).not.toHaveBeenCalled();
-    expect(mockRecordFailedAttempt).toHaveBeenCalledWith('192.168.1.1');
+    expect(mockRecordFailedAttempt).toHaveBeenCalledWith('ip:192.168.1.1');
   });
 
   it('returns 400 when file field is not a File instance', async () => {

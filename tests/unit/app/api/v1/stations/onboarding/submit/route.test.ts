@@ -14,6 +14,7 @@ jest.mock('@/server/station/station-service', () => ({
 }));
 
 jest.mock('@/lib/rate-limiter', () => ({
+  normalizeRateLimitKey: (k: string) => k,
   checkRateLimit: (...args: unknown[]) => mockCheckRateLimit(...args),
   recordFailedAttempt: (...args: unknown[]) => mockRecordFailedAttempt(...args),
   resetOnSuccess: (...args: unknown[]) => mockResetOnSuccess(...args),
@@ -79,7 +80,7 @@ describe('POST /api/v1/stations/onboarding/submit', () => {
     expect(dto.documents[0].storage).toBe('cloudinary');
     expect(dto.documents[1].storage).toBe('local');
     expect(dto).not.toHaveProperty('confirm_password');
-    expect(mockResetOnSuccess).toHaveBeenCalledWith('10.0.0.1');
+    expect(mockResetOnSuccess).toHaveBeenCalledWith('ip:10.0.0.1');
   });
 
   it('returns 400 when body is not valid JSON', async () => {

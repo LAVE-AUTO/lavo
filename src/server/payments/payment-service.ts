@@ -4,7 +4,7 @@
  * The station's stripe_account_id is used as the connected account (destination).
  */
 import { stripe } from '@/lib/stripe';
-import { NotImplementedError } from '@/lib/errors';
+import { NotImplementedError, ValidationError } from '@/lib/errors';
 
 // ─── Legacy queue payment (immediate charge) ────────────────────────────────
 
@@ -30,8 +30,9 @@ export type ProcessPaymentResult = {
  * returns a 501 instead of silently accepting unpaid entries.
  */
 export async function processPayment(
-  _params: ProcessPaymentParams
+  params: ProcessPaymentParams
 ): Promise<ProcessPaymentResult> {
+  void params;
   throw new NotImplementedError('Queue payment is not yet implemented');
 }
 
@@ -70,19 +71,32 @@ export async function createPaymentIntent(
     metadata = {},
   } = params;
 
+  if (!Number.isInteger(amountCents) || amountCents <= 0) {
+    throw new ValidationError('Invalid payment amount');
+  }
+  if (!Number.isInteger(commissionCents) || commissionCents < 0 || commissionCents > amountCents) {
+    throw new ValidationError('Invalid commission amount');
+  }
+  const destination = stationStripeAccountId.trim();
+  if (!destination.startsWith('acct_')) {
+    throw new ValidationError('Invalid connected account');
+  }
+
+  const mergedMetadata: Record<string, string> = {
+    ...metadata,
+    user_id: params.userId,
+    station_id: params.stationId,
+  };
+
   const paymentIntent = await stripe.paymentIntents.create({
     amount: amountCents,
     currency,
     capture_method: 'manual',
     application_fee_amount: commissionCents,
     transfer_data: {
-      destination: stationStripeAccountId,
+      destination,
     },
-    metadata: {
-      ...metadata,
-      user_id: params.userId,
-      station_id: params.stationId,
-    },
+    metadata: mergedMetadata,
     automatic_payment_methods: { enabled: true, allow_redirects: 'never' },
   });
 

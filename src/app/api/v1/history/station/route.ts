@@ -22,7 +22,7 @@ import { AppError } from '@/lib/errors';
 import type { NextResponse } from 'next/server';
 
 export async function GET(request: Request): Promise<NextResponse> {
-  const auth = await requireRole('station');
+  const auth = await requireRole(request, 'station');
   if (auth instanceof Response) return auth as NextResponse;
 
   const station = await findStationByUserId(auth.sub);

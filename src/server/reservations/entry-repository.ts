@@ -144,6 +144,8 @@ export async function findReservationWithSlot(
       stripe_payment_id: reservations.stripe_payment_id,
       stripe_transfer_id: reservations.stripe_transfer_id,
       stripe_refund_id: reservations.stripe_refund_id,
+      stripe_payment_succeeded_at: reservations.stripe_payment_succeeded_at,
+      stripe_payment_succeeded_notified_at: reservations.stripe_payment_succeeded_notified_at,
       client_confirmed: reservations.client_confirmed,
       cancellation_reason: reservations.cancellation_reason,
       penalty_amount: reservations.penalty_amount,
@@ -157,7 +159,8 @@ export async function findReservationWithSlot(
     .leftJoin(timeSlots, eq(reservations.time_slot_id, timeSlots.id))
     .where(and(eq(reservations.id, id), eq(reservations.user_id, userId)))
     .limit(1);
-  return rows[0] as EntryWithSlot | undefined;
+  const row = rows[0];
+  return row;
 }
 
 /**
@@ -194,6 +197,8 @@ export async function listEntriesByStation(stationId: string): Promise<Entry[]> 
       stripe_payment_id: reservations.stripe_payment_id,
       stripe_transfer_id: reservations.stripe_transfer_id,
       stripe_refund_id: reservations.stripe_refund_id,
+      stripe_payment_succeeded_at: reservations.stripe_payment_succeeded_at,
+      stripe_payment_succeeded_notified_at: reservations.stripe_payment_succeeded_notified_at,
       client_confirmed: reservations.client_confirmed,
       cancellation_reason: reservations.cancellation_reason,
       penalty_amount: reservations.penalty_amount,
@@ -210,7 +215,7 @@ export async function listEntriesByStation(stationId: string): Promise<Entry[]> 
       asc(timeSlots.start_time),
       asc(reservations.queue_position)
     );
-  return rows as Entry[];
+  return rows;
 }
 
 /**
@@ -300,6 +305,7 @@ export async function hasActiveEntryAtStation(
   return row.length > 0;
 }
 
+
 /**
  * Finds an entry by its Stripe payment ID. Used by webhook handler.
  */
@@ -310,6 +316,13 @@ export async function findEntryByStripePaymentId(
     where: eq(reservations.stripe_payment_id, stripePaymentId),
   });
 }
+
+export {
+  setStripeTransferIdIfMissing,
+  setStripePaymentSucceededAtIfMissing,
+  setStripePaymentSucceededNotifiedAtIfMissing,
+  clearStripePaymentSucceededNotifiedAt,
+} from './entry-stripe-repository';
 
 /** Pagination + filter options for entry listing. */
 export type ListEntriesFilters = {
@@ -396,6 +409,8 @@ export async function listEntriesByStationPaginated(
         stripe_payment_id: reservations.stripe_payment_id,
         stripe_transfer_id: reservations.stripe_transfer_id,
         stripe_refund_id: reservations.stripe_refund_id,
+        stripe_payment_succeeded_at: reservations.stripe_payment_succeeded_at,
+        stripe_payment_succeeded_notified_at: reservations.stripe_payment_succeeded_notified_at,
         client_confirmed: reservations.client_confirmed,
         cancellation_reason: reservations.cancellation_reason,
         penalty_amount: reservations.penalty_amount,
@@ -417,7 +432,7 @@ export async function listEntriesByStationPaginated(
   ]);
 
   return {
-    rows: rows as Entry[],
+    rows,
     total: countRows[0]?.count ?? 0,
     page,
     per_page: limit,
@@ -479,6 +494,32 @@ export async function confirmEntryIfPendingPayment(id: string): Promise<Entry | 
   return row;
 }
 
+const STRIPE_PAYMENT_CANCEL_STATUSES = ['pending_payment', 'confirmed'] as const;
+
+/**
+ * Cancels an entry for Stripe payment_failed / canceled webhooks only while status is still
+ * pending_payment or confirmed. Returns the updated row if a row matched; otherwise undefined.
+ * Callers must run slot decrement in the same transaction so webhook replays cannot double-decrement.
+ */
+export async function cancelEntryForStripePaymentFailureIfEligible(
+  id: string,
+  reason: string,
+  tx: DbTransaction
+): Promise<Entry | undefined> {
+  const [row] = await tx
+    .update(reservations)
+    .set({
+      status: 'cancelled',
+      cancellation_reason: reason,
+      updated_at: new Date(),
+    })
+    .where(
+      and(eq(reservations.id, id), inArray(reservations.status, [...STRIPE_PAYMENT_CANCEL_STATUSES]))
+    )
+    .returning();
+  return row;
+}
+
 /**
  * Shifts queue positions for a station: entries with queue_position >= fromPosition get +delta.
  * Used when inserting at a specific position (e.g. middle_of_queue) or reordering.
@@ -530,6 +571,8 @@ export async function listLateUnconfirmedReservations(): Promise<Entry[]> {
       stripe_payment_id: reservations.stripe_payment_id,
       stripe_transfer_id: reservations.stripe_transfer_id,
       stripe_refund_id: reservations.stripe_refund_id,
+      stripe_payment_succeeded_at: reservations.stripe_payment_succeeded_at,
+      stripe_payment_succeeded_notified_at: reservations.stripe_payment_succeeded_notified_at,
       client_confirmed: reservations.client_confirmed,
       cancellation_reason: reservations.cancellation_reason,
       penalty_amount: reservations.penalty_amount,
@@ -540,6 +583,7 @@ export async function listLateUnconfirmedReservations(): Promise<Entry[]> {
     })
     .from(reservations)
     .innerJoin(timeSlots, eq(reservations.time_slot_id, timeSlots.id))
+    // `station_configs.id` is the station id (row is 1:1 with `stations`); the table has no `station_id` column.
     .innerJoin(stationConfigs, eq(reservations.station_id, stationConfigs.id))
     .where(
       and(
@@ -549,7 +593,7 @@ export async function listLateUnconfirmedReservations(): Promise<Entry[]> {
         sql`(${timeSlots.start_time} + (${stationConfigs.late_tolerance_minutes} * interval '1 minute')) < ${now}`
       )
     );
-  return rows as Entry[];
+  return rows;
 }
 
 /**

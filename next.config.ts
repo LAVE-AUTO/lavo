@@ -39,6 +39,8 @@ function buildCsp(): string {
 
 const nextConfig: NextConfig = {
   reactCompiler: true,
+  /** ESM package; required so Jest (next/jest) transpiles it when importing @/lib/jwt in tests. */
+  transpilePackages: ["jose"],
   async headers() {
     return [
       {

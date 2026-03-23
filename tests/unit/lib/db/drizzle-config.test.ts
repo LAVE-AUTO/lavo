@@ -19,8 +19,11 @@ describe("drizzle config and migrations", () => {
     });
 
     it("uses DATABASE_URL from env for credentials", () => {
-      expect(config.dbCredentials).toBeDefined();
-      expect(typeof config.dbCredentials?.url).toBe("string");
+      const withCreds = config as typeof config & {
+        dbCredentials?: { url: string };
+      };
+      expect(withCreds.dbCredentials).toBeDefined();
+      expect(typeof withCreds.dbCredentials?.url).toBe("string");
     });
   });
 

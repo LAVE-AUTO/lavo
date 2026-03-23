@@ -63,7 +63,7 @@ import {
 } from '@/server/station/station-repository';
 
 const mockSelect = db.select as jest.Mock;
-const mockFindFirst = (db.query.stations as { findFirst: jest.Mock }).findFirst;
+const mockFindFirst = (db.query.stations as unknown as { findFirst: jest.Mock }).findFirst;
 
 describe('station repository', () => {
   beforeEach(() => {

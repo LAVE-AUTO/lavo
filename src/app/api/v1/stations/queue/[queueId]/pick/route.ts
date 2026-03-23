@@ -25,7 +25,7 @@ const queueIdParamSchema = z.object({
 type Params = { params: Promise<{ queueId: string }> };
 
 export async function POST(_request: Request, { params }: Params): Promise<NextResponse> {
-  const auth = await requireRole('station');
+  const auth = await requireRole(_request, 'station');
   if (auth instanceof Response) return auth as NextResponse;
 
   const station = await findStationByUserId(auth.sub);

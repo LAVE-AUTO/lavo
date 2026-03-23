@@ -14,7 +14,7 @@ import { AppError } from '@/lib/errors';
 import type { NextResponse } from 'next/server';
 
 export async function GET(request: Request): Promise<NextResponse> {
-  const auth = await requireRole('client');
+  const auth = await requireRole(request, 'client');
   if (auth instanceof Response) return auth as NextResponse;
 
   const { searchParams } = new URL(request.url);

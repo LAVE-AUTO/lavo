@@ -108,6 +108,9 @@ const mockReservationRow = {
   commission_amount: '1.20',
   station_payout: '10.80',
   stripe_payment_id: null,
+  stripe_transfer_id: null,
+  stripe_payment_succeeded_at: null,
+  stripe_payment_succeeded_notified_at: null,
   created_at: new Date(),
   updated_at: new Date(),
 };
@@ -329,6 +332,57 @@ describe('entry-repository', () => {
       const db = require('@/lib/db').db;
       await shiftQueuePositions('station-1', 1, 1);
       expect(db.update).toHaveBeenCalled();
+    });
+  });
+
+  describe('stripe idempotence helpers', () => {
+    it('setStripeTransferIdIfMissing returns true when stripe_transfer_id is null', async () => {
+      mockUpdateReturning.mockResolvedValueOnce([{ id: validUuid }]);
+      const { setStripeTransferIdIfMissing } = require('@/server/reservations/entry-repository');
+      const updated = await setStripeTransferIdIfMissing(validUuid, 'tr_123');
+      expect(updated).toBe(true);
+      expect(mockUpdateSet).toHaveBeenCalledWith(
+        expect.objectContaining({ stripe_transfer_id: 'tr_123' })
+      );
+    });
+
+    it('setStripeTransferIdIfMissing returns false when already set (no row updated)', async () => {
+      mockUpdateReturning.mockResolvedValueOnce([]);
+      const { setStripeTransferIdIfMissing } = require('@/server/reservations/entry-repository');
+      const updated = await setStripeTransferIdIfMissing(validUuid, 'tr_123');
+      expect(updated).toBe(false);
+    });
+
+    it('setStripePaymentSucceededAtIfMissing sets succeeded_at once', async () => {
+      mockUpdateReturning.mockResolvedValueOnce([{ id: validUuid }]);
+      const { setStripePaymentSucceededAtIfMissing } = require('@/server/reservations/entry-repository');
+      const succeededAt = new Date('2026-01-01T00:00:00.000Z');
+      const updated = await setStripePaymentSucceededAtIfMissing(validUuid, succeededAt);
+      expect(updated).toBe(true);
+      expect(mockUpdateSet).toHaveBeenCalledWith(
+        expect.objectContaining({ stripe_payment_succeeded_at: succeededAt })
+      );
+    });
+
+    it('setStripePaymentSucceededNotifiedAtIfMissing sets notified_at once', async () => {
+      mockUpdateReturning.mockResolvedValueOnce([{ id: validUuid }]);
+      const {
+        setStripePaymentSucceededNotifiedAtIfMissing,
+      } = require('@/server/reservations/entry-repository');
+      const notifiedAt = new Date('2026-01-02T00:00:00.000Z');
+      const updated = await setStripePaymentSucceededNotifiedAtIfMissing(validUuid, notifiedAt);
+      expect(updated).toBe(true);
+      expect(mockUpdateSet).toHaveBeenCalledWith(
+        expect.objectContaining({ stripe_payment_succeeded_notified_at: notifiedAt })
+      );
+    });
+
+    it('clearStripePaymentSucceededNotifiedAt remet notified_at à null', async () => {
+      const { clearStripePaymentSucceededNotifiedAt } = require('@/server/reservations/entry-repository');
+      await clearStripePaymentSucceededNotifiedAt(validUuid);
+      expect(mockUpdateSet).toHaveBeenCalledWith(
+        expect.objectContaining({ stripe_payment_succeeded_notified_at: null })
+      );
     });
   });
 });

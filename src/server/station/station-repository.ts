@@ -39,6 +39,16 @@ export type ListActiveStationsResult = {
 /** Row returned by listActiveStations: station columns plus available_slots and completed_count (bigint from DB). */
 export type StationWithAvailableSlots = Station & { available_slots: string; completed_count: string };
 
+function rowToStationWithSlots(
+  row: Station & { available_slots: unknown; completed_count: unknown }
+): StationWithAvailableSlots {
+  return {
+    ...row,
+    available_slots: String(row.available_slots),
+    completed_count: String(row.completed_count),
+  };
+}
+
 export async function createStation(data: NewStation): Promise<Station> {
   const [station] = await db.insert(stations).values(data).returning();
   return station;
@@ -162,7 +172,7 @@ export async function listActiveStations(
   ]);
 
   const total = countRows[0]?.count ?? 0;
-  return { rows, total };
+  return { rows: rows.map(rowToStationWithSlots), total };
 }
 
 /**
@@ -199,7 +209,8 @@ export async function listActiveStationsGroup(
 
   const query = baseSelect();
   const ordered = orderByList.length > 0 ? query.orderBy(...orderByList) : query;
-  return ordered.limit(limitPerGroup);
+  const rawRows = await ordered.limit(limitPerGroup);
+  return rawRows.map(rowToStationWithSlots);
 }
 
 /**

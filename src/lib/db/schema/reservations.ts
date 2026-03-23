@@ -52,6 +52,17 @@ export const reservations = pgTable(
     stripe_payment_id: varchar("stripe_payment_id", { length: 200 }),
     stripe_transfer_id: varchar("stripe_transfer_id", { length: 200 }),
     stripe_refund_id: varchar("stripe_refund_id", { length: 200 }),
+    stripe_payment_succeeded_at: timestamp("stripe_payment_succeeded_at", {
+      mode: "date",
+      withTimezone: true,
+    }),
+    stripe_payment_succeeded_notified_at: timestamp(
+      "stripe_payment_succeeded_notified_at",
+      {
+        mode: "date",
+        withTimezone: true,
+      }
+    ),
     client_confirmed: boolean("client_confirmed").notNull().default(false),
     cancellation_reason: text("cancellation_reason"),
     penalty_amount: decimal("penalty_amount", { precision: 10, scale: 2 }),
@@ -82,6 +93,7 @@ export const reservations = pgTable(
     index("reservations_time_slot_id_idx").on(table.time_slot_id),
     index("reservations_status_idx").on(table.status),
     index("reservations_created_at_idx").on(table.created_at),
+    index("reservations_stripe_payment_succeeded_at_idx").on(table.stripe_payment_succeeded_at),
     index("reservations_entry_type_station_idx").on(table.entry_type, table.station_id),
   ]
 );

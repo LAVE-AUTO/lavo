@@ -27,7 +27,7 @@ import type { NextResponse } from 'next/server';
  */
 export async function POST(request: Request) {
   // Allow access even when force_password_change = true (that's the point of this endpoint)
-  const auth = await requireAuth();
+  const auth = await requireAuth(request);
   if (auth instanceof Response) return auth as NextResponse;
 
   let body: unknown;

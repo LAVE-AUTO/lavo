@@ -178,11 +178,11 @@ describe('responses', () => {
     const originalEnv = process.env.NODE_ENV;
 
     afterEach(() => {
-      process.env.NODE_ENV = originalEnv;
+      jest.replaceProperty(process.env, 'NODE_ENV', originalEnv);
     });
 
     it('includes _dev message only in development', async () => {
-      process.env.NODE_ENV = 'development';
+      jest.replaceProperty(process.env, 'NODE_ENV', 'development');
       const error = new Error('Boom');
       const res = errorResponse(
         'Internal',
@@ -195,7 +195,7 @@ describe('responses', () => {
     });
 
     it('does not include _dev outside development', async () => {
-      process.env.NODE_ENV = 'test';
+      jest.replaceProperty(process.env, 'NODE_ENV', 'test');
       const res = errorResponse(
         'Internal',
         HTTP_STATUS.SERVER_ERROR,
