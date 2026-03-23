@@ -246,6 +246,11 @@ export default function ClientReservationsPage() {
     () => reservations.find((r) => r.status === 'completed'),
     [reservations],
   );
+  /* Second completed reservation (or same if only one) — used to show the tip prompt */
+  const pendingTip = useMemo(() => {
+    const completed = reservations.filter((r) => r.status === 'completed');
+    return completed.length > 1 ? completed[1] : completed[0] ?? null;
+  }, [reservations]);
 
   const handleCancelConfirm = async () => {
     if (!cancelTarget) return;
@@ -311,6 +316,29 @@ export default function ClientReservationsPage() {
               className="shrink-0 px-3 py-2 bg-gold hover:bg-gold-hover rounded-[10px] text-[13px] font-black text-dark-bg transition-colors"
             >
               {t('rate_btn')}
+            </Link>
+          </div>
+        </div>
+      )}
+
+      {/* Tip prompt — shown when a completed reservation has not yet received a tip */}
+      {pendingTip && (
+        <div className="px-4 max-w-2xl mx-auto mb-4">
+          <div className="flex items-center gap-3 bg-[#E8E8D8] dark:bg-dark-card border border-[#D0D0C0] dark:border-tab-inactive rounded-xl p-4">
+            <div className="w-10 h-10 rounded-full bg-gold/20 flex items-center justify-center shrink-0">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#af8408" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                <line x1="12" y1="1" x2="12" y2="23" /><path d="M17 5H9.5a3.5 3.5 0 000 7h5a3.5 3.5 0 010 7H6" />
+              </svg>
+            </div>
+            <div className="flex-1 min-w-0">
+              <p className="text-[14px] font-bold text-[#0A0A14] dark:text-white leading-snug">{t('tip_prompt_title')}</p>
+              <p className="text-[12px] text-[#666] dark:text-[#B0B0A0] mt-0.5 truncate">{pendingTip.stationName}</p>
+            </div>
+            <Link
+              href={`/client/reservations/${pendingTip.id}/tip`}
+              className="shrink-0 px-3 py-2 border border-gold/50 rounded-[10px] text-[13px] font-bold text-gold hover:bg-gold/10 transition-colors"
+            >
+              {t('tip_btn')}
             </Link>
           </div>
         </div>
@@ -486,12 +514,20 @@ function ReservationCard({
             </button>
           )}
           {r.status === 'completed' && (
-            <Link
-              href={`/client/reservations/${r.id}/rate`}
-              className="text-[13px] font-semibold text-gold hover:opacity-75 transition-opacity"
-            >
-              {t('rate_btn')}
-            </Link>
+            <>
+              <Link
+                href={`/client/reservations/${r.id}/rate`}
+                className="text-[13px] font-semibold text-gold hover:opacity-75 transition-opacity"
+              >
+                {t('rate_btn')}
+              </Link>
+              <Link
+                href={`/client/reservations/${r.id}/tip`}
+                className="text-[13px] font-semibold text-[#666] dark:text-[#B0B0A0] hover:text-gold hover:opacity-75 transition-colors"
+              >
+                {t('tip_btn')}
+              </Link>
+            </>
           )}
         </div>
       )}
