@@ -5,6 +5,8 @@ import { useTranslations, useLocale } from 'next-intl';
 import { Link } from '@/i18n/navigation';
 import { getFromApi, patchWithApi } from '@/services/axios-service';
 import { useToast } from '@/context';
+import { useAuth } from '@/context/auth-context';
+import { RESERVATIONS_MOCK_ENABLED, MOCK_RESERVATIONS, MOCK_QUEUE_ENTRIES } from '@/data/reservations-mock';
 
 type Tab = 'reservations' | 'queue';
 type ReservationStatus = 'confirmed' | 'in_progress' | 'completed' | 'cancelled' | 'pending_payment' | 'pending';
@@ -163,6 +165,7 @@ export default function ClientReservationsPage() {
   const t      = useTranslations('coupons');
   const locale = useLocale();
   const { success, error } = useToast();
+  const { isLoading: authLoading } = useAuth();
 
   const mountedRef = useRef(true);
   useEffect(() => { mountedRef.current = true; return () => { mountedRef.current = false; }; }, []);
@@ -178,6 +181,14 @@ export default function ClientReservationsPage() {
   const loadEntries = useCallback(async () => {
     setLoading(true);
     setLoadError(false);
+
+    // TODO: remove mock block once booking flow is connected to Stripe
+    if (RESERVATIONS_MOCK_ENABLED) {
+      setReservations(MOCK_RESERVATIONS as unknown as ClientReservation[]);
+      setQueueEntries(MOCK_QUEUE_ENTRIES as unknown as ClientQueueEntry[]);
+      setLoading(false);
+      return;
+    }
 
     const [ok, data] = await getFromApi('/me/entries?per_page=50');
     if (!mountedRef.current) return;
@@ -218,7 +229,9 @@ export default function ClientReservationsPage() {
     setLoading(false);
   }, []);
 
-  useEffect(() => { loadEntries(); }, [loadEntries]);
+  useEffect(() => {
+    if (!authLoading) loadEntries();
+  }, [authLoading, loadEntries]);
 
   const upcoming = useMemo(
     () => reservations.filter((r) => r.status === 'confirmed' || r.status === 'in_progress' || r.status === 'pending'),
