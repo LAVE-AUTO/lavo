@@ -7,6 +7,13 @@ import { mapZodErrors } from './auth';
 export { mapZodErrors };
 
 const uuidSchema = z.string().uuid('Must be a valid UUID');
+const qrTokenSchema = z
+  .string()
+  .trim()
+  .regex(/^[a-f0-9]{64}$/i, 'qr_token must be a 64-character hexadecimal signature');
+const qrVersionSchema = z.literal('1', {
+  errorMap: () => ({ message: 'v must be "1"' }),
+});
 
 /** Path param: entry id (for PATCH me/entries/:entryId/cancel, POST upgrade-to-reservation, PATCH station/entries/:entryId). */
 export const entryIdParamSchema = z.object({
@@ -30,8 +37,21 @@ export const createReservationBodySchema = z
   .object({
     time_slot_id: uuidSchema,
     vehicle_format_id: uuidSchema,
+    qr_token: qrTokenSchema.optional(),
+    v: qrVersionSchema.optional(),
   })
-  .strict();
+  .strict()
+  .superRefine((data, ctx) => {
+    const hasToken = typeof data.qr_token === 'string';
+    const hasVersion = typeof data.v === 'string' && data.v.length > 0;
+    if (hasToken !== hasVersion) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: 'qr_token and v must be provided together',
+        path: hasToken ? ['v'] : ['qr_token'],
+      });
+    }
+  });
 
 /** POST /stations/:id/queue/join — join queue. */
 export const joinQueueBodySchema = z

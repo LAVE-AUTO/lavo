@@ -17,7 +17,7 @@ jest.mock('@/server/reservations/reservation-service', () => ({
 }));
 
 import { POST } from '@/app/api/v1/stations/[id]/reservations/route';
-import { NotFoundError, ConflictError } from '@/lib/errors';
+import { NotFoundError, ConflictError, ValidationError } from '@/lib/errors';
 
 const userAuth = { sub: 'user-1', role: 'user' };
 const stationId = 'a1b2c3d4-e5f6-7890-abcd-ef1234567890';
@@ -73,7 +73,11 @@ describe('POST /api/v1/stations/:id/reservations', () => {
       stationId,
       'acct_test_123',
       slotId,
-      formatId
+      formatId,
+      {
+        qrToken: undefined,
+        qrVersion: undefined,
+      }
     );
   });
 
@@ -180,6 +184,20 @@ describe('POST /api/v1/stations/:id/reservations', () => {
     expect(body.code).toBe('CONFLICT');
   });
 
+  it('returns 400/VALIDATION_FAILED when createReservation throws ValidationError', async () => {
+    mockCreateReservation.mockRejectedValueOnce(new ValidationError('Invalid QR booking token context'));
+    const req = new Request('http://localhost/api/v1/stations/1/reservations', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ time_slot_id: slotId, vehicle_format_id: formatId }),
+    });
+    const res = await POST(req, { params: buildParams(stationId) });
+    expect(res.status).toBe(400);
+    const body = await res.json();
+    expect(body.message).toBe('Invalid QR booking token context');
+    expect(body.code).toBe('VALIDATION_FAILED');
+  });
+
   it('returns 404 when station exists but status is not active', async () => {
     mockFindStationById.mockResolvedValueOnce({ id: stationId, status: 'pending' });
     const req = new Request('http://localhost/api/v1/stations/1/reservations', {
@@ -189,6 +207,93 @@ describe('POST /api/v1/stations/:id/reservations', () => {
     });
     const res = await POST(req, { params: buildParams(stationId) });
     expect(res.status).toBe(404);
+    expect(mockCreateReservation).not.toHaveBeenCalled();
+  });
+
+  it('passes qr_token and version to service when payload is valid', async () => {
+    const qrToken = 'a'.repeat(64);
+    const req = new Request('http://localhost/api/v1/stations/1/reservations', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        time_slot_id: slotId,
+        vehicle_format_id: formatId,
+        qr_token: qrToken,
+        v: '1',
+      }),
+    });
+
+    const res = await POST(req, { params: buildParams(stationId) });
+
+    expect(res.status).toBe(201);
+    expect(mockCreateReservation).toHaveBeenCalledWith(
+      userAuth.sub,
+      stationId,
+      'acct_test_123',
+      slotId,
+      formatId,
+      { qrToken, qrVersion: '1' }
+    );
+  });
+
+  it('returns 400 when qr_token is sent without version (bypass attempt)', async () => {
+    const req = new Request('http://localhost/api/v1/stations/1/reservations', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        time_slot_id: slotId,
+        vehicle_format_id: formatId,
+        qr_token: 'a'.repeat(64),
+      }),
+    });
+
+    const res = await POST(req, { params: buildParams(stationId) });
+    const body = await res.json();
+
+    expect(res.status).toBe(400);
+    expect(body.code).toBe('VALIDATION_FAILED');
+    expect(JSON.stringify(body.errors ?? body.details)).toContain('qr_token and v must be provided together');
+    expect(mockCreateReservation).not.toHaveBeenCalled();
+  });
+
+  it('returns 400 when version is sent without qr_token (bypass attempt)', async () => {
+    const req = new Request('http://localhost/api/v1/stations/1/reservations', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        time_slot_id: slotId,
+        vehicle_format_id: formatId,
+        v: '1',
+      }),
+    });
+
+    const res = await POST(req, { params: buildParams(stationId) });
+    const body = await res.json();
+
+    expect(res.status).toBe(400);
+    expect(body.code).toBe('VALIDATION_FAILED');
+    expect(JSON.stringify(body.errors ?? body.details)).toContain('qr_token and v must be provided together');
+    expect(mockCreateReservation).not.toHaveBeenCalled();
+  });
+
+  it('returns 400 when version is invalid', async () => {
+    const req = new Request('http://localhost/api/v1/stations/1/reservations', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        time_slot_id: slotId,
+        vehicle_format_id: formatId,
+        qr_token: 'a'.repeat(64),
+        v: '2',
+      }),
+    });
+
+    const res = await POST(req, { params: buildParams(stationId) });
+    const body = await res.json();
+
+    expect(res.status).toBe(400);
+    expect(body.code).toBe('VALIDATION_FAILED');
+    expect(JSON.stringify(body.errors ?? body.details)).toContain('v must be \\\"1\\\"');
     expect(mockCreateReservation).not.toHaveBeenCalled();
   });
 });

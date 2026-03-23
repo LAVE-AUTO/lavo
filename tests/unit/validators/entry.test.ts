@@ -47,6 +47,68 @@ describe('entry validators', () => {
         createReservationBodySchema.safeParse({ vehicle_format_id: validUuid }).success
       ).toBe(false);
     });
+
+    it('accepts valid qr_token + v pair', () => {
+      const r = createReservationBodySchema.safeParse({
+        time_slot_id: validUuid,
+        vehicle_format_id: validUuid,
+        qr_token: 'a'.repeat(64),
+        v: '1',
+      });
+      expect(r.success).toBe(true);
+    });
+
+    it('rejects partial QR payload (token without version)', () => {
+      const r = createReservationBodySchema.safeParse({
+        time_slot_id: validUuid,
+        vehicle_format_id: validUuid,
+        qr_token: 'a'.repeat(64),
+      });
+      expect(r.success).toBe(false);
+      if (!r.success) {
+        expect(JSON.stringify(r.error.format())).toContain('qr_token and v must be provided together');
+      }
+    });
+
+    it('rejects partial QR payload (version without token)', () => {
+      const r = createReservationBodySchema.safeParse({
+        time_slot_id: validUuid,
+        vehicle_format_id: validUuid,
+        v: '1',
+      });
+      expect(r.success).toBe(false);
+      if (!r.success) {
+        expect(JSON.stringify(r.error.format())).toContain('qr_token and v must be provided together');
+      }
+    });
+
+    it('rejects invalid QR version', () => {
+      const r = createReservationBodySchema.safeParse({
+        time_slot_id: validUuid,
+        vehicle_format_id: validUuid,
+        qr_token: 'a'.repeat(64),
+        v: '2',
+      });
+      expect(r.success).toBe(false);
+      if (!r.success) {
+        expect(JSON.stringify(r.error.format())).toContain('v must be \\\"1\\\"');
+      }
+    });
+
+    it('rejects invalid qr_token format', () => {
+      const r = createReservationBodySchema.safeParse({
+        time_slot_id: validUuid,
+        vehicle_format_id: validUuid,
+        qr_token: 'not-a-signature',
+        v: '1',
+      });
+      expect(r.success).toBe(false);
+      if (!r.success) {
+        expect(JSON.stringify(r.error.format())).toContain(
+          'qr_token must be a 64-character hexadecimal signature'
+        );
+      }
+    });
   });
 
   describe('joinQueueBodySchema', () => {

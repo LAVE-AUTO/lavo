@@ -1,4 +1,5 @@
 import { requireRole } from '@/lib/require-role';
+import { extractLocale } from '@/lib/email';
 import { approveStation } from '@/server/station/station-service';
 import { successResponse, error403, error404, error500, fromAppError } from '@/lib/responses';
 import { AppError, ForbiddenError, NotFoundError } from '@/lib/errors';
@@ -17,16 +18,17 @@ import type { NextResponse } from 'next/server';
  *   500 INTERNAL_ERROR
  */
 export async function POST(
-  _request: Request,
+  request: Request,
   { params }: { params: Promise<{ id: string }> }
 ) {
-  const auth = await requireRole(_request, 'admin');
+  const auth = await requireRole(request, 'admin');
   if (auth instanceof Response) return auth as NextResponse;
 
   const { id } = await params;
+  const locale = extractLocale(request.headers.get('accept-language'));
 
   try {
-    await approveStation(auth.sub, id);
+    await approveStation(auth.sub, id, locale);
     return successResponse({ approved: true }, 'Station approved successfully.');
   } catch (e) {
     if (e instanceof NotFoundError) return error404(e.message);

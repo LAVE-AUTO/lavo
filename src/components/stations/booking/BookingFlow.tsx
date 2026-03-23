@@ -17,13 +17,15 @@ interface BookingFlowProps {
   station: StationDetailData;
   category: ServiceCategory;
   forfait: ServiceForfait;
+  qrToken?: string | null;
+  qrVersion?: '1' | null;
   onClose: () => void;
 }
 
 const STEPS = ['extras', 'arrival', 'summary', 'payment'] as const;
 type Step = (typeof STEPS)[number];
 
-export function BookingFlow({ station, forfait, onClose }: BookingFlowProps) {
+export function BookingFlow({ station, forfait, qrToken, qrVersion, onClose }: BookingFlowProps) {
   const t = useTranslations('booking');
   const userLocation = useUserLocation();
   const [step, setStep] = useState<Step>('extras');
@@ -123,15 +125,24 @@ export function BookingFlow({ station, forfait, onClose }: BookingFlowProps) {
       if (!mountedRef.current) return;
       setPaymentResult(ok ? 'success' : 'error');
     } else if (arrivalMode === 'book_slot' && selectedSlot) {
-      const [ok] = await postWithApi(`/stations/${station.id}/reservations`, {
+      const reservationPayload: Record<string, string> = {
         time_slot_id: selectedSlot.id,
         vehicle_format_id: forfait.id,
+      };
+      // QR context validation is centralized in StationDetail normalization.
+      const hasValidQrContext = Boolean(qrToken && qrVersion === '1');
+      if (hasValidQrContext) {
+        reservationPayload.qr_token = qrToken!;
+        reservationPayload.v = qrVersion!;
+      }
+      const [ok] = await postWithApi(`/stations/${station.id}/reservations`, {
+        ...reservationPayload,
       });
       if (!mountedRef.current) return;
       // TODO: confirm Stripe payment intent with stripe_client_secret once Stripe Elements are integrated
       setPaymentResult(ok ? 'success' : 'error');
     }
-  }, [arrivalMode, station.id, forfait.id, selectedSlot]);
+  }, [arrivalMode, station.id, forfait.id, selectedSlot, qrToken, qrVersion]);
 
   const handleRetryPayment = useCallback(() => {
     setPaymentResult(null);
