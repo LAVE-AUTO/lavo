@@ -116,6 +116,10 @@ export function BookingFlow({ station, forfait, onClose }: BookingFlowProps) {
     setSelectedSlot(null);
   }, []);
 
+  const devSkipPayment =
+    process.env.NODE_ENV !== 'production' &&
+    process.env.NEXT_PUBLIC_DEV_SKIP_PAYMENT === 'true';
+
   const handlePaymentConfirm = useCallback(async (): Promise<void> => {
     if (arrivalMode === 'queue_now' || arrivalMode === 'queue_later') {
       const [ok] = await postWithApi(`/stations/${station.id}/queue/join`, {
@@ -124,15 +128,20 @@ export function BookingFlow({ station, forfait, onClose }: BookingFlowProps) {
       if (!mountedRef.current) return;
       setPaymentResult(ok ? 'success' : 'error');
     } else if (arrivalMode === 'book_slot' && selectedSlot) {
-      const [ok] = await postWithApi(`/stations/${station.id}/reservations`, {
-        time_slot_id: selectedSlot.id,
-        vehicle_format_id: forfait.id,
-      });
+      // In dev mode (NEXT_PUBLIC_DEV_SKIP_PAYMENT=true), bypass Stripe and create
+      // a confirmed reservation directly so the booking flow can be tested end-to-end.
+      // TODO: replace with real Stripe Elements payment confirmation once integrated.
+      const endpoint = devSkipPayment
+        ? '/dev/reservations'
+        : `/stations/${station.id}/reservations`;
+      const payload = devSkipPayment
+        ? { station_id: station.id, time_slot_id: selectedSlot.id, vehicle_format_id: forfait.id }
+        : { time_slot_id: selectedSlot.id, vehicle_format_id: forfait.id };
+      const [ok] = await postWithApi(endpoint, payload);
       if (!mountedRef.current) return;
-      // TODO: confirm Stripe payment intent with stripe_client_secret once Stripe Elements are integrated
       setPaymentResult(ok ? 'success' : 'error');
     }
-  }, [arrivalMode, station.id, forfait.id, selectedSlot]);
+  }, [arrivalMode, station.id, forfait.id, selectedSlot, devSkipPayment]);
 
   const handleRetryPayment = useCallback(() => {
     setPaymentResult(null);
