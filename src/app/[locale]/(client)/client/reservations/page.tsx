@@ -5,6 +5,7 @@ import { useTranslations, useLocale } from 'next-intl';
 import { Link } from '@/i18n/navigation';
 import { getFromApi, patchWithApi } from '@/services/axios-service';
 import { useToast } from '@/context';
+import { useAuth } from '@/context/auth-context';
 
 type Tab = 'reservations' | 'queue';
 type ReservationStatus = 'confirmed' | 'in_progress' | 'completed' | 'cancelled' | 'pending_payment' | 'pending';
@@ -163,6 +164,7 @@ export default function ClientReservationsPage() {
   const t      = useTranslations('coupons');
   const locale = useLocale();
   const { success, error } = useToast();
+  const { isLoading: authLoading } = useAuth();
 
   const mountedRef = useRef(true);
   useEffect(() => { mountedRef.current = true; return () => { mountedRef.current = false; }; }, []);
@@ -218,7 +220,9 @@ export default function ClientReservationsPage() {
     setLoading(false);
   }, []);
 
-  useEffect(() => { loadEntries(); }, [loadEntries]);
+  useEffect(() => {
+    if (!authLoading) loadEntries();
+  }, [authLoading, loadEntries]);
 
   const upcoming = useMemo(
     () => reservations.filter((r) => r.status === 'confirmed' || r.status === 'in_progress' || r.status === 'pending'),
