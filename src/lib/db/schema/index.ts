@@ -6,6 +6,7 @@
 import { relations } from "drizzle-orm";
 import { adminLogs } from "./admins";
 import { commissionSettings } from "./commission";
+import { delayRequests } from "./delay-requests";
 import { emailVerificationTokens, users } from "./users";
 import { refreshTokens } from "./refresh-tokens";
 import { noShowFees, reservations } from "./reservations";
@@ -27,6 +28,7 @@ import { timeSlots } from "./slots";
 export * from "./users";
 export * from "./admins";
 export * from "./stations";
+export * from "./delay-requests";
 export * from "./slots";
 export * from "./reservations";
 export * from "./ratings";
@@ -240,5 +242,20 @@ export const supportTicketsRelations = relations(supportTickets, ({ one }) => ({
   assignedToAdmin: one(users, {
     fields: [supportTickets.assigned_to],
     references: [users.id],
+  }),
+}));
+
+export const delayRequestsRelations = relations(delayRequests, ({ one }) => ({
+  reservation: one(reservations, {
+    fields: [delayRequests.reservation_id],
+    references: [reservations.id],
+  }),
+  user: one(users, {
+    fields: [delayRequests.user_id],
+    references: [users.id],
+  }),
+  station: one(stations, {
+    fields: [delayRequests.station_id],
+    references: [stations.id],
   }),
 }));
