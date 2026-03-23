@@ -64,6 +64,14 @@ export const stationPatchEntryBodySchema = z
   })
   .strict();
 
+/** POST /reservations/:id/signal-delay — optional client message. */
+export const signalDelayBodySchema = z
+  .object({
+    message: z.string().max(500).optional(),
+  })
+  .strict()
+  .optional();
+
 /** PATCH /station/entries/:entryId/position — reorder queue. */
 export const stationPatchPositionBodySchema = z
   .object({
@@ -88,3 +96,4 @@ export type UpgradeToReservationBody = z.infer<typeof upgradeToReservationBodySc
 export type StationPatchEntryBody = z.infer<typeof stationPatchEntryBodySchema>;
 export type StationPatchPositionBody = z.infer<typeof stationPatchPositionBodySchema>;
 export type EntryIdParam = z.infer<typeof entryIdParamSchema>;
+export type SignalDelayBody = z.infer<typeof signalDelayBodySchema>;
