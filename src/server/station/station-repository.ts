@@ -244,8 +244,26 @@ export async function findStationByUserId(userId: string): Promise<Station | und
   return db.query.stations.findFirst({ where: eq(stations.user_id, userId) });
 }
 
-export async function listStationsByStatus(status: string): Promise<Station[]> {
-  return db.query.stations.findMany({ where: eq(stations.status, status) });
+export async function listStationsByStatus(
+  status: string,
+  page = 1,
+  perPage = 20
+): Promise<{ rows: Station[]; total: number }> {
+  const offset = (page - 1) * perPage;
+  const [rows, countResult] = await Promise.all([
+    db
+      .select()
+      .from(stations)
+      .where(eq(stations.status, status))
+      .orderBy(asc(stations.created_at))
+      .limit(perPage)
+      .offset(offset),
+    db
+      .select({ count: sql<number>`count(*)::int` })
+      .from(stations)
+      .where(eq(stations.status, status)),
+  ]);
+  return { rows, total: countResult[0]?.count ?? 0 };
 }
 
 export async function updateStationStatus(

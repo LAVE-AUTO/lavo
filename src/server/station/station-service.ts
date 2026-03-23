@@ -14,11 +14,16 @@ import {
 import {
   sendVerificationEmail,
   sendStationApprovalEmail,
+  sendStationRejectionEmail,
   sendStationApplicationAdminNotification,
 } from '@/lib/email';
+import { insertAdminLog } from '@/server/admin/admin-log-repository';
+import {
+  createStripeConnectAccount,
+  createStripeOnboardingLink,
+} from '@/server/payments/payment-service';
 import {
   ConflictError,
-  ForbiddenError,
   NotFoundError,
   ValidationError,
 } from '@/lib/errors';
@@ -31,6 +36,7 @@ import {
   listActiveStations,
   listActiveStationsGroup,
   listStationsByStatus,
+  updateStationInfo,
   updateStationStatus,
   type ListActiveStationsFilters,
   type Station,
@@ -177,8 +183,29 @@ export async function completeStationOnboarding(
   return { user, station };
 }
 
-export async function getPendingStations(): Promise<Station[]> {
-  return listStationsByStatus('pending_admin_validation');
+export type PendingStationsMeta = {
+  total: number;
+  page: number;
+  per_page: number;
+  total_pages: number;
+};
+
+export type PendingStationsResult = {
+  stations: Station[];
+  meta: PendingStationsMeta;
+};
+
+export async function getPendingStations(page = 1, perPage = 20): Promise<PendingStationsResult> {
+  const { rows, total } = await listStationsByStatus('pending_admin_validation', page, perPage);
+  return {
+    stations: rows,
+    meta: {
+      total,
+      page,
+      per_page: perPage,
+      total_pages: Math.max(1, Math.ceil(total / perPage)),
+    },
+  };
 }
 
 export async function getStationById(id: string): Promise<StationWithDocuments> {
@@ -197,21 +224,53 @@ export async function approveStation(
   if (!station) throw new NotFoundError('Station not found');
 
   if (station.status !== 'pending_admin_validation') {
-    throw new ForbiddenError('Station is not pending validation');
+    throw new ConflictError('Station is not pending validation');
   }
 
+  // Fetch station user upfront — needed for Stripe account creation and approval email.
+  const stationUser = station.user_id ? await findById(station.user_id) : null;
+
+  // Activate station.
   await updateStationStatus(stationId, 'active', {
     approved_by: adminId,
     approved_at: new Date(),
   });
 
-  // Fire-and-forget — only possible if station has an associated user account (3-step flow)
-  if (station.user_id) {
-    findById(station.user_id).then((user) => {
-      if (user) {
-        sendStationApprovalEmail(user.email, station.name).catch(() => void 0);
-      }
-    }).catch(() => void 0);
+  // Create Stripe Connect Express account and store the account id — non-fatal.
+  let stripeOnboardingUrl: string | null = null;
+  if (stationUser) {
+    try {
+      const accountId = await createStripeConnectAccount(stationUser.email, stationId);
+      await updateStationInfo(stationId, { stripe_account_id: accountId });
+      stripeOnboardingUrl = await createStripeOnboardingLink(accountId);
+    } catch (e) {
+      console.error('[APPROVE_STRIPE_CONNECT_FAILED]', {
+        stationId,
+        error: e instanceof Error ? e.message : String(e),
+      });
+    }
+  }
+
+  // Admin audit log — non-fatal.
+  try {
+    await insertAdminLog({
+      admin_id: adminId,
+      action: 'station_approved',
+      target_type: 'station',
+      target_id: stationId,
+      details: { stripe_connected: stripeOnboardingUrl !== null },
+    });
+  } catch (e) {
+    console.error('[APPROVE_ADMIN_LOG_FAILED]', {
+      stationId,
+      error: e instanceof Error ? e.message : String(e),
+    });
+  }
+
+  // Approval email — fire-and-forget.
+  if (stationUser) {
+    sendStationApprovalEmail(stationUser.email, station.name, stripeOnboardingUrl ?? undefined)
+      .catch(() => void 0);
   }
 }
 
@@ -224,11 +283,35 @@ export async function rejectStation(
   if (!station) throw new NotFoundError('Station not found');
 
   if (station.status !== 'pending_admin_validation') {
-    throw new ForbiddenError('Station is not pending validation');
+    throw new ConflictError('Station is not pending validation');
   }
 
-  void adminId; // logged implicitly via audit; extend with admin_logs table if needed
   await updateStationStatus(stationId, 'rejected', { rejection_reason: reason });
+
+  // Admin audit log — non-fatal.
+  try {
+    await insertAdminLog({
+      admin_id: adminId,
+      action: 'station_rejected',
+      target_type: 'station',
+      target_id: stationId,
+      details: { reason },
+    });
+  } catch (e) {
+    console.error('[REJECT_ADMIN_LOG_FAILED]', {
+      stationId,
+      error: e instanceof Error ? e.message : String(e),
+    });
+  }
+
+  // Rejection email — fire-and-forget.
+  if (station.user_id) {
+    findById(station.user_id).then((user) => {
+      if (user) {
+        sendStationRejectionEmail(user.email, station.name, reason).catch(() => void 0);
+      }
+    }).catch(() => void 0);
+  }
 }
 
 export async function getMyStation(userId: string): Promise<StationWithDocuments> {

@@ -130,6 +130,8 @@ const TEXTS = {
       body: (name: string) =>
         `Nous avons le plaisir de vous informer que votre station <strong>${name}</strong> a été approuvée et est maintenant active sur Slowtime.`,
       extra: 'Vous pouvez dès à présent vous connecter avec votre adresse e-mail et le mot de passe choisi lors de votre inscription.',
+      stripePrompt: 'Pour recevoir vos paiements, veuillez compléter la configuration de votre compte Stripe en cliquant sur le bouton ci-dessous.',
+      stripeCta: 'Configurer mon compte Stripe',
       cta: 'Se connecter à Slowtime',
       closing: 'Bienvenue dans la communauté Slowtime !',
     },
@@ -139,8 +141,30 @@ const TEXTS = {
       body: (name: string) =>
         `We are pleased to inform you that your station <strong>${name}</strong> has been approved and is now active on Slowtime.`,
       extra: 'You can now log in using the email address and password you chose during registration.',
+      stripePrompt: 'To receive payments, please complete your Stripe account setup by clicking the button below.',
+      stripeCta: 'Set up my Stripe account',
       cta: 'Log in to Slowtime',
       closing: 'Welcome to the Slowtime community!',
+    },
+  },
+  stationRejection: {
+    fr: {
+      subject: (name: string) => `[Slowtime] Votre demande d'adhésion pour ${name} a été refusée`,
+      greeting: 'Bonjour,',
+      body: (name: string) =>
+        `Nous vous informons que votre demande d'adhésion pour la station <strong>${name}</strong> n'a pas pu être approuvée.`,
+      reasonLabel: 'Motif du refus :',
+      closing: 'Vous pouvez resoumettre votre dossier avec les corrections nécessaires depuis l\'application.',
+      cta: 'Accéder à Slowtime',
+    },
+    en: {
+      subject: (name: string) => `[Slowtime] Your application for ${name} has been rejected`,
+      greeting: 'Hello,',
+      body: (name: string) =>
+        `We regret to inform you that your application for station <strong>${name}</strong> could not be approved.`,
+      reasonLabel: 'Reason for rejection:',
+      closing: 'You may resubmit your application with the required corrections from the app.',
+      cta: 'Go to Slowtime',
     },
   },
   paymentSuccess: {
@@ -405,6 +429,7 @@ export async function sendPasswordResetEmail(
 export async function sendStationApprovalEmail(
   to: string,
   stationName: string,
+  stripeOnboardingUrl?: string,
   locale: Locale = 'fr'
 ): Promise<void> {
   const client = getResendClient();
@@ -415,9 +440,19 @@ export async function sendStationApprovalEmail(
   if (!isReasonableRecipientEmail(to)) return;
 
   const t = TEXTS.stationApproval[locale];
-  const loginUrl = safeHttpUrlForEmailHref(`${APP_URL}/${locale}/login`) ?? '';
   const subjectName = safePlainTextSnippet(stationName, 200);
   const escapedName = escapeHtmlPlain(safePlainTextSnippet(stationName, 500));
+  const safeStripeUrl = safeHttpUrlForEmailHref(stripeOnboardingUrl);
+
+  // When a Stripe onboarding URL is available, it becomes the primary CTA.
+  // A secondary login link is included in the body text.
+  const loginUrl = safeHttpUrlForEmailHref(`${APP_URL}/${locale}/login`) ?? '';
+  const stripeBlock = safeStripeUrl
+    ? `<br/><br/>${t.stripePrompt}`
+    : '';
+  const loginBlock = safeStripeUrl
+    ? `<br/><br/>${t.extra} <a href="${loginUrl}" style="color:#af8408;">${t.cta}</a>`
+    : `<br/><br/>${t.extra}`;
 
   await client.emails.send({
     from: FROM,
@@ -425,8 +460,42 @@ export async function sendStationApprovalEmail(
     subject: t.subject(subjectName),
     html: brandedEmail(locale, {
       greeting: t.greeting,
-      bodyHtml: `${t.body(escapedName)}<br/><br/>${t.extra}`,
-      ctaUrl: loginUrl || undefined,
+      bodyHtml: `${t.body(escapedName)}${stripeBlock}${loginBlock}`,
+      ctaUrl: safeStripeUrl ?? (loginUrl || undefined),
+      ctaLabel: safeStripeUrl ? t.stripeCta : t.cta,
+      footNote: t.closing,
+    }),
+  });
+}
+
+
+export async function sendStationRejectionEmail(
+  to: string,
+  stationName: string,
+  reason: string,
+  locale: Locale = 'fr'
+): Promise<void> {
+  const client = getResendClient();
+  if (!client) {
+    warnResendMissingOnce('sendStationRejectionEmail');
+    return;
+  }
+  if (!isReasonableRecipientEmail(to)) return;
+
+  const t = TEXTS.stationRejection[locale];
+  const subjectName = safePlainTextSnippet(stationName, 200);
+  const escapedName = escapeHtmlPlain(safePlainTextSnippet(stationName, 500));
+  const escapedReason = escapeHtmlPlain(safePlainTextSnippet(reason, 500));
+  const appUrl = safeHttpUrlForEmailHref(`${APP_URL}/${locale}`) ?? '';
+
+  await client.emails.send({
+    from: FROM,
+    to,
+    subject: t.subject(subjectName),
+    html: brandedEmail(locale, {
+      greeting: t.greeting,
+      bodyHtml: `${t.body(escapedName)}<br/><br/><strong>${t.reasonLabel}</strong><br/>${escapedReason}`,
+      ctaUrl: appUrl || undefined,
       ctaLabel: t.cta,
       footNote: t.closing,
     }),

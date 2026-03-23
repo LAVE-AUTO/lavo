@@ -1,7 +1,8 @@
 import { requireRole } from '@/lib/require-role';
 import { approveStation } from '@/server/station/station-service';
-import { successResponse, error403, error404, error500, fromAppError } from '@/lib/responses';
-import { AppError, ForbiddenError, NotFoundError } from '@/lib/errors';
+import { successResponse, error404, error409, error500, fromAppError } from '@/lib/responses';
+import { ApiCode } from '@/types/api-codes';
+import { AppError, ConflictError, NotFoundError } from '@/lib/errors';
 import type { NextResponse } from 'next/server';
 
 /**
@@ -30,7 +31,7 @@ export async function POST(
     return successResponse({ approved: true }, 'Station approved successfully.');
   } catch (e) {
     if (e instanceof NotFoundError) return error404(e.message);
-    if (e instanceof ForbiddenError) return error403(e.message);
+    if (e instanceof ConflictError) return error409(e.message, ApiCode.CONFLICT);
     if (e instanceof AppError) return fromAppError(e);
     return error500(e);
   }

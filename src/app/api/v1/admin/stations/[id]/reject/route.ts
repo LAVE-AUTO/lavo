@@ -4,13 +4,13 @@ import { rejectStationSchema, mapZodErrors } from '@/validators/station';
 import {
   successResponse,
   error400,
-  error403,
   error404,
+  error409,
   error500,
   fromAppError,
 } from '@/lib/responses';
 import { ApiCode } from '@/types/api-codes';
-import { AppError, ForbiddenError, NotFoundError } from '@/lib/errors';
+import { AppError, ConflictError, NotFoundError } from '@/lib/errors';
 import type { NextResponse } from 'next/server';
 
 /**
@@ -54,7 +54,7 @@ export async function POST(
     return successResponse({ rejected: true }, 'Station rejected.');
   } catch (e) {
     if (e instanceof NotFoundError) return error404(e.message);
-    if (e instanceof ForbiddenError) return error403(e.message);
+    if (e instanceof ConflictError) return error409(e.message, ApiCode.CONFLICT);
     if (e instanceof AppError) return fromAppError(e);
     return error500(e);
   }

@@ -4,6 +4,7 @@
  * The station's stripe_account_id is used as the connected account (destination).
  */
 import { stripe } from '@/lib/stripe';
+import { APP_URL } from '@/helpers/constants';
 import { NotImplementedError, ValidationError } from '@/lib/errors';
 
 // ─── Legacy queue payment (immediate charge) ────────────────────────────────
@@ -180,4 +181,36 @@ export async function distributePenalty(
     amount: clawbackCents,
   });
   return reversal.id;
+}
+
+// ─── Stripe Connect onboarding ────────────────────────────────────────────────
+
+/**
+ * Creates a Stripe Connect Express account for a station.
+ * Returns the new account ID (acct_xxx) to be stored in stations.stripe_account_id.
+ */
+export async function createStripeConnectAccount(
+  email: string,
+  stationId: string
+): Promise<string> {
+  const account = await stripe.accounts.create({
+    type: 'express',
+    email,
+    metadata: { station_id: stationId },
+  });
+  return account.id;
+}
+
+/**
+ * Generates a Stripe Connect onboarding link for a connected account.
+ * The station owner uses this URL to complete their Stripe profile and add bank details.
+ */
+export async function createStripeOnboardingLink(accountId: string): Promise<string> {
+  const link = await stripe.accountLinks.create({
+    account: accountId,
+    refresh_url: `${APP_URL}/station/stripe-refresh`,
+    return_url: `${APP_URL}/station/stripe-return`,
+    type: 'account_onboarding',
+  });
+  return link.url;
 }
