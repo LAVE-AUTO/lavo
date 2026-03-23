@@ -7,6 +7,7 @@ import { Link, useRouter } from '@/i18n/navigation';
 import { useParams } from 'next/navigation';
 import { useToast } from '@/context/toast-context';
 import { getFromApi, patchWithApi } from '@/services/axios-service';
+import { RESERVATIONS_MOCK_ENABLED, findMockReservation } from '@/data/reservations-mock';
 
 /* ------------------------------------------------------------------ */
 /* API shapes                                                           */
@@ -91,6 +92,29 @@ export default function ReservationDetailPage() {
 
   const loadReservation = useCallback(async () => {
     setLoading(true);
+
+    // TODO: remove mock block once booking flow is connected to Stripe
+    if (RESERVATIONS_MOCK_ENABLED) {
+      const mock = findMockReservation(id);
+      if (!mock) { setNotFound(true); setLoading(false); return; }
+      setReservation({
+        id: mock.id,
+        stationName: mock.stationName,
+        stationAddress: mock.stationAddress,
+        stationImageUrl: mock.stationImageUrl,
+        stationLatitude: mock.stationLatitude,
+        stationLongitude: mock.stationLongitude,
+        forfaitName: mock.forfaitName,
+        date: mock.date,
+        timeSlot: mock.timeSlot,
+        duration: mock.duration,
+        totalPrice: mock.totalPrice,
+        status: mock.status,
+      });
+      setLoading(false);
+      return;
+    }
+
     const [ok, data] = await getFromApi('/me/entries?per_page=100');
     if (!mountedRef.current) return;
 
@@ -222,6 +246,16 @@ export default function ReservationDetailPage() {
   const handleConfirmCancel = async () => {
     if (!reservation) return;
     setCancelLoading(true);
+
+    // TODO: remove mock block once booking flow is connected to Stripe
+    if (RESERVATIONS_MOCK_ENABLED) {
+      setCancelLoading(false);
+      setShowCancelModal(false);
+      showSuccess(t('toast_cancel_success'));
+      router.push('/client/reservations');
+      return;
+    }
+
     const [ok] = await patchWithApi(`/me/entries/${reservation.id}/cancel`, {});
     setCancelLoading(false);
     if (ok) {

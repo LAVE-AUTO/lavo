@@ -9,6 +9,7 @@ import { SummaryStep } from './SummaryStep';
 import { PaymentStep } from './PaymentStep';
 import { useUserLocation } from '../useUserLocation';
 import { postWithApi } from '@/services/axios-service';
+import { RESERVATIONS_MOCK_ENABLED } from '@/data/reservations-mock';
 import type { StationDetailData, ServiceCategory, ServiceForfait, TimeSlot } from '@/types/station';
 
 type ArrivalMode = 'queue_now' | 'queue_later' | 'book_slot';
@@ -121,6 +122,13 @@ export function BookingFlow({ station, forfait, onClose }: BookingFlowProps) {
     process.env.NEXT_PUBLIC_DEV_SKIP_PAYMENT === 'true';
 
   const handlePaymentConfirm = useCallback(async (): Promise<void> => {
+    // TODO: remove mock block once booking flow is connected to Stripe
+    if (RESERVATIONS_MOCK_ENABLED) {
+      if (!mountedRef.current) return;
+      setPaymentResult('success');
+      return;
+    }
+
     if (arrivalMode === 'queue_now' || arrivalMode === 'queue_later') {
       const [ok] = await postWithApi(`/stations/${station.id}/queue/join`, {
         vehicle_format_id: forfait.id,
