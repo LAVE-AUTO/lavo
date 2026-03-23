@@ -115,3 +115,30 @@ export class SlotFullError extends AppError {
     super(message, HTTP_STATUS.CONFLICT);
   }
 }
+
+/**
+ * Reservation has already been rated (409).
+ */
+export class AlreadyRatedError extends AppError {
+  constructor(message = 'This reservation has already been rated') {
+    super(message, HTTP_STATUS.CONFLICT);
+  }
+}
+
+/**
+ * Rating submission window (7 days) has expired (409).
+ */
+export class RatingWindowExpiredError extends AppError {
+  constructor(message = 'The 7-day rating window has expired') {
+    super(message, HTTP_STATUS.CONFLICT);
+  }
+}
+
+/**
+ * Reservation is not in completed status (409).
+ */
+export class ReservationNotCompletedError extends AppError {
+  constructor(message = 'The reservation is not completed') {
+    super(message, HTTP_STATUS.CONFLICT);
+  }
+}
