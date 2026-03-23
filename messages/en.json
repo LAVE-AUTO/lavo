@@ -844,6 +844,8 @@
     "past_completed": "This reservation is completed.",
     "past_cancelled": "This reservation was cancelled.",
     "rate_btn": "Leave a review",
+    "rating_prompt_title": "How was your service?",
+    "rating_prompt_subtitle": "Share your experience to help other clients.",
     "toast_cancel_success": "Reservation cancelled successfully",
     "toast_cancel_error": "Unable to cancel the reservation. Please try again.",
     "confirm_title": "Reservation confirmation",

@@ -844,6 +844,8 @@
     "past_completed": "Cette réservation est terminée.",
     "past_cancelled": "Cette réservation a été annulée.",
     "rate_btn": "Laisser un avis",
+    "rating_prompt_title": "Comment s'est passé votre service ?",
+    "rating_prompt_subtitle": "Partagez votre expérience pour aider les autres clients.",
     "toast_cancel_success": "Réservation annulée avec succès",
     "toast_cancel_error": "Impossible d'annuler la réservation. Veuillez réessayer.",
     "confirm_title": "Confirmation de réservation",
