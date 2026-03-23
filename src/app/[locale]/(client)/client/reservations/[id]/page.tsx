@@ -316,10 +316,21 @@ export default function ReservationDetailPage() {
         )}
 
         {isPast && (
-          <div className="bg-[#E8E8D8] dark:bg-[#1A1A18] rounded-xl border border-[#D0D0C0] dark:border-tab-inactive p-4 text-center">
-            <p className="text-[14px] text-[#666] dark:text-[#B0B0A0]">
+          <div className="bg-[#E8E8D8] dark:bg-[#1A1A18] rounded-xl border border-[#D0D0C0] dark:border-tab-inactive p-4 space-y-3">
+            <p className="text-[14px] text-[#666] dark:text-[#B0B0A0] text-center">
               {reservation.status === 'completed' ? t('past_completed') : t('past_cancelled')}
             </p>
+            {reservation.status === 'completed' && (
+              <Link
+                href={`/client/reservations/${id}/rate`}
+                className="flex items-center justify-center gap-2 w-full py-3 rounded-xl border-2 border-gold/40 text-[14px] font-bold text-gold hover:bg-gold/10 hover:border-gold/60 transition-colors"
+              >
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                  <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z" />
+                </svg>
+                {t('rate_btn')}
+              </Link>
+            )}
           </div>
         )}
       </div>
