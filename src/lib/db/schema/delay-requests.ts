@@ -24,6 +24,7 @@ export const delayRequests = pgTable(
     /** pending | accepted | refused */
     status: varchar('status', { length: 20 }).notNull().default('pending'),
     message: text('message'),
+    refusal_reason: text('refusal_reason'),
     created_at: timestamp('created_at', { mode: 'date', withTimezone: true }).notNull().defaultNow(),
     updated_at: timestamp('updated_at', { mode: 'date', withTimezone: true }).notNull().defaultNow(),
   },

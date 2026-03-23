@@ -72,6 +72,14 @@ export const signalDelayBodySchema = z
   .strict()
   .optional();
 
+/** POST /reservations/:id/refuse-delay — optional refusal reason. */
+export const refuseDelayBodySchema = z
+  .object({
+    refusal_reason: z.string().max(500).optional(),
+  })
+  .strict()
+  .optional();
+
 /** PATCH /station/entries/:entryId/position — reorder queue. */
 export const stationPatchPositionBodySchema = z
   .object({
@@ -97,3 +105,4 @@ export type StationPatchEntryBody = z.infer<typeof stationPatchEntryBodySchema>;
 export type StationPatchPositionBody = z.infer<typeof stationPatchPositionBodySchema>;
 export type EntryIdParam = z.infer<typeof entryIdParamSchema>;
 export type SignalDelayBody = z.infer<typeof signalDelayBodySchema>;
+export type RefuseDelayBody = z.infer<typeof refuseDelayBodySchema>;

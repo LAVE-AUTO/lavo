@@ -125,7 +125,8 @@ export async function acceptDelay(
  */
 export async function refuseDelay(
   reservationId: string,
-  stationId: string
+  stationId: string,
+  refusalReason?: string
 ): Promise<DelayRequest> {
   const entry = await findEntryByIdAndStation(reservationId, stationId);
   if (!entry) throw new NotFoundError('Reservation not found');
@@ -140,7 +141,7 @@ export async function refuseDelay(
 
   const [updated] = await db
     .update(delayRequests)
-    .set({ status: 'refused', updated_at: new Date() })
+    .set({ status: 'refused', refusal_reason: refusalReason ?? null, updated_at: new Date() })
     .where(eq(delayRequests.id, delayRequest.id))
     .returning();
   if (!updated) throw new Error('Update delay request failed');
