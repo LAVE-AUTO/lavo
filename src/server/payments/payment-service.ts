@@ -147,6 +147,17 @@ export async function refundPaymentIntent(
 }
 
 /**
+ * Updates the metadata on an existing Stripe PaymentIntent.
+ * Used when a reservation is rescheduled without penalty to re-point the PI to the new reservation.
+ */
+export async function updatePaymentIntentMetadata(
+  paymentIntentId: string,
+  metadata: Record<string, string>
+): Promise<void> {
+  await stripe.paymentIntents.update(paymentIntentId, { metadata });
+}
+
+/**
  * Distributes the penalty amount between platform and station after a late cancellation.
  * Claws back the platform's share from the station via a Stripe transfer reversal.
  *
