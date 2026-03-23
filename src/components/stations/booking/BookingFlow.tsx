@@ -50,6 +50,7 @@ export function BookingFlow({ station, forfait, onClose }: BookingFlowProps) {
   const totalDuration = forfait.duration + extrasDuration;
 
   useEffect(() => {
+    mountedRef.current = true;
     return () => { mountedRef.current = false; };
   }, []);
 
