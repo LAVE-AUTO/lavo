@@ -849,6 +849,7 @@
     "tip_btn": "Leave a tip",
     "tip_prompt_title": "Happy with the service?",
     "tip_prompt_subtitle": "Thank your service provider with a tip.",
+    "signal_delay_btn": "Signal a delay",
     "toast_cancel_success": "Reservation cancelled successfully",
     "toast_cancel_error": "Unable to cancel the reservation. Please try again.",
     "confirm_title": "Reservation confirmation",
@@ -1708,5 +1709,23 @@
     "btn_back_reservations": "View my reservations",
     "already_tipped_title": "Tip already sent",
     "already_tipped_desc": "You have already left a tip for this reservation."
+  },
+  "signal_delay": {
+    "page_title": "Signal a delay",
+    "subtitle": "Let the station know you will be running late.",
+    "btn_back": "Back",
+    "btn_retry": "Retry",
+    "error_load": "Unable to load reservation data.",
+    "warning": "Note: signaling a delay does not guarantee your slot will be held. The station will decide whether to accept or refuse your late arrival.",
+    "message_label": "Message (optional)",
+    "message_hint": "Specify your estimated arrival time or any useful information.",
+    "message_placeholder": "e.g. I will arrive in 15 minutes...",
+    "btn_submit": "Confirm delay",
+    "processing": "Sending...",
+    "success_title": "Delay signaled",
+    "success_desc": "The station has been notified. You will receive a response shortly.",
+    "btn_back_reservation": "Back to reservation",
+    "already_signaled_title": "Delay already signaled",
+    "already_signaled_desc": "You have already signaled a delay for this reservation. Please wait for the station's response."
   }
 }

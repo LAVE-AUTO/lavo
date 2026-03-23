@@ -346,6 +346,13 @@ export default function ReservationDetailPage() {
               {t('reschedule_btn')}
             </Link>
 
+            <Link
+              href={`/client/reservations/${id}/signal-delay`}
+              className="block w-full py-3.5 rounded-xl text-[15px] font-bold text-center text-[#555] dark:text-[#B0B0A0] border-2 border-[#D0D0C0] dark:border-tab-inactive hover:border-lavo-error/40 hover:text-lavo-error transition-colors"
+            >
+              {t('signal_delay_btn')}
+            </Link>
+
             <button
               type="button"
               onClick={() => setShowCancelModal(true)}
