@@ -6,6 +6,7 @@
 import { relations } from "drizzle-orm";
 import { adminLogs } from "./admins";
 import { commissionSettings } from "./commission";
+import { rescheduleRequests } from "./reschedule-requests";
 import { emailVerificationTokens, users } from "./users";
 import { refreshTokens } from "./refresh-tokens";
 import { noShowFees, reservations } from "./reservations";
@@ -36,6 +37,7 @@ export * from "./support";
 export * from "./settings";
 export * from "./auth-rate-limits";
 export * from "./refresh-tokens";
+export * from "./reschedule-requests";
 
 export const usersRelations = relations(users, ({ one, many }) => ({
   station: one(stations, {
@@ -240,5 +242,26 @@ export const supportTicketsRelations = relations(supportTickets, ({ one }) => ({
   assignedToAdmin: one(users, {
     fields: [supportTickets.assigned_to],
     references: [users.id],
+  }),
+}));
+
+export const rescheduleRequestsRelations = relations(rescheduleRequests, ({ one }) => ({
+  originalReservation: one(reservations, {
+    fields: [rescheduleRequests.original_reservation_id],
+    references: [reservations.id],
+    relationName: 'originalReschedule',
+  }),
+  newReservation: one(reservations, {
+    fields: [rescheduleRequests.new_reservation_id],
+    references: [reservations.id],
+    relationName: 'newReschedule',
+  }),
+  user: one(users, {
+    fields: [rescheduleRequests.user_id],
+    references: [users.id],
+  }),
+  station: one(stations, {
+    fields: [rescheduleRequests.station_id],
+    references: [stations.id],
   }),
 }));

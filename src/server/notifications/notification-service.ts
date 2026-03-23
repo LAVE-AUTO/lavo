@@ -22,7 +22,9 @@ export type NotifyEntryParams = {
     | 'reservation_reminder_30min'
     | 'client_late'
     | 'queue_pick'
-    | 'queue_position_changed';
+    | 'queue_position_changed'
+    | 'reservation_rescheduled'
+    | 'reschedule_station_notified';
   payload?: Record<string, unknown>;
 };
 
@@ -40,6 +42,8 @@ const PUSH_MESSAGES: Record<NotifyEntryParams['type'], { title: string; body: st
   client_late: { title: 'You have been moved to the walk-in queue', body: 'Your reservation window has passed. You are now at the front of the walk-in queue.' },
   queue_pick: { title: 'It is your turn!', body: 'The station is ready for you. Please proceed to the wash bay.' },
   queue_position_changed: { title: 'Queue update', body: 'Your position in the queue has been updated.' },
+  reservation_rescheduled: { title: 'Reservation rescheduled', body: 'Your reservation has been moved to a new time slot.' },
+  reschedule_station_notified: { title: 'Reservation rescheduled', body: 'A client has rescheduled their reservation to a new time slot.' },
 };
 
 /**
