@@ -850,6 +850,7 @@
     "tip_prompt_title": "Happy with the service?",
     "tip_prompt_subtitle": "Thank your service provider with a tip.",
     "signal_delay_btn": "Signal a delay",
+    "reschedule_btn": "Reschedule reservation",
     "toast_cancel_success": "Reservation cancelled successfully",
     "toast_cancel_error": "Unable to cancel the reservation. Please try again.",
     "confirm_title": "Reservation confirmation",
