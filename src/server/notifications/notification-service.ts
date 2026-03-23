@@ -24,7 +24,7 @@ export type NotifyEntryParams = {
     | 'queue_pick'
     | 'queue_position_changed'
     | 'reservation_rescheduled'
-    | 'reschedule_station_notified';
+    | 'reschedule_station_notified'
     | 'delay_request_received'
     | 'delay_accepted'
     | 'delay_refused';
