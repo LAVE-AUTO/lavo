@@ -1,0 +1,359 @@
+'use client';
+
+import { useState, useEffect, useRef, useCallback } from 'react';
+import { useTranslations, useLocale } from 'next-intl';
+import { Link } from '@/i18n/navigation';
+import { useParams } from 'next/navigation';
+import { useToast } from '@/context/toast-context';
+import { getFromApi } from '@/services/axios-service';
+import SlotPicker, { type AvailableSlot } from '@/components/reservations/SlotPicker';
+import RescheduleSuccessView from '@/components/reservations/RescheduleSuccessView';
+
+/* ------------------------------------------------------------------ */
+/* Shapes API                                                           */
+/* ------------------------------------------------------------------ */
+
+interface ApiEntry {
+  id: string;
+  entry_type: 'reservation' | 'queue';
+  time_slot_id: string | null;
+  station_id: string;
+  vehicle_format_id: string | null;
+  status: string;
+  amount_paid: string | null;
+  created_at: string;
+}
+
+interface ApiTimeSlot {
+  id: string;
+  start_time: string;
+  status: string;
+  booked_count: number;
+  capacity: number;
+}
+
+interface ApiStation {
+  id: string;
+  name: string;
+  vehicleFormats: Array<{ id: string; label: string; price: string }>;
+  timeSlots: ApiTimeSlot[];
+  stationConfig?: { wash_duration_minutes: number } | null;
+}
+
+/* ------------------------------------------------------------------ */
+/* Constantes                                                           */
+/* ------------------------------------------------------------------ */
+
+/* Frais de report appliqués si le créneau actuel est dans moins de 2h */
+const RESCHEDULE_FEE = 5;
+const LATE_RESCHEDULE_THRESHOLD_MINUTES = 120;
+
+function safeFloat(v: string | null | undefined): number {
+  const n = parseFloat(v ?? '');
+  return isNaN(n) ? 0 : n;
+}
+
+/* ------------------------------------------------------------------ */
+/* Composant                                                            */
+/* ------------------------------------------------------------------ */
+
+export default function RescheduleReservationPage() {
+  const t      = useTranslations('reschedule');
+  const locale = useLocale();
+  const params = useParams();
+  const id     = params.id as string;
+  const { error: showError } = useToast();
+
+  const mountedRef = useRef(true);
+  useEffect(() => {
+    mountedRef.current = true;
+    return () => { mountedRef.current = false; };
+  }, []);
+
+  const [loading, setLoading]                 = useState(true);
+  const [loadError, setLoadError]             = useState(false);
+  const [submitting, setSubmitting]           = useState(false);
+  const [done, setDone]                       = useState(false);
+  const [selectedSlotId, setSelectedSlotId]   = useState<string | null>(null);
+  const [availableSlots, setAvailableSlots]   = useState<AvailableSlot[]>([]);
+  const [currentLabel, setCurrentLabel]       = useState('');
+  const [forfaitLabel, setForfaitLabel]       = useState('');
+  const [stationName, setStationName]         = useState('');
+  const [amount, setAmount]                   = useState(0);
+  const [hasFee, setHasFee]                   = useState(false);
+
+  const loadData = useCallback(async () => {
+    setLoading(true);
+    setLoadError(false);
+
+    const [entriesOk, entriesData] = await getFromApi('/me/entries?per_page=100');
+    if (!mountedRef.current) return;
+
+    if (!entriesOk) { setLoadError(true); setLoading(false); return; }
+
+    const entries: ApiEntry[] = (entriesData as { data: { entries: ApiEntry[] } })?.data?.entries ?? [];
+    const entry = entries.find((e) => e.id === id && e.entry_type === 'reservation');
+
+    if (!entry) { setLoadError(true); setLoading(false); return; }
+
+    const [stationOk, stationData] = await getFromApi(`/stations/${entry.station_id}`);
+    if (!mountedRef.current) return;
+
+    if (!stationOk) { setLoadError(true); setLoading(false); return; }
+
+    const station = (stationData as { data: ApiStation }).data;
+
+    /* Créneau actuel */
+    const currentSlot = entry.time_slot_id
+      ? station.timeSlots.find((s) => s.id === entry.time_slot_id)
+      : null;
+
+    const now = Date.now();
+
+    if (currentSlot) {
+      const slotDate = new Date(currentSlot.start_time);
+      const label = slotDate.toLocaleDateString(locale === 'en' ? 'en-CA' : 'fr-CA', {
+        weekday: 'short', day: 'numeric', month: 'short',
+      }) + ' ' + String(slotDate.getHours()).padStart(2, '0') + ':' + String(slotDate.getMinutes()).padStart(2, '0');
+      setCurrentLabel(label);
+
+      const minutesUntil = (slotDate.getTime() - now) / 60000;
+      setHasFee(minutesUntil > 0 && minutesUntil < LATE_RESCHEDULE_THRESHOLD_MINUTES);
+    }
+
+    const format = station.vehicleFormats.find((f) => f.id === entry.vehicle_format_id);
+    setForfaitLabel(format?.label ?? '—');
+    setStationName(station.name);
+    setAmount(safeFloat(entry.amount_paid));
+
+    /* Créneaux disponibles : futurs, pas pleins, différents du créneau actuel */
+    const future: AvailableSlot[] = station.timeSlots
+      .filter((s) => new Date(s.start_time).getTime() > now && s.id !== entry.time_slot_id)
+      .map((s) => ({
+        id: s.id,
+        startTime: s.start_time,
+        isFull: s.status === 'full' || s.booked_count >= s.capacity,
+      }));
+    setAvailableSlots(future);
+    setLoading(false);
+  }, [id, locale]);
+
+  useEffect(() => { loadData(); }, [loadData]);
+
+  const handleConfirm = async () => {
+    if (!selectedSlotId || submitting) return;
+    setSubmitting(true);
+
+    // TODO: connect to API once endpoint is available
+    // PATCH /me/entries/:id/reschedule { new_slot_id: selectedSlotId }
+    await new Promise((r) => setTimeout(r, 800));
+
+    if (!mountedRef.current) return;
+    setSubmitting(false);
+    setDone(true);
+  };
+
+  if (done) return <RescheduleSuccessView />;
+
+  /* État chargement */
+  if (loading) {
+    return (
+      <main className="min-h-screen bg-[#F5F5E6] dark:bg-[#0F0F0D] flex items-center justify-center pb-24 sm:pb-8">
+        <div className="h-8 w-8 animate-spin rounded-full border-[3px] border-gold border-t-transparent" />
+      </main>
+    );
+  }
+
+  /* État erreur */
+  if (loadError) {
+    return (
+      <main className="min-h-screen bg-[#F5F5E6] dark:bg-[#0F0F0D] flex flex-col items-center justify-center gap-3 pb-24 sm:pb-8">
+        <p className="text-[15px] font-semibold text-[#555] dark:text-[#B0B0A0] text-center px-4">
+          {t('error_load')}
+        </p>
+        <button
+          type="button"
+          onClick={loadData}
+          className="rounded-[10px] border border-gold/50 px-4 py-2 text-[13px] font-semibold text-gold hover:bg-gold/10 transition-colors cursor-pointer"
+        >
+          {t('btn_retry')}
+        </button>
+      </main>
+    );
+  }
+
+  const feeTotal = hasFee ? RESCHEDULE_FEE : 0;
+  const canConfirm = selectedSlotId !== null && !submitting;
+
+  return (
+    <main className="min-h-screen bg-[#F5F5E6] dark:bg-[#0F0F0D] pb-24 sm:pb-8">
+      {/* En-tête */}
+      <div className="px-4 pt-4 pb-2 max-w-2xl mx-auto">
+        <Link
+          href={`/client/reservations/${id}`}
+          className="inline-flex items-center gap-2 text-[14px] font-bold text-gold hover:text-gold-hover transition-colors"
+        >
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+            <polyline points="15 18 9 12 15 6" />
+          </svg>
+          {t('btn_back')}
+        </Link>
+        <h1 className="text-[22px] font-black text-[#0A0A14] dark:text-white mt-3">
+          {t('page_title')}
+        </h1>
+      </div>
+
+      <div className="px-4 max-w-2xl mx-auto space-y-4">
+        {/* Récapitulatif de la réservation actuelle */}
+        <CurrentBookingCard
+          stationName={stationName}
+          forfait={forfaitLabel}
+          currentLabel={currentLabel}
+          amount={amount}
+          t={t}
+        />
+
+        {/* Avertissement frais de report */}
+        {hasFee && <FeeWarningBanner fee={RESCHEDULE_FEE} t={t} />}
+
+        {/* Sélecteur de créneau */}
+        <section className="bg-[#E8E8D8] dark:bg-dark-card rounded-xl border border-[#D0D0C0] dark:border-tab-inactive p-5">
+          <h2 className="text-[16px] font-black text-[#0A0A14] dark:text-white mb-4">
+            {t('select_slot')}
+          </h2>
+          {availableSlots.length === 0 ? (
+            <p className="text-[14px] text-[#666] dark:text-[#B0B0A0]">{t('no_slots')}</p>
+          ) : (
+            <SlotPicker
+              slots={availableSlots}
+              selectedSlotId={selectedSlotId}
+              onSelect={setSelectedSlotId}
+              locale={locale}
+            />
+          )}
+        </section>
+
+        {/* Résumé financier + bouton */}
+        {selectedSlotId && (
+          <ConfirmSection
+            amount={amount}
+            fee={feeTotal}
+            hasFee={hasFee}
+            submitting={submitting}
+            canConfirm={canConfirm}
+            onConfirm={handleConfirm}
+            t={t}
+          />
+        )}
+      </div>
+    </main>
+  );
+}
+
+/* ------------------------------------------------------------------ */
+/* Sous-composants                                                      */
+/* ------------------------------------------------------------------ */
+
+function CurrentBookingCard({
+  stationName, forfait, currentLabel, amount, t,
+}: {
+  stationName: string;
+  forfait: string;
+  currentLabel: string;
+  amount: number;
+  t: ReturnType<typeof useTranslations>;
+}) {
+  return (
+    <div className="bg-[#E8E8D8] dark:bg-dark-card rounded-xl border border-[#D0D0C0] dark:border-tab-inactive p-5 space-y-3">
+      <h2 className="text-[16px] font-black text-[#0A0A14] dark:text-white">{t('current_booking')}</h2>
+      <div className="space-y-2 text-[14px]">
+        <Row label={t('label_station')} value={stationName} />
+        <Row label={t('label_forfait')} value={forfait} />
+        {currentLabel && <Row label={t('label_date')} value={currentLabel} />}
+        <div className="pt-2 border-t border-[#D0D0C0] dark:border-tab-inactive flex items-center justify-between">
+          <span className="font-bold text-[#0A0A14] dark:text-white">{t('total')}</span>
+          <span className="text-[18px] font-black text-gold">{amount.toFixed(2)}$</span>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function FeeWarningBanner({ fee, t }: { fee: number; t: ReturnType<typeof useTranslations> }) {
+  return (
+    <div className="flex gap-3 bg-[#FF8800]/10 border border-[#FF8800]/30 rounded-xl px-4 py-3">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#FF8800" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="shrink-0 mt-0.5" aria-hidden="true">
+        <path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z" />
+        <line x1="12" y1="9" x2="12" y2="13" /><line x1="12" y1="17" x2="12.01" y2="17" />
+      </svg>
+      <p className="text-[13px] font-semibold text-[#FF8800] leading-relaxed">
+        {t('fee_warning')} ({fee.toFixed(2)}$)
+      </p>
+    </div>
+  );
+}
+
+function ConfirmSection({
+  amount, fee, hasFee, submitting, canConfirm, onConfirm, t,
+}: {
+  amount: number;
+  fee: number;
+  hasFee: boolean;
+  submitting: boolean;
+  canConfirm: boolean;
+  onConfirm: () => void;
+  t: ReturnType<typeof useTranslations>;
+}) {
+  return (
+    <div className="bg-[#E8E8D8] dark:bg-dark-card rounded-xl border border-[#D0D0C0] dark:border-tab-inactive p-5 space-y-4">
+      {hasFee && (
+        <div className="space-y-2 text-[14px]">
+          <div className="flex justify-between text-[#555] dark:text-[#C0C0B0]">
+            <span>{t('subtotal')}</span>
+            <span>{amount.toFixed(2)}$</span>
+          </div>
+          <div className="flex justify-between text-[#FF8800]">
+            <span>{t('fee_label')}</span>
+            <span>+{fee.toFixed(2)}$</span>
+          </div>
+          <div className="pt-2 border-t border-[#D0D0C0] dark:border-tab-inactive flex justify-between font-black text-[#0A0A14] dark:text-white text-[16px]">
+            <span>{t('total')}</span>
+            <span className="text-gold">{(amount + fee).toFixed(2)}$</span>
+          </div>
+        </div>
+      )}
+
+      <button
+        type="button"
+        onClick={onConfirm}
+        disabled={!canConfirm}
+        className="w-full py-3.5 rounded-[10px] bg-gold hover:bg-gold-hover text-dark-bg text-[15px] font-black transition-colors cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+      >
+        {submitting && (
+          <svg className="animate-spin" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" aria-hidden="true">
+            <path d="M21 12a9 9 0 11-6.219-8.56" />
+          </svg>
+        )}
+        {submitting ? t('processing') : t('btn_confirm')}
+      </button>
+
+      {hasFee && (
+        <p className="text-[11px] text-[#999] dark:text-[#888] text-center flex items-center justify-center gap-1.5">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+            <rect x="3" y="11" width="18" height="11" rx="2" ry="2" /><path d="M7 11V7a5 5 0 0110 0v4" />
+          </svg>
+          {t('payment_secured')}
+        </p>
+      )}
+    </div>
+  );
+}
+
+function Row({ label, value }: { label: string; value: string }) {
+  return (
+    <div className="flex items-start justify-between gap-4">
+      <span className="text-[#999] dark:text-[#888] shrink-0">{label}</span>
+      <span className="font-semibold text-[#0A0A14] dark:text-white text-right">{value}</span>
+    </div>
+  );
+}
