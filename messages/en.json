@@ -1828,6 +1828,8 @@
     "alert_disputes_title": "Open disputes",
     "alert_disputes_empty": "No open disputes.",
     "alert_disputes_action": "View all disputes",
-    "notif_tooltip": "Notifications"
+    "notif_tooltip": "Notifications",
+    "section_performance": "Performance",
+    "kpi_period": "Today"
   }
 }
