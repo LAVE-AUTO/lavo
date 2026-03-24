@@ -56,6 +56,13 @@ const QrIcon = () => (
   </svg>
 );
 
+const DelaysIcon = () => (
+  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <circle cx="12" cy="12" r="10" /><polyline points="12 6 12 12 16 14" />
+    <path d="M16 19l-4-2-4 2" />
+  </svg>
+);
+
 const SupportIcon = () => (
   <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
     <circle cx="12" cy="12" r="10" /><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3" /><line x1="12" y1="17" x2="12.01" y2="17" />
@@ -79,6 +86,7 @@ export function StationSidebar() {
     { href: '/station/dashboard',    labelKey: 'nav_home',         icon: <HomeIcon /> },
     { href: '/station/queue',        labelKey: 'nav_queue',        icon: <QueueIcon /> },
     { href: '/station/reservations', labelKey: 'nav_reservations', icon: <ReservationsIcon /> },
+    { href: '/station/delays',       labelKey: 'nav_delays',       icon: <DelaysIcon /> },
     { href: '/station/formats',      labelKey: 'nav_formats',      icon: <FormatsIcon /> },
     { href: '/station/config',       labelKey: 'nav_config',       icon: <ConfigIcon /> },
     { href: '/station/history',      labelKey: 'nav_history',      icon: <HistoryIcon /> },
