@@ -1523,6 +1523,8 @@
     "btn_geolocate": "Use my current location",
     "geolocating": "Getting location...",
     "geo_error": "Unable to retrieve your location",
+    "geo_invalid_lat": "Invalid latitude (must be between -90 and 90)",
+    "geo_invalid_lng": "Invalid longitude (must be between -180 and 180)",
     "location_save_success": "Location updated",
     "location_save_error": "Error updating location",
     "section_extras": "Extras by service type",

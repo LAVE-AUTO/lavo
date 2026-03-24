@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useTranslations } from 'next-intl';
 import { patchWithApi } from '@/services';
 
@@ -116,6 +116,8 @@ export function StationConfigForm({ config, posts, onSaved, locked = false }: St
   );
   const [saving, setSaving] = useState(false);
   const [feedback, setFeedback] = useState<{ ok: boolean; msg: string } | null>(null);
+  const mountedRef = useRef(true);
+  useEffect(() => { mountedRef.current = true; return () => { mountedRef.current = false; }; }, []);
 
   useEffect(() => { setForm(initForm(config)); }, [config]);
   useEffect(() => { setPostStates(Object.fromEntries(posts.map((p) => [p.id, p.is_active]))); }, [posts]);
@@ -131,6 +133,11 @@ export function StationConfigForm({ config, posts, onSaved, locked = false }: St
     setIsEditing(false);
   }
 
+  function safeInt(v: string | number): number | undefined {
+    const n = Number(v);
+    return !isNaN(n) && v !== '' ? Math.max(0, Math.floor(n)) : undefined;
+  }
+
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     setSaving(true);
@@ -141,16 +148,17 @@ export function StationConfigForm({ config, posts, onSaved, locked = false }: St
     if (form.closing_time) payload.closing_time = form.closing_time;
     if (form.break_start) payload.break_start = form.break_start;
     if (form.break_end) payload.break_end = form.break_end;
-    if (form.wash_duration_minutes !== '') payload.wash_duration_minutes = Number(form.wash_duration_minutes);
-    if (form.late_tolerance_minutes !== '') payload.late_tolerance_minutes = Number(form.late_tolerance_minutes);
-    if (form.cancellation_delay_minutes !== '') payload.cancellation_delay_minutes = Number(form.cancellation_delay_minutes);
-    if (form.max_concurrent_posts !== '') payload.max_concurrent_posts = Number(form.max_concurrent_posts);
-    if (form.margin_before_minutes !== '') payload.margin_before_minutes = Number(form.margin_before_minutes);
-    if (form.margin_after_minutes !== '') payload.margin_after_minutes = Number(form.margin_after_minutes);
+    const wd = safeInt(form.wash_duration_minutes); if (wd !== undefined) payload.wash_duration_minutes = wd;
+    const lt = safeInt(form.late_tolerance_minutes); if (lt !== undefined) payload.late_tolerance_minutes = lt;
+    const cd = safeInt(form.cancellation_delay_minutes); if (cd !== undefined) payload.cancellation_delay_minutes = cd;
+    const mp = safeInt(form.max_concurrent_posts); if (mp !== undefined) payload.max_concurrent_posts = mp;
+    const mb = safeInt(form.margin_before_minutes); if (mb !== undefined) payload.margin_before_minutes = mb;
+    const ma = safeInt(form.margin_after_minutes); if (ma !== undefined) payload.margin_after_minutes = ma;
     if (form.reservation_surcharge !== '') payload.reservation_surcharge = form.reservation_surcharge;
     payload.posts = posts.map((p) => ({ id: p.id, is_active: postStates[p.id] ?? p.is_active }));
 
     const [ok, data] = await patchWithApi('/station/config', payload);
+    if (!mountedRef.current) return;
     setSaving(false);
 
     if (ok) {

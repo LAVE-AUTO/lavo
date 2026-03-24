@@ -106,8 +106,22 @@ export function StationLocationForm({ location, onSaved, locked = false }: Props
     setIsEditing(false);
   }
 
+  function validateCoord(val: string, min: number, max: number) {
+    if (!val) return true;
+    const n = parseFloat(val);
+    return !isNaN(n) && n >= min && n <= max;
+  }
+
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
+    if (lat && !validateCoord(lat, -90, 90)) {
+      setFeedback({ ok: false, msg: t('geo_invalid_lat') });
+      return;
+    }
+    if (lng && !validateCoord(lng, -180, 180)) {
+      setFeedback({ ok: false, msg: t('geo_invalid_lng') });
+      return;
+    }
     setSaving(true);
     setFeedback(null);
 
@@ -180,18 +194,18 @@ export function StationLocationForm({ location, onSaved, locked = false }: Props
             <div className="grid grid-cols-2 gap-4">
               <div className="col-span-2">
                 <Field label={t('field_address')}>
-                  <input type="text" className={inputClass} value={address} onChange={(e) => setAddress(e.target.value)} />
+                  <input type="text" className={inputClass} value={address} onChange={(e) => setAddress(e.target.value)} required maxLength={200} />
                 </Field>
               </div>
               <Field label={t('field_city')}>
-                <input type="text" className={inputClass} value={city} onChange={(e) => setCity(e.target.value)} />
+                <input type="text" className={inputClass} value={city} onChange={(e) => setCity(e.target.value)} required maxLength={100} />
               </Field>
               <div />
               <Field label={t('field_latitude')}>
-                <input type="text" className={inputClass + ' font-mono'} value={lat} onChange={(e) => setLat(e.target.value)} placeholder="45.5017000" />
+                <input type="text" inputMode="decimal" className={inputClass + ' font-mono'} value={lat} onChange={(e) => setLat(e.target.value)} placeholder="45.5017000" maxLength={20} />
               </Field>
               <Field label={t('field_longitude')}>
-                <input type="text" className={inputClass + ' font-mono'} value={lng} onChange={(e) => setLng(e.target.value)} placeholder="-73.5673000" />
+                <input type="text" inputMode="decimal" className={inputClass + ' font-mono'} value={lng} onChange={(e) => setLng(e.target.value)} placeholder="-73.5673000" maxLength={20} />
               </Field>
               <div className="col-span-2 flex flex-col gap-1">
                 <button type="button" onClick={handleGeolocate} disabled={geoLoading}

@@ -171,7 +171,7 @@ export function StationProfileForm({ profile, onSaved, locked = false }: Props) 
               )}
               <div className="col-span-2">
                 <Field label={t('field_station_name')}>
-                  <input type="text" className={inputClass} value={name} onChange={(e) => setName(e.target.value)} required />
+                  <input type="text" className={inputClass} value={name} onChange={(e) => setName(e.target.value)} required maxLength={100} />
                 </Field>
               </div>
               <div className="col-span-2">
@@ -193,7 +193,7 @@ export function StationProfileForm({ profile, onSaved, locked = false }: Props) 
               <div className="col-span-2">
                 <Field label={t('field_description')} hint={t('field_optional')}>
                   <textarea rows={3} className={inputClass + ' resize-none leading-relaxed'} value={description}
-                    onChange={(e) => setDescription(e.target.value)} placeholder={t('field_description_placeholder')} />
+                    onChange={(e) => setDescription(e.target.value)} placeholder={t('field_description_placeholder')} maxLength={500} />
                 </Field>
               </div>
             </div>
