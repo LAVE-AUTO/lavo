@@ -1892,7 +1892,12 @@
     "toast_suspended": "Account suspended.",
     "toast_unblocked": "Account unblocked.",
     "empty_stations": "No active or suspended merchant.",
-    "error_load": "Failed to load data."
+    "empty_search": "No results for this search.",
+    "error_load": "Failed to load data.",
+    "chip_active": "active",
+    "chip_suspended": "suspended",
+    "search_placeholder": "Search an account...",
+    "confirm_suspend_hint": "Confirm suspension?"
   },
   "admin_settings": {
     "page_title": "Platform settings",
@@ -1922,7 +1927,7 @@
   "admin_dashboard": {
     "nav_dashboard": "Dashboard",
     "nav_kyc": "KYC Validation",
-    "nav_clients": "Clients",
+    "nav_clients": "Accounts",
     "nav_disputes": "Disputes",
     "nav_commission": "Commission",
     "nav_settings": "Settings",

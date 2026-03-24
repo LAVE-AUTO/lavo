@@ -1892,7 +1892,12 @@
     "toast_suspended": "Compte suspendu.",
     "toast_unblocked": "Compte débloqué.",
     "empty_stations": "Aucun marchand actif ou suspendu.",
-    "error_load": "Impossible de charger les données."
+    "empty_search": "Aucun résultat pour cette recherche.",
+    "error_load": "Impossible de charger les données.",
+    "chip_active": "actifs",
+    "chip_suspended": "suspendus",
+    "search_placeholder": "Rechercher un compte...",
+    "confirm_suspend_hint": "Confirmer la suspension ?"
   },
   "admin_settings": {
     "page_title": "Paramètres plateforme",
@@ -1922,7 +1927,7 @@
   "admin_dashboard": {
     "nav_dashboard": "Tableau de bord",
     "nav_kyc": "Validation KYC",
-    "nav_clients": "Clients",
+    "nav_clients": "Comptes",
     "nav_disputes": "Litiges",
     "nav_commission": "Commission",
     "nav_settings": "Paramètres",
