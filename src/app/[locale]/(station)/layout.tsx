@@ -83,7 +83,12 @@ export default function StationLayout({ children }: { children: ReactNode }) {
   if (!isAuthenticated || !isStation) return null;
 
   if (state.kind === 'pending') {
-    return <StationPendingView stationName={state.name} />;
+    return (
+      <StationShell stationName={state.name}>
+        <StationPendingView />
+        {children}
+      </StationShell>
+    );
   }
 
   if (state.kind === 'rejected') {

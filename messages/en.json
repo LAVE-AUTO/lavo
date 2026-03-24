@@ -1718,17 +1718,9 @@
     "empty_all": "No stations registered"
   },
   "station_pending": {
-    "title": "Application under review",
-    "subtitle": "The application for <strong>{name}</strong> has been received and is currently being reviewed by our team.",
-    "step1_label": "Application submitted",
-    "step1_desc": "Your documents were successfully transmitted.",
-    "step2_label": "Verification in progress",
-    "step2_desc": "Our team is reviewing your application. This process may take 24 to 48 hours.",
-    "step3_label": "Decision",
-    "step3_desc": "You will receive an email as soon as a decision has been made.",
-    "notice": "You can close this page and come back later. You will be notified by email.",
-    "btn_logout": "Log out",
-    "or_contact_support": "Questions? Contact our support team."
+    "title": "Your KYC application is under review",
+    "notice": "Our team is reviewing your application. You will be notified by email as soon as a decision is made.",
+    "status_label": "Pending"
   },
   "station_rejected": {
     "title": "Your KYC application was rejected",
