@@ -34,65 +34,72 @@ function formatDate(iso: string | null | undefined, locale: string): string {
   });
 }
 
-// ─── Status config ───────────────────────────────────────────────────────────
+// ─── Status config ────────────────────────────────────────────────────────────
 
-const STATUS_STYLES: Record<string, { dot: string; bg: string; text: string; border: string }> = {
+const STATUS_STYLES: Record<string, { dot: string; bg: string; text: string; border: string; barColor: string }> = {
   pending_admin_validation: {
-    dot: '#C49A1E', bg: '#C49A1E14', text: '#C49A1E', border: '#C49A1E33',
+    dot: '#C49A1E', bg: 'rgba(196,154,30,0.08)', text: '#C49A1E', border: 'rgba(196,154,30,0.2)', barColor: '#C49A1E',
   },
   active: {
-    dot: '#00C851', bg: '#00C85114', text: '#00C851', border: '#00C85133',
+    dot: '#00C851', bg: 'rgba(0,200,81,0.07)', text: '#00C851', border: 'rgba(0,200,81,0.2)', barColor: '#00C851',
   },
   rejected: {
-    dot: '#EF4444', bg: '#EF444414', text: '#EF4444', border: '#EF444433',
+    dot: '#EF4444', bg: 'rgba(239,68,68,0.07)', text: '#EF4444', border: 'rgba(239,68,68,0.2)', barColor: '#EF4444',
   },
   suspended: {
-    dot: '#AAAAAA', bg: '#AAAAAA14', text: '#888888', border: '#AAAAAA33',
+    dot: '#AAAAAA', bg: 'rgba(170,170,170,0.07)', text: '#888', border: 'rgba(170,170,170,0.2)', barColor: '#AAAAAA',
   },
 };
 
-// ─── Tab pill ────────────────────────────────────────────────────────────────
+// ─── Tab button ───────────────────────────────────────────────────────────────
 
-function TabPill({
-  label, count, active, onClick,
-}: { label: string; count: number; active: boolean; onClick: () => void }) {
+function TabButton({
+  label, count, active, color, onClick,
+}: { label: string; count: number; active: boolean; color?: string; onClick: () => void }) {
   return (
     <button
       type="button"
       onClick={onClick}
-      className={[
-        'flex items-center gap-1.5 rounded-full px-4 py-1.5 text-[12px] font-bold transition-colors duration-150',
-        active
-          ? 'bg-[#C49A1E] text-white shadow-sm'
-          : 'bg-white text-[#888] ring-1 ring-black/[0.06] hover:bg-[#F5F3ED] dark:bg-[#1A2416] dark:text-[#6A6A5A] dark:ring-white/[0.06] dark:hover:bg-[#243020]',
-      ].join(' ')}
+      className="relative flex flex-col items-center gap-0.5 px-4 py-2.5 text-[12px] font-bold transition-colors duration-150 focus:outline-none"
+      style={{ color: active ? (color ?? '#C49A1E') : undefined }}
     >
-      {label}
+      <span className={active ? '' : 'text-[#888] dark:text-[#5A5A5A]'}>{label}</span>
       <span className={[
-        'flex h-[18px] min-w-[18px] items-center justify-center rounded-full px-1 text-[10px] font-black',
-        active ? 'bg-white/20 text-white' : 'bg-[#F0EDE0] text-[#888] dark:bg-[#243020] dark:text-[#6A6A5A]',
-      ].join(' ')}>
+        'text-[18px] font-black leading-none',
+        active ? '' : 'text-[#333] dark:text-[#B0B0A0]',
+      ].join(' ')} style={{ color: active ? (color ?? '#C49A1E') : undefined }}>
         {count}
       </span>
+      {/* Active underline */}
+      <span className={[
+        'absolute bottom-0 left-3 right-3 h-[2.5px] rounded-full transition-opacity duration-150',
+        active ? 'opacity-100' : 'opacity-0',
+      ].join(' ')} style={{ background: color ?? '#C49A1E' }} />
     </button>
   );
 }
 
 // ─── Station card ─────────────────────────────────────────────────────────────
 
-function StationCard({ s, locale, t }: { s: ApiStation; locale: string; t: ReturnType<typeof useTranslations<'admin_stations'>> }) {
-  const style = STATUS_STYLES[s.status] ?? STATUS_STYLES['suspended'];
+function StationCard({
+  s, locale, t,
+}: { s: ApiStation; locale: string; t: ReturnType<typeof useTranslations<'admin_stations'>> }) {
+  const style     = STATUS_STYLES[s.status] ?? STATUS_STYLES['suspended'];
   const isPending = s.status === 'pending_admin_validation';
   const isApproved = s.status === 'active';
   const isRejected = s.status === 'rejected';
 
-  const dateLabel = isPending
-    ? formatDate(s.created_at, locale)
-    : isApproved
+  const dateLabel = isApproved
     ? formatDate(s.approved_at, locale)
+    : formatDate(s.updated_at ?? s.created_at, locale);
+
+  const datePrefixLabel = isPending
+    ? t('label_submitted_on')
+    : isApproved
+    ? t('label_approved_on')
     : isRejected
-    ? formatDate(s.updated_at, locale)
-    : formatDate(s.updated_at, locale);
+    ? t('label_rejected_on')
+    : t('label_updated_on');
 
   const statusLabel = isPending
     ? t('status_pending')
@@ -105,84 +112,95 @@ function StationCard({ s, locale, t }: { s: ApiStation; locale: string; t: Retur
   const docCount = s.documents?.length ?? 0;
 
   return (
-    <div className="group relative flex items-start gap-5 overflow-hidden rounded-2xl bg-white p-5 shadow-sm ring-1 ring-black/[0.04] transition-all hover:-translate-y-0.5 hover:shadow-lg dark:bg-[#1A2416] dark:ring-white/[0.06]"
-      style={{ '--hover-border': style.dot } as React.CSSProperties}>
-      {/* Left accent */}
-      <div className="absolute left-0 top-0 h-full w-[3px] rounded-l-2xl opacity-0 transition-opacity group-hover:opacity-100"
-        style={{ background: style.dot }} />
+    <div className="group relative flex items-stretch overflow-hidden rounded-2xl bg-white shadow-sm ring-1 ring-black/[0.05] transition-all duration-200 hover:-translate-y-px hover:shadow-md hover:ring-black/[0.08] dark:bg-[#161F13] dark:ring-white/[0.06] dark:hover:ring-white/[0.10]">
 
-      {/* Avatar */}
-      <div className="flex h-[52px] w-[52px] shrink-0 items-center justify-center rounded-xl text-[15px] font-black ring-1"
-        style={{ background: style.bg, color: style.dot, borderColor: style.border }}>
-        {initials(s.name)}
-      </div>
+      {/* Colored left bar — always visible */}
+      <div className="w-[4px] shrink-0 rounded-l-2xl transition-all duration-200 group-hover:w-[5px]"
+        style={{ background: style.barColor }} />
 
-      {/* Info */}
-      <div className="min-w-0 flex-1">
-        <div className="flex items-start justify-between gap-2">
-          <p className="truncate text-[15px] font-black text-[#0F1A0C] dark:text-[#F0EDD4]">{s.name}</p>
-          {/* Status badge */}
-          <span className="shrink-0 rounded-md px-2 py-0.5 text-[10px] font-black uppercase tracking-wider"
-            style={{ background: style.bg, color: style.dot }}>
-            {statusLabel}
-          </span>
+      {/* Card body */}
+      <div className="flex min-w-0 flex-1 items-center gap-4 px-5 py-4">
+
+        {/* Avatar */}
+        <div className="flex h-[48px] w-[48px] shrink-0 items-center justify-center rounded-xl text-[14px] font-black"
+          style={{ background: style.bg, color: style.dot, boxShadow: `0 0 0 1px ${style.border}` }}>
+          {initials(s.name)}
         </div>
 
-        <p className="mt-0.5 truncate text-[11px] text-[#999] dark:text-[#5A5A4A]">
-          {s.city}{s.address ? ` · ${s.address}` : ''}
-        </p>
-
-        {/* Chips row */}
-        <div className="mt-2 flex flex-wrap items-center gap-1.5">
-          {/* Date chip */}
-          <span className="flex items-center gap-1 rounded-md bg-[#F5F3ED] px-2 py-0.5 text-[10px] font-semibold text-[#888] dark:bg-[#1E2A1A] dark:text-[#6A6A5A]">
-            <svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-              <rect x="3" y="4" width="18" height="18" rx="2" ry="2" /><line x1="16" y1="2" x2="16" y2="6" /><line x1="8" y1="2" x2="8" y2="6" /><line x1="3" y1="10" x2="21" y2="10" />
-            </svg>
-            {dateLabel}
-          </span>
-
-          {/* Docs chip (pending only) */}
-          {isPending && docCount > 0 && (
-            <span className="flex items-center gap-1 rounded-md bg-[#F5F3ED] px-2 py-0.5 text-[10px] font-semibold text-[#888] dark:bg-[#1E2A1A] dark:text-[#6A6A5A]">
-              <svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-                <path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z" /><polyline points="14 2 14 8 20 8" />
-              </svg>
-              {docCount}
+        {/* Info */}
+        <div className="min-w-0 flex-1">
+          {/* Name + badge */}
+          <div className="flex items-center gap-2">
+            <p className="truncate text-[14px] font-black text-[#0F1A0C] dark:text-[#F0EDD4]">{s.name}</p>
+            <span className="shrink-0 rounded-[5px] px-1.5 py-0.5 text-[9px] font-black uppercase tracking-widest"
+              style={{ background: style.bg, color: style.dot }}>
+              {statusLabel}
             </span>
-          )}
+          </div>
 
-          {/* Rejection count chip */}
-          {(isRejected || s.rejection_count > 0) && (
-            <span className="flex items-center gap-1 rounded-md px-2 py-0.5 text-[10px] font-semibold"
-              style={{ background: '#EF444418', color: '#EF4444' }}>
-              <svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-                <circle cx="12" cy="12" r="10" /><line x1="15" y1="9" x2="9" y2="15" /><line x1="9" y1="9" x2="15" y2="15" />
-              </svg>
-              {t('label_rejection_count', { n: s.rejection_count })}
-            </span>
-          )}
-        </div>
-
-        {/* Rejection reason snippet */}
-        {isRejected && s.rejection_reason && (
-          <p className="mt-2 line-clamp-1 text-[11px] italic text-[#EF4444]/70">
-            {s.rejection_reason}
+          {/* Location */}
+          <p className="mt-0.5 truncate text-[11px] text-[#AAA] dark:text-[#555]">
+            {[s.city, s.address].filter(Boolean).join(' · ')}
           </p>
-        )}
-      </div>
 
-      {/* CTA */}
-      <Link
-        href={`/admin/stations/${s.id}` as Parameters<typeof Link>[0]['href']}
-        className="flex shrink-0 items-center gap-1.5 self-center rounded-xl px-4 py-2.5 text-[12px] font-bold text-white shadow-sm transition-all hover:opacity-80"
-        style={{ background: style.dot }}
-      >
-        {t('btn_review')}
-        <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-          <line x1="5" y1="12" x2="19" y2="12" /><polyline points="12 5 19 12 12 19" />
-        </svg>
-      </Link>
+          {/* Meta row */}
+          <div className="mt-2 flex flex-wrap items-center gap-2">
+            {/* Date */}
+            <span className="flex items-center gap-1 text-[10px] font-semibold text-[#999] dark:text-[#5A5A4A]">
+              <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                <rect x="3" y="4" width="18" height="18" rx="2" /><line x1="16" y1="2" x2="16" y2="6" /><line x1="8" y1="2" x2="8" y2="6" /><line x1="3" y1="10" x2="21" y2="10" />
+              </svg>
+              <span className="text-[#BBBB]">{datePrefixLabel}</span>
+              {dateLabel}
+            </span>
+
+            {/* Separator */}
+            {isPending && docCount > 0 && <span className="text-[#DDD] dark:text-[#2A2A2A]">·</span>}
+
+            {/* Docs count */}
+            {isPending && docCount > 0 && (
+              <span className="flex items-center gap-1 text-[10px] font-semibold text-[#999] dark:text-[#5A5A4A]">
+                <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                  <path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z" /><polyline points="14 2 14 8 20 8" />
+                </svg>
+                {docCount} doc{docCount > 1 ? 's' : ''}
+              </span>
+            )}
+
+            {/* Rejection count */}
+            {s.rejection_count > 0 && (
+              <>
+                <span className="text-[#DDD] dark:text-[#2A2A2A]">·</span>
+                <span className="flex items-center gap-1 text-[10px] font-semibold" style={{ color: '#EF4444' }}>
+                  <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                    <circle cx="12" cy="12" r="10" /><line x1="15" y1="9" x2="9" y2="15" /><line x1="9" y1="9" x2="15" y2="15" />
+                  </svg>
+                  {t('label_rejection_count', { n: s.rejection_count })}
+                </span>
+              </>
+            )}
+          </div>
+
+          {/* Rejection reason */}
+          {isRejected && s.rejection_reason && (
+            <p className="mt-2 line-clamp-1 rounded-[6px] bg-[#FEF2F2] px-2 py-1 text-[10px] italic leading-relaxed text-[#EF4444]/80 dark:bg-[#1E0A0A] dark:text-[#EF4444]/60">
+              {s.rejection_reason}
+            </p>
+          )}
+        </div>
+
+        {/* CTA */}
+        <Link
+          href={`/admin/stations/${s.id}` as Parameters<typeof Link>[0]['href']}
+          className="flex shrink-0 items-center gap-1.5 self-center rounded-[10px] px-3.5 py-2 text-[11px] font-bold text-white transition-opacity hover:opacity-80"
+          style={{ background: style.dot }}
+        >
+          {t('btn_review')}
+          <svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+            <line x1="5" y1="12" x2="19" y2="12" /><polyline points="12 5 19 12 12 19" />
+          </svg>
+        </Link>
+      </div>
     </div>
   );
 }
@@ -213,73 +231,91 @@ export function PendingStationsList() {
 
   useEffect(() => { loadStations(); }, [loadStations]);
 
+  const counts = {
+    all:      allStations.length,
+    pending:  allStations.filter((s) => s.status === 'pending_admin_validation').length,
+    approved: allStations.filter((s) => s.status === 'active' || s.status === 'suspended').length,
+    rejected: allStations.filter((s) => s.status === 'rejected').length,
+  };
+
   const filtered = allStations.filter((s) => {
-    if (activeTab === 'all') return true;
-    if (activeTab === 'pending') return s.status === 'pending_admin_validation';
+    if (activeTab === 'all')      return true;
+    if (activeTab === 'pending')  return s.status === 'pending_admin_validation';
     if (activeTab === 'approved') return s.status === 'active' || s.status === 'suspended';
     if (activeTab === 'rejected') return s.status === 'rejected';
     return true;
   });
 
-  const counts = {
-    all: allStations.length,
-    pending: allStations.filter((s) => s.status === 'pending_admin_validation').length,
-    approved: allStations.filter((s) => s.status === 'active' || s.status === 'suspended').length,
-    rejected: allStations.filter((s) => s.status === 'rejected').length,
-  };
-
-  const emptyKey = activeTab === 'all'
-    ? 'empty_all'
-    : activeTab === 'pending'
-    ? 'empty_title'
-    : activeTab === 'approved'
-    ? 'empty_approved'
-    : 'empty_rejected';
+  const emptyKey = activeTab === 'approved' ? 'empty_approved'
+    : activeTab === 'rejected' ? 'empty_rejected'
+    : activeTab === 'all'      ? 'empty_all'
+    : 'empty_title';
 
   return (
-    <div className="flex flex-1 flex-col overflow-y-auto bg-[#F5F5EE] dark:bg-[#0C1209]">
+    /* Outer: no scroll — header stays fixed, only body scrolls */
+    <div className="flex h-full flex-col overflow-hidden bg-[#F5F5EE] dark:bg-[#0C1209]">
 
-      {/* ── Header ── */}
-      <div className="relative overflow-hidden border-b border-[#E8E4D8] bg-white px-7 py-6 dark:border-[#1A2A14] dark:bg-[#111A0E]">
-        <div className="pointer-events-none absolute right-0 top-0 h-full w-72 bg-gradient-to-l from-[#C49A1E]/5 to-transparent" />
-        <div className="mb-5 flex items-center justify-between">
-          <div>
-            <div className="flex items-center gap-2.5">
-              <h1 className="text-[21px] font-black text-[#0F1A0C] dark:text-[#F0EDD4]">{t('page_title_history')}</h1>
-              {!loading && !loadError && counts.pending > 0 && (
-                <span className="flex h-6 min-w-[24px] items-center justify-center rounded-full bg-[#C49A1E] px-2 text-[11px] font-black text-white shadow-sm">
-                  {counts.pending}
-                </span>
-              )}
+      {/* ── Sticky header ── */}
+      <div className="shrink-0 border-b border-[#E8E4D8] bg-white dark:border-[#1A2A14] dark:bg-[#111A0E]">
+
+        {/* Title row */}
+        <div className="relative overflow-hidden px-7 pt-6 pb-0">
+          <div className="pointer-events-none absolute right-0 top-0 h-full w-64 bg-gradient-to-l from-[#C49A1E]/4 to-transparent" />
+          <div className="flex items-start justify-between">
+            <div>
+              <div className="flex items-center gap-2.5">
+                <h1 className="text-[20px] font-black tracking-tight text-[#0F1A0C] dark:text-[#F0EDD4]">
+                  {t('page_title_history')}
+                </h1>
+                {!loading && counts.pending > 0 && (
+                  <span className="flex h-5 min-w-[20px] items-center justify-center rounded-full bg-[#C49A1E] px-1.5 text-[10px] font-black text-white">
+                    {counts.pending}
+                  </span>
+                )}
+              </div>
+              <p className="mt-0.5 text-[11px] text-[#AAA] dark:text-[#4A4A3A]">
+                {t('page_subtitle_history')}
+              </p>
             </div>
-            <p className="mt-0.5 text-[12px] text-[#999] dark:text-[#5A5A4A]">{t('page_subtitle_history')}</p>
+
+            {/* Live KYC indicator */}
+            {!loading && counts.pending > 0 && (
+              <div className="flex items-center gap-2 rounded-full border border-[#C49A1E]/20 bg-[#C49A1E]/6 px-3 py-1.5">
+                <span className="relative flex h-1.5 w-1.5">
+                  <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-[#C49A1E] opacity-60" />
+                  <span className="relative inline-flex h-1.5 w-1.5 rounded-full bg-[#C49A1E]" />
+                </span>
+                <span className="text-[10px] font-black uppercase tracking-widest text-[#C49A1E]">KYC</span>
+              </div>
+            )}
           </div>
-          {!loading && counts.pending > 0 && (
-            <div className="flex items-center gap-2 rounded-full border border-[#C49A1E]/25 bg-[#C49A1E]/8 px-3.5 py-1.5">
-              <span className="relative flex h-2 w-2 shrink-0">
-                <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-[#C49A1E] opacity-70" />
-                <span className="relative inline-flex h-2 w-2 rounded-full bg-[#C49A1E]" />
-              </span>
-              <span className="text-[11px] font-black uppercase tracking-wider text-[#C49A1E]">KYC</span>
+        </div>
+
+        {/* Tab bar */}
+        <div className="flex items-end border-b border-[#F0EDE0] px-5 dark:border-[#1A2A14]">
+          {!loading && !loadError && (
+            <>
+              <TabButton label={t('tab_pending')}  count={counts.pending}  active={activeTab === 'pending'}  color="#C49A1E" onClick={() => setActiveTab('pending')}  />
+              <TabButton label={t('tab_approved')} count={counts.approved} active={activeTab === 'approved'} color="#00C851" onClick={() => setActiveTab('approved')} />
+              <TabButton label={t('tab_rejected')} count={counts.rejected} active={activeTab === 'rejected'} color="#EF4444" onClick={() => setActiveTab('rejected')} />
+              <TabButton label={t('tab_all')}      count={counts.all}      active={activeTab === 'all'}      color="#C49A1E" onClick={() => setActiveTab('all')}      />
+            </>
+          )}
+          {/* Skeleton tabs while loading */}
+          {loading && (
+            <div className="flex gap-1 py-2.5 px-2">
+              {[80, 90, 80, 60].map((w, i) => (
+                <div key={i} className="h-8 animate-pulse rounded-lg bg-[#F0EDE0] dark:bg-[#1A2416]" style={{ width: w }} />
+              ))}
             </div>
           )}
         </div>
-
-        {/* Tabs */}
-        {!loading && !loadError && (
-          <div className="flex flex-wrap gap-2">
-            <TabPill label={t('tab_pending')}  count={counts.pending}  active={activeTab === 'pending'}  onClick={() => setActiveTab('pending')}  />
-            <TabPill label={t('tab_approved')} count={counts.approved} active={activeTab === 'approved'} onClick={() => setActiveTab('approved')} />
-            <TabPill label={t('tab_rejected')} count={counts.rejected} active={activeTab === 'rejected'} onClick={() => setActiveTab('rejected')} />
-            <TabPill label={t('tab_all')}      count={counts.all}      active={activeTab === 'all'}      onClick={() => setActiveTab('all')}      />
-          </div>
-        )}
       </div>
 
-      {/* ── Body ── */}
-      <div className="flex flex-1 flex-col gap-3 px-7 py-6">
+      {/* ── Scrollable body ── */}
+      <div className="flex flex-1 flex-col overflow-y-auto">
 
-        {/* Loading */}
+        {/* Loading spinner */}
         {loading && (
           <div className="flex flex-1 items-center justify-center py-24">
             <div className="h-8 w-8 animate-spin rounded-full border-[3px] border-[#C49A1E] border-t-transparent" />
@@ -289,9 +325,9 @@ export function PendingStationsList() {
         {/* Error */}
         {!loading && loadError && (
           <div className="flex flex-1 flex-col items-center justify-center gap-3 py-24 text-center">
-            <p className="text-[14px] font-semibold text-[#555] dark:text-[#B0B0A0]">{t('error_load')}</p>
+            <p className="text-[13px] font-semibold text-[#888] dark:text-[#6A6A5A]">{t('error_load')}</p>
             <button type="button" onClick={loadStations}
-              className="rounded-xl border border-[#C49A1E]/50 px-4 py-2 text-[13px] font-semibold text-[#C49A1E] transition-colors hover:bg-[#C49A1E]/10">
+              className="rounded-xl border border-[#C49A1E]/40 px-4 py-2 text-[12px] font-bold text-[#C49A1E] transition-colors hover:bg-[#C49A1E]/8">
               {t('btn_retry')}
             </button>
           </div>
@@ -299,20 +335,25 @@ export function PendingStationsList() {
 
         {/* Empty */}
         {!loading && !loadError && filtered.length === 0 && (
-          <div className="flex flex-1 flex-col items-center justify-center gap-4 py-24 text-center">
-            <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-white shadow-sm ring-1 ring-black/[0.04] dark:bg-[#1A2416] dark:ring-white/[0.06]">
-              <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#C49A1E" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+          <div className="flex flex-1 flex-col items-center justify-center gap-3 py-24 text-center">
+            <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-white shadow-sm ring-1 ring-black/[0.04] dark:bg-[#1A2416] dark:ring-white/[0.06]">
+              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#C49A1E" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
                 <path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z" /><polyline points="9 22 9 12 15 12 15 22" />
               </svg>
             </div>
-            <p className="text-[15px] font-bold text-[#1A1A0A] dark:text-[#F0EDD4]">{t(emptyKey)}</p>
+            <p className="text-[14px] font-bold text-[#1A1A0A] dark:text-[#F0EDD4]">{t(emptyKey)}</p>
           </div>
         )}
 
-        {/* Cards */}
-        {!loading && !loadError && filtered.map((s) => (
-          <StationCard key={s.id} s={s} locale={locale} t={t} />
-        ))}
+        {/* Cards list */}
+        {!loading && !loadError && filtered.length > 0 && (
+          <div className="flex flex-col gap-2.5 px-7 py-5">
+            {filtered.map((s) => (
+              <StationCard key={s.id} s={s} locale={locale} t={t} />
+            ))}
+          </div>
+        )}
+
       </div>
     </div>
   );
