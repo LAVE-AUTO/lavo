@@ -90,7 +90,7 @@ export function AdminPlatformSettings() {
     // TODO: connect to API once endpoint is available (POST /admin/platform-settings)
     await new Promise((r) => setTimeout(r, 700));
     if (!mountedRef.current) return;
-    if (adminShare !== savedCommissionRate) updateRate(adminShare);
+    if (adminShare !== savedCommissionRate) updateRate(Math.round(adminShare * 10) / 10);
     setSaving(false);
     toastSuccess(t('save_success'));
   }

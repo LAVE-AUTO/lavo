@@ -28,13 +28,14 @@ export function AdminCommissionView() {
   const barWidth     = Math.max(2, Math.min(98, rate));
 
   async function handleSave() {
-    if (rate < 0 || rate > 100) { toastError(t('error_range')); return; }
+    const rounded = Math.round(rate * 10) / 10;
+    if (rounded < 0 || rounded > 100) { toastError(t('error_range')); return; }
     setSaving(true);
     try {
       // TODO: connect to API once endpoint is available (POST /admin/commission)
       await new Promise((r) => setTimeout(r, 700));
       if (!mountedRef.current) return;
-      updateRate(rate);
+      updateRate(rounded);
       toastSuccess(t('save_success'));
     } finally {
       if (mountedRef.current) setSaving(false);

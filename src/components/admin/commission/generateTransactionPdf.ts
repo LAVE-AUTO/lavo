@@ -177,7 +177,7 @@ export async function generateTransactionPdf(tx: TxRow, labels: PdfLabels): Prom
   doc.text(labels.stationLabel, mx + 10, iy);
   doc.setTextColor(26, 26, 10);
   doc.setFont('helvetica', 'bold');
-  doc.text(tx.station, W - mx - 6, iy, { align: 'right' });
+  doc.text(tx.station.slice(0, 50), W - mx - 6, iy, { align: 'right' });
 
   iy += 12;
   doc.setTextColor(150, 148, 136);
@@ -185,7 +185,7 @@ export async function generateTransactionPdf(tx: TxRow, labels: PdfLabels): Prom
   doc.text(labels.clientLabel, mx + 10, iy);
   doc.setTextColor(26, 26, 10);
   doc.setFont('helvetica', 'bold');
-  doc.text(tx.client, W - mx - 6, iy, { align: 'right' });
+  doc.text(tx.client.slice(0, 50), W - mx - 6, iy, { align: 'right' });
 
   y += 48;
 
@@ -198,7 +198,7 @@ export async function generateTransactionPdf(tx: TxRow, labels: PdfLabels): Prom
   doc.setTextColor(150, 148, 136);
   doc.setFont('helvetica', 'normal');
   doc.setFontSize(7.5);
-  doc.text('Slowtime Inc.', mx, y);
+  doc.text('Slowtime Inc. — Document confidentiel / Confidential document', mx, y);
 
   const today = new Date().toLocaleDateString('fr-CA', { day: 'numeric', month: 'long', year: 'numeric' });
   doc.text(`${labels.generatedOn} ${today}`, W - mx, y, { align: 'right' });
