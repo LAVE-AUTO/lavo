@@ -1,4 +1,4 @@
-import { eq } from 'drizzle-orm';
+import { and, eq } from 'drizzle-orm';
 import { db } from '@/lib/db';
 import { stations, stationDocuments, pendingUploads } from '@/lib/db/schema';
 import { requireAuthWithPasswordCheck } from '@/lib/require-role';
@@ -136,9 +136,18 @@ export async function POST(request: Request) {
       ...(typeof description === 'string' ? { description: description.trim().slice(0, 1000) || null } : {}),
     };
 
-    // Replace documents and reset station status in a transaction
+    // Replace documents and reset station status in a transaction.
+    // WHERE includes status = 'rejected' to guard against concurrent reapply requests.
     await db.transaction(async (tx) => {
-      await tx.update(stations).set(updates).where(eq(stations.id, station.id));
+      const updated = await tx
+        .update(stations)
+        .set(updates)
+        .where(and(eq(stations.id, station.id), eq(stations.status, 'rejected')))
+        .returning({ id: stations.id });
+
+      if (updated.length === 0) {
+        throw new Error('CONCURRENT_REAPPLY');
+      }
 
       // Remove existing documents (pending_uploads rows cascade-deleted)
       await tx.delete(stationDocuments).where(eq(stationDocuments.station_id, station.id));
@@ -169,6 +178,9 @@ export async function POST(request: Request) {
 
     return successResponse({ reapplied: true }, 'Application resubmitted successfully.');
   } catch (e) {
+    if (e instanceof Error && e.message === 'CONCURRENT_REAPPLY') {
+      return error400('Application is no longer in rejected state', ApiCode.VALIDATION_FAILED);
+    }
     return error500(e);
   }
 }
