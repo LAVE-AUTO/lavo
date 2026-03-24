@@ -1277,6 +1277,7 @@
     "nav_support": "Support",
     "nav_logout": "Log out",
     "nav_queue": "Queue",
+    "nav_delays": "Delays",
     "nav_qr": "QR Code",
     "kpi_revenue": "Today's revenue",
     "kpi_clients": "Clients served",
@@ -1768,5 +1769,22 @@
     "btn_cancel": "Cancel",
     "error_action": "Action failed. Please try again.",
     "error_invalid_transition": "This entry cannot be updated at this time. Please refresh and try again."
+  },
+  "station_delays": {
+    "page_title": "Delay requests",
+    "pending_n": "{n} pending request(s)",
+    "no_pending": "No pending requests",
+    "empty_state": "No pending delay requests.",
+    "btn_accept": "Accept",
+    "btn_refuse": "Refuse",
+    "btn_cancel": "Cancel",
+    "confirm_accept_title": "Accept delay",
+    "confirm_accept_message": "Confirm accepting this delay request?",
+    "refuse_title": "Refuse delay",
+    "refuse_message": "You may provide an optional refusal reason that will be sent to the client.",
+    "refuse_reason_label": "Refusal reason",
+    "refuse_reason_placeholder": "e.g. The slot was assigned to another client...",
+    "optional": "optional",
+    "error_action": "Action failed. Please try again."
   }
 }
