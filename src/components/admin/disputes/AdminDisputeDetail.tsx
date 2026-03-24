@@ -231,8 +231,8 @@ export function AdminDisputeDetail({ id }: Props) {
                       </button>
                       <div className="h-px bg-[#F0EDE6] dark:bg-[#1A2A14]" />
                       <button type="button" onClick={() => setModal('close_dispute')}
-                        className="flex w-full items-center gap-3 rounded-xl border border-[#D8D4C8] px-4 py-3 text-[13px] font-bold text-[#666] transition-all hover:-translate-y-0.5 hover:bg-[#F5F3EE] hover:shadow-sm active:translate-y-0 dark:border-[#243020] dark:text-[#9A9A8A] dark:hover:bg-[#1A2A14]">
-                        <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-[#E8E4DC] dark:bg-[#243020]">
+                        className="flex w-full items-center gap-3 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-[13px] font-bold text-red-600 transition-all hover:-translate-y-0.5 hover:bg-red-100 hover:shadow-sm active:translate-y-0 dark:border-red-900/40 dark:bg-red-950/30 dark:text-red-400 dark:hover:bg-red-950/50">
+                        <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-red-100 dark:bg-red-950/60">
                           <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><polyline points="20 6 9 17 4 12" /></svg>
                         </div>
                         {t('btn_close_dispute')}
