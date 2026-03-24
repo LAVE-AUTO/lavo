@@ -93,14 +93,15 @@ export function StationQueuePage() {
     setActionLoading(true);
     setActionError(null);
     const newStatus = pending.type === 'call' ? 'in_progress' : 'completed';
-    const [ok] = await patchWithApi(`/station/entries/${pending.entryId}`, { status: newStatus });
+    const [ok, data] = await patchWithApi(`/station/entries/${pending.entryId}`, { status: newStatus });
     if (!mountedRef.current) return;
     setActionLoading(false);
     if (ok) {
       setPending(null);
       await loadData(true);
     } else {
-      setActionError(t('error_action'));
+      const raw = (data as { message?: string })?.message ?? '';
+      setActionError(raw.includes('Cannot transition') ? t('error_invalid_transition') : t('error_action'));
     }
   }
 

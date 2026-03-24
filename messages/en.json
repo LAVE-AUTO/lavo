@@ -1336,7 +1336,8 @@
     "confirm_cancel_title": "Cancel entry",
     "confirm_cancel_message": "Confirm cancellation of this entry?",
     "confirm_start_title": "Start service",
-    "confirm_start_message": "Confirm starting the service?"
+    "confirm_start_message": "Confirm starting the service?",
+    "error_invalid_transition": "This entry cannot be updated at this time. Please refresh and try again."
   },
   "station_reservations": {
     "page_title": "Today's reservations",
@@ -1765,6 +1766,7 @@
     "btn_call": "Start",
     "btn_complete": "Complete",
     "btn_cancel": "Cancel",
-    "error_action": "Action failed. Please try again."
+    "error_action": "Action failed. Please try again.",
+    "error_invalid_transition": "This entry cannot be updated at this time. Please refresh and try again."
   }
 }

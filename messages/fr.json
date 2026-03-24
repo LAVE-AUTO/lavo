@@ -1336,7 +1336,8 @@
     "confirm_cancel_title": "Annuler l'entrée",
     "confirm_cancel_message": "Confirmer l'annulation de cette entrée ?",
     "confirm_start_title": "Démarrer le service",
-    "confirm_start_message": "Confirmer le démarrage du service ?"
+    "confirm_start_message": "Confirmer le démarrage du service ?",
+    "error_invalid_transition": "Cette entrée ne peut pas être modifiée pour le moment. Veuillez actualiser la page et réessayer."
   },
   "station_reservations": {
     "page_title": "Réservations du jour",
@@ -1765,6 +1766,7 @@
     "btn_call": "Démarrer",
     "btn_complete": "Terminer",
     "btn_cancel": "Annuler",
-    "error_action": "L'opération a échoué. Veuillez réessayer."
+    "error_action": "L'opération a échoué. Veuillez réessayer.",
+    "error_invalid_transition": "Cette entrée ne peut pas être modifiée pour le moment. Veuillez actualiser la page et réessayer."
   }
 }

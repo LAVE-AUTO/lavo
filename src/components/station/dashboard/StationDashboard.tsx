@@ -144,8 +144,12 @@ export function StationDashboard() {
       setPending(null);
       await loadData();
     } else {
-      const msg = (data as { message?: string })?.message;
-      setActionError(msg ?? t('action_error_generic'));
+      const raw = (data as { message?: string })?.message ?? '';
+      // Translate backend transition errors into a readable message
+      const errorMsg = raw.includes('Cannot transition')
+        ? t('error_invalid_transition')
+        : raw || t('action_error_generic');
+      setActionError(errorMsg);
     }
   }
 
