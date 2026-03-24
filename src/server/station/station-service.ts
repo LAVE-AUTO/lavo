@@ -32,6 +32,7 @@ import {
   listActiveStations,
   listActiveStationsGroup,
   listStationsByStatus,
+  listAllStationsForAdmin,
   updateStationStatus,
   type ListActiveStationsFilters,
   type Station,
@@ -180,6 +181,10 @@ export async function completeStationOnboarding(
 
 export async function getPendingStations(): Promise<Station[]> {
   return listStationsByStatus('pending_admin_validation');
+}
+
+export async function getStationsForAdmin(status?: string): Promise<Station[]> {
+  return listAllStationsForAdmin(status);
 }
 
 export async function getStationById(id: string): Promise<StationWithDocuments> {
