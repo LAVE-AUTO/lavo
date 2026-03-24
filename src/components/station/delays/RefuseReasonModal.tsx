@@ -58,8 +58,11 @@ export function RefuseReasonModal({ open, loading, error, onConfirm, onCancel }:
               value={reason}
               onChange={(e) => setReason(e.target.value.slice(0, MAX_REASON))}
               rows={3}
+              maxLength={MAX_REASON}
               disabled={loading}
               placeholder={t('refuse_reason_placeholder')}
+              aria-invalid={!!error}
+              aria-describedby={error ? 'refuse-modal-error' : undefined}
               className="w-full resize-none rounded-[10px] border border-[#DDD9CC] bg-[#F5F4EE] px-3.5 py-2.5 text-[12px] text-[#1A1A0A] outline-none transition-all duration-150 focus:border-[#E8472A]/60 focus:ring-2 focus:ring-[#E8472A]/10 dark:border-[#2A3826] dark:bg-[#111A0E] dark:text-[#F0EDD4] placeholder:text-[#555]/30 dark:placeholder:text-[#FFFFF0]/20 disabled:opacity-50"
             />
             <div className="mt-1 flex items-center justify-between">
@@ -74,7 +77,7 @@ export function RefuseReasonModal({ open, loading, error, onConfirm, onCancel }:
 
           {/* Error */}
           {error && (
-            <div className="mt-3 rounded-[8px] bg-[#FEF2F2] px-3 py-2 text-[11px] font-medium text-[#E8472A] dark:bg-[#2A0A0A]">
+            <div id="refuse-modal-error" role="alert" className="mt-3 rounded-[8px] bg-[#FEF2F2] px-3 py-2 text-[11px] font-medium text-[#E8472A] dark:bg-[#2A0A0A]">
               {error}
             </div>
           )}
