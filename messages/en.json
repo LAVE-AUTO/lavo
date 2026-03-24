@@ -1325,7 +1325,10 @@
     "queue_detail_post": "Bay",
     "queue_see_all": "See all",
     "queue_in_progress_badge": "IN PROGRESS",
-    "queue_complete_now": "Complete"
+    "queue_complete_now": "Complete",
+    "action_error_generic": "Action failed. Please try again.",
+    "confirm_btn_confirm": "Confirm",
+    "confirm_btn_cancel": "Cancel"
   },
   "station_reservations": {
     "page_title": "Today's reservations",
@@ -1754,9 +1757,6 @@
     "btn_call": "Start",
     "btn_complete": "Complete",
     "btn_cancel": "Cancel",
-    "error_action": "Action failed. Please try again.",
-    "action_error_generic": "Action failed. Please try again.",
-    "confirm_btn_confirm": "Confirm",
-    "confirm_btn_cancel": "Cancel"
+    "error_action": "Action failed. Please try again."
   }
 }

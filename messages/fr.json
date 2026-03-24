@@ -1325,7 +1325,10 @@
     "queue_detail_post": "Poste",
     "queue_see_all": "Voir tout",
     "queue_in_progress_badge": "EN COURS",
-    "queue_complete_now": "Terminer"
+    "queue_complete_now": "Terminer",
+    "action_error_generic": "L'opération a échoué. Veuillez réessayer.",
+    "confirm_btn_confirm": "Confirmer",
+    "confirm_btn_cancel": "Annuler"
   },
   "station_reservations": {
     "page_title": "Réservations du jour",
@@ -1754,9 +1757,6 @@
     "btn_call": "Démarrer",
     "btn_complete": "Terminer",
     "btn_cancel": "Annuler",
-    "error_action": "L'opération a échoué. Veuillez réessayer.",
-    "action_error_generic": "L'opération a échoué. Veuillez réessayer.",
-    "confirm_btn_confirm": "Confirmer",
-    "confirm_btn_cancel": "Annuler"
+    "error_action": "L'opération a échoué. Veuillez réessayer."
   }
 }
