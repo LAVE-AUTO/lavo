@@ -84,6 +84,7 @@ export const stations = pgTable(
       withTimezone: true,
     }),
     rejection_reason: text("rejection_reason"),
+    rejection_count: integer("rejection_count").notNull().default(0),
     created_at: timestamp("created_at", {
       mode: "date",
       withTimezone: true,

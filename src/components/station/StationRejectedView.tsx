@@ -4,6 +4,7 @@ import { useState, useRef, useEffect } from 'react';
 import { useTranslations } from 'next-intl';
 import { useAuth } from '@/context';
 import { postWithApi } from '@/services';
+import { FileUploadZone, type UploadedFile } from '@/components/stations/apply/FileUploadZone';
 
 interface Props {
   stationName: string;
@@ -26,27 +27,50 @@ export function StationRejectedView({ stationName, rejectionReason }: Props) {
   const t = useTranslations('station_rejected');
   const { logout } = useAuth();
 
-  const [showForm, setShowForm] = useState(false);
-  const [name, setName]         = useState(stationName);
-  const [address, setAddress]   = useState('');
-  const [city, setCity]         = useState('');
-  const [description, setDesc]  = useState('');
-  const [submitting, setSubmitting] = useState(false);
-  const [submitted, setSubmitted]   = useState(false);
-  const [error, setError]           = useState<string | null>(null);
+  const [showForm, setShowForm]       = useState(false);
+  const [name, setName]               = useState(stationName);
+  const [address, setAddress]         = useState('');
+  const [city, setCity]               = useState('');
+  const [description, setDesc]        = useState('');
+  const [certificate, setCertificate] = useState<UploadedFile | null>(null);
+  const [addressProof, setAddressProof] = useState<UploadedFile | null>(null);
+  const [license, setLicense]         = useState<UploadedFile | null>(null);
+  const [docErrors, setDocErrors]     = useState({ certificate: '', addressProof: '' });
+  const [submitting, setSubmitting]   = useState(false);
+  const [submitted, setSubmitted]     = useState(false);
+  const [error, setError]             = useState<string | null>(null);
   const mountedRef = useRef(true);
   useEffect(() => { mountedRef.current = true; return () => { mountedRef.current = false; }; }, []);
 
+  function validateDocs(): boolean {
+    const errors = { certificate: '', addressProof: '' };
+    if (!certificate) errors.certificate = t('doc_required');
+    if (!addressProof) errors.addressProof = t('doc_required');
+    setDocErrors(errors);
+    return !errors.certificate && !errors.addressProof;
+  }
+
   async function handleReapply(e: React.FormEvent) {
     e.preventDefault();
+    if (!validateDocs()) return;
+
     setSubmitting(true);
     setError(null);
+
+    const documents = [
+      { document_type: 'registration_certificate', file_url: certificate!.url, storage: certificate!.storage },
+      { document_type: 'address_proof', file_url: addressProof!.url, storage: addressProof!.storage },
+      ...(license ? [{ document_type: 'license', file_url: license.url, storage: license.storage }] : []),
+    ];
+
     const [ok, data] = await postWithApi('/station/reapply', {
       name: name.trim() || undefined,
       address: address.trim() || undefined,
       city: city.trim() || undefined,
       description: description.trim() || undefined,
+      documents,
     });
+
     if (!mountedRef.current) return;
     setSubmitting(false);
     if (ok) {
@@ -75,7 +99,7 @@ export function StationRejectedView({ stationName, rejectionReason }: Props) {
         <div className="w-full max-w-xl">
 
           {submitted ? (
-            /* ── Success state ── */
+            /* Success state */
             <div className="rounded-2xl bg-white p-8 shadow-sm ring-1 ring-black/[0.04] dark:bg-[#1A2416] dark:ring-white/[0.06]">
               <div className="mb-5 flex h-14 w-14 items-center justify-center rounded-2xl bg-[#00C851]/10">
                 <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#00C851" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
@@ -87,7 +111,7 @@ export function StationRejectedView({ stationName, rejectionReason }: Props) {
             </div>
           ) : (
             <>
-              {/* ── Rejection card ── */}
+              {/* Rejection card */}
               <div className="mb-5 rounded-2xl bg-white p-6 shadow-sm ring-1 ring-black/[0.04] dark:bg-[#1A2416] dark:ring-white/[0.06]">
                 <div className="mb-5 flex h-14 w-14 items-center justify-center rounded-2xl bg-[#EF4444]/10">
                   <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#EF4444" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
@@ -105,7 +129,7 @@ export function StationRejectedView({ stationName, rejectionReason }: Props) {
                 )}
               </div>
 
-              {/* ── Resubmit form ── */}
+              {/* Resubmit form */}
               {!showForm ? (
                 <div className="flex flex-col gap-3">
                   <button type="button" onClick={() => setShowForm(true)}
@@ -121,6 +145,8 @@ export function StationRejectedView({ stationName, rejectionReason }: Props) {
                 <div className="rounded-2xl bg-white p-6 shadow-sm ring-1 ring-black/[0.04] dark:bg-[#1A2416] dark:ring-white/[0.06]">
                   <h2 className="mb-5 text-[15px] font-black text-[#1A1A0A] dark:text-[#F0EDD4]">{t('form_title')}</h2>
                   <form onSubmit={handleReapply} className="flex flex-col gap-4">
+
+                    {/* Text fields */}
                     <Field label={t('field_name')}>
                       <input type="text" className={inputClass} value={name} onChange={(e) => setName(e.target.value)}
                         maxLength={150} placeholder={t('field_name_placeholder')} />
@@ -139,7 +165,36 @@ export function StationRejectedView({ stationName, rejectionReason }: Props) {
                       <textarea rows={3} className={inputClass + ' resize-none leading-relaxed'} value={description}
                         onChange={(e) => setDesc(e.target.value)} maxLength={1000} placeholder={t('field_description_placeholder')} />
                     </Field>
+
+                    {/* Document uploads */}
+                    <div className="mt-1 border-t border-[#E8E4D8] pt-5 dark:border-[#243020]">
+                      <p className="mb-4 text-[13px] font-bold text-[#1A1A0A] dark:text-[#F0EDD4]">{t('docs_section_title')}</p>
+                      <FileUploadZone
+                        label={t('doc_certificate')}
+                        hint={t('doc_certificate_hint')}
+                        required
+                        value={certificate}
+                        onChange={(f) => { setCertificate(f); if (f) setDocErrors((prev) => ({ ...prev, certificate: '' })); }}
+                        error={docErrors.certificate}
+                      />
+                      <FileUploadZone
+                        label={t('doc_address_proof')}
+                        hint={t('doc_address_proof_hint')}
+                        required
+                        value={addressProof}
+                        onChange={(f) => { setAddressProof(f); if (f) setDocErrors((prev) => ({ ...prev, addressProof: '' })); }}
+                        error={docErrors.addressProof}
+                      />
+                      <FileUploadZone
+                        label={t('doc_license')}
+                        hint={t('doc_license_hint')}
+                        value={license}
+                        onChange={setLicense}
+                      />
+                    </div>
+
                     {error && <p className="text-[12px] font-semibold text-[#EF4444]">{error}</p>}
+
                     <div className="flex gap-3 pt-1">
                       <button type="button" onClick={() => setShowForm(false)} disabled={submitting}
                         className="flex-1 rounded-[10px] border border-[#E0DCD0] py-2.5 text-[13px] font-semibold text-[#666] hover:bg-[#F0EDE0] disabled:opacity-50 dark:border-[#243020] dark:text-[#9A9A8A]">

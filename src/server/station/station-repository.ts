@@ -251,7 +251,7 @@ export async function listStationsByStatus(status: string): Promise<Station[]> {
 export async function updateStationStatus(
   id: string,
   status: string,
-  extra?: Partial<Pick<Station, 'approved_by' | 'approved_at' | 'rejection_reason'>>
+  extra?: Partial<Pick<Station, 'approved_by' | 'approved_at' | 'rejection_reason' | 'rejection_count'>>
 ): Promise<void> {
   await db
     .update(stations)

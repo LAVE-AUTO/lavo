@@ -229,7 +229,10 @@ export async function rejectStation(
   }
 
   void adminId; // logged implicitly via audit; extend with admin_logs table if needed
-  await updateStationStatus(stationId, 'rejected', { rejection_reason: reason });
+  await updateStationStatus(stationId, 'rejected', {
+    rejection_reason: reason,
+    rejection_count: (station.rejection_count ?? 0) + 1,
+  });
 
   // Fire-and-forget rejection notification email
   if (station.user_id) {

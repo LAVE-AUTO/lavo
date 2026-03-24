@@ -1,31 +1,43 @@
 import { eq } from 'drizzle-orm';
 import { db } from '@/lib/db';
-import { stations } from '@/lib/db/schema';
+import { stations, stationDocuments, pendingUploads } from '@/lib/db/schema';
 import { requireAuthWithPasswordCheck } from '@/lib/require-role';
 import { successResponse, error400, error403, error404, error500 } from '@/lib/responses';
 import { ApiCode } from '@/types/api-codes';
 import type { NextResponse } from 'next/server';
 
 const REAPPLY_COOLDOWN_HOURS = 24;
+const REJECTION_COUNT_FOR_COOLDOWN = 3;
 const MIN_NAME_LENGTH = 2;
 const MIN_CITY_LENGTH = 2;
+
+const ALLOWED_DOC_TYPES = ['registration_certificate', 'address_proof', 'license'] as const;
+type DocType = (typeof ALLOWED_DOC_TYPES)[number];
+
+interface DocumentInput {
+  document_type: DocType;
+  file_url: string;
+  storage: 'cloudinary' | 'local';
+}
 
 /**
  * POST /api/v1/station/reapply
  * Allows a rejected station to resubmit their KYC application.
  * Resets status to pending_admin_validation and clears the rejection reason.
+ * Replaces existing station documents with the newly uploaded ones.
  * Optionally updates name, address, city, and description.
  * Intentionally bypasses requireRole active-status check — rejected stations need access.
- * Rate-limited: one reapplication per REAPPLY_COOLDOWN_HOURS hours.
+ * Rate-limited: one reapplication per REAPPLY_COOLDOWN_HOURS hours, but only after
+ * REJECTION_COUNT_FOR_COOLDOWN or more rejections.
  *
- * Body: { name?, address?, city?, description? }
+ * Body: { name?, address?, city?, description?, documents: DocumentInput[] }
  *
  * Responses:
  *   200 { data: { reapplied: true } }
- *   400 VALIDATION_FAILED — station is not rejected or cooldown active
+ *   400 VALIDATION_FAILED — station is not rejected or required docs missing
  *   403 FORBIDDEN — user is not a station
  *   404 NOT_FOUND
- *   429 TOO_MANY_REQUESTS — reapplied too recently
+ *   429 TOO_MANY_REQUESTS — reapplied too recently (after 3+ rejections)
  *   500 INTERNAL_ERROR
  */
 export async function POST(request: Request) {
@@ -40,13 +52,13 @@ export async function POST(request: Request) {
   try {
     body = await request.json();
   } catch {
-    // empty body is fine — all fields are optional
+    // empty body is fine
   }
 
   try {
     const station = await db.query.stations.findFirst({
       where: eq(stations.user_id, auth.sub),
-      columns: { id: true, status: true, updated_at: true },
+      columns: { id: true, status: true, updated_at: true, rejection_count: true },
     });
 
     if (!station) {
@@ -57,8 +69,8 @@ export async function POST(request: Request) {
       return error400('Only rejected stations can reapply', ApiCode.VALIDATION_FAILED);
     }
 
-    // Cooldown: prevent spam reapplications
-    if (station.updated_at) {
+    // Cooldown applies only after REJECTION_COUNT_FOR_COOLDOWN or more rejections
+    if ((station.rejection_count ?? 0) >= REJECTION_COUNT_FOR_COOLDOWN && station.updated_at) {
       const hoursSinceLastUpdate =
         (Date.now() - new Date(station.updated_at).getTime()) / (1000 * 60 * 60);
       if (hoursSinceLastUpdate < REAPPLY_COOLDOWN_HOURS) {
@@ -69,11 +81,32 @@ export async function POST(request: Request) {
       }
     }
 
-    const { name, address, city, description } = body as {
-      name?: string; address?: string; city?: string; description?: string;
+    const { name, address, city, description, documents } = body as {
+      name?: string;
+      address?: string;
+      city?: string;
+      description?: string;
+      documents?: DocumentInput[];
     };
 
-    // Validate provided fields
+    // Validate documents — required types must be present
+    const docs: DocumentInput[] = Array.isArray(documents) ? documents : [];
+
+    const hasRegistrationCert = docs.some(
+      (d) => d.document_type === 'registration_certificate' && d.file_url?.trim()
+    );
+    const hasAddressProof = docs.some(
+      (d) => d.document_type === 'address_proof' && d.file_url?.trim()
+    );
+
+    if (!hasRegistrationCert || !hasAddressProof) {
+      return error400(
+        'Registration certificate and address proof are required',
+        ApiCode.VALIDATION_FAILED
+      );
+    }
+
+    // Validate provided text fields
     if (typeof name === 'string' && name.trim().length > 0 && name.trim().length < MIN_NAME_LENGTH) {
       return error400(`Station name must be at least ${MIN_NAME_LENGTH} characters`, ApiCode.VALIDATION_FAILED);
     }
@@ -92,7 +125,44 @@ export async function POST(request: Request) {
     if (typeof city === 'string' && city.trim()) updates.city = city.trim().slice(0, 100);
     if (typeof description === 'string') updates.description = description.trim().slice(0, 1000) || null;
 
-    await db.update(stations).set(updates).where(eq(stations.id, station.id));
+    // Replace documents and reset station status in a transaction
+    await db.transaction(async (tx) => {
+      await tx.update(stations).set(updates).where(eq(stations.id, station.id));
+
+      // Remove existing documents (pending_uploads rows cascade-deleted)
+      await tx.delete(stationDocuments).where(eq(stationDocuments.station_id, station.id));
+
+      // Insert new documents
+      const validDocs = docs.filter(
+        (d) =>
+          ALLOWED_DOC_TYPES.includes(d.document_type as DocType) &&
+          typeof d.file_url === 'string' &&
+          d.file_url.trim() &&
+          (d.storage === 'cloudinary' || d.storage === 'local')
+      );
+
+      if (validDocs.length > 0) {
+        const inserted = await tx
+          .insert(stationDocuments)
+          .values(
+            validDocs.map((d) => ({
+              station_id: station.id,
+              document_type: d.document_type,
+              file_url: d.file_url.trim(),
+              storage: d.storage,
+              terms_accepted: true,
+            }))
+          )
+          .returning({ id: stationDocuments.id, storage: stationDocuments.storage });
+
+        // Queue local files for Cloudinary sync
+        for (const row of inserted) {
+          if (row.storage === 'local') {
+            await tx.insert(pendingUploads).values({ station_document_id: row.id });
+          }
+        }
+      }
+    });
 
     return successResponse({ reapplied: true }, 'Application resubmitted successfully.');
   } catch (e) {
