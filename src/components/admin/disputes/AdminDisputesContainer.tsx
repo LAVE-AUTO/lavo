@@ -6,12 +6,13 @@ import { MOCK_DISPUTES } from './disputes-mock';
 import { AdminDisputesList } from './AdminDisputesList';
 
 export function AdminDisputesContainer() {
-  const t       = useTranslations('admin_disputes');
+  const t        = useTranslations('admin_disputes');
   const [query, setQuery] = useState('');
 
   // TODO: replace with getFromApi('/admin/disputes') once endpoint is available
   const disputes = MOCK_DISPUTES;
   const open     = disputes.filter((d) => d.status === 'open').length;
+  const total    = disputes.length;
 
   return (
     <div className="flex min-h-full flex-col">
@@ -23,16 +24,22 @@ export function AdminDisputesContainer() {
             <p className="mt-1 text-[12px] text-[#888] dark:text-[#6A6A5A]">{t('page_subtitle')}</p>
           </div>
           <div className="flex shrink-0 items-center gap-2 pt-1">
-            <span className="flex items-center gap-1.5 rounded-full border border-[#F97316]/20 bg-[#F97316]/8 px-3 py-1 text-[11px] font-bold text-[#F97316]">
-              <span className="h-1.5 w-1.5 rounded-full bg-[#F97316]" />{open} {t('chip_open')}
-            </span>
-            <span className="flex items-center gap-1.5 rounded-full border border-[#D8D4C8] bg-[#F0EDE6] px-3 py-1 text-[11px] font-bold text-[#888] dark:border-[#243020] dark:bg-[#1A2A14] dark:text-[#6A6A5A]">
-              {disputes.length} {t('chip_total')}
+            {open > 0 && (
+              <span className="flex items-center gap-1.5 rounded-full border border-[#F97316]/30 bg-[#FFF4EC] px-3 py-1 text-[11px] font-black text-[#C2410C] dark:border-[#F97316]/20 dark:bg-[#2A1408]">
+                <span className="relative flex h-2 w-2">
+                  <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-[#F97316] opacity-50" />
+                  <span className="relative inline-flex h-2 w-2 rounded-full bg-[#F97316]" />
+                </span>
+                {open} {t('chip_open')}
+              </span>
+            )}
+            <span className="flex items-center gap-1.5 rounded-full border border-[#D8D4C8] bg-white px-3 py-1 text-[11px] font-bold text-[#888] dark:border-[#243020] dark:bg-[#131E10] dark:text-[#5A5A4A]">
+              {total} {t('chip_total')}
             </span>
           </div>
         </div>
 
-        {/* Search bar */}
+        {/* Search */}
         <div className="mt-5 flex items-end justify-end pb-0">
           <div className="relative mb-2.5">
             <svg className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-[#BBBBAA]" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"><circle cx="11" cy="11" r="8" /><path d="m21 21-4.35-4.35" /></svg>
