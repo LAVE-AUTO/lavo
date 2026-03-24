@@ -849,6 +849,8 @@
     "tip_btn": "Laisser un pourboire",
     "tip_prompt_title": "Satisfait du service ?",
     "tip_prompt_subtitle": "Remerciez votre prestataire avec un pourboire.",
+    "signal_delay_btn": "Signaler un retard",
+    "reschedule_btn": "Reporter la réservation",
     "toast_cancel_success": "Réservation annulée avec succès",
     "toast_cancel_error": "Impossible d'annuler la réservation. Veuillez réessayer.",
     "confirm_title": "Confirmation de réservation",
@@ -1708,5 +1710,23 @@
     "btn_back_reservations": "Retour à mes réservations",
     "already_tipped_title": "Pourboire déjà envoyé",
     "already_tipped_desc": "Vous avez déjà laissé un pourboire pour cette réservation."
+  },
+  "signal_delay": {
+    "page_title": "Signaler un retard",
+    "subtitle": "Informez la station que vous serez en retard.",
+    "btn_back": "Retour",
+    "btn_retry": "Réessayer",
+    "error_load": "Impossible de charger la réservation.",
+    "warning": "Attention : signaler un retard ne garantit pas le maintien de votre créneau. La station décidera d'accepter ou de refuser votre retard.",
+    "message_label": "Message (optionnel)",
+    "message_hint": "Précisez votre heure d'arrivée estimée ou toute information utile.",
+    "message_placeholder": "Ex : J'arrive dans 15 minutes...",
+    "btn_submit": "Confirmer le retard",
+    "processing": "Envoi...",
+    "success_title": "Retard signalé",
+    "success_desc": "La station a été notifiée. Vous recevrez une réponse prochainement.",
+    "btn_back_reservation": "Retour à la réservation",
+    "already_signaled_title": "Retard déjà signalé",
+    "already_signaled_desc": "Vous avez déjà signalé un retard pour cette réservation. Attendez la réponse de la station."
   }
 }
