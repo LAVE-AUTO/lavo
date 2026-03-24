@@ -27,7 +27,8 @@ export function AdminCommissionView() {
   const [rate, setRate]       = useState(MOCK_CURRENT_RATE);
   const [saving, setSaving]   = useState(false);
   const [history, setHistory] = useState(MOCK_HISTORY);
-  const isDirty = rate !== MOCK_HISTORY[0].rate;
+  const savedRate = history[0]?.rate ?? MOCK_CURRENT_RATE;
+  const isDirty   = rate !== savedRate;
 
   const stationShare  = 100 - rate;
   const barWidth      = Math.max(2, Math.min(98, rate));
@@ -57,7 +58,7 @@ export function AdminCommissionView() {
             <p className="mt-1 text-[12px] text-[#888] dark:text-[#6A6A5A]">{t('page_subtitle')}</p>
           </div>
           <span className="flex items-center gap-1.5 rounded-full border border-[#C49A1E]/30 bg-[#C49A1E]/10 px-3 py-1 text-[11px] font-black text-[#7A5E0A] dark:border-[#C49A1E]/20 dark:text-[#C49A1E]">
-            <span className="h-1.5 w-1.5 rounded-full bg-[#C49A1E]" />{MOCK_HISTORY[0].rate}% {t('chip_current')}
+            <span className="h-1.5 w-1.5 rounded-full bg-[#C49A1E]" />{savedRate}% {t('chip_current')}
           </span>
         </div>
       </div>
