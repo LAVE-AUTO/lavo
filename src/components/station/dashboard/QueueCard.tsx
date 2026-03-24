@@ -15,6 +15,7 @@ export interface QueueEntry {
   marginMin?: number;
   marginMax?: number;
   isNext: boolean;
+  status?: string;
 }
 
 interface QueueCardProps {
@@ -23,9 +24,15 @@ interface QueueCardProps {
   onPick?: (id: string) => void;
   onMoveUp?: () => void;
   onMoveDown?: () => void;
+  /** Override CTA button label (default: queue_call_now) */
+  callLabel?: string;
+  /** Override header badge label (default: queue_next) */
+  badgeLabel?: string;
+  /** Override pulsing dot + badge text color (default: #FF2525) */
+  badgeColor?: string;
 }
 
-export function QueueCard({ entry, onCall, onPick, onMoveUp, onMoveDown }: QueueCardProps) {
+export function QueueCard({ entry, onCall, onPick, onMoveUp, onMoveDown, callLabel, badgeLabel, badgeColor }: QueueCardProps) {
   const t = useTranslations('station_dashboard');
   const [expanded, setExpanded] = useState(false);
 
@@ -42,12 +49,12 @@ export function QueueCard({ entry, onCall, onPick, onMoveUp, onMoveDown }: Queue
         <div className="p-5">
           {/* Header */}
           <div className="mb-4 flex items-center justify-between">
-            <div className="flex items-center gap-2 text-[10px] font-bold uppercase tracking-wider text-[#FF2525]">
+            <div className="flex items-center gap-2 text-[10px] font-bold uppercase tracking-wider" style={{ color: badgeColor ?? '#FF2525' }}>
               <span className="relative flex h-2.5 w-2.5">
-                <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-[#FF2525] opacity-75" />
-                <span className="relative inline-flex h-2.5 w-2.5 rounded-full bg-[#FF2525]" />
+                <span className="absolute inline-flex h-full w-full animate-ping rounded-full opacity-75" style={{ background: badgeColor ?? '#FF2525' }} />
+                <span className="relative inline-flex h-2.5 w-2.5 rounded-full" style={{ background: badgeColor ?? '#FF2525' }} />
               </span>
-              {t('queue_next')}
+              {badgeLabel ?? t('queue_next')}
             </div>
             <span className="rounded-md px-2.5 py-0.5 text-[9px] font-bold uppercase tracking-wide text-white" style={{ background: tagBg }}>
               {tagLabel}
@@ -94,7 +101,7 @@ export function QueueCard({ entry, onCall, onPick, onMoveUp, onMoveDown }: Queue
             className="flex w-full items-center justify-center gap-2 rounded-[10px] bg-[#C09A18] py-3 text-[13px] font-bold text-[#1A2116] transition-all hover:bg-[#D4A820] active:scale-[0.98]"
           >
             <PlayTriangle />
-            {t('queue_call_now')}
+            {callLabel ?? t('queue_call_now')}
           </button>
         </div>
       </div>
