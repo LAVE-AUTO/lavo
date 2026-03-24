@@ -1728,5 +1728,29 @@
     "btn_back_reservation": "Back to reservation",
     "already_signaled_title": "Delay already signaled",
     "already_signaled_desc": "You have already signaled a delay for this reservation. Please wait for the station's response."
+  },
+  "station_queue": {
+    "page_title": "Queue",
+    "waiting_n": "{n} client(s) waiting",
+    "queue_empty_short": "No clients waiting",
+    "queue_empty": "Queue is empty — no clients waiting.",
+    "error_load": "Failed to load the queue.",
+    "btn_retry": "Retry",
+    "btn_refresh": "Refresh",
+    "last_updated": "Updated at {time}",
+    "section_in_progress": "In progress",
+    "section_waiting": "Waiting",
+    "stat_reserved": "Reserved",
+    "stat_walkin": "Walk-in",
+    "stat_in_progress": "In progress",
+    "badge_in_progress": "IN PROGRESS",
+    "confirm_call_title": "Call client",
+    "confirm_call_message": "Confirm starting the service for this client?",
+    "confirm_complete_title": "Complete service",
+    "confirm_complete_message": "Mark this service as completed?",
+    "btn_call": "Start",
+    "btn_complete": "Complete",
+    "btn_cancel": "Cancel",
+    "error_action": "Action failed. Please try again."
   }
 }

@@ -1728,5 +1728,29 @@
     "btn_back_reservation": "Retour à la réservation",
     "already_signaled_title": "Retard déjà signalé",
     "already_signaled_desc": "Vous avez déjà signalé un retard pour cette réservation. Attendez la réponse de la station."
+  },
+  "station_queue": {
+    "page_title": "File d'attente",
+    "waiting_n": "{n} client(s) en attente",
+    "queue_empty_short": "Aucun client en attente",
+    "queue_empty": "File vide — aucun client en attente pour le moment.",
+    "error_load": "Impossible de charger la file d'attente.",
+    "btn_retry": "Réessayer",
+    "btn_refresh": "Actualiser",
+    "last_updated": "Mis à jour à {time}",
+    "section_in_progress": "En cours",
+    "section_waiting": "En attente",
+    "stat_reserved": "Réservations",
+    "stat_walkin": "File",
+    "stat_in_progress": "En cours",
+    "badge_in_progress": "EN COURS",
+    "confirm_call_title": "Appeler le client",
+    "confirm_call_message": "Confirmer le démarrage du service pour ce client ?",
+    "confirm_complete_title": "Terminer le service",
+    "confirm_complete_message": "Marquer ce service comme terminé ?",
+    "btn_call": "Démarrer",
+    "btn_complete": "Terminer",
+    "btn_cancel": "Annuler",
+    "error_action": "L'opération a échoué. Veuillez réessayer."
   }
 }
