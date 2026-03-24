@@ -1827,6 +1827,7 @@
     "alert_kyc_error": "Impossible de charger les données.",
     "alert_disputes_title": "Litiges ouverts",
     "alert_disputes_empty": "Aucun litige en cours.",
-    "alert_disputes_action": "Voir tous les litiges"
+    "alert_disputes_action": "Voir tous les litiges",
+    "notif_tooltip": "Notifications"
   }
 }
