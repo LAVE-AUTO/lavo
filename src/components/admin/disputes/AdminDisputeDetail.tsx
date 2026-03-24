@@ -168,7 +168,7 @@ export function AdminDisputeDetail({ id }: Props) {
                 </div>
                 <div className="flex flex-col gap-3 p-5">
                   {isResolved ? (
-                    <p className="text-center text-[12px] text-[#BBBBAA] dark:text-[#4A4A3A]">Ce litige a déjà été traité.</p>
+                    <p className="text-center text-[12px] text-[#BBBBAA] dark:text-[#4A4A3A]">{t('already_resolved')}</p>
                   ) : (
                     <>
                       <button type="button" onClick={() => setModal('refund_full')}
@@ -194,7 +194,7 @@ export function AdminDisputeDetail({ id }: Props) {
 
               {/* Client info mini-card */}
               <div className="rounded-xl border border-[#E8E4DC] bg-white p-4 shadow-sm dark:border-[#1E2E18] dark:bg-[#131E10]">
-                <p className="mb-2 text-[10px] font-black uppercase tracking-widest text-[#AAAAAA] dark:text-[#4A4A3A]">Client</p>
+                <p className="mb-2 text-[10px] font-black uppercase tracking-widest text-[#AAAAAA] dark:text-[#4A4A3A]">{t('label_client')}</p>
                 <p className="text-[13px] font-bold text-[#1A1A0A] dark:text-[#F0EDD4]">{dispute.client.name}</p>
                 <p className="mt-0.5 text-[11px] text-[#BBBBAA] dark:text-[#4A4A3A]">{dispute.client.email}</p>
               </div>

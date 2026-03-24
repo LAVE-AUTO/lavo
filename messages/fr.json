@@ -1978,7 +1978,9 @@
     "timeline_by_client": "Client",
     "timeline_by_station": "Station",
     "timeline_by_admin": "Admin",
-    "filter_all": "Tous"
+    "filter_all": "Tous",
+    "already_resolved": "Ce litige a déjà été traité.",
+    "label_client": "Client"
   },
   "admin_dashboard": {
     "nav_dashboard": "Tableau de bord",
