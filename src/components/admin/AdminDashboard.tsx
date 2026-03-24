@@ -1,13 +1,14 @@
 'use client';
 
-import { useTranslations } from 'next-intl';
+import { useTranslations, useLocale } from 'next-intl';
 import { AdminKpiRow } from './dashboard/AdminKpiRow';
 import { AdminAlertsSection } from './dashboard/AdminAlertsSection';
 
 export function AdminDashboard() {
-  const t = useTranslations('admin_dashboard');
+  const t      = useTranslations('admin_dashboard');
+  const locale = useLocale();
 
-  const today = new Date().toLocaleDateString('fr-CA', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
+  const today = new Date().toLocaleDateString(locale === 'en' ? 'en-CA' : 'fr-CA', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
 
   return (
     <div className="flex flex-1 flex-col overflow-y-auto">
