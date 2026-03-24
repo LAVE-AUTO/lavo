@@ -3,15 +3,7 @@
 import { useState, useRef, useEffect } from 'react';
 import { useTranslations } from 'next-intl';
 import { useToast } from '@/context/toast-context';
-
-// TODO: connect to API once endpoint is available (GET|POST /admin/commission)
-const MOCK_CURRENT_RATE = 10;
-const MOCK_HISTORY = [
-  { id: 'h1', rate: 10, set_by: 'admin@lavo.ca',        effective_at: '2026-01-01T00:00:00Z', created_at: '2025-12-28T14:30:00Z' },
-  { id: 'h2', rate: 8,  set_by: 'admin@lavo.ca',        effective_at: '2025-09-01T00:00:00Z', created_at: '2025-08-25T10:15:00Z' },
-  { id: 'h3', rate: 12, set_by: 'superadmin@lavo.ca',   effective_at: '2025-05-01T00:00:00Z', created_at: '2025-04-30T08:00:00Z' },
-  { id: 'h4', rate: 10, set_by: 'superadmin@lavo.ca',   effective_at: '2025-01-01T00:00:00Z', created_at: '2024-12-20T16:00:00Z' },
-];
+import { useCommission } from '@/context/commission-context';
 
 function formatDate(d: string) {
   try { return new Date(d).toLocaleDateString('fr-CA', { day: 'numeric', month: 'short', year: 'numeric' }); }
@@ -21,17 +13,19 @@ function formatDate(d: string) {
 export function AdminCommissionView() {
   const t = useTranslations('admin_commission');
   const { success: toastSuccess, error: toastError } = useToast();
+  const { rate: savedRate, history, updateRate } = useCommission();
   const mountedRef = useRef(true);
   useEffect(() => { mountedRef.current = true; return () => { mountedRef.current = false; }; }, []);
 
-  const [rate, setRate]       = useState(MOCK_CURRENT_RATE);
-  const [saving, setSaving]   = useState(false);
-  const [history, setHistory] = useState(MOCK_HISTORY);
-  const savedRate = history[0]?.rate ?? MOCK_CURRENT_RATE;
-  const isDirty   = rate !== savedRate;
+  const [rate, setRate]     = useState(savedRate);
+  const [saving, setSaving] = useState(false);
 
-  const stationShare  = 100 - rate;
-  const barWidth      = Math.max(2, Math.min(98, rate));
+  /* Sync local input when savedRate changes (e.g. changed from platform-settings) */
+  useEffect(() => { setRate(savedRate); }, [savedRate]);
+
+  const isDirty      = rate !== savedRate;
+  const stationShare = 100 - rate;
+  const barWidth     = Math.max(2, Math.min(98, rate));
 
   async function handleSave() {
     if (rate < 0 || rate > 100) { toastError(t('error_range')); return; }
@@ -40,8 +34,7 @@ export function AdminCommissionView() {
       // TODO: connect to API once endpoint is available (POST /admin/commission)
       await new Promise((r) => setTimeout(r, 700));
       if (!mountedRef.current) return;
-      const entry = { id: `h${Date.now()}`, rate, set_by: 'admin@lavo.ca', effective_at: new Date().toISOString(), created_at: new Date().toISOString() };
-      setHistory((prev) => [entry, ...prev]);
+      updateRate(rate);
       toastSuccess(t('save_success'));
     } finally {
       if (mountedRef.current) setSaving(false);
@@ -122,27 +115,22 @@ export function AdminCommissionView() {
               <p className="p-8 text-center text-[13px] text-[#999]">{t('empty_history')}</p>
             ) : (
               <>
-                {/* Table header */}
                 <div className="grid grid-cols-[80px_1fr_100px] gap-4 border-b border-[#F0EDE6] px-5 py-2.5 dark:border-[#1A2A14]">
                   {[t('col_rate'), t('col_set_by'), t('col_effective')].map((h) => (
                     <span key={h} className="text-[10px] font-black uppercase tracking-widest text-[#AAAAAA] dark:text-[#4A4A3A]">{h}</span>
                   ))}
                 </div>
                 {history.map((h, i) => {
-                  const prev    = history[i + 1];
-                  const up      = prev ? h.rate > prev.rate : false;
-                  const same    = prev ? h.rate === prev.rate : true;
+                  const prev      = history[i + 1];
+                  const up        = prev ? h.rate > prev.rate : false;
+                  const same      = prev ? h.rate === prev.rate : true;
                   const isCurrent = i === 0;
                   return (
                     <div key={h.id}
                       className={`grid grid-cols-[80px_1fr_100px] items-center gap-4 border-b px-5 py-3.5 last:border-0 transition-colors ${isCurrent ? 'border-[#F0EDE6] bg-[#FEFCF5] dark:border-[#1A2A14] dark:bg-[#182416]' : 'border-[#F5F2ED] bg-white hover:bg-[#FAFAF7] dark:border-[#1A2A14] dark:bg-[#131E10] dark:hover:bg-[#182416]'}`}>
                       <div className="flex items-center gap-2">
                         <span className={`text-[18px] font-black ${isCurrent ? 'text-[#C49A1E]' : 'text-[#1A1A0A] dark:text-[#F0EDD4]'}`}>{h.rate}%</span>
-                        {!same && (
-                          <span className={`text-[10px] font-black ${up ? 'text-[#F97316]' : 'text-[#22C55E]'}`}>
-                            {up ? '▲' : '▼'}
-                          </span>
-                        )}
+                        {!same && <span className={`text-[10px] font-black ${up ? 'text-[#F97316]' : 'text-[#22C55E]'}`}>{up ? '▲' : '▼'}</span>}
                         {isCurrent && <span className="rounded-full bg-[#C49A1E]/15 px-1.5 py-0.5 text-[9px] font-black text-[#7A5E0A] dark:text-[#C49A1E]">live</span>}
                       </div>
                       <p className="truncate text-[12px] text-[#666] dark:text-[#9A9A8A]">{h.set_by}</p>

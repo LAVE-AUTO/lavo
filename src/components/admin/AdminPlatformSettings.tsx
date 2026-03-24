@@ -3,9 +3,10 @@
 import { useState, useRef, useEffect } from 'react';
 import { useTranslations } from 'next-intl';
 import { useToast } from '@/context/toast-context';
+import { useCommission } from '@/context/commission-context';
 
 // TODO: connect to API once endpoint is available (GET|POST /admin/platform-settings)
-const MOCK_SETTINGS = { penalty_rate: 15, admin_share: 10, reschedule_delay_minutes: 30 };
+const MOCK_SETTINGS = { penalty_rate: 15, reschedule_delay_minutes: 30 };
 
 function NumericField({
   label, hint, value, unit, min, max, onChange, readOnly,
@@ -55,19 +56,23 @@ function SectionCard({ icon, title, children }: { icon: React.ReactNode; title: 
 export function AdminPlatformSettings() {
   const t = useTranslations('admin_settings');
   const { success: toastSuccess, error: toastError } = useToast();
+  const { rate: savedCommissionRate, updateRate } = useCommission();
   const mountedRef = useRef(true);
   useEffect(() => { mountedRef.current = true; return () => { mountedRef.current = false; }; }, []);
 
   const [penaltyRate, setPenaltyRate]         = useState(MOCK_SETTINGS.penalty_rate);
-  const [adminShare, setAdminShare]           = useState(MOCK_SETTINGS.admin_share);
+  const [adminShare, setAdminShare]           = useState(savedCommissionRate);
   const [rescheduleDelay, setRescheduleDelay] = useState(MOCK_SETTINGS.reschedule_delay_minutes);
   const [saving, setSaving]                   = useState(false);
+
+  /* Sync local input if commission rate changed from commission page */
+  useEffect(() => { setAdminShare(savedCommissionRate); }, [savedCommissionRate]);
 
   const stationShare = 100 - adminShare;
 
   const isDirty =
     penaltyRate !== MOCK_SETTINGS.penalty_rate ||
-    adminShare  !== MOCK_SETTINGS.admin_share  ||
+    adminShare  !== savedCommissionRate        ||
     rescheduleDelay !== MOCK_SETTINGS.reschedule_delay_minutes;
 
   function validate(): string | null {
@@ -85,6 +90,7 @@ export function AdminPlatformSettings() {
     // TODO: connect to API once endpoint is available (POST /admin/platform-settings)
     await new Promise((r) => setTimeout(r, 700));
     if (!mountedRef.current) return;
+    if (adminShare !== savedCommissionRate) updateRate(adminShare);
     setSaving(false);
     toastSuccess(t('save_success'));
   }
