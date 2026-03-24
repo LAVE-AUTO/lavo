@@ -167,11 +167,13 @@ export function DelayRequestsPage() {
         </div>
 
         {/* Tabs */}
-        <div className="flex gap-0">
+        <div className="flex gap-0" role="tablist" aria-label={t('page_title')}>
           {(['pending', 'history'] as Tab[]).map((t_) => (
             <button
               key={t_}
               type="button"
+              role="tab"
+              aria-selected={tab === t_}
               onClick={() => setTab(t_)}
               className={`flex items-center gap-1.5 border-b-2 px-4 py-2.5 text-[12px] font-bold transition-all duration-150 ${
                 tab === t_
@@ -215,6 +217,8 @@ export function DelayRequestsPage() {
                   onRefuse={() => { setActionError(null); setPending({ type: 'refuse', request: req }); }}
                   acceptLabel={t('btn_accept')}
                   refuseLabel={t('btn_refuse')}
+                  badgeLabel={t('badge_waiting')}
+                  agoLabel={formatAgo(req.requested_at, t)}
                 />
               ))}
             </div>
@@ -225,7 +229,13 @@ export function DelayRequestsPage() {
           ) : (
             <div className="flex flex-col gap-2.5 max-w-xl">
               {history.map((req, idx) => (
-                <HistoryCard key={req.id} request={req} animationDelay={`${idx * 50}ms`} />
+                <HistoryCard
+                  key={req.id}
+                  request={req}
+                  animationDelay={`${idx * 50}ms`}
+                  statusLabel={req.status === 'accepted' ? t('badge_accepted') : t('badge_refused')}
+                  agoLabel={formatAgo(req.resolved_at, t)}
+                />
               ))}
             </div>
           )
@@ -272,9 +282,11 @@ interface PendingCardProps {
   onRefuse: () => void;
   acceptLabel: string;
   refuseLabel: string;
+  badgeLabel: string;
+  agoLabel: string;
 }
 
-function PendingCard({ request, animationDelay, onAccept, onRefuse, acceptLabel, refuseLabel }: PendingCardProps) {
+function PendingCard({ request, animationDelay, onAccept, onRefuse, acceptLabel, refuseLabel, badgeLabel, agoLabel }: PendingCardProps) {
   const initials = request.client_name.replace('Client #', '');
   return (
     <div
@@ -294,7 +306,7 @@ function PendingCard({ request, animationDelay, onAccept, onRefuse, acceptLabel,
             <div className="flex items-center gap-2">
               <span className="text-[13px] font-bold text-[#1A1A0A] dark:text-[#F0EDD4]">{request.client_name}</span>
               <span className="rounded-full bg-[#FEF3C7] px-2 py-0.5 text-[9px] font-bold uppercase tracking-wide text-[#92400E] dark:bg-[#3A2800] dark:text-[#FCD34D]">
-                En attente
+                {badgeLabel}
               </span>
             </div>
             <p className="mt-1.5 text-[12px] italic leading-relaxed text-[#333]/65 dark:text-[#FFFFF0]/55">
@@ -302,7 +314,7 @@ function PendingCard({ request, animationDelay, onAccept, onRefuse, acceptLabel,
             </p>
             <span className="mt-1.5 inline-flex items-center gap-1 text-[10px] text-[#555]/40 dark:text-[#FFFFF0]/30">
               <ClockMiniIcon />
-              {formatAgo(request.requested_at)}
+              {agoLabel}
             </span>
           </div>
         </div>
@@ -332,9 +344,11 @@ function PendingCard({ request, animationDelay, onAccept, onRefuse, acceptLabel,
 interface HistoryCardProps {
   request: ResolvedRequest;
   animationDelay: string;
+  statusLabel: string;
+  agoLabel: string;
 }
 
-function HistoryCard({ request, animationDelay }: HistoryCardProps) {
+function HistoryCard({ request, animationDelay, statusLabel, agoLabel }: HistoryCardProps) {
   const accepted = request.status === 'accepted';
   const accentColor = accepted ? '#00C851' : '#E8472A';
   const initials = request.client_name.replace('Client #', '');
@@ -361,7 +375,7 @@ function HistoryCard({ request, animationDelay }: HistoryCardProps) {
               className="shrink-0 rounded-full px-2 py-0.5 text-[9px] font-bold uppercase tracking-wide text-white"
               style={{ background: accentColor }}
             >
-              {accepted ? 'Accepté' : 'Refusé'}
+              {statusLabel}
             </span>
           </div>
           <p className="mt-1 text-[11px] italic text-[#333]/50 dark:text-[#FFFFF0]/40 leading-relaxed">
@@ -374,7 +388,7 @@ function HistoryCard({ request, animationDelay }: HistoryCardProps) {
           )}
           <span className="mt-1.5 inline-flex items-center gap-1 text-[10px] text-[#555]/35 dark:text-[#FFFFF0]/25">
             <ClockMiniIcon />
-            {formatAgo(request.resolved_at)}
+            {agoLabel}
           </span>
         </div>
       </div>
@@ -408,11 +422,10 @@ const ClockMiniIcon = () => (
   </svg>
 );
 
-function formatAgo(iso: string): string {
+function formatAgo(iso: string, t: (key: string, values?: Record<string, unknown>) => string): string {
   const diffMs = Date.now() - new Date(iso).getTime();
   const minutes = Math.floor(diffMs / 60_000);
-  if (minutes < 1) return 'À l\'instant';
-  if (minutes < 60) return `Il y a ${minutes} min`;
-  const hours = Math.floor(minutes / 60);
-  return `Il y a ${hours} h`;
+  if (minutes < 1) return t('ago_now');
+  if (minutes < 60) return t('ago_minutes', { n: minutes });
+  return t('ago_hours', { n: Math.floor(minutes / 60) });
 }

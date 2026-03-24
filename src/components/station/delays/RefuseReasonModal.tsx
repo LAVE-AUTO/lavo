@@ -20,7 +20,7 @@ export function RefuseReasonModal({ open, loading, error, onConfirm, onCancel }:
   if (!open) return null;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4" role="dialog" aria-modal="true">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4" role="dialog" aria-modal="true" aria-labelledby="refuse-modal-title">
       {/* Backdrop */}
       <div
         className="absolute inset-0 bg-black/50 backdrop-blur-sm"
@@ -42,7 +42,7 @@ export function RefuseReasonModal({ open, loading, error, onConfirm, onCancel }:
               </svg>
             </div>
             <div>
-              <h2 className="text-[15px] font-black text-[#1A1A0A] dark:text-[#F0EDD4]">{t('refuse_title')}</h2>
+              <h2 id="refuse-modal-title" className="text-[15px] font-black text-[#1A1A0A] dark:text-[#F0EDD4]">{t('refuse_title')}</h2>
               <p className="mt-0.5 text-[11px] text-[#555]/60 dark:text-[#FFFFF0]/45">{t('refuse_message')}</p>
             </div>
           </div>
