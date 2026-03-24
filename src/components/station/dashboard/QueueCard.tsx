@@ -27,9 +27,11 @@ interface QueueCardProps {
   callLabel?: string;
   /** Override header badge label (default: queue_next) */
   badgeLabel?: string;
+  /** Override pulsing dot + badge text color (default: #FF2525) */
+  badgeColor?: string;
 }
 
-export function QueueCard({ entry, onCall, onPick, onMoveUp, onMoveDown, callLabel, badgeLabel }: QueueCardProps) {
+export function QueueCard({ entry, onCall, onPick, onMoveUp, onMoveDown, callLabel, badgeLabel, badgeColor }: QueueCardProps) {
   const t = useTranslations('station_dashboard');
   const [expanded, setExpanded] = useState(false);
 
@@ -46,10 +48,10 @@ export function QueueCard({ entry, onCall, onPick, onMoveUp, onMoveDown, callLab
         <div className="p-5">
           {/* Header */}
           <div className="mb-4 flex items-center justify-between">
-            <div className="flex items-center gap-2 text-[10px] font-bold uppercase tracking-wider text-[#FF2525]">
+            <div className="flex items-center gap-2 text-[10px] font-bold uppercase tracking-wider" style={{ color: badgeColor ?? '#FF2525' }}>
               <span className="relative flex h-2.5 w-2.5">
-                <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-[#FF2525] opacity-75" />
-                <span className="relative inline-flex h-2.5 w-2.5 rounded-full bg-[#FF2525]" />
+                <span className="absolute inline-flex h-full w-full animate-ping rounded-full opacity-75" style={{ background: badgeColor ?? '#FF2525' }} />
+                <span className="relative inline-flex h-2.5 w-2.5 rounded-full" style={{ background: badgeColor ?? '#FF2525' }} />
               </span>
               {badgeLabel ?? t('queue_next')}
             </div>

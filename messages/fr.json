@@ -1322,7 +1322,10 @@
     "queue_detail_time": "Heure",
     "queue_detail_service": "Service",
     "queue_detail_price": "Prix",
-    "queue_detail_post": "Poste"
+    "queue_detail_post": "Poste",
+    "queue_see_all": "Voir tout",
+    "queue_in_progress_badge": "EN COURS",
+    "queue_complete_now": "Terminer"
   },
   "station_reservations": {
     "page_title": "Réservations du jour",

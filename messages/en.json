@@ -1322,7 +1322,10 @@
     "queue_detail_time": "Time",
     "queue_detail_service": "Service",
     "queue_detail_price": "Price",
-    "queue_detail_post": "Bay"
+    "queue_detail_post": "Bay",
+    "queue_see_all": "See all",
+    "queue_in_progress_badge": "IN PROGRESS",
+    "queue_complete_now": "Complete"
   },
   "station_reservations": {
     "page_title": "Today's reservations",

@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { getFromApi, patchWithApi } from '@/services';
 import { useAuth } from '@/context/auth-context';
 import { DashboardKpiRow, type KpiData } from './DashboardKpiRow';
@@ -34,7 +34,18 @@ interface RawConfig {
 }
 
 function buildQueueEntries(raw: RawEntry[]): QueueEntry[] {
-  return raw
+  // Show in_progress first (being served), then pending (waiting), sorted by queue_position
+  const inProgress = raw
+    .filter((e) => e.status === 'in_progress')
+    .map((e, idx): QueueEntry => ({
+      id: e.id,
+      position: 0,
+      clientName: `Client #${e.user_id.slice(0, 4)}`,
+      entryType: e.entry_type,
+      price: e.amount_paid ? parseFloat(e.amount_paid) : undefined,
+      isNext: idx === 0 && raw.filter((x) => x.status === 'pending').length === 0,
+    }));
+  const waiting = raw
     .filter((e) => e.status === 'pending')
     .sort((a, b) => (a.queue_position ?? 999) - (b.queue_position ?? 999))
     .map((e, idx): QueueEntry => ({
@@ -43,8 +54,9 @@ function buildQueueEntries(raw: RawEntry[]): QueueEntry[] {
       clientName: `Client #${e.user_id.slice(0, 4)}`,
       entryType: e.entry_type,
       price: e.amount_paid ? parseFloat(e.amount_paid) : undefined,
-      isNext: idx === 0,
+      isNext: inProgress.length === 0 && idx === 0,
     }));
+  return [...inProgress, ...waiting];
 }
 
 function buildPosts(rawConfig: RawConfig, rawEntries: RawEntry[]): Post[] {
@@ -66,6 +78,9 @@ function buildPosts(rawConfig: RawConfig, rawEntries: RawEntry[]): Post[] {
 
 export function StationDashboard() {
   const { isLoading: authLoading } = useAuth();
+  const mountedRef = useRef(true);
+  useEffect(() => { mountedRef.current = true; return () => { mountedRef.current = false; }; }, []);
+
   const [selectedDate, setSelectedDate] = useState(() => new Date());
   const [view, setView] = useState<'weekly' | 'monthly'>('weekly');
   const [queueEntries, setQueueEntries] = useState<QueueEntry[]>([]);
@@ -75,7 +90,7 @@ export function StationDashboard() {
   const loadData = useCallback(async () => {
     const [entriesOk, entriesData] = await getFromApi('/station/entries');
     const [configOk, configData] = await getFromApi('/station/config');
-
+    if (!mountedRef.current) return;
     if (entriesOk && configOk) {
       const raw = (entriesData as { data: { entries: RawEntry[] } }).data.entries ?? [];
       const config = (configData as { data: RawConfig }).data;
@@ -91,22 +106,22 @@ export function StationDashboard() {
 
   async function handleCall(id: string) {
     await patchWithApi(`/station/entries/${id}`, { status: 'in_progress' });
-    await loadData();
+    if (mountedRef.current) await loadData();
   }
 
   async function handleComplete(id: string) {
     await patchWithApi(`/station/entries/${id}`, { status: 'completed' });
-    await loadData();
+    if (mountedRef.current) await loadData();
   }
 
   async function handleCancel(id: string) {
     await patchWithApi(`/station/entries/${id}`, { status: 'cancelled' });
-    await loadData();
+    if (mountedRef.current) await loadData();
   }
 
   async function handleStart(id: string) {
     await patchWithApi(`/station/entries/${id}`, { status: 'in_progress' });
-    await loadData();
+    if (mountedRef.current) await loadData();
   }
 
   if (loading) {
