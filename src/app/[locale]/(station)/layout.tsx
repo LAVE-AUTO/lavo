@@ -8,10 +8,12 @@ import { useAuth } from '@/context';
 import { getFromApi } from '@/services/axios-service';
 import { StationShell } from '@/components/station/StationShell';
 import { StationRejectedView } from '@/components/station/StationRejectedView';
+import { StationPendingView } from '@/components/station/StationPendingView';
 
 type StationState =
   | { kind: 'loading' }
   | { kind: 'ok'; name: string }
+  | { kind: 'pending'; name: string }
   | { kind: 'rejected'; name: string; reason: string | null };
 
 export default function StationLayout({ children }: { children: ReactNode }) {
@@ -58,7 +60,19 @@ export default function StationLayout({ children }: { children: ReactNode }) {
         return;
       }
 
-      // BUSINESS_NOT_APPROVED (pending) or other non-fatal error — show shell with empty name
+      if (errCode === 'BUSINESS_NOT_APPROVED') {
+        // Fetch station name from status endpoint (no active check required)
+        getFromApi('/station/status').then(([statusOk, statusData]) => {
+          if (!mounted) return;
+          const name = statusOk
+            ? (statusData as { data: { name: string } }).data?.name ?? ''
+            : '';
+          setState({ kind: 'pending', name });
+        });
+        return;
+      }
+
+      // Other non-fatal error — show shell
       setState({ kind: 'ok', name: '' });
     });
 
@@ -67,6 +81,10 @@ export default function StationLayout({ children }: { children: ReactNode }) {
 
   if (isLoading || state.kind === 'loading') return null;
   if (!isAuthenticated || !isStation) return null;
+
+  if (state.kind === 'pending') {
+    return <StationPendingView stationName={state.name} />;
+  }
 
   if (state.kind === 'rejected') {
     return <StationRejectedView stationName={state.name} rejectionReason={state.reason} />;

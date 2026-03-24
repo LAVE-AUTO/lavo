@@ -1717,6 +1717,19 @@
     "empty_rejected": "Aucune station rejetée",
     "empty_all": "Aucune station enregistrée"
   },
+  "station_pending": {
+    "title": "Demande en cours d'examen",
+    "subtitle": "Le dossier de <strong>{name}</strong> a bien été reçu et est actuellement examiné par notre équipe.",
+    "step1_label": "Dossier soumis",
+    "step1_desc": "Vos documents ont été transmis avec succès.",
+    "step2_label": "Vérification en cours",
+    "step2_desc": "Notre équipe examine votre dossier. Ce processus peut prendre 24 à 48 heures.",
+    "step3_label": "Décision",
+    "step3_desc": "Vous recevrez un e-mail dès qu'une décision aura été prise.",
+    "notice": "Vous pouvez fermer cette page et revenir plus tard. Vous serez notifié par e-mail.",
+    "btn_logout": "Se déconnecter",
+    "or_contact_support": "Des questions ? Contactez notre support."
+  },
   "station_rejected": {
     "title": "Votre demande KYC a été rejetée",
     "subtitle": "La demande d'adhésion pour {name} n'a pas été approuvée par notre équipe.",
