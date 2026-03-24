@@ -8,23 +8,33 @@ import { QueueCard, type QueueEntry } from './QueueCard';
 interface DashboardQueuePanelProps {
   entries: QueueEntry[];
   onCallEntry: (id: string) => void;
+  onCompleteEntry?: (id: string) => void;
 }
 
-export function DashboardQueuePanel({ entries, onCallEntry }: DashboardQueuePanelProps) {
+export function DashboardQueuePanel({ entries, onCallEntry, onCompleteEntry }: DashboardQueuePanelProps) {
   const t = useTranslations('station_dashboard');
   const locale = useLocale();
 
-  const inProgressEntries = entries.filter((e) => e.isNext && e.position === 0);
-  const waitingEntries = entries.filter((e) => e.position > 0 || !e.isNext);
-  const waitingCount = entries.filter((e) => e.position > 0).length;
+  // Fix: use entry.status directly instead of isNext + position heuristic
+  const inProgressEntries = entries.filter((e) => e.status === 'in_progress');
+  const waitingEntries = entries.filter((e) => e.status === 'pending');
+  const waitingCount = waitingEntries.length;
+  const totalCount = entries.length;
 
   return (
     <div className="flex w-[280px] flex-shrink-0 flex-col overflow-hidden border-r border-[#E0DCD0] bg-[#F0EDE0] dark:border-[#1A2A14] dark:bg-[#182214]">
       {/* Header */}
       <div className="border-b border-[#E0DCD0] px-4 py-3.5 dark:border-[#1A2A14]">
         <div className="flex items-center justify-between">
-          <div className="text-[14px] font-black text-[#1A1A0A] dark:text-[#F0EDD4]">
-            {t('queue_title')}
+          <div className="flex items-center gap-2">
+            <div className="text-[14px] font-black text-[#1A1A0A] dark:text-[#F0EDD4]">
+              {t('queue_title')}
+            </div>
+            {totalCount > 0 && (
+              <span className="rounded-full bg-[#C09A18] px-2 py-0.5 text-[9px] font-black text-[#0C1209] leading-tight">
+                {totalCount}
+              </span>
+            )}
           </div>
           <Link
             href={`/${locale}/station/queue`}
@@ -48,18 +58,29 @@ export function DashboardQueuePanel({ entries, onCallEntry }: DashboardQueuePane
           </div>
         ) : (
           <>
-            {inProgressEntries.map((entry) => (
-              <QueueCard
+            {inProgressEntries.map((entry, idx) => (
+              <div
                 key={entry.id}
-                entry={entry}
-                onCall={onCallEntry}
-                badgeColor="#00C851"
-                badgeLabel={t('queue_in_progress_badge')}
-                callLabel={t('queue_complete_now')}
-              />
+                className="animate-fade-in-up transition-all duration-150 hover:bg-[#E8E4D0] dark:hover:bg-[#1A2A14] rounded-2xl"
+                style={{ animationDelay: `${idx * 60}ms` }}
+              >
+                <QueueCard
+                  entry={entry}
+                  onCall={onCompleteEntry ?? onCallEntry}
+                  badgeColor="#00C851"
+                  badgeLabel={t('queue_in_progress_badge')}
+                  callLabel={t('queue_complete_now')}
+                />
+              </div>
             ))}
-            {waitingEntries.map((entry) => (
-              <QueueCard key={entry.id} entry={entry} onCall={onCallEntry} />
+            {waitingEntries.map((entry, idx) => (
+              <div
+                key={entry.id}
+                className="animate-fade-in-up transition-all duration-150 hover:bg-[#E8E4D0] dark:hover:bg-[#1A2A14] rounded-2xl"
+                style={{ animationDelay: `${(inProgressEntries.length + idx) * 60}ms` }}
+              >
+                <QueueCard entry={entry} onCall={onCallEntry} />
+              </div>
             ))}
           </>
         )}

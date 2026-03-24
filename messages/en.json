@@ -1754,6 +1754,9 @@
     "btn_call": "Start",
     "btn_complete": "Complete",
     "btn_cancel": "Cancel",
-    "error_action": "Action failed. Please try again."
+    "error_action": "Action failed. Please try again.",
+    "action_error_generic": "Action failed. Please try again.",
+    "confirm_btn_confirm": "Confirm",
+    "confirm_btn_cancel": "Cancel"
   }
 }

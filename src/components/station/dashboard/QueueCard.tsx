@@ -15,6 +15,7 @@ export interface QueueEntry {
   marginMin?: number;
   marginMax?: number;
   isNext: boolean;
+  status?: string;
 }
 
 interface QueueCardProps {
