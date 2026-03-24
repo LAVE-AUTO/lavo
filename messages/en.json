@@ -2039,6 +2039,7 @@
     "drawer_status": "Status",
     "section_amounts": "Financial breakdown",
     "section_parties": "Parties",
+    "pdf_receipt_label": "Transaction Receipt",
     "btn_download": "Download receipt (PDF)",
     "btn_close": "Close",
     "pdf_generated_on": "Generated on"

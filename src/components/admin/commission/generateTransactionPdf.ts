@@ -3,6 +3,7 @@ import type { TxRow, TxStatus } from './AdminTransactionDrawer';
 
 export interface PdfLabels {
   pageTitle: string;
+  receiptLabel: string;
   stripeIdLabel: string;
   grossLabel: string;
   commissionLabel: string;
@@ -30,36 +31,51 @@ function formatDT(d: string) {
   } catch { return d; }
 }
 
-export function generateTransactionPdf(tx: TxRow, labels: PdfLabels): void {
+async function fetchAsDataUrl(url: string): Promise<string> {
+  const res   = await fetch(url);
+  const blob  = await res.blob();
+  return new Promise<string>((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onloadend = () => resolve(reader.result as string);
+    reader.onerror  = reject;
+    reader.readAsDataURL(blob);
+  });
+}
+
+export async function generateTransactionPdf(tx: TxRow, labels: PdfLabels): Promise<void> {
+  const logoDataUrl = await fetchAsDataUrl('/logo/logo_2.png');
+
   const doc  = new jsPDF({ unit: 'mm', format: 'a4', orientation: 'portrait' });
   const W    = 210;
   const mx   = 18;
   const cw   = W - mx * 2;
   const [sr, sg, sb] = STATUS_RGB[tx.status];
 
-  // ─── Gold header ──────────────────────────────────────────────────────
-  doc.setFillColor(196, 154, 30);
-  doc.rect(0, 0, W, 40, 'F');
+  // ─── White header with Slowtime logo ──────────────────────────────────
+  // logo_2.png aspect ratio ≈ 3.04 : 1 (width : height)
+  const logoW = 58;
+  const logoH = 19;
+  doc.addImage(logoDataUrl, 'PNG', mx, 7, logoW, logoH);
 
-  // Brand name
-  doc.setTextColor(255, 255, 255);
+  // Document label (right side of header)
+  doc.setTextColor(26, 26, 10);
   doc.setFont('helvetica', 'bold');
-  doc.setFontSize(30);
-  doc.text('LAVO', mx, 26);
-
-  // Subtitle (right-aligned)
-  doc.setFontSize(9);
+  doc.setFontSize(12);
+  doc.text(labels.receiptLabel, W - mx, 13, { align: 'right' });
   doc.setFont('helvetica', 'normal');
-  doc.text(labels.pageTitle, W - mx, 19, { align: 'right' });
-  doc.setFontSize(7.5);
-  doc.setTextColor(255, 230, 160);
-  doc.text('Slowtime Inc.', W - mx, 27, { align: 'right' });
+  doc.setFontSize(8);
+  doc.setTextColor(150, 148, 136);
+  doc.text(labels.pageTitle, W - mx, 20, { align: 'right' });
+
+  // ─── Gold separator bar ───────────────────────────────────────────────
+  doc.setFillColor(196, 154, 30);
+  doc.rect(0, 31, W, 9, 'F');
 
   // ─── Status accent strip ──────────────────────────────────────────────
   doc.setFillColor(sr, sg, sb);
-  doc.rect(0, 40, W, 4.5, 'F');
+  doc.rect(0, 40, W, 4, 'F');
 
-  let y = 55;
+  let y = 54;
 
   // ─── Stripe reference block ───────────────────────────────────────────
   doc.setFillColor(249, 248, 245);
@@ -103,13 +119,12 @@ export function generateTransactionPdf(tx: TxRow, labels: PdfLabels): void {
   doc.setFontSize(7);
   doc.text(labels.sectionAmounts.toUpperCase(), mx + 6, y + 9.5);
 
-  // Left accent bar (gold)
+  // Gold left accent bar
   doc.setFillColor(196, 154, 30);
   doc.roundedRect(mx + 2.5, y + 5, 1.5, 47, 1, 1, 'F');
 
   let iy = y + 22;
 
-  // Gross row
   doc.setTextColor(26, 26, 10);
   doc.setFont('helvetica', 'normal');
   doc.setFontSize(10);
@@ -117,7 +132,6 @@ export function generateTransactionPdf(tx: TxRow, labels: PdfLabels): void {
   doc.setFont('helvetica', 'bold');
   doc.text(fmt(tx.gross), W - mx - 6, iy, { align: 'right' });
 
-  // Commission row
   iy += 13;
   doc.setTextColor(26, 26, 10);
   doc.setFont('helvetica', 'normal');
@@ -126,13 +140,11 @@ export function generateTransactionPdf(tx: TxRow, labels: PdfLabels): void {
   doc.setFont('helvetica', 'bold');
   doc.text(`- ${fmt(tx.commission)}`, W - mx - 6, iy, { align: 'right' });
 
-  // Separator
   iy += 8;
   doc.setDrawColor(218, 214, 202);
   doc.setLineWidth(0.4);
   doc.line(mx + 10, iy, W - mx - 6, iy);
 
-  // Payout row
   iy += 10;
   doc.setTextColor(26, 26, 10);
   doc.setFont('helvetica', 'bold');
@@ -153,12 +165,11 @@ export function generateTransactionPdf(tx: TxRow, labels: PdfLabels): void {
   doc.setFontSize(7);
   doc.text(labels.sectionParties.toUpperCase(), mx + 6, y + 9.5);
 
-  // Left accent bar (status color)
+  // Status-colored left accent bar
   doc.setFillColor(sr, sg, sb);
   doc.roundedRect(mx + 2.5, y + 5, 1.5, 30, 1, 1, 'F');
 
   iy = y + 22;
-
   doc.setTextColor(150, 148, 136);
   doc.setFont('helvetica', 'normal');
   doc.setFontSize(9.5);
@@ -186,10 +197,10 @@ export function generateTransactionPdf(tx: TxRow, labels: PdfLabels): void {
   doc.setTextColor(150, 148, 136);
   doc.setFont('helvetica', 'normal');
   doc.setFontSize(7.5);
-  doc.text('LAVO · Slowtime Inc.', mx, y);
+  doc.text('Slowtime Inc.', mx, y);
 
   const today = new Date().toLocaleDateString('fr-CA', { day: 'numeric', month: 'long', year: 'numeric' });
   doc.text(`${labels.generatedOn} ${today}`, W - mx, y, { align: 'right' });
 
-  doc.save(`lavo-tx-${tx.stripe_id.slice(-8).toLowerCase()}.pdf`);
+  doc.save(`slowtime-tx-${tx.stripe_id.slice(-8).toLowerCase()}.pdf`);
 }

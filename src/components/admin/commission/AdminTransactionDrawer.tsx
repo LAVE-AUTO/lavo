@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useTranslations } from 'next-intl';
 import { generateTransactionPdf, type PdfLabels } from './generateTransactionPdf';
 
@@ -30,7 +30,14 @@ interface Props { tx: TxRow | null; onClose: () => void; }
 
 export function AdminTransactionDrawer({ tx, onClose }: Props) {
   const t = useTranslations('admin_transactions');
-  const closeBtnRef = useRef<HTMLButtonElement>(null);
+  const closeBtnRef   = useRef<HTMLButtonElement>(null);
+  const mountedRef    = useRef(true);
+  const [exporting, setExporting] = useState(false);
+
+  useEffect(() => {
+    mountedRef.current = true;
+    return () => { mountedRef.current = false; };
+  }, []);
 
   const STATUS_LABELS: Record<TxStatus, string> = {
     succeeded: t('status_succeeded'),
@@ -46,22 +53,28 @@ export function AdminTransactionDrawer({ tx, onClose }: Props) {
     return () => document.removeEventListener('keydown', onKey);
   }, [tx, onClose]);
 
-  function handleDownload() {
-    if (!tx) return;
-    const pdfLabels: PdfLabels = {
-      pageTitle:       t('page_title'),
-      stripeIdLabel:   t('drawer_stripe_id'),
-      grossLabel:      t('drawer_gross'),
-      commissionLabel: t('drawer_commission'),
-      payoutLabel:     t('drawer_payout'),
-      stationLabel:    t('drawer_station'),
-      clientLabel:     t('drawer_client'),
-      sectionAmounts:  t('section_amounts'),
-      sectionParties:  t('section_parties'),
-      statusText:      STATUS_LABELS[tx.status],
-      generatedOn:     t('pdf_generated_on'),
-    };
-    generateTransactionPdf(tx, pdfLabels);
+  async function handleDownload() {
+    if (!tx || exporting) return;
+    setExporting(true);
+    try {
+      const pdfLabels: PdfLabels = {
+        pageTitle:       t('page_title'),
+        receiptLabel:    t('pdf_receipt_label'),
+        stripeIdLabel:   t('drawer_stripe_id'),
+        grossLabel:      t('drawer_gross'),
+        commissionLabel: t('drawer_commission'),
+        payoutLabel:     t('drawer_payout'),
+        stationLabel:    t('drawer_station'),
+        clientLabel:     t('drawer_client'),
+        sectionAmounts:  t('section_amounts'),
+        sectionParties:  t('section_parties'),
+        statusText:      STATUS_LABELS[tx.status],
+        generatedOn:     t('pdf_generated_on'),
+      };
+      await generateTransactionPdf(tx, pdfLabels);
+    } finally {
+      if (mountedRef.current) setExporting(false);
+    }
   }
 
   if (!tx) return null;
@@ -139,9 +152,12 @@ export function AdminTransactionDrawer({ tx, onClose }: Props) {
 
         {/* Footer */}
         <div className="border-t border-[#E8E4DC] p-5 dark:border-[#1E2E18]">
-          <button type="button" onClick={handleDownload}
-            className="flex w-full items-center justify-center gap-2 rounded-xl bg-[#C49A1E] px-5 py-3 text-[13px] font-bold text-[#0C1209] shadow-sm transition-all hover:-translate-y-0.5 hover:bg-[#D4A830] hover:shadow-md active:translate-y-0">
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4" /><polyline points="7 10 12 15 17 10" /><line x1="12" y1="15" x2="12" y2="3" /></svg>
+          <button type="button" onClick={handleDownload} disabled={exporting}
+            className="flex w-full items-center justify-center gap-2 rounded-xl bg-[#C49A1E] px-5 py-3 text-[13px] font-bold text-[#0C1209] shadow-sm transition-all hover:-translate-y-0.5 hover:bg-[#D4A830] hover:shadow-md active:translate-y-0 disabled:opacity-60 disabled:translate-y-0">
+            {exporting
+              ? <span className="h-3.5 w-3.5 animate-spin rounded-full border-2 border-[#0C1209] border-t-transparent" />
+              : <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4" /><polyline points="7 10 12 15 17 10" /><line x1="12" y1="15" x2="12" y2="3" /></svg>
+            }
             {t('btn_download')}
           </button>
         </div>

@@ -2039,6 +2039,7 @@
     "drawer_status": "Statut",
     "section_amounts": "Répartition financière",
     "section_parties": "Parties concernées",
+    "pdf_receipt_label": "Reçu de transaction",
     "btn_download": "Télécharger le reçu (PDF)",
     "btn_close": "Fermer",
     "pdf_generated_on": "Généré le"
