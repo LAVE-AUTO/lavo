@@ -36,8 +36,11 @@ export function AdminStationsManagement({ stations, loading, error, onAction }: 
   async function doAction(id: string, action: 'activate' | 'suspend') {
     setBusy(id);
     setConfirmId(null);
-    await onAction(id, action);
-    setBusy(null);
+    try {
+      await onAction(id, action);
+    } finally {
+      setBusy(null);
+    }
   }
 
   if (loading) return (

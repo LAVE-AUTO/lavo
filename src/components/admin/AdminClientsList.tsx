@@ -43,13 +43,16 @@ export function AdminClientsList({ onAction }: Props) {
   async function doAction(id: string, action: 'activate' | 'suspend' | 'unblock') {
     setBusy(id);
     setConfirmId(null);
-    await onAction(id, action);
-    if (action !== 'unblock') {
-      setClients((prev) =>
-        prev.map((c) => c.id === id ? { ...c, status: action === 'activate' ? 'active' : 'suspended' } : c)
-      );
+    try {
+      await onAction(id, action);
+      if (action !== 'unblock') {
+        setClients((prev) =>
+          prev.map((c) => c.id === id ? { ...c, status: action === 'activate' ? 'active' : 'suspended' } : c)
+        );
+      }
+    } finally {
+      setBusy(null);
     }
-    setBusy(null);
   }
 
   return (
