@@ -10,6 +10,7 @@ const REAPPLY_COOLDOWN_HOURS = 24;
 const REJECTION_COUNT_FOR_COOLDOWN = 3;
 const MIN_NAME_LENGTH = 2;
 const MIN_CITY_LENGTH = 2;
+const MIN_ADDRESS_LENGTH = 5;
 
 const ALLOWED_DOC_TYPES = ['registration_certificate', 'address_proof', 'license'] as const;
 type DocType = (typeof ALLOWED_DOC_TYPES)[number];
@@ -89,15 +90,23 @@ export async function POST(request: Request) {
       documents?: DocumentInput[];
     };
 
-    // Validate documents — required types must be present
-    const docs: DocumentInput[] = Array.isArray(documents) ? documents : [];
+    // Validate documents — required types must be present; deduplicate by type (keep last)
+    const rawDocs: DocumentInput[] = Array.isArray(documents) ? documents : [];
+    const docsByType = new Map<string, DocumentInput>();
+    for (const d of rawDocs) {
+      if (
+        ALLOWED_DOC_TYPES.includes(d.document_type as DocType) &&
+        typeof d.file_url === 'string' &&
+        d.file_url.trim().startsWith('http') &&
+        (d.storage === 'cloudinary' || d.storage === 'local')
+      ) {
+        docsByType.set(d.document_type, d);
+      }
+    }
+    const docs = Array.from(docsByType.values());
 
-    const hasRegistrationCert = docs.some(
-      (d) => d.document_type === 'registration_certificate' && d.file_url?.trim()
-    );
-    const hasAddressProof = docs.some(
-      (d) => d.document_type === 'address_proof' && d.file_url?.trim()
-    );
+    const hasRegistrationCert = docs.some((d) => d.document_type === 'registration_certificate');
+    const hasAddressProof = docs.some((d) => d.document_type === 'address_proof');
 
     if (!hasRegistrationCert || !hasAddressProof) {
       return error400(
@@ -110,20 +119,22 @@ export async function POST(request: Request) {
     if (typeof name === 'string' && name.trim().length > 0 && name.trim().length < MIN_NAME_LENGTH) {
       return error400(`Station name must be at least ${MIN_NAME_LENGTH} characters`, ApiCode.VALIDATION_FAILED);
     }
+    if (typeof address === 'string' && address.trim().length > 0 && address.trim().length < MIN_ADDRESS_LENGTH) {
+      return error400(`Address must be at least ${MIN_ADDRESS_LENGTH} characters`, ApiCode.VALIDATION_FAILED);
+    }
     if (typeof city === 'string' && city.trim().length > 0 && city.trim().length < MIN_CITY_LENGTH) {
       return error400(`City must be at least ${MIN_CITY_LENGTH} characters`, ApiCode.VALIDATION_FAILED);
     }
 
-    const updates: Record<string, unknown> = {
+    const updates: Partial<typeof stations.$inferInsert> = {
       status: 'pending_admin_validation',
       rejection_reason: null,
       updated_at: new Date(),
+      ...(typeof name === 'string' && name.trim() ? { name: name.trim().slice(0, 150) } : {}),
+      ...(typeof address === 'string' && address.trim() ? { address: address.trim().slice(0, 200) } : {}),
+      ...(typeof city === 'string' && city.trim() ? { city: city.trim().slice(0, 100) } : {}),
+      ...(typeof description === 'string' ? { description: description.trim().slice(0, 1000) || null } : {}),
     };
-
-    if (typeof name === 'string' && name.trim()) updates.name = name.trim().slice(0, 150);
-    if (typeof address === 'string' && address.trim()) updates.address = address.trim().slice(0, 200);
-    if (typeof city === 'string' && city.trim()) updates.city = city.trim().slice(0, 100);
-    if (typeof description === 'string') updates.description = description.trim().slice(0, 1000) || null;
 
     // Replace documents and reset station status in a transaction
     await db.transaction(async (tx) => {
@@ -132,20 +143,12 @@ export async function POST(request: Request) {
       // Remove existing documents (pending_uploads rows cascade-deleted)
       await tx.delete(stationDocuments).where(eq(stationDocuments.station_id, station.id));
 
-      // Insert new documents
-      const validDocs = docs.filter(
-        (d) =>
-          ALLOWED_DOC_TYPES.includes(d.document_type as DocType) &&
-          typeof d.file_url === 'string' &&
-          d.file_url.trim() &&
-          (d.storage === 'cloudinary' || d.storage === 'local')
-      );
-
-      if (validDocs.length > 0) {
+      // Insert validated + deduplicated documents
+      if (docs.length > 0) {
         const inserted = await tx
           .insert(stationDocuments)
           .values(
-            validDocs.map((d) => ({
+            docs.map((d) => ({
               station_id: station.id,
               document_type: d.document_type,
               file_url: d.file_url.trim(),
