@@ -58,14 +58,28 @@ export function AdminStationDetail({ id }: Props) {
     else { setActionError(t('action_error')); setConfirmApprove(false); }
   };
 
+  const MIN_REASON = 10;
+
   const handleReject = async () => {
-    if (!station || !rejectReason.trim()) return;
+    if (!station) return;
+    const trimmed = rejectReason.trim();
+    if (trimmed.length < MIN_REASON) {
+      setActionError(t('reject_reason_min', { n: MIN_REASON }));
+      return;
+    }
     setRejecting(true); setActionError(null);
-    const [ok] = await postWithApi(`/admin/stations/${id}/reject`, { rejection_reason: rejectReason.trim() });
+    const [ok, data] = await postWithApi(`/admin/stations/${id}/reject`, { rejection_reason: trimmed });
     if (!mountedRef.current) return;
     setRejecting(false);
-    if (ok) { success(t('action_success_reject')); router.push('/admin/stations'); }
-    else { showError(t('action_error')); setActionError(t('action_error')); }
+    if (ok) {
+      success(t('action_success_reject'));
+      router.push('/admin/stations');
+    } else {
+      const apiMsg = (data as { message?: string })?.message;
+      const msg = apiMsg ?? t('action_error');
+      showError(msg);
+      setActionError(msg);
+    }
   };
 
   const scopeLabel: Record<string, string> = {
@@ -252,8 +266,11 @@ export function AdminStationDetail({ id }: Props) {
                   placeholder={t('reject_reason_placeholder')}
                   className="w-full resize-none rounded-xl border border-[#E8E4D8] bg-[#F8F6F2] px-4 py-3 text-[13px] text-[#0F1A0C] outline-none transition focus:border-[#EF4444]/50 focus:ring-2 focus:ring-[#EF4444]/10 disabled:opacity-50 dark:border-[#1E2A1A] dark:bg-[#0F1A0C] dark:text-[#F0EDD4]"
                 />
-                <div className="mt-1 flex justify-end text-[10px] text-[#CCC] dark:text-[#3A3A2A]">
-                  {rejectReason.length}/{MAX_REASON}
+                <div className="mt-1 flex items-center justify-between">
+                  <span className={`text-[10px] font-semibold transition-colors ${rejectReason.trim().length > 0 && rejectReason.trim().length < MIN_REASON ? 'text-[#EF4444]' : 'text-transparent'}`}>
+                    {t('reject_reason_min', { n: MIN_REASON })}
+                  </span>
+                  <span className="text-[10px] text-[#CCC] dark:text-[#3A3A2A]">{rejectReason.length}/{MAX_REASON}</span>
                 </div>
               </div>
               <div className="flex gap-3">
@@ -262,7 +279,7 @@ export function AdminStationDetail({ id }: Props) {
                   className="flex-1 rounded-xl border border-[#E0DCD0] py-2.5 text-[13px] font-semibold text-[#666] hover:bg-[#F0EDE0] disabled:opacity-50 dark:border-[#243020] dark:text-[#9A9A8A]">
                   {t('btn_cancel')}
                 </button>
-                <button type="button" onClick={handleReject} disabled={rejecting || !rejectReason.trim()}
+                <button type="button" onClick={handleReject} disabled={rejecting || rejectReason.trim().length < MIN_REASON}
                   className="flex flex-1 items-center justify-center gap-2 rounded-xl bg-[#EF4444] py-2.5 text-[13px] font-bold text-white shadow-sm transition hover:bg-[#DC2626] disabled:opacity-50">
                   {rejecting && <Spinner />}
                   {t('confirm_reject_label')}

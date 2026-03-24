@@ -1679,6 +1679,7 @@
     "btn_reject": "Reject",
     "confirm_reject_label": "Confirm rejection",
     "reject_reason_label": "Rejection reason",
+    "reject_reason_min": "Minimum {n} characters required",
     "reject_reason_placeholder": "Explain why the request is rejected...",
     "action_success_approve": "Station approved successfully",
     "action_success_reject": "Station rejected",
