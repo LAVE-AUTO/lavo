@@ -96,7 +96,7 @@ export function MerchantNavbar() {
                   <Link href="/station/login" className={pillClass}>
                     {t('login_pill')}
                   </Link>
-                  <Link href="/stations/apply" className={ctaClass}>
+                  <Link href="/station/apply" className={ctaClass}>
                     {t('partner_cta')}
                   </Link>
                 </>
@@ -142,7 +142,7 @@ export function MerchantNavbar() {
                     {t('login_pill')}
                   </Link>
                   <Link
-                    href="/stations/apply"
+                    href="/station/apply"
                     className="btn-shine flex items-center justify-center py-3 bg-[#c8980a] text-[#0d1f0f] text-[14px] font-bold tracking-[1px] uppercase rounded-[2px] transition-all hover:bg-[#e8b520]"
                   >
                     {t('partner_cta')}
