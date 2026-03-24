@@ -82,7 +82,9 @@ import {
   ConflictError,
   ActiveReservationExistsError,
   SlotFullError,
+  ValidationError,
 } from '@/lib/errors';
+import { generateQrToken } from '@/server/qr/qr-token-service';
 
 const userId = 'user-1';
 const stationId = 'station-1';
@@ -95,6 +97,7 @@ describe('reservation-service', () => {
   beforeEach(() => {
     jest.clearAllMocks();
     mockHasActiveEntryAtStation.mockResolvedValue(false);
+    process.env.QR_TOKEN_SECRET = 'unit-test-qr-secret-0123456789abcdef';
   });
 
   describe('createReservation', () => {
@@ -163,7 +166,7 @@ describe('reservation-service', () => {
       expect(result.entry.stripe_payment_id).toBe('pi_123');
       expect(mockIncrementSlotBookedCount).toHaveBeenCalledWith(slotId, expect.anything());
       expect(mockCreateReservationEntry).toHaveBeenCalledWith(
-        expect.objectContaining({ status: 'pending_payment' }),
+        expect.objectContaining({ status: 'pending_payment', booking_source: 'standard' }),
         expect.anything()
       );
       expect(mockNotifyEntry).toHaveBeenCalledWith(
@@ -190,6 +193,147 @@ describe('reservation-service', () => {
       ).rejects.toThrow('Stripe unavailable');
       expect(mockUpdateEntry).toHaveBeenCalledWith(entryId, expect.objectContaining({ status: 'cancelled' }), expect.anything());
       expect(mockDecrementSlotBookedCount).toHaveBeenCalledWith(slotId, expect.anything());
+    });
+
+    it('applies 0% commission and booking_source=qr for valid qr_token + v=1', async () => {
+      mockFindFormatByIdAndStation.mockResolvedValue({ id: formatId, price: '10', is_active: true });
+      mockGetConfigByStationId.mockResolvedValue({ reservation_surcharge: '2' });
+      mockLockSlotForUpdate.mockResolvedValue({
+        id: slotId,
+        capacity: 2,
+        start_time: new Date(),
+      });
+      mockCountReservationsBySlotId.mockResolvedValue(0);
+      const created = { id: entryId, entry_type: 'reservation', time_slot_id: slotId, stripe_payment_id: null };
+      mockCreateReservationEntry.mockResolvedValue(created);
+      mockCreatePaymentIntent.mockResolvedValue({
+        paymentIntentId: 'pi_123',
+        clientSecret: 'pi_123_secret_abc',
+      });
+      mockUpdateEntry.mockResolvedValue({ ...created, stripe_payment_id: 'pi_123' });
+
+      const qrToken = generateQrToken(stationId);
+      await createReservation(userId, stationId, stripeAccountId, slotId, formatId, {
+        qrToken,
+        qrVersion: '1',
+      });
+
+      expect(mockCreateReservationEntry).toHaveBeenCalledWith(
+        expect.objectContaining({
+          booking_source: 'qr',
+          commission_rate: '0.0000',
+          commission_amount: '0.00',
+          station_payout: '12.00',
+        }),
+        expect.anything()
+      );
+      expect(mockCreatePaymentIntent).toHaveBeenCalledWith(
+        expect.objectContaining({ commissionCents: 0 })
+      );
+    });
+
+    it('rejects invalid QR token context instead of silently falling back', async () => {
+      mockFindFormatByIdAndStation.mockResolvedValue({ id: formatId, price: '10', is_active: true });
+      mockGetConfigByStationId.mockResolvedValue({ reservation_surcharge: '2' });
+      mockLockSlotForUpdate.mockResolvedValue({
+        id: slotId,
+        capacity: 2,
+        start_time: new Date(),
+      });
+      mockCountReservationsBySlotId.mockResolvedValue(0);
+      const created = { id: entryId, entry_type: 'reservation', time_slot_id: slotId, stripe_payment_id: null };
+      mockCreateReservationEntry.mockResolvedValue(created);
+      mockCreatePaymentIntent.mockResolvedValue({
+        paymentIntentId: 'pi_123',
+        clientSecret: 'pi_123_secret_abc',
+      });
+      mockUpdateEntry.mockResolvedValue({ ...created, stripe_payment_id: 'pi_123' });
+
+      await expect(
+        createReservation(userId, stationId, stripeAccountId, slotId, formatId, {
+          qrToken: 'invalid-token',
+          qrVersion: '2',
+        })
+      ).rejects.toThrow(ValidationError);
+      expect(mockCreateReservationEntry).not.toHaveBeenCalled();
+    });
+
+    it('rejects partial QR payload when version is missing', async () => {
+      mockFindFormatByIdAndStation.mockResolvedValue({ id: formatId, price: '10', is_active: true });
+      mockGetConfigByStationId.mockResolvedValue({ reservation_surcharge: '2' });
+      mockLockSlotForUpdate.mockResolvedValue({
+        id: slotId,
+        capacity: 2,
+        start_time: new Date(),
+      });
+      mockCountReservationsBySlotId.mockResolvedValue(0);
+      const created = { id: entryId, entry_type: 'reservation', time_slot_id: slotId, stripe_payment_id: null };
+      mockCreateReservationEntry.mockResolvedValue(created);
+      mockCreatePaymentIntent.mockResolvedValue({
+        paymentIntentId: 'pi_123',
+        clientSecret: 'pi_123_secret_abc',
+      });
+      mockUpdateEntry.mockResolvedValue({ ...created, stripe_payment_id: 'pi_123' });
+
+      const qrToken = generateQrToken(stationId);
+      await expect(
+        createReservation(userId, stationId, stripeAccountId, slotId, formatId, {
+          qrToken,
+        })
+      ).rejects.toThrow(ValidationError);
+      expect(mockCreateReservationEntry).not.toHaveBeenCalled();
+    });
+
+    it('rejects partial QR payload when only version is provided', async () => {
+      mockFindFormatByIdAndStation.mockResolvedValue({ id: formatId, price: '10', is_active: true });
+      mockGetConfigByStationId.mockResolvedValue({ reservation_surcharge: '2' });
+      mockLockSlotForUpdate.mockResolvedValue({
+        id: slotId,
+        capacity: 2,
+        start_time: new Date(),
+      });
+      mockCountReservationsBySlotId.mockResolvedValue(0);
+      const created = { id: entryId, entry_type: 'reservation', time_slot_id: slotId, stripe_payment_id: null };
+      mockCreateReservationEntry.mockResolvedValue(created);
+      mockCreatePaymentIntent.mockResolvedValue({
+        paymentIntentId: 'pi_123',
+        clientSecret: 'pi_123_secret_abc',
+      });
+      mockUpdateEntry.mockResolvedValue({ ...created, stripe_payment_id: 'pi_123' });
+
+      await expect(
+        createReservation(userId, stationId, stripeAccountId, slotId, formatId, {
+          qrVersion: '1',
+        })
+      ).rejects.toThrow(ValidationError);
+      expect(mockCreateReservationEntry).not.toHaveBeenCalled();
+    });
+
+    it('rejects QR token signed for another station (bypass attempt)', async () => {
+      mockFindFormatByIdAndStation.mockResolvedValue({ id: formatId, price: '10', is_active: true });
+      mockGetConfigByStationId.mockResolvedValue({ reservation_surcharge: '2' });
+      mockLockSlotForUpdate.mockResolvedValue({
+        id: slotId,
+        capacity: 2,
+        start_time: new Date(),
+      });
+      mockCountReservationsBySlotId.mockResolvedValue(0);
+      const created = { id: entryId, entry_type: 'reservation', time_slot_id: slotId, stripe_payment_id: null };
+      mockCreateReservationEntry.mockResolvedValue(created);
+      mockCreatePaymentIntent.mockResolvedValue({
+        paymentIntentId: 'pi_123',
+        clientSecret: 'pi_123_secret_abc',
+      });
+      mockUpdateEntry.mockResolvedValue({ ...created, stripe_payment_id: 'pi_123' });
+
+      const qrTokenForOtherStation = generateQrToken('station-2');
+      await expect(
+        createReservation(userId, stationId, stripeAccountId, slotId, formatId, {
+          qrToken: qrTokenForOtherStation,
+          qrVersion: '1',
+        })
+      ).rejects.toThrow(ValidationError);
+      expect(mockCreateReservationEntry).not.toHaveBeenCalled();
     });
   });
 

@@ -23,6 +23,7 @@ import { users } from "./users";
 
 /** Entry type: reservation (slot) or queue. */
 export const entryTypeEnum = pgEnum("entry_type", ["reservation", "queue"]);
+export const bookingSourceEnum = pgEnum("booking_source", ["standard", "qr"]);
 
 /** Reservation lifecycle, queue position, and payment snapshot. */
 export const reservations = pgTable(
@@ -33,6 +34,7 @@ export const reservations = pgTable(
       .notNull()
       .references(() => users.id, { onDelete: "cascade" }),
     entry_type: entryTypeEnum("entry_type").notNull().default("reservation"),
+    booking_source: bookingSourceEnum("booking_source").notNull().default("standard"),
     time_slot_id: uuid("time_slot_id").references(() => timeSlots.id, {
       onDelete: "cascade",
     }),
@@ -46,8 +48,8 @@ export const reservations = pgTable(
     queue_position: integer("queue_position"),
     amount_paid: decimal("amount_paid", { precision: 10, scale: 2 }).notNull(),
     commission_rate: decimal("commission_rate", { precision: 5, scale: 4 }).notNull(),
-    commission_amount: decimal("commission_amount", { precision: 10, scale: 2 }),
-    station_payout: decimal("station_payout", { precision: 10, scale: 2 }),
+    commission_amount: decimal("commission_amount", { precision: 10, scale: 2 }).notNull().default("0.00"),
+    station_payout: decimal("station_payout", { precision: 10, scale: 2 }).notNull().default("0.00"),
     tip_amount: decimal("tip_amount", { precision: 10, scale: 2 }),
     stripe_payment_id: varchar("stripe_payment_id", { length: 200 }),
     stripe_transfer_id: varchar("stripe_transfer_id", { length: 200 }),
@@ -95,6 +97,7 @@ export const reservations = pgTable(
     index("reservations_created_at_idx").on(table.created_at),
     index("reservations_stripe_payment_succeeded_at_idx").on(table.stripe_payment_succeeded_at),
     index("reservations_entry_type_station_idx").on(table.entry_type, table.station_id),
+    index("reservations_booking_source_idx").on(table.booking_source),
   ]
 );
 

@@ -3,9 +3,8 @@
  * Uses entry repository, slot repo (booked_count + SELECT FOR UPDATE), config (surcharge),
  * Stripe PaymentIntent (Connect), and notification stubs.
  */
-import { NotFoundError, ConflictError, ActiveReservationExistsError, SlotFullError } from '@/lib/errors';
+import { NotFoundError, ConflictError, ActiveReservationExistsError, SlotFullError, ValidationError } from '@/lib/errors';
 import { MAX_ADVANCE_BOOKING_DAYS } from '@/helpers/constants';
-import { getActiveCommissionRate } from '@/server/admin/platform-settings-service';
 import { db } from '@/lib/db';
 import { getConfigByStationId } from '@/server/station/config-repository';
 import { findFormatByIdAndStation } from '@/server/station/format-repository';
@@ -34,6 +33,8 @@ import {
   listEntriesByUserPaginated,
   listEntriesByStationPaginated,
 } from './entry-repository';
+import { computeReservationSplit } from './compute-reservation-split';
+import { verifyQrToken } from '@/server/qr/qr-token-service';
 
 const STATUS_PENDING_PAYMENT = 'pending_payment';
 const STATUS_CANCELLED = 'cancelled';
@@ -82,7 +83,8 @@ export async function createReservation(
   stationId: string,
   stationStripeAccountId: string,
   timeSlotId: string,
-  vehicleFormatId: string
+  vehicleFormatId: string,
+  options?: { qrToken?: string; qrVersion?: string }
 ): Promise<CreateReservationResult> {
   const format = await findFormatByIdAndStation(vehicleFormatId, stationId);
   if (!format) throw new NotFoundError('Vehicle format not found');
@@ -95,9 +97,23 @@ export async function createReservation(
   const amountTotal = formatPrice + surcharge;
   if (amountTotal <= 0) throw new ConflictError('Invalid amount');
 
-  const commissionRate = await getActiveCommissionRate();
-  const commissionAmount = amountTotal * parseFloat(commissionRate);
-  const stationPayout = amountTotal - commissionAmount;
+  const hasQrPayload = Boolean(options?.qrToken || options?.qrVersion);
+  const qrValidation = options?.qrToken
+    ? verifyQrToken({
+        stationId,
+        qrToken: options.qrToken,
+        version: options.qrVersion,
+      })
+    : { isValid: false as const, reason: undefined };
+  const isQrBooking = Boolean(options?.qrToken) && qrValidation.isValid;
+  if (hasQrPayload && !isQrBooking) {
+    throw new ValidationError('Invalid QR booking token context');
+  }
+
+  const split = await computeReservationSplit({
+    amountTotal,
+    isQrBooking,
+  });
 
   // Atomic: check duplicate, lock slot (SELECT FOR UPDATE), verify capacity, insert entry, increment booked_count
   const entry = await db.transaction(async (tx) => {
@@ -125,9 +141,10 @@ export async function createReservation(
         time_slot_id: timeSlotId,
         status: STATUS_PENDING_PAYMENT,
         amount_paid: toDecimal(amountTotal),
-        commission_rate: commissionRate,
-        commission_amount: toDecimal(commissionAmount),
-        station_payout: toDecimal(stationPayout),
+        booking_source: split.bookingSource,
+        commission_rate: split.commissionRate,
+        commission_amount: toDecimal(split.commissionAmount),
+        station_payout: toDecimal(split.stationPayout),
         stripe_payment_id: null,
       },
       tx
@@ -139,7 +156,7 @@ export async function createReservation(
   // Create Stripe PaymentIntent (outside transaction — Stripe is an external side-effect)
   // If Stripe fails, rollback the DB entry to avoid orphaned pending_payment entries
   const amountCents = Math.round(amountTotal * 100);
-  const commissionCents = Math.round(commissionAmount * 100);
+  const commissionCents = Math.round(split.commissionAmount * 100);
 
   let paymentIntentId: string;
   let clientSecret: string;
@@ -321,9 +338,10 @@ export async function upgradeQueueToReservation(
   const amountTotal = formatPrice + surcharge;
   if (amountTotal <= 0) throw new ConflictError('Invalid amount');
 
-  const commissionRate = await getActiveCommissionRate();
-  const commissionAmount = amountTotal * parseFloat(commissionRate);
-  const stationPayout = amountTotal - commissionAmount;
+  const split = await computeReservationSplit({
+    amountTotal,
+    isQrBooking: false,
+  });
 
   // Atomic: lock slot, verify capacity, shift queue, convert entry, increment booked_count.
   const updated = await db.transaction(async (tx) => {
@@ -349,9 +367,10 @@ export async function upgradeQueueToReservation(
         queue_position: null,
         status: STATUS_PENDING_PAYMENT,
         amount_paid: toDecimal(amountTotal),
-        commission_rate: commissionRate,
-        commission_amount: toDecimal(commissionAmount),
-        station_payout: toDecimal(stationPayout),
+        booking_source: 'standard',
+        commission_rate: split.commissionRate,
+        commission_amount: toDecimal(split.commissionAmount),
+        station_payout: toDecimal(split.stationPayout),
         stripe_payment_id: null,
       },
       tx
@@ -362,7 +381,7 @@ export async function upgradeQueueToReservation(
 
   // Create Stripe PaymentIntent outside transaction (external side-effect).
   const amountCents = Math.round(amountTotal * 100);
-  const commissionCents = Math.round(commissionAmount * 100);
+  const commissionCents = Math.round(split.commissionAmount * 100);
 
   let paymentIntentId: string;
   let clientSecret: string;

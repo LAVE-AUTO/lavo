@@ -14,6 +14,14 @@ interface StationMe {
   };
 }
 
+interface StationQrTokenResponse {
+  data: {
+    station_id: string;
+    qr_token: string;
+    v: '1';
+  };
+}
+
 export function StationQrPage() {
   const t = useTranslations('station_qr');
   const locale = useLocale();
@@ -22,6 +30,8 @@ export function StationQrPage() {
   const [stationName, setStationName] = useState('');
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(false);
+  const [qrToken, setQrToken] = useState<string | null>(null);
+  const [qrVersion, setQrVersion] = useState<'1' | null>(null);
 
   const [origin, setOrigin] = useState('');
   const mountedRef = useRef(true);
@@ -29,26 +39,46 @@ export function StationQrPage() {
 
   useEffect(() => { setOrigin(window.location.origin); }, []);
 
-  const publicUrl = stationId && origin
-    ? `${origin}/${locale}/stations/${stationId}`
+  const publicUrl = stationId && origin && qrToken && qrVersion
+    ? `${origin}/${locale}/stations/${stationId}?qr_token=${encodeURIComponent(qrToken)}&v=${encodeURIComponent(qrVersion)}`
     : '';
 
   const loadStation = useCallback(async () => {
     setLoading(true);
     setError(false);
-    const [ok, data] = await getFromApi('/station/me');
-    if (!mountedRef.current) return;
-    if (ok) {
-      const res = data as StationMe;
-      // Validate the response shape before using it
-      if (!res?.data?.id || !res?.data?.name) {
+    try {
+      const [[ok, data], [okToken, tokenData]] = await Promise.all([
+        getFromApi('/station/me'),
+        getFromApi('/station/qr-token'),
+      ]);
+      if (!mountedRef.current) return;
+      if (ok && okToken) {
+        const res = data as StationMe;
+        const tokenRes = tokenData as StationQrTokenResponse;
+        // Validate the response shape before using it
+        const token = tokenRes?.data?.qr_token;
+        const version = tokenRes?.data?.v;
+        const tokenStationId = tokenRes?.data?.station_id;
+        const hasValidToken = typeof token === 'string' && /^[a-f0-9]{64}$/i.test(token);
+        if (
+          !res?.data?.id ||
+          !res?.data?.name ||
+          !hasValidToken ||
+          version !== '1' ||
+          tokenStationId !== res.data.id
+        ) {
+          setError(true);
+          setLoading(false);
+          return;
+        }
+        setStationId(res.data.id);
+        setStationName(res.data.name);
+        setQrToken(token);
+        setQrVersion(version);
+      } else {
         setError(true);
-        setLoading(false);
-        return;
       }
-      setStationId(res.data.id);
-      setStationName(res.data.name);
-    } else {
+    } catch {
       setError(true);
     }
     setLoading(false);
