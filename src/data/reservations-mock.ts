@@ -220,6 +220,14 @@ export const MOCK_RESERVATIONS: MockReservation[] = [
     },
 ];
 
+export function findMockReservation(id: string): MockReservation | undefined {
+  return MOCK_RESERVATIONS.find((r) => r.id === id);
+}
+
+export function findMockQueueEntry(id: string): MockQueueEntry | undefined {
+  return MOCK_QUEUE_ENTRIES.find((q) => q.id === id);
+}
+
 export const MOCK_QUEUE_ENTRIES: MockQueueEntry[] = [
     {
         id: 'q-1',
