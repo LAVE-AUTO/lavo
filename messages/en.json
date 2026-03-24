@@ -1751,7 +1751,8 @@
     "btn_submitting": "Submitting...",
     "resubmit_error": "An error occurred. Please try again.",
     "resubmit_success_title": "Application resubmitted successfully",
-    "resubmit_success_desc": "Your application is now under review again. You will receive an email as soon as a decision is made."
+    "resubmit_success_desc": "Your application is now under review again. You will receive an email as soon as a decision is made.",
+    "resubmit_redirect": "Redirecting in {n}s..."
   },
   "rating": {
     "page_title": "Leave a review",

@@ -1751,7 +1751,8 @@
     "btn_submitting": "Envoi en cours...",
     "resubmit_error": "Une erreur est survenue. Veuillez réessayer.",
     "resubmit_success_title": "Dossier resoumis avec succès",
-    "resubmit_success_desc": "Votre dossier est de nouveau en cours d'examen. Vous recevrez un e-mail dès qu'une décision aura été prise."
+    "resubmit_success_desc": "Votre dossier est de nouveau en cours d'examen. Vous recevrez un e-mail dès qu'une décision aura été prise.",
+    "resubmit_redirect": "Redirection dans {n}s..."
   },
   "rating": {
     "page_title": "Laisser un avis",

@@ -38,9 +38,26 @@ export function StationRejectedView({ stationName, rejectionReason }: Props) {
   const [docErrors, setDocErrors]     = useState({ certificate: '', addressProof: '' });
   const [submitting, setSubmitting]   = useState(false);
   const [submitted, setSubmitted]     = useState(false);
+  const [countdown, setCountdown]     = useState(5);
   const [error, setError]             = useState<string | null>(null);
   const mountedRef = useRef(true);
   useEffect(() => { mountedRef.current = true; return () => { mountedRef.current = false; }; }, []);
+
+  // Auto-reload 5s after successful resubmit
+  useEffect(() => {
+    if (!submitted) return;
+    const interval = setInterval(() => {
+      setCountdown((prev) => {
+        if (prev <= 1) {
+          clearInterval(interval);
+          window.location.reload();
+          return 0;
+        }
+        return prev - 1;
+      });
+    }, 1000);
+    return () => clearInterval(interval);
+  }, [submitted]);
 
   function validateDocs(): boolean {
     const errors = { certificate: '', addressProof: '' };
@@ -108,6 +125,10 @@ export function StationRejectedView({ stationName, rejectionReason }: Props) {
               </div>
               <h2 className="text-[20px] font-black text-[#1A1A0A] dark:text-[#F0EDD4]">{t('resubmit_success_title')}</h2>
               <p className="mt-2 text-[14px] text-[#666] dark:text-[#8A8A7A]">{t('resubmit_success_desc')}</p>
+              <p className="mt-4 flex items-center gap-2 text-[12px] font-semibold text-[#C49A1E]">
+                <span className="h-4 w-4 animate-spin rounded-full border-2 border-[#C49A1E] border-t-transparent" />
+                {t('resubmit_redirect', { n: countdown })}
+              </p>
             </div>
           ) : (
             <>
