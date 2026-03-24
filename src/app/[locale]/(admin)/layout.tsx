@@ -5,6 +5,7 @@ import type { ReactNode } from 'react';
 import { useRouter } from 'next/navigation';
 import { useLocale } from 'next-intl';
 import { useAuth } from '@/context';
+import { AdminShell } from '@/components/admin/AdminShell';
 
 export default function AdminLayout({ children }: { children: ReactNode }) {
   const { isAuthenticated, isLoading, isSuperAdmin } = useAuth();
@@ -21,5 +22,5 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
   if (isLoading) return null;
   if (!isAuthenticated || !isSuperAdmin) return null;
 
-  return <>{children}</>;
+  return <AdminShell>{children}</AdminShell>;
 }
