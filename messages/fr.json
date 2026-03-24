@@ -1684,7 +1684,9 @@
     "doc_proof_of_address": "Justificatif de domicile",
     "doc_insurance_certificate": "Attestation d'assurance",
     "doc_kbis": "Extrait Kbis",
-    "doc_terms_acceptance": "CGU acceptées"
+    "doc_terms_acceptance": "CGU acceptées",
+    "label_submitted_on": "Soumis le",
+    "confirm_approve_label": "Confirmer"
   },
   "rating": {
     "page_title": "Laisser un avis",

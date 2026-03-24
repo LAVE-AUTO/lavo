@@ -1684,7 +1684,9 @@
     "doc_proof_of_address": "Proof of Address",
     "doc_insurance_certificate": "Insurance Certificate",
     "doc_kbis": "Kbis Extract",
-    "doc_terms_acceptance": "Terms Accepted"
+    "doc_terms_acceptance": "Terms Accepted",
+    "label_submitted_on": "Submitted on",
+    "confirm_approve_label": "Confirm"
   },
   "rating": {
     "page_title": "Leave a review",
