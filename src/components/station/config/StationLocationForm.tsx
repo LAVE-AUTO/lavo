@@ -144,19 +144,32 @@ export function StationLocationForm({ location, onSaved, locked = false }: Props
       <div className="p-5">
         {!isEditing ? (
           /* ── Read-only view ── */
-          <div className="grid grid-cols-2 gap-x-8 gap-y-4">
-            <div className="col-span-2">
-              <ReadField label={t('field_address')} value={location.address} />
+          <div className="flex flex-col gap-4">
+            {/* Address card */}
+            <div className="flex items-start gap-4 rounded-[10px] bg-[#F7F6F2] px-4 py-3.5 dark:bg-[#0F1A0C]">
+              <div className="mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-[8px] bg-[#C49A1E]/15">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#C49A1E" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                  <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z" /><circle cx="12" cy="10" r="3" />
+                </svg>
+              </div>
+              <div className="flex flex-col gap-0.5">
+                <p className="text-[10px] font-semibold uppercase tracking-wider text-[#AAAAAA] dark:text-[#4A4A3A]">{t('field_address')}</p>
+                <p className="text-[14px] font-bold text-[#1A1A0A] dark:text-[#F0EDD4]">{location.address || '—'}</p>
+                <p className="text-[12px] font-semibold text-[#888] dark:text-[#6A6A5A]">{location.city || '—'}</p>
+              </div>
             </div>
-            <ReadField label={t('field_city')} value={location.city} />
             {(location.latitude || location.longitude) && (
-              <ReadField
-                label={`${t('field_latitude')} / ${t('field_longitude')}`}
-                value={[location.latitude, location.longitude].filter(Boolean).join(', ')}
-              />
+              <div className="flex items-center gap-3">
+                <div className="flex flex-col gap-0.5">
+                  <p className="text-[10px] font-semibold uppercase tracking-wider text-[#C8C4B4] dark:text-[#2E3C2A]">{t('field_latitude')} / {t('field_longitude')}</p>
+                  <p className="font-mono text-[12px] font-semibold text-[#888] dark:text-[#6A6A5A]">
+                    {[location.latitude, location.longitude].filter(Boolean).join(', ')}
+                  </p>
+                </div>
+              </div>
             )}
             {feedback && (
-              <p className="col-span-2 text-[12px] font-semibold" style={{ color: feedback.ok ? '#00C851' : '#EF4444' }}>
+              <p className="text-[12px] font-semibold" style={{ color: feedback.ok ? '#00C851' : '#EF4444' }}>
                 {feedback.msg}
               </p>
             )}

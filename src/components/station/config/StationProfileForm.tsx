@@ -109,30 +109,45 @@ export function StationProfileForm({ profile, onSaved, locked = false }: Props) 
       <div className="p-5">
         {!isEditing ? (
           /* ── Read-only view ── */
-          <div className="grid grid-cols-2 gap-x-8 gap-y-4">
-            {user?.email && (
-              <div className="col-span-2">
-                <p className="mb-0.5 text-[10px] font-bold uppercase tracking-wider text-[#C8C4B4] dark:text-[#2E3C2A]">{t('field_email')}</p>
-                <div className="flex items-center gap-2">
-                  <span className="text-[13px] font-semibold text-[#1A1A0A] dark:text-[#F0EDD4]">{user.email}</span>
-                  <span className="rounded-full bg-[#E8E4DC] px-2 py-0.5 text-[10px] font-semibold text-[#AAAAAA] dark:bg-[#1A2A14] dark:text-[#4A4A3A]">
-                    {t('field_email_readonly')}
+          <div className="flex flex-col gap-4">
+            {/* Avatar + name row */}
+            <div className="flex items-center gap-4">
+              <div className="flex h-[52px] w-[52px] shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-[#C49A1E]/20 to-[#C49A1E]/8 text-[15px] font-black text-[#C49A1E] ring-1 ring-[#C49A1E]/15 dark:from-[#C49A1E]/15 dark:to-[#C49A1E]/5">
+                {profile.name ? profile.name.substring(0, 2).toUpperCase() : '—'}
+              </div>
+              <div className="flex flex-col gap-0.5">
+                <p className="text-[16px] font-black text-[#1A1A0A] dark:text-[#F0EDD4]">{profile.name || '—'}</p>
+                {profile.service_scope && (
+                  <span className="w-fit rounded-full bg-[#FDF3D8] px-2.5 py-0.5 text-[11px] font-semibold text-[#C49A1E] dark:bg-[#2A1E08]">
+                    {scopeLabels[profile.service_scope as ScopeValue] ?? profile.service_scope}
                   </span>
+                )}
+              </div>
+            </div>
+            <div className="h-px bg-[#F0EDE4] dark:bg-[#1A2A14]" />
+            <div className="grid grid-cols-2 gap-x-8 gap-y-4">
+              {user?.email && (
+                <div className="col-span-2">
+                  <p className="mb-0.5 text-[10px] font-bold uppercase tracking-wider text-[#C8C4B4] dark:text-[#2E3C2A]">{t('field_email')}</p>
+                  <div className="flex items-center gap-2">
+                    <span className="text-[13px] font-semibold text-[#1A1A0A] dark:text-[#F0EDD4]">{user.email}</span>
+                    <span className="rounded-full bg-[#E8E4DC] px-2 py-0.5 text-[10px] font-semibold text-[#AAAAAA] dark:bg-[#1A2A14] dark:text-[#4A4A3A]">
+                      {t('field_email_readonly')}
+                    </span>
+                  </div>
                 </div>
-              </div>
-            )}
-            <ReadField label={t('field_station_name')} value={profile.name} />
-            <ReadField label={t('field_service_scope')} value={profile.service_scope ? scopeLabels[profile.service_scope as ScopeValue] ?? profile.service_scope : '—'} />
-            {profile.description && (
-              <div className="col-span-2">
-                <ReadField label={t('field_description')} value={profile.description} />
-              </div>
-            )}
-            {feedback && (
-              <p className="col-span-2 text-[12px] font-semibold" style={{ color: feedback.ok ? '#00C851' : '#EF4444' }}>
-                {feedback.msg}
-              </p>
-            )}
+              )}
+              {profile.description && (
+                <div className="col-span-2">
+                  <ReadField label={t('field_description')} value={profile.description} />
+                </div>
+              )}
+              {feedback && (
+                <p className="col-span-2 text-[12px] font-semibold" style={{ color: feedback.ok ? '#00C851' : '#EF4444' }}>
+                  {feedback.msg}
+                </p>
+              )}
+            </div>
           </div>
         ) : (
           /* ── Edit form ── */

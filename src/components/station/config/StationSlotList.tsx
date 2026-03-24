@@ -19,10 +19,10 @@ function fmt(iso: string) {
   return new Date(iso).toLocaleTimeString('fr-CA', { hour: '2-digit', minute: '2-digit' });
 }
 
-const statusColor: Record<string, string> = {
-  available: '#2ECC71',
-  full: '#EF4444',
-  blocked: '#888',
+const statusConfig: Record<string, { color: string; bg: string; darkBg: string }> = {
+  available: { color: '#00C851', bg: 'rgba(0,200,81,0.12)', darkBg: 'rgba(0,200,81,0.1)' },
+  full:      { color: '#EF4444', bg: 'rgba(239,68,68,0.10)', darkBg: 'rgba(239,68,68,0.08)' },
+  blocked:   { color: '#AAAAAA', bg: 'rgba(170,170,170,0.12)', darkBg: 'rgba(170,170,170,0.08)' },
 };
 
 export function StationSlotList({
@@ -54,84 +54,91 @@ export function StationSlotList({
   };
 
   return (
-    <section className="rounded-xl border border-[#E0DCD0] bg-white p-5 dark:border-[#1A2A14] dark:bg-[#182214]">
+    <section className="rounded-xl border border-[#E8E4DC] bg-white shadow-sm dark:border-[#1A2A14] dark:bg-[#182214]">
       {/* Header */}
-      <div className="mb-4 flex items-center justify-between">
-        <div className="text-[13px] font-black text-[#1A1A0A] dark:text-[#F0EDD4]">
-          {t('slots_title')}
-        </div>
-        <div className="flex items-center gap-2">
+      <div className="flex flex-wrap items-center gap-3 border-b border-[#F0EDE4] px-5 py-3.5 dark:border-[#1A2A14]">
+        <span className="h-4 w-[3px] rounded-full bg-[#C49A1E]" />
+        <span className="flex-1 text-[13px] font-bold text-[#1A1A0A] dark:text-[#F0EDD4]">{t('slots_title')}</span>
+        {slots.length > 0 && (
+          <span className="rounded-full bg-[#FDF3D8] px-2 py-0.5 text-[11px] font-bold text-[#C49A1E] dark:bg-[#2A1E08]">
+            {slots.length}
+          </span>
+        )}
+        <div className="flex flex-wrap items-center gap-2">
           <input
             type="date"
             value={selectedDate}
             onChange={(e) => onDateChange(e.target.value)}
-            className="rounded-lg border border-[#E0DCD0] bg-[#F5F5EE] px-2 py-1 text-[11px] text-[#1A1A0A] outline-none focus:border-[#C49A1E] dark:border-[#1A2A14] dark:bg-[#0C1209] dark:text-[#F0EDD4]"
+            className="rounded-[8px] border border-[#E0DCD0] bg-[#F7F6F2] px-2.5 py-1.5 text-[12px] text-[#1A1A0A] outline-none transition-colors focus:border-[#C49A1E] dark:border-[#243020] dark:bg-[#0F1A0C] dark:text-[#F0EDD4]"
           />
-          <button
-            type="button"
-            onClick={onAddSlot}
-            className="rounded-lg border border-[#C49A1E] px-3 py-1.5 text-[11px] font-bold text-[#C49A1E] transition-colors hover:bg-[#C49A1E] hover:text-[#0C1209]"
-          >
+          <button type="button" onClick={onAddSlot}
+            className="rounded-[8px] border border-[#C49A1E]/50 px-3 py-1.5 text-[11px] font-bold text-[#C49A1E] transition-colors hover:border-[#C49A1E] hover:bg-[#C49A1E]/8">
             {t('btn_add_slot')}
           </button>
-          <button
-            type="button"
-            onClick={onBulk}
-            className="rounded-lg border border-[#C49A1E] px-3 py-1.5 text-[11px] font-bold text-[#C49A1E] transition-colors hover:bg-[#C49A1E] hover:text-[#0C1209]"
-          >
+          <button type="button" onClick={onBulk}
+            className="rounded-[8px] border border-[#C49A1E]/50 px-3 py-1.5 text-[11px] font-bold text-[#C49A1E] transition-colors hover:border-[#C49A1E] hover:bg-[#C49A1E]/8">
             {t('btn_bulk_slot')}
           </button>
-          <button
-            type="button"
-            onClick={onGenerate}
-            className="rounded-lg bg-[#C49A1E] px-3 py-1.5 text-[11px] font-black text-[#0C1209] transition-opacity hover:opacity-80"
-          >
+          <button type="button" onClick={onGenerate}
+            className="rounded-[8px] bg-[#C49A1E] px-3 py-1.5 text-[11px] font-black text-[#0C1209] transition-opacity hover:opacity-80">
             {t('btn_generate')}
           </button>
         </div>
       </div>
 
-      {/* Slot list */}
-      {slots.length === 0 ? (
-        <div className="flex h-24 items-center justify-center text-[12px] text-[#888] dark:text-[#8A8A7A]">
-          {t('slots_empty')}
-        </div>
-      ) : (
-        <div className="flex flex-col gap-2">
-          {slots.map((slot) => (
-            <div
-              key={slot.id}
-              className="flex items-center justify-between rounded-lg border border-[#E0DCD0] px-4 py-2.5 dark:border-[#1A2A14]"
-            >
-              <div className="flex items-center gap-3">
-                <div
-                  className="h-2.5 w-2.5 rounded-full"
-                  style={{ background: statusColor[slot.status] ?? '#888' }}
-                />
-                <span className="text-[13px] font-bold text-[#1A1A0A] dark:text-[#F0EDD4]">
-                  {fmt(slot.start_time)} – {fmt(slot.end_time)}
-                </span>
-                <span className="text-[11px] text-[#666] dark:text-[#8A8A7A]">
-                  {t('slot_booked', { n: slot.booked_count, total: slot.capacity })}
-                </span>
-              </div>
-              <div className="flex items-center gap-3">
-                <span className="text-[10px] font-semibold" style={{ color: statusColor[slot.status] ?? '#888' }}>
-                  {statusLabel[slot.status] ?? slot.status}
-                </span>
-                <button
-                  type="button"
-                  onClick={() => handleDelete(slot.id)}
-                  disabled={deletingId === slot.id}
-                  className="rounded px-2 py-1 text-[11px] font-bold text-[#EF4444] transition-colors hover:bg-[#FEE2E2] disabled:opacity-40 dark:hover:bg-[#3A1A1A]"
-                >
-                  {deletingId === slot.id ? t('deleting') : t('btn_delete_slot')}
-                </button>
-              </div>
-            </div>
-          ))}
-        </div>
-      )}
+      <div className="p-5">
+        {slots.length === 0 ? (
+          <div className="flex h-20 flex-col items-center justify-center gap-1.5 rounded-[10px] border border-dashed border-[#E0DCD4] dark:border-[#243020]">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#CCCCBB" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+              <rect x="3" y="4" width="18" height="18" rx="2" /><line x1="16" y1="2" x2="16" y2="6" /><line x1="8" y1="2" x2="8" y2="6" /><line x1="3" y1="10" x2="21" y2="10" />
+            </svg>
+            <span className="text-[12px] text-[#BBBBAA] dark:text-[#4A4A3A]">{t('slots_empty')}</span>
+          </div>
+        ) : (
+          <div className="flex flex-col gap-2">
+            {slots.map((slot) => {
+              const st = statusConfig[slot.status] ?? statusConfig.blocked;
+              const fillPct = slot.capacity > 0 ? Math.round((slot.booked_count / slot.capacity) * 100) : 0;
+              return (
+                <div key={slot.id}
+                  className="flex items-center gap-4 rounded-[10px] border border-[#EDEBE5] bg-[#FAFAF7] px-4 py-3 transition-shadow hover:shadow-sm dark:border-[#243020] dark:bg-[#0D170A]">
+                  {/* Status dot */}
+                  <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-[8px]" style={{ background: st.bg }}>
+                    <span className="h-2 w-2 rounded-full" style={{ background: st.color }} />
+                  </div>
+
+                  {/* Time range */}
+                  <div className="flex flex-1 flex-col gap-1">
+                    <span className="text-[13px] font-bold tabular-nums text-[#1A1A0A] dark:text-[#F0EDD4]">
+                      {fmt(slot.start_time)} – {fmt(slot.end_time)}
+                    </span>
+                    {/* Capacity bar */}
+                    <div className="flex items-center gap-2">
+                      <div className="h-1 w-24 overflow-hidden rounded-full bg-[#E8E4DC] dark:bg-[#243020]">
+                        <div className="h-full rounded-full transition-all duration-300" style={{ width: `${fillPct}%`, background: st.color }} />
+                      </div>
+                      <span className="text-[11px] text-[#999] dark:text-[#6A6A5A]">
+                        {t('slot_booked', { n: slot.booked_count, total: slot.capacity })}
+                      </span>
+                    </div>
+                  </div>
+
+                  {/* Status badge */}
+                  <span className="rounded-full px-2.5 py-1 text-[10px] font-bold" style={{ color: st.color, background: st.bg }}>
+                    {statusLabel[slot.status] ?? slot.status}
+                  </span>
+
+                  {/* Delete */}
+                  <button type="button" onClick={() => handleDelete(slot.id)} disabled={deletingId === slot.id}
+                    className="rounded-[7px] px-2.5 py-1.5 text-[11px] font-bold text-[#C8C4BC] transition-colors hover:bg-[#FEE2E2] hover:text-[#EF4444] disabled:opacity-40 dark:text-[#3A3A2A] dark:hover:bg-[#3A1A1A] dark:hover:text-[#EF4444]">
+                    {deletingId === slot.id ? t('deleting') : t('btn_delete_slot')}
+                  </button>
+                </div>
+              );
+            })}
+          </div>
+        )}
+      </div>
     </section>
   );
 }

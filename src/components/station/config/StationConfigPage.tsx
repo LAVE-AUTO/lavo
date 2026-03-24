@@ -150,6 +150,7 @@ export function StationConfigPage() {
         <StationConfigForm
           config={config}
           posts={posts}
+          locked={isPendingApproval}
           onSaved={(c, p) => {
             setConfig(c);
             setPosts(p);
