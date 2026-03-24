@@ -4,7 +4,6 @@ import { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 import { useTranslations, useLocale } from 'next-intl';
 import { Link } from '@/i18n/navigation';
 import { useParams } from 'next/navigation';
-import { useToast } from '@/context/toast-context';
 import { getFromApi, postWithApi } from '@/services/axios-service';
 import { RESERVATIONS_MOCK_ENABLED, findMockReservation } from '@/data/reservations-mock';
 import type { AvailableSlot } from '@/components/reservations/SlotPicker';
@@ -74,7 +73,6 @@ export default function RescheduleReservationPage() {
   const locale = useLocale();
   const params = useParams();
   const id     = params.id as string;
-  useToast();
 
   const mountedRef = useRef(true);
   useEffect(() => {

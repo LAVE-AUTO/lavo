@@ -2,6 +2,7 @@
 
 import { useState, useCallback } from 'react';
 import { useTranslations } from 'next-intl';
+import { useToast } from '@/context/toast-context';
 import { AdminTransactionDrawer, type TxRow, type TxStatus } from './AdminTransactionDrawer';
 
 // TODO: connect to API once endpoint is available (GET /admin/transactions)
@@ -35,10 +36,17 @@ function shortId(s: string) { return '…' + s.slice(-8).toUpperCase(); }
 
 export function AdminTransactionsView() {
   const t = useTranslations('admin_transactions');
+  const { error: toastError } = useToast();
   const [filter, setFilter]     = useState<TxStatus | 'all'>('all');
   const [query, setQuery]       = useState('');
   const [copied, setCopied]     = useState<string | null>(null);
   const [selected, setSelected] = useState<TxRow | null>(null);
+
+  const STATUS_LABELS: Record<TxStatus, string> = {
+    succeeded: t('status_succeeded'),
+    refunded:  t('status_refunded'),
+    failed:    t('status_failed'),
+  };
 
   const q        = query.toLowerCase();
   const filtered = MOCK_TRANSACTIONS
@@ -53,9 +61,12 @@ export function AdminTransactionsView() {
 
   function copyId(e: React.MouseEvent, id: string) {
     e.stopPropagation();
-    navigator.clipboard.writeText(id).catch(() => {});
-    setCopied(id);
-    setTimeout(() => setCopied(null), 1800);
+    navigator.clipboard.writeText(id).then(() => {
+      setCopied(id);
+      setTimeout(() => setCopied(null), 1800);
+    }).catch(() => {
+      toastError(t('copy_error'));
+    });
   }
 
   const handleClose = useCallback(() => setSelected(null), []);
@@ -123,7 +134,6 @@ export function AdminTransactionsView() {
           <div className="flex flex-col gap-2.5">
             {filtered.map((tx) => {
               const s = STATUS_META[tx.status];
-              const statusLabel: Record<TxStatus, string> = { succeeded: t('status_succeeded'), refunded: t('status_refunded'), failed: t('status_failed') };
               return (
                 <div key={tx.id} role="button" tabIndex={0} onClick={() => setSelected(tx)}
                   onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); setSelected(tx); } }}
@@ -144,7 +154,7 @@ export function AdminTransactionsView() {
                         }
                       </button>
                       <span className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-bold ${s.badge}`}>
-                        <span className={`h-1.5 w-1.5 rounded-full ${s.dot}`} />{statusLabel[tx.status]}
+                        <span className={`h-1.5 w-1.5 rounded-full ${s.dot}`} />{STATUS_LABELS[tx.status]}
                       </span>
                     </div>
                     <p className="truncate text-[12px] text-[#666] dark:text-[#9A9A8A]">

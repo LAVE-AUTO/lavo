@@ -27,6 +27,17 @@ interface ResInfo {
   dateLabel:   string;
 }
 
+interface ApiEntry {
+  id: string; entry_type: string; status: string;
+  station_id: string; vehicle_format_id: string | null; time_slot_id: string | null;
+}
+
+interface ApiStation {
+  id: string; name: string;
+  vehicleFormats: Array<{ id: string; label: string }>;
+  timeSlots: Array<{ id: string; start_time: string }>;
+}
+
 /* ------------------------------------------------------------------ */
 /* Page                                                                 */
 /* ------------------------------------------------------------------ */
@@ -67,16 +78,6 @@ export default function RateReservationPage() {
       });
       setPageState('form');
       return;
-    }
-
-    interface ApiEntry {
-      id: string; entry_type: string; status: string;
-      station_id: string; vehicle_format_id: string | null; time_slot_id: string | null;
-    }
-    interface ApiStation {
-      id: string; name: string;
-      vehicleFormats: Array<{ id: string; label: string }>;
-      timeSlots: Array<{ id: string; start_time: string }>;
     }
 
     const [entriesOk, entriesData] = await getFromApi('/me/entries?per_page=100');
@@ -185,10 +186,8 @@ export default function RateReservationPage() {
     return <SuccessView stationId={res?.stationId ?? ''} />;
   }
 
-  const display     = hovered > 0 ? hovered : score;
-  const starLabels  = locale === 'en'
-    ? ['', t('star_1'), t('star_2'), t('star_3'), t('star_4'), t('star_5')]
-    : ['', t('star_1'), t('star_2'), t('star_3'), t('star_4'), t('star_5')];
+  const display    = hovered > 0 ? hovered : score;
+  const starLabels = ['', t('star_1'), t('star_2'), t('star_3'), t('star_4'), t('star_5')];
 
   /* ---- Form ---- */
   return (

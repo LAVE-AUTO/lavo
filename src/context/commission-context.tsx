@@ -33,7 +33,7 @@ export function CommissionProvider({ children }: { children: ReactNode }) {
 
   function updateRate(newRate: number) {
     const entry: CommissionEntry = {
-      id: `h${Date.now()}`,
+      id: crypto.randomUUID(),
       rate: newRate,
       set_by: 'admin@lavo.ca',
       effective_at: new Date().toISOString(),

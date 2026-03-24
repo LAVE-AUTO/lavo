@@ -81,7 +81,7 @@ export function AdminRatingsView() {
   const [scoreFilter, setScoreFilter]           = useState<ScoreFilter>(0);
   const [togglingId, setTogglingId]             = useState<string | null>(null);
 
-  const loadData = useCallback(async (p = 1, vis = visibilityFilter, sc = scoreFilter) => {
+  const loadData = useCallback(async (p: number, vis: VisibilityFilter, sc: ScoreFilter) => {
     setLoading(true);
     setLoadError(false);
 
@@ -99,9 +99,9 @@ export function AdminRatingsView() {
     setMeta(payload.meta ?? null);
     setPage(p);
     setLoading(false);
-  }, [visibilityFilter, scoreFilter]);
+  }, []);
 
-  useEffect(() => { loadData(1, visibilityFilter, scoreFilter); }, [visibilityFilter, scoreFilter]); // eslint-disable-line react-hooks/exhaustive-deps
+  useEffect(() => { loadData(1, visibilityFilter, scoreFilter); }, [visibilityFilter, scoreFilter, loadData]);
 
   async function handleToggle(item: RatingItem) {
     if (togglingId) return;
@@ -199,7 +199,7 @@ export function AdminRatingsView() {
             <p className="text-[14px] text-[#888] dark:text-[#5A5A4A]">{t('error_load')}</p>
             <button
               type="button"
-              onClick={() => loadData(page)}
+              onClick={() => loadData(page, visibilityFilter, scoreFilter)}
               className="rounded-lg border border-[#C49A1E]/50 px-4 py-2 text-[13px] font-semibold text-[#C49A1E] hover:bg-[#C49A1E]/10 transition-colors"
             >
               {t('btn_retry')}

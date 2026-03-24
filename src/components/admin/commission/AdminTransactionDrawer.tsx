@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from 'react';
 import { useTranslations } from 'next-intl';
+import { useToast } from '@/context/toast-context';
 import { generateTransactionPdf, type PdfLabels } from './generateTransactionPdf';
 
 export type TxStatus = 'succeeded' | 'refunded' | 'failed';
@@ -30,6 +31,7 @@ interface Props { tx: TxRow | null; onClose: () => void; }
 
 export function AdminTransactionDrawer({ tx, onClose }: Props) {
   const t = useTranslations('admin_transactions');
+  const { error: toastError } = useToast();
   const closeBtnRef   = useRef<HTMLButtonElement>(null);
   const mountedRef    = useRef(true);
   const [exporting, setExporting] = useState(false);
@@ -72,6 +74,8 @@ export function AdminTransactionDrawer({ tx, onClose }: Props) {
         generatedOn:     t('pdf_generated_on'),
       };
       await generateTransactionPdf(tx, pdfLabels);
+    } catch {
+      if (mountedRef.current) toastError(t('error_export'));
     } finally {
       if (mountedRef.current) setExporting(false);
     }

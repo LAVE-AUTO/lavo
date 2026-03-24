@@ -2028,6 +2028,7 @@
     "chip_commissions": "commissions",
     "chip_count": "transactions",
     "copied": "Copied!",
+    "copy_error": "Unable to copy.",
     "drawer_title": "Transaction Details",
     "drawer_stripe_id": "Stripe Reference",
     "drawer_station": "Station",
@@ -2042,7 +2043,8 @@
     "pdf_receipt_label": "Transaction Receipt",
     "btn_download": "Download receipt (PDF)",
     "btn_close": "Close",
-    "pdf_generated_on": "Generated on"
+    "pdf_generated_on": "Generated on",
+    "error_export": "Failed to generate PDF."
   },
   "admin_ratings": {
     "page_title": "Ratings & Reviews",

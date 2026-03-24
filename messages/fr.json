@@ -2028,6 +2028,7 @@
     "chip_commissions": "commissions",
     "chip_count": "transactions",
     "copied": "Copié !",
+    "copy_error": "Impossible de copier.",
     "drawer_title": "Détails de la transaction",
     "drawer_stripe_id": "Référence Stripe",
     "drawer_station": "Station",
@@ -2042,7 +2043,8 @@
     "pdf_receipt_label": "Reçu de transaction",
     "btn_download": "Télécharger le reçu (PDF)",
     "btn_close": "Fermer",
-    "pdf_generated_on": "Généré le"
+    "pdf_generated_on": "Généré le",
+    "error_export": "Échec de la génération du PDF."
   },
   "admin_ratings": {
     "page_title": "Avis & notes",

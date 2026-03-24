@@ -25,7 +25,7 @@ function NumericField({
       ].join(' ')}>
         <input
           type="number" min={min} max={max} readOnly={readOnly} value={value}
-          onChange={onChange ? (e) => onChange(Math.min(max ?? 99999, Math.max(min ?? 0, parseInt(e.target.value, 10) || (min ?? 0)))) : undefined}
+          onChange={onChange ? (e) => onChange(Math.min(max ?? 99999, Math.max(min ?? 0, parseFloat(e.target.value) || (min ?? 0)))) : undefined}
           className={[
             'flex-1 bg-transparent px-4 py-3 text-[18px] font-bold outline-none',
             '[appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none',
