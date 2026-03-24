@@ -13,6 +13,7 @@ export interface StationProfile {
 interface Props {
   profile: StationProfile;
   onSaved: (profile: StationProfile) => void;
+  locked?: boolean;
 }
 
 const inputClass =
@@ -42,7 +43,7 @@ function ReadField({ label, value }: { label: string; value: string }) {
 const SCOPE_VALUES = ['exterior', 'interior', 'both'] as const;
 type ScopeValue = (typeof SCOPE_VALUES)[number];
 
-export function StationProfileForm({ profile, onSaved }: Props) {
+export function StationProfileForm({ profile, onSaved, locked = false }: Props) {
   const t = useTranslations('station_config');
   const { user } = useAuth();
 
@@ -90,7 +91,7 @@ export function StationProfileForm({ profile, onSaved }: Props) {
       <div className="flex items-center gap-2.5 border-b border-[#F0EDE4] px-5 py-3.5 dark:border-[#1A2A14]">
         <span className="h-4 w-[3px] rounded-full bg-[#C49A1E]" />
         <span className="flex-1 text-[13px] font-bold text-[#1A1A0A] dark:text-[#F0EDD4]">{t('section_profile')}</span>
-        {!isEditing && (
+        {!isEditing && !locked && (
           <button
             type="button"
             onClick={() => setIsEditing(true)}

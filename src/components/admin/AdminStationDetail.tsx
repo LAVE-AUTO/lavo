@@ -122,7 +122,7 @@ export function AdminStationDetail({ id }: Props) {
           <p className="text-[11px] text-[#999] dark:text-[#5A5A4A]">{station.city}</p>
         </div>
         <span className="shrink-0 rounded-full bg-[#C49A1E]/10 px-3 py-1 text-[10px] font-black uppercase tracking-wider text-[#C49A1E]">
-          KYC — {t('page_title')}
+          KYC
         </span>
       </div>
 
@@ -130,8 +130,10 @@ export function AdminStationDetail({ id }: Props) {
       <div className="flex flex-1 flex-col gap-5 overflow-y-auto px-7 py-6">
 
         {/* ── Hero card ── */}
-        <div className="relative overflow-hidden rounded-2xl bg-white p-6 shadow-sm ring-1 ring-black/[0.04] dark:bg-[#1A2416] dark:ring-white/[0.06]">
-          <div className="pointer-events-none absolute right-0 top-0 h-full w-64 bg-gradient-to-l from-[#C49A1E]/6 to-transparent dark:from-[#C49A1E]/4" />
+        <div className="relative rounded-2xl bg-white p-6 shadow-sm ring-1 ring-black/[0.04] dark:bg-[#1A2416] dark:ring-white/[0.06]">
+          <div className="pointer-events-none absolute inset-0 overflow-hidden rounded-2xl">
+            <div className="absolute right-0 top-0 h-full w-64 bg-gradient-to-l from-[#C49A1E]/6 to-transparent dark:from-[#C49A1E]/4" />
+          </div>
           <div className="flex items-start gap-5">
             {/* Large avatar */}
             <div className="flex h-[68px] w-[68px] shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br from-[#C49A1E]/25 to-[#C49A1E]/10 text-[22px] font-black text-[#C49A1E] ring-2 ring-[#C49A1E]/15">

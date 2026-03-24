@@ -1466,6 +1466,8 @@
     "post_inactive": "Inactive",
     "btn_edit": "Edit",
     "btn_cancel_edit": "Cancel",
+    "pending_banner_title": "Station under review",
+    "pending_banner_desc": "Your application is being reviewed by our team. Your settings will be accessible once your station is approved.",
     "btn_save": "Save",
     "btn_saving": "Saving...",
     "save_success": "Settings saved",

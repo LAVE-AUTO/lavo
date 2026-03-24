@@ -1466,6 +1466,8 @@
     "post_inactive": "Inactif",
     "btn_edit": "Modifier",
     "btn_cancel_edit": "Annuler",
+    "pending_banner_title": "Station en cours de validation",
+    "pending_banner_desc": "Votre dossier est en cours d'examen par notre équipe. Vos paramètres seront accessibles dès que votre station sera approuvée.",
     "btn_save": "Enregistrer",
     "btn_saving": "Enregistrement...",
     "save_success": "Paramètres enregistrés",

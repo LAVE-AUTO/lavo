@@ -34,7 +34,7 @@ const MOCK_POSTS: StationPost[] = [
   { id: 'post-3', position: 3, is_active: false },
 ];
 
-const MOCK_PROFILE: StationProfile = { name: 'Station', description: null, service_scope: null };
+const MOCK_PROFILE: StationProfile = { name: '', description: null, service_scope: null };
 const MOCK_LOCATION: StationLocation = { address: '', city: '', latitude: null, longitude: null };
 
 function todayISO() {
@@ -64,10 +64,19 @@ export function StationConfigPage() {
   const [slots, setSlots] = useState<CreatedSlot[]>(INITIAL_SLOTS);
   const [selectedDate, setSelectedDate] = useState(todayISO);
   const [loading, setLoading] = useState(true);
+  const [isPendingApproval, setIsPendingApproval] = useState(false);
   const [modal, setModal] = useState<'add' | 'generate' | 'bulk' | null>(null);
 
   const loadData = useCallback(async () => {
     const [configOk, configData] = await getFromApi('/station/config');
+
+    // Station not yet approved — all station API calls return 403 BUSINESS_NOT_APPROVED
+    if (!configOk && (configData as { code?: string }).code === 'BUSINESS_NOT_APPROVED') {
+      setIsPendingApproval(true);
+      setLoading(false);
+      return;
+    }
+
     if (configOk) {
       const res = configData as { data: { config: StationConfig; posts: StationPost[] } };
       setConfig(res.data.config);
@@ -122,8 +131,22 @@ export function StationConfigPage() {
       </div>
 
       <div className="flex flex-1 flex-col gap-5 overflow-y-auto p-6">
-        <StationProfileForm profile={profile} onSaved={setProfile} />
-        <StationLocationForm location={location} onSaved={setLocation} />
+        {/* Pending approval banner */}
+        {isPendingApproval && (
+          <div className="flex items-start gap-4 rounded-xl border border-[#C49A1E]/25 bg-[#C49A1E]/8 px-5 py-4 dark:border-[#C49A1E]/20 dark:bg-[#C49A1E]/5">
+            <div className="mt-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-[#C49A1E]/15">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#C49A1E" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                <circle cx="12" cy="12" r="10" /><line x1="12" y1="8" x2="12" y2="12" /><line x1="12" y1="16" x2="12.01" y2="16" />
+              </svg>
+            </div>
+            <div>
+              <p className="text-[13px] font-bold text-[#8A6A00] dark:text-[#C49A1E]">{t('pending_banner_title')}</p>
+              <p className="mt-0.5 text-[12px] text-[#8A6A00]/80 dark:text-[#C49A1E]/70">{t('pending_banner_desc')}</p>
+            </div>
+          </div>
+        )}
+        <StationProfileForm profile={profile} onSaved={setProfile} locked={isPendingApproval} />
+        <StationLocationForm location={location} onSaved={setLocation} locked={isPendingApproval} />
         <StationConfigForm
           config={config}
           posts={posts}
