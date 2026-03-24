@@ -44,7 +44,7 @@ export function AdminDisputesList({ disputes, query }: Props) {
   );
 
   const FILTERS: Array<{ key: DisputeStatus | 'all'; label: string }> = [
-    { key: 'all',             label: 'Tous' },
+    { key: 'all',             label: t('filter_all') },
     { key: 'open',            label: t('status_open') },
     { key: 'refunded_full',   label: t('status_refunded_full') },
     { key: 'refunded_partial',label: t('status_refunded_partial') },

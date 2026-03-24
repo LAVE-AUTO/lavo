@@ -38,10 +38,10 @@ export function AdminDisputeActionModal({ mode, maxAmount, busy, onConfirm, onCl
     if (mode === 'refund_partial') {
       const val = parseFloat(amount.replace(',', '.'));
       if (!amount.trim()) { setError(t('modal_amount_required')); return; }
-      if (isNaN(val) || val <= 0 || (maxAmount !== undefined && val > maxAmount)) { setError(t('modal_amount_invalid')); return; }
+      if (isNaN(val) || val <= 0 || (maxAmount !== undefined && val > maxAmount) || !/^\d+(\.\d{1,2})?$/.test(amount.replace(',', '.'))) { setError(t('modal_amount_invalid')); return; }
       onConfirm({ amount: val });
     } else if (mode === 'close_dispute') {
-      if (!reason.trim()) { setError(t('modal_reason_required')); return; }
+      if (!reason.trim() || reason.trim().length < 10) { setError(t('modal_reason_required')); return; }
       onConfirm({ reason: reason.trim() });
     } else {
       onConfirm({});
@@ -92,7 +92,7 @@ export function AdminDisputeActionModal({ mode, maxAmount, busy, onConfirm, onCl
             <div className="flex flex-col gap-2">
               <label className="text-[12px] font-bold text-[#555] dark:text-[#9A9A8A]">{t('modal_reason_label')}</label>
               <textarea ref={inputRef as React.RefObject<HTMLTextAreaElement>}
-                value={reason} onChange={(e) => setReason(e.target.value)} rows={4}
+                value={reason} onChange={(e) => setReason(e.target.value)} rows={4} maxLength={500}
                 placeholder={t('modal_reason_placeholder')}
                 className={`w-full resize-none rounded-lg border bg-transparent px-3 py-2 text-[13px] text-[#1A1A0A] outline-none transition-all dark:text-[#F0EDD4] ${error ? 'border-red-400' : 'border-[#D8D4C8] focus:border-[#C49A1E] focus:shadow-[0_0_0_3px_rgba(196,154,30,0.10)] dark:border-[#243020] dark:focus:border-[#C49A1E]'}`} />
             </div>

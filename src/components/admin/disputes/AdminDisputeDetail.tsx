@@ -145,10 +145,10 @@ export function AdminDisputeDetail({ id }: Props) {
                         </div>
                         {i < dispute.events.length - 1 && <div className="w-px flex-1 bg-[#E8E4DC] dark:bg-[#1E2E18] my-1" />}
                       </div>
-                      <div className={`pb-${i < dispute.events.length - 1 ? '4' : '0'} min-w-0 pt-1`}>
+                      <div className={`${i < dispute.events.length - 1 ? 'pb-4' : ''} min-w-0 pt-1`}>
                         <div className="mb-1 flex items-center gap-2">
                           <span className={`rounded px-1.5 py-0.5 text-[10px] font-black uppercase tracking-wide ${ACTOR_COLOR[ev.by]}`}>
-                            {t(`timeline_by_${ev.by}`)}
+                            {({ client: t('timeline_by_client'), station: t('timeline_by_station'), admin: t('timeline_by_admin') } as Record<TimelineActor, string>)[ev.by]}
                           </span>
                           <span className="text-[11px] text-[#BBBBAA] dark:text-[#4A4A3A]">{formatDate(ev.date)}</span>
                         </div>
