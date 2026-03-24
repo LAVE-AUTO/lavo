@@ -264,6 +264,10 @@ export const rescheduleRequestsRelations = relations(rescheduleRequests, ({ one 
   }),
   station: one(stations, {
     fields: [rescheduleRequests.station_id],
+    references: [stations.id],
+  }),
+}));
+
 export const delayRequestsRelations = relations(delayRequests, ({ one }) => ({
   reservation: one(reservations, {
     fields: [delayRequests.reservation_id],
