@@ -1678,7 +1678,13 @@
     "action_success_reject": "Station rejected",
     "action_error": "An error occurred. Please try again.",
     "btn_cancel": "Cancel",
-    "btn_back": "Back to stations"
+    "btn_back": "Back to stations",
+    "doc_identity_document": "Identity Document",
+    "doc_business_registration": "Business Registration",
+    "doc_proof_of_address": "Proof of Address",
+    "doc_insurance_certificate": "Insurance Certificate",
+    "doc_kbis": "Kbis Extract",
+    "doc_terms_acceptance": "Terms Accepted"
   },
   "rating": {
     "page_title": "Leave a review",

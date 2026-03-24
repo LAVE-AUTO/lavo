@@ -1678,7 +1678,13 @@
     "action_success_reject": "Station rejetée",
     "action_error": "Une erreur est survenue. Veuillez réessayer.",
     "btn_cancel": "Annuler",
-    "btn_back": "Retour aux stations"
+    "btn_back": "Retour aux stations",
+    "doc_identity_document": "Pièce d'identité",
+    "doc_business_registration": "Registre de commerce",
+    "doc_proof_of_address": "Justificatif de domicile",
+    "doc_insurance_certificate": "Attestation d'assurance",
+    "doc_kbis": "Extrait Kbis",
+    "doc_terms_acceptance": "CGU acceptées"
   },
   "rating": {
     "page_title": "Laisser un avis",

@@ -8,15 +8,6 @@ import { useToast } from '@/context';
 
 const MAX_REASON = 500;
 
-const DOC_LABELS: Record<string, string> = {
-  identity_document:    "Pièce d'identité",
-  business_registration:'Registre de commerce',
-  proof_of_address:     'Justificatif de domicile',
-  insurance_certificate:'Attestation d\'assurance',
-  kbis:                 'Extrait Kbis',
-  terms_acceptance:     'CGU acceptées',
-};
-
 interface ApiDocument { id: string; document_type: string; file_url: string; }
 interface ApiStation {
   id: string; name: string; legal_name: string | null; registration_number: string | null;
@@ -78,6 +69,17 @@ export function AdminStationDetail({ id }: Props) {
 
   const scopeLabel: Record<string, string> = {
     exterior: t('scope_exterior'), interior: t('scope_interior'), both: t('scope_both'),
+  };
+  const docLabel = (type: string): string => {
+    const known: Record<string, string> = {
+      identity_document:     t('doc_identity_document'),
+      business_registration: t('doc_business_registration'),
+      proof_of_address:      t('doc_proof_of_address'),
+      insurance_certificate: t('doc_insurance_certificate'),
+      kbis:                  t('doc_kbis'),
+      terms_acceptance:      t('doc_terms_acceptance'),
+    };
+    return known[type] ?? type.replace(/_/g, ' ');
   };
 
   /* ── Loading ── */
@@ -151,7 +153,7 @@ export function AdminStationDetail({ id }: Props) {
                   </div>
                   <div className="min-w-0 flex-1">
                     <p className="truncate text-[12px] font-bold text-[#0F1A0C] dark:text-[#F0EDD4]">
-                      {DOC_LABELS[doc.document_type] ?? doc.document_type.replace(/_/g, ' ')}
+                      {docLabel(doc.document_type)}
                     </p>
                     <p className="text-[10px] text-[#C49A1E] group-hover:underline">{t('doc_open')} →</p>
                   </div>
