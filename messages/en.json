@@ -1464,6 +1464,8 @@
     "post_label": "Post {n}",
     "post_active": "Active",
     "post_inactive": "Inactive",
+    "btn_edit": "Edit",
+    "btn_cancel_edit": "Cancel",
     "btn_save": "Save",
     "btn_saving": "Saving...",
     "save_success": "Settings saved",

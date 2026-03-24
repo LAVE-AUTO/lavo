@@ -1464,6 +1464,8 @@
     "post_label": "Poste {n}",
     "post_active": "Actif",
     "post_inactive": "Inactif",
+    "btn_edit": "Modifier",
+    "btn_cancel_edit": "Annuler",
     "btn_save": "Enregistrer",
     "btn_saving": "Enregistrement...",
     "save_success": "Paramètres enregistrés",

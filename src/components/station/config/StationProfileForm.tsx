@@ -30,6 +30,15 @@ function Field({ label, hint, children }: { label: string; hint?: string; childr
   );
 }
 
+function ReadField({ label, value }: { label: string; value: string }) {
+  return (
+    <div>
+      <p className="mb-0.5 text-[10px] font-bold uppercase tracking-wider text-[#C8C4B4] dark:text-[#2E3C2A]">{label}</p>
+      <p className="text-[13px] font-semibold text-[#1A1A0A] dark:text-[#F0EDD4]">{value || '—'}</p>
+    </div>
+  );
+}
+
 const SCOPE_VALUES = ['exterior', 'interior', 'both'] as const;
 type ScopeValue = (typeof SCOPE_VALUES)[number];
 
@@ -37,6 +46,7 @@ export function StationProfileForm({ profile, onSaved }: Props) {
   const t = useTranslations('station_config');
   const { user } = useAuth();
 
+  const [isEditing, setIsEditing] = useState(false);
   const [name, setName] = useState(profile.name);
   const [description, setDescription] = useState(profile.description ?? '');
   const [serviceScope, setServiceScope] = useState<ScopeValue | ''>(
@@ -51,6 +61,14 @@ export function StationProfileForm({ profile, onSaved }: Props) {
     both: t('extras_tab_both'),
   };
 
+  function handleCancel() {
+    setName(profile.name);
+    setDescription(profile.description ?? '');
+    setServiceScope((profile.service_scope as ScopeValue) ?? '');
+    setFeedback(null);
+    setIsEditing(false);
+  }
+
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     setSaving(true);
@@ -60,104 +78,127 @@ export function StationProfileForm({ profile, onSaved }: Props) {
     await new Promise((r) => setTimeout(r, 400));
     setSaving(false);
 
-    onSaved({ name, description: description || null, service_scope: serviceScope || null });
+    const saved: StationProfile = { name, description: description || null, service_scope: serviceScope || null };
+    onSaved(saved);
     setFeedback({ ok: true, msg: t('profile_save_success') });
+    setIsEditing(false);
   }
 
   return (
-    <form onSubmit={handleSubmit}>
-      <section className="rounded-xl border border-[#E8E4DC] bg-white shadow-sm dark:border-[#1A2A14] dark:bg-[#182214]">
-        <div className="flex items-center gap-2.5 border-b border-[#F0EDE4] px-5 py-3.5 dark:border-[#1A2A14]">
-          <span className="h-4 w-[3px] rounded-full bg-[#C49A1E]" />
-          <span className="text-[13px] font-bold text-[#1A1A0A] dark:text-[#F0EDD4]">{t('section_profile')}</span>
-        </div>
+    <section className="rounded-xl border border-[#E8E4DC] bg-white shadow-sm dark:border-[#1A2A14] dark:bg-[#182214]">
+      {/* Header */}
+      <div className="flex items-center gap-2.5 border-b border-[#F0EDE4] px-5 py-3.5 dark:border-[#1A2A14]">
+        <span className="h-4 w-[3px] rounded-full bg-[#C49A1E]" />
+        <span className="flex-1 text-[13px] font-bold text-[#1A1A0A] dark:text-[#F0EDD4]">{t('section_profile')}</span>
+        {!isEditing && (
+          <button
+            type="button"
+            onClick={() => setIsEditing(true)}
+            className="flex items-center gap-1.5 rounded-[8px] border border-[#C49A1E]/40 px-3 py-1 text-[12px] font-semibold text-[#C49A1E] transition-colors hover:bg-[#C49A1E]/8"
+          >
+            <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+              <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" />
+              <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" />
+            </svg>
+            {t('btn_edit')}
+          </button>
+        )}
+      </div>
 
-        <div className="p-5">
-          <div className="grid grid-cols-2 gap-x-6 gap-y-4">
-            {/* Email — full width, read-only */}
+      <div className="p-5">
+        {!isEditing ? (
+          /* ── Read-only view ── */
+          <div className="grid grid-cols-2 gap-x-8 gap-y-4">
             {user?.email && (
               <div className="col-span-2">
-                <Field label={t('field_email')}>
-                  <div className="flex items-center gap-2.5 rounded-[8px] border border-[#D8D4C8] bg-[#F0EFEB] px-3 py-2.5 dark:border-[#243020] dark:bg-[#0A1208]">
-                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#BBBBAA" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                      <rect x="3" y="5" width="18" height="14" rx="2" />
-                      <polyline points="3 7 12 13 21 7" />
-                    </svg>
-                    <span className="text-[13px] text-[#999] dark:text-[#5A5A4A]">{user.email}</span>
-                    <span className="ml-auto rounded-full bg-[#E8E4DC] px-2 py-0.5 text-[10px] font-semibold text-[#AAAAAA] dark:bg-[#1A2A14] dark:text-[#4A4A3A]">
-                      {t('field_email_readonly')}
-                    </span>
+                <p className="mb-0.5 text-[10px] font-bold uppercase tracking-wider text-[#C8C4B4] dark:text-[#2E3C2A]">{t('field_email')}</p>
+                <div className="flex items-center gap-2">
+                  <span className="text-[13px] font-semibold text-[#1A1A0A] dark:text-[#F0EDD4]">{user.email}</span>
+                  <span className="rounded-full bg-[#E8E4DC] px-2 py-0.5 text-[10px] font-semibold text-[#AAAAAA] dark:bg-[#1A2A14] dark:text-[#4A4A3A]">
+                    {t('field_email_readonly')}
+                  </span>
+                </div>
+              </div>
+            )}
+            <ReadField label={t('field_station_name')} value={profile.name} />
+            <ReadField label={t('field_service_scope')} value={profile.service_scope ? scopeLabels[profile.service_scope as ScopeValue] ?? profile.service_scope : '—'} />
+            {profile.description && (
+              <div className="col-span-2">
+                <ReadField label={t('field_description')} value={profile.description} />
+              </div>
+            )}
+            {feedback && (
+              <p className="col-span-2 text-[12px] font-semibold" style={{ color: feedback.ok ? '#00C851' : '#EF4444' }}>
+                {feedback.msg}
+              </p>
+            )}
+          </div>
+        ) : (
+          /* ── Edit form ── */
+          <form onSubmit={handleSubmit}>
+            <div className="grid grid-cols-2 gap-x-6 gap-y-4">
+              {user?.email && (
+                <div className="col-span-2">
+                  <Field label={t('field_email')}>
+                    <div className="flex items-center gap-2.5 rounded-[8px] border border-[#D8D4C8] bg-[#F0EFEB] px-3 py-2.5 dark:border-[#243020] dark:bg-[#0A1208]">
+                      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#BBBBAA" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                        <rect x="3" y="5" width="18" height="14" rx="2" />
+                        <polyline points="3 7 12 13 21 7" />
+                      </svg>
+                      <span className="text-[13px] text-[#999] dark:text-[#5A5A4A]">{user.email}</span>
+                      <span className="ml-auto rounded-full bg-[#E8E4DC] px-2 py-0.5 text-[10px] font-semibold text-[#AAAAAA] dark:bg-[#1A2A14] dark:text-[#4A4A3A]">
+                        {t('field_email_readonly')}
+                      </span>
+                    </div>
+                  </Field>
+                </div>
+              )}
+              <div className="col-span-2">
+                <Field label={t('field_station_name')}>
+                  <input type="text" className={inputClass} value={name} onChange={(e) => setName(e.target.value)} required />
+                </Field>
+              </div>
+              <div className="col-span-2">
+                <Field label={t('field_service_scope')}>
+                  <div className="flex gap-1 rounded-[10px] border border-[#D8D4C8] bg-[#F7F6F2] p-1 dark:border-[#243020] dark:bg-[#0F1A0C]">
+                    <button type="button" onClick={() => setServiceScope('')}
+                      className={`rounded-[7px] px-3 py-1.5 text-[12px] font-semibold transition-all duration-150 ${!serviceScope ? 'bg-white text-[#5A5A4A] shadow-sm dark:bg-[#182214] dark:text-[#9A9A8A]' : 'text-[#BBBBAA] hover:text-[#888] dark:text-[#3A3A2A] dark:hover:text-[#6A6A5A]'}`}>
+                      —
+                    </button>
+                    {SCOPE_VALUES.map((v) => (
+                      <button key={v} type="button" onClick={() => setServiceScope(v)}
+                        className={`flex-1 rounded-[7px] py-1.5 text-[12px] font-semibold transition-all duration-150 ${serviceScope === v ? 'bg-[#C49A1E] text-[#0C1209] shadow-sm' : 'text-[#AAAAAA] hover:text-[#5A5A4A] dark:text-[#4A4A3A] dark:hover:text-[#9A9A8A]'}`}>
+                        {scopeLabels[v]}
+                      </button>
+                    ))}
                   </div>
                 </Field>
               </div>
-            )}
-
-            {/* Station name */}
-            <div className="col-span-2">
-              <Field label={t('field_station_name')}>
-                <input type="text" className={inputClass} value={name} onChange={(e) => setName(e.target.value)} required />
-              </Field>
+              <div className="col-span-2">
+                <Field label={t('field_description')} hint={t('field_optional')}>
+                  <textarea rows={3} className={inputClass + ' resize-none leading-relaxed'} value={description}
+                    onChange={(e) => setDescription(e.target.value)} placeholder={t('field_description_placeholder')} />
+                </Field>
+              </div>
             </div>
-
-            {/* Service scope — segmented control, full width */}
-            <div className="col-span-2">
-              <Field label={t('field_service_scope')}>
-                <div className="flex gap-1 rounded-[10px] border border-[#D8D4C8] bg-[#F7F6F2] p-1 dark:border-[#243020] dark:bg-[#0F1A0C]">
-                  <button
-                    type="button"
-                    onClick={() => setServiceScope('')}
-                    className={`rounded-[7px] px-3 py-1.5 text-[12px] font-semibold transition-all duration-150 ${
-                      !serviceScope
-                        ? 'bg-white text-[#5A5A4A] shadow-sm dark:bg-[#182214] dark:text-[#9A9A8A]'
-                        : 'text-[#BBBBAA] hover:text-[#888] dark:text-[#3A3A2A] dark:hover:text-[#6A6A5A]'
-                    }`}
-                  >
-                    —
-                  </button>
-                  {SCOPE_VALUES.map((v) => (
-                    <button
-                      key={v}
-                      type="button"
-                      onClick={() => setServiceScope(v)}
-                      className={`flex-1 rounded-[7px] py-1.5 text-[12px] font-semibold transition-all duration-150 ${
-                        serviceScope === v
-                          ? 'bg-[#C49A1E] text-[#0C1209] shadow-sm'
-                          : 'text-[#AAAAAA] hover:text-[#5A5A4A] dark:text-[#4A4A3A] dark:hover:text-[#9A9A8A]'
-                      }`}
-                    >
-                      {scopeLabels[v]}
-                    </button>
-                  ))}
-                </div>
-              </Field>
+            <div className="mt-5 flex items-center justify-between">
+              {feedback ? (
+                <span className="text-[12px] font-semibold" style={{ color: feedback.ok ? '#00C851' : '#EF4444' }}>{feedback.msg}</span>
+              ) : <span />}
+              <div className="flex items-center gap-2">
+                <button type="button" onClick={handleCancel} disabled={saving}
+                  className="rounded-[10px] border border-[#E0DCD0] px-4 py-2.5 text-[13px] font-semibold text-[#666] transition-colors hover:bg-[#F0EDE0] disabled:opacity-50 dark:border-[#243020] dark:text-[#9A9A8A]">
+                  {t('btn_cancel_edit')}
+                </button>
+                <button type="submit" disabled={saving}
+                  className="rounded-[10px] bg-[#C49A1E] px-6 py-2.5 text-[13px] font-bold text-[#0C1209] transition-opacity hover:opacity-80 disabled:opacity-50">
+                  {saving ? t('btn_saving') : t('btn_save')}
+                </button>
+              </div>
             </div>
-
-            {/* Description — full width, optional */}
-            <div className="col-span-2">
-              <Field label={t('field_description')} hint={t('field_optional')}>
-                <textarea
-                  rows={3}
-                  className={inputClass + ' resize-none leading-relaxed'}
-                  value={description}
-                  onChange={(e) => setDescription(e.target.value)}
-                  placeholder={t('field_description_placeholder')}
-                />
-              </Field>
-            </div>
-          </div>
-
-          <div className="mt-5 flex items-center justify-between">
-            {feedback ? (
-              <span className="text-[12px] font-semibold" style={{ color: feedback.ok ? '#00C851' : '#EF4444' }}>
-                {feedback.msg}
-              </span>
-            ) : <span />}
-            <button type="submit" disabled={saving} className="rounded-[10px] bg-[#C49A1E] px-6 py-2.5 text-[13px] font-bold text-[#0C1209] transition-opacity hover:opacity-80 disabled:opacity-50">
-              {saving ? t('btn_saving') : t('btn_save')}
-            </button>
-          </div>
-        </div>
-      </section>
-    </form>
+          </form>
+        )}
+      </div>
+    </section>
   );
 }

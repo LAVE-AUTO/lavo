@@ -118,7 +118,7 @@ export function AdminStationDetail({ id }: Props) {
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="15 18 9 12 15 6" /></svg>
         </Link>
         <div className="min-w-0 flex-1">
-          <h1 className="truncate text-[16px] font-black text-[#0F1A0C] dark:text-[#F0EDD4]">{station.name}</h1>
+          <h1 className="truncate pb-0.5 text-[16px] font-black text-[#0F1A0C] dark:text-[#F0EDD4]">{station.name}</h1>
           <p className="text-[11px] text-[#999] dark:text-[#5A5A4A]">{station.city}</p>
         </div>
         <span className="shrink-0 rounded-full bg-[#C49A1E]/10 px-3 py-1 text-[10px] font-black uppercase tracking-wider text-[#C49A1E]">
