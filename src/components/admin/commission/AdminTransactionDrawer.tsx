@@ -31,6 +31,12 @@ export function AdminTransactionDrawer({ tx, onClose }: Props) {
   const t = useTranslations('admin_transactions');
   const closeBtnRef = useRef<HTMLButtonElement>(null);
 
+  const STATUS_LABELS: Record<TxStatus, string> = {
+    succeeded: t('status_succeeded'),
+    refunded:  t('status_refunded'),
+    failed:    t('status_failed'),
+  };
+
   useEffect(() => {
     if (!tx) return;
     closeBtnRef.current?.focus();
@@ -45,7 +51,7 @@ export function AdminTransactionDrawer({ tx, onClose }: Props) {
       `LAVO — ${t('page_title')}`,
       '='.repeat(44),
       `${t('drawer_stripe_id')}: ${tx.stripe_id}`,
-      `${t('drawer_status')}: ${t(`status_${tx.status}`)}`,
+      `${t('drawer_status')}: ${STATUS_LABELS[tx.status]}`,
       `${t('drawer_date')}: ${formatDateTime(tx.date)}`,
       '',
       `${t('drawer_station')}: ${tx.station}`,
@@ -90,7 +96,7 @@ export function AdminTransactionDrawer({ tx, onClose }: Props) {
           {/* Status + date */}
           <div className="flex items-center justify-between">
             <span className={`inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-[12px] font-bold ${s.badge}`}>
-              <span className={`h-2 w-2 rounded-full ${s.dot}`} />{t(`status_${tx.status}`)}
+              <span className={`h-2 w-2 rounded-full ${s.dot}`} />{STATUS_LABELS[tx.status]}
             </span>
             <p className="text-[12px] text-[#888] dark:text-[#5A5A4A]">{formatDateTime(tx.date)}</p>
           </div>
