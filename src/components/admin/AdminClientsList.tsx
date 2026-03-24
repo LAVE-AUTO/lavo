@@ -15,10 +15,14 @@ const MOCK_CLIENTS = [
 ];
 
 const AVATAR_COLORS = ['#C49A1E', '#5A8A50', '#3B82F6', '#8B5CF6', '#EF4444', '#06B6D4'];
-const LEFT_BAR: Record<string, string>  = { active: 'bg-[#00C851]', suspended: 'bg-[#FF8800]' };
-const STATUS_BADGE: Record<string, string> = { active: 'bg-[#00C851]/10 text-[#00C851]', suspended: 'bg-[#FF8800]/10 text-[#FF8800]' };
+
+const STATUS: Record<string, { badge: string; dot: string; label: string }> = {
+  active:    { badge: 'bg-[#F0FDF4] text-[#166534] ring-1 ring-[#86EFAC]/40', dot: 'bg-[#22C55E]', label: 'status_active' },
+  suspended: { badge: 'bg-[#FFF7ED] text-[#9A3412] ring-1 ring-[#FDBA74]/40', dot: 'bg-[#F97316]', label: 'status_suspended' },
+};
 
 function avatarColor(name: string) { return AVATAR_COLORS[name.charCodeAt(0) % AVATAR_COLORS.length]; }
+function initials(first: string, last: string) { return `${first[0] ?? ''}${last[0] ?? ''}`.toUpperCase(); }
 function formatDate(d: string) {
   try { return new Date(d).toLocaleDateString('fr-CA', { day: 'numeric', month: 'short', year: 'numeric' }); }
   catch { return d; }
@@ -52,84 +56,93 @@ export function AdminClientsList({ query, onAction }: Props) {
 
   if (!filtered.length) return (
     <div className="flex flex-col items-center gap-3 py-20 text-center">
-      <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-white shadow-sm dark:bg-[#131E10]">
-        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#C49A1E" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2" /><circle cx="9" cy="7" r="4" /></svg>
+      <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-[#F5F3EE] dark:bg-[#131E10]">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#C49A1E" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2" /><circle cx="9" cy="7" r="4" /></svg>
       </div>
-      <p className="text-[13px] font-semibold text-[#999] dark:text-[#5A5A4A]">{t('empty_search')}</p>
+      <p className="text-[13px] font-semibold text-[#999]">{q ? t('empty_search') : t('empty_search')}</p>
     </div>
   );
 
   return (
-    <div className="flex flex-col gap-2">
-      {filtered.map((client) => {
-        const fullName     = `${client.first_name} ${client.last_name}`;
-        const initials     = `${client.first_name[0]}${client.last_name[0]}`.toUpperCase();
-        const color        = avatarColor(client.first_name);
+    <div className="overflow-hidden rounded-xl border border-[#E8E4DC] shadow-sm dark:border-[#1E2E18]">
+      {/* Table header */}
+      <div className="grid grid-cols-[40px_1fr_1fr_120px_160px] items-center gap-4 border-b border-[#E8E4DC] bg-[#F9F8F5] px-5 py-3 dark:border-[#1E2E18] dark:bg-[#0E1A0C]">
+        {['', t('col_account'), t('col_contact'), t('col_status'), t('col_actions')].map((h, i) => (
+          <span key={i} className={`text-[10px] font-black uppercase tracking-widest text-[#AAAAAA] dark:text-[#4A4A3A] ${i === 4 ? 'text-right' : ''}`}>{h}</span>
+        ))}
+      </div>
+
+      {/* Rows */}
+      {filtered.map((client, idx) => {
+        const s            = STATUS[client.status];
         const isConfirming = confirmId === client.id;
         const isBusy       = busy === client.id;
+        const color        = avatarColor(client.first_name);
 
         return (
-          <div key={client.id} className={[
-            'flex overflow-hidden rounded-xl border transition-all duration-200',
-            isConfirming
-              ? 'border-[#EF4444]/25 bg-[#FEF2F2] shadow-sm dark:border-[#3A1A1A] dark:bg-[#1C0A0A]'
-              : 'border-[#ECEAE0] bg-white hover:border-[#D4C080]/50 hover:shadow-sm dark:border-[#1A2A14] dark:bg-[#131E10] dark:hover:border-[#2A3A20]',
-          ].join(' ')}>
+          <div key={client.id}
+            className={[
+              'grid grid-cols-[40px_1fr_1fr_120px_160px] items-center gap-4 border-b px-5 py-3.5 transition-colors duration-150 last:border-0',
+              isConfirming
+                ? 'border-red-100 bg-red-50 dark:border-[#2A1010] dark:bg-[#1A0808]'
+                : idx % 2 === 0
+                  ? 'border-[#F2EFE8] bg-white hover:bg-[#FEFCF5] dark:border-[#1A2A14] dark:bg-[#131E10] dark:hover:bg-[#182416]'
+                  : 'border-[#F2EFE8] bg-[#FAFAF7] hover:bg-[#FEFCF5] dark:border-[#1A2A14] dark:bg-[#111C0E] dark:hover:bg-[#182416]',
+            ].join(' ')}>
 
-            <div className={`w-[3px] shrink-0 ${LEFT_BAR[client.status] ?? 'bg-[#E0DCD0]'}`} />
+            <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl text-[11px] font-black text-white"
+              style={{ background: color }}>
+              {initials(client.first_name, client.last_name)}
+            </div>
 
-            <div className="flex flex-1 items-center gap-4 px-5 py-4">
-              <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full text-[12px] font-black text-white"
-                style={{ background: color }}>
-                {initials}
-              </div>
-              <div className="min-w-0 flex-1">
-                <div className="flex items-center gap-2">
-                  <Link href={`/admin/clients/${client.id}` as Parameters<typeof Link>[0]['href']}
-                    className="truncate text-[14px] font-bold text-[#1A1A0A] underline-offset-2 hover:text-[#C49A1E] hover:underline dark:text-[#F0EDD4]">
-                    {fullName}
-                  </Link>
-                  <span className={`shrink-0 rounded-full px-2 py-0.5 text-[10px] font-black uppercase tracking-wide ${STATUS_BADGE[client.status] ?? 'bg-[#E0DCD0] text-[#888]'}`}>
-                    {t(`status_${client.status}`)}
-                  </span>
-                </div>
-                <p className="mt-0.5 text-[11px] text-[#BBBBAA] dark:text-[#4A4A3A]">
-                  {client.email} · {formatDate(client.created_at)}
-                </p>
-              </div>
+            <div className="min-w-0">
+              <Link href={`/admin/clients/${client.id}` as Parameters<typeof Link>[0]['href']}
+                className="block truncate text-[13px] font-bold text-[#1A1A0A] underline-offset-2 hover:text-[#C49A1E] hover:underline dark:text-[#F0EDD4]">
+                {client.first_name} {client.last_name}
+              </Link>
+              <p className="truncate text-[11px] text-[#BBBBAA] dark:text-[#4A4A3A]">{formatDate(client.created_at)}</p>
+            </div>
 
-              {/* Actions */}
-              <div className="flex shrink-0 items-center gap-2">
-                {isConfirming ? (
-                  <>
-                    <span className="hidden text-[11px] font-semibold text-[#EF4444] sm:block">{t('confirm_suspend_hint')}</span>
-                    <button type="button" disabled={isBusy} onClick={() => doAction(client.id, 'suspend')}
-                      className="rounded-lg bg-[#EF4444] px-3.5 py-1.5 text-[11px] font-bold text-white transition-opacity hover:opacity-80 disabled:opacity-50">
-                      {isBusy ? '…' : t('btn_confirm')}
-                    </button>
-                    <button type="button" onClick={() => setConfirmId(null)}
-                      className="rounded-lg border border-[#D8D4C8] px-3.5 py-1.5 text-[11px] font-semibold text-[#666] hover:bg-[#F0EDE0] dark:border-[#243020] dark:text-[#9A9A8A] dark:hover:bg-[#1A2A14]">
-                      {t('btn_cancel')}
-                    </button>
-                  </>
-                ) : client.status === 'active' ? (
-                  <button type="button" disabled={isBusy} onClick={() => setConfirmId(client.id)}
-                    className="rounded-lg border border-[#FF8800]/30 px-3.5 py-1.5 text-[11px] font-bold text-[#FF8800] transition-colors hover:bg-[#FF8800]/8 disabled:opacity-50">
-                    {t('btn_suspend')}
+            <div className="min-w-0">
+              <p className="truncate text-[12px] text-[#555] dark:text-[#9A9A8A]">{client.email}</p>
+              <p className="truncate text-[11px] text-[#BBBBAA] dark:text-[#4A4A3A]">{client.phone}</p>
+            </div>
+
+            {s ? (
+              <span className={`inline-flex w-fit items-center gap-1.5 rounded-full px-2.5 py-1 text-[11px] font-semibold ${s.badge}`}>
+                <span className={`h-1.5 w-1.5 rounded-full ${s.dot}`} />{t(s.label)}
+              </span>
+            ) : <span />}
+
+            <div className="flex justify-end gap-1.5">
+              {isConfirming ? (
+                <>
+                  <button type="button" disabled={isBusy} onClick={() => doAction(client.id, 'suspend')}
+                    className="rounded-lg bg-red-500 px-3 py-1.5 text-[11px] font-bold text-white hover:bg-red-600 disabled:opacity-50">
+                    {isBusy ? '…' : t('btn_confirm')}
                   </button>
-                ) : (
-                  <div className="flex gap-1.5">
-                    <button type="button" disabled={isBusy} onClick={() => doAction(client.id, 'activate')}
-                      className="rounded-lg border border-[#00C851]/30 px-3.5 py-1.5 text-[11px] font-bold text-[#00C851] transition-colors hover:bg-[#00C851]/8 disabled:opacity-50">
-                      {isBusy ? '…' : t('btn_activate')}
-                    </button>
-                    <button type="button" disabled={isBusy} onClick={() => doAction(client.id, 'unblock')}
-                      className="rounded-lg border border-[#3B82F6]/30 px-3.5 py-1.5 text-[11px] font-bold text-[#3B82F6] transition-colors hover:bg-[#3B82F6]/8 disabled:opacity-50">
-                      {t('btn_unblock')}
-                    </button>
-                  </div>
-                )}
-              </div>
+                  <button type="button" onClick={() => setConfirmId(null)}
+                    className="rounded-lg border border-[#D8D4C8] px-3 py-1.5 text-[11px] font-semibold text-[#666] hover:bg-[#F5F3EE] dark:border-[#243020] dark:text-[#9A9A8A]">
+                    {t('btn_cancel')}
+                  </button>
+                </>
+              ) : client.status === 'active' ? (
+                <button type="button" disabled={isBusy} onClick={() => setConfirmId(client.id)}
+                  className="rounded-lg border border-orange-200 px-3 py-1.5 text-[11px] font-bold text-orange-600 hover:bg-orange-50 disabled:opacity-50 dark:border-orange-900/40 dark:text-orange-400 dark:hover:bg-orange-950/30">
+                  {t('btn_suspend')}
+                </button>
+              ) : (
+                <div className="flex gap-1.5">
+                  <button type="button" disabled={isBusy} onClick={() => doAction(client.id, 'activate')}
+                    className="rounded-lg border border-green-200 px-3 py-1.5 text-[11px] font-bold text-green-700 hover:bg-green-50 disabled:opacity-50 dark:border-green-900/40 dark:text-green-400 dark:hover:bg-green-950/30">
+                    {isBusy ? '…' : t('btn_activate')}
+                  </button>
+                  <button type="button" disabled={isBusy} onClick={() => doAction(client.id, 'unblock')}
+                    className="rounded-lg border border-blue-200 px-3 py-1.5 text-[11px] font-bold text-blue-600 hover:bg-blue-50 disabled:opacity-50 dark:border-blue-900/40 dark:text-blue-400 dark:hover:bg-blue-950/30">
+                    {isBusy ? '…' : t('btn_unblock')}
+                  </button>
+                </div>
+              )}
             </div>
           </div>
         );

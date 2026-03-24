@@ -1897,7 +1897,12 @@
     "chip_active": "actifs",
     "chip_suspended": "suspendus",
     "search_placeholder": "Rechercher un compte...",
-    "confirm_suspend_hint": "Confirmer la suspension ?"
+    "confirm_suspend_hint": "Confirmer la suspension ?",
+    "col_account": "Compte",
+    "col_contact": "Contact",
+    "col_location": "Localisation",
+    "col_status": "Statut",
+    "col_actions": "Actions"
   },
   "admin_settings": {
     "page_title": "Paramètres plateforme",
