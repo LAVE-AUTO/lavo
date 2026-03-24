@@ -1874,6 +1874,26 @@
     "optional": "optionnel",
     "error_action": "L'opération a échoué. Veuillez réessayer."
   },
+  "admin_clients": {
+    "page_title": "Gestion marchands & clients",
+    "page_subtitle": "Activez, suspendez ou débloquez les comptes marchands et clients.",
+    "tab_stations": "Marchands",
+    "tab_clients": "Clients",
+    "status_active": "Actif",
+    "status_suspended": "Suspendu",
+    "status_pending_admin_validation": "En attente KYC",
+    "status_rejected": "Rejeté",
+    "btn_activate": "Activer",
+    "btn_suspend": "Suspendre",
+    "btn_unblock": "Débloquer",
+    "btn_confirm": "Confirmer",
+    "btn_cancel": "Annuler",
+    "toast_activated": "Compte activé.",
+    "toast_suspended": "Compte suspendu.",
+    "toast_unblocked": "Compte débloqué.",
+    "empty_stations": "Aucun marchand actif ou suspendu.",
+    "error_load": "Impossible de charger les données."
+  },
   "admin_settings": {
     "page_title": "Paramètres plateforme",
     "page_subtitle": "Configurez les règles de commission, de pénalité et les délais de traitement.",

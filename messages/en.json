@@ -1874,6 +1874,26 @@
     "optional": "optional",
     "error_action": "Action failed. Please try again."
   },
+  "admin_clients": {
+    "page_title": "Merchants & clients management",
+    "page_subtitle": "Activate, suspend or unblock merchant and client accounts.",
+    "tab_stations": "Merchants",
+    "tab_clients": "Clients",
+    "status_active": "Active",
+    "status_suspended": "Suspended",
+    "status_pending_admin_validation": "Pending KYC",
+    "status_rejected": "Rejected",
+    "btn_activate": "Activate",
+    "btn_suspend": "Suspend",
+    "btn_unblock": "Unblock",
+    "btn_confirm": "Confirm",
+    "btn_cancel": "Cancel",
+    "toast_activated": "Account activated.",
+    "toast_suspended": "Account suspended.",
+    "toast_unblocked": "Account unblocked.",
+    "empty_stations": "No active or suspended merchant.",
+    "error_load": "Failed to load data."
+  },
   "admin_settings": {
     "page_title": "Platform settings",
     "page_subtitle": "Configure commission rules, penalties, and processing delays.",
