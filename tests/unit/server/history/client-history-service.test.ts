@@ -15,7 +15,7 @@ jest.mock('@/server/payments/payment-service', () => ({
 }));
 
 // Mock translation files consumed by toPdfTextLines via dynamic import.
-jest.mock('../../../messages/fr.json', () => ({
+jest.mock('../../../../messages/fr.json', () => ({
   history: {
     receipt_title: 'Recu de reservation',
     receipt_ref: 'Reference',
@@ -30,7 +30,7 @@ jest.mock('../../../messages/fr.json', () => ({
     receipt_tip: 'Pourboire',
   },
 }));
-jest.mock('../../../messages/en.json', () => ({
+jest.mock('../../../../messages/en.json', () => ({
   history: {
     receipt_title: 'Reservation Receipt',
     receipt_ref: 'Reference',
