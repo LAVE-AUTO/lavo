@@ -1774,7 +1774,13 @@
     "page_title": "Delay requests",
     "pending_n": "{n} pending request(s)",
     "no_pending": "No pending requests",
-    "empty_state": "No pending delay requests.",
+    "badge_pending": "pending",
+    "tab_pending": "Pending",
+    "tab_history": "History",
+    "empty_pending": "No pending requests",
+    "empty_pending_sub": "All requests have been handled.",
+    "empty_history": "No history yet",
+    "empty_history_sub": "Handled requests will appear here.",
     "btn_accept": "Accept",
     "btn_refuse": "Refuse",
     "btn_cancel": "Cancel",
@@ -1784,6 +1790,7 @@
     "refuse_message": "You may provide an optional refusal reason that will be sent to the client.",
     "refuse_reason_label": "Refusal reason",
     "refuse_reason_placeholder": "e.g. The slot was assigned to another client...",
+    "refuse_reason_hint": "Optional — leave empty to refuse without a reason.",
     "optional": "optional",
     "error_action": "Action failed. Please try again."
   }

@@ -47,7 +47,7 @@ function KpiCard({ icon, value, label, trend, trendType, animationDelay }: KpiCa
 
   return (
     <div
-      className="animate-fade-in-up rounded-xl bg-white p-4 transition-all duration-200 hover:scale-[1.02] hover:shadow-md dark:bg-[#1E2A1A]"
+      className="animate-fade-in-up rounded-xl bg-[#F0EDE0] p-4 transition-all duration-200 hover:scale-[1.02] hover:shadow-md dark:bg-[#1E2A1A]"
       style={{ animationDelay }}
     >
       <div className="mb-2 text-[22px] leading-none">{icon}</div>
@@ -134,7 +134,7 @@ export function DashboardKpiRow({ data }: DashboardKpiRowProps) {
   ];
 
   return (
-    <div className="grid grid-cols-4 gap-3 border-b border-[#E0DCD0] bg-white px-5 py-4 dark:border-[#1A2A14] dark:bg-[#111A0E]">
+    <div className="grid grid-cols-4 gap-3 border-b border-[#DDD9CC] bg-[#E8E4D4] px-5 py-4 dark:border-[#1A2A14] dark:bg-[#111A0E]">
       {cards.map((card) => (
         <KpiCard key={card.label} {...card} />
       ))}
