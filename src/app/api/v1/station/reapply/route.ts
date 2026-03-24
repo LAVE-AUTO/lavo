@@ -6,20 +6,26 @@ import { successResponse, error400, error403, error404, error500 } from '@/lib/r
 import { ApiCode } from '@/types/api-codes';
 import type { NextResponse } from 'next/server';
 
+const REAPPLY_COOLDOWN_HOURS = 24;
+const MIN_NAME_LENGTH = 2;
+const MIN_CITY_LENGTH = 2;
+
 /**
  * POST /api/v1/station/reapply
  * Allows a rejected station to resubmit their KYC application.
  * Resets status to pending_admin_validation and clears the rejection reason.
  * Optionally updates name, address, city, and description.
- * Does NOT require active status.
+ * Intentionally bypasses requireRole active-status check — rejected stations need access.
+ * Rate-limited: one reapplication per REAPPLY_COOLDOWN_HOURS hours.
  *
  * Body: { name?, address?, city?, description? }
  *
  * Responses:
  *   200 { data: { reapplied: true } }
- *   400 VALIDATION_FAILED — if station is not rejected
- *   403 FORBIDDEN — if user is not a station
+ *   400 VALIDATION_FAILED — station is not rejected or cooldown active
+ *   403 FORBIDDEN — user is not a station
  *   404 NOT_FOUND
+ *   429 TOO_MANY_REQUESTS — reapplied too recently
  *   500 INTERNAL_ERROR
  */
 export async function POST(request: Request) {
@@ -40,7 +46,7 @@ export async function POST(request: Request) {
   try {
     const station = await db.query.stations.findFirst({
       where: eq(stations.user_id, auth.sub),
-      columns: { id: true, status: true },
+      columns: { id: true, status: true, updated_at: true },
     });
 
     if (!station) {
@@ -51,15 +57,34 @@ export async function POST(request: Request) {
       return error400('Only rejected stations can reapply', ApiCode.VALIDATION_FAILED);
     }
 
-    // Build optional updates (only accepted text fields)
+    // Cooldown: prevent spam reapplications
+    if (station.updated_at) {
+      const hoursSinceLastUpdate =
+        (Date.now() - new Date(station.updated_at).getTime()) / (1000 * 60 * 60);
+      if (hoursSinceLastUpdate < REAPPLY_COOLDOWN_HOURS) {
+        return error400(
+          `Please wait ${REAPPLY_COOLDOWN_HOURS} hours before resubmitting`,
+          ApiCode.TOO_MANY_REQUESTS
+        );
+      }
+    }
+
+    const { name, address, city, description } = body as {
+      name?: string; address?: string; city?: string; description?: string;
+    };
+
+    // Validate provided fields
+    if (typeof name === 'string' && name.trim().length > 0 && name.trim().length < MIN_NAME_LENGTH) {
+      return error400(`Station name must be at least ${MIN_NAME_LENGTH} characters`, ApiCode.VALIDATION_FAILED);
+    }
+    if (typeof city === 'string' && city.trim().length > 0 && city.trim().length < MIN_CITY_LENGTH) {
+      return error400(`City must be at least ${MIN_CITY_LENGTH} characters`, ApiCode.VALIDATION_FAILED);
+    }
+
     const updates: Record<string, unknown> = {
       status: 'pending_admin_validation',
       rejection_reason: null,
       updated_at: new Date(),
-    };
-
-    const { name, address, city, description } = body as {
-      name?: string; address?: string; city?: string; description?: string;
     };
 
     if (typeof name === 'string' && name.trim()) updates.name = name.trim().slice(0, 150);

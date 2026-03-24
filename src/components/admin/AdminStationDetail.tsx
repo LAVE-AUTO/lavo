@@ -409,7 +409,7 @@ function TimelineEvent({
   const c = colorMap[color];
 
   const formattedDate = date
-    ? new Date(date).toLocaleDateString(locale === 'en' ? 'en-CA' : 'fr-CA', {
+    ? new Date(date).toLocaleString(locale === 'en' ? 'en-CA' : 'fr-CA', {
         day: 'numeric', month: 'long', year: 'numeric', hour: '2-digit', minute: '2-digit',
       })
     : null;

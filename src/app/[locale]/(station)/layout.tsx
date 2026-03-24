@@ -28,7 +28,11 @@ export default function StationLayout({ children }: { children: ReactNode }) {
       return;
     }
 
+    let mounted = true;
+
     getFromApi('/station/me').then(([ok, data]) => {
+      if (!mounted) return;
+
       if (ok) {
         const name = (data as { data: { name: string } }).data?.name ?? '';
         setState({ kind: 'ok', name });
@@ -38,8 +42,9 @@ export default function StationLayout({ children }: { children: ReactNode }) {
       const errCode = (data as { code?: string }).code;
 
       if (errCode === 'BUSINESS_REJECTED') {
-        // Fetch rejection reason from the status endpoint (no active check)
+        // Fetch rejection reason from the status endpoint (no active check required)
         getFromApi('/station/status').then(([statusOk, statusData]) => {
+          if (!mounted) return;
           const name =
             statusOk
               ? (statusData as { data: { name: string } }).data?.name ?? ''
@@ -53,9 +58,11 @@ export default function StationLayout({ children }: { children: ReactNode }) {
         return;
       }
 
-      // Any other error (BUSINESS_NOT_APPROVED = pending) — continue with empty name
+      // BUSINESS_NOT_APPROVED (pending) or other non-fatal error — show shell with empty name
       setState({ kind: 'ok', name: '' });
     });
+
+    return () => { mounted = false; };
   }, [isLoading, isAuthenticated, isStation, router, locale]);
 
   if (isLoading || state.kind === 'loading') return null;

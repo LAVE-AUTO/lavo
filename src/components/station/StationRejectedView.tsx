@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useRef } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { useTranslations } from 'next-intl';
 import { useAuth } from '@/context';
 import { postWithApi } from '@/services';
@@ -35,6 +35,7 @@ export function StationRejectedView({ stationName, rejectionReason }: Props) {
   const [submitted, setSubmitted]   = useState(false);
   const [error, setError]           = useState<string | null>(null);
   const mountedRef = useRef(true);
+  useEffect(() => { mountedRef.current = true; return () => { mountedRef.current = false; }; }, []);
 
   async function handleReapply(e: React.FormEvent) {
     e.preventDefault();
