@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import { useTranslations } from 'next-intl';
 import { Link } from '@/i18n/navigation';
+import { useSearchParams } from 'next/navigation';
 import { StationReviews } from './StationReviews';
 import { BookingFlow } from './booking/BookingFlow';
 import { fetchStationById } from '@/services/station-api';
@@ -15,9 +16,25 @@ interface StationDetailProps {
   id: string;
 }
 
+function normalizeQrContext(searchParams: ReturnType<typeof useSearchParams>): {
+  qrToken: string | null;
+  qrVersion: '1' | null;
+} {
+  const rawToken = searchParams.get('qr_token');
+  const rawVersion = searchParams.get('v');
+  const qrToken = typeof rawToken === 'string' && /^[a-f0-9]{64}$/i.test(rawToken) ? rawToken : null;
+  const qrVersion = rawVersion === '1' ? '1' : null;
+  if (!qrToken || !qrVersion) {
+    return { qrToken: null, qrVersion: null };
+  }
+  return { qrToken, qrVersion };
+}
+
 export function StationDetail({ id }: StationDetailProps) {
   const t = useTranslations('stations');
   const { isFavorite, toggle } = useFavorites();
+  const searchParams = useSearchParams();
+  const { qrToken, qrVersion } = normalizeQrContext(searchParams);
 
   const [station, setStation] = useState<StationDetailData | null | undefined>(undefined);
 
@@ -363,6 +380,8 @@ export function StationDetail({ id }: StationDetailProps) {
           station={station}
           category={currentCategory!}
           forfait={currentForfait}
+          qrToken={qrToken}
+          qrVersion={qrVersion}
           onClose={() => setBookingOpen(false)}
         />
       )}

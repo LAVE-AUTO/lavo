@@ -16,6 +16,8 @@ import {
   sendStationApprovalEmail,
   sendStationApplicationAdminNotification,
 } from '@/lib/email';
+import { APP_URL } from '@/helpers/constants';
+import { buildStationQrPublicUrl } from '@/server/qr/qr-token-service';
 import {
   ConflictError,
   ForbiddenError,
@@ -191,7 +193,8 @@ export async function getStationById(id: string): Promise<StationWithDocuments> 
 
 export async function approveStation(
   adminId: string,
-  stationId: string
+  stationId: string,
+  locale: 'fr' | 'en' = 'fr'
 ): Promise<void> {
   const station = await findStationById(stationId);
   if (!station) throw new NotFoundError('Station not found');
@@ -205,14 +208,46 @@ export async function approveStation(
     approved_at: new Date(),
   });
 
+  let qrPublicUrl: string | undefined;
+  try {
+    qrPublicUrl = buildStationQrPublicUrl({
+      origin: APP_URL,
+      locale,
+      stationId: station.id,
+    });
+  } catch (error) {
+    console.error('[STATION_APPROVAL_QR_URL_GENERATION_FAILED]', {
+      stationId,
+      error: error instanceof Error ? error.message : String(error),
+    });
+  }
+
   // Fire-and-forget — only possible if station has an associated user account (3-step flow)
   if (station.user_id) {
     findById(station.user_id).then((user) => {
       if (user) {
-        sendStationApprovalEmail(user.email, station.name).catch(() => void 0);
+        sendStationApprovalEmail(user.email, station.name, locale, { qrPublicUrl }).catch((error) => {
+          console.error('[STATION_APPROVAL_EMAIL_SEND_FAILED]', {
+            stationId,
+            userId: station.user_id,
+            email: user.email,
+            error: error instanceof Error ? error.message : String(error),
+          });
+        });
       }
-    }).catch(() => void 0);
+    }).catch((error) => {
+      console.error('[STATION_APPROVAL_USER_LOOKUP_FAILED]', {
+        stationId,
+        userId: station.user_id,
+        error: error instanceof Error ? error.message : String(error),
+      });
+    });
   }
+
+  sendStationApplicationAdminNotification(station.name, station.id, {
+    context: 'approval',
+    qrPublicUrl,
+  }).catch(() => void 0);
 }
 
 export async function rejectStation(

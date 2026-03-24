@@ -18,13 +18,15 @@ interface BookingFlowProps {
   station: StationDetailData;
   category: ServiceCategory;
   forfait: ServiceForfait;
+  qrToken?: string | null;
+  qrVersion?: '1' | null;
   onClose: () => void;
 }
 
 const STEPS = ['extras', 'arrival', 'summary', 'payment'] as const;
 type Step = (typeof STEPS)[number];
 
-export function BookingFlow({ station, forfait, onClose }: BookingFlowProps) {
+export function BookingFlow({ station, forfait, qrToken, qrVersion, onClose }: BookingFlowProps) {
   const t = useTranslations('booking');
   const userLocation = useUserLocation();
   const [step, setStep] = useState<Step>('extras');
@@ -51,7 +53,6 @@ export function BookingFlow({ station, forfait, onClose }: BookingFlowProps) {
   const totalDuration = forfait.duration + extrasDuration;
 
   useEffect(() => {
-    mountedRef.current = true;
     return () => { mountedRef.current = false; };
   }, []);
 
@@ -136,6 +137,16 @@ export function BookingFlow({ station, forfait, onClose }: BookingFlowProps) {
       if (!mountedRef.current) return;
       setPaymentResult(ok ? 'success' : 'error');
     } else if (arrivalMode === 'book_slot' && selectedSlot) {
+      const reservationPayload: Record<string, string> = {
+        time_slot_id: selectedSlot.id,
+        vehicle_format_id: forfait.id,
+      };
+      // QR context validation is centralized in StationDetail normalization.
+      const hasValidQrContext = Boolean(qrToken && qrVersion === '1');
+      if (hasValidQrContext) {
+        reservationPayload.qr_token = qrToken!;
+        reservationPayload.v = qrVersion!;
+      }
       // In dev mode (NEXT_PUBLIC_DEV_SKIP_PAYMENT=true), bypass Stripe and create
       // a confirmed reservation directly so the booking flow can be tested end-to-end.
       // TODO: replace with real Stripe Elements payment confirmation once integrated.
@@ -143,13 +154,13 @@ export function BookingFlow({ station, forfait, onClose }: BookingFlowProps) {
         ? '/dev/reservations'
         : `/stations/${station.id}/reservations`;
       const payload = devSkipPayment
-        ? { station_id: station.id, time_slot_id: selectedSlot.id, vehicle_format_id: forfait.id }
-        : { time_slot_id: selectedSlot.id, vehicle_format_id: forfait.id };
+        ? { station_id: station.id, time_slot_id: selectedSlot.id, vehicle_format_id: forfait.id, ...( hasValidQrContext ? { qr_token: qrToken!, v: qrVersion! } : {}) }
+        : reservationPayload;
       const [ok] = await postWithApi(endpoint, payload);
       if (!mountedRef.current) return;
       setPaymentResult(ok ? 'success' : 'error');
     }
-  }, [arrivalMode, station.id, forfait.id, selectedSlot, devSkipPayment]);
+  }, [arrivalMode, station.id, forfait.id, selectedSlot, qrToken, qrVersion, devSkipPayment]);
 
   const handleRetryPayment = useCallback(() => {
     setPaymentResult(null);

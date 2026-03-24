@@ -9,6 +9,7 @@ export function serializeEntry(entry: Entry) {
   return {
     id: entry.id,
     entry_type: entry.entry_type,
+    booking_source: entry.booking_source,
     time_slot_id: entry.time_slot_id,
     station_id: entry.station_id,
     vehicle_format_id: entry.vehicle_format_id,
@@ -26,6 +27,7 @@ export function serializeStationEntry(entry: Entry) {
     id: entry.id,
     user_id: entry.user_id,
     entry_type: entry.entry_type,
+    booking_source: entry.booking_source,
     time_slot_id: entry.time_slot_id,
     station_id: entry.station_id,
     vehicle_format_id: entry.vehicle_format_id,

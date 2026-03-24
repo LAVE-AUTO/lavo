@@ -1,4 +1,5 @@
 import { Resend } from 'resend';
+import QRCode from 'qrcode';
 import { APP_URL } from '@/helpers/constants';
 
 
@@ -132,6 +133,9 @@ const TEXTS = {
       extra: 'Vous pouvez dès à présent vous connecter avec votre adresse e-mail et le mot de passe choisi lors de votre inscription.',
       cta: 'Se connecter à Slowtime',
       closing: 'Bienvenue dans la communauté Slowtime !',
+      qrLabel: 'QR réservation :',
+      qrAlt: 'QR de réservation station',
+      qrLinkLabel: 'Lien de réservation QR :',
     },
     en: {
       subject: (name: string) => `[Slowtime] Your station ${name} has been approved`,
@@ -141,6 +145,9 @@ const TEXTS = {
       extra: 'You can now log in using the email address and password you chose during registration.',
       cta: 'Log in to Slowtime',
       closing: 'Welcome to the Slowtime community!',
+      qrLabel: 'Booking QR:',
+      qrAlt: 'Station booking QR',
+      qrLinkLabel: 'Booking QR link:',
     },
   },
   paymentSuccess: {
@@ -405,7 +412,8 @@ export async function sendPasswordResetEmail(
 export async function sendStationApprovalEmail(
   to: string,
   stationName: string,
-  locale: Locale = 'fr'
+  locale: Locale = 'fr',
+  opts?: { qrPublicUrl?: string }
 ): Promise<void> {
   const client = getResendClient();
   if (!client) {
@@ -416,8 +424,30 @@ export async function sendStationApprovalEmail(
 
   const t = TEXTS.stationApproval[locale];
   const loginUrl = safeHttpUrlForEmailHref(`${APP_URL}/${locale}/login`) ?? '';
+  const safeQrUrl = safeHttpUrlForEmailHref(opts?.qrPublicUrl);
   const subjectName = safePlainTextSnippet(stationName, 200);
   const escapedName = escapeHtmlPlain(safePlainTextSnippet(stationName, 500));
+  let qrImageDataUrl: string | null = null;
+
+  if (safeQrUrl) {
+    try {
+      qrImageDataUrl = await QRCode.toDataURL(safeQrUrl, { width: 220, margin: 1 });
+    } catch (error) {
+      console.warn('[STATION_APPROVAL_QR_IMAGE_FALLBACK_LINK_ONLY]', {
+        error: error instanceof Error ? error.message : String(error),
+      });
+    }
+  }
+
+  const qrBlock = safeQrUrl
+    ? (
+        qrImageDataUrl
+          ? `<br/><br/><p><strong>${t.qrLabel}</strong></p>
+             <p style="margin: 10px 0;"><img src="${qrImageDataUrl}" alt="${t.qrAlt}" width="220" height="220" style="display:block;border:1px solid #e8e4da;border-radius:8px;padding:6px;background:#ffffff;" /></p>
+             <p><a href="${safeQrUrl}" target="_blank" rel="noopener noreferrer">${safeQrUrl}</a></p>`
+          : `<br/><br/><p><strong>${t.qrLinkLabel}</strong> <a href="${safeQrUrl}" target="_blank" rel="noopener noreferrer">${safeQrUrl}</a></p>`
+      )
+    : '';
 
   await client.emails.send({
     from: FROM,
@@ -425,7 +455,7 @@ export async function sendStationApprovalEmail(
     subject: t.subject(subjectName),
     html: brandedEmail(locale, {
       greeting: t.greeting,
-      bodyHtml: `${t.body(escapedName)}<br/><br/>${t.extra}`,
+      bodyHtml: `${t.body(escapedName)}<br/><br/>${t.extra}${qrBlock}`,
       ctaUrl: loginUrl || undefined,
       ctaLabel: t.cta,
       footNote: t.closing,
@@ -436,7 +466,8 @@ export async function sendStationApprovalEmail(
 
 export async function sendStationApplicationAdminNotification(
   stationName: string,
-  stationId: string
+  stationId: string,
+  opts?: { context?: 'application' | 'approval'; qrPublicUrl?: string }
 ): Promise<void> {
   const adminEmail = process.env.ADMIN_NOTIFICATION_EMAIL?.trim();
   if (!adminEmail) {
@@ -457,18 +488,57 @@ export async function sendStationApplicationAdminNotification(
 
   const safeName = escapeHtmlPlain(safePlainTextSnippet(stationName, 500));
   const safeId = escapeHtmlPlain(safePlainTextSnippet(stationId, 128));
+  const context = opts?.context ?? 'application';
+  const safeQrUrl = safeHttpUrlForEmailHref(opts?.qrPublicUrl);
+  let qrImageDataUrl: string | null = null;
+
+  if (context === 'approval' && safeQrUrl) {
+    try {
+      qrImageDataUrl = await QRCode.toDataURL(safeQrUrl, { width: 220, margin: 1 });
+    } catch (error) {
+      console.warn('[ADMIN_APPROVAL_QR_IMAGE_FALLBACK_LINK_ONLY]', {
+        stationId: safeId,
+        error: error instanceof Error ? error.message : String(error),
+      });
+    }
+  }
+
+  const subject =
+    context === 'approval'
+      ? `[Slowtime] Station approved with QR: ${safePlainTextSnippet(stationName, 120)}`
+      : `[Slowtime] New station application: ${safePlainTextSnippet(stationName, 120)}`;
+  const bodyHtml = context === 'approval'
+    ? `
+      <p style="margin: 0 0 8px;"><strong>Station approved:</strong> ${safeName}</p>
+      <p style="margin: 0 0 8px;"><strong>Station ID:</strong> ${safeId}</p>
+      ${
+        safeQrUrl
+          ? (
+              qrImageDataUrl
+                ? `<p style="margin: 12px 0 8px;"><strong>Booking QR:</strong></p>
+                   <p style="margin: 0 0 10px;"><img src="${qrImageDataUrl}" alt="Station booking QR" width="220" height="220" style="display:block;border:1px solid #e8e4da;border-radius:8px;padding:6px;background:#ffffff;" /></p>
+                   <p style="margin: 0;"><a href="${safeQrUrl}" target="_blank" rel="noopener noreferrer">${safeQrUrl}</a></p>`
+                : `<p style="margin: 12px 0 0;"><strong>Booking QR link:</strong> <a href="${safeQrUrl}" target="_blank" rel="noopener noreferrer">${safeQrUrl}</a></p>`
+            )
+          : ''
+      }
+    `
+    : `
+      <p style="margin: 0 0 8px;"><strong>Station name:</strong> ${safeName}</p>
+      <p style="margin: 0;"><strong>Station ID:</strong> ${safeId}</p>
+    `;
 
   await client.emails.send({
     from: FROM,
     to: adminEmail,
-    subject: `[Slowtime] New station application: ${safePlainTextSnippet(stationName, 120)}`,
+    subject,
     html: brandedEmail('en', {
-      greeting: 'New station application',
-      bodyHtml: `
-        <p style="margin: 0 0 8px;"><strong>Station name:</strong> ${safeName}</p>
-        <p style="margin: 0;"><strong>Station ID:</strong> ${safeId}</p>
-      `,
-      footNote: 'Please review the application in the admin panel.',
+      greeting: context === 'approval' ? 'Station approval completed' : 'New station application',
+      bodyHtml,
+      footNote:
+        context === 'approval'
+          ? 'QR image fallback to link-only is monitored and should remain rare.'
+          : 'Please review the application in the admin panel.',
     }),
   });
 }
