@@ -3,17 +3,21 @@
  */
 import { z } from 'zod';
 import { mapZodErrors } from './auth';
+import { isValidCalendarDate } from '@/helpers/date-helper';
 
 export { mapZodErrors };
 
 const CLIENT_HISTORY_ALLOWED_STATUSES = ['confirmed', 'in_progress', 'completed', 'cancelled'] as const;
+const STATION_HISTORY_ALLOWED_STATUSES = [
+  'pending_payment',
+  'pending',
+  'confirmed',
+  'in_progress',
+  'completed',
+  'cancelled',
+] as const;
 const CLIENT_HISTORY_ALLOWED_ENTRY_TYPES = ['reservation', 'queue'] as const;
 const STRICT_DECIMAL_REGEX = /^\d+(?:\.\d+)?$/;
-
-function isValidCalendarDate(s: string): boolean {
-  const d = new Date(s + 'T00:00:00Z');
-  return !Number.isNaN(d.getTime()) && d.toISOString().slice(0, 10) === s;
-}
 
 function splitCsvValues(values: string[]): string[] {
   return values
@@ -66,7 +70,7 @@ export const stationHistoryQuerySchema = z
       .regex(/^\d{4}-\d{2}-\d{2}$/, 'to must be YYYY-MM-DD')
       .refine(isValidCalendarDate, { message: 'to must be a valid calendar date' })
       .optional(),
-    status: z.string().max(30).optional(),
+    status: z.enum(STATION_HISTORY_ALLOWED_STATUSES).optional(),
     amount_min: z
       .string()
       .optional()
@@ -170,8 +174,8 @@ export const clientHistoryQuerySchema = z
       .refine((s) => s === undefined || s.length <= 100, {
         message: 'q must be at most 100 characters',
       }),
-    sort_by: z.literal('created_at').optional(),
-    sort_order: z.enum(['asc', 'desc']).optional(),
+    sort_by: z.enum(['created_at', 'amount_paid', 'status']).optional().default('created_at'),
+    sort_order: z.enum(['asc', 'desc']).optional().default('desc'),
   })
   .refine(
     (data) => {
@@ -192,5 +196,6 @@ export const clientHistoryReceiptParamSchema = z.object({
   entryId: z.string().uuid('entryId must be a valid UUID'),
 });
 
+export type StationHistoryAllowedStatus = (typeof STATION_HISTORY_ALLOWED_STATUSES)[number];
 export type ClientHistoryQuery = z.infer<typeof clientHistoryQuerySchema>;
 export type ClientHistoryAllowedStatus = (typeof CLIENT_HISTORY_ALLOWED_STATUSES)[number];

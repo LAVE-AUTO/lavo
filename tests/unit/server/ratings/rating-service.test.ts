@@ -2,7 +2,6 @@
  * Unit tests for rating-service: submitRating business logic and race condition handler.
  * @jest-environment node
  */
-const mockFindEntryById = jest.fn();
 const mockFindEntryByIdAndUser = jest.fn();
 const mockFindStationById = jest.fn();
 const mockFindRatingByReservationId = jest.fn();
@@ -15,7 +14,6 @@ const mockListAdminRatings = jest.fn();
 const mockListPublicRatingsByStation = jest.fn();
 
 jest.mock('@/server/reservations/entry-repository', () => ({
-  findEntryById: (...args: unknown[]) => mockFindEntryById(...args),
   findEntryByIdAndUser: (...args: unknown[]) => mockFindEntryByIdAndUser(...args),
 }));
 
@@ -43,7 +41,6 @@ jest.mock('@/lib/db', () => ({
 import { submitRating, toggleRatingVisibility, getPublicRatings } from '@/server/ratings/rating-service';
 import {
   AlreadyRatedError,
-  ForbiddenError,
   NotFoundError,
   RatingWindowExpiredError,
   ReservationNotCompletedError,
@@ -80,7 +77,6 @@ const insertedRating = {
 describe('submitRating', () => {
   beforeEach(() => {
     jest.clearAllMocks();
-    mockFindEntryById.mockResolvedValue(completedEntry);
     mockFindEntryByIdAndUser.mockResolvedValue(completedEntry);
     mockFindRatingByReservationId.mockResolvedValue(undefined);
     mockInsertRating.mockResolvedValue(insertedRating);
@@ -98,14 +94,9 @@ describe('submitRating', () => {
 
   // --- Pre-check guard errors ---
 
-  it('throws NotFoundError when reservation does not exist', async () => {
-    mockFindEntryById.mockResolvedValue(undefined);
-    await expect(submitRating(userId, { reservation_id: reservationId, score: 4 })).rejects.toThrow(NotFoundError);
-  });
-
-  it('throws ForbiddenError when reservation belongs to another user', async () => {
+  it('throws NotFoundError when reservation does not exist or belongs to another user', async () => {
     mockFindEntryByIdAndUser.mockResolvedValue(undefined);
-    await expect(submitRating(userId, { reservation_id: reservationId, score: 4 })).rejects.toThrow(ForbiddenError);
+    await expect(submitRating(userId, { reservation_id: reservationId, score: 4 })).rejects.toThrow(NotFoundError);
   });
 
   it('throws ReservationNotCompletedError when status is not completed', async () => {

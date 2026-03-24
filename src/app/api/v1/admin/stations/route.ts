@@ -2,6 +2,7 @@ import { requireRole } from '@/lib/require-role';
 import { getPendingStations } from '@/server/station/station-service';
 import { successResponse, error500, fromAppError } from '@/lib/responses';
 import { AppError } from '@/lib/errors';
+import { applyNoStoreHeaders } from '@/lib/response-headers';
 import type { NextResponse } from 'next/server';
 
 /**
@@ -17,13 +18,13 @@ import type { NextResponse } from 'next/server';
  */
 export async function GET() {
   const auth = await requireRole(undefined, 'admin');
-  if (auth instanceof Response) return auth as NextResponse;
+  if (auth instanceof Response) return applyNoStoreHeaders(auth as NextResponse);
 
   try {
     const stations = await getPendingStations();
-    return successResponse(stations);
+    return applyNoStoreHeaders(successResponse(stations));
   } catch (e) {
-    if (e instanceof AppError) return fromAppError(e);
-    return error500(e);
+    if (e instanceof AppError) return applyNoStoreHeaders(fromAppError(e));
+    return applyNoStoreHeaders(error500(e));
   }
 }

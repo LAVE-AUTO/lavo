@@ -14,6 +14,38 @@ jest.mock('@/server/payments/payment-service', () => ({
   getStripeReceiptUrl: (...args: unknown[]) => mockGetStripeReceiptUrl(...args),
 }));
 
+// Mock translation files consumed by toPdfTextLines via dynamic import.
+jest.mock('../../../messages/fr.json', () => ({
+  history: {
+    receipt_title: 'Recu de reservation',
+    receipt_ref: 'Reference',
+    receipt_date: 'Date',
+    receipt_status: 'Statut',
+    receipt_station: 'Station',
+    receipt_address: 'Adresse',
+    receipt_service: 'Service',
+    receipt_entry_type: "Type d'entree",
+    receipt_total: 'Total',
+    receipt_commission: 'Commission',
+    receipt_tip: 'Pourboire',
+  },
+}));
+jest.mock('../../../messages/en.json', () => ({
+  history: {
+    receipt_title: 'Reservation Receipt',
+    receipt_ref: 'Reference',
+    receipt_date: 'Date',
+    receipt_status: 'Status',
+    receipt_station: 'Station',
+    receipt_address: 'Address',
+    receipt_service: 'Service',
+    receipt_entry_type: 'Entry type',
+    receipt_total: 'Total',
+    receipt_commission: 'Commission',
+    receipt_tip: 'Tip',
+  },
+}));
+
 import {
   getClientHistory,
   getClientHistoryReceiptDetail,
@@ -62,6 +94,7 @@ describe('client-history-service', () => {
       amount_min: undefined,
       amount_max: undefined,
       q: undefined,
+      sort_by: 'created_at',
       sort_order: 'desc',
     });
     expect(result.meta).toEqual({
@@ -100,6 +133,7 @@ describe('client-history-service', () => {
         amount_min: 2,
         amount_max: 15,
         q: '23/03/2026',
+        sort_by: 'created_at',
         sort_order: 'asc',
       })
     );
@@ -173,11 +207,23 @@ describe('client-history-service', () => {
     mockFindClientHistoryReceiptByEntryId.mockResolvedValue(row);
     mockGetStripeReceiptUrl.mockResolvedValue('https://pay.stripe.com/receipts/pi_123');
 
-    const result = await getClientHistoryReceiptPdf('client-1', row.id);
+    const result = await getClientHistoryReceiptPdf('client-1', row.id, 'fr');
 
     expect(result.filename).toBe(`receipt-${row.id}.pdf`);
     expect(result.stripe_receipt_url).toBe('https://pay.stripe.com/receipts/pi_123');
-    expect(result.text_lines[0]).toContain('Slowtime - Recu Client');
+    // First line uses the locale-aware receipt_title key.
+    expect(result.text_lines[0]).toBe('Slowtime - Recu de reservation');
+  });
+
+  it('returns english pdf labels when locale is en', async () => {
+    mockFindClientHistoryReceiptByEntryId.mockResolvedValue(row);
+    mockGetStripeReceiptUrl.mockResolvedValue(null);
+
+    const result = await getClientHistoryReceiptPdf('client-1', row.id, 'en');
+
+    expect(result.text_lines[0]).toBe('Slowtime - Reservation Receipt');
+    expect(result.text_lines[1]).toBe(`Reference: ${row.id}`);
+    expect(result.text_lines[7]).toBe('Entry type: reservation');
   });
 
   it('returns fallback pdf text when app receipt is unavailable', async () => {

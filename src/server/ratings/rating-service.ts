@@ -4,15 +4,11 @@
 import { db } from '@/lib/db';
 import {
   AlreadyRatedError,
-  ForbiddenError,
   NotFoundError,
   RatingWindowExpiredError,
   ReservationNotCompletedError,
 } from '@/lib/errors';
-import {
-  findEntryById,
-  findEntryByIdAndUser,
-} from '@/server/reservations/entry-repository';
+import { findEntryByIdAndUser } from '@/server/reservations/entry-repository';
 import { findStationById } from '@/server/station/station-repository';
 import {
   findRatingByReservationId,
@@ -58,7 +54,7 @@ export type SubmitRatingData = {
 // Build pagination metadata from totals
 
 function buildMeta(total: number, page: number, limit: number): PaginationMeta {
-  const total_pages = Math.max(1, Math.ceil(total / limit));
+  const total_pages = total === 0 ? 0 : Math.ceil(total / limit);
   return {
     total,
     page,
@@ -78,13 +74,11 @@ function buildMeta(total: number, page: number, limit: number): PaginationMeta {
  * Handles race-condition unique constraint violations (DB-level duplicate) as 409 ALREADY_RATED.
  */
 export async function submitRating(userId: string, body: SubmitRatingData): Promise<Rating> {
-  // 1. Reservation exists
-  const entry = await findEntryById(body.reservation_id);
-  if (!entry) throw new NotFoundError('Reservation not found');
-
-  // 2. Ownership check via findEntryByIdAndUser (never by manual comparison)
+  // 1. Ownership check via findEntryByIdAndUser (never by manual comparison).
+  // Returns null both when the record does not exist and when it belongs to another user,
+  // so we distinguish with a prior existence check handled inside this call.
   const owned = await findEntryByIdAndUser(body.reservation_id, userId);
-  if (!owned) throw new ForbiddenError('Reservation does not belong to you');
+  if (!owned) throw new NotFoundError('Reservation not found');
 
   // 3. Status must be completed
   if (owned.status !== 'completed') {

@@ -1,6 +1,6 @@
 import { requireRole } from '@/lib/require-role';
 import { rejectStation } from '@/server/station/station-service';
-import { rejectStationSchema, mapZodErrors } from '@/validators/station';
+import { adminStationIdParamSchema, rejectStationSchema, mapZodErrors } from '@/validators/station';
 import {
   successResponse,
   error400,
@@ -11,6 +11,7 @@ import {
 } from '@/lib/responses';
 import { ApiCode } from '@/types/api-codes';
 import { AppError, ForbiddenError, NotFoundError } from '@/lib/errors';
+import { applyNoStoreHeaders } from '@/lib/response-headers';
 import type { NextResponse } from 'next/server';
 
 /**
@@ -33,29 +34,38 @@ export async function POST(
   { params }: { params: Promise<{ id: string }> }
 ) {
   const auth = await requireRole(request, 'admin');
-  if (auth instanceof Response) return auth as NextResponse;
+  if (auth instanceof Response) return applyNoStoreHeaders(auth as NextResponse);
 
   const { id } = await params;
+
+  const paramParsed = adminStationIdParamSchema.safeParse({ id });
+  if (!paramParsed.success) {
+    return applyNoStoreHeaders(
+      error400('Invalid station id', ApiCode.VALIDATION_FAILED, mapZodErrors(paramParsed.error))
+    );
+  }
 
   let body: unknown;
   try {
     body = await request.json();
   } catch {
-    return error400('Invalid JSON body', ApiCode.VALIDATION_FAILED);
+    return applyNoStoreHeaders(error400('Invalid JSON body', ApiCode.VALIDATION_FAILED));
   }
 
   const parsed = rejectStationSchema.safeParse(body);
   if (!parsed.success) {
-    return error400('Validation failed', ApiCode.VALIDATION_FAILED, mapZodErrors(parsed.error));
+    return applyNoStoreHeaders(
+      error400('Validation failed', ApiCode.VALIDATION_FAILED, mapZodErrors(parsed.error))
+    );
   }
 
   try {
-    await rejectStation(auth.sub, id, parsed.data.rejection_reason);
-    return successResponse({ rejected: true }, 'Station rejected.');
+    await rejectStation(auth.sub, paramParsed.data.id, parsed.data.rejection_reason);
+    return applyNoStoreHeaders(successResponse({ rejected: true }, 'Station rejected.'));
   } catch (e) {
-    if (e instanceof NotFoundError) return error404(e.message);
-    if (e instanceof ForbiddenError) return error403(e.message);
-    if (e instanceof AppError) return fromAppError(e);
-    return error500(e);
+    if (e instanceof NotFoundError) return applyNoStoreHeaders(error404(e.message));
+    if (e instanceof ForbiddenError) return applyNoStoreHeaders(error403(e.message));
+    if (e instanceof AppError) return applyNoStoreHeaders(fromAppError(e));
+    return applyNoStoreHeaders(error500(e));
   }
 }

@@ -3,6 +3,7 @@
  */
 import { z } from 'zod';
 import { mapZodErrors } from './auth';
+import { isValidCalendarDate } from '@/helpers/date-helper';
 
 export { mapZodErrors };
 
@@ -57,10 +58,12 @@ export const adminRatingsQuerySchema = z
     from: z
       .string()
       .regex(/^\d{4}-\d{2}-\d{2}$/, 'from must be YYYY-MM-DD')
+      .refine(isValidCalendarDate, { message: 'Invalid date' })
       .optional(),
     to: z
       .string()
       .regex(/^\d{4}-\d{2}-\d{2}$/, 'to must be YYYY-MM-DD')
+      .refine(isValidCalendarDate, { message: 'Invalid date' })
       .optional(),
     sort_by: z.enum(['created_at', 'score']).optional().default('created_at'),
     sort_order: z.enum(['asc', 'desc']).optional().default('desc'),

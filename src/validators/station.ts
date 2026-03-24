@@ -1,6 +1,7 @@
 import { z } from 'zod';
 import { mapZodErrors } from './auth';
 import { phoneSchema } from './shared';
+import { isValidCalendarDate } from '@/helpers/date-helper';
 
 export { mapZodErrors };
 
@@ -86,6 +87,11 @@ export const stationOnboardingSubmitSchema = _step1Base
   });
 
 // ─── Admin ────────────────────────────────────────────────────────────────────
+
+/** Path param id for admin station routes (GET/approve/reject). */
+export const adminStationIdParamSchema = z.object({
+  id: z.string().uuid('Invalid station id (must be a valid UUID)'),
+});
 
 // Admin: reject a station
 export const rejectStationSchema = z.object({
@@ -302,12 +308,6 @@ export const deleteSlotsBodySchema = z
   })
   .strict();
 
-/** Valid calendar date YYYY-MM-DD (rejects e.g. 2024-02-30). */
-function isValidCalendarDate(s: string): boolean {
-  const d = new Date(s + 'T00:00:00Z');
-  return !Number.isNaN(d.getTime()) && d.toISOString().slice(0, 10) === s;
-}
-
 /** Generate slots: date or date range; optional interval_minutes. */
 export const generateSlotsBodySchema = z
   .object({
@@ -382,5 +382,6 @@ export type RegisterStationDto = z.infer<typeof registerStationSchema>;
 export type StationInfoDto = z.infer<typeof stationInfoSchema>;
 export type StationDocumentsDto = z.infer<typeof stationDocumentsSchema>;
 export type StationOnboardingSubmitDto = z.infer<typeof stationOnboardingSubmitSchema>;
+export type AdminStationIdParam = z.infer<typeof adminStationIdParamSchema>;
 export type RejectStationDto = z.infer<typeof rejectStationSchema>;
 export type ChangePasswordDto = z.infer<typeof changePasswordSchema>;

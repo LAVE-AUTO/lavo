@@ -21,6 +21,7 @@ import { ApiCode } from '@/types/api-codes';
 import { AppError } from '@/lib/errors';
 import { adminRatingsQuerySchema, mapZodErrors } from '@/validators/ratings';
 import { listAllAdminRatings } from '@/server/ratings/rating-service';
+import { applyNoStoreHeaders } from '@/lib/response-headers';
 import type { NextResponse } from 'next/server';
 
 
@@ -29,21 +30,23 @@ import type { NextResponse } from 'next/server';
 
 export async function GET(request: Request): Promise<NextResponse> {
   const auth = await requireRole(request, 'admin');
-  if (auth instanceof Response) return auth as NextResponse;
+  if (auth instanceof Response) return applyNoStoreHeaders(auth as NextResponse);
 
   // Validate and parse query params
   const { searchParams } = new URL(request.url);
   const queryParsed = adminRatingsQuerySchema.safeParse(Object.fromEntries(searchParams));
   if (!queryParsed.success) {
-    return error400('Validation failed', ApiCode.VALIDATION_FAILED, mapZodErrors(queryParsed.error));
+    return applyNoStoreHeaders(
+      error400('Validation failed', ApiCode.VALIDATION_FAILED, mapZodErrors(queryParsed.error))
+    );
   }
 
   // Fetch admin ratings list
   try {
     const result = await listAllAdminRatings(queryParsed.data);
-    return successResponse(result);
+    return applyNoStoreHeaders(successResponse(result));
   } catch (e) {
-    if (e instanceof AppError) return fromAppError(e);
-    return error500(e);
+    if (e instanceof AppError) return applyNoStoreHeaders(fromAppError(e));
+    return applyNoStoreHeaders(error500(e));
   }
 }

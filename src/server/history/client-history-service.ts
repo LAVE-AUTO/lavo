@@ -9,6 +9,7 @@ import {
 import type { ClientHistoryAllowedStatus, ClientHistoryQuery } from '@/validators/history';
 import { getStripeReceiptUrl } from '@/server/payments/payment-service';
 import { NotFoundError } from '@/lib/errors';
+import { isTrustedStripeReceiptUrl } from '@/lib/stripe-utils';
 
 const DEFAULT_CLIENT_HISTORY_STATUSES: ClientHistoryAllowedStatus[] = [
   'confirmed',
@@ -90,22 +91,6 @@ function toIsoDate(value: Date | null): string | null {
   return value ? value.toISOString() : null;
 }
 
-function isTrustedStripeReceiptUrl(value: string): boolean {
-  try {
-    const parsed = new URL(value);
-    if (parsed.protocol !== 'https:') return false;
-    if (parsed.username || parsed.password) return false;
-    if (parsed.port && parsed.port !== '443') return false;
-    const host = parsed.hostname.toLowerCase();
-    if (!(host === 'stripe.com' || host.endsWith('.stripe.com'))) return false;
-
-    // Only allow Stripe receipt pages to avoid unrelated external redirects.
-    return /^\/receipts(\/|$)/.test(parsed.pathname);
-  } catch {
-    return false;
-  }
-}
-
 function hasAppReceipt(row: ClientHistoryRepositoryItem): boolean {
   const amount = Number.parseFloat(row.amount_paid);
   return !Number.isNaN(amount) && amount > 0;
@@ -174,19 +159,26 @@ function mapHistoryItem(row: ClientHistoryRepositoryItem): ClientHistoryItem {
   };
 }
 
-function toPdfTextLines(receipt: ClientHistoryAppReceipt): string[] {
+async function toPdfTextLines(receipt: ClientHistoryAppReceipt, locale: string): Promise<string[]> {
+  const normalizedLocale = locale.startsWith('en') ? 'en' : 'fr';
+  // Load labels from the official translation files so FR and EN are consistent.
+  const messages = (await import(`../../../messages/${normalizedLocale}.json`)).default as {
+    history: Record<string, string>;
+  };
+  const t = messages.history;
+
   return [
-    'Slowtime - Recu Client',
-    `Reference: ${receipt.reference}`,
-    `Date: ${receipt.date}`,
-    `Statut: ${receipt.status}`,
-    `Station: ${receipt.station.name ?? '-'}`,
-    `Adresse: ${receipt.station.address ?? '-'} ${receipt.station.city ?? ''}`.trim(),
-    `Service: ${receipt.service.title ?? '-'}`,
-    `Type entree: ${receipt.service.entry_type}`,
-    `Montant total: ${receipt.amount.total} ${receipt.amount.currency}`,
-    `Commission: ${receipt.amount.commission ?? '-'}`,
-    `Pourboire: ${receipt.amount.tip ?? '-'}`,
+    `Slowtime - ${t['receipt_title'] ?? 'Receipt'}`,
+    `${t['receipt_ref'] ?? 'Reference'}: ${receipt.reference}`,
+    `${t['receipt_date'] ?? 'Date'}: ${receipt.date}`,
+    `${t['receipt_status'] ?? 'Status'}: ${receipt.status}`,
+    `${t['receipt_station'] ?? 'Station'}: ${receipt.station.name ?? '-'}`,
+    `${t['receipt_address'] ?? 'Address'}: ${receipt.station.address ?? '-'} ${receipt.station.city ?? ''}`.trim(),
+    `${t['receipt_service'] ?? 'Service'}: ${receipt.service.title ?? '-'}`,
+    `${t['receipt_entry_type'] ?? 'Entry type'}: ${receipt.service.entry_type}`,
+    `${t['receipt_total'] ?? 'Total'}: ${receipt.amount.total} ${receipt.amount.currency}`,
+    `${t['receipt_commission'] ?? 'Commission'}: ${receipt.amount.commission ?? '-'}`,
+    `${t['receipt_tip'] ?? 'Tip'}: ${receipt.amount.tip ?? '-'}`,
   ];
 }
 
@@ -200,6 +192,7 @@ export async function getClientHistory(
   const page = query.page ?? 1;
   const limit = query.limit ?? 20;
   const statuses = query.status ?? DEFAULT_CLIENT_HISTORY_STATUSES;
+  const sortBy = query.sort_by ?? 'created_at';
   const sortOrder = query.sort_order ?? 'desc';
 
   const result = await listClientHistory({
@@ -213,6 +206,7 @@ export async function getClientHistory(
     amount_min: query.amount_min,
     amount_max: query.amount_max,
     q: query.q,
+    sort_by: sortBy,
     sort_order: sortOrder,
   });
 
@@ -227,7 +221,7 @@ export async function getClientHistory(
       limit,
       total_pages,
       has_next_page: page < total_pages,
-      has_prev_page: page > 1 && total_pages > 0,
+      has_prev_page: page > 1,
     },
   };
 }
@@ -269,14 +263,21 @@ export async function getClientHistoryReceiptDetail(
 
 /**
  * Returns data needed by the receipt.pdf endpoint.
+ *
+ * @param userId - Authenticated client user ID.
+ * @param entryId - History entry UUID.
+ * @param locale  - BCP 47 locale string (e.g. "fr", "en-US"). Defaults to "fr".
  */
 export async function getClientHistoryReceiptPdf(
   userId: string,
-  entryId: string
+  entryId: string,
+  locale: string = 'fr'
 ): Promise<ClientHistoryPdfReceipt> {
   const detail = await getClientHistoryReceiptDetail(userId, entryId);
   const filename = `receipt-${entryId}.pdf`;
-  const text_lines = detail.app_receipt ? toPdfTextLines(detail.app_receipt) : ['Receipt unavailable'];
+  const text_lines = detail.app_receipt
+    ? await toPdfTextLines(detail.app_receipt, locale)
+    : ['Receipt unavailable'];
 
   return {
     filename,
