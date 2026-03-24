@@ -2039,8 +2039,9 @@
     "drawer_status": "Statut",
     "section_amounts": "Répartition financière",
     "section_parties": "Parties concernées",
-    "btn_download": "Télécharger le reçu",
-    "btn_close": "Fermer"
+    "btn_download": "Télécharger le reçu (PDF)",
+    "btn_close": "Fermer",
+    "pdf_generated_on": "Généré le"
   },
   "admin_dashboard": {
     "nav_dashboard": "Tableau de bord",

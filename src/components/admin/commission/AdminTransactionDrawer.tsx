@@ -2,6 +2,7 @@
 
 import { useEffect, useRef } from 'react';
 import { useTranslations } from 'next-intl';
+import { generateTransactionPdf, type PdfLabels } from './generateTransactionPdf';
 
 export type TxStatus = 'succeeded' | 'refunded' | 'failed';
 
@@ -47,27 +48,20 @@ export function AdminTransactionDrawer({ tx, onClose }: Props) {
 
   function handleDownload() {
     if (!tx) return;
-    const lines = [
-      `LAVO — ${t('page_title')}`,
-      '='.repeat(44),
-      `${t('drawer_stripe_id')}: ${tx.stripe_id}`,
-      `${t('drawer_status')}: ${STATUS_LABELS[tx.status]}`,
-      `${t('drawer_date')}: ${formatDateTime(tx.date)}`,
-      '',
-      `${t('drawer_station')}: ${tx.station}`,
-      `${t('drawer_client')}: ${tx.client}`,
-      '',
-      `${t('drawer_gross')}: ${fmt(tx.gross)}`,
-      `${t('drawer_commission')}: -${fmt(tx.commission)}`,
-      `${t('drawer_payout')}: ${fmt(tx.payout)}`,
-    ];
-    const blob = new Blob([lines.join('\n')], { type: 'text/plain;charset=utf-8' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = `lavo-tx-${tx.stripe_id.slice(-8).toLowerCase()}.txt`;
-    a.click();
-    setTimeout(() => URL.revokeObjectURL(url), 100);
+    const pdfLabels: PdfLabels = {
+      pageTitle:       t('page_title'),
+      stripeIdLabel:   t('drawer_stripe_id'),
+      grossLabel:      t('drawer_gross'),
+      commissionLabel: t('drawer_commission'),
+      payoutLabel:     t('drawer_payout'),
+      stationLabel:    t('drawer_station'),
+      clientLabel:     t('drawer_client'),
+      sectionAmounts:  t('section_amounts'),
+      sectionParties:  t('section_parties'),
+      statusText:      STATUS_LABELS[tx.status],
+      generatedOn:     t('pdf_generated_on'),
+    };
+    generateTransactionPdf(tx, pdfLabels);
   }
 
   if (!tx) return null;

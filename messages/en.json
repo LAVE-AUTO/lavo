@@ -2039,8 +2039,9 @@
     "drawer_status": "Status",
     "section_amounts": "Financial breakdown",
     "section_parties": "Parties",
-    "btn_download": "Download receipt",
-    "btn_close": "Close"
+    "btn_download": "Download receipt (PDF)",
+    "btn_close": "Close",
+    "pdf_generated_on": "Generated on"
   },
   "admin_dashboard": {
     "nav_dashboard": "Dashboard",
