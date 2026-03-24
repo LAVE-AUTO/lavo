@@ -192,3 +192,21 @@ export async function distributePenalty(
   });
   return reversal.id;
 }
+
+/**
+ * Returns the Stripe receipt URL for a PaymentIntent when available.
+ * Returns null when no charge/receipt exists yet.
+ */
+export async function getStripeReceiptUrl(paymentIntentId: string): Promise<string | null> {
+  const pi = await stripe.paymentIntents.retrieve(paymentIntentId, { expand: ['latest_charge'] });
+
+  const latestCharge = pi.latest_charge;
+  if (!latestCharge) return null;
+
+  if (typeof latestCharge !== 'string') {
+    return latestCharge.receipt_url ?? null;
+  }
+
+  const charge = await stripe.charges.retrieve(latestCharge);
+  return charge.receipt_url ?? null;
+}
