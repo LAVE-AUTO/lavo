@@ -13,7 +13,9 @@ interface ApiStation {
   id: string; name: string; legal_name: string | null; registration_number: string | null;
   address: string; city: string; description: string | null;
   service_scope: string | null; wash_post_count: number | null;
-  status: string; created_at: string; documents: ApiDocument[];
+  status: string; created_at: string; updated_at: string;
+  approved_at?: string | null; rejection_reason?: string | null;
+  documents: ApiDocument[];
 }
 
 interface Props { id: string }
@@ -214,6 +216,46 @@ export function AdminStationDetail({ id }: Props) {
             </div>
           </div>
         )}
+        {/* ── History timeline ── */}
+        <div className="rounded-2xl bg-white p-6 shadow-sm ring-1 ring-black/[0.04] dark:bg-[#1A2416] dark:ring-white/[0.06]">
+          <p className="mb-5 text-[10px] font-black uppercase tracking-[0.15em] text-[#C49A1E]">{t('detail_history')}</p>
+          <div className="flex flex-col gap-0">
+            <TimelineEvent
+              icon="submit"
+              label={t('history_submitted')}
+              date={station.created_at}
+              locale={locale}
+            />
+            {station.status === 'active' && (
+              <TimelineEvent
+                icon="check"
+                label={t('history_approved')}
+                date={station.approved_at ?? station.updated_at}
+                locale={locale}
+                color="green"
+              />
+            )}
+            {station.status === 'rejected' && (
+              <TimelineEvent
+                icon="x"
+                label={t('history_rejected')}
+                date={station.updated_at}
+                locale={locale}
+                color="red"
+                note={station.rejection_reason ?? undefined}
+              />
+            )}
+            {station.status === 'pending_admin_validation' && (
+              <TimelineEvent
+                icon="clock"
+                label={t('history_pending')}
+                locale={locale}
+                color="gold"
+                active
+              />
+            )}
+          </div>
+        </div>
       </div>
 
       {/* ── Sticky action bar ── */}
@@ -344,3 +386,68 @@ const Spinner = () => (
     <path d="M21 12a9 9 0 11-6.219-8.56" />
   </svg>
 );
+
+type TimelineColor = 'gold' | 'green' | 'red' | 'grey';
+
+function TimelineEvent({
+  icon, label, date, locale, color = 'grey', note, active,
+}: {
+  icon: 'submit' | 'check' | 'x' | 'clock';
+  label: string;
+  date?: string | null;
+  locale: string;
+  color?: TimelineColor;
+  note?: string;
+  active?: boolean;
+}) {
+  const colorMap: Record<TimelineColor, { dot: string; text: string; bg: string }> = {
+    gold:  { dot: '#C49A1E', text: '#C49A1E', bg: 'rgba(196,154,30,0.12)' },
+    green: { dot: '#00C851', text: '#00C851', bg: 'rgba(0,200,81,0.10)' },
+    red:   { dot: '#EF4444', text: '#EF4444', bg: 'rgba(239,68,68,0.10)' },
+    grey:  { dot: '#AAAAAA', text: '#888',    bg: 'rgba(170,170,170,0.10)' },
+  };
+  const c = colorMap[color];
+
+  const formattedDate = date
+    ? new Date(date).toLocaleDateString(locale === 'en' ? 'en-CA' : 'fr-CA', {
+        day: 'numeric', month: 'long', year: 'numeric', hour: '2-digit', minute: '2-digit',
+      })
+    : null;
+
+  const iconPath: Record<string, React.ReactNode> = {
+    submit: <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />,
+    check:  <polyline points="20 6 9 17 4 12" />,
+    x:      <><line x1="18" y1="6" x2="6" y2="18" /><line x1="6" y1="6" x2="18" y2="18" /></>,
+    clock:  <><circle cx="12" cy="12" r="10" /><polyline points="12 6 12 12 16 14" /></>,
+  };
+
+  return (
+    <div className="group relative flex gap-4 pb-6 last:pb-0">
+      {/* Connector line */}
+      <div className="absolute left-[15px] top-8 bottom-0 w-px bg-[#E8E4DC] group-last:hidden dark:bg-[#1A2A14]" />
+
+      {/* Icon */}
+      <div className="relative z-10 flex h-8 w-8 shrink-0 items-center justify-center rounded-full" style={{ background: c.bg }}>
+        {active && (
+          <span className="absolute inset-0 animate-ping rounded-full opacity-40" style={{ background: c.dot }} />
+        )}
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke={c.dot} strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+          {iconPath[icon]}
+        </svg>
+      </div>
+
+      {/* Content */}
+      <div className="flex flex-1 flex-col gap-0.5 pt-1">
+        <p className="text-[13px] font-bold" style={{ color: c.text }}>{label}</p>
+        {formattedDate && (
+          <p className="text-[11px] text-[#999] dark:text-[#5A5A4A]">{formattedDate}</p>
+        )}
+        {note && (
+          <div className="mt-2 rounded-[8px] border border-[#EF4444]/20 bg-[#FEF2F2] px-3 py-2 dark:border-[#3A1A1A] dark:bg-[#200D0D]">
+            <p className="text-[12px] leading-relaxed text-[#555] dark:text-[#E0B0B0]">{note}</p>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}

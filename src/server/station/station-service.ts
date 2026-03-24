@@ -14,6 +14,7 @@ import {
 import {
   sendVerificationEmail,
   sendStationApprovalEmail,
+  sendStationRejectionEmail,
   sendStationApplicationAdminNotification,
 } from '@/lib/email';
 import {
@@ -229,6 +230,15 @@ export async function rejectStation(
 
   void adminId; // logged implicitly via audit; extend with admin_logs table if needed
   await updateStationStatus(stationId, 'rejected', { rejection_reason: reason });
+
+  // Fire-and-forget rejection notification email
+  if (station.user_id) {
+    findById(station.user_id).then((user) => {
+      if (user) {
+        sendStationRejectionEmail(user.email, station.name, reason).catch(() => void 0);
+      }
+    }).catch(() => void 0);
+  }
 }
 
 export async function getMyStation(userId: string): Promise<StationWithDocuments> {
