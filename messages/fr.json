@@ -1328,7 +1328,15 @@
     "queue_complete_now": "Terminer",
     "action_error_generic": "L'opération a échoué. Veuillez réessayer.",
     "confirm_btn_confirm": "Confirmer",
-    "confirm_btn_cancel": "Annuler"
+    "confirm_btn_cancel": "Annuler",
+    "confirm_call_title": "Appeler le client",
+    "confirm_call_message": "Confirmer le démarrage du service pour ce client ?",
+    "confirm_complete_title": "Terminer le service",
+    "confirm_complete_message": "Marquer ce service comme terminé ?",
+    "confirm_cancel_title": "Annuler l'entrée",
+    "confirm_cancel_message": "Confirmer l'annulation de cette entrée ?",
+    "confirm_start_title": "Démarrer le service",
+    "confirm_start_message": "Confirmer le démarrage du service ?"
   },
   "station_reservations": {
     "page_title": "Réservations du jour",

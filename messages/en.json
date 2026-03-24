@@ -1328,7 +1328,15 @@
     "queue_complete_now": "Complete",
     "action_error_generic": "Action failed. Please try again.",
     "confirm_btn_confirm": "Confirm",
-    "confirm_btn_cancel": "Cancel"
+    "confirm_btn_cancel": "Cancel",
+    "confirm_call_title": "Call client",
+    "confirm_call_message": "Confirm starting the service for this client?",
+    "confirm_complete_title": "Complete service",
+    "confirm_complete_message": "Mark this service as completed?",
+    "confirm_cancel_title": "Cancel entry",
+    "confirm_cancel_message": "Confirm cancellation of this entry?",
+    "confirm_start_title": "Start service",
+    "confirm_start_message": "Confirm starting the service?"
   },
   "station_reservations": {
     "page_title": "Today's reservations",
