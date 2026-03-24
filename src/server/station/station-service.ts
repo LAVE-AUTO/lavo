@@ -229,6 +229,9 @@ export async function approveStation(
 
   // Fetch station user upfront — needed for Stripe account creation and approval email.
   const stationUser = station.user_id ? await findById(station.user_id) : null;
+  if (!stationUser) {
+    console.warn('[APPROVE_NO_USER]', { stationId, user_id: station.user_id });
+  }
 
   // Activate station.
   await updateStationStatus(stationId, 'active', {
@@ -286,6 +289,12 @@ export async function rejectStation(
     throw new ConflictError('Station is not pending validation');
   }
 
+  // Fetch station user upfront — needed for rejection email.
+  const stationUser = station.user_id ? await findById(station.user_id) : null;
+  if (!stationUser) {
+    console.warn('[REJECT_NO_USER]', { stationId, user_id: station.user_id });
+  }
+
   await updateStationStatus(stationId, 'rejected', { rejection_reason: reason });
 
   // Admin audit log — non-fatal.
@@ -305,12 +314,8 @@ export async function rejectStation(
   }
 
   // Rejection email — fire-and-forget.
-  if (station.user_id) {
-    findById(station.user_id).then((user) => {
-      if (user) {
-        sendStationRejectionEmail(user.email, station.name, reason).catch(() => void 0);
-      }
-    }).catch(() => void 0);
+  if (stationUser) {
+    sendStationRejectionEmail(stationUser.email, station.name, reason).catch(() => void 0);
   }
 }
 

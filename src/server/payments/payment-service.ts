@@ -193,6 +193,12 @@ export async function createStripeConnectAccount(
   email: string,
   stationId: string
 ): Promise<string> {
+  if (!email.trim()) {
+    throw new ValidationError('Invalid email for Stripe Connect account');
+  }
+  if (!stationId.trim()) {
+    throw new ValidationError('Invalid station id for Stripe Connect account');
+  }
   const account = await stripe.accounts.create({
     type: 'express',
     email,
@@ -206,6 +212,9 @@ export async function createStripeConnectAccount(
  * The station owner uses this URL to complete their Stripe profile and add bank details.
  */
 export async function createStripeOnboardingLink(accountId: string): Promise<string> {
+  if (!accountId.trim().startsWith('acct_')) {
+    throw new ValidationError('Invalid connected account id for onboarding link');
+  }
   const link = await stripe.accountLinks.create({
     account: accountId,
     refresh_url: `${APP_URL}/station/stripe-refresh`,

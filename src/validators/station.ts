@@ -92,6 +92,14 @@ export const rejectStationSchema = z.object({
   rejection_reason: z.string().min(10, 'Rejection reason must be at least 10 characters'),
 });
 
+/** Query params for GET /admin/stations (paginated pending list). */
+export const listPendingStationsQuerySchema = z.object({
+  page: z.coerce.number().int().min(1).optional().default(1),
+  per_page: z.coerce.number().int().min(1).max(100).optional().default(20),
+});
+
+export type ListPendingStationsQuery = z.infer<typeof listPendingStationsQuerySchema>;
+
 // Auth: change password
 export const changePasswordSchema = z
   .object({
@@ -382,12 +390,5 @@ export type RegisterStationDto = z.infer<typeof registerStationSchema>;
 export type StationInfoDto = z.infer<typeof stationInfoSchema>;
 export type StationDocumentsDto = z.infer<typeof stationDocumentsSchema>;
 export type StationOnboardingSubmitDto = z.infer<typeof stationOnboardingSubmitSchema>;
-/** Query params for GET /admin/stations (paginated pending list). */
-export const listPendingStationsQuerySchema = z.object({
-  page: z.coerce.number().int().min(1).optional().default(1),
-  per_page: z.coerce.number().int().min(1).max(100).optional().default(20),
-});
-
-export type ListPendingStationsQuery = z.infer<typeof listPendingStationsQuerySchema>;
 export type RejectStationDto = z.infer<typeof rejectStationSchema>;
 export type ChangePasswordDto = z.infer<typeof changePasswordSchema>;
