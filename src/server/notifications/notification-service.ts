@@ -23,6 +23,8 @@ export type NotifyEntryParams = {
     | 'client_late'
     | 'queue_pick'
     | 'queue_position_changed'
+    | 'reservation_rescheduled'
+    | 'reschedule_station_notified'
     | 'delay_request_received'
     | 'delay_accepted'
     | 'delay_refused';
@@ -43,6 +45,8 @@ const PUSH_MESSAGES: Record<NotifyEntryParams['type'], { title: string; body: st
   client_late: { title: 'You have been moved to the walk-in queue', body: 'Your reservation window has passed. You are now at the front of the walk-in queue.' },
   queue_pick: { title: 'It is your turn!', body: 'The station is ready for you. Please proceed to the wash bay.' },
   queue_position_changed: { title: 'Queue update', body: 'Your position in the queue has been updated.' },
+  reservation_rescheduled: { title: 'Reservation rescheduled', body: 'Your reservation has been moved to a new time slot.' },
+  reschedule_station_notified: { title: 'Reservation rescheduled', body: 'A client has rescheduled their reservation to a new time slot.' },
   delay_request_received: { title: 'Delay request received', body: 'A client has signaled they will be late for their reservation.' },
   delay_accepted: { title: 'Delay accepted', body: 'The station has accepted your late arrival. Please proceed as soon as possible.' },
   delay_refused: { title: 'Delay refused', body: 'The station cannot accommodate your late arrival. Please proceed to your appointment on time.' },

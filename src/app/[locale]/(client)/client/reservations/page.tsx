@@ -5,6 +5,8 @@ import { useTranslations, useLocale } from 'next-intl';
 import { Link } from '@/i18n/navigation';
 import { getFromApi, patchWithApi } from '@/services/axios-service';
 import { useToast } from '@/context';
+import { useAuth } from '@/context/auth-context';
+import { RESERVATIONS_MOCK_ENABLED, MOCK_RESERVATIONS, MOCK_QUEUE_ENTRIES } from '@/data/reservations-mock';
 
 type Tab = 'reservations' | 'queue';
 type ReservationStatus = 'confirmed' | 'in_progress' | 'completed' | 'cancelled' | 'pending_payment' | 'pending';
@@ -163,6 +165,7 @@ export default function ClientReservationsPage() {
   const t      = useTranslations('coupons');
   const locale = useLocale();
   const { success, error } = useToast();
+  const { isLoading: authLoading } = useAuth();
 
   const mountedRef = useRef(true);
   useEffect(() => { mountedRef.current = true; return () => { mountedRef.current = false; }; }, []);
@@ -178,6 +181,14 @@ export default function ClientReservationsPage() {
   const loadEntries = useCallback(async () => {
     setLoading(true);
     setLoadError(false);
+
+    // TODO: remove mock block once booking flow is connected to Stripe
+    if (RESERVATIONS_MOCK_ENABLED) {
+      setReservations(MOCK_RESERVATIONS as unknown as ClientReservation[]);
+      setQueueEntries(MOCK_QUEUE_ENTRIES as unknown as ClientQueueEntry[]);
+      setLoading(false);
+      return;
+    }
 
     const [ok, data] = await getFromApi('/me/entries?per_page=50');
     if (!mountedRef.current) return;
@@ -218,7 +229,9 @@ export default function ClientReservationsPage() {
     setLoading(false);
   }, []);
 
-  useEffect(() => { loadEntries(); }, [loadEntries]);
+  useEffect(() => {
+    if (!authLoading) loadEntries();
+  }, [authLoading, loadEntries]);
 
   const upcoming = useMemo(
     () => reservations.filter((r) => r.status === 'confirmed' || r.status === 'in_progress' || r.status === 'pending'),
@@ -228,6 +241,16 @@ export default function ClientReservationsPage() {
     () => reservations.filter((r) => r.status === 'completed' || r.status === 'cancelled'),
     [reservations],
   );
+  /* First completed reservation without a rating — used to show the rating prompt */
+  const pendingRating = useMemo(
+    () => reservations.find((r) => r.status === 'completed'),
+    [reservations],
+  );
+  /* Second completed reservation (or same if only one) — used to show the tip prompt */
+  const pendingTip = useMemo(() => {
+    const completed = reservations.filter((r) => r.status === 'completed');
+    return completed.length > 1 ? completed[1] : completed[0] ?? null;
+  }, [reservations]);
 
   const handleCancelConfirm = async () => {
     if (!cancelTarget) return;
@@ -274,6 +297,52 @@ export default function ClientReservationsPage() {
       <div className="px-4 pt-6 pb-4 max-w-2xl mx-auto">
         <h1 className="text-[22px] font-black text-[#0A0A14] dark:text-white">{t('title')}</h1>
       </div>
+
+      {/* Rating prompt — shown when a completed reservation has not yet been rated */}
+      {pendingRating && (
+        <div className="px-4 max-w-2xl mx-auto mb-4">
+          <div className="flex items-center gap-3 bg-gold/10 border border-gold/30 rounded-xl p-4">
+            <div className="w-10 h-10 rounded-full bg-gold/20 flex items-center justify-center shrink-0">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#af8408" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z" />
+              </svg>
+            </div>
+            <div className="flex-1 min-w-0">
+              <p className="text-[14px] font-bold text-[#0A0A14] dark:text-white leading-snug">{t('rating_prompt_title')}</p>
+              <p className="text-[12px] text-[#666] dark:text-[#B0B0A0] mt-0.5 truncate">{pendingRating.stationName}</p>
+            </div>
+            <Link
+              href={`/client/reservations/${pendingRating.id}/rate`}
+              className="shrink-0 px-3 py-2 bg-gold hover:bg-gold-hover rounded-[10px] text-[13px] font-black text-dark-bg transition-colors"
+            >
+              {t('rate_btn')}
+            </Link>
+          </div>
+        </div>
+      )}
+
+      {/* Tip prompt — shown when a completed reservation has not yet received a tip */}
+      {pendingTip && (
+        <div className="px-4 max-w-2xl mx-auto mb-4">
+          <div className="flex items-center gap-3 bg-[#E8E8D8] dark:bg-dark-card border border-[#D0D0C0] dark:border-tab-inactive rounded-xl p-4">
+            <div className="w-10 h-10 rounded-full bg-gold/20 flex items-center justify-center shrink-0">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#af8408" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                <line x1="12" y1="1" x2="12" y2="23" /><path d="M17 5H9.5a3.5 3.5 0 000 7h5a3.5 3.5 0 010 7H6" />
+              </svg>
+            </div>
+            <div className="flex-1 min-w-0">
+              <p className="text-[14px] font-bold text-[#0A0A14] dark:text-white leading-snug">{t('tip_prompt_title')}</p>
+              <p className="text-[12px] text-[#666] dark:text-[#B0B0A0] mt-0.5 truncate">{pendingTip.stationName}</p>
+            </div>
+            <Link
+              href={`/client/reservations/${pendingTip.id}/tip`}
+              className="shrink-0 px-3 py-2 border border-gold/50 rounded-[10px] text-[13px] font-bold text-gold hover:bg-gold/10 transition-colors"
+            >
+              {t('tip_btn')}
+            </Link>
+          </div>
+        </div>
+      )}
 
       {/* Tabs */}
       <div className="px-4 max-w-2xl mx-auto">
@@ -433,15 +502,33 @@ function ReservationCard({
         </div>
       </Link>
 
-      {onCancel && (
-        <div className="px-4 pb-3 pt-2 border-t border-[#D0D0C0] dark:border-tab-inactive">
-          <button
-            type="button"
-            onClick={onCancel}
-            className="text-[13px] font-semibold text-lavo-error hover:opacity-75 transition-opacity cursor-pointer"
-          >
-            {t('cancel_reservation')}
-          </button>
+      {(onCancel || r.status === 'completed') && (
+        <div className="px-4 pb-3 pt-2 border-t border-[#D0D0C0] dark:border-tab-inactive flex items-center gap-4">
+          {onCancel && (
+            <button
+              type="button"
+              onClick={onCancel}
+              className="text-[13px] font-semibold text-lavo-error hover:opacity-75 transition-opacity cursor-pointer"
+            >
+              {t('cancel_reservation')}
+            </button>
+          )}
+          {r.status === 'completed' && (
+            <>
+              <Link
+                href={`/client/reservations/${r.id}/rate`}
+                className="text-[13px] font-semibold text-gold hover:opacity-75 transition-opacity"
+              >
+                {t('rate_btn')}
+              </Link>
+              <Link
+                href={`/client/reservations/${r.id}/tip`}
+                className="text-[13px] font-semibold text-[#666] dark:text-[#B0B0A0] hover:text-gold hover:opacity-75 transition-colors"
+              >
+                {t('tip_btn')}
+              </Link>
+            </>
+          )}
         </div>
       )}
     </div>

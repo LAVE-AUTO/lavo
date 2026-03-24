@@ -7,6 +7,7 @@ import { Link, useRouter } from '@/i18n/navigation';
 import { useParams } from 'next/navigation';
 import { useToast } from '@/context/toast-context';
 import { getFromApi, patchWithApi } from '@/services/axios-service';
+import { RESERVATIONS_MOCK_ENABLED, findMockReservation } from '@/data/reservations-mock';
 
 /* ------------------------------------------------------------------ */
 /* API shapes                                                           */
@@ -91,6 +92,29 @@ export default function ReservationDetailPage() {
 
   const loadReservation = useCallback(async () => {
     setLoading(true);
+
+    // TODO: remove mock block once booking flow is connected to Stripe
+    if (RESERVATIONS_MOCK_ENABLED) {
+      const mock = findMockReservation(id);
+      if (!mock) { setNotFound(true); setLoading(false); return; }
+      setReservation({
+        id: mock.id,
+        stationName: mock.stationName,
+        stationAddress: mock.stationAddress,
+        stationImageUrl: mock.stationImageUrl,
+        stationLatitude: mock.stationLatitude,
+        stationLongitude: mock.stationLongitude,
+        forfaitName: mock.forfaitName,
+        date: mock.date,
+        timeSlot: mock.timeSlot,
+        duration: mock.duration,
+        totalPrice: mock.totalPrice,
+        status: mock.status,
+      });
+      setLoading(false);
+      return;
+    }
+
     const [ok, data] = await getFromApi('/me/entries?per_page=100');
     if (!mountedRef.current) return;
 
@@ -222,6 +246,16 @@ export default function ReservationDetailPage() {
   const handleConfirmCancel = async () => {
     if (!reservation) return;
     setCancelLoading(true);
+
+    // TODO: remove mock block once booking flow is connected to Stripe
+    if (RESERVATIONS_MOCK_ENABLED) {
+      setCancelLoading(false);
+      setShowCancelModal(false);
+      showSuccess(t('toast_cancel_success'));
+      router.push('/client/reservations');
+      return;
+    }
+
     const [ok] = await patchWithApi(`/me/entries/${reservation.id}/cancel`, {});
     setCancelLoading(false);
     if (ok) {
@@ -305,6 +339,20 @@ export default function ReservationDetailPage() {
               <p className="text-[12px] text-lavo-success text-center font-semibold">{t('start_ready')}</p>
             )}
 
+            <Link
+              href={`/client/reservations/${id}/reschedule`}
+              className="block w-full py-3.5 rounded-xl text-[15px] font-bold text-center text-[#0A0A14] dark:text-white border-2 border-[#D0D0C0] dark:border-tab-inactive hover:border-gold/50 hover:bg-[#E8E8D8] dark:hover:bg-dark-card transition-colors"
+            >
+              {t('reschedule_btn')}
+            </Link>
+
+            <Link
+              href={`/client/reservations/${id}/signal-delay`}
+              className="block w-full py-3.5 rounded-xl text-[15px] font-bold text-center text-[#555] dark:text-[#B0B0A0] border-2 border-[#D0D0C0] dark:border-tab-inactive hover:border-lavo-error/40 hover:text-lavo-error transition-colors"
+            >
+              {t('signal_delay_btn')}
+            </Link>
+
             <button
               type="button"
               onClick={() => setShowCancelModal(true)}
@@ -316,10 +364,32 @@ export default function ReservationDetailPage() {
         )}
 
         {isPast && (
-          <div className="bg-[#E8E8D8] dark:bg-[#1A1A18] rounded-xl border border-[#D0D0C0] dark:border-tab-inactive p-4 text-center">
-            <p className="text-[14px] text-[#666] dark:text-[#B0B0A0]">
+          <div className="bg-[#E8E8D8] dark:bg-[#1A1A18] rounded-xl border border-[#D0D0C0] dark:border-tab-inactive p-4 space-y-3">
+            <p className="text-[14px] text-[#666] dark:text-[#B0B0A0] text-center">
               {reservation.status === 'completed' ? t('past_completed') : t('past_cancelled')}
             </p>
+            {reservation.status === 'completed' && (
+              <>
+                <Link
+                  href={`/client/reservations/${id}/rate`}
+                  className="flex items-center justify-center gap-2 w-full py-3 rounded-xl border-2 border-gold/40 text-[14px] font-bold text-gold hover:bg-gold/10 hover:border-gold/60 transition-colors"
+                >
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                    <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z" />
+                  </svg>
+                  {t('rate_btn')}
+                </Link>
+                <Link
+                  href={`/client/reservations/${id}/tip`}
+                  className="flex items-center justify-center gap-2 w-full py-3 rounded-xl border-2 border-[#D0D0C0] dark:border-tab-inactive text-[14px] font-bold text-[#555] dark:text-[#B0B0A0] hover:border-gold/30 hover:text-gold transition-colors"
+                >
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                    <line x1="12" y1="1" x2="12" y2="23" /><path d="M17 5H9.5a3.5 3.5 0 000 7h5a3.5 3.5 0 010 7H6" />
+                  </svg>
+                  {t('tip_btn')}
+                </Link>
+              </>
+            )}
           </div>
         )}
       </div>

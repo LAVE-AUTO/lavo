@@ -4,6 +4,7 @@ import { use, useEffect, useState, useCallback, useRef } from 'react';
 import { useTranslations } from 'next-intl';
 import { Link } from '@/i18n/navigation';
 import { getFromApi } from '@/services/axios-service';
+import { useAuth } from '@/context/auth-context';
 import { notFound } from 'next/navigation';
 
 /* ------------------------------------------------------------------ */
@@ -69,6 +70,7 @@ interface PageProps {
 export default function QueueDetailPage({ params }: PageProps) {
   const { id } = use(params);
   const t = useTranslations('queue_detail');
+  const { isLoading: authLoading } = useAuth();
 
   const mountedRef = useRef(true);
   useEffect(() => { mountedRef.current = true; return () => { mountedRef.current = false; }; }, []);
@@ -113,7 +115,11 @@ export default function QueueDetailPage({ params }: PageProps) {
     setLoading(false);
   }, [id]);
 
-  useEffect(() => { loadEntry(); }, [loadEntry]);
+  useEffect(() => {
+    if (!authLoading) loadEntry();
+  }, [authLoading, loadEntry]);
+
+  const position = useRealtimePosition(entry?.position ?? 0);
 
   if (loading) {
     return (
@@ -122,9 +128,6 @@ export default function QueueDetailPage({ params }: PageProps) {
       </main>
     );
   }
-
-  /* useRealtimePosition must be called unconditionally (rules of hooks) */
-  const position = useRealtimePosition(entry?.position ?? 0);
 
   if (missing || !entry) notFound();
 

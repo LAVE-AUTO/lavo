@@ -1,11 +1,16 @@
-export default function AdminIndexPage() {
-  return (
-    <main className="p-6">
-      <h1 className="text-xl font-semibold">Admin</h1>
-      <p className="mt-2 text-sm text-zinc-600">
-        Cette page pourra rediriger vers le dashboard administrateur.
-      </p>
-    </main>
-  );
-}
+'use client';
 
+import { useEffect } from 'react';
+import { useRouter } from 'next/navigation';
+import { useLocale } from 'next-intl';
+
+export default function AdminIndexPage() {
+  const router = useRouter();
+  const locale = useLocale();
+
+  useEffect(() => {
+    router.replace(`/${locale}/admin/dashboard`);
+  }, [router, locale]);
+
+  return null;
+}
