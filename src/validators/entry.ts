@@ -84,6 +84,29 @@ export const stationPatchEntryBodySchema = z
   })
   .strict();
 
+/** POST /reservations/:id/reschedule — new time slot id. */
+export const rescheduleBodySchema = z
+  .object({
+    new_time_slot_id: z.string().uuid('new_time_slot_id must be a valid UUID'),
+  })
+  .strict();
+
+/** POST /reservations/:id/signal-delay — optional client message. */
+export const signalDelayBodySchema = z
+  .object({
+    message: z.string().max(500).optional(),
+  })
+  .strict()
+  .optional();
+
+/** POST /reservations/:id/refuse-delay — optional refusal reason. */
+export const refuseDelayBodySchema = z
+  .object({
+    refusal_reason: z.string().max(500).optional(),
+  })
+  .strict()
+  .optional();
+
 /** PATCH /station/entries/:entryId/position — reorder queue. */
 export const stationPatchPositionBodySchema = z
   .object({
@@ -108,3 +131,6 @@ export type UpgradeToReservationBody = z.infer<typeof upgradeToReservationBodySc
 export type StationPatchEntryBody = z.infer<typeof stationPatchEntryBodySchema>;
 export type StationPatchPositionBody = z.infer<typeof stationPatchPositionBodySchema>;
 export type EntryIdParam = z.infer<typeof entryIdParamSchema>;
+export type RescheduleBody = z.infer<typeof rescheduleBodySchema>;
+export type SignalDelayBody = z.infer<typeof signalDelayBodySchema>;
+export type RefuseDelayBody = z.infer<typeof refuseDelayBodySchema>;

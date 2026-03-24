@@ -133,6 +133,9 @@ const TEXTS = {
       extra: 'Vous pouvez dès à présent vous connecter avec votre adresse e-mail et le mot de passe choisi lors de votre inscription.',
       cta: 'Se connecter à Slowtime',
       closing: 'Bienvenue dans la communauté Slowtime !',
+      qrLabel: 'QR réservation :',
+      qrAlt: 'QR de réservation station',
+      qrLinkLabel: 'Lien de réservation QR :',
     },
     en: {
       subject: (name: string) => `[Slowtime] Your station ${name} has been approved`,
@@ -142,6 +145,9 @@ const TEXTS = {
       extra: 'You can now log in using the email address and password you chose during registration.',
       cta: 'Log in to Slowtime',
       closing: 'Welcome to the Slowtime community!',
+      qrLabel: 'Booking QR:',
+      qrAlt: 'Station booking QR',
+      qrLinkLabel: 'Booking QR link:',
     },
   },
   paymentSuccess: {
@@ -436,10 +442,10 @@ export async function sendStationApprovalEmail(
   const qrBlock = safeQrUrl
     ? (
         qrImageDataUrl
-          ? `<br/><br/><p><strong>QR réservation :</strong></p>
-             <p style="margin: 10px 0;"><img src="${qrImageDataUrl}" alt="QR de reservation station" width="220" height="220" style="display:block;border:1px solid #e8e4da;border-radius:8px;padding:6px;background:#ffffff;" /></p>
+          ? `<br/><br/><p><strong>${t.qrLabel}</strong></p>
+             <p style="margin: 10px 0;"><img src="${qrImageDataUrl}" alt="${t.qrAlt}" width="220" height="220" style="display:block;border:1px solid #e8e4da;border-radius:8px;padding:6px;background:#ffffff;" /></p>
              <p><a href="${safeQrUrl}" target="_blank" rel="noopener noreferrer">${safeQrUrl}</a></p>`
-          : `<br/><br/><p><strong>Lien de réservation QR :</strong> <a href="${safeQrUrl}" target="_blank" rel="noopener noreferrer">${safeQrUrl}</a></p>`
+          : `<br/><br/><p><strong>${t.qrLinkLabel}</strong> <a href="${safeQrUrl}" target="_blank" rel="noopener noreferrer">${safeQrUrl}</a></p>`
       )
     : '';
 

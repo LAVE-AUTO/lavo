@@ -63,11 +63,12 @@ describe('approveStation', () => {
     );
   });
 
-  it('keeps QR public URL generation locale-neutral', async () => {
+  it('passes locale to QR public URL generation', async () => {
     await approveStation('admin-1', 'station-1', 'en');
 
     expect(mockBuildStationQrPublicUrl).toHaveBeenCalledWith({
       origin: APP_URL,
+      locale: 'en',
       stationId: 'station-1',
     });
   });

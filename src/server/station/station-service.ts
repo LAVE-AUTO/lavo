@@ -212,6 +212,7 @@ export async function approveStation(
   try {
     qrPublicUrl = buildStationQrPublicUrl({
       origin: APP_URL,
+      locale,
       stationId: station.id,
     });
   } catch (error) {
