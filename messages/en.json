@@ -846,6 +846,9 @@
     "rate_btn": "Leave a review",
     "rating_prompt_title": "How was your service?",
     "rating_prompt_subtitle": "Share your experience to help other clients.",
+    "tip_btn": "Leave a tip",
+    "tip_prompt_title": "Happy with the service?",
+    "tip_prompt_subtitle": "Thank your service provider with a tip.",
     "toast_cancel_success": "Reservation cancelled successfully",
     "toast_cancel_error": "Unable to cancel the reservation. Please try again.",
     "confirm_title": "Reservation confirmation",
@@ -1685,5 +1688,25 @@
     "star_3": "Fair",
     "star_4": "Good",
     "star_5": "Excellent"
+  },
+  "tip": {
+    "page_title": "Leave a tip",
+    "subtitle": "Thank your service provider for a great experience.",
+    "btn_back": "Back",
+    "btn_retry": "Retry",
+    "error_load": "Unable to load reservation data.",
+    "amount_label": "Choose an amount",
+    "custom_label": "Or enter a custom amount",
+    "custom_placeholder": "0.00",
+    "amount_preview": "Selected tip",
+    "btn_submit": "Confirm tip",
+    "btn_skip": "Skip",
+    "processing": "Processing...",
+    "success_title": "Thank you!",
+    "success_desc": "Your tip has been sent to the service provider.",
+    "btn_view_station": "View station",
+    "btn_back_reservations": "View my reservations",
+    "already_tipped_title": "Tip already sent",
+    "already_tipped_desc": "You have already left a tip for this reservation."
   }
 }

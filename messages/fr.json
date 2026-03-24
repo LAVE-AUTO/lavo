@@ -846,6 +846,9 @@
     "rate_btn": "Laisser un avis",
     "rating_prompt_title": "Comment s'est passé votre service ?",
     "rating_prompt_subtitle": "Partagez votre expérience pour aider les autres clients.",
+    "tip_btn": "Laisser un pourboire",
+    "tip_prompt_title": "Satisfait du service ?",
+    "tip_prompt_subtitle": "Remerciez votre prestataire avec un pourboire.",
     "toast_cancel_success": "Réservation annulée avec succès",
     "toast_cancel_error": "Impossible d'annuler la réservation. Veuillez réessayer.",
     "confirm_title": "Confirmation de réservation",
@@ -1685,5 +1688,25 @@
     "star_3": "Correct",
     "star_4": "Bien",
     "star_5": "Excellent"
+  },
+  "tip": {
+    "page_title": "Laisser un pourboire",
+    "subtitle": "Remerciez votre prestataire pour un excellent service.",
+    "btn_back": "Retour",
+    "btn_retry": "Réessayer",
+    "error_load": "Impossible de charger les données.",
+    "amount_label": "Choisissez un montant",
+    "custom_label": "Ou entrez un montant libre",
+    "custom_placeholder": "0.00",
+    "amount_preview": "Pourboire sélectionné",
+    "btn_submit": "Confirmer le pourboire",
+    "btn_skip": "Passer",
+    "processing": "Traitement...",
+    "success_title": "Merci !",
+    "success_desc": "Votre pourboire a bien été transmis au prestataire.",
+    "btn_view_station": "Voir la fiche station",
+    "btn_back_reservations": "Retour à mes réservations",
+    "already_tipped_title": "Pourboire déjà envoyé",
+    "already_tipped_desc": "Vous avez déjà laissé un pourboire pour cette réservation."
   }
 }
