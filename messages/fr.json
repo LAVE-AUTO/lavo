@@ -850,7 +850,8 @@
     "status_pending": "En attente",
     "status_pending_payment": "Paiement en attente",
     "error_load": "Impossible de charger vos réservations.",
-    "btn_retry": "Réessayer"
+    "btn_retry": "Réessayer",
+    "reschedule_btn": "Reporter"
   },
   "queue_detail": {
     "title": "Ma file d'attente",
@@ -1655,5 +1656,38 @@
     "action_error": "Une erreur est survenue. Veuillez réessayer.",
     "btn_cancel": "Annuler",
     "btn_back": "Retour aux stations"
+  },
+  "reschedule": {
+    "page_title": "Reporter la réservation",
+    "current_booking": "Réservation actuelle",
+    "select_slot": "Choisir un nouveau créneau",
+    "no_slots": "Aucun créneau disponible pour cette station.",
+    "fee_title": "Frais de report",
+    "fee_warning": "Ce report est effectué moins de 2 heures avant votre créneau. Des frais s'appliquent.",
+    "fee_label": "Frais de report",
+    "subtotal": "Sous-total",
+    "total": "Total",
+    "btn_confirm": "Confirmer le report",
+    "btn_back": "Retour",
+    "btn_retry": "Réessayer",
+    "error_load": "Impossible de charger les données.",
+    "error_reschedule": "Impossible de reporter la réservation. Veuillez réessayer.",
+    "success_title": "Réservation reportée !",
+    "success_desc": "Votre réservation a été reportée au nouveau créneau sélectionné.",
+    "btn_view_reservation": "Voir mes réservations",
+    "reschedule_reservation": "Reporter",
+    "duration_label": "{duration} min",
+    "processing": "Traitement en cours...",
+    "payment_secured": "Paiement sécurisé par Stripe",
+    "label_date": "Date actuelle",
+    "label_time": "Heure actuelle",
+    "label_forfait": "Forfait",
+    "label_station": "Station",
+    "new_slot_label": "Nouveau créneau",
+    "available_slots_count": "{count} créneau(x) disponible(s)",
+    "confirm_modal_title": "Confirmer le report ?",
+    "confirm_modal_desc": "Votre réservation sera déplacée vers le créneau suivant :",
+    "confirm_modal_keep": "Annuler",
+    "confirm_modal_confirm": "Confirmer"
   }
 }
