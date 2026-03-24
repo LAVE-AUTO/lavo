@@ -1874,6 +1874,28 @@
     "optional": "optionnel",
     "error_action": "L'opération a échoué. Veuillez réessayer."
   },
+  "admin_settings": {
+    "page_title": "Paramètres plateforme",
+    "page_subtitle": "Configurez les règles de commission, de pénalité et les délais de traitement.",
+    "section_commission": "Commission",
+    "field_admin_share": "Part plateforme",
+    "hint_admin_share": "Pourcentage prélevé par la plateforme sur chaque transaction.",
+    "field_station_share": "Part station (calculée automatiquement)",
+    "hint_station_share": "Complément à 100 % de la part plateforme.",
+    "section_penalties": "Pénalités",
+    "field_penalty_rate": "Taux de pénalité no-show",
+    "hint_penalty_rate": "Pourcentage du montant de réservation facturé en cas d'absence du client.",
+    "section_reschedule": "Délai de report",
+    "field_reschedule_delay": "Délai de réponse report",
+    "hint_reschedule_delay": "Durée maximale laissée à la station pour accepter ou refuser une demande de report.",
+    "unit_minutes": "min",
+    "error_penalty_range": "Le taux de pénalité doit être compris entre 0 et 100 %.",
+    "error_share_range": "La part plateforme doit être comprise entre 0 et 100 %.",
+    "error_delay_range": "Le délai doit être compris entre 1 et 10 080 minutes.",
+    "save_success": "Paramètres sauvegardés.",
+    "btn_save": "Sauvegarder",
+    "btn_saving": "Sauvegarde en cours..."
+  },
   "admin_dashboard": {
     "nav_dashboard": "Tableau de bord",
     "nav_kyc": "Validation KYC",

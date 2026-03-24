@@ -1874,6 +1874,28 @@
     "optional": "optional",
     "error_action": "Action failed. Please try again."
   },
+  "admin_settings": {
+    "page_title": "Platform settings",
+    "page_subtitle": "Configure commission rules, penalties, and processing delays.",
+    "section_commission": "Commission",
+    "field_admin_share": "Platform share",
+    "hint_admin_share": "Percentage taken by the platform on each transaction.",
+    "field_station_share": "Station share (auto-calculated)",
+    "hint_station_share": "Complement to 100% of the platform share.",
+    "section_penalties": "Penalties",
+    "field_penalty_rate": "No-show penalty rate",
+    "hint_penalty_rate": "Percentage of the booking amount charged when the client does not show up.",
+    "section_reschedule": "Reschedule delay",
+    "field_reschedule_delay": "Reschedule response delay",
+    "hint_reschedule_delay": "Maximum time given to the station to accept or reject a reschedule request.",
+    "unit_minutes": "min",
+    "error_penalty_range": "The penalty rate must be between 0 and 100%.",
+    "error_share_range": "The platform share must be between 0 and 100%.",
+    "error_delay_range": "The delay must be between 1 and 10,080 minutes.",
+    "save_success": "Settings saved.",
+    "btn_save": "Save",
+    "btn_saving": "Saving..."
+  },
   "admin_dashboard": {
     "nav_dashboard": "Dashboard",
     "nav_kyc": "KYC Validation",
