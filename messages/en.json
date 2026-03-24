@@ -2027,7 +2027,20 @@
     "chip_volume": "total volume",
     "chip_commissions": "commissions",
     "chip_count": "transactions",
-    "copied": "Copied!"
+    "copied": "Copied!",
+    "drawer_title": "Transaction Details",
+    "drawer_stripe_id": "Stripe Reference",
+    "drawer_station": "Station",
+    "drawer_client": "Client",
+    "drawer_gross": "Gross amount",
+    "drawer_commission": "Platform commission",
+    "drawer_payout": "Station payout",
+    "drawer_date": "Date & time",
+    "drawer_status": "Status",
+    "section_amounts": "Financial breakdown",
+    "section_parties": "Parties",
+    "btn_download": "Download receipt",
+    "btn_close": "Close"
   },
   "admin_dashboard": {
     "nav_dashboard": "Dashboard",

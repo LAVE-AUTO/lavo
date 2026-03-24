@@ -1,66 +1,64 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useCallback } from 'react';
 import { useTranslations } from 'next-intl';
-
-type TxStatus = 'succeeded' | 'refunded' | 'failed';
-
-interface TxRow {
-  id: string; stripe_id: string; station: string; client: string;
-  gross: number; commission: number; payout: number;
-  status: TxStatus; date: string;
-}
+import { AdminTransactionDrawer, type TxRow, type TxStatus } from './AdminTransactionDrawer';
 
 // TODO: connect to API once endpoint is available (GET /admin/transactions)
 const MOCK_TRANSACTIONS: TxRow[] = [
-  { id: 't1', stripe_id: 'pi_3QzK1A2eZvKYlo2C1XaM0001', station: 'Wash Express MTL',   client: 'Sophie Martin',   gross: 29.99, commission: 3.00, payout: 26.99, status: 'succeeded', date: '2026-03-22T14:32:00Z' },
-  { id: 't2', stripe_id: 'pi_3QzK1A2eZvKYlo2C1XaM0002', station: 'AutoBrille Laval',   client: 'Jean Tremblay',   gross: 44.50, commission: 4.45, payout: 40.05, status: 'refunded',  date: '2026-03-21T11:05:00Z' },
-  { id: 't3', stripe_id: 'pi_3QzK1A2eZvKYlo2C1XaM0003', station: 'CleanCar Brossard',  client: 'Marie Côté',      gross: 19.99, commission: 2.00, payout: 17.99, status: 'succeeded', date: '2026-03-20T09:48:00Z' },
-  { id: 't4', stripe_id: 'pi_3QzK1A2eZvKYlo2C1XaM0004', station: 'Wash Express MTL',   client: 'Luc Gagnon',      gross: 34.99, commission: 3.50, payout: 31.49, status: 'succeeded', date: '2026-03-19T16:20:00Z' },
-  { id: 't5', stripe_id: 'pi_3QzK1A2eZvKYlo2C1XaM0005', station: 'NettoCar Longueuil', client: 'Isabelle Roy',    gross: 54.99, commission: 5.50, payout: 49.49, status: 'failed',    date: '2026-03-18T08:15:00Z' },
-  { id: 't6', stripe_id: 'pi_3QzK1A2eZvKYlo2C1XaM0006', station: 'AutoBrille Laval',   client: 'Marc Lavoie',     gross: 24.99, commission: 2.50, payout: 22.49, status: 'succeeded', date: '2026-03-17T13:55:00Z' },
-  { id: 't7', stripe_id: 'pi_3QzK1A2eZvKYlo2C1XaM0007', station: 'Wash Express MTL',   client: 'Sophie Martin',   gross: 29.99, commission: 3.00, payout: 26.99, status: 'succeeded', date: '2026-03-15T10:30:00Z' },
-  { id: 't8', stripe_id: 'pi_3QzK1A2eZvKYlo2C1XaM0008', station: 'CleanCar Brossard',  client: 'Jean Tremblay',   gross: 19.99, commission: 2.00, payout: 17.99, status: 'refunded',  date: '2026-03-14T07:45:00Z' },
+  { id: 't1', stripe_id: 'pi_3QzK1A2eZvKYlo2C1XaM0001', station: 'Wash Express MTL',   client: 'Sophie Martin',  gross: 29.99, commission: 3.00, payout: 26.99, status: 'succeeded', date: '2026-03-22T14:32:00Z' },
+  { id: 't2', stripe_id: 'pi_3QzK1A2eZvKYlo2C1XaM0002', station: 'AutoBrille Laval',   client: 'Jean Tremblay',  gross: 44.50, commission: 4.45, payout: 40.05, status: 'refunded',  date: '2026-03-21T11:05:00Z' },
+  { id: 't3', stripe_id: 'pi_3QzK1A2eZvKYlo2C1XaM0003', station: 'CleanCar Brossard',  client: 'Marie Côté',     gross: 19.99, commission: 2.00, payout: 17.99, status: 'succeeded', date: '2026-03-20T09:48:00Z' },
+  { id: 't4', stripe_id: 'pi_3QzK1A2eZvKYlo2C1XaM0004', station: 'Wash Express MTL',   client: 'Luc Gagnon',     gross: 34.99, commission: 3.50, payout: 31.49, status: 'succeeded', date: '2026-03-19T16:20:00Z' },
+  { id: 't5', stripe_id: 'pi_3QzK1A2eZvKYlo2C1XaM0005', station: 'NettoCar Longueuil', client: 'Isabelle Roy',   gross: 54.99, commission: 5.50, payout: 49.49, status: 'failed',    date: '2026-03-18T08:15:00Z' },
+  { id: 't6', stripe_id: 'pi_3QzK1A2eZvKYlo2C1XaM0006', station: 'AutoBrille Laval',   client: 'Marc Lavoie',    gross: 24.99, commission: 2.50, payout: 22.49, status: 'succeeded', date: '2026-03-17T13:55:00Z' },
+  { id: 't7', stripe_id: 'pi_3QzK1A2eZvKYlo2C1XaM0007', station: 'Wash Express MTL',   client: 'Sophie Martin',  gross: 29.99, commission: 3.00, payout: 26.99, status: 'succeeded', date: '2026-03-15T10:30:00Z' },
+  { id: 't8', stripe_id: 'pi_3QzK1A2eZvKYlo2C1XaM0008', station: 'CleanCar Brossard',  client: 'Jean Tremblay',  gross: 19.99, commission: 2.00, payout: 17.99, status: 'refunded',  date: '2026-03-14T07:45:00Z' },
 ];
 
-const STATUS_STYLE: Record<TxStatus, { badge: string; dot: string }> = {
-  succeeded: { badge: 'bg-[#F0FDF4] text-[#15803D] ring-1 ring-[#22C55E]/20', dot: 'bg-[#22C55E]' },
-  refunded:  { badge: 'bg-[#EFF6FF] text-[#1D4ED8] ring-1 ring-[#3B82F6]/20', dot: 'bg-[#3B82F6]' },
-  failed:    { badge: 'bg-[#FFF1F2] text-[#BE123C] ring-1 ring-[#FB7185]/20', dot: 'bg-[#F43F5E]' },
+const STATUS_META: Record<TxStatus, { badge: string; dot: string; bar: string; icon: string }> = {
+  succeeded: { badge: 'bg-[#F0FDF4] text-[#15803D] ring-1 ring-[#22C55E]/20', dot: 'bg-[#22C55E]', bar: 'bg-[#22C55E]',  icon: '#22C55E' },
+  refunded:  { badge: 'bg-[#EFF6FF] text-[#1D4ED8] ring-1 ring-[#3B82F6]/20', dot: 'bg-[#3B82F6]', bar: 'bg-[#3B82F6]',  icon: '#3B82F6' },
+  failed:    { badge: 'bg-[#FFF1F2] text-[#BE123C] ring-1 ring-[#FB7185]/20', dot: 'bg-[#F43F5E]', bar: 'bg-[#F43F5E]',  icon: '#F43F5E' },
 };
 
+function fmt(n: number) { return n.toLocaleString('fr-CA', { style: 'currency', currency: 'CAD' }); }
 function formatDate(d: string) {
-  try { return new Date(d).toLocaleDateString('fr-CA', { day: 'numeric', month: 'short', year: 'numeric' }); }
+  try { return new Date(d).toLocaleDateString('fr-CA', { day: 'numeric', month: 'short' }); }
   catch { return d; }
 }
-function fmt(n: number) {
-  return n.toLocaleString('fr-CA', { style: 'currency', currency: 'CAD' });
+function formatTime(d: string) {
+  try { return new Date(d).toLocaleTimeString('fr-CA', { hour: '2-digit', minute: '2-digit' }); }
+  catch { return ''; }
 }
-function shortId(s: string) { return s.slice(-8).toUpperCase(); }
+function shortId(s: string) { return '…' + s.slice(-8).toUpperCase(); }
 
 export function AdminTransactionsView() {
   const t = useTranslations('admin_transactions');
-  const [filter, setFilter] = useState<TxStatus | 'all'>('all');
-  const [query, setQuery]   = useState('');
-  const [copied, setCopied] = useState<string | null>(null);
+  const [filter, setFilter]     = useState<TxStatus | 'all'>('all');
+  const [query, setQuery]       = useState('');
+  const [copied, setCopied]     = useState<string | null>(null);
+  const [selected, setSelected] = useState<TxRow | null>(null);
 
   const q        = query.toLowerCase();
   const filtered = MOCK_TRANSACTIONS
     .filter((tx) => filter === 'all' || tx.status === filter)
     .filter((tx) => !q || tx.stripe_id.toLowerCase().includes(q) || tx.station.toLowerCase().includes(q) || tx.client.toLowerCase().includes(q));
 
-  const succeeded = MOCK_TRANSACTIONS.filter((tx) => tx.status === 'succeeded');
-  const volume    = succeeded.reduce((s, tx) => s + tx.gross, 0);
-  const commTotal = succeeded.reduce((s, tx) => s + tx.commission, 0);
-
+  const succeeded  = MOCK_TRANSACTIONS.filter((tx) => tx.status === 'succeeded');
+  const volume     = succeeded.reduce((s, tx) => s + tx.gross, 0);
+  const commTotal  = succeeded.reduce((s, tx) => s + tx.commission, 0);
   const counts: Record<string, number> = { all: MOCK_TRANSACTIONS.length };
   for (const tx of MOCK_TRANSACTIONS) counts[tx.status] = (counts[tx.status] ?? 0) + 1;
 
-  function copyId(id: string) {
+  function copyId(e: React.MouseEvent, id: string) {
+    e.stopPropagation();
     navigator.clipboard.writeText(id).catch(() => {});
     setCopied(id);
     setTimeout(() => setCopied(null), 1800);
   }
+
+  const handleClose = useCallback(() => setSelected(null), []);
 
   const FILTERS: Array<{ key: TxStatus | 'all'; label: string; dot?: string }> = [
     { key: 'all',       label: t('filter_all') },
@@ -71,6 +69,7 @@ export function AdminTransactionsView() {
 
   return (
     <div className="flex min-h-full flex-col">
+
       {/* Header */}
       <div className="shrink-0 border-b border-[#E0DCD0] bg-[#F5F5EE] px-6 pb-0 pt-6 dark:border-[#1A2A14] dark:bg-[#0C1209]">
         <div className="flex items-start justify-between gap-4">
@@ -92,16 +91,11 @@ export function AdminTransactionsView() {
         </div>
 
         {/* Filters + search */}
-        <div className="mt-5 flex items-end justify-between gap-4 pb-0">
+        <div className="mt-5 flex items-end justify-between gap-4">
           <div className="flex flex-wrap gap-2">
             {FILTERS.map(({ key, label, dot }) => (
               <button key={key} type="button" onClick={() => setFilter(key)}
-                className={[
-                  'flex items-center gap-1.5 rounded-xl px-3 py-1.5 text-[11px] font-bold transition-all',
-                  filter === key
-                    ? 'bg-white text-[#1A1A0A] shadow-sm ring-1 ring-[#E0DCD0] dark:bg-[#1E2E18] dark:text-[#F0EDD4] dark:ring-[#2A3820]'
-                    : 'text-[#999] hover:text-[#555] dark:text-[#5A5A4A] dark:hover:text-[#9A9A8A]',
-                ].join(' ')}>
+                className={['flex items-center gap-1.5 rounded-xl px-3 py-1.5 text-[11px] font-bold transition-all', filter === key ? 'bg-white text-[#1A1A0A] shadow-sm ring-1 ring-[#E0DCD0] dark:bg-[#1E2E18] dark:text-[#F0EDD4] dark:ring-[#2A3820]' : 'text-[#999] hover:text-[#555] dark:text-[#5A5A4A] dark:hover:text-[#9A9A8A]'].join(' ')}>
                 {dot && <span className="h-1.5 w-1.5 rounded-full" style={{ background: filter === key ? dot : '#CCCCCC' }} />}
                 {label}
                 <span className={['min-w-[16px] rounded-full px-1 py-0.5 text-center text-[10px] font-black', filter === key ? 'bg-[#C49A1E] text-[#0C1209]' : 'bg-[#E8E4DC] text-[#AAAAAA] dark:bg-[#1E2E18] dark:text-[#4A4A3A]'].join(' ')}>{counts[key] ?? 0}</span>
@@ -116,7 +110,7 @@ export function AdminTransactionsView() {
         </div>
       </div>
 
-      {/* Table */}
+      {/* List */}
       <div className="flex-1 overflow-y-auto bg-[#F5F5EE] p-6 dark:bg-[#0C1209]">
         {!filtered.length ? (
           <div className="flex flex-col items-center gap-3 py-24 text-center">
@@ -126,49 +120,62 @@ export function AdminTransactionsView() {
             <p className="text-[13px] font-semibold text-[#999]">{q ? t('empty_search') : t('empty_transactions')}</p>
           </div>
         ) : (
-          <div className="overflow-hidden rounded-2xl border border-[#E8E4DC] shadow-sm dark:border-[#1E2E18]">
-            {/* Header */}
-            <div className="grid grid-cols-[1fr_120px_100px_100px_120px_80px] items-center gap-3 border-b border-[#E8E4DC] bg-[#F9F8F5] px-5 py-3 dark:border-[#1E2E18] dark:bg-[#0E1A0C]">
-              {[t('col_reference'), t('col_gross'), t('col_commission'), t('col_payout'), t('col_status'), t('col_date')].map((h, i) => (
-                <span key={i} className={`text-[10px] font-black uppercase tracking-widest text-[#AAAAAA] dark:text-[#4A4A3A] ${i >= 1 && i <= 3 ? 'text-right' : ''}`}>{h}</span>
-              ))}
-            </div>
-            {/* Rows */}
-            {filtered.map((tx, idx) => {
-              const s = STATUS_STYLE[tx.status];
-              const isCopied = copied === tx.stripe_id;
+          <div className="flex flex-col gap-2.5">
+            {filtered.map((tx) => {
+              const s = STATUS_META[tx.status];
               return (
-                <div key={tx.id}
-                  className={`grid grid-cols-[1fr_120px_100px_100px_120px_80px] items-center gap-3 border-b px-5 py-3.5 transition-colors last:border-0 ${idx % 2 === 0 ? 'border-[#F2EFE8] bg-white dark:border-[#1A2A14] dark:bg-[#131E10]' : 'border-[#F2EFE8] bg-[#FAFAF7] dark:border-[#1A2A14] dark:bg-[#111C0E]'}`}>
+                <button key={tx.id} type="button" onClick={() => setSelected(tx)}
+                  className="group flex w-full items-center gap-4 overflow-hidden rounded-2xl border border-[#E8E4DC] bg-white text-left shadow-sm transition-all duration-150 hover:-translate-y-0.5 hover:shadow-md dark:border-[#1E2E18] dark:bg-[#131E10]">
 
-                  {/* Reference */}
-                  <div className="flex min-w-0 flex-col gap-0.5">
-                    <button type="button" onClick={() => copyId(tx.stripe_id)}
-                      className="group flex w-fit items-center gap-1.5 rounded-lg border border-[#E8E4DC] bg-[#F5F2EC] px-2.5 py-1 transition-colors hover:border-[#C49A1E]/40 hover:bg-[#FFF8E8] dark:border-[#1E2E18] dark:bg-[#0E1A0C] dark:hover:border-[#C49A1E]/30">
-                      <span className="font-mono text-[11px] font-bold text-[#555] dark:text-[#9A9A8A]">…{shortId(tx.stripe_id)}</span>
-                      {isCopied
-                        ? <span className="text-[10px] font-bold text-[#22C55E]">{t('copied')}</span>
-                        : <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" className="text-[#BBBBAA] group-hover:text-[#C49A1E]"><rect x="9" y="9" width="13" height="13" rx="2" /><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1" /></svg>
-                      }
-                    </button>
-                    <p className="truncate text-[11px] text-[#BBBBAA] dark:text-[#4A4A3A]">{tx.station} · {tx.client}</p>
+                  {/* Left status accent bar */}
+                  <div className={`h-full w-1 self-stretch shrink-0 ${s.bar}`} />
+
+                  {/* Reference + parties */}
+                  <div className="flex min-w-0 flex-1 flex-col gap-1 py-4 pr-0">
+                    <div className="flex items-center gap-2">
+                      <button type="button" onClick={(e) => copyId(e, tx.stripe_id)}
+                        className="flex items-center gap-1.5 rounded-lg border border-[#E8E4DC] bg-[#F5F2EC] px-2 py-0.5 transition-colors hover:border-[#C49A1E]/40 hover:bg-[#FFF8E8] dark:border-[#1E2E18] dark:bg-[#0E1A0C] dark:hover:border-[#C49A1E]/30">
+                        <span className="font-mono text-[11px] font-bold text-[#555] dark:text-[#9A9A8A]">{shortId(tx.stripe_id)}</span>
+                        {copied === tx.stripe_id
+                          ? <span className="text-[10px] font-bold text-[#22C55E]">{t('copied')}</span>
+                          : <svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" className="text-[#BBBBAA]"><rect x="9" y="9" width="13" height="13" rx="2" /><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1" /></svg>
+                        }
+                      </button>
+                      <span className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-bold ${s.badge}`}>
+                        <span className={`h-1.5 w-1.5 rounded-full ${s.dot}`} />{t(`status_${tx.status}`)}
+                      </span>
+                    </div>
+                    <p className="truncate text-[12px] text-[#666] dark:text-[#9A9A8A]">
+                      <span className="font-semibold text-[#1A1A0A] dark:text-[#F0EDD4]">{tx.station}</span>
+                      <span className="mx-1.5 text-[#CCCCCC] dark:text-[#3A3A2A]">·</span>
+                      {tx.client}
+                    </p>
                   </div>
 
-                  <p className="text-right text-[13px] font-bold text-[#1A1A0A] dark:text-[#F0EDD4]">{fmt(tx.gross)}</p>
-                  <p className="text-right text-[13px] font-bold text-[#C49A1E]">{fmt(tx.commission)}</p>
-                  <p className="text-right text-[13px] font-bold text-[#555] dark:text-[#9A9A8A]">{fmt(tx.payout)}</p>
+                  {/* Amounts */}
+                  <div className="flex shrink-0 flex-col items-end gap-1 py-4">
+                    <span className="text-[17px] font-black text-[#1A1A0A] dark:text-[#F0EDD4]">{fmt(tx.gross)}</span>
+                    <div className="flex items-center gap-2">
+                      <span className="text-[11px] font-bold text-[#C49A1E]">{fmt(tx.commission)}</span>
+                      <span className="text-[10px] text-[#CCCCCC] dark:text-[#3A3A2A]">·</span>
+                      <span className="text-[11px] text-[#888] dark:text-[#5A5A4A]">{fmt(tx.payout)}</span>
+                    </div>
+                  </div>
 
-                  <span className={`inline-flex w-fit items-center gap-1.5 rounded-full px-2.5 py-1 text-[11px] font-semibold ${s.badge}`}>
-                    <span className={`h-1.5 w-1.5 rounded-full ${s.dot}`} />{t(`status_${tx.status}`)}
-                  </span>
-
-                  <p className="text-[11px] text-[#BBBBAA] dark:text-[#4A4A3A]">{formatDate(tx.date)}</p>
-                </div>
+                  {/* Date + arrow */}
+                  <div className="flex shrink-0 flex-col items-end gap-0.5 py-4 pr-4 pl-2">
+                    <span className="text-[12px] font-semibold text-[#555] dark:text-[#9A9A8A]">{formatDate(tx.date)}</span>
+                    <span className="text-[11px] text-[#BBBBAA] dark:text-[#4A4A3A]">{formatTime(tx.date)}</span>
+                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="mt-1 text-[#CCCCCC] transition-colors group-hover:text-[#C49A1E] dark:text-[#3A3A2A]"><path d="m9 18 6-6-6-6" /></svg>
+                  </div>
+                </button>
               );
             })}
           </div>
         )}
       </div>
+
+      <AdminTransactionDrawer tx={selected} onClose={handleClose} />
     </div>
   );
 }

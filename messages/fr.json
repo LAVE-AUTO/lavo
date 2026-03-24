@@ -2027,7 +2027,20 @@
     "chip_volume": "volume total",
     "chip_commissions": "commissions",
     "chip_count": "transactions",
-    "copied": "Copié !"
+    "copied": "Copié !",
+    "drawer_title": "Détails de la transaction",
+    "drawer_stripe_id": "Référence Stripe",
+    "drawer_station": "Station",
+    "drawer_client": "Client",
+    "drawer_gross": "Montant brut",
+    "drawer_commission": "Commission plateforme",
+    "drawer_payout": "Virement station",
+    "drawer_date": "Date et heure",
+    "drawer_status": "Statut",
+    "section_amounts": "Répartition financière",
+    "section_parties": "Parties concernées",
+    "btn_download": "Télécharger le reçu",
+    "btn_close": "Fermer"
   },
   "admin_dashboard": {
     "nav_dashboard": "Tableau de bord",
