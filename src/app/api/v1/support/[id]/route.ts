@@ -15,7 +15,7 @@ export async function GET(
   { params }: { params: Promise<{ id: string }> }
 ) {
   const auth = await requireRole(request, 'client', 'station', 'admin');
-  if (auth instanceof NextResponse) return auth;
+  if (auth instanceof Response) return auth as NextResponse;
 
   const { id } = await params;
   const idResult = supportTicketIdSchema.safeParse(id);
@@ -41,7 +41,7 @@ export async function PATCH(
   { params }: { params: Promise<{ id: string }> }
 ) {
   const auth = await requireRole(request, 'admin');
-  if (auth instanceof NextResponse) return auth;
+  if (auth instanceof Response) return auth as NextResponse;
 
   const { id } = await params;
   const idResult = supportTicketIdSchema.safeParse(id);

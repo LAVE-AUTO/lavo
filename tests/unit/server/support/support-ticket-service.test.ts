@@ -325,6 +325,28 @@ describe('addSupportMessage', () => {
 
     expect(mockNotifyEntry).not.toHaveBeenCalled();
   });
+
+  // --- Closed ticket guard ---
+
+  it('throws 422 AppError when trying to message a closed (ferme) ticket', async () => {
+    mockFindTicketById.mockResolvedValue({ ...baseTicket, status: 'ferme' });
+
+    await expect(
+      addSupportMessage(userId, ticketId, 'Is it still closed?', false)
+    ).rejects.toMatchObject({ statusCode: 422 });
+
+    expect(mockAddMessage).not.toHaveBeenCalled();
+  });
+
+  it('throws 422 AppError even for admin trying to message a closed ticket', async () => {
+    mockFindTicketById.mockResolvedValue({ ...baseTicket, status: 'ferme' });
+
+    await expect(
+      addSupportMessage(adminId, ticketId, 'Admin reply on closed ticket.', true)
+    ).rejects.toMatchObject({ statusCode: 422 });
+
+    expect(mockAddMessage).not.toHaveBeenCalled();
+  });
 });
 
 // ---------------------------------------------------------------------------

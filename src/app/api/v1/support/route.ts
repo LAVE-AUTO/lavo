@@ -12,7 +12,7 @@ import { NextResponse } from 'next/server';
  */
 export async function GET(request: Request) {
   const auth = await requireRole(request, 'client', 'station', 'admin');
-  if (auth instanceof NextResponse) return auth;
+  if (auth instanceof Response) return auth as NextResponse;
 
   const { searchParams } = new URL(request.url);
   const rawStatus = searchParams.get('status') ?? undefined;
@@ -38,7 +38,7 @@ export async function GET(request: Request) {
  */
 export async function POST(request: Request) {
   const auth = await requireRole(request, 'client', 'station', 'admin');
-  if (auth instanceof NextResponse) return auth;
+  if (auth instanceof Response) return auth as NextResponse;
 
   try {
     const body = await request.json();

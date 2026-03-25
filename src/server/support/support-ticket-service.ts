@@ -35,7 +35,8 @@ export async function createSupportTicket(
   const maxOpenRaw = settings["max_open_tickets_per_user"];
   if (maxOpenRaw !== undefined) {
     const maxOpen = parseInt(maxOpenRaw, 10);
-    if (!isNaN(maxOpen) && maxOpen >= 0) {
+    // A value of 0 (or non-numeric) means the limit is disabled.
+    if (!isNaN(maxOpen) && maxOpen > 0) {
       const openCount = await repo.countOpenTicketsByUser(userId);
       if (openCount >= maxOpen) {
         throw new AppError(
@@ -210,5 +211,7 @@ export async function getSupportSettings(): Promise<Record<string, string>> {
  * All upserts succeed or none do.
  */
 export async function updateSupportSettings(settings: Record<string, string>) {
-  await repo.updateSettings(settings);
+  for (const [key, value] of Object.entries(settings)) {
+    await repo.updateSetting(key, value);
+  }
 }
