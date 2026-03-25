@@ -297,7 +297,7 @@ describe('POST /api/v1/support', () => {
 
   // --- Hostile: malformed body ---
 
-  it('returns 500 on malformed (non-JSON) body', async () => {
+  it('returns 400 on malformed (non-JSON) body', async () => {
     const req = new Request('http://localhost/api/v1/support', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -306,7 +306,7 @@ describe('POST /api/v1/support', () => {
 
     const res = await POST(req);
 
-    expect(res.status).toBe(500);
+    expect(res.status).toBe(400);
     expect(mockCreateSupportTicket).not.toHaveBeenCalled();
   });
 

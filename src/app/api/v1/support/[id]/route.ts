@@ -3,7 +3,7 @@ import { successResponse, error400, error500, fromAppError } from '@/lib/respons
 import { mapZodErrors, updateTicketStatusSchema, supportTicketIdSchema } from '@/validators/support';
 import { getTicketDetails, updateSupportTicketStatus } from '@/server/support/support-ticket-service';
 import { AppError } from '@/lib/errors';
-import { NextResponse } from 'next/server';
+import type { NextResponse } from 'next/server';
 
 /**
  * GET /api/v1/support/[id]
@@ -48,13 +48,19 @@ export async function PATCH(
     return error400('Invalid ticket ID format');
   }
 
+  let body: unknown;
   try {
-    const body = await request.json();
-    const parsed = updateTicketStatusSchema.safeParse(body);
-    if (!parsed.success) {
-      return error400('Validation failed', undefined, mapZodErrors(parsed.error));
-    }
+    body = await request.json();
+  } catch {
+    return error400('Invalid JSON body');
+  }
 
+  const parsed = updateTicketStatusSchema.safeParse(body);
+  if (!parsed.success) {
+    return error400('Validation failed', undefined, mapZodErrors(parsed.error));
+  }
+
+  try {
     const ticket = await updateSupportTicketStatus(idResult.data, parsed.data.status);
     return successResponse(ticket, 'Ticket status updated');
   } catch (e) {

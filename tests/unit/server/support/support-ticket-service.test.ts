@@ -10,7 +10,9 @@ const mockListTickets = jest.fn();
 const mockUpdateTicketStatus = jest.fn();
 const mockGetSettings = jest.fn();
 const mockUpdateSettings = jest.fn();
+const mockAssignTicket = jest.fn();
 const mockNotifyEntry = jest.fn();
+const mockDbUsersFind = jest.fn();
 
 jest.mock('@/server/support/support-ticket-repository', () => ({
   createTicket: (...args: unknown[]) => mockCreateTicket(...args),
@@ -20,10 +22,21 @@ jest.mock('@/server/support/support-ticket-repository', () => ({
   updateTicketStatus: (...args: unknown[]) => mockUpdateTicketStatus(...args),
   getSettings: (...args: unknown[]) => mockGetSettings(...args),
   updateSettings: (...args: unknown[]) => mockUpdateSettings(...args),
+  assignTicket: (...args: unknown[]) => mockAssignTicket(...args),
 }));
 
 jest.mock('@/server/notifications/notification-service', () => ({
   notifyEntry: (...args: unknown[]) => mockNotifyEntry(...args),
+}));
+
+jest.mock('@/lib/db', () => ({
+  db: {
+    query: {
+      users: {
+        findFirst: (...args: unknown[]) => mockDbUsersFind(...args),
+      },
+    },
+  },
 }));
 
 import {
@@ -34,6 +47,7 @@ import {
   updateSupportTicketStatus,
   getSupportSettings,
   updateSupportSettings,
+  assignSupportTicket,
 } from '@/server/support/support-ticket-service';
 import { AppError } from '@/lib/errors';
 
@@ -619,5 +633,91 @@ describe('updateSupportSettings', () => {
 
     expect(mockUpdateSettings).toHaveBeenCalledTimes(1);
     expect(mockUpdateSettings).toHaveBeenCalledWith({ support_email: 'ops@lavo.ca' });
+  });
+});
+
+// ---------------------------------------------------------------------------
+// assignSupportTicket
+// ---------------------------------------------------------------------------
+
+describe('assignSupportTicket', () => {
+  const adminUserId = '22222222-2222-2222-2222-222222222222';
+  const assignedTicket = { ...baseTicket, assigned_to: adminUserId };
+  const unassignedTicket = { ...baseTicket, assigned_to: null };
+
+  beforeEach(() => {
+    jest.clearAllMocks();
+    mockFindTicketById.mockResolvedValue(baseTicket);
+    mockDbUsersFind.mockResolvedValue({ id: adminUserId, role: 'admin' });
+    mockAssignTicket.mockResolvedValue(assignedTicket);
+  });
+
+  // --- Happy path: assign ---
+
+  it('assigns the ticket to an admin user and returns the updated ticket', async () => {
+    const result = await assignSupportTicket(ticketId, adminUserId);
+
+    expect(mockFindTicketById).toHaveBeenCalledWith(ticketId);
+    expect(mockDbUsersFind).toHaveBeenCalledTimes(1);
+    expect(mockAssignTicket).toHaveBeenCalledWith(ticketId, adminUserId);
+    expect(result.assigned_to).toBe(adminUserId);
+  });
+
+  // --- Happy path: unassign ---
+
+  it('unassigns the ticket when assigned_to is null (skips user lookup)', async () => {
+    mockAssignTicket.mockResolvedValueOnce(unassignedTicket);
+
+    const result = await assignSupportTicket(ticketId, null);
+
+    expect(mockDbUsersFind).not.toHaveBeenCalled();
+    expect(mockAssignTicket).toHaveBeenCalledWith(ticketId, null);
+    expect(result.assigned_to).toBeNull();
+  });
+
+  // --- Ticket not found ---
+
+  it('throws 404 AppError when the ticket does not exist', async () => {
+    mockFindTicketById.mockResolvedValueOnce(undefined);
+
+    await expect(assignSupportTicket(ticketId, adminUserId)).rejects.toMatchObject({
+      statusCode: 404,
+    });
+
+    expect(mockAssignTicket).not.toHaveBeenCalled();
+  });
+
+  // --- Target user does not exist ---
+
+  it('throws 422 AppError when the target user does not exist in the database', async () => {
+    mockDbUsersFind.mockResolvedValueOnce(undefined);
+
+    await expect(assignSupportTicket(ticketId, adminUserId)).rejects.toMatchObject({
+      statusCode: 422,
+    });
+
+    expect(mockAssignTicket).not.toHaveBeenCalled();
+  });
+
+  // --- Target user is not an admin ---
+
+  it('throws 422 AppError when the target user exists but does not have role admin', async () => {
+    mockDbUsersFind.mockResolvedValueOnce({ id: adminUserId, role: 'client' });
+
+    await expect(assignSupportTicket(ticketId, adminUserId)).rejects.toMatchObject({
+      statusCode: 422,
+    });
+
+    expect(mockAssignTicket).not.toHaveBeenCalled();
+  });
+
+  // --- repo.assignTicket returns null (ticket disappeared between find and update) ---
+
+  it('throws 404 AppError when repo.assignTicket returns null (ticket vanished mid-request)', async () => {
+    mockAssignTicket.mockResolvedValueOnce(null);
+
+    await expect(assignSupportTicket(ticketId, adminUserId)).rejects.toMatchObject({
+      statusCode: 404,
+    });
   });
 });

@@ -3,7 +3,7 @@ import { successResponse, error400, error500, fromAppError } from '@/lib/respons
 import { assignTicketSchema, mapZodErrors, supportTicketIdSchema } from '@/validators/support';
 import { assignSupportTicket } from '@/server/support/support-ticket-service';
 import { AppError } from '@/lib/errors';
-import { NextResponse } from 'next/server';
+import type { NextResponse } from 'next/server';
 
 /**
  * PATCH /api/v1/admin/support/[id]/assign

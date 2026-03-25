@@ -3,7 +3,7 @@ import { successResponse, error400, error500, fromAppError } from '@/lib/respons
 import { mapZodErrors, updateSupportSettingsSchema } from '@/validators/support';
 import { getSupportSettings, updateSupportSettings } from '@/server/support/support-ticket-service';
 import { AppError } from '@/lib/errors';
-import { NextResponse } from 'next/server';
+import type { NextResponse } from 'next/server';
 
 /**
  * GET /api/v1/admin/support/settings
@@ -30,13 +30,19 @@ export async function PATCH(request: Request) {
   const auth = await requireRole(request, 'admin');
   if (auth instanceof Response) return auth as NextResponse;
 
+  let body: unknown;
   try {
-    const body = await request.json();
-    const parsed = updateSupportSettingsSchema.safeParse(body);
-    if (!parsed.success) {
-      return error400('Validation failed', undefined, mapZodErrors(parsed.error));
-    }
+    body = await request.json();
+  } catch {
+    return error400('Invalid JSON body');
+  }
 
+  const parsed = updateSupportSettingsSchema.safeParse(body);
+  if (!parsed.success) {
+    return error400('Validation failed', undefined, mapZodErrors(parsed.error));
+  }
+
+  try {
     await updateSupportSettings(parsed.data);
     return successResponse({}, 'Support settings updated');
   } catch (e) {

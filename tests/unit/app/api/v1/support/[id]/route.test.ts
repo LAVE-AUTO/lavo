@@ -321,7 +321,7 @@ describe('PATCH /api/v1/support/[id]', () => {
 
   // --- Hostile: invalid body format ---
 
-  it('returns 500 on malformed (non-JSON) body', async () => {
+  it('returns 400 on malformed (non-JSON) body', async () => {
     const req = new Request(`http://localhost/api/v1/support/${ticketId}`, {
       method: 'PATCH',
       headers: { 'Content-Type': 'application/json' },
@@ -330,7 +330,7 @@ describe('PATCH /api/v1/support/[id]', () => {
 
     const res = await PATCH(req, { params: buildParams(ticketId) });
 
-    expect(res.status).toBe(500);
+    expect(res.status).toBe(400);
     expect(mockUpdateSupportTicketStatus).not.toHaveBeenCalled();
   });
 

@@ -3,7 +3,7 @@ import { successResponse, error400, error429, error500, fromAppError } from '@/l
 import { createTicketSchema, mapZodErrors, supportStatusFilterSchema } from '@/validators/support';
 import { createSupportTicket, getSupportTickets } from '@/server/support/support-ticket-service';
 import { AppError } from '@/lib/errors';
-import { NextResponse } from 'next/server';
+import type { NextResponse } from 'next/server';
 import { checkSlidingWindowRateLimit, normalizeRateLimitKey } from '@/lib/rate-limiter';
 
 /** Maximum number of tickets a user may create per hour. */
@@ -54,13 +54,19 @@ export async function POST(request: Request) {
   );
   if (!allowed) return error429();
 
+  let body: unknown;
   try {
-    const body = await request.json();
-    const parsed = createTicketSchema.safeParse(body);
-    if (!parsed.success) {
-      return error400('Validation failed', undefined, mapZodErrors(parsed.error));
-    }
+    body = await request.json();
+  } catch {
+    return error400('Invalid JSON body');
+  }
 
+  const parsed = createTicketSchema.safeParse(body);
+  if (!parsed.success) {
+    return error400('Validation failed', undefined, mapZodErrors(parsed.error));
+  }
+
+  try {
     const ticket = await createSupportTicket(auth.sub, parsed.data);
     return successResponse(ticket, 'Ticket created successfully', 201);
   } catch (e) {
