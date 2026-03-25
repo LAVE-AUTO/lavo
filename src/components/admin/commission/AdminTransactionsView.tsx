@@ -5,17 +5,17 @@ import { useTranslations } from 'next-intl';
 import { useToast } from '@/context/toast-context';
 import { AdminTransactionDrawer, type TxRow, type TxStatus } from './AdminTransactionDrawer';
 
-// TODO: connect to API once endpoint is available (GET /admin/transactions)
-const MOCK_TRANSACTIONS: TxRow[] = [
-  { id: 't1', stripe_id: 'pi_3QzK1A2eZvKYlo2C1XaM0001', station: 'Wash Express MTL',   client: 'Sophie Martin',  gross: 29.99, commission: 3.00, payout: 26.99, status: 'succeeded', date: '2026-03-22T14:32:00Z' },
-  { id: 't2', stripe_id: 'pi_3QzK1A2eZvKYlo2C1XaM0002', station: 'AutoBrille Laval',   client: 'Jean Tremblay',  gross: 44.50, commission: 4.45, payout: 40.05, status: 'refunded',  date: '2026-03-21T11:05:00Z' },
-  { id: 't3', stripe_id: 'pi_3QzK1A2eZvKYlo2C1XaM0003', station: 'CleanCar Brossard',  client: 'Marie Côté',     gross: 19.99, commission: 2.00, payout: 17.99, status: 'succeeded', date: '2026-03-20T09:48:00Z' },
-  { id: 't4', stripe_id: 'pi_3QzK1A2eZvKYlo2C1XaM0004', station: 'Wash Express MTL',   client: 'Luc Gagnon',     gross: 34.99, commission: 3.50, payout: 31.49, status: 'succeeded', date: '2026-03-19T16:20:00Z' },
-  { id: 't5', stripe_id: 'pi_3QzK1A2eZvKYlo2C1XaM0005', station: 'NettoCar Longueuil', client: 'Isabelle Roy',   gross: 54.99, commission: 5.50, payout: 49.49, status: 'failed',    date: '2026-03-18T08:15:00Z' },
-  { id: 't6', stripe_id: 'pi_3QzK1A2eZvKYlo2C1XaM0006', station: 'AutoBrille Laval',   client: 'Marc Lavoie',    gross: 24.99, commission: 2.50, payout: 22.49, status: 'succeeded', date: '2026-03-17T13:55:00Z' },
-  { id: 't7', stripe_id: 'pi_3QzK1A2eZvKYlo2C1XaM0007', station: 'Wash Express MTL',   client: 'Sophie Martin',  gross: 29.99, commission: 3.00, payout: 26.99, status: 'succeeded', date: '2026-03-15T10:30:00Z' },
-  { id: 't8', stripe_id: 'pi_3QzK1A2eZvKYlo2C1XaM0008', station: 'CleanCar Brossard',  client: 'Jean Tremblay',  gross: 19.99, commission: 2.00, payout: 17.99, status: 'refunded',  date: '2026-03-14T07:45:00Z' },
-];
+// MOCK DATA — replace with API call before shipping (GET /admin/transactions)
+const MOCK_TRANSACTIONS: TxRow[] = process.env.NODE_ENV === 'development' ? [
+  { id: 't1', stripe_id: 'pi_3QzK1A2eZvKYlo2C1XaM0001', station: 'Wash Express MTL',   client: 'Client A', gross: 29.99, commission: 3.00, payout: 26.99, status: 'succeeded', date: '2026-03-22T14:32:00Z' },
+  { id: 't2', stripe_id: 'pi_3QzK1A2eZvKYlo2C1XaM0002', station: 'AutoBrille Laval',   client: 'Client B', gross: 44.50, commission: 4.45, payout: 40.05, status: 'refunded',  date: '2026-03-21T11:05:00Z' },
+  { id: 't3', stripe_id: 'pi_3QzK1A2eZvKYlo2C1XaM0003', station: 'CleanCar Brossard',  client: 'Client C', gross: 19.99, commission: 2.00, payout: 17.99, status: 'succeeded', date: '2026-03-20T09:48:00Z' },
+  { id: 't4', stripe_id: 'pi_3QzK1A2eZvKYlo2C1XaM0004', station: 'Wash Express MTL',   client: 'Client D', gross: 34.99, commission: 3.50, payout: 31.49, status: 'succeeded', date: '2026-03-19T16:20:00Z' },
+  { id: 't5', stripe_id: 'pi_3QzK1A2eZvKYlo2C1XaM0005', station: 'NettoCar Longueuil', client: 'Client E', gross: 54.99, commission: 5.50, payout: 49.49, status: 'failed',    date: '2026-03-18T08:15:00Z' },
+  { id: 't6', stripe_id: 'pi_3QzK1A2eZvKYlo2C1XaM0006', station: 'AutoBrille Laval',   client: 'Client F', gross: 24.99, commission: 2.50, payout: 22.49, status: 'succeeded', date: '2026-03-17T13:55:00Z' },
+  { id: 't7', stripe_id: 'pi_3QzK1A2eZvKYlo2C1XaM0007', station: 'Wash Express MTL',   client: 'Client A', gross: 29.99, commission: 3.00, payout: 26.99, status: 'succeeded', date: '2026-03-15T10:30:00Z' },
+  { id: 't8', stripe_id: 'pi_3QzK1A2eZvKYlo2C1XaM0008', station: 'CleanCar Brossard',  client: 'Client B', gross: 19.99, commission: 2.00, payout: 17.99, status: 'refunded',  date: '2026-03-14T07:45:00Z' },
+] : [];
 
 const STATUS_META: Record<TxStatus, { badge: string; dot: string; bar: string; icon: string }> = {
   succeeded: { badge: 'bg-[#F0FDF4] text-[#15803D] ring-1 ring-[#22C55E]/20', dot: 'bg-[#22C55E]', bar: 'bg-[#22C55E]',  icon: '#22C55E' },

@@ -1,4 +1,4 @@
-// TODO: connect to API once endpoint is available (GET /admin/disputes)
+// MOCK DATA — replace with API call before shipping (GET /admin/disputes)
 
 export type DisputeStatus = 'open' | 'refunded_full' | 'refunded_partial' | 'closed';
 export type TimelineActor = 'client' | 'station' | 'admin';
@@ -27,7 +27,7 @@ export interface DisputeRow {
   events: TimelineEvent[];
 }
 
-export const MOCK_DISPUTES: DisputeRow[] = [
+export const MOCK_DISPUTES: DisputeRow[] = process.env.NODE_ENV === 'development' ? [
   {
     id: 'd1',
     client:  { name: 'Sophie Martin',   email: 'sophie.martin@gmail.com'   },
@@ -97,4 +97,4 @@ export const MOCK_DISPUTES: DisputeRow[] = [
       { id: 'e14', date: '2026-03-20T13:15:00Z', label: 'Litige ouvert par le client.',                      by: 'client'  },
     ],
   },
-];
+] : [];
