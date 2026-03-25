@@ -3,6 +3,7 @@
 import { useState, useRef, useEffect } from 'react';
 import { useTranslations } from 'next-intl';
 import { useToast } from '@/context/toast-context';
+import { postWithApi } from '@/services/axios-service';
 
 interface Props {
   onCreated: () => void;
@@ -28,11 +29,15 @@ export function SupportCreateForm({ onCreated, onCancel }: Props) {
     if (!message.trim()) { toastError(t('error_message_empty')); return; }
     setSaving(true);
     try {
-      // TODO: connect to API once endpoint is available (POST /support)
-      await new Promise((r) => setTimeout(r, 600));
+      // TODO: endpoint not yet implemented — returns 501 (POST /api/v1/support)
+      const [ok] = await postWithApi('/support', { subject: subject.trim(), message: message.trim() });
       if (!mountedRef.current) return;
-      toastSuccess(t('submit_success'));
-      onCreated();
+      if (ok) {
+        toastSuccess(t('submit_success'));
+        onCreated();
+      } else {
+        toastError(t('submit_error'));
+      }
     } catch {
       if (mountedRef.current) toastError(t('submit_error'));
     } finally {
