@@ -64,6 +64,7 @@ export function AdminDisputeDetail({ id }: Props) {
   const isResolved = dispute.status !== 'open';
 
   async function handleAction(payload: { amount?: number; reason?: string }) {
+    if (!dispute) return;
     setBusy(true);
     try {
       // TODO: connect to API once endpoint is available (POST /admin/disputes/:id/refund or /close)
@@ -74,8 +75,8 @@ export function AdminDisputeDetail({ id }: Props) {
       let newStatus: DisputeStatus = dispute.status;
       let eventLabel = '';
       if (modal === 'refund_full')    { newStatus = 'refunded_full';    eventLabel = t('event_refund_full',    { amount: formatAmount(dispute.reservation.amount_paid) }); }
-      if (modal === 'refund_partial') { newStatus = 'refunded_partial'; eventLabel = t('event_refund_partial', { amount: formatAmount(payload.amount!) }); }
-      if (modal === 'close_dispute')  { newStatus = 'closed';           eventLabel = t('event_closed',         { reason: payload.reason }); }
+      if (modal === 'refund_partial') { newStatus = 'refunded_partial'; eventLabel = t('event_refund_partial', { amount: formatAmount(payload.amount ?? 0) }); }
+      if (modal === 'close_dispute')  { newStatus = 'closed';           eventLabel = t('event_closed',         { reason: payload.reason ?? '' }); }
 
       setDispute((prev) => prev ? {
         ...prev, status: newStatus,
