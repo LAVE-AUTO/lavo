@@ -79,7 +79,6 @@ describe('createSupportTicket', () => {
   beforeEach(() => {
     jest.clearAllMocks();
     mockGetSettings.mockResolvedValue({});
-    mockCountOpenTicketsByUser.mockResolvedValue(0);
     mockCreateTicket.mockResolvedValue(baseTicket);
     mockNotifyEntry.mockResolvedValue(undefined);
   });
@@ -98,7 +97,8 @@ describe('createSupportTicket', () => {
         status: 'ouvert',
         ticket_number: expect.stringMatching(/^SUP-[A-F0-9]{8}$/),
       }),
-      createInput.message
+      createInput.message,
+      undefined // maxOpen not set when setting is absent
     );
     expect(mockNotifyEntry).toHaveBeenCalledWith({
       userId,
@@ -120,56 +120,82 @@ describe('createSupportTicket', () => {
 
     expect(mockCreateTicket).toHaveBeenCalledWith(
       expect.objectContaining({ priority: 'normal', category: 'autre' }),
-      expect.any(String)
+      expect.any(String),
+      undefined
     );
   });
 
   // --- max_open_tickets_per_user enforcement ---
+  // The limit is now enforced atomically inside repo.createTicket (same transaction).
+  // The service passes maxOpen as the 3rd argument; the repo throws 422 if exceeded.
 
   it('throws 422 AppError when open ticket count meets the configured limit', async () => {
     mockGetSettings.mockResolvedValue({ max_open_tickets_per_user: '2' });
-    mockCountOpenTicketsByUser.mockResolvedValue(2);
+    // The repo throws AppError when the count inside the transaction exceeds the limit.
+    mockCreateTicket.mockRejectedValue(new AppError('Ticket limit reached', 422));
 
     await expect(createSupportTicket(userId, createInput)).rejects.toThrow(AppError);
     await expect(createSupportTicket(userId, createInput)).rejects.toMatchObject({
       statusCode: 422,
     });
-    expect(mockCreateTicket).not.toHaveBeenCalled();
+    // createTicket IS called (the limit check is inside it), but it throws.
+    expect(mockCreateTicket).toHaveBeenCalledWith(
+      expect.any(Object),
+      expect.any(String),
+      2 // maxOpen passed to repo
+    );
   });
 
   it('allows creation when open count is below the configured limit', async () => {
     mockGetSettings.mockResolvedValue({ max_open_tickets_per_user: '3' });
-    mockCountOpenTicketsByUser.mockResolvedValue(2);
 
     await expect(createSupportTicket(userId, createInput)).resolves.toBeDefined();
     expect(mockCreateTicket).toHaveBeenCalledTimes(1);
+    expect(mockCreateTicket).toHaveBeenCalledWith(
+      expect.any(Object),
+      expect.any(String),
+      3 // maxOpen passed to repo
+    );
   });
 
   it('enforces the limit when max_open_tickets_per_user is 0 (zero tickets allowed)', async () => {
-    // A value of "0" means the limit is zero — any existing open ticket blocks creation.
+    // A value of "0" means the limit is zero — the repo throws inside the transaction.
     mockGetSettings.mockResolvedValue({ max_open_tickets_per_user: '0' });
-    mockCountOpenTicketsByUser.mockResolvedValue(0);
+    mockCreateTicket.mockRejectedValue(new AppError('Ticket limit reached', 422));
 
     await expect(createSupportTicket(userId, createInput)).rejects.toMatchObject({
       statusCode: 422,
     });
-    expect(mockCreateTicket).not.toHaveBeenCalled();
+    expect(mockCreateTicket).toHaveBeenCalledWith(
+      expect.any(Object),
+      expect.any(String),
+      0 // maxOpen=0 passed to repo
+    );
   });
 
   it('ignores a non-numeric setting value and does not enforce the limit', async () => {
     mockGetSettings.mockResolvedValue({ max_open_tickets_per_user: 'disabled' });
-    mockCountOpenTicketsByUser.mockResolvedValue(99);
 
     await expect(createSupportTicket(userId, createInput)).resolves.toBeDefined();
     expect(mockCreateTicket).toHaveBeenCalledTimes(1);
+    // maxOpen should be undefined when the setting is non-numeric.
+    expect(mockCreateTicket).toHaveBeenCalledWith(
+      expect.any(Object),
+      expect.any(String),
+      undefined
+    );
   });
 
-  it('skips the open-ticket count query when the setting is absent', async () => {
+  it('passes undefined maxOpen when the setting is absent', async () => {
     mockGetSettings.mockResolvedValue({});
 
     await createSupportTicket(userId, createInput);
 
-    expect(mockCountOpenTicketsByUser).not.toHaveBeenCalled();
+    expect(mockCreateTicket).toHaveBeenCalledWith(
+      expect.any(Object),
+      expect.any(String),
+      undefined
+    );
   });
 
   // --- Ticket number uniqueness retry loop ---

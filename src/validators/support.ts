@@ -102,6 +102,17 @@ export const updateSupportSettingsSchema = z
         });
       }
     }
+    if ("welcome_message" in obj && obj.welcome_message !== undefined) {
+      // Defense-in-depth: reject HTML/script tags to prevent stored XSS even
+      // though React auto-escapes output. This blocks <script>, <img onerror>, etc.
+      if (/<[^>]*>/i.test(obj.welcome_message)) {
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          path: ["welcome_message"],
+          message: "welcome_message must not contain HTML tags",
+        });
+      }
+    }
   });
 
 /** Optional status query param filter - must match a valid status if provided. */

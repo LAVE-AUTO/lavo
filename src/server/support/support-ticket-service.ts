@@ -26,26 +26,25 @@ function generateTicketNumber(): string {
  * Creates a new support ticket with a unique ticket number and initial message.
  * Enforces the `max_open_tickets_per_user` setting if configured.
  * Retries ticket number generation up to 5 times on unique constraint collision.
+ *
+ * The open-ticket limit is enforced **inside** the same database transaction
+ * that inserts the ticket (via `repo.createTicket`), eliminating the TOCTOU
+ * race condition where two concurrent requests could both pass an external
+ * count check and exceed the configured limit.
  */
 export async function createSupportTicket(
   userId: string,
   data: CreateTicketInput
 ) {
-  // Enforce max open tickets per user if the setting is configured.
-  // A value of 0 means no open tickets are allowed (hard block).
-  // Absence of the key or a non-numeric value means the limit is disabled.
+  // Resolve the open-ticket limit from settings. The actual enforcement
+  // happens atomically inside `repo.createTicket`.
   const settings = await repo.getSettings();
   const maxOpenRaw = settings["max_open_tickets_per_user"];
+  let maxOpen: number | undefined;
   if (maxOpenRaw !== undefined) {
-    const maxOpen = parseInt(maxOpenRaw, 10);
-    if (!isNaN(maxOpen) && maxOpen >= 0) {
-      const openCount = await repo.countOpenTicketsByUser(userId);
-      if (openCount >= maxOpen) {
-        throw new AppError(
-          "Ticket limit reached",
-          HTTP_STATUS.UNPROCESSABLE_ENTITY
-        );
-      }
+    const parsed = parseInt(maxOpenRaw, 10);
+    if (!isNaN(parsed) && parsed >= 0) {
+      maxOpen = parsed;
     }
   }
 
@@ -63,7 +62,8 @@ export async function createSupportTicket(
           category: data.category,
           status: "ouvert",
         },
-        data.message
+        data.message,
+        maxOpen
       );
 
       await notifyEntry({
@@ -74,6 +74,10 @@ export async function createSupportTicket(
 
       return ticket;
     } catch (err: unknown) {
+      // Re-throw AppError (e.g. ticket limit reached) without retrying.
+      if (err instanceof AppError) {
+        throw err;
+      }
       // Postgres unique_violation code is 23505. Retry only on that error.
       const code =
         err &&

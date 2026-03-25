@@ -5,6 +5,13 @@ import {
   supportTickets,
 } from "@/lib/db/schema";
 import { and, asc, desc, eq, inArray, sql } from "drizzle-orm";
+import { AppError } from "@/lib/errors";
+import { HTTP_STATUS } from "@/helpers/constants";
+import type { z } from "zod";
+import type { supportStatusSchema } from "@/validators/support";
+
+/** Status type derived from the canonical Zod schema — single source of truth. */
+type TicketStatus = z.infer<typeof supportStatusSchema>;
 
 export type Ticket = typeof supportTickets.$inferSelect;
 export type NewTicket = typeof supportTickets.$inferInsert;
@@ -14,12 +21,40 @@ export type Setting = typeof supportSettings.$inferSelect;
 
 /**
  * Creates a new support ticket and its initial message in a single transaction.
+ *
+ * When `maxOpen` is provided (>= 0), the open-ticket count for the user is
+ * checked **inside** the same transaction that inserts the ticket.  This
+ * eliminates the TOCTOU race where two concurrent requests could both pass
+ * an external count check and exceed the limit.
+ *
+ * @throws {AppError} 422 if the user already has `maxOpen` (or more) open tickets.
  */
 export async function createTicket(
   ticketData: NewTicket,
-  initialMessage: string
+  initialMessage: string,
+  maxOpen?: number
 ) {
   return await db.transaction(async (tx) => {
+    // Atomic open-ticket limit enforcement inside the same transaction.
+    if (maxOpen !== undefined && maxOpen >= 0) {
+      const countResult = await tx
+        .select({ count: sql<number>`count(*)::int` })
+        .from(supportTickets)
+        .where(
+          and(
+            eq(supportTickets.created_by, ticketData.created_by),
+            inArray(supportTickets.status, ["ouvert", "en_cours"] as const)
+          )
+        );
+      const openCount = countResult[0]?.count ?? 0;
+      if (openCount >= maxOpen) {
+        throw new AppError(
+          "Ticket limit reached",
+          HTTP_STATUS.UNPROCESSABLE_ENTITY
+        );
+      }
+    }
+
     const [ticket] = await tx
       .insert(supportTickets)
       .values(ticketData)
@@ -84,8 +119,6 @@ export async function findTicketById(id: string) {
     },
   });
 }
-
-type TicketStatus = "ouvert" | "en_cours" | "resolu" | "ferme";
 
 /**
  * Lists tickets with optional user and status filters.
