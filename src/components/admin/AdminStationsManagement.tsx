@@ -25,11 +25,17 @@ interface Props {
 
 export function AdminStationsManagement({ stations, loading, error, query, onAction }: Props) {
   const t = useTranslations('admin_clients');
-  const [confirmId, setConfirmId] = useState<string | null>(null);
-  const [busy, setBusy]           = useState<string | null>(null);
+  const [confirmId, setConfirmId]         = useState<string | null>(null);
+  const [confirmAction, setConfirmAction] = useState<'activate' | 'suspend' | null>(null);
+  const [busy, setBusy]                   = useState<string | null>(null);
+
+  function requestConfirm(id: string, action: 'activate' | 'suspend') {
+    setConfirmId(id);
+    setConfirmAction(action);
+  }
 
   async function doAction(id: string, action: 'activate' | 'suspend') {
-    setBusy(id); setConfirmId(null);
+    setBusy(id); setConfirmId(null); setConfirmAction(null);
     try { await onAction(id, action); } finally { setBusy(null); }
   }
 
@@ -82,7 +88,9 @@ export function AdminStationsManagement({ stations, loading, error, query, onAct
             className={[
               'grid grid-cols-[40px_1fr_1fr_120px_140px] items-center gap-4 border-b px-5 py-3.5 transition-colors duration-150 last:border-0',
               isConfirming
-                ? 'border-red-100 bg-red-50 dark:border-[#2A1010] dark:bg-[#1A0808]'
+                ? confirmAction === 'suspend'
+                  ? 'border-red-100 bg-red-50 dark:border-[#2A1010] dark:bg-[#1A0808]'
+                  : 'border-green-100 bg-green-50 dark:border-[#0A2A14] dark:bg-[#0A1A10]'
                 : idx % 2 === 0
                   ? 'border-[#F2EFE8] bg-white hover:bg-[#FEFCF5] dark:border-[#1A2A14] dark:bg-[#131E10] dark:hover:bg-[#182416]'
                   : 'border-[#F2EFE8] bg-[#FAFAF7] hover:bg-[#FEFCF5] dark:border-[#1A2A14] dark:bg-[#111C0E] dark:hover:bg-[#182416]',
@@ -111,22 +119,26 @@ export function AdminStationsManagement({ stations, loading, error, query, onAct
             <div className="flex justify-end gap-1.5">
               {isConfirming ? (
                 <>
-                  <button type="button" disabled={isBusy} onClick={() => doAction(station.id, 'suspend')}
-                    className="rounded-lg bg-red-500 px-3 py-1.5 text-[11px] font-bold text-white hover:bg-red-600 disabled:opacity-50">
+                  <button type="button" disabled={isBusy}
+                    onClick={() => doAction(station.id, confirmAction!)}
+                    className={[
+                      'rounded-lg px-3 py-1.5 text-[11px] font-bold text-white disabled:opacity-50',
+                      confirmAction === 'suspend' ? 'bg-red-500 hover:bg-red-600' : 'bg-green-600 hover:bg-green-700',
+                    ].join(' ')}>
                     {isBusy ? '…' : t('btn_confirm')}
                   </button>
-                  <button type="button" onClick={() => setConfirmId(null)}
+                  <button type="button" onClick={() => { setConfirmId(null); setConfirmAction(null); }}
                     className="rounded-lg border border-[#D8D4C8] px-3 py-1.5 text-[11px] font-semibold text-[#666] hover:bg-[#F5F3EE] dark:border-[#243020] dark:text-[#9A9A8A]">
                     {t('btn_cancel')}
                   </button>
                 </>
               ) : station.status === 'active' ? (
-                <button type="button" disabled={isBusy} onClick={() => setConfirmId(station.id)}
+                <button type="button" disabled={isBusy} onClick={() => requestConfirm(station.id, 'suspend')}
                   className="rounded-lg border border-orange-200 px-3 py-1.5 text-[11px] font-bold text-orange-600 hover:bg-orange-50 disabled:opacity-50 dark:border-orange-900/40 dark:text-orange-400 dark:hover:bg-orange-950/30">
                   {t('btn_suspend')}
                 </button>
               ) : (
-                <button type="button" disabled={isBusy} onClick={() => doAction(station.id, 'activate')}
+                <button type="button" disabled={isBusy} onClick={() => requestConfirm(station.id, 'activate')}
                   className="rounded-lg border border-green-200 px-3 py-1.5 text-[11px] font-bold text-green-700 hover:bg-green-50 disabled:opacity-50 dark:border-green-900/40 dark:text-green-400 dark:hover:bg-green-950/30">
                   {isBusy ? '…' : t('btn_activate')}
                 </button>
