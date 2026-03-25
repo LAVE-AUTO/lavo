@@ -9,10 +9,10 @@ import { useCommission } from '@/context/commission-context';
 const DEFAULT_SETTINGS = { penalty_rate: 15, reschedule_delay_minutes: 30 };
 
 function NumericField({
-  label, hint, value, unit, min, max, onChange, readOnly,
+  label, hint, value, unit, min, max, step, onChange, readOnly,
 }: {
   label: string; hint?: string; value: number; unit: string;
-  min?: number; max?: number; onChange?: (v: number) => void; readOnly?: boolean;
+  min?: number; max?: number; step?: number; onChange?: (v: number) => void; readOnly?: boolean;
 }) {
   return (
     <div className="flex flex-col gap-2">
@@ -24,7 +24,7 @@ function NumericField({
           : 'border-[#D8D4C8] bg-white hover:border-[#C4A830]/60 focus-within:border-[#C49A1E] focus-within:shadow-[0_0_0_4px_rgba(196,154,30,0.12)] dark:border-[#243020] dark:bg-[#0F1A0C] dark:hover:border-[#3A5030] dark:focus-within:border-[#C49A1E]',
       ].join(' ')}>
         <input
-          type="number" min={min} max={max} readOnly={readOnly} value={value}
+          type="number" min={min} max={max} step={step} readOnly={readOnly} value={value}
           onChange={onChange ? (e) => onChange(Math.min(max ?? 99999, Math.max(min ?? 0, parseFloat(e.target.value) || (min ?? 0)))) : undefined}
           className={[
             'flex-1 bg-transparent px-4 py-3 text-[18px] font-bold outline-none',
@@ -168,7 +168,7 @@ export function AdminPlatformSettings() {
         <SectionCard title={t('section_reschedule')} icon={
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10" /><polyline points="12 6 12 12 16 14" /></svg>
         }>
-          <NumericField label={t('field_reschedule_delay')} hint={t('hint_reschedule_delay')} value={rescheduleDelay} unit={t('unit_minutes')} min={1} max={10080} onChange={setRescheduleDelay} />
+          <NumericField label={t('field_reschedule_delay')} hint={t('hint_reschedule_delay')} value={rescheduleDelay} unit={t('unit_minutes')} min={1} max={10080} step={1} onChange={(v) => setRescheduleDelay(Math.round(v))} />
         </SectionCard>
 
       </div>

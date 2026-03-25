@@ -114,6 +114,14 @@ export function StationLocationForm({ location, onSaved, locked = false }: Props
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
+    if (!address.trim()) {
+      setFeedback({ ok: false, msg: t('error_address_empty') });
+      return;
+    }
+    if (!city.trim()) {
+      setFeedback({ ok: false, msg: t('error_city_empty') });
+      return;
+    }
     if (lat && !validateCoord(lat, -90, 90)) {
       setFeedback({ ok: false, msg: t('geo_invalid_lat') });
       return;

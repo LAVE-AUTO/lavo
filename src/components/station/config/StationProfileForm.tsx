@@ -72,6 +72,10 @@ export function StationProfileForm({ profile, onSaved, locked = false }: Props) 
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
+    if (!name.trim()) {
+      setFeedback({ ok: false, msg: t('error_name_empty') });
+      return;
+    }
     setSaving(true);
     // TODO: connect to API once endpoint is available — PATCH /station/me does not exist yet
     setFeedback({ ok: false, msg: t('profile_save_error') });
