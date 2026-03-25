@@ -57,7 +57,6 @@ export async function createSupportTicket(
           ticket_number: ticketNumber,
           created_by: userId,
           subject: data.subject,
-          message: data.message,
           priority: data.priority,
           category: data.category,
           status: "ouvert",

@@ -5,6 +5,12 @@ import {
   supportTickets,
 } from "@/lib/db/schema";
 import { and, asc, desc, eq, inArray, sql } from "drizzle-orm";
+
+/** Preview of the most recent message on a ticket — content truncated to 200 chars. */
+export type LastMessagePreview = {
+  content: string;
+  created_at: Date;
+} | null;
 import { AppError } from "@/lib/errors";
 import { HTTP_STATUS } from "@/helpers/constants";
 import type { z } from "zod";
@@ -122,6 +128,9 @@ export async function findTicketById(id: string) {
 
 /**
  * Lists tickets with optional user and status filters.
+ * Each ticket includes a `lastMessage` preview: the most recent message's
+ * content (truncated to 200 chars) and creation date. Fetching only the
+ * last message per ticket avoids loading full message threads in the list view.
  */
 export async function listTickets(
   filters: { userId?: string; status?: TicketStatus } = {}
@@ -132,14 +141,36 @@ export async function listTickets(
 
   const whereClause = conditions.length > 0 ? and(...conditions) : undefined;
 
-  return await db.query.supportTickets.findMany({
+  const tickets = await db.query.supportTickets.findMany({
     where: whereClause,
     orderBy: [desc(supportTickets.updated_at)],
     with: {
       createdByUser: {
         columns: SAFE_USER_COLUMNS,
       },
+      messages: {
+        orderBy: [desc(supportMessages.created_at)],
+        limit: 1,
+        columns: {
+          content: true,
+          created_at: true,
+        },
+      },
     },
+  });
+
+  return tickets.map((ticket) => {
+    const { messages, ...rest } = ticket;
+    const last = messages[0] ?? null;
+    const lastMessage: LastMessagePreview = last
+      ? {
+          content: last.content.length > 200
+            ? last.content.slice(0, 200) + "…"
+            : last.content,
+          created_at: last.created_at,
+        }
+      : null;
+    return { ...rest, lastMessage };
   });
 }
 

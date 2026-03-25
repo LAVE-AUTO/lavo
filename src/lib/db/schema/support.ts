@@ -50,7 +50,6 @@ export const supportTickets = pgTable("support_tickets", {
     onDelete: "set null",
   }),
   subject: varchar("subject", { length: 255 }).notNull(),
-  message: text("message").notNull(),
   status: supportStatusEnum("status").notNull().default("ouvert"),
   priority: supportPriorityEnum("priority").notNull().default("normal"),
   category: supportCategoryEnum("category").notNull().default("autre"),

@@ -53,7 +53,6 @@ const baseTicket = {
   created_by: userId,
   assigned_to: null,
   subject: 'My washer is broken',
-  message: 'It stopped mid-cycle and will not restart.',
   status: 'ouvert',
   priority: 'normal',
   category: 'technique',
@@ -91,7 +90,6 @@ describe('createSupportTicket', () => {
       expect.objectContaining({
         created_by: userId,
         subject: createInput.subject,
-        message: createInput.message,
         status: 'ouvert',
         ticket_number: expect.stringMatching(/^SUP-[A-F0-9]{8}$/),
       }),
