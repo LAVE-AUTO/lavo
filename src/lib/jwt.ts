@@ -61,7 +61,7 @@ export async function signJwt(payload: JwtPayload): Promise<string> {
 
 /**
  * Verifies the access JWT. Tokens without `iss`/`aud` still validate (legacy) when env omits issuer/audience.
- * When `JWT_ISSUER` is set and the token includes `iss`, it must match.
+ * When `JWT_ISSUER` is set, the token MUST include a matching `iss` claim (tokens without `iss` are rejected).
  * When `JWT_AUDIENCE` (or derived audience from `NEXT_PUBLIC_APP_URL`) is set, the token must include `aud`
  * and it must match the expected audience.
  */
@@ -69,7 +69,7 @@ export async function verifyJwt(token: string): Promise<JwtPayload | null> {
   try {
     const { payload } = await jwtVerify(token, getSecret());
     const expectedIss = getOptionalJwtIssuer();
-    if (expectedIss && payload.iss !== undefined && payload.iss !== expectedIss) {
+    if (expectedIss && payload.iss !== expectedIss) {
       return null;
     }
     const expectedAud = getOptionalJwtAudience();

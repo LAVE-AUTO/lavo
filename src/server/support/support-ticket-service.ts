@@ -4,6 +4,7 @@ import { AppError } from "@/lib/errors";
 import { HTTP_STATUS } from "@/helpers/constants";
 import { z } from "zod";
 import { createTicketSchema, supportStatusSchema } from "@/validators/support";
+import { randomBytes } from "crypto";
 
 type SupportStatus = z.infer<typeof supportStatusSchema>;
 
@@ -14,10 +15,11 @@ type CreateTicketInput = z.infer<typeof createTicketSchema>;
 const TICKET_NUMBER_MAX_RETRIES = 5;
 
 /**
- * Generates a random ticket number in the format SUP-XXXXXX (uppercase base36).
+ * Generates a cryptographically random ticket number in the format SUP-XXXXXXXX
+ * (8 uppercase hex chars = 32 bits of entropy, non-predictable).
  */
 function generateTicketNumber(): string {
-  return `SUP-${Math.random().toString(36).substring(2, 8).toUpperCase()}`;
+  return `SUP-${randomBytes(4).toString("hex").toUpperCase()}`;
 }
 
 /**
@@ -30,13 +32,13 @@ export async function createSupportTicket(
   data: CreateTicketInput
 ) {
   // Enforce max open tickets per user if the setting is configured.
-  // A value of "0" means no open tickets are allowed (hard block), not "disabled".
+  // A value of 0 means no open tickets are allowed (hard block).
+  // Absence of the key or a non-numeric value means the limit is disabled.
   const settings = await repo.getSettings();
   const maxOpenRaw = settings["max_open_tickets_per_user"];
   if (maxOpenRaw !== undefined) {
     const maxOpen = parseInt(maxOpenRaw, 10);
-    // A value of 0 (or non-numeric) means the limit is disabled.
-    if (!isNaN(maxOpen) && maxOpen > 0) {
+    if (!isNaN(maxOpen) && maxOpen >= 0) {
       const openCount = await repo.countOpenTicketsByUser(userId);
       if (openCount >= maxOpen) {
         throw new AppError(
@@ -178,12 +180,35 @@ export async function getSupportTickets(
 }
 
 /**
+ * Valid status transitions for support tickets.
+ * A closed ticket cannot be re-opened or moved to any other state.
+ */
+const ALLOWED_TRANSITIONS: Record<SupportStatus, SupportStatus[]> = {
+  ouvert:   ["en_cours", "resolu", "ferme"],
+  en_cours: ["ouvert", "resolu", "ferme"],
+  resolu:   ["ouvert", "en_cours", "ferme"],
+  ferme:    [],
+};
+
+/**
  * Updates a ticket status (Admin only).
+ * Enforces allowed transitions — a closed (ferme) ticket cannot be re-opened.
  */
 export async function updateSupportTicketStatus(
   ticketId: string,
   status: SupportStatus
 ) {
+  const current = await repo.findTicketById(ticketId);
+  if (!current) throw new AppError("Ticket not found", HTTP_STATUS.NOT_FOUND);
+
+  const allowed = ALLOWED_TRANSITIONS[current.status as SupportStatus] ?? [];
+  if (!allowed.includes(status)) {
+    throw new AppError(
+      `Cannot transition ticket from '${current.status}' to '${status}'`,
+      HTTP_STATUS.UNPROCESSABLE_ENTITY
+    );
+  }
+
   const ticket = await repo.updateTicketStatus(ticketId, status);
   if (!ticket) throw new AppError("Ticket not found", HTTP_STATUS.NOT_FOUND);
   return ticket;
@@ -208,10 +233,8 @@ export async function getSupportSettings(): Promise<Record<string, string>> {
 
 /**
  * Updates batch settings in the database atomically.
- * All upserts succeed or none do.
+ * All upserts succeed or none do (single transaction via repo.updateSettings).
  */
 export async function updateSupportSettings(settings: Record<string, string>) {
-  for (const [key, value] of Object.entries(settings)) {
-    await repo.updateSetting(key, value);
-  }
+  await repo.updateSettings(settings);
 }
