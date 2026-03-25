@@ -78,9 +78,12 @@ export function AdminAddUserModal({ open, onClose }: Props) {
 
   function validate() {
     const errs: Record<string, string> = {};
-    if (!firstName.trim()) errs.first_name = t('error_firstname_required');
-    if (!lastName.trim())  errs.last_name  = t('error_lastname_required');
-    if (!email.trim())     errs.email      = t('error_email_required');
+    if (!firstName.trim())               errs.first_name = t('error_firstname_required');
+    else if (firstName.trim().length > 100) errs.first_name = t('error_firstname_too_long');
+    if (!lastName.trim())                errs.last_name  = t('error_lastname_required');
+    else if (lastName.trim().length > 100)  errs.last_name  = t('error_lastname_too_long');
+    if (!email.trim())                   errs.email = t('error_email_required');
+    else if (email.trim().length > 254)  errs.email = t('error_email_too_long');
     else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim())) errs.email = t('error_email_invalid');
     return errs;
   }

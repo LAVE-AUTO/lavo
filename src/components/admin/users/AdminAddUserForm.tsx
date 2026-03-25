@@ -76,14 +76,14 @@ export function AdminAddUserForm({
           <div className="flex flex-col gap-1.5">
             <label className="text-[12px] font-bold text-[#555] dark:text-[#9A9A8A]">{t('field_firstname')}</label>
             <input type="text" value={firstName} onChange={(e) => onFirstNameChange(e.target.value)}
-              placeholder={t('field_firstname_placeholder')}
+              placeholder={t('field_firstname_placeholder')} maxLength={100}
               className={`${inputBase} ${errors.first_name ? inputError : inputIdle}`} />
             {errors.first_name && <p className="text-[11px] font-semibold text-red-500">{errors.first_name}</p>}
           </div>
           <div className="flex flex-col gap-1.5">
             <label className="text-[12px] font-bold text-[#555] dark:text-[#9A9A8A]">{t('field_lastname')}</label>
             <input type="text" value={lastName} onChange={(e) => onLastNameChange(e.target.value)}
-              placeholder={t('field_lastname_placeholder')}
+              placeholder={t('field_lastname_placeholder')} maxLength={100}
               className={`${inputBase} ${errors.last_name ? inputError : inputIdle}`} />
             {errors.last_name && <p className="text-[11px] font-semibold text-red-500">{errors.last_name}</p>}
           </div>
@@ -93,7 +93,7 @@ export function AdminAddUserForm({
         <div className="flex flex-col gap-1.5">
           <label className="text-[12px] font-bold text-[#555] dark:text-[#9A9A8A]">{t('field_email')}</label>
           <input type="email" value={email} onChange={(e) => onEmailChange(e.target.value)}
-            placeholder={t('field_email_placeholder')}
+            placeholder={t('field_email_placeholder')} maxLength={254}
             className={`${inputBase} ${errors.email ? inputError : inputIdle}`} />
           {errors.email && <p className="text-[11px] font-semibold text-red-500">{errors.email}</p>}
         </div>

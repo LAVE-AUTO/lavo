@@ -2228,6 +2228,9 @@
     "success_info": "Credentials have been sent by email. The user must change their password on first login.",
     "copy_email_label": "Email",
     "copy_password_label": "Password",
-    "copy_credentials": "Copy credentials"
+    "copy_credentials": "Copy credentials",
+    "error_firstname_too_long": "First name cannot exceed 100 characters.",
+    "error_lastname_too_long": "Last name cannot exceed 100 characters.",
+    "error_email_too_long": "Email address cannot exceed 254 characters."
   }
 }
