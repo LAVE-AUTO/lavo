@@ -2318,6 +2318,7 @@
     "success_kyc_notice_title": "KYC verification pending",
     "success_kyc_notice_body": "The station will need to upload their documents. You will be notified to validate the account.",
     "success_docs_uploaded_notice": "Uploaded documents will be submitted to the KYC validation process.",
-    "success_force_change_notice": "The station will be required to change their password on first login."
+    "success_force_change_notice": "The station will be required to change their password on first login.",
+    "role_station": "Station"
   }
 }

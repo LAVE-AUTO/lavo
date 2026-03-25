@@ -39,7 +39,7 @@ export function AdminAddStationSuccess({ data, onClose }: Props) {
             <p className="text-[13px] font-bold text-[#1A1A0A] dark:text-[#F0EDD4]">
               {data.first_name} {data.last_name}
               <span className="ml-2 inline-flex items-center rounded-full border border-[#C49A1E]/30 bg-[#C49A1E]/10 px-2 py-0.5 text-[10px] font-black uppercase tracking-wide text-[#C49A1E]">
-                Station
+                {t('role_station')}
               </span>
             </p>
             <p className="text-[12px] text-[#888] dark:text-[#6A6A5A]">{t('success_account_created')}</p>

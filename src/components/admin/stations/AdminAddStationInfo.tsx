@@ -32,12 +32,13 @@ export interface StationInfoErrors {
 }
 
 interface Props {
-  data:     StationInfoData;
-  errors:   StationInfoErrors;
-  busy:     boolean;
-  onChange: (data: StationInfoData) => void;
-  onNext:   () => void;
-  onPrev:   () => void;
+  data:      StationInfoData;
+  errors:    StationInfoErrors;
+  busy:      boolean;
+  onChange:  (data: StationInfoData) => void;
+  onErrors:  (errors: StationInfoErrors) => void;
+  onNext:    () => void;
+  onPrev:    () => void;
 }
 
 const inputBase  = 'w-full rounded-lg border bg-transparent px-3 py-2 text-[13px] text-[#1A1A0A] outline-none transition-all dark:text-[#F0EDD4]';
@@ -71,7 +72,7 @@ function ToggleCard({ selected, onClick, icon, label, sub }: {
   );
 }
 
-export function AdminAddStationInfo({ data, errors, busy, onChange, onNext, onPrev }: Props) {
+export function AdminAddStationInfo({ data, errors, busy, onChange, onErrors, onNext, onPrev }: Props) {
   const t = useTranslations('admin_add_station');
 
   const WASH_META: Record<WashTypeCode, { icon: ReactNode; label: string; sub: string }> = {
@@ -91,6 +92,7 @@ export function AdminAddStationInfo({ data, errors, busy, onChange, onNext, onPr
       ? data.washTypeCodes.filter((c) => c !== code)
       : [...data.washTypeCodes, code];
     onChange({ ...data, washTypeCodes: next });
+    if (errors.washTypeCodes && next.length > 0) onErrors({ ...errors, washTypeCodes: undefined });
   }
 
   return (
@@ -103,9 +105,9 @@ export function AdminAddStationInfo({ data, errors, busy, onChange, onNext, onPr
           <label htmlFor="stn-name" className="text-[12px] font-bold text-[#555] dark:text-[#9A9A8A]">
             {t('field_station_name')}<span className="ml-0.5 text-[#C49A1E]">*</span>
           </label>
-          <input id="stn-name" type="text" value={data.stationName} maxLength={100}
+          <input id="stn-name" type="text" value={data.stationName} minLength={2} maxLength={100}
             placeholder={t('field_station_name_placeholder')}
-            onChange={(e) => onChange({ ...data, stationName: e.target.value })}
+            onChange={(e) => { onChange({ ...data, stationName: e.target.value }); if (errors.stationName) onErrors({ ...errors, stationName: undefined }); }}
             className={`${inputBase} ${errors.stationName ? inputError : inputIdle}`} />
           {errors.stationName && <p className="text-[11px] font-semibold text-red-500">{errors.stationName}</p>}
         </div>
@@ -135,9 +137,9 @@ export function AdminAddStationInfo({ data, errors, busy, onChange, onNext, onPr
           <label htmlFor="stn-address" className="text-[12px] font-bold text-[#555] dark:text-[#9A9A8A]">
             {t('field_address')}<span className="ml-0.5 text-[#C49A1E]">*</span>
           </label>
-          <input id="stn-address" type="text" value={data.address} maxLength={200}
+          <input id="stn-address" type="text" value={data.address} minLength={5} maxLength={200}
             placeholder={t('field_address_placeholder')}
-            onChange={(e) => onChange({ ...data, address: e.target.value })}
+            onChange={(e) => { onChange({ ...data, address: e.target.value }); if (errors.address) onErrors({ ...errors, address: undefined }); }}
             className={`${inputBase} ${errors.address ? inputError : inputIdle}`} />
           {errors.address && <p className="text-[11px] font-semibold text-red-500">{errors.address}</p>}
         </div>
@@ -147,7 +149,7 @@ export function AdminAddStationInfo({ data, errors, busy, onChange, onNext, onPr
           <AdminCityInput
             label={t('field_city')} required value={data.city}
             placeholder={t('field_city_placeholder')} error={errors.city}
-            onChange={(city) => onChange({ ...data, city })} />
+            onChange={(city) => { onChange({ ...data, city }); if (errors.city) onErrors({ ...errors, city: undefined }); }} />
           <div className="flex flex-col gap-1.5">
             <label htmlFor="stn-posts" className="text-[12px] font-bold text-[#555] dark:text-[#9A9A8A]">
               {t('field_wash_posts')}<span className="ml-0.5 text-[#C49A1E]">*</span>

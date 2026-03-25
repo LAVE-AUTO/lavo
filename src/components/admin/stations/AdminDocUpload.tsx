@@ -47,7 +47,7 @@ export function AdminDocUpload({ label, hint, required, value, onChange, error }
         onChange({ url: body.data.url, storage: body.data.storage, name: file.name });
       } else {
         const body = await res.json().catch(() => null) as { message?: string } | null;
-        setLocalError(body?.message ?? t('doc_error_upload'));
+        setLocalError(t('doc_error_upload'));
       }
     } catch {
       setLocalError(t('doc_error_upload'));
@@ -79,19 +79,20 @@ export function AdminDocUpload({ label, hint, required, value, onChange, error }
             </svg>
             <span className="truncate text-[11px] font-semibold text-[#1A1A0A] dark:text-[#F0EDD4]">{value.name}</span>
           </div>
-          <button type="button" onClick={() => { onChange(null); setLocalError(null); }}
-            className="ml-2 shrink-0 text-[11px] font-bold text-[#888] transition-colors hover:text-red-500">
+          <button type="button" onClick={() => { onChange(null); setLocalError(null); }} disabled={isUploading}
+            className="ml-2 shrink-0 text-[11px] font-bold text-[#888] transition-colors hover:text-red-500 disabled:opacity-40">
             {t('doc_file_remove')}
           </button>
         </div>
       ) : (
         <div
-          onDrop={onDrop}
-          onDragOver={(e) => { e.preventDefault(); setIsDragging(true); }}
-          onDragLeave={() => setIsDragging(false)}
-          onClick={() => inputRef.current?.click()}
+          onDrop={isUploading ? undefined : onDrop}
+          onDragOver={isUploading ? undefined : (e) => { e.preventDefault(); setIsDragging(true); }}
+          onDragLeave={isUploading ? undefined : () => setIsDragging(false)}
+          onClick={isUploading ? undefined : () => inputRef.current?.click()}
           className={[
-            'flex cursor-pointer flex-col items-center justify-center gap-1.5 rounded-lg border-[1.5px] border-dashed px-4 py-4 transition-all',
+            'flex flex-col items-center justify-center gap-1.5 rounded-lg border-[1.5px] border-dashed px-4 py-4 transition-all',
+            isUploading ? 'cursor-default' : 'cursor-pointer',
             isDragging          ? 'border-[#C49A1E] bg-[#C49A1E]/6' : '',
             displayError        ? 'border-red-400' : '',
             !isDragging && !displayError ? 'border-[#D8D4C8] hover:border-[#C49A1E]/60 dark:border-[#243020]' : '',

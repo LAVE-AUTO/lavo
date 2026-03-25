@@ -22,6 +22,7 @@ interface Props {
   errors:   StationDocsErrors;
   busy:     boolean;
   onChange: (data: StationDocsData) => void;
+  onErrors: (errors: StationDocsErrors) => void;
   onSubmit: () => void;
   onPrev:   () => void;
 }
@@ -44,7 +45,7 @@ function ModeCard({ selected, onClick, icon, label, sub }: {
   );
 }
 
-export function AdminAddStationDocs({ data, errors, busy, onChange, onSubmit, onPrev }: Props) {
+export function AdminAddStationDocs({ data, errors, busy, onChange, onErrors, onSubmit, onPrev }: Props) {
   const t = useTranslations('admin_add_station');
 
   return (
@@ -54,12 +55,12 @@ export function AdminAddStationDocs({ data, errors, busy, onChange, onSubmit, on
         {/* Toggle */}
         <div className="flex gap-3">
           <ModeCard
-            selected={data.mode === 'now'} onClick={() => onChange({ ...data, mode: 'now' })}
+            selected={data.mode === 'now'} onClick={() => { onChange({ ...data, mode: 'now' }); onErrors({}); }}
             label={t('docs_toggle_now')} sub={t('docs_toggle_now_sub')}
             icon={<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>}
           />
           <ModeCard
-            selected={data.mode === 'later'} onClick={() => onChange({ ...data, mode: 'later' })}
+            selected={data.mode === 'later'} onClick={() => { onChange({ ...data, mode: 'later' }); onErrors({}); }}
             label={t('docs_toggle_later')} sub={t('docs_toggle_later_sub')}
             icon={<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>}
           />
