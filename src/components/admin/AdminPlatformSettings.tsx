@@ -6,7 +6,7 @@ import { useToast } from '@/context/toast-context';
 import { useCommission } from '@/context/commission-context';
 
 // TODO: connect to API once endpoint is available (GET|POST /admin/platform-settings)
-const MOCK_SETTINGS = { penalty_rate: 15, reschedule_delay_minutes: 30 };
+const DEFAULT_SETTINGS = { penalty_rate: 15, reschedule_delay_minutes: 30 };
 
 function NumericField({
   label, hint, value, unit, min, max, onChange, readOnly,
@@ -60,10 +60,15 @@ export function AdminPlatformSettings() {
   const mountedRef = useRef(true);
   useEffect(() => { mountedRef.current = true; return () => { mountedRef.current = false; }; }, []);
 
-  const [penaltyRate, setPenaltyRate]         = useState(MOCK_SETTINGS.penalty_rate);
+  const [penaltyRate, setPenaltyRate]         = useState(DEFAULT_SETTINGS.penalty_rate);
   const [adminShare, setAdminShare]           = useState(savedCommissionRate);
-  const [rescheduleDelay, setRescheduleDelay] = useState(MOCK_SETTINGS.reschedule_delay_minutes);
+  const [rescheduleDelay, setRescheduleDelay] = useState(DEFAULT_SETTINGS.reschedule_delay_minutes);
   const [saving, setSaving]                   = useState(false);
+  // Track last committed values so isDirty resets correctly after each save
+  const [committed, setCommitted] = useState({
+    penalty_rate: DEFAULT_SETTINGS.penalty_rate,
+    reschedule_delay_minutes: DEFAULT_SETTINGS.reschedule_delay_minutes,
+  });
 
   /* Sync local input if commission rate changed from commission page */
   useEffect(() => { setAdminShare(savedCommissionRate); }, [savedCommissionRate]);
@@ -71,9 +76,9 @@ export function AdminPlatformSettings() {
   const stationShare = 100 - adminShare;
 
   const isDirty =
-    penaltyRate !== MOCK_SETTINGS.penalty_rate ||
-    adminShare  !== savedCommissionRate        ||
-    rescheduleDelay !== MOCK_SETTINGS.reschedule_delay_minutes;
+    penaltyRate !== committed.penalty_rate ||
+    adminShare  !== savedCommissionRate    ||
+    rescheduleDelay !== committed.reschedule_delay_minutes;
 
   function validate(): string | null {
     if (penaltyRate < 0 || penaltyRate > 100)          return t('error_penalty_range');
@@ -91,6 +96,7 @@ export function AdminPlatformSettings() {
     await new Promise((r) => setTimeout(r, 700));
     if (!mountedRef.current) return;
     if (adminShare !== savedCommissionRate) updateRate(Math.round(adminShare * 10) / 10);
+    setCommitted({ penalty_rate: penaltyRate, reschedule_delay_minutes: rescheduleDelay });
     setSaving(false);
     toastSuccess(t('save_success'));
   }
