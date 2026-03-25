@@ -3,7 +3,9 @@ import { notifyEntry } from "@/server/notifications/notification-service";
 import { AppError } from "@/lib/errors";
 import { HTTP_STATUS } from "@/helpers/constants";
 import { z } from "zod";
-import { createTicketSchema } from "@/validators/support";
+import { createTicketSchema, supportStatusSchema } from "@/validators/support";
+
+type SupportStatus = z.infer<typeof supportStatusSchema>;
 
 /** Inferred input type from the create ticket Zod schema. */
 type CreateTicketInput = z.infer<typeof createTicketSchema>;
@@ -161,9 +163,9 @@ export async function getTicketDetails(
 export async function getSupportTickets(
   userId: string,
   role: string,
-  status?: string
+  status?: SupportStatus
 ) {
-  const filters: { userId?: string; status?: string } = {};
+  const filters: { userId?: string; status?: SupportStatus } = {};
   if (role !== "admin") {
     filters.userId = userId;
   }
@@ -179,7 +181,7 @@ export async function getSupportTickets(
  */
 export async function updateSupportTicketStatus(
   ticketId: string,
-  status: string
+  status: SupportStatus
 ) {
   const ticket = await repo.updateTicketStatus(ticketId, status);
   if (!ticket) throw new AppError("Ticket not found", HTTP_STATUS.NOT_FOUND);
@@ -192,7 +194,7 @@ export async function updateSupportTicketStatus(
  * always wins — it applies the fallback chain even when the DB value is an
  * empty string (which would otherwise be returned as-is via the spread).
  */
-export async function getSupportSettings() {
+export async function getSupportSettings(): Promise<Record<string, string>> {
   const dbSettings = await repo.getSettings();
   return {
     ...dbSettings,

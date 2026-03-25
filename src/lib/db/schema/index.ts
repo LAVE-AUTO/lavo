@@ -23,7 +23,7 @@ import {
   vehicleFormats,
   washTypes,
 } from "./stations";
-import { supportTickets } from "./support";
+import { supportMessages, supportSettings, supportTickets } from "./support";
 import { timeSlots } from "./slots";
 
 export * from "./users";
@@ -50,7 +50,9 @@ export const usersRelations = relations(users, ({ one, many }) => ({
   refreshTokens: many(refreshTokens),
   reservations: many(reservations, { relationName: "userReservations" }),
   ratings: many(ratings, { relationName: "userRatings" }),
-  supportTickets: many(supportTickets),
+  supportTickets: many(supportTickets, { relationName: "ticketCreator" }),
+  assignedTickets: many(supportTickets, { relationName: "ticketAssignee" }),
+  supportMessages: many(supportMessages, { relationName: "messageSender" }),
   notifications: many(notifications, { relationName: "userNotifications" }),
 }));
 
@@ -236,14 +238,30 @@ export const commissionSettingsRelations = relations(
   })
 );
 
-export const supportTicketsRelations = relations(supportTickets, ({ one }) => ({
+export const supportTicketsRelations = relations(supportTickets, ({ one, many }) => ({
   createdByUser: one(users, {
     fields: [supportTickets.created_by],
     references: [users.id],
+    relationName: "ticketCreator",
   }),
   assignedToAdmin: one(users, {
     fields: [supportTickets.assigned_to],
     references: [users.id],
+    relationName: "ticketAssignee",
+  }),
+  messages: many(supportMessages, { relationName: "ticketMessages" }),
+}));
+
+export const supportMessagesRelations = relations(supportMessages, ({ one }) => ({
+  ticket: one(supportTickets, {
+    fields: [supportMessages.ticket_id],
+    references: [supportTickets.id],
+    relationName: "ticketMessages",
+  }),
+  sender: one(users, {
+    fields: [supportMessages.sender_id],
+    references: [users.id],
+    relationName: "messageSender",
   }),
 }));
 

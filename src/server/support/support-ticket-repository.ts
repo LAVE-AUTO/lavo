@@ -4,7 +4,7 @@ import {
   supportSettings,
   supportTickets,
 } from "@/lib/db/schema";
-import { and, asc, count, desc, eq, inArray, sql } from "drizzle-orm";
+import { and, asc, desc, eq, inArray, sql } from "drizzle-orm";
 
 export type Ticket = typeof supportTickets.$inferSelect;
 export type NewTicket = typeof supportTickets.$inferInsert;
@@ -56,9 +56,6 @@ export async function addMessage(messageData: NewMessage) {
 }
 
 /**
- * Finds a ticket by ID, including its message thread (ordered by creation).
- */
-/**
  * Safe subset of user columns exposed in support ticket responses.
  * Never include password_hash, stripe_customer_id, or other sensitive fields.
  */
@@ -70,6 +67,7 @@ const SAFE_USER_COLUMNS = {
   role: true,
 } as const;
 
+/** Finds a ticket by ID, including its message thread (ordered ASC) and safe user info. */
 export async function findTicketById(id: string) {
   return await db.query.supportTickets.findFirst({
     where: eq(supportTickets.id, id),
@@ -87,11 +85,13 @@ export async function findTicketById(id: string) {
   });
 }
 
+type TicketStatus = "ouvert" | "en_cours" | "resolu" | "ferme";
+
 /**
  * Lists tickets with optional user and status filters.
  */
 export async function listTickets(
-  filters: { userId?: string; status?: string } = {}
+  filters: { userId?: string; status?: TicketStatus } = {}
 ) {
   const conditions = [];
   if (filters.userId) conditions.push(eq(supportTickets.created_by, filters.userId));
@@ -120,7 +120,7 @@ export async function countOpenTicketsByUser(userId: string): Promise<number> {
     .where(
       and(
         eq(supportTickets.created_by, userId),
-        inArray(supportTickets.status, ["ouvert", "en_cours"])
+        inArray(supportTickets.status, ["ouvert", "en_cours"] as const)
       )
     );
   return result[0]?.count ?? 0;
@@ -129,7 +129,10 @@ export async function countOpenTicketsByUser(userId: string): Promise<number> {
 /**
  * Updates a ticket status and sets resolved_at if status is 'resolu'.
  */
-export async function updateTicketStatus(id: string, status: string) {
+export async function updateTicketStatus(
+  id: string,
+  status: "ouvert" | "en_cours" | "resolu" | "ferme"
+) {
   const [ticket] = await db
     .update(supportTickets)
     .set({
@@ -164,4 +167,23 @@ export async function updateSetting(key: string, value: string) {
       target: supportSettings.key,
       set: { value, updated_at: new Date() },
     });
+}
+
+/**
+ * Updates or creates multiple support settings in a single transaction.
+ * All upserts succeed or none do.
+ */
+export async function updateSettings(settings: Record<string, string>) {
+  const now = new Date();
+  await db.transaction(async (tx) => {
+    for (const [key, value] of Object.entries(settings)) {
+      await tx
+        .insert(supportSettings)
+        .values({ key, value, updated_at: now })
+        .onConflictDoUpdate({
+          target: supportSettings.key,
+          set: { value, updated_at: now },
+        });
+    }
+  });
 }

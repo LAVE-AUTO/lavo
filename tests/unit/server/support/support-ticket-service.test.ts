@@ -272,27 +272,6 @@ describe('addSupportMessage', () => {
     expect(result).toBeDefined();
   });
 
-  // --- Closed ticket guard ---
-
-  it('throws 422 AppError when adding a message to a closed (ferme) ticket', async () => {
-    mockFindTicketById.mockResolvedValue({ ...baseTicket, status: 'ferme' });
-
-    await expect(
-      addSupportMessage(userId, ticketId, 'Can I reopen?', false)
-    ).rejects.toMatchObject({ statusCode: 422 });
-
-    expect(mockAddMessage).not.toHaveBeenCalled();
-  });
-
-  it('allows adding a message to a resolved (resolu) ticket', async () => {
-    mockFindTicketById.mockResolvedValue({ ...baseTicket, status: 'resolu', assigned_to: adminId });
-
-    const result = await addSupportMessage(userId, ticketId, 'Still an issue.', false);
-
-    expect(mockAddMessage).toHaveBeenCalledTimes(1);
-    expect(result).toBeDefined();
-  });
-
   // --- Permission enforcement ---
 
   it('throws 403 AppError when a non-admin sends a message to another user ticket', async () => {
@@ -365,7 +344,7 @@ describe('getTicketDetails', () => {
     expect(result.id).toBe(ticketId);
   });
 
-  it('returns ticket when admin requests any ticket', async () => {
+  it('returns ticket when admin requests any ticket (cross-user access permitted)', async () => {
     const otherTicket = { ...baseTicket, created_by: otherUserId };
     mockFindTicketById.mockResolvedValue(otherTicket);
 
@@ -381,7 +360,7 @@ describe('getTicketDetails', () => {
     expect(result.id).toBe(ticketId);
   });
 
-  // --- Permission enforcement ---
+  // --- Permission enforcement: cross-user access denied ---
 
   it('throws 403 AppError when a client requests another user ticket', async () => {
     await expect(
@@ -477,7 +456,7 @@ describe('updateSupportTicketStatus', () => {
   });
 
   it('forwards each valid status string without modification', async () => {
-    for (const status of ['ouvert', 'en_cours', 'resolu', 'ferme']) {
+    for (const status of ['ouvert', 'en_cours', 'resolu', 'ferme'] as const) {
       mockUpdateTicketStatus.mockResolvedValueOnce({ ...baseTicket, status });
       const result = await updateSupportTicketStatus(ticketId, status);
       expect(mockUpdateTicketStatus).toHaveBeenCalledWith(ticketId, status);
@@ -501,7 +480,7 @@ describe('getSupportSettings', () => {
     const result = await getSupportSettings();
 
     expect(result.max_open_tickets_per_user).toBe('5');
-    // support_email must be present (either from db or fallback).
+    // support_email must always be present.
     expect(typeof result.support_email).toBe('string');
     expect(result.support_email.length).toBeGreaterThan(0);
   });

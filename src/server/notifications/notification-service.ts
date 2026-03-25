@@ -8,7 +8,7 @@ import { sendPushNotification } from './fcm-service';
 export type NotifyEntryParams = {
   entryId: string;
   userId: string;
-  stationId: string;
+  stationId?: string;
   type:
     | 'reservation_created'
     | 'reservation_confirmed'
@@ -27,7 +27,9 @@ export type NotifyEntryParams = {
     | 'reschedule_station_notified'
     | 'delay_request_received'
     | 'delay_accepted'
-    | 'delay_refused';
+    | 'delay_refused'
+    | 'support_ticket_created'
+    | 'support_message_received';
   payload?: Record<string, unknown>;
 };
 
@@ -50,6 +52,8 @@ const PUSH_MESSAGES: Record<NotifyEntryParams['type'], { title: string; body: st
   delay_request_received: { title: 'Delay request received', body: 'A client has signaled they will be late for their reservation.' },
   delay_accepted: { title: 'Delay accepted', body: 'The station has accepted your late arrival. Please proceed as soon as possible.' },
   delay_refused: { title: 'Delay refused', body: 'The station cannot accommodate your late arrival. Please proceed to your appointment on time.' },
+  support_ticket_created: { title: 'Nouveau ticket de support', body: 'Votre demande a été enregistrée avec succès.' },
+  support_message_received: { title: 'Nouveau message de support', body: 'Vous avez reçu une réponse à votre ticket.' },
 };
 
 /**
@@ -61,7 +65,11 @@ export async function notifyEntry(params: NotifyEntryParams): Promise<void> {
     await sendPushNotification(params.userId, {
       title: message.title,
       body: message.body,
-      data: { entry_id: params.entryId, station_id: params.stationId, type: params.type },
+      data: {
+        entry_id: params.entryId,
+        ...(params.stationId && { station_id: params.stationId }),
+        type: params.type,
+      },
     });
   }
 }

@@ -12,12 +12,13 @@ import { NextResponse } from 'next/server';
  */
 export async function GET(
   request: Request,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   const auth = await requireRole(request, 'client', 'station', 'admin');
   if (auth instanceof NextResponse) return auth;
 
-  const idResult = supportTicketIdSchema.safeParse(params.id);
+  const { id } = await params;
+  const idResult = supportTicketIdSchema.safeParse(id);
   if (!idResult.success) {
     return error400('Invalid ticket ID format');
   }
@@ -37,12 +38,13 @@ export async function GET(
  */
 export async function PATCH(
   request: Request,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   const auth = await requireRole(request, 'admin');
   if (auth instanceof NextResponse) return auth;
 
-  const idResult = supportTicketIdSchema.safeParse(params.id);
+  const { id } = await params;
+  const idResult = supportTicketIdSchema.safeParse(id);
   if (!idResult.success) {
     return error400('Invalid ticket ID format');
   }
