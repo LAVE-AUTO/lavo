@@ -40,6 +40,11 @@ interface AuthContextValue {
 
 const AuthContext = createContext<AuthContextValue | undefined>(undefined);
 
+/** Returns "; Secure" when the page is served over HTTPS. */
+function secureFlag(): string {
+  return typeof window !== 'undefined' && window.isSecureContext ? '; Secure' : '';
+}
+
 function normalizeRole(role: string): UserRole {
   const lower = role.toLowerCase();
   if (lower === 'admin') return 'admin';
@@ -93,9 +98,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           // Hint cookie for middleware-level admin guard (non-httpOnly, non-sensitive)
           if (typeof document !== 'undefined') {
             if (normalized.role === 'admin') {
-              document.cookie = 'lavo_admin_session=1; path=/; SameSite=Lax';
+              document.cookie = `lavo_admin_session=1; path=/; SameSite=Lax${secureFlag()}`;
             } else {
-              document.cookie = 'lavo_admin_session=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT; SameSite=Lax';
+              document.cookie = `lavo_admin_session=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT; SameSite=Lax${secureFlag()}`;
             }
           }
           return data.access_token;
@@ -115,7 +120,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       baseURL: process.env.NEXT_PUBLIC_API_URL || '/api/v1',
     });
     if (typeof document !== 'undefined') {
-      document.cookie = 'lavo_admin_session=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT; SameSite=Lax';
+      document.cookie = `lavo_admin_session=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT; SameSite=Lax${secureFlag()}`;
     }
     if (typeof window !== 'undefined') {
       window.location.href = loginPath;
@@ -171,9 +176,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     // Hint cookie for middleware-level admin guard (non-httpOnly, non-sensitive)
     if (typeof document !== 'undefined') {
       if (normalized.role === 'admin') {
-        document.cookie = 'lavo_admin_session=1; path=/; SameSite=Lax';
+        document.cookie = `lavo_admin_session=1; path=/; SameSite=Lax${secureFlag()}`;
       } else {
-        document.cookie = 'lavo_admin_session=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT; SameSite=Lax';
+        document.cookie = `lavo_admin_session=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT; SameSite=Lax${secureFlag()}`;
       }
     }
     refreshAxiosService({
@@ -198,7 +203,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       baseURL: process.env.NEXT_PUBLIC_API_URL || '/api/v1',
     });
     if (typeof document !== 'undefined') {
-      document.cookie = 'lavo_admin_session=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT; SameSite=Lax';
+      document.cookie = `lavo_admin_session=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT; SameSite=Lax${secureFlag()}`;
     }
     if (typeof window !== 'undefined') {
       window.location.href = homePath;
