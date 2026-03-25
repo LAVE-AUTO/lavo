@@ -120,7 +120,7 @@ export function AdminStationsManagement({ stations, loading, error, query, onAct
               {isConfirming ? (
                 <>
                   <button type="button" disabled={isBusy}
-                    onClick={() => doAction(station.id, confirmAction!)}
+                    onClick={() => confirmAction && doAction(station.id, confirmAction)}
                     className={[
                       'rounded-lg px-3 py-1.5 text-[11px] font-bold text-white disabled:opacity-50',
                       confirmAction === 'suspend' ? 'bg-red-500 hover:bg-red-600' : 'bg-green-600 hover:bg-green-700',
@@ -135,7 +135,7 @@ export function AdminStationsManagement({ stations, loading, error, query, onAct
               ) : station.status === 'active' ? (
                 <button type="button" disabled={isBusy} onClick={() => requestConfirm(station.id, 'suspend')}
                   className="rounded-lg border border-orange-200 px-3 py-1.5 text-[11px] font-bold text-orange-600 hover:bg-orange-50 disabled:opacity-50 dark:border-orange-900/40 dark:text-orange-400 dark:hover:bg-orange-950/30">
-                  {t('btn_suspend')}
+                  {isBusy ? '…' : t('btn_suspend')}
                 </button>
               ) : (
                 <button type="button" disabled={isBusy} onClick={() => requestConfirm(station.id, 'activate')}

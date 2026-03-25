@@ -1984,7 +1984,9 @@
     "label_client": "Client",
     "event_refund_full": "Full refund of {amount} processed.",
     "event_refund_partial": "Partial refund of {amount} processed.",
-    "event_closed": "Dispute closed: {reason}"
+    "event_closed": "Dispute closed: {reason}",
+    "not_found": "Dispute not found.",
+    "label_station": "Station"
   },
   "admin_commission": {
     "page_title": "Commission",

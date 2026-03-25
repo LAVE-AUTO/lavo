@@ -53,7 +53,7 @@ export function AdminDisputeDetail({ id }: Props) {
       <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-white shadow-sm ring-1 ring-[#E8E4DC] dark:bg-[#131E10] dark:ring-[#1E2E18]">
         <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#C49A1E" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10" /><line x1="12" y1="8" x2="12" y2="12" /><line x1="12" y1="16" x2="12.01" y2="16" /></svg>
       </div>
-      <p className="text-[14px] font-semibold text-[#666] dark:text-[#9A9A8A]">Litige introuvable.</p>
+      <p className="text-[14px] font-semibold text-[#666] dark:text-[#9A9A8A]">{t('not_found')}</p>
       <Link href="/admin/disputes" className="rounded-xl bg-[#C49A1E] px-4 py-2 text-[12px] font-bold text-[#0C1209] transition-colors hover:bg-[#B08A14]">
         {t('back_link')}
       </Link>
@@ -263,7 +263,7 @@ export function AdminDisputeDetail({ id }: Props) {
               {/* Station card */}
               <div className="overflow-hidden rounded-2xl border border-[#E8E4DC] bg-white shadow-sm dark:border-[#1E2E18] dark:bg-[#131E10]">
                 <div className="border-b border-[#F0EDE6] bg-[#F9F8F5] px-5 py-3 dark:border-[#1A2A14] dark:bg-[#0E1A0C]">
-                  <p className="text-[11px] font-black uppercase tracking-widest text-[#AAAAAA] dark:text-[#4A4A3A]">Station</p>
+                  <p className="text-[11px] font-black uppercase tracking-widest text-[#AAAAAA] dark:text-[#4A4A3A]">{t('label_station')}</p>
                 </div>
                 <div className="flex items-center gap-3 p-4">
                   <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-[#F0EDE6] dark:bg-[#1A2A14]">

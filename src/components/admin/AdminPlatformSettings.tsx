@@ -92,13 +92,16 @@ export function AdminPlatformSettings() {
     const err = validate();
     if (err) { toastError(err); return; }
     setSaving(true);
-    // TODO: connect to API once endpoint is available (POST /admin/platform-settings)
-    await new Promise((r) => setTimeout(r, 700));
-    if (!mountedRef.current) return;
-    if (adminShare !== savedCommissionRate) updateRate(Math.round(adminShare * 10) / 10);
-    setCommitted({ penalty_rate: penaltyRate, reschedule_delay_minutes: rescheduleDelay });
-    setSaving(false);
-    toastSuccess(t('save_success'));
+    try {
+      // TODO: connect to API once endpoint is available (POST /admin/platform-settings)
+      await new Promise((r) => setTimeout(r, 700));
+      if (!mountedRef.current) return;
+      if (adminShare !== savedCommissionRate) updateRate(Math.round(adminShare * 10) / 10);
+      setCommitted({ penalty_rate: penaltyRate, reschedule_delay_minutes: rescheduleDelay });
+      toastSuccess(t('save_success'));
+    } finally {
+      if (mountedRef.current) setSaving(false);
+    }
   }
 
   return (
