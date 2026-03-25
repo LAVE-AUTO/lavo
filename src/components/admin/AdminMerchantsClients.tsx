@@ -7,6 +7,7 @@ import { getFromApi } from '@/services';
 import { AdminStationsManagement } from './AdminStationsManagement';
 import { AdminClientsList } from './AdminClientsList';
 import { AdminAddUserModal } from './users/AdminAddUserModal';
+import { AdminAddStationModal } from './stations/AdminAddStationModal';
 
 type Tab = 'stations' | 'clients';
 
@@ -25,7 +26,8 @@ export function AdminMerchantsClients() {
   const [loading, setLoading]       = useState(true);
   const [fetchError, setFetchError] = useState(false);
   const [query, setQuery]           = useState('');
-  const [addUserOpen, setAddUserOpen] = useState(false);
+  const [addUserOpen,    setAddUserOpen]    = useState(false);
+  const [addStationOpen, setAddStationOpen] = useState(false);
 
   useEffect(() => {
     getFromApi('/admin/stations?status=all').then(([ok, data]) => {
@@ -74,7 +76,8 @@ export function AdminMerchantsClients() {
               <span className="h-1.5 w-1.5 rounded-full bg-[#FF8800]" />{suspended} {t('chip_suspended')}
             </span>
             <div className="mx-1 h-4 w-px bg-[#E0DCD0] dark:bg-[#1A2A14]" />
-            <button type="button" onClick={() => setAddUserOpen(true)}
+            <button type="button"
+              onClick={() => tab === 'stations' ? setAddStationOpen(true) : setAddUserOpen(true)}
               className="flex items-center gap-1.5 rounded-lg bg-[#C49A1E] px-3 py-1.5 text-[11px] font-bold text-[#0C1209] transition-colors hover:bg-[#B08A14]">
               <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.8" strokeLinecap="round" aria-hidden="true"><line x1="12" y1="5" x2="12" y2="19" /><line x1="5" y1="12" x2="19" y2="12" /></svg>
               {t('btn_add_user')}
@@ -117,7 +120,8 @@ export function AdminMerchantsClients() {
         }
       </div>
 
-      <AdminAddUserModal open={addUserOpen} onClose={() => setAddUserOpen(false)} />
+      <AdminAddUserModal    open={addUserOpen}    onClose={() => setAddUserOpen(false)} />
+      <AdminAddStationModal open={addStationOpen} onClose={() => setAddStationOpen(false)} />
     </div>
   );
 }
