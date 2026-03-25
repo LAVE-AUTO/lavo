@@ -2208,11 +2208,6 @@
     "field_lastname_placeholder": "Dupont",
     "field_email": "Adresse e-mail",
     "field_email_placeholder": "jean.dupont@exemple.com",
-    "field_password": "Mot de passe généré",
-    "field_password_hint": "Généré automatiquement. L'utilisateur devra le changer à la première connexion.",
-    "btn_regenerate": "Regénérer",
-    "btn_copy": "Copier",
-    "btn_copied": "Copié !",
     "btn_create": "Créer et envoyer par e-mail",
     "btn_creating": "Création en cours…",
     "btn_cancel": "Annuler",
@@ -2223,15 +2218,13 @@
     "error_email_required": "L'adresse e-mail est requise.",
     "error_email_invalid": "L'adresse e-mail n'est pas valide.",
     "success_account_created": "Compte créé et e-mail envoyé.",
-    "success_credentials_title": "Identifiants générés",
-    "success_email_label": "Adresse e-mail",
-    "success_password_label": "Mot de passe temporaire",
     "success_info": "Les identifiants ont été envoyés par e-mail. L'utilisateur devra changer son mot de passe à la première connexion.",
-    "copy_email_label": "E-mail",
-    "copy_password_label": "Mot de passe",
-    "copy_credentials": "Copier les identifiants",
     "error_firstname_too_long": "Le prénom ne peut pas dépasser 100 caractères.",
     "error_lastname_too_long": "Le nom ne peut pas dépasser 100 caractères.",
-    "error_email_too_long": "L'adresse e-mail ne peut pas dépasser 254 caractères."
+    "error_email_too_long": "L'adresse e-mail ne peut pas dépasser 254 caractères.",
+    "form_password_notice": "Un mot de passe temporaire sera généré automatiquement et envoyé à cette adresse e-mail.",
+    "success_email_sent_title": "E-mail envoyé",
+    "success_email_sent_body": "Les identifiants de connexion ont été envoyés à {email}.",
+    "success_force_change_notice": "L'utilisateur devra changer son mot de passe à la première connexion."
   }
 }

@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useCallback, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { useTranslations } from 'next-intl';
 import { AdminAddUserForm, type Role } from './AdminAddUserForm';
 import { AdminAddUserSuccess } from './AdminAddUserSuccess';
@@ -9,7 +9,6 @@ type Step = 'form' | 'success';
 
 interface SuccessData {
   email: string;
-  password: string;
   first_name: string;
   last_name: string;
   role: Role;
@@ -53,18 +52,15 @@ export function AdminAddUserModal({ open, onClose }: Props) {
   const [firstName, setFirstName] = useState('');
   const [lastName,  setLastName]  = useState('');
   const [email,     setEmail]     = useState('');
-  const [password,  setPassword]  = useState(generatePassword);
   const [errors,    setErrors]    = useState<Record<string, string>>({});
   const [busy,      setBusy]      = useState(false);
-  const [copied,    setCopied]    = useState(false);
   const [success,   setSuccess]   = useState<SuccessData | null>(null);
 
   useEffect(() => {
     if (open) {
       setStep('form'); setRole('client');
       setFirstName(''); setLastName(''); setEmail('');
-      setPassword(generatePassword());
-      setErrors({}); setBusy(false); setCopied(false); setSuccess(null);
+      setErrors({}); setBusy(false); setSuccess(null);
     }
   }, [open]);
 
@@ -74,16 +70,14 @@ export function AdminAddUserModal({ open, onClose }: Props) {
     return () => window.removeEventListener('keydown', handler);
   }, [busy, onClose]);
 
-  const regenerate = useCallback(() => setPassword(generatePassword()), []);
-
   function validate() {
     const errs: Record<string, string> = {};
-    if (!firstName.trim())               errs.first_name = t('error_firstname_required');
+    if (!firstName.trim())                  errs.first_name = t('error_firstname_required');
     else if (firstName.trim().length > 100) errs.first_name = t('error_firstname_too_long');
-    if (!lastName.trim())                errs.last_name  = t('error_lastname_required');
+    if (!lastName.trim())                   errs.last_name  = t('error_lastname_required');
     else if (lastName.trim().length > 100)  errs.last_name  = t('error_lastname_too_long');
-    if (!email.trim())                   errs.email = t('error_email_required');
-    else if (email.trim().length > 254)  errs.email = t('error_email_too_long');
+    if (!email.trim())                      errs.email = t('error_email_required');
+    else if (email.trim().length > 254)     errs.email = t('error_email_too_long');
     else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim())) errs.email = t('error_email_invalid');
     return errs;
   }
@@ -94,22 +88,16 @@ export function AdminAddUserModal({ open, onClose }: Props) {
     setErrors({});
     setBusy(true);
 
+    const password = generatePassword();
+
     // TODO: connect to API once endpoint is available (POST /admin/users)
+    // Payload: { role, first_name, last_name, email, password }
+    // The backend must hash the password, set force_password_change: true, and send credentials by email.
     await new Promise<void>((r) => setTimeout(r, 900));
 
-    setSuccess({ email: email.trim(), password, first_name: firstName.trim(), last_name: lastName.trim(), role });
+    setSuccess({ email: email.trim(), first_name: firstName.trim(), last_name: lastName.trim(), role });
     setStep('success');
     setBusy(false);
-  }
-
-  async function handleCopyCredentials() {
-    if (!success) return;
-    const text = `${t('copy_email_label')}: ${success.email}\n${t('copy_password_label')}: ${success.password}`;
-    try {
-      await navigator.clipboard.writeText(text);
-      setCopied(true);
-      setTimeout(() => setCopied(false), 2000);
-    } catch { /* silent */ }
   }
 
   if (!open) return null;
@@ -133,22 +121,16 @@ export function AdminAddUserModal({ open, onClose }: Props) {
         {step === 'form' ? (
           <AdminAddUserForm
             role={role} firstName={firstName} lastName={lastName} email={email}
-            password={password} errors={errors} busy={busy}
+            errors={errors} busy={busy}
             onRoleChange={setRole}
             onFirstNameChange={setFirstName}
             onLastNameChange={setLastName}
             onEmailChange={setEmail}
-            onRegenerate={regenerate}
             onSubmit={handleSubmit}
             onClose={onClose}
           />
         ) : (
-          <AdminAddUserSuccess
-            data={success!}
-            copied={copied}
-            onCopy={handleCopyCredentials}
-            onClose={onClose}
-          />
+          <AdminAddUserSuccess data={success!} onClose={onClose} />
         )}
       </div>
     </div>

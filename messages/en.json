@@ -2208,11 +2208,6 @@
     "field_lastname_placeholder": "Doe",
     "field_email": "Email address",
     "field_email_placeholder": "john.doe@example.com",
-    "field_password": "Generated password",
-    "field_password_hint": "Auto-generated. The user must change it on first login.",
-    "btn_regenerate": "Regenerate",
-    "btn_copy": "Copy",
-    "btn_copied": "Copied!",
     "btn_create": "Create and send by email",
     "btn_creating": "Creating…",
     "btn_cancel": "Cancel",
@@ -2223,15 +2218,13 @@
     "error_email_required": "Email address is required.",
     "error_email_invalid": "Email address is not valid.",
     "success_account_created": "Account created and email sent.",
-    "success_credentials_title": "Generated credentials",
-    "success_email_label": "Email address",
-    "success_password_label": "Temporary password",
     "success_info": "Credentials have been sent by email. The user must change their password on first login.",
-    "copy_email_label": "Email",
-    "copy_password_label": "Password",
-    "copy_credentials": "Copy credentials",
     "error_firstname_too_long": "First name cannot exceed 100 characters.",
     "error_lastname_too_long": "Last name cannot exceed 100 characters.",
-    "error_email_too_long": "Email address cannot exceed 254 characters."
+    "error_email_too_long": "Email address cannot exceed 254 characters.",
+    "form_password_notice": "A temporary password will be automatically generated and sent to this email address.",
+    "success_email_sent_title": "Email sent",
+    "success_email_sent_body": "Login credentials have been sent to {email}.",
+    "success_force_change_notice": "The user will be required to change their password on first login."
   }
 }
