@@ -122,16 +122,8 @@ export function StationLocationForm({ location, onSaved, locked = false }: Props
       setFeedback({ ok: false, msg: t('geo_invalid_lng') });
       return;
     }
-    setSaving(true);
-    setFeedback(null);
-
     // TODO: connect to API once endpoint is available — PATCH /station/me does not exist yet
-    await new Promise((r) => setTimeout(r, 400));
-    setSaving(false);
-
-    onSaved({ address, city, latitude: lat || null, longitude: lng || null });
-    setFeedback({ ok: true, msg: t('location_save_success') });
-    setIsEditing(false);
+    setFeedback({ ok: false, msg: t('location_save_error') });
   }
 
   return (

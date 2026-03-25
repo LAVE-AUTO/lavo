@@ -1526,7 +1526,7 @@
     "geo_invalid_lat": "Invalid latitude (must be between -90 and 90)",
     "geo_invalid_lng": "Invalid longitude (must be between -180 and 180)",
     "location_save_success": "Location updated",
-    "location_save_error": "Error updating location",
+    "location_save_error": "Feature not available — API connection coming soon",
     "section_extras": "Extras by service type",
     "extras_tab_exterior": "Exterior",
     "extras_tab_interior": "Interior",
