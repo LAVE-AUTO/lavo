@@ -29,7 +29,7 @@ const ticketId = '11111111-1111-1111-1111-111111111111';
 
 const ticketFixture = {
   id: '11111111-1111-1111-1111-111111111111',
-  ticket_number: 'SUP-ABCD12',
+  ticket_number: 'SUP-ABCD1234',
   created_by: clientAuth.sub,
   subject: 'Broken machine',
   status: 'ouvert',
@@ -79,7 +79,7 @@ describe('GET /api/v1/support/[id]', () => {
     expect(res.status).toBe(200);
     const body = await res.json();
     expect(body.data.id).toBe(ticketId);
-    expect(body.data.ticket_number).toBe('SUP-ABCD12');
+    expect(body.data.ticket_number).toBe('SUP-ABCD1234');
     expect(mockGetTicketDetails).toHaveBeenCalledWith(clientAuth.sub, clientAuth.role, ticketId);
   });
 
@@ -353,6 +353,23 @@ describe('PATCH /api/v1/support/[id]', () => {
 
     expect(res.status).toBe(403);
     expect(mockUpdateSupportTicketStatus).not.toHaveBeenCalled();
+  });
+
+  // --- Status transition enforcement (delegated to service) ---
+
+  it('returns 422 when trying to re-open a closed ticket (invalid transition)', async () => {
+    mockUpdateSupportTicketStatus.mockRejectedValueOnce(
+      new AppError("Cannot transition ticket from 'ferme' to 'ouvert'", 422)
+    );
+
+    const res = await PATCH(makePatchRequest(ticketId, { status: 'ouvert' }), {
+      params: buildParams(ticketId),
+    });
+
+    expect(res.status).toBe(422);
+    const body = await res.json();
+    expect(body.message).toContain('ferme');
+    expect(mockUpdateSupportTicketStatus).toHaveBeenCalledWith(ticketId, 'ouvert');
   });
 
   // --- Unexpected errors ---

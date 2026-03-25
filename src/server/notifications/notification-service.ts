@@ -52,8 +52,8 @@ const PUSH_MESSAGES: Record<NotifyEntryParams['type'], { title: string; body: st
   delay_request_received: { title: 'Delay request received', body: 'A client has signaled they will be late for their reservation.' },
   delay_accepted: { title: 'Delay accepted', body: 'The station has accepted your late arrival. Please proceed as soon as possible.' },
   delay_refused: { title: 'Delay refused', body: 'The station cannot accommodate your late arrival. Please proceed to your appointment on time.' },
-  support_ticket_created: { title: 'Nouveau ticket de support', body: 'Votre demande a été enregistrée avec succès.' },
-  support_message_received: { title: 'Nouveau message de support', body: 'Vous avez reçu une réponse à votre ticket.' },
+  support_ticket_created: { title: 'Support ticket created', body: 'Your request has been registered successfully.' },
+  support_message_received: { title: 'New support message', body: 'You have received a reply to your support ticket.' },
 };
 
 /**

@@ -140,6 +140,8 @@ describe('PATCH /api/v1/admin/support/settings', () => {
     );
 
     expect(res.status).toBe(200);
+    const body = await res.json();
+    expect(body.data).toEqual({});
     expect(mockUpdateSupportSettings).toHaveBeenCalledWith({
       support_email: 'help@lavo.ca',
       max_open_tickets_per_user: '5',
@@ -160,12 +162,13 @@ describe('PATCH /api/v1/admin/support/settings', () => {
     expect(mockUpdateSupportSettings).toHaveBeenCalledWith({});
   });
 
-  it('accepts the maximum allowed value length (500 chars)', async () => {
+  it('accepts the maximum allowed value length (500 chars) on a free-form key', async () => {
+    // welcome_message has no semantic constraint beyond max length.
     const maxValue = 'A'.repeat(500);
-    const res = await PATCH(makePatchRequest({ support_email: maxValue }));
+    const res = await PATCH(makePatchRequest({ welcome_message: maxValue }));
 
     expect(res.status).toBe(200);
-    expect(mockUpdateSupportSettings).toHaveBeenCalledWith({ support_email: maxValue });
+    expect(mockUpdateSupportSettings).toHaveBeenCalledWith({ welcome_message: maxValue });
   });
 
   // --- Validation: value constraints ---

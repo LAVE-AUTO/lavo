@@ -28,7 +28,7 @@ const stationAuth = { sub: 'station-uuid-0001', role: 'station' };
 
 const ticketFixture = {
   id: 'ticket-uuid-0001-000000000001',
-  ticket_number: 'SUP-ABCD12',
+  ticket_number: 'SUP-ABCD1234',
   created_by: clientAuth.sub,
   subject: 'Broken machine',
   status: 'ouvert',
@@ -69,7 +69,7 @@ describe('GET /api/v1/support', () => {
     expect(res.status).toBe(200);
     const body = await res.json();
     expect(Array.isArray(body.data)).toBe(true);
-    expect(body.data[0].ticket_number).toBe('SUP-ABCD12');
+    expect(body.data[0].ticket_number).toBe('SUP-ABCD1234');
     expect(mockGetSupportTickets).toHaveBeenCalledWith(clientAuth.sub, clientAuth.role, undefined);
   });
 
@@ -177,7 +177,7 @@ describe('POST /api/v1/support', () => {
 
     expect(res.status).toBe(201);
     const body = await res.json();
-    expect(body.data.ticket_number).toBe('SUP-ABCD12');
+    expect(body.data.ticket_number).toBe('SUP-ABCD1234');
     expect(mockCreateSupportTicket).toHaveBeenCalledWith(clientAuth.sub, expect.objectContaining({
       subject: validBody.subject,
       message: validBody.message,

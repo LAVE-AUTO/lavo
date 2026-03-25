@@ -10,7 +10,7 @@ const mockListTickets = jest.fn();
 const mockCountOpenTicketsByUser = jest.fn();
 const mockUpdateTicketStatus = jest.fn();
 const mockGetSettings = jest.fn();
-const mockUpdateSetting = jest.fn();
+const mockUpdateSettings = jest.fn();
 const mockNotifyEntry = jest.fn();
 
 jest.mock('@/server/support/support-ticket-repository', () => ({
@@ -21,7 +21,7 @@ jest.mock('@/server/support/support-ticket-repository', () => ({
   countOpenTicketsByUser: (...args: unknown[]) => mockCountOpenTicketsByUser(...args),
   updateTicketStatus: (...args: unknown[]) => mockUpdateTicketStatus(...args),
   getSettings: (...args: unknown[]) => mockGetSettings(...args),
-  updateSetting: (...args: unknown[]) => mockUpdateSetting(...args),
+  updateSettings: (...args: unknown[]) => mockUpdateSettings(...args),
 }));
 
 jest.mock('@/server/notifications/notification-service', () => ({
@@ -51,7 +51,7 @@ const now = new Date();
 
 const baseTicket = {
   id: ticketId,
-  ticket_number: 'SUP-ABCD12',
+  ticket_number: 'SUP-ABCD1234',
   created_by: userId,
   assigned_to: null,
   subject: 'My washer is broken',
@@ -96,7 +96,7 @@ describe('createSupportTicket', () => {
         subject: createInput.subject,
         message: createInput.message,
         status: 'ouvert',
-        ticket_number: expect.stringMatching(/^SUP-[A-Z0-9]{6}$/),
+        ticket_number: expect.stringMatching(/^SUP-[A-F0-9]{8}$/),
       }),
       createInput.message
     );
@@ -145,12 +145,15 @@ describe('createSupportTicket', () => {
     expect(mockCreateTicket).toHaveBeenCalledTimes(1);
   });
 
-  it('ignores the setting when max_open_tickets_per_user is 0 (disabled)', async () => {
+  it('enforces the limit when max_open_tickets_per_user is 0 (zero tickets allowed)', async () => {
+    // A value of "0" means the limit is zero — any existing open ticket blocks creation.
     mockGetSettings.mockResolvedValue({ max_open_tickets_per_user: '0' });
-    mockCountOpenTicketsByUser.mockResolvedValue(99);
+    mockCountOpenTicketsByUser.mockResolvedValue(0);
 
-    await expect(createSupportTicket(userId, createInput)).resolves.toBeDefined();
-    expect(mockCreateTicket).toHaveBeenCalledTimes(1);
+    await expect(createSupportTicket(userId, createInput)).rejects.toMatchObject({
+      statusCode: 422,
+    });
+    expect(mockCreateTicket).not.toHaveBeenCalled();
   });
 
   it('ignores a non-numeric setting value and does not enforce the limit', async () => {
@@ -467,6 +470,7 @@ describe('updateSupportTicketStatus', () => {
 
   beforeEach(() => {
     jest.clearAllMocks();
+    mockFindTicketById.mockResolvedValue(baseTicket); // default: ticket is 'ouvert'
     mockUpdateTicketStatus.mockResolvedValue(updatedTicket);
   });
 
@@ -477,13 +481,45 @@ describe('updateSupportTicketStatus', () => {
     expect(result.status).toBe('resolu');
   });
 
-  it('forwards each valid status string without modification', async () => {
-    for (const status of ['ouvert', 'en_cours', 'resolu', 'ferme'] as const) {
+  it('allows valid transitions from ouvert to en_cours, resolu, or ferme', async () => {
+    for (const status of ['en_cours', 'resolu', 'ferme'] as const) {
+      mockFindTicketById.mockResolvedValue({ ...baseTicket, status: 'ouvert' });
       mockUpdateTicketStatus.mockResolvedValueOnce({ ...baseTicket, status });
       const result = await updateSupportTicketStatus(ticketId, status);
-      expect(mockUpdateTicketStatus).toHaveBeenCalledWith(ticketId, status);
       expect(result.status).toBe(status);
     }
+  });
+
+  it('throws 422 AppError when trying to re-open a closed (ferme) ticket', async () => {
+    mockFindTicketById.mockResolvedValue({ ...baseTicket, status: 'ferme' });
+
+    await expect(
+      updateSupportTicketStatus(ticketId, 'ouvert')
+    ).rejects.toMatchObject({ statusCode: 422 });
+
+    expect(mockUpdateTicketStatus).not.toHaveBeenCalled();
+  });
+
+  it('throws 422 AppError for any target status when the ticket is already closed', async () => {
+    mockFindTicketById.mockResolvedValue({ ...baseTicket, status: 'ferme' });
+
+    for (const status of ['ouvert', 'en_cours', 'resolu'] as const) {
+      await expect(
+        updateSupportTicketStatus(ticketId, status)
+      ).rejects.toMatchObject({ statusCode: 422 });
+    }
+
+    expect(mockUpdateTicketStatus).not.toHaveBeenCalled();
+  });
+
+  it('throws 404 AppError when the ticket does not exist', async () => {
+    mockFindTicketById.mockResolvedValue(undefined);
+
+    await expect(
+      updateSupportTicketStatus(ticketId, 'en_cours')
+    ).rejects.toMatchObject({ statusCode: 404 });
+
+    expect(mockUpdateTicketStatus).not.toHaveBeenCalled();
   });
 });
 
@@ -534,30 +570,32 @@ describe('getSupportSettings', () => {
 describe('updateSupportSettings', () => {
   beforeEach(() => {
     jest.clearAllMocks();
-    mockUpdateSetting.mockResolvedValue(undefined);
+    mockUpdateSettings.mockResolvedValue(undefined);
   });
 
-  it('calls updateSetting once per key-value pair', async () => {
-    await updateSupportSettings({
+  it('delegates to repo.updateSettings with the full settings map (atomic)', async () => {
+    const settings = {
       support_email: 'help@lavo.ca',
       max_open_tickets_per_user: '3',
-    });
+    };
 
-    expect(mockUpdateSetting).toHaveBeenCalledTimes(2);
-    expect(mockUpdateSetting).toHaveBeenCalledWith('support_email', 'help@lavo.ca');
-    expect(mockUpdateSetting).toHaveBeenCalledWith('max_open_tickets_per_user', '3');
+    await updateSupportSettings(settings);
+
+    expect(mockUpdateSettings).toHaveBeenCalledTimes(1);
+    expect(mockUpdateSettings).toHaveBeenCalledWith(settings);
   });
 
-  it('calls updateSetting zero times for an empty settings object', async () => {
+  it('passes an empty object to repo.updateSettings when no keys are provided', async () => {
     await updateSupportSettings({});
 
-    expect(mockUpdateSetting).not.toHaveBeenCalled();
+    expect(mockUpdateSettings).toHaveBeenCalledTimes(1);
+    expect(mockUpdateSettings).toHaveBeenCalledWith({});
   });
 
-  it('calls updateSetting exactly once for a single key', async () => {
+  it('passes a single-key map to repo.updateSettings', async () => {
     await updateSupportSettings({ support_email: 'ops@lavo.ca' });
 
-    expect(mockUpdateSetting).toHaveBeenCalledTimes(1);
-    expect(mockUpdateSetting).toHaveBeenCalledWith('support_email', 'ops@lavo.ca');
+    expect(mockUpdateSettings).toHaveBeenCalledTimes(1);
+    expect(mockUpdateSettings).toHaveBeenCalledWith({ support_email: 'ops@lavo.ca' });
   });
 });

@@ -1,7 +1,6 @@
 import { requireRole } from '@/lib/require-role';
 import { successResponse, error400, error500, fromAppError } from '@/lib/responses';
-import { mapZodErrors } from '@/validators/auth';
-import { updateTicketStatusSchema, supportTicketIdSchema } from '@/validators/support';
+import { mapZodErrors, updateTicketStatusSchema, supportTicketIdSchema } from '@/validators/support';
 import { getTicketDetails, updateSupportTicketStatus } from '@/server/support/support-ticket-service';
 import { AppError } from '@/lib/errors';
 import { NextResponse } from 'next/server';

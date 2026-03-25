@@ -1,7 +1,6 @@
 import { requireRole } from '@/lib/require-role';
 import { successResponse, error400, error500, fromAppError } from '@/lib/responses';
-import { mapZodErrors } from '@/validators/auth';
-import { updateSupportSettingsSchema } from '@/validators/support';
+import { mapZodErrors, updateSupportSettingsSchema } from '@/validators/support';
 import { getSupportSettings, updateSupportSettings } from '@/server/support/support-ticket-service';
 import { AppError } from '@/lib/errors';
 import { NextResponse } from 'next/server';
@@ -39,7 +38,7 @@ export async function PATCH(request: Request) {
     }
 
     await updateSupportSettings(parsed.data);
-    return successResponse(null, 'Support settings updated');
+    return successResponse({}, 'Support settings updated');
   } catch (e) {
     if (e instanceof AppError) return fromAppError(e);
     return error500(e);
