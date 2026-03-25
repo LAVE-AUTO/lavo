@@ -73,7 +73,7 @@ export default async function StationLoginPage({ params }: Props) {
             <p className="text-center mt-6 text-[14px] text-[#666] dark:text-lavo-muted">
               {t('no_account')}{' '}
               <Link
-                href="/stations/apply"
+                href="/station/apply"
                 className="text-gold font-semibold hover:underline"
               >
                 {t('register_link')}

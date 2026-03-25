@@ -248,10 +248,21 @@ export async function listStationsByStatus(status: string): Promise<Station[]> {
   return db.query.stations.findMany({ where: eq(stations.status, status) });
 }
 
+/**
+ * List all stations for admin KYC history, optionally filtered by status.
+ * Ordered by updated_at DESC so most recent activity appears first.
+ */
+export async function listAllStationsForAdmin(status?: string): Promise<Station[]> {
+  return db.query.stations.findMany({
+    where: status ? eq(stations.status, status) : undefined,
+    orderBy: (t, { desc }) => [desc(t.updated_at)],
+  });
+}
+
 export async function updateStationStatus(
   id: string,
   status: string,
-  extra?: Partial<Pick<Station, 'approved_by' | 'approved_at' | 'rejection_reason'>>
+  extra?: Partial<Pick<Station, 'approved_by' | 'approved_at' | 'rejection_reason' | 'rejection_count'>>
 ): Promise<void> {
   await db
     .update(stations)

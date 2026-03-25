@@ -5,7 +5,7 @@ import type { ReactNode } from 'react';
 import { useTranslations, useLocale } from 'next-intl';
 import { Link } from '@/i18n/navigation';
 import { useParams } from 'next/navigation';
-import { postWithApi } from '@/services/axios-service';
+import { getFromApi, postWithApi } from '@/services/axios-service';
 import { RESERVATIONS_MOCK_ENABLED, findMockReservation } from '@/data/reservations-mock';
 
 /* ------------------------------------------------------------------ */
@@ -25,6 +25,17 @@ interface ResInfo {
   stationName: string;
   forfaitName: string;
   dateLabel:   string;
+}
+
+interface ApiEntry {
+  id: string; entry_type: string; status: string;
+  station_id: string; vehicle_format_id: string | null; time_slot_id: string | null;
+}
+
+interface ApiStation {
+  id: string; name: string;
+  vehicleFormats: Array<{ id: string; label: string }>;
+  timeSlots: Array<{ id: string; start_time: string }>;
 }
 
 /* ------------------------------------------------------------------ */
@@ -69,10 +80,35 @@ export default function RateReservationPage() {
       return;
     }
 
-    // TODO: connect to API once endpoints are available
-    // 1. GET /me/entries/:id — verify status === 'completed', check completedAt for 30-day expiry
-    // 2. GET /me/entries/:id/rating — if 200 → already_rated; if 404 → show form
-    setPageState('error');
+    const [entriesOk, entriesData] = await getFromApi('/me/entries?per_page=100');
+    if (!mountedRef.current) return;
+    if (!entriesOk) { setPageState('error'); return; }
+
+    const entries: ApiEntry[] = (entriesData as { data: { entries: ApiEntry[] } })?.data?.entries ?? [];
+    const entry = entries.find((e) => e.id === id && e.entry_type === 'reservation');
+    if (!entry) { setPageState('error'); return; }
+    if (entry.status !== 'completed') { setPageState('error'); return; }
+
+    const [stationOk, stationData] = await getFromApi(`/stations/${entry.station_id}`);
+    if (!mountedRef.current) return;
+    if (!stationOk) { setPageState('error'); return; }
+
+    const station = (stationData as { data: ApiStation }).data;
+    const format = station.vehicleFormats.find((f) => f.id === entry.vehicle_format_id);
+    const slot = station.timeSlots.find((s) => s.id === entry.time_slot_id);
+    const slotDate = slot ? new Date(slot.start_time) : null;
+
+    setRes({
+      stationId:   station.id,
+      stationName: station.name,
+      forfaitName: format?.label ?? '—',
+      dateLabel:   slotDate
+        ? slotDate.toLocaleDateString(locale === 'en' ? 'en-CA' : 'fr-CA', {
+            weekday: 'short', day: 'numeric', month: 'long', year: 'numeric',
+          })
+        : '—',
+    });
+    setPageState('form');
   }, [id, locale]);
 
   useEffect(() => { loadData(); }, [loadData]);
@@ -150,10 +186,8 @@ export default function RateReservationPage() {
     return <SuccessView stationId={res?.stationId ?? ''} />;
   }
 
-  const display     = hovered > 0 ? hovered : score;
-  const starLabels  = locale === 'en'
-    ? ['', t('star_1'), t('star_2'), t('star_3'), t('star_4'), t('star_5')]
-    : ['', t('star_1'), t('star_2'), t('star_3'), t('star_4'), t('star_5')];
+  const display    = hovered > 0 ? hovered : score;
+  const starLabels = ['', t('star_1'), t('star_2'), t('star_3'), t('star_4'), t('star_5')];
 
   /* ---- Form ---- */
   return (

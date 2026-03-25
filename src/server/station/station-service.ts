@@ -14,6 +14,7 @@ import {
 import {
   sendVerificationEmail,
   sendStationApprovalEmail,
+  sendStationRejectionEmail,
   sendStationApplicationAdminNotification,
 } from '@/lib/email';
 import { APP_URL } from '@/helpers/constants';
@@ -33,6 +34,7 @@ import {
   listActiveStations,
   listActiveStationsGroup,
   listStationsByStatus,
+  listAllStationsForAdmin,
   updateStationStatus,
   type ListActiveStationsFilters,
   type Station,
@@ -183,6 +185,10 @@ export async function getPendingStations(): Promise<Station[]> {
   return listStationsByStatus('pending_admin_validation');
 }
 
+export async function getStationsForAdmin(status?: string): Promise<Station[]> {
+  return listAllStationsForAdmin(status);
+}
+
 export async function getStationById(id: string): Promise<StationWithDocuments> {
   const station = await findStationById(id);
   if (!station) throw new NotFoundError('Station not found');
@@ -263,7 +269,19 @@ export async function rejectStation(
   }
 
   void adminId; // logged implicitly via audit; extend with admin_logs table if needed
-  await updateStationStatus(stationId, 'rejected', { rejection_reason: reason });
+  await updateStationStatus(stationId, 'rejected', {
+    rejection_reason: reason,
+    rejection_count: (station.rejection_count ?? 0) + 1,
+  });
+
+  // Fire-and-forget rejection notification email
+  if (station.user_id) {
+    findById(station.user_id).then((user) => {
+      if (user) {
+        sendStationRejectionEmail(user.email, station.name, reason).catch(() => void 0);
+      }
+    }).catch(() => void 0);
+  }
 }
 
 export async function getMyStation(userId: string): Promise<StationWithDocuments> {

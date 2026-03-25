@@ -124,6 +124,28 @@ const TEXTS = {
       ignore: 'If you did not request a password reset, you can safely ignore this email.',
     },
   },
+  stationRejection: {
+    fr: {
+      subject: (name: string) => `[Slowtime] Votre demande pour la station ${name} n'a pas été approuvée`,
+      greeting: 'Bonjour,',
+      body: (name: string) =>
+        `Nous vous informons que votre demande d'adhésion pour la station <strong>${name}</strong> n'a malheureusement pas été approuvée par notre équipe.`,
+      reasonLabel: 'Motif du refus :',
+      extra: 'Vous pouvez corriger les informations et resoumettre votre dossier depuis votre espace. Pour toute question, n\'hésitez pas à contacter notre support.',
+      cta: 'Resoumettre mon dossier',
+      closing: 'L\'équipe Slowtime',
+    },
+    en: {
+      subject: (name: string) => `[Slowtime] Your application for station ${name} was not approved`,
+      greeting: 'Hello,',
+      body: (name: string) =>
+        `We regret to inform you that your membership application for station <strong>${name}</strong> has not been approved by our team.`,
+      reasonLabel: 'Reason for rejection:',
+      extra: 'You may correct the information and resubmit your application from your account. If you have any questions, please contact our support team.',
+      cta: 'Resubmit my application',
+      closing: 'The Slowtime team',
+    },
+  },
   stationApproval: {
     fr: {
       subject: (name: string) => `[Slowtime] Votre station ${name} a été approuvée`,
@@ -457,6 +479,40 @@ export async function sendStationApprovalEmail(
       greeting: t.greeting,
       bodyHtml: `${t.body(escapedName)}<br/><br/>${t.extra}${qrBlock}`,
       ctaUrl: loginUrl || undefined,
+      ctaLabel: t.cta,
+      footNote: t.closing,
+    }),
+  });
+}
+
+
+export async function sendStationRejectionEmail(
+  to: string,
+  stationName: string,
+  rejectionReason: string,
+  locale: Locale = 'fr'
+): Promise<void> {
+  const client = getResendClient();
+  if (!client) {
+    warnResendMissingOnce('sendStationRejectionEmail');
+    return;
+  }
+  if (!isReasonableRecipientEmail(to)) return;
+
+  const t = TEXTS.stationRejection[locale];
+  const resubmitUrl = safeHttpUrlForEmailHref(`${APP_URL}/${locale}/station/resubmit`) ?? '';
+  const subjectName = safePlainTextSnippet(stationName, 200);
+  const escapedName = escapeHtmlPlain(safePlainTextSnippet(stationName, 500));
+  const escapedReason = escapeHtmlPlain(safePlainTextSnippet(rejectionReason, 1000));
+
+  await client.emails.send({
+    from: FROM,
+    to,
+    subject: t.subject(subjectName),
+    html: brandedEmail(locale, {
+      greeting: t.greeting,
+      bodyHtml: `${t.body(escapedName)}<br/><br/><p style="margin:0 0 6px;font-weight:bold;">${t.reasonLabel}</p><p style="margin:0;padding:12px 16px;background:#F7F6F0;border-left:3px solid #C49A1E;border-radius:4px;line-height:1.5;">${escapedReason}</p><br/>${t.extra}`,
+      ctaUrl: resubmitUrl || undefined,
       ctaLabel: t.cta,
       footNote: t.closing,
     }),
