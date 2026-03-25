@@ -117,3 +117,11 @@ export const updateSupportSettingsSchema = z
 
 /** Optional status query param filter - must match a valid status if provided. */
 export const supportStatusFilterSchema = supportStatusSchema.optional();
+
+/**
+ * Body schema for PATCH /api/v1/admin/support/[id]/assign.
+ * `assigned_to` must be a valid UUID when provided, or null to unassign.
+ */
+export const assignTicketSchema = z.object({
+  assigned_to: z.string().uuid('assigned_to must be a valid UUID').nullable(),
+});

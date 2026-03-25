@@ -5,6 +5,9 @@ import { HTTP_STATUS } from "@/helpers/constants";
 import { z } from "zod";
 import { createTicketSchema, supportStatusSchema } from "@/validators/support";
 import { randomBytes } from "crypto";
+import { db } from "@/lib/db";
+import { users } from "@/lib/db/schema";
+import { eq } from "drizzle-orm";
 
 type SupportStatus = z.infer<typeof supportStatusSchema>;
 
@@ -240,4 +243,42 @@ export async function getSupportSettings(): Promise<Record<string, string>> {
  */
 export async function updateSupportSettings(settings: Record<string, string>) {
   await repo.updateSettings(settings);
+}
+
+/**
+ * Assigns or unassigns a support ticket to an admin user.
+ *
+ * Rules:
+ * - The ticket must exist (404 otherwise).
+ * - When `assignedTo` is not null, the target user must exist and have role `admin` (422 otherwise).
+ * - When `assignedTo` is null the ticket is unassigned; no role check is needed.
+ *
+ * @param ticketId   - UUID of the ticket to update.
+ * @param assignedTo - UUID of the admin user to assign, or null to unassign.
+ * @returns The updated ticket row.
+ */
+export async function assignSupportTicket(
+  ticketId: string,
+  assignedTo: string | null
+) {
+  const ticket = await repo.findTicketById(ticketId);
+  if (!ticket) throw new AppError("Ticket not found", HTTP_STATUS.NOT_FOUND);
+
+  if (assignedTo !== null) {
+    const user = await db.query.users.findFirst({
+      where: eq(users.id, assignedTo),
+      columns: { id: true, role: true },
+    });
+
+    if (!user || user.role !== "admin") {
+      throw new AppError(
+        "Target user does not exist or is not an admin",
+        HTTP_STATUS.UNPROCESSABLE_ENTITY
+      );
+    }
+  }
+
+  const updated = await repo.assignTicket(ticketId, assignedTo);
+  if (!updated) throw new AppError("Ticket not found", HTTP_STATUS.NOT_FOUND);
+  return updated;
 }

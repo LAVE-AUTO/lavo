@@ -97,6 +97,20 @@ export async function addMessage(messageData: NewMessage) {
 }
 
 /**
+ * Assigns or unassigns a ticket to a user (intended to be an admin).
+ * Pass `null` for `assignedTo` to clear the current assignment.
+ * Returns the updated ticket row, or null if the ticket was not found.
+ */
+export async function assignTicket(ticketId: string, assignedTo: string | null) {
+  const [ticket] = await db
+    .update(supportTickets)
+    .set({ assigned_to: assignedTo, updated_at: new Date() })
+    .where(eq(supportTickets.id, ticketId))
+    .returning();
+  return ticket ?? null;
+}
+
+/**
  * Safe subset of user columns exposed in support ticket responses.
  * Never include password_hash, stripe_customer_id, or other sensitive fields.
  */
