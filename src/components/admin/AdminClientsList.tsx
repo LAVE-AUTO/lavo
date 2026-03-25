@@ -2,17 +2,16 @@
 
 import { useState } from 'react';
 import { useTranslations } from 'next-intl';
-import { Link } from '@/i18n/navigation';
 
-// TODO: connect to API once endpoint is available (GET /admin/clients)
-const MOCK_CLIENTS = [
-  { id: 'c1', first_name: 'Sophie',   last_name: 'Martin',   email: 'sophie.martin@gmail.com',   phone: '+1 514 555 0101', status: 'active',    created_at: '2025-11-15T10:00:00Z' },
-  { id: 'c2', first_name: 'Jean',     last_name: 'Tremblay', email: 'jean.tremblay@outlook.com', phone: '+1 514 555 0202', status: 'suspended', created_at: '2025-12-03T14:30:00Z' },
-  { id: 'c3', first_name: 'Marie',    last_name: 'Côté',     email: 'marie.cote@gmail.com',      phone: '+1 438 555 0303', status: 'active',    created_at: '2026-01-20T09:15:00Z' },
-  { id: 'c4', first_name: 'Luc',      last_name: 'Gagnon',   email: 'luc.gagnon@hotmail.com',    phone: '+1 450 555 0404', status: 'active',    created_at: '2026-02-05T16:00:00Z' },
-  { id: 'c5', first_name: 'Isabelle', last_name: 'Roy',      email: 'i.roy@email.ca',            phone: '+1 514 555 0505', status: 'suspended', created_at: '2026-02-28T11:45:00Z' },
-  { id: 'c6', first_name: 'Marc',     last_name: 'Lavoie',   email: 'marc.lavoie@videotron.ca',  phone: '+1 438 555 0606', status: 'active',    created_at: '2026-03-10T08:00:00Z' },
-];
+// MOCK DATA — replace with API call before shipping (GET /admin/clients)
+const MOCK_CLIENTS = process.env.NODE_ENV === 'development' ? [
+  { id: 'c1', first_name: 'Client',  last_name: 'A', email: 'client.a@example.com', phone: '+1 555 000 0001', status: 'active',    created_at: '2025-11-15T10:00:00Z' },
+  { id: 'c2', first_name: 'Client',  last_name: 'B', email: 'client.b@example.com', phone: '+1 555 000 0002', status: 'suspended', created_at: '2025-12-03T14:30:00Z' },
+  { id: 'c3', first_name: 'Client',  last_name: 'C', email: 'client.c@example.com', phone: '+1 555 000 0003', status: 'active',    created_at: '2026-01-20T09:15:00Z' },
+  { id: 'c4', first_name: 'Client',  last_name: 'D', email: 'client.d@example.com', phone: '+1 555 000 0004', status: 'active',    created_at: '2026-02-05T16:00:00Z' },
+  { id: 'c5', first_name: 'Client',  last_name: 'E', email: 'client.e@example.com', phone: '+1 555 000 0005', status: 'suspended', created_at: '2026-02-28T11:45:00Z' },
+  { id: 'c6', first_name: 'Client',  last_name: 'F', email: 'client.f@example.com', phone: '+1 555 000 0006', status: 'active',    created_at: '2026-03-10T08:00:00Z' },
+] : [];
 
 const AVATAR_COLORS = ['#C49A1E', '#5A8A50', '#3B82F6', '#8B5CF6', '#EF4444', '#06B6D4'];
 
@@ -59,7 +58,7 @@ export function AdminClientsList({ query, onAction }: Props) {
       <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-[#F5F3EE] dark:bg-[#131E10]">
         <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#C49A1E" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2" /><circle cx="9" cy="7" r="4" /></svg>
       </div>
-      <p className="text-[13px] font-semibold text-[#999]">{q ? t('empty_search') : t('empty_search')}</p>
+      <p className="text-[13px] font-semibold text-[#999]">{q ? t('empty_search') : t('empty_data')}</p>
     </div>
   );
 
@@ -96,10 +95,10 @@ export function AdminClientsList({ query, onAction }: Props) {
             </div>
 
             <div className="min-w-0">
-              <Link href={`/admin/clients/${client.id}` as Parameters<typeof Link>[0]['href']}
-                className="block truncate text-[13px] font-bold text-[#1A1A0A] underline-offset-2 hover:text-[#C49A1E] hover:underline dark:text-[#F0EDD4]">
+              {/* TODO: link to /admin/clients/:id once the detail page is built */}
+              <p className="block truncate text-[13px] font-bold text-[#1A1A0A] dark:text-[#F0EDD4]">
                 {client.first_name} {client.last_name}
-              </Link>
+              </p>
               <p className="truncate text-[11px] text-[#BBBBAA] dark:text-[#4A4A3A]">{formatDate(client.created_at)}</p>
             </div>
 

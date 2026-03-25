@@ -1892,6 +1892,7 @@
     "toast_suspended": "Compte suspendu.",
     "toast_unblocked": "Compte débloqué.",
     "empty_stations": "Aucun marchand actif ou suspendu.",
+    "empty_data": "Aucun client pour le moment.",
     "empty_search": "Aucun résultat pour cette recherche.",
     "error_load": "Impossible de charger les données.",
     "chip_active": "actifs",
