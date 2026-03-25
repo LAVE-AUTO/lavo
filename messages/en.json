@@ -1514,7 +1514,7 @@
     "service_scope_interior": "Interior wash only",
     "service_scope_both": "Exterior and interior",
     "profile_save_success": "Profile updated",
-    "profile_save_error": "Error updating profile",
+    "profile_save_error": "Feature not available — API connection coming soon",
     "section_location": "Location",
     "field_address": "Address",
     "field_city": "City",

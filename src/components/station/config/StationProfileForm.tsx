@@ -72,17 +72,8 @@ export function StationProfileForm({ profile, onSaved, locked = false }: Props) 
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
-    setSaving(true);
-    setFeedback(null);
-
     // TODO: connect to API once endpoint is available — PATCH /station/me does not exist yet
-    await new Promise((r) => setTimeout(r, 400));
-    setSaving(false);
-
-    const saved: StationProfile = { name, description: description || null, service_scope: serviceScope || null };
-    onSaved(saved);
-    setFeedback({ ok: true, msg: t('profile_save_success') });
-    setIsEditing(false);
+    setFeedback({ ok: false, msg: t('profile_save_error') });
   }
 
   return (
