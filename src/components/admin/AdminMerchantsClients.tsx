@@ -3,7 +3,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { useTranslations } from 'next-intl';
 import { getFromApi } from '@/services';
-import { useToast } from '@/context/toast-context';
+
 import { AdminStationsManagement } from './AdminStationsManagement';
 import { AdminClientsList } from './AdminClientsList';
 
@@ -16,7 +16,6 @@ export interface StationRow {
 
 export function AdminMerchantsClients() {
   const t = useTranslations('admin_clients');
-  const { success: toastSuccess } = useToast();
   const mountedRef = useRef(true);
   useEffect(() => { mountedRef.current = true; return () => { mountedRef.current = false; }; }, []);
 
@@ -35,26 +34,20 @@ export function AdminMerchantsClients() {
     });
   }, []);
 
-  async function handleStationAction(id: string, action: 'activate' | 'suspend') {
+  async function handleStationAction(_id: string, _action: 'activate' | 'suspend') {
     // TODO: connect to API once endpoint is available (PATCH /admin/stations/:id)
-    await new Promise((r) => setTimeout(r, 500));
-    if (!mountedRef.current) return;
-    setStations((prev) => prev.map((s) => s.id === id ? { ...s, status: action === 'activate' ? 'active' : 'suspended' } : s));
-    toastSuccess(action === 'activate' ? t('toast_activated') : t('toast_suspended'));
   }
 
-  async function handleClientAction(_id: string, action: 'activate' | 'suspend' | 'unblock') {
+  async function handleClientAction(_id: string, _action: 'activate' | 'suspend' | 'unblock') {
     // TODO: connect to API once endpoints are available (PATCH /admin/users/:id, POST /admin/users/:id/unblock)
-    await new Promise((r) => setTimeout(r, 500));
-    if (!mountedRef.current) return;
-    toastSuccess(action === 'activate' ? t('toast_activated') : action === 'suspend' ? t('toast_suspended') : t('toast_unblocked'));
   }
 
   const managed   = stations.filter((s) => s.status === 'active' || s.status === 'suspended');
   const actives   = managed.filter((s) => s.status === 'active').length;
   const suspended = managed.filter((s) => s.status === 'suspended').length;
 
-  const MOCK_CLIENT_COUNT = 6;
+  // TODO: replace with real client count from API
+  const MOCK_CLIENT_COUNT = process.env.NODE_ENV === 'development' ? 6 : 0;
   const tabs = [
     { id: 'stations' as Tab, count: loading ? '…' : managed.length },
     { id: 'clients'  as Tab, count: MOCK_CLIENT_COUNT },
