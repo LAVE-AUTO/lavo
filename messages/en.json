@@ -367,7 +367,8 @@
     "queue": "Queue",
     "config": "Configuration",
     "clients": "Clients",
-    "history": "History"
+    "history": "History",
+    "support": "Support"
   },
   "footer": {
     "tagline": "The booking and payment platform for car wash stations across Canada.",
@@ -2138,7 +2139,12 @@
     "status_in_progress": "In progress",
     "status_resolved": "Resolved",
     "status_closed": "Closed",
-    "label_created": "Created on"
+    "label_created": "Created on",
+    "label_messages": "messages",
+    "thread_no_messages": "No messages yet.",
+    "thread_admin_label": "Support team",
+    "thread_resolved_hint": "This ticket has been resolved by the support team.",
+    "thread_closed_hint": "This ticket is closed."
   },
   "admin_support": {
     "page_title": "Support tickets",

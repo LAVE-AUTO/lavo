@@ -367,7 +367,8 @@
     "queue": "File d'attente",
     "config": "Configuration",
     "clients": "Clients",
-    "history": "Historique"
+    "history": "Historique",
+    "support": "Support"
   },
   "footer": {
     "tagline": "La plateforme de réservation et de paiement pour vos stations de lavage automobile au Canada.",
@@ -2138,7 +2139,12 @@
     "status_in_progress": "En cours",
     "status_resolved": "Résolu",
     "status_closed": "Fermé",
-    "label_created": "Créé le"
+    "label_created": "Créé le",
+    "label_messages": "messages",
+    "thread_no_messages": "Aucun message pour l'instant.",
+    "thread_admin_label": "Équipe support",
+    "thread_resolved_hint": "Ce ticket a été résolu par l'équipe support.",
+    "thread_closed_hint": "Ce ticket est clôturé."
   },
   "admin_support": {
     "page_title": "Tickets support",

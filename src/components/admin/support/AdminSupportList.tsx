@@ -6,10 +6,10 @@ import { Link } from '@/i18n/navigation';
 import type { SupportTicket, TicketStatus, TicketRole } from '@/components/support/support-mock';
 
 const STATUS_STYLE: Record<TicketStatus, { bar: string; badge: string; dot: string; label: string }> = {
-  open:        { bar: 'bg-[#F97316]', badge: 'bg-[#FFF4EC] text-[#C2410C] ring-1 ring-[#F97316]/20', dot: 'bg-[#F97316]', label: 'status_open' },
-  in_progress: { bar: 'bg-[#3B82F6]', badge: 'bg-[#EFF6FF] text-[#1D4ED8] ring-1 ring-[#3B82F6]/20', dot: 'bg-[#3B82F6]', label: 'status_in_progress' },
-  resolved:    { bar: 'bg-[#22C55E]', badge: 'bg-[#F0FDF4] text-[#15803D] ring-1 ring-[#22C55E]/20', dot: 'bg-[#22C55E]', label: 'status_resolved' },
-  closed:      { bar: 'bg-[#94A3B8]', badge: 'bg-[#F8FAFC] text-[#64748B] ring-1 ring-[#CBD5E1]/60', dot: 'bg-[#94A3B8]', label: 'status_closed' },
+  open:        { bar: 'bg-[#F97316]', badge: 'bg-[#FFF4EC] text-[#C2410C] ring-1 ring-[#F97316]/20',  dot: 'bg-[#F97316]', label: 'status_open' },
+  in_progress: { bar: 'bg-[#3B82F6]', badge: 'bg-[#EFF6FF] text-[#1D4ED8] ring-1 ring-[#3B82F6]/20',  dot: 'bg-[#3B82F6]', label: 'status_in_progress' },
+  resolved:    { bar: 'bg-[#22C55E]', badge: 'bg-[#F0FDF4] text-[#15803D] ring-1 ring-[#22C55E]/20',  dot: 'bg-[#22C55E]', label: 'status_resolved' },
+  closed:      { bar: 'bg-[#94A3B8]', badge: 'bg-[#F8FAFC] text-[#64748B] ring-1 ring-[#CBD5E1]/60',  dot: 'bg-[#94A3B8]', label: 'status_closed' },
 };
 
 function formatDate(d: string) {
@@ -22,7 +22,6 @@ function initials(name: string) {
 }
 
 type FilterKey = TicketStatus | 'all';
-
 interface Props { tickets: SupportTicket[]; query: string }
 
 export function AdminSupportList({ tickets, query }: Props) {
@@ -51,7 +50,7 @@ export function AdminSupportList({ tickets, query }: Props) {
   };
 
   return (
-    <div className="flex flex-col gap-5">
+    <div className="flex flex-col gap-4">
       {/* Filter tabs */}
       <div className="flex flex-wrap gap-2">
         {FILTERS.map(({ key, label, color }) => {
@@ -80,25 +79,33 @@ export function AdminSupportList({ tickets, query }: Props) {
       {!filtered.length ? (
         <div className="flex flex-col items-center gap-3 py-24 text-center">
           <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-white shadow-sm ring-1 ring-[#E8E4DC] dark:bg-[#131E10] dark:ring-[#1E2E18]">
-            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#C49A1E" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z" /></svg>
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#C49A1E" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+              <path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z" />
+            </svg>
           </div>
           <p className="text-[13px] font-semibold text-[#999]">{q ? t('empty_search') : t('empty_tickets')}</p>
         </div>
       ) : (
-        <div className="flex flex-col gap-3">
+        <div className="flex flex-col gap-2.5">
           {filtered.map((tk) => {
-            const s = STATUS_STYLE[tk.status];
+            const s        = STATUS_STYLE[tk.status];
+            const lastMsg  = tk.messages[tk.messages.length - 1];
+            const msgCount = tk.messages.length;
             return (
-              <Link key={tk.id} href={`/admin/support/${tk.id}` as Parameters<typeof Link>[0]['href']}
-                className="group flex overflow-hidden rounded-2xl border border-[#E8E4DC] bg-white shadow-sm transition-all duration-200 hover:-translate-y-0.5 hover:shadow-md dark:border-[#1E2E18] dark:bg-[#131E10]">
-
+              <Link
+                key={tk.id}
+                href={`/admin/support/${tk.id}` as Parameters<typeof Link>[0]['href']}
+                className="group flex overflow-hidden rounded-2xl border border-[#E8E4DC] bg-white shadow-sm transition-all duration-200 hover:-translate-y-0.5 hover:border-[#D0CCC4] hover:shadow-md dark:border-[#1E2E18] dark:bg-[#131E10] dark:hover:border-[#2A3820]"
+              >
                 <div className={`w-1 shrink-0 ${s.bar}`} />
 
                 <div className="flex min-w-0 flex-1 items-center gap-5 px-5 py-4">
+                  {/* Avatar */}
                   <div className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-xl text-[12px] font-black text-white ${s.bar}`}>
                     {initials(tk.created_by)}
                   </div>
 
+                  {/* Body */}
                   <div className="min-w-0 flex-1">
                     <div className="flex flex-wrap items-center gap-2">
                       <p className="truncate text-[14px] font-bold text-[#1A1A0A] dark:text-[#F0EDD4]">{tk.subject}</p>
@@ -109,12 +116,19 @@ export function AdminSupportList({ tickets, query }: Props) {
                         {ROLE_LABEL[tk.role]}
                       </span>
                     </div>
-                    <p className="mt-0.5 truncate text-[12px] text-[#AAAAAA] dark:text-[#4A4A3A]">
+                    {lastMsg ? (
+                      <p className="mt-0.5 truncate text-[12px] text-[#AAAAAA] dark:text-[#4A4A3A]">
+                        {lastMsg.body}
+                      </p>
+                    ) : null}
+                    <p className="mt-0.5 text-[11px] text-[#CCCCBB] dark:text-[#3A3A2A]">
                       {tk.created_by} · {formatDate(tk.created_at)}
+                      {msgCount > 0 && <span className="ml-2 text-[#BBBBAA] dark:text-[#3A3A2A]">· {msgCount} msg</span>}
                     </p>
                   </div>
 
-                  <div className="flex shrink-0 items-center gap-1 text-[11px] font-bold text-[#BBBBAA] transition-colors group-hover:text-[#C49A1E] dark:text-[#4A4A3A]">
+                  {/* Arrow */}
+                  <div className="flex shrink-0 items-center gap-1 text-[11px] font-bold text-[#CCCCBB] transition-colors group-hover:text-[#C49A1E] dark:text-[#3A3A2A]">
                     {t('btn_detail')}
                     <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" aria-hidden="true"><polyline points="9 18 15 12 9 6" /></svg>
                   </div>
