@@ -1,13 +1,20 @@
 import { requireRole } from '@/lib/require-role';
-import { successResponse, error400, error500, fromAppError } from '@/lib/responses';
+import { successResponse, error400, error429, error500, fromAppError } from '@/lib/responses';
 import { mapZodErrors, addSupportMessageSchema, supportTicketIdSchema } from '@/validators/support';
 import { addSupportMessage } from '@/server/support/support-ticket-service';
 import { AppError } from '@/lib/errors';
 import { NextResponse } from 'next/server';
+import { checkSlidingWindowRateLimit, normalizeRateLimitKey } from '@/lib/rate-limiter';
+
+/** Maximum number of messages a user may send per hour across all tickets. */
+const MESSAGE_SEND_LIMIT = 30;
+/** Sliding window size for message sending rate limit: 1 hour. */
+const MESSAGE_SEND_WINDOW_SECS = 3600;
 
 /**
  * POST /api/v1/support/[id]/messages
  * Adds a message to the ticket thread.
+ * Rate limited: 30 messages per hour per authenticated user.
  */
 export async function POST(
   request: Request,
@@ -21,6 +28,14 @@ export async function POST(
   if (!idResult.success) {
     return error400('Invalid ticket ID format');
   }
+
+  const rateLimitKey = normalizeRateLimitKey(`support:message:user:${auth.sub}`);
+  const { allowed } = await checkSlidingWindowRateLimit(
+    rateLimitKey,
+    MESSAGE_SEND_LIMIT,
+    MESSAGE_SEND_WINDOW_SECS
+  );
+  if (!allowed) return error429();
 
   try {
     const body = await request.json();

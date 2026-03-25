@@ -1,9 +1,15 @@
 import { requireRole } from '@/lib/require-role';
-import { successResponse, error400, error500, fromAppError } from '@/lib/responses';
+import { successResponse, error400, error429, error500, fromAppError } from '@/lib/responses';
 import { createTicketSchema, mapZodErrors, supportStatusFilterSchema } from '@/validators/support';
 import { createSupportTicket, getSupportTickets } from '@/server/support/support-ticket-service';
 import { AppError } from '@/lib/errors';
 import { NextResponse } from 'next/server';
+import { checkSlidingWindowRateLimit, normalizeRateLimitKey } from '@/lib/rate-limiter';
+
+/** Maximum number of tickets a user may create per hour. */
+const TICKET_CREATE_LIMIT = 5;
+/** Sliding window size for ticket creation rate limit: 1 hour. */
+const TICKET_CREATE_WINDOW_SECS = 3600;
 
 /**
  * GET /api/v1/support
@@ -34,10 +40,19 @@ export async function GET(request: Request) {
 /**
  * POST /api/v1/support
  * Creates a new support ticket with initial message.
+ * Rate limited: 5 tickets per hour per authenticated user.
  */
 export async function POST(request: Request) {
   const auth = await requireRole(request, 'client', 'station', 'admin');
   if (auth instanceof Response) return auth as NextResponse;
+
+  const rateLimitKey = normalizeRateLimitKey(`support:ticket:user:${auth.sub}`);
+  const { allowed } = await checkSlidingWindowRateLimit(
+    rateLimitKey,
+    TICKET_CREATE_LIMIT,
+    TICKET_CREATE_WINDOW_SECS
+  );
+  if (!allowed) return error429();
 
   try {
     const body = await request.json();

@@ -4,6 +4,7 @@
  */
 const mockRequireRole = jest.fn();
 const mockAddSupportMessage = jest.fn();
+const mockCheckSlidingWindowRateLimit = jest.fn();
 
 jest.mock('@/lib/require-role', () => ({
   requireRole: (...args: unknown[]) => mockRequireRole(...args),
@@ -11,6 +12,11 @@ jest.mock('@/lib/require-role', () => ({
 
 jest.mock('@/server/support/support-ticket-service', () => ({
   addSupportMessage: (...args: unknown[]) => mockAddSupportMessage(...args),
+}));
+
+jest.mock('@/lib/rate-limiter', () => ({
+  checkSlidingWindowRateLimit: (...args: unknown[]) => mockCheckSlidingWindowRateLimit(...args),
+  normalizeRateLimitKey: (key: string) => key,
 }));
 
 import { POST } from '@/app/api/v1/support/[id]/messages/route';
@@ -55,6 +61,8 @@ describe('POST /api/v1/support/[id]/messages', () => {
     jest.clearAllMocks();
     mockRequireRole.mockResolvedValue(clientAuth);
     mockAddSupportMessage.mockResolvedValue(messageFixture);
+    // Default: rate limit allows the request through.
+    mockCheckSlidingWindowRateLimit.mockResolvedValue({ allowed: true });
   });
 
   // --- Happy path ---
@@ -234,5 +242,20 @@ describe('POST /api/v1/support/[id]/messages', () => {
     expect(res.status).toBe(500);
     const body = await res.json();
     expect(body.code).toBe('INTERNAL_ERROR');
+  });
+
+  // --- Rate limiting ---
+
+  it('returns 429 when the user has exceeded the hourly message limit', async () => {
+    mockCheckSlidingWindowRateLimit.mockResolvedValueOnce({ allowed: false, retryAfter: 3500 });
+
+    const res = await POST(makePostRequest(ticketId, { content: 'One more message.' }), {
+      params: buildParams(ticketId),
+    });
+
+    expect(res.status).toBe(429);
+    const body = await res.json();
+    expect(body.code).toBe('TOO_MANY_REQUESTS');
+    expect(mockAddSupportMessage).not.toHaveBeenCalled();
   });
 });
