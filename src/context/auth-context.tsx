@@ -90,6 +90,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           tokenRef.current = data.access_token;
           setToken(data.access_token);
           setUser(normalized);
+          // Hint cookie for middleware-level admin guard (non-httpOnly, non-sensitive)
+          if (typeof document !== 'undefined') {
+            if (normalized.role === 'admin') {
+              document.cookie = 'lavo_admin_session=1; path=/; SameSite=Lax';
+            } else {
+              document.cookie = 'lavo_admin_session=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT; SameSite=Lax';
+            }
+          }
           return data.access_token;
         }
       }
@@ -106,6 +114,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     initAxiosService({
       baseURL: process.env.NEXT_PUBLIC_API_URL || '/api/v1',
     });
+    if (typeof document !== 'undefined') {
+      document.cookie = 'lavo_admin_session=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT; SameSite=Lax';
+    }
     if (typeof window !== 'undefined') {
       window.location.href = loginPath;
     }
@@ -157,6 +168,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     tokenRef.current = newToken;
     setToken(newToken);
     setUser(normalized);
+    // Hint cookie for middleware-level admin guard (non-httpOnly, non-sensitive)
+    if (typeof document !== 'undefined') {
+      if (normalized.role === 'admin') {
+        document.cookie = 'lavo_admin_session=1; path=/; SameSite=Lax';
+      } else {
+        document.cookie = 'lavo_admin_session=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT; SameSite=Lax';
+      }
+    }
     refreshAxiosService({
       baseURL: process.env.NEXT_PUBLIC_API_URL || '/api/v1',
       tokenGetter: () => tokenRef.current,
@@ -178,6 +197,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     initAxiosService({
       baseURL: process.env.NEXT_PUBLIC_API_URL || '/api/v1',
     });
+    if (typeof document !== 'undefined') {
+      document.cookie = 'lavo_admin_session=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT; SameSite=Lax';
+    }
     if (typeof window !== 'undefined') {
       window.location.href = homePath;
     }
