@@ -135,6 +135,26 @@ describe('GET /api/v1/support/[id]', () => {
     expect(body.code).toBe('FORBIDDEN');
   });
 
+  // --- Route param UUID validation ---
+
+  it('returns 400 when ticket id is not a valid UUID', async () => {
+    const res = await GET(makeGetRequest('not-a-uuid'), { params: buildParams('not-a-uuid') });
+
+    expect(res.status).toBe(400);
+    const body = await res.json();
+    expect(body.code).toBe('VALIDATION_FAILED');
+    expect(mockGetTicketDetails).not.toHaveBeenCalled();
+  });
+
+  it('returns 400 when ticket id is an empty string', async () => {
+    const res = await GET(makeGetRequest(''), { params: buildParams('') });
+
+    expect(res.status).toBe(400);
+    const body = await res.json();
+    expect(body.code).toBe('VALIDATION_FAILED');
+    expect(mockGetTicketDetails).not.toHaveBeenCalled();
+  });
+
   // --- Not found ---
 
   it('returns 404 when ticket does not exist', async () => {
@@ -353,6 +373,34 @@ describe('PATCH /api/v1/support/[id]', () => {
 
     expect(res.status).toBe(403);
     expect(mockUpdateSupportTicketStatus).not.toHaveBeenCalled();
+  });
+
+  // --- Route param UUID validation ---
+
+  it('returns 400 when ticket id is not a valid UUID', async () => {
+    const res = await PATCH(makePatchRequest('not-a-uuid', { status: 'en_cours' }), {
+      params: buildParams('not-a-uuid'),
+    });
+
+    expect(res.status).toBe(400);
+    const body = await res.json();
+    expect(body.code).toBe('VALIDATION_FAILED');
+    expect(mockUpdateSupportTicketStatus).not.toHaveBeenCalled();
+  });
+
+  // --- Not found ---
+
+  it('returns 404 when ticket does not exist', async () => {
+    mockUpdateSupportTicketStatus.mockRejectedValueOnce(new AppError('Ticket not found', 404));
+
+    const res = await PATCH(makePatchRequest(ticketId, { status: 'en_cours' }), {
+      params: buildParams(ticketId),
+    });
+
+    expect(res.status).toBe(404);
+    const body = await res.json();
+    expect(body.code).toBe('NOT_FOUND');
+    expect(body.message).toBe('Ticket not found');
   });
 
   // --- Status transition enforcement (delegated to service) ---

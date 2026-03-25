@@ -171,6 +171,99 @@ describe('PATCH /api/v1/admin/support/settings', () => {
     expect(mockUpdateSupportSettings).toHaveBeenCalledWith({ welcome_message: maxValue });
   });
 
+  // --- Per-key semantic validation ---
+
+  it('returns 400 when support_email is not a valid email address', async () => {
+    const res = await PATCH(makePatchRequest({ support_email: 'not-an-email' }));
+
+    expect(res.status).toBe(400);
+    const body = await res.json();
+    expect(body.code).toBe('VALIDATION_FAILED');
+    expect(mockUpdateSupportSettings).not.toHaveBeenCalled();
+  });
+
+  it('returns 400 when support_email is an empty string (not a valid email)', async () => {
+    const res = await PATCH(makePatchRequest({ support_email: '' }));
+
+    expect(res.status).toBe(400);
+    const body = await res.json();
+    expect(body.code).toBe('VALIDATION_FAILED');
+    expect(mockUpdateSupportSettings).not.toHaveBeenCalled();
+  });
+
+  it('accepts a valid support_email value', async () => {
+    const res = await PATCH(makePatchRequest({ support_email: 'ops@lavo.ca' }));
+
+    expect(res.status).toBe(200);
+    expect(mockUpdateSupportSettings).toHaveBeenCalledWith({ support_email: 'ops@lavo.ca' });
+  });
+
+  it('returns 400 when max_open_tickets_per_user is a negative integer string', async () => {
+    const res = await PATCH(makePatchRequest({ max_open_tickets_per_user: '-1' }));
+
+    expect(res.status).toBe(400);
+    const body = await res.json();
+    expect(body.code).toBe('VALIDATION_FAILED');
+    expect(mockUpdateSupportSettings).not.toHaveBeenCalled();
+  });
+
+  it('returns 400 when max_open_tickets_per_user is a decimal string', async () => {
+    const res = await PATCH(makePatchRequest({ max_open_tickets_per_user: '3.5' }));
+
+    expect(res.status).toBe(400);
+    const body = await res.json();
+    expect(body.code).toBe('VALIDATION_FAILED');
+    expect(mockUpdateSupportSettings).not.toHaveBeenCalled();
+  });
+
+  it('returns 400 when max_open_tickets_per_user is a non-numeric string', async () => {
+    const res = await PATCH(makePatchRequest({ max_open_tickets_per_user: 'unlimited' }));
+
+    expect(res.status).toBe(400);
+    const body = await res.json();
+    expect(body.code).toBe('VALIDATION_FAILED');
+    expect(mockUpdateSupportSettings).not.toHaveBeenCalled();
+  });
+
+  it('accepts max_open_tickets_per_user = "0" (hard block — no open tickets allowed)', async () => {
+    const res = await PATCH(makePatchRequest({ max_open_tickets_per_user: '0' }));
+
+    expect(res.status).toBe(200);
+    expect(mockUpdateSupportSettings).toHaveBeenCalledWith({ max_open_tickets_per_user: '0' });
+  });
+
+  it('accepts a valid positive integer for max_open_tickets_per_user', async () => {
+    const res = await PATCH(makePatchRequest({ max_open_tickets_per_user: '5' }));
+
+    expect(res.status).toBe(200);
+    expect(mockUpdateSupportSettings).toHaveBeenCalledWith({ max_open_tickets_per_user: '5' });
+  });
+
+  it('returns 400 when auto_close_days is zero (must be a positive integer)', async () => {
+    const res = await PATCH(makePatchRequest({ auto_close_days: '0' }));
+
+    expect(res.status).toBe(400);
+    const body = await res.json();
+    expect(body.code).toBe('VALIDATION_FAILED');
+    expect(mockUpdateSupportSettings).not.toHaveBeenCalled();
+  });
+
+  it('returns 400 when auto_close_days is a negative integer string', async () => {
+    const res = await PATCH(makePatchRequest({ auto_close_days: '-5' }));
+
+    expect(res.status).toBe(400);
+    const body = await res.json();
+    expect(body.code).toBe('VALIDATION_FAILED');
+    expect(mockUpdateSupportSettings).not.toHaveBeenCalled();
+  });
+
+  it('accepts a valid positive integer for auto_close_days', async () => {
+    const res = await PATCH(makePatchRequest({ auto_close_days: '30' }));
+
+    expect(res.status).toBe(200);
+    expect(mockUpdateSupportSettings).toHaveBeenCalledWith({ auto_close_days: '30' });
+  });
+
   // --- Validation: value constraints ---
 
   it('returns 400 when a value exceeds 500 characters', async () => {

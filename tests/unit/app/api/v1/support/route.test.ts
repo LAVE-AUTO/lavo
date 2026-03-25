@@ -85,6 +85,26 @@ describe('GET /api/v1/support', () => {
     expect(mockGetSupportTickets).toHaveBeenCalledWith(clientAuth.sub, clientAuth.role, undefined);
   });
 
+  // --- Status filter validation ---
+
+  it('returns 400 when status query param is not a valid enum value', async () => {
+    const res = await GET(makeGetRequest('status=invalid_value'));
+
+    expect(res.status).toBe(400);
+    const body = await res.json();
+    expect(body.code).toBe('VALIDATION_FAILED');
+    expect(mockGetSupportTickets).not.toHaveBeenCalled();
+  });
+
+  it('returns 400 when status query param is an arbitrary string', async () => {
+    const res = await GET(makeGetRequest('status=pending'));
+
+    expect(res.status).toBe(400);
+    const body = await res.json();
+    expect(body.code).toBe('VALIDATION_FAILED');
+    expect(mockGetSupportTickets).not.toHaveBeenCalled();
+  });
+
   it('admin sees all tickets — passes admin role to service', async () => {
     mockRequireRole.mockResolvedValue(adminAuth);
     mockGetSupportTickets.mockResolvedValue([ticketFixture]);

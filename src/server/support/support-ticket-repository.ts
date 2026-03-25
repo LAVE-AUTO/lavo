@@ -144,27 +144,13 @@ export async function listTickets(
 }
 
 /**
- * Counts the open tickets (status 'ouvert' or 'en_cours') for a given user.
- */
-export async function countOpenTicketsByUser(userId: string): Promise<number> {
-  const result = await db
-    .select({ count: sql<number>`count(*)::int` })
-    .from(supportTickets)
-    .where(
-      and(
-        eq(supportTickets.created_by, userId),
-        inArray(supportTickets.status, ["ouvert", "en_cours"] as const)
-      )
-    );
-  return result[0]?.count ?? 0;
-}
-
-/**
  * Updates a ticket status and sets resolved_at if status is 'resolu'.
+ * When transitioning away from 'resolu' (e.g. back to 'en_cours'), resolved_at
+ * is cleared to null — this is intentional, not a default.
  */
 export async function updateTicketStatus(
   id: string,
-  status: "ouvert" | "en_cours" | "resolu" | "ferme"
+  status: TicketStatus
 ) {
   const [ticket] = await db
     .update(supportTickets)
@@ -187,19 +173,6 @@ export async function getSettings() {
     acc[curr.key] = curr.value;
     return acc;
   }, {} as Record<string, string>);
-}
-
-/**
- * Updates or creates a global support setting.
- */
-export async function updateSetting(key: string, value: string) {
-  await db
-    .insert(supportSettings)
-    .values({ key, value, updated_at: new Date() })
-    .onConflictDoUpdate({
-      target: supportSettings.key,
-      set: { value, updated_at: new Date() },
-    });
 }
 
 /**
