@@ -70,11 +70,12 @@ export function AdminDisputeDetail({ id }: Props) {
       await new Promise((r) => setTimeout(r, 700));
       if (!mountedRef.current) return;
 
+      // Update state only after simulated success (will be inside if (success) once API is connected)
       let newStatus: DisputeStatus = dispute.status;
       let eventLabel = '';
-      if (modal === 'refund_full')    { newStatus = 'refunded_full';    eventLabel = `Remboursement total de ${formatAmount(dispute.reservation.amount_paid)} effectué.`; }
-      if (modal === 'refund_partial') { newStatus = 'refunded_partial'; eventLabel = `Remboursement partiel de ${formatAmount(payload.amount!)} effectué.`; }
-      if (modal === 'close_dispute')  { newStatus = 'closed';           eventLabel = `Litige clôturé : ${payload.reason}`; }
+      if (modal === 'refund_full')    { newStatus = 'refunded_full';    eventLabel = t('event_refund_full',    { amount: formatAmount(dispute.reservation.amount_paid) }); }
+      if (modal === 'refund_partial') { newStatus = 'refunded_partial'; eventLabel = t('event_refund_partial', { amount: formatAmount(payload.amount!) }); }
+      if (modal === 'close_dispute')  { newStatus = 'closed';           eventLabel = t('event_closed',         { reason: payload.reason }); }
 
       setDispute((prev) => prev ? {
         ...prev, status: newStatus,

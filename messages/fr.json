@@ -1981,7 +1981,10 @@
     "timeline_by_admin": "Admin",
     "filter_all": "Tous",
     "already_resolved": "Ce litige a déjà été traité.",
-    "label_client": "Client"
+    "label_client": "Client",
+    "event_refund_full": "Remboursement total de {amount} effectué.",
+    "event_refund_partial": "Remboursement partiel de {amount} effectué.",
+    "event_closed": "Litige clôturé : {reason}"
   },
   "admin_commission": {
     "page_title": "Commission",
