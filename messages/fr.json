@@ -1907,7 +1907,8 @@
     "col_contact": "Contact",
     "col_location": "Localisation",
     "col_status": "Statut",
-    "col_actions": "Actions"
+    "col_actions": "Actions",
+    "btn_add_user": "Ajouter"
   },
   "admin_settings": {
     "page_title": "Paramètres plateforme",

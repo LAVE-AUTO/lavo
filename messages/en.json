@@ -1907,7 +1907,8 @@
     "col_contact": "Contact",
     "col_location": "Location",
     "col_status": "Status",
-    "col_actions": "Actions"
+    "col_actions": "Actions",
+    "btn_add_user": "Add user"
   },
   "admin_settings": {
     "page_title": "Platform settings",

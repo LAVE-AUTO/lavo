@@ -72,17 +72,17 @@ export function AdminAddUserForm({
         </div>
 
         {/* Name row */}
-        <div className="grid grid-cols-2 gap-3">
+        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
           <div className="flex flex-col gap-1.5">
-            <label className="text-[12px] font-bold text-[#555] dark:text-[#9A9A8A]">{t('field_firstname')}</label>
-            <input type="text" value={firstName} onChange={(e) => onFirstNameChange(e.target.value)}
+            <label htmlFor="add-user-firstname" className="text-[12px] font-bold text-[#555] dark:text-[#9A9A8A]">{t('field_firstname')}</label>
+            <input id="add-user-firstname" type="text" value={firstName} onChange={(e) => onFirstNameChange(e.target.value)}
               placeholder={t('field_firstname_placeholder')} maxLength={100}
               className={`${inputBase} ${errors.first_name ? inputError : inputIdle}`} />
             {errors.first_name && <p className="text-[11px] font-semibold text-red-500">{errors.first_name}</p>}
           </div>
           <div className="flex flex-col gap-1.5">
-            <label className="text-[12px] font-bold text-[#555] dark:text-[#9A9A8A]">{t('field_lastname')}</label>
-            <input type="text" value={lastName} onChange={(e) => onLastNameChange(e.target.value)}
+            <label htmlFor="add-user-lastname" className="text-[12px] font-bold text-[#555] dark:text-[#9A9A8A]">{t('field_lastname')}</label>
+            <input id="add-user-lastname" type="text" value={lastName} onChange={(e) => onLastNameChange(e.target.value)}
               placeholder={t('field_lastname_placeholder')} maxLength={100}
               className={`${inputBase} ${errors.last_name ? inputError : inputIdle}`} />
             {errors.last_name && <p className="text-[11px] font-semibold text-red-500">{errors.last_name}</p>}
@@ -91,8 +91,8 @@ export function AdminAddUserForm({
 
         {/* Email */}
         <div className="flex flex-col gap-1.5">
-          <label className="text-[12px] font-bold text-[#555] dark:text-[#9A9A8A]">{t('field_email')}</label>
-          <input type="email" value={email} onChange={(e) => onEmailChange(e.target.value)}
+          <label htmlFor="add-user-email" className="text-[12px] font-bold text-[#555] dark:text-[#9A9A8A]">{t('field_email')}</label>
+          <input id="add-user-email" type="email" value={email} onChange={(e) => onEmailChange(e.target.value)}
             placeholder={t('field_email_placeholder')} maxLength={254}
             className={`${inputBase} ${errors.email ? inputError : inputIdle}`} />
           {errors.email && <p className="text-[11px] font-semibold text-red-500">{errors.email}</p>}
@@ -100,10 +100,10 @@ export function AdminAddUserForm({
 
         {/* Generated password */}
         <div className="flex flex-col gap-1.5">
-          <label className="text-[12px] font-bold text-[#555] dark:text-[#9A9A8A]">{t('field_password')}</label>
+          <label htmlFor="add-user-password" className="text-[12px] font-bold text-[#555] dark:text-[#9A9A8A]">{t('field_password')}</label>
           <div className="flex items-center gap-2">
             <div className="relative flex-1">
-              <input type="text" readOnly value={password}
+              <input id="add-user-password" type="text" readOnly value={password}
                 className="w-full cursor-default rounded-lg border border-[#D8D4C8] bg-[#F9F8F5] px-3 py-2 font-mono text-[12px] text-[#444] dark:border-[#243020] dark:bg-[#131E10] dark:text-[#B0ADA0]" />
               <button type="button" onClick={handleCopyPassword} tabIndex={-1}
                 title={t('btn_copy')}
