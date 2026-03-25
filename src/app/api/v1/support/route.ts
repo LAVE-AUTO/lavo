@@ -1,7 +1,7 @@
 import { requireRole } from '@/lib/require-role';
 import { successResponse, error400, error500, fromAppError } from '@/lib/responses';
 import { mapZodErrors } from '@/validators/auth';
-import { createTicketSchema } from '@/validators/support';
+import { createTicketSchema, supportStatusFilterSchema } from '@/validators/support';
 import { createSupportTicket, getSupportTickets } from '@/server/support/support-ticket-service';
 import { AppError } from '@/lib/errors';
 import { NextResponse } from 'next/server';
@@ -15,10 +15,16 @@ export async function GET(request: Request) {
   if (auth instanceof NextResponse) return auth;
 
   const { searchParams } = new URL(request.url);
-  const status = searchParams.get('status') ?? undefined;
+  const rawStatus = searchParams.get('status') ?? undefined;
+
+  // Validate the optional status filter against the allowed enum values.
+  const statusResult = supportStatusFilterSchema.safeParse(rawStatus);
+  if (!statusResult.success) {
+    return error400('Invalid status filter. Allowed: ouvert, en_cours, resolu, ferme');
+  }
 
   try {
-    const tickets = await getSupportTickets(auth.sub, auth.role, status);
+    const tickets = await getSupportTickets(auth.sub, auth.role, statusResult.data);
     return successResponse(tickets);
   } catch (e) {
     if (e instanceof AppError) return fromAppError(e);

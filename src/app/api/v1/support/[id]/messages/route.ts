@@ -1,7 +1,7 @@
 import { requireRole } from '@/lib/require-role';
 import { successResponse, error400, error500, fromAppError } from '@/lib/responses';
 import { mapZodErrors } from '@/validators/auth';
-import { addSupportMessageSchema } from '@/validators/support';
+import { addSupportMessageSchema, supportTicketIdSchema } from '@/validators/support';
 import { addSupportMessage } from '@/server/support/support-ticket-service';
 import { AppError } from '@/lib/errors';
 import { NextResponse } from 'next/server';
@@ -17,6 +17,11 @@ export async function POST(
   const auth = await requireRole(request, 'client', 'station', 'admin');
   if (auth instanceof NextResponse) return auth;
 
+  const idResult = supportTicketIdSchema.safeParse(params.id);
+  if (!idResult.success) {
+    return error400('Invalid ticket ID format');
+  }
+
   try {
     const body = await request.json();
     const parsed = addSupportMessageSchema.safeParse(body);
@@ -26,7 +31,7 @@ export async function POST(
 
     const message = await addSupportMessage(
       auth.sub,
-      params.id,
+      idResult.data,
       parsed.data.content,
       auth.role === 'admin'
     );

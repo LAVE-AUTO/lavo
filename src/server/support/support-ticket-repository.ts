@@ -58,6 +58,18 @@ export async function addMessage(messageData: NewMessage) {
 /**
  * Finds a ticket by ID, including its message thread (ordered by creation).
  */
+/**
+ * Safe subset of user columns exposed in support ticket responses.
+ * Never include password_hash, stripe_customer_id, or other sensitive fields.
+ */
+const SAFE_USER_COLUMNS = {
+  id: true,
+  first_name: true,
+  last_name: true,
+  email: true,
+  role: true,
+} as const;
+
 export async function findTicketById(id: string) {
   return await db.query.supportTickets.findFirst({
     where: eq(supportTickets.id, id),
@@ -65,8 +77,12 @@ export async function findTicketById(id: string) {
       messages: {
         orderBy: [asc(supportMessages.created_at)],
       },
-      createdByUser: true,
-      assignedToAdmin: true,
+      createdByUser: {
+        columns: SAFE_USER_COLUMNS,
+      },
+      assignedToAdmin: {
+        columns: SAFE_USER_COLUMNS,
+      },
     },
   });
 }
@@ -87,7 +103,9 @@ export async function listTickets(
     where: whereClause,
     orderBy: [desc(supportTickets.updated_at)],
     with: {
-      createdByUser: true,
+      createdByUser: {
+        columns: SAFE_USER_COLUMNS,
+      },
     },
   });
 }

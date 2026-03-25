@@ -1,7 +1,7 @@
 import { requireRole } from '@/lib/require-role';
 import { successResponse, error400, error500, fromAppError } from '@/lib/responses';
 import { mapZodErrors } from '@/validators/auth';
-import { updateTicketStatusSchema } from '@/validators/support';
+import { updateTicketStatusSchema, supportTicketIdSchema } from '@/validators/support';
 import { getTicketDetails, updateSupportTicketStatus } from '@/server/support/support-ticket-service';
 import { AppError } from '@/lib/errors';
 import { NextResponse } from 'next/server';
@@ -17,8 +17,13 @@ export async function GET(
   const auth = await requireRole(request, 'client', 'station', 'admin');
   if (auth instanceof NextResponse) return auth;
 
+  const idResult = supportTicketIdSchema.safeParse(params.id);
+  if (!idResult.success) {
+    return error400('Invalid ticket ID format');
+  }
+
   try {
-    const ticket = await getTicketDetails(auth.sub, auth.role, params.id);
+    const ticket = await getTicketDetails(auth.sub, auth.role, idResult.data);
     return successResponse(ticket);
   } catch (e) {
     if (e instanceof AppError) return fromAppError(e);
@@ -37,6 +42,11 @@ export async function PATCH(
   const auth = await requireRole(request, 'admin');
   if (auth instanceof NextResponse) return auth;
 
+  const idResult = supportTicketIdSchema.safeParse(params.id);
+  if (!idResult.success) {
+    return error400('Invalid ticket ID format');
+  }
+
   try {
     const body = await request.json();
     const parsed = updateTicketStatusSchema.safeParse(body);
@@ -44,7 +54,7 @@ export async function PATCH(
       return error400('Validation failed', undefined, mapZodErrors(parsed.error));
     }
 
-    const ticket = await updateSupportTicketStatus(params.id, parsed.data.status);
+    const ticket = await updateSupportTicketStatus(idResult.data, parsed.data.status);
     return successResponse(ticket, 'Ticket status updated');
   } catch (e) {
     if (e instanceof AppError) return fromAppError(e);

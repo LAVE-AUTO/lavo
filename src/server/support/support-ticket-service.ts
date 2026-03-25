@@ -28,11 +28,12 @@ export async function createSupportTicket(
   data: CreateTicketInput
 ) {
   // Enforce max open tickets per user if the setting is configured.
+  // A value of "0" means no open tickets are allowed (hard block), not "disabled".
   const settings = await repo.getSettings();
   const maxOpenRaw = settings["max_open_tickets_per_user"];
   if (maxOpenRaw !== undefined) {
     const maxOpen = parseInt(maxOpenRaw, 10);
-    if (!isNaN(maxOpen) && maxOpen > 0) {
+    if (!isNaN(maxOpen) && maxOpen >= 0) {
       const openCount = await repo.countOpenTicketsByUser(userId);
       if (openCount >= maxOpen) {
         throw new AppError(
@@ -44,7 +45,6 @@ export async function createSupportTicket(
   }
 
   // Attempt ticket creation with retry loop to handle rare unique number collisions.
-  let lastError: unknown;
   for (let attempt = 0; attempt < TICKET_NUMBER_MAX_RETRIES; attempt++) {
     const ticketNumber = generateTicketNumber();
     try {
@@ -77,7 +77,6 @@ export async function createSupportTicket(
           ? (err as { code?: string }).code
           : undefined;
       if (code === "23505") {
-        lastError = err;
         continue;
       }
       throw err;
@@ -101,6 +100,14 @@ export async function addSupportMessage(
 ) {
   const ticket = await repo.findTicketById(ticketId);
   if (!ticket) throw new AppError("Ticket not found", HTTP_STATUS.NOT_FOUND);
+
+  // Prevent adding messages to closed tickets.
+  if (ticket.status === "ferme") {
+    throw new AppError(
+      "Cannot add messages to a closed ticket",
+      HTTP_STATUS.UNPROCESSABLE_ENTITY
+    );
+  }
 
   // RBAC: Non-admins can only message their own tickets.
   if (!isAdmin && ticket.created_by !== userId) {
@@ -174,28 +181,32 @@ export async function updateSupportTicketStatus(
   ticketId: string,
   status: string
 ) {
-  return await repo.updateTicketStatus(ticketId, status);
+  const ticket = await repo.updateTicketStatus(ticketId, status);
+  if (!ticket) throw new AppError("Ticket not found", HTTP_STATUS.NOT_FOUND);
+  return ticket;
 }
 
 /**
  * Retrieves global support settings with .env fallback for support email.
+ * `...dbSettings` is spread first so that the explicit `support_email` key
+ * always wins — it applies the fallback chain even when the DB value is an
+ * empty string (which would otherwise be returned as-is via the spread).
  */
 export async function getSupportSettings() {
   const dbSettings = await repo.getSettings();
   return {
+    ...dbSettings,
     support_email:
       dbSettings.support_email ||
       process.env.SUPPORT_EMAIL ||
       "support@lavo.ca",
-    ...dbSettings,
   };
 }
 
 /**
- * Updates batch settings in the database.
+ * Updates batch settings in the database atomically.
+ * All upserts succeed or none do.
  */
 export async function updateSupportSettings(settings: Record<string, string>) {
-  for (const [key, value] of Object.entries(settings)) {
-    await repo.updateSetting(key, value);
-  }
+  await repo.updateSettings(settings);
 }
