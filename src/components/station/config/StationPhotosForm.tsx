@@ -105,10 +105,11 @@ export function StationPhotosForm({ locked = false }: Props) {
                   <>
                     {/* eslint-disable-next-line @next/next/no-img-element */}
                     <img src={url} alt={t('photos_slot_aria', { n: i + 1 })} className="h-full w-full object-cover" />
+                    {/* Delete disabled during active upload to prevent race condition */}
                     {!locked && (
-                      <button type="button" onClick={() => handleDelete(i)}
+                      <button type="button" onClick={() => handleDelete(i)} disabled={uploadingIdx !== null}
                         aria-label={t('photos_delete_aria')}
-                        className="absolute inset-0 flex items-center justify-center bg-black/0 transition-colors hover:bg-black/40 [&:hover>svg]:opacity-100">
+                        className="absolute inset-0 flex items-center justify-center bg-black/0 transition-colors hover:bg-black/40 [&:hover>svg]:opacity-100 disabled:cursor-not-allowed">
                         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2.5" strokeLinecap="round" className="opacity-0 transition-opacity" aria-hidden="true">
                           <line x1="18" y1="6" x2="6" y2="18" /><line x1="6" y1="6" x2="18" y2="18" />
                         </svg>
