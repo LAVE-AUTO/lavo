@@ -102,8 +102,6 @@ export function AdminAddStationModal({ open, onClose }: Props) {
 
   async function handleSubmit() {
     if (!validateDocs()) return;
-    setBusy(true);
-    const password = generatePassword();
 
     // TODO: connect to API once endpoint is available (POST /admin/stations)
     // Payload: { first_name, last_name, email, phone, password, station_name, legal_name,
@@ -111,16 +109,7 @@ export function AdminAddStationModal({ open, onClose }: Props) {
     //   description, docs: { certificate_url, address_proof_url, license_url } }
     // Backend must: create user (role=station) + station, hash password, set force_password_change: true,
     //   link uploaded docs, send credentials by email, notify station to upload docs if mode=later.
-    await new Promise<void>((r) => setTimeout(r, 900));
-
-    setSuccess({
-      email:      account.email.trim(),
-      first_name: account.firstName.trim(),
-      last_name:  account.lastName.trim(),
-      docsMode:   docs.mode,
-    });
-    setStep('success');
-    setBusy(false);
+    // Submission is disabled until the endpoint exists — do not show a success screen for a stubbed call.
   }
 
   const STEP_LABELS: Record<1 | 2 | 3, string> = { 1: t('step_account'), 2: t('step_info'), 3: t('step_docs') };

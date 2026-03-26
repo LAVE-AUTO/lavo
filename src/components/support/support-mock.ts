@@ -11,15 +11,17 @@ export interface SupportMessage {
 }
 
 export interface SupportTicket {
-  id:          string;
-  subject:     string;
-  status:      TicketStatus;
-  role:        TicketRole;
-  created_by:  string;
-  assigned_to: string | null;
-  messages:    SupportMessage[];
-  created_at:  string;
-  updated_at:  string;
+  id:           string;
+  subject:      string;
+  status:       TicketStatus;
+  role:         TicketRole;
+  created_by:   string;
+  assigned_to:  string | null;
+  messages:     SupportMessage[];
+  created_at:   string;
+  updated_at:   string;
+  /** Reason provided by admin when closing the ticket. */
+  close_reason?: string;
 }
 
 export const MOCK_TICKETS: SupportTicket[] = process.env.NODE_ENV === 'development'

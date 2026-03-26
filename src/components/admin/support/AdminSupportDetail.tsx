@@ -172,9 +172,9 @@ export function AdminSupportDetail({ id }: Props) {
       // TODO: connect to API once endpoint is available (PATCH /admin/support/tickets/:id)
       await new Promise((r) => setTimeout(r, 500));
       if (!mountedRef.current) return;
-      setTicket((prev) => prev ? { ...prev, status: 'closed' } : prev);
+      setTicket((prev) => prev ? { ...prev, status: 'closed', close_reason: reason } : prev);
       setShowCloseModal(false);
-      // TODO: toastSuccess once PATCH /admin/support/tickets/:id endpoint is available
+      toastSuccess(t('close_success'));
     } finally {
       if (mountedRef.current) setActionBusy(false);
     }
@@ -282,8 +282,10 @@ export function AdminSupportDetail({ id }: Props) {
               )}
             </div>
 
-            {/* Reply form */}
-            {!isClosed && (
+            {/* Reply form — only shown for open/in_progress tickets.
+                Resolved and closed tickets no longer accept new replies:
+                resolved = admin confirmed the issue is fixed; closed = ticket archived. */}
+            {!isClosed && !isResolved && (
               <div className="rounded-2xl border border-[#E8E4DC] bg-white shadow-sm dark:border-[#1E2E18] dark:bg-[#131E10]">
                 <div className="border-b border-[#F0EDE4] px-5 py-3 dark:border-[#1A2A14]">
                   <span className="text-[12px] font-bold text-[#5A5A4A] dark:text-[#9A9A8A]">{t('field_reply')}</span>
@@ -303,6 +305,13 @@ export function AdminSupportDetail({ id }: Props) {
                     </button>
                   </div>
                 </form>
+              </div>
+            )}
+
+            {/* Resolved notice */}
+            {isResolved && (
+              <div className="flex items-center justify-center rounded-2xl border border-[#E8E4DC] bg-white px-5 py-4 shadow-sm dark:border-[#1E2E18] dark:bg-[#131E10]">
+                <p className="text-[12px] text-[#AAAAAA] dark:text-[#4A4A3A]">{t('resolve_success')}</p>
               </div>
             )}
 

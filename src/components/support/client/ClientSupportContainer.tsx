@@ -16,9 +16,14 @@ const STATS: Array<{ key: 'open' | 'in_progress' | 'resolved' | 'closed'; label:
 interface Props {
   /** Pre-filtered list of tickets for the current user (client or station). */
   tickets: SupportTicket[];
+  /**
+   * Override the "Mes tickets" section label for non-client contexts (e.g. station support).
+   * Defaults to the client_support.section_tickets i18n key.
+   */
+  sectionLabel?: string;
 }
 
-export function ClientSupportContainer({ tickets: initialTickets }: Props) {
+export function ClientSupportContainer({ tickets: initialTickets, sectionLabel }: Props) {
   const t           = useTranslations('client_support');
   const [showForm, setShowForm] = useState(false);
   // TODO: connect to API once endpoint is available (GET /me/tickets)
@@ -80,7 +85,7 @@ export function ClientSupportContainer({ tickets: initialTickets }: Props) {
           <div className="flex flex-col gap-3">
             {!showForm && (
               <h2 className="text-[11px] font-black uppercase tracking-wider text-[#AAAAAA] dark:text-[#4A4A3A]">
-                {t('section_tickets')}
+                {sectionLabel ?? t('section_tickets')}
               </h2>
             )}
             {tickets.length === 0 ? (

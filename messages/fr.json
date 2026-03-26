@@ -1650,7 +1650,8 @@
     "extras_active": "Actif",
     "extras_inactive": "Inactif",
     "extras_save_success": "Extras enregistrés",
-    "extras_save_error": "Erreur lors de l'enregistrement"
+    "extras_save_error": "Erreur lors de l'enregistrement",
+    "photos_save_unavailable": "Aperçu uniquement — la sauvegarde ne sera disponible qu'une fois l'API connectée."
   },
   "station_services": {
     "page_title": "Mes Services",
@@ -2301,7 +2302,10 @@
     "close_success": "Ticket clôturé.",
     "resolve_success": "Ticket marqué comme résolu.",
     "assign_success": "Ticket assigné.",
-    "not_found": "Ticket introuvable."
+    "not_found": "Ticket introuvable.",
+    "empty_thread": "Aucun message pour l'instant.",
+    "label_msg": "msg",
+    "reopen_success": "Ticket rouvert."
   },
   "admin_add_user": {
     "modal_title": "Ajouter un utilisateur",
@@ -2332,7 +2336,8 @@
     "form_password_notice": "Un mot de passe temporaire sera généré automatiquement et envoyé à cette adresse e-mail.",
     "success_email_sent_title": "E-mail envoyé",
     "success_email_sent_body": "Les identifiants de connexion ont été envoyés à {email}.",
-    "success_force_change_notice": "L'utilisateur devra changer son mot de passe à la première connexion."
+    "success_force_change_notice": "L'utilisateur devra changer son mot de passe à la première connexion.",
+    "form_api_unavailable_notice": "Aperçu uniquement — fonctionnalité non disponible tant que l'API n'est pas connectée."
   },
   "admin_add_station": {
     "modal_title": "Créer une station",
@@ -2426,7 +2431,8 @@
     "success_kyc_notice_body": "La station devra uploader ses documents. Vous serez notifié(e) pour valider le compte.",
     "success_docs_uploaded_notice": "Les documents uploadés seront soumis au processus de validation KYC.",
     "success_force_change_notice": "La station devra changer son mot de passe à la première connexion.",
-    "role_station": "Station"
+    "role_station": "Station",
+    "form_api_unavailable_notice": "Aperçu uniquement — fonctionnalité non disponible tant que l'API n'est pas connectée."
   },
   "admin_promo_qr": {
     "section_title": "QR Code promotionnel",
@@ -2444,7 +2450,9 @@
     "qr_notice_body": "Le client scanne ce QR → redirigé vers l'inscription avec un code de référence. Lors de son premier service dans cette station, la commission personnalisée est appliquée une seule fois par client.",
     "referral_url_label": "Lien de référence",
     "error_commission_required": "Le taux de commission est requis.",
-    "error_commission_invalid": "Le taux doit être compris entre 0 et 50."
+    "error_commission_invalid": "Le taux doit être compris entre 0 et 50.",
+    "preview_only_notice": "Aperçu uniquement — ce QR code ne sera fonctionnel qu'une fois l'API connectée.",
+    "error_commission_step": "La commission doit être un multiple de 0,5 (ex. : 5, 5,5, 10)."
   },
   "admin_legal": {
     "section_title": "Contenu légal et informatif",
@@ -2468,5 +2476,10 @@
     "toolbar_ul": "Liste à puces",
     "toolbar_ol": "Liste numérotée",
     "editor_aria_label": "Éditeur de contenu"
+  },
+  "station_support": {
+    "section_title": "Mes tickets",
+    "page_title": "Support",
+    "page_subtitle": "Créez un ticket ou suivez vos demandes en cours"
   }
 }

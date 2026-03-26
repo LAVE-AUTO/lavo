@@ -4,7 +4,7 @@ import { refreshSession } from '@/server/auth/auth-service';
 import { successResponse, error401, error500 } from '@/lib/responses';
 import { UnauthorizedError } from '@/lib/errors';
 import { buildRefreshCookieOptions } from '@/lib/jwt';
-import { REFRESH_COOKIE_NAME } from '@/helpers/constants';
+import { REFRESH_COOKIE_NAME } from '@/helpers/server-constants';
 
 /**
  * POST /api/v1/auth/refresh

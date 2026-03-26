@@ -18,7 +18,8 @@ import {
   fromAppError,
 } from '@/lib/responses';
 import { ApiCode } from '@/types/api-codes';
-import { HTTP_STATUS, REFRESH_COOKIE_NAME } from '@/helpers/constants';
+import { HTTP_STATUS } from '@/helpers/constants';
+import { REFRESH_COOKIE_NAME } from '@/helpers/server-constants';
 import { AppError, ConflictError } from '@/lib/errors';
 import { buildRefreshCookieOptions } from '@/lib/jwt';
 

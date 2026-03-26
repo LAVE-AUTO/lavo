@@ -88,15 +88,10 @@ export function AdminAddUserModal({ open, onClose }: Props) {
     setErrors({});
     setBusy(true);
 
-    const password = generatePassword();
-
     // TODO: connect to API once endpoint is available (POST /admin/users)
     // Payload: { role, first_name, last_name, email, password }
     // The backend must hash the password, set force_password_change: true, and send credentials by email.
-    await new Promise<void>((r) => setTimeout(r, 900));
-
-    setSuccess({ email: email.trim(), first_name: firstName.trim(), last_name: lastName.trim(), role });
-    setStep('success');
+    // Submission is disabled until the endpoint exists — do not show a success screen for a stubbed call.
     setBusy(false);
   }
 

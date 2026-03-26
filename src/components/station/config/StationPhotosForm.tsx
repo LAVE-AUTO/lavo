@@ -27,10 +27,9 @@ export function StationPhotosForm({ locked = false }: Props) {
   const [photos,       setPhotos]       = useState<string[]>(Array(MAX_PHOTOS).fill(''));
   const [uploadingIdx, setUploadingIdx] = useState<number | null>(null);
   const [isDirty,      setIsDirty]      = useState(false);
-  const [saving,       setSaving]       = useState(false);
 
   function triggerUpload(slot: number) {
-    if (locked || uploadingIdx !== null || saving) return;
+    if (locked || uploadingIdx !== null) return;
     targetSlot.current = slot;
     fileInputRef.current?.click();
   }
@@ -77,21 +76,12 @@ export function StationPhotosForm({ locked = false }: Props) {
   }
 
   async function handleSave() {
-    setSaving(true);
-    try {
-      // TODO: connect to API once endpoint is available (PATCH /station/photos)
-      // Payload: { photo_urls: photos.filter(Boolean) }
-      // Backend must: store URLs linked to the station record.
-      //   Return them in GET /stations/:id so client-facing cards can display them.
-      await new Promise<void>(r => setTimeout(r, 500));
-      if (!mountedRef.current) return;
-      setIsDirty(false);
-      success(t('photos_save_success'));
-    } catch {
-      if (mountedRef.current) showError(t('photos_save_error'));
-    } finally {
-      if (mountedRef.current) setSaving(false);
-    }
+    // TODO: connect to API once endpoint is available (PATCH /station/photos)
+    // Payload: { photo_urls: photos.filter(Boolean) }
+    // Backend must: store URLs linked to the station record.
+    //   Return them in GET /stations/:id so client-facing cards can display them.
+    // Save is a no-op until the endpoint exists — do not show a success toast for a mocked call.
+    showError(t('photos_save_unavailable'));
   }
 
   return (
@@ -115,7 +105,7 @@ export function StationPhotosForm({ locked = false }: Props) {
                   <>
                     {/* eslint-disable-next-line @next/next/no-img-element */}
                     <img src={url} alt={t('photos_slot_aria', { n: i + 1 })} className="h-full w-full object-cover" />
-                    {!locked && !saving && (
+                    {!locked && (
                       <button type="button" onClick={() => handleDelete(i)}
                         aria-label={t('photos_delete_aria')}
                         className="absolute inset-0 flex items-center justify-center bg-black/0 transition-colors hover:bg-black/40 [&:hover>svg]:opacity-100">
@@ -126,7 +116,7 @@ export function StationPhotosForm({ locked = false }: Props) {
                     )}
                   </>
                 ) : (
-                  <button type="button" disabled={locked || saving || uploadingIdx !== null} onClick={() => triggerUpload(i)}
+                  <button type="button" disabled={locked || uploadingIdx !== null} onClick={() => triggerUpload(i)}
                     aria-label={t('photos_slot_aria', { n: i + 1 })}
                     className="flex h-full w-full flex-col items-center justify-center gap-1 rounded-xl border-2 border-dashed border-[#D8D4C8] bg-[#F8F6F2] transition-colors hover:border-[#C49A1E] hover:bg-[#FFFBF0] disabled:cursor-not-allowed disabled:opacity-50 dark:border-[#243020] dark:bg-[#0F1A0C] dark:hover:border-[#C49A1E] dark:hover:bg-[#141E10]">
                     {isUploading ? (
@@ -149,13 +139,23 @@ export function StationPhotosForm({ locked = false }: Props) {
         </div>
 
         {isDirty && (
-          <div className="mt-4 flex items-center justify-between">
-            <p className="text-[11px] text-[#FF8800]">{t('photos_unsaved')}</p>
-            <button type="button" onClick={handleSave} disabled={saving}
-              className="flex items-center gap-2 rounded-xl bg-[#C49A1E] px-5 py-2.5 text-[13px] font-bold text-[#0C1209] transition-colors hover:bg-[#B08A14] disabled:opacity-50">
-              {saving && <svg className="animate-spin" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" aria-hidden="true"><path d="M21 12a9 9 0 11-6.219-8.56" /></svg>}
-              {saving ? t('btn_saving') : t('btn_save')}
-            </button>
+          <div className="mt-4 flex flex-col gap-3">
+            {/* Preview notice — save not available until PATCH /station/photos endpoint is connected */}
+            <div className="flex items-start gap-2 rounded-lg border border-orange-200 bg-orange-50 px-3 py-2.5 dark:border-orange-900/40 dark:bg-orange-950/20">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#F97316" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="mt-0.5 shrink-0" aria-hidden="true">
+                <path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z" /><line x1="12" y1="9" x2="12" y2="13" /><line x1="12" y1="17" x2="12.01" y2="17" />
+              </svg>
+              <p className="text-[11px] leading-snug text-orange-700 dark:text-orange-400">{t('photos_save_unavailable')}</p>
+            </div>
+            <div className="flex items-center justify-between">
+              <p className="text-[11px] text-[#FF8800]">{t('photos_unsaved')}</p>
+              {/* Save button disabled — TODO: enable once PATCH /station/photos endpoint is available */}
+              <button type="button" onClick={handleSave} disabled
+                title={t('photos_save_unavailable')}
+                className="flex items-center gap-2 rounded-xl bg-[#C49A1E] px-5 py-2.5 text-[13px] font-bold text-[#0C1209] opacity-40 cursor-not-allowed">
+                {t('btn_save')}
+              </button>
+            </div>
           </div>
         )}
       </div>

@@ -18,7 +18,7 @@
 import { eq, and, isNull, lte, desc } from 'drizzle-orm';
 import { db } from '@/lib/db';
 import { settings, commissionSettings } from '@/lib/db/schema';
-import { DEFAULT_COMMISSION_RATE } from '@/helpers/constants';
+import { DEFAULT_COMMISSION_RATE } from '@/helpers/server-constants';
 import { isTruePlatformSetting } from '@/helpers/platform-setting-boolean';
 
 export type CancellationPolicy = {

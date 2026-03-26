@@ -2,7 +2,7 @@ import { NextResponse } from 'next/server';
 import { auth } from '@/auth';
 import { findOrCreateOAuthUser } from '@/server/auth/auth-service';
 import { buildRefreshCookieOptions } from '@/lib/jwt';
-import { REFRESH_COOKIE_NAME } from '@/helpers/constants';
+import { REFRESH_COOKIE_NAME } from '@/helpers/server-constants';
 
 /**
  * GET /api/v1/auth/oauth/finalize

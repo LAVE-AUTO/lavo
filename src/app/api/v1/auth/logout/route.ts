@@ -3,7 +3,7 @@ import { NextResponse } from 'next/server';
 import { successResponse } from '@/lib/responses';
 import { revokeAllRefreshTokensForUser } from '@/server/auth/refresh-token-repository';
 import { verifyJwt, extractBearerToken } from '@/lib/jwt';
-import { REFRESH_COOKIE_NAME } from '@/helpers/constants';
+import { REFRESH_COOKIE_NAME } from '@/helpers/server-constants';
 
 /**
  * POST /api/v1/auth/logout
