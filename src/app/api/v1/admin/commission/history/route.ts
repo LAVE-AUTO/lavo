@@ -29,8 +29,8 @@ export async function GET(request: Request) {
 
   const { searchParams } = new URL(request.url);
   const parsed = commissionHistoryQuerySchema.safeParse({
-    page: searchParams.get('page'),
-    per_page: searchParams.get('per_page'),
+    page: searchParams.get('page') ?? undefined,
+    per_page: searchParams.get('per_page') ?? undefined,
   });
 
   if (!parsed.success) {

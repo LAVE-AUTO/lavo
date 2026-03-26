@@ -35,12 +35,12 @@ export async function GET(request: Request) {
 
   const { searchParams } = new URL(request.url);
   const parsed = transactionLogsQuerySchema.safeParse({
-    page: searchParams.get('page'),
-    per_page: searchParams.get('per_page'),
-    type: searchParams.get('type'),
-    station_id: searchParams.get('station_id'),
-    date_from: searchParams.get('date_from'),
-    date_to: searchParams.get('date_to'),
+    page: searchParams.get('page') ?? undefined,
+    per_page: searchParams.get('per_page') ?? undefined,
+    type: searchParams.get('type') ?? undefined,
+    station_id: searchParams.get('station_id') ?? undefined,
+    date_from: searchParams.get('date_from') ?? undefined,
+    date_to: searchParams.get('date_to') ?? undefined,
   });
 
   if (!parsed.success) {
