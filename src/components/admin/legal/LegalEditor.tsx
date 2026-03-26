@@ -22,6 +22,8 @@ export function LegalEditor({ pageKey, html, onChange, disabled = false }: Props
 
   function exec(cmd: string, value?: string) {
     editorRef.current?.focus();
+    /* document.execCommand is deprecated but still functional in all major browsers as of 2025.
+       Track migration to a proper ProseMirror-based editor (e.g. Tiptap) as a future improvement. */
     try { document.execCommand(cmd, false, value); } catch { /* execCommand can throw in certain environments */ }
   }
 

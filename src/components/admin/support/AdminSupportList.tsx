@@ -123,7 +123,7 @@ export function AdminSupportList({ tickets, query }: Props) {
                     ) : null}
                     <p className="mt-0.5 text-[11px] text-[#CCCCBB] dark:text-[#3A3A2A]">
                       {tk.created_by} · {formatDate(tk.created_at)}
-                      {msgCount > 0 && <span className="ml-2 text-[#BBBBAA] dark:text-[#3A3A2A]">· {msgCount} msg</span>}
+                      {msgCount > 0 && <span className="ml-2 text-[#BBBBAA] dark:text-[#3A3A2A]">· {msgCount} {t('label_msg')}</span>}
                     </p>
                   </div>
 

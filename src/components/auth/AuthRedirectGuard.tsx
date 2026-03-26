@@ -1,48 +1,31 @@
-'use client';
-
-import { useEffect } from 'react';
+import { cookies } from 'next/headers';
+import { redirect } from 'next/navigation';
 import type { ReactNode } from 'react';
-import { useRouter } from 'next/navigation';
-import { useLocale } from 'next-intl';
-import { useAuth } from '@/context';
 
 type AuthRedirectGuardProps = {
   children?: ReactNode;
 };
 
 /**
- * Client-side guard for public auth pages.
+ * Server-side guard for public auth pages.
  *
- * - While auth is loading, renders nothing to avoid flicker.
- * - When authenticated, redirects users to the appropriate destination:
- *   CLIENT → /stations, STATION → /station/dashboard, SUPER_ADMIN → /admin
- * - When not authenticated, renders children as-is.
+ * Reads the refresh_token httpOnly cookie server-side to avoid the client-side
+ * flash where authenticated users briefly see the login form on slow connections.
+ *
+ * - If the refresh_token cookie is present, the user is likely authenticated:
+ *   redirect to the home page (AuthProvider will handle role-specific redirect after hydration).
+ * - If not present, render children (the auth page).
+ *
+ * Note: the access token is in React memory only, so the server cannot verify the
+ * exact role. Redirecting to '/' is safe — AuthProvider will redirect further by role.
  */
-export function AuthRedirectGuard({ children }: AuthRedirectGuardProps) {
-  const { isAuthenticated, isLoading, isClient, isStation, isSuperAdmin } = useAuth();
-  const router = useRouter();
-  const locale = useLocale();
+export async function AuthRedirectGuard({ children }: AuthRedirectGuardProps) {
+  const cookieStore = await cookies();
+  const hasSession = cookieStore.has('refresh_token');
 
-  useEffect(() => {
-    if (isLoading || !isAuthenticated) return;
-
-    if (isClient) {
-      router.replace(`/${locale}/stations`);
-    } else if (isStation) {
-      router.replace(`/${locale}/station/dashboard`);
-    } else if (isSuperAdmin) {
-      router.replace(`/${locale}/admin`);
-    }
-  }, [isLoading, isAuthenticated, isClient, isStation, isSuperAdmin, router, locale]);
-
-  if (isLoading) {
-    return null;
-  }
-
-  if (isAuthenticated) {
-    return null;
+  if (hasSession) {
+    redirect('/');
   }
 
   return <>{children}</>;
 }
-

@@ -100,7 +100,7 @@ export const MOCK_TICKETS: SupportTicket[] = process.env.NODE_ENV === 'developme
 
 /** Tickets belonging to the current user (client or station) — filtered server-side in real API. */
 export const MOCK_MY_TICKETS: SupportTicket[] = process.env.NODE_ENV === 'development'
-  ? MOCK_TICKETS.filter((t) => t.role === 'client').slice(0, 3)
+  ? MOCK_TICKETS.filter((t) => t.role === 'client')
   : [];
 
 /** Tickets visible from the station perspective. */

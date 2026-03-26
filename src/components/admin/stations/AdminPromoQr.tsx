@@ -43,6 +43,8 @@ export function AdminPromoQr({ stationId, stationName }: Props) {
     if (!commission.trim()) { setCommissionError(t('error_commission_required')); return false; }
     const val = parseFloat(commission);
     if (isNaN(val) || val < 0 || val > 50) { setCommissionError(t('error_commission_invalid')); return false; }
+    /* Enforce 0.5-step precision: val * 2 must be an integer (e.g. 5 → 10 ok, 5.5 → 11 ok, 5.3 → 10.6 fail). */
+    if (!Number.isInteger(val * 2)) { setCommissionError(t('error_commission_step')); return false; }
     setCommissionError(null);
     return true;
   }
