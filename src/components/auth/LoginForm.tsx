@@ -39,13 +39,15 @@ function EyeIcon({ open }: { open: boolean }) {
 interface LoginFormProps {
   /** Override the forgot-password link destination (e.g. /station/forgot-password). Defaults to /forgot-password. */
   forgotPasswordHref?: string;
+  /** Local path to redirect to after successful login (e.g. /stations/abc). Ignored if not a safe relative path. */
+  callbackUrl?: string;
 }
 
 /**
  * Login form — email + password + remember me + forgot-password link + social buttons.
  * On success: persists session via AuthContext and redirects by role.
  */
-export function LoginForm({ forgotPasswordHref = '/forgot-password' }: LoginFormProps) {
+export function LoginForm({ forgotPasswordHref = '/forgot-password', callbackUrl }: LoginFormProps) {
   const t = useTranslations('login');
   const router = useRouter();
   const { error: showError, success: showSuccess } = useToast();
@@ -112,9 +114,19 @@ export function LoginForm({ forgotPasswordHref = '/forgot-password' }: LoginForm
           return;
         }
 
-        if (userRole === 'station')          router.push('/station');
-        else if (userRole === 'admin') router.push('/admin');
-        else                                        router.push('/stations');
+        const safeCallback =
+          callbackUrl &&
+          callbackUrl.startsWith('/') &&
+          !callbackUrl.startsWith('//');
+
+        if (safeCallback) {
+          router.push(callbackUrl as string);
+          return;
+        }
+
+        if (userRole === 'station')      router.push('/station');
+        else if (userRole === 'admin')   router.push('/admin');
+        else                             router.push('/stations');
         return;
       }
 

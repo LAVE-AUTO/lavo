@@ -2,6 +2,7 @@
 
 import { useTranslations } from 'next-intl';
 import { Link } from '@/i18n/navigation';
+import { useAuth } from '@/context';
 import { useUserLocation, haversineKm } from './useUserLocation';
 import type { StationDetailData } from '@/types/station';
 
@@ -15,8 +16,9 @@ interface StationCardProps {
  * Shows distance from user, estimated wait, open/closed status, forfait tags, CTA.
  */
 export function StationCard({ station, unavailable = false }: StationCardProps) {
-  const t            = useTranslations('stations');
-  const userLocation = useUserLocation();
+  const t               = useTranslations('stations');
+  const userLocation    = useUserLocation();
+  const { isAuthenticated } = useAuth();
 
   const distanceLabel = (() => {
     if (!userLocation || station.latitude == null || station.longitude == null) return null;
@@ -143,7 +145,11 @@ export function StationCard({ station, unavailable = false }: StationCardProps) 
         {/* CTA */}
         <div className="mt-auto">
           <Link
-            href={`/stations/${station.id}`}
+            href={
+              isAuthenticated
+                ? `/stations/${station.id}`
+                : `/login?callbackUrl=${encodeURIComponent(`/stations/${station.id}`)}`
+            }
             className="block w-full py-2.5 bg-gold hover:bg-gold-hover rounded-lg text-[15px] font-bold text-dark-bg text-center transition-colors"
           >
             {t('details')}

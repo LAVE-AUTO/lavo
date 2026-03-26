@@ -7,7 +7,8 @@ import { AuthRedirectGuard } from '@/components/auth/AuthRedirectGuard';
 import { AuthModeSwitcher } from '@/components/auth/AuthModeSwitcher';
 
 type Props = {
-  params: Promise<{ locale: string }>;
+  params:       Promise<{ locale: string }>;
+  searchParams: Promise<{ callbackUrl?: string }>;
 };
 
 export async function generateMetadata({ params }: Props) {
@@ -19,8 +20,9 @@ export async function generateMetadata({ params }: Props) {
 /**
  * Public login page.
  */
-export default async function LoginPage({ params }: Props) {
-  const { locale } = await params;
+export default async function LoginPage({ params, searchParams }: Props) {
+  const { locale }      = await params;
+  const { callbackUrl } = await searchParams;
   setRequestLocale(locale);
 
   const t = await getTranslations({ locale, namespace: 'login' });
@@ -46,7 +48,7 @@ export default async function LoginPage({ params }: Props) {
               registerLabel={t('tab_register')}
             />
           </div>
-          <LoginForm />
+          <LoginForm callbackUrl={callbackUrl} />
         </div>
       </div>
     </AuthPageLayout>
