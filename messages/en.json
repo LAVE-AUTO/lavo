@@ -2320,5 +2320,23 @@
     "success_docs_uploaded_notice": "Uploaded documents will be submitted to the KYC validation process.",
     "success_force_change_notice": "The station will be required to change their password on first login.",
     "role_station": "Station"
+  },
+  "admin_promo_qr": {
+    "section_title": "Promotional QR Code",
+    "section_subtitle": "Unique QR per station, separate from the operational QR. The client is redirected to registration with a referral code.",
+    "field_commission": "Promo commission rate (%)",
+    "field_commission_hint": "Commission applied to the referred client's first service (0 – 50%)",
+    "field_commission_placeholder": "e.g. 5",
+    "btn_generate": "Generate QR",
+    "btn_generating": "Generating...",
+    "btn_regenerate": "Regenerate",
+    "btn_download_png": "PNG",
+    "btn_print_pdf": "Print / PDF",
+    "commission_active_badge": "Promo · {rate}%",
+    "qr_notice_title": "How it works",
+    "qr_notice_body": "Client scans this QR → redirected to registration with a referral code. On their first service at this station, the custom commission is applied once per client.",
+    "referral_url_label": "Referral link",
+    "error_commission_required": "Commission rate is required.",
+    "error_commission_invalid": "Rate must be between 0 and 50."
   }
 }
