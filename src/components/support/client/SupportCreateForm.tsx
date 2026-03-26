@@ -17,7 +17,7 @@ export function SupportCreateForm({ onCreated, onCancel }: Props) {
   const t      = useTranslations('client_support');
   const { success: toastSuccess, error: toastError } = useToast();
   const mountedRef = useRef(true);
-  useEffect(() => { mountedRef.current = true; return () => { mountedRef.current = false; }; }, []);
+  useEffect(() => { return () => { mountedRef.current = false; }; }, []);
 
   const [subject, setSubject] = useState('');
   const [message, setMessage] = useState('');

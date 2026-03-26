@@ -55,6 +55,8 @@ export function SupportTicketCard({ ticket }: Props) {
         onClick={() => setOpen((v) => !v)}
         className="w-full flex overflow-hidden text-left group focus-visible:outline-none"
         aria-expanded={open}
+        aria-label={`${open ? t('btn_collapse') : t('btn_expand')} — ${ticket.subject}`}
+        aria-controls={`ticket-thread-${ticket.id}`}
       >
         <div className={`w-1 shrink-0 ${s.bar}`} />
 
@@ -99,7 +101,7 @@ export function SupportTicketCard({ ticket }: Props) {
 
       {/* --- Thread (expanded) --- */}
       {open && (
-        <div className="border-t border-[#F0EDE4] dark:border-[#1A2A14]">
+        <div id={`ticket-thread-${ticket.id}`} className="border-t border-[#F0EDE4] dark:border-[#1A2A14]">
           {msgCount === 0 ? (
             <div className="flex items-center justify-center py-8">
               <p className="text-[12px] text-[#AAAAAA] dark:text-[#4A4A3A]">{t('thread_no_messages')}</p>

@@ -122,7 +122,7 @@ export function AdminSupportDetail({ id }: Props) {
         };
       });
       setReply('');
-      // TODO: toastSuccess once POST /admin/support/tickets/:id/messages endpoint is available
+      toastSuccess(t('reply_success'));
     } catch {
       if (mountedRef.current) toastError(t('reply_error'));
     } finally {
@@ -137,7 +137,7 @@ export function AdminSupportDetail({ id }: Props) {
       await new Promise((r) => setTimeout(r, 400));
       if (!mountedRef.current) return;
       setTicket((prev) => prev ? { ...prev, assigned_to: 'Admin Support' } : prev);
-      // TODO: toastSuccess once PATCH /admin/support/tickets/:id endpoint is available
+      toastSuccess(t('assign_success'));
     } finally {
       if (mountedRef.current) setActionBusy(false);
     }
@@ -150,7 +150,7 @@ export function AdminSupportDetail({ id }: Props) {
       await new Promise((r) => setTimeout(r, 400));
       if (!mountedRef.current) return;
       setTicket((prev) => prev ? { ...prev, status: 'resolved' } : prev);
-      // TODO: toastSuccess once PATCH /admin/support/tickets/:id endpoint is available
+      toastSuccess(t('resolve_success'));
     } finally {
       if (mountedRef.current) setActionBusy(false);
     }
@@ -163,6 +163,7 @@ export function AdminSupportDetail({ id }: Props) {
       await new Promise((r) => setTimeout(r, 400));
       if (!mountedRef.current) return;
       setTicket((prev) => prev ? { ...prev, status: 'open' } : prev);
+      toastSuccess(t('reopen_success'));
     } finally {
       if (mountedRef.current) setActionBusy(false);
     }
