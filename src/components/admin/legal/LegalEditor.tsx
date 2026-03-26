@@ -17,11 +17,12 @@ export function LegalEditor({ pageKey, html, onChange, disabled = false }: Props
   // Synchronously set content on page switch (avoids blank flash)
   useLayoutEffect(() => {
     if (editorRef.current) editorRef.current.innerHTML = html;
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [pageKey]); // intentionally only on page change — not on every html update
 
   function exec(cmd: string, value?: string) {
     editorRef.current?.focus();
-    document.execCommand(cmd, false, value);
+    try { document.execCommand(cmd, false, value); } catch { /* execCommand can throw in certain environments */ }
   }
 
   const btn = [
