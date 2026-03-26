@@ -1,5 +1,7 @@
+import { desc, lte } from 'drizzle-orm';
+import { db } from '@/lib/db';
+import { commissionSettings, adminLogs } from '@/lib/db/schema';
 import { DEFAULT_COMMISSION_RATE } from '@/helpers/constants';
-import { insertAdminLog } from './admin-log-repository';
 import * as repo from './commission-repository';
 
 /**
@@ -17,32 +19,42 @@ export async function getCurrentCommission() {
 }
 
 /**
- * Creates a new commission entry (immutable history — never modifies past rows).
- * Snapshots the current rate as previous_rate, logs the admin action.
+ * Creates a new commission entry atomically (immutable history — never modifies past rows).
+ * The read, insert, and audit log are wrapped in a single DB transaction:
+ * - prevents TOCTOU: two concurrent PUTs cannot both record the same previous_rate
+ * - guarantees consistency: if the admin log insert fails, the commission update rolls back
  *
- * @param adminId  UUID of the admin performing the change (used for set_by + audit log).
- * @param newRate  New rate as a decimal fraction, already validated and rounded (e.g. 0.1 = 10%).
+ * @param adminId  UUID of the admin performing the change.
+ * @param newRate  New rate already validated and rounded by Zod (e.g. 0.1 = 10%).
  */
 export async function updateCommission(adminId: string, newRate: number) {
-  const current = await repo.getActiveCommissionRow();
-  const previousRate = current?.rate ?? DEFAULT_COMMISSION_RATE;
+  return db.transaction(async (tx) => {
+    const current = await tx.query.commissionSettings.findFirst({
+      where: lte(commissionSettings.effective_at, new Date()),
+      orderBy: [desc(commissionSettings.effective_at)],
+    });
+    const previousRate = current?.rate ?? DEFAULT_COMMISSION_RATE;
 
-  const entry = await repo.insertCommissionEntry({
-    rate: newRate.toFixed(4),
-    previous_rate: previousRate,
-    set_by: adminId,
-    effective_at: new Date(),
+    const [entry] = await tx
+      .insert(commissionSettings)
+      .values({
+        rate: newRate.toFixed(4),
+        previous_rate: previousRate,
+        set_by: adminId,
+        effective_at: new Date(),
+      })
+      .returning();
+
+    await tx.insert(adminLogs).values({
+      admin_id: adminId,
+      action: 'commission_rate_updated',
+      target_type: 'commission_settings',
+      target_id: entry.id,
+      details: { previous_rate: previousRate, new_rate: entry.rate },
+    });
+
+    return entry;
   });
-
-  await insertAdminLog({
-    admin_id: adminId,
-    action: 'commission_rate_updated',
-    target_type: 'commission_settings',
-    target_id: entry.id,
-    details: { previous_rate: previousRate, new_rate: entry.rate },
-  });
-
-  return entry;
 }
 
 /**

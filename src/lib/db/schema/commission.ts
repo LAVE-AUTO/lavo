@@ -2,7 +2,7 @@
  * Commission rate history set by admins.
  * Effective at a given time; past reservations keep their snapshot rate.
  */
-import { decimal, pgTable, timestamp, uuid } from "drizzle-orm/pg-core";
+import { decimal, index, pgTable, timestamp, uuid } from "drizzle-orm/pg-core";
 import { users } from "./users";
 
 /** Commission rate history; effective_at defines when rate applies. */
@@ -24,4 +24,7 @@ export const commissionSettings = pgTable("commission_settings", {
   })
     .notNull()
     .defaultNow(),
-});
+},
+(table) => [
+  index("commission_settings_effective_at_idx").on(table.effective_at),
+]);

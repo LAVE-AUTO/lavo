@@ -23,6 +23,11 @@ export const commissionHistoryQuerySchema = z.object({
   per_page: z.coerce.number().int().min(1).max(100).default(20),
 });
 
+/** z.coerce.date() accepts strings but does not reject Invalid Date objects (e.g. "2025-13-45"). */
+const validDate = z.coerce
+  .date()
+  .refine((d) => !isNaN(d.getTime()), { message: 'Invalid date format' });
+
 export const transactionLogsQuerySchema = z.object({
   page: z.coerce.number().int().min(1).default(1),
   per_page: z.coerce.number().int().min(1).max(100).default(20),
@@ -31,9 +36,9 @@ export const transactionLogsQuerySchema = z.object({
   /** Filter by station UUID. */
   station_id: z.string().uuid('Invalid station ID').optional(),
   /** ISO date-time string — lower bound on created_at. */
-  date_from: z.coerce.date().optional(),
+  date_from: validDate.optional(),
   /** ISO date-time string — upper bound on created_at. */
-  date_to: z.coerce.date().optional(),
+  date_to: validDate.optional(),
 });
 
 export type TransactionLogsQuery = z.infer<typeof transactionLogsQuerySchema>;

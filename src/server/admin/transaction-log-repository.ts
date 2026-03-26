@@ -28,6 +28,9 @@ export type TransactionLogFilters = {
  *
  * Each sub-select is filtered independently; the type filter excludes irrelevant sub-selects
  * via a SQL condition so the planner can skip the full table scan.
+ *
+ * Deployment dependency: the `reservation_tips` table is created by the tip feature migration
+ * (feat/api-pourboire). This query will fail at runtime if that migration has not been applied.
  */
 export async function listTransactionLogs(
   filters: TransactionLogFilters,
