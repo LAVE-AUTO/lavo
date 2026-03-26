@@ -370,7 +370,9 @@
     "config": "Configuration",
     "clients": "Clients",
     "history": "Historique",
-    "support": "Support"
+    "support": "Support",
+    "bottom_nav_aria": "Navigation principale",
+    "appearance_aria": "Apparence"
   },
   "footer": {
     "tagline": "La plateforme de réservation et de paiement pour vos stations de lavage automobile au Canada.",
@@ -2248,18 +2250,17 @@
     "status_in_progress": "En cours",
     "status_resolved": "Résolu",
     "status_closed": "Fermé",
-    "label_created": "Créé le",
     "label_messages": "messages",
     "thread_no_messages": "Aucun message pour l'instant.",
     "thread_admin_label": "Équipe support",
     "thread_resolved_hint": "Ce ticket a été résolu par l'équipe support.",
-    "thread_closed_hint": "Ce ticket est clôturé."
+    "thread_closed_hint": "Ce ticket est clôturé.",
+    "btn_expand": "Développer le ticket",
+    "btn_collapse": "Réduire le ticket"
   },
   "admin_support": {
     "page_title": "Tickets support",
     "page_subtitle": "Gérez les demandes des clients et des stations",
-    "chip_open": "ouverts",
-    "chip_total": "au total",
     "search_placeholder": "Chercher un ticket…",
     "filter_all": "Tous",
     "status_open": "Ouvert",
@@ -2268,11 +2269,6 @@
     "status_closed": "Fermé",
     "role_client": "Client",
     "role_station": "Station",
-    "col_subject": "Sujet",
-    "col_from": "De",
-    "col_status": "Statut",
-    "col_date": "Date",
-    "col_actions": "Actions",
     "btn_detail": "Voir",
     "btn_back": "Retour",
     "empty_tickets": "Aucun ticket.",
@@ -2478,7 +2474,7 @@
     "editor_aria_label": "Éditeur de contenu"
   },
   "station_support": {
-    "section_title": "Mes tickets",
+    "section_title": "Tickets de la station",
     "page_title": "Support",
     "page_subtitle": "Créez un ticket ou suivez vos demandes en cours"
   }
