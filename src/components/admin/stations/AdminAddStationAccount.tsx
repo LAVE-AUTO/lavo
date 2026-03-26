@@ -40,6 +40,7 @@ export function AdminAddStationAccount({ data, errors, busy, onChange, onNext, o
           <div className="flex flex-col gap-1.5">
             <label htmlFor="stn-add-firstname" className="text-[12px] font-bold text-[#555] dark:text-[#9A9A8A]">{t('field_firstname')}</label>
             <input id="stn-add-firstname" type="text" value={data.firstName} maxLength={100}
+              required aria-required="true" autoFocus
               placeholder={t('field_firstname_placeholder')}
               onChange={(e) => onChange({ ...data, firstName: e.target.value })}
               className={`${inputBase} ${errors.firstName ? inputError : inputIdle}`} />
@@ -48,6 +49,7 @@ export function AdminAddStationAccount({ data, errors, busy, onChange, onNext, o
           <div className="flex flex-col gap-1.5">
             <label htmlFor="stn-add-lastname" className="text-[12px] font-bold text-[#555] dark:text-[#9A9A8A]">{t('field_lastname')}</label>
             <input id="stn-add-lastname" type="text" value={data.lastName} maxLength={100}
+              required aria-required="true"
               placeholder={t('field_lastname_placeholder')}
               onChange={(e) => onChange({ ...data, lastName: e.target.value })}
               className={`${inputBase} ${errors.lastName ? inputError : inputIdle}`} />
@@ -59,6 +61,7 @@ export function AdminAddStationAccount({ data, errors, busy, onChange, onNext, o
         <div className="flex flex-col gap-1.5">
           <label htmlFor="stn-add-email" className="text-[12px] font-bold text-[#555] dark:text-[#9A9A8A]">{t('field_email')}</label>
           <input id="stn-add-email" type="email" value={data.email} maxLength={254}
+            required aria-required="true"
             placeholder={t('field_email_placeholder')}
             onChange={(e) => onChange({ ...data, email: e.target.value })}
             className={`${inputBase} ${errors.email ? inputError : inputIdle}`} />

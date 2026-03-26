@@ -106,6 +106,7 @@ export function AdminAddStationInfo({ data, errors, busy, onChange, onErrors, on
             {t('field_station_name')}<span className="ml-0.5 text-[#C49A1E]">*</span>
           </label>
           <input id="stn-name" type="text" value={data.stationName} minLength={2} maxLength={100}
+            required aria-required="true"
             placeholder={t('field_station_name_placeholder')}
             onChange={(e) => { onChange({ ...data, stationName: e.target.value }); if (errors.stationName) onErrors({ ...errors, stationName: undefined }); }}
             className={`${inputBase} ${errors.stationName ? inputError : inputIdle}`} />
@@ -138,6 +139,7 @@ export function AdminAddStationInfo({ data, errors, busy, onChange, onErrors, on
             {t('field_address')}<span className="ml-0.5 text-[#C49A1E]">*</span>
           </label>
           <input id="stn-address" type="text" value={data.address} minLength={5} maxLength={200}
+            required aria-required="true"
             placeholder={t('field_address_placeholder')}
             onChange={(e) => { onChange({ ...data, address: e.target.value }); if (errors.address) onErrors({ ...errors, address: undefined }); }}
             className={`${inputBase} ${errors.address ? inputError : inputIdle}`} />
@@ -155,8 +157,9 @@ export function AdminAddStationInfo({ data, errors, busy, onChange, onErrors, on
               {t('field_wash_posts')}<span className="ml-0.5 text-[#C49A1E]">*</span>
             </label>
             <input id="stn-posts" type="number" min={1} max={100} value={data.washPostCount}
+              required aria-required="true"
               placeholder={t('field_wash_posts_placeholder')}
-              onChange={(e) => onChange({ ...data, washPostCount: e.target.value })}
+              onChange={(e) => { onChange({ ...data, washPostCount: e.target.value }); if (errors.washPostCount) onErrors({ ...errors, washPostCount: undefined }); }}
               className={`${inputBase} ${errors.washPostCount ? inputError : inputIdle}`} />
             {errors.washPostCount && <p className="text-[11px] font-semibold text-red-500">{errors.washPostCount}</p>}
           </div>

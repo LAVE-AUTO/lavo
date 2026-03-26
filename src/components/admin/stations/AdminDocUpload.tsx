@@ -18,8 +18,9 @@ interface Props {
   error?: string;
 }
 
-const ACCEPTED_MIME = ['image/jpeg', 'image/png', 'image/webp', 'application/pdf'];
-const MAX_BYTES     = 10 * 1024 * 1024;
+const ACCEPTED_MIME      = ['image/jpeg', 'image/png', 'image/webp', 'application/pdf'];
+const MAX_BYTES          = 10 * 1024 * 1024;
+const UPLOAD_TIMEOUT_MS  = 30_000;
 
 export function AdminDocUpload({ label, hint, required, value, onChange, error }: Props) {
   const t = useTranslations('admin_add_station');
@@ -36,20 +37,23 @@ export function AdminDocUpload({ label, hint, required, value, onChange, error }
     if (file.size > MAX_BYTES) { setLocalError(t('doc_error_size')); return; }
 
     setIsUploading(true);
+    const controller = new AbortController();
+    const timer = setTimeout(() => controller.abort(), UPLOAD_TIMEOUT_MS);
     try {
       const formData = new FormData();
       formData.append('file', file);
       const res = await fetch('/api/v1/stations/onboarding/upload', {
-        method: 'POST', body: formData, credentials: 'include',
+        method: 'POST', body: formData, credentials: 'include', signal: controller.signal,
       });
+      clearTimeout(timer);
       if (res.ok) {
         const body = await res.json() as { data: { url: string; storage: string } };
         onChange({ url: body.data.url, storage: body.data.storage, name: file.name });
       } else {
-        const body = await res.json().catch(() => null) as { message?: string } | null;
         setLocalError(t('doc_error_upload'));
       }
     } catch {
+      clearTimeout(timer);
       setLocalError(t('doc_error_upload'));
     } finally {
       setIsUploading(false);
