@@ -87,16 +87,8 @@ export function AdminPromoQr({ stationId, stationName }: Props) {
         width: 1024, margin: 2, errorCorrectionLevel: 'H',
         color: { dark: '#1A1A0A', light: '#FFFFFF' },
       });
-      const doc = new jsPDF({ orientation: 'portrait', unit: 'mm', format: [100, 130] });
+      const doc = new jsPDF({ orientation: 'portrait', unit: 'mm', format: [100, 100] });
       doc.addImage(dataUrl, 'PNG', 10, 10, 80, 80);
-      doc.setFontSize(11);
-      doc.setTextColor('#1A1A0A');
-      doc.text(stationName, 50, 100, { align: 'center' });
-      if (appliedRate) {
-        doc.setFontSize(9);
-        doc.setTextColor('#C49A1E');
-        doc.text(`${t('commission_active_badge', { rate: appliedRate })}`, 50, 108, { align: 'center' });
-      }
       doc.save(`qr-promo-${sanitizeFilename(stationName)}.pdf`);
     } catch { /* silently ignore — user stays on the page */ }
   }
