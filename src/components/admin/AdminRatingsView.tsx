@@ -313,9 +313,10 @@ export function AdminRatingsView() {
               type="button"
               disabled={page === 1}
               onClick={() => loadData(page - 1, visibilityFilter, scoreFilter)}
+              aria-label="Page précédente"
               className="flex h-8 w-8 items-center justify-center rounded-lg border border-[#D8D4CC] text-[#888] transition-colors hover:border-[#C49A1E] hover:text-[#C49A1E] disabled:opacity-40 dark:border-[#1A2A14] dark:text-[#5A5A4A]"
             >
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"><polyline points="15 18 9 12 15 6" /></svg>
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" aria-hidden="true"><polyline points="15 18 9 12 15 6" /></svg>
             </button>
             {Array.from({ length: totalPages }, (_, i) => i + 1).map((p) => (
               <button
@@ -336,9 +337,10 @@ export function AdminRatingsView() {
               type="button"
               disabled={page === totalPages}
               onClick={() => loadData(page + 1, visibilityFilter, scoreFilter)}
+              aria-label="Page suivante"
               className="flex h-8 w-8 items-center justify-center rounded-lg border border-[#D8D4CC] text-[#888] transition-colors hover:border-[#C49A1E] hover:text-[#C49A1E] disabled:opacity-40 dark:border-[#1A2A14] dark:text-[#5A5A4A]"
             >
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"><polyline points="9 18 15 12 9 6" /></svg>
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" aria-hidden="true"><polyline points="9 18 15 12 9 6" /></svg>
             </button>
           </div>
         )}
