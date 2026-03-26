@@ -17,6 +17,7 @@ export type ClientHistoryRepositoryFilters = {
   amount_min?: number;
   amount_max?: number;
   q?: string;
+  sort_by: 'created_at' | 'amount_paid' | 'status';
   sort_order: 'asc' | 'desc';
 };
 
@@ -69,7 +70,7 @@ function escapeLikePattern(value: string): string {
 export async function listClientHistory(
   filters: ClientHistoryRepositoryFilters
 ): Promise<ClientHistoryRepositoryResult> {
-  const { userId, statuses, page, limit, entry_type, from, to, amount_min, amount_max, q, sort_order } =
+  const { userId, statuses, page, limit, entry_type, from, to, amount_min, amount_max, q, sort_by, sort_order } =
     filters;
 
   const conditions = [eq(reservations.user_id, userId), inArray(reservations.status, statuses)];
@@ -108,8 +109,14 @@ export async function listClientHistory(
 
   const where = and(...conditions);
   const offset = (page - 1) * limit;
-  const orderByCreatedAt =
-    sort_order === 'asc' ? asc(reservations.created_at) : desc(reservations.created_at);
+
+  const sortSqlColumn =
+    sort_by === 'amount_paid'
+      ? sql`${reservations.amount_paid}::numeric`
+      : sort_by === 'status'
+        ? reservations.status
+        : reservations.created_at;
+  const orderByPrimary = sort_order === 'asc' ? asc(sortSqlColumn) : desc(sortSqlColumn);
 
   const [countResult, rows] = await Promise.all([
     db
@@ -139,7 +146,7 @@ export async function listClientHistory(
       .leftJoin(vehicleFormats, eq(reservations.vehicle_format_id, vehicleFormats.id))
       .leftJoin(timeSlots, eq(reservations.time_slot_id, timeSlots.id))
       .where(where)
-      .orderBy(orderByCreatedAt, sql`${reservations.amount_paid}::numeric DESC`)
+      .orderBy(orderByPrimary)
       .limit(limit)
       .offset(offset),
   ]);

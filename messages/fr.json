@@ -986,6 +986,10 @@
     "receipt_total": "Total",
     "receipt_status": "Statut",
     "receipt_footer": "Merci de votre confiance. LAVO — Lavage auto simplifié.",
+    "receipt_service": "Service",
+    "receipt_entry_type": "Type d'entrée",
+    "receipt_commission": "Commission",
+    "receipt_tip": "Pourboire",
     "detail_close": "Fermer"
   },
   "faq_page": {

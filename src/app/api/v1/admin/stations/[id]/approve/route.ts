@@ -5,7 +5,8 @@ import { isAdminActionRateLimited } from '@/server/admin/admin-log-repository';
 import { successResponse, error400, error404, error409, error429, error500, fromAppError } from '@/lib/responses';
 import { ApiCode } from '@/types/api-codes';
 import { AppError, ConflictError, NotFoundError } from '@/lib/errors';
-import { stationIdParamSchema, mapZodErrors } from '@/validators/station';
+import { adminStationIdParamSchema, mapZodErrors } from '@/validators/station';
+import { applyNoStoreHeaders } from '@/lib/response-headers';
 import type { NextResponse } from 'next/server';
 
 /**
@@ -20,6 +21,7 @@ import type { NextResponse } from 'next/server';
  *   403 FORBIDDEN
  *   404 NOT_FOUND — station or owner not found
  *   409 CONFLICT — station not in pending_admin_validation state
+ *   429 TOO_MANY_REQUESTS — rate limit exceeded
  *   500 INTERNAL_ERROR
  */
 export async function POST(
@@ -27,29 +29,31 @@ export async function POST(
   { params }: { params: Promise<{ id: string }> }
 ) {
   const auth = await requireRole(request, 'admin');
-  if (auth instanceof Response) return auth as NextResponse;
+  if (auth instanceof Response) return applyNoStoreHeaders(auth as NextResponse);
 
   const { id } = await params;
-  const locale = extractLocale(request.headers.get('accept-language'));
 
-  // H-3: Validate :id is a UUID before hitting the DB.
-  const parsed = stationIdParamSchema.safeParse({ id });
-  if (!parsed.success) {
-    return error400('Validation failed', ApiCode.VALIDATION_FAILED, mapZodErrors(parsed.error));
+  const paramParsed = adminStationIdParamSchema.safeParse({ id });
+  if (!paramParsed.success) {
+    return applyNoStoreHeaders(
+      error400('Invalid station id', ApiCode.VALIDATION_FAILED, mapZodErrors(paramParsed.error))
+    );
   }
 
   // H-4: Rate limit — max 20 approve/reject actions per admin per minute.
   if (await isAdminActionRateLimited(auth.sub, ['station_approved', 'station_rejected'])) {
-    return error429();
+    return applyNoStoreHeaders(error429());
   }
 
+  const locale = extractLocale(request.headers.get('accept-language'));
+
   try {
-    await approveStation(auth.sub, parsed.data.id, locale);
-    return successResponse({ approved: true }, 'Station approved successfully.');
+    await approveStation(auth.sub, paramParsed.data.id, locale);
+    return applyNoStoreHeaders(successResponse({ approved: true }, 'Station approved successfully.'));
   } catch (e) {
-    if (e instanceof NotFoundError) return error404(e.message);
-    if (e instanceof ConflictError) return error409(e.message, ApiCode.CONFLICT);
-    if (e instanceof AppError) return fromAppError(e);
-    return error500(e);
+    if (e instanceof NotFoundError) return applyNoStoreHeaders(error404(e.message));
+    if (e instanceof ConflictError) return applyNoStoreHeaders(error409(e.message, ApiCode.CONFLICT));
+    if (e instanceof AppError) return applyNoStoreHeaders(fromAppError(e));
+    return applyNoStoreHeaders(error500(e));
   }
 }

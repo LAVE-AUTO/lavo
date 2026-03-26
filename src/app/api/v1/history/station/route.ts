@@ -19,14 +19,15 @@ import { stationHistoryQuerySchema, mapZodErrors } from '@/validators/history';
 import { findStationByUserId } from '@/server/station/station-repository';
 import { getStationHistory } from '@/server/history/station-history-service';
 import { AppError } from '@/lib/errors';
+import { applyNoStoreHeaders } from '@/lib/response-headers';
 import type { NextResponse } from 'next/server';
 
 export async function GET(request: Request): Promise<NextResponse> {
   const auth = await requireRole(request, 'station');
-  if (auth instanceof Response) return auth as NextResponse;
+  if (auth instanceof Response) return applyNoStoreHeaders(auth as NextResponse);
 
   const station = await findStationByUserId(auth.sub);
-  if (!station) return error404('No station associated with this account');
+  if (!station) return applyNoStoreHeaders(error404('No station associated with this account'));
 
   const { searchParams } = new URL(request.url);
   const raw = {
@@ -41,14 +42,16 @@ export async function GET(request: Request): Promise<NextResponse> {
 
   const parsed = stationHistoryQuerySchema.safeParse(raw);
   if (!parsed.success) {
-    return error400('Validation failed', ApiCode.VALIDATION_FAILED, mapZodErrors(parsed.error));
+    return applyNoStoreHeaders(
+      error400('Validation failed', ApiCode.VALIDATION_FAILED, mapZodErrors(parsed.error))
+    );
   }
 
   try {
     const result = await getStationHistory({ stationId: station.id, ...parsed.data });
-    return successResponse(result);
+    return applyNoStoreHeaders(successResponse(result));
   } catch (e) {
-    if (e instanceof AppError) return fromAppError(e);
-    return error500(e);
+    if (e instanceof AppError) return applyNoStoreHeaders(fromAppError(e));
+    return applyNoStoreHeaders(error500(e));
   }
 }

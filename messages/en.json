@@ -986,6 +986,10 @@
     "receipt_total": "Total",
     "receipt_status": "Status",
     "receipt_footer": "Thank you for your trust. LAVO — Car wash simplified.",
+    "receipt_service": "Service",
+    "receipt_entry_type": "Entry type",
+    "receipt_commission": "Commission",
+    "receipt_tip": "Tip",
     "detail_close": "Close"
   },
   "faq_page": {

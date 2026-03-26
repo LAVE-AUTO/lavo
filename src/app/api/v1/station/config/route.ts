@@ -12,6 +12,7 @@ import { findStationByUserId } from '@/server/station/station-repository';
 import { getOrCreateConfig, updateConfig } from '@/server/station/config-service';
 import { stationConfigBodySchema, mapZodErrors } from '@/validators/station';
 import { AppError, NotFoundError } from '@/lib/errors';
+import { applyNoStoreHeaders } from '@/lib/response-headers';
 import type { NextResponse } from 'next/server';
 
 function serializeConfig(config: { [k: string]: unknown }) {
@@ -39,41 +40,45 @@ function serializePost(post: { id: string; station_id: string; position: number;
 
 export async function GET(): Promise<NextResponse> {
   const auth = await requireRole(undefined, 'station');
-  if (auth instanceof Response) return auth as NextResponse;
+  if (auth instanceof Response) return applyNoStoreHeaders(auth as NextResponse);
 
   try {
     const station = await findStationByUserId(auth.sub);
-    if (!station) return error404('No station associated with this account');
+    if (!station) return applyNoStoreHeaders(error404('No station associated with this account'));
     const { config, posts } = await getOrCreateConfig(station.id);
-    return successResponse({
-      config: serializeConfig(config),
-      posts: posts.map(serializePost),
-    });
+    return applyNoStoreHeaders(
+      successResponse({
+        config: serializeConfig(config),
+        posts: posts.map(serializePost),
+      })
+    );
   } catch (e) {
-    if (e instanceof NotFoundError) return error404(e.message);
-    if (e instanceof AppError) return fromAppError(e);
-    return error500(e);
+    if (e instanceof NotFoundError) return applyNoStoreHeaders(error404(e.message));
+    if (e instanceof AppError) return applyNoStoreHeaders(fromAppError(e));
+    return applyNoStoreHeaders(error500(e));
   }
 }
 
 export async function PATCH(request: Request): Promise<NextResponse> {
   const auth = await requireRole(request, 'station');
-  if (auth instanceof Response) return auth as NextResponse;
+  if (auth instanceof Response) return applyNoStoreHeaders(auth as NextResponse);
 
   let body: unknown;
   try {
     body = await request.json();
   } catch {
-    return error400('Invalid JSON body', ApiCode.VALIDATION_FAILED);
+    return applyNoStoreHeaders(error400('Invalid JSON body', ApiCode.VALIDATION_FAILED));
   }
 
   const parsed = stationConfigBodySchema.safeParse(body);
   if (!parsed.success) {
-    return error400('Validation failed', ApiCode.VALIDATION_FAILED, mapZodErrors(parsed.error));
+    return applyNoStoreHeaders(
+      error400('Validation failed', ApiCode.VALIDATION_FAILED, mapZodErrors(parsed.error))
+    );
   }
 
   const station = await findStationByUserId(auth.sub);
-  if (!station) return error404('No station associated with this account');
+  if (!station) return applyNoStoreHeaders(error404('No station associated with this account'));
 
   const { posts, ...configFields } = parsed.data;
   const configPayload: Parameters<typeof updateConfig>[1] = {};
@@ -103,12 +108,14 @@ export async function PATCH(request: Request): Promise<NextResponse> {
       configPayload,
       posts
     );
-    return successResponse({
-      config: serializeConfig(config),
-      posts: updatedPosts.map(serializePost),
-    });
+    return applyNoStoreHeaders(
+      successResponse({
+        config: serializeConfig(config),
+        posts: updatedPosts.map(serializePost),
+      })
+    );
   } catch (e) {
-    if (e instanceof AppError) return fromAppError(e);
-    return error500(e);
+    if (e instanceof AppError) return applyNoStoreHeaders(fromAppError(e));
+    return applyNoStoreHeaders(error500(e));
   }
 }

@@ -4,17 +4,8 @@ import { ApiCode } from '@/types/api-codes';
 import { clientHistoryQuerySchema, mapZodErrors } from '@/validators/history';
 import { getClientHistory } from '@/server/history/client-history-service';
 import { AppError } from '@/lib/errors';
+import { applyNoStoreHeaders } from '@/lib/response-headers';
 import type { NextResponse } from 'next/server';
-
-function applyNoStoreHeaders(response: NextResponse): NextResponse {
-  response.headers.set('Cache-Control', 'private, no-store');
-  response.headers.set('Pragma', 'no-cache');
-  response.headers.set('Vary', 'Authorization, Cookie');
-  response.headers.set('X-Content-Type-Options', 'nosniff');
-  response.headers.set('X-Frame-Options', 'DENY');
-  response.headers.set('Referrer-Policy', 'no-referrer');
-  return response;
-}
 
 /**
  * GET /api/v1/history/client

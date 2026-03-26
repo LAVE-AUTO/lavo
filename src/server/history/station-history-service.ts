@@ -76,7 +76,7 @@ export async function getStationHistory(
     commission_amount: item.commission_amount,
     tip_amount: item.tip_amount,
     penalty_amount: item.penalty_amount,
-    reservation_ref: item.stripe_payment_id ?? item.id,
+    reservation_ref: item.id,
   }));
 
   return {

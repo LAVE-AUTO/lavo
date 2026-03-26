@@ -3,24 +3,20 @@
  * Returns receipt PDF for one client entry (Stripe link prioritized when available).
  */
 import { requireRole } from '@/lib/require-role';
-import { error400, error404, error500, fromAppError } from '@/lib/responses';
+import { error400, error404, error429, error500, fromAppError } from '@/lib/responses';
 import { ApiCode } from '@/types/api-codes';
 import { clientHistoryReceiptParamSchema, mapZodErrors } from '@/validators/history';
 import { getClientHistoryReceiptPdf } from '@/server/history/client-history-service';
+import { extractLocale } from '@/lib/email';
 import { AppError, NotFoundError } from '@/lib/errors';
+import { applyNoStoreHeaders } from '@/lib/response-headers';
+import { createEndpointRateLimiter } from '@/lib/endpoint-rate-limiter';
 import { NextResponse } from 'next/server';
 
-type Params = { params: Promise<{ entryId: string }> };
+/** 20 requests per minute per user. */
+const pdfLimiter = createEndpointRateLimiter({ maxRequests: 20, windowMs: 60_000 });
 
-function applyNoStoreHeaders(response: NextResponse): NextResponse {
-  response.headers.set('Cache-Control', 'private, no-store');
-  response.headers.set('Pragma', 'no-cache');
-  response.headers.set('Vary', 'Authorization, Cookie');
-  response.headers.set('X-Content-Type-Options', 'nosniff');
-  response.headers.set('X-Frame-Options', 'DENY');
-  response.headers.set('Referrer-Policy', 'no-referrer');
-  return response;
-}
+type Params = { params: Promise<{ entryId: string }> };
 
 function escapePdfText(value: string): string {
   return value
@@ -28,22 +24,6 @@ function escapePdfText(value: string): string {
     .replace(/\\/g, '\\\\')
     .replace(/\(/g, '\\(')
     .replace(/\)/g, '\\)');
-}
-
-function isTrustedStripeReceiptUrl(value: string): boolean {
-  try {
-    const parsed = new URL(value);
-    if (parsed.protocol !== 'https:') return false;
-    if (parsed.username || parsed.password) return false;
-    if (parsed.port && parsed.port !== '443') return false;
-    const host = parsed.hostname.toLowerCase();
-    if (!(host === 'stripe.com' || host.endsWith('.stripe.com'))) return false;
-
-    // Only allow Stripe receipt pages to avoid unrelated external redirects.
-    return /^\/receipts(\/|$)/.test(parsed.pathname);
-  } catch {
-    return false;
-  }
 }
 
 function generateSimplePdfFromLines(lines: string[]): Uint8Array {
@@ -89,6 +69,10 @@ export async function GET(request: Request, { params }: Params): Promise<NextRes
   const auth = await requireRole(request, 'client');
   if (auth instanceof Response) return applyNoStoreHeaders(auth as NextResponse);
 
+  if (pdfLimiter.isRateLimited(auth.sub)) {
+    return applyNoStoreHeaders(error429());
+  }
+
   const { entryId } = await params;
   const parsed = clientHistoryReceiptParamSchema.safeParse({ entryId });
   if (!parsed.success) {
@@ -98,31 +82,22 @@ export async function GET(request: Request, { params }: Params): Promise<NextRes
   }
 
   try {
-    const result = await getClientHistoryReceiptPdf(auth.sub, parsed.data.entryId);
+    const locale = extractLocale(request.headers.get('accept-language'));
+    const result = await getClientHistoryReceiptPdf(auth.sub, parsed.data.entryId, locale);
 
-    if (result.stripe_receipt_url && isTrustedStripeReceiptUrl(result.stripe_receipt_url)) {
-      const redirectResponse = NextResponse.redirect(result.stripe_receipt_url, 302);
-      applyNoStoreHeaders(redirectResponse);
-      redirectResponse.headers.set('Referrer-Policy', 'no-referrer');
-      redirectResponse.headers.set('X-Content-Type-Options', 'nosniff');
-      redirectResponse.headers.set('X-Frame-Options', 'DENY');
-      return redirectResponse;
+    if (result.stripe_receipt_url) {
+      return applyNoStoreHeaders(NextResponse.redirect(result.stripe_receipt_url, 302));
     }
 
     const pdfBytes = generateSimplePdfFromLines(result.text_lines);
-    return new NextResponse(pdfBytes, {
+    const pdfResponse = new NextResponse(pdfBytes, {
       status: 200,
       headers: {
         'Content-Type': 'application/pdf',
         'Content-Disposition': `inline; filename="${result.filename}"`,
-        'Cache-Control': 'private, no-store',
-        Pragma: 'no-cache',
-        Vary: 'Authorization, Cookie',
-        'X-Content-Type-Options': 'nosniff',
-        'X-Frame-Options': 'DENY',
-        'Referrer-Policy': 'no-referrer',
       },
     });
+    return applyNoStoreHeaders(pdfResponse);
   } catch (e) {
     if (e instanceof NotFoundError) return applyNoStoreHeaders(error404(e.message));
     if (e instanceof AppError) return applyNoStoreHeaders(fromAppError(e));

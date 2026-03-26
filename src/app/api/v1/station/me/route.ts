@@ -2,6 +2,7 @@ import { requireRole } from '@/lib/require-role';
 import { getMyStation } from '@/server/station/station-service';
 import { successResponse, error403, error404, error500, fromAppError } from '@/lib/responses';
 import { AppError, ForbiddenError, NotFoundError } from '@/lib/errors';
+import { applyNoStoreHeaders } from '@/lib/response-headers';
 import type { NextResponse } from 'next/server';
 
 /**
@@ -16,17 +17,17 @@ import type { NextResponse } from 'next/server';
  *   404 NOT_FOUND — no station associated with this account
  *   500 INTERNAL_ERROR
  */
-export async function GET() {
+export async function GET(): Promise<NextResponse> {
   const auth = await requireRole(undefined, 'station');
-  if (auth instanceof Response) return auth as NextResponse;
+  if (auth instanceof Response) return applyNoStoreHeaders(auth as NextResponse);
 
   try {
     const station = await getMyStation(auth.sub);
-    return successResponse(station);
+    return applyNoStoreHeaders(successResponse(station));
   } catch (e) {
-    if (e instanceof NotFoundError) return error404(e.message);
-    if (e instanceof ForbiddenError) return error403(e.message);
-    if (e instanceof AppError) return fromAppError(e);
-    return error500(e);
+    if (e instanceof NotFoundError) return applyNoStoreHeaders(error404(e.message));
+    if (e instanceof ForbiddenError) return applyNoStoreHeaders(error403(e.message));
+    if (e instanceof AppError) return applyNoStoreHeaders(fromAppError(e));
+    return applyNoStoreHeaders(error500(e));
   }
 }

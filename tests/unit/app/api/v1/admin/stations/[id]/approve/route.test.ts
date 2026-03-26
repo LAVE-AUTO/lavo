@@ -56,4 +56,18 @@ describe('POST /api/v1/admin/stations/:id/approve', () => {
     expect(mockExtractLocale).not.toHaveBeenCalled();
     expect(mockApproveStation).not.toHaveBeenCalled();
   });
+
+  it('returns 400 when station id is not a valid UUID', async () => {
+    const req = new Request('http://localhost/api/v1/admin/stations/not-a-uuid/approve', {
+      method: 'POST',
+      headers: { 'accept-language': 'en' },
+    });
+
+    const res = await POST(req, { params: Promise.resolve({ id: 'not-a-uuid' }) });
+    const body = await res.json();
+
+    expect(res.status).toBe(400);
+    expect(body.code).toBe('VALIDATION_FAILED');
+    expect(mockApproveStation).not.toHaveBeenCalled();
+  });
 });

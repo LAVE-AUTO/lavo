@@ -7,6 +7,8 @@ import {
   error500,
 } from '@/lib/responses';
 import { ACCESS_COOKIE_NAME } from '@/helpers/constants';
+import { applyNoStoreHeaders } from '@/lib/response-headers';
+import type { NextResponse } from 'next/server';
 
 /**
  * GET /api/v1/auth/me
@@ -18,24 +20,24 @@ import { ACCESS_COOKIE_NAME } from '@/helpers/constants';
  *   401 UNAUTHORIZED — missing or invalid token
  *   500 INTERNAL_ERROR
  */
-export async function GET() {
+export async function GET(): Promise<NextResponse> {
   const headersList = await headers();
   const bearerToken = extractBearerToken(headersList.get('authorization'));
   const cookieStore = await cookies();
   const cookieToken = cookieStore.get(ACCESS_COOKIE_NAME)?.value;
   const token = bearerToken ?? cookieToken ?? null;
 
-  if (!token) return error401();
+  if (!token) return applyNoStoreHeaders(error401());
 
   const payload = await verifyJwt(token);
-  if (!payload) return error401('Session expired or invalid');
+  if (!payload) return applyNoStoreHeaders(error401('Session expired or invalid'));
 
   try {
     const user = await findById(payload.sub);
-    if (!user) return error401('User not found');
+    if (!user) return applyNoStoreHeaders(error401('User not found'));
 
-    return successResponse(user);
+    return applyNoStoreHeaders(successResponse(user));
   } catch (e) {
-    return error500(e);
+    return applyNoStoreHeaders(error500(e));
   }
 }

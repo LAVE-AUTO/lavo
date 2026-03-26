@@ -4,6 +4,7 @@ import { successResponse, error400, error500, fromAppError } from '@/lib/respons
 import { AppError } from '@/lib/errors';
 import { ApiCode } from '@/types/api-codes';
 import { listPendingStationsQuerySchema, mapZodErrors } from '@/validators/station';
+import { applyNoStoreHeaders } from '@/lib/response-headers';
 import type { NextResponse } from 'next/server';
 
 const ALLOWED_STATUSES = ['pending_admin_validation', 'active', 'rejected', 'suspended'] as const;
@@ -29,7 +30,7 @@ type AllowedStatus = (typeof ALLOWED_STATUSES)[number];
  */
 export async function GET(request: Request): Promise<NextResponse> {
   const auth = await requireRole(request, 'admin');
-  if (auth instanceof Response) return auth as NextResponse;
+  if (auth instanceof Response) return applyNoStoreHeaders(auth as NextResponse);
 
   const { searchParams } = new URL(request.url);
   const parsed = listPendingStationsQuerySchema.safeParse({
@@ -38,7 +39,9 @@ export async function GET(request: Request): Promise<NextResponse> {
     per_page: searchParams.get('per_page') || undefined,
   });
   if (!parsed.success) {
-    return error400('Validation failed', ApiCode.VALIDATION_FAILED, mapZodErrors(parsed.error));
+    return applyNoStoreHeaders(
+      error400('Validation failed', ApiCode.VALIDATION_FAILED, mapZodErrors(parsed.error))
+    );
   }
 
   try {
@@ -55,9 +58,9 @@ export async function GET(request: Request): Promise<NextResponse> {
       stations = await getPendingStations(parsed.data.page, parsed.data.per_page);
     }
 
-    return successResponse(stations);
+    return applyNoStoreHeaders(successResponse(stations));
   } catch (e) {
-    if (e instanceof AppError) return fromAppError(e);
-    return error500(e);
+    if (e instanceof AppError) return applyNoStoreHeaders(fromAppError(e));
+    return applyNoStoreHeaders(error500(e));
   }
 }

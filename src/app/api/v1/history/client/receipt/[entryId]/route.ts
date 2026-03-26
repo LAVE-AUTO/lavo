@@ -8,19 +8,10 @@ import { ApiCode } from '@/types/api-codes';
 import { clientHistoryReceiptParamSchema, mapZodErrors } from '@/validators/history';
 import { getClientHistoryReceiptDetail } from '@/server/history/client-history-service';
 import { AppError, NotFoundError } from '@/lib/errors';
+import { applyNoStoreHeaders } from '@/lib/response-headers';
 import type { NextResponse } from 'next/server';
 
 type Params = { params: Promise<{ entryId: string }> };
-
-function applyNoStoreHeaders(response: NextResponse): NextResponse {
-  response.headers.set('Cache-Control', 'private, no-store');
-  response.headers.set('Pragma', 'no-cache');
-  response.headers.set('Vary', 'Authorization, Cookie');
-  response.headers.set('X-Content-Type-Options', 'nosniff');
-  response.headers.set('X-Frame-Options', 'DENY');
-  response.headers.set('Referrer-Policy', 'no-referrer');
-  return response;
-}
 
 export async function GET(request: Request, { params }: Params): Promise<NextResponse> {
   const auth = await requireRole(request, 'client');

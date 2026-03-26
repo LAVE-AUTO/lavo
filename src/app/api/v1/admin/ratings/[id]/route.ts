@@ -30,6 +30,7 @@ import {
   mapZodErrors,
 } from '@/validators/ratings';
 import { toggleRatingVisibility } from '@/server/ratings/rating-service';
+import { applyNoStoreHeaders } from '@/lib/response-headers';
 import type { NextResponse } from 'next/server';
 
 
@@ -41,14 +42,16 @@ export async function PATCH(
   { params }: { params: Promise<{ id: string }> }
 ): Promise<NextResponse> {
   const auth = await requireRole(request, 'admin');
-  if (auth instanceof Response) return auth as NextResponse;
+  if (auth instanceof Response) return applyNoStoreHeaders(auth as NextResponse);
 
   const { id } = await params;
 
   // Validate rating id param
   const paramParsed = adminRatingIdParamSchema.safeParse({ id });
   if (!paramParsed.success) {
-    return error400('Invalid rating id', ApiCode.VALIDATION_FAILED, mapZodErrors(paramParsed.error));
+    return applyNoStoreHeaders(
+      error400('Invalid rating id', ApiCode.VALIDATION_FAILED, mapZodErrors(paramParsed.error))
+    );
   }
 
   // Parse and validate request body
@@ -56,12 +59,14 @@ export async function PATCH(
   try {
     body = await request.json();
   } catch {
-    return error400('Invalid JSON body');
+    return applyNoStoreHeaders(error400('Invalid JSON body', ApiCode.VALIDATION_FAILED));
   }
 
   const parsed = adminToggleRatingBodySchema.safeParse(body);
   if (!parsed.success) {
-    return error400('Validation failed', ApiCode.VALIDATION_FAILED, mapZodErrors(parsed.error));
+    return applyNoStoreHeaders(
+      error400('Validation failed', ApiCode.VALIDATION_FAILED, mapZodErrors(parsed.error))
+    );
   }
 
   // Toggle rating visibility; idempotent
@@ -71,17 +76,19 @@ export async function PATCH(
       parsed.data.is_visible,
       auth.sub
     );
-    return successResponse({
-      id: result.id,
-      is_visible: result.is_visible,
-      score: result.score,
-      comment: result.comment,
-      station_id: result.station_id,
-      updated: result.updated,
-    });
+    return applyNoStoreHeaders(
+      successResponse({
+        id: result.id,
+        is_visible: result.is_visible,
+        score: result.score,
+        comment: result.comment,
+        station_id: result.station_id,
+        updated: result.updated,
+      })
+    );
   } catch (e) {
-    if (e instanceof NotFoundError) return error404(e.message);
-    if (e instanceof AppError) return fromAppError(e);
-    return error500(e);
+    if (e instanceof NotFoundError) return applyNoStoreHeaders(error404(e.message));
+    if (e instanceof AppError) return applyNoStoreHeaders(fromAppError(e));
+    return applyNoStoreHeaders(error500(e));
   }
 }
