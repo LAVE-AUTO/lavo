@@ -9,6 +9,7 @@ import { StationProfileForm, type StationProfile } from './StationProfileForm';
 import { StationLocationForm, type StationLocation } from './StationLocationForm';
 import { StationSlotList } from './StationSlotList';
 import { SlotModal, type CreatedSlot } from './SlotModal';
+import { StationPhotosForm } from './StationPhotosForm';
 
 const INITIAL_SLOTS: CreatedSlot[] = [];
 
@@ -146,6 +147,7 @@ export function StationConfigPage() {
           </div>
         )}
         <StationProfileForm profile={profile} onSaved={setProfile} locked={isPendingApproval} />
+        <StationPhotosForm locked={isPendingApproval} />
         <StationLocationForm location={location} onSaved={setLocation} locked={isPendingApproval} />
         <StationConfigForm
           config={config}
