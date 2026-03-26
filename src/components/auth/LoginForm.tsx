@@ -113,9 +113,10 @@ export function LoginForm({
     setIsLoading(true);
     try {
       const [success, response] = await postWithApi('/auth/login', {
-        email:       formData.email.trim(),
-        password:    formData.password,
-        remember_me: rememberMe,
+        email:         formData.email.trim(),
+        password:      formData.password,
+        remember_me:   rememberMe,
+        expected_role: allowedRole,
       }, { successStatus: HTTP_STATUS.OK });
 
       if (success) {
