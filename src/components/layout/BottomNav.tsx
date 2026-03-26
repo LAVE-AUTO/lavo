@@ -175,7 +175,7 @@ export function BottomNav() {
 
       <nav
         className="sm:hidden fixed bottom-0 left-0 right-0 z-50 flex bg-[#1E2A1A] border-t border-[#2C3828]"
-        aria-label="Navigation principale"
+        aria-label={t('bottom_nav_aria')}
         style={{ paddingBottom: 'env(safe-area-inset-bottom)' }}
       >
         {items.map(({ href, label, icon }) => {
@@ -269,7 +269,7 @@ export function BottomNav() {
 
                 {/* Theme + Lang row */}
                 <div className="flex items-center justify-between px-4 py-3 border-t border-[#2C3828]">
-                  <span className="text-[12px] font-semibold text-[#7a9a7d]">Apparence</span>
+                  <span className="text-[12px] font-semibold text-[#7a9a7d]">{t('appearance_aria')}</span>
                   <div className="flex items-center gap-2">
                     <ThemeToggle />
                     <LangToggle />
