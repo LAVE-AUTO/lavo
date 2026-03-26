@@ -120,6 +120,48 @@
       "when": 1774000000000,
       "tag": "0016_stations_rejection_count",
       "breakpoints": true
+    },
+    {
+      "idx": 17,
+      "version": "7",
+      "when": 1774100000000,
+      "tag": "0017_reservations_commission_and_payout_not_null",
+      "breakpoints": true
+    },
+    {
+      "idx": 18,
+      "version": "7",
+      "when": 1774200000000,
+      "tag": "0018_support_system",
+      "breakpoints": true
+    },
+    {
+      "idx": 19,
+      "version": "7",
+      "when": 1774300000000,
+      "tag": "0019_support_status_enum",
+      "breakpoints": true
+    },
+    {
+      "idx": 20,
+      "version": "7",
+      "when": 1774400000000,
+      "tag": "0020_drop_support_tickets_message",
+      "breakpoints": true
+    },
+    {
+      "idx": 23,
+      "version": "7",
+      "when": 1774540000000,
+      "tag": "0023_commission_add_previous_rate",
+      "breakpoints": true
+    },
+    {
+      "idx": 24,
+      "version": "7",
+      "when": 1774560000000,
+      "tag": "0024_commission_effective_at_index",
+      "breakpoints": true
     }
   ]
 }
