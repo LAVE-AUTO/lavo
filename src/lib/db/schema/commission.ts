@@ -9,6 +9,8 @@ import { users } from "./users";
 export const commissionSettings = pgTable("commission_settings", {
   id: uuid("id").primaryKey().defaultRandom(),
   rate: decimal("rate", { precision: 5, scale: 4 }).notNull(),
+  /** Rate that was active before this entry. Null for the very first entry. */
+  previous_rate: decimal("previous_rate", { precision: 5, scale: 4 }),
   set_by: uuid("set_by")
     .notNull()
     .references(() => users.id, { onDelete: "cascade" }),
