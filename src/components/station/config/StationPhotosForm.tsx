@@ -3,6 +3,7 @@
 import { useState, useRef, useEffect, type ChangeEvent } from 'react';
 import { useTranslations } from 'next-intl';
 import { useToast } from '@/context/toast-context';
+import { useAuth } from '@/context/auth-context';
 
 const MAX_PHOTOS       = 8;
 const UPLOAD_TIMEOUT   = 30_000;
@@ -14,6 +15,7 @@ interface Props { locked?: boolean }
 export function StationPhotosForm({ locked = false }: Props) {
   const t          = useTranslations('station_config');
   const { success, error: showError } = useToast();
+  const { token }  = useAuth();
   const mountedRef = useRef(true);
   useEffect(() => { mountedRef.current = true; return () => { mountedRef.current = false; }; }, []);
 
@@ -48,8 +50,10 @@ export function StationPhotosForm({ locked = false }: Props) {
     const controller = new AbortController();
     const timer = setTimeout(() => controller.abort(), UPLOAD_TIMEOUT);
     try {
+      const headers: HeadersInit = token ? { Authorization: `Bearer ${token}` } : {};
       const res = await fetch('/api/v1/upload', {
         method: 'POST', body: form, credentials: 'include', signal: controller.signal,
+        headers,
       });
       clearTimeout(timer);
       if (!mountedRef.current) return;

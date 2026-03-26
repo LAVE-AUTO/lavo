@@ -19,9 +19,13 @@ export function ContactContent() {
     e.preventDefault();
     if (!name || !email || !message) return;
     setStatus('sending');
-    /* Simulate send — backend not wired yet */
-    await new Promise((r) => setTimeout(r, 1200));
-    setStatus('sent');
+    try {
+      // TODO: connect to API once endpoint is available (POST /support or /contact)
+      await new Promise((r) => setTimeout(r, 1200));
+      setStatus('sent');
+    } catch {
+      setStatus('error');
+    }
   };
 
   const inputClass = (hasVal: boolean) => [
@@ -146,6 +150,10 @@ export function ContactContent() {
                   className={`${inputClass(!!message)} resize-none`}
                 />
               </div>
+
+              {status === 'error' && (
+                <p role="alert" className="text-[13px] font-semibold text-lavo-error">{t('error_generic')}</p>
+              )}
 
               <button
                 type="submit"

@@ -63,7 +63,7 @@ export function AdminPromoQr({ stationId, stationName }: Props) {
     setPromoUrl(`${origin}/${locale}/register?ref=${stationId}&source=promo`);
     setAppliedRate(commission);
     setGenerating(false);
-  }, [commission, locale, stationId]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [commission, locale, stationId, t]);
 
   async function downloadPng() {
     if (!promoUrl) return;

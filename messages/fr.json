@@ -1106,7 +1106,8 @@
     "submit": "Envoyer le message",
     "success_title": "Message envoyé !",
     "success_desc": "Nous vous répondrons dans les 24 heures ouvrées. Merci de nous avoir contactés.",
-    "new_message": "Envoyer un autre message"
+    "new_message": "Envoyer un autre message",
+    "error_generic": "Une erreur est survenue. Veuillez réessayer."
   },
   "privacy_page": {
     "meta_title": "Politique de confidentialité — Slowtime",

@@ -1106,7 +1106,8 @@
     "submit": "Send message",
     "success_title": "Message sent!",
     "success_desc": "We'll reply within 24 business hours. Thank you for reaching out.",
-    "new_message": "Send another message"
+    "new_message": "Send another message",
+    "error_generic": "An error occurred. Please try again."
   },
   "privacy_page": {
     "meta_title": "Privacy Policy — Slowtime",

@@ -97,7 +97,7 @@ function LogoutIcon() {
 
 /**
  * Mobile-only bottom navigation bar.
- * Guest: Accueil, Stations, Login, Comment ca marche
+ * Guest: Accueil, Stations, Login, Comment ça marche
  * Authenticated CLIENT: Accueil, Reservations, Favoris, Plus (Profile + Deconnexion)
  */
 export function BottomNav() {
