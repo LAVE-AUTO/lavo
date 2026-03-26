@@ -47,7 +47,7 @@ export default async function LoginPage({ params, searchParams }: Props) {
                 registerLabel={t('tab_register')}
               />
             </div>
-            <LoginForm callbackUrl={callbackUrl} />
+            <LoginForm callbackUrl={callbackUrl} allowedRole="client" />
           </div>
         </div>
       </AuthPageLayout>

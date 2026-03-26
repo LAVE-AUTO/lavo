@@ -260,7 +260,9 @@
     "error_account_suspended": "Your account has been suspended. Contact support.",
     "error_rate_limit": "Too many attempts. Please try again in a few minutes.",
     "error_password_change_required": "You must change your password.",
-    "toast_success": "Successfully signed in"
+    "toast_success": "Successfully signed in",
+    "error_wrong_space": "This account does not belong to this login space.",
+    "wrong_space_link_label": "Go to the right space"
   },
   "forgot_password": {
     "title": "Forgot password",
