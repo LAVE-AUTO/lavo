@@ -1,12 +1,48 @@
 /**
  * Support tickets created by users, optionally assigned to admins.
  */
-import { pgTable, text, timestamp, uuid, varchar } from "drizzle-orm/pg-core";
+import {
+  boolean,
+  pgEnum,
+  pgTable,
+  serial,
+  text,
+  timestamp,
+  uuid,
+  varchar,
+} from "drizzle-orm/pg-core";
 import { users } from "./users";
+
+export const supportPriorityEnum = pgEnum("support_priority", [
+  "bas",
+  "normal",
+  "urgent",
+]);
+
+export const supportCategoryEnum = pgEnum("support_category", [
+  "technique",
+  "facturation",
+  "bug",
+  "autre",
+]);
+
+/**
+ * DB-level enum for ticket status.
+ * Requires a migration: ALTER TYPE or CREATE TYPE + ALTER COLUMN.
+ * The migration (0018) used varchar — a follow-up migration must add this enum
+ * and convert the column before this schema change is deployed to production.
+ */
+export const supportStatusEnum = pgEnum("support_status", [
+  "ouvert",
+  "en_cours",
+  "resolu",
+  "ferme",
+]);
 
 /** Support tickets created by users; optionally assigned to admins. */
 export const supportTickets = pgTable("support_tickets", {
   id: uuid("id").primaryKey().defaultRandom(),
+  ticket_number: varchar("ticket_number", { length: 20 }).notNull().unique(),
   created_by: uuid("created_by")
     .notNull()
     .references(() => users.id, { onDelete: "cascade" }),
@@ -14,8 +50,9 @@ export const supportTickets = pgTable("support_tickets", {
     onDelete: "set null",
   }),
   subject: varchar("subject", { length: 255 }).notNull(),
-  message: text("message").notNull(),
-  status: varchar("status", { length: 30 }).notNull(),
+  status: supportStatusEnum("status").notNull().default("ouvert"),
+  priority: supportPriorityEnum("priority").notNull().default("normal"),
+  category: supportCategoryEnum("category").notNull().default("autre"),
   resolved_at: timestamp("resolved_at", {
     mode: "date",
     withTimezone: true,
@@ -26,6 +63,38 @@ export const supportTickets = pgTable("support_tickets", {
   })
     .notNull()
     .defaultNow(),
+  updated_at: timestamp("updated_at", {
+    mode: "date",
+    withTimezone: true,
+  })
+    .notNull()
+    .defaultNow(),
+});
+
+/** Conversation messages within a support ticket. */
+export const supportMessages = pgTable("support_messages", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  ticket_id: uuid("ticket_id")
+    .notNull()
+    .references(() => supportTickets.id, { onDelete: "cascade" }),
+  sender_id: uuid("sender_id")
+    .notNull()
+    .references(() => users.id, { onDelete: "cascade" }),
+  is_from_admin: boolean("is_from_admin").notNull().default(false),
+  content: text("content").notNull(),
+  created_at: timestamp("created_at", {
+    mode: "date",
+    withTimezone: true,
+  })
+    .notNull()
+    .defaultNow(),
+});
+
+/** Global support settings configurable by Super Admin. */
+export const supportSettings = pgTable("support_settings", {
+  id: serial("id").primaryKey(),
+  key: varchar("key", { length: 100 }).notNull().unique(),
+  value: text("value").notNull(),
   updated_at: timestamp("updated_at", {
     mode: "date",
     withTimezone: true,
