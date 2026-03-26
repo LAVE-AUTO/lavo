@@ -2096,6 +2096,7 @@
     "nav_transactions": "Transactions",
     "nav_logs": "Logs",
     "nav_support": "Support",
+    "nav_legal_content": "Legal content",
     "nav_logout": "Log out",
     "page_title": "Dashboard",
     "kpi_transactions": "Today's transactions",
@@ -2338,5 +2339,28 @@
     "referral_url_label": "Referral link",
     "error_commission_required": "Commission rate is required.",
     "error_commission_invalid": "Rate must be between 0 and 50."
+  },
+  "admin_legal": {
+    "section_title": "Legal and informational content",
+    "section_subtitle": "Edit the platform's public and legal pages.",
+    "page_privacy": "Privacy policy",
+    "page_terms_clients": "Client terms",
+    "page_terms_stations": "Station terms",
+    "page_legal_mentions": "Legal notices",
+    "page_contact": "Contact",
+    "page_how_it_works": "How it works",
+    "btn_save": "Save",
+    "btn_saving": "Saving...",
+    "save_success": "Content saved.",
+    "save_error": "An error occurred while saving.",
+    "unsaved_changes": "Unsaved changes",
+    "unsaved_indicator": "Unsaved changes",
+    "toolbar_bold": "Bold",
+    "toolbar_italic": "Italic",
+    "toolbar_underline": "Underline",
+    "toolbar_paragraph": "Paragraph",
+    "toolbar_ul": "Bullet list",
+    "toolbar_ol": "Numbered list",
+    "editor_aria_label": "Content editor"
   }
 }

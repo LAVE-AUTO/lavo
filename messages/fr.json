@@ -2096,6 +2096,7 @@
     "nav_transactions": "Transactions",
     "nav_logs": "Journaux",
     "nav_support": "Support",
+    "nav_legal_content": "Contenu légal",
     "nav_logout": "Déconnexion",
     "page_title": "Tableau de bord",
     "kpi_transactions": "Transactions du jour",
@@ -2338,5 +2339,28 @@
     "referral_url_label": "Lien de référence",
     "error_commission_required": "Le taux de commission est requis.",
     "error_commission_invalid": "Le taux doit être compris entre 0 et 50."
+  },
+  "admin_legal": {
+    "section_title": "Contenu légal et informatif",
+    "section_subtitle": "Modifiez les pages publiques et légales de la plateforme.",
+    "page_privacy": "Politique de confidentialité",
+    "page_terms_clients": "CGU clients",
+    "page_terms_stations": "CGU stations",
+    "page_legal_mentions": "Mentions légales",
+    "page_contact": "Contact",
+    "page_how_it_works": "Comment ça marche",
+    "btn_save": "Enregistrer",
+    "btn_saving": "Enregistrement...",
+    "save_success": "Contenu enregistré.",
+    "save_error": "Erreur lors de l'enregistrement.",
+    "unsaved_changes": "Modifications non enregistrées",
+    "unsaved_indicator": "Modifications non enregistrées",
+    "toolbar_bold": "Gras",
+    "toolbar_italic": "Italique",
+    "toolbar_underline": "Souligné",
+    "toolbar_paragraph": "Paragraphe",
+    "toolbar_ul": "Liste à puces",
+    "toolbar_ol": "Liste numérotée",
+    "editor_aria_label": "Éditeur de contenu"
   }
 }
