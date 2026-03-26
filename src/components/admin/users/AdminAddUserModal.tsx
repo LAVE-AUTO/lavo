@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import { useTranslations } from 'next-intl';
 import { AdminAddUserForm, type Role } from './AdminAddUserForm';
 import { AdminAddUserSuccess } from './AdminAddUserSuccess';
+import { generatePassword } from '@/helpers/generate-password';
 
 type Step = 'form' | 'success';
 
@@ -64,7 +65,7 @@ export function AdminAddUserModal({ open, onClose }: Props) {
     setBusy(true);
 
     // TODO: connect to API once endpoint is available (POST /admin/users)
-    // Payload: { role, first_name, last_name, email, password }
+    // Payload: { role, first_name, last_name, email, password: generatePassword() }
     // The backend must hash the password, set force_password_change: true, and send credentials by email.
     // Submission is disabled until the endpoint exists — do not show a success screen for a stubbed call.
     setBusy(false);

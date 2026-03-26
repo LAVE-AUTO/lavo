@@ -2297,10 +2297,11 @@
     "reply_error": "Impossible d'envoyer la réponse.",
     "close_success": "Ticket clôturé.",
     "resolve_success": "Ticket marqué comme résolu.",
+    "status_resolved_notice": "Ce ticket est résolu. Aucune réponse supplémentaire n'est acceptée.",
     "assign_success": "Ticket assigné.",
     "not_found": "Ticket introuvable.",
     "empty_thread": "Aucun message pour l'instant.",
-    "label_msg": "msg",
+    "label_msg": "{count, plural, one {message} other {messages}}",
     "reopen_success": "Ticket rouvert."
   },
   "admin_add_user": {

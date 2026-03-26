@@ -317,7 +317,7 @@ export function AdminSupportDetail({ id }: Props) {
             {/* Resolved notice */}
             {isResolved && (
               <div className="flex items-center justify-center rounded-2xl border border-[#E8E4DC] bg-white px-5 py-4 shadow-sm dark:border-[#1E2E18] dark:bg-[#131E10]">
-                <p className="text-[12px] text-[#AAAAAA] dark:text-[#4A4A3A]">{t('resolve_success')}</p>
+                <p className="text-[12px] text-[#AAAAAA] dark:text-[#4A4A3A]">{t('status_resolved_notice')}</p>
               </div>
             )}
 
