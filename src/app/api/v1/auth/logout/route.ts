@@ -1,6 +1,6 @@
 import { headers } from 'next/headers';
 import { NextResponse } from 'next/server';
-import { successResponse, error500 } from '@/lib/responses';
+import { successResponse } from '@/lib/responses';
 import { revokeAllRefreshTokensForUser } from '@/server/auth/refresh-token-repository';
 import { verifyJwt, extractBearerToken } from '@/lib/jwt';
 import { REFRESH_COOKIE_NAME } from '@/helpers/constants';
@@ -19,22 +19,11 @@ export async function POST() {
   const headersList = await headers();
   const accessToken = extractBearerToken(headersList.get('authorization'));
 
-  // Best-effort DB revocation — if token is missing or expired, still return success
-  if (accessToken) {
-    const payload = await verifyJwt(accessToken);
-    if (payload) {
-      try {
-        await revokeAllRefreshTokensForUser(payload.sub);
-      } catch (e) {
-        return error500(e);
-      }
-    }
-  }
-
+  // Build the response and clear the cookie FIRST, unconditionally.
+  // The client-side session must be terminated regardless of whether the DB
+  // revocation succeeds — a failed DB call must never leave the cookie active.
   const res = successResponse({ logged_out: true }, 'Logged out successfully');
   const response = NextResponse.json(await res.json(), { status: res.status });
-
-  // Clear the refresh token cookie
   response.cookies.set(REFRESH_COOKIE_NAME, '', {
     httpOnly: true,
     secure: process.env.NODE_ENV === 'production',
@@ -42,6 +31,17 @@ export async function POST() {
     path: '/api/v1/auth',
     maxAge: 0,
   });
+
+  // Best-effort DB revocation — errors are logged but do not affect the response.
+  // The access token is short-lived; the cookie is already cleared above.
+  if (accessToken) {
+    const payload = await verifyJwt(accessToken);
+    if (payload) {
+      revokeAllRefreshTokensForUser(payload.sub).catch((e) => {
+        console.error('[logout] Failed to revoke refresh tokens for user', payload.sub, e);
+      });
+    }
+  }
 
   return response;
 }

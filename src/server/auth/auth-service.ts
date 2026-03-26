@@ -169,6 +169,7 @@ export type LoginDto = {
   email: string;
   password: string;
   remember_me: boolean;
+  expected_role: 'client' | 'station' | 'admin';
 };
 
 export async function login(dto: LoginDto): Promise<AuthResult> {
@@ -187,6 +188,12 @@ export async function login(dto: LoginDto): Promise<AuthResult> {
 
   if (user.status !== 'active') {
     throw new ForbiddenError('Account is not active');
+  }
+
+  // Enforce space separation server-side: the user's role must match the
+  // login space they are connecting from. Prevents cross-space token issuance.
+  if (user.role !== dto.expected_role) {
+    throw new ForbiddenError('Access to this space is not allowed for your account type');
   }
 
   // eslint-disable-next-line @typescript-eslint/no-unused-vars -- strip password_hash
