@@ -2320,5 +2320,23 @@
     "success_docs_uploaded_notice": "Les documents uploadés seront soumis au processus de validation KYC.",
     "success_force_change_notice": "La station devra changer son mot de passe à la première connexion.",
     "role_station": "Station"
+  },
+  "admin_promo_qr": {
+    "section_title": "QR Code promotionnel",
+    "section_subtitle": "QR unique par station, distinct du QR opérationnel. Le client est redirigé vers l'inscription avec un code de référence.",
+    "field_commission": "Taux de commission promo (%)",
+    "field_commission_hint": "Commission appliquée au premier service du client référé (0 – 50 %)",
+    "field_commission_placeholder": "Ex : 5",
+    "btn_generate": "Générer le QR",
+    "btn_generating": "Génération...",
+    "btn_regenerate": "Régénérer",
+    "btn_download_png": "PNG",
+    "btn_print_pdf": "Imprimer / PDF",
+    "commission_active_badge": "Promo · {rate}%",
+    "qr_notice_title": "Comment ça fonctionne",
+    "qr_notice_body": "Le client scanne ce QR → redirigé vers l'inscription avec un code de référence. Lors de son premier service dans cette station, la commission personnalisée est appliquée une seule fois par client.",
+    "referral_url_label": "Lien de référence",
+    "error_commission_required": "Le taux de commission est requis.",
+    "error_commission_invalid": "Le taux doit être compris entre 0 et 50."
   }
 }

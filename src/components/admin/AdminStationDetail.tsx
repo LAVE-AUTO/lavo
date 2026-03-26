@@ -5,6 +5,7 @@ import { useTranslations, useLocale } from 'next-intl';
 import { Link, useRouter } from '@/i18n/navigation';
 import { getFromApi, postWithApi } from '@/services/axios-service';
 import { useToast } from '@/context';
+import { AdminPromoQr } from './stations/AdminPromoQr';
 
 const MAX_REASON = 500;
 
@@ -216,6 +217,11 @@ export function AdminStationDetail({ id }: Props) {
             </div>
           </div>
         )}
+        {/* ── QR Promotionnel (stations actives uniquement) ── */}
+        {station.status === 'active' && (
+          <AdminPromoQr stationId={station.id} stationName={station.name} />
+        )}
+
         {/* ── History timeline ── */}
         <div className="rounded-2xl bg-white p-6 shadow-sm ring-1 ring-black/[0.04] dark:bg-[#1A2416] dark:ring-white/[0.06]">
           <p className="mb-5 text-[10px] font-black uppercase tracking-[0.15em] text-[#C49A1E]">{t('detail_history')}</p>
