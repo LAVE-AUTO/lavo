@@ -5,16 +5,16 @@ import {
   supportTickets,
 } from "@/lib/db/schema";
 import { and, asc, desc, eq, inArray, sql } from "drizzle-orm";
+import { AppError } from "@/lib/errors";
+import { HTTP_STATUS } from "@/helpers/constants";
+import type { z } from "zod";
+import type { supportStatusSchema } from "@/validators/support";
 
 /** Preview of the most recent message on a ticket — content truncated to 200 chars. */
 export type LastMessagePreview = {
   content: string;
   created_at: Date;
 } | null;
-import { AppError } from "@/lib/errors";
-import { HTTP_STATUS } from "@/helpers/constants";
-import type { z } from "zod";
-import type { supportStatusSchema } from "@/validators/support";
 
 /** Status type derived from the canonical Zod schema — single source of truth. */
 type TicketStatus = z.infer<typeof supportStatusSchema>;
