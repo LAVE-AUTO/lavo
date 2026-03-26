@@ -94,10 +94,8 @@ export function PublicNavbar({
 
   const initial = user ? (user.first_name?.[0] ?? user.email[0]).toUpperCase() : '';
 
-  /* Logo destination depends on auth state */
-  const logoHref = isAuthenticated
-    ? (isClient ? '/stations' : isStation ? '/station/dashboard' : isSuperAdmin ? '/admin' : '/')
-    : '/';
+  /* Logo always goes to the landing page regardless of auth state */
+  const logoHref = '/' as const;
 
   /* Nav links shown to logged-in users (desktop) */
   const authNavLinks = isClient
