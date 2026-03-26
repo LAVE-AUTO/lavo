@@ -53,6 +53,15 @@ export const loginSchema = z.object({
   email: z.string().email('Invalid email address').max(320, 'Email must not exceed 320 characters'),
   password: z.string().min(1, 'Password is required').max(128, 'Password must not exceed 128 characters'),
   remember_me: z.boolean().optional().default(false),
+  /**
+   * The role of the login space the client is connecting from.
+   * Enforced server-side: the authenticated user's role must match.
+   * Prevents cross-space token issuance (client page → admin token, etc.).
+   */
+  expected_role: z.enum(['client', 'station', 'admin'], {
+    required_error: 'expected_role is required',
+    invalid_type_error: 'expected_role must be one of: client, station, admin',
+  }),
 });
 
 export const forgotPasswordSchema = z.object({
