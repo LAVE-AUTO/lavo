@@ -24,6 +24,7 @@ import {
   washTypes,
 } from "./stations";
 import { supportMessages, supportSettings, supportTickets } from "./support";
+import { reservationTips } from "./tips";
 import { timeSlots } from "./slots";
 
 export * from "./users";
@@ -40,6 +41,7 @@ export * from "./settings";
 export * from "./auth-rate-limits";
 export * from "./refresh-tokens";
 export * from "./reschedule-requests";
+export * from "./tips";
 
 export const usersRelations = relations(users, ({ one, many }) => ({
   station: one(stations, {
@@ -297,6 +299,21 @@ export const delayRequestsRelations = relations(delayRequests, ({ one }) => ({
   }),
   station: one(stations, {
     fields: [delayRequests.station_id],
+    references: [stations.id],
+  }),
+}));
+
+export const reservationTipsRelations = relations(reservationTips, ({ one }) => ({
+  reservation: one(reservations, {
+    fields: [reservationTips.reservation_id],
+    references: [reservations.id],
+  }),
+  client: one(users, {
+    fields: [reservationTips.client_id],
+    references: [users.id],
+  }),
+  station: one(stations, {
+    fields: [reservationTips.station_id],
     references: [stations.id],
   }),
 }));

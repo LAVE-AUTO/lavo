@@ -2475,6 +2475,368 @@
       ]
     },
     {
+      "name": "Pourboire (tip)",
+      "description": "POST /api/v1/reservations/:reservation_id/tip — Envoie un pourboire apres une reservation terminee.\n\nLe montant est vire integralement a la station via Stripe (aucune commission plateforme).\nRetourne un client_secret Stripe que le frontend utilise pour confirmer le paiement avec la carte du client.\n\nPrerequis : reservation au statut completed, role client, station avec stripe_account_id configure.\nVariables auto-remplies : tip_id, tip_client_secret",
+      "item": [
+        {
+          "name": "Envoyer un pourboire — succes (201)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 201', () => pm.response.to.have.status(201));",
+                  "pm.test('Retourne tip et clientSecret', () => {",
+                  "  const json = pm.response.json();",
+                  "  pm.expect(json.data).to.have.property('tip');",
+                  "  pm.expect(json.data).to.have.property('clientSecret');",
+                  "  pm.expect(json.data.tip.status).to.eql('pending');",
+                  "  pm.expect(json.data.tip.amount).to.be.a('string');",
+                  "  pm.environment.set('tip_id', json.data.tip.id);",
+                  "  pm.environment.set('tip_client_secret', json.data.clientSecret);",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "response": [],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/reservations/{{reservation_id}}/tip",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "reservations",
+                "{{reservation_id}}",
+                "tip"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"amount\": 5.00,\n  \"currency\": \"eur\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "description": "Envoie un pourboire pour une reservation completee.\n\nFlux :\n1. Le backend cree un Stripe PaymentIntent (destination charge, 0% commission).\n2. Retourne un client_secret que le frontend confirme avec la carte du client.\n3. A la confirmation, Stripe transfer la totalite du montant au compte connecte de la station.\n\nLe statut du tip est 'pending' jusqu'a reception du webhook payment_intent.succeeded."
+          }
+        },
+        {
+          "name": "Tip — 400 montant invalide (amount = 0)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 400', () => pm.response.to.have.status(400));",
+                  "pm.test('Code VALIDATION_FAILED', () => {",
+                  "  pm.expect(pm.response.json().code).to.eql('VALIDATION_FAILED');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "response": [],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/reservations/{{reservation_id}}/tip",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "reservations",
+                "{{reservation_id}}",
+                "tip"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"amount\": 0,\n  \"currency\": \"eur\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "description": "amount doit etre strictement superieur a 0."
+          }
+        },
+        {
+          "name": "Tip — 400 montant depasse le plafond (amount > 500)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 400', () => pm.response.to.have.status(400));",
+                  "pm.test('Code VALIDATION_FAILED', () => {",
+                  "  pm.expect(pm.response.json().code).to.eql('VALIDATION_FAILED');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "response": [],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/reservations/{{reservation_id}}/tip",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "reservations",
+                "{{reservation_id}}",
+                "tip"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"amount\": 501,\n  \"currency\": \"eur\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "description": "amount plafonne a 500."
+          }
+        },
+        {
+          "name": "Tip — 400 UUID reservation invalide",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 400', () => pm.response.to.have.status(400));",
+                  "pm.test('Code VALIDATION_FAILED', () => {",
+                  "  pm.expect(pm.response.json().code).to.eql('VALIDATION_FAILED');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "response": [],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/reservations/not-a-uuid/tip",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "reservations",
+                "not-a-uuid",
+                "tip"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"amount\": 5.00\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "description": "Le parametre :id doit etre un UUID valide."
+          }
+        },
+        {
+          "name": "Tip — 401 non authentifie",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 401', () => pm.response.to.have.status(401));",
+                  "pm.test('Code UNAUTHORIZED', () => {",
+                  "  pm.expect(pm.response.json().code).to.eql('UNAUTHORIZED');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "response": [],
+          "request": {
+            "auth": {
+              "type": "noauth"
+            },
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/reservations/{{reservation_id}}/tip",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "reservations",
+                "{{reservation_id}}",
+                "tip"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"amount\": 5.00\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "description": "Sans token d'authentification."
+          }
+        },
+        {
+          "name": "Tip — 409 pourboire deja envoye",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 409', () => pm.response.to.have.status(409));",
+                  "pm.test('Code TIP_ALREADY_EXISTS', () => {",
+                  "  pm.expect(pm.response.json().code).to.eql('TIP_ALREADY_EXISTS');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "response": [],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/reservations/{{reservation_id}}/tip",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "reservations",
+                "{{reservation_id}}",
+                "tip"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"amount\": 5.00\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "description": "Un seul pourboire autorise par reservation. Renvoyer la meme requete apres un premier tip reussi."
+          }
+        },
+        {
+          "name": "Tip — 422 reservation non completee",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 422', () => pm.response.to.have.status(422));"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "response": [],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/reservations/{{reservation_id}}/tip",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "reservations",
+                "{{reservation_id}}",
+                "tip"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"amount\": 5.00\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "description": "Tester avec une reservation au statut confirmed, pending ou cancelled (pas completed)."
+          }
+        }
+      ]
+    },
+    {
       "name": "Webhook Stripe",
       "description": "POST /api/v1/webhooks/stripe — Webhook Stripe pour les evenements de paiement.\n\nFlux avec capture_method: 'manual' :\n  1. Client confirme le paiement cote frontend → autorisation carte (fonds bloques).\n  2. payment_intent.amount_capturable_updated → reservation confirmee (status: confirmed).\n  3. Station marque le service comme complete (ou cron late) → notre code appelle capture().\n  4. payment_intent.succeeded → fonds distribues par Stripe. Aucune action de notre cote.\n\nNecessite STRIPE_WEBHOOK_SECRET dans .env.\nUtiliser `stripe listen --forward-to localhost:3000/api/v1/webhooks/stripe` en dev.",
       "item": [

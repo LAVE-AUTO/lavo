@@ -194,6 +194,64 @@ export async function distributePenalty(
   return reversal.id;
 }
 
+// ─── Tip payment (destination charge, 0% platform fee) ───────────────────────
+
+export type CreateTipPaymentIntentParams = {
+  amountCents: number;
+  currency: string;
+  userId: string;
+  stationId: string;
+  stationStripeAccountId: string;
+  reservationId: string;
+  metadata?: Record<string, string>;
+};
+
+/**
+ * Creates a Stripe PaymentIntent for a client tip.
+ * Uses a destination charge (transfer_data.destination) with no application_fee_amount,
+ * so 100% of the tip flows directly to the station's connected account.
+ * capture_method is 'automatic' — funds are captured immediately on confirmation.
+ */
+export async function createTipPaymentIntent(
+  params: CreateTipPaymentIntentParams
+): Promise<CreatePaymentIntentResult> {
+  const { amountCents, currency, stationStripeAccountId, metadata = {} } = params;
+
+  if (!Number.isInteger(amountCents) || amountCents <= 0) {
+    throw new ValidationError('Invalid tip amount');
+  }
+  const destination = stationStripeAccountId.trim();
+  if (!destination.startsWith('acct_')) {
+    throw new ValidationError('Invalid connected account');
+  }
+
+  const mergedMetadata: Record<string, string> = {
+    ...metadata,
+    user_id: params.userId,
+    station_id: params.stationId,
+    reservation_id: params.reservationId,
+    type: 'tip',
+  };
+
+  const paymentIntent = await stripe.paymentIntents.create({
+    amount: amountCents,
+    currency,
+    capture_method: 'automatic',
+    transfer_data: { destination },
+    metadata: mergedMetadata,
+    automatic_payment_methods: { enabled: true, allow_redirects: 'never' },
+  });
+
+  if (!paymentIntent.client_secret) {
+    throw new Error('Stripe did not return a client_secret');
+  }
+
+  return {
+    paymentIntentId: paymentIntent.id,
+    clientSecret: paymentIntent.client_secret,
+  };
+}
+
 // ─── Stripe Connect onboarding ────────────────────────────────────────────────
 
 /**

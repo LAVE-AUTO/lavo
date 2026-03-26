@@ -150,6 +150,20 @@
       "breakpoints": true
     },
     {
+      "idx": 21,
+      "version": "7",
+      "when": 1774500000000,
+      "tag": "0021_reservation_tips",
+      "breakpoints": true
+    },
+    {
+      "idx": 22,
+      "version": "7",
+      "when": 1774520000000,
+      "tag": "0022_tips_drop_currency",
+      "breakpoints": true
+    },
+    {
       "idx": 23,
       "version": "7",
       "when": 1774540000000,

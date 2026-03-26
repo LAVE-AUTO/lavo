@@ -29,7 +29,9 @@ export type NotifyEntryParams = {
     | 'delay_accepted'
     | 'delay_refused'
     | 'support_ticket_created'
-    | 'support_message_received';
+    | 'support_message_received'
+    | 'tip_received'
+    | 'tip_sent';
   payload?: Record<string, unknown>;
 };
 
@@ -54,6 +56,8 @@ const PUSH_MESSAGES: Record<NotifyEntryParams['type'], { title: string; body: st
   delay_refused: { title: 'Delay refused', body: 'The station cannot accommodate your late arrival. Please proceed to your appointment on time.' },
   support_ticket_created: { title: 'Support ticket created', body: 'Your request has been registered successfully.' },
   support_message_received: { title: 'New support message', body: 'You have received a reply to your support ticket.' },
+  tip_received: { title: 'Tip received', body: 'A client has left you a tip for their recent service.' },
+  tip_sent: { title: 'Tip sent', body: 'Your tip has been sent successfully. Thank you!' },
 };
 
 /**
