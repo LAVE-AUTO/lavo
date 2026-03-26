@@ -23,6 +23,9 @@ function CheckIcon() {
   );
 }
 
+// NOTE: This component is preview-only. The force_password_change flag and the email
+// notification will only be enforced once the POST /admin/users API endpoint is wired.
+// The success screen is not reachable until then (handleSubmit in AdminAddUserModal is disabled).
 export function AdminAddUserSuccess({ data, onClose }: Props) {
   const t = useTranslations('admin_add_user');
 

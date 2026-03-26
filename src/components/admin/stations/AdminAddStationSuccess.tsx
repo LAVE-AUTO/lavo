@@ -23,6 +23,9 @@ function CheckIcon() {
   );
 }
 
+// NOTE: This component is preview-only. The force_password_change flag, credential email,
+// and KYC document linking will only be enforced once the POST /admin/stations API endpoint is wired.
+// The success screen is not reachable until then (handleSubmit in AdminAddStationModal is disabled).
 export function AdminAddStationSuccess({ data, onClose }: Props) {
   const t = useTranslations('admin_add_station');
 
