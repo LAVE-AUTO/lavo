@@ -36,6 +36,17 @@ function FavoritesIcon({ active }: { active: boolean }) {
   );
 }
 
+function HowItWorksIcon({ active }: { active: boolean }) {
+  const c = active ? '#C49A1E' : '#9A9A8A';
+  return (
+    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      <circle cx="12" cy="12" r="10" stroke={c} strokeWidth="2" />
+      <path d="M9.09 9a3 3 0 015.83 1c0 2-3 3-3 3" stroke={c} strokeWidth="2" />
+      <circle cx="12" cy="17" r="0.5" fill={c} stroke={c} strokeWidth="1" />
+    </svg>
+  );
+}
+
 function SearchIcon({ active }: { active: boolean }) {
   const c = active ? '#C49A1E' : '#9A9A8A';
   return (
@@ -86,7 +97,7 @@ function LogoutIcon() {
 
 /**
  * Mobile-only bottom navigation bar.
- * Guest: Accueil, Stations, Login, Favoris
+ * Guest: Accueil, Stations, Login, Comment ça marche
  * Authenticated CLIENT: Accueil, Reservations, Favoris, Plus (Profile + Deconnexion)
  */
 export function BottomNav() {
@@ -140,7 +151,7 @@ export function BottomNav() {
     { href: homeHref, label: t('home'), icon: (a: boolean) => <HomeIcon active={a} /> },
     { href: '/stations', label: t('stations'), icon: (a: boolean) => <SearchIcon active={a} /> },
     { href: '/login', label: t('login'), icon: () => <UserIcon /> },
-    { href: '/favorites', label: t('favorites'), icon: (a: boolean) => <FavoritesIcon active={a} /> },
+    { href: '/#how-it-works', label: t('how_it_works'), icon: (a: boolean) => <HowItWorksIcon active={a} /> },
   ];
 
   /* Authenticated items (no "More" — handled separately) */

@@ -24,10 +24,10 @@ export async function PublicFooter() {
   ];
 
   const legalLinks = [
-    { href: '/cgu',  label: t('legal_tos') },
-    { href: '#',     label: t('legal_privacy') },
-    { href: '#',     label: t('legal_law25') },
-    { href: '#',     label: t('legal_cookies') },
+    { href: '/cgu',                          label: t('legal_tos') },
+    { href: '/cgu-stations',                 label: t('legal_tos_stations') },
+    { href: '/politique-de-confidentialite', label: t('legal_privacy') },
+    { href: '/mentions-legales',             label: t('legal_mentions') },
   ];
 
   return (
@@ -107,15 +107,15 @@ export async function PublicFooter() {
             {t('copyright', { year })}
           </p>
           <div className="flex items-center gap-5">
-            <a href="#" className="text-[11px] text-[#7a9a7d] hover:text-[#c8980a] transition-colors duration-300">
+            <Link href="/politique-de-confidentialite" className="text-[11px] text-[#7a9a7d] hover:text-[#c8980a] transition-colors duration-300">
               {t('legal_privacy')}
-            </a>
+            </Link>
             <Link href="/cgu" className="text-[11px] text-[#7a9a7d] hover:text-[#c8980a] transition-colors duration-300">
               {t('legal_tos')}
             </Link>
-            <a href="#" className="text-[11px] text-[#7a9a7d] hover:text-[#c8980a] transition-colors duration-300">
-              {t('legal_cookies')}
-            </a>
+            <Link href="/mentions-legales" className="text-[11px] text-[#7a9a7d] hover:text-[#c8980a] transition-colors duration-300">
+              {t('legal_mentions')}
+            </Link>
           </div>
         </div>
       </div>

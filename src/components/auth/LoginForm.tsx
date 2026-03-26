@@ -36,16 +36,39 @@ function EyeIcon({ open }: { open: boolean }) {
   );
 }
 
+/** Maps a role to its dedicated login page. */
+function loginHrefForRole(role: UserRole): string {
+  if (role === 'station') return '/station/login';
+  if (role === 'admin')   return '/login/admin';
+  return '/login';
+}
+
 interface LoginFormProps {
   /** Override the forgot-password link destination (e.g. /station/forgot-password). Defaults to /forgot-password. */
   forgotPasswordHref?: string;
+  /** Local path to redirect to after successful login (e.g. /stations/abc). Only honoured for client role. */
+  callbackUrl?: string;
+  /** Hide social auth buttons (Google, Facebook). Use on admin login page. */
+  hideSocialButtons?: boolean;
+  /**
+   * When set, only accounts with this role are accepted on this login page.
+   * If a user logs in with a different role they are NOT signed in and a redirect
+   * banner pointing to the correct login page is shown instead.
+   */
+  allowedRole?: UserRole;
 }
 
 /**
  * Login form — email + password + remember me + forgot-password link + social buttons.
  * On success: persists session via AuthContext and redirects by role.
+ * When allowedRole is set, blocks cross-space logins and shows a redirect banner.
  */
-export function LoginForm({ forgotPasswordHref = '/forgot-password' }: LoginFormProps) {
+export function LoginForm({
+  forgotPasswordHref = '/forgot-password',
+  callbackUrl,
+  hideSocialButtons = false,
+  allowedRole,
+}: LoginFormProps) {
   const t = useTranslations('login');
   const router = useRouter();
   const { error: showError, success: showSuccess } = useToast();
@@ -56,11 +79,13 @@ export function LoginForm({ forgotPasswordHref = '/forgot-password' }: LoginForm
   const [rememberMe, setRememberMe]     = useState(false);
   const [isLoading, setIsLoading]       = useState(false);
   const [showPassword, setShowPassword] = useState(false);
+  const [wrongSpaceHref, setWrongSpaceHref] = useState<string | null>(null);
 
   const handleChange =
     (field: keyof LoginFormData) => (e: ChangeEvent<HTMLInputElement>) => {
       setFormData((prev) => ({ ...prev, [field]: e.target.value }));
       if (errors[field]) setErrors((prev) => ({ ...prev, [field]: undefined }));
+      if (wrongSpaceHref) setWrongSpaceHref(null);
     };
 
   const handleBlurEmail = () => {
@@ -102,8 +127,18 @@ export function LoginForm({ forgotPasswordHref = '/forgot-password' }: LoginForm
         }
 
         const userRole = String(data.user.role || 'client') as UserRole;
-        const authUser: AuthUser = { ...data.user, role: userRole } as AuthUser;
 
+        /* Cross-space login guard: block if role does not match this login page.
+           The backend already set a refresh_token cookie — call logout to clear it
+           before showing the error, otherwise AuthProvider will log the user in anyway. */
+        if (allowedRole && userRole !== allowedRole) {
+          await postWithApi('/auth/logout', {});
+          setWrongSpaceHref(loginHrefForRole(userRole));
+          showError(t('error_wrong_space'));
+          return;
+        }
+
+        const authUser: AuthUser = { ...data.user, role: userRole } as AuthUser;
         auth.login(data.access_token, authUser);
         showSuccess(t('toast_success'));
 
@@ -112,9 +147,21 @@ export function LoginForm({ forgotPasswordHref = '/forgot-password' }: LoginForm
           return;
         }
 
-        if (userRole === 'station')          router.push('/station');
+        /* callbackUrl only honoured for client role */
+        const safeCallback =
+          userRole === 'client' &&
+          callbackUrl &&
+          callbackUrl.startsWith('/') &&
+          !callbackUrl.startsWith('//');
+
+        if (safeCallback) {
+          router.push(callbackUrl as string);
+          return;
+        }
+
+        if (userRole === 'station')    router.push('/station');
         else if (userRole === 'admin') router.push('/admin');
-        else                                        router.push('/stations');
+        else                           router.push('/stations');
         return;
       }
 
@@ -200,7 +247,22 @@ export function LoginForm({ forgotPasswordHref = '/forgot-password' }: LoginForm
         {isLoading ? t('loading') : t('submit')}
       </Button>
 
-      <SocialButtons namespace="login" />
+      {/* Wrong space banner — shown when user logs in with the wrong account type */}
+      {wrongSpaceHref && (
+        <div className="mt-4 flex items-center justify-between gap-3 px-4 py-3 rounded-xl border border-gold/30 bg-gold/5 animate-fade-in">
+          <p className="text-[13px] text-[#555] dark:text-lavo-muted leading-snug">
+            {t('error_wrong_space')}
+          </p>
+          <Link
+            href={wrongSpaceHref}
+            className="shrink-0 text-[13px] font-bold text-gold hover:text-gold-hover transition-colors whitespace-nowrap"
+          >
+            {t('wrong_space_link_label')}
+          </Link>
+        </div>
+      )}
+
+      {!hideSocialButtons && <SocialButtons namespace="login" />}
     </form>
   );
 }

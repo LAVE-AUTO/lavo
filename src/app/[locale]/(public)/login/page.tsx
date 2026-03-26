@@ -7,7 +7,8 @@ import { AuthRedirectGuard } from '@/components/auth/AuthRedirectGuard';
 import { AuthModeSwitcher } from '@/components/auth/AuthModeSwitcher';
 
 type Props = {
-  params: Promise<{ locale: string }>;
+  params:       Promise<{ locale: string }>;
+  searchParams: Promise<{ callbackUrl?: string }>;
 };
 
 export async function generateMetadata({ params }: Props) {
@@ -19,37 +20,37 @@ export async function generateMetadata({ params }: Props) {
 /**
  * Public login page.
  */
-export default async function LoginPage({ params }: Props) {
-  const { locale } = await params;
+export default async function LoginPage({ params, searchParams }: Props) {
+  const { locale }      = await params;
+  const { callbackUrl } = await searchParams;
   setRequestLocale(locale);
 
   const t = await getTranslations({ locale, namespace: 'login' });
 
   return (
-    <>
-      <AuthRedirectGuard />
+    <AuthRedirectGuard>
       <AuthPageLayout>
-      <div className="w-full max-w-lg animate-fade-in">
-        <AuthHeader
-          title={t('welcome_title')}
-          subtitle={t('welcome_subtitle')}
-          locale={locale}
-        />
+        <div className="w-full max-w-lg animate-fade-in">
+          <AuthHeader
+            title={t('welcome_title')}
+            subtitle={t('welcome_subtitle')}
+            locale={locale}
+          />
 
-        <AuthModeSwitcher mode="client" />
+          <AuthModeSwitcher mode="client" />
 
-        <div className="bg-white dark:bg-dark-card rounded-2xl shadow-[0_4px_24px_rgba(0,0,0,0.08),_0_1px_2px_rgba(0,0,0,0.04)] dark:shadow-[0_8px_40px_rgba(0,0,0,0.5)] dark:ring-1 dark:ring-gold/10 overflow-hidden">
-          <div className="px-8 pt-6 pb-2">
-            <TabSwitcher
-              activeTab="login"
-              loginLabel={t('tab_login')}
-              registerLabel={t('tab_register')}
-            />
+          <div className="bg-white dark:bg-dark-card rounded-2xl shadow-[0_4px_24px_rgba(0,0,0,0.08),_0_1px_2px_rgba(0,0,0,0.04)] dark:shadow-[0_8px_40px_rgba(0,0,0,0.5)] dark:ring-1 dark:ring-gold/10 overflow-hidden">
+            <div className="px-8 pt-6 pb-2">
+              <TabSwitcher
+                activeTab="login"
+                loginLabel={t('tab_login')}
+                registerLabel={t('tab_register')}
+              />
+            </div>
+            <LoginForm callbackUrl={callbackUrl} allowedRole="client" />
           </div>
-          <LoginForm />
         </div>
-      </div>
-    </AuthPageLayout>
-    </>
+      </AuthPageLayout>
+    </AuthRedirectGuard>
   );
 }

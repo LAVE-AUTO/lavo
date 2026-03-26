@@ -26,30 +26,29 @@ export default async function RegisterPage({ params }: Props) {
   const t = await getTranslations({ locale, namespace: 'register' });
 
   return (
-    <>
-      <AuthRedirectGuard />
+    <AuthRedirectGuard>
       <AuthPageLayout>
-      <div className="w-full max-w-xl animate-fade-in">
-        <AuthHeader
-          title={t('welcome_title')}
-          subtitle={t('welcome_subtitle')}
-          locale={locale}
-        />
+        <div className="w-full max-w-xl animate-fade-in">
+          <AuthHeader
+            title={t('welcome_title')}
+            subtitle={t('welcome_subtitle')}
+            locale={locale}
+          />
 
-        <AuthModeSwitcher mode="client" />
+          <AuthModeSwitcher mode="client" />
 
-        <div className="bg-white dark:bg-dark-card rounded-2xl shadow-[0_4px_24px_rgba(0,0,0,0.08),_0_1px_2px_rgba(0,0,0,0.04)] dark:shadow-[0_8px_40px_rgba(0,0,0,0.5)] dark:ring-1 dark:ring-gold/10 overflow-hidden">
-          <div className="px-8 pt-6 pb-2">
-            <TabSwitcher
-              activeTab="register"
-              loginLabel={t('tab_login')}
-              registerLabel={t('tab_register')}
-            />
+          <div className="bg-white dark:bg-dark-card rounded-2xl shadow-[0_4px_24px_rgba(0,0,0,0.08),_0_1px_2px_rgba(0,0,0,0.04)] dark:shadow-[0_8px_40px_rgba(0,0,0,0.5)] dark:ring-1 dark:ring-gold/10 overflow-hidden">
+            <div className="px-8 pt-6 pb-2">
+              <TabSwitcher
+                activeTab="register"
+                loginLabel={t('tab_login')}
+                registerLabel={t('tab_register')}
+              />
+            </div>
+            <RegisterForm />
           </div>
-          <RegisterForm />
         </div>
-      </div>
-    </AuthPageLayout>
-    </>
+      </AuthPageLayout>
+    </AuthRedirectGuard>
   );
 }
