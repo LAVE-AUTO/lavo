@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useRef, useEffect } from 'react';
+import { useState, useRef, useEffect, useCallback } from 'react';
 import { useTranslations, useLocale } from 'next-intl';
 import QRCode from 'qrcode';
 
@@ -26,7 +26,9 @@ export function AdminPromoQr({ stationId, stationName }: Props) {
   const [appliedRate,     setAppliedRate]     = useState<string | null>(null);
   const [qrReady,         setQrReady]         = useState(false);
 
-  const canvasRef = useRef<HTMLCanvasElement>(null);
+  const canvasRef  = useRef<HTMLCanvasElement>(null);
+  const mountedRef = useRef(true);
+  useEffect(() => { mountedRef.current = true; return () => { mountedRef.current = false; }; }, []);
 
   useEffect(() => {
     if (!promoUrl || !canvasRef.current) return;
@@ -45,7 +47,7 @@ export function AdminPromoQr({ stationId, stationName }: Props) {
     return true;
   }
 
-  async function handleGenerate() {
+  const handleGenerate = useCallback(async () => {
     if (!validate()) return;
     setGenerating(true);
 
@@ -56,42 +58,47 @@ export function AdminPromoQr({ stationId, stationName }: Props) {
     //   On client's first reservation at this station: apply stored promo rate once per (client, station) pair.
     await new Promise<void>((r) => setTimeout(r, 700));
 
+    if (!mountedRef.current) return;
     const origin = typeof window !== 'undefined' ? window.location.origin : '';
     setPromoUrl(`${origin}/${locale}/register?ref=${stationId}&source=promo`);
     setAppliedRate(commission);
     setGenerating(false);
-  }
+  }, [commission, locale, stationId]); // eslint-disable-line react-hooks/exhaustive-deps
 
   async function downloadPng() {
     if (!promoUrl) return;
-    const dataUrl = await QRCode.toDataURL(promoUrl, {
-      width: 1024, margin: 2, errorCorrectionLevel: 'H',
-      color: { dark: '#1A1A0A', light: '#FFFFFF' },
-    });
-    const a = document.createElement('a');
-    a.href = dataUrl;
-    a.download = `qr-promo-${sanitizeFilename(stationName)}.png`;
-    a.click();
+    try {
+      const dataUrl = await QRCode.toDataURL(promoUrl, {
+        width: 1024, margin: 2, errorCorrectionLevel: 'H',
+        color: { dark: '#1A1A0A', light: '#FFFFFF' },
+      });
+      const a = document.createElement('a');
+      a.href = dataUrl;
+      a.download = `qr-promo-${sanitizeFilename(stationName)}.png`;
+      a.click();
+    } catch { /* silently ignore — user stays on the page */ }
   }
 
   async function printPdf() {
     if (!promoUrl) return;
-    const { jsPDF } = await import('jspdf');
-    const dataUrl = await QRCode.toDataURL(promoUrl, {
-      width: 1024, margin: 2, errorCorrectionLevel: 'H',
-      color: { dark: '#1A1A0A', light: '#FFFFFF' },
-    });
-    const doc = new jsPDF({ orientation: 'portrait', unit: 'mm', format: [100, 130] });
-    doc.addImage(dataUrl, 'PNG', 10, 10, 80, 80);
-    doc.setFontSize(11);
-    doc.setTextColor('#1A1A0A');
-    doc.text(stationName, 50, 100, { align: 'center' });
-    if (appliedRate) {
-      doc.setFontSize(9);
-      doc.setTextColor('#C49A1E');
-      doc.text(`${t('commission_active_badge', { rate: appliedRate })}`, 50, 108, { align: 'center' });
-    }
-    doc.save(`qr-promo-${sanitizeFilename(stationName)}.pdf`);
+    try {
+      const { jsPDF } = await import('jspdf');
+      const dataUrl = await QRCode.toDataURL(promoUrl, {
+        width: 1024, margin: 2, errorCorrectionLevel: 'H',
+        color: { dark: '#1A1A0A', light: '#FFFFFF' },
+      });
+      const doc = new jsPDF({ orientation: 'portrait', unit: 'mm', format: [100, 130] });
+      doc.addImage(dataUrl, 'PNG', 10, 10, 80, 80);
+      doc.setFontSize(11);
+      doc.setTextColor('#1A1A0A');
+      doc.text(stationName, 50, 100, { align: 'center' });
+      if (appliedRate) {
+        doc.setFontSize(9);
+        doc.setTextColor('#C49A1E');
+        doc.text(`${t('commission_active_badge', { rate: appliedRate })}`, 50, 108, { align: 'center' });
+      }
+      doc.save(`qr-promo-${sanitizeFilename(stationName)}.pdf`);
+    } catch { /* silently ignore — user stays on the page */ }
   }
 
   const inputBase = 'w-full rounded-lg border bg-transparent px-3 py-2 text-[13px] text-[#1A1A0A] outline-none transition-all dark:text-[#F0EDD4] border-[#D8D4C8] focus:border-[#C49A1E] focus:shadow-[0_0_0_3px_rgba(196,154,30,0.10)] dark:border-[#243020] dark:focus:border-[#C49A1E]';
@@ -125,7 +132,7 @@ export function AdminPromoQr({ stationId, stationName }: Props) {
             <div className="flex items-center gap-2">
               <input
                 id="promo-commission" type="number" min={0} max={50} step={0.5}
-                value={commission} maxLength={5}
+                value={commission}
                 required aria-required="true"
                 placeholder={t('field_commission_placeholder')}
                 onChange={(e) => { setCommission(e.target.value); setCommissionError(null); }}
