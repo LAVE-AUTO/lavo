@@ -4,8 +4,7 @@ import { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 import { useTranslations, useLocale } from 'next-intl';
 import { Link } from '@/i18n/navigation';
 import { useParams } from 'next/navigation';
-import { useToast } from '@/context/toast-context';
-import { getFromApi } from '@/services/axios-service';
+import { getFromApi, postWithApi } from '@/services/axios-service';
 import { RESERVATIONS_MOCK_ENABLED, findMockReservation } from '@/data/reservations-mock';
 import type { AvailableSlot } from '@/components/reservations/SlotPicker';
 import RescheduleSuccessView from '@/components/reservations/RescheduleSuccessView';
@@ -74,7 +73,6 @@ export default function RescheduleReservationPage() {
   const locale = useLocale();
   const params = useParams();
   const id     = params.id as string;
-  useToast();
 
   const mountedRef = useRef(true);
   useEffect(() => {
@@ -277,13 +275,11 @@ export default function RescheduleReservationPage() {
     setShowConfirmModal(false);
     setSubmitting(true);
 
-    // TODO: connect to API once endpoint is available
-    // PATCH /me/entries/:id/reschedule { new_slot_id: selectedSlotId }
-    await new Promise((r) => setTimeout(r, 800));
-
+    const [ok] = await postWithApi(`/reservations/${id}/reschedule`, { new_time_slot_id: selectedSlotId });
     if (!mountedRef.current) return;
     setSubmitting(false);
-    setDone(true);
+    if (ok) { setDone(true); return; }
+    setLoadError(true);
   };
 
   if (done) return <RescheduleSuccessView />;

@@ -28,5 +28,7 @@ export async function sendPushNotification(
 ): Promise<void> {
   // TODO: look up device tokens for userId from device_tokens table
   // TODO: call firebase-admin messaging.sendEachForMulticast(tokens, payload)
-  console.info(`[FCM stub] → user ${userId}: "${payload.title}" — ${payload.body}`);
+  if (process.env.NODE_ENV !== "production") {
+    console.info(`[FCM stub] → user ${userId}: "${payload.title}" — ${payload.body}`);
+  }
 }

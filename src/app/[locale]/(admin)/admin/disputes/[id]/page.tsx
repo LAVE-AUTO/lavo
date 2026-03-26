@@ -1,17 +1,10 @@
-interface AdminDisputeDetailPageProps {
-  params: {
-    id: string;
-  };
-}
+import { setRequestLocale } from 'next-intl/server';
+import { AdminDisputeDetail } from '@/components/admin/disputes/AdminDisputeDetail';
 
-export default function AdminDisputeDetailPage({
-  params,
-}: AdminDisputeDetailPageProps) {
-  return (
-    <main className="p-6">
-      <h1 className="text-xl font-semibold">Détail litige</h1>
-      <p className="mt-2 text-sm text-zinc-600">ID: {params.id}</p>
-    </main>
-  );
-}
+type Props = { params: Promise<{ locale: string; id: string }> };
 
+export default async function AdminDisputeDetailPage({ params }: Props) {
+  const { locale, id } = await params;
+  setRequestLocale(locale);
+  return <AdminDisputeDetail id={id} />;
+}

@@ -1,10 +1,11 @@
 import { requireRole } from '@/lib/require-role';
 import { extractLocale } from '@/lib/email';
 import { approveStation } from '@/server/station/station-service';
-import { successResponse, error400, error403, error404, error500, fromAppError } from '@/lib/responses';
-import { AppError, ForbiddenError, NotFoundError } from '@/lib/errors';
-import { adminStationIdParamSchema, mapZodErrors } from '@/validators/station';
+import { isAdminActionRateLimited } from '@/server/admin/admin-log-repository';
+import { successResponse, error400, error404, error409, error429, error500, fromAppError } from '@/lib/responses';
 import { ApiCode } from '@/types/api-codes';
+import { AppError, ConflictError, NotFoundError } from '@/lib/errors';
+import { adminStationIdParamSchema, mapZodErrors } from '@/validators/station';
 import { applyNoStoreHeaders } from '@/lib/response-headers';
 import type { NextResponse } from 'next/server';
 
@@ -15,9 +16,12 @@ import type { NextResponse } from 'next/server';
  *
  * Responses:
  *   200 { data: { approved: true } }
+ *   400 VALIDATION_FAILED — :id is not a valid UUID
  *   401 UNAUTHORIZED
- *   403 FORBIDDEN — station not in pending_admin_validation state
- *   404 NOT_FOUND
+ *   403 FORBIDDEN
+ *   404 NOT_FOUND — station or owner not found
+ *   409 CONFLICT — station not in pending_admin_validation state
+ *   429 TOO_MANY_REQUESTS — rate limit exceeded
  *   500 INTERNAL_ERROR
  */
 export async function POST(
@@ -36,6 +40,11 @@ export async function POST(
     );
   }
 
+  // H-4: Rate limit — max 20 approve/reject actions per admin per minute.
+  if (await isAdminActionRateLimited(auth.sub, ['station_approved', 'station_rejected'])) {
+    return applyNoStoreHeaders(error429());
+  }
+
   const locale = extractLocale(request.headers.get('accept-language'));
 
   try {
@@ -43,7 +52,7 @@ export async function POST(
     return applyNoStoreHeaders(successResponse({ approved: true }, 'Station approved successfully.'));
   } catch (e) {
     if (e instanceof NotFoundError) return applyNoStoreHeaders(error404(e.message));
-    if (e instanceof ForbiddenError) return applyNoStoreHeaders(error403(e.message));
+    if (e instanceof ConflictError) return applyNoStoreHeaders(error409(e.message, ApiCode.CONFLICT));
     if (e instanceof AppError) return applyNoStoreHeaders(fromAppError(e));
     return applyNoStoreHeaders(error500(e));
   }
