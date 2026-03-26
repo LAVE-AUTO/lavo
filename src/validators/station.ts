@@ -89,8 +89,19 @@ export const stationOnboardingSubmitSchema = _step1Base
 
 // Admin: reject a station
 export const rejectStationSchema = z.object({
-  rejection_reason: z.string().min(10, 'Rejection reason must be at least 10 characters'),
+  rejection_reason: z
+    .string()
+    .min(10, 'Rejection reason must be at least 10 characters')
+    .max(2000, 'Rejection reason must not exceed 2000 characters'),
 });
+
+/** Query params for GET /admin/stations (paginated pending list). */
+export const listPendingStationsQuerySchema = z.object({
+  page: z.coerce.number().int().min(1).optional().default(1),
+  per_page: z.coerce.number().int().min(1).max(100).optional().default(20),
+});
+
+export type ListPendingStationsQuery = z.infer<typeof listPendingStationsQuerySchema>;
 
 // Auth: change password
 export const changePasswordSchema = z

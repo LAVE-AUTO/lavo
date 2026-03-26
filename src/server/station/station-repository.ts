@@ -244,8 +244,28 @@ export async function findStationByUserId(userId: string): Promise<Station | und
   return db.query.stations.findFirst({ where: eq(stations.user_id, userId) });
 }
 
-export async function listStationsByStatus(status: string): Promise<Station[]> {
-  return db.query.stations.findMany({ where: eq(stations.status, status) });
+type StationStatus = 'pending_admin_validation' | 'active' | 'rejected' | 'suspended';
+
+export async function listStationsByStatus(
+  status: StationStatus,
+  page = 1,
+  perPage = 20
+): Promise<{ rows: Station[]; total: number }> {
+  const offset = (page - 1) * perPage;
+  const [rows, countResult] = await Promise.all([
+    db
+      .select()
+      .from(stations)
+      .where(eq(stations.status, status))
+      .orderBy(asc(stations.created_at))
+      .limit(perPage)
+      .offset(offset),
+    db
+      .select({ count: sql<number>`count(*)::int` })
+      .from(stations)
+      .where(eq(stations.status, status)),
+  ]);
+  return { rows, total: countResult[0]?.count ?? 0 };
 }
 
 /**
@@ -261,13 +281,16 @@ export async function listAllStationsForAdmin(status?: string): Promise<Station[
 
 export async function updateStationStatus(
   id: string,
-  status: string,
+  status: StationStatus,
   extra?: Partial<Pick<Station, 'approved_by' | 'approved_at' | 'rejection_reason' | 'rejection_count'>>
-): Promise<void> {
-  await db
+): Promise<Station> {
+  const [updated] = await db
     .update(stations)
     .set({ status, updated_at: new Date(), ...extra })
-    .where(eq(stations.id, id));
+    .where(eq(stations.id, id))
+    .returning();
+  if (!updated) throw new Error(`Station ${id} not found during status update`);
+  return updated;
 }
 
 export async function updateStationInfo(

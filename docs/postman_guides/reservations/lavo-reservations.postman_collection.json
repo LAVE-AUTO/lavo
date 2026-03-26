@@ -1,7 +1,7 @@
 {
   "info": {
     "name": "LAVO — Reservations API",
-    "description": "Collection pour le systeme de reservation incluant la creation, la consultation (user/station), l'annulation, la confirmation de presence, et le webhook Stripe.\n\nVariables requises : `base_url`, `access_token`, `station_id`, `time_slot_id`, `vehicle_format_id`\nVariables auto-remplies : `reservation_id`, `stripe_client_secret`",
+    "description": "Collection pour le systeme de reservation incluant la creation, la consultation (user/station), l'annulation, la confirmation de presence, la signalisation de retard, la replanification, et le webhook Stripe.\n\nVariables requises : `base_url`, `access_token`, `station_id`, `time_slot_id`, `vehicle_format_id`, `new_time_slot_id`\nVariables auto-remplies : `reservation_id`, `stripe_client_secret`",
     "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
   },
   "variable": [
@@ -12,6 +12,11 @@
     },
     {
       "key": "access_token",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "new_time_slot_id",
       "value": "",
       "type": "string"
     }
@@ -1387,6 +1392,1085 @@
             "description": "404 — Reservation introuvable ou n'appartient pas au client authentifie."
           },
           "response": []
+        }
+      ]
+    },
+    {
+      "name": "Signalisation de retard",
+      "description": "POST /api/v1/reservations/:id/signal-delay — Le client signale qu'il sera en retard.\nUne demande de retard est creee avec le statut 'pending' et notifie la station.\nAuth : client.\n\nPrerequis : reservation au statut confirmed.",
+      "item": [
+        {
+          "name": "Signaler retard — succes (201)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 201', () => pm.response.to.have.status(201));",
+                  "pm.test('Retourne delay_request en attente', () => {",
+                  "  const json = pm.response.json();",
+                  "  pm.expect(json.data).to.have.property('delay_request');",
+                  "  pm.expect(json.data.delay_request).to.have.property('id');",
+                  "  pm.expect(json.data.delay_request).to.have.property('reservation_id');",
+                  "  pm.expect(json.data.delay_request.status).to.eql('pending');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "response": [],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/reservations/{{reservation_id}}/signal-delay",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "reservations",
+                "{{reservation_id}}",
+                "signal-delay"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"message\": \"Je serai en retard d'environ 15 minutes.\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "description": "Le client signale son retard. Le message est optionnel. Retourne la demande de retard creee avec statut 'pending'."
+          }
+        },
+        {
+          "name": "Signaler retard — sans message (201)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 201', () => pm.response.to.have.status(201));",
+                  "pm.test('delay_request cree sans message', () => {",
+                  "  const json = pm.response.json();",
+                  "  pm.expect(json.data.delay_request.status).to.eql('pending');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "response": [],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/reservations/{{reservation_id}}/signal-delay",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "reservations",
+                "{{reservation_id}}",
+                "signal-delay"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "description": "Le message est optionnel — body vide accepte."
+          }
+        },
+        {
+          "name": "Signaler retard — demande deja active (409)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 409', () => pm.response.to.have.status(409));",
+                  "pm.test('Code CONFLICT', () => {",
+                  "  const json = pm.response.json();",
+                  "  pm.expect(json.code).to.eql('CONFLICT');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "response": [],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/reservations/{{reservation_id}}/signal-delay",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "reservations",
+                "{{reservation_id}}",
+                "signal-delay"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"message\": \"Je serai en retard d'environ 15 minutes.\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "description": "409 CONFLICT — une demande de retard est deja active (pending) pour cette reservation, ou la reservation n'est pas au statut confirmed."
+          }
+        },
+        {
+          "name": "Signaler retard — body invalide (400)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 400', () => pm.response.to.have.status(400));",
+                  "pm.test('Code VALIDATION_FAILED', () => {",
+                  "  const json = pm.response.json();",
+                  "  pm.expect(json.code).to.eql('VALIDATION_FAILED');",
+                  "  pm.expect(json.errors).to.be.an('array');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "response": [],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/reservations/{{reservation_id}}/signal-delay",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "reservations",
+                "{{reservation_id}}",
+                "signal-delay"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"message\": 12345\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "description": "400 VALIDATION_FAILED — le champ message doit etre une chaine de caracteres."
+          }
+        },
+        {
+          "name": "Signaler retard — reservation introuvable (404)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 404', () => pm.response.to.have.status(404));"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "response": [],
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/v1/reservations/00000000-0000-0000-0000-000000000000/signal-delay",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "reservations",
+                "00000000-0000-0000-0000-000000000000",
+                "signal-delay"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "description": "404 NOT_FOUND — reservation inexistante."
+          }
+        },
+        {
+          "name": "Signaler retard — non authentifie (401)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 401', () => pm.response.to.have.status(401));"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "response": [],
+          "request": {
+            "auth": {
+              "type": "noauth"
+            },
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/v1/reservations/{{reservation_id}}/signal-delay",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "reservations",
+                "{{reservation_id}}",
+                "signal-delay"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "description": "401 UNAUTHORIZED — aucun token fourni."
+          }
+        }
+      ]
+    },
+    {
+      "name": "Gestion retard (station)",
+      "description": "Endpoints pour accepter ou refuser une demande de retard signales par un client.\nAuth : station.\n\n- POST /api/v1/reservations/:id/accept-delay — accepte la demande de retard (statut: accepted)\n- POST /api/v1/reservations/:id/refuse-delay — refuse la demande de retard (statut: refused)",
+      "item": [
+        {
+          "name": "Accepter retard — succes (200)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 200', () => pm.response.to.have.status(200));",
+                  "pm.test('delay_request accepte', () => {",
+                  "  const json = pm.response.json();",
+                  "  pm.expect(json.data).to.have.property('delay_request');",
+                  "  pm.expect(json.data.delay_request).to.have.property('id');",
+                  "  pm.expect(json.data.delay_request.status).to.eql('accepted');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "response": [],
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/v1/reservations/{{reservation_id}}/accept-delay",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "reservations",
+                "{{reservation_id}}",
+                "accept-delay"
+              ]
+            },
+            "description": "La station accepte la demande de retard en attente. Retourne la demande avec statut 'accepted'."
+          }
+        },
+        {
+          "name": "Accepter retard — aucune demande en attente (409)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 409', () => pm.response.to.have.status(409));",
+                  "pm.test('Code CONFLICT', () => {",
+                  "  const json = pm.response.json();",
+                  "  pm.expect(json.code).to.eql('CONFLICT');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "response": [],
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/v1/reservations/{{reservation_id}}/accept-delay",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "reservations",
+                "{{reservation_id}}",
+                "accept-delay"
+              ]
+            },
+            "description": "409 CONFLICT — aucune demande de retard en attente (pending) pour cette reservation."
+          }
+        },
+        {
+          "name": "Accepter retard — reservation introuvable (404)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 404', () => pm.response.to.have.status(404));"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "response": [],
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/v1/reservations/00000000-0000-0000-0000-000000000000/accept-delay",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "reservations",
+                "00000000-0000-0000-0000-000000000000",
+                "accept-delay"
+              ]
+            },
+            "description": "404 NOT_FOUND — reservation inexistante."
+          }
+        },
+        {
+          "name": "Accepter retard — non authentifie (401)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 401', () => pm.response.to.have.status(401));"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "response": [],
+          "request": {
+            "auth": {
+              "type": "noauth"
+            },
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/v1/reservations/{{reservation_id}}/accept-delay",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "reservations",
+                "{{reservation_id}}",
+                "accept-delay"
+              ]
+            },
+            "description": "401 UNAUTHORIZED — aucun token fourni."
+          }
+        },
+        {
+          "name": "Refuser retard — succes (200)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 200', () => pm.response.to.have.status(200));",
+                  "pm.test('delay_request refuse avec raison', () => {",
+                  "  const json = pm.response.json();",
+                  "  pm.expect(json.data).to.have.property('delay_request');",
+                  "  pm.expect(json.data.delay_request.status).to.eql('refused');",
+                  "  pm.expect(json.data.delay_request).to.have.property('refusal_reason');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "response": [],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/reservations/{{reservation_id}}/refuse-delay",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "reservations",
+                "{{reservation_id}}",
+                "refuse-delay"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"refusal_reason\": \"Nous ne pouvons pas accommoder ce retard.\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "description": "La station refuse la demande de retard. La raison est optionnelle (max 500 caracteres). Retourne la demande avec statut 'refused'."
+          }
+        },
+        {
+          "name": "Refuser retard — sans raison (200)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 200', () => pm.response.to.have.status(200));",
+                  "pm.test('delay_request refuse', () => {",
+                  "  const json = pm.response.json();",
+                  "  pm.expect(json.data.delay_request.status).to.eql('refused');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "response": [],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/reservations/{{reservation_id}}/refuse-delay",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "reservations",
+                "{{reservation_id}}",
+                "refuse-delay"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "description": "Le champ refusal_reason est optionnel — body vide accepte."
+          }
+        },
+        {
+          "name": "Refuser retard — aucune demande en attente (409)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 409', () => pm.response.to.have.status(409));",
+                  "pm.test('Code CONFLICT', () => {",
+                  "  const json = pm.response.json();",
+                  "  pm.expect(json.code).to.eql('CONFLICT');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "response": [],
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/v1/reservations/{{reservation_id}}/refuse-delay",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "reservations",
+                "{{reservation_id}}",
+                "refuse-delay"
+              ]
+            },
+            "description": "409 CONFLICT — aucune demande de retard en attente (pending) pour cette reservation."
+          }
+        },
+        {
+          "name": "Refuser retard — reservation introuvable (404)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 404', () => pm.response.to.have.status(404));"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "response": [],
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/v1/reservations/00000000-0000-0000-0000-000000000000/refuse-delay",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "reservations",
+                "00000000-0000-0000-0000-000000000000",
+                "refuse-delay"
+              ]
+            },
+            "description": "404 NOT_FOUND — reservation inexistante."
+          }
+        },
+        {
+          "name": "Refuser retard — non authentifie (401)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 401', () => pm.response.to.have.status(401));"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "response": [],
+          "request": {
+            "auth": {
+              "type": "noauth"
+            },
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/v1/reservations/{{reservation_id}}/refuse-delay",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "reservations",
+                "{{reservation_id}}",
+                "refuse-delay"
+              ]
+            },
+            "description": "401 UNAUTHORIZED — aucun token fourni."
+          }
+        }
+      ]
+    },
+    {
+      "name": "Replanification de reservation",
+      "description": "POST /api/v1/reservations/:id/reschedule — Le client replanifie sa reservation sur un nouveau creneau.\nAuth : client.\n\nComportement :\n- Si replanification tardive (< fenetre libre) : penalite appliquee, stripe_client_secret retourne pour paiement supplementaire eventuel.\n- Retourne is_late_cancellation, penalty_amount, refunded_amount et optionnellement stripe_client_secret.\n\nVariable requise : `new_time_slot_id`",
+      "item": [
+        {
+          "name": "Replanifier reservation — succes (201)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 201', () => pm.response.to.have.status(201));",
+                  "pm.test('Retourne nouvelle reservation replanifiee', () => {",
+                  "  const json = pm.response.json();",
+                  "  pm.expect(json.data).to.have.property('id');",
+                  "  pm.expect(json.data.status).to.be.oneOf(['confirmed', 'pending_payment']);",
+                  "  pm.expect(json.data).to.have.property('is_late_cancellation');",
+                  "  pm.expect(json.data).to.have.property('penalty_amount');",
+                  "  pm.expect(json.data).to.have.property('refunded_amount');",
+                  "  pm.environment.set('reservation_id', json.data.id);",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "response": [],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/reservations/{{reservation_id}}/reschedule",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "reservations",
+                "{{reservation_id}}",
+                "reschedule"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"new_time_slot_id\": \"{{new_time_slot_id}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "description": "Replanifie la reservation sur le creneau indique. Retourne les details incluant is_late_cancellation, penalty_amount, refunded_amount, et stripe_client_secret si replanification tardive avec paiement supplementaire requis."
+          }
+        },
+        {
+          "name": "Replanifier reservation — avec penalite tardive (201)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 201', () => pm.response.to.have.status(201));",
+                  "pm.test('Penalite appliquee et stripe_client_secret present', () => {",
+                  "  const json = pm.response.json();",
+                  "  pm.expect(json.data.is_late_cancellation).to.eql(true);",
+                  "  pm.expect(json.data.penalty_amount).to.be.above(0);",
+                  "  pm.expect(json.data).to.have.property('stripe_client_secret');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "response": [],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/reservations/{{reservation_id}}/reschedule",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "reservations",
+                "{{reservation_id}}",
+                "reschedule"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"new_time_slot_id\": \"{{new_time_slot_id}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "description": "Replanification dans la fenetre tardive (< 60 min avant le service) : penalite appliquee, stripe_client_secret retourne pour confirmer le paiement supplementaire cote frontend."
+          }
+        },
+        {
+          "name": "Replanifier reservation — meme creneau (409)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 409', () => pm.response.to.have.status(409));",
+                  "pm.test('Code CONFLICT', () => {",
+                  "  const json = pm.response.json();",
+                  "  pm.expect(json.code).to.eql('CONFLICT');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "response": [],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/reservations/{{reservation_id}}/reschedule",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "reservations",
+                "{{reservation_id}}",
+                "reschedule"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"new_time_slot_id\": \"{{time_slot_id}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "description": "409 CONFLICT — le nouveau creneau est identique au creneau actuel, ou la reservation n'est pas dans un statut replanifiable."
+          }
+        },
+        {
+          "name": "Replanifier reservation — creneau plein (409 SLOT_FULL)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 409', () => pm.response.to.have.status(409));",
+                  "pm.test('Code SLOT_FULL', () => {",
+                  "  const json = pm.response.json();",
+                  "  pm.expect(json.code).to.eql('SLOT_FULL');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "response": [],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/reservations/{{reservation_id}}/reschedule",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "reservations",
+                "{{reservation_id}}",
+                "reschedule"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"new_time_slot_id\": \"{{new_time_slot_id}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "description": "409 SLOT_FULL — le nouveau creneau cible a atteint sa capacite maximale."
+          }
+        },
+        {
+          "name": "Replanifier reservation — body invalide (400)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 400', () => pm.response.to.have.status(400));",
+                  "pm.test('Code VALIDATION_FAILED', () => {",
+                  "  const json = pm.response.json();",
+                  "  pm.expect(json.code).to.eql('VALIDATION_FAILED');",
+                  "  pm.expect(json.errors).to.be.an('array');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "response": [],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/reservations/{{reservation_id}}/reschedule",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "reservations",
+                "{{reservation_id}}",
+                "reschedule"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"new_time_slot_id\": \"not-a-uuid\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "description": "400 VALIDATION_FAILED — new_time_slot_id manquant ou format UUID invalide."
+          }
+        },
+        {
+          "name": "Replanifier reservation — reservation introuvable (404)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 404', () => pm.response.to.have.status(404));"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "response": [],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/reservations/00000000-0000-0000-0000-000000000000/reschedule",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "reservations",
+                "00000000-0000-0000-0000-000000000000",
+                "reschedule"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"new_time_slot_id\": \"{{new_time_slot_id}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "description": "404 NOT_FOUND — reservation inexistante ou appartenant a un autre utilisateur."
+          }
+        },
+        {
+          "name": "Replanifier reservation — non authentifie (401)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 401', () => pm.response.to.have.status(401));"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "response": [],
+          "request": {
+            "auth": {
+              "type": "noauth"
+            },
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/reservations/{{reservation_id}}/reschedule",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "reservations",
+                "{{reservation_id}}",
+                "reschedule"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"new_time_slot_id\": \"{{new_time_slot_id}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "description": "401 UNAUTHORIZED — aucun token fourni."
+          }
+        },
+        {
+          "name": "Replanifier reservation — erreur serveur (500)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 500', () => pm.response.to.have.status(500));",
+                  "pm.test('Code INTERNAL_ERROR', () => {",
+                  "  const json = pm.response.json();",
+                  "  pm.expect(json.code).to.eql('INTERNAL_ERROR');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "response": [],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/reservations/{{reservation_id}}/reschedule",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "reservations",
+                "{{reservation_id}}",
+                "reschedule"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"new_time_slot_id\": \"{{new_time_slot_id}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "description": "500 INTERNAL_ERROR — erreur inattendue lors de la replanification (ex. echec Stripe)."
+          }
         }
       ]
     },

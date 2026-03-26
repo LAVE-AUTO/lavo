@@ -1,7 +1,7 @@
 {
   "info": {
     "name": "LAVO — Admin API",
-    "description": "Collection pour les endpoints d'administration LAVO.\n\nVariable requise : `base_url` (ex: http://localhost:3000)\nVariable requise : `access_token` (JWT admin, obtenu après login admin)\nVariable requise : `station_id` (UUID de la station ciblée)\n\n## Groupes\n- **Admin — Stations** : lister, détailler, approuver, rejeter les demandes d'inscription station",
+    "description": "Collection pour les endpoints d'administration LAVO.\n\nVariable requise : `base_url` (ex: http://localhost:3000)\nVariable requise : `access_token` (JWT admin, obtenu après login admin)\nVariable requise : `station_id` (UUID de la station ciblée)\n\n## Groupes\n- **Admin — Stations** : lister (paginé), détailler, approuver, rejeter les demandes d'inscription station",
     "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
   },
   "variable": [
@@ -27,12 +27,33 @@
       "item": [
         {
           "name": "Lister stations en attente (200)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 200', () => pm.response.to.have.status(200));",
+                  "pm.test('Retourne stations paginées', () => {",
+                  "  const json = pm.response.json();",
+                  "  pm.expect(json.data).to.have.property('stations');",
+                  "  pm.expect(json.data).to.have.property('meta');",
+                  "  pm.expect(json.data.meta).to.have.property('total');",
+                  "  pm.expect(json.data.meta).to.have.property('page');",
+                  "  pm.expect(json.data.meta).to.have.property('per_page');",
+                  "  pm.expect(json.data.meta).to.have.property('total_pages');",
+                  "  pm.expect(json.data.stations).to.be.an('array');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
           "response": [],
           "request": {
             "method": "GET",
             "header": [],
             "url": {
-              "raw": "{{base_url}}/api/v1/admin/stations",
+              "raw": "{{base_url}}/api/v1/admin/stations?page=1&per_page=20",
               "host": [
                 "{{base_url}}"
               ],
@@ -41,9 +62,66 @@
                 "v1",
                 "admin",
                 "stations"
+              ],
+              "query": [
+                {
+                  "key": "page",
+                  "value": "1"
+                },
+                {
+                  "key": "per_page",
+                  "value": "20"
+                }
               ]
             },
-            "description": "Authentifie admin. Retourne les stations avec status=pending_admin_validation."
+            "description": "Authentifie admin. Retourne les stations avec status=pending_admin_validation.\n\nPagination : `page` (defaut: 1), `per_page` (defaut: 20, max: 100).\nReponse : `{ data: { stations: [...], meta: { total, page, per_page, total_pages } } }`"
+          }
+        },
+        {
+          "name": "Lister stations — page 2 (200)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 200', () => pm.response.to.have.status(200));",
+                  "pm.test('Pagination correcte — page 2', () => {",
+                  "  const json = pm.response.json();",
+                  "  pm.expect(json.data.meta.page).to.eql(2);",
+                  "  pm.expect(json.data.meta.per_page).to.eql(10);",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "response": [],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/v1/admin/stations?page=2&per_page=10",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "admin",
+                "stations"
+              ],
+              "query": [
+                {
+                  "key": "page",
+                  "value": "2"
+                },
+                {
+                  "key": "per_page",
+                  "value": "10"
+                }
+              ]
+            },
+            "description": "Pagination : page 2, 10 resultats par page."
           }
         },
         {
@@ -70,6 +148,17 @@
         },
         {
           "name": "Approuver station (200)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 200', () => pm.response.to.have.status(200));"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
           "response": [],
           "request": {
             "method": "POST",
@@ -88,11 +177,60 @@
                 "approve"
               ]
             },
-            "description": "Approuve la station — status=active."
+            "description": "Approuve la station — status=active.\n\nRetourne 409 CONFLICT si la station est deja approuvee ou dans un statut terminal (active, rejected)."
+          }
+        },
+        {
+          "name": "Approuver station deja approuvee (409)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 409', () => pm.response.to.have.status(409));",
+                  "pm.test('Code CONFLICT', () => {",
+                  "  const json = pm.response.json();",
+                  "  pm.expect(json.code).to.eql('CONFLICT');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "response": [],
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/v1/admin/stations/{{station_id}}/approve",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "admin",
+                "stations",
+                "{{station_id}}",
+                "approve"
+              ]
+            },
+            "description": "409 CONFLICT — la station est deja approuvee (status=active) ou dans un statut terminal. Executer apres avoir deja approuve la meme station."
           }
         },
         {
           "name": "Rejeter station (200)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 200', () => pm.response.to.have.status(200));"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
           "response": [],
           "request": {
             "method": "POST",
@@ -125,7 +263,59 @@
                 }
               }
             },
-            "description": "Rejette la station — status=rejected avec raison."
+            "description": "Rejette la station — status=rejected avec raison.\n\nRetourne 409 CONFLICT si la station est deja rejetee ou dans un statut terminal (active, rejected)."
+          }
+        },
+        {
+          "name": "Rejeter station deja rejetee (409)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 409', () => pm.response.to.have.status(409));",
+                  "pm.test('Code CONFLICT', () => {",
+                  "  const json = pm.response.json();",
+                  "  pm.expect(json.code).to.eql('CONFLICT');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "response": [],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/admin/stations/{{station_id}}/reject",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "admin",
+                "stations",
+                "{{station_id}}",
+                "reject"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\"rejection_reason\":\"Documents fournis incomplets ou invalides.\"}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "description": "409 CONFLICT — la station est deja rejetee ou dans un statut terminal. Executer apres avoir deja rejete la meme station."
           }
         },
         {

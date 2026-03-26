@@ -153,6 +153,8 @@ const TEXTS = {
       body: (name: string) =>
         `Nous avons le plaisir de vous informer que votre station <strong>${name}</strong> a été approuvée et est maintenant active sur Slowtime.`,
       extra: 'Vous pouvez dès à présent vous connecter avec votre adresse e-mail et le mot de passe choisi lors de votre inscription.',
+      stripePrompt: 'Pour recevoir vos paiements, veuillez compléter la configuration de votre compte Stripe en cliquant sur le bouton ci-dessous.',
+      stripeCta: 'Configurer mon compte Stripe',
       cta: 'Se connecter à Slowtime',
       closing: 'Bienvenue dans la communauté Slowtime !',
       qrLabel: 'QR réservation :',
@@ -165,6 +167,8 @@ const TEXTS = {
       body: (name: string) =>
         `We are pleased to inform you that your station <strong>${name}</strong> has been approved and is now active on Slowtime.`,
       extra: 'You can now log in using the email address and password you chose during registration.',
+      stripePrompt: 'To receive payments, please complete your Stripe account setup by clicking the button below.',
+      stripeCta: 'Set up my Stripe account',
       cta: 'Log in to Slowtime',
       closing: 'Welcome to the Slowtime community!',
       qrLabel: 'Booking QR:',
@@ -212,12 +216,10 @@ const TEXTS = {
     fr: {
       teamLine: "L'équipe Slowtime",
       autoMessage: 'Cet e-mail a été envoyé automatiquement. Merci de ne pas y répondre.',
-      copyright: `© ${new Date().getFullYear()} Slowtime. Tous droits réservés.`,
     },
     en: {
       teamLine: 'The Slowtime Team',
       autoMessage: 'This email was sent automatically. Please do not reply.',
-      copyright: `© ${new Date().getFullYear()} Slowtime. All rights reserved.`,
     },
   },
 } as const;
@@ -344,7 +346,7 @@ function brandedEmail(
             <td align="center" style="padding: 20px 0 0;">
               <p style="margin: 0 0 4px; font-size: 13px; color: #af8408; font-weight: 600; letter-spacing: 0.04em;">${f.teamLine}</p>
               <p style="margin: 0 0 4px; font-size: 12px; color: #aaaaaa;">${f.autoMessage}</p>
-              <p style="margin: 0; font-size: 12px; color: #aaaaaa;">${f.copyright}</p>
+              <p style="margin: 0; font-size: 12px; color: #aaaaaa;">© ${new Date().getFullYear()} Slowtime. ${locale === 'fr' ? 'Tous droits réservés.' : 'All rights reserved.'}</p>
             </td>
           </tr>
 
