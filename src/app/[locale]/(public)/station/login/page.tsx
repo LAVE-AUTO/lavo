@@ -29,8 +29,7 @@ export default async function StationLoginPage({ params }: Props) {
   const t = await getTranslations({ locale, namespace: 'station_login' });
 
   return (
-    <>
-      <AuthRedirectGuard />
+    <AuthRedirectGuard>
       <div className="min-h-screen flex">
         {/* Left brand panel — desktop only */}
         <aside className="hidden lg:block lg:w-[42%] xl:w-[45%] shrink-0 sticky top-0 h-screen">
@@ -82,6 +81,6 @@ export default async function StationLoginPage({ params }: Props) {
           </div>
         </main>
       </div>
-    </>
+    </AuthRedirectGuard>
   );
 }
