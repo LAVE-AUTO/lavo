@@ -233,6 +233,8 @@ export async function createStripeOnboardingLink(accountId: string): Promise<str
     type: 'account_onboarding',
   });
   return link.url;
+}
+
 /**
  * Returns the Stripe receipt URL for a PaymentIntent when available.
  * Returns null when no charge/receipt exists yet.

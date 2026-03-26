@@ -1,15 +1,22 @@
 import { requireRole } from '@/lib/require-role';
-import { getPendingStations } from '@/server/station/station-service';
+import { getPendingStations, getStationsForAdmin } from '@/server/station/station-service';
 import { successResponse, error400, error500, fromAppError } from '@/lib/responses';
 import { AppError } from '@/lib/errors';
 import { ApiCode } from '@/types/api-codes';
 import { listPendingStationsQuerySchema, mapZodErrors } from '@/validators/station';
 import type { NextResponse } from 'next/server';
 
+const ALLOWED_STATUSES = ['pending_admin_validation', 'active', 'rejected', 'suspended'] as const;
+type AllowedStatus = (typeof ALLOWED_STATUSES)[number];
+
 /**
  * GET /api/v1/admin/stations
- * List all stations pending admin validation — paginated.
- * Requires DB role `'admin'` (UI "SUPER_ADMIN" is display-only; see docs/ARCHITECTURE.md).
+ * List stations for admin KYC management.
+ *
+ * Query params:
+ *   ?status=pending_admin_validation|active|rejected|suspended  → filter by status
+ *   ?status=all                                                 → return all stations
+ *   (no param)                                                  → pending only (legacy)
  *
  * Query: page (default 1), per_page (default 20, max 100)
  *
@@ -35,8 +42,20 @@ export async function GET(request: Request): Promise<NextResponse> {
   }
 
   try {
-    const result = await getPendingStations(parsed.data.page, parsed.data.per_page);
-    return successResponse({ stations: result.stations, meta: result.meta });
+    const statusParam = searchParams.get('status');
+
+    let stations;
+    if (!statusParam) {
+      stations = await getPendingStations(parsed.data.page, parsed.data.per_page);
+    } else if (statusParam === 'all') {
+      stations = await getStationsForAdmin();
+    } else if (ALLOWED_STATUSES.includes(statusParam as AllowedStatus)) {
+      stations = await getStationsForAdmin(statusParam);
+    } else {
+      stations = await getPendingStations(parsed.data.page, parsed.data.per_page);
+    }
+
+    return successResponse(stations);
   } catch (e) {
     if (e instanceof AppError) return fromAppError(e);
     return error500(e);

@@ -1,5 +1,5 @@
-// TODO: set to false and remove once booking flow is connected to Stripe
-export const RESERVATIONS_MOCK_ENABLED = true;
+// TODO: remove this file once booking flow is fully connected to Stripe
+export const RESERVATIONS_MOCK_ENABLED = false;
 
 export type ReservationStatus = 'confirmed' | 'in_progress' | 'completed' | 'cancelled';
 export type QueueStatus = 'waiting' | 'in_progress';

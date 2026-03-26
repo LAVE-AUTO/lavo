@@ -18,6 +18,8 @@ import {
   sendStationRejectionEmail,
   sendStationApplicationAdminNotification,
 } from '@/lib/email';
+import { APP_URL } from '@/helpers/constants';
+import { buildStationQrPublicUrl } from '@/server/qr/qr-token-service';
 import {
   createStripeConnectAccount,
   createStripeOnboardingLink,
@@ -36,6 +38,7 @@ import {
   listActiveStations,
   listActiveStationsGroup,
   listStationsByStatus,
+  listAllStationsForAdmin,
   type ListActiveStationsFilters,
   type Station,
   type StationWithAvailableSlots,
@@ -211,6 +214,10 @@ export async function getPendingStations(page = 1, perPage = 20): Promise<Pendin
   };
 }
 
+export async function getStationsForAdmin(status?: string): Promise<Station[]> {
+  return listAllStationsForAdmin(status);
+}
+
 export async function getStationById(id: string): Promise<StationWithDocuments> {
   const station = await findStationById(id);
   if (!station) throw new NotFoundError('Station not found');
@@ -221,7 +228,8 @@ export async function getStationById(id: string): Promise<StationWithDocuments> 
 
 export async function approveStation(
   adminId: string,
-  stationId: string
+  stationId: string,
+  locale: 'fr' | 'en' = 'fr'
 ): Promise<void> {
   const station = await findStationById(stationId);
   if (!station) throw new NotFoundError('Station not found');
@@ -265,9 +273,19 @@ export async function approveStation(
     });
   });
 
-  // M-4: Fire-and-forget email — log failures instead of silently swallowing them.
-  sendStationApprovalEmail(stationUser.email, station.name, stripeOnboardingUrl)
+  let qrPublicUrl: string | undefined;
+  try {
+    qrPublicUrl = buildStationQrPublicUrl({ origin: APP_URL, locale, stationId: station.id });
+  } catch (e) {
+    console.error('[STATION_APPROVAL_QR_URL_GENERATION_FAILED]', { stationId, error: e instanceof Error ? e.message : String(e) });
+  }
+
+  // M-4: stationUser already fetched (H-2) — no need for fire-and-forget user lookup.
+  sendStationApprovalEmail(stationUser.email, station.name, locale, { qrPublicUrl })
     .catch((e) => console.error('[APPROVE_EMAIL_FAILED]', { stationId, error: e instanceof Error ? e.message : String(e) }));
+
+  sendStationApplicationAdminNotification(station.name, station.id, { context: 'approval', qrPublicUrl })
+    .catch(() => void 0);
 }
 
 export async function rejectStation(
@@ -291,6 +309,7 @@ export async function rejectStation(
       .set({
         status: 'rejected',
         rejection_reason: reason,
+        rejection_count: (station.rejection_count ?? 0) + 1,
         updated_at: new Date(),
       })
       .where(and(eq(stations.id, stationId), eq(stations.status, 'pending_admin_validation')))

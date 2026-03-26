@@ -1,4 +1,5 @@
 import { requireRole } from '@/lib/require-role';
+import { extractLocale } from '@/lib/email';
 import { approveStation } from '@/server/station/station-service';
 import { isAdminActionRateLimited } from '@/server/admin/admin-log-repository';
 import { successResponse, error400, error404, error409, error429, error500, fromAppError } from '@/lib/responses';
@@ -22,13 +23,14 @@ import type { NextResponse } from 'next/server';
  *   500 INTERNAL_ERROR
  */
 export async function POST(
-  _request: Request,
+  request: Request,
   { params }: { params: Promise<{ id: string }> }
 ) {
-  const auth = await requireRole(_request, 'admin');
+  const auth = await requireRole(request, 'admin');
   if (auth instanceof Response) return auth as NextResponse;
 
   const { id } = await params;
+  const locale = extractLocale(request.headers.get('accept-language'));
 
   // H-3: Validate :id is a UUID before hitting the DB.
   const parsed = stationIdParamSchema.safeParse({ id });
@@ -42,7 +44,7 @@ export async function POST(
   }
 
   try {
-    await approveStation(auth.sub, parsed.data.id);
+    await approveStation(auth.sub, parsed.data.id, locale);
     return successResponse({ approved: true }, 'Station approved successfully.');
   } catch (e) {
     if (e instanceof NotFoundError) return error404(e.message);

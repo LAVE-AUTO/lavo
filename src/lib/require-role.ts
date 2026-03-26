@@ -48,10 +48,10 @@ export async function requireRole(
     });
 
     if (!station || station.status !== 'active') {
-      return error403(
-        'Station account is pending approval',
-        ApiCode.BUSINESS_NOT_APPROVED
-      );
+      if (station?.status === 'rejected') {
+        return error403('Station account has been rejected', ApiCode.BUSINESS_REJECTED);
+      }
+      return error403('Station account is pending approval', ApiCode.BUSINESS_NOT_APPROVED);
     }
   }
 

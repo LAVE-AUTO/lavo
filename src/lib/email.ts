@@ -1,4 +1,5 @@
 import { Resend } from 'resend';
+import QRCode from 'qrcode';
 import { APP_URL } from '@/helpers/constants';
 
 
@@ -123,6 +124,28 @@ const TEXTS = {
       ignore: 'If you did not request a password reset, you can safely ignore this email.',
     },
   },
+  stationRejection: {
+    fr: {
+      subject: (name: string) => `[Slowtime] Votre demande pour la station ${name} n'a pas été approuvée`,
+      greeting: 'Bonjour,',
+      body: (name: string) =>
+        `Nous vous informons que votre demande d'adhésion pour la station <strong>${name}</strong> n'a malheureusement pas été approuvée par notre équipe.`,
+      reasonLabel: 'Motif du refus :',
+      extra: 'Vous pouvez corriger les informations et resoumettre votre dossier depuis votre espace. Pour toute question, n\'hésitez pas à contacter notre support.',
+      cta: 'Resoumettre mon dossier',
+      closing: 'L\'équipe Slowtime',
+    },
+    en: {
+      subject: (name: string) => `[Slowtime] Your application for station ${name} was not approved`,
+      greeting: 'Hello,',
+      body: (name: string) =>
+        `We regret to inform you that your membership application for station <strong>${name}</strong> has not been approved by our team.`,
+      reasonLabel: 'Reason for rejection:',
+      extra: 'You may correct the information and resubmit your application from your account. If you have any questions, please contact our support team.',
+      cta: 'Resubmit my application',
+      closing: 'The Slowtime team',
+    },
+  },
   stationApproval: {
     fr: {
       subject: (name: string) => `[Slowtime] Votre station ${name} a été approuvée`,
@@ -134,6 +157,9 @@ const TEXTS = {
       stripeCta: 'Configurer mon compte Stripe',
       cta: 'Se connecter à Slowtime',
       closing: 'Bienvenue dans la communauté Slowtime !',
+      qrLabel: 'QR réservation :',
+      qrAlt: 'QR de réservation station',
+      qrLinkLabel: 'Lien de réservation QR :',
     },
     en: {
       subject: (name: string) => `[Slowtime] Your station ${name} has been approved`,
@@ -145,26 +171,9 @@ const TEXTS = {
       stripeCta: 'Set up my Stripe account',
       cta: 'Log in to Slowtime',
       closing: 'Welcome to the Slowtime community!',
-    },
-  },
-  stationRejection: {
-    fr: {
-      subject: (name: string) => `[Slowtime] Votre demande d'adhésion pour ${name} a été refusée`,
-      greeting: 'Bonjour,',
-      body: (name: string) =>
-        `Nous vous informons que votre demande d'adhésion pour la station <strong>${name}</strong> n'a pas pu être approuvée.`,
-      reasonLabel: 'Motif du refus :',
-      closing: 'Vous pouvez resoumettre votre dossier avec les corrections nécessaires depuis l\'application.',
-      cta: 'Accéder à Slowtime',
-    },
-    en: {
-      subject: (name: string) => `[Slowtime] Your application for ${name} has been rejected`,
-      greeting: 'Hello,',
-      body: (name: string) =>
-        `We regret to inform you that your application for station <strong>${name}</strong> could not be approved.`,
-      reasonLabel: 'Reason for rejection:',
-      closing: 'You may resubmit your application with the required corrections from the app.',
-      cta: 'Go to Slowtime',
+      qrLabel: 'Booking QR:',
+      qrAlt: 'Station booking QR',
+      qrLinkLabel: 'Booking QR link:',
     },
   },
   paymentSuccess: {
@@ -427,8 +436,8 @@ export async function sendPasswordResetEmail(
 export async function sendStationApprovalEmail(
   to: string,
   stationName: string,
-  stripeOnboardingUrl?: string,
-  locale: Locale = 'fr'
+  locale: Locale = 'fr',
+  opts?: { qrPublicUrl?: string }
 ): Promise<void> {
   const client = getResendClient();
   if (!client) {
@@ -438,19 +447,31 @@ export async function sendStationApprovalEmail(
   if (!isReasonableRecipientEmail(to)) return;
 
   const t = TEXTS.stationApproval[locale];
+  const loginUrl = safeHttpUrlForEmailHref(`${APP_URL}/${locale}/login`) ?? '';
+  const safeQrUrl = safeHttpUrlForEmailHref(opts?.qrPublicUrl);
   const subjectName = safePlainTextSnippet(stationName, 200);
   const escapedName = escapeHtmlPlain(safePlainTextSnippet(stationName, 500));
-  const safeStripeUrl = safeHttpUrlForEmailHref(stripeOnboardingUrl);
+  let qrImageDataUrl: string | null = null;
 
-  // When a Stripe onboarding URL is available, it becomes the primary CTA.
-  // A secondary login link is included in the body text.
-  const loginUrl = safeHttpUrlForEmailHref(`${APP_URL}/${locale}/login`) ?? '';
-  const stripeBlock = safeStripeUrl
-    ? `<br/><br/>${t.stripePrompt}`
+  if (safeQrUrl) {
+    try {
+      qrImageDataUrl = await QRCode.toDataURL(safeQrUrl, { width: 220, margin: 1 });
+    } catch (error) {
+      console.warn('[STATION_APPROVAL_QR_IMAGE_FALLBACK_LINK_ONLY]', {
+        error: error instanceof Error ? error.message : String(error),
+      });
+    }
+  }
+
+  const qrBlock = safeQrUrl
+    ? (
+        qrImageDataUrl
+          ? `<br/><br/><p><strong>${t.qrLabel}</strong></p>
+             <p style="margin: 10px 0;"><img src="${qrImageDataUrl}" alt="${t.qrAlt}" width="220" height="220" style="display:block;border:1px solid #e8e4da;border-radius:8px;padding:6px;background:#ffffff;" /></p>
+             <p><a href="${safeQrUrl}" target="_blank" rel="noopener noreferrer">${safeQrUrl}</a></p>`
+          : `<br/><br/><p><strong>${t.qrLinkLabel}</strong> <a href="${safeQrUrl}" target="_blank" rel="noopener noreferrer">${safeQrUrl}</a></p>`
+      )
     : '';
-  const loginBlock = safeStripeUrl
-    ? `<br/><br/>${t.extra} <a href="${loginUrl}" style="color:#af8408;">${t.cta}</a>`
-    : `<br/><br/>${t.extra}`;
 
   await client.emails.send({
     from: FROM,
@@ -458,9 +479,9 @@ export async function sendStationApprovalEmail(
     subject: t.subject(subjectName),
     html: brandedEmail(locale, {
       greeting: t.greeting,
-      bodyHtml: `${t.body(escapedName)}${stripeBlock}${loginBlock}`,
-      ctaUrl: safeStripeUrl ?? (loginUrl || undefined),
-      ctaLabel: safeStripeUrl ? t.stripeCta : t.cta,
+      bodyHtml: `${t.body(escapedName)}<br/><br/>${t.extra}${qrBlock}`,
+      ctaUrl: loginUrl || undefined,
+      ctaLabel: t.cta,
       footNote: t.closing,
     }),
   });
@@ -470,7 +491,7 @@ export async function sendStationApprovalEmail(
 export async function sendStationRejectionEmail(
   to: string,
   stationName: string,
-  reason: string,
+  rejectionReason: string,
   locale: Locale = 'fr'
 ): Promise<void> {
   const client = getResendClient();
@@ -481,10 +502,10 @@ export async function sendStationRejectionEmail(
   if (!isReasonableRecipientEmail(to)) return;
 
   const t = TEXTS.stationRejection[locale];
+  const resubmitUrl = safeHttpUrlForEmailHref(`${APP_URL}/${locale}/station/resubmit`) ?? '';
   const subjectName = safePlainTextSnippet(stationName, 200);
   const escapedName = escapeHtmlPlain(safePlainTextSnippet(stationName, 500));
-  const escapedReason = escapeHtmlPlain(safePlainTextSnippet(reason, 500));
-  const appUrl = safeHttpUrlForEmailHref(`${APP_URL}/${locale}`) ?? '';
+  const escapedReason = escapeHtmlPlain(safePlainTextSnippet(rejectionReason, 1000));
 
   await client.emails.send({
     from: FROM,
@@ -492,8 +513,8 @@ export async function sendStationRejectionEmail(
     subject: t.subject(subjectName),
     html: brandedEmail(locale, {
       greeting: t.greeting,
-      bodyHtml: `${t.body(escapedName)}<br/><br/><strong>${t.reasonLabel}</strong><br/>${escapedReason}`,
-      ctaUrl: appUrl || undefined,
+      bodyHtml: `${t.body(escapedName)}<br/><br/><p style="margin:0 0 6px;font-weight:bold;">${t.reasonLabel}</p><p style="margin:0;padding:12px 16px;background:#F7F6F0;border-left:3px solid #C49A1E;border-radius:4px;line-height:1.5;">${escapedReason}</p><br/>${t.extra}`,
+      ctaUrl: resubmitUrl || undefined,
       ctaLabel: t.cta,
       footNote: t.closing,
     }),
@@ -503,7 +524,8 @@ export async function sendStationRejectionEmail(
 
 export async function sendStationApplicationAdminNotification(
   stationName: string,
-  stationId: string
+  stationId: string,
+  opts?: { context?: 'application' | 'approval'; qrPublicUrl?: string }
 ): Promise<void> {
   const adminEmail = process.env.ADMIN_NOTIFICATION_EMAIL?.trim();
   if (!adminEmail) {
@@ -524,18 +546,57 @@ export async function sendStationApplicationAdminNotification(
 
   const safeName = escapeHtmlPlain(safePlainTextSnippet(stationName, 500));
   const safeId = escapeHtmlPlain(safePlainTextSnippet(stationId, 128));
+  const context = opts?.context ?? 'application';
+  const safeQrUrl = safeHttpUrlForEmailHref(opts?.qrPublicUrl);
+  let qrImageDataUrl: string | null = null;
+
+  if (context === 'approval' && safeQrUrl) {
+    try {
+      qrImageDataUrl = await QRCode.toDataURL(safeQrUrl, { width: 220, margin: 1 });
+    } catch (error) {
+      console.warn('[ADMIN_APPROVAL_QR_IMAGE_FALLBACK_LINK_ONLY]', {
+        stationId: safeId,
+        error: error instanceof Error ? error.message : String(error),
+      });
+    }
+  }
+
+  const subject =
+    context === 'approval'
+      ? `[Slowtime] Station approved with QR: ${safePlainTextSnippet(stationName, 120)}`
+      : `[Slowtime] New station application: ${safePlainTextSnippet(stationName, 120)}`;
+  const bodyHtml = context === 'approval'
+    ? `
+      <p style="margin: 0 0 8px;"><strong>Station approved:</strong> ${safeName}</p>
+      <p style="margin: 0 0 8px;"><strong>Station ID:</strong> ${safeId}</p>
+      ${
+        safeQrUrl
+          ? (
+              qrImageDataUrl
+                ? `<p style="margin: 12px 0 8px;"><strong>Booking QR:</strong></p>
+                   <p style="margin: 0 0 10px;"><img src="${qrImageDataUrl}" alt="Station booking QR" width="220" height="220" style="display:block;border:1px solid #e8e4da;border-radius:8px;padding:6px;background:#ffffff;" /></p>
+                   <p style="margin: 0;"><a href="${safeQrUrl}" target="_blank" rel="noopener noreferrer">${safeQrUrl}</a></p>`
+                : `<p style="margin: 12px 0 0;"><strong>Booking QR link:</strong> <a href="${safeQrUrl}" target="_blank" rel="noopener noreferrer">${safeQrUrl}</a></p>`
+            )
+          : ''
+      }
+    `
+    : `
+      <p style="margin: 0 0 8px;"><strong>Station name:</strong> ${safeName}</p>
+      <p style="margin: 0;"><strong>Station ID:</strong> ${safeId}</p>
+    `;
 
   await client.emails.send({
     from: FROM,
     to: adminEmail,
-    subject: `[Slowtime] New station application: ${safePlainTextSnippet(stationName, 120)}`,
+    subject,
     html: brandedEmail('en', {
-      greeting: 'New station application',
-      bodyHtml: `
-        <p style="margin: 0 0 8px;"><strong>Station name:</strong> ${safeName}</p>
-        <p style="margin: 0;"><strong>Station ID:</strong> ${safeId}</p>
-      `,
-      footNote: 'Please review the application in the admin panel.',
+      greeting: context === 'approval' ? 'Station approval completed' : 'New station application',
+      bodyHtml,
+      footNote:
+        context === 'approval'
+          ? 'QR image fallback to link-only is monitored and should remain rare.'
+          : 'Please review the application in the admin panel.',
     }),
   });
 }

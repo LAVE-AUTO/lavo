@@ -15,11 +15,12 @@ export type CreateReservationEntryData = {
   station_id: string;
   vehicle_format_id: string;
   time_slot_id: string;
+  booking_source?: 'standard' | 'qr';
   status: string;
   amount_paid: string;
   commission_rate: string;
-  commission_amount?: string | null;
-  station_payout?: string | null;
+  commission_amount?: string;
+  station_payout?: string;
   stripe_payment_id?: string | null;
 };
 
@@ -32,8 +33,8 @@ export type CreateQueueEntryData = {
   status: string;
   amount_paid: string;
   commission_rate: string;
-  commission_amount?: string | null;
-  station_payout?: string | null;
+  commission_amount?: string;
+  station_payout?: string;
   stripe_payment_id?: string | null;
 };
 
@@ -52,13 +53,14 @@ export async function createReservationEntry(
       station_id: data.station_id,
       vehicle_format_id: data.vehicle_format_id,
       entry_type: 'reservation',
+      booking_source: data.booking_source ?? 'standard',
       time_slot_id: data.time_slot_id,
       queue_position: null,
       status: data.status,
       amount_paid: data.amount_paid,
       commission_rate: data.commission_rate,
-      commission_amount: data.commission_amount ?? null,
-      station_payout: data.station_payout ?? null,
+      commission_amount: data.commission_amount ?? '0.00',
+      station_payout: data.station_payout ?? '0.00',
       stripe_payment_id: data.stripe_payment_id ?? null,
     })
     .returning();
@@ -78,13 +80,14 @@ export async function createQueueEntry(data: CreateQueueEntryData, tx?: DbTransa
       station_id: data.station_id,
       vehicle_format_id: data.vehicle_format_id,
       entry_type: 'queue',
+      booking_source: 'standard',
       time_slot_id: null,
       queue_position: data.queue_position,
       status: data.status,
       amount_paid: data.amount_paid,
       commission_rate: data.commission_rate,
-      commission_amount: data.commission_amount ?? null,
-      station_payout: data.station_payout ?? null,
+      commission_amount: data.commission_amount ?? '0.00',
+      station_payout: data.station_payout ?? '0.00',
       stripe_payment_id: data.stripe_payment_id ?? null,
     })
     .returning();
@@ -131,6 +134,7 @@ export async function findReservationWithSlot(
       id: reservations.id,
       user_id: reservations.user_id,
       entry_type: reservations.entry_type,
+      booking_source: reservations.booking_source,
       time_slot_id: reservations.time_slot_id,
       station_id: reservations.station_id,
       vehicle_format_id: reservations.vehicle_format_id,
@@ -184,6 +188,7 @@ export async function listEntriesByStation(stationId: string): Promise<Entry[]> 
       id: reservations.id,
       user_id: reservations.user_id,
       entry_type: reservations.entry_type,
+      booking_source: reservations.booking_source,
       time_slot_id: reservations.time_slot_id,
       station_id: reservations.station_id,
       vehicle_format_id: reservations.vehicle_format_id,
@@ -396,6 +401,7 @@ export async function listEntriesByStationPaginated(
         id: reservations.id,
         user_id: reservations.user_id,
         entry_type: reservations.entry_type,
+        booking_source: reservations.booking_source,
         time_slot_id: reservations.time_slot_id,
         station_id: reservations.station_id,
         vehicle_format_id: reservations.vehicle_format_id,
@@ -449,6 +455,7 @@ export async function updateEntry(
   data: Partial<{
     status: string;
     entry_type: 'reservation' | 'queue';
+    booking_source: 'standard' | 'qr';
     time_slot_id: string | null;
     queue_position: number | null;
     amount_paid: string;
@@ -558,6 +565,7 @@ export async function listLateUnconfirmedReservations(): Promise<Entry[]> {
       id: reservations.id,
       user_id: reservations.user_id,
       entry_type: reservations.entry_type,
+      booking_source: reservations.booking_source,
       time_slot_id: reservations.time_slot_id,
       station_id: reservations.station_id,
       vehicle_format_id: reservations.vehicle_format_id,

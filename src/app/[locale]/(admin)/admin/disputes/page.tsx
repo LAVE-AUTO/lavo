@@ -1,8 +1,5 @@
-export default function AdminDisputesPage() {
-  return (
-    <main className="p-6">
-      <h1 className="text-xl font-semibold">Litiges</h1>
-    </main>
-  );
-}
+import { AdminDisputesContainer } from '@/components/admin/disputes/AdminDisputesContainer';
 
+export default function AdminDisputesPage() {
+  return <AdminDisputesContainer />;
+}

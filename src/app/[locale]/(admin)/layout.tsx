@@ -6,6 +6,7 @@ import { useRouter } from 'next/navigation';
 import { useLocale } from 'next-intl';
 import { useAuth } from '@/context';
 import { AdminShell } from '@/components/admin/AdminShell';
+import { CommissionProvider } from '@/context/commission-context';
 
 export default function AdminLayout({ children }: { children: ReactNode }) {
   const { isAuthenticated, isLoading, isSuperAdmin } = useAuth();
@@ -22,5 +23,9 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
   if (isLoading) return null;
   if (!isAuthenticated || !isSuperAdmin) return null;
 
-  return <AdminShell>{children}</AdminShell>;
+  return (
+    <CommissionProvider>
+      <AdminShell>{children}</AdminShell>
+    </CommissionProvider>
+  );
 }
