@@ -1268,6 +1268,11 @@
     "no_account": "Pas encore partenaire ?",
     "register_link": "Rejoindre Slowtime"
   },
+  "admin_login": {
+    "meta_title": "Administration — Slowtime",
+    "welcome_title": "Accès administrateur",
+    "welcome_subtitle": "Espace réservé à l'équipe d'administration de la plateforme."
+  },
   "station_dashboard": {
     "nav_home": "Accueil",
     "nav_availability": "Disponibilité",
