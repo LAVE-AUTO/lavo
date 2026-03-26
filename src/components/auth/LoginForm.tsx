@@ -128,8 +128,11 @@ export function LoginForm({
 
         const userRole = String(data.user.role || 'client') as UserRole;
 
-        /* Cross-space login guard: block if role does not match this login page */
+        /* Cross-space login guard: block if role does not match this login page.
+           The backend already set a refresh_token cookie — call logout to clear it
+           before showing the error, otherwise AuthProvider will log the user in anyway. */
         if (allowedRole && userRole !== allowedRole) {
+          await postWithApi('/auth/logout', {});
           setWrongSpaceHref(loginHrefForRole(userRole));
           showError(t('error_wrong_space'));
           return;
