@@ -17,14 +17,6 @@ export async function getActiveCommissionRow(): Promise<CommissionRow | undefine
 }
 
 /**
- * Inserts a new commission entry. Rows are immutable — updates create new entries.
- */
-export async function insertCommissionEntry(data: NewCommissionRow): Promise<CommissionRow> {
-  const [row] = await db.insert(commissionSettings).values(data).returning();
-  return row;
-}
-
-/**
  * Returns paginated commission history ordered by effective_at descending.
  */
 export async function listCommissionHistory(

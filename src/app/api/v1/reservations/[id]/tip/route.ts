@@ -1,5 +1,6 @@
 import { requireRole } from '@/lib/require-role';
 import { successResponse, error400, error409, error500, fromAppError } from '@/lib/responses';
+import { applyNoStoreHeaders } from '@/lib/response-headers';
 import { ApiCode } from '@/types/api-codes';
 import { AppError } from '@/lib/errors';
 import { HTTP_STATUS } from '@/helpers/constants';
@@ -35,19 +36,19 @@ export async function POST(
   const { id } = await params;
   const idResult = reservationIdParamSchema.safeParse(id);
   if (!idResult.success) {
-    return error400('Invalid reservation ID format', ApiCode.VALIDATION_FAILED);
+    return applyNoStoreHeaders(error400('Invalid reservation ID format', ApiCode.VALIDATION_FAILED));
   }
 
   let body: unknown;
   try {
     body = await request.json();
   } catch {
-    return error400('Invalid JSON body', ApiCode.VALIDATION_FAILED);
+    return applyNoStoreHeaders(error400('Invalid JSON body', ApiCode.VALIDATION_FAILED));
   }
 
   const parsed = createTipSchema.safeParse(body);
   if (!parsed.success) {
-    return error400('Validation failed', ApiCode.VALIDATION_FAILED, mapZodErrors(parsed.error));
+    return applyNoStoreHeaders(error400('Validation failed', ApiCode.VALIDATION_FAILED, mapZodErrors(parsed.error)));
   }
 
   try {
@@ -55,9 +56,9 @@ export async function POST(
     return successResponse(result, 'Tip sent successfully', 201);
   } catch (e) {
     if (e instanceof AppError && e.statusCode === HTTP_STATUS.CONFLICT) {
-      return error409(e.message, ApiCode.TIP_ALREADY_EXISTS);
+      return applyNoStoreHeaders(error409(e.message, ApiCode.TIP_ALREADY_EXISTS));
     }
-    if (e instanceof AppError) return fromAppError(e);
-    return error500(e);
+    if (e instanceof AppError) return applyNoStoreHeaders(fromAppError(e));
+    return applyNoStoreHeaders(error500(e));
   }
 }
