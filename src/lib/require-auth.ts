@@ -1,7 +1,7 @@
 import { cookies, headers } from 'next/headers';
 import { verifyJwt, extractBearerToken, type JwtPayload } from '@/lib/jwt';
 import { error401 } from '@/lib/responses';
-import { ACCESS_COOKIE_NAME } from '@/helpers/constants';
+import { ACCESS_COOKIE_NAME } from '@/helpers/server-constants';
 import type { NextResponse } from 'next/server';
 import { assertSafeCookieAuthForMutation } from '@/lib/cookie-auth-csrf';
 

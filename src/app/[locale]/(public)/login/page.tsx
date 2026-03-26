@@ -22,7 +22,9 @@ export async function generateMetadata({ params }: Props) {
  */
 export default async function LoginPage({ params, searchParams }: Props) {
   const { locale }      = await params;
-  const { callbackUrl } = await searchParams;
+  const { callbackUrl: rawCallbackUrl } = await searchParams;
+  /* Cap callbackUrl length server-side to prevent oversized payloads being forwarded to the client. */
+  const callbackUrl = rawCallbackUrl ? rawCallbackUrl.slice(0, 300) : undefined;
   setRequestLocale(locale);
 
   const t = await getTranslations({ locale, namespace: 'login' });

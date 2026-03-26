@@ -8,6 +8,7 @@ import { useTheme } from '@/context/theme-context';
 /* Dashboard mockup                                                     */
 /* ------------------------------------------------------------------ */
 
+/* Decorative dashboard mockup — all text is intentionally hardcoded as it is purely visual/illustrative. */
 function AdminMockup({ isDark }: { isDark: boolean }) {
   const cardBg  = isDark ? '#1E2A1A' : '#F5F0E4';
   const borderC = isDark ? '#2E3E2A' : '#D4C88A';
@@ -87,6 +88,8 @@ function AdminMockup({ isDark }: { isDark: boolean }) {
 /* AdminBrandPanel                                                      */
 /* ------------------------------------------------------------------ */
 
+/* Decorative feature list — content is intentionally hardcoded French as it is part of the branding panel
+   visual design, not functional UI. Update manually if brand copy changes. */
 const FEATURES = [
   { label: 'Gestion des stations',  sub: 'Valider, suspendre, configurer chaque station.' },
   { label: 'Suivi des clients',     sub: 'Accédez aux profils et historiques de tous les clients.' },

@@ -4,7 +4,7 @@ import { authRateLimits } from '@/lib/db/schema';
 import {
   RATE_LIMIT_MAX_ATTEMPTS,
   RATE_LIMIT_BLOCK_MINUTES,
-} from '@/helpers/constants';
+} from '@/helpers/server-constants';
 
 if (RATE_LIMIT_MAX_ATTEMPTS < 2) {
   throw new Error(

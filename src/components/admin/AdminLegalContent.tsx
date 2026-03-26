@@ -52,6 +52,8 @@ export function AdminLegalContent() {
       // Keys map to public routes: privacy → /privacy-policy, terms_clients → /terms/clients,
       //   terms_stations → /terms/stations, legal_mentions → /legal, contact → /contact,
       //   how_it_works → landing page "Comment ça marche" section.
+      // TODO: sanitize HTML server-side (DOMPurify or equivalent) before persisting and before
+      //   rendering on public pages — raw WYSIWYG output is an XSS risk if admin credentials are compromised.
       await new Promise<void>(r => setTimeout(r, 600));
       if (!mountedRef.current) return;
       setDirty(prev => { const s = new Set(prev); s.delete(activePage); return s; });

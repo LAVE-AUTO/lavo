@@ -5,7 +5,7 @@ import {
   REFRESH_COOKIE_NAME,
   JWT_DEFAULT_MAX_AGE,
   JWT_REMEMBER_MAX_AGE,
-} from '@/helpers/constants';
+} from '@/helpers/server-constants';
 
 export interface JwtPayload {
   sub: string;

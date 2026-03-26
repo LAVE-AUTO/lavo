@@ -9,7 +9,17 @@ type Props = { params: Promise<{ locale: string }> };
 export async function generateMetadata({ params }: Props) {
   const { locale } = await params;
   const t = await getTranslations({ locale, namespace: 'cgu_stations_page' });
-  return { title: t('meta_title'), description: t('meta_desc') };
+  return {
+    title: t('meta_title'),
+    description: t('meta_desc'),
+    alternates: {
+      canonical: `/${locale}/cgu-stations`,
+      languages: {
+        fr: '/fr/cgu-stations',
+        en: '/en/cgu-stations',
+      },
+    },
+  };
 }
 
 export default async function CguStationsPage({ params }: Props) {

@@ -4,6 +4,7 @@ import { useState, useRef, useEffect } from 'react';
 import { useTranslations } from 'next-intl';
 import { Link } from '@/i18n/navigation';
 import { useToast } from '@/context/toast-context';
+import { Modal } from '@/components/ui/Modal';
 import { MOCK_TICKETS, type SupportTicket, type TicketStatus } from '@/components/support/support-mock';
 
 const STATUS_STYLE: Record<TicketStatus, { badge: string; dot: string; label: string }> = {
@@ -29,9 +30,9 @@ function nameInitials(name: string) {
 }
 
 /* ---- Close modal ---- */
-interface CloseModalProps { onConfirm: (reason: string) => void; onCancel: () => void; busy: boolean }
+interface CloseModalProps { open: boolean; onConfirm: (reason: string) => void; onCancel: () => void; busy: boolean }
 
-function CloseModal({ onConfirm, onCancel, busy }: CloseModalProps) {
+function CloseModal({ open, onConfirm, onCancel, busy }: CloseModalProps) {
   const t = useTranslations('admin_support');
   const [reason, setReason] = useState('');
 
@@ -42,34 +43,35 @@ function CloseModal({ onConfirm, onCancel, busy }: CloseModalProps) {
   }
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4 backdrop-blur-sm">
-      <div className="w-full max-w-md rounded-2xl bg-white shadow-2xl ring-1 ring-black/[0.05] dark:bg-[#1A2416] dark:ring-white/[0.05]">
-        <div className="border-b border-[#F0EDE4] px-6 py-4 dark:border-[#243020]">
-          <h2 className="text-[15px] font-black text-[#1A1A0A] dark:text-[#F0EDD4]">{t('close_modal_title')}</h2>
+    <Modal
+      open={open}
+      onClose={onCancel}
+      title={t('close_modal_title')}
+      footer={
+        <div className="flex items-center justify-end gap-2">
+          <button type="button" onClick={onCancel} disabled={busy}
+            className="rounded-[10px] border border-[#E0DCD0] px-4 py-2 text-[13px] font-semibold text-[#666] transition-colors hover:bg-[#F0EDE0] disabled:opacity-50 dark:border-[#243020] dark:text-[#9A9A8A]">
+            {t('close_modal_cancel')}
+          </button>
+          <button type="submit" form="close-ticket-form" disabled={busy || !reason.trim()}
+            className="rounded-[10px] bg-[#94A3B8] px-5 py-2 text-[13px] font-bold text-white transition-opacity hover:opacity-80 disabled:opacity-50">
+            {t('close_modal_confirm')}
+          </button>
         </div>
-        <form onSubmit={handleConfirm} className="flex flex-col gap-4 p-6">
-          <div className="flex flex-col gap-1.5">
-            <label className="text-[12px] font-medium text-[#5A5A4A] dark:text-[#9A9A8A]">{t('close_modal_reason_label')}</label>
-            <textarea rows={3} maxLength={500}
-              className="w-full resize-none rounded-[8px] border border-[#D8D4C8] bg-[#F7F6F2] px-3 py-2.5 text-[13px] text-[#1A1A0A] outline-none placeholder:text-[#BBBBAA] focus:border-[#C49A1E] focus:bg-white focus:shadow-[0_0_0_3px_rgba(196,154,30,0.12)] dark:border-[#243020] dark:bg-[#0F1A0C] dark:text-[#F0EDD4] dark:focus:border-[#C49A1E]"
-              placeholder={t('close_modal_reason_placeholder')}
-              value={reason}
-              onChange={(e) => setReason(e.target.value)}
-            />
-          </div>
-          <div className="flex items-center justify-end gap-2">
-            <button type="button" onClick={onCancel} disabled={busy}
-              className="rounded-[10px] border border-[#E0DCD0] px-4 py-2 text-[13px] font-semibold text-[#666] transition-colors hover:bg-[#F0EDE0] disabled:opacity-50 dark:border-[#243020] dark:text-[#9A9A8A]">
-              {t('close_modal_cancel')}
-            </button>
-            <button type="submit" disabled={busy || !reason.trim()}
-              className="rounded-[10px] bg-[#94A3B8] px-5 py-2 text-[13px] font-bold text-white transition-opacity hover:opacity-80 disabled:opacity-50">
-              {t('close_modal_confirm')}
-            </button>
-          </div>
-        </form>
-      </div>
-    </div>
+      }
+    >
+      <form id="close-ticket-form" onSubmit={handleConfirm} className="flex flex-col gap-4">
+        <div className="flex flex-col gap-1.5">
+          <label htmlFor="close-ticket-reason" className="text-[12px] font-medium text-[#5A5A4A] dark:text-[#9A9A8A]">{t('close_modal_reason_label')}</label>
+          <textarea id="close-ticket-reason" rows={3} maxLength={500}
+            className="w-full resize-none rounded-[8px] border border-[#D8D4C8] bg-[#F7F6F2] px-3 py-2.5 text-[13px] text-[#1A1A0A] outline-none placeholder:text-[#BBBBAA] focus:border-[#C49A1E] focus:bg-white focus:shadow-[0_0_0_3px_rgba(196,154,30,0.12)] dark:border-[#243020] dark:bg-[#0F1A0C] dark:text-[#F0EDD4] dark:focus:border-[#C49A1E]"
+            placeholder={t('close_modal_reason_placeholder')}
+            value={reason}
+            onChange={(e) => setReason(e.target.value)}
+          />
+        </div>
+      </form>
+    </Modal>
   );
 }
 
@@ -120,7 +122,7 @@ export function AdminSupportDetail({ id }: Props) {
         };
       });
       setReply('');
-      // TODO: toastSuccess once POST /admin/support/tickets/:id/messages endpoint is available
+      toastSuccess(t('reply_success'));
     } catch {
       if (mountedRef.current) toastError(t('reply_error'));
     } finally {
@@ -135,7 +137,7 @@ export function AdminSupportDetail({ id }: Props) {
       await new Promise((r) => setTimeout(r, 400));
       if (!mountedRef.current) return;
       setTicket((prev) => prev ? { ...prev, assigned_to: 'Admin Support' } : prev);
-      // TODO: toastSuccess once PATCH /admin/support/tickets/:id endpoint is available
+      toastSuccess(t('assign_success'));
     } finally {
       if (mountedRef.current) setActionBusy(false);
     }
@@ -148,7 +150,7 @@ export function AdminSupportDetail({ id }: Props) {
       await new Promise((r) => setTimeout(r, 400));
       if (!mountedRef.current) return;
       setTicket((prev) => prev ? { ...prev, status: 'resolved' } : prev);
-      // TODO: toastSuccess once PATCH /admin/support/tickets/:id endpoint is available
+      toastSuccess(t('resolve_success'));
     } finally {
       if (mountedRef.current) setActionBusy(false);
     }
@@ -161,6 +163,7 @@ export function AdminSupportDetail({ id }: Props) {
       await new Promise((r) => setTimeout(r, 400));
       if (!mountedRef.current) return;
       setTicket((prev) => prev ? { ...prev, status: 'open' } : prev);
+      toastSuccess(t('reopen_success'));
     } finally {
       if (mountedRef.current) setActionBusy(false);
     }
@@ -172,9 +175,9 @@ export function AdminSupportDetail({ id }: Props) {
       // TODO: connect to API once endpoint is available (PATCH /admin/support/tickets/:id)
       await new Promise((r) => setTimeout(r, 500));
       if (!mountedRef.current) return;
-      setTicket((prev) => prev ? { ...prev, status: 'closed' } : prev);
+      setTicket((prev) => prev ? { ...prev, status: 'closed', close_reason: reason } : prev);
       setShowCloseModal(false);
-      // TODO: toastSuccess once PATCH /admin/support/tickets/:id endpoint is available
+      toastSuccess(t('close_success'));
     } finally {
       if (mountedRef.current) setActionBusy(false);
     }
@@ -182,9 +185,12 @@ export function AdminSupportDetail({ id }: Props) {
 
   return (
     <>
-      {showCloseModal && (
-        <CloseModal onConfirm={handleClose} onCancel={() => setShowCloseModal(false)} busy={actionBusy} />
-      )}
+      <CloseModal
+        open={showCloseModal}
+        onConfirm={handleClose}
+        onCancel={() => setShowCloseModal(false)}
+        busy={actionBusy}
+      />
 
       <div className="flex min-h-full flex-col">
         {/* Header */}
@@ -251,7 +257,7 @@ export function AdminSupportDetail({ id }: Props) {
               <h2 className="text-[11px] font-black uppercase tracking-wider text-[#AAAAAA] dark:text-[#4A4A3A]">{t('section_thread')}</h2>
               {ticket.messages.length === 0 ? (
                 <div className="flex flex-col items-center gap-2 py-10 text-center">
-                  <p className="text-[13px] text-[#AAAAAA] dark:text-[#4A4A3A]">{t('empty_tickets')}</p>
+                  <p className="text-[13px] text-[#AAAAAA] dark:text-[#4A4A3A]">{t('empty_thread')}</p>
                 </div>
               ) : (
                 ticket.messages.map((msg) => {
@@ -282,14 +288,16 @@ export function AdminSupportDetail({ id }: Props) {
               )}
             </div>
 
-            {/* Reply form */}
-            {!isClosed && (
+            {/* Reply form — only shown for open/in_progress tickets.
+                Resolved and closed tickets no longer accept new replies:
+                resolved = admin confirmed the issue is fixed; closed = ticket archived. */}
+            {!isClosed && !isResolved && (
               <div className="rounded-2xl border border-[#E8E4DC] bg-white shadow-sm dark:border-[#1E2E18] dark:bg-[#131E10]">
                 <div className="border-b border-[#F0EDE4] px-5 py-3 dark:border-[#1A2A14]">
-                  <span className="text-[12px] font-bold text-[#5A5A4A] dark:text-[#9A9A8A]">{t('field_reply')}</span>
+                  <label htmlFor="admin-reply-field" className="text-[12px] font-bold text-[#5A5A4A] dark:text-[#9A9A8A]">{t('field_reply')}</label>
                 </div>
                 <form onSubmit={handleSendReply} className="flex flex-col gap-3 p-5">
-                  <textarea rows={4} maxLength={2000}
+                  <textarea id="admin-reply-field" rows={4} maxLength={2000}
                     className="w-full resize-none rounded-[8px] border border-[#D8D4C8] bg-[#F7F6F2] px-3 py-2.5 text-[13px] text-[#1A1A0A] outline-none placeholder:text-[#BBBBAA] focus:border-[#C49A1E] focus:bg-white focus:shadow-[0_0_0_3px_rgba(196,154,30,0.12)] dark:border-[#243020] dark:bg-[#0F1A0C] dark:text-[#F0EDD4] dark:focus:border-[#C49A1E]"
                     placeholder={t('field_reply_placeholder')}
                     value={reply}
@@ -303,6 +311,13 @@ export function AdminSupportDetail({ id }: Props) {
                     </button>
                   </div>
                 </form>
+              </div>
+            )}
+
+            {/* Resolved notice */}
+            {isResolved && (
+              <div className="flex items-center justify-center rounded-2xl border border-[#E8E4DC] bg-white px-5 py-4 shadow-sm dark:border-[#1E2E18] dark:bg-[#131E10]">
+                <p className="text-[12px] text-[#AAAAAA] dark:text-[#4A4A3A]">{t('resolve_success')}</p>
               </div>
             )}
 

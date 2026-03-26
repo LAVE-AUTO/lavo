@@ -43,6 +43,8 @@ export function AdminPromoQr({ stationId, stationName }: Props) {
     if (!commission.trim()) { setCommissionError(t('error_commission_required')); return false; }
     const val = parseFloat(commission);
     if (isNaN(val) || val < 0 || val > 50) { setCommissionError(t('error_commission_invalid')); return false; }
+    /* Enforce 0.5-step precision: val * 2 must be an integer (e.g. 5 → 10 ok, 5.5 → 11 ok, 5.3 → 10.6 fail). */
+    if (!Number.isInteger(val * 2)) { setCommissionError(t('error_commission_step')); return false; }
     setCommissionError(null);
     return true;
   }
@@ -97,6 +99,14 @@ export function AdminPromoQr({ stationId, stationName }: Props) {
 
   return (
     <div className="rounded-2xl bg-white p-6 shadow-sm ring-1 ring-black/[0.04] dark:bg-[#1A2416] dark:ring-white/[0.06]">
+
+      {/* Preview-only warning — QR is not functional until the API endpoint is connected */}
+      <div className="mb-5 flex items-start gap-2 rounded-xl border border-orange-200 bg-orange-50 px-4 py-3 dark:border-orange-900/40 dark:bg-orange-950/20">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#F97316" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="mt-0.5 shrink-0" aria-hidden="true">
+          <path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z" /><line x1="12" y1="9" x2="12" y2="13" /><line x1="12" y1="17" x2="12.01" y2="17" />
+        </svg>
+        <p className="text-[12px] leading-snug text-orange-700 dark:text-orange-400">{t('preview_only_notice')}</p>
+      </div>
 
       {/* Section header */}
       <div className="mb-5 flex items-center justify-between">

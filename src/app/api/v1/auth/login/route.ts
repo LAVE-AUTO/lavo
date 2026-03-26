@@ -16,7 +16,7 @@ import { AppError, ForbiddenError, UnauthorizedError } from '@/lib/errors';
 import { checkRateLimit, recordFailedAttempt, resetOnSuccess } from '@/lib/rate-limiter';
 import { getClientRateLimitKey } from '@/lib/request-ip';
 import { buildRefreshCookieOptions } from '@/lib/jwt';
-import { REFRESH_COOKIE_NAME } from '@/helpers/constants';
+import { REFRESH_COOKIE_NAME } from '@/helpers/server-constants';
 
 /**
  * POST /api/v1/auth/login

@@ -370,7 +370,9 @@
     "config": "Configuration",
     "clients": "Clients",
     "history": "History",
-    "support": "Support"
+    "support": "Support",
+    "bottom_nav_aria": "Main navigation",
+    "appearance_aria": "Appearance"
   },
   "footer": {
     "tagline": "The booking and payment platform for car wash stations across Canada.",
@@ -1650,7 +1652,8 @@
     "extras_active": "Active",
     "extras_inactive": "Inactive",
     "extras_save_success": "Extras saved",
-    "extras_save_error": "Error saving extras"
+    "extras_save_error": "Error saving extras",
+    "photos_save_unavailable": "Preview only — save will be available once the API endpoint is connected."
   },
   "station_services": {
     "page_title": "My Services",
@@ -2247,18 +2250,17 @@
     "status_in_progress": "In progress",
     "status_resolved": "Resolved",
     "status_closed": "Closed",
-    "label_created": "Created on",
     "label_messages": "messages",
     "thread_no_messages": "No messages yet.",
     "thread_admin_label": "Support team",
     "thread_resolved_hint": "This ticket has been resolved by the support team.",
-    "thread_closed_hint": "This ticket is closed."
+    "thread_closed_hint": "This ticket is closed.",
+    "btn_expand": "Expand ticket",
+    "btn_collapse": "Collapse ticket"
   },
   "admin_support": {
     "page_title": "Support tickets",
     "page_subtitle": "Manage client and station requests",
-    "chip_open": "open",
-    "chip_total": "total",
     "search_placeholder": "Search a ticket…",
     "filter_all": "All",
     "status_open": "Open",
@@ -2267,11 +2269,6 @@
     "status_closed": "Closed",
     "role_client": "Client",
     "role_station": "Station",
-    "col_subject": "Subject",
-    "col_from": "From",
-    "col_status": "Status",
-    "col_date": "Date",
-    "col_actions": "Actions",
     "btn_detail": "View",
     "btn_back": "Back",
     "empty_tickets": "No tickets.",
@@ -2301,7 +2298,10 @@
     "close_success": "Ticket closed.",
     "resolve_success": "Ticket marked as resolved.",
     "assign_success": "Ticket assigned.",
-    "not_found": "Ticket not found."
+    "not_found": "Ticket not found.",
+    "empty_thread": "No messages yet.",
+    "label_msg": "msg",
+    "reopen_success": "Ticket reopened."
   },
   "admin_add_user": {
     "modal_title": "Add a user",
@@ -2332,7 +2332,8 @@
     "form_password_notice": "A temporary password will be automatically generated and sent to this email address.",
     "success_email_sent_title": "Email sent",
     "success_email_sent_body": "Login credentials have been sent to {email}.",
-    "success_force_change_notice": "The user will be required to change their password on first login."
+    "success_force_change_notice": "The user will be required to change their password on first login.",
+    "form_api_unavailable_notice": "Preview only — feature unavailable until the API endpoint is connected."
   },
   "admin_add_station": {
     "modal_title": "Create a station",
@@ -2426,7 +2427,8 @@
     "success_kyc_notice_body": "The station will need to upload their documents. You will be notified to validate the account.",
     "success_docs_uploaded_notice": "Uploaded documents will be submitted to the KYC validation process.",
     "success_force_change_notice": "The station will be required to change their password on first login.",
-    "role_station": "Station"
+    "role_station": "Station",
+    "form_api_unavailable_notice": "Preview only — feature unavailable until the API endpoint is connected."
   },
   "admin_promo_qr": {
     "section_title": "Promotional QR Code",
@@ -2444,7 +2446,9 @@
     "qr_notice_body": "Client scans this QR → redirected to registration with a referral code. On their first service at this station, the custom commission is applied once per client.",
     "referral_url_label": "Referral link",
     "error_commission_required": "Commission rate is required.",
-    "error_commission_invalid": "Rate must be between 0 and 50."
+    "error_commission_invalid": "Rate must be between 0 and 50.",
+    "preview_only_notice": "Preview only — this QR code will not be functional until the API is connected.",
+    "error_commission_step": "Commission must be a multiple of 0.5 (e.g. 5, 5.5, 10)."
   },
   "admin_legal": {
     "section_title": "Legal and informational content",
@@ -2468,5 +2472,10 @@
     "toolbar_ul": "Bullet list",
     "toolbar_ol": "Numbered list",
     "editor_aria_label": "Content editor"
+  },
+  "station_support": {
+    "section_title": "Station tickets",
+    "page_title": "Support",
+    "page_subtitle": "Create a ticket or track your ongoing requests"
   }
 }

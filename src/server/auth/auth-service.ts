@@ -9,7 +9,7 @@ import {
   TokenExpiredError,
   UnauthorizedError,
 } from '@/lib/errors';
-import { ACCESS_TOKEN_MAX_AGE, JWT_DEFAULT_MAX_AGE, JWT_REMEMBER_MAX_AGE } from '@/helpers/constants';
+import { ACCESS_TOKEN_MAX_AGE, JWT_DEFAULT_MAX_AGE, JWT_REMEMBER_MAX_AGE } from '@/helpers/server-constants';
 import {
   findByEmail,
   findById,
