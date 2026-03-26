@@ -114,7 +114,7 @@ export async function PublicFooter() {
               {t('legal_tos')}
             </Link>
             <Link href="/mentions-legales" className="text-[11px] text-[#7a9a7d] hover:text-[#c8980a] transition-colors duration-300">
-              {t('legal_cookies')}
+              {t('legal_mentions')}
             </Link>
           </div>
         </div>
