@@ -3,6 +3,7 @@ import bcrypt from 'bcrypt';
 import { and, eq, inArray } from 'drizzle-orm';
 import { db } from '@/lib/db';
 import {
+  adminLogs,
   pendingUploads,
   users,
   emailVerificationTokens,
@@ -17,7 +18,6 @@ import {
   sendStationRejectionEmail,
   sendStationApplicationAdminNotification,
 } from '@/lib/email';
-import { insertAdminLog } from '@/server/admin/admin-log-repository';
 import {
   createStripeConnectAccount,
   createStripeOnboardingLink,
@@ -36,8 +36,6 @@ import {
   listActiveStations,
   listActiveStationsGroup,
   listStationsByStatus,
-  updateStationInfo,
-  updateStationStatus,
   type ListActiveStationsFilters,
   type Station,
   type StationWithAvailableSlots,
@@ -190,20 +188,25 @@ export type PendingStationsMeta = {
   total_pages: number;
 };
 
+// M-5: Omit sensitive columns not needed for admin listing.
+export type PendingStationAdminItem = Omit<Station, 'stripe_account_id' | 'rejection_reason'>;
+
 export type PendingStationsResult = {
-  stations: Station[];
+  stations: PendingStationAdminItem[];
   meta: PendingStationsMeta;
 };
 
 export async function getPendingStations(page = 1, perPage = 20): Promise<PendingStationsResult> {
-  const { rows, total } = await listStationsByStatus('pending_admin_validation', page, perPage);
+  const safePer = Math.min(100, Math.max(1, perPage)); // M-3: cap perPage in service, not only in validator
+  const { rows, total } = await listStationsByStatus('pending_admin_validation', page, safePer);
   return {
-    stations: rows,
+    // M-5: Strip sensitive columns before returning.
+    stations: rows.map(({ stripe_account_id: _s, rejection_reason: _r, ...rest }) => rest),
     meta: {
       total,
       page,
-      per_page: perPage,
-      total_pages: Math.max(1, Math.ceil(total / perPage)),
+      per_page: safePer,
+      total_pages: Math.max(1, Math.ceil(total / safePer)),
     },
   };
 }
@@ -223,58 +226,48 @@ export async function approveStation(
   const station = await findStationById(stationId);
   if (!station) throw new NotFoundError('Station not found');
 
-  if (station.status !== 'pending_admin_validation') {
-    throw new ConflictError('Station is not pending validation');
-  }
-
-  // Fetch station user upfront — needed for Stripe account creation and approval email.
+  // H-2: Fail hard — a station without an owner cannot be activated or receive payments.
   const stationUser = station.user_id ? await findById(station.user_id) : null;
   if (!stationUser) {
-    console.warn('[APPROVE_NO_USER]', { stationId, user_id: station.user_id });
+    throw new NotFoundError('Station owner not found — cannot approve an orphaned station');
   }
 
-  // Activate station.
-  await updateStationStatus(stationId, 'active', {
-    approved_by: adminId,
-    approved_at: new Date(),
-  });
+  // M-1: Create Stripe account BEFORE activating so the station stays pending if Stripe fails.
+  const accountId = await createStripeConnectAccount(stationUser.email, stationId);
+  const stripeOnboardingUrl = await createStripeOnboardingLink(accountId);
 
-  // Create Stripe Connect Express account and store the account id — non-fatal.
-  let stripeOnboardingUrl: string | null = null;
-  if (stationUser) {
-    try {
-      const accountId = await createStripeConnectAccount(stationUser.email, stationId);
-      await updateStationInfo(stationId, { stripe_account_id: accountId });
-      stripeOnboardingUrl = await createStripeOnboardingLink(accountId);
-    } catch (e) {
-      console.error('[APPROVE_STRIPE_CONNECT_FAILED]', {
-        stationId,
-        error: e instanceof Error ? e.message : String(e),
-      });
+  // C-2 + H-1: Atomic conditional UPDATE + audit log in one transaction.
+  // The WHERE on status ensures only one concurrent approve wins — the other gets 0 rows → 409.
+  await db.transaction(async (tx) => {
+    const [updated] = await tx
+      .update(stations)
+      .set({
+        status: 'active',
+        approved_by: adminId,
+        approved_at: new Date(),
+        stripe_account_id: accountId,
+        updated_at: new Date(),
+      })
+      .where(and(eq(stations.id, stationId), eq(stations.status, 'pending_admin_validation')))
+      .returning();
+
+    if (!updated) {
+      throw new ConflictError('Station is not pending validation');
     }
-  }
 
-  // Admin audit log — non-fatal.
-  try {
-    await insertAdminLog({
+    // L-8: Include stripe_account_id in audit details for traceability.
+    await tx.insert(adminLogs).values({
       admin_id: adminId,
       action: 'station_approved',
       target_type: 'station',
       target_id: stationId,
-      details: { stripe_connected: stripeOnboardingUrl !== null },
+      details: { stripe_account_id: accountId, stripe_connected: true },
     });
-  } catch (e) {
-    console.error('[APPROVE_ADMIN_LOG_FAILED]', {
-      stationId,
-      error: e instanceof Error ? e.message : String(e),
-    });
-  }
+  });
 
-  // Approval email — fire-and-forget.
-  if (stationUser) {
-    sendStationApprovalEmail(stationUser.email, station.name, stripeOnboardingUrl ?? undefined)
-      .catch(() => void 0);
-  }
+  // M-4: Fire-and-forget email — log failures instead of silently swallowing them.
+  sendStationApprovalEmail(stationUser.email, station.name, stripeOnboardingUrl)
+    .catch((e) => console.error('[APPROVE_EMAIL_FAILED]', { stationId, error: e instanceof Error ? e.message : String(e) }));
 }
 
 export async function rejectStation(
@@ -285,38 +278,40 @@ export async function rejectStation(
   const station = await findStationById(stationId);
   if (!station) throw new NotFoundError('Station not found');
 
-  if (station.status !== 'pending_admin_validation') {
-    throw new ConflictError('Station is not pending validation');
-  }
-
-  // Fetch station user upfront — needed for rejection email.
+  // H-2: Fail hard — an orphaned station should not be silently rejected without notifying anyone.
   const stationUser = station.user_id ? await findById(station.user_id) : null;
   if (!stationUser) {
-    console.warn('[REJECT_NO_USER]', { stationId, user_id: station.user_id });
+    throw new NotFoundError('Station owner not found — cannot reject an orphaned station');
   }
 
-  await updateStationStatus(stationId, 'rejected', { rejection_reason: reason });
+  // C-2 + H-1: Atomic conditional UPDATE + audit log in one transaction.
+  await db.transaction(async (tx) => {
+    const [updated] = await tx
+      .update(stations)
+      .set({
+        status: 'rejected',
+        rejection_reason: reason,
+        updated_at: new Date(),
+      })
+      .where(and(eq(stations.id, stationId), eq(stations.status, 'pending_admin_validation')))
+      .returning();
 
-  // Admin audit log — non-fatal.
-  try {
-    await insertAdminLog({
+    if (!updated) {
+      throw new ConflictError('Station is not pending validation');
+    }
+
+    await tx.insert(adminLogs).values({
       admin_id: adminId,
       action: 'station_rejected',
       target_type: 'station',
       target_id: stationId,
       details: { reason },
     });
-  } catch (e) {
-    console.error('[REJECT_ADMIN_LOG_FAILED]', {
-      stationId,
-      error: e instanceof Error ? e.message : String(e),
-    });
-  }
+  });
 
-  // Rejection email — fire-and-forget.
-  if (stationUser) {
-    sendStationRejectionEmail(stationUser.email, station.name, reason).catch(() => void 0);
-  }
+  // M-4: Fire-and-forget email — log failures instead of silently swallowing them.
+  sendStationRejectionEmail(stationUser.email, station.name, reason)
+    .catch((e) => console.error('[REJECT_EMAIL_FAILED]', { stationId, error: e instanceof Error ? e.message : String(e) }));
 }
 
 export async function getMyStation(userId: string): Promise<StationWithDocuments> {

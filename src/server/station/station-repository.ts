@@ -244,8 +244,10 @@ export async function findStationByUserId(userId: string): Promise<Station | und
   return db.query.stations.findFirst({ where: eq(stations.user_id, userId) });
 }
 
+type StationStatus = 'pending_admin_validation' | 'active' | 'rejected' | 'suspended';
+
 export async function listStationsByStatus(
-  status: string,
+  status: StationStatus,
   page = 1,
   perPage = 20
 ): Promise<{ rows: Station[]; total: number }> {
@@ -268,13 +270,16 @@ export async function listStationsByStatus(
 
 export async function updateStationStatus(
   id: string,
-  status: string,
+  status: StationStatus,
   extra?: Partial<Pick<Station, 'approved_by' | 'approved_at' | 'rejection_reason'>>
-): Promise<void> {
-  await db
+): Promise<Station> {
+  const [updated] = await db
     .update(stations)
     .set({ status, updated_at: new Date(), ...extra })
-    .where(eq(stations.id, id));
+    .where(eq(stations.id, id))
+    .returning();
+  if (!updated) throw new Error(`Station ${id} not found during status update`);
+  return updated;
 }
 
 export async function updateStationInfo(

@@ -207,12 +207,10 @@ const TEXTS = {
     fr: {
       teamLine: "L'équipe Slowtime",
       autoMessage: 'Cet e-mail a été envoyé automatiquement. Merci de ne pas y répondre.',
-      copyright: `© ${new Date().getFullYear()} Slowtime. Tous droits réservés.`,
     },
     en: {
       teamLine: 'The Slowtime Team',
       autoMessage: 'This email was sent automatically. Please do not reply.',
-      copyright: `© ${new Date().getFullYear()} Slowtime. All rights reserved.`,
     },
   },
 } as const;
@@ -339,7 +337,7 @@ function brandedEmail(
             <td align="center" style="padding: 20px 0 0;">
               <p style="margin: 0 0 4px; font-size: 13px; color: #af8408; font-weight: 600; letter-spacing: 0.04em;">${f.teamLine}</p>
               <p style="margin: 0 0 4px; font-size: 12px; color: #aaaaaa;">${f.autoMessage}</p>
-              <p style="margin: 0; font-size: 12px; color: #aaaaaa;">${f.copyright}</p>
+              <p style="margin: 0; font-size: 12px; color: #aaaaaa;">© ${new Date().getFullYear()} Slowtime. ${locale === 'fr' ? 'Tous droits réservés.' : 'All rights reserved.'}</p>
             </td>
           </tr>
 

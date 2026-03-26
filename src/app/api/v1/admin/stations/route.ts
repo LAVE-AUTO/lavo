@@ -26,8 +26,9 @@ export async function GET(request: Request): Promise<NextResponse> {
 
   const { searchParams } = new URL(request.url);
   const parsed = listPendingStationsQuerySchema.safeParse({
-    page: searchParams.get('page') ?? undefined,
-    per_page: searchParams.get('per_page') ?? undefined,
+    // L-1: Use || instead of ?? so empty string "" becomes undefined (avoids NaN from z.coerce.number()).
+    page: searchParams.get('page') || undefined,
+    per_page: searchParams.get('per_page') || undefined,
   });
   if (!parsed.success) {
     return error400('Validation failed', ApiCode.VALIDATION_FAILED, mapZodErrors(parsed.error));

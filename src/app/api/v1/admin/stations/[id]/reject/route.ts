@@ -1,11 +1,13 @@
 import { requireRole } from '@/lib/require-role';
 import { rejectStation } from '@/server/station/station-service';
-import { rejectStationSchema, mapZodErrors } from '@/validators/station';
+import { isAdminActionRateLimited } from '@/server/admin/admin-log-repository';
+import { rejectStationSchema, stationIdParamSchema, mapZodErrors } from '@/validators/station';
 import {
   successResponse,
   error400,
   error404,
   error409,
+  error429,
   error500,
   fromAppError,
 } from '@/lib/responses';
@@ -37,6 +39,17 @@ export async function POST(
 
   const { id } = await params;
 
+  // H-3: Validate :id is a UUID before hitting the DB.
+  const idParsed = stationIdParamSchema.safeParse({ id });
+  if (!idParsed.success) {
+    return error400('Validation failed', ApiCode.VALIDATION_FAILED, mapZodErrors(idParsed.error));
+  }
+
+  // H-4: Rate limit — max 20 approve/reject actions per admin per minute.
+  if (await isAdminActionRateLimited(auth.sub, ['station_approved', 'station_rejected'])) {
+    return error429();
+  }
+
   let body: unknown;
   try {
     body = await request.json();
@@ -50,7 +63,7 @@ export async function POST(
   }
 
   try {
-    await rejectStation(auth.sub, id, parsed.data.rejection_reason);
+    await rejectStation(auth.sub, idParsed.data.id, parsed.data.rejection_reason);
     return successResponse({ rejected: true }, 'Station rejected.');
   } catch (e) {
     if (e instanceof NotFoundError) return error404(e.message);

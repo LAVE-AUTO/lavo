@@ -89,7 +89,10 @@ export const stationOnboardingSubmitSchema = _step1Base
 
 // Admin: reject a station
 export const rejectStationSchema = z.object({
-  rejection_reason: z.string().min(10, 'Rejection reason must be at least 10 characters'),
+  rejection_reason: z
+    .string()
+    .min(10, 'Rejection reason must be at least 10 characters')
+    .max(2000, 'Rejection reason must not exceed 2000 characters'),
 });
 
 /** Query params for GET /admin/stations (paginated pending list). */
