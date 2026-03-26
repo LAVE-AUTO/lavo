@@ -41,13 +41,15 @@ interface LoginFormProps {
   forgotPasswordHref?: string;
   /** Local path to redirect to after successful login (e.g. /stations/abc). Ignored if not a safe relative path. */
   callbackUrl?: string;
+  /** Hide social auth buttons (Google, Facebook). Use on admin login page. */
+  hideSocialButtons?: boolean;
 }
 
 /**
  * Login form — email + password + remember me + forgot-password link + social buttons.
  * On success: persists session via AuthContext and redirects by role.
  */
-export function LoginForm({ forgotPasswordHref = '/forgot-password', callbackUrl }: LoginFormProps) {
+export function LoginForm({ forgotPasswordHref = '/forgot-password', callbackUrl, hideSocialButtons = false }: LoginFormProps) {
   const t = useTranslations('login');
   const router = useRouter();
   const { error: showError, success: showSuccess } = useToast();
@@ -212,7 +214,7 @@ export function LoginForm({ forgotPasswordHref = '/forgot-password', callbackUrl
         {isLoading ? t('loading') : t('submit')}
       </Button>
 
-      <SocialButtons namespace="login" />
+      {!hideSocialButtons && <SocialButtons namespace="login" />}
     </form>
   );
 }
