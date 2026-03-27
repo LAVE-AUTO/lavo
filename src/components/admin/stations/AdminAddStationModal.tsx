@@ -6,6 +6,7 @@ import { AdminAddStationAccount, type StationAccountData, type StationAccountErr
 import { AdminAddStationInfo, type StationInfoData, type StationInfoErrors } from './AdminAddStationInfo';
 import { AdminAddStationDocs, type StationDocsData, type StationDocsErrors } from './AdminAddStationDocs';
 import { AdminAddStationSuccess, type StationSuccessData } from './AdminAddStationSuccess';
+import { generatePassword } from '@/helpers/generate-password';
 
 type Step = 1 | 2 | 3 | 'success';
 
@@ -89,7 +90,7 @@ export function AdminAddStationModal({ open, onClose }: Props) {
     if (!validateDocs()) return;
 
     // TODO: connect to API once endpoint is available (POST /admin/stations)
-    // Payload: { first_name, last_name, email, phone, password, station_name, legal_name,
+    // Payload: { first_name, last_name, email, phone, password: generatePassword(), station_name, legal_name,
     //   registration_number, address, city, wash_post_count, wash_type_codes, service_scope,
     //   description, docs: { certificate_url, address_proof_url, license_url } }
     // Backend must: create user (role=station) + station, hash password, set force_password_change: true,
