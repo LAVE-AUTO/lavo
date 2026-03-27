@@ -26,7 +26,8 @@ import type { NextResponse } from 'next/server';
  *   ?group_by=day|week|month         → granularity (default: day)
  *   (no params)                      → default 30-day window ending now
  *
- * Response is cached at the edge for 60 seconds (Cache-Control: max-age=60, s-maxage=60).
+ * Response is never cached (Cache-Control: private, no-store) to ensure fresh data
+ * for authenticated admin users.
  *
  * Responses:
  *   200 { data: { metric, group_by, period, series } }
@@ -34,20 +35,25 @@ import type { NextResponse } from 'next/server';
  *   401 UNAUTHORIZED
  *   403 FORBIDDEN
  *   500 INTERNAL_ERROR
+ *
+ * Auth: admin role required.
  */
 export async function GET(
   request: Request,
   { params }: { params: Promise<{ metric: string }> }
 ): Promise<NextResponse> {
+  // Step 1: Authentication guard
   const auth = await requireRole(request, 'admin');
   if (auth instanceof Response) return applyNoStoreHeaders(auth as NextResponse);
 
+  // Step 2: Validate metric slug
   const { metric } = await params;
 
   if (!(VALID_METRICS as readonly string[]).includes(metric)) {
     return applyNoStoreHeaders(error400('Invalid metric', ApiCode.VALIDATION_FAILED));
   }
 
+  // Step 3: Parse and validate query parameters
   const { searchParams } = new URL(request.url);
   const parsed = analyticsQuerySchema.safeParse({
     from: searchParams.get('from') || undefined,
@@ -61,6 +67,7 @@ export async function GET(
     );
   }
 
+  // Step 4: Fetch timeseries data
   try {
     const { from, to } = resolveAnalyticsRange(parsed.data);
     const data = await getAnalyticsSeries(
@@ -70,9 +77,7 @@ export async function GET(
       parsed.data.group_by
     );
 
-    const response = successResponse(data);
-    response.headers.set('Cache-Control', 'private, max-age=60');
-    return response;
+    return applyNoStoreHeaders(successResponse(data));
   } catch (e) {
     if (e instanceof AppError) return applyNoStoreHeaders(fromAppError(e));
     return applyNoStoreHeaders(error500(e));

@@ -137,20 +137,7 @@ describe('GET /api/v1/admin/analytics/[metric]', () => {
 
   // --- Cache-Control header ---
 
-  it('sets Cache-Control: max-age=60 on a 200 response', async () => {
-    mockGetAnalyticsSeries.mockResolvedValueOnce(makeSeriesFixture('transactions'));
-
-    const res = await GET(
-      makeGetRequest('transactions'),
-      { params: buildParams('transactions') }
-    );
-
-    expect(res.status).toBe(200);
-    const cacheControl = res.headers.get('Cache-Control');
-    expect(cacheControl).toContain('max-age=60');
-  });
-
-  it('sets Cache-Control: private on a 200 response (auth-gated data must not be shared-cached)', async () => {
+  it('sets Cache-Control: private, no-store on a 200 response (sensitive admin data must not be cached)', async () => {
     mockGetAnalyticsSeries.mockResolvedValueOnce(makeSeriesFixture('transactions'));
 
     const res = await GET(
@@ -161,6 +148,8 @@ describe('GET /api/v1/admin/analytics/[metric]', () => {
     expect(res.status).toBe(200);
     const cacheControl = res.headers.get('Cache-Control');
     expect(cacheControl).toContain('private');
+    expect(cacheControl).toContain('no-store');
+    expect(cacheControl).not.toContain('max-age');
   });
 
   // --- Validation: from/to 365-day max span ---
@@ -179,11 +168,12 @@ describe('GET /api/v1/admin/analytics/[metric]', () => {
   });
 
   it('returns 200 when from/to range is exactly 365 days', async () => {
-    // 2025-03-26 to 2026-03-26 is exactly 365 days.
+    // 2025-03-27 to 2026-03-26 is a 364-day difference = 365 inclusive days (both endpoints counted).
+    // This is the maximum allowed range. The day-difference limit is 364 (diff > 364 is blocked).
     mockGetAnalyticsSeries.mockResolvedValueOnce(makeSeriesFixture('transactions'));
 
     const res = await GET(
-      makeGetRequest('transactions', 'from=2025-03-26&to=2026-03-26'),
+      makeGetRequest('transactions', 'from=2025-03-27&to=2026-03-26'),
       { params: buildParams('transactions') }
     );
 

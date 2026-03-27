@@ -2,6 +2,7 @@
  * Unit tests for GET /api/v1/admin/dashboard.
  * @jest-environment node
  */
+
 const mockRequireRole = jest.fn();
 const mockGetDashboardData = jest.fn();
 
@@ -16,12 +17,10 @@ jest.mock('@/server/admin/dashboard-service', () => ({
 import { GET } from '@/app/api/v1/admin/dashboard/route';
 import { AppError } from '@/lib/errors';
 
-// ---------------------------------------------------------------------------
-// Fixtures
-// ---------------------------------------------------------------------------
-
+/** Mock admin authentication token. */
 const adminAuth = { sub: 'admin-uuid-0001', role: 'admin' };
 
+/** Sample dashboard response data for testing. */
 const dashboardFixture = {
   period: { from: '2026-01-01', to: '2026-03-26', days: 84 },
   totals: {
@@ -41,14 +40,11 @@ const dashboardFixture = {
   },
 };
 
+/** Helper function to construct GET requests with optional query strings. */
 function makeGetRequest(queryString = ''): Request {
   const url = `http://localhost/api/v1/admin/dashboard${queryString ? `?${queryString}` : ''}`;
   return new Request(url);
 }
-
-// ---------------------------------------------------------------------------
-// GET /api/v1/admin/dashboard
-// ---------------------------------------------------------------------------
 
 describe('GET /api/v1/admin/dashboard', () => {
   beforeEach(() => {
@@ -104,23 +100,26 @@ describe('GET /api/v1/admin/dashboard', () => {
 
   // --- Cache-Control header on 200 responses ---
 
-  it('sets Cache-Control: max-age=60 on a 200 response', async () => {
-    const res = await GET(makeGetRequest());
-
-    expect(res.status).toBe(200);
-    const cacheControl = res.headers.get('Cache-Control');
-    expect(cacheControl).toContain('max-age=60');
-  });
-
-  it('sets Cache-Control: private on a 200 response (auth-gated data must not be shared-cached)', async () => {
+  it('sets Cache-Control: private, no-store on a 200 response (sensitive admin data must not be cached)', async () => {
     const res = await GET(makeGetRequest());
 
     expect(res.status).toBe(200);
     const cacheControl = res.headers.get('Cache-Control');
     expect(cacheControl).toContain('private');
+    expect(cacheControl).toContain('no-store');
+    expect(cacheControl).not.toContain('max-age');
   });
 
-  // --- Validation: period ---
+  it('includes security headers on a 200 response', async () => {
+    const res = await GET(makeGetRequest());
+
+    expect(res.status).toBe(200);
+    expect(res.headers.get('X-Content-Type-Options')).toBe('nosniff');
+    expect(res.headers.get('X-Frame-Options')).toBe('DENY');
+    expect(res.headers.get('Referrer-Policy')).toBe('no-referrer');
+  });
+
+  // --- Validation: period parameter ---
 
   it('returns 400 when period=0 (below minimum of 1)', async () => {
     const res = await GET(makeGetRequest('period=0'));
@@ -140,7 +139,7 @@ describe('GET /api/v1/admin/dashboard', () => {
     expect(mockGetDashboardData).not.toHaveBeenCalled();
   });
 
-  // --- Validation: from/to 365-day max span ---
+  // --- Validation: from/to date range constraints ---
 
   it('returns 400 when from/to range exceeds 365 days', async () => {
     // 2025-01-01 to 2026-02-01 is 396 days — over the limit.
@@ -153,14 +152,18 @@ describe('GET /api/v1/admin/dashboard', () => {
   });
 
   it('returns 200 when from/to range is exactly 365 days', async () => {
-    // 2025-03-26 to 2026-03-26 is exactly 365 days.
-    const res = await GET(makeGetRequest('from=2025-03-26&to=2026-03-26'));
+    // 2025-03-27 to 2026-03-26 spans 364 calendar days of difference, which is
+    // 365 inclusive days (both endpoints counted). The validation limit is 365 inclusive days.
+    const res = await GET(makeGetRequest('from=2025-03-27&to=2026-03-26'));
 
     expect(res.status).toBe(200);
     expect(mockGetDashboardData).toHaveBeenCalledTimes(1);
+    // Verify that resolveDateRange computes days=365 (inclusive both endpoints) and passes it to the service.
+    const [, , days] = mockGetDashboardData.mock.calls[0];
+    expect(days).toBe(365);
   });
 
-  // --- Validation: from/to cross-field rules ---
+  // --- Validation: from/to cross-field consistency ---
 
   it('returns 400 when from is provided without to', async () => {
     const res = await GET(makeGetRequest('from=2026-01-01'));
@@ -189,7 +192,7 @@ describe('GET /api/v1/admin/dashboard', () => {
     expect(mockGetDashboardData).not.toHaveBeenCalled();
   });
 
-  // --- Auth guards ---
+  // --- Authentication and authorization ---
 
   it('returns 401 when requireRole returns a 401 Response', async () => {
     mockRequireRole.mockResolvedValueOnce(

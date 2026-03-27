@@ -6,7 +6,16 @@ import { and, eq, inArray, lte, gte, sql } from 'drizzle-orm';
 import { db } from '@/lib/db';
 import { stations, users, reservations, supportTickets } from '@/lib/db/schema';
 
-/** Shape of a pending KYC alert — station + owner details. */
+/**
+ * Maximum number of rows returned by alert list queries.
+ * Prevents unbounded reads and ensures pagination-friendly result sets.
+ */
+const ALERTS_LIMIT = 100;
+
+/**
+ * Shape of a pending KYC alert — station + owner details.
+ * Represents a station awaiting admin validation, joined with owner information.
+ */
 export type PendingKycAlert = {
   station_id: string;
   station_name: string;
@@ -21,7 +30,10 @@ export type PendingKycAlert = {
   submitted_at: Date;
 };
 
-/** Shape of an open support ticket alert — ticket + creator + assignee details. */
+/**
+ * Shape of an open support ticket alert — ticket + creator + assignee details.
+ * Includes the ticket metadata, creator (who raised it), and assignee (who is working on it).
+ */
 export type OpenTicketAlert = {
   ticket_id: string;
   ticket_number: string;
@@ -43,6 +55,8 @@ export type OpenTicketAlert = {
 /**
  * Returns the count of active stations and stations pending KYC validation
  * in a single SELECT using conditional aggregation.
+ *
+ * @returns Count of active stations and those awaiting admin validation.
  */
 export async function getStationCounts(): Promise<{
   active_stations: number;
@@ -63,6 +77,8 @@ export async function getStationCounts(): Promise<{
 
 /**
  * Returns the total number of users with role = 'client'.
+ *
+ * @returns Total count of client users.
  */
 export async function getTotalClients(): Promise<number> {
   const result = await db
@@ -75,6 +91,8 @@ export async function getTotalClients(): Promise<number> {
 
 /**
  * Returns the count of support tickets with status 'ouvert' or 'en_cours'.
+ *
+ * @returns Count of open or in-progress support tickets.
  */
 export async function getOpenSupportTickets(): Promise<number> {
   const result = await db
@@ -91,6 +109,15 @@ export async function getOpenSupportTickets(): Promise<number> {
  *
  * Monetary values are returned as strings to preserve decimal precision
  * and match the project convention (Drizzle decimal → string).
+ *
+ * NOTE: Revenue is attributed to the reservation booking date (created_at), not the
+ * Stripe payment capture date. This is intentional — it matches how reservations are
+ * counted in the same period. If attribution by payment date is needed in the future,
+ * filter on stripe_payment_succeeded_at (nullable) with an isNotNull guard instead.
+ *
+ * @param from - Start of the period (inclusive).
+ * @param to   - End of the period (inclusive).
+ * @returns    - Transaction count and monetary totals as strings.
  */
 export async function getReservationMetrics(
   from: Date,
@@ -103,8 +130,8 @@ export async function getReservationMetrics(
   const result = await db
     .select({
       total_transactions: sql<number>`COUNT(*)::int`,
-      total_revenue: sql<string>`COALESCE(SUM(${reservations.amount_paid}), 0)::numeric::text`,
-      total_commissions: sql<string>`COALESCE(SUM(${reservations.commission_amount}), 0)::numeric::text`,
+      total_revenue: sql<string>`COALESCE(SUM(${reservations.amount_paid}), 0.00)::numeric::text`,
+      total_commissions: sql<string>`COALESCE(SUM(${reservations.commission_amount}), 0.00)::numeric::text`,
     })
     .from(reservations)
     .where(
@@ -117,8 +144,8 @@ export async function getReservationMetrics(
 
   return {
     total_transactions: result[0]?.total_transactions ?? 0,
-    total_revenue: result[0]?.total_revenue ?? '0',
-    total_commissions: result[0]?.total_commissions ?? '0',
+    total_revenue: result[0]?.total_revenue ?? '0.00',
+    total_commissions: result[0]?.total_commissions ?? '0.00',
   };
 }
 
@@ -126,6 +153,8 @@ export async function getReservationMetrics(
  * Returns the list of stations currently pending admin KYC validation,
  * joined with the station owner's user record.
  * Ordered by stations.created_at ASC (oldest first = highest priority).
+ *
+ * @returns List of pending KYC stations (up to ALERTS_LIMIT) with owner details.
  */
 export async function getPendingKycAlerts(): Promise<PendingKycAlert[]> {
   const rows = await db
@@ -145,7 +174,8 @@ export async function getPendingKycAlerts(): Promise<PendingKycAlert[]> {
     .from(stations)
     .leftJoin(users, eq(stations.user_id, users.id))
     .where(eq(stations.status, 'pending_admin_validation'))
-    .orderBy(stations.created_at);
+    .orderBy(stations.created_at)
+    .limit(ALERTS_LIMIT);
 
   return rows.map((row) => ({
     station_id: row.station_id,
@@ -168,7 +198,10 @@ export async function getPendingKycAlerts(): Promise<PendingKycAlert[]> {
  * Ordered by created_at ASC (oldest first = highest priority).
  *
  * Uses a raw SQL query to support two JOINs on the same `users` table
- * with distinct aliases (creator_user, assignee_user).
+ * with distinct aliases (creator_user, assignee_user). This is more efficient
+ * and clearer than attempting equivalent ORM joins.
+ *
+ * @returns List of open tickets (up to ALERTS_LIMIT) with creator and assignee details.
  */
 export async function getOpenTicketAlerts(): Promise<OpenTicketAlert[]> {
   const rows = await db.execute<{
@@ -213,6 +246,7 @@ export async function getOpenTicketAlerts(): Promise<OpenTicketAlert[]> {
     LEFT  JOIN users au ON au.id = st.assigned_to
     WHERE st.status IN ('ouvert', 'en_cours')
     ORDER BY st.created_at ASC
+    LIMIT ${ALERTS_LIMIT}
   `);
 
   return rows.rows.map((row) => ({
