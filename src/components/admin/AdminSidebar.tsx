@@ -65,7 +65,7 @@ export function AdminSidebar() {
     },
   ];
 
-  const base   = 'flex items-center gap-2 rounded-lg px-3 py-2 text-[12px] font-semibold transition-colors duration-150';
+  const base   = 'flex items-center gap-2 rounded-lg px-3 py-2 text-[13px] font-semibold transition-colors duration-150';
   const active = `${base} bg-[#C49A1E] text-[#0C1209]`;
   const idle   = `${base} text-[#666] hover:bg-[#E8E4D8] dark:text-[#8A8A7A] dark:hover:bg-[#182214]`;
 
@@ -73,14 +73,14 @@ export function AdminSidebar() {
     <aside className="flex w-[190px] shrink-0 flex-col overflow-y-auto border-r border-[#E0DCD0] bg-[#F0EDE0] p-3 dark:border-[#1A2A14] dark:bg-[#111A0E]">
       {/* Brand */}
       <div className="mb-4 px-3 pt-1">
-        <span className="text-[10px] font-black uppercase tracking-[0.2em] text-[#C49A1E]">Administration</span>
+        <span className="text-[11px] font-black uppercase tracking-[0.2em] text-[#C49A1E]">Administration</span>
       </div>
 
       <nav className="flex flex-col gap-4">
         {navGroups.map((group, gi) => (
           <div key={gi} className="flex flex-col gap-1">
             {group.labelKey && (
-              <span className="px-3 text-[9px] font-black uppercase tracking-[0.18em] text-[#BBAA88] dark:text-[#4A4A3A]">
+              <span className="px-3 text-[10px] font-black uppercase tracking-[0.18em] text-[#BBAA88] dark:text-[#4A4A3A]">
                 {t(group.labelKey)}
               </span>
             )}
@@ -103,7 +103,7 @@ export function AdminSidebar() {
         <button
           type="button"
           onClick={() => logout()}
-          className="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-[12px] font-semibold text-[#888] transition-colors hover:bg-[#FEF2F2] hover:text-[#EF4444] dark:text-[#6A6A5A] dark:hover:bg-[#2A0A0A] dark:hover:text-[#FF8A80]"
+          className="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-[13px] font-semibold text-[#888] transition-colors hover:bg-[#FEF2F2] hover:text-[#EF4444] dark:text-[#6A6A5A] dark:hover:bg-[#2A0A0A] dark:hover:text-[#FF8A80]"
         >
           <LogoutIcon />
           {t('nav_logout')}
