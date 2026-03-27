@@ -6,8 +6,6 @@ import { AdminAddStationAccount, type StationAccountData, type StationAccountErr
 import { AdminAddStationInfo, type StationInfoData, type StationInfoErrors } from './AdminAddStationInfo';
 import { AdminAddStationDocs, type StationDocsData, type StationDocsErrors } from './AdminAddStationDocs';
 import { AdminAddStationSuccess, type StationSuccessData } from './AdminAddStationSuccess';
-import { generatePassword } from '@/helpers/generate-password';
-
 type Step = 1 | 2 | 3 | 'success';
 
 interface Props {

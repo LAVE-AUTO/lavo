@@ -104,7 +104,7 @@ export function AdminRatingsView() {
   useEffect(() => { loadData(1, visibilityFilter, scoreFilter); }, [visibilityFilter, scoreFilter, loadData]);
 
   async function handleToggle(item: RatingItem) {
-    if (togglingId) return;
+    if (togglingId === item.id) return;
     setTogglingId(item.id);
     const newVisible = !item.is_visible;
     const [ok] = await patchWithApi(`/admin/ratings/${item.id}`, { is_visible: newVisible });
