@@ -2204,7 +2204,10 @@
     "meta_total": "{count} reviews total",
     "no_comment": "No comment",
     "toggling": "Updating...",
-    "toggle_error": "Update failed."
+    "toggle_error": "Update failed.",
+    "star_row_label": "{score} out of 5 stars",
+    "pagination_prev": "Previous page",
+    "pagination_next": "Next page"
   },
   "admin_dashboard": {
     "nav_dashboard": "Dashboard",

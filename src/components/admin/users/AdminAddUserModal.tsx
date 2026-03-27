@@ -98,9 +98,9 @@ export function AdminAddUserModal({ open, onClose }: Props) {
             onSubmit={handleSubmit}
             onClose={onClose}
           />
-        ) : (
-          <AdminAddUserSuccess data={success!} onClose={onClose} />
-        )}
+        ) : success ? (
+          <AdminAddUserSuccess data={success} onClose={onClose} />
+        ) : null}
       </div>
     </div>
   );

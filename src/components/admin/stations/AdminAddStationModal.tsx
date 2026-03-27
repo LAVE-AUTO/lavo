@@ -146,7 +146,7 @@ export function AdminAddStationModal({ open, onClose }: Props) {
           <AdminAddStationDocs data={docs} errors={docsErrs} busy={busy}
             onChange={setDocs} onErrors={setDocsErrs} onSubmit={handleSubmit} onPrev={() => setStep(2)} />
         )}
-        {step === 'success' && <AdminAddStationSuccess data={success!} onClose={onClose} />}
+        {step === 'success' && success && <AdminAddStationSuccess data={success} onClose={onClose} />}
       </div>
     </div>
   );
