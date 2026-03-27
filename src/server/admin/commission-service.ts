@@ -1,7 +1,7 @@
 import { desc, lte } from 'drizzle-orm';
 import { db } from '@/lib/db';
 import { commissionSettings, adminLogs } from '@/lib/db/schema';
-import { DEFAULT_COMMISSION_RATE } from '@/helpers/constants';
+import { DEFAULT_COMMISSION_RATE } from '@/helpers/server-constants';
 import * as repo from './commission-repository';
 
 /**
@@ -34,6 +34,10 @@ export async function updateCommission(adminId: string, newRate: number) {
       orderBy: [desc(commissionSettings.effective_at)],
     });
     const previousRate = current?.rate ?? DEFAULT_COMMISSION_RATE;
+
+    if (current && Number(current.rate) === newRate) {
+      return current;
+    }
 
     const [entry] = await tx
       .insert(commissionSettings)
