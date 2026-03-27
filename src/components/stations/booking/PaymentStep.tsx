@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useTranslations } from 'next-intl';
 import { loadStripe } from '@stripe/stripe-js';
 import { Elements, CardElement, useStripe, useElements } from '@stripe/react-stripe-js';
@@ -32,6 +32,8 @@ function StripeCardForm({ grandTotal, clientSecret, onConfirm, onBack }: StripeC
   const elements = useElements();
   const [stripeError, setStripeError] = useState<string | null>(null);
   const [processing, setProcessing] = useState(false);
+  const mountedRef = useRef(true);
+  useEffect(() => () => { mountedRef.current = false; }, []);
 
   const handlePay = async () => {
     if (!stripe || !elements) return;
@@ -42,12 +44,14 @@ function StripeCardForm({ grandTotal, clientSecret, onConfirm, onBack }: StripeC
     const { error } = await stripe.confirmCardPayment(clientSecret, {
       payment_method: { card: cardElement },
     });
+    if (!mountedRef.current) return;
     if (error) {
       setStripeError(error.message ?? t('error_stripe_payment'));
       setProcessing(false);
       return;
     }
     await onConfirm();
+    if (!mountedRef.current) return;
     setProcessing(false);
   };
 
@@ -123,10 +127,13 @@ function StripeCardForm({ grandTotal, clientSecret, onConfirm, onBack }: StripeC
 function QueueConfirmForm({ grandTotal, onConfirm, onBack }: { grandTotal: number; onConfirm: () => Promise<void>; onBack: () => void }) {
   const t = useTranslations('booking');
   const [processing, setProcessing] = useState(false);
+  const mountedRef = useRef(true);
+  useEffect(() => () => { mountedRef.current = false; }, []);
 
   const handleConfirm = async () => {
     setProcessing(true);
     await onConfirm();
+    if (!mountedRef.current) return;
     setProcessing(false);
   };
 
