@@ -816,7 +816,15 @@
     "result_open_maps": "Suivre l'itinéraire",
     "result_queue_now_desc": "Vous avez rejoint la file ! Suivez l'itinéraire vers la station.",
     "result_queue_position_label": "Votre position dans la file",
-    "result_queue_arrival_time": "Heure d'arrivée prévue : {time}"
+    "result_queue_arrival_time": "Heure d'arrivée prévue : {time}",
+    "summary_creating": "Création en cours...",
+    "error_slot_full": "Ce créneau est complet. Veuillez en choisir un autre.",
+    "error_active_reservation": "Vous avez déjà une réservation active dans cette station.",
+    "error_reservation_failed": "Impossible de créer la réservation. Veuillez réessayer.",
+    "payment_queue_subtitle": "Confirmez votre inscription dans la file d'attente.",
+    "payment_confirm_queue": "Confirmer",
+    "error_stripe_payment": "Le paiement a échoué. Vérifiez vos informations de carte.",
+    "error_stripe_unavailable": "Le service de paiement est temporairement indisponible."
   },
   "coupons": {
     "title": "Mes réservations",
