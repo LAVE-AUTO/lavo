@@ -119,9 +119,9 @@ export function AdminAlertsSection() {
   useEffect(() => {
     let mounted = true;
     async function load() {
-      const [ok, data] = await getFromApi<{ data: Station[] }>('/admin/stations');
+      const [ok, data] = await getFromApi<{ data: { stations: Station[] } }>('/admin/stations');
       if (!mounted) return;
-      if (ok) setStations((data as { data: Station[] }).data ?? []);
+      if (ok) setStations((data as { data: { stations: Station[] } }).data?.stations ?? []);
       else setKycError(true);
       setKycLoading(false);
     }
