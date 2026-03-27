@@ -9,7 +9,17 @@ type Props = { params: Promise<{ locale: string }> };
 export async function generateMetadata({ params }: Props) {
   const { locale } = await params;
   const t = await getTranslations({ locale, namespace: 'privacy_page' });
-  return { title: t('meta_title'), description: t('meta_desc') };
+  return {
+    title: t('meta_title'),
+    description: t('meta_desc'),
+    alternates: {
+      canonical: `/${locale}/politique-de-confidentialite`,
+      languages: {
+        fr: '/fr/politique-de-confidentialite',
+        en: '/en/politique-de-confidentialite',
+      },
+    },
+  };
 }
 
 export default async function PrivacyPage({ params }: Props) {

@@ -9,7 +9,17 @@ type Props = { params: Promise<{ locale: string }> };
 export async function generateMetadata({ params }: Props) {
   const { locale } = await params;
   const t = await getTranslations({ locale, namespace: 'legal_mentions_page' });
-  return { title: t('meta_title'), description: t('meta_desc') };
+  return {
+    title: t('meta_title'),
+    description: t('meta_desc'),
+    alternates: {
+      canonical: `/${locale}/mentions-legales`,
+      languages: {
+        fr: '/fr/mentions-legales',
+        en: '/en/mentions-legales',
+      },
+    },
+  };
 }
 
 export default async function MentionsLegalesPage({ params }: Props) {

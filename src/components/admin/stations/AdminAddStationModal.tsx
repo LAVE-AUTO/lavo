@@ -6,27 +6,13 @@ import { AdminAddStationAccount, type StationAccountData, type StationAccountErr
 import { AdminAddStationInfo, type StationInfoData, type StationInfoErrors } from './AdminAddStationInfo';
 import { AdminAddStationDocs, type StationDocsData, type StationDocsErrors } from './AdminAddStationDocs';
 import { AdminAddStationSuccess, type StationSuccessData } from './AdminAddStationSuccess';
+import { generatePassword } from '@/helpers/generate-password';
 
 type Step = 1 | 2 | 3 | 'success';
 
 interface Props {
   open:    boolean;
   onClose: () => void;
-}
-
-function generatePassword(): string {
-  const upper   = 'ABCDEFGHJKLMNPQRSTUVWXYZ';
-  const lower   = 'abcdefghjkmnpqrstuvwxyz';
-  const digits  = '23456789';
-  const special = '!@#$%&*';
-  const all     = upper + lower + digits + special;
-  const rand    = (max: number) => { const b = new Uint32Array(1); crypto.getRandomValues(b); return b[0] % max; };
-  const pick    = (src: string) => src[rand(src.length)];
-  const base    = [pick(upper), pick(lower), pick(digits), pick(special)];
-  const rest    = Array.from({ length: 8 }, () => pick(all));
-  const raw     = [...base, ...rest];
-  for (let i = raw.length - 1; i > 0; i--) { const j = rand(i + 1); [raw[i], raw[j]] = [raw[j], raw[i]]; }
-  return raw.join('');
 }
 
 const ACCOUNT_INIT: StationAccountData = { firstName: '', lastName: '', email: '', phone: '' };
@@ -102,25 +88,14 @@ export function AdminAddStationModal({ open, onClose }: Props) {
 
   async function handleSubmit() {
     if (!validateDocs()) return;
-    setBusy(true);
-    const password = generatePassword();
 
     // TODO: connect to API once endpoint is available (POST /admin/stations)
-    // Payload: { first_name, last_name, email, phone, password, station_name, legal_name,
+    // Payload: { first_name, last_name, email, phone, password: generatePassword(), station_name, legal_name,
     //   registration_number, address, city, wash_post_count, wash_type_codes, service_scope,
     //   description, docs: { certificate_url, address_proof_url, license_url } }
     // Backend must: create user (role=station) + station, hash password, set force_password_change: true,
     //   link uploaded docs, send credentials by email, notify station to upload docs if mode=later.
-    await new Promise<void>((r) => setTimeout(r, 900));
-
-    setSuccess({
-      email:      account.email.trim(),
-      first_name: account.firstName.trim(),
-      last_name:  account.lastName.trim(),
-      docsMode:   docs.mode,
-    });
-    setStep('success');
-    setBusy(false);
+    // Submission is disabled until the endpoint exists — do not show a success screen for a stubbed call.
   }
 
   const STEP_LABELS: Record<1 | 2 | 3, string> = { 1: t('step_account'), 2: t('step_info'), 3: t('step_docs') };

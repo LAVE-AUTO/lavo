@@ -148,15 +148,20 @@ export function LoginForm({
           return;
         }
 
-        /* callbackUrl only honoured for client role */
-        const safeCallback =
-          userRole === 'client' &&
-          callbackUrl &&
-          callbackUrl.startsWith('/') &&
-          !callbackUrl.startsWith('//');
+        /* callbackUrl only honoured for client role.
+           Origin check via URL constructor prevents open-redirect via percent-encoded paths (e.g. /%2F%2Fevil.com). */
+        const isSafeCallback = (() => {
+          if (!callbackUrl || userRole !== 'client') return false;
+          try {
+            const u = new URL(callbackUrl, window.location.origin);
+            return u.origin === window.location.origin;
+          } catch {
+            return false;
+          }
+        })();
 
-        if (safeCallback) {
-          router.push(callbackUrl as string);
+        if (isSafeCallback) {
+          router.push(callbackUrl);
           return;
         }
 

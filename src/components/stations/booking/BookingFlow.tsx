@@ -37,6 +37,11 @@ export function BookingFlow({ station, forfait, qrToken, qrVersion, onClose }: B
   // Payment result
   const [paymentResult, setPaymentResult] = useState<'success' | 'error' | null>(null);
 
+  // Reservation creation (book_slot only)
+  const [clientSecret, setClientSecret] = useState<string | null>(null);
+  const [summaryLoading, setSummaryLoading] = useState(false);
+  const [summaryError, setSummaryError] = useState<string | null>(null);
+
   // Extras state
   const [selectedExtraIds, setSelectedExtraIds] = useState<string[]>([]);
 
@@ -122,8 +127,55 @@ export function BookingFlow({ station, forfait, qrToken, qrVersion, onClose }: B
     process.env.NODE_ENV !== 'production' &&
     process.env.NEXT_PUBLIC_DEV_SKIP_PAYMENT === 'true';
 
+  // Called at SummaryStep "Passer au paiement":
+  // - book_slot (real): creates reservation → gets client_secret → navigates to payment
+  // - book_slot (devSkipPayment): skip API call, navigate directly
+  // - queue modes: navigate directly (no reservation needed)
+  const handleSummaryContinue = useCallback(async () => {
+    // Reset stale client secret from any previous reservation attempt so that
+    // PaymentStep always renders the correct form (queue confirm vs Stripe card).
+    setClientSecret(null);
+    setSummaryError(null);
+
+    if (RESERVATIONS_MOCK_ENABLED || arrivalMode !== 'book_slot' || devSkipPayment) {
+      goNext();
+      return;
+    }
+    if (!selectedSlot) return;
+    setSummaryLoading(true);
+    const reservationPayload: Record<string, string> = {
+      time_slot_id: selectedSlot.id,
+      vehicle_format_id: forfait.id,
+    };
+    const hasValidQrContext = Boolean(qrToken && qrVersion === '1');
+    if (hasValidQrContext) {
+      reservationPayload.qr_token = qrToken!;
+      reservationPayload.v = qrVersion!;
+    }
+    const [ok, data] = await postWithApi<{ data: { reservation_id: string; stripe_client_secret: string } }>(
+      `/stations/${station.id}/reservations`,
+      reservationPayload,
+    );
+    if (!mountedRef.current) return;
+    setSummaryLoading(false);
+    if (!ok) {
+      const errData = data as { code?: string } | null;
+      if (errData?.code === 'SLOT_FULL') {
+        setSummaryError(t('error_slot_full'));
+      } else if (errData?.code === 'ACTIVE_RESERVATION_EXISTS') {
+        setSummaryError(t('error_active_reservation'));
+      } else {
+        setSummaryError(t('error_reservation_failed'));
+      }
+      return;
+    }
+    const resData = data as { data: { stripe_client_secret: string } };
+    setClientSecret(resData.data?.stripe_client_secret ?? null);
+    goNext();
+  }, [arrivalMode, station.id, forfait.id, selectedSlot, qrToken, qrVersion, devSkipPayment, goNext, t]);
+
   const handlePaymentConfirm = useCallback(async (): Promise<void> => {
-    // TODO: remove mock block once booking flow is connected to Stripe
+    // TODO: remove mock block once Stripe is fully live in production
     if (RESERVATIONS_MOCK_ENABLED) {
       if (!mountedRef.current) return;
       setPaymentResult('success');
@@ -136,29 +188,25 @@ export function BookingFlow({ station, forfait, qrToken, qrVersion, onClose }: B
       });
       if (!mountedRef.current) return;
       setPaymentResult(ok ? 'success' : 'error');
-    } else if (arrivalMode === 'book_slot' && selectedSlot) {
-      const reservationPayload: Record<string, string> = {
-        time_slot_id: selectedSlot.id,
-        vehicle_format_id: forfait.id,
-      };
-      // QR context validation is centralized in StationDetail normalization.
-      const hasValidQrContext = Boolean(qrToken && qrVersion === '1');
-      if (hasValidQrContext) {
-        reservationPayload.qr_token = qrToken!;
-        reservationPayload.v = qrVersion!;
+    } else if (arrivalMode === 'book_slot') {
+      if (devSkipPayment && selectedSlot) {
+        // Dev bypass: create confirmed reservation directly (skips Stripe)
+        const hasValidQrContext = Boolean(qrToken && qrVersion === '1');
+        const payload = {
+          station_id: station.id,
+          time_slot_id: selectedSlot.id,
+          vehicle_format_id: forfait.id,
+          ...(hasValidQrContext ? { qr_token: qrToken!, v: qrVersion! } : {}),
+        };
+        const [ok] = await postWithApi('/dev/reservations', payload);
+        if (!mountedRef.current) return;
+        setPaymentResult(ok ? 'success' : 'error');
+      } else {
+        // Stripe payment was confirmed in PaymentStep via confirmCardPayment;
+        // the PaymentIntent webhook updates the reservation server-side.
+        if (!mountedRef.current) return;
+        setPaymentResult('success');
       }
-      // In dev mode (NEXT_PUBLIC_DEV_SKIP_PAYMENT=true), bypass Stripe and create
-      // a confirmed reservation directly so the booking flow can be tested end-to-end.
-      // TODO: replace with real Stripe Elements payment confirmation once integrated.
-      const endpoint = devSkipPayment
-        ? '/dev/reservations'
-        : `/stations/${station.id}/reservations`;
-      const payload = devSkipPayment
-        ? { station_id: station.id, time_slot_id: selectedSlot.id, vehicle_format_id: forfait.id, ...( hasValidQrContext ? { qr_token: qrToken!, v: qrVersion! } : {}) }
-        : reservationPayload;
-      const [ok] = await postWithApi(endpoint, payload);
-      if (!mountedRef.current) return;
-      setPaymentResult(ok ? 'success' : 'error');
     }
   }, [arrivalMode, station.id, forfait.id, selectedSlot, qrToken, qrVersion, devSkipPayment]);
 
@@ -215,7 +263,9 @@ export function BookingFlow({ station, forfait, qrToken, qrVersion, onClose }: B
             laterTime={laterTime}
             grandTotal={grandTotal}
             totalDuration={totalDuration}
-            onContinue={goNext}
+            loading={summaryLoading}
+            error={summaryError}
+            onContinue={handleSummaryContinue}
             onBack={goBack}
           />
         );
@@ -223,6 +273,7 @@ export function BookingFlow({ station, forfait, qrToken, qrVersion, onClose }: B
         return (
           <PaymentStep
             grandTotal={grandTotal}
+            clientSecret={clientSecret}
             onConfirm={handlePaymentConfirm}
             onBack={goBack}
           />

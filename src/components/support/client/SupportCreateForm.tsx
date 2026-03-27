@@ -17,7 +17,7 @@ export function SupportCreateForm({ onCreated, onCancel }: Props) {
   const t      = useTranslations('client_support');
   const { success: toastSuccess, error: toastError } = useToast();
   const mountedRef = useRef(true);
-  useEffect(() => { mountedRef.current = true; return () => { mountedRef.current = false; }; }, []);
+  useEffect(() => { return () => { mountedRef.current = false; }; }, []);
 
   const [subject, setSubject] = useState('');
   const [message, setMessage] = useState('');
@@ -54,8 +54,9 @@ export function SupportCreateForm({ onCreated, onCancel }: Props) {
 
       <form onSubmit={handleSubmit} className="flex flex-col gap-4 p-5">
         <div className="flex flex-col gap-1.5">
-          <label className="text-[12px] font-medium text-[#5A5A4A] dark:text-[#9A9A8A]">{t('field_subject')}</label>
+          <label htmlFor="support-subject" className="text-[12px] font-medium text-[#5A5A4A] dark:text-[#9A9A8A]">{t('field_subject')}</label>
           <input
+            id="support-subject"
             type="text" maxLength={255}
             className={inputClass}
             placeholder={t('field_subject_placeholder')}
@@ -65,8 +66,9 @@ export function SupportCreateForm({ onCreated, onCancel }: Props) {
         </div>
 
         <div className="flex flex-col gap-1.5">
-          <label className="text-[12px] font-medium text-[#5A5A4A] dark:text-[#9A9A8A]">{t('field_message')}</label>
+          <label htmlFor="support-message" className="text-[12px] font-medium text-[#5A5A4A] dark:text-[#9A9A8A]">{t('field_message')}</label>
           <textarea
+            id="support-message"
             rows={5} maxLength={2000}
             className={inputClass + ' resize-none leading-relaxed'}
             placeholder={t('field_message_placeholder')}

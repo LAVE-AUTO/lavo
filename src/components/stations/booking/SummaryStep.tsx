@@ -15,11 +15,13 @@ interface SummaryStepProps {
   laterTime: string | null;
   grandTotal: number;
   totalDuration: number;
+  loading?: boolean;
+  error?: string | null;
   onContinue: () => void;
   onBack: () => void;
 }
 
-export function SummaryStep({ station, forfait, selectedExtras, arrivalMode, selectedDate, selectedSlot, laterTime, grandTotal, totalDuration, onContinue, onBack }: SummaryStepProps) {
+export function SummaryStep({ station, forfait, selectedExtras, arrivalMode, selectedDate, selectedSlot, laterTime, grandTotal, totalDuration, loading, error, onContinue, onBack }: SummaryStepProps) {
   const t = useTranslations('booking');
 
   const arrivalLabel = arrivalMode === 'queue_now'
@@ -83,21 +85,33 @@ export function SummaryStep({ station, forfait, selectedExtras, arrivalMode, sel
       </div>
 
       {/* Actions */}
-      <div className="border-t border-[#D0D0C0] dark:border-tab-inactive pt-4 flex gap-3">
-        <button
-          type="button"
-          onClick={onBack}
-          className="flex-1 py-3 border-2 border-gold rounded-xl text-[15px] font-bold text-gold hover:bg-gold/10 transition-colors cursor-pointer"
-        >
-          {t('back')}
-        </button>
-        <button
-          type="button"
-          onClick={onContinue}
-          className="flex-1 py-3 bg-gold hover:bg-gold-hover rounded-xl text-[15px] font-black text-dark-bg transition-colors cursor-pointer"
-        >
-          {t('proceed_to_payment')}
-        </button>
+      <div className="border-t border-[#D0D0C0] dark:border-tab-inactive pt-4 space-y-3">
+        {error && (
+          <p className="text-[13px] text-lavo-error text-center">{error}</p>
+        )}
+        <div className="flex gap-3">
+          <button
+            type="button"
+            onClick={onBack}
+            disabled={loading}
+            className="flex-1 py-3 border-2 border-gold rounded-xl text-[15px] font-bold text-gold hover:bg-gold/10 transition-colors cursor-pointer disabled:opacity-50"
+          >
+            {t('back')}
+          </button>
+          <button
+            type="button"
+            onClick={onContinue}
+            disabled={loading}
+            className={`flex-1 py-3 rounded-xl text-[15px] font-black transition-colors cursor-pointer ${loading ? 'bg-[#D0D0C0] dark:bg-tab-inactive text-[#888] cursor-not-allowed' : 'bg-gold hover:bg-gold-hover text-dark-bg'}`}
+          >
+            {loading ? (
+              <span className="flex items-center justify-center gap-2">
+                <svg className="animate-spin h-4 w-4" viewBox="0 0 24 24" fill="none" aria-hidden="true"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" /><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" /></svg>
+                {t('summary_creating')}
+              </span>
+            ) : t('proceed_to_payment')}
+          </button>
+        </div>
       </div>
     </div>
   );

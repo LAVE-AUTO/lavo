@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import { useTranslations } from 'next-intl';
 import { AdminAddUserForm, type Role } from './AdminAddUserForm';
 import { AdminAddUserSuccess } from './AdminAddUserSuccess';
+import { generatePassword } from '@/helpers/generate-password';
 
 type Step = 'form' | 'success';
 
@@ -17,31 +18,6 @@ interface SuccessData {
 interface Props {
   open: boolean;
   onClose: () => void;
-}
-
-function generatePassword(): string {
-  const upper   = 'ABCDEFGHJKLMNPQRSTUVWXYZ';
-  const lower   = 'abcdefghjkmnpqrstuvwxyz';
-  const digits  = '23456789';
-  const special = '!@#$%&*';
-  const all     = upper + lower + digits + special;
-
-  const rand = (max: number) => {
-    const buf = new Uint32Array(1);
-    crypto.getRandomValues(buf);
-    return buf[0] % max;
-  };
-
-  const pick = (src: string) => src[rand(src.length)];
-  const base = [pick(upper), pick(lower), pick(digits), pick(special)];
-  const rest = Array.from({ length: 8 }, () => pick(all));
-  const raw  = [...base, ...rest];
-
-  for (let i = raw.length - 1; i > 0; i--) {
-    const j = rand(i + 1);
-    [raw[i], raw[j]] = [raw[j], raw[i]];
-  }
-  return raw.join('');
 }
 
 export function AdminAddUserModal({ open, onClose }: Props) {
@@ -88,15 +64,10 @@ export function AdminAddUserModal({ open, onClose }: Props) {
     setErrors({});
     setBusy(true);
 
-    const password = generatePassword();
-
     // TODO: connect to API once endpoint is available (POST /admin/users)
-    // Payload: { role, first_name, last_name, email, password }
+    // Payload: { role, first_name, last_name, email, password: generatePassword() }
     // The backend must hash the password, set force_password_change: true, and send credentials by email.
-    await new Promise<void>((r) => setTimeout(r, 900));
-
-    setSuccess({ email: email.trim(), first_name: firstName.trim(), last_name: lastName.trim(), role });
-    setStep('success');
+    // Submission is disabled until the endpoint exists — do not show a success screen for a stubbed call.
     setBusy(false);
   }
 

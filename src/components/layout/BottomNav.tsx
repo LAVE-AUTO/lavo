@@ -154,12 +154,15 @@ export function BottomNav() {
     { href: '/#how-it-works', label: t('how_it_works'), icon: (a: boolean) => <HowItWorksIcon active={a} /> },
   ];
 
-  /* Authenticated items (no "More" — handled separately) */
-  const authItems = [
-    { href: homeHref, label: t('home'), icon: (a: boolean) => <HomeIcon active={a} /> },
-    { href: '/client/reservations', label: t('coupons'), icon: (a: boolean) => <CouponsIcon active={a} /> },
-    { href: '/favorites', label: t('favorites'), icon: (a: boolean) => <FavoritesIcon active={a} /> },
-  ];
+  /* Authenticated items — client only.
+     Station and admin users see guestItems since /client/reservations and /favorites are client-specific routes. */
+  const authItems = isClient
+    ? [
+        { href: homeHref, label: t('home'), icon: (a: boolean) => <HomeIcon active={a} /> },
+        { href: '/client/reservations', label: t('coupons'), icon: (a: boolean) => <CouponsIcon active={a} /> },
+        { href: '/favorites', label: t('favorites'), icon: (a: boolean) => <FavoritesIcon active={a} /> },
+      ]
+    : guestItems;
 
   const items = isAuthenticated ? authItems : guestItems;
 
@@ -172,7 +175,7 @@ export function BottomNav() {
 
       <nav
         className="sm:hidden fixed bottom-0 left-0 right-0 z-50 flex bg-[#1E2A1A] border-t border-[#2C3828]"
-        aria-label="Navigation principale"
+        aria-label={t('bottom_nav_aria')}
         style={{ paddingBottom: 'env(safe-area-inset-bottom)' }}
       >
         {items.map(({ href, label, icon }) => {
@@ -266,7 +269,7 @@ export function BottomNav() {
 
                 {/* Theme + Lang row */}
                 <div className="flex items-center justify-between px-4 py-3 border-t border-[#2C3828]">
-                  <span className="text-[12px] font-semibold text-[#7a9a7d]">Apparence</span>
+                  <span className="text-[12px] font-semibold text-[#7a9a7d]">{t('appearance_aria')}</span>
                   <div className="flex items-center gap-2">
                     <ThemeToggle />
                     <LangToggle />

@@ -6,7 +6,7 @@ import {
   error401,
   error500,
 } from '@/lib/responses';
-import { ACCESS_COOKIE_NAME } from '@/helpers/constants';
+import { ACCESS_COOKIE_NAME } from '@/helpers/server-constants';
 import { applyNoStoreHeaders } from '@/lib/response-headers';
 import type { NextResponse } from 'next/server';
 
