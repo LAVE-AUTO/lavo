@@ -143,7 +143,6 @@ export function BookingFlow({ station, forfait, qrToken, qrVersion, onClose }: B
     }
     if (!selectedSlot) return;
     setSummaryLoading(true);
-    setSummaryError(null);
     const reservationPayload: Record<string, string> = {
       time_slot_id: selectedSlot.id,
       vehicle_format_id: forfait.id,
