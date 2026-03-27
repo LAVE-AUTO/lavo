@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
+import { PwaRegister } from "@/components/layout/PwaRegister";
 import "./globals.css";
 
 const geistSans = Geist({
@@ -16,8 +17,8 @@ export const metadata: Metadata = {
   title: "Slowtime",
   description: "Plateforme de réservation et paiement pour stations de lavage",
   icons: {
-    icon: '/logo/frame2.png',
-    apple: '/logo/frame2.png',
+    icon: '/icons/icon-192x192.png',
+    apple: '/icons/icon-192x192.png',
   },
 };
 
@@ -31,6 +32,7 @@ export default function RootLayout({
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
+        <PwaRegister />
         {children}
       </body>
     </html>
