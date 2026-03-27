@@ -132,6 +132,11 @@ export function BookingFlow({ station, forfait, qrToken, qrVersion, onClose }: B
   // - book_slot (devSkipPayment): skip API call, navigate directly
   // - queue modes: navigate directly (no reservation needed)
   const handleSummaryContinue = useCallback(async () => {
+    // Reset stale client secret from any previous reservation attempt so that
+    // PaymentStep always renders the correct form (queue confirm vs Stripe card).
+    setClientSecret(null);
+    setSummaryError(null);
+
     if (RESERVATIONS_MOCK_ENABLED || arrivalMode !== 'book_slot' || devSkipPayment) {
       goNext();
       return;
