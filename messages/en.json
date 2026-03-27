@@ -816,7 +816,15 @@
     "result_open_maps": "Get directions",
     "result_queue_now_desc": "You joined the queue! Follow the route to the station.",
     "result_queue_position_label": "Your position in the queue",
-    "result_queue_arrival_time": "Expected arrival time: {time}"
+    "result_queue_arrival_time": "Expected arrival time: {time}",
+    "summary_creating": "Creating...",
+    "error_slot_full": "This slot is full. Please choose another.",
+    "error_active_reservation": "You already have an active reservation at this station.",
+    "error_reservation_failed": "Unable to create the reservation. Please try again.",
+    "payment_queue_subtitle": "Confirm your spot in the queue.",
+    "payment_confirm_queue": "Confirm",
+    "error_stripe_payment": "Payment failed. Please check your card details.",
+    "error_stripe_unavailable": "The payment service is temporarily unavailable."
   },
   "coupons": {
     "title": "My reservations",
