@@ -1,6 +1,7 @@
 import { cookies } from 'next/headers';
 import { redirect } from 'next/navigation';
 import type { ReactNode } from 'react';
+import { REFRESH_COOKIE_NAME } from '@/helpers/server-constants';
 
 type AuthRedirectGuardProps = {
   children?: ReactNode;
@@ -21,7 +22,7 @@ type AuthRedirectGuardProps = {
  */
 export async function AuthRedirectGuard({ children }: AuthRedirectGuardProps) {
   const cookieStore = await cookies();
-  const hasSession = cookieStore.has('refresh_token');
+  const hasSession = cookieStore.has(REFRESH_COOKIE_NAME);
 
   if (hasSession) {
     redirect('/');

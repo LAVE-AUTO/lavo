@@ -16,9 +16,9 @@ function buildCsp(): string {
       "frame-ancestors 'none'",
       "img-src 'self' data: https:",
       "style-src 'self' 'unsafe-inline'",
-      "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://js.stripe.com",
+      "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://js.stripe.com https://www.googletagmanager.com https://cdn.pagesense.io",
       "frame-src https://js.stripe.com",
-      "connect-src 'self' https: ws: https://api.stripe.com",
+      "connect-src 'self' https: ws: https://api.stripe.com https://www.google-analytics.com https://analytics.google.com https://stats.g.doubleclick.net",
     ].join("; ");
   }
 
@@ -32,9 +32,9 @@ function buildCsp(): string {
     // Keep 'unsafe-inline' for styles to avoid breaking Next.js/Tailwind class injection,
     // but avoid it for scripts in production to reduce XSS risk.
     "style-src 'self' 'unsafe-inline'",
-    "script-src 'self' https://js.stripe.com",
+    "script-src 'self' https://js.stripe.com https://www.googletagmanager.com https://cdn.pagesense.io",
     "frame-src https://js.stripe.com",
-    "connect-src 'self' https: https://api.stripe.com",
+    "connect-src 'self' https: https://api.stripe.com https://www.google-analytics.com https://analytics.google.com https://stats.g.doubleclick.net",
     "upgrade-insecure-requests",
   ].join("; ");
 }
@@ -58,11 +58,11 @@ const nextConfig: NextConfig = {
           { key: "Cross-Origin-Resource-Policy", value: "same-site" },
           ...(isProd
             ? [
-                {
-                  key: "Strict-Transport-Security",
-                  value: "max-age=31536000; includeSubDomains; preload",
-                },
-              ]
+              {
+                key: "Strict-Transport-Security",
+                value: "max-age=31536000; includeSubDomains; preload",
+              },
+            ]
             : []),
         ],
       },

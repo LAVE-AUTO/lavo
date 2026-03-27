@@ -1,0 +1,1143 @@
+{
+  "info": {
+    "name": "LAVO — Admin Dashboard & Analytics API",
+    "description": "Collection pour les endpoints admin de tableau de bord et d'analytiques LAVO.\n\nVariable requise : `base_url` (ex: http://localhost:3000)\nVariable requise : `access_token` (JWT admin, obtenu apres login admin)\n\n## Groupes\n- **Admin — Dashboard** : KPI snapshot (totaux, metriques de periode, alertes)\n- **Admin — Analytics** : series temporelles par metrique (transactions, revenue, commissions, etc.)\n\n## Cache\nLes deux endpoints repondent avec `Cache-Control: max-age=60, s-maxage=60`.\nUne reponse servie depuis le cache reste un 200 valide.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    {
+      "key": "base_url",
+      "value": "http://localhost:3000",
+      "type": "string"
+    },
+    {
+      "key": "access_token",
+      "value": "",
+      "type": "string"
+    }
+  ],
+  "auth": {
+    "type": "bearer",
+    "bearer": [
+      {
+        "key": "token",
+        "value": "{{access_token}}",
+        "type": "string"
+      }
+    ]
+  },
+  "item": [
+    {
+      "name": "Admin — Dashboard",
+      "description": "GET /api/v1/admin/dashboard — Retourne un snapshot KPI admin : totaux stock, metriques de periode, et alertes actionnables.\n\nLes query params sont tous optionnels. Combinaisons acceptees :\n- Aucun param → fenetre 30 jours par defaut\n- ?period=N → fenetre de N jours se terminant maintenant (1 ≤ N ≤ 365)\n- ?from=YYYY-MM-DD&to=YYYY-MM-DD → plage exacte\n\nReponse 200 : { data: { period: { from, to, days }, totals: { active_stations, total_clients, pending_kyc, open_support_tickets }, metrics: { total_transactions, total_revenue, total_commissions }, alerts: { pending_kyc, open_support_tickets } } }",
+      "item": [
+        {
+          "name": "Dashboard — periode 30j (200)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 200', () => pm.response.to.have.status(200));",
+                  "pm.test('Retourne la structure dashboard complete', () => {",
+                  "  const json = pm.response.json();",
+                  "  pm.expect(json.data).to.have.property('period');",
+                  "  pm.expect(json.data).to.have.property('totals');",
+                  "  pm.expect(json.data).to.have.property('metrics');",
+                  "  pm.expect(json.data).to.have.property('alerts');",
+                  "});",
+                  "pm.test('Period contient from, to, days', () => {",
+                  "  const period = pm.response.json().data.period;",
+                  "  pm.expect(period).to.have.property('from');",
+                  "  pm.expect(period).to.have.property('to');",
+                  "  pm.expect(period).to.have.property('days');",
+                  "  pm.expect(period.days).to.eql(30);",
+                  "});",
+                  "pm.test('Totals contient les 4 compteurs stock', () => {",
+                  "  const totals = pm.response.json().data.totals;",
+                  "  pm.expect(totals).to.have.property('active_stations');",
+                  "  pm.expect(totals).to.have.property('total_clients');",
+                  "  pm.expect(totals).to.have.property('pending_kyc');",
+                  "  pm.expect(totals).to.have.property('open_support_tickets');",
+                  "});",
+                  "pm.test('Metrics contient les KPI de periode', () => {",
+                  "  const metrics = pm.response.json().data.metrics;",
+                  "  pm.expect(metrics).to.have.property('total_transactions');",
+                  "  pm.expect(metrics).to.have.property('total_revenue');",
+                  "  pm.expect(metrics).to.have.property('total_commissions');",
+                  "});",
+                  "pm.test('Alerts contient pending_kyc et open_support_tickets en tableaux', () => {",
+                  "  const alerts = pm.response.json().data.alerts;",
+                  "  pm.expect(alerts.pending_kyc).to.be.an('array');",
+                  "  pm.expect(alerts.open_support_tickets).to.be.an('array');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "response": [],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/v1/admin/dashboard?period=30",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "admin",
+                "dashboard"
+              ],
+              "query": [
+                {
+                  "key": "period",
+                  "value": "30"
+                }
+              ]
+            },
+            "description": "Fenetre glissante de 30 jours se terminant maintenant.\n\nReponse : { data: { period: { from, to, days: 30 }, totals, metrics, alerts } }\n\nCache-Control: max-age=60, s-maxage=60 — la reponse peut etre servie depuis le cache pendant 60 secondes."
+          }
+        },
+        {
+          "name": "Dashboard — intervalle custom (200)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 200', () => pm.response.to.have.status(200));",
+                  "pm.test('Period reflète les dates fournies', () => {",
+                  "  const period = pm.response.json().data.period;",
+                  "  pm.expect(period.from).to.eql('2026-01-01');",
+                  "  pm.expect(period).to.have.property('to');",
+                  "  pm.expect(period).to.have.property('days');",
+                  "});",
+                  "pm.test('Retourne la structure dashboard complete', () => {",
+                  "  const json = pm.response.json();",
+                  "  pm.expect(json.data).to.have.property('totals');",
+                  "  pm.expect(json.data).to.have.property('metrics');",
+                  "  pm.expect(json.data).to.have.property('alerts');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "response": [],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/v1/admin/dashboard?from=2026-01-01&to=2026-03-26",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "admin",
+                "dashboard"
+              ],
+              "query": [
+                {
+                  "key": "from",
+                  "value": "2026-01-01"
+                },
+                {
+                  "key": "to",
+                  "value": "2026-03-26"
+                }
+              ]
+            },
+            "description": "Plage exacte du 2026-01-01 au 2026-03-26.\n\nLa reponse doit avoir data.period.from === '2026-01-01'.\nLes metriques de flux couvrent uniquement cette periode."
+          }
+        },
+        {
+          "name": "Dashboard — defaut sans params (200)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 200', () => pm.response.to.have.status(200));",
+                  "pm.test('Period par defaut est 30 jours', () => {",
+                  "  const period = pm.response.json().data.period;",
+                  "  pm.expect(period.days).to.eql(30);",
+                  "});",
+                  "pm.test('Retourne la structure dashboard complete', () => {",
+                  "  const json = pm.response.json();",
+                  "  pm.expect(json.data).to.have.property('period');",
+                  "  pm.expect(json.data).to.have.property('totals');",
+                  "  pm.expect(json.data).to.have.property('metrics');",
+                  "  pm.expect(json.data).to.have.property('alerts');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "response": [],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/v1/admin/dashboard",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "admin",
+                "dashboard"
+              ]
+            },
+            "description": "Aucun query param — la fenetre par defaut de 30 jours est appliquee.\n\ndata.period.days doit valoir 30."
+          }
+        },
+        {
+          "name": "Dashboard — from sans to (400)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 400', () => pm.response.to.have.status(400));",
+                  "pm.test('Code VALIDATION_FAILED', () => {",
+                  "  const json = pm.response.json();",
+                  "  pm.expect(json.code).to.eql('VALIDATION_FAILED');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "response": [],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/v1/admin/dashboard?from=2026-01-01",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "admin",
+                "dashboard"
+              ],
+              "query": [
+                {
+                  "key": "from",
+                  "value": "2026-01-01"
+                }
+              ]
+            },
+            "description": "400 VALIDATION_FAILED — `from` fourni sans `to`.\n\nLa regle cross-field exige que les deux soient presents ou absents."
+          }
+        },
+        {
+          "name": "Dashboard — to sans from (400)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 400', () => pm.response.to.have.status(400));",
+                  "pm.test('Code VALIDATION_FAILED', () => {",
+                  "  const json = pm.response.json();",
+                  "  pm.expect(json.code).to.eql('VALIDATION_FAILED');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "response": [],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/v1/admin/dashboard?to=2026-03-26",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "admin",
+                "dashboard"
+              ],
+              "query": [
+                {
+                  "key": "to",
+                  "value": "2026-03-26"
+                }
+              ]
+            },
+            "description": "400 VALIDATION_FAILED — `to` fourni sans `from`.\n\nLa regle cross-field exige que les deux soient presents ou absents."
+          }
+        },
+        {
+          "name": "Dashboard — from > to (400)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 400', () => pm.response.to.have.status(400));",
+                  "pm.test('Code VALIDATION_FAILED', () => {",
+                  "  const json = pm.response.json();",
+                  "  pm.expect(json.code).to.eql('VALIDATION_FAILED');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "response": [],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/v1/admin/dashboard?from=2026-03-26&to=2026-01-01",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "admin",
+                "dashboard"
+              ],
+              "query": [
+                {
+                  "key": "from",
+                  "value": "2026-03-26"
+                },
+                {
+                  "key": "to",
+                  "value": "2026-01-01"
+                }
+              ]
+            },
+            "description": "400 VALIDATION_FAILED — `from` posterieur a `to`.\n\nLa regle cross-field interdit from > to."
+          }
+        },
+        {
+          "name": "Dashboard — period invalide (400)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 400', () => pm.response.to.have.status(400));",
+                  "pm.test('Code VALIDATION_FAILED', () => {",
+                  "  const json = pm.response.json();",
+                  "  pm.expect(json.code).to.eql('VALIDATION_FAILED');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "response": [],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/v1/admin/dashboard?period=0",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "admin",
+                "dashboard"
+              ],
+              "query": [
+                {
+                  "key": "period",
+                  "value": "0"
+                }
+              ]
+            },
+            "description": "400 VALIDATION_FAILED — `period=0` est invalide, le minimum est 1."
+          }
+        },
+        {
+          "name": "Dashboard — period trop grand (400)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 400', () => pm.response.to.have.status(400));",
+                  "pm.test('Code VALIDATION_FAILED', () => {",
+                  "  const json = pm.response.json();",
+                  "  pm.expect(json.code).to.eql('VALIDATION_FAILED');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "response": [],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/v1/admin/dashboard?period=366",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "admin",
+                "dashboard"
+              ],
+              "query": [
+                {
+                  "key": "period",
+                  "value": "366"
+                }
+              ]
+            },
+            "description": "400 VALIDATION_FAILED — `period=366` depasse le maximum de 365."
+          }
+        },
+        {
+          "name": "Dashboard — non admin (403)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 403', () => pm.response.to.have.status(403));",
+                  "pm.test('Code FORBIDDEN', () => {",
+                  "  const json = pm.response.json();",
+                  "  pm.expect(json.code).to.eql('FORBIDDEN');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "response": [],
+          "request": {
+            "auth": {
+              "type": "noauth"
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/v1/admin/dashboard",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "admin",
+                "dashboard"
+              ]
+            },
+            "description": "403 FORBIDDEN — token absent ou role != admin.\n\nCe cas utilise `noauth` pour bypasser le Bearer token configure sur la collection.\nRemplacer par un token valide non-admin pour simuler le cas role interdit."
+          }
+        }
+      ]
+    },
+    {
+      "name": "Admin — Analytics",
+      "description": "GET /api/v1/admin/analytics/[metric] — Retourne une serie temporelle pour la metrique demandee.\n\nMetriques valides : transactions, revenue, commissions, registrations, stations, reservations, cancellations, support-tickets, avg-rating\n\nQuery params :\n- ?from=YYYY-MM-DD&to=YYYY-MM-DD (les deux requis si l'un est fourni)\n- ?group_by=day|week|month (defaut: day)\n- Aucun param → fenetre 30 jours par defaut\n\nReponse 200 : { data: { metric, group_by, period: { from, to }, series: [{ date, value }] } }\n\nCache-Control: max-age=60, s-maxage=60",
+      "item": [
+        {
+          "name": "Analytics — transactions/day (200)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 200', () => pm.response.to.have.status(200));",
+                  "pm.test('Retourne serie transactions par jour', () => {",
+                  "  const json = pm.response.json();",
+                  "  pm.expect(json.data.series).to.be.an('array');",
+                  "  pm.expect(json.data.metric).to.eql('transactions');",
+                  "  pm.expect(json.data).to.have.property('group_by');",
+                  "  pm.expect(json.data.group_by).to.eql('day');",
+                  "  pm.expect(json.data).to.have.property('period');",
+                  "  pm.expect(json.data.period).to.have.property('from');",
+                  "  pm.expect(json.data.period).to.have.property('to');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "response": [],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/v1/admin/analytics/transactions?from=2026-01-01&to=2026-03-26&group_by=day",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "admin",
+                "analytics",
+                "transactions"
+              ],
+              "query": [
+                {
+                  "key": "from",
+                  "value": "2026-01-01"
+                },
+                {
+                  "key": "to",
+                  "value": "2026-03-26"
+                },
+                {
+                  "key": "group_by",
+                  "value": "day"
+                }
+              ]
+            },
+            "description": "Serie du nombre de transactions par jour sur la periode 2026-01-01 → 2026-03-26.\n\nChaque point de series a la forme { date: 'YYYY-MM-DD', value: number }.\nLes jours sans transaction ont value: 0 (gap-fill)."
+          }
+        },
+        {
+          "name": "Analytics — revenue/month (200)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 200', () => pm.response.to.have.status(200));",
+                  "pm.test('Retourne serie revenue par mois', () => {",
+                  "  const json = pm.response.json();",
+                  "  pm.expect(json.data.series).to.be.an('array');",
+                  "  pm.expect(json.data.metric).to.eql('revenue');",
+                  "  pm.expect(json.data.group_by).to.eql('month');",
+                  "  pm.expect(json.data).to.have.property('period');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "response": [],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/v1/admin/analytics/revenue?from=2026-01-01&to=2026-03-26&group_by=month",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "admin",
+                "analytics",
+                "revenue"
+              ],
+              "query": [
+                {
+                  "key": "from",
+                  "value": "2026-01-01"
+                },
+                {
+                  "key": "to",
+                  "value": "2026-03-26"
+                },
+                {
+                  "key": "group_by",
+                  "value": "month"
+                }
+              ]
+            },
+            "description": "Serie du chiffre d'affaires (revenus totaux) par mois.\n\nLes valeurs monetaires sont des chaines decimales (ex: '1234.56').\nLes mois sans revenus ont value: '0.00' (gap-fill)."
+          }
+        },
+        {
+          "name": "Analytics — commissions/week (200)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 200', () => pm.response.to.have.status(200));",
+                  "pm.test('Retourne serie commissions par semaine', () => {",
+                  "  const json = pm.response.json();",
+                  "  pm.expect(json.data.series).to.be.an('array');",
+                  "  pm.expect(json.data.metric).to.eql('commissions');",
+                  "  pm.expect(json.data.group_by).to.eql('week');",
+                  "  pm.expect(json.data).to.have.property('period');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "response": [],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/v1/admin/analytics/commissions?from=2026-01-01&to=2026-03-26&group_by=week",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "admin",
+                "analytics",
+                "commissions"
+              ],
+              "query": [
+                {
+                  "key": "from",
+                  "value": "2026-01-01"
+                },
+                {
+                  "key": "to",
+                  "value": "2026-03-26"
+                },
+                {
+                  "key": "group_by",
+                  "value": "week"
+                }
+              ]
+            },
+            "description": "Serie des commissions LAVO par semaine ISO (debut lundi).\n\nLes valeurs monetaires sont des chaines decimales.\nLes semaines sans commission ont value: '0.00' (gap-fill)."
+          }
+        },
+        {
+          "name": "Analytics — registrations/day (200)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 200', () => pm.response.to.have.status(200));",
+                  "pm.test('Retourne serie inscriptions par jour', () => {",
+                  "  const json = pm.response.json();",
+                  "  pm.expect(json.data.series).to.be.an('array');",
+                  "  pm.expect(json.data.metric).to.eql('registrations');",
+                  "  pm.expect(json.data.group_by).to.eql('day');",
+                  "  pm.expect(json.data).to.have.property('period');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "response": [],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/v1/admin/analytics/registrations?from=2026-01-01&to=2026-03-26&group_by=day",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "admin",
+                "analytics",
+                "registrations"
+              ],
+              "query": [
+                {
+                  "key": "from",
+                  "value": "2026-01-01"
+                },
+                {
+                  "key": "to",
+                  "value": "2026-03-26"
+                },
+                {
+                  "key": "group_by",
+                  "value": "day"
+                }
+              ]
+            },
+            "description": "Serie du nombre de nouveaux clients inscrits par jour.\n\nLes jours sans inscription ont value: 0 (gap-fill)."
+          }
+        },
+        {
+          "name": "Analytics — stations/month (200)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 200', () => pm.response.to.have.status(200));",
+                  "pm.test('Retourne serie nouvelles stations par mois', () => {",
+                  "  const json = pm.response.json();",
+                  "  pm.expect(json.data.series).to.be.an('array');",
+                  "  pm.expect(json.data.metric).to.eql('stations');",
+                  "  pm.expect(json.data.group_by).to.eql('month');",
+                  "  pm.expect(json.data).to.have.property('period');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "response": [],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/v1/admin/analytics/stations?from=2026-01-01&to=2026-03-26&group_by=month",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "admin",
+                "analytics",
+                "stations"
+              ],
+              "query": [
+                {
+                  "key": "from",
+                  "value": "2026-01-01"
+                },
+                {
+                  "key": "to",
+                  "value": "2026-03-26"
+                },
+                {
+                  "key": "group_by",
+                  "value": "month"
+                }
+              ]
+            },
+            "description": "Serie du nombre de nouvelles stations approuvees (actives) par mois.\n\nLes mois sans nouvelle station ont value: 0 (gap-fill)."
+          }
+        },
+        {
+          "name": "Analytics — reservations/day (200)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 200', () => pm.response.to.have.status(200));",
+                  "pm.test('Retourne serie reservations par jour', () => {",
+                  "  const json = pm.response.json();",
+                  "  pm.expect(json.data.series).to.be.an('array');",
+                  "  pm.expect(json.data.metric).to.eql('reservations');",
+                  "  pm.expect(json.data.group_by).to.eql('day');",
+                  "  pm.expect(json.data).to.have.property('period');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "response": [],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/v1/admin/analytics/reservations?from=2026-01-01&to=2026-03-26&group_by=day",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "admin",
+                "analytics",
+                "reservations"
+              ],
+              "query": [
+                {
+                  "key": "from",
+                  "value": "2026-01-01"
+                },
+                {
+                  "key": "to",
+                  "value": "2026-03-26"
+                },
+                {
+                  "key": "group_by",
+                  "value": "day"
+                }
+              ]
+            },
+            "description": "Serie du nombre total de reservations (tous statuts) par jour.\n\nLes jours sans reservation ont value: 0 (gap-fill)."
+          }
+        },
+        {
+          "name": "Analytics — cancellations/day (200)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 200', () => pm.response.to.have.status(200));",
+                  "pm.test('Retourne serie annulations par jour', () => {",
+                  "  const json = pm.response.json();",
+                  "  pm.expect(json.data.series).to.be.an('array');",
+                  "  pm.expect(json.data.metric).to.eql('cancellations');",
+                  "  pm.expect(json.data.group_by).to.eql('day');",
+                  "  pm.expect(json.data).to.have.property('period');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "response": [],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/v1/admin/analytics/cancellations?from=2026-01-01&to=2026-03-26&group_by=day",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "admin",
+                "analytics",
+                "cancellations"
+              ],
+              "query": [
+                {
+                  "key": "from",
+                  "value": "2026-01-01"
+                },
+                {
+                  "key": "to",
+                  "value": "2026-03-26"
+                },
+                {
+                  "key": "group_by",
+                  "value": "day"
+                }
+              ]
+            },
+            "description": "Serie du nombre d'annulations par jour.\n\nLes jours sans annulation ont value: 0 (gap-fill)."
+          }
+        },
+        {
+          "name": "Analytics — support-tickets/week (200)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 200', () => pm.response.to.have.status(200));",
+                  "pm.test('Retourne serie tickets support par semaine', () => {",
+                  "  const json = pm.response.json();",
+                  "  pm.expect(json.data.series).to.be.an('array');",
+                  "  pm.expect(json.data.metric).to.eql('support-tickets');",
+                  "  pm.expect(json.data.group_by).to.eql('week');",
+                  "  pm.expect(json.data).to.have.property('period');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "response": [],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/v1/admin/analytics/support-tickets?from=2026-01-01&to=2026-03-26&group_by=week",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "admin",
+                "analytics",
+                "support-tickets"
+              ],
+              "query": [
+                {
+                  "key": "from",
+                  "value": "2026-01-01"
+                },
+                {
+                  "key": "to",
+                  "value": "2026-03-26"
+                },
+                {
+                  "key": "group_by",
+                  "value": "week"
+                }
+              ]
+            },
+            "description": "Serie du nombre de tickets support ouverts par semaine ISO.\n\nLes semaines sans ticket ont value: 0 (gap-fill)."
+          }
+        },
+        {
+          "name": "Analytics — avg-rating/month (200)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 200', () => pm.response.to.have.status(200));",
+                  "pm.test('Retourne serie note moyenne par mois', () => {",
+                  "  const json = pm.response.json();",
+                  "  pm.expect(json.data.series).to.be.an('array');",
+                  "  pm.expect(json.data.metric).to.eql('avg-rating');",
+                  "  pm.expect(json.data.group_by).to.eql('month');",
+                  "  pm.expect(json.data).to.have.property('period');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "response": [],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/v1/admin/analytics/avg-rating?from=2026-01-01&to=2026-03-26&group_by=month",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "admin",
+                "analytics",
+                "avg-rating"
+              ],
+              "query": [
+                {
+                  "key": "from",
+                  "value": "2026-01-01"
+                },
+                {
+                  "key": "to",
+                  "value": "2026-03-26"
+                },
+                {
+                  "key": "group_by",
+                  "value": "month"
+                }
+              ]
+            },
+            "description": "Serie de la note moyenne des stations par mois.\n\nLes valeurs sont des chaines decimales (ex: '4.35').\nLes mois sans note ont value: '0.00' (gap-fill)."
+          }
+        },
+        {
+          "name": "Analytics — metrique inconnue (400)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 400', () => pm.response.to.have.status(400));",
+                  "pm.test('Code VALIDATION_FAILED', () => {",
+                  "  const json = pm.response.json();",
+                  "  pm.expect(json.code).to.eql('VALIDATION_FAILED');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "response": [],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/v1/admin/analytics/unknown-metric?from=2026-01-01&to=2026-03-26",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "admin",
+                "analytics",
+                "unknown-metric"
+              ],
+              "query": [
+                {
+                  "key": "from",
+                  "value": "2026-01-01"
+                },
+                {
+                  "key": "to",
+                  "value": "2026-03-26"
+                }
+              ]
+            },
+            "description": "400 VALIDATION_FAILED — le slug de metrique n'existe pas.\n\nMetriques valides : transactions, revenue, commissions, registrations, stations, reservations, cancellations, support-tickets, avg-rating."
+          }
+        },
+        {
+          "name": "Analytics — from sans to (400)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 400', () => pm.response.to.have.status(400));",
+                  "pm.test('Code VALIDATION_FAILED', () => {",
+                  "  const json = pm.response.json();",
+                  "  pm.expect(json.code).to.eql('VALIDATION_FAILED');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "response": [],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/v1/admin/analytics/transactions?from=2026-01-01",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "admin",
+                "analytics",
+                "transactions"
+              ],
+              "query": [
+                {
+                  "key": "from",
+                  "value": "2026-01-01"
+                }
+              ]
+            },
+            "description": "400 VALIDATION_FAILED — `from` fourni sans `to`.\n\nLa regle cross-field exige que les deux soient presents ou absents."
+          }
+        },
+        {
+          "name": "Analytics — group_by invalide (400)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 400', () => pm.response.to.have.status(400));",
+                  "pm.test('Code VALIDATION_FAILED', () => {",
+                  "  const json = pm.response.json();",
+                  "  pm.expect(json.code).to.eql('VALIDATION_FAILED');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "response": [],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/v1/admin/analytics/transactions?from=2026-01-01&to=2026-03-26&group_by=year",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "admin",
+                "analytics",
+                "transactions"
+              ],
+              "query": [
+                {
+                  "key": "from",
+                  "value": "2026-01-01"
+                },
+                {
+                  "key": "to",
+                  "value": "2026-03-26"
+                },
+                {
+                  "key": "group_by",
+                  "value": "year"
+                }
+              ]
+            },
+            "description": "400 VALIDATION_FAILED — `group_by=year` n'est pas une valeur acceptee.\n\nValeurs valides : day, week, month."
+          }
+        },
+        {
+          "name": "Analytics — non admin (403)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 403', () => pm.response.to.have.status(403));",
+                  "pm.test('Code FORBIDDEN', () => {",
+                  "  const json = pm.response.json();",
+                  "  pm.expect(json.code).to.eql('FORBIDDEN');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "response": [],
+          "request": {
+            "auth": {
+              "type": "noauth"
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/v1/admin/analytics/transactions?from=2026-01-01&to=2026-03-26",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "admin",
+                "analytics",
+                "transactions"
+              ],
+              "query": [
+                {
+                  "key": "from",
+                  "value": "2026-01-01"
+                },
+                {
+                  "key": "to",
+                  "value": "2026-03-26"
+                }
+              ]
+            },
+            "description": "403 FORBIDDEN — token absent ou role != admin.\n\nCe cas utilise `noauth` pour bypasser le Bearer token configure sur la collection.\nRemplacer par un token valide non-admin pour simuler le cas role interdit."
+          }
+        }
+      ]
+    }
+  ]
+}

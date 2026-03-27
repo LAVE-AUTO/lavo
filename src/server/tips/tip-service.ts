@@ -125,20 +125,20 @@ export async function createTip(
     reservationId,
   });
 
-  // 10. Persist the tip record.
+  // 9. Persist the tip record.
   const tip = await repo.createTip({
     reservation_id: reservationId,
     client_id: userId,
     station_id: reservation.station_id,
-    amount: String(data.amount),
+    amount: data.amount.toFixed(2),
     stripe_payment_intent_id: paymentIntentId,
     status: 'pending',
   });
 
-  // 11. Denormalize tip_amount onto the reservation row.
-  await repo.setReservationTipAmount(reservationId, String(data.amount));
+  // 10. Denormalize tip_amount onto the reservation row.
+  await repo.setReservationTipAmount(reservationId, data.amount.toFixed(2));
 
-  // 12. Notify station — fire-and-forget (notification failure must not abort the tip).
+  // 11. Notify station — fire-and-forget (notification failure must not abort the tip).
   if (station.user_id) {
     notifyEntry({
       userId: station.user_id,
@@ -148,7 +148,7 @@ export async function createTip(
     }).catch(() => undefined);
   }
 
-  // 13. Notify client (confirmation) — fire-and-forget.
+  // 12. Notify client (confirmation) — fire-and-forget.
   notifyEntry({
     userId,
     entryId: reservationId,

@@ -2308,10 +2308,11 @@
     "reply_error": "Unable to send the reply.",
     "close_success": "Ticket closed.",
     "resolve_success": "Ticket marked as resolved.",
+    "status_resolved_notice": "This ticket has been resolved. No further replies are accepted.",
     "assign_success": "Ticket assigned.",
     "not_found": "Ticket not found.",
     "empty_thread": "No messages yet.",
-    "label_msg": "msg",
+    "label_msg": "{count, plural, one {message} other {messages}}",
     "reopen_success": "Ticket reopened."
   },
   "admin_add_user": {

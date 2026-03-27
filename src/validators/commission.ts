@@ -28,17 +28,27 @@ const validDate = z.coerce
   .date()
   .refine((d) => !isNaN(d.getTime()), { message: 'Invalid date format' });
 
-export const transactionLogsQuerySchema = z.object({
-  page: z.coerce.number().int().min(1).default(1),
-  per_page: z.coerce.number().int().min(1).max(100).default(20),
-  /** Filter by LAVO business type. */
-  type: z.enum(['reservation', 'tip', 'penalty']).optional(),
-  /** Filter by station UUID. */
-  station_id: z.string().uuid('Invalid station ID').optional(),
-  /** ISO date-time string — lower bound on created_at. */
-  date_from: validDate.optional(),
-  /** ISO date-time string — upper bound on created_at. */
-  date_to: validDate.optional(),
-});
+export const transactionLogsQuerySchema = z
+  .object({
+    page: z.coerce.number().int().min(1).default(1),
+    per_page: z.coerce.number().int().min(1).max(100).default(20),
+    /** Filter by LAVO business type. */
+    type: z.enum(['reservation', 'tip', 'penalty']).optional(),
+    /** Filter by station UUID. */
+    station_id: z.string().uuid('Invalid station ID').optional(),
+    /** ISO date-time string — lower bound on created_at. */
+    date_from: validDate.optional(),
+    /** ISO date-time string — upper bound on created_at. */
+    date_to: validDate.optional(),
+  })
+  .superRefine((val, ctx) => {
+    if (val.date_from && val.date_to && val.date_from > val.date_to) {
+      ctx.addIssue({
+        code: 'custom',
+        path: ['date_to'],
+        message: 'date_to must be after date_from',
+      });
+    }
+  });
 
 export type TransactionLogsQuery = z.infer<typeof transactionLogsQuerySchema>;
