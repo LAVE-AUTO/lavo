@@ -226,8 +226,8 @@ function mapApiStationToDetail(s: ApiStationListItem): StationDetailData {
         ...mapApiStationToStation(s),
         reviews: [],
         services: [],
-        serviceCategories: MOCK_SERVICE_CATEGORIES,
-        extras: MOCK_EXTRAS,
+        serviceCategories: process.env.NODE_ENV !== 'production' ? MOCK_SERVICE_CATEGORIES : [],
+        extras: process.env.NODE_ENV !== 'production' ? MOCK_EXTRAS : [],
         timeSlots: [],
         queueCount: 0,
         estimatedWaitMinutes: 0,
@@ -268,7 +268,7 @@ function mapApiDetailToStationDetail(
                 duration: s.stationConfig?.wash_duration_minutes ?? 30,
             })),
         },
-    ] : MOCK_SERVICE_CATEGORIES;
+    ] : (process.env.NODE_ENV !== 'production' ? MOCK_SERVICE_CATEGORIES : []);
 
     /* Map real time slots: only future, non-blocked, available slots. */
     const now = new Date();
@@ -300,7 +300,7 @@ function mapApiDetailToStationDetail(
         reviews,
         services: [],
         serviceCategories,
-        extras: MOCK_EXTRAS,
+        extras: process.env.NODE_ENV !== 'production' ? MOCK_EXTRAS : [],
         timeSlots,
         queueCount,
         estimatedWaitMinutes,

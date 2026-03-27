@@ -43,7 +43,7 @@ export function StationDetail({ id }: StationDetailProps) {
   const { isAuthenticated } = useAuth();
   const locale = useLocale();
   const mountedRef = useRef(true);
-  useEffect(() => { mountedRef.current = true; return () => { mountedRef.current = false; }; }, []);
+  useEffect(() => { return () => { mountedRef.current = false; }; }, [mountedRef]);
 
   const [station, setStation] = useState<StationDetailData | null | undefined>(undefined);
 
@@ -246,6 +246,7 @@ export function StationDetail({ id }: StationDetailProps) {
           type="button"
           onClick={handleJoinQueue}
           disabled={joiningQueue}
+          aria-busy={joiningQueue}
           className="w-full py-3.5 bg-gold hover:bg-gold-hover rounded-xl text-[15px] font-black text-dark-bg text-center transition-colors cursor-pointer btn-shine disabled:opacity-60 disabled:cursor-not-allowed"
         >
           {joiningQueue ? '...' : t('detail_join_queue')}
