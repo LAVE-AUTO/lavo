@@ -1,5 +1,5 @@
 import { getFromApi } from './axios-service';
-import type { Station, StationDetailData, ServiceCategory, ServiceExtra, TimeSlot } from '@/types/station';
+import type { Station, StationDetailData, ServiceCategory, ServiceExtra, TimeSlot, Review } from '@/types/station';
 
 /* ------------------------------------------------------------------ */
 /*  API response shapes (snake_case, matching backend output)          */
@@ -69,6 +69,26 @@ interface ApiStationListResponse {
         per_page: number;
         total_pages: number;
     };
+}
+
+interface ApiRatingItem {
+    id: string;
+    score: number;
+    comment: string | null;
+    created_at: string;
+}
+
+interface ApiRatingsResponse {
+    data: {
+        items: ApiRatingItem[];
+        meta: { total: number; page: number; per_page: number; total_pages: number };
+    };
+}
+
+interface ApiQueueEntry {
+    id: string;
+    status: string;
+    queue_position: number | null;
 }
 
 /* ------------------------------------------------------------------ */
@@ -164,6 +184,23 @@ function mockAvailableSlots(id: string, apiValue: number): number {
     return n < 4 ? 0 : (n % 4) + 1;         // ~25% unavailable, rest 1-4
 }
 
+function mapRatingToReview(r: ApiRatingItem): Review {
+    const d = new Date(r.created_at);
+    const date = d.toLocaleDateString('fr-CA', { day: '2-digit', month: '2-digit', year: 'numeric' });
+    return {
+        id: r.id,
+        authorName: 'Anonyme',
+        rating: r.score,
+        comment: r.comment || '',
+        date,
+    };
+}
+
+function calcEstimatedWait(queueCount: number, washDuration: number, washPostCount: number): number {
+    if (queueCount === 0) return 0;
+    return Math.ceil(queueCount / Math.max(washPostCount, 1)) * washDuration;
+}
+
 function mapApiStationToStation(s: ApiStationListItem): Station {
     return {
         id: s.id,
@@ -197,7 +234,12 @@ function mapApiStationToDetail(s: ApiStationListItem): StationDetailData {
     };
 }
 
-function mapApiDetailToStationDetail(s: ApiStationDetail): StationDetailData {
+function mapApiDetailToStationDetail(
+    s: ApiStationDetail,
+    reviews: Review[] = [],
+    queueCount: number = 0,
+    estimatedWaitMinutes: number = 0,
+): StationDetailData {
     const base = mapApiStationToStation(s);
 
     const activeFormats = (s.vehicleFormats || []).filter((f) => f.is_active);
@@ -216,8 +258,8 @@ function mapApiDetailToStationDetail(s: ApiStationDetail): StationDetailData {
     const serviceCategories: ServiceCategory[] = activeFormats.length > 0 ? [
         {
             type: 'hand_wash',
-            label: 'Format de vehicule',
-            description: 'Choisissez le format correspondant a votre vehicule.',
+            label: 'Format de véhicule',
+            description: 'Choisissez le format correspondant à votre véhicule.',
             forfaits: activeFormats.map((f) => ({
                 id: f.id,
                 name: f.label,
@@ -255,13 +297,13 @@ function mapApiDetailToStationDetail(s: ApiStationDetail): StationDetailData {
         priceFrom,
         vehicleTypes,
         openingHours,
-        reviews: [],
+        reviews,
         services: [],
         serviceCategories,
         extras: MOCK_EXTRAS,
         timeSlots,
-        queueCount: 0,
-        estimatedWaitMinutes: 0,
+        queueCount,
+        estimatedWaitMinutes,
     };
 }
 
@@ -312,13 +354,34 @@ export async function fetchStations(params?: Record<string, string>): Promise<Fe
 }
 
 export async function fetchStationById(id: string): Promise<StationDetailData | null> {
-    const [ok, data] = await getFromApi<{ data: ApiStationDetail }>(
-        `/stations/${encodeURIComponent(id)}`,
-    );
+    const encodedId = encodeURIComponent(id);
 
+    const [detailResult, ratingsResult, queueResult] = await Promise.all([
+        getFromApi<{ data: ApiStationDetail }>(`/stations/${encodedId}`),
+        getFromApi<ApiRatingsResponse>(`/stations/${encodedId}/ratings?limit=10`),
+        getFromApi<{ data: ApiQueueEntry[] }>(`/stations/${encodedId}/queue`),
+    ]);
+
+    const [ok, data] = detailResult;
     if (!ok || !data || !('data' in data)) {
         return null;
     }
+    const station = (data as { data: ApiStationDetail }).data;
 
-    return mapApiDetailToStationDetail((data as { data: ApiStationDetail }).data);
+    const [ratingsOk, ratingsData] = ratingsResult;
+    const reviews: Review[] = (ratingsOk && ratingsData && 'data' in (ratingsData as object))
+        ? ((ratingsData as ApiRatingsResponse).data?.items || []).map(mapRatingToReview)
+        : [];
+
+    const [queueOk, queueData] = queueResult;
+    const queueEntries: ApiQueueEntry[] = (queueOk && queueData && 'data' in (queueData as object))
+        ? ((queueData as { data: ApiQueueEntry[] }).data || [])
+        : [];
+    const activeStatuses = new Set(['waiting', 'in_progress', 'pending']);
+    const queueCount = queueEntries.filter((e) => activeStatuses.has(e.status)).length;
+    const washDuration = station.stationConfig?.wash_duration_minutes ?? 30;
+    const washPostCount = station.wash_post_count ?? 1;
+    const estimatedWaitMinutes = calcEstimatedWait(queueCount, washDuration, washPostCount);
+
+    return mapApiDetailToStationDetail(station, reviews, queueCount, estimatedWaitMinutes);
 }
