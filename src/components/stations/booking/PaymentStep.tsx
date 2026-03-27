@@ -48,18 +48,21 @@ function StripeCardForm({ grandTotal, clientSecret, onConfirm, onBack }: StripeC
     if (!cardElement) return;
     setProcessing(true);
     setStripeError(null);
-    const { error } = await stripe.confirmCardPayment(clientSecret, {
-      payment_method: { card: cardElement },
-    });
-    if (!mountedRef.current) return;
-    if (error) {
-      setStripeError(error.message ?? t('error_stripe_payment'));
-      setProcessing(false);
-      return;
+    try {
+      const { error } = await stripe.confirmCardPayment(clientSecret, {
+        payment_method: { card: cardElement },
+      });
+      if (!mountedRef.current) return;
+      if (error) {
+        setStripeError(error.message ?? t('error_stripe_payment'));
+        return;
+      }
+      await onConfirm();
+    } catch {
+      if (mountedRef.current) setStripeError(t('error_stripe_payment'));
+    } finally {
+      if (mountedRef.current) setProcessing(false);
     }
-    await onConfirm();
-    if (!mountedRef.current) return;
-    setProcessing(false);
   };
 
   return (
@@ -139,9 +142,11 @@ function QueueConfirmForm({ grandTotal, onConfirm, onBack }: { grandTotal: numbe
 
   const handleConfirm = async () => {
     setProcessing(true);
-    await onConfirm();
-    if (!mountedRef.current) return;
-    setProcessing(false);
+    try {
+      await onConfirm();
+    } finally {
+      if (mountedRef.current) setProcessing(false);
+    }
   };
 
   return (
