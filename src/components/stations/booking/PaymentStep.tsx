@@ -12,8 +12,15 @@ interface PaymentStepProps {
   onBack: () => void;
 }
 
-const stripeKey = process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY;
-const stripePromise = stripeKey ? loadStripe(stripeKey) : null;
+// Lazy singleton: loadStripe is deferred until first client render to avoid
+// Turbopack/SSR module initialization issues with @stripe/stripe-js.
+let stripePromise: ReturnType<typeof loadStripe> | null = null;
+function getStripePromise() {
+  if (stripePromise !== null) return stripePromise;
+  const key = process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY;
+  if (key) stripePromise = loadStripe(key);
+  return stripePromise;
+}
 
 /* ------------------------------------------------------------------
  *  Stripe card form — only rendered when clientSecret is provided
@@ -186,7 +193,9 @@ export function PaymentStep({ grandTotal, clientSecret, onConfirm, onBack }: Pay
     return <QueueConfirmForm grandTotal={grandTotal} onConfirm={onConfirm} onBack={onBack} />;
   }
 
-  if (!stripePromise) {
+  const resolvedStripePromise = getStripePromise();
+
+  if (!resolvedStripePromise) {
     return (
       <div className="flex flex-col h-full">
         <div className="flex-1 flex items-center justify-center py-8 text-center">
@@ -206,7 +215,7 @@ export function PaymentStep({ grandTotal, clientSecret, onConfirm, onBack }: Pay
   }
 
   return (
-    <Elements stripe={stripePromise} options={{ clientSecret }}>
+    <Elements stripe={resolvedStripePromise} options={{ clientSecret }}>
       <StripeCardForm
         grandTotal={grandTotal}
         clientSecret={clientSecret}
