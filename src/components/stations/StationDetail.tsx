@@ -1,15 +1,18 @@
 'use client';
 
-import { useState, useEffect } from 'react';
-import { useTranslations } from 'next-intl';
+import { useState, useEffect, useRef } from 'react';
+import { useTranslations, useLocale } from 'next-intl';
 import { Link } from '@/i18n/navigation';
-import { useSearchParams } from 'next/navigation';
+import { useSearchParams, useRouter } from 'next/navigation';
 import { StationReviews } from './StationReviews';
 import { BookingFlow } from './booking/BookingFlow';
 import { fetchStationById } from '@/services/station-api';
 import { useFavorites } from './useFavorites';
 import { PageSpinner } from '@/components/ui/PageSpinner';
 import { Badge } from '@/components/ui/Badge';
+import { useToast } from '@/context/toast-context';
+import { useAuth } from '@/context/auth-context';
+import { postWithApi } from '@/services/axios-service';
 import type { StationDetailData, ServiceCategory, ServiceForfait } from '@/types/station';
 
 interface StationDetailProps {
@@ -34,7 +37,13 @@ export function StationDetail({ id }: StationDetailProps) {
   const t = useTranslations('stations');
   const { isFavorite, toggle } = useFavorites();
   const searchParams = useSearchParams();
+  const router = useRouter();
   const { qrToken, qrVersion } = normalizeQrContext(searchParams);
+  const { success: toastSuccess, error: toastError } = useToast();
+  const { isAuthenticated } = useAuth();
+  const locale = useLocale();
+  const mountedRef = useRef(true);
+  useEffect(() => { mountedRef.current = true; return () => { mountedRef.current = false; }; }, []);
 
   const [station, setStation] = useState<StationDetailData | null | undefined>(undefined);
 
@@ -51,6 +60,7 @@ export function StationDetail({ id }: StationDetailProps) {
   const [selectedCategoryIdx, setSelectedCategoryIdx] = useState(0);
   const [selectedForfaitIdx, setSelectedForfaitIdx] = useState(0);
   const [bookingOpen, setBookingOpen] = useState(false);
+  const [joiningQueue, setJoiningQueue] = useState(false);
 
   if (station === undefined) return <PageSpinner />;
 
@@ -75,6 +85,24 @@ export function StationDetail({ id }: StationDetailProps) {
   const handleCategoryChange = (idx: number) => {
     setSelectedCategoryIdx(idx);
     setSelectedForfaitIdx(0);
+  };
+
+  const handleJoinQueue = async () => {
+    if (!isAuthenticated) {
+      const callbackUrl = encodeURIComponent(`/stations/${id}`);
+      router.push(`/${locale ?? 'fr'}/login?callbackUrl=${callbackUrl}`);
+      return;
+    }
+    if (!currentForfait) return;
+    setJoiningQueue(true);
+    const [ok] = await postWithApi(`/stations/${id}/queue/join`, { vehicle_format_id: currentForfait.id });
+    if (!mountedRef.current) return;
+    setJoiningQueue(false);
+    if (ok) {
+      toastSuccess(t('detail_queue_joined'));
+    } else {
+      toastError(t('detail_queue_join_error'));
+    }
   };
 
   const mapsUrl =
@@ -102,8 +130,8 @@ export function StationDetail({ id }: StationDetailProps) {
         </Badge>
       </div>
 
-      {/* Slot picker — hidden when station has no available slots */}
-      {hasSlots && categories.length > 0 && (
+      {/* Slot picker — shown when available slots OR station is open (for queue join) */}
+      {(hasSlots || isOpen) && categories.length > 0 && (
         <div>
           <label className="block text-[11px] font-bold text-[#555] dark:text-[#A0A090] uppercase tracking-wider mb-2">
             {t('service_type')}
@@ -127,8 +155,8 @@ export function StationDetail({ id }: StationDetailProps) {
         </div>
       )}
 
-      {/* Forfait cards — hidden when station has no available slots */}
-      {hasSlots && currentCategory && (
+      {/* Forfait cards — shown when available slots OR station is open (for queue join) */}
+      {(hasSlots || isOpen) && currentCategory && (
         <div className="space-y-3">
           {currentCategory.description && (
             <p className="text-[13px] text-[#555] dark:text-[#B0B0A0] leading-relaxed">
@@ -171,8 +199,8 @@ export function StationDetail({ id }: StationDetailProps) {
         </div>
       )}
 
-      {/* Unavailable notice — shown when station has no available slots */}
-      {!hasSlots && (
+      {/* Unavailable notice — shown when station is closed and has no available slots */}
+      {!hasSlots && !isOpen && (
         <div className="rounded-xl border border-[#D0D0C0] dark:border-tab-inactive bg-[#F0F0E2] dark:bg-dark-bg/50 px-4 py-4 text-[14px] text-[#555] dark:text-[#B0B0A0] text-center leading-relaxed">
           {t('detail_unavailable_notice')}
         </div>
@@ -212,6 +240,15 @@ export function StationDetail({ id }: StationDetailProps) {
           className="w-full py-3.5 bg-gold hover:bg-gold-hover rounded-xl text-[15px] font-black text-dark-bg text-center transition-colors cursor-pointer btn-shine"
         >
           {t('continue')}
+        </button>
+      ) : isOpen && currentForfait ? (
+        <button
+          type="button"
+          onClick={handleJoinQueue}
+          disabled={joiningQueue}
+          className="w-full py-3.5 bg-gold hover:bg-gold-hover rounded-xl text-[15px] font-black text-dark-bg text-center transition-colors cursor-pointer btn-shine disabled:opacity-60 disabled:cursor-not-allowed"
+        >
+          {joiningQueue ? '...' : t('detail_join_queue')}
         </button>
       ) : (
         <div className="w-full py-3.5 bg-[#E0E0D0] dark:bg-tab-inactive rounded-xl text-[15px] font-bold text-[#444] dark:text-[#C0C0B0] text-center">
@@ -364,6 +401,15 @@ export function StationDetail({ id }: StationDetailProps) {
                 className="flex-1 py-3 bg-gold hover:bg-gold-hover rounded-xl text-[15px] font-black text-dark-bg text-center transition-colors cursor-pointer btn-shine"
               >
                 {t('continue')}
+              </button>
+            ) : isOpen && currentForfait ? (
+              <button
+                type="button"
+                onClick={handleJoinQueue}
+                disabled={joiningQueue}
+                className="flex-1 py-3 bg-gold hover:bg-gold-hover rounded-xl text-[15px] font-black text-dark-bg text-center transition-colors cursor-pointer btn-shine disabled:opacity-60 disabled:cursor-not-allowed"
+              >
+                {joiningQueue ? '...' : t('detail_join_queue')}
               </button>
             ) : (
               <div className="flex-1 py-3 bg-[#E0E0D0] dark:bg-tab-inactive rounded-xl text-[15px] font-bold text-[#444] dark:text-[#C0C0B0] text-center">
