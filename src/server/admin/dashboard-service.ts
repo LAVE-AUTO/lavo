@@ -11,18 +11,25 @@ import {
   getOpenTicketAlerts,
 } from './dashboard-repository';
 import type { PendingKycAlert, OpenTicketAlert } from './dashboard-repository';
+import { formatDateUTC } from '@/validators/shared';
 
 /** Formatted date string in YYYY-MM-DD format. */
 type DateString = string;
 
-/** Effective period used for flow KPIs. */
+/**
+ * Effective period used for flow KPIs (revenue, transactions, etc.).
+ * Includes the date range and number of days for client-side calculations.
+ */
 type DashboardPeriod = {
   from: DateString;
   to: DateString;
   days: number;
 };
 
-/** All-time stock KPIs — independent of date range. */
+/**
+ * All-time stock KPIs — independent of date range.
+ * Represents current state of the platform (active stations, total clients, etc.).
+ */
 type DashboardTotals = {
   active_stations: number;
   total_clients: number;
@@ -30,20 +37,29 @@ type DashboardTotals = {
   open_support_tickets: number;
 };
 
-/** Flow KPIs filtered by the requested period. */
+/**
+ * Flow KPIs filtered by the requested period.
+ * Represents activity within the dashboard's date range.
+ */
 type DashboardMetrics = {
   total_transactions: number;
   total_revenue: string;
   total_commissions: string;
 };
 
-/** Actionable alert lists — current state, no date filter. */
+/**
+ * Actionable alert lists — current state, no date filter.
+ * Admin-facing lists of items requiring immediate attention.
+ */
 type DashboardAlerts = {
   pending_kyc: PendingKycAlert[];
   open_support_tickets: OpenTicketAlert[];
 };
 
-/** Full shape of the dashboard data returned to the route handler. */
+/**
+ * Full shape of the dashboard data returned to the route handler.
+ * Combines period, totals, metrics, and alerts into a single response.
+ */
 export type DashboardData = {
   period: DashboardPeriod;
   totals: DashboardTotals;
@@ -56,6 +72,11 @@ export type DashboardData = {
  *
  * All 6 repository queries are run in parallel via Promise.all to minimise
  * wall-clock latency (total time = slowest query, not sum of all).
+ *
+ * Promise.all: fail-fast — if any single DB query rejects, the whole dashboard returns 500.
+ * This is intentional for simplicity; the dashboard is an admin-only tool and partial data
+ * is not surfaced. If resilience to individual query failures becomes a requirement,
+ * switch to Promise.allSettled and surface partial data in the response shape.
  *
  * @param from  - Start of the period (inclusive).
  * @param to    - End of the period (inclusive).
@@ -85,8 +106,8 @@ export async function getDashboardData(
 
   return {
     period: {
-      from: formatDate(from),
-      to: formatDate(to),
+      from: formatDateUTC(from),
+      to: formatDateUTC(to),
       days,
     },
     totals: {
@@ -105,15 +126,4 @@ export async function getDashboardData(
       open_support_tickets: openTicketAlerts,
     },
   };
-}
-
-/**
- * Formats a Date as a YYYY-MM-DD string using UTC components.
- * Avoids locale-dependent output from toLocaleDateString().
- */
-function formatDate(date: Date): DateString {
-  const year = date.getUTCFullYear();
-  const month = String(date.getUTCMonth() + 1).padStart(2, '0');
-  const day = String(date.getUTCDate()).padStart(2, '0');
-  return `${year}-${month}-${day}`;
 }

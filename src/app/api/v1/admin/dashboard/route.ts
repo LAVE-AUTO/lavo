@@ -16,7 +16,8 @@ import type { NextResponse } from 'next/server';
  *   ?from=YYYY-MM-DD&to=YYYY-MM-DD     → exact date range for flow KPIs
  *   (no params)                        → default 30-day window
  *
- * Response is cached at the edge for 60 seconds (Cache-Control: max-age=60, s-maxage=60).
+ * Response is never cached (Cache-Control: private, no-store) because it contains
+ * sensitive admin data including PII (emails, names) in alert lists.
  *
  * Responses:
  *   200 { data: { period, totals, metrics, alerts } }
@@ -24,11 +25,15 @@ import type { NextResponse } from 'next/server';
  *   401 UNAUTHORIZED
  *   403 FORBIDDEN
  *   500 INTERNAL_ERROR
+ *
+ * Auth: admin role required.
  */
 export async function GET(request: Request): Promise<NextResponse> {
+  // Step 1: Authentication guard
   const auth = await requireRole(request, 'admin');
   if (auth instanceof Response) return applyNoStoreHeaders(auth as NextResponse);
 
+  // Step 2: Parse and validate query parameters
   const { searchParams } = new URL(request.url);
   const parsed = dashboardQuerySchema.safeParse({
     // Use || instead of ?? so empty string "" becomes undefined (avoids NaN from z.coerce.number()).
@@ -43,13 +48,12 @@ export async function GET(request: Request): Promise<NextResponse> {
     );
   }
 
+  // Step 3: Fetch dashboard data
   try {
     const { from, to, days } = resolveDateRange(parsed.data);
     const data = await getDashboardData(from, to, days);
 
-    const response = successResponse(data);
-    response.headers.set('Cache-Control', 'private, max-age=60');
-    return response;
+    return applyNoStoreHeaders(successResponse(data));
   } catch (e) {
     if (e instanceof AppError) return applyNoStoreHeaders(fromAppError(e));
     return applyNoStoreHeaders(error500(e));

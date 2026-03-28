@@ -1,9 +1,12 @@
 import { z } from 'zod';
-import { mapZodErrors } from './auth';
+import { mapZodErrors, dateStringSchema, refineDateRange } from './shared';
 
 export { mapZodErrors };
 
-/** All valid metric slug values for the analytics timeseries endpoints. */
+/**
+ * All valid metric slug values for the analytics timeseries endpoints.
+ * Each metric maps to a specific repository function that returns a sparse timeseries.
+ */
 export const VALID_METRICS = [
   'transactions',
   'revenue',
@@ -18,22 +21,19 @@ export const VALID_METRICS = [
 
 export type MetricSlug = (typeof VALID_METRICS)[number];
 
-/** Matches YYYY-MM-DD strings. Does not validate calendar correctness. */
-const dateStringSchema = z
-  .string()
-  .regex(/^\d{4}-\d{2}-\d{2}$/, 'Date must be in YYYY-MM-DD format');
-
 /**
  * Zod schema for GET /api/v1/admin/analytics/[metric] query parameters.
  *
  * Accepted combinations:
- *   - No params                           → default 30-day window ending now
- *   - ?from=YYYY-MM-DD&to=YYYY-MM-DD      → exact date range
+ *   - No params                           → default 30-day window ending now, group_by=day
+ *   - ?from=YYYY-MM-DD&to=YYYY-MM-DD      → exact date range, group_by=day
+ *   - ?group_by=day|week|month            → granularity for grouping (default: day)
  *
  * Cross-field rules:
  *   - `from` without `to` → error
  *   - `to` without `from` → error
  *   - `from` > `to`       → error
+ *   - date range > 365 days → error
  */
 export const analyticsQuerySchema = z
   .object({
@@ -41,49 +41,8 @@ export const analyticsQuerySchema = z
     to: dateStringSchema.optional(),
     group_by: z.enum(['day', 'week', 'month']).default('day'),
   })
-  .superRefine((data, ctx) => {
-    const hasFrom = data.from !== undefined;
-    const hasTo = data.to !== undefined;
-
-    if (hasFrom && !hasTo) {
-      ctx.addIssue({
-        code: z.ZodIssueCode.custom,
-        message: '`to` is required when `from` is provided',
-        path: ['to'],
-      });
-      return;
-    }
-
-    if (hasTo && !hasFrom) {
-      ctx.addIssue({
-        code: z.ZodIssueCode.custom,
-        message: '`from` is required when `to` is provided',
-        path: ['from'],
-      });
-      return;
-    }
-
-    if (hasFrom && hasTo) {
-      const fromDate = new Date(data.from!);
-      const toDate = new Date(data.to!);
-      if (fromDate > toDate) {
-        ctx.addIssue({
-          code: z.ZodIssueCode.custom,
-          message: '`from` must not be after `to`',
-          path: ['from'],
-        });
-      }
-      const diffMs = toDate.getTime() - fromDate.getTime();
-      const diffDays = Math.ceil(diffMs / (1000 * 60 * 60 * 24));
-      if (diffDays > 365) {
-        ctx.addIssue({
-          code: z.ZodIssueCode.custom,
-          message: 'Date range must not exceed 365 days',
-          path: ['from'],
-        });
-      }
-    }
-  });
+  .strict()
+  .superRefine(refineDateRange);
 
 export type AnalyticsQuery = z.infer<typeof analyticsQuerySchema>;
 
@@ -95,23 +54,29 @@ export type AnalyticsQuery = z.infer<typeof analyticsQuerySchema>;
  *   2. Default               → 30-day window ending now
  *
  * `from` is set to start of day (UTC); `to` is set to end of day (UTC)
- * so the full boundary days are included.
+ * so the full boundary days are included in database range queries.
  *
- * @returns { from: Date, to: Date }
+ * @param parsed - Validated analytics query parameters.
+ * @returns      - Effective date range (from and to as Date objects).
  */
 export function resolveAnalyticsRange(parsed: AnalyticsQuery): { from: Date; to: Date } {
+  // Branch 1: explicit from/to range provided.
   if (parsed.from !== undefined && parsed.to !== undefined) {
     const from = new Date(parsed.from);
     from.setUTCHours(0, 0, 0, 0);
+
     const to = new Date(parsed.to);
     to.setUTCHours(23, 59, 59, 999);
     return { from, to };
   }
 
+  // Branch 2: default 30-day window.
+  // Subtract 29 (not 30) so the range is 30 inclusive days: today-29 through today.
   const now = new Date();
   const from = new Date(now);
-  from.setUTCDate(from.getUTCDate() - 30);
+  from.setUTCDate(from.getUTCDate() - 29);
   from.setUTCHours(0, 0, 0, 0);
+
   const to = new Date(now);
   to.setUTCHours(23, 59, 59, 999);
   return { from, to };

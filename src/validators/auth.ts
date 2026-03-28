@@ -1,6 +1,20 @@
 import { z } from 'zod';
-import type { ApiErrorBody } from '@/types/api';
-import { phoneSchema } from './shared';
+import { phoneSchema, mapZodErrors } from './shared';
+
+export { mapZodErrors };
+
+/**
+ * Shared password validation rules used in register and reset-password schemas.
+ */
+const passwordSchema = z
+  .string()
+  .min(8, 'Password must be at least 8 characters')
+  .max(128, 'Password must not exceed 128 characters')
+  .regex(/[A-Z]/, 'Password must contain at least one uppercase letter')
+  .regex(/[a-z]/, 'Password must contain at least one lowercase letter')
+  .regex(/[0-9]/, 'Password must contain at least one number')
+  .regex(/[@$!%*#?&_\-+=]/, 'Password must contain at least one special character. Allowed: @ $ ! % * # ? & _ - + =')
+  .regex(/^[A-Za-z0-9@$!%*#?&_\-+=]+$/, 'Password contains invalid characters. Only letters, numbers, and these special characters are allowed: @ $ ! % * # ? & _ - + =');
 
 export const registerSchema = z
   .object({
@@ -12,15 +26,7 @@ export const registerSchema = z
       .max(320, 'Email must not exceed 320 characters')
       .refine((s) => !s.includes('..'), { message: 'Email cannot contain consecutive dots' }),
     phone: phoneSchema,
-    password: z
-      .string()
-      .min(8, 'Password must be at least 8 characters')
-      .max(128, 'Password must not exceed 128 characters')
-      .regex(/[A-Z]/, 'Password must contain at least one uppercase letter')
-      .regex(/[a-z]/, 'Password must contain at least one lowercase letter')
-      .regex(/[0-9]/, 'Password must contain at least one number')
-      .regex(/[@$!%*#?&_\-+=]/, 'Password must contain at least one special character. Allowed: @ $ ! % * # ? & _ - + =')
-      .regex(/^[A-Za-z0-9@$!%*#?&_\-+=]+$/, 'Password contains invalid characters. Only letters, numbers, and these special characters are allowed: @ $ ! % * # ? & _ - + ='),
+    password: passwordSchema,
     confirm_password: z.string().min(1, 'Password confirmation is required'),
     remember_me: z.boolean().optional().default(false),
   })
@@ -39,20 +45,11 @@ export const resendEmailSchema = z.object({
   email: z.string().email('Invalid email address'),
 });
 
-const passwordSchema = z
-  .string()
-  .min(8, 'Password must be at least 8 characters')
-  .max(128, 'Password must not exceed 128 characters')
-  .regex(/[A-Z]/, 'Password must contain at least one uppercase letter')
-  .regex(/[a-z]/, 'Password must contain at least one lowercase letter')
-  .regex(/[0-9]/, 'Password must contain at least one number')
-  .regex(/[@$!%*#?&_\-+=]/, 'Password must contain at least one special character. Allowed: @ $ ! % * # ? & _ - + =')
-  .regex(/^[A-Za-z0-9@$!%*#?&_\-+=]+$/, 'Password contains invalid characters. Only letters, numbers, and these special characters are allowed: @ $ ! % * # ? & _ - + =');
-
 export const loginSchema = z.object({
   email: z.string().email('Invalid email address').max(320, 'Email must not exceed 320 characters'),
   password: z.string().min(1, 'Password is required').max(128, 'Password must not exceed 128 characters'),
   remember_me: z.boolean().optional().default(false),
+
   /**
    * The role of the login space the client is connecting from.
    * Enforced server-side: the authenticated user's role must match.
@@ -78,12 +75,3 @@ export const resetPasswordSchema = z
     message: 'Passwords do not match',
     path: ['confirm_new_password'],
   });
-
-export function mapZodErrors(
-  err: z.ZodError
-): NonNullable<ApiErrorBody['errors']> {
-  return err.errors.map((e) => ({
-    field: e.path.join('.'),
-    message: e.message,
-  }));
-}
