@@ -13,6 +13,7 @@ import { refreshTokens } from "./refresh-tokens";
 import { noShowFees, reservations } from "./reservations";
 import { notifications } from "./notifications";
 import { ratings } from "./ratings";
+import { disputes } from "./disputes";
 import {
   pendingUploads,
   stationConfigs,
@@ -42,6 +43,7 @@ export * from "./auth-rate-limits";
 export * from "./refresh-tokens";
 export * from "./reschedule-requests";
 export * from "./tips";
+export * from "./disputes";
 
 export const usersRelations = relations(users, ({ one, many }) => ({
   station: one(stations, {
@@ -315,5 +317,26 @@ export const reservationTipsRelations = relations(reservationTips, ({ one }) => 
   station: one(stations, {
     fields: [reservationTips.station_id],
     references: [stations.id],
+  }),
+}));
+
+export const disputesRelations = relations(disputes, ({ one }) => ({
+  reservation: one(reservations, {
+    fields: [disputes.reservation_id],
+    references: [reservations.id],
+  }),
+  client: one(users, {
+    fields: [disputes.client_id],
+    references: [users.id],
+    relationName: "disputeClient",
+  }),
+  station: one(stations, {
+    fields: [disputes.station_id],
+    references: [stations.id],
+  }),
+  closedByAdmin: one(users, {
+    fields: [disputes.closed_by],
+    references: [users.id],
+    relationName: "disputeClosedBy",
   }),
 }));
