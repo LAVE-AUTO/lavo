@@ -39,9 +39,9 @@ function formatDate(d: string) {
   } catch { return d; }
 }
 
-function StarRow({ score }: { score: number }) {
+function StarRow({ score, ariaLabel }: { score: number; ariaLabel: string }) {
   return (
-    <div className="flex items-center gap-0.5" aria-label={`${score} étoiles`}>
+    <div className="flex items-center gap-0.5" aria-label={ariaLabel}>
       {[1, 2, 3, 4, 5].map((n) => (
         <svg key={n} width="13" height="13" viewBox="0 0 24 24" aria-hidden="true">
           <path
@@ -104,7 +104,7 @@ export function AdminRatingsView() {
   useEffect(() => { loadData(1, visibilityFilter, scoreFilter); }, [visibilityFilter, scoreFilter, loadData]);
 
   async function handleToggle(item: RatingItem) {
-    if (togglingId) return;
+    if (togglingId === item.id) return;
     setTogglingId(item.id);
     const newVisible = !item.is_visible;
     const [ok] = await patchWithApi(`/admin/ratings/${item.id}`, { is_visible: newVisible });
@@ -249,7 +249,7 @@ export function AdminRatingsView() {
 
                     {/* Score */}
                     <td className="px-4 py-3">
-                      <StarRow score={item.score} />
+                      <StarRow score={item.score} ariaLabel={t('star_row_label', { score: item.score })} />
                     </td>
 
                     {/* Comment */}
@@ -311,7 +311,7 @@ export function AdminRatingsView() {
           <div className="mt-5 flex items-center justify-center gap-2">
             <button
               type="button"
-              aria-label="Page précédente"
+              aria-label={t('pagination_prev')}
               disabled={page === 1}
               onClick={() => loadData(page - 1, visibilityFilter, scoreFilter)}
               className="flex h-8 w-8 items-center justify-center rounded-lg border border-[#D8D4CC] text-[#888] transition-colors hover:border-[#C49A1E] hover:text-[#C49A1E] disabled:opacity-40 dark:border-[#1A2A14] dark:text-[#5A5A4A]"
@@ -335,7 +335,7 @@ export function AdminRatingsView() {
             ))}
             <button
               type="button"
-              aria-label="Page suivante"
+              aria-label={t('pagination_next')}
               disabled={page === totalPages}
               onClick={() => loadData(page + 1, visibilityFilter, scoreFilter)}
               className="flex h-8 w-8 items-center justify-center rounded-lg border border-[#D8D4CC] text-[#888] transition-colors hover:border-[#C49A1E] hover:text-[#C49A1E] disabled:opacity-40 dark:border-[#1A2A14] dark:text-[#5A5A4A]"

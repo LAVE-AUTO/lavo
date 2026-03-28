@@ -4,8 +4,6 @@ import { useState, useEffect } from 'react';
 import { useTranslations } from 'next-intl';
 import { AdminAddUserForm, type Role } from './AdminAddUserForm';
 import { AdminAddUserSuccess } from './AdminAddUserSuccess';
-import { generatePassword } from '@/helpers/generate-password';
-
 type Step = 'form' | 'success';
 
 interface SuccessData {
@@ -100,9 +98,9 @@ export function AdminAddUserModal({ open, onClose }: Props) {
             onSubmit={handleSubmit}
             onClose={onClose}
           />
-        ) : (
-          <AdminAddUserSuccess data={success!} onClose={onClose} />
-        )}
+        ) : success ? (
+          <AdminAddUserSuccess data={success} onClose={onClose} />
+        ) : null}
       </div>
     </div>
   );

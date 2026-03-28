@@ -2204,7 +2204,10 @@
     "meta_total": "{count} avis au total",
     "no_comment": "Aucun commentaire",
     "toggling": "Mise à jour...",
-    "toggle_error": "Échec de la mise à jour."
+    "toggle_error": "Échec de la mise à jour.",
+    "star_row_label": "{score} étoiles sur 5",
+    "pagination_prev": "Page précédente",
+    "pagination_next": "Page suivante"
   },
   "admin_dashboard": {
     "nav_dashboard": "Tableau de bord",
@@ -2215,6 +2218,7 @@
     "nav_settings": "Paramètres",
     "nav_transactions": "Transactions",
     "nav_logs": "Journaux",
+    "nav_ratings": "Avis",
     "nav_support": "Support",
     "nav_legal_content": "Contenu légal",
     "nav_logout": "Déconnexion",
