@@ -144,15 +144,18 @@ export async function refundDispute(
   }
 
   // Call Stripe — outside the transaction to avoid holding a DB lock during network I/O.
+  // The idempotency key is scoped to this dispute so retries on network timeout do not
+  // issue a second refund.
   const stripeRefundId = await refundPaymentIntent(
     reservation.stripe_payment_id,
-    refundAmountCents
+    refundAmountCents,
+    `refund_dispute_${disputeId}`
   );
 
   const refundedAmountCents = refundAmountCents ?? amountPaidCents;
   const refundedAmount = (refundedAmountCents / 100).toFixed(2);
 
-  let updatedDispute!: repo.Dispute;
+  let updatedDispute: repo.Dispute | undefined;
 
   await db.transaction(async (tx) => {
     updatedDispute = await repo.updateDispute(
@@ -179,6 +182,7 @@ export async function refundDispute(
     });
   });
 
+  if (!updatedDispute) throw new NotFoundError('Dispute not found after update');
   return updatedDispute;
 }
 
@@ -200,7 +204,7 @@ export async function closeDispute(
   if (!dispute) throw new NotFoundError('Dispute not found');
   if (dispute.status !== 'open') throw new DisputeAlreadyClosedError();
 
-  let updatedDispute!: repo.Dispute;
+  let updatedDispute: repo.Dispute | undefined;
 
   await db.transaction(async (tx) => {
     updatedDispute = await repo.updateDispute(
@@ -226,5 +230,6 @@ export async function closeDispute(
     });
   });
 
+  if (!updatedDispute) throw new NotFoundError('Dispute not found after update');
   return updatedDispute;
 }

@@ -2,6 +2,7 @@ import { and, count, eq, gte, lte, sql } from 'drizzle-orm';
 import { db } from '@/lib/db';
 import { disputes, stations } from '@/lib/db/schema';
 import type { DbTransaction } from '@/lib/db';
+import { DisputeAlreadyExistsError } from '@/lib/errors';
 
 export type Dispute = typeof disputes.$inferSelect;
 
@@ -56,19 +57,28 @@ export async function findDisputeByReservationId(reservationId: string): Promise
 }
 
 export async function createDispute(data: CreateDisputeData): Promise<Dispute> {
-  const [dispute] = await db
-    .insert(disputes)
-    .values({
-      reservation_id: data.reservation_id,
-      client_id: data.client_id,
-      station_id: data.station_id,
-      reason: data.reason,
-      description: data.description ?? null,
-      requested_amount: data.requested_amount ?? null,
-      status: 'open',
-    })
-    .returning();
-  return dispute;
+  try {
+    const [dispute] = await db
+      .insert(disputes)
+      .values({
+        reservation_id: data.reservation_id,
+        client_id: data.client_id,
+        station_id: data.station_id,
+        reason: data.reason,
+        description: data.description ?? null,
+        requested_amount: data.requested_amount ?? null,
+        status: 'open',
+      })
+      .returning();
+    return dispute;
+  } catch (err: unknown) {
+    // Concurrent duplicate: both requests passed the app-level check, second hits the DB unique constraint.
+    const code = err && typeof err === 'object' && 'code' in err
+      ? (err as { code?: string }).code
+      : undefined;
+    if (code === '23505') throw new DisputeAlreadyExistsError();
+    throw err;
+  }
 }
 
 export async function updateDispute(
