@@ -57,6 +57,14 @@ export async function createDispute(
     );
   }
 
+  // SECURITY: requested_amount must not exceed what was actually paid
+  if (input.requested_amount !== undefined) {
+    const amountPaid = parseFloat(reservation.amount_paid);
+    if (Number.isFinite(amountPaid) && input.requested_amount > amountPaid) {
+      throw new ValidationError('Requested amount cannot exceed the amount paid for this reservation');
+    }
+  }
+
   const existing = await repo.findDisputeByReservationId(input.reservation_id);
   if (existing) throw new DisputeAlreadyExistsError();
 

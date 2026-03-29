@@ -30,7 +30,8 @@ import type { NextRequest, NextResponse } from 'next/server';
  *   500 INTERNAL_ERROR
  */
 export async function GET(request: NextRequest): Promise<NextResponse> {
-  const auth = await requireRole(undefined, 'admin');
+  // SECURITY: pass request so requireAuth reads headers for auth validation
+  const auth = await requireRole(request, 'admin');
   if (auth instanceof Response) return auth as NextResponse;
 
   const searchParams = Object.fromEntries(request.nextUrl.searchParams.entries());
@@ -47,6 +48,8 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
     return applyNoStoreHeaders(successResponse(result));
   } catch (e) {
     if (e instanceof AppError) return applyNoStoreHeaders(fromAppError(e));
-    return applyNoStoreHeaders(error500(e));
+    // SECURITY: never pass raw error to error500 — leaks internal details via _dev
+    console.error('[GET /api/v1/admin/disputes] Unhandled error:', e);
+    return applyNoStoreHeaders(error500());
   }
 }

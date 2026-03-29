@@ -3,6 +3,7 @@ import {
   successResponse,
   error400,
   error409,
+  error429,
   error500,
   fromAppError,
 } from '@/lib/responses';
@@ -11,7 +12,11 @@ import { ApiCode } from '@/types/api-codes';
 import { AppError } from '@/lib/errors';
 import { createDisputeSchema, mapZodErrors } from '@/validators/dispute';
 import { createDispute } from '@/server/disputes/dispute-service';
+import { createEndpointRateLimiter } from '@/lib/endpoint-rate-limiter';
 import type { NextResponse } from 'next/server';
+
+// SECURITY: rate-limit dispute creation to 5 requests per minute per user
+const disputeCreateLimiter = createEndpointRateLimiter({ maxRequests: 5, windowMs: 60_000 });
 
 /**
  * POST /api/v1/disputes
@@ -31,6 +36,10 @@ import type { NextResponse } from 'next/server';
 export async function POST(request: Request): Promise<NextResponse> {
   const auth = await requireRole(request, 'client');
   if (auth instanceof Response) return auth as NextResponse;
+
+  if (disputeCreateLimiter.isRateLimited(auth.sub)) {
+    return applyNoStoreHeaders(error429());
+  }
 
   let body: unknown;
   try {
@@ -54,6 +63,8 @@ export async function POST(request: Request): Promise<NextResponse> {
       return applyNoStoreHeaders(error409(e.message, ApiCode.DISPUTE_ALREADY_EXISTS));
     }
     if (e instanceof AppError) return applyNoStoreHeaders(fromAppError(e));
-    return applyNoStoreHeaders(error500(e));
+    // SECURITY: never pass raw error to error500 — leaks internal details via _dev
+    console.error('[POST /api/v1/disputes] Unhandled error:', e);
+    return applyNoStoreHeaders(error500());
   }
 }

@@ -4,6 +4,7 @@ import {
   error400,
   error404,
   error409,
+  error429,
   error500,
   fromAppError,
 } from '@/lib/responses';
@@ -12,7 +13,11 @@ import { ApiCode } from '@/types/api-codes';
 import { AppError, DisputeAlreadyClosedError, RefundNotEligibleError } from '@/lib/errors';
 import { disputeIdParamSchema, refundDisputeSchema, mapZodErrors } from '@/validators/dispute';
 import { refundDispute } from '@/server/disputes/dispute-service';
+import { createEndpointRateLimiter } from '@/lib/endpoint-rate-limiter';
 import type { NextResponse } from 'next/server';
+
+// SECURITY: rate-limit refund actions to 10 per minute per admin
+const refundLimiter = createEndpointRateLimiter({ maxRequests: 10, windowMs: 60_000 });
 
 /**
  * POST /api/v1/admin/disputes/:id/refund
@@ -40,6 +45,10 @@ export async function POST(
 ): Promise<NextResponse> {
   const auth = await requireRole(request, 'admin');
   if (auth instanceof Response) return auth as NextResponse;
+
+  if (refundLimiter.isRateLimited(auth.sub)) {
+    return applyNoStoreHeaders(error429());
+  }
 
   const { id } = await params;
   const idResult = disputeIdParamSchema.safeParse(id);
@@ -75,6 +84,8 @@ export async function POST(
       return applyNoStoreHeaders(error404(e.message));
     }
     if (e instanceof AppError) return applyNoStoreHeaders(fromAppError(e));
-    return applyNoStoreHeaders(error500(e));
+    // SECURITY: never pass raw error to error500
+    console.error('[POST /api/v1/admin/disputes/:id/refund] Unhandled error:', e);
+    return applyNoStoreHeaders(error500());
   }
 }

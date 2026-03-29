@@ -4,6 +4,7 @@ import {
   error400,
   error404,
   error409,
+  error429,
   error500,
   fromAppError,
 } from '@/lib/responses';
@@ -12,7 +13,11 @@ import { ApiCode } from '@/types/api-codes';
 import { AppError, DisputeAlreadyClosedError } from '@/lib/errors';
 import { disputeIdParamSchema, closeDisputeSchema, mapZodErrors } from '@/validators/dispute';
 import { closeDispute } from '@/server/disputes/dispute-service';
+import { createEndpointRateLimiter } from '@/lib/endpoint-rate-limiter';
 import type { NextResponse } from 'next/server';
+
+// SECURITY: rate-limit close actions to 20 per minute per admin
+const closeLimiter = createEndpointRateLimiter({ maxRequests: 20, windowMs: 60_000 });
 
 /**
  * POST /api/v1/admin/disputes/:id/close
@@ -39,6 +44,10 @@ export async function POST(
 ): Promise<NextResponse> {
   const auth = await requireRole(request, 'admin');
   if (auth instanceof Response) return auth as NextResponse;
+
+  if (closeLimiter.isRateLimited(auth.sub)) {
+    return applyNoStoreHeaders(error429());
+  }
 
   const { id } = await params;
   const idResult = disputeIdParamSchema.safeParse(id);
@@ -71,6 +80,8 @@ export async function POST(
       return applyNoStoreHeaders(error404(e.message));
     }
     if (e instanceof AppError) return applyNoStoreHeaders(fromAppError(e));
-    return applyNoStoreHeaders(error500(e));
+    // SECURITY: never pass raw error to error500
+    console.error('[POST /api/v1/admin/disputes/:id/close] Unhandled error:', e);
+    return applyNoStoreHeaders(error500());
   }
 }
