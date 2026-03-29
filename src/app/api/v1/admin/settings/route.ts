@@ -17,6 +17,7 @@ import {
   fromAppError,
 } from '@/lib/responses';
 import { AppError } from '@/lib/errors';
+import { ApiCode } from '@/types/api-codes';
 import { applyNoStoreHeaders } from '@/lib/response-headers';
 import {
   updatePlatformSettingsSchema,
@@ -86,14 +87,14 @@ export async function PATCH(request: Request): Promise<NextResponse> {
   try {
     body = await request.json();
   } catch {
-    return applyNoStoreHeaders(error400('Invalid JSON body'));
+    return applyNoStoreHeaders(error400('Invalid JSON body', ApiCode.VALIDATION_FAILED));
   }
 
   // Validate against schema
   const parsed = updatePlatformSettingsSchema.safeParse(body);
   if (!parsed.success) {
     return applyNoStoreHeaders(
-      error400('Validation failed', undefined, mapZodErrors(parsed.error))
+      error400('Validation failed', ApiCode.VALIDATION_FAILED, mapZodErrors(parsed.error))
     );
   }
 
