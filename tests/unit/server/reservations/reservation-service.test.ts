@@ -24,6 +24,7 @@ const mockDecrementSlotBookedCount = jest.fn();
 jest.mock('@/server/admin/platform-settings-service', () => ({
   getActiveCommissionRate: jest.fn().mockResolvedValue('0.10'),
   getPlatformSetting: jest.fn().mockResolvedValue(null),
+  getPlatformSettingWithFallback: jest.fn().mockResolvedValue('7'),
   isAdminEscrowPushEnabled: jest.fn().mockResolvedValue(false),
 }));
 

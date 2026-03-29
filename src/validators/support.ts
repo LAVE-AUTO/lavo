@@ -1,7 +1,25 @@
+/**
+ * Zod schemas for support ticket API endpoints.
+ *
+ * Schemas:
+ *   - createTicketSchema: POST /api/v1/support (create ticket)
+ *   - addSupportMessageSchema: POST /api/v1/support/:id/messages (add message)
+ *   - updateTicketStatusSchema: PATCH /api/v1/support/:id (update status)
+ *   - updateSupportSettingsSchema: PATCH /api/v1/admin/support/settings (admin settings)
+ *
+ * Features:
+ *   - Dynamic max message length (configurable via platform settings)
+ *   - Enumerated priorities, categories, and statuses (French labels)
+ *   - Per-key semantic validation for admin settings
+ */
 import { z } from "zod";
 import { mapZodErrors } from "./auth";
 
 export { mapZodErrors };
+
+
+// %%%%% Enums %%%%%
+// Support ticket field enumerations (French labels)
 
 export const supportPrioritySchema = z.enum(["bas", "normal", "urgent"]);
 export const supportCategorySchema = z.enum([
@@ -11,12 +29,31 @@ export const supportCategorySchema = z.enum([
   "autre",
 ]);
 
-/** Valid ticket statuses in this system. */
+/**
+ * Valid ticket statuses in the system.
+ * Lifecycle: ouvert → en_cours → resolu → ferme
+ */
 export const supportStatusSchema = z.enum(["ouvert", "en_cours", "resolu", "ferme"]);
 
-/** Reusable UUID param validator for route [id] segments. */
+
+// %%%%% Param validators %%%%%
+// Route parameter validation
+
+/**
+ * Validator for ticket ID param (route [id] segments).
+ * Ensures valid UUID format.
+ */
 export const supportTicketIdSchema = z.string().uuid("Invalid ticket ID format");
 
+
+// %%%%% Create ticket schema %%%%%
+// POST /api/v1/support
+
+/**
+ * Schema for creating a new support ticket.
+ * Validates subject (5–255 chars), initial message (10–5000 chars),
+ * and optional priority/category with defaults.
+ */
 export const createTicketSchema = z.object({
   subject: z
     .string()
@@ -32,19 +69,43 @@ export const createTicketSchema = z.object({
   category: supportCategorySchema.optional().default("autre"),
 });
 
-export const addSupportMessageSchema = z.object({
-  content: z
-    .string()
-    .trim()
-    .min(1, "Message content cannot be empty")
-    .max(5000, "Message must not exceed 5000 characters"),
-});
+
+// %%%%% Add message schema %%%%%
+// POST /api/v1/support/:id/messages (with configurable max length)
+
+/**
+ * Factory that builds the add-message schema with a dynamic max length.
+ * Call this with the platform-configured maximum (read from DB → env → default)
+ * to honour admin-configured content limits.
+ *
+ * @param maxLength - Maximum characters allowed in message content
+ * @returns Zod schema for POST /api/v1/support/:id/messages request body
+ */
+export function createSupportMessageSchema(maxLength: number) {
+  return z.object({
+    content: z
+      .string()
+      .trim()
+      .min(1, 'Message content cannot be empty')
+      .max(maxLength, `Message must not exceed ${maxLength} characters`),
+  });
+}
+
+/** Static schema with hardcoded default (5000 chars) for backward compat and tests. */
+export const addSupportMessageSchema = createSupportMessageSchema(5000);
+
+
+// %%%%% Update ticket status schema %%%%%
+// PATCH /api/v1/support/:id
 
 export const updateTicketStatusSchema = z.object({
   status: supportStatusSchema,
 });
 
-/** Allowed settings keys to prevent arbitrary key injection. */
+
+// %%%%% Admin settings schema %%%%%
+// PATCH /api/v1/admin/support/settings (admin only)
+
 const ALLOWED_SETTINGS_KEYS = [
   "support_email",
   "max_open_tickets_per_user",
@@ -53,10 +114,18 @@ const ALLOWED_SETTINGS_KEYS = [
 ] as const;
 
 /**
- * Settings are key→value pairs restricted to known keys.
- * Values are capped at 500 characters to prevent abuse.
- * Maximum 10 keys per request to prevent DoS.
- * Per-key semantic validation prevents invalid data from reaching the DB.
+ * Schema for bulk support settings update (admin only).
+ *
+ * Constraints:
+ *   - Keys: restricted to ALLOWED_SETTINGS_KEYS (prevent injection)
+ *   - Values: max 500 chars each (prevent abuse)
+ *   - Count: max 10 keys per request (prevent DoS)
+ *
+ * Per-key validation via superRefine:
+ *   - support_email: valid email format
+ *   - max_open_tickets_per_user: non-negative integer
+ *   - auto_close_days: positive integer
+ *   - welcome_message: no semantic validation (free text)
  */
 export const updateSupportSettingsSchema = z
   .record(

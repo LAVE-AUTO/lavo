@@ -1,5 +1,17 @@
 /**
- * Zod schemas for ratings API endpoints (client submit, public listing, admin management).
+ * Zod schemas for ratings API endpoints.
+ *
+ * Schemas:
+ *   - createRatingCommentSchema: POST /api/v1/ratings (client rating submission)
+ *   - stationRatingsQuerySchema: GET /api/v1/stations/:id/ratings (public listing)
+ *   - adminRatingsQuerySchema: GET /api/v1/admin/ratings (admin moderation interface)
+ *   - updateRatingVisibilitySchema: PATCH /api/v1/admin/ratings/:id (toggle visibility)
+ *
+ * Features:
+ *   - Dynamic max comment length (configurable via platform settings)
+ *   - Cross-field validation (score_min <= score_max, from <= to)
+ *   - Pagination validation (page >= 1, limit in ranges)
+ *   - Date validation (YYYY-MM-DD format and valid calendar dates)
  */
 import { z } from 'zod';
 import { mapZodErrors } from './auth';
@@ -8,30 +20,51 @@ import { isValidCalendarDate } from '@/helpers/date-helper';
 export { mapZodErrors };
 
 
-// %%%%% Schema definitions %%%%%
-// Common schemas and validators
+// %%%%% Common validators %%%%%
+// Reusable field schemas
 
 const uuidSchema = z.string().uuid('Must be a valid UUID');
 
 
-// %%%%% Client rating submission %%%%%
-// POST /api/v1/ratings body schema
 
-export const postRatingBodySchema = z
-  .object({
-    reservation_id: uuidSchema,
-    score: z
-      .number({ invalid_type_error: 'score must be a number' })
-      .int('score must be an integer')
-      .min(1, 'score must be at least 1')
-      .max(5, 'score must be at most 5'),
-    comment: z.string().max(500, 'comment must not exceed 500 characters').optional(),
-  })
-  .strict();
+// %%%%% Client rating submission %%%%%
+// POST /api/v1/ratings body
+
+/**
+ * Factory that builds the POST /api/v1/ratings body schema with configurable max comment length.
+ *
+ * Called with the platform-configured maximum (read from DB → env → default) to honour
+ * admin-set limits. Validates:
+ *   - reservation_id: valid UUID
+ *   - score: integer 1–5
+ *   - comment: optional string up to maxCommentLength
+ *
+ * @param maxCommentLength - Max characters allowed in comment field (e.g., 500, 1000)
+ * @returns Zod schema for POST /api/v1/ratings request body
+ */
+export function createRatingCommentSchema(maxCommentLength: number) {
+  return z
+    .object({
+      reservation_id: uuidSchema,
+      score: z
+        .number({ invalid_type_error: 'score must be a number' })
+        .int('score must be an integer')
+        .min(1, 'score must be at least 1')
+        .max(5, 'score must be at most 5'),
+      comment: z
+        .string()
+        .max(maxCommentLength, `comment must not exceed ${maxCommentLength} characters`)
+        .optional(),
+    })
+    .strict();
+}
+
+/** Static schema with hardcoded default (500 chars) for backward compat and tests. */
+export const postRatingBodySchema = createRatingCommentSchema(500);
 
 
 // %%%%% Public station ratings %%%%%
-// GET /api/v1/stations/:id/ratings
+// GET /api/v1/stations/:id/ratings query and params
 
 export const ratingStationIdParamSchema = z.object({
   id: uuidSchema,
@@ -44,8 +77,23 @@ export const stationRatingsQuerySchema = z.object({
 
 
 // %%%%% Admin ratings management %%%%%
-// GET /api/v1/admin/ratings, PATCH /api/v1/admin/ratings/:id
+// GET /api/v1/admin/ratings (with filters), PATCH /api/v1/admin/ratings/:id
 
+/**
+ * Query schema for admin ratings listing with filtering and pagination.
+ *
+ * Filters:
+ *   - station_id: optional UUID (filter by station)
+ *   - is_visible: optional boolean (filter by visibility)
+ *   - score_min / score_max: optional 1–5 range (cross-validated: min <= max)
+ *   - from / to: optional YYYY-MM-DD dates (cross-validated: from <= to)
+ *
+ * Sorting & pagination:
+ *   - sort_by: 'created_at' or 'score' (default: 'created_at')
+ *   - sort_order: 'asc' or 'desc' (default: 'desc')
+ *   - page: integer >= 1 (default: 1)
+ *   - limit: 1–100 (default: 20)
+ */
 export const adminRatingsQuerySchema = z
   .object({
     station_id: uuidSchema.optional(),

@@ -1,3 +1,32 @@
+/**
+ * Tip service: create tips for completed reservations.
+ *
+ * Features:
+ *   - createTip: submit tip with Stripe payment flow
+ *
+ * Validation:
+ *   - Reservation must exist and belong to client
+ *   - Reservation must be completed
+ *   - One tip per reservation (unique constraint)
+ *   - Station must have Stripe Connect account
+ *   - Amount must not exceed platform maximum
+ *
+ * Flow:
+ *   1. Fetch and validate reservation
+ *   2. Check ownership and status
+ *   3. Check no existing tip (prevent duplicates)
+ *   4. Fetch station and verify Stripe account
+ *   5. Read platform settings (max amount, currency) with fallback
+ *   6. Create Stripe PaymentIntent (destination charge, 0% platform fee)
+ *   7. Insert tip record with status=pending
+ *   8. Denormalize tip_amount onto reservation row
+ *   9. Send notifications (fire-and-forget)
+ *   10. Return tip + client_secret for payment confirmation UI
+ *
+ * Idempotency:
+ *   - Unique constraint on reservation_id prevents concurrent duplicates
+ *   - Unique constraint on stripe_payment_intent_id prevents PI re-use
+ */
 import { db } from '@/lib/db';
 import { reservations, stations } from '@/lib/db/schema';
 import { eq } from 'drizzle-orm';
@@ -5,45 +34,52 @@ import { AppError } from '@/lib/errors';
 import { HTTP_STATUS } from '@/helpers/constants';
 import { createTipPaymentIntent } from '@/server/payments/payment-service';
 import { notifyEntry } from '@/server/notifications/notification-service';
-import { getPlatformSetting } from '@/server/admin/platform-settings-service';
+import { getPlatformSettingWithFallback } from '@/server/admin/platform-settings-service';
 import * as repo from './tip-repository';
 import type { CreateTipInput } from '@/validators/tip';
 
-/** Fallback when platform_currency setting is not configured. */
+
+// %%%%% Constants %%%%%
+// Fallback defaults for platform settings
+
 const DEFAULT_PLATFORM_CURRENCY = 'cad';
-/** Fallback max tip when tip_max_amount setting is not configured. */
 const DEFAULT_TIP_MAX_AMOUNT = 500;
+
+
+// %%%%% Types %%%%%
+// Operation results
 
 export type CreateTipResult = {
   tip: repo.Tip;
   clientSecret: string;
 };
 
+
+// %%%%% Tip creation %%%%%
+// Create tip with full validation and Stripe integration
+
 /**
- * Creates a tip for a completed reservation.
+ * Creates a tip for a completed reservation with full validation.
  *
- * Rules enforced:
- * 1. The reservation must exist and belong to the authenticated client.
- * 2. The reservation must be in 'completed' status.
- * 3. No tip may have already been submitted for this reservation.
- * 4. The station must have a valid Stripe Connect account (stripe_account_id starting with 'acct_').
- * 5. The amount must not exceed the platform-configured maximum (key: tip_max_amount, default: 500).
+ * Validation rules enforced:
+ *   1. Reservation must exist
+ *   2. Reservation must belong to the authenticated client (ownership check)
+ *   3. Reservation must have status='completed'
+ *   4. No tip may already exist for this reservation (unique constraint)
+ *   5. Station must have valid Stripe Connect account (acct_* format)
+ *   6. Tip amount must not exceed platform-configured maximum
  *
- * Flow:
- * - Stripe PaymentIntent created first (destination charge, 0% platform fee).
- * - Tip record inserted with status 'pending' and the PI id.
- * - reservations.tip_amount updated as a denormalized cache.
- * - Station and client notified.
- * - Returns the tip record + Stripe client_secret for frontend payment confirmation.
+ * Error responses:
+ *   - 404: reservation or station not found
+ *   - 403: reservation does not belong to client
+ *   - 422: reservation not completed, or station not configured for payments
+ *   - 409: tip already exists for this reservation
  *
- * Idempotency:
- * - The unique DB constraint on reservation_id prevents concurrent duplicate tips.
- * - The unique constraint on stripe_payment_intent_id prevents PI re-use.
- *
- * @throws AppError 404 — reservation or station not found
- * @throws AppError 403 — reservation does not belong to client
- * @throws AppError 422 — reservation not completed, or station not configured for payments
- * @throws AppError 409 — tip already exists for this reservation
+ * @param userId - Client UUID (from auth)
+ * @param reservationId - Reservation UUID to tip for
+ * @param data - Validated { amount } from request body
+ * @returns CreateTipResult with tip record and Stripe client_secret
+ * @throws AppError 404 | 403 | 422 | 409 as documented above
  */
 export async function createTip(
   userId: string,
@@ -98,11 +134,11 @@ export async function createTip(
 
   // 6. Read platform settings (max tip + currency) in parallel.
   const [maxRaw, currencyRaw] = await Promise.all([
-    getPlatformSetting('tip_max_amount'),
-    getPlatformSetting('platform_currency'),
+    getPlatformSettingWithFallback('max_tip_amount_xaf', 'PLATFORM_MAX_TIP_AMOUNT_XAF', String(DEFAULT_TIP_MAX_AMOUNT)),
+    getPlatformSettingWithFallback('platform_currency', 'PLATFORM_CURRENCY', DEFAULT_PLATFORM_CURRENCY),
   ]);
-  const maxAmount = maxRaw ? parseFloat(maxRaw) : DEFAULT_TIP_MAX_AMOUNT;
-  const currency = currencyRaw?.trim().toLowerCase() || DEFAULT_PLATFORM_CURRENCY;
+  const maxAmount = parseFloat(maxRaw);
+  const currency = currencyRaw.trim().toLowerCase() || DEFAULT_PLATFORM_CURRENCY;
   if (!Number.isFinite(maxAmount) || data.amount > maxAmount) {
     throw new AppError(
       `Tip amount must not exceed ${Number.isFinite(maxAmount) ? maxAmount : DEFAULT_TIP_MAX_AMOUNT}`,

@@ -38,6 +38,10 @@ jest.mock('@/lib/db', () => ({
   },
 }));
 
+jest.mock('@/server/admin/platform-settings-service', () => ({
+  getPlatformSettingWithFallback: jest.fn().mockResolvedValue('7'),
+}));
+
 import { submitRating, toggleRatingVisibility, getPublicRatings } from '@/server/ratings/rating-service';
 import {
   AlreadyRatedError,

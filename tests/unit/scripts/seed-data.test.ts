@@ -35,10 +35,29 @@ describe("seed-data", () => {
   // Platform settings keys and values (contract for seed script)
   // ---------------------------------------------------------------------------
   describe("PLATFORM_SETTINGS", () => {
+    // All 14 platform-configurable keys + 2 backend token-expiry keys = 16 entries.
     const expectedKeys = [
+      // Group A — Cancellation policy
       "cancellation_penalty_percent",
+      "cancellation_free_window_minutes",
+      "cancellation_penalty_platform_rate",
+      "cancellation_penalty_station_rate",
+      // Group B — Reservations & booking
+      "max_advance_booking_days",
+      "rating_window_days",
       "default_late_tolerance_minutes",
+      // Group C — Tips
+      "max_tip_amount_xaf",
+      // Group D — Reminders
+      "reminder_first_window_hours",
+      "reminder_second_window_minutes",
+      // Group E — Notification emails
+      "admin_notification_email",
+      "weekly_report_email",
+      // Group F — Content limits
       "max_rating_comment_length",
+      "max_support_message_length",
+      // Backend configuration (not admin-configurable via API)
       "email_verification_token_expiry_hours",
       "password_reset_token_expiry_hours",
     ];
@@ -54,15 +73,24 @@ describe("seed-data", () => {
         expect(typeof s.key).toBe("string");
         expect(typeof s.value).toBe("string");
         expect(s.key.length).toBeGreaterThan(0);
-        expect(s.value.length).toBeGreaterThan(0);
+        // email keys are intentionally empty strings in seed
       });
     });
 
     it("has expected values for known keys", () => {
       const byKey = Object.fromEntries(PLATFORM_SETTINGS.map((s) => [s.key, s.value]));
-      expect(byKey.cancellation_penalty_percent).toBe("20");
+      expect(byKey.cancellation_penalty_percent).toBe("20.00");
+      expect(byKey.cancellation_free_window_minutes).toBe("60");
+      expect(byKey.cancellation_penalty_platform_rate).toBe("0.70");
+      expect(byKey.cancellation_penalty_station_rate).toBe("0.30");
+      expect(byKey.max_advance_booking_days).toBe("7");
+      expect(byKey.rating_window_days).toBe("7");
       expect(byKey.default_late_tolerance_minutes).toBe("5");
+      expect(byKey.max_tip_amount_xaf).toBe("500");
+      expect(byKey.reminder_first_window_hours).toBe("5");
+      expect(byKey.reminder_second_window_minutes).toBe("30");
       expect(byKey.max_rating_comment_length).toBe("500");
+      expect(byKey.max_support_message_length).toBe("5000");
       expect(byKey.email_verification_token_expiry_hours).toBe("24");
       expect(byKey.password_reset_token_expiry_hours).toBe("1");
     });

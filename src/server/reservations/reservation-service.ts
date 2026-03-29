@@ -1,10 +1,21 @@
 /**
  * Reservation business logic: create reservation, cancel, list my entries, upgrade queue to reservation.
- * Uses entry repository, slot repo (booked_count + SELECT FOR UPDATE), config (surcharge),
- * Stripe PaymentIntent (Connect), and notification stubs.
+ *
+ * Core operations:
+ *   - createReservation: new booking with Stripe PaymentIntent and atomic slot check
+ *   - cancelReservation: cancel with optional refund or late-cancellation penalty handling
+ *   - listMyReservations / listStationReservations: paginated entry listings
+ *   - onStripePaymentSucceeded: mark entry as confirmed when payment captured
+ *
+ * Dependencies:
+ *   - Entry repository (CRUD operations on reservation entries)
+ *   - Slot repository (booked_count tracking, SELECT FOR UPDATE locking)
+ *   - Station config (surcharge read)
+ *   - Stripe PaymentIntent (Connect charges)
+ *   - Notifications (fire-and-forget entry updates)
  */
 import { NotFoundError, ConflictError, ActiveReservationExistsError, SlotFullError, ValidationError } from '@/lib/errors';
-import { MAX_ADVANCE_BOOKING_DAYS } from '@/helpers/constants';
+import { getPlatformSettingWithFallback } from '@/server/admin/platform-settings-service';
 import { db } from '@/lib/db';
 import { getConfigByStationId } from '@/server/station/config-repository';
 import { findFormatByIdAndStation } from '@/server/station/format-repository';
@@ -36,9 +47,17 @@ import {
 import { computeReservationSplit } from './compute-reservation-split';
 import { verifyQrToken } from '@/server/qr/qr-token-service';
 
+
+// %%%%% Constants %%%%%
+// Entry status values
+
 const STATUS_PENDING_PAYMENT = 'pending_payment';
 const STATUS_CANCELLED = 'cancelled';
 const STATUS_CONFIRMED = 'confirmed';
+
+
+// %%%%% Utilities %%%%%
+// Number formatting and parsing
 
 function toDecimal(v: string | number): string {
   return typeof v === 'number' ? v.toFixed(2) : String(v);
@@ -50,15 +69,57 @@ function parseDecimal(s: string | null | undefined): number {
   return Number.isFinite(n) ? n : 0;
 }
 
-/** Result of createReservation: entry + Stripe client_secret for frontend payment. */
+/**
+ * Reads the max advance booking days setting and returns the cutoff in milliseconds.
+ * Stripe card authorizations expire after 7 days, so bookings beyond this window must be rejected.
+ */
+async function getMaxAdvanceBookingMs(): Promise<{ maxDays: number; maxAdvanceMs: number }> {
+  const raw = parseInt(
+    await getPlatformSettingWithFallback('max_advance_booking_days', 'PLATFORM_MAX_ADVANCE_BOOKING_DAYS', '7'),
+    10
+  );
+  const maxDays = Number.isFinite(raw) && raw >= 1 ? raw : 7;
+  return { maxDays, maxAdvanceMs: maxDays * 24 * 60 * 60 * 1000 };
+}
+
+/**
+ * Resolves the total amount for a reservation: vehicle format price + optional station surcharge.
+ * Returns the parsed surcharge and total. Throws ConflictError if amount is non-positive.
+ */
+async function resolveReservationAmount(
+  vehicleFormatId: string,
+  stationId: string
+): Promise<{ format: Awaited<ReturnType<typeof findFormatByIdAndStation>>; amountTotal: number }> {
+  const format = await findFormatByIdAndStation(vehicleFormatId, stationId);
+  if (!format) throw new NotFoundError('Vehicle format not found');
+
+  const config = await getConfigByStationId(stationId);
+  const surcharge = config?.reservation_surcharge
+    ? parseDecimal(String(config.reservation_surcharge))
+    : 0;
+  const amountTotal = parseDecimal(String(format.price)) + surcharge;
+  if (amountTotal <= 0) throw new ConflictError('Invalid amount');
+
+  return { format, amountTotal };
+}
+
+
+// %%%%% Types %%%%%
+// Operation results
+
+/**
+ * Result of createReservation operation.
+ * Includes the created entry and Stripe client_secret for frontend payment UI.
+ */
 export type CreateReservationResult = {
   entry: Entry;
   clientSecret: string;
 };
 
 /**
- * Result of cancelEntry. Financial fields are only present for confirmed reservations
- * that triggered a Stripe refund (refundedAmount >= 0) or a late cancellation penalty.
+ * Result of cancelEntry operation.
+ * Financial fields (refundedAmount, penaltyAmount) are only present for confirmed reservations
+ * that triggered a Stripe refund or a late-cancellation penalty calculation.
  */
 export type CancelEntryResult = {
   entry: Entry;
@@ -67,16 +128,42 @@ export type CancelEntryResult = {
   isLateCancellation?: boolean;
 };
 
+
+// %%%%% Create reservation %%%%%
+// Atomic slot lock, capacity check, entry creation, Stripe intent
+
 /**
- * Creates a reservation for the given slot and format.
+ * Creates a new reservation for the given time slot and vehicle format.
  *
- * Flow:
- * 1. Validate format and station config
- * 2. Check no active entry exists for user at this station
- * 3. Atomic transaction: SELECT FOR UPDATE on slot, verify capacity, create entry, increment booked_count
- * 4. Create Stripe PaymentIntent (Connect) — after DB commit to avoid charging for failed inserts
- * 5. Update entry with Stripe payment ID
- * 6. Return entry + client_secret for frontend payment confirmation
+ * Full flow:
+ * 1. Validate vehicle format and station config (surcharge)
+ * 2. Verify no active reservation exists for user at this station (prevent duplicates)
+ * 3. Atomic transaction:
+ *    - Lock slot with SELECT FOR UPDATE
+ *    - Verify slot exists and belongs to station
+ *    - Enforce max advance booking window (Stripe card auth expires after 7 days)
+ *    - Count current reservations and verify capacity
+ *    - Insert entry with status=pending_payment
+ *    - Increment slot booked_count
+ * 4. Create Stripe PaymentIntent (outside transaction — external side-effect)
+ * 5. Persist Stripe payment ID on entry
+ * 6. Send notification to client
+ *
+ * Error handling:
+ *   - If Stripe creation fails, rollback DB entry and slot count atomically
+ *   - Ensures no orphaned pending_payment entries
+ *
+ * @param userId - Client UUID
+ * @param stationId - Station UUID
+ * @param stationStripeAccountId - Stripe Connect account for destination charge
+ * @param timeSlotId - Time slot UUID
+ * @param vehicleFormatId - Vehicle format UUID
+ * @param options - Optional QR booking context (token + version for kiosk bookings)
+ * @returns CreateReservationResult with entry and Stripe client_secret
+ * @throws NotFoundError - format or slot not found
+ * @throws ConflictError - invalid amount, active reservation exists, or booking window exceeded
+ * @throws SlotFullError - slot at capacity
+ * @throws ValidationError - invalid QR booking token
  */
 export async function createReservation(
   userId: string,
@@ -86,16 +173,7 @@ export async function createReservation(
   vehicleFormatId: string,
   options?: { qrToken?: string; qrVersion?: string }
 ): Promise<CreateReservationResult> {
-  const format = await findFormatByIdAndStation(vehicleFormatId, stationId);
-  if (!format) throw new NotFoundError('Vehicle format not found');
-
-  const config = await getConfigByStationId(stationId);
-  const surcharge = config?.reservation_surcharge
-    ? parseDecimal(String(config.reservation_surcharge))
-    : 0;
-  const formatPrice = parseDecimal(String(format.price));
-  const amountTotal = formatPrice + surcharge;
-  if (amountTotal <= 0) throw new ConflictError('Invalid amount');
+  const { format, amountTotal } = await resolveReservationAmount(vehicleFormatId, stationId);
 
   const hasQrPayload = Boolean(options?.qrToken || options?.qrVersion);
   const qrValidation = options?.qrToken
@@ -125,9 +203,9 @@ export async function createReservation(
     if (!slot) throw new NotFoundError('Time slot not found or does not belong to this station');
 
     // Stripe card authorizations expire after 7 days — reject bookings beyond this window.
-    const maxAdvanceMs = MAX_ADVANCE_BOOKING_DAYS * 24 * 60 * 60 * 1000;
+    const { maxDays, maxAdvanceMs } = await getMaxAdvanceBookingMs();
     if (slot.start_time.getTime() - Date.now() > maxAdvanceMs) {
-      throw new ConflictError(`Reservations cannot be made more than ${MAX_ADVANCE_BOOKING_DAYS} days in advance`);
+      throw new ConflictError(`Reservations cannot be made more than ${maxDays} days in advance`);
     }
 
     const count = await countReservationsBySlotId(timeSlotId, tx);
@@ -327,16 +405,7 @@ export async function upgradeQueueToReservation(
   if (entry.entry_type !== 'queue') throw new ConflictError('Entry is not a queue entry');
   if (entry.station_id !== stationId) throw new NotFoundError('Entry does not belong to this station');
 
-  const format = await findFormatByIdAndStation(entry.vehicle_format_id, stationId);
-  if (!format) throw new NotFoundError('Vehicle format not found');
-
-  const config = await getConfigByStationId(stationId);
-  const surcharge = config?.reservation_surcharge
-    ? parseDecimal(String(config.reservation_surcharge))
-    : 0;
-  const formatPrice = parseDecimal(String(format.price));
-  const amountTotal = formatPrice + surcharge;
-  if (amountTotal <= 0) throw new ConflictError('Invalid amount');
+  const { amountTotal } = await resolveReservationAmount(entry.vehicle_format_id, stationId);
 
   const split = await computeReservationSplit({
     amountTotal,
@@ -349,9 +418,9 @@ export async function upgradeQueueToReservation(
     if (!slot) throw new NotFoundError('Time slot not found or does not belong to this station');
 
     // Stripe card authorizations expire after 7 days.
-    const maxAdvanceMs = MAX_ADVANCE_BOOKING_DAYS * 24 * 60 * 60 * 1000;
+    const { maxDays: maxDaysUpgrade, maxAdvanceMs } = await getMaxAdvanceBookingMs();
     if (slot.start_time.getTime() - Date.now() > maxAdvanceMs) {
-      throw new ConflictError(`Reservations cannot be made more than ${MAX_ADVANCE_BOOKING_DAYS} days in advance`);
+      throw new ConflictError(`Reservations cannot be made more than ${maxDaysUpgrade} days in advance`);
     }
 
     const count = await countReservationsBySlotId(timeSlotId, tx);

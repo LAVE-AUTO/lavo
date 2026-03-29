@@ -6,6 +6,10 @@ jest.mock('@/lib/email', () => ({
   sendWeeklyEscrowTransactionsReportEmail: jest.fn().mockResolvedValue(undefined),
 }));
 
+jest.mock('@/server/admin/platform-settings-service', () => ({
+  getPlatformSetting: jest.fn().mockResolvedValue(null),
+}));
+
 jest.mock('@/lib/db', () => {
   const mockOrderBy = jest.fn().mockResolvedValue([]);
   const mockWhere = jest.fn().mockReturnValue({ orderBy: mockOrderBy });

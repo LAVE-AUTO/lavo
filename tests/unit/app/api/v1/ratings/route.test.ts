@@ -4,12 +4,16 @@
  */
 const mockRequireRole = jest.fn();
 const mockSubmitRating = jest.fn();
+const mockGetPlatformSettingWithFallback = jest.fn().mockResolvedValue('500');
 
 jest.mock('@/lib/require-role', () => ({
   requireRole: (...args: unknown[]) => mockRequireRole(...args),
 }));
 jest.mock('@/server/ratings/rating-service', () => ({
   submitRating: (...args: unknown[]) => mockSubmitRating(...args),
+}));
+jest.mock('@/server/admin/platform-settings-service', () => ({
+  getPlatformSettingWithFallback: (...args: unknown[]) => mockGetPlatformSettingWithFallback(...args),
 }));
 
 import { POST } from '@/app/api/v1/ratings/route';

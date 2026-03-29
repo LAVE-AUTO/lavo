@@ -5,6 +5,7 @@
 const mockRequireRole = jest.fn();
 const mockAddSupportMessage = jest.fn();
 const mockCheckSlidingWindowRateLimit = jest.fn();
+const mockGetPlatformSettingWithFallback = jest.fn().mockResolvedValue('5000');
 
 jest.mock('@/lib/require-role', () => ({
   requireRole: (...args: unknown[]) => mockRequireRole(...args),
@@ -17,6 +18,10 @@ jest.mock('@/server/support/support-ticket-service', () => ({
 jest.mock('@/lib/rate-limiter', () => ({
   checkSlidingWindowRateLimit: (...args: unknown[]) => mockCheckSlidingWindowRateLimit(...args),
   normalizeRateLimitKey: (key: string) => key,
+}));
+
+jest.mock('@/server/admin/platform-settings-service', () => ({
+  getPlatformSettingWithFallback: (...args: unknown[]) => mockGetPlatformSettingWithFallback(...args),
 }));
 
 import { POST } from '@/app/api/v1/support/[id]/messages/route';
