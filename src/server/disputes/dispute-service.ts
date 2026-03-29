@@ -49,7 +49,12 @@ export async function createDispute(
   }
 
   // Enforce the dispute filing window (30 days from completion).
-  const completedAt = reservation.completed_at ?? reservation.updated_at;
+  // Use stripe_payment_succeeded_at as an intermediate fallback because
+  // updated_at reflects any row edit and can be arbitrarily recent or old.
+  const completedAt =
+    reservation.completed_at ??
+    reservation.stripe_payment_succeeded_at ??
+    reservation.updated_at;
   const windowMs = DISPUTE_WINDOW_DAYS * 24 * 60 * 60 * 1000;
   if (Date.now() - completedAt.getTime() > windowMs) {
     throw new ValidationError(

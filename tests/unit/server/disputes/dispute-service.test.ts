@@ -177,8 +177,9 @@ describe('createDispute', () => {
 
   it('throws DisputeAlreadyExistsError when repo.createDispute raises a 23505 DB unique violation', async () => {
     // Simulates concurrent requests: both pass the app-level uniqueness check, second hits the DB constraint.
-    const pgUniqueError = Object.assign(new Error('duplicate key value'), { code: '23505' });
-    mockCreateDispute.mockRejectedValue(pgUniqueError);
+    // The repository layer translates the raw PG 23505 error into DisputeAlreadyExistsError before it
+    // reaches the service, so the mock at the repo boundary must throw DisputeAlreadyExistsError directly.
+    mockCreateDispute.mockRejectedValue(new DisputeAlreadyExistsError());
     await expect(createDispute(CLIENT_ID, input)).rejects.toThrow(DisputeAlreadyExistsError);
   });
 
@@ -202,6 +203,35 @@ describe('createDispute', () => {
     });
     const result = await createDispute(CLIENT_ID, input);
     expect(result.id).toBe(DISPUTE_ID);
+  });
+
+  it('falls back to stripe_payment_succeeded_at when completed_at is null', async () => {
+    // updated_at is old enough to deny the window; stripe_payment_succeeded_at is recent.
+    // The service must prefer stripe_payment_succeeded_at over updated_at.
+    const recentDate = new Date(Date.now() - 5 * 24 * 60 * 60 * 1000);
+    const oldUpdatedAt = new Date(Date.now() - 60 * 24 * 60 * 60 * 1000);
+    mockReservationsFindFirst.mockResolvedValue({
+      ...completedReservation,
+      completed_at: null,
+      stripe_payment_succeeded_at: recentDate,
+      updated_at: oldUpdatedAt,
+    });
+    const result = await createDispute(CLIENT_ID, input);
+    expect(result.id).toBe(DISPUTE_ID);
+  });
+
+  it('falls back to updated_at only when both completed_at and stripe_payment_succeeded_at are null', async () => {
+    // When both primary timestamps are absent and updated_at is outside the window,
+    // the dispute must be rejected.
+    const oldDate = new Date(Date.now() - 31 * 24 * 60 * 60 * 1000);
+    mockReservationsFindFirst.mockResolvedValue({
+      ...completedReservation,
+      completed_at: null,
+      stripe_payment_succeeded_at: null,
+      updated_at: oldDate,
+    });
+    await expect(createDispute(CLIENT_ID, input)).rejects.toThrow(ValidationError);
+    expect(mockCreateDispute).not.toHaveBeenCalled();
   });
 });
 
@@ -279,7 +309,7 @@ describe('refundDispute', () => {
   it('issues a full refund and returns updated dispute', async () => {
     const result = await refundDispute(ADMIN_ID, DISPUTE_ID, {});
     expect(result.status).toBe('refunded');
-    expect(mockRefundPaymentIntent).toHaveBeenCalledWith('pi_test_123', undefined);
+    expect(mockRefundPaymentIntent).toHaveBeenCalledWith('pi_test_123', undefined, `refund_dispute_${DISPUTE_ID}`);
     expect(mockUpdateDispute).toHaveBeenCalledWith(
       DISPUTE_ID,
       expect.objectContaining({ status: 'refunded', refunded_amount: '50.00', stripe_refund_id: 're_test_456' }),
@@ -290,7 +320,7 @@ describe('refundDispute', () => {
   it('issues a partial refund when amount is provided', async () => {
     mockUpdateDispute.mockResolvedValue({ ...refundedDispute, refunded_amount: '20.00' });
     const result = await refundDispute(ADMIN_ID, DISPUTE_ID, { amount: 20 });
-    expect(mockRefundPaymentIntent).toHaveBeenCalledWith('pi_test_123', 2000);
+    expect(mockRefundPaymentIntent).toHaveBeenCalledWith('pi_test_123', 2000, `refund_dispute_${DISPUTE_ID}`);
     expect(result.refunded_amount).toBe('20.00');
   });
 

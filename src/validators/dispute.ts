@@ -9,17 +9,18 @@ export const disputeIdParamSchema = z.string().uuid('Invalid dispute ID format')
 
 // ─── Client: create dispute ───────────────────────────────────────────────────
 
+// SECURITY: .strict() rejects unknown keys; .trim() prevents whitespace-only strings
 export const createDisputeSchema = z.object({
   reservation_id: z.string().uuid('Invalid reservation ID format'),
-  reason: z.string().min(1, 'Reason is required').max(500, 'Reason must not exceed 500 characters'),
-  description: z.string().max(2000, 'Description must not exceed 2000 characters').optional(),
+  reason: z.string().trim().min(1, 'Reason is required').max(500, 'Reason must not exceed 500 characters'),
+  description: z.string().trim().max(2000, 'Description must not exceed 2000 characters').optional(),
   requested_amount: z
     .number({ invalid_type_error: 'requested_amount must be a number' })
     .positive('Requested amount must be greater than 0')
     .max(100_000, 'Requested amount exceeds maximum')
     .transform((v) => Math.round(v * 100) / 100)
     .optional(),
-});
+}).strict();
 
 export type CreateDisputeInput = z.infer<typeof createDisputeSchema>;
 
@@ -32,7 +33,7 @@ export const refundDisputeSchema = z.object({
     .max(100_000, 'Refund amount exceeds maximum')
     .transform((v) => Math.round(v * 100) / 100)
     .optional(),
-});
+}).strict();
 
 export type RefundDisputeInput = z.infer<typeof refundDisputeSchema>;
 
@@ -43,8 +44,8 @@ export const closeDisputeSchema = z.object({
     required_error: 'status is required',
     invalid_type_error: 'status must be "resolved" or "rejected"',
   }),
-  reason: z.string().min(1, 'Reason is required').max(500, 'Reason must not exceed 500 characters'),
-});
+  reason: z.string().trim().min(1, 'Reason is required').max(500, 'Reason must not exceed 500 characters'),
+}).strict();
 
 export type CloseDisputeInput = z.infer<typeof closeDisputeSchema>;
 
