@@ -6,8 +6,6 @@ import { AdminAddStationAccount, type StationAccountData, type StationAccountErr
 import { AdminAddStationInfo, type StationInfoData, type StationInfoErrors } from './AdminAddStationInfo';
 import { AdminAddStationDocs, type StationDocsData, type StationDocsErrors } from './AdminAddStationDocs';
 import { AdminAddStationSuccess, type StationSuccessData } from './AdminAddStationSuccess';
-import { generatePassword } from '@/helpers/generate-password';
-
 type Step = 1 | 2 | 3 | 'success';
 
 interface Props {
@@ -148,7 +146,7 @@ export function AdminAddStationModal({ open, onClose }: Props) {
           <AdminAddStationDocs data={docs} errors={docsErrs} busy={busy}
             onChange={setDocs} onErrors={setDocsErrs} onSubmit={handleSubmit} onPrev={() => setStep(2)} />
         )}
-        {step === 'success' && <AdminAddStationSuccess data={success!} onClose={onClose} />}
+        {step === 'success' && success && <AdminAddStationSuccess data={success} onClose={onClose} />}
       </div>
     </div>
   );

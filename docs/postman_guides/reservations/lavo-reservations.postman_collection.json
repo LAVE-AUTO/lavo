@@ -3680,6 +3680,305 @@
           ]
         }
       ]
+    },
+    {
+      "name": "Litiges",
+      "description": "POST /api/v1/disputes — Ouverture d'un litige par un client pour une réservation terminée et payée.\n\nPrerequis : utilisateur authentifié (role client), réservation avec status=completed et stripe_payment_succeeded_at renseigné.\nUn seul litige par réservation.",
+      "item": [
+        {
+          "name": "Créer litige — succès (201)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 201', () => pm.response.to.have.status(201));",
+                  "pm.test('Retourne le litige créé', () => {",
+                  "  const json = pm.response.json();",
+                  "  pm.expect(json.data).to.have.property('id');",
+                  "  pm.expect(json.data.status).to.eql('open');",
+                  "  pm.expect(json.data).to.have.property('reservation_id');",
+                  "  pm.expect(json.data).to.have.property('reason');",
+                  "  pm.expect(json.message).to.eql('Dispute created successfully');",
+                  "  pm.collectionVariables.set('dispute_id', json.data.id);",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "response": [],
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/disputes",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "disputes"]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"reservation_id\": \"{{reservation_id}}\",\n  \"reason\": \"Le véhicule a été rayé pendant le lavage.\",\n  \"description\": \"J'ai constaté une rayure sur le capot après le passage en station.\",\n  \"requested_amount\": 150.00\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "description": "Crée un litige pour une réservation terminée. Champs :\n- `reservation_id` (obligatoire, UUID)\n- `reason` (obligatoire, 1-500 chars)\n- `description` (optionnel, max 2000 chars)\n- `requested_amount` (optionnel, montant en EUR)\n\nReponse : `{ message, data: dispute }` avec status=open."
+          }
+        },
+        {
+          "name": "Créer litige — sans description ni montant (201)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 201', () => pm.response.to.have.status(201));",
+                  "pm.test('Litige créé sans champs optionnels', () => {",
+                  "  const json = pm.response.json();",
+                  "  pm.expect(json.data.status).to.eql('open');",
+                  "  pm.expect(json.data.description).to.be.null;",
+                  "  pm.expect(json.data.requested_amount).to.be.null;",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "response": [],
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/disputes",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "disputes"]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"reservation_id\": \"{{reservation_id}}\",\n  \"reason\": \"Service non conforme.\"\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "description": "Litige minimal — seuls reservation_id et reason sont fournis."
+          }
+        },
+        {
+          "name": "Créer litige — réservation non terminée (400)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 400', () => pm.response.to.have.status(400));",
+                  "pm.test('Code VALIDATION_FAILED', () => {",
+                  "  const json = pm.response.json();",
+                  "  pm.expect(json.code).to.eql('VALIDATION_FAILED');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "response": [],
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/disputes",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "disputes"]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"reservation_id\": \"{{reservation_id}}\",\n  \"reason\": \"La réservation est encore en cours.\"\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "description": "400 VALIDATION_FAILED — réservation avec status != completed. Seules les réservations terminées peuvent faire l'objet d'un litige."
+          }
+        },
+        {
+          "name": "Créer litige — litige déjà existant (409)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 409', () => pm.response.to.have.status(409));",
+                  "pm.test('Code DISPUTE_ALREADY_EXISTS', () => {",
+                  "  const json = pm.response.json();",
+                  "  pm.expect(json.code).to.eql('DISPUTE_ALREADY_EXISTS');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "response": [],
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/disputes",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "disputes"]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"reservation_id\": \"{{reservation_id}}\",\n  \"reason\": \"Deuxième tentative de litige sur la même réservation.\"\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "description": "409 DISPUTE_ALREADY_EXISTS — un litige existe déjà pour cette réservation. Un seul litige par réservation."
+          }
+        },
+        {
+          "name": "Créer litige — réservation d'un autre client (403)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 403', () => pm.response.to.have.status(403));",
+                  "pm.test('Code FORBIDDEN', () => {",
+                  "  const json = pm.response.json();",
+                  "  pm.expect(json.code).to.eql('FORBIDDEN');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "response": [],
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/disputes",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "disputes"]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"reservation_id\": \"{{reservation_id}}\",\n  \"reason\": \"Litige sur la réservation d'un autre client.\"\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "description": "403 FORBIDDEN — la réservation appartient à un autre client que celui authentifié."
+          }
+        },
+        {
+          "name": "Créer litige — réservation introuvable (404)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 404', () => pm.response.to.have.status(404));",
+                  "pm.test('Code NOT_FOUND', () => {",
+                  "  const json = pm.response.json();",
+                  "  pm.expect(json.code).to.eql('NOT_FOUND');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "response": [],
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/disputes",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "disputes"]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"reservation_id\": \"00000000-0000-0000-0000-000000000000\",\n  \"reason\": \"Réservation inexistante.\"\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "description": "404 NOT_FOUND — UUID valide mais réservation inexistante."
+          }
+        },
+        {
+          "name": "Créer litige — reservation_id manquant (400)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 400', () => pm.response.to.have.status(400));",
+                  "pm.test('Code VALIDATION_FAILED', () => {",
+                  "  const json = pm.response.json();",
+                  "  pm.expect(json.code).to.eql('VALIDATION_FAILED');",
+                  "  pm.expect(json.errors).to.be.an('array');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "response": [],
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/disputes",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "disputes"]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"reason\": \"Raison fournie mais reservation_id absent.\"\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "description": "400 VALIDATION_FAILED — `reservation_id` est obligatoire."
+          }
+        },
+        {
+          "name": "Créer litige — non authentifié (401)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 401', () => pm.response.to.have.status(401));"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "response": [],
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer invalid_token" }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/disputes",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "disputes"]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"reservation_id\": \"{{reservation_id}}\",\n  \"reason\": \"Test sans auth valide.\"\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "description": "401 UNAUTHORIZED — token absent ou invalide."
+          }
+        }
+      ]
     }
   ]
 }
