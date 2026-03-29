@@ -142,3 +142,30 @@ export class ReservationNotCompletedError extends AppError {
     super(message, HTTP_STATUS.CONFLICT);
   }
 }
+
+/**
+ * A dispute already exists for this reservation (409).
+ */
+export class DisputeAlreadyExistsError extends AppError {
+  constructor(message = 'A dispute already exists for this reservation') {
+    super(message, HTTP_STATUS.CONFLICT);
+  }
+}
+
+/**
+ * Dispute is already closed (refunded, resolved, or rejected) (409).
+ */
+export class DisputeAlreadyClosedError extends AppError {
+  constructor(message = 'This dispute is already closed') {
+    super(message, HTTP_STATUS.CONFLICT);
+  }
+}
+
+/**
+ * Refund is not eligible because a Stripe transfer to the station already occurred (400).
+ */
+export class RefundNotEligibleError extends AppError {
+  constructor(message = 'Refund is not eligible: a transfer to the station has already been made') {
+    super(message, HTTP_STATUS.BAD_REQUEST);
+  }
+}
