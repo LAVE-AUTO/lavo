@@ -66,6 +66,14 @@ export const listDisputesQuerySchema = z.object({
     .optional()
     .transform((v) => (v ? parseInt(v, 10) : 20))
     .pipe(z.number().int().min(1).max(100, 'per_page must not exceed 100')),
-});
+}).refine(
+  (data) => {
+    if (data.date_from && data.date_to) {
+      return new Date(data.date_from) <= new Date(data.date_to);
+    }
+    return true;
+  },
+  { message: 'date_from must be earlier than or equal to date_to' }
+);
 
 export type ListDisputesQuery = z.infer<typeof listDisputesQuerySchema>;

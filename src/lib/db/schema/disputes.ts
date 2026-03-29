@@ -44,7 +44,7 @@ export const disputes = pgTable(
     status: disputeStatusEnum("status").notNull().default("open"),
     requested_amount: decimal("requested_amount", { precision: 10, scale: 2 }),
     refunded_amount: decimal("refunded_amount", { precision: 10, scale: 2 }),
-    stripe_refund_id: varchar("stripe_refund_id", { length: 200 }),
+    stripe_refund_id: varchar("stripe_refund_id", { length: 200 }).unique(),
     closed_by: uuid("closed_by").references(() => users.id),
     closed_reason: text("closed_reason"),
     created_at: timestamp("created_at", {

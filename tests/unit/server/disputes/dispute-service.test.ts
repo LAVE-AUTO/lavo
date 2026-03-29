@@ -174,6 +174,35 @@ describe('createDispute', () => {
     await expect(createDispute(CLIENT_ID, input)).rejects.toThrow(DisputeAlreadyExistsError);
     expect(mockCreateDispute).not.toHaveBeenCalled();
   });
+
+  it('throws DisputeAlreadyExistsError when repo.createDispute raises a 23505 DB unique violation', async () => {
+    // Simulates concurrent requests: both pass the app-level uniqueness check, second hits the DB constraint.
+    const pgUniqueError = Object.assign(new Error('duplicate key value'), { code: '23505' });
+    mockCreateDispute.mockRejectedValue(pgUniqueError);
+    await expect(createDispute(CLIENT_ID, input)).rejects.toThrow(DisputeAlreadyExistsError);
+  });
+
+  it('throws ValidationError when reservation was completed more than 30 days ago', async () => {
+    const oldDate = new Date(Date.now() - 31 * 24 * 60 * 60 * 1000);
+    mockReservationsFindFirst.mockResolvedValue({
+      ...completedReservation,
+      completed_at: oldDate,
+      updated_at: oldDate,
+    });
+    await expect(createDispute(CLIENT_ID, input)).rejects.toThrow(ValidationError);
+    expect(mockCreateDispute).not.toHaveBeenCalled();
+  });
+
+  it('accepts a dispute opened exactly at the 30-day boundary', async () => {
+    const boundaryDate = new Date(Date.now() - 29 * 24 * 60 * 60 * 1000);
+    mockReservationsFindFirst.mockResolvedValue({
+      ...completedReservation,
+      completed_at: boundaryDate,
+      updated_at: boundaryDate,
+    });
+    const result = await createDispute(CLIENT_ID, input);
+    expect(result.id).toBe(DISPUTE_ID);
+  });
 });
 
 // ─── listDisputesAdmin ────────────────────────────────────────────────────────

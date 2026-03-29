@@ -135,6 +135,14 @@ describe('POST /api/v1/disputes', () => {
     expect(body.code).toBe('VALIDATION_FAILED');
   });
 
+  it('returns 400 when the 30-day dispute window has expired', async () => {
+    mockCreateDispute.mockRejectedValue(new ValidationError('Disputes must be opened within 30 days of reservation completion'));
+    const res = await POST(makeRequest({ reservation_id: VALID_UUID, reason: 'x' }));
+    const body = await res.json();
+    expect(res.status).toBe(400);
+    expect(body.code).toBe('VALIDATION_FAILED');
+  });
+
   it('returns 409 DISPUTE_ALREADY_EXISTS when dispute already exists', async () => {
     mockCreateDispute.mockRejectedValue(new DisputeAlreadyExistsError());
     const res = await POST(makeRequest({ reservation_id: VALID_UUID, reason: 'x' }));

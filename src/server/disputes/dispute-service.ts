@@ -15,13 +15,16 @@ import type { CreateDisputeInput, RefundDisputeInput, CloseDisputeInput, ListDis
 
 // ─── Client ───────────────────────────────────────────────────────────────────
 
+/** Maximum number of days after reservation completion within which a dispute can be opened. */
+const DISPUTE_WINDOW_DAYS = 30;
+
 /**
  * Creates a dispute for a completed, paid reservation.
- * Validates ownership, payment status, and uniqueness before inserting.
+ * Validates ownership, payment status, time window, and uniqueness before inserting.
  *
  * @throws NotFoundError — reservation not found
  * @throws ForbiddenError — reservation does not belong to the client
- * @throws ValidationError — reservation not completed or not paid
+ * @throws ValidationError — reservation not completed, not paid, or outside the 30-day window
  * @throws DisputeAlreadyExistsError — a dispute already exists for this reservation
  */
 export async function createDispute(
@@ -43,6 +46,15 @@ export async function createDispute(
 
   if (!reservation.stripe_payment_id || !reservation.stripe_payment_succeeded_at) {
     throw new ValidationError('Reservation has no confirmed payment');
+  }
+
+  // Enforce the dispute filing window (30 days from completion).
+  const completedAt = reservation.completed_at ?? reservation.updated_at;
+  const windowMs = DISPUTE_WINDOW_DAYS * 24 * 60 * 60 * 1000;
+  if (Date.now() - completedAt.getTime() > windowMs) {
+    throw new ValidationError(
+      `Disputes must be opened within ${DISPUTE_WINDOW_DAYS} days of reservation completion`
+    );
   }
 
   const existing = await repo.findDisputeByReservationId(input.reservation_id);

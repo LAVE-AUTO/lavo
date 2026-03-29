@@ -17,7 +17,7 @@ CREATE TABLE IF NOT EXISTS "disputes" (
   "status" "dispute_status" NOT NULL DEFAULT 'open',
   "requested_amount" decimal(10, 2),
   "refunded_amount" decimal(10, 2),
-  "stripe_refund_id" varchar(200),
+  "stripe_refund_id" varchar(200) UNIQUE,
   "closed_by" uuid REFERENCES "users"("id"),
   "closed_reason" text,
   "created_at" timestamp with time zone NOT NULL DEFAULT now(),
