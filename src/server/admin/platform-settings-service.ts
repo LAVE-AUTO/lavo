@@ -25,6 +25,7 @@ import { db } from '@/lib/db';
 import { settings, commissionSettings } from '@/lib/db/schema';
 import { DEFAULT_COMMISSION_RATE } from '@/helpers/server-constants';
 import { isTruePlatformSetting } from '@/helpers/platform-setting-boolean';
+import { ValidationError } from '@/lib/errors';
 import {
   getAllPlatformSettings as repoGetAll,
   upsertPlatformSettings,
@@ -194,13 +195,25 @@ export async function getCancellationPolicy(): Promise<CancellationPolicy> {
 // %%%%% Settings reads with fallback %%%%%
 // 3-tier fallback: DB → environment → default
 
+/** In-process TTL cache for platform settings to avoid a DB round-trip on every request. */
+const SETTING_CACHE_TTL_MS = 60_000; // 1 minute
+
+type CacheEntry = { value: string | null; expiresAt: number };
+const settingCache = new Map<string, CacheEntry>();
+
+/** Invalidates the in-process cache for a given key (called after a successful PATCH). */
+function invalidateSettingCache(key: string): void {
+  settingCache.delete(key);
+}
+
 /**
- * Reads a platform setting with a 3-tier fallback.
+ * Reads a platform setting with a 3-tier fallback and a 60-second in-process TTL cache.
  *
  * Priority order:
- *   1. Database value (settings table, type='admin', entity_id IS NULL)
- *   2. Environment variable (envVar parameter)
- *   3. Hardcoded default (defaultValue parameter)
+ *   1. In-process cache (60-second TTL, invalidated on PATCH)
+ *   2. Database value (settings table, type='admin', entity_id IS NULL)
+ *   3. Environment variable (envVar parameter)
+ *   4. Hardcoded default (defaultValue parameter)
  *
  * Use this for any business rule that should be overridable by operators
  * via environment variable when the DB is not yet configured (fresh deploy, test).
@@ -215,7 +228,13 @@ export async function getPlatformSettingWithFallback(
   envVar: string,
   defaultValue: string
 ): Promise<string> {
+  const cached = settingCache.get(key);
+  if (cached && Date.now() < cached.expiresAt) {
+    return cached.value ?? process.env[envVar] ?? defaultValue;
+  }
+
   const dbValue = await getPlatformSetting(key);
+  settingCache.set(key, { value: dbValue, expiresAt: Date.now() + SETTING_CACHE_TTL_MS });
   return dbValue ?? process.env[envVar] ?? defaultValue;
 }
 
@@ -239,21 +258,52 @@ export async function getAllPlatformSettings(): Promise<PlatformSettingRow[]> {
 /**
  * Bulk-upserts one or more platform settings.
  *
- * Each key in `data` is written to the database with the admin's UUID
- * recorded in `updated_by` for audit purposes. Uses an atomic upsert to
- * ensure idempotency across concurrent requests.
+ * Enforces the cross-key invariant cancellation_penalty_platform_rate +
+ * cancellation_penalty_station_rate = 1.00 even across separate PATCH requests:
+ * when only one of the two rate keys is present in the payload, the persisted value
+ * of the complementary key is read from the DB and the combined sum is validated.
  *
  * @param data - Validated map of setting keys to new string values
  * @param adminId - UUID of the admin performing the update (from JWT subject claim)
+ * @throws ValidationError — penalty rates do not sum to 1.00
  */
 export async function updatePlatformSettings(
   data: UpdatePlatformSettingsInput,
   adminId: string
 ): Promise<void> {
+  const PLATFORM_KEY = 'cancellation_penalty_platform_rate';
+  const STATION_KEY = 'cancellation_penalty_station_rate';
+
+  const hasPlatform = PLATFORM_KEY in data;
+  const hasStation = STATION_KEY in data;
+
+  // Cross-request guard: if only one rate key is being updated, read the persisted
+  // value of the complementary key and validate the resulting sum.
+  if (hasPlatform !== hasStation) {
+    const incomingRate = parseFloat(hasPlatform ? data[PLATFORM_KEY]! : data[STATION_KEY]!);
+    const persistedRaw = await getPlatformSetting(hasPlatform ? STATION_KEY : PLATFORM_KEY);
+    if (persistedRaw !== null) {
+      const persistedRate = parseFloat(persistedRaw);
+      if (Number.isFinite(incomingRate) && Number.isFinite(persistedRate)) {
+        const sum = Math.round((incomingRate + persistedRate) * 100) / 100;
+        if (sum !== 1.0) {
+          throw new ValidationError(
+            `${PLATFORM_KEY} and ${STATION_KEY} must sum to 1.00 ` +
+            `(current persisted value: ${persistedRaw}, incoming: ${hasPlatform ? data[PLATFORM_KEY] : data[STATION_KEY]})`
+          );
+        }
+      }
+    }
+  }
+
   const entries = Object.entries(data).map(([key, value]) => ({
     key,
     value,
     updatedBy: adminId,
   }));
   await upsertPlatformSettings(entries);
+  // Invalidate cached values so consumers read the new settings within one TTL cycle.
+  for (const key of Object.keys(data)) {
+    invalidateSettingCache(key);
+  }
 }

@@ -19,6 +19,14 @@ export { mapZodErrors };
  * Includes business rules (cancellation, booking), content limits (ratings, support),
  * and notification email addresses.
  */
+/**
+ * Stripe card authorizations expire after 7 days.
+ * This is the technical upper bound for max_advance_booking_days; bookings beyond
+ * this window would have their PaymentIntent expire before capture.
+ * If the payment processor changes, update both this constant and the booking logic.
+ */
+export const MAX_STRIPE_AUTH_DAYS = 7;
+
 export const ALLOWED_PLATFORM_SETTING_KEYS = [
   'cancellation_free_window_minutes',
   'cancellation_penalty_percent',
@@ -172,9 +180,9 @@ export const updatePlatformSettingsSchema = z
     // --- Group B: Reservations & booking ---
 
     if ('max_advance_booking_days' in obj) {
-      const val = parseBoundedInteger(obj.max_advance_booking_days!, 1, 7);
+      const val = parseBoundedInteger(obj.max_advance_booking_days!, 1, MAX_STRIPE_AUTH_DAYS);
       if (isNaN(val)) {
-        addIssue(ctx, 'max_advance_booking_days', 'max_advance_booking_days must be an integer between 1 and 7');
+        addIssue(ctx, 'max_advance_booking_days', `max_advance_booking_days must be an integer between 1 and ${MAX_STRIPE_AUTH_DAYS}`);
       }
     }
 
