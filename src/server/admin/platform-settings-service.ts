@@ -287,12 +287,18 @@ export async function updatePlatformSettings(
       if (Number.isFinite(incomingRate) && Number.isFinite(persistedRate)) {
         const sum = Math.round((incomingRate + persistedRate) * 100) / 100;
         if (sum !== 1.0) {
+          // SECURITY: do not leak persisted DB values in the error message
           throw new ValidationError(
-            `${PLATFORM_KEY} and ${STATION_KEY} must sum to 1.00 ` +
-            `(current persisted value: ${persistedRaw}, incoming: ${hasPlatform ? data[PLATFORM_KEY] : data[STATION_KEY]})`
+            `${PLATFORM_KEY} and ${STATION_KEY} must sum to 1.00`
           );
         }
       }
+    } else {
+      // SECURITY: if the complementary key has never been set, require both keys
+      // to be submitted together to prevent an inconsistent split configuration.
+      throw new ValidationError(
+        `Both ${PLATFORM_KEY} and ${STATION_KEY} must be set together when the complementary key has no persisted value`
+      );
     }
   }
 

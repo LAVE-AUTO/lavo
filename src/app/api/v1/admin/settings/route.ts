@@ -13,6 +13,7 @@ import { requireRole } from '@/lib/require-role';
 import {
   successResponse,
   error400,
+  error429,
   error500,
   fromAppError,
 } from '@/lib/responses';
@@ -27,7 +28,11 @@ import {
   getAllPlatformSettings,
   updatePlatformSettings,
 } from '@/server/admin/platform-settings-service';
+import { createEndpointRateLimiter } from '@/lib/endpoint-rate-limiter';
 import type { NextResponse } from 'next/server';
+
+// SECURITY: rate-limit settings mutations to 20 per minute per admin
+const settingsPatchLimiter = createEndpointRateLimiter({ maxRequests: 20, windowMs: 60_000 });
 
 
 // %%%%% GET handler %%%%%
@@ -53,7 +58,9 @@ export async function GET(request: Request): Promise<NextResponse> {
     return applyNoStoreHeaders(successResponse(rows));
   } catch (e) {
     if (e instanceof AppError) return applyNoStoreHeaders(fromAppError(e));
-    return applyNoStoreHeaders(error500(e));
+    // SECURITY: never pass the raw error to error500 — it leaks internal details via _dev in development mode
+    console.error('[GET /api/v1/admin/settings] Unhandled error:', e);
+    return applyNoStoreHeaders(error500());
   }
 }
 
@@ -82,6 +89,10 @@ export async function PATCH(request: Request): Promise<NextResponse> {
   const auth = await requireRole(request, 'admin');
   if (auth instanceof Response) return applyNoStoreHeaders(auth as NextResponse);
 
+  if (settingsPatchLimiter.isRateLimited(auth.sub)) {
+    return applyNoStoreHeaders(error429());
+  }
+
   // Parse request body
   let body: unknown;
   try {
@@ -104,6 +115,8 @@ export async function PATCH(request: Request): Promise<NextResponse> {
     return applyNoStoreHeaders(successResponse({}, 'Platform settings updated'));
   } catch (e) {
     if (e instanceof AppError) return applyNoStoreHeaders(fromAppError(e));
-    return applyNoStoreHeaders(error500(e));
+    // SECURITY: never pass the raw error to error500 — it leaks internal details via _dev in development mode
+    console.error('[PATCH /api/v1/admin/settings] Unhandled error:', e);
+    return applyNoStoreHeaders(error500());
   }
 }

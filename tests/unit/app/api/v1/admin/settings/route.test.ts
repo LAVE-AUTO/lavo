@@ -24,6 +24,12 @@ jest.mock('@/server/admin/platform-settings-service', () => ({
   updatePlatformSettings: (...args: unknown[]) => mockUpdatePlatformSettings(...args),
 }));
 
+// TESTING: mock the rate limiter to never block requests in unit tests;
+// rate-limiting behaviour is covered by endpoint-rate-limiter unit tests.
+jest.mock('@/lib/endpoint-rate-limiter', () => ({
+  createEndpointRateLimiter: () => ({ isRateLimited: () => false }),
+}));
+
 import { GET, PATCH } from '@/app/api/v1/admin/settings/route';
 import { AppError } from '@/lib/errors';
 
@@ -496,6 +502,23 @@ describe('PATCH /api/v1/admin/settings', () => {
     const body = await res.json();
     expect(body.errors).toContainEqual(
       expect.objectContaining({ field: 'cancellation_penalty_platform_rate' })
+    );
+  });
+
+  it('returns 400 when only platform_rate is submitted and service rejects due to no persisted counterpart', async () => {
+    const { ValidationError } = await import('@/lib/errors');
+    mockUpdatePlatformSettings.mockRejectedValueOnce(
+      new ValidationError('Both cancellation_penalty_platform_rate and cancellation_penalty_station_rate must be set together when the complementary key has no persisted value')
+    );
+
+    const res = await PATCH(makePatchRequest({ cancellation_penalty_platform_rate: '0.70' }));
+    const body = await res.json();
+
+    expect(res.status).toBe(400);
+    expect(body.code).toBe('VALIDATION_FAILED');
+    expect(mockUpdatePlatformSettings).toHaveBeenCalledWith(
+      { cancellation_penalty_platform_rate: '0.70' },
+      'admin-uuid-0001'
     );
   });
 
