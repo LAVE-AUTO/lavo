@@ -1,52 +1,118 @@
 /**
- * Seed data constants for LAVO. Used by scripts/seed.ts.
- * Exported for unit testing without DB.
+ * Seed data constants for LAVO platform.
  *
- * Demo seed: run "npm run db:seed" for a full reseed (replaces demo data).
- * To use pre-computed password hashes and avoid bcrypt at runtime, run
- * "npm run db:hash-passwords" and paste the output into the SEED_PASSWORD_HASH_* constants below.
+ * Used by scripts/seed.ts to bootstrap demo database.
+ * Exported for unit testing without DB access.
+ *
+ * Usage:
+ *   - Full reseed: npm run db:seed (replaces all demo data)
+ *   - Pre-computed hashes: npm run db:hash-passwords, then paste output below to skip bcrypt at runtime
+ *   - Custom admin password: set SEED_ADMIN_PASSWORD_HASH env var to use custom hash
  */
+
+// %%%%% Admin credentials %%%%%
+// Demo admin account for development and testing
 
 export const SEED_ADMIN_EMAIL = "admin@lavo.local";
 
-/** Passwords for demo (dev only). Use exactly these for client demos. */
+/**
+ * Demo passwords (dev only, change for production).
+ * Use exactly these values for consistent client demos.
+ */
 export const SEED_PASSWORD_ADMIN = "@Admin2026";
 export const SEED_PASSWORD_CLIENT = "@User2026";
 export const SEED_PASSWORD_STATION = "@Station2026";
 
+
+// %%%%% Pre-computed password hashes %%%%%
+// Optional bcrypt hashes to avoid bcrypt at runtime
+
 /**
- * Pre-computed bcrypt hashes (optional). If set, seed uses them and does not need bcrypt at runtime.
- * Generate with: npm run db:hash-passwords
+ * Pre-computed bcrypt hashes (optional, empty string = generate at runtime).
+ * To generate, run: npm run db:hash-passwords
+ * Then paste the output into these constants to skip bcrypt during seed.
  */
 export const SEED_PASSWORD_HASH_ADMIN = "";
 export const SEED_PASSWORD_HASH_CLIENT = "";
 export const SEED_PASSWORD_HASH_STATION = "";
 
-/** Legacy: default admin password for dev seed. Aligned to demo password. */
+/**
+ * Legacy fallback for admin password.
+ * Aligned to SEED_PASSWORD_ADMIN for consistent demo experience.
+ */
 export const SEED_ADMIN_PASSWORD_DEFAULT = SEED_PASSWORD_ADMIN;
 
-/** Legacy: default admin password hash; used only if no pre-computed hash and no env override. */
+/**
+ * Legacy fallback hash (for @Admin2026 password).
+ * Used only if no pre-computed hash is provided and no SEED_ADMIN_PASSWORD_HASH env override.
+ */
 export const SEED_ADMIN_PASSWORD_HASH_DEFAULT =
   "$2b$10$q0/a/xj6fSrI/aArWuDqOO0hJVyDUwh8tCilT0vaDpAklhjgST/dm";
 
+
+// %%%%% Platform settings seed data %%%%%
+// Business rule configuration seeded into database
+
+/**
+ * Seed values for all 14 whitelisted platform settings.
+ * Organized by functional groups (cancellation, booking, tips, reminders, emails, content).
+ * Email fields (admin_notification_email, weekly_report_email) are intentionally empty;
+ * operators should configure these via the admin panel.
+ */
 export const PLATFORM_SETTINGS: Array<{ key: string; value: string }> = [
-  { key: "cancellation_penalty_percent", value: "20" },
+  // Group A: Cancellation policy
+  { key: "cancellation_penalty_percent", value: "20.00" },
+  { key: "cancellation_free_window_minutes", value: "60" },
+  { key: "cancellation_penalty_platform_rate", value: "0.70" },
+  { key: "cancellation_penalty_station_rate", value: "0.30" },
+
+  // Group B: Reservations & booking
+  { key: "max_advance_booking_days", value: "7" },
+  { key: "rating_window_days", value: "7" },
   { key: "default_late_tolerance_minutes", value: "5" },
+
+  // Group C: Tips
+  { key: "max_tip_amount_xaf", value: "500" },
+
+  // Group D: Reminders
+  { key: "reminder_first_window_hours", value: "5" },
+  { key: "reminder_second_window_minutes", value: "30" },
+
+  // Group E: Notification emails (admin-configurable, leave empty for now)
+  { key: "admin_notification_email", value: "" },
+  { key: "weekly_report_email", value: "" },
+
+  // Group F: Content limits
   { key: "max_rating_comment_length", value: "500" },
-  { key: "email_verification_token_expiry_hours", value: "24" },
-  { key: "password_reset_token_expiry_hours", value: "1" },
+  { key: "max_support_message_length", value: "5000" },
 ];
 
 export const SEED_COMMISSION_RATE = "0.1000";
 
+
+// %%%%% Stripe connected account %%%%%
+// Test account for seed stations
+
 /**
- * Stripe test connected account ID for seed stations.
- * Set via SEED_STRIPE_ACCOUNT_ID env var or update here after creating a test account:
+ * Stripe Connect test account ID for seed stations.
+ *
+ * To create a test account:
  *   stripe accounts create --type=express --country=FR
+ *
+ * Set via SEED_STRIPE_ACCOUNT_ID env var or update this constant.
+ * Leave empty to skip Stripe payment flow in tests.
  */
 export const SEED_STRIPE_ACCOUNT_ID = process.env.SEED_STRIPE_ACCOUNT_ID ?? "";
 
-/** Base vehicle format labels/prices; stations can use these or slight variants. */
+
+// %%%%% Vehicle formats %%%%%
+// Base vehicle categories with seed prices
+
+/**
+ * Base vehicle format labels and prices (French).
+ * Stations can use these or customize slight variants.
+ * Prices are in the platform currency (CAD for seed).
+ */
 export const SEED_VEHICLE_FORMATS: Array<{ label: string; price: string }> = [
   { label: "Petit", price: "8.00" },
   { label: "Moyen", price: "12.00" },
@@ -54,6 +120,10 @@ export const SEED_VEHICLE_FORMATS: Array<{ label: string; price: string }> = [
   { label: "SUV", price: "18.00" },
   { label: "Utilitaire", price: "22.00" },
 ];
+
+
+// %%%%% Station configuration %%%%%
+// Default settings for seed stations
 
 export const SEED_STATION_CONFIG = {
   opening_time: "08:00:00+00",
@@ -67,7 +137,14 @@ export const SEED_STATION_CONFIG = {
   reservation_surcharge: "2.00" as string | null,
 };
 
-/** Wash type codes from migration 0008. Seed selects by code to link station_wash_types. */
+
+// %%%%% Wash types %%%%%
+// Wash service categories referenced by stations
+
+/**
+ * Wash type codes (from migration 0008).
+ * Seed selects by code to link station_wash_types.
+ */
 export const WASH_TYPE_CODES = ["hand_wash", "automatic", "self_service"] as const;
 
 /**

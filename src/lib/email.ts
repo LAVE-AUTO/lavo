@@ -1,13 +1,36 @@
+/**
+ * Email service: build and send transactional emails via Resend.
+ *
+ * Features:
+ *   - Lazy-loading Resend client (avoids initializing without API key)
+ *   - HTML escaping and URL validation (security)
+ *   - Bilingual email templates (fr / en)
+ *   - QR code generation for station booking links
+ *   - Customizable copy via platform settings (admin-configurable)
+ *
+ * Template types:
+ *   - Email verification (sign-up confirmation)
+ *   - Password reset
+ *   - Station rejection / approval (with QR codes)
+ *   - Payment success confirmation
+ *   - Weekly escrow transactions report
+ */
 import { Resend } from 'resend';
 import QRCode from 'qrcode';
 import { APP_URL } from '@/helpers/constants';
+import { getPlatformSetting } from '@/server/admin/platform-settings-service';
 
 
-
+// %%%%% Constants %%%%%
+// Email configuration
 
 const FROM = process.env.EMAIL_FROM ?? 'noreply@lavo.app';
 
 type Locale = 'fr' | 'en';
+
+
+// %%%%% Resend client (singleton) %%%%%
+// Lazy initialization with warnings
 
 let warnedResendApiKeyMissing = false;
 let resendClient: Resend | null | undefined;
@@ -16,7 +39,11 @@ let resendClient: Resend | null | undefined;
 // %%%%% MODULE — Resend client %%%%%
 // Lazy singleton; never pass undefined to the SDK.
 
-/** Returns a Resend client when `RESEND_API_KEY` is set; otherwise null. */
+
+/**
+ * Returns a Resend client when `RESEND_API_KEY` is set; otherwise null.
+ * Caches the client after first call (singleton pattern).
+ */
 function getResendClient(): Resend | null {
   if (resendClient !== undefined) return resendClient;
   const key = process.env.RESEND_API_KEY?.trim();
@@ -28,8 +55,10 @@ function getResendClient(): Resend | null {
   return resendClient;
 }
 
-
-/** Logs a single warning when Resend is not configured (skipped in test). */
+/**
+ * Logs a single warning when Resend is not configured.
+ * Skipped in test environment to avoid noise in test logs.
+ */
 function warnResendMissingOnce(context: string): void {
   if (process.env.NODE_ENV === 'test' || warnedResendApiKeyMissing) return;
   warnedResendApiKeyMissing = true;
@@ -37,12 +66,17 @@ function warnResendMissingOnce(context: string): void {
 }
 
 
-// %%%%% END - MODULE — Resend client %%%%%
+// %%%%% END - Resend client %%%%%
 
 
-// %%%%% MODULE — Email payload safety %%%%%
-// HTML escape, snippet truncation, http(s) hrefs, recipient sanity.
+// %%%%% Security & validation %%%%%
+// HTML escaping, URL validation, recipient sanity checks
 
+
+/**
+ * Escapes HTML special characters to prevent injection in email bodies.
+ * Converts &, <, >, " to their entity equivalents.
+ */
 function escapeHtmlPlain(text: string): string {
   return text
     .replace(/&/g, '&amp;')
@@ -51,13 +85,17 @@ function escapeHtmlPlain(text: string): string {
     .replace(/"/g, '&quot;');
 }
 
-/** Strip newlines to reduce header / log injection in subjects and snippets. */
+/**
+ * Sanitizes plain text for email subjects and snippets.
+ * Removes newlines to prevent header/log injection.
+ */
 function safePlainTextSnippet(text: string, maxLen: number): string {
   return text.replace(/\r|\n/g, ' ').trim().slice(0, maxLen);
 }
 
 /**
- * Only allow http(s) URLs in email CTAs (mitigates javascript:/data: in href if a caller passes untrusted input).
+ * Validates and returns a URL safe for email CTAs.
+ * Only allows http(s) URLs; blocks javascript:, data:, and other schemes.
  */
 function safeHttpUrlForEmailHref(href: string | undefined): string | undefined {
   if (!href) return undefined;
@@ -72,7 +110,10 @@ function safeHttpUrlForEmailHref(href: string | undefined): string | undefined {
   }
 }
 
-/** Minimal sanity check before sending (avoids logging odd payloads to third parties). */
+/**
+ * Sanity check for recipient email addresses.
+ * Verifies reasonable length and presence of @ symbol.
+ */
 function isReasonableRecipientEmail(to: string): boolean {
   const t = to.trim();
   if (t.length < 3 || t.length > 320) return false;
@@ -81,11 +122,11 @@ function isReasonableRecipientEmail(to: string): boolean {
 }
 
 
-// %%%%% END - MODULE — Email payload safety %%%%%
+// %%%%% END - Security & validation %%%%%
 
 
-// %%%%% MODULE — i18n copy (TEXTS) %%%%%
-// Subjects, bodies, and footer strings per locale.
+// %%%%% Bilingual email templates %%%%%
+// Subjects, bodies, and footer text per locale (fr / en)
 
 const TEXTS = {
   verification: {
@@ -527,11 +568,12 @@ export async function sendStationApplicationAdminNotification(
   stationId: string,
   opts?: { context?: 'application' | 'approval'; qrPublicUrl?: string }
 ): Promise<void> {
-  const adminEmail = process.env.ADMIN_NOTIFICATION_EMAIL?.trim();
+  const dbAdminEmail = await getPlatformSetting('admin_notification_email');
+  const adminEmail = (dbAdminEmail?.trim() || process.env.ADMIN_NOTIFICATION_EMAIL?.trim()) ?? '';
   if (!adminEmail) {
     if (process.env.NODE_ENV !== 'test') {
       console.warn(
-        'sendStationApplicationAdminNotification: ADMIN_NOTIFICATION_EMAIL not set, skipping'
+        'sendStationApplicationAdminNotification: admin_notification_email not configured (DB or env), skipping'
       );
     }
     return;

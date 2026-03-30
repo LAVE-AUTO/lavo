@@ -1,17 +1,30 @@
 /**
- * Data access for station_configs and station_posts.
- * Used by config-service for GET/PATCH station config API.
+ * Data access layer for station configuration.
+ *
+ * Manages two tables:
+ *   - station_configs: opening times, washing setup, margins, tolerance, surcharge
+ *   - station_posts: numbered wash station positions with active status
+ *
+ * Used by config-service for GET/PATCH station config API endpoints.
  */
 import { eq, inArray, sql } from 'drizzle-orm';
 import { db } from '@/lib/db';
 import { stationConfigs, stationPosts, stations } from '@/lib/db/schema';
+import { getPlatformSettingWithFallback } from '@/server/admin/platform-settings-service';
+
+
+// %%%%% Types %%%%%
+// Inferred types from Drizzle schema
 
 export type StationConfig = typeof stationConfigs.$inferSelect;
 export type StationConfigInsert = typeof stationConfigs.$inferInsert;
 export type StationPost = typeof stationPosts.$inferSelect;
 export type StationPostInsert = typeof stationPosts.$inferInsert;
 
-/** Default time strings for config (opening 08:00, closing 20:00). */
+
+// %%%%% Constants %%%%%
+// Default configuration values
+
 export const DEFAULT_OPENING_TIME = '08:00:00+00';
 export const DEFAULT_CLOSING_TIME = '20:00:00+00';
 export const DEFAULT_WASH_DURATION_MINUTES = 30;
@@ -20,9 +33,18 @@ export const DEFAULT_CANCELLATION_DELAY_MINUTES = 60;
 export const DEFAULT_MARGIN_BEFORE_MINUTES = 5;
 export const DEFAULT_MARGIN_AFTER_MINUTES = 10;
 
+
+// %%%%% Config reads %%%%%
+// Fetch configuration by station
+
 /**
- * Returns the station config row for the given station id, or undefined.
- * `station_configs.id` is the station identifier (PK = FK to `stations.id`, 1:1); there is no separate `station_id` column.
+ * Retrieves the station config row for the given station.
+ *
+ * Note: `station_configs.id` is the primary key and also the foreign key to `stations.id`.
+ * The relationship is 1:1; there is no separate `station_id` column.
+ *
+ * @param stationId - Station UUID
+ * @returns StationConfig row, or undefined if no config exists for this station
  */
 export async function getConfigByStationId(stationId: string): Promise<StationConfig | undefined> {
   const row = await db.query.stationConfigs.findFirst({
@@ -32,7 +54,10 @@ export async function getConfigByStationId(stationId: string): Promise<StationCo
 }
 
 /**
- * Returns all station_posts for the given station, ordered by position.
+ * Retrieves all wash station posts for a station, ordered by position.
+ *
+ * @param stationId - Station UUID
+ * @returns Array of StationPost rows, sorted by position (ascending)
  */
 export async function getPostsByStationId(stationId: string): Promise<StationPost[]> {
   return db.query.stationPosts.findMany({
@@ -41,11 +66,29 @@ export async function getPostsByStationId(stationId: string): Promise<StationPos
   });
 }
 
+
+// %%%%% Config writes %%%%%
+// Upsert configuration with defaults and platform setting fallbacks
+
 /**
- * Upserts station config. Insert if missing; update if present.
- * Defaults: opening 08:00, closing 20:00, margins 5/10, late_tolerance 5, cancellation_delay from spec (60).
- * On insert, `wash_post_count` / `max_concurrent_posts` default from each other when one is provided; otherwise
- * `getStationWashPostCount` runs once. Pass `options.existing` to skip the initial lookup (e.g. after a read).
+ * Upserts station config (insert if missing, update if present).
+ *
+ * Defaults:
+ *   - opening_time: 08:00
+ *   - closing_time: 20:00
+ *   - margins: 5 min before, 10 min after
+ *   - late_tolerance: from platform setting or 5 min fallback
+ *   - cancellation_delay: 60 min
+ *   - wash_post_count / max_concurrent_posts: from station or queried on first insert
+ *
+ * On insert, if both wash_post_count and max_concurrent_posts are absent,
+ * queries the station's wash_post_count once to use as default.
+ * Pass `options.existing` to skip the initial lookup (e.g., after a recent read).
+ *
+ * @param stationId - Station UUID
+ * @param data - Partial config data to upsert (id and updated_at are set automatically)
+ * @param options - Optional optimization: pass existing config to skip DB lookup
+ * @returns Updated or inserted StationConfig row
  */
 export async function upsertConfig(
   stationId: string,
@@ -55,6 +98,18 @@ export async function upsertConfig(
   const existing =
     options !== undefined ? options.existing : await getConfigByStationId(stationId);
   const now = new Date();
+  const platformLateTolerance = parseInt(
+    await getPlatformSettingWithFallback(
+      'default_late_tolerance_minutes',
+      'PLATFORM_DEFAULT_LATE_TOLERANCE_MINUTES',
+      String(DEFAULT_LATE_TOLERANCE_MINUTES)
+    ),
+    10
+  );
+  const resolvedLateTolerance =
+    Number.isFinite(platformLateTolerance) && platformLateTolerance >= 0
+      ? platformLateTolerance
+      : DEFAULT_LATE_TOLERANCE_MINUTES;
   if (existing) {
     const [updated] = await db
       .update(stationConfigs)
@@ -78,7 +133,7 @@ export async function upsertConfig(
     break_end: data.break_end ?? null,
     wash_duration_minutes: data.wash_duration_minutes ?? DEFAULT_WASH_DURATION_MINUTES,
     wash_post_count: data.wash_post_count ?? washDefault,
-    late_tolerance_minutes: data.late_tolerance_minutes ?? DEFAULT_LATE_TOLERANCE_MINUTES,
+    late_tolerance_minutes: data.late_tolerance_minutes ?? resolvedLateTolerance,
     cancellation_delay_minutes: data.cancellation_delay_minutes ?? DEFAULT_CANCELLATION_DELAY_MINUTES,
     max_concurrent_posts: data.max_concurrent_posts ?? washDefault,
     margin_before_minutes: data.margin_before_minutes ?? DEFAULT_MARGIN_BEFORE_MINUTES,
@@ -90,9 +145,25 @@ export async function upsertConfig(
   return inserted;
 }
 
+
 /**
- * Upserts station_posts by (station_id, position). Replaces existing posts for the station
- * with the given list; positions are 1-based. Each item: { position, is_active }.
+ * Upserts station wash posts by (station_id, position).
+ *
+ * Replaces the entire set of posts for the station with the given list.
+ * Positions are 1-based (position 1, 2, 3, etc.).
+ *
+ * Strategy:
+ *   1. Fetch existing posts by station
+ *   2. For each post in the new list:
+ *      - If position exists, queue update of is_active
+ *      - If position missing, queue insert
+ *   3. Delete positions no longer in the new list
+ *   4. Apply insert, update, delete in separate batches
+ *   5. Return full updated post list
+ *
+ * @param stationId - Station UUID
+ * @param posts - List of { position, is_active } items (1-based positions)
+ * @returns Updated full list of posts for the station (sorted by position)
  */
 export async function upsertPosts(
   stationId: string,
@@ -153,8 +224,13 @@ export async function upsertPosts(
   return getPostsByStationId(stationId);
 }
 
+
 /**
- * Returns wash_post_count for the station (from stations table). Used when creating default config.
+ * Retrieves the wash post count from the station row.
+ * Used when creating default config and wash_post_count is not explicitly provided.
+ *
+ * @param stationId - Station UUID
+ * @returns Wash post count, or 1 if not set or invalid
  */
 export async function getStationWashPostCount(stationId: string): Promise<number> {
   const row = await db.query.stations.findFirst({

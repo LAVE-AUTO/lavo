@@ -1,5 +1,21 @@
 /**
- * Business logic for ratings: validation, submission, public listing, admin moderation.
+ * Rating business logic: submit, list public/admin, and moderation operations.
+ *
+ * Features:
+ *   - submitRating: client submits rating for completed reservation with time-window and uniqueness checks
+ *   - getPublicRatings: public listing with pagination
+ *   - listAllAdminRatings: admin moderation interface with filtering
+ *   - toggleRatingVisibility: show/hide ratings for moderation (with idempotency and audit logging)
+ *
+ * Validation:
+ *   - Ownership check: only client who made reservation can rate it
+ *   - Status check: reservation must be completed
+ *   - Window check: rating must be submitted within configurable days of completion
+ *   - Uniqueness check: one rating per reservation (enforced at DB level)
+ *
+ * Audit:
+ *   - Admin moderation actions are logged for compliance
+ *   - Station aggregate rating recalculated after each change
  */
 import { db } from '@/lib/db';
 import {
@@ -23,12 +39,7 @@ import {
   type AdminRatingsFilters,
   type Rating,
 } from './ratings-repository';
-
-
-// %%%%% Constants %%%%%
-// Rating submission window (7 days in milliseconds)
-
-const RATING_WINDOW_MS = 7 * 24 * 60 * 60 * 1000;
+import { getPlatformSettingWithFallback } from '@/server/admin/platform-settings-service';
 
 
 // %%%%% Types %%%%%
@@ -85,10 +96,18 @@ export async function submitRating(userId: string, body: SubmitRatingData): Prom
     throw new ReservationNotCompletedError('The reservation is not completed');
   }
 
-  // 4. 7-day window since completed_at (fallback updated_at)
+  // 4. Configurable rating window since completed_at (fallback updated_at)
   const completedAt = owned.completed_at ?? owned.updated_at;
-  if (Date.now() - completedAt.getTime() > RATING_WINDOW_MS) {
-    throw new RatingWindowExpiredError('The 7-day rating window has expired');
+  const ratingWindowDaysRaw = parseInt(
+    await getPlatformSettingWithFallback('rating_window_days', 'PLATFORM_RATING_WINDOW_DAYS', '7'),
+    10
+  );
+  const ratingWindowDays = Number.isFinite(ratingWindowDaysRaw) && ratingWindowDaysRaw > 0
+    ? ratingWindowDaysRaw
+    : 7;
+  const ratingWindowMs = ratingWindowDays * 86400000;
+  if (Date.now() - completedAt.getTime() > ratingWindowMs) {
+    throw new RatingWindowExpiredError(`The ${ratingWindowDays}-day rating window has expired`);
   }
 
   // 5. Not already rated
@@ -120,7 +139,6 @@ export async function submitRating(userId: string, body: SubmitRatingData): Prom
     throw err;
   }
 }
-
 
 
 // %%%%% Public rating listing %%%%%

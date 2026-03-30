@@ -1,11 +1,17 @@
 /**
- * Cron job: send weekly escrow transactions report.
+ * Cron job: send weekly escrow transactions report to operations team.
  *
- * The report aggregates Stripe PaymentIntent captures released through escrow:
- * - uses reservations.stripe_payment_succeeded_at (set on payment_intent.succeeded webhook)
- * - includes all reservations with succeeded_at in the last 7 days window
+ * Aggregates all Stripe PaymentIntent captures released through escrow in the past 7 days:
+ *   - Data source: reservations table (entry_type='reservation' only)
+ *   - Timestamp: stripe_payment_succeeded_at (set by payment_intent.succeeded webhook)
+ *   - Window: past 7 calendar days (now - 7d) to (now)
  *
- * Email copy locale: `WEEKLY_REPORT_LOCALE` (`fr` | `en`, default `fr`) — see `.env.example`.
+ * Email delivery:
+ *   - Recipient: from DB setting → env vars → empty (fallback skips sending)
+ *   - Locale: WEEKLY_REPORT_LOCALE env var ('fr' or 'en', default 'fr')
+ *   - Template: bilingual email with transaction table and summary
+ *
+ * Invocation: GET /api/cron/send-escrow-weekly-transactions-report with CRON_SECRET header
  */
 import { and, eq, gte, isNotNull, lt } from 'drizzle-orm';
 import { db } from '@/lib/db';
@@ -15,6 +21,11 @@ import {
   type WeeklyEscrowTransactionRow,
 } from '@/lib/email';
 import { validateEmail } from '@/helpers/validators';
+import { getPlatformSetting } from '@/server/admin/platform-settings-service';
+
+
+// %%%%% Types %%%%%
+// Job result and locale
 
 export type SendEscrowWeeklyTransactionsReportResult = {
   processed: number;
@@ -25,8 +36,15 @@ export type SendEscrowWeeklyTransactionsReportResult = {
 
 type WeeklyReportLocale = 'fr' | 'en';
 
+
+// %%%%% Configuration %%%%%
+// Locale and email recipient resolution
+
 /**
- * Resolves email template locale; default `fr` matches app primary locale (next-intl) and operator expectations.
+ * Resolves the email template locale from environment.
+ * Defaults to 'fr' to match the app's primary locale (next-intl) and operator expectations.
+ *
+ * @returns 'fr' or 'en'
  */
 function resolveWeeklyReportLocale(): WeeklyReportLocale {
   const raw = process.env.WEEKLY_REPORT_LOCALE?.trim().toLowerCase();
@@ -39,7 +57,9 @@ export async function runSendEscrowWeeklyTransactionsReport(): Promise<SendEscro
   const weekStart = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
   const weekEnd = now;
 
+  const dbWeeklyEmail = await getPlatformSetting('weekly_report_email');
   const recipient =
+    dbWeeklyEmail?.trim() ||
     process.env.WEEKLY_TRANSACTIONS_REPORT_EMAIL?.trim() ||
     process.env.ADMIN_NOTIFICATION_EMAIL?.trim() ||
     '';
