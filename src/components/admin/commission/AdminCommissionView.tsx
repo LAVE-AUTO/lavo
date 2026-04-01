@@ -1,8 +1,9 @@
 'use client';
 
-import { useState, useRef, useEffect } from 'react';
+import { useState, useRef, useEffect, useCallback } from 'react';
 import { useTranslations } from 'next-intl';
 import { useToast } from '@/context/toast-context';
+import { useAuth } from '@/context/auth-context';
 import { useCommission } from '@/context/commission-context';
 import { updateWithApi } from '@/services/axios-service';
 
@@ -14,9 +15,20 @@ function formatDate(d: string) {
 export function AdminCommissionView() {
   const t = useTranslations('admin_commission');
   const { success: toastSuccess, error: toastError } = useToast();
+  const { user } = useAuth();
   const { rate: savedRate, history, loading: historyLoading, updateRate, reload } = useCommission();
   const mountedRef = useRef(true);
   useEffect(() => { mountedRef.current = true; return () => { mountedRef.current = false; }; }, []);
+
+  const resolveSetBy = useCallback((setBy: string) => {
+    if (!setBy) return '-';
+    if (user?.id && setBy === user.id) {
+      return [user.first_name, user.last_name].filter(Boolean).join(' ') || user.email;
+    }
+    // UUID from backend — no endpoint to resolve other admin names
+    if (/^[0-9a-f]{8}-/.test(setBy)) return setBy.slice(0, 8) + '...';
+    return setBy;
+  }, [user]);
 
   const [rate, setRate]     = useState(savedRate);
   const [saving, setSaving] = useState(false);
@@ -146,7 +158,7 @@ export function AdminCommissionView() {
                         {!same && <span className={`text-[10px] font-black ${up ? 'text-[#F97316]' : 'text-[#22C55E]'}`}>{up ? '▲' : '▼'}</span>}
                         {isCurrent && <span className="rounded-full bg-[#C49A1E]/15 px-1.5 py-0.5 text-[9px] font-black text-[#7A5E0A] dark:text-[#C49A1E]">live</span>}
                       </div>
-                      <p className="truncate text-[12px] text-[#666] dark:text-[#9A9A8A]">{h.set_by}</p>
+                      <p className="truncate text-[12px] text-[#666] dark:text-[#9A9A8A]">{resolveSetBy(h.set_by)}</p>
                       <p className="text-[11px] text-[#BBBBAA] dark:text-[#4A4A3A]">{formatDate(h.effective_at)}</p>
                     </div>
                   );
