@@ -4,8 +4,13 @@ import { useState, useRef, useEffect } from 'react';
 import { useTranslations } from 'next-intl';
 import { useToast } from '@/context/toast-context';
 import { useCommission } from '@/context/commission-context';
+import { getFromApi, patchWithApi } from '@/services/axios-service';
 
-// TODO: connect to API once endpoint is available (GET|POST /admin/platform-settings)
+interface PlatformSettingRow {
+  key: string;
+  value: string | null;
+}
+
 const DEFAULT_SETTINGS = { penalty_rate: 15, reschedule_delay_minutes: 30 };
 
 function NumericField({
@@ -64,6 +69,7 @@ export function AdminPlatformSettings() {
   const [adminShare, setAdminShare]           = useState(savedCommissionRate);
   const [rescheduleDelay, setRescheduleDelay] = useState(DEFAULT_SETTINGS.reschedule_delay_minutes);
   const [saving, setSaving]                   = useState(false);
+  const [loadingSettings, setLoadingSettings] = useState(true);
   // Track last committed values so isDirty resets correctly after each save
   const [committed, setCommitted] = useState({
     penalty_rate: DEFAULT_SETTINGS.penalty_rate,
@@ -72,6 +78,24 @@ export function AdminPlatformSettings() {
 
   /* Sync local input if commission rate changed from commission page */
   useEffect(() => { setAdminShare(savedCommissionRate); }, [savedCommissionRate]);
+
+  /* Load settings from backend */
+  useEffect(() => {
+    (async () => {
+      const [ok, data] = await getFromApi('/admin/settings');
+      if (!mountedRef.current) return;
+      setLoadingSettings(false);
+      if (!ok) return;
+      const rows = (data as { data: PlatformSettingRow[] }).data ?? [];
+      const map = new Map(rows.map((r) => [r.key, r.value]));
+
+      const penalty = parseFloat(map.get('cancellation_penalty_percent') ?? '');
+      const delay = parseInt(map.get('default_late_tolerance_minutes') ?? '', 10);
+
+      if (!isNaN(penalty)) { setPenaltyRate(penalty); setCommitted((c) => ({ ...c, penalty_rate: penalty })); }
+      if (!isNaN(delay)) { setRescheduleDelay(delay); setCommitted((c) => ({ ...c, reschedule_delay_minutes: delay })); }
+    })();
+  }, []);
 
   const stationShare = 100 - adminShare;
 
@@ -92,16 +116,31 @@ export function AdminPlatformSettings() {
     const err = validate();
     if (err) { toastError(err); return; }
     setSaving(true);
-    try {
-      // TODO: connect to API once endpoint is available (POST /admin/platform-settings)
-      await new Promise((r) => setTimeout(r, 700));
-      if (!mountedRef.current) return;
+
+    const payload: Record<string, string> = {
+      cancellation_penalty_percent: penaltyRate.toFixed(2),
+      default_late_tolerance_minutes: String(rescheduleDelay),
+    };
+
+    const [ok] = await patchWithApi('/admin/settings', payload);
+    if (!mountedRef.current) return;
+    setSaving(false);
+
+    if (ok) {
       if (adminShare !== savedCommissionRate) updateRate(Math.round(adminShare * 10) / 10);
       setCommitted({ penalty_rate: penaltyRate, reschedule_delay_minutes: rescheduleDelay });
       toastSuccess(t('save_success'));
-    } finally {
-      if (mountedRef.current) setSaving(false);
+    } else {
+      toastError(t('save_error'));
     }
+  }
+
+  if (loadingSettings) {
+    return (
+      <div className="flex min-h-full items-center justify-center">
+        <div className="h-8 w-8 animate-spin rounded-full border-[3px] border-[#C49A1E] border-t-transparent" />
+      </div>
+    );
   }
 
   return (

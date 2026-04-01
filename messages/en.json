@@ -2088,6 +2088,7 @@
     "error_share_range": "The platform share must be between 0 and 100%.",
     "error_delay_range": "The delay must be between 1 and 10,080 minutes.",
     "save_success": "Settings saved.",
+    "save_error": "Unable to save settings. Please try again.",
     "label_platform": "Platform",
     "label_station": "Station",
     "label_unsaved": "Unsaved changes",
