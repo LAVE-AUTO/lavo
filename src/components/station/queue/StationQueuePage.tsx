@@ -8,7 +8,7 @@
 
 import { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import { useTranslations } from 'next-intl';
-import { getFromApi, patchWithApi } from '@/services';
+import { getFromApi, patchWithApi, postWithApi } from '@/services';
 import { ConfirmDialog } from '@/components/ui/ConfirmDialog';
 import { QueueCard, type QueueEntry } from '@/components/station/dashboard/QueueCard';
 
@@ -110,6 +110,20 @@ export function StationQueuePage() {
     if (mountedRef.current) await loadData(true);
   }
 
+  async function handlePick(entryId: string) {
+    setActionLoading(true);
+    setActionError(null);
+    const [ok, data] = await postWithApi(`/stations/queue/${entryId}/pick`, {});
+    if (!mountedRef.current) return;
+    setActionLoading(false);
+    if (ok) {
+      await loadData(true);
+    } else {
+      const raw = (data as { message?: string })?.message ?? '';
+      setActionError(raw || t('error_action'));
+    }
+  }
+
   const lastUpdatedLabel = lastUpdated
     ? t('last_updated', { time: lastUpdated.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) })
     : '';
@@ -208,6 +222,7 @@ export function StationQueuePage() {
                     <QueueCard
                       entry={toQueueEntry(waitingEntries[0], 0, true)}
                       onCall={() => setPending({ type: 'call', entryId: waitingEntries[0].id })}
+                      onPick={() => handlePick(waitingEntries[0].id)}
                     />
                   </div>
                   {/* Rest of queue */}
@@ -218,6 +233,7 @@ export function StationQueuePage() {
                           key={e.id}
                           entry={toQueueEntry(e, idx + 1, false)}
                           onCall={() => setPending({ type: 'call', entryId: e.id })}
+                          onPick={() => handlePick(e.id)}
                           onMoveUp={idx > 0 ? () => handleReorder(e.id, (e.queue_position ?? idx + 2) - 1) : undefined}
                           onMoveDown={idx < waitingEntries.length - 2 ? () => handleReorder(e.id, (e.queue_position ?? idx + 2) + 1) : undefined}
                         />
