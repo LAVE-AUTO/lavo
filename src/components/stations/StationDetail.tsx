@@ -61,6 +61,7 @@ export function StationDetail({ id }: StationDetailProps) {
   const [selectedForfaitIdx, setSelectedForfaitIdx] = useState(0);
   const [bookingOpen, setBookingOpen] = useState(false);
   const [joiningQueue, setJoiningQueue] = useState(false);
+  const [navigating, setNavigating] = useState(false);
 
   if (station === undefined) return <PageSpinner />;
 
@@ -109,8 +110,6 @@ export function StationDetail({ id }: StationDetailProps) {
     station.latitude != null && station.longitude != null
       ? `https://www.google.com/maps/dir/?api=1&destination=${station.latitude},${station.longitude}`
       : `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(`${station.name}, ${station.address}, ${station.city}`)}`;
-
-  const [navigating, setNavigating] = useState(false);
 
   const handleEnRoute = async () => {
     setNavigating(true);
