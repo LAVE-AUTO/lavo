@@ -2284,7 +2284,15 @@
     "alert_disputes_action": "View all disputes",
     "notif_tooltip": "Notifications",
     "section_performance": "Performance",
-    "kpi_period": "Today"
+    "kpi_period": "Today",
+    "section_analytics": "Analytics",
+    "chart_revenue": "Revenue",
+    "chart_transactions": "Transactions",
+    "chart_registrations": "Registrations",
+    "chart_reservations": "Reservations",
+    "group_day": "Day",
+    "group_week": "Week",
+    "group_month": "Month"
   },
   "client_support": {
     "page_title": "Support",

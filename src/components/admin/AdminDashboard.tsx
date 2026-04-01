@@ -2,6 +2,7 @@
 
 import { useTranslations, useLocale } from 'next-intl';
 import { AdminKpiRow } from './dashboard/AdminKpiRow';
+import { AdminAnalyticsCharts } from './dashboard/AdminAnalyticsCharts';
 import { AdminAlertsSection } from './dashboard/AdminAlertsSection';
 
 function StatusDot() {
@@ -57,6 +58,11 @@ export function AdminDashboard() {
             </span>
           </div>
           <AdminKpiRow />
+        </section>
+
+        {/* Analytics charts */}
+        <section>
+          <AdminAnalyticsCharts />
         </section>
 
         {/* Alerts section */}
