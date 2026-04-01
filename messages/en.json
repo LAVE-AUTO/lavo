@@ -1610,6 +1610,8 @@
     "modal_generating": "Generating...",
     "delete_confirm": "Delete this slot?",
     "deleting": "Deleting...",
+    "select_all": "Select all",
+    "btn_delete_selected": "Delete ({n})",
     "loading": "Loading...",
     "section_profile": "Station profile",
     "field_email": "Email address",
