@@ -2067,7 +2067,9 @@
     "col_location": "Localisation",
     "col_status": "Statut",
     "col_actions": "Actions",
-    "btn_add_user": "Ajouter"
+    "btn_add_user": "Ajouter",
+    "action_success": "Action effectuée avec succès.",
+    "action_error": "Impossible d'effectuer cette action."
   },
   "admin_settings": {
     "page_title": "Paramètres plateforme",

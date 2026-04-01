@@ -2067,7 +2067,9 @@
     "col_location": "Location",
     "col_status": "Status",
     "col_actions": "Actions",
-    "btn_add_user": "Add user"
+    "btn_add_user": "Add user",
+    "action_success": "Action completed successfully.",
+    "action_error": "Unable to perform this action."
   },
   "admin_settings": {
     "page_title": "Platform settings",
