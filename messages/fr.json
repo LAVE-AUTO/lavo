@@ -876,7 +876,22 @@
     "status_pending": "En attente",
     "status_pending_payment": "Paiement en attente",
     "error_load": "Impossible de charger vos réservations.",
-    "btn_retry": "Réessayer"
+    "btn_retry": "Réessayer",
+    "dispute_btn": "Contester cette réservation",
+    "dispute_modal_title": "Contester la réservation",
+    "dispute_modal_desc": "Décrivez le problème rencontré lors de votre service. Notre équipe examinera votre demande dans les plus brefs délais.",
+    "dispute_field_reason": "Motif de la contestation",
+    "dispute_field_reason_placeholder": "Ex : service non conforme, véhicule endommagé...",
+    "dispute_field_description": "Description détaillée (optionnel)",
+    "dispute_field_description_placeholder": "Ajoutez des détails supplémentaires pour nous aider à traiter votre demande...",
+    "dispute_field_amount": "Montant demandé (optionnel)",
+    "dispute_field_amount_placeholder": "0.00",
+    "dispute_btn_submit": "Envoyer la contestation",
+    "dispute_btn_submitting": "Envoi...",
+    "dispute_btn_cancel": "Annuler",
+    "dispute_success": "Votre contestation a été envoyée avec succès.",
+    "dispute_error": "Impossible d'envoyer la contestation. Veuillez réessayer.",
+    "dispute_already_exists": "Une contestation existe déjà pour cette réservation."
   },
   "queue_detail": {
     "title": "Ma file d'attente",

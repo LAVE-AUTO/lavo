@@ -876,7 +876,22 @@
     "status_pending": "Pending",
     "status_pending_payment": "Awaiting payment",
     "error_load": "Unable to load your reservations.",
-    "btn_retry": "Retry"
+    "btn_retry": "Retry",
+    "dispute_btn": "Dispute this reservation",
+    "dispute_modal_title": "Dispute reservation",
+    "dispute_modal_desc": "Describe the issue you experienced during your service. Our team will review your request as soon as possible.",
+    "dispute_field_reason": "Reason for dispute",
+    "dispute_field_reason_placeholder": "E.g.: service not as described, vehicle damaged...",
+    "dispute_field_description": "Detailed description (optional)",
+    "dispute_field_description_placeholder": "Add more details to help us process your request...",
+    "dispute_field_amount": "Requested amount (optional)",
+    "dispute_field_amount_placeholder": "0.00",
+    "dispute_btn_submit": "Submit dispute",
+    "dispute_btn_submitting": "Submitting...",
+    "dispute_btn_cancel": "Cancel",
+    "dispute_success": "Your dispute has been submitted successfully.",
+    "dispute_error": "Unable to submit the dispute. Please try again.",
+    "dispute_already_exists": "A dispute already exists for this reservation."
   },
   "queue_detail": {
     "title": "My queue",
