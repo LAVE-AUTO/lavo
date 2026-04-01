@@ -2273,7 +2273,13 @@
     "thread_resolved_hint": "Ce ticket a été résolu par l'équipe support.",
     "thread_closed_hint": "Ce ticket est clôturé.",
     "btn_expand": "Développer le ticket",
-    "btn_collapse": "Réduire le ticket"
+    "btn_collapse": "Réduire le ticket",
+    "error_load": "Impossible de charger les tickets.",
+    "btn_retry": "Réessayer",
+    "reply_placeholder": "Votre réponse…",
+    "btn_send": "Envoyer",
+    "message_sent": "Message envoyé.",
+    "message_send_error": "Impossible d'envoyer le message."
   },
   "admin_support": {
     "page_title": "Tickets support",

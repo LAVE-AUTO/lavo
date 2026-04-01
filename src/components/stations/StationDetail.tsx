@@ -117,7 +117,8 @@ export function StationDetail({ id }: StationDetailProps) {
     const [ok, data] = await postWithApi<{ data: { mapsUrl: string } }>(`/stations/${id}/join`, {});
     if (!mountedRef.current) return;
     setNavigating(false);
-    const url = ok && data?.data?.mapsUrl ? data.data.mapsUrl : fallbackMapsUrl;
+    const result = ok ? (data as { data: { mapsUrl: string } }).data : null;
+    const url = result?.mapsUrl ?? fallbackMapsUrl;
     window.open(url, '_blank', 'noopener,noreferrer');
   };
 

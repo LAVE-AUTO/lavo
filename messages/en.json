@@ -2273,7 +2273,13 @@
     "thread_resolved_hint": "This ticket has been resolved by the support team.",
     "thread_closed_hint": "This ticket is closed.",
     "btn_expand": "Expand ticket",
-    "btn_collapse": "Collapse ticket"
+    "btn_collapse": "Collapse ticket",
+    "error_load": "Unable to load tickets.",
+    "btn_retry": "Retry",
+    "reply_placeholder": "Your reply…",
+    "btn_send": "Send",
+    "message_sent": "Message sent.",
+    "message_send_error": "Unable to send the message."
   },
   "admin_support": {
     "page_title": "Support tickets",
