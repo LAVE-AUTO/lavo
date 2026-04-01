@@ -61,7 +61,8 @@ export function AdminSupportSettings() {
     settings.welcome_message !== committed.welcome_message;
 
   function validate(): string | null {
-    if (settings.support_email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(settings.support_email)) {
+    const email = settings.support_email.trim();
+    if (email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
       return t('settings_error_email');
     }
     const maxTickets = parseInt(settings.max_open_tickets_per_user, 10);
@@ -78,18 +79,20 @@ export function AdminSupportSettings() {
     if (err) { toastError(err); return; }
     setSaving(true);
     try {
+      const trimmed = { ...settings, support_email: settings.support_email.trim(), welcome_message: settings.welcome_message.trim() };
       const payload: Record<string, string> = {};
-      if (settings.support_email !== committed.support_email) payload.support_email = settings.support_email;
-      if (settings.max_open_tickets_per_user !== committed.max_open_tickets_per_user) payload.max_open_tickets_per_user = settings.max_open_tickets_per_user;
-      if (settings.auto_close_days !== committed.auto_close_days) payload.auto_close_days = settings.auto_close_days;
-      if (settings.welcome_message !== committed.welcome_message) payload.welcome_message = settings.welcome_message;
+      if (trimmed.support_email !== committed.support_email) payload.support_email = trimmed.support_email;
+      if (trimmed.max_open_tickets_per_user !== committed.max_open_tickets_per_user) payload.max_open_tickets_per_user = trimmed.max_open_tickets_per_user;
+      if (trimmed.auto_close_days !== committed.auto_close_days) payload.auto_close_days = trimmed.auto_close_days;
+      if (trimmed.welcome_message !== committed.welcome_message) payload.welcome_message = trimmed.welcome_message;
 
       if (Object.keys(payload).length === 0) { setSaving(false); return; }
 
       const [ok] = await patchWithApi('/admin/support/settings', payload);
       if (!mountedRef.current) return;
       if (ok) {
-        setCommitted({ ...settings });
+        setSettings(trimmed);
+        setCommitted({ ...trimmed });
         toastSuccess(t('settings_save_success'));
       } else {
         toastError(t('settings_save_error'));
