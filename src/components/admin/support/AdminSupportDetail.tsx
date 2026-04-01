@@ -230,10 +230,10 @@ export function AdminSupportDetail({ id }: Props) {
 
             {/* Action buttons */}
             <div className="flex shrink-0 flex-wrap items-center gap-2">
-              {!ticket.assigned_to && !isClosed && (
+              {!isClosed && (
                 <button type="button" onClick={handleAssignMe} disabled={actionBusy}
                   className="rounded-[10px] border border-[#C49A1E]/40 px-3 py-2 text-[12px] font-semibold text-[#C49A1E] transition-colors hover:bg-[#C49A1E]/8 disabled:opacity-50">
-                  {t('detail_assign_me')}
+                  {ticket.assigned_to ? t('detail_reassign_me') : t('detail_assign_me')}
                 </button>
               )}
               {!isResolved && !isClosed && (

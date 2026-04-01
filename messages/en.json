@@ -2340,6 +2340,7 @@
     "detail_assigned": "Assigned to",
     "detail_unassigned": "Unassigned",
     "detail_assign_me": "Assign to me",
+    "detail_reassign_me": "Reassign to me",
     "section_thread": "Message thread",
     "field_reply": "Reply",
     "field_reply_placeholder": "Write your reply…",

@@ -2340,6 +2340,7 @@
     "detail_assigned": "Assigné à",
     "detail_unassigned": "Non assigné",
     "detail_assign_me": "M'assigner",
+    "detail_reassign_me": "Me réassigner",
     "section_thread": "Fil de messages",
     "field_reply": "Répondre",
     "field_reply_placeholder": "Écrivez votre réponse…",
