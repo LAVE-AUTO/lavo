@@ -2139,6 +2139,7 @@
     "toast_refunded_full": "Remboursement total effectué.",
     "toast_refunded_partial": "Remboursement partiel effectué.",
     "toast_closed": "Litige clôturé.",
+    "action_error": "Impossible d'effectuer cette action. Veuillez réessayer.",
     "chip_open": "ouverts",
     "chip_total": "au total",
     "timeline_by_client": "Client",

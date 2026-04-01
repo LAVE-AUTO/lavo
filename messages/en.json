@@ -2139,6 +2139,7 @@
     "toast_refunded_full": "Full refund processed.",
     "toast_refunded_partial": "Partial refund processed.",
     "toast_closed": "Dispute closed.",
+    "action_error": "Unable to perform this action. Please try again.",
     "chip_open": "open",
     "chip_total": "total",
     "timeline_by_client": "Client",

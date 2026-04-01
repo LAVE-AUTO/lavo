@@ -1,18 +1,67 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import { useTranslations } from 'next-intl';
-import { MOCK_DISPUTES } from './disputes-mock';
+import { getFromApi } from '@/services/axios-service';
+import { MOCK_DISPUTES, type DisputeRow } from './disputes-mock';
 import { AdminDisputesList } from './AdminDisputesList';
 
-export function AdminDisputesContainer() {
-  const t        = useTranslations('admin_disputes');
-  const [query, setQuery] = useState('');
+function mapApiStatus(s: string): DisputeRow['status'] {
+  if (s === 'refunded') return 'refunded_full';
+  if (s === 'resolved' || s === 'rejected') return 'closed';
+  return 'open';
+}
 
-  // TODO: replace with getFromApi('/admin/disputes') once endpoint is available
-  const disputes = MOCK_DISPUTES;
-  const open     = disputes.filter((d) => d.status === 'open').length;
-  const total    = disputes.length;
+interface ApiDispute {
+  id: string;
+  reason: string;
+  description: string | null;
+  status: string;
+  requested_amount: string | null;
+  refunded_amount: string | null;
+  client_id: string;
+  station_id: string;
+  reservation_id: string;
+  created_at: string;
+  station: { id: string; name: string; city: string; address: string } | null;
+}
+
+export function AdminDisputesContainer() {
+  const t = useTranslations('admin_disputes');
+  const [query, setQuery] = useState('');
+  const [disputes, setDisputes] = useState<DisputeRow[]>([]);
+  const [loading, setLoading] = useState(true);
+  const mountedRef = useRef(true);
+  useEffect(() => () => { mountedRef.current = false; }, []);
+
+  const loadDisputes = useCallback(async () => {
+    setLoading(true);
+    const [ok, data] = await getFromApi('/admin/disputes');
+    if (!mountedRef.current) return;
+    setLoading(false);
+
+    if (ok) {
+      const result = (data as { data: { items: ApiDispute[] } }).data;
+      const items = (result?.items ?? []).map((d): DisputeRow => ({
+        id: d.id,
+        client: { name: d.client_id.slice(0, 8), email: '' },
+        station: { name: d.station?.name ?? '', city: d.station?.city ?? '' },
+        reservation: { id: d.reservation_id, date: d.created_at, amount_paid: parseFloat(d.requested_amount ?? '0'), vehicle_format: '', status: '' },
+        reason: d.reason,
+        status: mapApiStatus(d.status),
+        created_at: d.created_at,
+        events: [{ id: `e-${d.id}`, date: d.created_at, label: d.reason, by: 'client' as const }],
+      }));
+      setDisputes(items);
+    } else {
+      setDisputes(MOCK_DISPUTES);
+    }
+  }, []);
+
+  useEffect(() => { loadDisputes(); }, [loadDisputes]);
+
+  const open  = disputes.filter((d) => d.status === 'open').length;
+  const total = disputes.length;
 
   return (
     <div className="flex min-h-full flex-col">
@@ -51,7 +100,13 @@ export function AdminDisputesContainer() {
 
       {/* Content */}
       <div className="flex-1 overflow-y-auto bg-[#F5F5EE] p-6 dark:bg-[#0C1209]">
-        <AdminDisputesList disputes={disputes} query={query} />
+        {loading ? (
+          <div className="flex items-center justify-center py-16">
+            <div className="h-8 w-8 animate-spin rounded-full border-[3px] border-[#C49A1E] border-t-transparent" />
+          </div>
+        ) : (
+          <AdminDisputesList disputes={disputes} query={query} />
+        )}
       </div>
     </div>
   );

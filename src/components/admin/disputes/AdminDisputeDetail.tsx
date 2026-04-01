@@ -4,6 +4,7 @@ import { useState, useRef, useEffect } from 'react';
 import { useTranslations } from 'next-intl';
 import { Link } from '@/i18n/navigation';
 import { useToast } from '@/context/toast-context';
+import { postWithApi } from '@/services/axios-service';
 import { MOCK_DISPUTES, type DisputeRow, type DisputeStatus, type TimelineActor } from './disputes-mock';
 import { AdminDisputeActionModal, type ModalMode } from './AdminDisputeActionModal';
 
@@ -39,7 +40,7 @@ interface Props { id: string }
 
 export function AdminDisputeDetail({ id }: Props) {
   const t = useTranslations('admin_disputes');
-  const { success: toastSuccess } = useToast();
+  const { success: toastSuccess, error: toastError } = useToast();
   const mountedRef = useRef(true);
   useEffect(() => { mountedRef.current = true; return () => { mountedRef.current = false; }; }, []);
 
@@ -66,29 +67,45 @@ export function AdminDisputeDetail({ id }: Props) {
   async function handleAction(payload: { amount?: number; reason?: string }) {
     if (!dispute) return;
     setBusy(true);
-    try {
-      // TODO: connect to API once endpoint is available (POST /admin/disputes/:id/refund or /close)
-      await new Promise((r) => setTimeout(r, 700));
-      if (!mountedRef.current) return;
 
-      // Update state only after simulated success (will be inside if (success) once API is connected)
-      let newStatus: DisputeStatus = dispute.status;
-      let eventLabel = '';
-      if (modal === 'refund_full')    { newStatus = 'refunded_full';    eventLabel = t('event_refund_full',    { amount: formatAmount(dispute.reservation.amount_paid) }); }
-      if (modal === 'refund_partial') { newStatus = 'refunded_partial'; eventLabel = t('event_refund_partial', { amount: formatAmount(payload.amount ?? 0) }); }
-      if (modal === 'close_dispute')  { newStatus = 'closed';           eventLabel = t('event_closed',         { reason: payload.reason ?? '' }); }
-
-      setDispute((prev) => prev ? {
-        ...prev, status: newStatus,
-        events: [...prev.events, { id: `e${Date.now()}`, date: new Date().toISOString(), label: eventLabel, by: 'admin' }],
-      } : prev);
-
-      if (modal === 'refund_full')    toastSuccess(t('toast_refunded_full'));
-      if (modal === 'refund_partial') toastSuccess(t('toast_refunded_partial'));
-      if (modal === 'close_dispute')  toastSuccess(t('toast_closed'));
-    } finally {
-      if (mountedRef.current) { setBusy(false); setModal(null); }
+    let ok = false;
+    if (modal === 'refund_full' || modal === 'refund_partial') {
+      const body: Record<string, unknown> = {};
+      if (modal === 'refund_partial' && payload.amount) body.amount = payload.amount;
+      const [success] = await postWithApi(`/admin/disputes/${dispute.id}/refund`, body);
+      ok = success;
+    } else if (modal === 'close_dispute') {
+      const [success] = await postWithApi(`/admin/disputes/${dispute.id}/close`, {
+        status: 'rejected',
+        reason: payload.reason ?? '',
+      });
+      ok = success;
     }
+
+    if (!mountedRef.current) return;
+    setBusy(false);
+
+    if (!ok) {
+      toastError(t('action_error'));
+      setModal(null);
+      return;
+    }
+
+    let newStatus: DisputeStatus = dispute.status;
+    let eventLabel = '';
+    if (modal === 'refund_full')    { newStatus = 'refunded_full';    eventLabel = t('event_refund_full',    { amount: formatAmount(dispute.reservation.amount_paid) }); }
+    if (modal === 'refund_partial') { newStatus = 'refunded_partial'; eventLabel = t('event_refund_partial', { amount: formatAmount(payload.amount ?? 0) }); }
+    if (modal === 'close_dispute')  { newStatus = 'closed';           eventLabel = t('event_closed',         { reason: payload.reason ?? '' }); }
+
+    setDispute((prev) => prev ? {
+      ...prev, status: newStatus,
+      events: [...prev.events, { id: `e${Date.now()}`, date: new Date().toISOString(), label: eventLabel, by: 'admin' }],
+    } : prev);
+
+    if (modal === 'refund_full')    toastSuccess(t('toast_refunded_full'));
+    if (modal === 'refund_partial') toastSuccess(t('toast_refunded_partial'));
+    if (modal === 'close_dispute')  toastSuccess(t('toast_closed'));
+    setModal(null);
   }
 
   return (
