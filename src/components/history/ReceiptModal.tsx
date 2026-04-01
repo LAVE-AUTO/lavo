@@ -1,6 +1,8 @@
 'use client';
 
+import { useState, useEffect, useRef } from 'react';
 import { useTranslations } from 'next-intl';
+import { getFromApi, getAxiosInstance } from '@/services/axios-service';
 import type { MockReservation } from '@/data/reservations-mock';
 
 /**
@@ -23,11 +25,28 @@ interface ReceiptModalProps {
 
 /**
  * Receipt modal for a reservation entry.
- * Completed entries show a "Download" button that opens a print-ready
- * standalone HTML document in a new tab (PDF via browser print dialog).
+ * Completed entries show a "Download" button that fetches the receipt PDF
+ * from the backend, or opens the Stripe receipt URL if available.
  */
 export function ReceiptModal({ entry: e, locale, onClose }: ReceiptModalProps) {
   const t = useTranslations('history');
+  const [downloading, setDownloading] = useState(false);
+  const [stripeReceiptUrl, setStripeReceiptUrl] = useState<string | null>(null);
+  const mountedRef = useRef(true);
+  useEffect(() => () => { mountedRef.current = false; }, []);
+
+  // Fetch receipt detail to check for Stripe receipt URL
+  useEffect(() => {
+    if (e.status !== 'completed') return;
+    (async () => {
+      const [ok, data] = await getFromApi(`/history/client/receipt/${e.id}`);
+      if (!mountedRef.current) return;
+      if (ok) {
+        const receipt = (data as { data: { stripe_receipt_url?: string | null } }).data;
+        if (receipt?.stripe_receipt_url) setStripeReceiptUrl(receipt.stripe_receipt_url);
+      }
+    })();
+  }, [e.id, e.status]);
 
   const dateLabel = new Date(e.date).toLocaleDateString(
     locale === 'en' ? 'en-CA' : 'fr-CA',
@@ -36,7 +55,38 @@ export function ReceiptModal({ entry: e, locale, onClose }: ReceiptModalProps) {
 
   const isCompleted = e.status === 'completed';
 
-  const handlePrint = () => {
+  const handleDownload = async () => {
+    // If Stripe receipt URL is available, open it directly
+    if (stripeReceiptUrl) {
+      window.open(stripeReceiptUrl, '_blank', 'noopener,noreferrer');
+      return;
+    }
+
+    // Otherwise, fetch PDF from backend
+    setDownloading(true);
+    try {
+      const response = await getAxiosInstance().get(`/history/client/${e.id}/receipt.pdf`, {
+        responseType: 'blob',
+      });
+      if (!mountedRef.current) return;
+      const blob = new Blob([response.data], { type: 'application/pdf' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `receipt-${e.id}.pdf`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+    } catch {
+      // Fallback: open print dialog with HTML receipt
+      handlePrintFallback();
+    } finally {
+      if (mountedRef.current) setDownloading(false);
+    }
+  };
+
+  const handlePrintFallback = () => {
     const extrasLines = e.extras.length > 0
       ? e.extras.map((ex) => `<li>${escapeHtml(ex)}</li>`).join('')
       : '';
@@ -518,15 +568,22 @@ export function ReceiptModal({ entry: e, locale, onClose }: ReceiptModalProps) {
           {isCompleted && (
             <button
               type="button"
-              onClick={handlePrint}
-              className="flex-1 py-3 bg-gold hover:bg-gold-hover rounded-xl text-[14px] font-black text-dark-bg transition-colors btn-shine flex items-center justify-center gap-2 cursor-pointer"
+              onClick={handleDownload}
+              disabled={downloading}
+              className="flex-1 py-3 bg-gold hover:bg-gold-hover rounded-xl text-[14px] font-black text-dark-bg transition-colors btn-shine flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50"
             >
-              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-                <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4" />
-                <polyline points="7 10 12 15 17 10" />
-                <line x1="12" y1="15" x2="12" y2="3" />
-              </svg>
-              {t('download_receipt')}
+              {downloading ? (
+                <svg className="animate-spin" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" aria-hidden="true">
+                  <path d="M21 12a9 9 0 11-6.219-8.56" />
+                </svg>
+              ) : (
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                  <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4" />
+                  <polyline points="7 10 12 15 17 10" />
+                  <line x1="12" y1="15" x2="12" y2="3" />
+                </svg>
+              )}
+              {downloading ? t('downloading_receipt') : t('download_receipt')}
             </button>
           )}
         </div>

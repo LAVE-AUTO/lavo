@@ -1027,6 +1027,7 @@
     "empty_title": "No history",
     "empty_desc": "Your completed reservations will appear here.",
     "download_receipt": "Download receipt",
+    "downloading_receipt": "Downloading...",
     "receipt_title": "Reservation Receipt",
     "receipt_ref": "Reference",
     "receipt_station": "Station",
