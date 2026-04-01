@@ -2,10 +2,11 @@
 
 import { use, useEffect, useState, useCallback, useRef } from 'react';
 import { useTranslations } from 'next-intl';
-import { Link } from '@/i18n/navigation';
+import { Link, useRouter } from '@/i18n/navigation';
 import { getFromApi } from '@/services/axios-service';
 import { useAuth } from '@/context/auth-context';
 import { notFound } from 'next/navigation';
+import UpgradeToReservationModal from '@/components/reservations/UpgradeToReservationModal';
 
 /* ------------------------------------------------------------------ */
 /* API shapes                                                           */
@@ -35,6 +36,7 @@ interface ApiStation {
 
 interface QueueEntry {
   id: string;
+  stationId: string;
   stationName: string;
   stationAddress: string;
   stationLatitude: number;
@@ -70,7 +72,9 @@ interface PageProps {
 export default function QueueDetailPage({ params }: PageProps) {
   const { id } = use(params);
   const t = useTranslations('queue_detail');
+  const router = useRouter();
   const { isLoading: authLoading } = useAuth();
+  const [showUpgradeModal, setShowUpgradeModal] = useState(false);
 
   const mountedRef = useRef(true);
   useEffect(() => { mountedRef.current = true; return () => { mountedRef.current = false; }; }, []);
@@ -103,6 +107,7 @@ export default function QueueDetailPage({ params }: PageProps) {
 
     setEntry({
       id: found.id,
+      stationId: found.station_id,
       stationName: station?.name ?? `#${found.station_id.slice(0, 8)}`,
       stationAddress: station ? `${station.address}, ${station.city}` : '',
       stationLatitude: parseFloat(station?.latitude ?? '0'),
@@ -201,6 +206,19 @@ export default function QueueDetailPage({ params }: PageProps) {
           </div>
         </div>
 
+        {/* Upgrade to reservation */}
+        <button
+          type="button"
+          onClick={() => setShowUpgradeModal(true)}
+          className="flex items-center justify-center gap-2 w-full py-3.5 rounded-xl text-[15px] font-bold text-gold border-2 border-gold/40 hover:bg-gold/10 hover:border-gold/60 transition-colors cursor-pointer"
+        >
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+            <polyline points="17 1 21 5 17 9" /><path d="M3 11V9a4 4 0 014-4h14" />
+            <polyline points="7 23 3 19 7 15" /><path d="M21 13v2a4 4 0 01-4 4H3" />
+          </svg>
+          {t('upgrade_btn')}
+        </button>
+
         {/* Google Maps CTA */}
         <a
           href={mapsUrl}
@@ -215,6 +233,19 @@ export default function QueueDetailPage({ params }: PageProps) {
           {t('open_maps')}
         </a>
       </div>
+
+      {/* Upgrade modal */}
+      {showUpgradeModal && entry && (
+        <UpgradeToReservationModal
+          entryId={entry.id}
+          stationId={entry.stationId}
+          onClose={() => setShowUpgradeModal(false)}
+          onSuccess={(reservationId) => {
+            setShowUpgradeModal(false);
+            router.push(`/client/reservations/${reservationId}`);
+          }}
+        />
+      )}
     </main>
   );
 }
