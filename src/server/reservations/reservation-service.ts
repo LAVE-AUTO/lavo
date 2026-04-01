@@ -319,10 +319,14 @@ export async function cancelEntry(
     return updateEntry(entryId, { status: STATUS_CANCELLED }, tx);
   });
 
-  // Cancel Stripe PaymentIntent if the reservation was awaiting payment.
-  if (entry.status === STATUS_PENDING_PAYMENT && entry.stripe_payment_id) {
+  // Cancel Stripe PaymentIntent if awaiting payment, or if a paid queue entry (authorized but not captured).
+  const shouldCancelPaymentIntent =
+    entry.stripe_payment_id &&
+    (entry.status === STATUS_PENDING_PAYMENT ||
+      (entry.entry_type === 'queue' && entry.status === STATUS_CONFIRMED));
+  if (shouldCancelPaymentIntent) {
     try {
-      await cancelPaymentIntent(entry.stripe_payment_id);
+      await cancelPaymentIntent(entry.stripe_payment_id!);
     } catch (e) {
       const error = e instanceof Error ? e.message : String(e);
       console.error('[CANCEL_PAYMENT_INTENT_FAILED]', {
@@ -546,9 +550,8 @@ export async function setEntryStatusByStation(
     updated_at: new Date(),
   });
   if (status === 'completed') {
-    // Capture the payment for reservation entries (distributes funds to station + platform).
-    // Queue (walk-in) entries have no stripe_payment_id and are skipped.
-    if (entry.entry_type === 'reservation' && entry.stripe_payment_id) {
+    // Capture the payment (distributes funds to station + platform).
+    if (entry.stripe_payment_id) {
       try {
         await capturePaymentIntent(entry.stripe_payment_id);
       } catch (e) {
