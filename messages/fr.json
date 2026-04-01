@@ -2280,6 +2280,7 @@
     "alert_kyc_error": "Impossible de charger les données.",
     "alert_disputes_title": "Litiges ouverts",
     "alert_disputes_empty": "Aucun litige en cours.",
+    "alert_disputes_loading": "Chargement des litiges…",
     "alert_disputes_action": "Voir tous les litiges",
     "notif_tooltip": "Notifications",
     "section_performance": "Performance",

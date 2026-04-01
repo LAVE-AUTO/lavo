@@ -2280,6 +2280,7 @@
     "alert_kyc_error": "Could not load data.",
     "alert_disputes_title": "Open disputes",
     "alert_disputes_empty": "No open disputes.",
+    "alert_disputes_loading": "Loading disputes…",
     "alert_disputes_action": "View all disputes",
     "notif_tooltip": "Notifications",
     "section_performance": "Performance",
