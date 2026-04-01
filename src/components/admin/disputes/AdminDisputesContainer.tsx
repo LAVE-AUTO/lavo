@@ -36,25 +36,31 @@ export function AdminDisputesContainer() {
 
   const loadDisputes = useCallback(async () => {
     setLoading(true);
-    const [ok, data] = await getFromApi('/admin/disputes');
-    if (!mountedRef.current) return;
-    setLoading(false);
+    try {
+      const [ok, data] = await getFromApi('/admin/disputes');
+      if (!mountedRef.current) return;
 
-    if (ok) {
-      const result = (data as { data: { items: ApiDispute[] } }).data;
-      const items = (result?.items ?? []).map((d): DisputeRow => ({
-        id: d.id,
-        client: { name: d.client_id.slice(0, 8), email: '' },
-        station: { name: d.station?.name ?? '', city: d.station?.city ?? '' },
-        reservation: { id: d.reservation_id, date: d.created_at, amount_paid: parseFloat(d.requested_amount ?? '0'), vehicle_format: '', status: '' },
-        reason: d.reason,
-        status: mapApiStatus(d.status),
-        created_at: d.created_at,
-        events: [{ id: `e-${d.id}`, date: d.created_at, label: d.reason, by: 'client' as const }],
-      }));
-      setDisputes(items);
-    } else {
+      if (ok) {
+        const result = (data as { data: { items: ApiDispute[] } }).data;
+        const items = (result?.items ?? []).map((d): DisputeRow => ({
+          id: d.id,
+          client: { name: d.client_id.slice(0, 8), email: '' },
+          station: { name: d.station?.name ?? '', city: d.station?.city ?? '' },
+          reservation: { id: d.reservation_id, date: d.created_at, amount_paid: parseFloat(d.requested_amount ?? '0'), vehicle_format: '', status: '' },
+          reason: d.reason,
+          status: mapApiStatus(d.status),
+          created_at: d.created_at,
+          events: [{ id: `e-${d.id}`, date: d.created_at, label: d.reason, by: 'client' as const }],
+        }));
+        setDisputes(items);
+      } else {
+        setDisputes(MOCK_DISPUTES);
+      }
+    } catch {
+      if (!mountedRef.current) return;
       setDisputes(MOCK_DISPUTES);
+    } finally {
+      if (mountedRef.current) setLoading(false);
     }
   }, []);
 
