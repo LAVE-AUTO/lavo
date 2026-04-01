@@ -2176,7 +2176,8 @@
     "platform_share": "Platform",
     "station_share": "Station",
     "preview_title": "Split",
-    "unsaved_dot": "Unsaved change"
+    "unsaved_dot": "Unsaved change",
+    "save_error": "Failed to update commission rate."
   },
   "admin_transactions": {
     "page_title": "Stripe Transactions",

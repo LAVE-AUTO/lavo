@@ -2176,7 +2176,8 @@
     "platform_share": "Plateforme",
     "station_share": "Station",
     "preview_title": "Répartition",
-    "unsaved_dot": "Modification non sauvegardée"
+    "unsaved_dot": "Modification non sauvegardée",
+    "save_error": "Impossible de mettre à jour le taux de commission."
   },
   "admin_transactions": {
     "page_title": "Transactions Stripe",
