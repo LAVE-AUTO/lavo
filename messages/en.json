@@ -824,7 +824,9 @@
     "payment_queue_subtitle": "Confirm your spot in the queue.",
     "payment_confirm_queue": "Confirm",
     "error_stripe_payment": "Payment failed. Please check your card details.",
-    "error_stripe_unavailable": "The payment service is temporarily unavailable."
+    "error_stripe_unavailable": "The payment service is temporarily unavailable.",
+    "error_queue_join_failed": "Unable to join the queue. Please try again.",
+    "error_active_queue_entry": "You already have an active entry at this station."
   },
   "coupons": {
     "title": "My reservations",
