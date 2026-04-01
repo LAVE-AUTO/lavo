@@ -32,7 +32,6 @@ export function BookingFlow({ station, forfait, qrToken, qrVersion, onClose }: B
   const [step, setStep] = useState<Step>('extras');
   const stepIndex = STEPS.indexOf(step);
   const dialogRootRef = useRef<HTMLDivElement | null>(null);
-  const mountedRef = useRef(true);
 
   // Payment result
   const [paymentResult, setPaymentResult] = useState<'success' | 'error' | null>(null);
@@ -56,10 +55,6 @@ export function BookingFlow({ station, forfait, qrToken, qrVersion, onClose }: B
   const extrasDuration = selectedExtras.reduce((sum, e) => sum + e.duration, 0);
   const grandTotal = forfait.price + extrasTotal;
   const totalDuration = forfait.duration + extrasDuration;
-
-  useEffect(() => {
-    return () => { mountedRef.current = false; };
-  }, []);
 
   // Lock body scroll and basic keyboard handling (Escape + initial focus)
   useEffect(() => {
@@ -130,14 +125,48 @@ export function BookingFlow({ station, forfait, qrToken, qrVersion, onClose }: B
   // Called at SummaryStep "Passer au paiement":
   // - book_slot (real): creates reservation → gets client_secret → navigates to payment
   // - book_slot (devSkipPayment): skip API call, navigate directly
-  // - queue modes: navigate directly (no reservation needed)
+  // - queue modes (real): joins queue → gets client_secret → navigates to Stripe card form
+  // - queue modes (devSkipPayment): navigate directly (API called later in handlePaymentConfirm)
   const handleSummaryContinue = useCallback(async () => {
-    // Reset stale client secret from any previous reservation attempt so that
-    // PaymentStep always renders the correct form (queue confirm vs Stripe card).
+    // Reset stale client secret so PaymentStep always renders the correct form.
     setClientSecret(null);
     setSummaryError(null);
 
-    if (RESERVATIONS_MOCK_ENABLED || arrivalMode !== 'book_slot' || devSkipPayment) {
+    if (RESERVATIONS_MOCK_ENABLED) {
+      goNext();
+      return;
+    }
+
+    const isQueueMode = arrivalMode === 'queue_now' || arrivalMode === 'queue_later';
+
+    if (isQueueMode) {
+      if (devSkipPayment) {
+        goNext();
+        return;
+      }
+      setSummaryLoading(true);
+      const [ok, data] = await postWithApi<{ data: { client_secret: string } }>(
+        `/stations/${station.id}/queue/join`,
+        { vehicle_format_id: forfait.id },
+      );
+      setSummaryLoading(false);
+      if (!ok) {
+        const errData = data as { code?: string } | null;
+        if (errData?.code === 'CONFLICT') {
+          setSummaryError(t('error_active_queue_entry'));
+        } else {
+          setSummaryError(t('error_queue_join_failed'));
+        }
+        return;
+      }
+      const queueData = data as { data: { client_secret: string } };
+      setClientSecret(queueData.data?.client_secret ?? null);
+      goNext();
+      return;
+    }
+
+    // book_slot
+    if (devSkipPayment) {
       goNext();
       return;
     }
@@ -156,7 +185,6 @@ export function BookingFlow({ station, forfait, qrToken, qrVersion, onClose }: B
       `/stations/${station.id}/reservations`,
       reservationPayload,
     );
-    if (!mountedRef.current) return;
     setSummaryLoading(false);
     if (!ok) {
       const errData = data as { code?: string } | null;
@@ -177,17 +205,24 @@ export function BookingFlow({ station, forfait, qrToken, qrVersion, onClose }: B
   const handlePaymentConfirm = useCallback(async (): Promise<void> => {
     // TODO: remove mock block once Stripe is fully live in production
     if (RESERVATIONS_MOCK_ENABLED) {
-      if (!mountedRef.current) return;
       setPaymentResult('success');
       return;
     }
 
-    if (arrivalMode === 'queue_now' || arrivalMode === 'queue_later') {
-      const [ok] = await postWithApi(`/stations/${station.id}/queue/join`, {
-        vehicle_format_id: forfait.id,
-      });
-      if (!mountedRef.current) return;
-      setPaymentResult(ok ? 'success' : 'error');
+    const isQueueMode = arrivalMode === 'queue_now' || arrivalMode === 'queue_later';
+
+    if (isQueueMode) {
+      if (devSkipPayment) {
+        // Dev bypass: call queue join directly (no Stripe payment)
+        const [ok] = await postWithApi(`/stations/${station.id}/queue/join`, {
+          vehicle_format_id: forfait.id,
+        });
+        setPaymentResult(ok ? 'success' : 'error');
+      } else {
+        // Stripe payment was confirmed in StripeCardForm via confirmCardPayment;
+        // the PaymentIntent webhook updates the entry server-side.
+        setPaymentResult('success');
+      }
     } else if (arrivalMode === 'book_slot') {
       if (devSkipPayment && selectedSlot) {
         // Dev bypass: create confirmed reservation directly (skips Stripe)
@@ -199,12 +234,10 @@ export function BookingFlow({ station, forfait, qrToken, qrVersion, onClose }: B
           ...(hasValidQrContext ? { qr_token: qrToken!, v: qrVersion! } : {}),
         };
         const [ok] = await postWithApi('/dev/reservations', payload);
-        if (!mountedRef.current) return;
         setPaymentResult(ok ? 'success' : 'error');
       } else {
-        // Stripe payment was confirmed in PaymentStep via confirmCardPayment;
+        // Stripe payment was confirmed in StripeCardForm via confirmCardPayment;
         // the PaymentIntent webhook updates the reservation server-side.
-        if (!mountedRef.current) return;
         setPaymentResult('success');
       }
     }
