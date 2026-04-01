@@ -94,6 +94,8 @@ export default function ReservationDetailPage() {
   const [disputeAmount, setDisputeAmount] = useState('');
   const [disputeLoading, setDisputeLoading] = useState(false);
   const disputeDialogRef = useRef<HTMLDivElement | null>(null);
+  const [confirmPresenceLoading, setConfirmPresenceLoading] = useState(false);
+  const [presenceConfirmed, setPresenceConfirmed] = useState(false);
   const { success: showSuccess, error: showError } = useToast();
 
   const loadReservation = useCallback(async () => {
@@ -304,6 +306,20 @@ export default function ReservationDetailPage() {
     }
   };
 
+  const handleConfirmPresence = async () => {
+    if (!reservation) return;
+    setConfirmPresenceLoading(true);
+    const [ok] = await postWithApi(`/reservations/${reservation.id}/confirm-presence`, {});
+    if (!mountedRef.current) return;
+    setConfirmPresenceLoading(false);
+    if (ok) {
+      setPresenceConfirmed(true);
+      showSuccess(t('confirm_presence_success'));
+    } else {
+      showError(t('confirm_presence_error'));
+    }
+  };
+
   const handleConfirmCancel = async () => {
     if (!reservation) return;
     setCancelLoading(true);
@@ -377,6 +393,34 @@ export default function ReservationDetailPage() {
         {/* Action buttons (only for upcoming reservations) */}
         {isUpcoming && (
           <div className="space-y-3">
+            {canStart && !presenceConfirmed && (
+              <button
+                type="button"
+                onClick={handleConfirmPresence}
+                disabled={confirmPresenceLoading}
+                className="w-full py-3.5 rounded-xl text-[15px] font-black text-center transition-all flex items-center justify-center gap-2 bg-lavo-success hover:bg-lavo-success/90 text-white cursor-pointer disabled:opacity-50"
+              >
+                {confirmPresenceLoading ? (
+                  <svg className="animate-spin" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" aria-hidden="true">
+                    <path d="M21 12a9 9 0 11-6.219-8.56" />
+                  </svg>
+                ) : (
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                    <polyline points="20 6 9 17 4 12" />
+                  </svg>
+                )}
+                {confirmPresenceLoading ? t('confirm_presence_loading') : t('confirm_presence_btn')}
+              </button>
+            )}
+            {canStart && presenceConfirmed && (
+              <div className="flex items-center justify-center gap-2 py-3 rounded-xl bg-lavo-success/10 border border-lavo-success/30">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#00C851" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                  <polyline points="20 6 9 17 4 12" />
+                </svg>
+                <span className="text-[14px] font-bold text-lavo-success">{t('confirm_presence_done')}</span>
+              </div>
+            )}
+
             <button
               type="button"
               onClick={canStart ? handleStartNavigation : undefined}
