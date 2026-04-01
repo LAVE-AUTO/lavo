@@ -82,18 +82,23 @@ export function AdminPlatformSettings() {
   /* Load settings from backend */
   useEffect(() => {
     (async () => {
-      const [ok, data] = await getFromApi('/admin/settings');
-      if (!mountedRef.current) return;
-      setLoadingSettings(false);
-      if (!ok) return;
-      const rows = (data as { data: PlatformSettingRow[] }).data ?? [];
-      const map = new Map(rows.map((r) => [r.key, r.value]));
+      try {
+        const [ok, data] = await getFromApi('/admin/settings');
+        if (!mountedRef.current) return;
+        if (!ok) return;
+        const rows = (data as { data: PlatformSettingRow[] }).data ?? [];
+        const map = new Map(rows.map((r) => [r.key, r.value]));
 
-      const penalty = parseFloat(map.get('cancellation_penalty_percent') ?? '');
-      const delay = parseInt(map.get('default_late_tolerance_minutes') ?? '', 10);
+        const penalty = parseFloat(map.get('cancellation_penalty_percent') ?? '');
+        const delay = parseInt(map.get('default_late_tolerance_minutes') ?? '', 10);
 
-      if (!isNaN(penalty)) { setPenaltyRate(penalty); setCommitted((c) => ({ ...c, penalty_rate: penalty })); }
-      if (!isNaN(delay)) { setRescheduleDelay(delay); setCommitted((c) => ({ ...c, reschedule_delay_minutes: delay })); }
+        if (!isNaN(penalty)) { setPenaltyRate(penalty); setCommitted((c) => ({ ...c, penalty_rate: penalty })); }
+        if (!isNaN(delay)) { setRescheduleDelay(delay); setCommitted((c) => ({ ...c, reschedule_delay_minutes: delay })); }
+      } catch {
+        // keep defaults on failure
+      } finally {
+        if (mountedRef.current) setLoadingSettings(false);
+      }
     })();
   }, []);
 
@@ -117,21 +122,26 @@ export function AdminPlatformSettings() {
     if (err) { toastError(err); return; }
     setSaving(true);
 
-    const payload: Record<string, string> = {
-      cancellation_penalty_percent: penaltyRate.toFixed(2),
-      default_late_tolerance_minutes: String(rescheduleDelay),
-    };
+    try {
+      const payload: Record<string, string> = {
+        cancellation_penalty_percent: penaltyRate.toFixed(2),
+        default_late_tolerance_minutes: String(rescheduleDelay),
+      };
 
-    const [ok] = await patchWithApi('/admin/settings', payload);
-    if (!mountedRef.current) return;
-    setSaving(false);
+      const [ok] = await patchWithApi('/admin/settings', payload);
+      if (!mountedRef.current) return;
 
-    if (ok) {
-      if (adminShare !== savedCommissionRate) updateRate(Math.round(adminShare * 10) / 10);
-      setCommitted({ penalty_rate: penaltyRate, reschedule_delay_minutes: rescheduleDelay });
-      toastSuccess(t('save_success'));
-    } else {
-      toastError(t('save_error'));
+      if (ok) {
+        if (adminShare !== savedCommissionRate) updateRate(Math.round(adminShare * 10) / 10);
+        setCommitted({ penalty_rate: penaltyRate, reschedule_delay_minutes: rescheduleDelay });
+        toastSuccess(t('save_success'));
+      } else {
+        toastError(t('save_error'));
+      }
+    } catch {
+      if (mountedRef.current) toastError(t('save_error'));
+    } finally {
+      if (mountedRef.current) setSaving(false);
     }
   }
 

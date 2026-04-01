@@ -34,9 +34,12 @@ export function AdminMerchantsClients() {
   useEffect(() => {
     getFromApi('/admin/stations?status=all').then(([ok, data]) => {
       if (!mountedRef.current) return;
-      setLoading(false);
       if (ok) setStations(((data as { data: StationRow[] }).data) ?? []);
       else setFetchError(true);
+    }).catch(() => {
+      if (mountedRef.current) setFetchError(true);
+    }).finally(() => {
+      if (mountedRef.current) setLoading(false);
     });
   }, []);
 

@@ -2398,7 +2398,8 @@
     "settings_error_email": "The email address is not valid.",
     "settings_error_max_tickets": "Ticket count must be a non-negative integer.",
     "settings_error_auto_close": "Auto-close delay must be at least 1 day.",
-    "settings_error_html": "Welcome message must not contain HTML tags."
+    "settings_error_html": "Welcome message must not contain HTML tags.",
+    "action_error": "Unable to perform this action. Please try again."
   },
   "admin_add_user": {
     "modal_title": "Add a user",

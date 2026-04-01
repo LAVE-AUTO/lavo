@@ -2398,7 +2398,8 @@
     "settings_error_email": "L'adresse e-mail n'est pas valide.",
     "settings_error_max_tickets": "Le nombre de tickets doit être un entier positif ou zéro.",
     "settings_error_auto_close": "Le délai de fermeture doit être d'au moins 1 jour.",
-    "settings_error_html": "Le message d'accueil ne doit pas contenir de balises HTML."
+    "settings_error_html": "Le message d'accueil ne doit pas contenir de balises HTML.",
+    "action_error": "Impossible d'effectuer cette action. Veuillez réessayer."
   },
   "admin_add_user": {
     "modal_title": "Ajouter un utilisateur",

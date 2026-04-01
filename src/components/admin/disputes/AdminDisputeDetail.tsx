@@ -68,44 +68,49 @@ export function AdminDisputeDetail({ id }: Props) {
     if (!dispute) return;
     setBusy(true);
 
-    let ok = false;
-    if (modal === 'refund_full' || modal === 'refund_partial') {
-      const body: Record<string, unknown> = {};
-      if (modal === 'refund_partial' && payload.amount) body.amount = payload.amount;
-      const [success] = await postWithApi(`/admin/disputes/${dispute.id}/refund`, body);
-      ok = success;
-    } else if (modal === 'close_dispute') {
-      const [success] = await postWithApi(`/admin/disputes/${dispute.id}/close`, {
-        status: 'rejected',
-        reason: payload.reason ?? '',
-      });
-      ok = success;
-    }
+    try {
+      let ok = false;
+      if (modal === 'refund_full' || modal === 'refund_partial') {
+        const body: Record<string, unknown> = {};
+        if (modal === 'refund_partial' && payload.amount) body.amount = payload.amount;
+        const [success] = await postWithApi(`/admin/disputes/${dispute.id}/refund`, body);
+        ok = success;
+      } else if (modal === 'close_dispute') {
+        const [success] = await postWithApi(`/admin/disputes/${dispute.id}/close`, {
+          status: 'rejected',
+          reason: payload.reason ?? '',
+        });
+        ok = success;
+      }
 
-    if (!mountedRef.current) return;
-    setBusy(false);
+      if (!mountedRef.current) return;
 
-    if (!ok) {
-      toastError(t('action_error'));
+      if (!ok) {
+        toastError(t('action_error'));
+        setModal(null);
+        return;
+      }
+
+      let newStatus: DisputeStatus = dispute.status;
+      let eventLabel = '';
+      if (modal === 'refund_full')    { newStatus = 'refunded_full';    eventLabel = t('event_refund_full',    { amount: formatAmount(dispute.reservation.amount_paid) }); }
+      if (modal === 'refund_partial') { newStatus = 'refunded_partial'; eventLabel = t('event_refund_partial', { amount: formatAmount(payload.amount ?? 0) }); }
+      if (modal === 'close_dispute')  { newStatus = 'closed';           eventLabel = t('event_closed',         { reason: payload.reason ?? '' }); }
+
+      setDispute((prev) => prev ? {
+        ...prev, status: newStatus,
+        events: [...prev.events, { id: `e${Date.now()}`, date: new Date().toISOString(), label: eventLabel, by: 'admin' }],
+      } : prev);
+
+      if (modal === 'refund_full')    toastSuccess(t('toast_refunded_full'));
+      if (modal === 'refund_partial') toastSuccess(t('toast_refunded_partial'));
+      if (modal === 'close_dispute')  toastSuccess(t('toast_closed'));
       setModal(null);
-      return;
+    } catch {
+      if (mountedRef.current) toastError(t('action_error'));
+    } finally {
+      if (mountedRef.current) setBusy(false);
     }
-
-    let newStatus: DisputeStatus = dispute.status;
-    let eventLabel = '';
-    if (modal === 'refund_full')    { newStatus = 'refunded_full';    eventLabel = t('event_refund_full',    { amount: formatAmount(dispute.reservation.amount_paid) }); }
-    if (modal === 'refund_partial') { newStatus = 'refunded_partial'; eventLabel = t('event_refund_partial', { amount: formatAmount(payload.amount ?? 0) }); }
-    if (modal === 'close_dispute')  { newStatus = 'closed';           eventLabel = t('event_closed',         { reason: payload.reason ?? '' }); }
-
-    setDispute((prev) => prev ? {
-      ...prev, status: newStatus,
-      events: [...prev.events, { id: `e${Date.now()}`, date: new Date().toISOString(), label: eventLabel, by: 'admin' }],
-    } : prev);
-
-    if (modal === 'refund_full')    toastSuccess(t('toast_refunded_full'));
-    if (modal === 'refund_partial') toastSuccess(t('toast_refunded_partial'));
-    if (modal === 'close_dispute')  toastSuccess(t('toast_closed'));
-    setModal(null);
   }
 
   return (

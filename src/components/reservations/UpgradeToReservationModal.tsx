@@ -165,20 +165,25 @@ export default function UpgradeToReservationModal({ entryId, stationId, onClose,
   useEffect(() => {
     (async () => {
       setLoadingSlots(true);
-      const [ok, data] = await getFromApi(`/stations/${stationId}`);
-      if (!mountedRef.current) return;
-      setLoadingSlots(false);
-      if (!ok) return;
-      const station = (data as { data: { timeSlots: ApiTimeSlot[] } }).data;
-      const now = new Date();
-      const available: AvailableSlot[] = (station.timeSlots ?? [])
-        .filter((s) => new Date(s.start_time) > now && s.status === 'available')
-        .map((s) => ({
-          id: s.id,
-          startTime: s.start_time,
-          isFull: s.booked_count >= s.capacity,
-        }));
-      setSlots(available);
+      try {
+        const [ok, data] = await getFromApi(`/stations/${stationId}`);
+        if (!mountedRef.current) return;
+        if (!ok) return;
+        const station = (data as { data: { timeSlots: ApiTimeSlot[] } }).data;
+        const now = new Date();
+        const available: AvailableSlot[] = (station.timeSlots ?? [])
+          .filter((s) => new Date(s.start_time) > now && s.status === 'available')
+          .map((s) => ({
+            id: s.id,
+            startTime: s.start_time,
+            isFull: s.booked_count >= s.capacity,
+          }));
+        setSlots(available);
+      } catch {
+        // keep empty slots on failure
+      } finally {
+        if (mountedRef.current) setLoadingSlots(false);
+      }
     })();
   }, [stationId]);
 
@@ -203,32 +208,36 @@ export default function UpgradeToReservationModal({ entryId, stationId, onClose,
   const handleUpgrade = async () => {
     if (!selectedSlotId) return;
     setUpgrading(true);
-    const [ok, data] = await postWithApi(`/me/entries/${entryId}/upgrade-to-reservation`, {
-      time_slot_id: selectedSlotId,
-    });
-    if (!mountedRef.current) return;
-    setUpgrading(false);
+    try {
+      const [ok, data] = await postWithApi(`/me/entries/${entryId}/upgrade-to-reservation`, {
+        time_slot_id: selectedSlotId,
+      });
+      if (!mountedRef.current) return;
 
-    if (!ok) {
-      const msg = (data as { message?: string })?.message ?? '';
-      if (msg.includes('full') || msg.includes('SLOT_FULL')) {
-        toastError(t('upgrade_error_slot_full'));
-      } else {
-        toastError(t('upgrade_error'));
+      if (!ok) {
+        const msg = (data as { message?: string })?.message ?? '';
+        if (msg.includes('full') || msg.includes('SLOT_FULL')) {
+          toastError(t('upgrade_error_slot_full'));
+        } else {
+          toastError(t('upgrade_error'));
+        }
+        return;
       }
-      return;
-    }
 
-    const result = (data as { data: { reservation_id: string; stripe_client_secret: string } }).data;
+      const result = (data as { data: { reservation_id: string; stripe_client_secret: string } }).data;
 
-    if (result.stripe_client_secret) {
-      setClientSecret(result.stripe_client_secret);
-      setReservationId(result.reservation_id);
-      setStep('payment');
-    } else {
-      // No payment required (edge case)
-      toastSuccess(t('upgrade_success'));
-      onSuccess(result.reservation_id);
+      if (result.stripe_client_secret) {
+        setClientSecret(result.stripe_client_secret);
+        setReservationId(result.reservation_id);
+        setStep('payment');
+      } else {
+        toastSuccess(t('upgrade_success'));
+        onSuccess(result.reservation_id);
+      }
+    } catch {
+      if (mountedRef.current) toastError(t('upgrade_error'));
+    } finally {
+      if (mountedRef.current) setUpgrading(false);
     }
   };
 

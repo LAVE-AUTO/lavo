@@ -53,6 +53,7 @@ interface QueueEntry {
 
 function useRealtimePosition(initial: number) {
   const [position, setPosition] = useState(initial);
+  useEffect(() => { setPosition(initial); }, [initial]);
   useEffect(() => {
     if (position <= 1) return;
     const id = setInterval(() => setPosition((p) => (p > 1 ? p - 1 : p)), 30_000);
@@ -85,39 +86,43 @@ export default function QueueDetailPage({ params }: PageProps) {
 
   const loadEntry = useCallback(async () => {
     setLoading(true);
+    try {
+      const [ok, data] = await getFromApi('/me/entries?per_page=100');
+      if (!mountedRef.current) return;
 
-    const [ok, data] = await getFromApi('/me/entries?per_page=100');
-    if (!mountedRef.current) return;
+      if (!ok) { setMissing(true); return; }
 
-    if (!ok) { setMissing(true); setLoading(false); return; }
+      const res = data as { data: { entries: ApiEntry[] } };
+      const found = (res?.data?.entries ?? []).find((e) => e.id === id && e.entry_type === 'queue');
 
-    const res = data as { data: { entries: ApiEntry[] } };
-    const found = (res?.data?.entries ?? []).find((e) => e.id === id && e.entry_type === 'queue');
+      if (!found) { setMissing(true); return; }
 
-    if (!found) { setMissing(true); setLoading(false); return; }
+      const [stationOk, stationData] = await getFromApi(`/stations/${found.station_id}`);
+      if (!mountedRef.current) return;
 
-    const [stationOk, stationData] = await getFromApi(`/stations/${found.station_id}`);
-    if (!mountedRef.current) return;
+      const station = stationOk && stationData
+        ? (stationData as { data: ApiStation }).data
+        : null;
 
-    const station = stationOk && stationData
-      ? (stationData as { data: ApiStation }).data
-      : null;
+      const format = station?.vehicleFormats.find((f) => f.id === found.vehicle_format_id);
 
-    const format = station?.vehicleFormats.find((f) => f.id === found.vehicle_format_id);
-
-    setEntry({
-      id: found.id,
-      stationId: found.station_id,
-      stationName: station?.name ?? `#${found.station_id.slice(0, 8)}`,
-      stationAddress: station ? `${station.address}, ${station.city}` : '',
-      stationLatitude: parseFloat(station?.latitude ?? '0'),
-      stationLongitude: parseFloat(station?.longitude ?? '0'),
-      forfaitName: format?.label ?? '—',
-      position: found.queue_position ?? 0,
-      totalPrice: parseFloat(found.amount_paid ?? '0'),
-      status: found.status === 'in_progress' ? 'in_progress' : 'waiting',
-    });
-    setLoading(false);
+      setEntry({
+        id: found.id,
+        stationId: found.station_id,
+        stationName: station?.name ?? `#${found.station_id.slice(0, 8)}`,
+        stationAddress: station ? `${station.address}, ${station.city}` : '',
+        stationLatitude: parseFloat(station?.latitude ?? '0'),
+        stationLongitude: parseFloat(station?.longitude ?? '0'),
+        forfaitName: format?.label ?? '—',
+        position: found.queue_position ?? 0,
+        totalPrice: parseFloat(found.amount_paid ?? '0'),
+        status: found.status === 'in_progress' ? 'in_progress' : 'waiting',
+      });
+    } catch {
+      if (mountedRef.current) setMissing(true);
+    } finally {
+      if (mountedRef.current) setLoading(false);
+    }
   }, [id]);
 
   useEffect(() => {

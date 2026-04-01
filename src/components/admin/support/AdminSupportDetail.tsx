@@ -161,6 +161,8 @@ export function AdminSupportDetail({ id }: Props) {
       if (!mountedRef.current) return;
       setTicket((prev) => prev ? { ...prev, status: 'resolved' } : prev);
       toastSuccess(t('resolve_success'));
+    } catch {
+      if (mountedRef.current) toastError(t('action_error'));
     } finally {
       if (mountedRef.current) setActionBusy(false);
     }
@@ -174,6 +176,8 @@ export function AdminSupportDetail({ id }: Props) {
       if (!mountedRef.current) return;
       setTicket((prev) => prev ? { ...prev, status: 'open' } : prev);
       toastSuccess(t('reopen_success'));
+    } catch {
+      if (mountedRef.current) toastError(t('action_error'));
     } finally {
       if (mountedRef.current) setActionBusy(false);
     }
@@ -188,6 +192,8 @@ export function AdminSupportDetail({ id }: Props) {
       setTicket((prev) => prev ? { ...prev, status: 'closed', close_reason: reason } : prev);
       setShowCloseModal(false);
       toastSuccess(t('close_success'));
+    } catch {
+      if (mountedRef.current) toastError(t('action_error'));
     } finally {
       if (mountedRef.current) setActionBusy(false);
     }

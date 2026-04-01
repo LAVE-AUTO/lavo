@@ -286,37 +286,47 @@ export default function ReservationDetailPage() {
     const amt = parseFloat(disputeAmount);
     if (!isNaN(amt) && amt > 0) payload.requested_amount = amt;
 
-    const [ok, data] = await postWithApi('/disputes', payload);
-    if (!mountedRef.current) return;
-    setDisputeLoading(false);
+    try {
+      const [ok, data] = await postWithApi('/disputes', payload);
+      if (!mountedRef.current) return;
 
-    if (ok) {
-      setShowDisputeModal(false);
-      setDisputeReason('');
-      setDisputeDescription('');
-      setDisputeAmount('');
-      showSuccess(t('dispute_success'));
-    } else {
-      const msg = (data as { message?: string })?.message ?? '';
-      if (msg.includes('already exists') || msg.includes('DISPUTE_ALREADY_EXISTS')) {
-        showError(t('dispute_already_exists'));
+      if (ok) {
+        setShowDisputeModal(false);
+        setDisputeReason('');
+        setDisputeDescription('');
+        setDisputeAmount('');
+        showSuccess(t('dispute_success'));
       } else {
-        showError(t('dispute_error'));
+        const msg = (data as { message?: string })?.message ?? '';
+        if (msg.includes('already exists') || msg.includes('DISPUTE_ALREADY_EXISTS')) {
+          showError(t('dispute_already_exists'));
+        } else {
+          showError(t('dispute_error'));
+        }
       }
+    } catch {
+      if (mountedRef.current) showError(t('dispute_error'));
+    } finally {
+      if (mountedRef.current) setDisputeLoading(false);
     }
   };
 
   const handleConfirmPresence = async () => {
     if (!reservation) return;
     setConfirmPresenceLoading(true);
-    const [ok] = await postWithApi(`/reservations/${reservation.id}/confirm-presence`, {});
-    if (!mountedRef.current) return;
-    setConfirmPresenceLoading(false);
-    if (ok) {
-      setPresenceConfirmed(true);
-      showSuccess(t('confirm_presence_success'));
-    } else {
-      showError(t('confirm_presence_error'));
+    try {
+      const [ok] = await postWithApi(`/reservations/${reservation.id}/confirm-presence`, {});
+      if (!mountedRef.current) return;
+      if (ok) {
+        setPresenceConfirmed(true);
+        showSuccess(t('confirm_presence_success'));
+      } else {
+        showError(t('confirm_presence_error'));
+      }
+    } catch {
+      if (mountedRef.current) showError(t('confirm_presence_error'));
+    } finally {
+      if (mountedRef.current) setConfirmPresenceLoading(false);
     }
   };
 
@@ -333,14 +343,20 @@ export default function ReservationDetailPage() {
       return;
     }
 
-    const [ok] = await patchWithApi(`/me/entries/${reservation.id}/cancel`, {});
-    setCancelLoading(false);
-    if (ok) {
-      setShowCancelModal(false);
-      showSuccess(t('toast_cancel_success'));
-      router.push('/client/reservations');
-    } else {
-      showError(t('toast_cancel_error'));
+    try {
+      const [ok] = await patchWithApi(`/me/entries/${reservation.id}/cancel`, {});
+      if (!mountedRef.current) return;
+      if (ok) {
+        setShowCancelModal(false);
+        showSuccess(t('toast_cancel_success'));
+        router.push('/client/reservations');
+      } else {
+        showError(t('toast_cancel_error'));
+      }
+    } catch {
+      if (mountedRef.current) showError(t('toast_cancel_error'));
+    } finally {
+      if (mountedRef.current) setCancelLoading(false);
     }
   };
 

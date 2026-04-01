@@ -17,7 +17,8 @@ interface KpiCardProps {
 }
 
 function Sparkline({ bars, color }: { bars: number[]; color: string }) {
-  const max = Math.max(...bars);
+  if (bars.length === 0) return null;
+  const max = Math.max(...bars, 1);
   return (
     <div className="flex items-end gap-[3px] h-7" aria-hidden="true">
       {bars.map((h, i) => (
