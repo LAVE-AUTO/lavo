@@ -105,10 +105,21 @@ export function StationDetail({ id }: StationDetailProps) {
     }
   };
 
-  const mapsUrl =
+  const fallbackMapsUrl =
     station.latitude != null && station.longitude != null
       ? `https://www.google.com/maps/dir/?api=1&destination=${station.latitude},${station.longitude}`
       : `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(`${station.name}, ${station.address}, ${station.city}`)}`;
+
+  const [navigating, setNavigating] = useState(false);
+
+  const handleEnRoute = async () => {
+    setNavigating(true);
+    const [ok, data] = await postWithApi<{ data: { mapsUrl: string } }>(`/stations/${id}/join`, {});
+    if (!mountedRef.current) return;
+    setNavigating(false);
+    const url = ok && data?.data?.mapsUrl ? data.data.mapsUrl : fallbackMapsUrl;
+    window.open(url, '_blank', 'noopener,noreferrer');
+  };
 
   /* ── Reusable booking widget (rendered in sidebar on lg, inline on mobile) ── */
   const BookingWidget = (
@@ -344,11 +355,11 @@ export function StationDetail({ id }: StationDetailProps) {
               )}
 
               {/* Location */}
-              <a
-                href={mapsUrl}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="flex items-center gap-4 bg-[#E8E8D8] dark:bg-dark-card rounded-xl px-5 py-4 transition-colors hover:border-gold/40 border border-[#D0D0C0] dark:border-tab-inactive group/loc"
+              <button
+                type="button"
+                onClick={handleEnRoute}
+                disabled={navigating}
+                className="flex w-full items-center gap-4 bg-[#E8E8D8] dark:bg-dark-card rounded-xl px-5 py-4 transition-colors hover:border-gold/40 border border-[#D0D0C0] dark:border-tab-inactive group/loc text-left cursor-pointer disabled:opacity-60"
               >
                 <div className="w-11 h-11 rounded-full bg-gold/15 flex items-center justify-center shrink-0">
                   <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#C49A1E" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -363,7 +374,7 @@ export function StationDetail({ id }: StationDetailProps) {
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#C49A1E" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="shrink-0 group-hover/loc:translate-x-0.5 transition-transform">
                   <polyline points="9 18 15 12 9 6" />
                 </svg>
-              </a>
+              </button>
 
               {/* Reviews */}
               <div>
