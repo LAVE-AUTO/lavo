@@ -1,3 +1,98 @@
+/**
+ * @swagger
+ * /admin/disputes:
+ *   get:
+ *     summary: List disputes (admin)
+ *     description: >
+ *       Returns a paginated, filterable list of all disputes across the platform.
+ *       Admin role required.
+ *     tags:
+ *       - Disputes
+ *     security:
+ *       - BearerAuth: []
+ *     parameters:
+ *       - name: status
+ *         in: query
+ *         schema:
+ *           type: string
+ *           enum: [open, refunded, resolved, rejected]
+ *       - name: station_id
+ *         in: query
+ *         schema:
+ *           type: string
+ *           format: uuid
+ *       - name: client_id
+ *         in: query
+ *         schema:
+ *           type: string
+ *           format: uuid
+ *       - name: date_from
+ *         in: query
+ *         schema:
+ *           type: string
+ *           format: date-time
+ *       - name: date_to
+ *         in: query
+ *         schema:
+ *           type: string
+ *           format: date-time
+ *       - name: page
+ *         in: query
+ *         schema:
+ *           type: integer
+ *           minimum: 1
+ *           default: 1
+ *       - name: per_page
+ *         in: query
+ *         schema:
+ *           type: integer
+ *           minimum: 1
+ *           maximum: 100
+ *           default: 20
+ *     responses:
+ *       200:
+ *         description: Paginated list of disputes
+ *         content:
+ *           application/json:
+ *             schema:
+ *               allOf:
+ *                 - $ref: '#/components/schemas/SuccessEnvelope'
+ *                 - type: object
+ *                   properties:
+ *                     data:
+ *                       type: object
+ *                       properties:
+ *                         items:
+ *                           type: array
+ *                           items:
+ *                             $ref: '#/components/schemas/Dispute'
+ *                         meta:
+ *                           $ref: '#/components/schemas/PaginationMeta'
+ *       400:
+ *         description: Validation failed
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorEnvelope'
+ *       401:
+ *         description: Unauthorized
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorEnvelope'
+ *       403:
+ *         description: Forbidden — admin role required
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorEnvelope'
+ *       500:
+ *         description: Internal server error
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorEnvelope'
+ */
 import { requireRole } from '@/lib/require-role';
 import { successResponse, error400, error500, fromAppError } from '@/lib/responses';
 import { applyNoStoreHeaders } from '@/lib/response-headers';

@@ -8,16 +8,63 @@ import { checkRateLimit, recordFailedAttempt } from '@/lib/rate-limiter';
 import { getClientRateLimitKey } from '@/lib/request-ip';
 
 /**
- * POST /api/v1/auth/forgot-password
- * Sends a password reset email if the account exists and is active.
- *
- * Body: { email: string }
- *
- * Responses:
- *   200 { data: { sent: true } }  — always, to prevent email enumeration
- *   400 VALIDATION_FAILED         — invalid email format
- *   429 TOO_MANY_REQUESTS         — rate limit exceeded
- *   500 INTERNAL_ERROR
+ * @swagger
+ * /auth/forgot-password:
+ *   post:
+ *     summary: Request a password reset email
+ *     description: >
+ *       Sends a password reset email when the account exists and is active.
+ *       Always returns 200 to prevent email enumeration — the caller cannot determine
+ *       whether an account with the given email exists.
+ *     tags:
+ *       - Auth
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - email
+ *             properties:
+ *               email:
+ *                 type: string
+ *                 format: email
+ *     responses:
+ *       200:
+ *         description: >
+ *           Reset email sent (if account exists). Always returned to prevent enumeration.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               allOf:
+ *                 - $ref: '#/components/schemas/SuccessEnvelope'
+ *                 - type: object
+ *                   properties:
+ *                     data:
+ *                       type: object
+ *                       properties:
+ *                         sent:
+ *                           type: boolean
+ *                           example: true
+ *       400:
+ *         description: Invalid email format
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorEnvelope'
+ *       429:
+ *         description: Too many requests
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorEnvelope'
+ *       500:
+ *         description: Internal server error
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorEnvelope'
  */
 export async function POST(request: Request) {
   const headersList = await headers();

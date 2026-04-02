@@ -1,8 +1,75 @@
 /**
- * POST /api/v1/me/device-token
- * Registers or updates the FCM push notification token for the authenticated client.
- * The token is upserted: if the token already exists for this user it is kept as-is;
- * if it is a new token it is inserted. Auth: client.
+ * @swagger
+ * /me/device-token:
+ *   post:
+ *     summary: Register or update the FCM push notification token
+ *     description: >
+ *       Upserts the Firebase Cloud Messaging (FCM) device token for the authenticated client.
+ *       If the token already exists for this user it is kept as-is; a new token is inserted.
+ *       Rate-limited to 10 requests per minute per user.
+ *     tags:
+ *       - Notifications
+ *     security:
+ *       - BearerAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - token
+ *               - platform
+ *             properties:
+ *               token:
+ *                 type: string
+ *                 description: FCM registration token from the mobile or web app.
+ *               platform:
+ *                 type: string
+ *                 enum: [android, ios, web]
+ *                 description: The device platform.
+ *     responses:
+ *       200:
+ *         description: Device token registered or confirmed
+ *         content:
+ *           application/json:
+ *             schema:
+ *               allOf:
+ *                 - $ref: '#/components/schemas/SuccessEnvelope'
+ *                 - type: object
+ *                   properties:
+ *                     data:
+ *                       type: object
+ *                       properties:
+ *                         token:
+ *                           type: string
+ *                         platform:
+ *                           type: string
+ *                           enum: [android, ios, web]
+ *       400:
+ *         description: Validation failed
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorEnvelope'
+ *       401:
+ *         description: Unauthorized
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorEnvelope'
+ *       429:
+ *         description: Too many requests
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorEnvelope'
+ *       500:
+ *         description: Internal server error
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorEnvelope'
  */
 import type { NextResponse } from 'next/server';
 

@@ -1,15 +1,52 @@
 /**
- * GET /api/v1/station/dashboard
- * Returns KPI summary for the authenticated station's current calendar month.
- *
- * Response:
- *   200 { data: { total_revenue, total_clients, total_completed, average_rating, pending_count, month } }
- *   401 UNAUTHORIZED
- *   403 FORBIDDEN — not a station or not yet approved
- *   404 NOT_FOUND — no station associated with this account
- *   500 INTERNAL_ERROR
- *
- * Auth: station role required (active station).
+ * @swagger
+ * /station/dashboard:
+ *   get:
+ *     summary: Get the station KPI dashboard for the current month
+ *     description: >
+ *       Returns key performance indicators for the authenticated station for the
+ *       current calendar month: total revenue, client count, completed services,
+ *       average rating, and pending entry count.
+ *     tags:
+ *       - Station
+ *     security:
+ *       - BearerAuth: []
+ *     responses:
+ *       200:
+ *         description: Station KPI dashboard
+ *         content:
+ *           application/json:
+ *             schema:
+ *               allOf:
+ *                 - $ref: '#/components/schemas/SuccessEnvelope'
+ *                 - type: object
+ *                   properties:
+ *                     data:
+ *                       $ref: '#/components/schemas/StationDashboard'
+ *       401:
+ *         description: Unauthorized
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorEnvelope'
+ *       403:
+ *         description: Forbidden — station role required or not approved
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorEnvelope'
+ *       404:
+ *         description: No station associated with this account
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorEnvelope'
+ *       500:
+ *         description: Internal server error
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorEnvelope'
  */
 import type { NextResponse } from 'next/server';
 

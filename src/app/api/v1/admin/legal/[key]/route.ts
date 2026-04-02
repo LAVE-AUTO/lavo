@@ -41,19 +41,121 @@ const legalPatchLimiter = createEndpointRateLimiter({ maxRequests: 20, windowMs:
 // Retrieve legal content by key
 
 /**
- * GET /api/v1/admin/legal/:key
- *
- * Returns the stored content for the requested legal document key.
- * If the document has never been written, content is returned as null.
- *
- * Path parameters:
- *   key: cgu | politique_confidentialite | mentions_legales
- *
- * Responses:
- *   200 { data: { key: string, content: string | null } } - success
- *   400 VALIDATION_FAILED - key is not one of the supported values
- *   401 UNAUTHORIZED - admin auth required
- *   500 INTERNAL_ERROR - database or service error
+ * @swagger
+ * /admin/legal/{key}:
+ *   get:
+ *     summary: Retrieve a legal document (admin)
+ *     description: >
+ *       Returns the stored HTML content for the given legal document key.
+ *       Returns content as null if the document has never been written.
+ *     tags:
+ *       - Legal Content
+ *     security:
+ *       - BearerAuth: []
+ *     parameters:
+ *       - name: key
+ *         in: path
+ *         required: true
+ *         schema:
+ *           type: string
+ *           enum: [cgu, politique_confidentialite, mentions_legales]
+ *     responses:
+ *       200:
+ *         description: Legal document content
+ *         content:
+ *           application/json:
+ *             schema:
+ *               allOf:
+ *                 - $ref: '#/components/schemas/SuccessEnvelope'
+ *                 - type: object
+ *                   properties:
+ *                     data:
+ *                       $ref: '#/components/schemas/LegalContent'
+ *       400:
+ *         description: Invalid legal document key
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorEnvelope'
+ *       401:
+ *         description: Unauthorized — admin auth required
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorEnvelope'
+ *       500:
+ *         description: Internal server error
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorEnvelope'
+ *   patch:
+ *     summary: Create or overwrite a legal document (admin)
+ *     description: >
+ *       Upserts the legal document for the given key. Content is sanitized
+ *       server-side with DOMPurify before persistence.
+ *       Rate-limited to 20 requests per minute per admin.
+ *     tags:
+ *       - Legal Content
+ *     security:
+ *       - BearerAuth: []
+ *     parameters:
+ *       - name: key
+ *         in: path
+ *         required: true
+ *         schema:
+ *           type: string
+ *           enum: [cgu, politique_confidentialite, mentions_legales]
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - content
+ *             properties:
+ *               content:
+ *                 type: string
+ *                 minLength: 1
+ *                 maxLength: 100000
+ *                 description: HTML content of the legal document.
+ *     responses:
+ *       200:
+ *         description: Legal document updated with sanitized content
+ *         content:
+ *           application/json:
+ *             schema:
+ *               allOf:
+ *                 - $ref: '#/components/schemas/SuccessEnvelope'
+ *                 - type: object
+ *                   properties:
+ *                     data:
+ *                       $ref: '#/components/schemas/LegalContent'
+ *       400:
+ *         description: Validation failed — invalid key or body
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorEnvelope'
+ *       401:
+ *         description: Unauthorized — admin auth required
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorEnvelope'
+ *       429:
+ *         description: Too many requests
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorEnvelope'
+ *       500:
+ *         description: Internal server error
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorEnvelope'
  */
 export async function GET(
   request: Request,

@@ -1,12 +1,84 @@
 /**
- * GET /api/v1/station/delays
- * List delay requests for the authenticated station, with optional status filter and pagination.
- * Auth: station.
- *
- * Query params:
- *   status   — pending | accepted | refused | all (default: all)
- *   page     — page number (default: 1)
- *   per_page — items per page, max 100 (default: 20)
+ * @swagger
+ * /station/delays:
+ *   get:
+ *     summary: List delay requests for the authenticated station
+ *     description: >
+ *       Returns paginated delay requests submitted by clients for reservations at
+ *       the authenticated station. Filter by status for workflow views.
+ *     tags:
+ *       - Station
+ *     security:
+ *       - BearerAuth: []
+ *     parameters:
+ *       - name: status
+ *         in: query
+ *         schema:
+ *           type: string
+ *           enum: [pending, accepted, refused, all]
+ *           default: all
+ *       - name: page
+ *         in: query
+ *         schema:
+ *           type: integer
+ *           minimum: 1
+ *           default: 1
+ *       - name: per_page
+ *         in: query
+ *         schema:
+ *           type: integer
+ *           minimum: 1
+ *           maximum: 100
+ *           default: 20
+ *     responses:
+ *       200:
+ *         description: Paginated list of delay requests
+ *         content:
+ *           application/json:
+ *             schema:
+ *               allOf:
+ *                 - $ref: '#/components/schemas/SuccessEnvelope'
+ *                 - type: object
+ *                   properties:
+ *                     data:
+ *                       type: object
+ *                       properties:
+ *                         items:
+ *                           type: array
+ *                           items:
+ *                             $ref: '#/components/schemas/DelayRequest'
+ *                         meta:
+ *                           $ref: '#/components/schemas/PaginationMeta'
+ *       400:
+ *         description: Validation failed
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorEnvelope'
+ *       401:
+ *         description: Unauthorized
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorEnvelope'
+ *       403:
+ *         description: Forbidden — station role required
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorEnvelope'
+ *       404:
+ *         description: No station associated with this account
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorEnvelope'
+ *       500:
+ *         description: Internal server error
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorEnvelope'
  */
 import { z } from 'zod';
 import type { NextResponse } from 'next/server';

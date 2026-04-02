@@ -1,11 +1,75 @@
 /**
- * POST /api/v1/stations/queue/:queueId/pick
- * Station selects a walk-in client from the queue to serve immediately. Auth: station.
- * The client's entry moves from pending/late to in_progress; queue positions shift up.
- * Typically used when a reserved slot becomes available due to a late client.
- *
- * Response 200: { data: { entry } }
- * Errors: 400 VALIDATION_FAILED, 401 UNAUTHORIZED, 403 FORBIDDEN, 404 NOT_FOUND, 409 CONFLICT, 500 INTERNAL_ERROR
+ * @swagger
+ * /stations/queue/{queueId}/pick:
+ *   post:
+ *     summary: Pick a walk-in client from the queue
+ *     description: >
+ *       Station operator selects a queue entry to serve immediately.
+ *       The entry moves from pending/late to in_progress and queue positions shift up.
+ *       Typically used when a reserved slot becomes available.
+ *     tags:
+ *       - Queue
+ *     security:
+ *       - BearerAuth: []
+ *     parameters:
+ *       - name: queueId
+ *         in: path
+ *         required: true
+ *         schema:
+ *           type: string
+ *           format: uuid
+ *         description: Queue entry UUID to pick
+ *     responses:
+ *       200:
+ *         description: Entry picked and moved to in_progress
+ *         content:
+ *           application/json:
+ *             schema:
+ *               allOf:
+ *                 - $ref: '#/components/schemas/SuccessEnvelope'
+ *                 - type: object
+ *                   properties:
+ *                     data:
+ *                       type: object
+ *                       properties:
+ *                         entry:
+ *                           $ref: '#/components/schemas/Entry'
+ *       400:
+ *         description: Invalid queue entry ID
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorEnvelope'
+ *       401:
+ *         description: Unauthorized
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorEnvelope'
+ *       403:
+ *         description: No station associated with this account
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorEnvelope'
+ *       404:
+ *         description: Queue entry not found
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorEnvelope'
+ *       409:
+ *         description: Entry is not in a pickable state
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorEnvelope'
+ *       500:
+ *         description: Internal server error
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorEnvelope'
  */
 import { requireRole } from '@/lib/require-role';
 import { successResponse, error400, error403, error404, error409, error500, fromAppError } from '@/lib/responses';

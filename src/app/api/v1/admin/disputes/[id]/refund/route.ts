@@ -1,3 +1,92 @@
+/**
+ * @swagger
+ * /admin/disputes/{id}/refund:
+ *   post:
+ *     summary: Issue a Stripe refund for a dispute (admin)
+ *     description: >
+ *       Issues a Stripe refund for the reservation attached to an open dispute.
+ *       Blocked if a Stripe transfer to the station already occurred.
+ *       Omit amount for a full refund. Admin role required.
+ *       Rate-limited to 10 requests per minute per admin.
+ *     tags:
+ *       - Disputes
+ *     security:
+ *       - BearerAuth: []
+ *     parameters:
+ *       - name: id
+ *         in: path
+ *         required: true
+ *         schema:
+ *           type: string
+ *           format: uuid
+ *         description: Dispute UUID
+ *     requestBody:
+ *       required: false
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               amount:
+ *                 type: number
+ *                 description: >
+ *                   Partial refund amount in EUR. Omit for a full refund.
+ *                 minimum: 0.01
+ *     responses:
+ *       200:
+ *         description: Refund issued successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               allOf:
+ *                 - $ref: '#/components/schemas/SuccessEnvelope'
+ *                 - type: object
+ *                   properties:
+ *                     data:
+ *                       $ref: '#/components/schemas/Dispute'
+ *       400:
+ *         description: Validation failed or refund not eligible
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorEnvelope'
+ *       401:
+ *         description: Unauthorized
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorEnvelope'
+ *       403:
+ *         description: Forbidden — admin role required
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorEnvelope'
+ *       404:
+ *         description: Dispute or reservation not found
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorEnvelope'
+ *       409:
+ *         description: Dispute is already closed
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorEnvelope'
+ *       429:
+ *         description: Too many requests
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorEnvelope'
+ *       500:
+ *         description: Internal server error
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorEnvelope'
+ */
 import { requireRole } from '@/lib/require-role';
 import {
   successResponse,

@@ -1,11 +1,87 @@
 /**
- * POST /api/v1/me/entries/:entryId/upgrade-to-reservation
- * Upgrade a queue entry to a reservation by booking a specific time slot. Auth: client.
- * Body: { time_slot_id: UUID }
- *
- * Creates a Stripe PaymentIntent (manual capture) and returns the client_secret
- * for the frontend to complete payment. On successful payment, the webhook confirms
- * the reservation (status: confirmed).
+ * @swagger
+ * /me/entries/{entryId}/upgrade-to-reservation:
+ *   post:
+ *     summary: Upgrade a queue entry to a paid reservation
+ *     description: >
+ *       Upgrades a walk-in queue entry to a time-slot reservation.
+ *       Returns a Stripe client secret for frontend payment confirmation.
+ *       The reservation is confirmed when the Stripe webhook reports payment success.
+ *     tags:
+ *       - Queue
+ *       - Reservations
+ *     security:
+ *       - BearerAuth: []
+ *     parameters:
+ *       - name: entryId
+ *         in: path
+ *         required: true
+ *         schema:
+ *           type: string
+ *           format: uuid
+ *         description: Queue entry UUID to upgrade
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - time_slot_id
+ *             properties:
+ *               time_slot_id:
+ *                 type: string
+ *                 format: uuid
+ *     responses:
+ *       201:
+ *         description: Entry upgraded, Stripe client secret returned
+ *         content:
+ *           application/json:
+ *             schema:
+ *               allOf:
+ *                 - $ref: '#/components/schemas/SuccessEnvelope'
+ *                 - type: object
+ *                   properties:
+ *                     data:
+ *                       allOf:
+ *                         - $ref: '#/components/schemas/Entry'
+ *                         - type: object
+ *                           properties:
+ *                             reservation_id:
+ *                               type: string
+ *                               format: uuid
+ *                             stripe_client_secret:
+ *                               type: string
+ *       400:
+ *         description: Validation failed
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorEnvelope'
+ *       401:
+ *         description: Unauthorized
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorEnvelope'
+ *       404:
+ *         description: Entry or station not found
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorEnvelope'
+ *       409:
+ *         description: Slot full or entry not eligible for upgrade
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorEnvelope'
+ *       500:
+ *         description: Internal server error
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorEnvelope'
  */
 import { requireRole } from '@/lib/require-role';
 import { successResponse, error400, error404, error409, error500, fromAppError } from '@/lib/responses';

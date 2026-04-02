@@ -1,24 +1,78 @@
 /**
- * GET /api/v1/station/analytics/[metric]
- * Returns a daily time series for the authenticated station over the past 30 days
- * or a specified from/to date range.
- *
- * Path param:
- *   [metric] — one of: revenue, clients, completed
- *
- * Query params (all optional):
- *   ?from=YYYY-MM-DD&to=YYYY-MM-DD → exact date range (both required if either is provided)
- *   (no params)                    → default 30-day window ending today
- *
- * Response:
- *   200 { data: { metric, series: [{ date, value }] } }
- *   400 VALIDATION_FAILED — unknown metric or invalid query params
- *   401 UNAUTHORIZED
- *   403 FORBIDDEN — not a station or not yet approved
- *   404 NOT_FOUND — no station associated with this account
- *   500 INTERNAL_ERROR
- *
- * Auth: station role required (active station).
+ * @swagger
+ * /station/analytics/{metric}:
+ *   get:
+ *     summary: Get a daily analytics time series for the station
+ *     description: >
+ *       Returns a daily time series for the authenticated station for the given metric.
+ *       Defaults to the past 30 days when no date range is specified.
+ *       Both from and to must be provided together when using a custom range.
+ *     tags:
+ *       - Station
+ *     security:
+ *       - BearerAuth: []
+ *     parameters:
+ *       - name: metric
+ *         in: path
+ *         required: true
+ *         schema:
+ *           type: string
+ *           enum: [revenue, clients, completed]
+ *         description: The metric to retrieve.
+ *       - name: from
+ *         in: query
+ *         schema:
+ *           type: string
+ *           format: date
+ *         description: Start date (YYYY-MM-DD). Required together with "to".
+ *       - name: to
+ *         in: query
+ *         schema:
+ *           type: string
+ *           format: date
+ *         description: End date (YYYY-MM-DD). Required together with "from".
+ *     responses:
+ *       200:
+ *         description: Daily time series for the requested metric
+ *         content:
+ *           application/json:
+ *             schema:
+ *               allOf:
+ *                 - $ref: '#/components/schemas/SuccessEnvelope'
+ *                 - type: object
+ *                   properties:
+ *                     data:
+ *                       $ref: '#/components/schemas/AnalyticsSeries'
+ *       400:
+ *         description: Unknown metric or invalid query params
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorEnvelope'
+ *       401:
+ *         description: Unauthorized
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorEnvelope'
+ *       403:
+ *         description: Forbidden — station role required or not approved
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorEnvelope'
+ *       404:
+ *         description: No station associated with this account
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorEnvelope'
+ *       500:
+ *         description: Internal server error
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorEnvelope'
  */
 import type { NextResponse } from 'next/server';
 

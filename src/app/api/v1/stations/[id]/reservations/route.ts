@@ -1,7 +1,96 @@
 /**
- * POST /api/v1/stations/:id/reservations
- * Create a reservation for the station. Auth: client. Body: time_slot_id, vehicle_format_id.
- * Returns reservation_id + stripe_client_secret for frontend payment confirmation.
+ * @swagger
+ * /stations/{id}/reservations:
+ *   post:
+ *     summary: Create a reservation at a station
+ *     description: >
+ *       Books a specific time slot at the given station.
+ *       Returns a Stripe client secret for payment confirmation on the frontend.
+ *       The reservation status becomes "confirmed" after the Stripe webhook confirms payment.
+ *     tags:
+ *       - Reservations
+ *     security:
+ *       - BearerAuth: []
+ *     parameters:
+ *       - name: id
+ *         in: path
+ *         required: true
+ *         schema:
+ *           type: string
+ *           format: uuid
+ *         description: Station UUID
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - time_slot_id
+ *               - vehicle_format_id
+ *             properties:
+ *               time_slot_id:
+ *                 type: string
+ *                 format: uuid
+ *               vehicle_format_id:
+ *                 type: string
+ *                 format: uuid
+ *               qr_token:
+ *                 type: string
+ *                 description: Optional QR code token for on-site booking.
+ *               v:
+ *                 type: integer
+ *                 description: QR token version.
+ *     responses:
+ *       201:
+ *         description: Reservation created, awaiting payment
+ *         content:
+ *           application/json:
+ *             schema:
+ *               allOf:
+ *                 - $ref: '#/components/schemas/SuccessEnvelope'
+ *                 - type: object
+ *                   properties:
+ *                     data:
+ *                       allOf:
+ *                         - $ref: '#/components/schemas/Entry'
+ *                         - type: object
+ *                           properties:
+ *                             reservation_id:
+ *                               type: string
+ *                               format: uuid
+ *                             stripe_client_secret:
+ *                               type: string
+ *       400:
+ *         description: Validation failed
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorEnvelope'
+ *       401:
+ *         description: Unauthorized
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorEnvelope'
+ *       404:
+ *         description: Station not found or not active
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorEnvelope'
+ *       409:
+ *         description: Slot full or an active reservation already exists
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorEnvelope'
+ *       500:
+ *         description: Internal server error
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorEnvelope'
  */
 import { requireRole } from '@/lib/require-role';
 import { successResponse, error400, error404, error409, error500, fromAppError } from '@/lib/responses';
