@@ -422,7 +422,8 @@ const ClockMiniIcon = () => (
   </svg>
 );
 
-function formatAgo(iso: string, t: (key: string, values?: Record<string, unknown>) => string): string {
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+function formatAgo(iso: string, t: (key: string, values?: any) => string): string {
   const diffMs = Date.now() - new Date(iso).getTime();
   const minutes = Math.floor(diffMs / 60_000);
   if (minutes < 1) return t('ago_now');

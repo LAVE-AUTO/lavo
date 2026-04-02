@@ -100,10 +100,10 @@ const ClientsIcon = () => (
 
 // Mock data — replace with API response once GET /admin/dashboard is implemented
 const MOCK: KpiCardProps[] = [
-  { icon: <TransactionsIcon />, value: '1 284 $', label: '',  trendValue: '+12%', trendUp: true,  sparkline: [55,60,45,70,65,80,95], accentColor: GOLD,      animationDelay: '0ms'   },
-  { icon: <CommissionIcon />,   value: '128 $',   label: '',  trendValue: '+12%', trendUp: true,  sparkline: [50,55,40,65,60,75,90], accentColor: GOLD,      animationDelay: '60ms'  },
-  { icon: <MerchantsIcon />,    value: '47',       label: '',  trendValue: '+3',   trendUp: true,  sparkline: [30,35,33,38,36,40,47], accentColor: '#3B82F6', animationDelay: '120ms' },
-  { icon: <ClientsIcon />,      value: '1 230',    label: '',  trendValue: '+48',  trendUp: true,  sparkline: [70,75,80,72,85,88,95], accentColor: '#10B981', animationDelay: '180ms' },
+  { icon: <TransactionsIcon />, value: '1 284 $', label: '', trendLabel: '', trendValue: '+12%', trendUp: true,  sparkline: [55,60,45,70,65,80,95], accentColor: GOLD,      animationDelay: '0ms'   },
+  { icon: <CommissionIcon />,   value: '128 $',   label: '', trendLabel: '', trendValue: '+12%', trendUp: true,  sparkline: [50,55,40,65,60,75,90], accentColor: GOLD,      animationDelay: '60ms'  },
+  { icon: <MerchantsIcon />,    value: '47',       label: '', trendLabel: '', trendValue: '+3',   trendUp: true,  sparkline: [30,35,33,38,36,40,47], accentColor: '#3B82F6', animationDelay: '120ms' },
+  { icon: <ClientsIcon />,      value: '1 230',    label: '', trendLabel: '', trendValue: '+48',  trendUp: true,  sparkline: [70,75,80,72,85,88,95], accentColor: '#10B981', animationDelay: '180ms' },
 ];
 
 export function AdminKpiRow() {
