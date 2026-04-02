@@ -2,7 +2,7 @@
  * Data access for station entries (reservations and queue) in the single reservations table.
  * Enforces entry_type constraints: reservation => time_slot_id set; queue => queue_position set.
  */
-import { and, asc, desc, eq, gte, inArray, lte, sql } from 'drizzle-orm';
+import { and, asc, desc, eq, gte, inArray, isNull, lt, lte, sql } from 'drizzle-orm';
 import { db, type DbTransaction } from '@/lib/db';
 import { reservations, timeSlots, stationConfigs } from '@/lib/db/schema';
 
@@ -602,6 +602,23 @@ export async function listLateUnconfirmedReservations(): Promise<Entry[]> {
       )
     );
   return rows;
+}
+
+/**
+ * Returns queue entries with status 'pending_payment', no stripe_payment_id, and created_at
+ * older than olderThanMinutes minutes. Used by orphan cleanup cron to find stuck entries
+ * where the server crashed after the DB insert but before the Stripe PaymentIntent was created.
+ */
+export async function findOrphanedPendingPaymentEntries(olderThanMinutes: number): Promise<Entry[]> {
+  const cutoff = new Date(Date.now() - olderThanMinutes * 60_000);
+  return db.query.reservations.findMany({
+    where: and(
+      eq(reservations.status, 'pending_payment'),
+      isNull(reservations.stripe_payment_id),
+      eq(reservations.entry_type, 'queue'),
+      lt(reservations.created_at, cutoff)
+    ),
+  });
 }
 
 /**
