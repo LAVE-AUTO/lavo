@@ -10,6 +10,7 @@ const config: Config = {
   moduleNameMapper: {
     '^@/(.*)$': '<rootDir>/src/$1',
     '^libphonenumber-js$': '<rootDir>/tests/helpers/mocks/libphonenumber-js.ts',
+    '^firebase-admin$': '<rootDir>/tests/helpers/mocks/firebase-admin.ts',
   },
   testPathIgnorePatterns: ['<rootDir>/node_modules/', '<rootDir>/.next/'],
   collectCoverageFrom: [
