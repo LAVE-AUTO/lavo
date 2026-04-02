@@ -19,7 +19,7 @@ jobs:
       DATABASE_URL: postgresql://ci:ci@localhost:5432/ci_test
       STRIPE_SECRET_KEY: sk_test_00000000000000000000000000000000
       CRON_SECRET: ci-cron-secret-placeholder
-      NEXTAUTH_SECRET: ci-nextauth-secret-placeholder
+      NEXTAUTH_SECRET: ci-nextauth-secret-placeholder-minimum-32-bytes
       JWT_SECRET: ci-jwt-secret-placeholder
 
     steps:
