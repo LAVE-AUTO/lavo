@@ -82,3 +82,41 @@ jobs:
       # DATABASE_URL connection. Production builds are performed by Vercel on each push.
       # Re-enable this step once all pages use `export const dynamic = 'force-dynamic'`
       # or an offline DB fixture is available in CI.
+
+# ---------------------------------------------------------------------------
+# E2E job — disabled until a stable staging server is available.
+#
+# Activation checklist:
+#   1. Provision a persistent staging environment reachable from GitHub Actions.
+#   2. Set PLAYWRIGHT_BASE_URL to the staging URL.
+#   3. Add E2E_CLIENT_EMAIL, E2E_CLIENT_PASSWORD, E2E_STATION_EMAIL,
+#      E2E_STATION_PASSWORD, E2E_ADMIN_EMAIL, E2E_ADMIN_PASSWORD as
+#      GitHub repository secrets (Settings > Secrets and variables > Actions).
+#   4. Change `if: false` to `if: true` (or remove the condition entirely).
+# ---------------------------------------------------------------------------
+  e2e:
+    name: E2E tests
+    runs-on: ubuntu-latest
+    # Disabled — no staging server is available yet.  See activation checklist above.
+    if: false
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Install Playwright browsers
+        run: npx playwright install --with-deps chromium
+
+      - name: Run E2E tests
+        run: npm run test:e2e
+        env:
+          PLAYWRIGHT_BASE_URL: http://localhost:3000
+          # Credentials — define the following in GitHub Secrets:
+          # E2E_CLIENT_EMAIL, E2E_CLIENT_PASSWORD
+          # E2E_STATION_EMAIL, E2E_STATION_PASSWORD
+          # E2E_ADMIN_EMAIL, E2E_ADMIN_PASSWORD
