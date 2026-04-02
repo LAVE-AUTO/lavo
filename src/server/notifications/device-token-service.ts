@@ -6,9 +6,14 @@
  * token was previously registered under a different user account it will be
  * reassigned to the current user (conflict on token → update user_id).
  */
+import { eq } from 'drizzle-orm';
+
 import { db } from '@/lib/db';
 import { deviceTokens } from '@/lib/db/schema';
-import { eq } from 'drizzle-orm';
+
+
+// %%%%% Token operations %%%%%
+// Upsert, read, and remove device tokens
 
 /**
  * Upserts an FCM device token for the given user.

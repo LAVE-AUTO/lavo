@@ -1,7 +1,12 @@
 import { z } from 'zod';
+
 import { mapZodErrors, dateStringSchema, refineDateRange } from './shared';
 
 export { mapZodErrors };
+
+
+// %%%%% Constants %%%%%
+// Supported station metrics
 
 /**
  * Supported metric slugs for GET /api/v1/station/analytics/[metric].
@@ -9,6 +14,10 @@ export { mapZodErrors };
 export const STATION_METRICS = ['revenue', 'clients', 'completed'] as const;
 
 export type StationMetricSlug = (typeof STATION_METRICS)[number];
+
+
+// %%%%% Validation schemas %%%%%
+// Query parameter validation for analytics endpoints
 
 /**
  * Zod schema for GET /api/v1/station/analytics/[metric] query parameters.
@@ -32,6 +41,10 @@ export const stationAnalyticsQuerySchema = z
   .superRefine(refineDateRange);
 
 export type StationAnalyticsQuery = z.infer<typeof stationAnalyticsQuerySchema>;
+
+
+// %%%%% Range resolution %%%%%
+// Determine effective date range from query parameters
 
 /**
  * Resolves the effective date range from validated station analytics query params.

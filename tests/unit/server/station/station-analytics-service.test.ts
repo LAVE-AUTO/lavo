@@ -2,6 +2,9 @@
  * Unit tests for station-analytics-service.
  * Mocks the repository layer to avoid loading pg.
  */
+
+// %%%%% Mocks %%%%%
+
 jest.mock('@/lib/db', () => ({ db: {} }));
 
 const mockGetDashboardKpis = jest.fn();
@@ -12,13 +15,22 @@ jest.mock('@/server/station/station-analytics-repository', () => ({
   getAnalyticsTimeSeries: (...args: unknown[]) => mockGetAnalyticsTimeSeries(...args),
 }));
 
+
+// %%%%% Imports %%%%%
+
 import {
   getStationDashboard,
   getStationAnalyticsSeries,
 } from '@/server/station/station-analytics-service';
 import { stationAnalyticsQuerySchema } from '@/validators/station-analytics';
 
+
+// %%%%% Fixtures %%%%%
+
 const STATION_ID = 'aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee';
+
+
+// %%%%% Tests %%%%%
 
 describe('getStationDashboard', () => {
   beforeEach(() => jest.clearAllMocks());

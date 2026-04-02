@@ -1,5 +1,9 @@
 import { z } from 'zod';
 
+
+// %%%%% Validation schemas %%%%%
+// Device token registration validation
+
 /**
  * Validates the request body for POST /me/device-token.
  * Token must be non-empty and within FCM's max length.

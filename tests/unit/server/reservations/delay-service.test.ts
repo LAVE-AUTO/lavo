@@ -4,6 +4,8 @@
  * @jest-environment node
  */
 
+// %%%%% Mocks %%%%%
+
 const mockListDelayRequestsByStation = jest.fn();
 
 jest.mock('@/server/reservations/delay-repository', () => ({
@@ -11,13 +13,18 @@ jest.mock('@/server/reservations/delay-repository', () => ({
     mockListDelayRequestsByStation(...args),
 }));
 
-// Silence transitive imports that are not under test
 jest.mock('@/lib/db', () => ({ db: {} }));
 jest.mock('@/server/station/station-repository', () => ({}));
 jest.mock('@/server/notifications/notification-service', () => ({}));
 jest.mock('@/server/reservations/entry-repository', () => ({}));
 
+
+// %%%%% Imports %%%%%
+
 import { listDelaysByStation } from '@/server/reservations/delay-service';
+
+
+// %%%%% Fixtures %%%%%
 
 const makeDelay = (overrides: Partial<{
   id: string;
@@ -50,9 +57,15 @@ const makeDelay = (overrides: Partial<{
 
 const STATION_ID = 'station-abc';
 
+
+// %%%%% Setup %%%%%
+
 beforeEach(() => {
   jest.clearAllMocks();
 });
+
+
+// %%%%% Tests %%%%%
 
 describe('listDelaysByStation', () => {
   it('returns paginated results from the repository', async () => {

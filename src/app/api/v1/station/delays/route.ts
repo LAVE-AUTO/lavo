@@ -9,20 +9,29 @@
  *   per_page — items per page, max 100 (default: 20)
  */
 import { z } from 'zod';
+import type { NextResponse } from 'next/server';
+
 import { requireRole } from '@/lib/require-role';
 import { successResponse, error400, error404, error500, fromAppError } from '@/lib/responses';
+import { AppError, NotFoundError } from '@/lib/errors';
+import { applyNoStoreHeaders } from '@/lib/response-headers';
 import { ApiCode } from '@/types/api-codes';
 import { findStationByUserId } from '@/server/station/station-repository';
 import { listDelaysByStation } from '@/server/reservations/delay-service';
-import { AppError, NotFoundError } from '@/lib/errors';
-import { applyNoStoreHeaders } from '@/lib/response-headers';
-import type { NextResponse } from 'next/server';
+
+
+// %%%%% Validation %%%%%
+// Query parameter schema for delay listing
 
 const listDelaysQuerySchema = z.object({
   status: z.enum(['pending', 'accepted', 'refused', 'all']).optional().default('all'),
   page: z.coerce.number().int().min(1).optional().default(1),
   per_page: z.coerce.number().int().min(1).max(100).optional().default(20),
 });
+
+
+// %%%%% GET Handler %%%%%
+// Retrieve paginated delay requests for authenticated station
 
 export async function GET(request: Request): Promise<NextResponse> {
   const auth = await requireRole(request, 'station');

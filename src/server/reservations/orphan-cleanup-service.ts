@@ -7,9 +7,17 @@
 import { db } from '@/lib/db';
 import { findOrphanedPendingPaymentEntries, updateEntry, shiftQueuePositions } from './entry-repository';
 
+
+// %%%%% Types %%%%%
+// Cleanup result type
+
 export type OrphanCleanupResult = {
   cancelled: number;
 };
+
+
+// %%%%% Cleanup operations %%%%%
+// Find and cancel orphaned payment entries
 
 /**
  * Finds all orphaned pending_payment queue entries older than timeoutMinutes,

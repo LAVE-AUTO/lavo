@@ -20,12 +20,15 @@
  *
  * Auth: station role required (active station).
  */
+import type { NextResponse } from 'next/server';
+
 import { requireRole } from '@/lib/require-role';
-import { findStationByUserId } from '@/server/station/station-repository';
-import { getStationAnalyticsSeries } from '@/server/station/station-analytics-service';
 import { successResponse, error400, error404, error500, fromAppError } from '@/lib/responses';
 import { AppError } from '@/lib/errors';
 import { ApiCode } from '@/types/api-codes';
+import { applyNoStoreHeaders } from '@/lib/response-headers';
+import { findStationByUserId } from '@/server/station/station-repository';
+import { getStationAnalyticsSeries } from '@/server/station/station-analytics-service';
 import {
   STATION_METRICS,
   stationAnalyticsQuerySchema,
@@ -33,10 +36,13 @@ import {
   mapZodErrors,
 } from '@/validators/station-analytics';
 import type { StationMetricSlug } from '@/validators/station-analytics';
-import { applyNoStoreHeaders } from '@/lib/response-headers';
-import type { NextResponse } from 'next/server';
+
 
 type Params = { params: Promise<{ metric: string }> };
+
+
+// %%%%% GET Handler %%%%%
+// Retrieve analytics time series for authenticated station
 
 export async function GET(request: Request, { params }: Params): Promise<NextResponse> {
   const auth = await requireRole(request, 'station');

@@ -7,12 +7,21 @@
  * Reads ORPHAN_PAYMENT_TIMEOUT_MINUTES from env (default: 15).
  */
 import { headers } from 'next/headers';
+
 import { verifyCronSecret } from '@/lib/verify-cron-secret';
-import { cleanupOrphanedPaymentEntries } from '@/server/reservations/orphan-cleanup-service';
 import { successResponse, error401, error500 } from '@/lib/responses';
 import { HTTP_STATUS } from '@/helpers/constants';
+import { cleanupOrphanedPaymentEntries } from '@/server/reservations/orphan-cleanup-service';
+
+
+// %%%%% Constants %%%%%
+// Timeout configuration
 
 const DEFAULT_TIMEOUT_MINUTES = 15;
+
+
+// %%%%% GET Handler %%%%%
+// Cleanup orphaned payment entries
 
 export async function GET() {
   const headersList = await headers();

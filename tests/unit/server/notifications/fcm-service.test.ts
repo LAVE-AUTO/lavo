@@ -4,29 +4,18 @@
  * @jest-environment node
  */
 
-// ---------------------------------------------------------------------------
-// Mocks — declared before any imports so jest.mock hoisting works correctly.
-// The firebase-admin mock uses module-level state to control app initialization
-// without capturing variables (which would fail due to hoisting).
-// ---------------------------------------------------------------------------
+// %%%%% Mocks %%%%%
 
 const mockSendEachForMulticast = jest.fn();
 const mockMessaging = jest.fn(() => ({ sendEachForMulticast: mockSendEachForMulticast }));
 const mockInitializeApp = jest.fn(() => ({ messaging: mockMessaging }));
 
-// Simulate firebase-admin.apps as a mutable array the service reads to detect
-// whether an app has already been initialized.
-const fakeAppsArray: unknown[] = [];
-
 jest.mock('firebase-admin', () => {
-  // NOTE: cannot reference outer variables here due to hoisting.
-  // We access fakeAppsArray via the module-level variable injected after the fact.
   return {
     __esModule: true,
     get default() {
       return {
         get apps() {
-          // Return the array controlled by each test via fakeAppsArray.
           return (global as Record<string, unknown>).__fakeFirebaseApps as unknown[] ?? [];
         },
         initializeApp: (...args: unknown[]) => mockInitializeApp(...args),
@@ -46,25 +35,22 @@ jest.mock('@/server/notifications/device-token-service', () => ({
   upsertDeviceToken: (...args: unknown[]) => mockUpsertDeviceToken(...(args as [string, string, string])),
 }));
 
-// ---------------------------------------------------------------------------
-// Imports (after mocks)
-// ---------------------------------------------------------------------------
+
+// %%%%% Imports %%%%%
 
 import { sendPushNotification } from '@/server/notifications/fcm-service';
 import { upsertDeviceToken } from '@/server/notifications/device-token-service';
 
-// ---------------------------------------------------------------------------
-// Fixtures
-// ---------------------------------------------------------------------------
+
+// %%%%% Fixtures %%%%%
 
 const USER_ID = 'user-0000-0000-0000-000000000001';
 const TOKEN_A = 'fcm-token-device-a';
 const TOKEN_B = 'fcm-token-device-b';
 const PAYLOAD = { title: 'Test title', body: 'Test body', data: { entry_id: 'e1' } };
 
-// ---------------------------------------------------------------------------
-// Helpers
-// ---------------------------------------------------------------------------
+
+// %%%%% Helpers %%%%%
 
 function setupFirebaseEnv() {
   process.env.FIREBASE_PROJECT_ID = 'test-project';
@@ -78,14 +64,12 @@ function clearFirebaseEnv() {
   delete process.env.FIREBASE_PRIVATE_KEY;
 }
 
-// Expose the apps array on global so the mock getter can access it.
 function setApps(apps: unknown[]) {
   (global as Record<string, unknown>).__fakeFirebaseApps = apps;
 }
 
-// ---------------------------------------------------------------------------
-// Tests: sendPushNotification
-// ---------------------------------------------------------------------------
+
+// %%%%% Tests %%%%%
 
 describe('sendPushNotification', () => {
   beforeEach(() => {

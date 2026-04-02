@@ -12,6 +12,8 @@
  * @jest-environment node
  */
 
+// %%%%% Mocks %%%%%
+
 const mockUpsertPlatformSettings = jest.fn().mockResolvedValue(undefined);
 const mockGetAllPlatformSettings = jest.fn().mockResolvedValue([]);
 
@@ -20,7 +22,6 @@ jest.mock('@/server/admin/platform-settings-repository', () => ({
   getAllPlatformSettings: (...args: unknown[]) => mockGetAllPlatformSettings(...args),
 }));
 
-// db mock — getPlatformSetting uses db.query.settings.findFirst
 jest.mock('@/lib/db', () => ({
   db: {
     query: {
@@ -40,21 +41,33 @@ jest.mock('@/lib/db', () => ({
   },
 }));
 
+
+// %%%%% Imports %%%%%
+
 import { updatePlatformSettings } from '@/server/admin/platform-settings-service';
 import { ValidationError } from '@/lib/errors';
+
+
+// %%%%% Fixtures %%%%%
 
 const ADMIN_ID = 'admin-uuid-0001';
 const PLATFORM_KEY = 'cancellation_penalty_platform_rate';
 const STATION_KEY = 'cancellation_penalty_station_rate';
 
-describe('updatePlatformSettings — penalty rate auto-sync', () => {
-  beforeEach(() => {
-    jest.clearAllMocks();
-  });
 
-  // ---------------------------------------------------------------------------
+// %%%%% Setup %%%%%
+
+beforeEach(() => {
+  jest.clearAllMocks();
+});
+
+
+// %%%%% Tests %%%%%
+
+describe('updatePlatformSettings — penalty rate auto-sync', () => {
+  // = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = =
   // Single key: platform_rate provided
-  // ---------------------------------------------------------------------------
+  // = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = =
 
   describe('when only platform_rate is provided', () => {
     it('auto-calculates station_rate as 0.40 when platform_rate is 0.60', async () => {

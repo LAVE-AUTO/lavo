@@ -11,13 +11,18 @@
  *
  * Auth: station role required (active station).
  */
+import type { NextResponse } from 'next/server';
+
 import { requireRole } from '@/lib/require-role';
-import { findStationByUserId } from '@/server/station/station-repository';
-import { getStationDashboard } from '@/server/station/station-analytics-service';
 import { successResponse, error404, error500, fromAppError } from '@/lib/responses';
 import { AppError } from '@/lib/errors';
 import { applyNoStoreHeaders } from '@/lib/response-headers';
-import type { NextResponse } from 'next/server';
+import { findStationByUserId } from '@/server/station/station-repository';
+import { getStationDashboard } from '@/server/station/station-analytics-service';
+
+
+// %%%%% GET Handler %%%%%
+// Retrieve dashboard KPIs for authenticated station
 
 export async function GET(request: Request): Promise<NextResponse> {
   const auth = await requireRole(request, 'station');

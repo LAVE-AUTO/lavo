@@ -14,10 +14,13 @@
  * 'registration-token-not-registered' are automatically removed from the
  * device_tokens table to keep the stored token set clean.
  */
-
-// requires: npm install firebase-admin
 import admin from 'firebase-admin';
+
 import { getTokensForUser, removeExpiredTokens } from './device-token-service';
+
+
+// %%%%% Types %%%%%
+// Push notification payload
 
 export type PushNotificationPayload = {
   title: string;
@@ -25,8 +28,16 @@ export type PushNotificationPayload = {
   data?: Record<string, string>;
 };
 
+
+// %%%%% Constants %%%%%
+// FCM configuration and error codes
+
 /** FCM error code returned when a token is no longer valid. */
 const INVALID_TOKEN_ERROR = 'messaging/registration-token-not-registered';
+
+
+// %%%%% Firebase initialization %%%%%
+// Lazy initialization and configuration
 
 /**
  * Returns true when Firebase is configured via environment variables.
@@ -57,6 +68,10 @@ function getFirebaseApp(): admin.app.App {
     }),
   });
 }
+
+
+// %%%%% Send notifications %%%%%
+// Push notification dispatch and token cleanup
 
 /**
  * Sends a push notification to all registered devices for the given user.

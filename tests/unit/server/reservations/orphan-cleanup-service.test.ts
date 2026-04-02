@@ -4,6 +4,8 @@
  * @jest-environment node
  */
 
+// %%%%% Mocks %%%%%
+
 const mockFindOrphanedPendingPaymentEntries = jest.fn();
 const mockUpdateEntry = jest.fn();
 const mockShiftQueuePositions = jest.fn();
@@ -21,7 +23,13 @@ jest.mock('@/lib/db', () => ({
   },
 }));
 
+
+// %%%%% Imports %%%%%
+
 import { cleanupOrphanedPaymentEntries } from '@/server/reservations/orphan-cleanup-service';
+
+
+// %%%%% Fixtures %%%%%
 
 const makeEntry = (overrides: Partial<{
   id: string;
@@ -44,12 +52,19 @@ const makeEntry = (overrides: Partial<{
   ...overrides,
 });
 
+
+// %%%%% Setup %%%%%
+
+beforeEach(() => {
+  jest.clearAllMocks();
+  mockUpdateEntry.mockResolvedValue({ id: 'entry-1', status: 'cancelled' });
+  mockShiftQueuePositions.mockResolvedValue(undefined);
+});
+
+
+// %%%%% Tests %%%%%
+
 describe('cleanupOrphanedPaymentEntries', () => {
-  beforeEach(() => {
-    jest.clearAllMocks();
-    mockUpdateEntry.mockResolvedValue({ id: 'entry-1', status: 'cancelled' });
-    mockShiftQueuePositions.mockResolvedValue(undefined);
-  });
 
   it('cancels an orphaned entry older than timeout and returns cancelled: 1', async () => {
     const entry = makeEntry();

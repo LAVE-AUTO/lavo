@@ -5,6 +5,7 @@
  * late detection and queue downgrade.
  */
 import { and, eq, inArray } from 'drizzle-orm';
+
 import { db } from '@/lib/db';
 import { delayRequests } from '@/lib/db/schema';
 import { ConflictError, NotFoundError } from '@/lib/errors';
@@ -17,11 +18,22 @@ import {
   type ListDelaysOptions,
 } from './delay-repository';
 
+
+// %%%%% Types %%%%%
+// Delay request types and exports
+
 export type DelayRequest = typeof delayRequests.$inferSelect;
 export type { DelayRequestWithReservation, ListDelaysOptions };
 
+
+// %%%%% Constants %%%%%
+// Status enumerations for delay requests
+
 const ACTIVE_DELAY_STATUSES = ['pending', 'accepted'] as const;
 const SIGNAL_ALLOWED_STATUSES = ['confirmed'] as const;
+
+// %%%%% List operations %%%%%
+// Retrieve delay requests with optional filtering
 
 /**
  * Returns a paginated list of delay requests for the given station.
@@ -35,6 +47,10 @@ export async function listDelaysByStation(
 ): Promise<{ rows: DelayRequestWithReservation[]; total: number; page: number; perPage: number }> {
   return listDelayRequestsByStation(stationId, options);
 }
+
+
+// %%%%% Signal delay %%%%%
+// Client initiates a delay notification
 
 /**
  * Client signals they will be late for their reservation.
@@ -96,6 +112,10 @@ export async function signalDelay(
   return row;
 }
 
+
+// %%%%% Accept delay %%%%%
+// Station approves a delay request
+
 /**
  * Station accepts a pending delay request.
  * Updates status to 'accepted' and notifies the client.
@@ -136,6 +156,10 @@ export async function acceptDelay(
 
   return updated;
 }
+
+
+// %%%%% Refuse delay %%%%%
+// Station rejects a delay request
 
 /**
  * Station refuses a pending delay request.

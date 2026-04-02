@@ -4,14 +4,19 @@
  * The token is upserted: if the token already exists for this user it is kept as-is;
  * if it is a new token it is inserted. Auth: client.
  */
+import type { NextResponse } from 'next/server';
+
 import { requireRole } from '@/lib/require-role';
 import { successResponse, error400, error500, fromAppError } from '@/lib/responses';
+import { AppError } from '@/lib/errors';
 import { applyNoStoreHeaders } from '@/lib/response-headers';
 import { ApiCode } from '@/types/api-codes';
 import { registerDeviceTokenBodySchema } from '@/validators/device-token';
 import { upsertDeviceToken } from '@/server/notifications/device-token-service';
-import { AppError } from '@/lib/errors';
-import type { NextResponse } from 'next/server';
+
+
+// %%%%% POST Handler %%%%%
+// Register or update device token for authenticated client
 
 export async function POST(request: Request): Promise<NextResponse> {
   const auth = await requireRole(request, 'client');

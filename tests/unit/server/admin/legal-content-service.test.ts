@@ -17,7 +17,6 @@
 
 // %%%%% Mocks %%%%%
 
-// Mock DOMPurify so sanitize is a controllable spy
 const mockSanitize = jest.fn((input: string) => input);
 
 jest.mock('isomorphic-dompurify', () => ({
@@ -25,12 +24,10 @@ jest.mock('isomorphic-dompurify', () => ({
   default: { sanitize: (input: string) => mockSanitize(input) },
 }));
 
-// Capture the insert chain so we can verify arguments
 const mockOnConflictDoUpdate = jest.fn().mockResolvedValue(undefined);
 const mockValues = jest.fn().mockReturnValue({ onConflictDoUpdate: mockOnConflictDoUpdate });
 const mockInsert = jest.fn().mockReturnValue({ values: mockValues });
 
-// Mock the db module — getLegalContent uses db.query.settings.findFirst
 const mockFindFirst = jest.fn();
 
 jest.mock('@/lib/db', () => ({
@@ -44,15 +41,27 @@ jest.mock('@/lib/db', () => ({
   },
 }));
 
-// Import after mocks are registered
+
+// %%%%% Imports %%%%%
+
 import { getLegalContent, updateLegalContent } from '@/server/admin/legal-content-service';
+
+
+// %%%%% Fixtures %%%%%
 
 const ADMIN_ID = 'admin-uuid-abcd-1234';
 
+
+// %%%%% Setup %%%%%
+
+beforeEach(() => {
+  jest.clearAllMocks();
+});
+
+
+// %%%%% Tests %%%%%
+
 describe('getLegalContent', () => {
-  beforeEach(() => {
-    jest.clearAllMocks();
-  });
 
   it('returns the content string when a row is found', async () => {
     mockFindFirst.mockResolvedValue({ value: '<p>CGU content</p>' });

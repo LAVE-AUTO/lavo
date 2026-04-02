@@ -9,13 +9,11 @@
  *
  * requires: npm install isomorphic-dompurify
  */
-
-// requires: npm install isomorphic-dompurify
+import { and, eq, isNull, sql } from 'drizzle-orm';
 import DOMPurify from 'isomorphic-dompurify';
-import { and, eq, isNull } from 'drizzle-orm';
+
 import { db } from '@/lib/db';
 import { settings } from '@/lib/db/schema';
-import { sql } from 'drizzle-orm';
 
 
 // %%%%% Read %%%%%

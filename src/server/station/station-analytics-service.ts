@@ -8,10 +8,18 @@ import type { StationMetricSlug } from '@/validators/station-analytics';
 
 export type { DashboardKpis, TimeSeriesPoint };
 
+
+// %%%%% Types %%%%%
+// Analytics response types
+
 export type AnalyticsSeriesResult = {
   metric: StationMetricSlug;
   series: TimeSeriesPoint[];
 };
+
+
+// %%%%% Dashboard service %%%%%
+// KPI retrieval for station dashboard
 
 /**
  * Returns KPI summary for the station's current calendar month.
@@ -24,6 +32,10 @@ export type AnalyticsSeriesResult = {
 export async function getStationDashboard(stationId: string): Promise<DashboardKpis> {
   return getDashboardKpis(stationId);
 }
+
+
+// %%%%% Analytics service %%%%%
+// Time series retrieval for analytics views
 
 /**
  * Returns a daily time series for the requested metric over the given date range.

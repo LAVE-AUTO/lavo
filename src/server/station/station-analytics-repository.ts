@@ -1,7 +1,12 @@
 import { and, eq, sql } from 'drizzle-orm';
+
 import { db } from '@/lib/db';
 import { reservations, ratings } from '@/lib/db/schema';
 import type { StationMetricSlug } from '@/validators/station-analytics';
+
+
+// %%%%% Types %%%%%
+// KPI and time series data types
 
 export type DashboardKpis = {
   total_revenue: string;
@@ -16,6 +21,10 @@ export type TimeSeriesPoint = {
   date: string;
   value: string;
 };
+
+
+// %%%%% KPI queries %%%%%
+// Dashboard metrics aggregation by month
 
 /**
  * Returns KPI summary for the station's current calendar month.
@@ -102,6 +111,10 @@ export async function getDashboardKpis(stationId: string): Promise<DashboardKpis
     month: monthStr,
   };
 }
+
+
+// %%%%% Time series queries %%%%%
+// Daily metrics by date range
 
 /**
  * Returns a daily time series for a given metric over a date range.

@@ -11,10 +11,7 @@
  * @jest-environment node
  */
 
-// ---------------------------------------------------------------------------
-// Module-level mocks — must be declared before any import that pulls the
-// mocked module transitively.
-// ---------------------------------------------------------------------------
+// %%%%% Mocks %%%%%
 
 const mockLogin = jest.fn();
 const mockRegisterWithPassword = jest.fn();
@@ -31,22 +28,22 @@ jest.mock('@/lib/rate-limiter', () => ({
   checkRateLimit: (...args: unknown[]) => mockCheckRateLimit(...args),
   recordFailedAttempt: (...args: unknown[]) => mockRecordFailedAttempt(...args),
   resetOnSuccess: (...args: unknown[]) => mockResetOnSuccess(...args),
-  // normalizeRateLimitKey is used internally by @/lib/request-ip — must be exported.
   normalizeRateLimitKey: (key: string) => key,
 }));
 
-// next/headers is a server-only module — stub it for the test environment.
 jest.mock('next/headers', () => ({
   headers: () => Promise.resolve(new Map()),
 }));
+
+
+// %%%%% Imports %%%%%
 
 import { POST as loginPOST } from '@/app/api/v1/auth/login/route';
 import { POST as registerPOST } from '@/app/api/v1/auth/register/route';
 import { UnauthorizedError, ForbiddenError, ConflictError } from '@/lib/errors';
 
-// ---------------------------------------------------------------------------
-// Fixtures
-// ---------------------------------------------------------------------------
+
+// %%%%% Fixtures %%%%%
 
 const FAKE_USER = {
   id: 'user-uuid-0001',

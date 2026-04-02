@@ -3,8 +3,13 @@
  * Isolated queries consumed by delay-service.ts.
  */
 import { and, asc, count, eq } from 'drizzle-orm';
+
 import { db } from '@/lib/db';
 import { delayRequests, reservations, timeSlots } from '@/lib/db/schema';
+
+
+// %%%%% Types %%%%%
+// Delay request types with reservation context
 
 export type DelayRequestWithReservation = typeof delayRequests.$inferSelect & {
   reservation: {
@@ -19,6 +24,10 @@ export type ListDelaysOptions = {
   page?: number;
   perPage?: number;
 };
+
+
+// %%%%% Database queries %%%%%
+// Paginate and filter delay requests
 
 /**
  * Paginates delay requests for a given station with optional status filter.
