@@ -63,6 +63,7 @@ export default function ApiDocsPage() {
         persistAuthorization
         filter
         deepLinking
+        tryItOutEnabled={false}
       />
     </div>
   );

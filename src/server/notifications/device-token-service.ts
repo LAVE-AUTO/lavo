@@ -5,11 +5,22 @@
  * belongs to this user, do nothing (no-op on conflict). If the same physical
  * token was previously registered under a different user account it will be
  * reassigned to the current user (conflict on token → update user_id).
+ *
+ * A per-user cap of MAX_TOKENS_PER_USER is enforced: once reached, the oldest
+ * token(s) for that user are removed before inserting the new one so the table
+ * does not grow unboundedly.
  */
-import { eq, inArray } from 'drizzle-orm';
+import { count, eq, inArray, asc } from 'drizzle-orm';
 
 import { db } from '@/lib/db';
 import { deviceTokens } from '@/lib/db/schema';
+
+
+// %%%%% Constants %%%%%
+// Per-user device token cap
+
+/** Maximum number of FCM tokens retained per user. Oldest tokens are pruned first. */
+const MAX_TOKENS_PER_USER = 25;
 
 
 // %%%%% Token operations %%%%%
@@ -29,6 +40,34 @@ export async function upsertDeviceToken(
   token: string,
   platform: string
 ): Promise<void> {
+  // Enforce the per-user cap before inserting a potentially new token.
+  // If the token already exists for this user the upsert is a no-op and the count
+  // check is harmless; if it exists under another user the upsert reassigns it
+  // (no net increase in count for this user).
+  const [countRow] = await db
+    .select({ value: count() })
+    .from(deviceTokens)
+    .where(eq(deviceTokens.user_id, userId));
+
+  const currentCount = countRow?.value ?? 0;
+
+  if (currentCount >= MAX_TOKENS_PER_USER) {
+    // Remove the oldest token(s) to stay within the cap.
+    const overflow = currentCount - MAX_TOKENS_PER_USER + 1;
+    const oldest = await db
+      .select({ token: deviceTokens.token })
+      .from(deviceTokens)
+      .where(eq(deviceTokens.user_id, userId))
+      .orderBy(asc(deviceTokens.created_at))
+      .limit(overflow);
+
+    if (oldest.length > 0) {
+      await db
+        .delete(deviceTokens)
+        .where(inArray(deviceTokens.token, oldest.map((r) => r.token)));
+    }
+  }
+
   await db
     .insert(deviceTokens)
     .values({ user_id: userId, token, platform })

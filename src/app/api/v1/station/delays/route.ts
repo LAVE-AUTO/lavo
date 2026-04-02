@@ -152,6 +152,7 @@ export async function GET(request: Request): Promise<NextResponse> {
           total: result.total,
           page: result.page,
           per_page: result.perPage,
+          total_pages: Math.ceil(result.total / result.perPage),
         },
       })
     );

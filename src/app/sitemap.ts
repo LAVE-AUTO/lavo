@@ -6,6 +6,9 @@ const LOCALES = ['fr', 'en'] as const;
 /**
  * Attempts to load active station IDs for the sitemap.
  * Returns an empty array if the database is unavailable (e.g. during static build).
+ *
+ * listActiveStations clamps per_page to a maximum of 100 rows per call, so we
+ * paginate until all stations have been fetched.
  */
 async function getStationIds(): Promise<string[]> {
   try {
@@ -14,8 +17,21 @@ async function getStationIds(): Promise<string[]> {
     const { listActiveStations } = await import(
       '@/server/station/station-repository'
     );
-    const { rows } = await listActiveStations({ page: 1, per_page: 1000 });
-    return rows.map((s: { id: string }) => s.id);
+
+    const PAGE_SIZE = 100;
+    const ids: string[] = [];
+    let page = 1;
+
+    // eslint-disable-next-line no-constant-condition
+    while (true) {
+      const { rows } = await listActiveStations({ page, per_page: PAGE_SIZE });
+      if (rows.length === 0) break;
+      ids.push(...rows.map((s: { id: string }) => s.id));
+      if (rows.length < PAGE_SIZE) break; // last page
+      page += 1;
+    }
+
+    return ids;
   } catch {
     return [];
   }
