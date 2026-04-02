@@ -2154,7 +2154,9 @@
     "event_refund_partial": "Partial refund of {amount} processed.",
     "event_closed": "Dispute closed: {reason}",
     "not_found": "Dispute not found.",
-    "label_station": "Station"
+    "label_station": "Station",
+    "fetch_error": "Unable to load disputes.",
+    "btn_retry": "Retry"
   },
   "admin_commission": {
     "page_title": "Commission",
@@ -2219,7 +2221,8 @@
     "btn_download": "Download receipt (PDF)",
     "btn_close": "Close",
     "pdf_generated_on": "Generated on",
-    "error_export": "Failed to generate PDF."
+    "error_export": "Failed to generate PDF.",
+    "truncated_warning": "Only the last 100 transactions are displayed."
   },
   "admin_ratings": {
     "page_title": "Ratings & Reviews",

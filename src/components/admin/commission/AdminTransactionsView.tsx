@@ -48,6 +48,7 @@ export function AdminTransactionsView() {
 
   const [transactions, setTransactions] = useState<TxRow[]>([]);
   const [loading, setLoading] = useState(true);
+  const [truncated, setTruncated] = useState(false);
   const [filter, setFilter]     = useState<TxStatus | 'all'>('all');
   const [query, setQuery]       = useState('');
   const [copied, setCopied]     = useState<string | null>(null);
@@ -59,7 +60,10 @@ export function AdminTransactionsView() {
         const [ok, data] = await getFromApi('/admin/transactions/logs?per_page=100');
         if (!mountedRef.current) return;
         if (ok) {
-          const logs = (data as { data: { logs: ApiTransactionLog[] } }).data?.logs ?? [];
+          const result = (data as { data: { logs: ApiTransactionLog[]; meta?: { total?: number } } }).data;
+          const logs = result?.logs ?? [];
+          const total = result?.meta?.total ?? 0;
+          if (total > 100) setTruncated(true);
           setTransactions(logs.map((l): TxRow => {
             const amount = parseFloat(l.amount) || 0;
             const commission = parseFloat(l.commission_amount ?? '0') || 0;
@@ -178,6 +182,11 @@ export function AdminTransactionsView() {
           </div>
         ) : (
           <div className="flex flex-col gap-2.5">
+            {truncated && (
+              <p className="mb-2 rounded-xl bg-[#FFF4EC] px-4 py-2 text-center text-[11px] font-semibold text-[#C2410C] dark:bg-[#2A1408] dark:text-[#FDBA74]">
+                {t('truncated_warning')}
+              </p>
+            )}
             {filtered.map((tx) => {
               const s = STATUS_META[tx.status];
               return (

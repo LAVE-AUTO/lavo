@@ -111,6 +111,8 @@ export function StationDetail({ id }: StationDetailProps) {
       ? `https://www.google.com/maps/dir/?api=1&destination=${station.latitude},${station.longitude}`
       : `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(`${station.name}, ${station.address}, ${station.city}`)}`;
 
+  // POST /stations/:id/join signals "client en route" to the station (notification/metric).
+  // This is separate from POST /stations/:id/queue/join which adds the client to the queue.
   const handleEnRoute = async () => {
     setNavigating(true);
     const [ok, data] = await postWithApi<{ data: { mapsUrl: string } }>(`/stations/${id}/join`, {});

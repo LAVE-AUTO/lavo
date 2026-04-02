@@ -2154,7 +2154,9 @@
     "event_refund_partial": "Remboursement partiel de {amount} effectué.",
     "event_closed": "Litige clôturé : {reason}",
     "not_found": "Litige introuvable.",
-    "label_station": "Station"
+    "label_station": "Station",
+    "fetch_error": "Impossible de charger les litiges.",
+    "btn_retry": "Réessayer"
   },
   "admin_commission": {
     "page_title": "Commission",
@@ -2219,7 +2221,8 @@
     "btn_download": "Télécharger le reçu (PDF)",
     "btn_close": "Fermer",
     "pdf_generated_on": "Généré le",
-    "error_export": "Échec de la génération du PDF."
+    "error_export": "Échec de la génération du PDF.",
+    "truncated_warning": "Seules les 100 dernières transactions sont affichées."
   },
   "admin_ratings": {
     "page_title": "Avis & notes",

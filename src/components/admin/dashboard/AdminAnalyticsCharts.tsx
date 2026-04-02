@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect, useRef } from 'react';
-import { useTranslations } from 'next-intl';
+import { useTranslations, useLocale } from 'next-intl';
 import { getFromApi } from '@/services/axios-service';
 
 type GroupBy = 'day' | 'week' | 'month';
@@ -40,12 +40,13 @@ const GROUP_OPTIONS: { key: GroupBy; labelKey: string }[] = [
   { key: 'month', labelKey: 'group_month' },
 ];
 
-function formatLabel(date: string, groupBy: GroupBy): string {
+function formatLabel(date: string, groupBy: GroupBy, locale: string): string {
   try {
+    const loc = locale === 'en' ? 'en-CA' : 'fr-CA';
     const d = new Date(date + 'T00:00:00');
-    if (groupBy === 'month') return d.toLocaleDateString('fr-CA', { month: 'short' });
-    if (groupBy === 'week') return d.toLocaleDateString('fr-CA', { day: 'numeric', month: 'short' });
-    return d.toLocaleDateString('fr-CA', { day: 'numeric', month: 'short' });
+    if (groupBy === 'month') return d.toLocaleDateString(loc, { month: 'short' });
+    if (groupBy === 'week') return d.toLocaleDateString(loc, { day: 'numeric', month: 'short' });
+    return d.toLocaleDateString(loc, { day: 'numeric', month: 'short' });
   } catch { return date; }
 }
 
@@ -54,12 +55,13 @@ function formatValue(v: number, isCurrency?: boolean): string {
   return String(v);
 }
 
-function BarChart({ series, color, groupBy, isCurrency, loading }: {
+function BarChart({ series, color, groupBy, isCurrency, loading, locale }: {
   series: SeriesPoint[];
   color: string;
   groupBy: GroupBy;
   isCurrency?: boolean;
   loading: boolean;
+  locale: string;
 }) {
   if (loading) {
     return (
@@ -93,15 +95,15 @@ function BarChart({ series, color, groupBy, isCurrency, loading }: {
                 style={{ height: `${h}%`, background: i === series.length - 1 ? color : `${color}60` }}
               />
               <div className="pointer-events-none absolute -top-8 left-1/2 z-10 hidden -translate-x-1/2 whitespace-nowrap rounded-md bg-[#1A1A0A] px-2 py-1 text-[10px] font-bold text-white shadow-lg group-hover:block dark:bg-[#F0EDD4] dark:text-[#0C1209]">
-                {formatLabel(p.date, groupBy)}: {formatValue(v, isCurrency)}
+                {formatLabel(p.date, groupBy, locale)}: {formatValue(v, isCurrency)}
               </div>
             </div>
           );
         })}
       </div>
       <div className="mt-1.5 flex justify-between text-[9px] text-[#BBBBAA] dark:text-[#4A4A3A]">
-        <span>{formatLabel(series[0].date, groupBy)}</span>
-        <span>{formatLabel(series[series.length - 1].date, groupBy)}</span>
+        <span>{formatLabel(series[0].date, groupBy, locale)}</span>
+        <span>{formatLabel(series[series.length - 1].date, groupBy, locale)}</span>
       </div>
     </div>
   );
@@ -109,6 +111,7 @@ function BarChart({ series, color, groupBy, isCurrency, loading }: {
 
 export function AdminAnalyticsCharts() {
   const t = useTranslations('admin_dashboard');
+  const locale = useLocale();
   const mountedRef = useRef(true);
   useEffect(() => { mountedRef.current = true; return () => { mountedRef.current = false; }; }, []);
 
@@ -186,6 +189,7 @@ export function AdminAnalyticsCharts() {
               groupBy={groupBy}
               isCurrency={isCurrency}
               loading={loading}
+              locale={locale}
             />
           </div>
         ))}

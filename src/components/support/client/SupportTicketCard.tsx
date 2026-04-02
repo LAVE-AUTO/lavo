@@ -188,13 +188,13 @@ export function SupportTicketCard({ ticket, onMessageSent }: Props) {
           {!isClosed && !loadingMessages && (
             <form onSubmit={handleSendMessage} className="border-t border-[#F0EDE4] px-5 py-3 dark:border-[#1A2A14]">
               <div className="flex gap-2">
-                <input
-                  type="text"
+                <textarea
+                  rows={2}
                   value={replyContent}
                   onChange={(e) => setReplyContent(e.target.value)}
                   placeholder={t('reply_placeholder')}
                   maxLength={5000}
-                  className="flex-1 rounded-[8px] border border-[#D8D4C8] bg-[#F7F6F2] px-3 py-2 text-[13px] text-[#1A1A0A] outline-none transition-colors placeholder:text-[#BBBBAA] focus:border-[#C49A1E] dark:border-[#243020] dark:bg-[#0F1A0C] dark:text-[#F0EDD4] dark:placeholder:text-[#4A4A3A]"
+                  className="flex-1 resize-none rounded-[8px] border border-[#D8D4C8] bg-[#F7F6F2] px-3 py-2 text-[13px] text-[#1A1A0A] outline-none transition-colors placeholder:text-[#BBBBAA] focus:border-[#C49A1E] dark:border-[#243020] dark:bg-[#0F1A0C] dark:text-[#F0EDD4] dark:placeholder:text-[#4A4A3A]"
                 />
                 <button
                   type="submit"

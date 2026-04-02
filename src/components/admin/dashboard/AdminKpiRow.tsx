@@ -146,10 +146,10 @@ export function AdminKpiRow() {
   const metrics = data?.metrics;
 
   const cards: KpiCardProps[] = [
-    { icon: <TransactionsIcon />, value: fmtCurrency(metrics?.total_revenue ?? '0'), label: t('kpi_transactions'), trendValue: String(metrics?.total_transactions ?? 0), trendUp: true, trendLabel: t('kpi_trend_vs_yesterday'), sparkline: [55,60,45,70,65,80,95], accentColor: GOLD, animationDelay: '0ms' },
-    { icon: <CommissionIcon />,   value: fmtCurrency(metrics?.total_commissions ?? '0'), label: t('kpi_commissions'), trendValue: '-', trendUp: true, trendLabel: t('kpi_trend_vs_yesterday'), sparkline: [50,55,40,65,60,75,90], accentColor: GOLD, animationDelay: '60ms' },
-    { icon: <MerchantsIcon />,    value: String(totals?.active_stations ?? 0), label: t('kpi_merchants'), trendValue: `${totals?.pending_kyc ?? 0} KYC`, trendUp: (totals?.pending_kyc ?? 0) > 0, trendLabel: t('kpi_vs_last_month'), sparkline: [30,35,33,38,36,40,47], accentColor: '#3B82F6', animationDelay: '120ms' },
-    { icon: <ClientsIcon />,      value: String(totals?.total_clients ?? 0), label: t('kpi_clients'), trendValue: '-', trendUp: true, trendLabel: t('kpi_vs_last_month'), sparkline: [70,75,80,72,85,88,95], accentColor: '#10B981', animationDelay: '180ms' },
+    { icon: <TransactionsIcon />, value: fmtCurrency(metrics?.total_revenue ?? '0'), label: t('kpi_transactions'), trendValue: String(metrics?.total_transactions ?? 0), trendUp: true, trendLabel: t('kpi_trend_vs_yesterday'), sparkline: [], accentColor: GOLD, animationDelay: '0ms' },
+    { icon: <CommissionIcon />,   value: fmtCurrency(metrics?.total_commissions ?? '0'), label: t('kpi_commissions'), trendValue: '-', trendUp: true, trendLabel: t('kpi_trend_vs_yesterday'), sparkline: [], accentColor: GOLD, animationDelay: '60ms' },
+    { icon: <MerchantsIcon />,    value: String(totals?.active_stations ?? 0), label: t('kpi_merchants'), trendValue: `${totals?.pending_kyc ?? 0} KYC`, trendUp: (totals?.pending_kyc ?? 0) > 0, trendLabel: t('kpi_vs_last_month'), sparkline: [], accentColor: '#3B82F6', animationDelay: '120ms' },
+    { icon: <ClientsIcon />,      value: String(totals?.total_clients ?? 0), label: t('kpi_clients'), trendValue: '-', trendUp: true, trendLabel: t('kpi_vs_last_month'), sparkline: [], accentColor: '#10B981', animationDelay: '180ms' },
   ];
 
   return (

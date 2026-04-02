@@ -53,6 +53,10 @@ export function mapApiStatus(apiStatus: string): TicketStatus {
     case 'en_cours': return 'in_progress';
     case 'resolu': return 'resolved';
     case 'ferme': return 'closed';
-    default: return 'open';
+    default:
+      if (process.env.NODE_ENV === 'development') {
+        console.warn(`[mapApiStatus] Unrecognised status: "${apiStatus}"`);
+      }
+      return 'open';
   }
 }
