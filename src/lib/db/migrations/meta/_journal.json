@@ -176,6 +176,13 @@
       "when": 1743552000000,
       "tag": "0028_legal_content_type",
       "breakpoints": true
+    },
+    {
+      "idx": 29,
+      "version": "7",
+      "when": 1743552100000,
+      "tag": "0029_device_tokens",
+      "breakpoints": true
     }
   ]
 }
