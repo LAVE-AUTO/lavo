@@ -14,6 +14,13 @@ jobs:
 
     env:
       NODE_ENV: test
+      # Dummy values satisfy module-level guards in db.ts and stripe-client.ts.
+      # Tests mock all actual DB/Stripe calls — no real connections are made.
+      DATABASE_URL: postgresql://ci:ci@localhost:5432/ci_test
+      STRIPE_SECRET_KEY: sk_test_00000000000000000000000000000000
+      CRON_SECRET: ci-cron-secret-placeholder
+      NEXTAUTH_SECRET: ci-nextauth-secret-placeholder
+      JWT_SECRET: ci-jwt-secret-placeholder
 
     steps:
       - name: Checkout repository
