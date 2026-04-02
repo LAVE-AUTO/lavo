@@ -259,13 +259,15 @@ export async function getAllPlatformSettings(): Promise<PlatformSettingRow[]> {
  * Bulk-upserts one or more platform settings.
  *
  * Enforces the cross-key invariant cancellation_penalty_platform_rate +
- * cancellation_penalty_station_rate = 1.00 even across separate PATCH requests:
- * when only one of the two rate keys is present in the payload, the persisted value
- * of the complementary key is read from the DB and the combined sum is validated.
+ * cancellation_penalty_station_rate = 1.00:
+ *   - Single key: the complementary key is auto-calculated as (1 - provided value)
+ *     and written alongside the provided key in the same upsert.
+ *   - Both keys: their sum is validated to equal exactly 1.00.
+ *   - Neither key: no rate logic applied, other settings are written as-is.
  *
  * @param data - Validated map of setting keys to new string values
  * @param adminId - UUID of the admin performing the update (from JWT subject claim)
- * @throws ValidationError — penalty rates do not sum to 1.00
+ * @throws ValidationError — provided rate is out of [0, 1] or both rates do not sum to 1.00
  */
 export async function updatePlatformSettings(
   data: UpdatePlatformSettingsInput,
@@ -277,39 +279,52 @@ export async function updatePlatformSettings(
   const hasPlatform = PLATFORM_KEY in data;
   const hasStation = STATION_KEY in data;
 
-  // Cross-request guard: if only one rate key is being updated, read the persisted
-  // value of the complementary key and validate the resulting sum.
-  if (hasPlatform !== hasStation) {
-    const incomingRate = parseFloat(hasPlatform ? data[PLATFORM_KEY]! : data[STATION_KEY]!);
-    const persistedRaw = await getPlatformSetting(hasPlatform ? STATION_KEY : PLATFORM_KEY);
-    if (persistedRaw !== null) {
-      const persistedRate = parseFloat(persistedRaw);
-      if (Number.isFinite(incomingRate) && Number.isFinite(persistedRate)) {
-        const sum = Math.round((incomingRate + persistedRate) * 100) / 100;
-        if (sum !== 1.0) {
-          // SECURITY: do not leak persisted DB values in the error message
-          throw new ValidationError(
-            `${PLATFORM_KEY} and ${STATION_KEY} must sum to 1.00`
-          );
-        }
+  // Build a mutable copy so we can inject the auto-calculated complementary key.
+  const payload: Record<string, string> = { ...data };
+
+  if (hasPlatform && hasStation) {
+    // Both provided: validate the sum.
+    const platformVal = parseFloat(data[PLATFORM_KEY]!);
+    const stationVal = parseFloat(data[STATION_KEY]!);
+    if (Number.isFinite(platformVal) && Number.isFinite(stationVal)) {
+      const sum = Math.round((platformVal + stationVal) * 100) / 100;
+      if (sum !== 1.0) {
+        throw new ValidationError(
+          `${PLATFORM_KEY} and ${STATION_KEY} must sum to 1.00`
+        );
       }
-    } else {
-      // SECURITY: if the complementary key has never been set, require both keys
-      // to be submitted together to prevent an inconsistent split configuration.
+    }
+  } else if (hasPlatform) {
+    // Only platform rate provided: auto-calculate the station rate.
+    const platformVal = parseFloat(data[PLATFORM_KEY]!);
+    if (!Number.isFinite(platformVal) || platformVal < 0 || platformVal > 1) {
       throw new ValidationError(
-        `Both ${PLATFORM_KEY} and ${STATION_KEY} must be set together when the complementary key has no persisted value`
+        `${PLATFORM_KEY} must be a decimal between 0.00 and 1.00`
       );
     }
+    const complementary = Math.round((1.0 - platformVal) * 100) / 100;
+    payload[STATION_KEY] = complementary.toFixed(2);
+  } else if (hasStation) {
+    // Only station rate provided: auto-calculate the platform rate.
+    const stationVal = parseFloat(data[STATION_KEY]!);
+    if (!Number.isFinite(stationVal) || stationVal < 0 || stationVal > 1) {
+      throw new ValidationError(
+        `${STATION_KEY} must be a decimal between 0.00 and 1.00`
+      );
+    }
+    const complementary = Math.round((1.0 - stationVal) * 100) / 100;
+    payload[PLATFORM_KEY] = complementary.toFixed(2);
   }
 
-  const entries = Object.entries(data).map(([key, value]) => ({
+  const entries = Object.entries(payload).map(([key, value]) => ({
     key,
     value,
     updatedBy: adminId,
   }));
   await upsertPlatformSettings(entries);
   // Invalidate cached values so consumers read the new settings within one TTL cycle.
-  for (const key of Object.keys(data)) {
+  // Covers both explicitly provided keys and any auto-calculated complementary key.
+  for (const key of Object.keys(payload)) {
     invalidateSettingCache(key);
   }
 }
