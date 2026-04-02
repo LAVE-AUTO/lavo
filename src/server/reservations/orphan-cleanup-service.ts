@@ -56,7 +56,7 @@ export async function cleanupOrphanedPaymentEntries(
       });
 
       cancelled += 1;
-      console.error('[ORPHAN_CLEANUP] Cancelled orphaned entry', { entryId, userId, stationId });
+      console.log('[ORPHAN_CLEANUP] Cancelled orphaned entry', { entryId, userId, stationId });
     } catch (e) {
       console.error('[ORPHAN_CLEANUP] Failed to cancel orphaned entry', {
         entryId,

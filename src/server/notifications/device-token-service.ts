@@ -6,7 +6,7 @@
  * token was previously registered under a different user account it will be
  * reassigned to the current user (conflict on token → update user_id).
  */
-import { eq } from 'drizzle-orm';
+import { eq, inArray } from 'drizzle-orm';
 
 import { db } from '@/lib/db';
 import { deviceTokens } from '@/lib/db/schema';
@@ -59,7 +59,5 @@ export async function getTokensForUser(userId: string): Promise<string[]> {
  */
 export async function removeExpiredTokens(tokens: string[]): Promise<void> {
   if (tokens.length === 0) return;
-  for (const token of tokens) {
-    await db.delete(deviceTokens).where(eq(deviceTokens.token, token));
-  }
+  await db.delete(deviceTokens).where(inArray(deviceTokens.token, tokens));
 }

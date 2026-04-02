@@ -61,7 +61,7 @@ export async function updateLegalContent(
   key: string,
   content: string,
   adminId: string
-): Promise<void> {
+): Promise<string> {
   const sanitized = DOMPurify.sanitize(content);
   const now = new Date();
 
@@ -84,4 +84,6 @@ export async function updateLegalContent(
         updated_at: sql`NOW()`,
       },
     });
+
+  return sanitized;
 }

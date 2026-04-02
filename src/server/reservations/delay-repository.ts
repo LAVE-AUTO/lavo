@@ -86,11 +86,13 @@ export async function listDelayRequestsByStation(
     refusal_reason: r.refusal_reason ?? null,
     created_at: r.created_at,
     updated_at: r.updated_at,
-    reservation: {
-      id: r.reservation_id,
-      scheduled_at: r.slot_start_time ?? null,
-      vehicle_format_id: r.reservation_vehicle_format_id ?? '',
-    },
+    reservation: r.reservation_vehicle_format_id !== null && r.reservation_vehicle_format_id !== undefined
+      ? {
+          id: r.reservation_id,
+          scheduled_at: r.slot_start_time ?? null,
+          vehicle_format_id: r.reservation_vehicle_format_id,
+        }
+      : null,
   }));
 
   return { rows: mapped, total: Number(total), page, perPage };

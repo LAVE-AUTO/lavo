@@ -184,9 +184,8 @@ describe('PATCH /api/v1/admin/legal/:key', () => {
   beforeEach(() => {
     jest.clearAllMocks();
     mockRequireRole.mockResolvedValue(ADMIN_AUTH);
-    mockUpdateLegalContent.mockResolvedValue(undefined);
-    // Re-read returns the stored (sanitized) content
-    mockGetLegalContent.mockResolvedValue(CGU_CONTENT);
+    // updateLegalContent now returns the sanitized content directly.
+    mockUpdateLegalContent.mockResolvedValue(CGU_CONTENT);
   });
 
   // --- Happy path: update returns sanitized content ---
@@ -200,7 +199,7 @@ describe('PATCH /api/v1/admin/legal/:key', () => {
 
     expect(res.status).toBe(200);
     expect(body.data.key).toBe('cgu');
-    // The stored (sanitized) value is returned via a subsequent getLegalContent call.
+    // The sanitized value is returned directly from updateLegalContent.
     expect(body.data.content).toBe(CGU_CONTENT);
     expect(mockUpdateLegalContent).toHaveBeenCalledWith('cgu', CGU_CONTENT, ADMIN_AUTH.sub);
   });
@@ -216,9 +215,9 @@ describe('PATCH /api/v1/admin/legal/:key', () => {
     expect(adminId).toBe(ADMIN_AUTH.sub);
   });
 
-  it('returns content from the re-read (post-sanitization) call', async () => {
+  it('returns the sanitized content returned by updateLegalContent', async () => {
     const sanitized = '<p>Sanitized CGU</p>';
-    mockGetLegalContent.mockResolvedValue(sanitized);
+    mockUpdateLegalContent.mockResolvedValue(sanitized);
 
     const res = await PATCH(
       makePatchRequest('cgu', { content: '<script>alert(1)</script><p>CGU</p>' }),

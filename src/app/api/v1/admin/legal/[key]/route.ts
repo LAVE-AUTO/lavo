@@ -147,10 +147,8 @@ export async function PATCH(
   const { content } = bodyParsed.data;
 
   try {
-    await updateLegalContent(key, content, auth.sub);
-    // Re-read the stored (sanitized) content to return it in the response
-    const stored = await getLegalContent(key);
-    return applyNoStoreHeaders(successResponse({ key, content: stored }));
+    const sanitized = await updateLegalContent(key, content, auth.sub);
+    return applyNoStoreHeaders(successResponse({ key, content: sanitized }));
   } catch (e) {
     if (e instanceof AppError) return applyNoStoreHeaders(fromAppError(e));
     // SECURITY: never expose raw error — it leaks internal details via _dev in development mode
