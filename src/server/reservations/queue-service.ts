@@ -7,7 +7,7 @@ import { NotFoundError, ConflictError } from '@/lib/errors';
 import { db } from '@/lib/db';
 import { findFormatByIdAndStation } from '@/server/station/format-repository';
 import { decrementSlotBookedCount } from '@/server/station/slot-repository';
-import { createPaymentIntent, capturePaymentIntent } from '@/server/payments/payment-service';
+import { createPaymentIntent, capturePaymentIntent, updatePaymentIntentMetadata } from '@/server/payments/payment-service';
 import { notifyEntry } from '@/server/notifications/notification-service';
 import { getQueuePositionWhenMovingFromReservation } from './queue-position-helper';
 import {
@@ -34,6 +34,10 @@ const STATUS_CANCELLED = 'cancelled';
  * Joins the walk-in queue at the station for the given vehicle format.
  * Payment is required: a Stripe PaymentIntent is authorized at join time and captured on service completion.
  * Assigns queue_position at end of queue.
+ *
+ * Stripe-first pattern: PI is created before the DB entry so there is no crash window where an
+ * entry exists with stripe_payment_id = null. If the DB transaction fails (duplicate, race), the PI
+ * is never returned to the client and auto-expires on Stripe after 24h — no charge, no orphan.
  */
 export async function joinQueue(
   userId: string,
@@ -48,7 +52,24 @@ export async function joinQueue(
   const formatPrice = parseFloat(String(format.price));
   const split = await computeReservationSplit({ amountTotal: formatPrice, isQrBooking: false });
 
-  // Atomic: check duplicate and allocate position inside transaction to prevent race conditions.
+  const amountCents = Math.round(formatPrice * 100);
+  const commissionCents = Math.round(split.commissionAmount * 100);
+
+  // Create Stripe PaymentIntent before the DB entry (Stripe-first pattern).
+  // reservation_id is omitted here; it will be set via a non-fatal metadata update after DB commit.
+  const { paymentIntentId, clientSecret } = await createPaymentIntent({
+    amountCents,
+    userId,
+    stationId,
+    stationStripeAccountId,
+    commissionCents,
+    metadata: {
+      vehicle_format_id: vehicleFormatId,
+      entry_type: 'queue',
+    },
+  });
+
+  // Atomic: check duplicate and allocate position. Entry is created with stripe_payment_id already set.
   const entry = await db.transaction(async (tx) => {
     const hasActive = await hasActiveEntryAtStation(userId, stationId, tx);
     if (hasActive) throw new ConflictError('You already have an active entry at this station');
@@ -65,38 +86,21 @@ export async function joinQueue(
       commission_rate: split.commissionRate,
       commission_amount: String(split.commissionAmount.toFixed(2)),
       station_payout: String(split.stationPayout.toFixed(2)),
-      stripe_payment_id: null,
+      stripe_payment_id: paymentIntentId,
     }, tx);
   });
 
-  // Create Stripe PaymentIntent outside the transaction (external side-effect).
-  // If Stripe fails, rollback the DB entry to avoid orphaned pending_payment entries.
-  const amountCents = Math.round(formatPrice * 100);
-  const commissionCents = Math.round(split.commissionAmount * 100);
-
-  let paymentIntentId: string;
-  let clientSecret: string;
+  // Update PI metadata with reservation_id now that the entry ID is known.
+  // Non-fatal: metadata is informational only; webhook resolution uses stripe_payment_id on the entry.
   try {
-    const result = await createPaymentIntent({
-      amountCents,
-      userId,
-      stationId,
-      stationStripeAccountId,
-      commissionCents,
-      metadata: {
-        reservation_id: entry.id,
-        vehicle_format_id: vehicleFormatId,
-        entry_type: 'queue',
-      },
+    await updatePaymentIntentMetadata(paymentIntentId, { reservation_id: entry.id });
+  } catch (e) {
+    console.error('[JOIN_QUEUE] PI metadata update failed — non-fatal', {
+      entryId: entry.id,
+      paymentIntentId,
+      error: e instanceof Error ? e.message : String(e),
     });
-    paymentIntentId = result.paymentIntentId;
-    clientSecret = result.clientSecret;
-  } catch (stripeError) {
-    await updateEntry(entry.id, { status: STATUS_CANCELLED, cancellation_reason: 'Payment setup failed' });
-    throw stripeError;
   }
-
-  await updateEntry(entry.id, { stripe_payment_id: paymentIntentId });
 
   await notifyEntry({
     entryId: entry.id,
@@ -104,7 +108,7 @@ export async function joinQueue(
     stationId,
     type: 'queue_joined',
   });
-  return { entry: { ...entry, stripe_payment_id: paymentIntentId }, clientSecret };
+  return { entry, clientSecret };
 }
 
 /**

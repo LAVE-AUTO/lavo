@@ -122,6 +122,9 @@ export function BookingFlow({ station, forfait, qrToken, qrVersion, onClose }: B
     process.env.NODE_ENV !== 'production' &&
     process.env.NEXT_PUBLIC_DEV_SKIP_PAYMENT === 'true';
 
+  // React 18: async setState calls below (setSummaryLoading, setSummaryError, setClientSecret, setPaymentResult)
+  // are safe without a mountedRef guard — React 18 silently ignores setState on unmounted components.
+
   // Called at SummaryStep "Passer au paiement":
   // - book_slot (real): creates reservation → gets client_secret → navigates to payment
   // - book_slot (devSkipPayment): skip API call, navigate directly
