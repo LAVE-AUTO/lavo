@@ -11,6 +11,7 @@ const config: Config = {
     '^@/(.*)$': '<rootDir>/src/$1',
     '^libphonenumber-js$': '<rootDir>/tests/helpers/mocks/libphonenumber-js.ts',
     '^firebase-admin$': '<rootDir>/tests/helpers/mocks/firebase-admin.ts',
+    '^isomorphic-dompurify$': '<rootDir>/tests/helpers/mocks/isomorphic-dompurify.ts',
   },
   testPathIgnorePatterns: ['<rootDir>/node_modules/', '<rootDir>/.next/'],
   collectCoverageFrom: [
