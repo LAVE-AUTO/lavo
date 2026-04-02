@@ -38,17 +38,7 @@ test.describe('admin dashboard page', () => {
   test('four KPI cards are visible on the dashboard', async ({ page }) => {
     await page.goto(ROUTES.adminDashboard);
 
-    /*
-     * AdminKpiRow renders a grid of 4 KpiCard components.
-     * Each KpiCard is a <div> with Tailwind class "rounded-2xl" and contains
-     * a sparkline and a value.
-     *
-     * We select KPI cards by the characteristic combination of classes that
-     * every KpiCard receives.  The selector targets elements that have both
-     * "rounded-2xl" and "shadow-sm" in their class list, which are unique to
-     * KpiCard within the dashboard page.
-     */
-    const kpiCards = page.locator('.rounded-2xl.shadow-sm');
+    const kpiCards = page.locator('[data-testid="kpi-card"]');
     await expect(kpiCards.first()).toBeVisible({ timeout: 15_000 });
     const count = await kpiCards.count();
     expect(count).toBeGreaterThanOrEqual(4);

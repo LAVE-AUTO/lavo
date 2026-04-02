@@ -37,6 +37,7 @@ function Sparkline({ bars, color }: { bars: number[]; color: string }) {
 function KpiCard({ icon, value, label, trendValue, trendLabel, trendUp, sparkline, accentColor, animationDelay }: KpiCardProps) {
   return (
     <div
+      data-testid="kpi-card"
       className="animate-fade-in-up relative overflow-hidden rounded-2xl bg-white p-5 shadow-sm ring-1 ring-black/[0.04] transition-all duration-200 hover:-translate-y-0.5 hover:shadow-md dark:bg-[#1A2416] dark:ring-white/[0.06]"
       style={{ animationDelay }}
     >
