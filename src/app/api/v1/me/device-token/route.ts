@@ -11,6 +11,7 @@ import { successResponse, error400, error500, fromAppError } from '@/lib/respons
 import { AppError } from '@/lib/errors';
 import { applyNoStoreHeaders } from '@/lib/response-headers';
 import { ApiCode } from '@/types/api-codes';
+import { mapZodErrors } from '@/validators/shared';
 import { registerDeviceTokenBodySchema } from '@/validators/device-token';
 import { upsertDeviceToken } from '@/server/notifications/device-token-service';
 
@@ -33,12 +34,8 @@ export async function POST(request: Request): Promise<NextResponse> {
 
   const parsed = registerDeviceTokenBodySchema.safeParse(body);
   if (!parsed.success) {
-    const errors = parsed.error.errors.map((e) => ({
-      field: e.path.join('.'),
-      message: e.message,
-    }));
     return applyNoStoreHeaders(
-      error400('Validation failed', ApiCode.VALIDATION_FAILED, errors)
+      error400('Validation failed', ApiCode.VALIDATION_FAILED, mapZodErrors(parsed.error))
     );
   }
 

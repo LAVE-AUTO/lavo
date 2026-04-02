@@ -16,6 +16,7 @@ import { successResponse, error400, error404, error500, fromAppError } from '@/l
 import { AppError, NotFoundError } from '@/lib/errors';
 import { applyNoStoreHeaders } from '@/lib/response-headers';
 import { ApiCode } from '@/types/api-codes';
+import { mapZodErrors } from '@/validators/shared';
 import { findStationByUserId } from '@/server/station/station-repository';
 import { listDelaysByStation } from '@/server/reservations/delay-service';
 
@@ -43,11 +44,7 @@ export async function GET(request: Request): Promise<NextResponse> {
   const { searchParams } = new URL(request.url);
   const parsed = listDelaysQuerySchema.safeParse(Object.fromEntries(searchParams));
   if (!parsed.success) {
-    const errors = parsed.error.errors.map((e) => ({
-      field: e.path.join('.'),
-      message: e.message,
-    }));
-    return applyNoStoreHeaders(error400('Validation failed', ApiCode.VALIDATION_FAILED, errors));
+    return applyNoStoreHeaders(error400('Validation failed', ApiCode.VALIDATION_FAILED, mapZodErrors(parsed.error)));
   }
 
   const { status, page, per_page } = parsed.data;
