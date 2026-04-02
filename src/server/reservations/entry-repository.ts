@@ -501,6 +501,37 @@ export async function confirmEntryIfPendingPayment(id: string): Promise<Entry | 
   return row;
 }
 
+/**
+ * Cancels an orphaned queue entry only if it is still in 'pending_payment' status with no
+ * stripe_payment_id set. Returns the updated row if the guard matched; otherwise undefined.
+ *
+ * The double guard (status AND stripe_payment_id IS NULL) prevents a race between the cron
+ * and a late-arriving Stripe PaymentIntent: if the walk-in flow has already set a Stripe ID
+ * (or the webhook has already confirmed the entry) the row will not match and the entry is
+ * left untouched.
+ */
+export async function cancelOrphanedEntryIfEligible(
+  id: string,
+  tx: DbTransaction
+): Promise<Entry | undefined> {
+  const [row] = await tx
+    .update(reservations)
+    .set({
+      status: 'cancelled',
+      cancellation_reason: 'Payment setup timeout',
+      updated_at: new Date(),
+    })
+    .where(
+      and(
+        eq(reservations.id, id),
+        eq(reservations.status, 'pending_payment'),
+        isNull(reservations.stripe_payment_id)
+      )
+    )
+    .returning();
+  return row;
+}
+
 const STRIPE_PAYMENT_CANCEL_STATUSES = ['pending_payment', 'confirmed'] as const;
 
 /**

@@ -1,4 +1,4 @@
--- %%%%% Migration 0028: Add device_tokens table %%%%%
+-- %%%%% Migration 0029: Add device_tokens table %%%%%
 -- Stores FCM push notification tokens per user device.
 -- Supports iOS, Android, and web push targets.
 -- Token is unique globally: one device can only be associated with one user at a time.

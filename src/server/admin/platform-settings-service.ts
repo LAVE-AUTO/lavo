@@ -243,7 +243,7 @@ export async function getPlatformSettingWithFallback(
 // Read all settings, or update multiple settings
 
 /**
- * Returns all 14 whitelisted platform setting rows with audit metadata.
+ * Returns all 15 whitelisted platform setting rows with audit metadata.
  *
  * Rows that have never been written are absent from the result.
  * The API layer returns them as-is; the frontend treats missing rows

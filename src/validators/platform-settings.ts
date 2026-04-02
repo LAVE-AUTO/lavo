@@ -1,7 +1,7 @@
 /**
  * Validator for the platform settings API (GET/PATCH /api/v1/admin/settings).
  *
- * All 14 whitelisted keys are declared in ALLOWED_PLATFORM_SETTING_KEYS.
+ * All 15 whitelisted keys are declared in ALLOWED_PLATFORM_SETTING_KEYS.
  * Per-key semantic rules are enforced in the superRefine callback so each
  * failure is reported under the correct key path.
  */
@@ -111,7 +111,7 @@ function addIssue(ctx: z.RefinementCtx, path: string, message: string): void {
  * Bulk platform-settings update schema.
  *
  * Accepts a record of known keys → string values.
- *   - Minimum 1 key required; maximum 14 per request (one per allowed key)
+ *   - Minimum 1 key required; maximum 15 per request (one per allowed key)
  *   - Unknown keys are rejected
  *   - Per-key semantic rules enforce correct types and value ranges via superRefine
  *

@@ -7,13 +7,14 @@
 // %%%%% Mocks %%%%%
 
 const mockFindOrphanedPendingPaymentEntries = jest.fn();
-const mockUpdateEntry = jest.fn();
+const mockCancelOrphanedEntryIfEligible = jest.fn();
 const mockShiftQueuePositions = jest.fn();
 
 jest.mock('@/server/reservations/entry-repository', () => ({
   findOrphanedPendingPaymentEntries: (...args: unknown[]) =>
     mockFindOrphanedPendingPaymentEntries(...args),
-  updateEntry: (...args: unknown[]) => mockUpdateEntry(...args),
+  cancelOrphanedEntryIfEligible: (...args: unknown[]) =>
+    mockCancelOrphanedEntryIfEligible(...args),
   shiftQueuePositions: (...args: unknown[]) => mockShiftQueuePositions(...args),
 }));
 
@@ -57,7 +58,7 @@ const makeEntry = (overrides: Partial<{
 
 beforeEach(() => {
   jest.clearAllMocks();
-  mockUpdateEntry.mockResolvedValue({ id: 'entry-1', status: 'cancelled' });
+  mockCancelOrphanedEntryIfEligible.mockResolvedValue({ id: 'entry-1', status: 'cancelled' });
   mockShiftQueuePositions.mockResolvedValue(undefined);
 });
 
@@ -74,12 +75,8 @@ describe('cleanupOrphanedPaymentEntries', () => {
 
     expect(result).toEqual({ cancelled: 1 });
     expect(mockFindOrphanedPendingPaymentEntries).toHaveBeenCalledWith(15);
-    expect(mockUpdateEntry).toHaveBeenCalledWith(
+    expect(mockCancelOrphanedEntryIfEligible).toHaveBeenCalledWith(
       entry.id,
-      expect.objectContaining({
-        status: 'cancelled',
-        cancellation_reason: 'Payment setup timeout',
-      }),
       expect.anything()
     );
     expect(mockShiftQueuePositions).toHaveBeenCalledWith(
@@ -98,7 +95,7 @@ describe('cleanupOrphanedPaymentEntries', () => {
     const result = await cleanupOrphanedPaymentEntries(15);
 
     expect(result).toEqual({ cancelled: 0 });
-    expect(mockUpdateEntry).not.toHaveBeenCalled();
+    expect(mockCancelOrphanedEntryIfEligible).not.toHaveBeenCalled();
   });
 
   it('does not touch a reservation entry (entry_type !== queue)', async () => {
@@ -109,7 +106,7 @@ describe('cleanupOrphanedPaymentEntries', () => {
     const result = await cleanupOrphanedPaymentEntries(15);
 
     expect(result).toEqual({ cancelled: 0 });
-    expect(mockUpdateEntry).not.toHaveBeenCalled();
+    expect(mockCancelOrphanedEntryIfEligible).not.toHaveBeenCalled();
   });
 
   it('does not cancel an orphaned entry younger than the timeout', async () => {
@@ -120,7 +117,7 @@ describe('cleanupOrphanedPaymentEntries', () => {
     const result = await cleanupOrphanedPaymentEntries(15);
 
     expect(result).toEqual({ cancelled: 0 });
-    expect(mockUpdateEntry).not.toHaveBeenCalled();
+    expect(mockCancelOrphanedEntryIfEligible).not.toHaveBeenCalled();
   });
 
   it('cancels multiple orphaned entries and returns the correct count', async () => {
@@ -134,7 +131,7 @@ describe('cleanupOrphanedPaymentEntries', () => {
     const result = await cleanupOrphanedPaymentEntries(15);
 
     expect(result).toEqual({ cancelled: 3 });
-    expect(mockUpdateEntry).toHaveBeenCalledTimes(3);
+    expect(mockCancelOrphanedEntryIfEligible).toHaveBeenCalledTimes(3);
     expect(mockShiftQueuePositions).toHaveBeenCalledTimes(3);
   });
 
@@ -145,13 +142,25 @@ describe('cleanupOrphanedPaymentEntries', () => {
     ];
     mockFindOrphanedPendingPaymentEntries.mockResolvedValue(entries);
     // First succeeds, second throws.
-    mockUpdateEntry
+    mockCancelOrphanedEntryIfEligible
       .mockResolvedValueOnce({ id: 'entry-1', status: 'cancelled' })
       .mockRejectedValueOnce(new Error('DB error'));
 
     const result = await cleanupOrphanedPaymentEntries(15);
 
     expect(result).toEqual({ cancelled: 1 });
+  });
+
+  it('skips the entry and does not count it when cancelOrphanedEntryIfEligible returns undefined (race condition)', async () => {
+    // Simulates the race where the entry was confirmed between the fetch and the cancel.
+    const entry = makeEntry({ queue_position: 2 });
+    mockFindOrphanedPendingPaymentEntries.mockResolvedValue([entry]);
+    mockCancelOrphanedEntryIfEligible.mockResolvedValue(undefined);
+
+    const result = await cleanupOrphanedPaymentEntries(15);
+
+    expect(result).toEqual({ cancelled: 0 });
+    expect(mockShiftQueuePositions).not.toHaveBeenCalled();
   });
 
   it('skips queue position shift when queue_position is null', async () => {
@@ -161,7 +170,7 @@ describe('cleanupOrphanedPaymentEntries', () => {
     const result = await cleanupOrphanedPaymentEntries(15);
 
     expect(result).toEqual({ cancelled: 1 });
-    expect(mockUpdateEntry).toHaveBeenCalledTimes(1);
+    expect(mockCancelOrphanedEntryIfEligible).toHaveBeenCalledTimes(1);
     expect(mockShiftQueuePositions).not.toHaveBeenCalled();
   });
 
@@ -176,6 +185,6 @@ describe('cleanupOrphanedPaymentEntries', () => {
 
     expect(first).toEqual({ cancelled: 1 });
     expect(second).toEqual({ cancelled: 0 });
-    expect(mockUpdateEntry).toHaveBeenCalledTimes(1);
+    expect(mockCancelOrphanedEntryIfEligible).toHaveBeenCalledTimes(1);
   });
 });

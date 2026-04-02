@@ -5,7 +5,11 @@
  * the queue positions for the affected station atomically.
  */
 import { db } from '@/lib/db';
-import { findOrphanedPendingPaymentEntries, updateEntry, shiftQueuePositions } from './entry-repository';
+import {
+  findOrphanedPendingPaymentEntries,
+  cancelOrphanedEntryIfEligible,
+  shiftQueuePositions,
+} from './entry-repository';
 
 
 // %%%%% Types %%%%%
@@ -38,16 +42,19 @@ export async function cleanupOrphanedPaymentEntries(
     const { id: entryId, user_id: userId, station_id: stationId, queue_position: position } = entry;
 
     try {
+      let wasActuallyCancelled = false;
+
       await db.transaction(async (tx) => {
-        await updateEntry(
-          entryId,
-          {
-            status: 'cancelled',
-            cancellation_reason: 'Payment setup timeout',
-            updated_at: new Date(),
-          },
-          tx
-        );
+        // Guard: only cancel if the entry is still pending_payment with no stripe_payment_id.
+        // This prevents overwriting an entry that was confirmed by a late-arriving Stripe webhook
+        // between the initial fetch and this transaction.
+        const cancelled_row = await cancelOrphanedEntryIfEligible(entryId, tx);
+        if (!cancelled_row) {
+          // Entry was already handled (confirmed or cancelled by another process). Skip.
+          return;
+        }
+
+        wasActuallyCancelled = true;
 
         // Shift entries with a higher position down by 1 to close the gap left by cancellation.
         if (position !== null && position > 0) {
@@ -55,8 +62,12 @@ export async function cleanupOrphanedPaymentEntries(
         }
       });
 
-      cancelled += 1;
-      console.log('[ORPHAN_CLEANUP] Cancelled orphaned entry', { entryId, userId, stationId });
+      if (wasActuallyCancelled) {
+        cancelled += 1;
+        console.log('[ORPHAN_CLEANUP] Cancelled orphaned entry', { entryId, userId, stationId });
+      } else {
+        console.log('[ORPHAN_CLEANUP] Skipped entry (already handled)', { entryId, userId, stationId });
+      }
     } catch (e) {
       console.error('[ORPHAN_CLEANUP] Failed to cancel orphaned entry', {
         entryId,
