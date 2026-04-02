@@ -3,7 +3,7 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { useTranslations } from 'next-intl';
 import { getFromApi } from '@/services/axios-service';
-import { MOCK_DISPUTES, type DisputeRow } from './disputes-mock';
+import type { DisputeRow } from './disputes-mock';
 import { AdminDisputesList } from './AdminDisputesList';
 
 function mapApiStatus(s: string): DisputeRow['status'] {
@@ -31,6 +31,7 @@ export function AdminDisputesContainer() {
   const [query, setQuery] = useState('');
   const [disputes, setDisputes] = useState<DisputeRow[]>([]);
   const [loading, setLoading] = useState(true);
+  const [fetchError, setFetchError] = useState(false);
   const mountedRef = useRef(true);
   useEffect(() => () => { mountedRef.current = false; }, []);
 
@@ -53,12 +54,13 @@ export function AdminDisputesContainer() {
           events: [{ id: `e-${d.id}`, date: d.created_at, label: d.reason, by: 'client' as const }],
         }));
         setDisputes(items);
+        setFetchError(false);
       } else {
-        setDisputes(MOCK_DISPUTES);
+        setFetchError(true);
       }
     } catch {
       if (!mountedRef.current) return;
-      setDisputes(MOCK_DISPUTES);
+      setFetchError(true);
     } finally {
       if (mountedRef.current) setLoading(false);
     }
@@ -109,6 +111,13 @@ export function AdminDisputesContainer() {
         {loading ? (
           <div className="flex items-center justify-center py-16">
             <div className="h-8 w-8 animate-spin rounded-full border-[3px] border-[#C49A1E] border-t-transparent" />
+          </div>
+        ) : fetchError ? (
+          <div className="flex flex-col items-center gap-3 py-24 text-center">
+            <p className="text-[13px] font-semibold text-[#999] dark:text-[#6A6A5A]">{t('fetch_error')}</p>
+            <button type="button" onClick={loadDisputes} className="rounded-xl bg-[#C49A1E] px-4 py-2 text-[12px] font-bold text-[#0C1209] transition-colors hover:bg-[#B08A14]">
+              {t('btn_retry')}
+            </button>
           </div>
         ) : (
           <AdminDisputesList disputes={disputes} query={query} />
