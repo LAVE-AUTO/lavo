@@ -18,7 +18,7 @@ jest.mock('firebase-admin', () => {
         get apps() {
           return (global as Record<string, unknown>).__fakeFirebaseApps as unknown[] ?? [];
         },
-        initializeApp: (...args: unknown[]) => mockInitializeApp(...args),
+        initializeApp: (...args: unknown[]) => (mockInitializeApp as (...a: unknown[]) => unknown)(...args),
         credential: { cert: (c: unknown) => c },
       };
     },

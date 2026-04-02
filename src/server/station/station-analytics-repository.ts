@@ -1,4 +1,4 @@
-import { and, eq, sql } from 'drizzle-orm';
+import { and, eq, sql, type SQL } from 'drizzle-orm';
 
 import { db } from '@/lib/db';
 import { reservations, ratings } from '@/lib/db/schema';
@@ -141,15 +141,15 @@ export async function getAnalyticsTimeSeries(
   from: Date,
   to: Date
 ): Promise<TimeSeriesPoint[]> {
-  let valueExpr: ReturnType<typeof sql>;
+  let valueExpr: SQL<string>;
 
   if (metric === 'revenue') {
-    valueExpr = sql`COALESCE(SUM(${reservations.amount_paid}), 0)::text`;
+    valueExpr = sql<string>`COALESCE(SUM(${reservations.amount_paid}), 0)::text`;
   } else if (metric === 'clients') {
-    valueExpr = sql`COUNT(DISTINCT ${reservations.user_id})::text`;
+    valueExpr = sql<string>`COUNT(DISTINCT ${reservations.user_id})::text`;
   } else {
     // completed
-    valueExpr = sql`COUNT(*)::text`;
+    valueExpr = sql<string>`COUNT(*)::text`;
   }
 
   const rows = await db
