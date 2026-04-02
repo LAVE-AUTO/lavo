@@ -12,6 +12,19 @@ import { NotificationsSection } from '@/components/home/NotificationsSection';
 import { TestimonialsSection } from '@/components/home/TestimonialsSection';
 import { FaqSection } from '@/components/home/FaqSection';
 
+const APP_URL = process.env.NEXT_PUBLIC_APP_URL ?? 'https://lavo.cm';
+
+const organizationJsonLd = {
+  '@context': 'https://schema.org',
+  '@type': 'Organization',
+  name: 'LAVO',
+  url: APP_URL,
+  logo: `${APP_URL}/icons/icon-192x192.png`,
+  description:
+    'LAVO is the booking and payment platform for car wash stations in Cameroon. Find a station, book a slot, and get your car washed effortlessly.',
+  sameAs: [],
+};
+
 type Props = {
   params: Promise<{ locale: string }>;
 };
@@ -22,6 +35,19 @@ export async function generateMetadata({ params }: Props) {
   return {
     title: t('meta_title'),
     description: t('meta_desc'),
+    alternates: {
+      canonical: `${APP_URL}/${locale}`,
+      languages: {
+        fr: `${APP_URL}/fr`,
+        en: `${APP_URL}/en`,
+      },
+    },
+    openGraph: {
+      type: 'website' as const,
+      url: `${APP_URL}/${locale}`,
+      title: t('meta_title'),
+      description: t('meta_desc'),
+    },
   };
 }
 
@@ -31,6 +57,10 @@ export default async function LandingPage({ params }: Props) {
 
   return (
     <>
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(organizationJsonLd) }}
+      />
       <HomeRedirectGuard />
       <PublicNavbar />
       <main className="min-h-screen bg-[#EDEDED] dark:bg-[#0d1f0f] transition-colors">
