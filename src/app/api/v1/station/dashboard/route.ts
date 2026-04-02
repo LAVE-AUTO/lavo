@@ -36,6 +36,7 @@ export async function GET(request: Request): Promise<NextResponse> {
     return applyNoStoreHeaders(successResponse(data));
   } catch (e) {
     if (e instanceof AppError) return applyNoStoreHeaders(fromAppError(e));
-    return applyNoStoreHeaders(error500(e));
+    console.error('[GET /api/v1/station/dashboard] Unhandled error:', e);
+    return applyNoStoreHeaders(error500());
   }
 }

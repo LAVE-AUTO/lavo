@@ -75,6 +75,7 @@ export async function GET(request: Request, { params }: Params): Promise<NextRes
     return applyNoStoreHeaders(successResponse(data));
   } catch (e) {
     if (e instanceof AppError) return applyNoStoreHeaders(fromAppError(e));
-    return applyNoStoreHeaders(error500(e));
+    console.error('[GET /api/v1/station/analytics] Unhandled error:', e);
+    return applyNoStoreHeaders(error500());
   }
 }

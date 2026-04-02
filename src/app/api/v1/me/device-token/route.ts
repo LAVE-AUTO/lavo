@@ -7,13 +7,17 @@
 import type { NextResponse } from 'next/server';
 
 import { requireRole } from '@/lib/require-role';
-import { successResponse, error400, error500, fromAppError } from '@/lib/responses';
+import { successResponse, error400, error429, error500, fromAppError } from '@/lib/responses';
 import { AppError } from '@/lib/errors';
 import { applyNoStoreHeaders } from '@/lib/response-headers';
 import { ApiCode } from '@/types/api-codes';
 import { mapZodErrors } from '@/validators/shared';
 import { registerDeviceTokenBodySchema } from '@/validators/device-token';
 import { upsertDeviceToken } from '@/server/notifications/device-token-service';
+import { createEndpointRateLimiter } from '@/lib/endpoint-rate-limiter';
+
+// SECURITY: rate-limit device token registration to 10 per minute per user
+const deviceTokenLimiter = createEndpointRateLimiter({ maxRequests: 10, windowMs: 60_000 });
 
 
 // %%%%% POST Handler %%%%%
@@ -22,6 +26,10 @@ import { upsertDeviceToken } from '@/server/notifications/device-token-service';
 export async function POST(request: Request): Promise<NextResponse> {
   const auth = await requireRole(request, 'client');
   if (auth instanceof Response) return applyNoStoreHeaders(auth as NextResponse);
+
+  if (deviceTokenLimiter.isRateLimited(auth.sub)) {
+    return applyNoStoreHeaders(error429());
+  }
 
   let body: unknown;
   try {
@@ -48,6 +56,7 @@ export async function POST(request: Request): Promise<NextResponse> {
     );
   } catch (e) {
     if (e instanceof AppError) return applyNoStoreHeaders(fromAppError(e));
-    return applyNoStoreHeaders(error500(e));
+    console.error('[POST /api/v1/me/device-token] Unhandled error:', e);
+    return applyNoStoreHeaders(error500());
   }
 }

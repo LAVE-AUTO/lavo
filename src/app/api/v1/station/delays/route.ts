@@ -86,6 +86,7 @@ export async function GET(request: Request): Promise<NextResponse> {
   } catch (e) {
     if (e instanceof NotFoundError) return applyNoStoreHeaders(error404(e.message));
     if (e instanceof AppError) return applyNoStoreHeaders(fromAppError(e));
-    return applyNoStoreHeaders(error500(e));
+    console.error('[GET /api/v1/station/delays] Unhandled error:', e);
+    return applyNoStoreHeaders(error500());
   }
 }

@@ -44,6 +44,7 @@ export async function GET() {
     const result = await cleanupOrphanedPaymentEntries(resolvedTimeout);
     return successResponse(result, undefined, HTTP_STATUS.OK);
   } catch (e) {
-    return error500(e);
+    console.error('[CRON cleanup-orphaned-payments] Unhandled error:', e);
+    return error500();
   }
 }
