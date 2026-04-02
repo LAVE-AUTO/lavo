@@ -20,6 +20,7 @@
   "dependencies": {
     "@stripe/react-stripe-js": "^6.0.0",
     "@stripe/stripe-js": "^9.0.0",
+    "@swc/helpers": "^0.5.20",
     "axios": "^1.13.6",
     "cloudinary": "^2.9.0",
     "drizzle-orm": "^0.36.4",
