@@ -297,8 +297,8 @@ export default function ReservationDetailPage() {
         setDisputeAmount('');
         showSuccess(t('dispute_success'));
       } else {
-        const msg = (data as { message?: string })?.message ?? '';
-        if (msg.includes('already exists') || msg.includes('DISPUTE_ALREADY_EXISTS')) {
+        const errData = data as { code?: string; message?: string } | null;
+        if (errData?.code === 'CONFLICT' || errData?.code === 'DISPUTE_ALREADY_EXISTS') {
           showError(t('dispute_already_exists'));
         } else {
           showError(t('dispute_error'));
