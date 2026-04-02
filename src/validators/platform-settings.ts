@@ -42,6 +42,7 @@ export const ALLOWED_PLATFORM_SETTING_KEYS = [
   'weekly_report_email',
   'max_rating_comment_length',
   'max_support_message_length',
+  'dispute_window_days',
 ] as const;
 
 export type PlatformSettingKey = (typeof ALLOWED_PLATFORM_SETTING_KEYS)[number];
@@ -130,8 +131,8 @@ export const updatePlatformSettingsSchema = z
     'At least one setting key is required'
   )
   .refine(
-    (obj) => Object.keys(obj).length <= 14,
-    'Cannot update more than 14 settings at once'
+    (obj) => Object.keys(obj).length <= 15,
+    'Cannot update more than 15 settings at once'
   )
   .superRefine((obj, ctx) => {
     // --- Group A: Cancellation policy ---
@@ -190,6 +191,13 @@ export const updatePlatformSettingsSchema = z
       const val = parsePositiveInteger(obj.rating_window_days!);
       if (isNaN(val)) {
         addIssue(ctx, 'rating_window_days', 'rating_window_days must be a positive integer (minimum 1)');
+      }
+    }
+
+    if ('dispute_window_days' in obj) {
+      const val = parsePositiveInteger(obj.dispute_window_days!);
+      if (isNaN(val)) {
+        addIssue(ctx, 'dispute_window_days', 'dispute_window_days must be a positive integer (minimum 1)');
       }
     }
 

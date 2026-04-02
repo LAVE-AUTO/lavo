@@ -4,6 +4,14 @@
  * @jest-environment node
  */
 
+// ─── Platform settings mock ───────────────────────────────────────────────────
+
+const mockGetPlatformSettingWithFallback = jest.fn();
+
+jest.mock('@/server/admin/platform-settings-service', () => ({
+  getPlatformSettingWithFallback: (...args: unknown[]) => mockGetPlatformSettingWithFallback(...args),
+}));
+
 // ─── Repository mocks ─────────────────────────────────────────────────────────
 
 const mockFindDisputeById = jest.fn();
@@ -55,6 +63,7 @@ import {
   NotFoundError,
   ForbiddenError,
   ValidationError,
+  ConflictError,
   DisputeAlreadyExistsError,
   DisputeAlreadyClosedError,
   RefundNotEligibleError,
@@ -77,6 +86,8 @@ const completedReservation = {
   stripe_payment_id: 'pi_test_123',
   stripe_payment_succeeded_at: new Date(),
   stripe_transfer_id: null,
+  completed_at: new Date(),
+  updated_at: new Date(),
 };
 
 const openDispute = {
@@ -106,6 +117,8 @@ describe('createDispute', () => {
     mockReservationsFindFirst.mockResolvedValue(completedReservation);
     mockFindDisputeByReservationId.mockResolvedValue(undefined);
     mockCreateDispute.mockResolvedValue(openDispute);
+    // Default: 30-day window (mirrors the hardcoded default)
+    mockGetPlatformSettingWithFallback.mockResolvedValue('30');
   });
 
   it('creates a dispute for a completed, paid reservation owned by the client', async () => {
@@ -177,31 +190,78 @@ describe('createDispute', () => {
 
   it('throws DisputeAlreadyExistsError when repo.createDispute raises a 23505 DB unique violation', async () => {
     // Simulates concurrent requests: both pass the app-level uniqueness check, second hits the DB constraint.
-    const pgUniqueError = Object.assign(new Error('duplicate key value'), { code: '23505' });
-    mockCreateDispute.mockRejectedValue(pgUniqueError);
+    // The repository layer converts the raw PG 23505 error to DisputeAlreadyExistsError before it reaches the service.
+    mockCreateDispute.mockRejectedValue(new DisputeAlreadyExistsError());
     await expect(createDispute(CLIENT_ID, input)).rejects.toThrow(DisputeAlreadyExistsError);
   });
 
-  it('throws ValidationError when reservation was completed more than 30 days ago', async () => {
+  it('throws ConflictError when reservation was completed more than 30 days ago (default window)', async () => {
     const oldDate = new Date(Date.now() - 31 * 24 * 60 * 60 * 1000);
     mockReservationsFindFirst.mockResolvedValue({
       ...completedReservation,
       completed_at: oldDate,
       updated_at: oldDate,
     });
-    await expect(createDispute(CLIENT_ID, input)).rejects.toThrow(ValidationError);
+    await expect(createDispute(CLIENT_ID, input)).rejects.toThrow(ConflictError);
+    await expect(createDispute(CLIENT_ID, input)).rejects.toThrow('Dispute window has expired');
     expect(mockCreateDispute).not.toHaveBeenCalled();
   });
 
-  it('accepts a dispute opened exactly at the 30-day boundary', async () => {
-    const boundaryDate = new Date(Date.now() - 29 * 24 * 60 * 60 * 1000);
+  it('accepts a dispute opened within the 30-day default window', async () => {
+    const recentDate = new Date(Date.now() - 29 * 24 * 60 * 60 * 1000);
     mockReservationsFindFirst.mockResolvedValue({
       ...completedReservation,
-      completed_at: boundaryDate,
-      updated_at: boundaryDate,
+      completed_at: recentDate,
+      updated_at: recentDate,
     });
     const result = await createDispute(CLIENT_ID, input);
     expect(result.id).toBe(DISPUTE_ID);
+  });
+
+  it('throws ConflictError when outside a custom window configured via platform settings', async () => {
+    // Window is set to 7 days; reservation completed 8 days ago.
+    mockGetPlatformSettingWithFallback.mockResolvedValue('7');
+    const oldDate = new Date(Date.now() - 8 * 24 * 60 * 60 * 1000);
+    mockReservationsFindFirst.mockResolvedValue({
+      ...completedReservation,
+      completed_at: oldDate,
+      updated_at: oldDate,
+    });
+    await expect(createDispute(CLIENT_ID, input)).rejects.toThrow(ConflictError);
+    await expect(createDispute(CLIENT_ID, input)).rejects.toThrow('Dispute window has expired');
+    expect(mockCreateDispute).not.toHaveBeenCalled();
+  });
+
+  it('accepts a dispute within a custom window configured via platform settings', async () => {
+    // Window is set to 7 days; reservation completed 6 days ago.
+    mockGetPlatformSettingWithFallback.mockResolvedValue('7');
+    const recentDate = new Date(Date.now() - 6 * 24 * 60 * 60 * 1000);
+    mockReservationsFindFirst.mockResolvedValue({
+      ...completedReservation,
+      completed_at: recentDate,
+      updated_at: recentDate,
+    });
+    const result = await createDispute(CLIENT_ID, input);
+    expect(result.id).toBe(DISPUTE_ID);
+  });
+
+  it('uses default 30-day window when dispute_window_days setting returns the default string', async () => {
+    // Simulate the fallback path: DB not set, env not set, default '30' returned.
+    mockGetPlatformSettingWithFallback.mockResolvedValue('30');
+    // Reservation completed 31 days ago — should be rejected.
+    const oldDate = new Date(Date.now() - 31 * 24 * 60 * 60 * 1000);
+    mockReservationsFindFirst.mockResolvedValue({
+      ...completedReservation,
+      completed_at: oldDate,
+      updated_at: oldDate,
+    });
+    await expect(createDispute(CLIENT_ID, input)).rejects.toThrow(ConflictError);
+    // Verify the correct key and env var are passed to the fallback helper.
+    expect(mockGetPlatformSettingWithFallback).toHaveBeenCalledWith(
+      'dispute_window_days',
+      'PLATFORM_DISPUTE_WINDOW_DAYS',
+      '30'
+    );
   });
 });
 
@@ -279,7 +339,7 @@ describe('refundDispute', () => {
   it('issues a full refund and returns updated dispute', async () => {
     const result = await refundDispute(ADMIN_ID, DISPUTE_ID, {});
     expect(result.status).toBe('refunded');
-    expect(mockRefundPaymentIntent).toHaveBeenCalledWith('pi_test_123', undefined);
+    expect(mockRefundPaymentIntent).toHaveBeenCalledWith('pi_test_123', undefined, `refund_dispute_${DISPUTE_ID}`);
     expect(mockUpdateDispute).toHaveBeenCalledWith(
       DISPUTE_ID,
       expect.objectContaining({ status: 'refunded', refunded_amount: '50.00', stripe_refund_id: 're_test_456' }),
@@ -290,7 +350,7 @@ describe('refundDispute', () => {
   it('issues a partial refund when amount is provided', async () => {
     mockUpdateDispute.mockResolvedValue({ ...refundedDispute, refunded_amount: '20.00' });
     const result = await refundDispute(ADMIN_ID, DISPUTE_ID, { amount: 20 });
-    expect(mockRefundPaymentIntent).toHaveBeenCalledWith('pi_test_123', 2000);
+    expect(mockRefundPaymentIntent).toHaveBeenCalledWith('pi_test_123', 2000, `refund_dispute_${DISPUTE_ID}`);
     expect(result.refunded_amount).toBe('20.00');
   });
 

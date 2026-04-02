@@ -8,23 +8,24 @@ import {
   DisputeAlreadyClosedError,
   RefundNotEligibleError,
   ValidationError,
+  ConflictError,
 } from '@/lib/errors';
 import { refundPaymentIntent } from '@/server/payments/payment-service';
+import { getPlatformSettingWithFallback } from '@/server/admin/platform-settings-service';
 import * as repo from './dispute-repository';
 import type { CreateDisputeInput, RefundDisputeInput, CloseDisputeInput, ListDisputesQuery } from '@/validators/dispute';
-
-// ─── Client ───────────────────────────────────────────────────────────────────
-
-/** Maximum number of days after reservation completion within which a dispute can be opened. */
-const DISPUTE_WINDOW_DAYS = 30;
 
 /**
  * Creates a dispute for a completed, paid reservation.
  * Validates ownership, payment status, time window, and uniqueness before inserting.
  *
+ * The dispute filing window is configurable via the `dispute_window_days` platform setting
+ * (DB → PLATFORM_DISPUTE_WINDOW_DAYS env var → 30-day default).
+ *
  * @throws NotFoundError — reservation not found
  * @throws ForbiddenError — reservation does not belong to the client
- * @throws ValidationError — reservation not completed, not paid, or outside the 30-day window
+ * @throws ValidationError — reservation not completed or not paid
+ * @throws ConflictError — dispute window has expired
  * @throws DisputeAlreadyExistsError — a dispute already exists for this reservation
  */
 export async function createDispute(
@@ -48,13 +49,19 @@ export async function createDispute(
     throw new ValidationError('Reservation has no confirmed payment');
   }
 
-  // Enforce the dispute filing window (30 days from completion).
+  // Enforce the dispute filing window (configurable, default 30 days from completion).
+  const windowDays = parseInt(
+    await getPlatformSettingWithFallback(
+      'dispute_window_days',
+      'PLATFORM_DISPUTE_WINDOW_DAYS',
+      '30'
+    ),
+    10
+  );
   const completedAt = reservation.completed_at ?? reservation.updated_at;
-  const windowMs = DISPUTE_WINDOW_DAYS * 24 * 60 * 60 * 1000;
+  const windowMs = windowDays * 24 * 60 * 60 * 1000;
   if (Date.now() - completedAt.getTime() > windowMs) {
-    throw new ValidationError(
-      `Disputes must be opened within ${DISPUTE_WINDOW_DAYS} days of reservation completion`
-    );
+    throw new ConflictError('Dispute window has expired');
   }
 
   // SECURITY: requested_amount must not exceed what was actually paid
