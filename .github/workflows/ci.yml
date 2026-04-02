@@ -99,6 +99,7 @@ jobs:
     runs-on: ubuntu-latest
     # Disabled — no staging server is available yet.  See activation checklist above.
     if: false
+    needs: [ci]
     steps:
       - uses: actions/checkout@v4
 
@@ -115,7 +116,9 @@ jobs:
       - name: Run E2E tests
         run: npm run test:e2e
         env:
-          PLAYWRIGHT_BASE_URL: http://localhost:3000
+          # Replace with the staging URL — must be set as a GitHub secret (PLAYWRIGHT_BASE_URL).
+          # See activation checklist above. localhost:3000 will NOT work in CI without a webServer.
+          PLAYWRIGHT_BASE_URL: ${{ secrets.PLAYWRIGHT_BASE_URL }}
           # Credentials — define the following in GitHub Secrets:
           # E2E_CLIENT_EMAIL, E2E_CLIENT_PASSWORD
           # E2E_STATION_EMAIL, E2E_STATION_PASSWORD

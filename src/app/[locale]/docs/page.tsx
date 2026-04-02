@@ -4,13 +4,17 @@
  * /docs — Swagger UI viewer for the Lavo OpenAPI specification.
  *
  * Displays the full API documentation by loading the spec from GET /api/docs.
- * This page is accessible in all environments. A banner is shown in non-production
- * environments to indicate the docs are intended for development and staging only.
+ *
+ * In production the backing /api/docs endpoint returns 404 unless
+ * ENABLE_API_DOCS=true, so even if this page is rendered it will not
+ * display any spec content.
  *
  * Implementation notes:
  * - Uses 'use client' because swagger-ui-react requires browser APIs.
  * - Dynamic import is used to avoid SSR errors from swagger-ui-react.
- * - No authentication is required to view the docs.
+ * - No authentication is required to view the docs (the endpoint itself
+ *   is the control point).
+ * - tryItOutEnabled is disabled to reduce accidental mutation risk.
  */
 import dynamic from 'next/dynamic';
 import 'swagger-ui-react/swagger-ui.css';
@@ -57,7 +61,6 @@ export default function ApiDocsPage() {
         docExpansion="list"
         defaultModelsExpandDepth={1}
         persistAuthorization
-        tryItOutEnabled
         filter
         deepLinking
       />

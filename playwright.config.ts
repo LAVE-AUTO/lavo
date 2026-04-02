@@ -44,7 +44,7 @@ export default defineConfig({
 
     /* Capture screenshot and trace only on failure to keep artifact size small. */
     screenshot: 'only-on-failure',
-    trace: 'on-first-retry',
+    trace: 'retain-on-failure',
   },
 
   projects: [

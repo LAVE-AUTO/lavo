@@ -17,6 +17,9 @@ let cachedSpec: ReturnType<typeof swaggerJsdoc> | null = null;
 /**
  * Returns the fully assembled OpenAPI spec object.
  * The result is memoized after the first call.
+ *
+ * Throws if the annotation scan encounters errors (failOnErrors: true)
+ * so broken annotations are caught early instead of producing a partial spec.
  */
 export function buildOpenApiSpec(): ReturnType<typeof swaggerJsdoc> {
   if (cachedSpec) return cachedSpec;
@@ -28,9 +31,12 @@ export function buildOpenApiSpec(): ReturnType<typeof swaggerJsdoc> {
     definition: swaggerDefinition,
     // Scan every route.ts file under /api/v1/ for @swagger JSDoc annotations.
     apis: [`${apiDir}/**/*.ts`],
-    failOnErrors: false,
+    failOnErrors: true,
   };
 
-  cachedSpec = swaggerJsdoc(options);
+  const spec = swaggerJsdoc(options);
+
+  // Freeze the cached object so request handlers cannot mutate it (cache poisoning).
+  cachedSpec = Object.freeze(spec) as ReturnType<typeof swaggerJsdoc>;
   return cachedSpec;
 }

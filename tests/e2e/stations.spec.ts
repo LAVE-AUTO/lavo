@@ -54,13 +54,9 @@ test.describe('public station list page', () => {
      */
     await expect(page).toHaveURL(/\/stations\/|\/login/, { timeout: 10_000 });
 
-    if (href) {
-      // When redirected to login, the callbackUrl query param must reference the station
-      const currentUrl = page.url();
-      const isOnStationPage = currentUrl.includes('/stations/');
-      const isOnLoginPage   = currentUrl.includes('/login');
-      expect(isOnStationPage || isOnLoginPage).toBe(true);
-    }
+    // The toHaveURL assertion above already guarantees the URL matches /stations/ or /login.
+    // No additional assertion is needed — the dead code block has been removed.
+    void href;
   });
 });
 
