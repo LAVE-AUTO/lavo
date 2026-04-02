@@ -11,11 +11,30 @@ import { ConflictError, NotFoundError } from '@/lib/errors';
 import { findStationById } from '@/server/station/station-repository';
 import { notifyEntry } from '@/server/notifications/notification-service';
 import { findEntryByIdAndStation, findEntryByIdAndUser } from './entry-repository';
+import {
+  listDelayRequestsByStation,
+  type DelayRequestWithReservation,
+  type ListDelaysOptions,
+} from './delay-repository';
 
 export type DelayRequest = typeof delayRequests.$inferSelect;
+export type { DelayRequestWithReservation, ListDelaysOptions };
 
 const ACTIVE_DELAY_STATUSES = ['pending', 'accepted'] as const;
 const SIGNAL_ALLOWED_STATUSES = ['confirmed'] as const;
+
+/**
+ * Returns a paginated list of delay requests for the given station.
+ *
+ * @param stationId - UUID of the authenticated station
+ * @param options   - Optional status filter ('pending' | 'accepted' | 'refused' | 'all') and pagination
+ */
+export async function listDelaysByStation(
+  stationId: string,
+  options: ListDelaysOptions = {}
+): Promise<{ rows: DelayRequestWithReservation[]; total: number; page: number; perPage: number }> {
+  return listDelayRequestsByStation(stationId, options);
+}
 
 /**
  * Client signals they will be late for their reservation.
