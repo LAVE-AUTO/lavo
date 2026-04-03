@@ -1,7 +1,5 @@
 'use client';
 
-// TODO: disputes data — connect to API once GET /admin/disputes endpoint is available
-
 import { useEffect, useState } from 'react';
 import { useTranslations } from 'next-intl';
 import { Link } from '@/i18n/navigation';
@@ -13,19 +11,21 @@ interface Station {
   created_at: string;
 }
 
-interface MockDispute {
+interface ApiDispute {
+  id: string;
+  client_id: string;
+  status: string;
+  requested_amount: string | null;
+  created_at: string;
+}
+
+interface DisputeAlert {
   id: string;
   client: string;
   amount: string;
   date: string;
   urgent: boolean;
 }
-
-const MOCK_DISPUTES: MockDispute[] = [
-  { id: 'd-1', client: 'Marc Dupont',    amount: '25 $',  date: '2026-03-22T10:00:00Z', urgent: true  },
-  { id: 'd-2', client: 'Sophie Laurent', amount: '40 $',  date: '2026-03-21T14:30:00Z', urgent: false },
-  { id: 'd-3', client: 'Jean Tremblay',  amount: '15 $',  date: '2026-03-20T09:15:00Z', urgent: false },
-];
 
 function initials(name: string): string {
   return name.split(' ').map((w) => w[0]).join('').slice(0, 2).toUpperCase();
@@ -115,15 +115,45 @@ export function AdminAlertsSection() {
   const [stations, setStations]     = useState<Station[]>([]);
   const [kycLoading, setKycLoading] = useState(true);
   const [kycError, setKycError]     = useState(false);
+  const [disputes, setDisputes]         = useState<DisputeAlert[]>([]);
+  const [disputesLoading, setDisputesLoading] = useState(true);
 
   useEffect(() => {
     let mounted = true;
     async function load() {
-      const [ok, data] = await getFromApi<{ data: { stations: Station[]; meta: unknown } }>('/admin/stations');
-      if (!mounted) return;
-      if (ok) setStations((data as { data: { stations: Station[] } }).data?.stations ?? []);
-      else setKycError(true);
-      setKycLoading(false);
+      try {
+        const [okKyc, dataKyc] = await getFromApi('/admin/stations');
+        if (!mounted) return;
+        if (okKyc) setStations((dataKyc as { data: { stations: Station[] } }).data?.stations ?? []);
+        else setKycError(true);
+      } catch {
+        if (mounted) setKycError(true);
+      } finally {
+        if (mounted) setKycLoading(false);
+      }
+
+      try {
+        const [okD, dataD] = await getFromApi('/admin/disputes');
+        if (!mounted) return;
+        if (okD) {
+          const items = (dataD as { data: { items: ApiDispute[] } }).data?.items ?? [];
+          const openDisputes = items
+            .filter((d) => d.status === 'open')
+            .slice(0, 5)
+            .map((d): DisputeAlert => ({
+              id: d.id,
+              client: d.client_id.slice(0, 8),
+              amount: d.requested_amount ? `${parseFloat(d.requested_amount).toFixed(0)} $` : '-',
+              date: d.created_at,
+              urgent: Date.now() - new Date(d.created_at).getTime() > 3 * 24 * 60 * 60 * 1000,
+            }));
+          setDisputes(openDisputes);
+        }
+      } catch {
+        // keep empty
+      } finally {
+        if (mounted) setDisputesLoading(false);
+      }
     }
     load();
     return () => { mounted = false; };
@@ -172,17 +202,20 @@ export function AdminAlertsSection() {
       <SectionPanel
         icon={<DisputeIcon />}
         title={t('alert_disputes_title')}
-        count={MOCK_DISPUTES.length}
+        count={disputes.length}
         color="#E8472A"
         actionLabel={t('alert_disputes_action')}
         actionHref="/admin/disputes"
-        mockBadge={t('kpi_mock_note')}
-        empty={false}
+        empty={!disputesLoading && disputes.length === 0}
         emptyLabel={t('alert_disputes_empty')}
       >
-        {MOCK_DISPUTES.map((d, i) => (
-          <div
+        {disputesLoading && (
+          <div className="px-5 py-4 text-[11px] text-[#AAA] dark:text-[#4A4A3A]">{t('alert_disputes_loading')}</div>
+        )}
+        {!disputesLoading && disputes.map((d, i) => (
+          <Link
             key={d.id}
+            href={`/admin/disputes/${d.id}` as Parameters<typeof Link>[0]['href']}
             className={`flex items-center gap-3 px-5 py-3 transition-colors hover:bg-[#F8F6EE] dark:hover:bg-[#182214]${i > 0 ? ' border-t border-[#F0EDE0] dark:border-[#1E2A1A]' : ''}`}
           >
             <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-[#E8472A]/10 text-[11px] font-black text-[#E8472A]">
@@ -200,7 +233,7 @@ export function AdminAlertsSection() {
                 </span>
               )}
             </div>
-          </div>
+          </Link>
         ))}
       </SectionPanel>
     </div>

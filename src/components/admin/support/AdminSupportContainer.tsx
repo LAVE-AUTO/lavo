@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { useTranslations } from 'next-intl';
 import { MOCK_TICKETS } from '@/components/support/support-mock';
 import { AdminSupportList } from './AdminSupportList';
+import { AdminSupportSettings } from './AdminSupportSettings';
 
 const STAT_CARDS = [
   { key: 'open',        labelKey: 'status_open',        color: '#F97316', bg: 'bg-[#FFF4EC] dark:bg-[#F97316]/8',  ring: 'ring-[#F97316]/20', text: 'text-[#C2410C] dark:text-[#F97316]' },
@@ -15,6 +16,7 @@ const STAT_CARDS = [
 export function AdminSupportContainer() {
   const t     = useTranslations('admin_support');
   const [query, setQuery] = useState('');
+  const [showSettings, setShowSettings] = useState(false);
 
   // TODO: replace with getFromApi('/admin/support/tickets') once endpoint is available
   const tickets = MOCK_TICKETS;
@@ -32,18 +34,30 @@ export function AdminSupportContainer() {
             <p className="mt-0.5 text-[12px] text-[#888] dark:text-[#6A6A5A]">{t('page_subtitle')}</p>
           </div>
 
-          {/* Search */}
-          <div className="relative mt-1">
-            <svg className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-[#BBBBAA] dark:text-[#4A4A3A]" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" aria-hidden="true">
-              <circle cx="11" cy="11" r="8" /><path d="m21 21-4.35-4.35" />
-            </svg>
-            <input
-              type="text"
-              value={query}
-              onChange={(e) => setQuery(e.target.value)}
-              placeholder={t('search_placeholder')}
-              className="w-[220px] rounded-[8px] border border-[#D8D4C8] bg-white py-2 pl-8 pr-3 text-[12px] text-[#1A1A0A] outline-none transition-all focus:border-[#C49A1E] focus:shadow-[0_0_0_3px_rgba(196,154,30,0.10)] dark:border-[#243020] dark:bg-[#0F1A0C] dark:text-[#F0EDD4] dark:focus:border-[#C49A1E]"
-            />
+          {/* Search + settings toggle */}
+          <div className="flex items-center gap-2 mt-1">
+            <button type="button" onClick={() => setShowSettings((v) => !v)}
+              className={[
+                'flex items-center gap-1.5 rounded-[8px] border px-3 py-2 text-[12px] font-semibold transition-colors',
+                showSettings
+                  ? 'border-[#C49A1E]/40 bg-[#C49A1E]/10 text-[#C49A1E]'
+                  : 'border-[#D8D4C8] text-[#888] hover:border-[#C49A1E]/40 hover:text-[#C49A1E] dark:border-[#243020] dark:text-[#6A6A5A]',
+              ].join(' ')}>
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="3" /><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 01-2.83 2.83l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83-2.83l.06-.06A1.65 1.65 0 004.68 15a1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 012.83-2.83l.06.06A1.65 1.65 0 009 4.68a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 2.83l-.06.06A1.65 1.65 0 0019.4 9a1.65 1.65 0 001.51 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z" /></svg>
+              {t('btn_settings')}
+            </button>
+            <div className="relative">
+              <svg className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-[#BBBBAA] dark:text-[#4A4A3A]" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" aria-hidden="true">
+                <circle cx="11" cy="11" r="8" /><path d="m21 21-4.35-4.35" />
+              </svg>
+              <input
+                type="text"
+                value={query}
+                onChange={(e) => setQuery(e.target.value)}
+                placeholder={t('search_placeholder')}
+                className="w-[220px] rounded-[8px] border border-[#D8D4C8] bg-white py-2 pl-8 pr-3 text-[12px] text-[#1A1A0A] outline-none transition-all focus:border-[#C49A1E] focus:shadow-[0_0_0_3px_rgba(196,154,30,0.10)] dark:border-[#243020] dark:bg-[#0F1A0C] dark:text-[#F0EDD4] dark:focus:border-[#C49A1E]"
+              />
+            </div>
           </div>
         </div>
 
@@ -64,6 +78,11 @@ export function AdminSupportContainer() {
 
       {/* Content */}
       <div className="flex-1 overflow-y-auto bg-[#F5F5EE] p-6 dark:bg-[#0C1209]">
+        {showSettings && (
+          <div className="mb-6">
+            <AdminSupportSettings />
+          </div>
+        )}
         <AdminSupportList tickets={tickets} query={query} />
       </div>
     </div>

@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useRef } from 'react';
 import { useTranslations } from 'next-intl';
-import { deleteWithApi } from '@/services';
+import { deleteWithApi, getAxiosInstance } from '@/services';
 import type { CreatedSlot } from './SlotModal';
 
 interface StationSlotListProps {
@@ -36,6 +36,8 @@ export function StationSlotList({
 }: StationSlotListProps) {
   const t = useTranslations('station_config');
   const [deletingId, setDeletingId] = useState<string | null>(null);
+  const [selected, setSelected] = useState<Set<string>>(new Set());
+  const [bulkDeleting, setBulkDeleting] = useState(false);
   const mountedRef = useRef(true);
   useEffect(() => { mountedRef.current = true; return () => { mountedRef.current = false; }; }, []);
 
@@ -45,6 +47,41 @@ export function StationSlotList({
     if (!mountedRef.current) return;
     setDeletingId(null);
     if (ok) onDeleted(id);
+  }
+
+  function toggleSelect(id: string) {
+    setSelected((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id); else next.add(id);
+      return next;
+    });
+  }
+
+  function toggleAll() {
+    if (selected.size === slots.length) {
+      setSelected(new Set());
+    } else {
+      setSelected(new Set(slots.map((s) => s.id)));
+    }
+  }
+
+  async function handleBulkDelete() {
+    if (selected.size === 0) return;
+    setBulkDeleting(true);
+    try {
+      const res = await getAxiosInstance().delete<{ data: { deleted: string[]; failed?: { id: string; reason: string }[] } }>(
+        '/station/slots',
+        { data: { ids: Array.from(selected) } },
+      );
+      if (!mountedRef.current) return;
+      const deleted = res.data?.data?.deleted ?? Array.from(selected);
+      for (const id of deleted) onDeleted(id);
+      setSelected(new Set());
+    } catch {
+      // silent — individual failures handled by backend partial response
+    } finally {
+      if (mountedRef.current) setBulkDeleting(false);
+    }
   }
 
   const statusLabel: Record<string, string> = {
@@ -63,6 +100,12 @@ export function StationSlotList({
           <span className="rounded-full bg-[#FDF3D8] px-2 py-0.5 text-[11px] font-bold text-[#C49A1E] dark:bg-[#2A1E08]">
             {slots.length}
           </span>
+        )}
+        {selected.size > 0 && (
+          <button type="button" onClick={handleBulkDelete} disabled={bulkDeleting}
+            className="rounded-[8px] bg-[#EF4444] px-3 py-1.5 text-[11px] font-bold text-white transition-opacity hover:opacity-80 disabled:opacity-50">
+            {bulkDeleting ? t('deleting') : t('btn_delete_selected', { n: selected.size })}
+          </button>
         )}
         <div className="flex flex-wrap items-center gap-2">
           <input
@@ -96,12 +139,30 @@ export function StationSlotList({
           </div>
         ) : (
           <div className="flex flex-col gap-2">
+            {slots.length > 1 && (
+              <label className="flex items-center gap-2 px-4 py-1 text-[11px] font-semibold text-[#888] dark:text-[#6A6A5A] cursor-pointer select-none">
+                <input
+                  type="checkbox"
+                  checked={selected.size === slots.length}
+                  onChange={toggleAll}
+                  className="accent-[#C49A1E] h-3.5 w-3.5"
+                />
+                {t('select_all')}
+              </label>
+            )}
             {slots.map((slot) => {
               const st = statusConfig[slot.status] ?? statusConfig.blocked;
               const fillPct = slot.capacity > 0 ? Math.round((slot.booked_count / slot.capacity) * 100) : 0;
               return (
                 <div key={slot.id}
                   className="flex items-center gap-4 rounded-[10px] border border-[#EDEBE5] bg-[#FAFAF7] px-4 py-3 transition-shadow hover:shadow-sm dark:border-[#243020] dark:bg-[#0D170A]">
+                  {/* Checkbox */}
+                  <input
+                    type="checkbox"
+                    checked={selected.has(slot.id)}
+                    onChange={() => toggleSelect(slot.id)}
+                    className="accent-[#C49A1E] h-3.5 w-3.5 shrink-0 cursor-pointer"
+                  />
                   {/* Status dot */}
                   <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-[8px]" style={{ background: st.bg }}>
                     <span className="h-2 w-2 rounded-full" style={{ background: st.color }} />

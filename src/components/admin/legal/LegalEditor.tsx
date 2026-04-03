@@ -2,6 +2,7 @@
 
 import { useRef, useLayoutEffect } from 'react';
 import { useTranslations } from 'next-intl';
+import DOMPurify from 'dompurify';
 
 interface Props {
   pageKey: string;
@@ -16,7 +17,7 @@ export function LegalEditor({ pageKey, html, onChange, disabled = false }: Props
 
   // Synchronously set content on page switch (avoids blank flash)
   useLayoutEffect(() => {
-    if (editorRef.current) editorRef.current.innerHTML = html;
+    if (editorRef.current) editorRef.current.innerHTML = DOMPurify.sanitize(html);
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [pageKey]); // intentionally only on page change — not on every html update
 
@@ -71,7 +72,7 @@ export function LegalEditor({ pageKey, html, onChange, disabled = false }: Props
         aria-multiline="true"
         contentEditable={!disabled}
         suppressContentEditableWarning
-        onInput={() => { if (editorRef.current) onChange(editorRef.current.innerHTML); }}
+        onInput={() => { if (editorRef.current) onChange(DOMPurify.sanitize(editorRef.current.innerHTML)); }}
         className={[
           'min-h-[420px] overflow-y-auto p-4 text-[13px] leading-relaxed outline-none',
           'text-[#1A1A0A] dark:text-[#F0EDD4]',

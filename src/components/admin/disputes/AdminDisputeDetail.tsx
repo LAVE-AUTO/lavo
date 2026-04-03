@@ -4,7 +4,8 @@ import { useState, useRef, useEffect } from 'react';
 import { useTranslations } from 'next-intl';
 import { Link } from '@/i18n/navigation';
 import { useToast } from '@/context/toast-context';
-import { MOCK_DISPUTES, type DisputeRow, type DisputeStatus, type TimelineActor } from './disputes-mock';
+import { getFromApi, postWithApi } from '@/services/axios-service';
+import type { DisputeRow, DisputeStatus, TimelineActor } from './disputes-mock';
 import { AdminDisputeActionModal, type ModalMode } from './AdminDisputeActionModal';
 
 const STATUS_STYLE: Record<DisputeStatus, { bar: string; badge: string; dot: string; label: string }> = {
@@ -39,14 +40,63 @@ interface Props { id: string }
 
 export function AdminDisputeDetail({ id }: Props) {
   const t = useTranslations('admin_disputes');
-  const { success: toastSuccess } = useToast();
+  const { success: toastSuccess, error: toastError } = useToast();
   const mountedRef = useRef(true);
   useEffect(() => { mountedRef.current = true; return () => { mountedRef.current = false; }; }, []);
 
-  // TODO: replace with getFromApi('/admin/disputes/:id') once endpoint is available
-  const [dispute, setDispute] = useState<DisputeRow | undefined>(() => MOCK_DISPUTES.find((d) => d.id === id));
+  const [dispute, setDispute] = useState<DisputeRow | undefined>(undefined);
+  const [loading, setLoading] = useState(true);
   const [modal, setModal]     = useState<ModalMode | null>(null);
   const [busy, setBusy]       = useState(false);
+
+  interface ApiDispute {
+    id: string; reason: string; description: string | null; status: string;
+    requested_amount: string | null; refunded_amount: string | null;
+    client_id: string; station_id: string; reservation_id: string; created_at: string;
+    station: { id: string; name: string; city: string; address: string } | null;
+  }
+
+  function mapApiStatus(s: string): DisputeStatus {
+    if (s === 'refunded') return 'refunded_full';
+    if (s === 'resolved' || s === 'rejected') return 'closed';
+    return 'open';
+  }
+
+  useEffect(() => {
+    (async () => {
+      try {
+        const [ok, data] = await getFromApi('/admin/disputes');
+        if (!mountedRef.current) return;
+        if (ok) {
+          const items = ((data as { data: { items: ApiDispute[] } }).data?.items) ?? [];
+          const found = items.find((d) => d.id === id);
+          if (found) {
+            setDispute({
+              id: found.id,
+              client: { name: found.client_id.slice(0, 8), email: '' },
+              station: { name: found.station?.name ?? '', city: found.station?.city ?? '' },
+              reservation: { id: found.reservation_id, date: found.created_at, amount_paid: parseFloat(found.requested_amount ?? '0'), vehicle_format: '', status: '' },
+              reason: found.reason,
+              status: mapApiStatus(found.status),
+              created_at: found.created_at,
+              events: [{ id: `e-${found.id}`, date: found.created_at, label: found.reason, by: 'client' as const }],
+            });
+          }
+        }
+      } catch {
+        // keep undefined
+      } finally {
+        if (mountedRef.current) setLoading(false);
+      }
+    })();
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [id]);
+
+  if (loading) return (
+    <div className="flex items-center justify-center py-32">
+      <div className="h-8 w-8 animate-spin rounded-full border-[3px] border-[#C49A1E] border-t-transparent" />
+    </div>
+  );
 
   if (!dispute) return (
     <div className="flex flex-col items-center gap-4 py-32">
@@ -66,12 +116,30 @@ export function AdminDisputeDetail({ id }: Props) {
   async function handleAction(payload: { amount?: number; reason?: string }) {
     if (!dispute) return;
     setBusy(true);
+
     try {
-      // TODO: connect to API once endpoint is available (POST /admin/disputes/:id/refund or /close)
-      await new Promise((r) => setTimeout(r, 700));
+      let ok = false;
+      if (modal === 'refund_full' || modal === 'refund_partial') {
+        const body: Record<string, unknown> = {};
+        if (modal === 'refund_partial' && payload.amount) body.amount = payload.amount;
+        const [success] = await postWithApi(`/admin/disputes/${dispute.id}/refund`, body);
+        ok = success;
+      } else if (modal === 'close_dispute') {
+        const [success] = await postWithApi(`/admin/disputes/${dispute.id}/close`, {
+          status: 'rejected',
+          reason: payload.reason ?? '',
+        });
+        ok = success;
+      }
+
       if (!mountedRef.current) return;
 
-      // Update state only after simulated success (will be inside if (success) once API is connected)
+      if (!ok) {
+        toastError(t('action_error'));
+        setModal(null);
+        return;
+      }
+
       let newStatus: DisputeStatus = dispute.status;
       let eventLabel = '';
       if (modal === 'refund_full')    { newStatus = 'refunded_full';    eventLabel = t('event_refund_full',    { amount: formatAmount(dispute.reservation.amount_paid) }); }
@@ -86,8 +154,11 @@ export function AdminDisputeDetail({ id }: Props) {
       if (modal === 'refund_full')    toastSuccess(t('toast_refunded_full'));
       if (modal === 'refund_partial') toastSuccess(t('toast_refunded_partial'));
       if (modal === 'close_dispute')  toastSuccess(t('toast_closed'));
+      setModal(null);
+    } catch {
+      if (mountedRef.current) toastError(t('action_error'));
     } finally {
-      if (mountedRef.current) { setBusy(false); setModal(null); }
+      if (mountedRef.current) setBusy(false);
     }
   }
 

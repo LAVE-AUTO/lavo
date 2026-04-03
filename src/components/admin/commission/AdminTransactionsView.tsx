@@ -1,21 +1,27 @@
 'use client';
 
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useEffect, useRef } from 'react';
 import { useTranslations } from 'next-intl';
 import { useToast } from '@/context/toast-context';
+import { getFromApi } from '@/services/axios-service';
 import { AdminTransactionDrawer, type TxRow, type TxStatus } from './AdminTransactionDrawer';
 
-// MOCK DATA — replace with API call before shipping (GET /admin/transactions)
-const MOCK_TRANSACTIONS: TxRow[] = process.env.NODE_ENV === 'development' ? [
-  { id: 't1', stripe_id: 'pi_3QzK1A2eZvKYlo2C1XaM0001', station: 'Wash Express MTL',   client: 'Client A', gross: 29.99, commission: 3.00, payout: 26.99, status: 'succeeded', date: '2026-03-22T14:32:00Z' },
-  { id: 't2', stripe_id: 'pi_3QzK1A2eZvKYlo2C1XaM0002', station: 'AutoBrille Laval',   client: 'Client B', gross: 44.50, commission: 4.45, payout: 40.05, status: 'refunded',  date: '2026-03-21T11:05:00Z' },
-  { id: 't3', stripe_id: 'pi_3QzK1A2eZvKYlo2C1XaM0003', station: 'CleanCar Brossard',  client: 'Client C', gross: 19.99, commission: 2.00, payout: 17.99, status: 'succeeded', date: '2026-03-20T09:48:00Z' },
-  { id: 't4', stripe_id: 'pi_3QzK1A2eZvKYlo2C1XaM0004', station: 'Wash Express MTL',   client: 'Client D', gross: 34.99, commission: 3.50, payout: 31.49, status: 'succeeded', date: '2026-03-19T16:20:00Z' },
-  { id: 't5', stripe_id: 'pi_3QzK1A2eZvKYlo2C1XaM0005', station: 'NettoCar Longueuil', client: 'Client E', gross: 54.99, commission: 5.50, payout: 49.49, status: 'failed',    date: '2026-03-18T08:15:00Z' },
-  { id: 't6', stripe_id: 'pi_3QzK1A2eZvKYlo2C1XaM0006', station: 'AutoBrille Laval',   client: 'Client F', gross: 24.99, commission: 2.50, payout: 22.49, status: 'succeeded', date: '2026-03-17T13:55:00Z' },
-  { id: 't7', stripe_id: 'pi_3QzK1A2eZvKYlo2C1XaM0007', station: 'Wash Express MTL',   client: 'Client A', gross: 29.99, commission: 3.00, payout: 26.99, status: 'succeeded', date: '2026-03-15T10:30:00Z' },
-  { id: 't8', stripe_id: 'pi_3QzK1A2eZvKYlo2C1XaM0008', station: 'CleanCar Brossard',  client: 'Client B', gross: 19.99, commission: 2.00, payout: 17.99, status: 'refunded',  date: '2026-03-14T07:45:00Z' },
-] : [];
+interface ApiTransactionLog {
+  type: string;
+  id: string;
+  station_id: string;
+  station_name: string | null;
+  amount: string;
+  commission_amount: string | null;
+  status: string;
+  created_at: string;
+}
+
+function mapStatus(s: string): TxStatus {
+  if (s === 'completed' || s === 'succeeded') return 'succeeded';
+  if (s === 'refunded') return 'refunded';
+  return 'failed';
+}
 
 const STATUS_META: Record<TxStatus, { badge: string; dot: string; bar: string; icon: string }> = {
   succeeded: { badge: 'bg-[#F0FDF4] text-[#15803D] ring-1 ring-[#22C55E]/20', dot: 'bg-[#22C55E]', bar: 'bg-[#22C55E]',  icon: '#22C55E' },
@@ -37,10 +43,50 @@ function shortId(s: string) { return '…' + s.slice(-8).toUpperCase(); }
 export function AdminTransactionsView() {
   const t = useTranslations('admin_transactions');
   const { error: toastError } = useToast();
+  const mountedRef = useRef(true);
+  useEffect(() => { mountedRef.current = true; return () => { mountedRef.current = false; }; }, []);
+
+  const [transactions, setTransactions] = useState<TxRow[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [truncated, setTruncated] = useState(false);
   const [filter, setFilter]     = useState<TxStatus | 'all'>('all');
   const [query, setQuery]       = useState('');
   const [copied, setCopied]     = useState<string | null>(null);
   const [selected, setSelected] = useState<TxRow | null>(null);
+
+  useEffect(() => {
+    (async () => {
+      try {
+        const [ok, data] = await getFromApi('/admin/transactions/logs?per_page=100');
+        if (!mountedRef.current) return;
+        if (ok) {
+          const result = (data as { data: { logs: ApiTransactionLog[]; meta?: { total?: number } } }).data;
+          const logs = result?.logs ?? [];
+          const total = result?.meta?.total ?? 0;
+          if (total > 100) setTruncated(true);
+          setTransactions(logs.map((l): TxRow => {
+            const amount = parseFloat(l.amount) || 0;
+            const commission = parseFloat(l.commission_amount ?? '0') || 0;
+            return {
+              id: l.id,
+              stripe_id: l.id,
+              station: l.station_name ?? l.station_id.slice(0, 8),
+              client: l.type,
+              gross: amount,
+              commission,
+              payout: amount - commission,
+              status: mapStatus(l.status),
+              date: l.created_at,
+            };
+          }));
+        }
+      } catch {
+        // keep empty
+      } finally {
+        if (mountedRef.current) setLoading(false);
+      }
+    })();
+  }, []);
 
   const STATUS_LABELS: Record<TxStatus, string> = {
     succeeded: t('status_succeeded'),
@@ -49,15 +95,15 @@ export function AdminTransactionsView() {
   };
 
   const q        = query.toLowerCase();
-  const filtered = MOCK_TRANSACTIONS
+  const filtered = transactions
     .filter((tx) => filter === 'all' || tx.status === filter)
     .filter((tx) => !q || tx.stripe_id.toLowerCase().includes(q) || tx.station.toLowerCase().includes(q) || tx.client.toLowerCase().includes(q));
 
-  const succeeded  = MOCK_TRANSACTIONS.filter((tx) => tx.status === 'succeeded');
+  const succeeded  = transactions.filter((tx) => tx.status === 'succeeded');
   const volume     = succeeded.reduce((s, tx) => s + tx.gross, 0);
   const commTotal  = succeeded.reduce((s, tx) => s + tx.commission, 0);
-  const counts: Record<string, number> = { all: MOCK_TRANSACTIONS.length };
-  for (const tx of MOCK_TRANSACTIONS) counts[tx.status] = (counts[tx.status] ?? 0) + 1;
+  const counts: Record<string, number> = { all: transactions.length };
+  for (const tx of transactions) counts[tx.status] = (counts[tx.status] ?? 0) + 1;
 
   function copyId(e: React.MouseEvent, id: string) {
     e.stopPropagation();
@@ -96,7 +142,7 @@ export function AdminTransactionsView() {
               {fmt(commTotal)} {t('chip_commissions')}
             </span>
             <span className="rounded-full border border-[#D8D4C8] bg-white px-3 py-1 text-[11px] font-bold text-[#888] dark:border-[#243020] dark:bg-[#131E10] dark:text-[#5A5A4A]">
-              {MOCK_TRANSACTIONS.length} {t('chip_count')}
+              {transactions.length} {t('chip_count')}
             </span>
           </div>
         </div>
@@ -123,7 +169,11 @@ export function AdminTransactionsView() {
 
       {/* List */}
       <div className="flex-1 overflow-y-auto bg-[#F5F5EE] p-6 dark:bg-[#0C1209]">
-        {!filtered.length ? (
+        {loading ? (
+          <div className="flex items-center justify-center py-16">
+            <div className="h-8 w-8 animate-spin rounded-full border-[3px] border-[#C49A1E] border-t-transparent" />
+          </div>
+        ) : !filtered.length ? (
           <div className="flex flex-col items-center gap-3 py-24 text-center">
             <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-white shadow-sm ring-1 ring-[#E8E4DC] dark:bg-[#131E10] dark:ring-[#1E2E18]">
               <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#C49A1E" strokeWidth="1.5" strokeLinecap="round"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12" /></svg>
@@ -132,6 +182,11 @@ export function AdminTransactionsView() {
           </div>
         ) : (
           <div className="flex flex-col gap-2.5">
+            {truncated && (
+              <p className="mb-2 rounded-xl bg-[#FFF4EC] px-4 py-2 text-center text-[11px] font-semibold text-[#C2410C] dark:bg-[#2A1408] dark:text-[#FDBA74]">
+                {t('truncated_warning')}
+              </p>
+            )}
             {filtered.map((tx) => {
               const s = STATUS_META[tx.status];
               return (

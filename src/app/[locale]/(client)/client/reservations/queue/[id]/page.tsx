@@ -2,10 +2,11 @@
 
 import { use, useEffect, useState, useCallback, useRef } from 'react';
 import { useTranslations } from 'next-intl';
-import { Link } from '@/i18n/navigation';
+import { Link, useRouter } from '@/i18n/navigation';
 import { getFromApi } from '@/services/axios-service';
 import { useAuth } from '@/context/auth-context';
 import { notFound } from 'next/navigation';
+import UpgradeToReservationModal from '@/components/reservations/UpgradeToReservationModal';
 
 /* ------------------------------------------------------------------ */
 /* API shapes                                                           */
@@ -35,6 +36,7 @@ interface ApiStation {
 
 interface QueueEntry {
   id: string;
+  stationId: string;
   stationName: string;
   stationAddress: string;
   stationLatitude: number;
@@ -51,6 +53,7 @@ interface QueueEntry {
 
 function useRealtimePosition(initial: number) {
   const [position, setPosition] = useState(initial);
+  useEffect(() => { setPosition(initial); }, [initial]);
   useEffect(() => {
     if (position <= 1) return;
     const id = setInterval(() => setPosition((p) => (p > 1 ? p - 1 : p)), 30_000);
@@ -70,7 +73,9 @@ interface PageProps {
 export default function QueueDetailPage({ params }: PageProps) {
   const { id } = use(params);
   const t = useTranslations('queue_detail');
+  const router = useRouter();
   const { isLoading: authLoading } = useAuth();
+  const [showUpgradeModal, setShowUpgradeModal] = useState(false);
 
   const mountedRef = useRef(true);
   useEffect(() => { mountedRef.current = true; return () => { mountedRef.current = false; }; }, []);
@@ -81,38 +86,43 @@ export default function QueueDetailPage({ params }: PageProps) {
 
   const loadEntry = useCallback(async () => {
     setLoading(true);
+    try {
+      const [ok, data] = await getFromApi('/me/entries?per_page=100');
+      if (!mountedRef.current) return;
 
-    const [ok, data] = await getFromApi('/me/entries?per_page=100');
-    if (!mountedRef.current) return;
+      if (!ok) { setMissing(true); return; }
 
-    if (!ok) { setMissing(true); setLoading(false); return; }
+      const res = data as { data: { entries: ApiEntry[] } };
+      const found = (res?.data?.entries ?? []).find((e) => e.id === id && e.entry_type === 'queue');
 
-    const res = data as { data: { entries: ApiEntry[] } };
-    const found = (res?.data?.entries ?? []).find((e) => e.id === id && e.entry_type === 'queue');
+      if (!found) { setMissing(true); return; }
 
-    if (!found) { setMissing(true); setLoading(false); return; }
+      const [stationOk, stationData] = await getFromApi(`/stations/${found.station_id}`);
+      if (!mountedRef.current) return;
 
-    const [stationOk, stationData] = await getFromApi(`/stations/${found.station_id}`);
-    if (!mountedRef.current) return;
+      const station = stationOk && stationData
+        ? (stationData as { data: ApiStation }).data
+        : null;
 
-    const station = stationOk && stationData
-      ? (stationData as { data: ApiStation }).data
-      : null;
+      const format = station?.vehicleFormats.find((f) => f.id === found.vehicle_format_id);
 
-    const format = station?.vehicleFormats.find((f) => f.id === found.vehicle_format_id);
-
-    setEntry({
-      id: found.id,
-      stationName: station?.name ?? `#${found.station_id.slice(0, 8)}`,
-      stationAddress: station ? `${station.address}, ${station.city}` : '',
-      stationLatitude: parseFloat(station?.latitude ?? '0'),
-      stationLongitude: parseFloat(station?.longitude ?? '0'),
-      forfaitName: format?.label ?? '—',
-      position: found.queue_position ?? 0,
-      totalPrice: parseFloat(found.amount_paid ?? '0'),
-      status: found.status === 'in_progress' ? 'in_progress' : 'waiting',
-    });
-    setLoading(false);
+      setEntry({
+        id: found.id,
+        stationId: found.station_id,
+        stationName: station?.name ?? `#${found.station_id.slice(0, 8)}`,
+        stationAddress: station ? `${station.address}, ${station.city}` : '',
+        stationLatitude: parseFloat(station?.latitude ?? '0'),
+        stationLongitude: parseFloat(station?.longitude ?? '0'),
+        forfaitName: format?.label ?? '—',
+        position: found.queue_position ?? 0,
+        totalPrice: parseFloat(found.amount_paid ?? '0'),
+        status: found.status === 'in_progress' ? 'in_progress' : 'waiting',
+      });
+    } catch {
+      if (mountedRef.current) setMissing(true);
+    } finally {
+      if (mountedRef.current) setLoading(false);
+    }
   }, [id]);
 
   useEffect(() => {
@@ -201,6 +211,19 @@ export default function QueueDetailPage({ params }: PageProps) {
           </div>
         </div>
 
+        {/* Upgrade to reservation */}
+        <button
+          type="button"
+          onClick={() => setShowUpgradeModal(true)}
+          className="flex items-center justify-center gap-2 w-full py-3.5 rounded-xl text-[15px] font-bold text-gold border-2 border-gold/40 hover:bg-gold/10 hover:border-gold/60 transition-colors cursor-pointer"
+        >
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+            <polyline points="17 1 21 5 17 9" /><path d="M3 11V9a4 4 0 014-4h14" />
+            <polyline points="7 23 3 19 7 15" /><path d="M21 13v2a4 4 0 01-4 4H3" />
+          </svg>
+          {t('upgrade_btn')}
+        </button>
+
         {/* Google Maps CTA */}
         <a
           href={mapsUrl}
@@ -215,6 +238,19 @@ export default function QueueDetailPage({ params }: PageProps) {
           {t('open_maps')}
         </a>
       </div>
+
+      {/* Upgrade modal */}
+      {showUpgradeModal && entry && (
+        <UpgradeToReservationModal
+          entryId={entry.id}
+          stationId={entry.stationId}
+          onClose={() => setShowUpgradeModal(false)}
+          onSuccess={(reservationId) => {
+            setShowUpgradeModal(false);
+            router.push(`/client/reservations/${reservationId}`);
+          }}
+        />
+      )}
     </main>
   );
 }

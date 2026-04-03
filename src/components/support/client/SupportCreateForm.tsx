@@ -29,7 +29,6 @@ export function SupportCreateForm({ onCreated, onCancel }: Props) {
     if (!message.trim()) { toastError(t('error_message_empty')); return; }
     setSaving(true);
     try {
-      // TODO: endpoint not yet implemented — returns 501 (POST /api/v1/support)
       const [ok] = await postWithApi('/support', { subject: subject.trim(), message: message.trim() });
       if (!mountedRef.current) return;
       if (ok) {

@@ -1,8 +1,8 @@
 'use client';
 
-// TODO: connect to API once GET /admin/dashboard endpoint is available
-
+import { useState, useEffect, useRef } from 'react';
 import { useTranslations } from 'next-intl';
+import { getFromApi } from '@/services/axios-service';
 
 interface KpiCardProps {
   icon: React.ReactNode;
@@ -17,7 +17,8 @@ interface KpiCardProps {
 }
 
 function Sparkline({ bars, color }: { bars: number[]; color: string }) {
-  const max = Math.max(...bars);
+  if (bars.length === 0) return null;
+  const max = Math.max(...bars, 1);
   return (
     <div className="flex items-end gap-[3px] h-7" aria-hidden="true">
       {bars.map((h, i) => (
@@ -98,24 +99,63 @@ const ClientsIcon = () => (
   </svg>
 );
 
-// Mock data — replace with API response once GET /admin/dashboard is implemented
-const MOCK: KpiCardProps[] = [
-  { icon: <TransactionsIcon />, value: '1 284 $', label: '',  trendValue: '+12%', trendUp: true,  sparkline: [55,60,45,70,65,80,95], accentColor: GOLD,      animationDelay: '0ms'   },
-  { icon: <CommissionIcon />,   value: '128 $',   label: '',  trendValue: '+12%', trendUp: true,  sparkline: [50,55,40,65,60,75,90], accentColor: GOLD,      animationDelay: '60ms'  },
-  { icon: <MerchantsIcon />,    value: '47',       label: '',  trendValue: '+3',   trendUp: true,  sparkline: [30,35,33,38,36,40,47], accentColor: '#3B82F6', animationDelay: '120ms' },
-  { icon: <ClientsIcon />,      value: '1 230',    label: '',  trendValue: '+48',  trendUp: true,  sparkline: [70,75,80,72,85,88,95], accentColor: '#10B981', animationDelay: '180ms' },
-];
+interface DashboardResponse {
+  data: {
+    totals: { active_stations: number; total_clients: number; pending_kyc: number; open_support_tickets: number };
+    metrics: { total_transactions: number; total_revenue: string; total_commissions: string };
+  };
+}
+
+function fmtCurrency(v: string | number) {
+  const n = typeof v === 'string' ? parseFloat(v) : v;
+  if (isNaN(n)) return '0 $';
+  return n.toLocaleString('fr-CA', { style: 'currency', currency: 'CAD', minimumFractionDigits: 0, maximumFractionDigits: 0 });
+}
 
 export function AdminKpiRow() {
   const t = useTranslations('admin_dashboard');
+  const mountedRef = useRef(true);
+  useEffect(() => { mountedRef.current = true; return () => { mountedRef.current = false; }; }, []);
 
-  const labels    = [t('kpi_transactions'), t('kpi_commissions'), t('kpi_merchants'), t('kpi_clients')];
-  const trendLabels = [t('kpi_trend_vs_yesterday'), t('kpi_trend_vs_yesterday'), t('kpi_vs_last_month'), t('kpi_vs_last_month')];
+  const [loading, setLoading] = useState(true);
+  const [data, setData] = useState<DashboardResponse['data'] | null>(null);
+
+  useEffect(() => {
+    (async () => {
+      try {
+        const [ok, res] = await getFromApi('/admin/dashboard');
+        if (!mountedRef.current) return;
+        if (ok) setData((res as DashboardResponse).data);
+      } catch {
+        // keep null
+      } finally {
+        if (mountedRef.current) setLoading(false);
+      }
+    })();
+  }, []);
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center py-12">
+        <div className="h-6 w-6 animate-spin rounded-full border-[3px] border-[#C49A1E] border-t-transparent" />
+      </div>
+    );
+  }
+
+  const totals = data?.totals;
+  const metrics = data?.metrics;
+
+  const cards: KpiCardProps[] = [
+    { icon: <TransactionsIcon />, value: fmtCurrency(metrics?.total_revenue ?? '0'), label: t('kpi_transactions'), trendValue: String(metrics?.total_transactions ?? 0), trendUp: true, trendLabel: t('kpi_trend_vs_yesterday'), sparkline: [], accentColor: GOLD, animationDelay: '0ms' },
+    { icon: <CommissionIcon />,   value: fmtCurrency(metrics?.total_commissions ?? '0'), label: t('kpi_commissions'), trendValue: '-', trendUp: true, trendLabel: t('kpi_trend_vs_yesterday'), sparkline: [], accentColor: GOLD, animationDelay: '60ms' },
+    { icon: <MerchantsIcon />,    value: String(totals?.active_stations ?? 0), label: t('kpi_merchants'), trendValue: `${totals?.pending_kyc ?? 0} KYC`, trendUp: (totals?.pending_kyc ?? 0) > 0, trendLabel: t('kpi_vs_last_month'), sparkline: [], accentColor: '#3B82F6', animationDelay: '120ms' },
+    { icon: <ClientsIcon />,      value: String(totals?.total_clients ?? 0), label: t('kpi_clients'), trendValue: '-', trendUp: true, trendLabel: t('kpi_vs_last_month'), sparkline: [], accentColor: '#10B981', animationDelay: '180ms' },
+  ];
 
   return (
     <div className="grid grid-cols-4 gap-4">
-      {MOCK.map((card, i) => (
-        <KpiCard key={i} {...card} label={labels[i]} trendLabel={trendLabels[i]} />
+      {cards.map((card, i) => (
+        <KpiCard key={i} {...card} />
       ))}
     </div>
   );

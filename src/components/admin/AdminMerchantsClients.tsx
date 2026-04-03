@@ -2,7 +2,8 @@
 
 import { useState, useEffect, useRef } from 'react';
 import { useTranslations } from 'next-intl';
-import { getFromApi } from '@/services';
+import { getFromApi, updateWithApi, postWithApi } from '@/services';
+import { useToast } from '@/context/toast-context';
 
 import { AdminStationsManagement } from './AdminStationsManagement';
 import { AdminClientsList } from './AdminClientsList';
@@ -18,6 +19,7 @@ export interface StationRow {
 
 export function AdminMerchantsClients() {
   const t = useTranslations('admin_clients');
+  const { success: toastSuccess, error: toastError } = useToast();
   const mountedRef = useRef(true);
   useEffect(() => { mountedRef.current = true; return () => { mountedRef.current = false; }; }, []);
 
@@ -32,18 +34,48 @@ export function AdminMerchantsClients() {
   useEffect(() => {
     getFromApi('/admin/stations?status=all').then(([ok, data]) => {
       if (!mountedRef.current) return;
-      setLoading(false);
       if (ok) setStations(((data as { data: StationRow[] }).data) ?? []);
       else setFetchError(true);
+    }).catch(() => {
+      if (mountedRef.current) setFetchError(true);
+    }).finally(() => {
+      if (mountedRef.current) setLoading(false);
     });
   }, []);
 
-  async function handleStationAction(_id: string, _action: 'activate' | 'suspend') {
-    // TODO: connect to API once endpoint is available (PATCH /admin/stations/:id)
+  async function handleStationAction(id: string, action: 'activate' | 'suspend') {
+    try {
+      const status = action === 'activate' ? 'active' : 'suspended';
+      const [ok] = await updateWithApi(`/admin/stations/${id}`, { status });
+      if (!mountedRef.current) return;
+      if (ok) {
+        setStations((prev) => prev.map((s) => s.id === id ? { ...s, status } : s));
+        toastSuccess(t('action_success'));
+      } else {
+        toastError(t('action_error'));
+      }
+    } catch {
+      if (mountedRef.current) toastError(t('action_error'));
+    }
   }
 
-  async function handleClientAction(_id: string, _action: 'activate' | 'suspend' | 'unblock') {
-    // TODO: connect to API once endpoints are available (PATCH /admin/users/:id, POST /admin/users/:id/unblock)
+  async function handleClientAction(id: string, action: 'activate' | 'suspend' | 'unblock') {
+    try {
+      if (action === 'unblock') {
+        const [ok] = await postWithApi(`/admin/users/${id}/unblock`, {});
+        if (!mountedRef.current) return;
+        if (!ok) { toastError(t('action_error')); return; }
+        toastSuccess(t('action_success'));
+      } else {
+        const status = action === 'activate' ? 'active' : 'suspended';
+        const [ok] = await updateWithApi(`/admin/users/${id}`, { status });
+        if (!mountedRef.current) return;
+        if (!ok) { toastError(t('action_error')); return; }
+        toastSuccess(t('action_success'));
+      }
+    } catch {
+      if (mountedRef.current) toastError(t('action_error'));
+    }
   }
 
   const managed   = stations.filter((s) => s.status === 'active' || s.status === 'suspended');
