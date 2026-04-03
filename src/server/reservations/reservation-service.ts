@@ -25,7 +25,7 @@ import {
   incrementSlotBookedCount,
   decrementSlotBookedCount,
 } from '@/server/station/slot-repository';
-import { createPaymentIntent, cancelPaymentIntent, capturePaymentIntent } from '@/server/payments/payment-service';
+import { createPaymentIntent, cancelPaymentIntent, capturePaymentIntent, updatePaymentIntentMetadata } from '@/server/payments/payment-service';
 import { cancelReservation } from '@/server/reservations/cancellation-service';
 import { notifyEntry } from '@/server/notifications/notification-service';
 import { sendEscrowReleasedNotificationsForEntry } from '@/server/notifications/escrow-released-notifications';
@@ -135,23 +135,21 @@ export type CancelEntryResult = {
 /**
  * Creates a new reservation for the given time slot and vehicle format.
  *
+ * Stripe-first pattern: PI is created before the DB transaction so there is no crash window
+ * where an entry exists with stripe_payment_id = null. If the DB transaction fails (slot full,
+ * duplicate, etc.), the PI is never returned to the client and auto-expires on Stripe after 24h —
+ * no charge, no orphan, no rollback needed.
+ *
  * Full flow:
  * 1. Validate vehicle format and station config (surcharge)
- * 2. Verify no active reservation exists for user at this station (prevent duplicates)
- * 3. Atomic transaction:
- *    - Lock slot with SELECT FOR UPDATE
- *    - Verify slot exists and belongs to station
- *    - Enforce max advance booking window (Stripe card auth expires after 7 days)
- *    - Count current reservations and verify capacity
- *    - Insert entry with status=pending_payment
- *    - Increment slot booked_count
- * 4. Create Stripe PaymentIntent (outside transaction — external side-effect)
- * 5. Persist Stripe payment ID on entry
+ * 2. QR token validation
+ * 3. Create Stripe PaymentIntent (before DB — Stripe-first)
+ * 4. Atomic transaction:
+ *    - Duplicate check (SELECT FOR UPDATE on slot prevents TOCTOU)
+ *    - Lock slot, verify capacity, enforce max advance booking window
+ *    - Insert entry with stripe_payment_id already set, increment slot booked_count
+ * 5. Update PI metadata with reservation_id (non-fatal — informational only)
  * 6. Send notification to client
- *
- * Error handling:
- *   - If Stripe creation fails, rollback DB entry and slot count atomically
- *   - Ensures no orphaned pending_payment entries
  *
  * @param userId - Client UUID
  * @param stationId - Station UUID
@@ -173,7 +171,7 @@ export async function createReservation(
   vehicleFormatId: string,
   options?: { qrToken?: string; qrVersion?: string }
 ): Promise<CreateReservationResult> {
-  const { format, amountTotal } = await resolveReservationAmount(vehicleFormatId, stationId);
+  const { amountTotal } = await resolveReservationAmount(vehicleFormatId, stationId);
 
   const hasQrPayload = Boolean(options?.qrToken || options?.qrVersion);
   const qrValidation = options?.qrToken
@@ -188,14 +186,28 @@ export async function createReservation(
     throw new ValidationError('Invalid QR booking token context');
   }
 
-  const split = await computeReservationSplit({
-    amountTotal,
-    isQrBooking,
+  const split = await computeReservationSplit({ amountTotal, isQrBooking });
+
+  const amountCents = Math.round(amountTotal * 100);
+  const commissionCents = Math.round(split.commissionAmount * 100);
+
+  // Create Stripe PaymentIntent before the DB transaction (Stripe-first pattern).
+  // reservation_id is set via a non-fatal metadata update after DB commit.
+  const { paymentIntentId, clientSecret } = await createPaymentIntent({
+    amountCents,
+    userId,
+    stationId,
+    stationStripeAccountId,
+    commissionCents,
+    metadata: {
+      time_slot_id: timeSlotId,
+      vehicle_format_id: vehicleFormatId,
+    },
   });
 
-  // Atomic: check duplicate, lock slot (SELECT FOR UPDATE), verify capacity, insert entry, increment booked_count
+  // Atomic: duplicate check, slot lock (SELECT FOR UPDATE), capacity check, entry insert, slot increment.
+  // Entry is created with stripe_payment_id already set — no orphan window.
   const entry = await db.transaction(async (tx) => {
-    // Duplicate check inside transaction to prevent TOCTOU race
     const hasActive = await hasActiveEntryAtStation(userId, stationId, tx);
     if (hasActive) throw new ActiveReservationExistsError();
 
@@ -223,7 +235,7 @@ export async function createReservation(
         commission_rate: split.commissionRate,
         commission_amount: toDecimal(split.commissionAmount),
         station_payout: toDecimal(split.stationPayout),
-        stripe_payment_id: null,
+        stripe_payment_id: paymentIntentId,
       },
       tx
     );
@@ -231,39 +243,17 @@ export async function createReservation(
     return created;
   });
 
-  // Create Stripe PaymentIntent (outside transaction — Stripe is an external side-effect)
-  // If Stripe fails, rollback the DB entry to avoid orphaned pending_payment entries
-  const amountCents = Math.round(amountTotal * 100);
-  const commissionCents = Math.round(split.commissionAmount * 100);
-
-  let paymentIntentId: string;
-  let clientSecret: string;
+  // Update PI metadata with reservation_id now that the entry ID is known.
+  // Non-fatal: metadata is informational only; webhook resolution uses stripe_payment_id on the entry.
   try {
-    const result = await createPaymentIntent({
-      amountCents,
-      userId,
-      stationId,
-      stationStripeAccountId,
-      commissionCents,
-      metadata: {
-        reservation_id: entry.id,
-        time_slot_id: timeSlotId,
-        vehicle_format_id: vehicleFormatId,
-      },
+    await updatePaymentIntentMetadata(paymentIntentId, { reservation_id: entry.id });
+  } catch (e) {
+    console.error('[CREATE_RESERVATION] PI metadata update failed — non-fatal', {
+      entryId: entry.id,
+      paymentIntentId,
+      error: e instanceof Error ? e.message : String(e),
     });
-    paymentIntentId = result.paymentIntentId;
-    clientSecret = result.clientSecret;
-  } catch (stripeError) {
-    // Rollback: atomically cancel entry and decrement slot to avoid orphaned pending_payment
-    await db.transaction(async (tx) => {
-      await updateEntry(entry.id, { status: STATUS_CANCELLED, cancellation_reason: 'Payment setup failed' }, tx);
-      await decrementSlotBookedCount(timeSlotId, tx);
-    });
-    throw stripeError;
   }
-
-  // Persist stripe payment ID on the entry
-  await updateEntry(entry.id, { stripe_payment_id: paymentIntentId });
 
   await notifyEntry({
     entryId: entry.id,
@@ -272,7 +262,7 @@ export async function createReservation(
     type: 'reservation_created',
   });
 
-  return { entry: { ...entry, stripe_payment_id: paymentIntentId }, clientSecret };
+  return { entry, clientSecret };
 }
 
 /**
@@ -319,10 +309,14 @@ export async function cancelEntry(
     return updateEntry(entryId, { status: STATUS_CANCELLED }, tx);
   });
 
-  // Cancel Stripe PaymentIntent if the reservation was awaiting payment.
-  if (entry.status === STATUS_PENDING_PAYMENT && entry.stripe_payment_id) {
+  // Cancel Stripe PaymentIntent if awaiting payment, or if a paid queue entry (authorized but not captured).
+  const shouldCancelPaymentIntent =
+    entry.stripe_payment_id &&
+    (entry.status === STATUS_PENDING_PAYMENT ||
+      (entry.entry_type === 'queue' && entry.status === STATUS_CONFIRMED));
+  if (shouldCancelPaymentIntent) {
     try {
-      await cancelPaymentIntent(entry.stripe_payment_id);
+      await cancelPaymentIntent(entry.stripe_payment_id!);
     } catch (e) {
       const error = e instanceof Error ? e.message : String(e);
       console.error('[CANCEL_PAYMENT_INTENT_FAILED]', {
@@ -384,13 +378,18 @@ export type UpgradeToReservationResult = {
 /**
  * Upgrades a queue entry to a reservation by assigning a time slot and initiating payment.
  *
+ * Stripe-first pattern: PI is created before the DB transaction so there is no crash window
+ * where an entry exists with stripe_payment_id = null. If the DB transaction fails (slot full,
+ * advance booking limit, etc.), the PI is never returned to the client and auto-expires on
+ * Stripe after 24h — no charge, no orphan, no rollback needed.
+ *
  * Flow:
  * 1. Validate entry is a queue entry belonging to the user at the given station.
  * 2. Resolve price: vehicle format price + optional reservation surcharge.
- * 3. Atomic transaction: lock slot, verify capacity, shift queue positions, convert entry to
- *    reservation (pending_payment), increment slot booked_count.
- * 4. Create Stripe PaymentIntent (manual capture) — outside the transaction.
- * 5. Persist stripe_payment_id on the entry.
+ * 3. Create Stripe PaymentIntent (before DB — Stripe-first).
+ * 4. Atomic transaction: lock slot, verify capacity, shift queue positions, convert entry to
+ *    reservation (pending_payment) with stripe_payment_id already set, increment slot booked_count.
+ * 5. Update PI metadata with reservation_id (non-fatal — informational only).
  * 6. Return entry + client_secret for frontend payment confirmation.
  */
 export async function upgradeQueueToReservation(
@@ -407,12 +406,27 @@ export async function upgradeQueueToReservation(
 
   const { amountTotal } = await resolveReservationAmount(entry.vehicle_format_id, stationId);
 
-  const split = await computeReservationSplit({
-    amountTotal,
-    isQrBooking: false,
+  const split = await computeReservationSplit({ amountTotal, isQrBooking: false });
+
+  const amountCents = Math.round(amountTotal * 100);
+  const commissionCents = Math.round(split.commissionAmount * 100);
+
+  // Create Stripe PaymentIntent before the DB transaction (Stripe-first pattern).
+  // reservation_id is set via a non-fatal metadata update after DB commit.
+  const { paymentIntentId, clientSecret } = await createPaymentIntent({
+    amountCents,
+    userId,
+    stationId,
+    stationStripeAccountId,
+    commissionCents,
+    metadata: {
+      time_slot_id: timeSlotId,
+      vehicle_format_id: entry.vehicle_format_id,
+      upgraded_from_queue: 'true',
+    },
   });
 
-  // Atomic: lock slot, verify capacity, shift queue, convert entry, increment booked_count.
+  // Atomic: slot lock, capacity check, queue shift, entry conversion with stripe_payment_id already set.
   const updated = await db.transaction(async (tx) => {
     const slot = await lockSlotForUpdate(timeSlotId, stationId, tx);
     if (!slot) throw new NotFoundError('Time slot not found or does not belong to this station');
@@ -440,7 +454,7 @@ export async function upgradeQueueToReservation(
         commission_rate: split.commissionRate,
         commission_amount: toDecimal(split.commissionAmount),
         station_payout: toDecimal(split.stationPayout),
-        stripe_payment_id: null,
+        stripe_payment_id: paymentIntentId,
       },
       tx
     );
@@ -448,51 +462,17 @@ export async function upgradeQueueToReservation(
     return result;
   });
 
-  // Create Stripe PaymentIntent outside transaction (external side-effect).
-  const amountCents = Math.round(amountTotal * 100);
-  const commissionCents = Math.round(split.commissionAmount * 100);
-
-  let paymentIntentId: string;
-  let clientSecret: string;
+  // Update PI metadata with reservation_id now that the entry ID is confirmed.
+  // Non-fatal: metadata is informational only; webhook resolution uses stripe_payment_id on the entry.
   try {
-    const result = await createPaymentIntent({
-      amountCents,
-      userId,
-      stationId,
-      stationStripeAccountId,
-      commissionCents,
-      metadata: {
-        reservation_id: entryId,
-        time_slot_id: timeSlotId,
-        vehicle_format_id: entry.vehicle_format_id,
-        upgraded_from_queue: 'true',
-      },
+    await updatePaymentIntentMetadata(paymentIntentId, { reservation_id: entryId });
+  } catch (e) {
+    console.error('[UPGRADE_TO_RESERVATION] PI metadata update failed — non-fatal', {
+      entryId,
+      paymentIntentId,
+      error: e instanceof Error ? e.message : String(e),
     });
-    paymentIntentId = result.paymentIntentId;
-    clientSecret = result.clientSecret;
-  } catch (stripeError) {
-    // Rollback: revert entry to queue and restore positions atomically to avoid partial state.
-    await db.transaction(async (tx) => {
-      await updateEntry(entryId, {
-        entry_type: 'queue',
-        time_slot_id: null,
-        queue_position: entry.queue_position,
-        status: 'pending',
-        amount_paid: '0.00',
-        commission_rate: '0.00',
-        commission_amount: '0.00',
-        station_payout: '0.00',
-      }, tx);
-      await decrementSlotBookedCount(timeSlotId, tx);
-      // Restore queue positions: shift from oldPosition to make room for restored entry.
-      if ((entry.queue_position ?? 0) > 0) {
-        await shiftQueuePositions(stationId, entry.queue_position!, 1, tx);
-      }
-    });
-    throw stripeError;
   }
-
-  await updateEntry(entryId, { stripe_payment_id: paymentIntentId });
 
   await notifyEntry({
     entryId,
@@ -501,7 +481,7 @@ export async function upgradeQueueToReservation(
     type: 'reservation_created',
   });
 
-  return { entry: { ...updated, stripe_payment_id: paymentIntentId }, clientSecret };
+  return { entry: updated, clientSecret };
 }
 
 
@@ -546,9 +526,8 @@ export async function setEntryStatusByStation(
     updated_at: new Date(),
   });
   if (status === 'completed') {
-    // Capture the payment for reservation entries (distributes funds to station + platform).
-    // Queue (walk-in) entries have no stripe_payment_id and are skipped.
-    if (entry.entry_type === 'reservation' && entry.stripe_payment_id) {
+    // Capture the payment (distributes funds to station + platform).
+    if (entry.stripe_payment_id) {
       try {
         await capturePaymentIntent(entry.stripe_payment_id);
       } catch (e) {

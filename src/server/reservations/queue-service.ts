@@ -1,13 +1,13 @@
 /**
  * Queue business logic: join queue, list queue, move reservation to queue (cron).
  * Uses entry repository, queue-position helper, slot repo (decrement booked_count), notification stub.
- * Walk-in queue entries are free of charge — payment only applies to reservations.
+ * Walk-in queue entries require Stripe payment (authorized at join time, captured on completion).
  */
 import { NotFoundError, ConflictError } from '@/lib/errors';
 import { db } from '@/lib/db';
 import { findFormatByIdAndStation } from '@/server/station/format-repository';
 import { decrementSlotBookedCount } from '@/server/station/slot-repository';
-import { capturePaymentIntent } from '@/server/payments/payment-service';
+import { createPaymentIntent, capturePaymentIntent, updatePaymentIntentMetadata } from '@/server/payments/payment-service';
 import { notifyEntry } from '@/server/notifications/notification-service';
 import { getQueuePositionWhenMovingFromReservation } from './queue-position-helper';
 import {
@@ -21,24 +21,55 @@ import {
   shiftQueuePositions,
   type Entry,
 } from './entry-repository';
+import { computeReservationSplit } from './compute-reservation-split';
+
+export type JoinQueueResult = { entry: Entry; clientSecret: string };
 
 const STATUS_PENDING = 'pending';
+const STATUS_PENDING_PAYMENT = 'pending_payment';
 const STATUS_LATE = 'late';
+const STATUS_CANCELLED = 'cancelled';
 
 /**
- * Joins the walk-in queue at the station for the given vehicle format. No payment required.
+ * Joins the walk-in queue at the station for the given vehicle format.
+ * Payment is required: a Stripe PaymentIntent is authorized at join time and captured on service completion.
  * Assigns queue_position at end of queue.
+ *
+ * Stripe-first pattern: PI is created before the DB entry so there is no crash window where an
+ * entry exists with stripe_payment_id = null. If the DB transaction fails (duplicate, race), the PI
+ * is never returned to the client and auto-expires on Stripe after 24h — no charge, no orphan.
  */
 export async function joinQueue(
   userId: string,
   stationId: string,
-  vehicleFormatId: string
-): Promise<Entry> {
+  vehicleFormatId: string,
+  stationStripeAccountId: string
+): Promise<JoinQueueResult> {
   const format = await findFormatByIdAndStation(vehicleFormatId, stationId);
   if (!format) throw new NotFoundError('Vehicle format not found');
   if (!format.is_active) throw new ConflictError('Format is not active');
 
-  // Atomic: check duplicate and allocate position inside transaction to prevent race conditions.
+  const formatPrice = parseFloat(String(format.price));
+  const split = await computeReservationSplit({ amountTotal: formatPrice, isQrBooking: false });
+
+  const amountCents = Math.round(formatPrice * 100);
+  const commissionCents = Math.round(split.commissionAmount * 100);
+
+  // Create Stripe PaymentIntent before the DB entry (Stripe-first pattern).
+  // reservation_id is omitted here; it will be set via a non-fatal metadata update after DB commit.
+  const { paymentIntentId, clientSecret } = await createPaymentIntent({
+    amountCents,
+    userId,
+    stationId,
+    stationStripeAccountId,
+    commissionCents,
+    metadata: {
+      vehicle_format_id: vehicleFormatId,
+      entry_type: 'queue',
+    },
+  });
+
+  // Atomic: check duplicate and allocate position. Entry is created with stripe_payment_id already set.
   const entry = await db.transaction(async (tx) => {
     const hasActive = await hasActiveEntryAtStation(userId, stationId, tx);
     if (hasActive) throw new ConflictError('You already have an active entry at this station');
@@ -50,14 +81,26 @@ export async function joinQueue(
       station_id: stationId,
       vehicle_format_id: vehicleFormatId,
       queue_position: nextPos,
-      status: STATUS_PENDING,
-      amount_paid: '0.00',
-      commission_rate: '0.00',
-      commission_amount: '0.00',
-      station_payout: '0.00',
-      stripe_payment_id: null,
+      status: STATUS_PENDING_PAYMENT,
+      amount_paid: String(formatPrice.toFixed(2)),
+      commission_rate: split.commissionRate,
+      commission_amount: String(split.commissionAmount.toFixed(2)),
+      station_payout: String(split.stationPayout.toFixed(2)),
+      stripe_payment_id: paymentIntentId,
     }, tx);
   });
+
+  // Update PI metadata with reservation_id now that the entry ID is known.
+  // Non-fatal: metadata is informational only; webhook resolution uses stripe_payment_id on the entry.
+  try {
+    await updatePaymentIntentMetadata(paymentIntentId, { reservation_id: entry.id });
+  } catch (e) {
+    console.error('[JOIN_QUEUE] PI metadata update failed — non-fatal', {
+      entryId: entry.id,
+      paymentIntentId,
+      error: e instanceof Error ? e.message : String(e),
+    });
+  }
 
   await notifyEntry({
     entryId: entry.id,
@@ -65,7 +108,7 @@ export async function joinQueue(
     stationId,
     type: 'queue_joined',
   });
-  return entry;
+  return { entry, clientSecret };
 }
 
 /**
@@ -144,7 +187,7 @@ export async function pickQueueEntry(stationId: string, queueEntryId: string): P
   if (entry.station_id !== stationId) throw new NotFoundError('Queue entry does not belong to this station');
   if (entry.entry_type !== 'queue') throw new ConflictError('Entry is not a queue entry');
   if (entry.status === 'in_progress') throw new ConflictError('Client is already being served');
-  if (!['pending', 'late'].includes(entry.status)) {
+  if (!['pending', 'confirmed', 'late'].includes(entry.status)) {
     throw new ConflictError(`Cannot pick an entry with status '${entry.status}'`);
   }
 
