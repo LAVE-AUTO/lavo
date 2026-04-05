@@ -1,4 +1,5 @@
 import { getTranslations, setRequestLocale } from 'next-intl/server';
+import { safeJsonLd } from '@/lib/json-ld';
 import { getStationDetailPublic } from '@/server/station/station-service';
 import { StationDetail } from '@/components/stations/StationDetail';
 
@@ -96,7 +97,7 @@ export default async function StationDetailPage({ params }: Props) {
       {jsonLd && (
         <script
           type="application/ld+json"
-          dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+          dangerouslySetInnerHTML={{ __html: safeJsonLd(jsonLd) }}
         />
       )}
       <StationDetail id={id} />

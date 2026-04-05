@@ -40,41 +40,42 @@ export async function upsertDeviceToken(
   token: string,
   platform: string
 ): Promise<void> {
-  // Enforce the per-user cap before inserting a potentially new token.
-  // If the token already exists for this user the upsert is a no-op and the count
-  // check is harmless; if it exists under another user the upsert reassigns it
-  // (no net increase in count for this user).
-  const [countRow] = await db
-    .select({ value: count() })
-    .from(deviceTokens)
-    .where(eq(deviceTokens.user_id, userId));
-
-  const currentCount = countRow?.value ?? 0;
-
-  if (currentCount >= MAX_TOKENS_PER_USER) {
-    // Remove the oldest token(s) to stay within the cap.
-    const overflow = currentCount - MAX_TOKENS_PER_USER + 1;
-    const oldest = await db
-      .select({ token: deviceTokens.token })
+  // Wrap in a transaction so the count → prune → insert sequence is atomic.
+  // Without a transaction, concurrent requests for the same user could each
+  // read the same count and both proceed to insert, exceeding MAX_TOKENS_PER_USER.
+  await db.transaction(async (tx) => {
+    const [countRow] = await tx
+      .select({ value: count() })
       .from(deviceTokens)
-      .where(eq(deviceTokens.user_id, userId))
-      .orderBy(asc(deviceTokens.created_at))
-      .limit(overflow);
+      .where(eq(deviceTokens.user_id, userId));
 
-    if (oldest.length > 0) {
-      await db
-        .delete(deviceTokens)
-        .where(inArray(deviceTokens.token, oldest.map((r) => r.token)));
+    const currentCount = countRow?.value ?? 0;
+
+    if (currentCount >= MAX_TOKENS_PER_USER) {
+      // Remove the oldest token(s) to stay within the cap.
+      const overflow = currentCount - MAX_TOKENS_PER_USER + 1;
+      const oldest = await tx
+        .select({ token: deviceTokens.token })
+        .from(deviceTokens)
+        .where(eq(deviceTokens.user_id, userId))
+        .orderBy(asc(deviceTokens.created_at))
+        .limit(overflow);
+
+      if (oldest.length > 0) {
+        await tx
+          .delete(deviceTokens)
+          .where(inArray(deviceTokens.token, oldest.map((r) => r.token)));
+      }
     }
-  }
 
-  await db
-    .insert(deviceTokens)
-    .values({ user_id: userId, token, platform })
-    .onConflictDoUpdate({
-      target: deviceTokens.token,
-      set: { user_id: userId, platform },
-    });
+    await tx
+      .insert(deviceTokens)
+      .values({ user_id: userId, token, platform })
+      .onConflictDoUpdate({
+        target: deviceTokens.token,
+        set: { user_id: userId, platform },
+      });
+  });
 }
 
 /**

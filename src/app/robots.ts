@@ -1,5 +1,16 @@
 import type { MetadataRoute } from 'next';
 
+// Keep in sync with LOCALES in src/app/sitemap.ts.
+// Defined here independently to avoid importing a large async module just for
+// a string array; sitemap.ts does not export LOCALES.
+const LOCALES = ['fr', 'en'] as const;
+
+// Generate disallow paths for every locale so new locales are covered automatically.
+const localeDisallow = LOCALES.flatMap((locale) => [
+  `/${locale}/admin/`,
+  `/${locale}/docs`,
+]);
+
 export default function robots(): MetadataRoute.Robots {
   const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? 'https://lavo.cm';
 
@@ -8,7 +19,7 @@ export default function robots(): MetadataRoute.Robots {
       {
         userAgent: '*',
         allow: '/',
-        disallow: ['/api/', '/fr/admin/', '/en/admin/', '/fr/docs', '/en/docs'],
+        disallow: ['/api/', ...localeDisallow],
       },
     ],
     sitemap: `${appUrl}/sitemap.xml`,

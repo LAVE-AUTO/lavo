@@ -55,7 +55,7 @@ function isFirebaseConfigured(): boolean {
  */
 function getFirebaseApp(): admin.app.App {
   if (admin.apps.length > 0) {
-    return admin.apps[0]!;
+    return admin.app();
   }
 
   const privateKey = (process.env.FIREBASE_PRIVATE_KEY ?? '').replace(/\\n/g, '\n');

@@ -99,25 +99,42 @@ const ClientsIcon = () => (
   </svg>
 );
 
-// Mock data — replace with API response once GET /admin/dashboard is implemented
-const MOCK: KpiCardProps[] = [
-  { icon: <TransactionsIcon />, value: '1 284 $', label: '', trendLabel: '', trendValue: '+12%', trendUp: true,  sparkline: [55,60,45,70,65,80,95], accentColor: GOLD,      animationDelay: '0ms'   },
-  { icon: <CommissionIcon />,   value: '128 $',   label: '', trendLabel: '', trendValue: '+12%', trendUp: true,  sparkline: [50,55,40,65,60,75,90], accentColor: GOLD,      animationDelay: '60ms'  },
-  { icon: <MerchantsIcon />,    value: '47',       label: '', trendLabel: '', trendValue: '+3',   trendUp: true,  sparkline: [30,35,33,38,36,40,47], accentColor: '#3B82F6', animationDelay: '120ms' },
-  { icon: <ClientsIcon />,      value: '1 230',    label: '', trendLabel: '', trendValue: '+48',  trendUp: true,  sparkline: [70,75,80,72,85,88,95], accentColor: '#10B981', animationDelay: '180ms' },
+// Placeholder cards — values will come from GET /admin/dashboard once implemented.
+// Using em-dash placeholders and trendUp: false to avoid showing misleading data.
+const PLACEHOLDER: Omit<KpiCardProps, 'label' | 'trendLabel'>[] = [
+  { icon: <TransactionsIcon />, value: '\u2014', trendValue: '', trendUp: false, sparkline: [1,1,1,1,1,1,1], accentColor: GOLD,      animationDelay: '0ms'   },
+  { icon: <CommissionIcon />,   value: '\u2014', trendValue: '', trendUp: false, sparkline: [1,1,1,1,1,1,1], accentColor: GOLD,      animationDelay: '60ms'  },
+  { icon: <MerchantsIcon />,    value: '\u2014', trendValue: '', trendUp: false, sparkline: [1,1,1,1,1,1,1], accentColor: '#3B82F6', animationDelay: '120ms' },
+  { icon: <ClientsIcon />,      value: '\u2014', trendValue: '', trendUp: false, sparkline: [1,1,1,1,1,1,1], accentColor: '#10B981', animationDelay: '180ms' },
 ];
 
 export function AdminKpiRow() {
   const t = useTranslations('admin_dashboard');
 
-  const labels    = [t('kpi_transactions'), t('kpi_commissions'), t('kpi_merchants'), t('kpi_clients')];
+  const labels      = [t('kpi_transactions'), t('kpi_commissions'), t('kpi_merchants'), t('kpi_clients')];
   const trendLabels = [t('kpi_trend_vs_yesterday'), t('kpi_trend_vs_yesterday'), t('kpi_vs_last_month'), t('kpi_vs_last_month')];
 
   return (
-    <div className="grid grid-cols-4 gap-4">
-      {MOCK.map((card, i) => (
-        <KpiCard key={i} {...card} label={labels[i]} trendLabel={trendLabels[i]} />
-      ))}
+    <div>
+      <div
+        style={{
+          background: '#fff3cd',
+          border: '1px solid #ffc107',
+          borderRadius: '8px',
+          padding: '10px 16px',
+          marginBottom: '16px',
+          fontSize: '13px',
+          color: '#7a5800',
+          fontWeight: 500,
+        }}
+      >
+        Dashboard KPIs not yet connected — data below is placeholder only.
+      </div>
+      <div className="grid grid-cols-4 gap-4">
+        {PLACEHOLDER.map((card, i) => (
+          <KpiCard key={i} {...card} label={labels[i]} trendLabel={trendLabels[i]} />
+        ))}
+      </div>
     </div>
   );
 }

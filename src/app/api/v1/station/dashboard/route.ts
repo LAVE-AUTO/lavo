@@ -41,6 +41,12 @@
  *           application/json:
  *             schema:
  *               $ref: '#/components/schemas/ErrorEnvelope'
+ *       429:
+ *         description: Too many requests
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorEnvelope'
  *       500:
  *         description: Internal server error
  *         content:
@@ -51,11 +57,15 @@
 import type { NextResponse } from 'next/server';
 
 import { requireRole } from '@/lib/require-role';
-import { successResponse, error404, error500, fromAppError } from '@/lib/responses';
+import { successResponse, error404, error429, error500, fromAppError } from '@/lib/responses';
 import { AppError } from '@/lib/errors';
 import { applyNoStoreHeaders } from '@/lib/response-headers';
 import { findStationByUserId } from '@/server/station/station-repository';
 import { getStationDashboard } from '@/server/station/station-analytics-service';
+import { createEndpointRateLimiter } from '@/lib/endpoint-rate-limiter';
+
+// SECURITY: rate-limit dashboard queries to 30 per minute per station user
+const dashboardLimiter = createEndpointRateLimiter({ maxRequests: 30, windowMs: 60_000 });
 
 
 // %%%%% GET Handler %%%%%
@@ -64,6 +74,10 @@ import { getStationDashboard } from '@/server/station/station-analytics-service'
 export async function GET(request: Request): Promise<NextResponse> {
   const auth = await requireRole(request, 'station');
   if (auth instanceof Response) return applyNoStoreHeaders(auth as NextResponse);
+
+  if (dashboardLimiter.isRateLimited(auth.sub)) {
+    return applyNoStoreHeaders(error429());
+  }
 
   const station = await findStationByUserId(auth.sub);
   if (!station) return applyNoStoreHeaders(error404('No station associated with this account'));

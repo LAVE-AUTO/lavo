@@ -94,7 +94,7 @@ const settingsPatchLimiter = createEndpointRateLimiter({ maxRequests: 20, window
  *             type: object
  *             description: >
  *               Map of setting keys to their new string values.
- *               At least 1 key required, maximum 14 per request.
+ *               At least 1 key required, maximum 15 per request.
  *             additionalProperties:
  *               type: string
  *             example:
@@ -157,7 +157,7 @@ export async function GET(request: Request): Promise<NextResponse> {
  * Bulk-upserts one or more platform settings.
  *
  * Request body: Record<AllowedKey, string>
- *   - At least 1 key required; maximum 14 per request
+ *   - At least 1 key required; maximum 15 per request
  *   - Each key must be in ALLOWED_PLATFORM_SETTING_KEYS
  *   - Per-key semantic validation (ranges, types, cross-key constraints)
  *
