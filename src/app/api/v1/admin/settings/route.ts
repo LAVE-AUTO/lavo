@@ -39,15 +39,98 @@ const settingsPatchLimiter = createEndpointRateLimiter({ maxRequests: 20, window
 // Retrieve all platform settings with audit metadata
 
 /**
- * GET /api/v1/admin/settings
- *
- * Returns all configured whitelisted platform settings with their values,
- * last update timestamp, and audit information (who changed it).
- *
- * Responses:
- *   200 { data: PlatformSettingRow[] } - array of settings
- *   401 UNAUTHORIZED - admin auth required
- *   500 INTERNAL_ERROR - database or service error
+ * @swagger
+ * /admin/settings:
+ *   get:
+ *     summary: Retrieve all platform settings (admin)
+ *     description: >
+ *       Returns all whitelisted platform settings with their values, last update
+ *       timestamps, and the admin user who last changed each setting.
+ *     tags:
+ *       - Admin Settings
+ *     security:
+ *       - BearerAuth: []
+ *     responses:
+ *       200:
+ *         description: All platform settings
+ *         content:
+ *           application/json:
+ *             schema:
+ *               allOf:
+ *                 - $ref: '#/components/schemas/SuccessEnvelope'
+ *                 - type: object
+ *                   properties:
+ *                     data:
+ *                       type: array
+ *                       items:
+ *                         $ref: '#/components/schemas/PlatformSettingRow'
+ *       401:
+ *         description: Unauthorized — admin auth required
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorEnvelope'
+ *       500:
+ *         description: Internal server error
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorEnvelope'
+ *   patch:
+ *     summary: Bulk-update platform settings (admin)
+ *     description: >
+ *       Upserts one or more platform settings. Each key must be in the platform allowlist.
+ *       Per-key semantic validation is applied (ranges, types, cross-key constraints).
+ *       Rate-limited to 20 requests per minute per admin.
+ *     tags:
+ *       - Admin Settings
+ *     security:
+ *       - BearerAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             description: >
+ *               Map of setting keys to their new string values.
+ *               At least 1 key required, maximum 15 per request.
+ *             additionalProperties:
+ *               type: string
+ *             example:
+ *               commission_rate_percent: "10"
+ *               penalty_rate_percent: "5"
+ *     responses:
+ *       200:
+ *         description: Platform settings updated
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/SuccessEnvelope'
+ *       400:
+ *         description: Validation failed — invalid keys, ranges, or cross-key constraints
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorEnvelope'
+ *       401:
+ *         description: Unauthorized — admin auth required
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorEnvelope'
+ *       429:
+ *         description: Too many requests
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorEnvelope'
+ *       500:
+ *         description: Internal server error
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorEnvelope'
  */
 export async function GET(request: Request): Promise<NextResponse> {
   const auth = await requireRole(request, 'admin');
@@ -74,7 +157,7 @@ export async function GET(request: Request): Promise<NextResponse> {
  * Bulk-upserts one or more platform settings.
  *
  * Request body: Record<AllowedKey, string>
- *   - At least 1 key required; maximum 14 per request
+ *   - At least 1 key required; maximum 15 per request
  *   - Each key must be in ALLOWED_PLATFORM_SETTING_KEYS
  *   - Per-key semantic validation (ranges, types, cross-key constraints)
  *

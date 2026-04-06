@@ -19,18 +19,86 @@ import { buildRefreshCookieOptions } from '@/lib/jwt';
 import { REFRESH_COOKIE_NAME } from '@/helpers/server-constants';
 
 /**
- * POST /api/v1/auth/login
- * Authenticates a user with email and password.
- *
- * Body: { email, password, remember_me? }
- *
- * Responses:
- *   200 { message, data: { user, access_token, refresh_token, token_type, expires_in } }
- *   400 VALIDATION_FAILED  — invalid input
- *   401 INVALID_CREDENTIALS — wrong email or password
- *   403 FORBIDDEN          — account not active or suspended
- *   429 TOO_MANY_REQUESTS  — rate limit exceeded
- *   500 INTERNAL_ERROR
+ * @swagger
+ * /auth/login:
+ *   post:
+ *     summary: Authenticate a user
+ *     description: >
+ *       Validates credentials and returns a short-lived access token plus an httpOnly
+ *       refresh token cookie. Rate-limited to prevent brute force attacks.
+ *     tags:
+ *       - Auth
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - email
+ *               - password
+ *               - expected_role
+ *             properties:
+ *               email:
+ *                 type: string
+ *                 format: email
+ *                 maxLength: 320
+ *               password:
+ *                 type: string
+ *                 minLength: 1
+ *                 maxLength: 128
+ *               expected_role:
+ *                 type: string
+ *                 enum: [client, station, admin]
+ *                 description: >
+ *                   Must match the authenticated user's actual role.
+ *                   Prevents cross-space token issuance.
+ *               remember_me:
+ *                 type: boolean
+ *                 default: false
+ *                 description: Extends the refresh token cookie lifetime.
+ *     responses:
+ *       200:
+ *         description: Authentication successful
+ *         content:
+ *           application/json:
+ *             schema:
+ *               allOf:
+ *                 - $ref: '#/components/schemas/SuccessEnvelope'
+ *                 - type: object
+ *                   properties:
+ *                     data:
+ *                       $ref: '#/components/schemas/TokensResponse'
+ *       400:
+ *         description: Validation failed
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorEnvelope'
+ *       401:
+ *         description: Invalid credentials
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorEnvelope'
+ *       403:
+ *         description: Account not active or suspended
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorEnvelope'
+ *       429:
+ *         description: Too many requests
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorEnvelope'
+ *       500:
+ *         description: Internal server error
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorEnvelope'
  */
 export async function POST(request: Request) {
   const headersList = await headers();

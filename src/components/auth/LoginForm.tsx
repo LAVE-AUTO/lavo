@@ -161,7 +161,7 @@ export function LoginForm({
         })();
 
         if (isSafeCallback) {
-          router.push(callbackUrl);
+          router.push(callbackUrl!);
           return;
         }
 

@@ -2,7 +2,7 @@
  * Data access for station entries (reservations and queue) in the single reservations table.
  * Enforces entry_type constraints: reservation => time_slot_id set; queue => queue_position set.
  */
-import { and, asc, desc, eq, gte, inArray, lte, sql } from 'drizzle-orm';
+import { and, asc, desc, eq, gte, inArray, isNull, lt, lte, sql } from 'drizzle-orm';
 import { db, type DbTransaction } from '@/lib/db';
 import { reservations, timeSlots, stationConfigs } from '@/lib/db/schema';
 
@@ -501,6 +501,37 @@ export async function confirmEntryIfPendingPayment(id: string): Promise<Entry | 
   return row;
 }
 
+/**
+ * Cancels an orphaned queue entry only if it is still in 'pending_payment' status with no
+ * stripe_payment_id set. Returns the updated row if the guard matched; otherwise undefined.
+ *
+ * The double guard (status AND stripe_payment_id IS NULL) prevents a race between the cron
+ * and a late-arriving Stripe PaymentIntent: if the walk-in flow has already set a Stripe ID
+ * (or the webhook has already confirmed the entry) the row will not match and the entry is
+ * left untouched.
+ */
+export async function cancelOrphanedEntryIfEligible(
+  id: string,
+  tx: DbTransaction
+): Promise<Entry | undefined> {
+  const [row] = await tx
+    .update(reservations)
+    .set({
+      status: 'cancelled',
+      cancellation_reason: 'Payment setup timeout',
+      updated_at: new Date(),
+    })
+    .where(
+      and(
+        eq(reservations.id, id),
+        eq(reservations.status, 'pending_payment'),
+        isNull(reservations.stripe_payment_id)
+      )
+    )
+    .returning();
+  return row;
+}
+
 const STRIPE_PAYMENT_CANCEL_STATUSES = ['pending_payment', 'confirmed'] as const;
 
 /**
@@ -602,6 +633,23 @@ export async function listLateUnconfirmedReservations(): Promise<Entry[]> {
       )
     );
   return rows;
+}
+
+/**
+ * Returns queue entries with status 'pending_payment', no stripe_payment_id, and created_at
+ * older than olderThanMinutes minutes. Used by orphan cleanup cron to find stuck entries
+ * where the server crashed after the DB insert but before the Stripe PaymentIntent was created.
+ */
+export async function findOrphanedPendingPaymentEntries(olderThanMinutes: number): Promise<Entry[]> {
+  const cutoff = new Date(Date.now() - olderThanMinutes * 60_000);
+  return db.query.reservations.findMany({
+    where: and(
+      eq(reservations.status, 'pending_payment'),
+      isNull(reservations.stripe_payment_id),
+      eq(reservations.entry_type, 'queue'),
+      lt(reservations.created_at, cutoff)
+    ),
+  });
 }
 
 /**

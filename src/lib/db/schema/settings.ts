@@ -29,6 +29,7 @@ export const settingsTypeEnum = pgEnum("settings_type", [
   "admin",
   "station",
   "user",
+  "legal",
 ]);
 
 

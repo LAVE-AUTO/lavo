@@ -24,17 +24,92 @@ import { AppError, ConflictError } from '@/lib/errors';
 import { buildRefreshCookieOptions } from '@/lib/jwt';
 
 /**
- * POST /api/v1/auth/register
- * Register a new client account with email and password.
- *
- * Body: { first_name, last_name, email, phone, password, confirm_password, remember_me? }
- *
- * Responses:
- *   201 { message, data: { user, access_token, refresh_token, token_type, expires_in } }
- *   400 VALIDATION_FAILED  — invalid input
- *   409 EMAIL_ALREADY_EXISTS — duplicate email
- *   429 TOO_MANY_REQUESTS  — rate limit exceeded
- *   500 INTERNAL_ERROR
+ * @swagger
+ * /auth/register:
+ *   post:
+ *     summary: Register a new client account
+ *     description: >
+ *       Creates a new client account with email and password.
+ *       Returns access and refresh tokens on success. A verification email is sent automatically.
+ *     tags:
+ *       - Auth
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - first_name
+ *               - last_name
+ *               - email
+ *               - phone
+ *               - password
+ *               - confirm_password
+ *             properties:
+ *               first_name:
+ *                 type: string
+ *                 minLength: 2
+ *                 maxLength: 100
+ *               last_name:
+ *                 type: string
+ *                 minLength: 2
+ *                 maxLength: 100
+ *               email:
+ *                 type: string
+ *                 format: email
+ *                 maxLength: 320
+ *               phone:
+ *                 type: string
+ *                 description: E.164 format phone number (e.g. +33612345678)
+ *               password:
+ *                 type: string
+ *                 minLength: 8
+ *                 maxLength: 128
+ *                 description: >
+ *                   Must contain at least one uppercase letter, one lowercase letter,
+ *                   one digit, and one special character from @ $ ! % * # ? & _ - + =
+ *               confirm_password:
+ *                 type: string
+ *               remember_me:
+ *                 type: boolean
+ *                 default: false
+ *     responses:
+ *       201:
+ *         description: Account created successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               allOf:
+ *                 - $ref: '#/components/schemas/SuccessEnvelope'
+ *                 - type: object
+ *                   properties:
+ *                     data:
+ *                       $ref: '#/components/schemas/TokensResponse'
+ *       400:
+ *         description: Validation failed
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorEnvelope'
+ *       409:
+ *         description: Email already in use
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorEnvelope'
+ *       429:
+ *         description: Too many requests
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorEnvelope'
+ *       500:
+ *         description: Internal server error
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorEnvelope'
  */
 export async function POST(request: Request) {
   const headersList = await headers();

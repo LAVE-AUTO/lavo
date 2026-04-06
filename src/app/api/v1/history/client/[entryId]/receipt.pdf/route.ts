@@ -90,7 +90,7 @@ export async function GET(request: Request, { params }: Params): Promise<NextRes
     }
 
     const pdfBytes = generateSimplePdfFromLines(result.text_lines);
-    const pdfResponse = new NextResponse(pdfBytes, {
+    const pdfResponse = new NextResponse(pdfBytes as BodyInit, {
       status: 200,
       headers: {
         'Content-Type': 'application/pdf',

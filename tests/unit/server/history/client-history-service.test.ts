@@ -81,7 +81,7 @@ describe('client-history-service', () => {
       total: 25,
     });
 
-    const result = await getClientHistory('client-1', { page: 2, limit: 10 });
+    const result = await getClientHistory('client-1', { page: 2, limit: 10, sort_by: 'created_at', sort_order: 'desc' });
 
     expect(mockListClientHistory).toHaveBeenCalledWith({
       userId: 'client-1',
@@ -145,7 +145,7 @@ describe('client-history-service', () => {
       total: 1,
     });
 
-    const result = await getClientHistory('client-1', {});
+    const result = await getClientHistory('client-1', { sort_by: 'created_at', sort_order: 'desc' });
 
     expect(result.items[0]?.receipt_available).toBe(true);
     expect(result.items[0]?.receipt_type).toBe('stripe_link');

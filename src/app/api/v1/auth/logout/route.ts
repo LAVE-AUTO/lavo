@@ -6,14 +6,34 @@ import { verifyJwt, extractBearerToken } from '@/lib/jwt';
 import { REFRESH_COOKIE_NAME } from '@/helpers/server-constants';
 
 /**
- * POST /api/v1/auth/logout
- * Revokes all refresh tokens for the user identified by the Bearer access token.
- * Clears the httpOnly refresh token cookie.
- *
- * Headers: Authorization: Bearer <access_token>
- *
- * Responses:
- *   200 { data: { logged_out: true } }
+ * @swagger
+ * /auth/logout:
+ *   post:
+ *     summary: Log out and revoke all refresh tokens
+ *     description: >
+ *       Clears the httpOnly refresh token cookie and revokes all refresh tokens for the
+ *       user identified by the Bearer access token. The cookie is cleared unconditionally
+ *       regardless of DB revocation outcome.
+ *     tags:
+ *       - Auth
+ *     security:
+ *       - BearerAuth: []
+ *     responses:
+ *       200:
+ *         description: Logged out successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               allOf:
+ *                 - $ref: '#/components/schemas/SuccessEnvelope'
+ *                 - type: object
+ *                   properties:
+ *                     data:
+ *                       type: object
+ *                       properties:
+ *                         logged_out:
+ *                           type: boolean
+ *                           example: true
  */
 export async function POST() {
   const headersList = await headers();

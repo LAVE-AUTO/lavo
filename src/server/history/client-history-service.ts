@@ -191,7 +191,7 @@ export async function getClientHistory(
 ): Promise<ClientHistoryResult> {
   const page = query.page ?? 1;
   const limit = query.limit ?? 20;
-  const statuses = query.status ?? DEFAULT_CLIENT_HISTORY_STATUSES;
+  const statuses = (query.status as ClientHistoryAllowedStatus[] | undefined) ?? DEFAULT_CLIENT_HISTORY_STATUSES;
   const sortBy = query.sort_by ?? 'created_at';
   const sortOrder = query.sort_order ?? 'desc';
 

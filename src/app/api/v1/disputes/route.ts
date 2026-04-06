@@ -1,3 +1,88 @@
+/**
+ * @swagger
+ * /disputes:
+ *   post:
+ *     summary: Open a dispute for a completed reservation
+ *     description: >
+ *       Opens a dispute on behalf of the authenticated client for a reservation that
+ *       has been completed and paid. Only one dispute per reservation is allowed.
+ *       Rate-limited to 5 requests per minute per user.
+ *     tags:
+ *       - Disputes
+ *     security:
+ *       - BearerAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - reservation_id
+ *               - reason
+ *             properties:
+ *               reservation_id:
+ *                 type: string
+ *                 format: uuid
+ *               reason:
+ *                 type: string
+ *                 minLength: 10
+ *                 maxLength: 2000
+ *     responses:
+ *       201:
+ *         description: Dispute created successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               allOf:
+ *                 - $ref: '#/components/schemas/SuccessEnvelope'
+ *                 - type: object
+ *                   properties:
+ *                     data:
+ *                       $ref: '#/components/schemas/Dispute'
+ *       400:
+ *         description: Validation failed
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorEnvelope'
+ *       401:
+ *         description: Unauthorized
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorEnvelope'
+ *       403:
+ *         description: Reservation does not belong to client
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorEnvelope'
+ *       404:
+ *         description: Reservation not found
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorEnvelope'
+ *       409:
+ *         description: A dispute already exists for this reservation
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorEnvelope'
+ *       429:
+ *         description: Too many requests
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorEnvelope'
+ *       500:
+ *         description: Internal server error
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorEnvelope'
+ */
 import { requireRole } from '@/lib/require-role';
 import {
   successResponse,

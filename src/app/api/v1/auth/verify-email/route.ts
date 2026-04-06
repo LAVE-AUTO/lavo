@@ -14,17 +14,62 @@ import { checkRateLimit, recordFailedAttempt, resetOnSuccess } from '@/lib/rate-
 import { getClientRateLimitKey } from '@/lib/request-ip';
 
 /**
- * POST /api/v1/auth/verify-email
- * Verifies a user's email address using the token sent by email.
- *
- * Body: { token: string }
- *
- * Responses:
- *   200 { data: { verified: true } }
- *   400 VALIDATION_FAILED — token missing from body
- *   400 TOKEN_EXPIRED     — invalid or expired verification token
- *   429 TOO_MANY_REQUESTS — rate limit exceeded
- *   500 INTERNAL_ERROR
+ * @swagger
+ * /auth/verify-email:
+ *   post:
+ *     summary: Verify email address
+ *     description: >
+ *       Verifies a user's email address using the one-time token sent by email.
+ *       Returns the same error shape for both invalid and expired tokens to prevent
+ *       token enumeration.
+ *     tags:
+ *       - Auth
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - token
+ *             properties:
+ *               token:
+ *                 type: string
+ *                 description: Verification token received by email.
+ *     responses:
+ *       200:
+ *         description: Email verified successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               allOf:
+ *                 - $ref: '#/components/schemas/SuccessEnvelope'
+ *                 - type: object
+ *                   properties:
+ *                     data:
+ *                       type: object
+ *                       properties:
+ *                         verified:
+ *                           type: boolean
+ *                           example: true
+ *       400:
+ *         description: Invalid or expired verification token
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorEnvelope'
+ *       429:
+ *         description: Too many requests
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorEnvelope'
+ *       500:
+ *         description: Internal server error
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorEnvelope'
  */
 export async function POST(request: Request) {
   const headersList = await headers();

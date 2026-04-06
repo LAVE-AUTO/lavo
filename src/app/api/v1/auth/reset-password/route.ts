@@ -14,17 +14,72 @@ import { checkRateLimit, recordFailedAttempt, resetOnSuccess } from '@/lib/rate-
 import { getClientRateLimitKey } from '@/lib/request-ip';
 
 /**
- * POST /api/v1/auth/reset-password
- * Resets the user's password using a valid reset token.
- *
- * Body: { token: string, new_password: string }
- *
- * Responses:
- *   200 { data: { reset: true } }
- *   400 VALIDATION_FAILED — invalid input or weak password
- *   400 TOKEN_EXPIRED     — invalid or expired reset token (same message for not found/expired to prevent enumeration)
- *   429 TOO_MANY_REQUESTS — rate limit exceeded
- *   500 INTERNAL_ERROR
+ * @swagger
+ * /auth/reset-password:
+ *   post:
+ *     summary: Reset password using a one-time token
+ *     description: >
+ *       Resets the user's password using the token received via the forgot-password email.
+ *       Returns the same error for both invalid and expired tokens to prevent enumeration.
+ *     tags:
+ *       - Auth
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - token
+ *               - new_password
+ *               - confirm_new_password
+ *             properties:
+ *               token:
+ *                 type: string
+ *                 description: Reset token from the password reset email.
+ *               new_password:
+ *                 type: string
+ *                 minLength: 8
+ *                 maxLength: 128
+ *                 description: >
+ *                   Must contain at least one uppercase letter, one lowercase letter,
+ *                   one digit, and one special character from @ $ ! % * # ? & _ - + =
+ *               confirm_new_password:
+ *                 type: string
+ *     responses:
+ *       200:
+ *         description: Password updated successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               allOf:
+ *                 - $ref: '#/components/schemas/SuccessEnvelope'
+ *                 - type: object
+ *                   properties:
+ *                     data:
+ *                       type: object
+ *                       properties:
+ *                         reset:
+ *                           type: boolean
+ *                           example: true
+ *       400:
+ *         description: Validation failed or invalid/expired token
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorEnvelope'
+ *       429:
+ *         description: Too many requests
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorEnvelope'
+ *       500:
+ *         description: Internal server error
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorEnvelope'
  */
 export async function POST(request: Request) {
   const headersList = await headers();

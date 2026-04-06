@@ -14,6 +14,7 @@ import { noShowFees, reservations } from "./reservations";
 import { notifications } from "./notifications";
 import { ratings } from "./ratings";
 import { disputes } from "./disputes";
+import { deviceTokens } from "./device-tokens";
 import {
   pendingUploads,
   stationConfigs,
@@ -44,6 +45,7 @@ export * from "./refresh-tokens";
 export * from "./reschedule-requests";
 export * from "./tips";
 export * from "./disputes";
+export * from "./device-tokens";
 
 export const usersRelations = relations(users, ({ one, many }) => ({
   station: one(stations, {
@@ -58,6 +60,7 @@ export const usersRelations = relations(users, ({ one, many }) => ({
   assignedTickets: many(supportTickets, { relationName: "ticketAssignee" }),
   supportMessages: many(supportMessages, { relationName: "messageSender" }),
   notifications: many(notifications, { relationName: "userNotifications" }),
+  deviceTokens: many(deviceTokens),
 }));
 
 export const emailVerificationTokensRelations = relations(
@@ -317,6 +320,13 @@ export const reservationTipsRelations = relations(reservationTips, ({ one }) => 
   station: one(stations, {
     fields: [reservationTips.station_id],
     references: [stations.id],
+  }),
+}));
+
+export const deviceTokensRelations = relations(deviceTokens, ({ one }) => ({
+  user: one(users, {
+    fields: [deviceTokens.user_id],
+    references: [users.id],
   }),
 }));
 

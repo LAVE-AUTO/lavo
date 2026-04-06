@@ -197,6 +197,20 @@
       "when": 1774800000000,
       "tag": "0027_settings_updated_by",
       "breakpoints": true
+    },
+    {
+      "idx": 28,
+      "version": "7",
+      "when": 1743552000000,
+      "tag": "0028_legal_content_type",
+      "breakpoints": true
+    },
+    {
+      "idx": 29,
+      "version": "7",
+      "when": 1743552100000,
+      "tag": "0029_device_tokens",
+      "breakpoints": true
     }
   ]
 }
