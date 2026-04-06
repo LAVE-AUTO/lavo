@@ -150,6 +150,34 @@
       "breakpoints": true
     },
     {
+      "idx": 21,
+      "version": "7",
+      "when": 1774465600000,
+      "tag": "0021_reservation_tips",
+      "breakpoints": true
+    },
+    {
+      "idx": 22,
+      "version": "7",
+      "when": 1774499200000,
+      "tag": "0022_tips_drop_currency",
+      "breakpoints": true
+    },
+    {
+      "idx": 23,
+      "version": "7",
+      "when": 1774532800000,
+      "tag": "0023_commission_add_previous_rate",
+      "breakpoints": true
+    },
+    {
+      "idx": 24,
+      "version": "7",
+      "when": 1774598400000,
+      "tag": "0024_commission_effective_at_index",
+      "breakpoints": true
+    },
+    {
       "idx": 25,
       "version": "7",
       "when": 1774665600000,

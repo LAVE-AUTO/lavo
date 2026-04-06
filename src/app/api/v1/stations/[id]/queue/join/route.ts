@@ -110,10 +110,11 @@ export async function POST(request: Request, { params }: Params): Promise<NextRe
   const station = await findStationById(paramParsed.data.id);
   if (!station || station.status !== 'active') return error404('Station not found or not active');
   if (!station.is_open) return error409('Station is currently closed for walk-ins', ApiCode.CONFLICT);
+  if (!station.stripe_account_id) return error409('Station payment not configured', ApiCode.CONFLICT);
 
   try {
-    const entry = await joinQueue(auth.sub, paramParsed.data.id, bodyParsed.data.vehicle_format_id);
-    return successResponse(serializeEntry(entry), undefined, 201);
+    const { entry, clientSecret } = await joinQueue(auth.sub, paramParsed.data.id, bodyParsed.data.vehicle_format_id, station.stripe_account_id);
+    return successResponse({ ...serializeEntry(entry), client_secret: clientSecret }, undefined, 201);
   } catch (e) {
     if (e instanceof NotFoundError) return error404(e.message);
     if (e instanceof ConflictError) return error409(e.message, ApiCode.CONFLICT);

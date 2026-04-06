@@ -1,10 +1,12 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { useTranslations } from 'next-intl';
+import { getFromApi } from '@/services/axios-service';
 import { SupportCreateForm } from './SupportCreateForm';
 import { SupportTicketCard } from './SupportTicketCard';
-import type { SupportTicket } from '../support-mock';
+import type { SupportTicketSummary } from '../support-types';
+import { mapApiStatus } from '../support-types';
 
 const STATS: Array<{ key: 'open' | 'in_progress' | 'resolved' | 'closed'; label: string; dot: string }> = [
   { key: 'open',        label: 'status_open',        dot: 'bg-[#F97316]' },
@@ -14,26 +16,42 @@ const STATS: Array<{ key: 'open' | 'in_progress' | 'resolved' | 'closed'; label:
 ];
 
 interface Props {
-  /** Pre-filtered list of tickets for the current user (client or station). */
-  tickets: SupportTicket[];
-  /**
-   * Override the "Mes tickets" section label for non-client contexts (e.g. station support).
-   * Defaults to the client_support.section_tickets i18n key.
-   */
   sectionLabel?: string;
 }
 
-export function ClientSupportContainer({ tickets: initialTickets, sectionLabel }: Props) {
-  const t           = useTranslations('client_support');
+export function ClientSupportContainer({ sectionLabel }: Props) {
+  const t = useTranslations('client_support');
   const [showForm, setShowForm] = useState(false);
-  // TODO: connect to API once endpoint is available (GET /me/tickets)
-  const tickets = initialTickets;
+  const [tickets, setTickets] = useState<SupportTicketSummary[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState(false);
+  const mountedRef = useRef(true);
+  useEffect(() => { return () => { mountedRef.current = false; }; }, []);
+
+  const loadTickets = useCallback(async () => {
+    setLoading(true);
+    setLoadError(false);
+    const [ok, data] = await getFromApi<{ data: SupportTicketSummary[] }>('/support');
+    if (!mountedRef.current) return;
+    if (ok && 'data' in (data as object) && (data as { data: SupportTicketSummary[] }).data) {
+      setTickets((data as { data: SupportTicketSummary[] }).data);
+    } else {
+      setLoadError(true);
+    }
+    setLoading(false);
+  }, []);
+
+  useEffect(() => { loadTickets(); }, [loadTickets]);
 
   const counts = { open: 0, in_progress: 0, resolved: 0, closed: 0 };
-  for (const tk of tickets) counts[tk.status as keyof typeof counts]++;
+  for (const tk of tickets) {
+    const mapped = mapApiStatus(tk.status);
+    if (mapped in counts) counts[mapped as keyof typeof counts]++;
+  }
 
   function handleCreated() {
     setShowForm(false);
+    loadTickets();
   }
 
   return (
@@ -81,28 +99,48 @@ export function ClientSupportContainer({ tickets: initialTickets, sectionLabel }
             <SupportCreateForm onCreated={handleCreated} onCancel={() => setShowForm(false)} />
           )}
 
+          {/* Loading state */}
+          {loading && (
+            <div className="flex items-center justify-center py-16">
+              <div className="h-8 w-8 animate-spin rounded-full border-[3px] border-[#C49A1E] border-t-transparent" />
+            </div>
+          )}
+
+          {/* Error state */}
+          {!loading && loadError && (
+            <div className="flex flex-col items-center gap-3 py-16 text-center">
+              <p className="text-[13px] font-semibold text-[#999]">{t('error_load')}</p>
+              <button type="button" onClick={loadTickets}
+                className="rounded-[10px] border border-[#C49A1E]/50 px-4 py-2 text-[13px] font-semibold text-[#C49A1E] hover:bg-[#C49A1E]/10">
+                {t('btn_retry')}
+              </button>
+            </div>
+          )}
+
           {/* Ticket list */}
-          <div className="flex flex-col gap-3">
-            {!showForm && (
-              <h2 className="text-[11px] font-black uppercase tracking-wider text-[#AAAAAA] dark:text-[#4A4A3A]">
-                {sectionLabel ?? t('section_tickets')}
-              </h2>
-            )}
-            {tickets.length === 0 ? (
-              <div className="flex flex-col items-center gap-3 py-20 text-center">
-                <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-white shadow-sm ring-1 ring-[#E8E4DC] dark:bg-[#131E10] dark:ring-[#1E2E18]">
-                  <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#C49A1E" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-                    <path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z" />
-                  </svg>
+          {!loading && !loadError && (
+            <div className="flex flex-col gap-3">
+              {!showForm && (
+                <h2 className="text-[11px] font-black uppercase tracking-wider text-[#AAAAAA] dark:text-[#4A4A3A]">
+                  {sectionLabel ?? t('section_tickets')}
+                </h2>
+              )}
+              {tickets.length === 0 ? (
+                <div className="flex flex-col items-center gap-3 py-20 text-center">
+                  <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-white shadow-sm ring-1 ring-[#E8E4DC] dark:bg-[#131E10] dark:ring-[#1E2E18]">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#C49A1E" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                      <path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z" />
+                    </svg>
+                  </div>
+                  <p className="text-[13px] font-semibold text-[#999]">{t('empty_tickets')}</p>
                 </div>
-                <p className="text-[13px] font-semibold text-[#999]">{t('empty_tickets')}</p>
-              </div>
-            ) : (
-              tickets.map((ticket) => (
-                <SupportTicketCard key={ticket.id} ticket={ticket} />
-              ))
-            )}
-          </div>
+              ) : (
+                tickets.map((ticket) => (
+                  <SupportTicketCard key={ticket.id} ticket={ticket} onMessageSent={loadTickets} />
+                ))
+              )}
+            </div>
+          )}
         </div>
       </div>
     </div>

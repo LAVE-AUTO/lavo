@@ -1,9 +1,11 @@
 'use client';
 
-import { useState, useRef, useEffect } from 'react';
+import { useState, useRef, useEffect, useCallback } from 'react';
 import { useTranslations } from 'next-intl';
 import { useToast } from '@/context/toast-context';
+import { useAuth } from '@/context/auth-context';
 import { useCommission } from '@/context/commission-context';
+import { updateWithApi } from '@/services/axios-service';
 
 function formatDate(d: string) {
   try { return new Date(d).toLocaleDateString('fr-CA', { day: 'numeric', month: 'short', year: 'numeric' }); }
@@ -13,9 +15,20 @@ function formatDate(d: string) {
 export function AdminCommissionView() {
   const t = useTranslations('admin_commission');
   const { success: toastSuccess, error: toastError } = useToast();
-  const { rate: savedRate, history, updateRate } = useCommission();
+  const { user } = useAuth();
+  const { rate: savedRate, history, loading: historyLoading, updateRate, reload } = useCommission();
   const mountedRef = useRef(true);
   useEffect(() => { mountedRef.current = true; return () => { mountedRef.current = false; }; }, []);
+
+  const resolveSetBy = useCallback((setBy: string) => {
+    if (!setBy) return '-';
+    if (user?.id && setBy === user.id) {
+      return [user.first_name, user.last_name].filter(Boolean).join(' ') || user.email;
+    }
+    // UUID from backend — no endpoint to resolve other admin names
+    if (/^[0-9a-f]{8}-/.test(setBy)) return setBy.slice(0, 8) + '...';
+    return setBy;
+  }, [user]);
 
   const [rate, setRate]     = useState(savedRate);
   const [saving, setSaving] = useState(false);
@@ -32,11 +45,18 @@ export function AdminCommissionView() {
     if (rounded < 0 || rounded > 100) { toastError(t('error_range')); return; }
     setSaving(true);
     try {
-      // TODO: connect to API once endpoint is available (POST /admin/commission)
-      await new Promise((r) => setTimeout(r, 700));
+      const decimalRate = rounded / 100;
+      const [ok] = await updateWithApi('/admin/commission', { rate: decimalRate });
       if (!mountedRef.current) return;
-      updateRate(rounded);
-      toastSuccess(t('save_success'));
+      if (ok) {
+        updateRate(rounded);
+        await reload();
+        toastSuccess(t('save_success'));
+      } else {
+        toastError(t('save_error'));
+      }
+    } catch {
+      if (mountedRef.current) toastError(t('save_error'));
     } finally {
       if (mountedRef.current) setSaving(false);
     }
@@ -112,7 +132,11 @@ export function AdminCommissionView() {
             <div className="border-b border-[#F0EDE6] bg-[#F9F8F5] px-5 py-3 dark:border-[#1A2A14] dark:bg-[#0E1A0C]">
               <p className="text-[11px] font-black uppercase tracking-widest text-[#AAAAAA] dark:text-[#4A4A3A]">{t('section_history')}</p>
             </div>
-            {history.length === 0 ? (
+            {historyLoading ? (
+              <div className="flex items-center justify-center py-12">
+                <div className="h-6 w-6 animate-spin rounded-full border-[3px] border-[#C49A1E] border-t-transparent" />
+              </div>
+            ) : history.length === 0 ? (
               <p className="p-8 text-center text-[13px] text-[#999]">{t('empty_history')}</p>
             ) : (
               <>
@@ -134,7 +158,7 @@ export function AdminCommissionView() {
                         {!same && <span className={`text-[10px] font-black ${up ? 'text-[#F97316]' : 'text-[#22C55E]'}`}>{up ? '▲' : '▼'}</span>}
                         {isCurrent && <span className="rounded-full bg-[#C49A1E]/15 px-1.5 py-0.5 text-[9px] font-black text-[#7A5E0A] dark:text-[#C49A1E]">live</span>}
                       </div>
-                      <p className="truncate text-[12px] text-[#666] dark:text-[#9A9A8A]">{h.set_by}</p>
+                      <p className="truncate text-[12px] text-[#666] dark:text-[#9A9A8A]">{resolveSetBy(h.set_by)}</p>
                       <p className="text-[11px] text-[#BBBBAA] dark:text-[#4A4A3A]">{formatDate(h.effective_at)}</p>
                     </div>
                   );

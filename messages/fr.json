@@ -824,7 +824,9 @@
     "payment_queue_subtitle": "Confirmez votre inscription dans la file d'attente.",
     "payment_confirm_queue": "Confirmer",
     "error_stripe_payment": "Le paiement a échoué. Vérifiez vos informations de carte.",
-    "error_stripe_unavailable": "Le service de paiement est temporairement indisponible."
+    "error_stripe_unavailable": "Le service de paiement est temporairement indisponible.",
+    "error_queue_join_failed": "Impossible de rejoindre la file d'attente. Veuillez réessayer.",
+    "error_active_queue_entry": "Vous avez déjà une entrée active dans cette station."
   },
   "coupons": {
     "title": "Mes réservations",
@@ -876,7 +878,27 @@
     "status_pending": "En attente",
     "status_pending_payment": "Paiement en attente",
     "error_load": "Impossible de charger vos réservations.",
-    "btn_retry": "Réessayer"
+    "btn_retry": "Réessayer",
+    "confirm_presence_btn": "Confirmer ma présence",
+    "confirm_presence_loading": "Confirmation...",
+    "confirm_presence_done": "Présence confirmée",
+    "confirm_presence_success": "Votre présence a été confirmée avec succès.",
+    "confirm_presence_error": "Impossible de confirmer votre présence. Veuillez réessayer.",
+    "dispute_btn": "Contester cette réservation",
+    "dispute_modal_title": "Contester la réservation",
+    "dispute_modal_desc": "Décrivez le problème rencontré lors de votre service. Notre équipe examinera votre demande dans les plus brefs délais.",
+    "dispute_field_reason": "Motif de la contestation",
+    "dispute_field_reason_placeholder": "Ex : service non conforme, véhicule endommagé...",
+    "dispute_field_description": "Description détaillée (optionnel)",
+    "dispute_field_description_placeholder": "Ajoutez des détails supplémentaires pour nous aider à traiter votre demande...",
+    "dispute_field_amount": "Montant demandé (optionnel)",
+    "dispute_field_amount_placeholder": "0.00",
+    "dispute_btn_submit": "Envoyer la contestation",
+    "dispute_btn_submitting": "Envoi...",
+    "dispute_btn_cancel": "Annuler",
+    "dispute_success": "Votre contestation a été envoyée avec succès.",
+    "dispute_error": "Impossible d'envoyer la contestation. Veuillez réessayer.",
+    "dispute_already_exists": "Une contestation existe déjà pour cette réservation."
   },
   "queue_detail": {
     "title": "Ma file d'attente",
@@ -890,7 +912,23 @@
     "service": "Service",
     "extras": "Extras",
     "total": "Total",
-    "open_maps": "Ouvrir l'itinéraire"
+    "open_maps": "Ouvrir l'itinéraire",
+    "upgrade_btn": "Convertir en réservation",
+    "upgrade_modal_title": "Convertir en réservation",
+    "upgrade_modal_desc": "Choisissez un créneau disponible pour convertir votre place en file d'attente en réservation.",
+    "upgrade_no_slots": "Aucun créneau disponible pour le moment.",
+    "upgrade_btn_cancel": "Annuler",
+    "upgrade_btn_continue": "Continuer",
+    "upgrade_btn_upgrading": "Conversion...",
+    "upgrade_btn_back": "Retour",
+    "upgrade_btn_pay": "Payer",
+    "upgrade_btn_paying": "Paiement...",
+    "upgrade_payment_desc": "Entrez vos informations de paiement pour finaliser la réservation.",
+    "upgrade_success": "Votre place a été convertie en réservation avec succès.",
+    "upgrade_error": "Impossible de convertir en réservation. Veuillez réessayer.",
+    "upgrade_error_slot_full": "Ce créneau est complet. Veuillez en choisir un autre.",
+    "upgrade_error_payment": "Le paiement a échoué. Veuillez réessayer.",
+    "upgrade_error_stripe": "Le service de paiement est indisponible. Veuillez réessayer plus tard."
   },
   "favorites": {
     "title": "Mes favoris",
@@ -991,6 +1029,7 @@
     "empty_title": "Aucun historique",
     "empty_desc": "Vos réservations terminées apparaîtront ici.",
     "download_receipt": "Télécharger le reçu",
+    "downloading_receipt": "Téléchargement...",
     "receipt_title": "Reçu de réservation",
     "receipt_ref": "Référence",
     "receipt_station": "Station",
@@ -1610,6 +1649,8 @@
     "modal_generating": "Génération...",
     "delete_confirm": "Supprimer ce créneau ?",
     "deleting": "Suppression...",
+    "select_all": "Tout sélectionner",
+    "btn_delete_selected": "Supprimer ({n})",
     "loading": "Chargement...",
     "section_profile": "Profil de la station",
     "field_email": "Adresse e-mail",
@@ -2028,7 +2069,9 @@
     "col_location": "Localisation",
     "col_status": "Statut",
     "col_actions": "Actions",
-    "btn_add_user": "Ajouter"
+    "btn_add_user": "Ajouter",
+    "action_success": "Action effectuée avec succès.",
+    "action_error": "Impossible d'effectuer cette action."
   },
   "admin_settings": {
     "page_title": "Paramètres plateforme",
@@ -2049,6 +2092,7 @@
     "error_share_range": "La part plateforme doit être comprise entre 0 et 100 %.",
     "error_delay_range": "Le délai doit être compris entre 1 et 10 080 minutes.",
     "save_success": "Paramètres sauvegardés.",
+    "save_error": "Impossible de sauvegarder les paramètres. Veuillez réessayer.",
     "label_platform": "Plateforme",
     "label_station": "Station",
     "label_unsaved": "Modifications non sauvegardées",
@@ -2099,6 +2143,7 @@
     "toast_refunded_full": "Remboursement total effectué.",
     "toast_refunded_partial": "Remboursement partiel effectué.",
     "toast_closed": "Litige clôturé.",
+    "action_error": "Impossible d'effectuer cette action. Veuillez réessayer.",
     "chip_open": "ouverts",
     "chip_total": "au total",
     "timeline_by_client": "Client",
@@ -2111,7 +2156,9 @@
     "event_refund_partial": "Remboursement partiel de {amount} effectué.",
     "event_closed": "Litige clôturé : {reason}",
     "not_found": "Litige introuvable.",
-    "label_station": "Station"
+    "label_station": "Station",
+    "fetch_error": "Impossible de charger les litiges.",
+    "btn_retry": "Réessayer"
   },
   "admin_commission": {
     "page_title": "Commission",
@@ -2135,7 +2182,8 @@
     "platform_share": "Plateforme",
     "station_share": "Station",
     "preview_title": "Répartition",
-    "unsaved_dot": "Modification non sauvegardée"
+    "unsaved_dot": "Modification non sauvegardée",
+    "save_error": "Impossible de mettre à jour le taux de commission."
   },
   "admin_transactions": {
     "page_title": "Transactions Stripe",
@@ -2175,7 +2223,8 @@
     "btn_download": "Télécharger le reçu (PDF)",
     "btn_close": "Fermer",
     "pdf_generated_on": "Généré le",
-    "error_export": "Échec de la génération du PDF."
+    "error_export": "Échec de la génération du PDF.",
+    "truncated_warning": "Seules les 100 dernières transactions sont affichées."
   },
   "admin_ratings": {
     "page_title": "Avis & notes",
@@ -2238,10 +2287,19 @@
     "alert_kyc_error": "Impossible de charger les données.",
     "alert_disputes_title": "Litiges ouverts",
     "alert_disputes_empty": "Aucun litige en cours.",
+    "alert_disputes_loading": "Chargement des litiges…",
     "alert_disputes_action": "Voir tous les litiges",
     "notif_tooltip": "Notifications",
     "section_performance": "Performance",
-    "kpi_period": "Aujourd'hui"
+    "kpi_period": "Aujourd'hui",
+    "section_analytics": "Analytiques",
+    "chart_revenue": "Revenus",
+    "chart_transactions": "Transactions",
+    "chart_registrations": "Inscriptions",
+    "chart_reservations": "Réservations",
+    "group_day": "Jour",
+    "group_week": "Semaine",
+    "group_month": "Mois"
   },
   "client_support": {
     "page_title": "Support",
@@ -2271,7 +2329,13 @@
     "thread_resolved_hint": "Ce ticket a été résolu par l'équipe support.",
     "thread_closed_hint": "Ce ticket est clôturé.",
     "btn_expand": "Développer le ticket",
-    "btn_collapse": "Réduire le ticket"
+    "btn_collapse": "Réduire le ticket",
+    "error_load": "Impossible de charger les tickets.",
+    "btn_retry": "Réessayer",
+    "reply_placeholder": "Votre réponse…",
+    "btn_send": "Envoyer",
+    "message_sent": "Message envoyé.",
+    "message_send_error": "Impossible d'envoyer le message."
   },
   "admin_support": {
     "page_title": "Tickets support",
@@ -2293,6 +2357,7 @@
     "detail_assigned": "Assigné à",
     "detail_unassigned": "Non assigné",
     "detail_assign_me": "M'assigner",
+    "detail_reassign_me": "Me réassigner",
     "section_thread": "Fil de messages",
     "field_reply": "Répondre",
     "field_reply_placeholder": "Écrivez votre réponse…",
@@ -2317,7 +2382,29 @@
     "not_found": "Ticket introuvable.",
     "empty_thread": "Aucun message pour l'instant.",
     "label_msg": "{count, plural, one {message} other {messages}}",
-    "reopen_success": "Ticket rouvert."
+    "reopen_success": "Ticket rouvert.",
+    "assign_error": "Impossible d'assigner le ticket.",
+    "btn_settings": "Paramètres",
+    "settings_title": "Paramètres du support",
+    "settings_unsaved": "Modifications non enregistrées",
+    "settings_saving": "Enregistrement…",
+    "settings_save": "Enregistrer",
+    "settings_save_success": "Paramètres du support mis à jour.",
+    "settings_save_error": "Impossible de sauvegarder les paramètres.",
+    "settings_email_label": "Adresse e-mail du support",
+    "settings_email_hint": "Adresse affichée aux utilisateurs pour contacter le support.",
+    "settings_max_tickets_label": "Tickets ouverts max par utilisateur",
+    "settings_max_tickets_hint": "Nombre maximum de tickets ouverts simultanément par utilisateur.",
+    "settings_auto_close_label": "Fermeture automatique (jours)",
+    "settings_auto_close_hint": "Nombre de jours d'inactivité avant fermeture automatique.",
+    "settings_welcome_label": "Message d'accueil",
+    "settings_welcome_placeholder": "Message affiché lors de la création d'un ticket…",
+    "settings_welcome_hint": "Texte affiché aux utilisateurs lorsqu'ils ouvrent un nouveau ticket.",
+    "settings_error_email": "L'adresse e-mail n'est pas valide.",
+    "settings_error_max_tickets": "Le nombre de tickets doit être un entier positif ou zéro.",
+    "settings_error_auto_close": "Le délai de fermeture doit être d'au moins 1 jour.",
+    "settings_error_html": "Le message d'accueil ne doit pas contenir de balises HTML.",
+    "action_error": "Impossible d'effectuer cette action. Veuillez réessayer."
   },
   "admin_add_user": {
     "modal_title": "Ajouter un utilisateur",

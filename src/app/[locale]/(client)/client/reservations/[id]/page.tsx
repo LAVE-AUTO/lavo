@@ -6,7 +6,7 @@ import { useTranslations, useLocale } from 'next-intl';
 import { Link, useRouter } from '@/i18n/navigation';
 import { useParams } from 'next/navigation';
 import { useToast } from '@/context/toast-context';
-import { getFromApi, patchWithApi } from '@/services/axios-service';
+import { getFromApi, patchWithApi, postWithApi } from '@/services/axios-service';
 import { RESERVATIONS_MOCK_ENABLED, findMockReservation } from '@/data/reservations-mock';
 
 /* ------------------------------------------------------------------ */
@@ -88,6 +88,14 @@ export default function ReservationDetailPage() {
   const [showCancelModal, setShowCancelModal] = useState(false);
   const [cancelLoading, setCancelLoading] = useState(false);
   const cancelDialogRef = useRef<HTMLDivElement | null>(null);
+  const [showDisputeModal, setShowDisputeModal] = useState(false);
+  const [disputeReason, setDisputeReason] = useState('');
+  const [disputeDescription, setDisputeDescription] = useState('');
+  const [disputeAmount, setDisputeAmount] = useState('');
+  const [disputeLoading, setDisputeLoading] = useState(false);
+  const disputeDialogRef = useRef<HTMLDivElement | null>(null);
+  const [confirmPresenceLoading, setConfirmPresenceLoading] = useState(false);
+  const [presenceConfirmed, setPresenceConfirmed] = useState(false);
   const { success: showSuccess, error: showError } = useToast();
 
   const loadReservation = useCallback(async () => {
@@ -192,6 +200,28 @@ export default function ReservationDetailPage() {
     };
   }, [showCancelModal]);
 
+  useEffect(() => {
+    if (!showDisputeModal) return;
+
+    const previouslyFocused = document.activeElement as HTMLElement | null;
+    const dialogEl = disputeDialogRef.current;
+    if (dialogEl) {
+      const focusable = dialogEl.querySelector<HTMLElement>(
+        'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])',
+      );
+      focusable?.focus();
+    }
+
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') { event.preventDefault(); setShowDisputeModal(false); }
+    };
+    document.addEventListener('keydown', handleKeyDown);
+    return () => {
+      document.removeEventListener('keydown', handleKeyDown);
+      previouslyFocused?.focus();
+    };
+  }, [showDisputeModal]);
+
   /* Loading */
   if (loading) {
     return (
@@ -243,6 +273,63 @@ export default function ReservationDetailPage() {
     window.open(url, '_blank', 'noopener,noreferrer');
   };
 
+  const handleSubmitDispute = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!reservation || !disputeReason.trim()) return;
+    setDisputeLoading(true);
+
+    const payload: Record<string, unknown> = {
+      reservation_id: reservation.id,
+      reason: disputeReason.trim(),
+    };
+    if (disputeDescription.trim()) payload.description = disputeDescription.trim();
+    const amt = parseFloat(disputeAmount);
+    if (!isNaN(amt) && amt > 0) payload.requested_amount = amt;
+
+    try {
+      const [ok, data] = await postWithApi('/disputes', payload);
+      if (!mountedRef.current) return;
+
+      if (ok) {
+        setShowDisputeModal(false);
+        setDisputeReason('');
+        setDisputeDescription('');
+        setDisputeAmount('');
+        showSuccess(t('dispute_success'));
+      } else {
+        const errData = data as { code?: string; message?: string } | null;
+        if (errData?.code === 'CONFLICT' || errData?.code === 'DISPUTE_ALREADY_EXISTS') {
+          showError(t('dispute_already_exists'));
+        } else {
+          showError(t('dispute_error'));
+        }
+      }
+    } catch {
+      if (mountedRef.current) showError(t('dispute_error'));
+    } finally {
+      if (mountedRef.current) setDisputeLoading(false);
+    }
+  };
+
+  const handleConfirmPresence = async () => {
+    if (!reservation) return;
+    setConfirmPresenceLoading(true);
+    try {
+      const [ok] = await postWithApi(`/reservations/${reservation.id}/confirm-presence`, {});
+      if (!mountedRef.current) return;
+      if (ok) {
+        setPresenceConfirmed(true);
+        showSuccess(t('confirm_presence_success'));
+      } else {
+        showError(t('confirm_presence_error'));
+      }
+    } catch {
+      if (mountedRef.current) showError(t('confirm_presence_error'));
+    } finally {
+      if (mountedRef.current) setConfirmPresenceLoading(false);
+    }
+  };
+
   const handleConfirmCancel = async () => {
     if (!reservation) return;
     setCancelLoading(true);
@@ -256,14 +343,20 @@ export default function ReservationDetailPage() {
       return;
     }
 
-    const [ok] = await patchWithApi(`/me/entries/${reservation.id}/cancel`, {});
-    setCancelLoading(false);
-    if (ok) {
-      setShowCancelModal(false);
-      showSuccess(t('toast_cancel_success'));
-      router.push('/client/reservations');
-    } else {
-      showError(t('toast_cancel_error'));
+    try {
+      const [ok] = await patchWithApi(`/me/entries/${reservation.id}/cancel`, {});
+      if (!mountedRef.current) return;
+      if (ok) {
+        setShowCancelModal(false);
+        showSuccess(t('toast_cancel_success'));
+        router.push('/client/reservations');
+      } else {
+        showError(t('toast_cancel_error'));
+      }
+    } catch {
+      if (mountedRef.current) showError(t('toast_cancel_error'));
+    } finally {
+      if (mountedRef.current) setCancelLoading(false);
     }
   };
 
@@ -316,6 +409,34 @@ export default function ReservationDetailPage() {
         {/* Action buttons (only for upcoming reservations) */}
         {isUpcoming && (
           <div className="space-y-3">
+            {canStart && !presenceConfirmed && (
+              <button
+                type="button"
+                onClick={handleConfirmPresence}
+                disabled={confirmPresenceLoading}
+                className="w-full py-3.5 rounded-xl text-[15px] font-black text-center transition-all flex items-center justify-center gap-2 bg-lavo-success hover:bg-lavo-success/90 text-white cursor-pointer disabled:opacity-50"
+              >
+                {confirmPresenceLoading ? (
+                  <svg className="animate-spin" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" aria-hidden="true">
+                    <path d="M21 12a9 9 0 11-6.219-8.56" />
+                  </svg>
+                ) : (
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                    <polyline points="20 6 9 17 4 12" />
+                  </svg>
+                )}
+                {confirmPresenceLoading ? t('confirm_presence_loading') : t('confirm_presence_btn')}
+              </button>
+            )}
+            {canStart && presenceConfirmed && (
+              <div className="flex items-center justify-center gap-2 py-3 rounded-xl bg-lavo-success/10 border border-lavo-success/30">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#00C851" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                  <polyline points="20 6 9 17 4 12" />
+                </svg>
+                <span className="text-[14px] font-bold text-lavo-success">{t('confirm_presence_done')}</span>
+              </div>
+            )}
+
             <button
               type="button"
               onClick={canStart ? handleStartNavigation : undefined}
@@ -388,11 +509,140 @@ export default function ReservationDetailPage() {
                   </svg>
                   {t('tip_btn')}
                 </Link>
+                <button
+                  type="button"
+                  onClick={() => setShowDisputeModal(true)}
+                  className="flex items-center justify-center gap-2 w-full py-3 rounded-xl border-2 border-lavo-error/30 text-[14px] font-bold text-lavo-error hover:bg-lavo-error/5 hover:border-lavo-error/50 transition-colors cursor-pointer"
+                >
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                    <path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z" />
+                    <line x1="12" y1="9" x2="12" y2="13" /><line x1="12" y1="17" x2="12.01" y2="17" />
+                  </svg>
+                  {t('dispute_btn')}
+                </button>
               </>
             )}
           </div>
         )}
       </div>
+
+      {/* Dispute modal */}
+      {showDisputeModal && (
+        <>
+          <div
+            className="fixed inset-0 z-[60] bg-black/50 backdrop-blur-sm"
+            onClick={() => setShowDisputeModal(false)}
+          />
+          <div className="fixed inset-0 z-[60] flex items-center justify-center p-4">
+            <div
+              ref={disputeDialogRef}
+              role="dialog"
+              aria-modal="true"
+              aria-labelledby="dispute-modal-title"
+              className="bg-[#F5F5E6] dark:bg-[#1A1A18] rounded-2xl shadow-2xl w-full max-w-md p-6 space-y-4 max-h-[90vh] overflow-y-auto"
+            >
+              <div className="w-14 h-14 rounded-full bg-lavo-error/15 flex items-center justify-center mx-auto">
+                <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#E8472A" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                  <path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z" />
+                  <line x1="12" y1="9" x2="12" y2="13" /><line x1="12" y1="17" x2="12.01" y2="17" />
+                </svg>
+              </div>
+
+              <h3
+                id="dispute-modal-title"
+                className="text-[18px] font-black text-[#0A0A14] dark:text-white text-center"
+              >
+                {t('dispute_modal_title')}
+              </h3>
+              <p className="text-[13px] text-[#666] dark:text-[#B0B0A0] text-center leading-relaxed">
+                {t('dispute_modal_desc')}
+              </p>
+
+              <form onSubmit={handleSubmitDispute} className="space-y-4">
+                {/* Reason (required) */}
+                <div>
+                  <label htmlFor="dispute-reason" className="block text-[13px] font-bold text-[#0A0A14] dark:text-white mb-1.5">
+                    {t('dispute_field_reason')} <span className="text-lavo-error">*</span>
+                  </label>
+                  <textarea
+                    id="dispute-reason"
+                    value={disputeReason}
+                    onChange={(e) => setDisputeReason(e.target.value)}
+                    placeholder={t('dispute_field_reason_placeholder')}
+                    maxLength={500}
+                    rows={3}
+                    required
+                    className="w-full rounded-xl border border-[#D0D0C0] dark:border-tab-inactive bg-white dark:bg-[#131310] px-3.5 py-2.5 text-[13px] text-[#0A0A14] dark:text-white outline-none transition-colors placeholder:text-[#BBBBAA] dark:placeholder:text-[#555] focus:border-gold resize-none"
+                  />
+                  <p className="mt-1 text-[11px] text-[#999] dark:text-[#666] text-right">{disputeReason.length}/500</p>
+                </div>
+
+                {/* Description (optional) */}
+                <div>
+                  <label htmlFor="dispute-description" className="block text-[13px] font-bold text-[#0A0A14] dark:text-white mb-1.5">
+                    {t('dispute_field_description')}
+                  </label>
+                  <textarea
+                    id="dispute-description"
+                    value={disputeDescription}
+                    onChange={(e) => setDisputeDescription(e.target.value)}
+                    placeholder={t('dispute_field_description_placeholder')}
+                    maxLength={2000}
+                    rows={4}
+                    className="w-full rounded-xl border border-[#D0D0C0] dark:border-tab-inactive bg-white dark:bg-[#131310] px-3.5 py-2.5 text-[13px] text-[#0A0A14] dark:text-white outline-none transition-colors placeholder:text-[#BBBBAA] dark:placeholder:text-[#555] focus:border-gold resize-none"
+                  />
+                  <p className="mt-1 text-[11px] text-[#999] dark:text-[#666] text-right">{disputeDescription.length}/2000</p>
+                </div>
+
+                {/* Requested amount (optional) */}
+                <div>
+                  <label htmlFor="dispute-amount" className="block text-[13px] font-bold text-[#0A0A14] dark:text-white mb-1.5">
+                    {t('dispute_field_amount')}
+                  </label>
+                  <div className="relative">
+                    <input
+                      id="dispute-amount"
+                      type="number"
+                      step="0.01"
+                      min="0.01"
+                      max="100000"
+                      value={disputeAmount}
+                      onChange={(e) => setDisputeAmount(e.target.value)}
+                      placeholder={t('dispute_field_amount_placeholder')}
+                      className="w-full rounded-xl border border-[#D0D0C0] dark:border-tab-inactive bg-white dark:bg-[#131310] px-3.5 py-2.5 pr-10 text-[13px] text-[#0A0A14] dark:text-white outline-none transition-colors placeholder:text-[#BBBBAA] dark:placeholder:text-[#555] focus:border-gold"
+                    />
+                    <span className="absolute right-3.5 top-1/2 -translate-y-1/2 text-[13px] font-bold text-[#999] dark:text-[#666]">$</span>
+                  </div>
+                </div>
+
+                {/* Actions */}
+                <div className="flex gap-3 pt-2">
+                  <button
+                    type="button"
+                    onClick={() => setShowDisputeModal(false)}
+                    disabled={disputeLoading}
+                    className="flex-1 py-3 border-2 border-[#D0D0C0] dark:border-tab-inactive rounded-xl text-[14px] font-bold text-[#555] dark:text-[#B0B0A0] hover:bg-[#E0E0D0] dark:hover:bg-[#222220] transition-colors cursor-pointer disabled:opacity-50"
+                  >
+                    {t('dispute_btn_cancel')}
+                  </button>
+                  <button
+                    type="submit"
+                    disabled={disputeLoading || !disputeReason.trim()}
+                    className="flex-1 py-3 bg-lavo-error hover:bg-lavo-error/90 rounded-xl text-[14px] font-bold text-white transition-colors cursor-pointer disabled:opacity-50 flex items-center justify-center gap-2"
+                  >
+                    {disputeLoading && (
+                      <svg className="animate-spin" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" aria-hidden="true">
+                        <path d="M21 12a9 9 0 11-6.219-8.56" />
+                      </svg>
+                    )}
+                    {disputeLoading ? t('dispute_btn_submitting') : t('dispute_btn_submit')}
+                  </button>
+                </div>
+              </form>
+            </div>
+          </div>
+        </>
+      )}
 
       {/* Cancel confirmation modal */}
       {showCancelModal && (

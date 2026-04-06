@@ -4,6 +4,8 @@ import { useState, useRef, useEffect } from 'react';
 import { useTranslations } from 'next-intl';
 import { Link } from '@/i18n/navigation';
 import { useToast } from '@/context/toast-context';
+import { useAuth } from '@/context/auth-context';
+import { patchWithApi } from '@/services/axios-service';
 import { Modal } from '@/components/ui/Modal';
 import { MOCK_TICKETS, type SupportTicket, type TicketStatus } from '@/components/support/support-mock';
 
@@ -81,6 +83,7 @@ interface Props { id: string }
 export function AdminSupportDetail({ id }: Props) {
   const t = useTranslations('admin_support');
   const { success: toastSuccess, error: toastError } = useToast();
+  const { user } = useAuth();
   const mountedRef = useRef(true);
   useEffect(() => { mountedRef.current = true; return () => { mountedRef.current = false; }; }, []);
 
@@ -131,13 +134,20 @@ export function AdminSupportDetail({ id }: Props) {
   }
 
   async function handleAssignMe() {
+    if (!user?.id) return;
     setActionBusy(true);
     try {
-      // TODO: connect to API once endpoint is available (PATCH /admin/support/tickets/:id)
-      await new Promise((r) => setTimeout(r, 400));
+      const [ok] = await patchWithApi(`/admin/support/${id}/assign`, { assigned_to: user.id });
       if (!mountedRef.current) return;
-      setTicket((prev) => prev ? { ...prev, assigned_to: 'Admin Support' } : prev);
-      toastSuccess(t('assign_success'));
+      if (ok) {
+        const displayName = [user.first_name, user.last_name].filter(Boolean).join(' ') || 'Admin';
+        setTicket((prev) => prev ? { ...prev, assigned_to: displayName } : prev);
+        toastSuccess(t('assign_success'));
+      } else {
+        toastError(t('assign_error'));
+      }
+    } catch {
+      if (mountedRef.current) toastError(t('assign_error'));
     } finally {
       if (mountedRef.current) setActionBusy(false);
     }
@@ -151,6 +161,8 @@ export function AdminSupportDetail({ id }: Props) {
       if (!mountedRef.current) return;
       setTicket((prev) => prev ? { ...prev, status: 'resolved' } : prev);
       toastSuccess(t('resolve_success'));
+    } catch {
+      if (mountedRef.current) toastError(t('action_error'));
     } finally {
       if (mountedRef.current) setActionBusy(false);
     }
@@ -164,6 +176,8 @@ export function AdminSupportDetail({ id }: Props) {
       if (!mountedRef.current) return;
       setTicket((prev) => prev ? { ...prev, status: 'open' } : prev);
       toastSuccess(t('reopen_success'));
+    } catch {
+      if (mountedRef.current) toastError(t('action_error'));
     } finally {
       if (mountedRef.current) setActionBusy(false);
     }
@@ -178,6 +192,8 @@ export function AdminSupportDetail({ id }: Props) {
       setTicket((prev) => prev ? { ...prev, status: 'closed', close_reason: reason } : prev);
       setShowCloseModal(false);
       toastSuccess(t('close_success'));
+    } catch {
+      if (mountedRef.current) toastError(t('action_error'));
     } finally {
       if (mountedRef.current) setActionBusy(false);
     }
@@ -220,10 +236,10 @@ export function AdminSupportDetail({ id }: Props) {
 
             {/* Action buttons */}
             <div className="flex shrink-0 flex-wrap items-center gap-2">
-              {!ticket.assigned_to && !isClosed && (
+              {!isClosed && (
                 <button type="button" onClick={handleAssignMe} disabled={actionBusy}
                   className="rounded-[10px] border border-[#C49A1E]/40 px-3 py-2 text-[12px] font-semibold text-[#C49A1E] transition-colors hover:bg-[#C49A1E]/8 disabled:opacity-50">
-                  {t('detail_assign_me')}
+                  {ticket.assigned_to ? t('detail_reassign_me') : t('detail_assign_me')}
                 </button>
               )}
               {!isResolved && !isClosed && (
