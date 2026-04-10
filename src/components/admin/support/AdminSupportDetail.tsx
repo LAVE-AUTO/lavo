@@ -229,7 +229,7 @@ export function AdminSupportDetail({ id }: Props) {
               </div>
               <p className="mt-1.5 text-[12px] text-[#888] dark:text-[#6A6A5A]">
                 {t('detail_from')} <span className="font-semibold text-[#444] dark:text-[#AAA]">{ticket.created_by}</span>
-                <span className="mx-2 text-[#CCC] dark:text-[#3A3A2A]" aria-hidden="true">·</span>
+                <span className="mx-2 text-[#CCC] dark:text-[#8A8A7A]" aria-hidden="true">·</span>
                 {t('detail_assigned')}: <span className="font-semibold text-[#444] dark:text-[#AAA]">{ticket.assigned_to ?? t('detail_unassigned')}</span>
               </p>
             </div>
@@ -270,10 +270,10 @@ export function AdminSupportDetail({ id }: Props) {
 
             {/* Thread */}
             <div className="flex flex-col gap-3">
-              <h2 className="text-[11px] font-black uppercase tracking-wider text-[#AAAAAA] dark:text-[#4A4A3A]">{t('section_thread')}</h2>
+              <h2 className="text-[11px] font-black uppercase tracking-wider text-[#AAAAAA] dark:text-[#8A8A7A]">{t('section_thread')}</h2>
               {ticket.messages.length === 0 ? (
                 <div className="flex flex-col items-center gap-2 py-10 text-center">
-                  <p className="text-[13px] text-[#AAAAAA] dark:text-[#4A4A3A]">{t('empty_thread')}</p>
+                  <p className="text-[13px] text-[#AAAAAA] dark:text-[#8A8A7A]">{t('empty_thread')}</p>
                 </div>
               ) : (
                 ticket.messages.map((msg) => {
@@ -296,7 +296,7 @@ export function AdminSupportDetail({ id }: Props) {
                           {msg.author}
                         </p>
                         <p className="text-[13px] leading-relaxed text-[#1A1A0A] dark:text-[#F0EDD4]">{msg.body}</p>
-                        <p className="mt-1.5 text-[10px] text-[#BBBBAA] dark:text-[#4A4A3A]">{formatDateTime(msg.created_at)}</p>
+                        <p className="mt-1.5 text-[10px] text-[#BBBBAA] dark:text-[#8A8A7A]">{formatDateTime(msg.created_at)}</p>
                       </div>
                     </div>
                   );
@@ -320,7 +320,7 @@ export function AdminSupportDetail({ id }: Props) {
                     onChange={(e) => setReply(e.target.value)}
                   />
                   <div className="flex items-center justify-between">
-                    <span className="text-[11px] text-[#BBBBAA] dark:text-[#4A4A3A]">{reply.length}/2000</span>
+                    <span className="text-[11px] text-[#BBBBAA] dark:text-[#8A8A7A]">{reply.length}/2000</span>
                     <button type="submit" disabled={replySaving || !reply.trim()}
                       className="rounded-[10px] bg-[#C49A1E] px-6 py-2.5 text-[13px] font-bold text-[#0C1209] transition-opacity hover:opacity-80 disabled:opacity-50">
                       {replySaving ? t('btn_sending') : t('btn_send_reply')}
@@ -333,14 +333,14 @@ export function AdminSupportDetail({ id }: Props) {
             {/* Resolved notice */}
             {isResolved && (
               <div className="flex items-center justify-center rounded-2xl border border-[#E8E4DC] bg-white px-5 py-4 shadow-sm dark:border-[#1E2E18] dark:bg-[#131E10]">
-                <p className="text-[12px] text-[#AAAAAA] dark:text-[#4A4A3A]">{t('status_resolved_notice')}</p>
+                <p className="text-[12px] text-[#AAAAAA] dark:text-[#8A8A7A]">{t('status_resolved_notice')}</p>
               </div>
             )}
 
             {/* Closed notice */}
             {isClosed && (
               <div className="flex items-center justify-center rounded-2xl border border-[#E8E4DC] bg-white px-5 py-4 shadow-sm dark:border-[#1E2E18] dark:bg-[#131E10]">
-                <p className="text-[12px] text-[#AAAAAA] dark:text-[#4A4A3A]">{t('close_success')}</p>
+                <p className="text-[12px] text-[#AAAAAA] dark:text-[#8A8A7A]">{t('close_success')}</p>
               </div>
             )}
           </div>

@@ -136,7 +136,7 @@ export function AdminRatingsView() {
       {/* Header */}
       <div className="shrink-0 border-b border-[#E0DCD0] bg-[#F5F5EE] px-6 py-5 dark:border-[#1A2A14] dark:bg-[#0C1209]">
         <h1 className="text-[22px] font-black text-[#1A1A0A] dark:text-[#F0EDD4]">{t('page_title')}</h1>
-        <p className="mt-1 text-[13px] text-[#888] dark:text-[#5A5A4A]">{t('page_subtitle')}</p>
+        <p className="mt-1 text-[13px] text-[#888] dark:text-[#8A8A7A]">{t('page_subtitle')}</p>
       </div>
 
       {/* Filters */}
@@ -179,7 +179,7 @@ export function AdminRatingsView() {
         ))}
 
         {meta && (
-          <span className="ml-auto text-[12px] text-[#AAA] dark:text-[#5A5A4A]">
+          <span className="ml-auto text-[12px] text-[#AAA] dark:text-[#8A8A7A]">
             {t('meta_total', { count: meta.total })}
           </span>
         )}
@@ -196,7 +196,7 @@ export function AdminRatingsView() {
 
         {!loading && loadError && (
           <div className="flex flex-col items-center gap-3 py-20">
-            <p className="text-[14px] text-[#888] dark:text-[#5A5A4A]">{t('error_load')}</p>
+            <p className="text-[14px] text-[#888] dark:text-[#8A8A7A]">{t('error_load')}</p>
             <button
               type="button"
               onClick={() => loadData(page, visibilityFilter, scoreFilter)}
@@ -209,7 +209,7 @@ export function AdminRatingsView() {
 
         {!loading && !loadError && items.length === 0 && (
           <div className="flex justify-center py-20">
-            <p className="text-[14px] text-[#AAA] dark:text-[#5A5A4A]">{t('no_results')}</p>
+            <p className="text-[14px] text-[#AAA] dark:text-[#8A8A7A]">{t('no_results')}</p>
           </div>
         )}
 
@@ -221,7 +221,7 @@ export function AdminRatingsView() {
                   {[t('col_station'), t('col_client'), t('col_score'), t('col_comment'), t('col_date'), t('col_visibility'), ''].map((h, i) => (
                     <th
                       key={i}
-                      className="px-4 py-3 text-left text-[10px] font-black uppercase tracking-widest text-[#AAAAAA] dark:text-[#4A4A3A]"
+                      className="px-4 py-3 text-left text-[10px] font-black uppercase tracking-widest text-[#AAAAAA] dark:text-[#8A8A7A]"
                     >
                       {h}
                     </th>
@@ -256,12 +256,12 @@ export function AdminRatingsView() {
                     <td className="max-w-[220px] px-4 py-3 text-[#666] dark:text-[#7A7A6A]">
                       {item.comment
                         ? <span className="line-clamp-2 leading-relaxed">{item.comment}</span>
-                        : <span className="italic text-[#BBB] dark:text-[#4A4A3A]">{t('no_comment')}</span>
+                        : <span className="italic text-[#BBB] dark:text-[#8A8A7A]">{t('no_comment')}</span>
                       }
                     </td>
 
                     {/* Date */}
-                    <td className="whitespace-nowrap px-4 py-3 text-[#999] dark:text-[#5A5A4A]">
+                    <td className="whitespace-nowrap px-4 py-3 text-[#999] dark:text-[#8A8A7A]">
                       {formatDate(item.created_at)}
                     </td>
 
@@ -314,7 +314,7 @@ export function AdminRatingsView() {
               aria-label={t('pagination_prev')}
               disabled={page === 1}
               onClick={() => loadData(page - 1, visibilityFilter, scoreFilter)}
-              className="flex h-8 w-8 items-center justify-center rounded-lg border border-[#D8D4CC] text-[#888] transition-colors hover:border-[#C49A1E] hover:text-[#C49A1E] disabled:opacity-40 dark:border-[#1A2A14] dark:text-[#5A5A4A]"
+              className="flex h-8 w-8 items-center justify-center rounded-lg border border-[#D8D4CC] text-[#888] transition-colors hover:border-[#C49A1E] hover:text-[#C49A1E] disabled:opacity-40 dark:border-[#1A2A14] dark:text-[#8A8A7A]"
             >
               <svg aria-hidden="true" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"><polyline points="15 18 9 12 15 6" /></svg>
             </button>
@@ -327,7 +327,7 @@ export function AdminRatingsView() {
                   'flex h-8 w-8 items-center justify-center rounded-lg text-[13px] font-bold transition-colors',
                   p === page
                     ? 'bg-[#C49A1E] text-[#0C1209]'
-                    : 'border border-[#D8D4CC] text-[#888] hover:border-[#C49A1E] hover:text-[#C49A1E] dark:border-[#1A2A14] dark:text-[#5A5A4A]',
+                    : 'border border-[#D8D4CC] text-[#888] hover:border-[#C49A1E] hover:text-[#C49A1E] dark:border-[#1A2A14] dark:text-[#8A8A7A]',
                 ].join(' ')}
               >
                 {p}
@@ -338,7 +338,7 @@ export function AdminRatingsView() {
               aria-label={t('pagination_next')}
               disabled={page === totalPages}
               onClick={() => loadData(page + 1, visibilityFilter, scoreFilter)}
-              className="flex h-8 w-8 items-center justify-center rounded-lg border border-[#D8D4CC] text-[#888] transition-colors hover:border-[#C49A1E] hover:text-[#C49A1E] disabled:opacity-40 dark:border-[#1A2A14] dark:text-[#5A5A4A]"
+              className="flex h-8 w-8 items-center justify-center rounded-lg border border-[#D8D4CC] text-[#888] transition-colors hover:border-[#C49A1E] hover:text-[#C49A1E] disabled:opacity-40 dark:border-[#1A2A14] dark:text-[#8A8A7A]"
             >
               <svg aria-hidden="true" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"><polyline points="9 18 15 12 9 6" /></svg>
             </button>

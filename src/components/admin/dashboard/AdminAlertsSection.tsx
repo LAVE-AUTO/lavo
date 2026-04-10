@@ -89,7 +89,7 @@ function SectionPanel({
         {empty ? (
           <div className="flex flex-col items-center justify-center py-10 text-center">
             <div className="mb-2 text-[28px] opacity-20" aria-hidden="true">✓</div>
-            <p className="text-[12px] font-medium text-[#AAA] dark:text-[#4A4A3A]">{emptyLabel}</p>
+            <p className="text-[12px] font-medium text-[#AAA] dark:text-[#8A8A7A]">{emptyLabel}</p>
           </div>
         ) : children}
       </div>
@@ -173,7 +173,7 @@ export function AdminAlertsSection() {
         emptyLabel={t('alert_kyc_empty')}
       >
         {kycLoading && (
-          <div className="px-5 py-4 text-[11px] text-[#AAA] dark:text-[#4A4A3A]">{t('alert_kyc_loading')}</div>
+          <div className="px-5 py-4 text-[11px] text-[#AAA] dark:text-[#8A8A7A]">{t('alert_kyc_loading')}</div>
         )}
         {!kycLoading && kycError && (
           <div className="px-5 py-4 text-[11px] text-[#E8472A]">{t('alert_kyc_error')}</div>
@@ -189,7 +189,7 @@ export function AdminAlertsSection() {
             </div>
             <div className="min-w-0 flex-1">
               <div className="truncate text-[12px] font-bold text-[#0F1A0C] dark:text-[#F0EDD4]">{s.name}</div>
-              <div className="text-[10px] text-[#AAA] dark:text-[#4A4A3A]">{formatDate(s.created_at)}</div>
+              <div className="text-[10px] text-[#AAA] dark:text-[#8A8A7A]">{formatDate(s.created_at)}</div>
             </div>
             <span className="shrink-0 rounded-full bg-[#C49A1E]/10 px-2 py-0.5 text-[9px] font-black uppercase tracking-wider text-[#C49A1E]">
               KYC
@@ -210,7 +210,7 @@ export function AdminAlertsSection() {
         emptyLabel={t('alert_disputes_empty')}
       >
         {disputesLoading && (
-          <div className="px-5 py-4 text-[11px] text-[#AAA] dark:text-[#4A4A3A]">{t('alert_disputes_loading')}</div>
+          <div className="px-5 py-4 text-[11px] text-[#AAA] dark:text-[#8A8A7A]">{t('alert_disputes_loading')}</div>
         )}
         {!disputesLoading && disputes.map((d, i) => (
           <Link
@@ -223,7 +223,7 @@ export function AdminAlertsSection() {
             </div>
             <div className="min-w-0 flex-1">
               <div className="truncate text-[12px] font-bold text-[#0F1A0C] dark:text-[#F0EDD4]">{d.client}</div>
-              <div className="text-[10px] text-[#AAA] dark:text-[#4A4A3A]">{formatDate(d.date)}</div>
+              <div className="text-[10px] text-[#AAA] dark:text-[#8A8A7A]">{formatDate(d.date)}</div>
             </div>
             <div className="flex shrink-0 flex-col items-end gap-1">
               <span className="text-[12px] font-black text-[#E8472A]">{d.amount}</span>

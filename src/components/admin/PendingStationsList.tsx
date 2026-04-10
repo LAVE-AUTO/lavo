@@ -146,7 +146,7 @@ function StationCard({
           {/* Meta row */}
           <div className="mt-2 flex flex-wrap items-center gap-2">
             {/* Date */}
-            <span className="flex items-center gap-1 text-[10px] font-semibold text-[#999] dark:text-[#5A5A4A]">
+            <span className="flex items-center gap-1 text-[10px] font-semibold text-[#999] dark:text-[#8A8A7A]">
               <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
                 <rect x="3" y="4" width="18" height="18" rx="2" /><line x1="16" y1="2" x2="16" y2="6" /><line x1="8" y1="2" x2="8" y2="6" /><line x1="3" y1="10" x2="21" y2="10" />
               </svg>
@@ -155,11 +155,11 @@ function StationCard({
             </span>
 
             {/* Separator */}
-            {isPending && docCount > 0 && <span className="text-[#DDD] dark:text-[#2A2A2A]">·</span>}
+            {isPending && docCount > 0 && <span className="text-[#DDD] dark:text-[#6A6A5A]">·</span>}
 
             {/* Docs count */}
             {isPending && docCount > 0 && (
-              <span className="flex items-center gap-1 text-[10px] font-semibold text-[#999] dark:text-[#5A5A4A]">
+              <span className="flex items-center gap-1 text-[10px] font-semibold text-[#999] dark:text-[#8A8A7A]">
                 <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
                   <path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z" /><polyline points="14 2 14 8 20 8" />
                 </svg>
@@ -170,7 +170,7 @@ function StationCard({
             {/* Rejection count */}
             {s.rejection_count > 0 && (
               <>
-                <span className="text-[#DDD] dark:text-[#2A2A2A]">·</span>
+                <span className="text-[#DDD] dark:text-[#6A6A5A]">·</span>
                 <span className="flex items-center gap-1 text-[10px] font-semibold" style={{ color: '#EF4444' }}>
                   <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
                     <circle cx="12" cy="12" r="10" /><line x1="15" y1="9" x2="9" y2="15" /><line x1="9" y1="9" x2="15" y2="15" />
@@ -273,7 +273,7 @@ export function PendingStationsList() {
                   </span>
                 )}
               </div>
-              <p className="mt-0.5 text-[11px] text-[#AAA] dark:text-[#4A4A3A]">
+              <p className="mt-0.5 text-[11px] text-[#AAA] dark:text-[#8A8A7A]">
                 {t('page_subtitle_history')}
               </p>
             </div>

@@ -84,10 +84,10 @@ export function AdminCommissionView() {
           <div className="flex flex-col gap-4">
             <div className="overflow-hidden rounded-2xl border border-[#E8E4DC] bg-white shadow-sm dark:border-[#1E2E18] dark:bg-[#131E10]">
               <div className="border-b border-[#F0EDE6] bg-[#F9F8F5] px-5 py-3 dark:border-[#1A2A14] dark:bg-[#0E1A0C]">
-                <p className="text-[11px] font-black uppercase tracking-widest text-[#AAAAAA] dark:text-[#4A4A3A]">{t('section_current')}</p>
+                <p className="text-[11px] font-black uppercase tracking-widest text-[#AAAAAA] dark:text-[#8A8A7A]">{t('section_current')}</p>
               </div>
               <div className="p-5">
-                <p className="mb-3 text-[11px] font-bold uppercase tracking-wider text-[#8A8A7A] dark:text-[#5A5A4A]">{t('label_rate')}</p>
+                <p className="mb-3 text-[11px] font-bold uppercase tracking-wider text-[#8A8A7A] dark:text-[#8A8A7A]">{t('label_rate')}</p>
                 {/* Big rate input */}
                 <div className="flex overflow-hidden rounded-xl border-2 border-[#D8D4C8] bg-white transition-all focus-within:border-[#C49A1E] focus-within:shadow-[0_0_0_4px_rgba(196,154,30,0.12)] dark:border-[#243020] dark:bg-[#0F1A0C] dark:focus-within:border-[#C49A1E]">
                   <input type="number" min={0} max={100} step={0.5} value={rate}
@@ -95,23 +95,23 @@ export function AdminCommissionView() {
                     className="flex-1 bg-transparent px-5 py-4 text-[32px] font-black text-[#1A1A0A] outline-none [appearance:textfield] dark:text-[#F0EDD4]" />
                   <span className="flex items-center border-l border-[#E8E4D8] bg-[#F5F2EC] px-5 text-[20px] font-black text-[#AAAAAA] dark:border-[#243020] dark:bg-[#0E1A0C]">%</span>
                 </div>
-                <p className="mt-2 text-[11px] leading-relaxed text-[#AAAAAA] dark:text-[#4A4A3A]">{t('hint_rate')}</p>
+                <p className="mt-2 text-[11px] leading-relaxed text-[#AAAAAA] dark:text-[#8A8A7A]">{t('hint_rate')}</p>
 
                 {/* Split preview bar */}
                 <div className="mt-5">
-                  <p className="mb-2 text-[10px] font-black uppercase tracking-widest text-[#AAAAAA] dark:text-[#4A4A3A]">{t('preview_title')}</p>
+                  <p className="mb-2 text-[10px] font-black uppercase tracking-widest text-[#AAAAAA] dark:text-[#8A8A7A]">{t('preview_title')}</p>
                   <div className="flex h-8 overflow-hidden rounded-xl bg-[#F0EDE6] dark:bg-[#1A2A14]">
                     <div className="flex items-center justify-center bg-[#C49A1E] text-[10px] font-black text-[#0C1209] transition-all duration-500"
                       style={{ width: `${barWidth}%` }}>
                       {rate > 8 && `${rate}%`}
                     </div>
-                    <div className="flex flex-1 items-center justify-center text-[10px] font-bold text-[#888] dark:text-[#5A5A4A]">
+                    <div className="flex flex-1 items-center justify-center text-[10px] font-bold text-[#888] dark:text-[#8A8A7A]">
                       {stationShare > 8 && `${stationShare}%`}
                     </div>
                   </div>
                   <div className="mt-2 flex justify-between text-[11px] font-bold">
                     <span className="text-[#C49A1E]">{t('platform_share')}</span>
-                    <span className="text-[#888] dark:text-[#5A5A4A]">{t('station_share')}</span>
+                    <span className="text-[#888] dark:text-[#8A8A7A]">{t('station_share')}</span>
                   </div>
                 </div>
 
@@ -130,7 +130,7 @@ export function AdminCommissionView() {
           {/* Right: history */}
           <div className="overflow-hidden rounded-2xl border border-[#E8E4DC] bg-white shadow-sm dark:border-[#1E2E18] dark:bg-[#131E10]">
             <div className="border-b border-[#F0EDE6] bg-[#F9F8F5] px-5 py-3 dark:border-[#1A2A14] dark:bg-[#0E1A0C]">
-              <p className="text-[11px] font-black uppercase tracking-widest text-[#AAAAAA] dark:text-[#4A4A3A]">{t('section_history')}</p>
+              <p className="text-[11px] font-black uppercase tracking-widest text-[#AAAAAA] dark:text-[#8A8A7A]">{t('section_history')}</p>
             </div>
             {historyLoading ? (
               <div className="flex items-center justify-center py-12">
@@ -142,7 +142,7 @@ export function AdminCommissionView() {
               <>
                 <div className="grid grid-cols-[80px_1fr_100px] gap-4 border-b border-[#F0EDE6] px-5 py-2.5 dark:border-[#1A2A14]">
                   {[t('col_rate'), t('col_set_by'), t('col_effective')].map((h) => (
-                    <span key={h} className="text-[10px] font-black uppercase tracking-widest text-[#AAAAAA] dark:text-[#4A4A3A]">{h}</span>
+                    <span key={h} className="text-[10px] font-black uppercase tracking-widest text-[#AAAAAA] dark:text-[#8A8A7A]">{h}</span>
                   ))}
                 </div>
                 {history.map((h, i) => {
@@ -159,7 +159,7 @@ export function AdminCommissionView() {
                         {isCurrent && <span className="rounded-full bg-[#C49A1E]/15 px-1.5 py-0.5 text-[9px] font-black text-[#7A5E0A] dark:text-[#C49A1E]">live</span>}
                       </div>
                       <p className="truncate text-[12px] text-[#666] dark:text-[#9A9A8A]">{resolveSetBy(h.set_by)}</p>
-                      <p className="text-[11px] text-[#BBBBAA] dark:text-[#4A4A3A]">{formatDate(h.effective_at)}</p>
+                      <p className="text-[11px] text-[#BBBBAA] dark:text-[#8A8A7A]">{formatDate(h.effective_at)}</p>
                     </div>
                   );
                 })}

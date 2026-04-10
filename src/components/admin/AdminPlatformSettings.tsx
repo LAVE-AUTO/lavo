@@ -34,14 +34,14 @@ function NumericField({
           className={[
             'flex-1 bg-transparent px-4 py-3 text-[18px] font-bold outline-none',
             '[appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none',
-            readOnly ? 'cursor-not-allowed text-[#9A9A8A] dark:text-[#5A5A4A]' : 'text-[#1A1A0A] dark:text-[#F0EDD4]',
+            readOnly ? 'cursor-not-allowed text-[#9A9A8A] dark:text-[#8A8A7A]' : 'text-[#1A1A0A] dark:text-[#F0EDD4]',
           ].join(' ')}
         />
-        <span className="flex items-center border-l border-[#E8E4D8] bg-[#F0EDE0] px-3.5 text-[12px] font-black text-[#8A8A6A] dark:border-[#243020] dark:bg-[#141E10] dark:text-[#5A5A4A]">
+        <span className="flex items-center border-l border-[#E8E4D8] bg-[#F0EDE0] px-3.5 text-[12px] font-black text-[#8A8A6A] dark:border-[#243020] dark:bg-[#141E10] dark:text-[#8A8A7A]">
           {unit}
         </span>
       </div>
-      {hint && <p className="mt-1 text-[11px] leading-relaxed text-[#AAAAAA] dark:text-[#4A4A3A]">{hint}</p>}
+      {hint && <p className="mt-1 text-[11px] leading-relaxed text-[#AAAAAA] dark:text-[#8A8A7A]">{hint}</p>}
     </div>
   );
 }
@@ -164,7 +164,7 @@ export function AdminPlatformSettings() {
         </div>
         <div className="flex items-center gap-3">
           {isDirty && !saving && (
-            <span className="text-[11px] font-semibold text-[#AAAAAA] dark:text-[#5A5A4A]">{t('label_unsaved')}</span>
+            <span className="text-[11px] font-semibold text-[#AAAAAA] dark:text-[#8A8A7A]">{t('label_unsaved')}</span>
           )}
           <button type="submit" disabled={saving}
             className="relative flex items-center gap-2 rounded-[10px] bg-[#C49A1E] px-6 py-2.5 text-[13px] font-bold text-[#0C1209] shadow-sm transition-all duration-200 hover:bg-[#D4A830] hover:shadow-md active:scale-[0.98] disabled:opacity-50">

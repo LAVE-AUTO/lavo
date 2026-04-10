@@ -136,7 +136,7 @@ export function AdminStationDetail({ id }: Props) {
         </Link>
         <div className="min-w-0 flex-1">
           <h1 className="truncate pb-0.5 text-[16px] font-black text-[#0F1A0C] dark:text-[#F0EDD4]">{station.name}</h1>
-          <p className="text-[11px] text-[#999] dark:text-[#5A5A4A]">{station.city}</p>
+          <p className="text-[11px] text-[#999] dark:text-[#8A8A7A]">{station.city}</p>
         </div>
         <span className="shrink-0 rounded-full bg-[#C49A1E]/10 px-3 py-1 text-[10px] font-black uppercase tracking-wider text-[#C49A1E]">
           KYC
@@ -318,7 +318,7 @@ export function AdminStationDetail({ id }: Props) {
                   <span className={`text-[10px] font-semibold transition-colors ${rejectReason.trim().length > 0 && rejectReason.trim().length < MIN_REASON ? 'text-[#EF4444]' : 'text-transparent'}`}>
                     {t('reject_reason_min', { n: MIN_REASON })}
                   </span>
-                  <span className="text-[10px] text-[#CCC] dark:text-[#3A3A2A]">{rejectReason.length}/{MAX_REASON}</span>
+                  <span className="text-[10px] text-[#CCC] dark:text-[#8A8A7A]">{rejectReason.length}/{MAX_REASON}</span>
                 </div>
               </div>
               <div className="flex gap-3">
@@ -346,7 +346,7 @@ export function AdminStationDetail({ id }: Props) {
 function InfoField({ label, value, full }: { label: string; value: string; full?: boolean }) {
   return (
     <div className={full ? 'col-span-2' : ''}>
-      <p className="mb-0.5 text-[10px] font-bold uppercase tracking-wider text-[#C8C4B4] dark:text-[#2E3C2A]">{label}</p>
+      <p className="mb-0.5 text-[10px] font-bold uppercase tracking-wider text-[#C8C4B4] dark:text-[#8A8A7A]">{label}</p>
       <p className="text-[13px] font-semibold text-[#0F1A0C] dark:text-[#F0EDD4]">{value}</p>
     </div>
   );
@@ -446,7 +446,7 @@ function TimelineEvent({
       <div className="flex flex-1 flex-col gap-0.5 pt-1">
         <p className="text-[13px] font-bold" style={{ color: c.text }}>{label}</p>
         {formattedDate && (
-          <p className="text-[11px] text-[#999] dark:text-[#5A5A4A]">{formattedDate}</p>
+          <p className="text-[11px] text-[#999] dark:text-[#8A8A7A]">{formattedDate}</p>
         )}
         {note && (
           <div className="mt-2 rounded-[8px] border border-[#EF4444]/20 bg-[#FEF2F2] px-3 py-2 dark:border-[#3A1A1A] dark:bg-[#200D0D]">

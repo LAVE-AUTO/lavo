@@ -67,7 +67,7 @@ export function AdminClientsList({ query, onAction }: Props) {
       {/* Table header */}
       <div className="grid grid-cols-[40px_1fr_1fr_120px_160px] items-center gap-4 border-b border-[#E8E4DC] bg-[#F9F8F5] px-5 py-3 dark:border-[#1E2E18] dark:bg-[#0E1A0C]">
         {['', t('col_account'), t('col_contact'), t('col_status'), t('col_actions')].map((h, i) => (
-          <span key={i} className={`text-[10px] font-black uppercase tracking-widest text-[#AAAAAA] dark:text-[#4A4A3A] ${i === 4 ? 'text-right' : ''}`}>{h}</span>
+          <span key={i} className={`text-[10px] font-black uppercase tracking-widest text-[#AAAAAA] dark:text-[#8A8A7A] ${i === 4 ? 'text-right' : ''}`}>{h}</span>
         ))}
       </div>
 
@@ -99,12 +99,12 @@ export function AdminClientsList({ query, onAction }: Props) {
               <p className="block truncate text-[13px] font-bold text-[#1A1A0A] dark:text-[#F0EDD4]">
                 {client.first_name} {client.last_name}
               </p>
-              <p className="truncate text-[11px] text-[#BBBBAA] dark:text-[#4A4A3A]">{formatDate(client.created_at)}</p>
+              <p className="truncate text-[11px] text-[#BBBBAA] dark:text-[#8A8A7A]">{formatDate(client.created_at)}</p>
             </div>
 
             <div className="min-w-0">
               <p className="truncate text-[12px] text-[#555] dark:text-[#9A9A8A]">{client.email}</p>
-              <p className="truncate text-[11px] text-[#BBBBAA] dark:text-[#4A4A3A]">{client.phone}</p>
+              <p className="truncate text-[11px] text-[#BBBBAA] dark:text-[#8A8A7A]">{client.phone}</p>
             </div>
 
             {s ? (

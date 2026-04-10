@@ -67,7 +67,7 @@ function ToggleCard({ selected, onClick, icon, label, sub }: {
       ].join(' ')}>
       <span className={selected ? 'text-[#C49A1E]' : 'text-[#888] dark:text-[#6A6A5A]'}>{icon}</span>
       <span className={`text-[11px] font-bold leading-tight ${selected ? 'text-[#1A1A0A] dark:text-[#F0EDD4]' : 'text-[#555] dark:text-[#9A9A8A]'}`}>{label}</span>
-      <span className={`text-[10px] leading-snug ${selected ? 'text-[#C49A1E]/70' : 'text-[#999] dark:text-[#5A5A4A]'}`}>{sub}</span>
+      <span className={`text-[10px] leading-snug ${selected ? 'text-[#C49A1E]/70' : 'text-[#999] dark:text-[#8A8A7A]'}`}>{sub}</span>
     </button>
   );
 }

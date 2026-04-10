@@ -123,7 +123,7 @@ export function AdminSupportSettings() {
         </div>
         <div className="flex items-center gap-2">
           {isDirty && !saving && (
-            <span className="text-[11px] font-semibold text-[#AAAAAA] dark:text-[#5A5A4A]">{t('settings_unsaved')}</span>
+            <span className="text-[11px] font-semibold text-[#AAAAAA] dark:text-[#8A8A7A]">{t('settings_unsaved')}</span>
           )}
           <button type="submit" disabled={saving || !isDirty}
             className="relative rounded-[10px] bg-[#C49A1E] px-5 py-2 text-[12px] font-bold text-[#0C1209] shadow-sm transition-all hover:bg-[#D4A830] disabled:opacity-50">
@@ -140,7 +140,7 @@ export function AdminSupportSettings() {
             onChange={(e) => setSettings((s) => ({ ...s, support_email: e.target.value }))}
             placeholder="support@lavo.ca"
             className="rounded-[10px] border-2 border-[#D8D4C8] bg-white px-4 py-2.5 text-[13px] text-[#1A1A0A] outline-none transition-all focus:border-[#C49A1E] focus:shadow-[0_0_0_4px_rgba(196,154,30,0.12)] dark:border-[#243020] dark:bg-[#0F1A0C] dark:text-[#F0EDD4] dark:focus:border-[#C49A1E]" />
-          <p className="text-[11px] text-[#AAAAAA] dark:text-[#4A4A3A]">{t('settings_email_hint')}</p>
+          <p className="text-[11px] text-[#AAAAAA] dark:text-[#8A8A7A]">{t('settings_email_hint')}</p>
         </div>
 
         {/* Max open tickets */}
@@ -149,7 +149,7 @@ export function AdminSupportSettings() {
           <input id="max-tickets" type="number" min={0} max={100} value={settings.max_open_tickets_per_user}
             onChange={(e) => setSettings((s) => ({ ...s, max_open_tickets_per_user: e.target.value }))}
             className="rounded-[10px] border-2 border-[#D8D4C8] bg-white px-4 py-2.5 text-[13px] text-[#1A1A0A] outline-none transition-all [appearance:textfield] focus:border-[#C49A1E] focus:shadow-[0_0_0_4px_rgba(196,154,30,0.12)] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none dark:border-[#243020] dark:bg-[#0F1A0C] dark:text-[#F0EDD4] dark:focus:border-[#C49A1E]" />
-          <p className="text-[11px] text-[#AAAAAA] dark:text-[#4A4A3A]">{t('settings_max_tickets_hint')}</p>
+          <p className="text-[11px] text-[#AAAAAA] dark:text-[#8A8A7A]">{t('settings_max_tickets_hint')}</p>
         </div>
 
         {/* Auto close days */}
@@ -158,7 +158,7 @@ export function AdminSupportSettings() {
           <input id="auto-close" type="number" min={1} max={365} value={settings.auto_close_days}
             onChange={(e) => setSettings((s) => ({ ...s, auto_close_days: e.target.value }))}
             className="rounded-[10px] border-2 border-[#D8D4C8] bg-white px-4 py-2.5 text-[13px] text-[#1A1A0A] outline-none transition-all [appearance:textfield] focus:border-[#C49A1E] focus:shadow-[0_0_0_4px_rgba(196,154,30,0.12)] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none dark:border-[#243020] dark:bg-[#0F1A0C] dark:text-[#F0EDD4] dark:focus:border-[#C49A1E]" />
-          <p className="text-[11px] text-[#AAAAAA] dark:text-[#4A4A3A]">{t('settings_auto_close_hint')}</p>
+          <p className="text-[11px] text-[#AAAAAA] dark:text-[#8A8A7A]">{t('settings_auto_close_hint')}</p>
         </div>
 
         {/* Welcome message */}
@@ -168,7 +168,7 @@ export function AdminSupportSettings() {
             onChange={(e) => setSettings((s) => ({ ...s, welcome_message: e.target.value }))}
             placeholder={t('settings_welcome_placeholder')}
             className="w-full resize-none rounded-[10px] border-2 border-[#D8D4C8] bg-white px-4 py-2.5 text-[13px] text-[#1A1A0A] outline-none transition-all focus:border-[#C49A1E] focus:shadow-[0_0_0_4px_rgba(196,154,30,0.12)] dark:border-[#243020] dark:bg-[#0F1A0C] dark:text-[#F0EDD4] dark:focus:border-[#C49A1E]" />
-          <p className="text-[11px] text-[#AAAAAA] dark:text-[#4A4A3A]">{t('settings_welcome_hint')}</p>
+          <p className="text-[11px] text-[#AAAAAA] dark:text-[#8A8A7A]">{t('settings_welcome_hint')}</p>
         </div>
       </div>
     </form>

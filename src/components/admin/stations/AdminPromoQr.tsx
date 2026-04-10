@@ -142,7 +142,7 @@ export function AdminPromoQr({ stationId, stationName }: Props) {
               />
               <span className="text-[13px] font-bold text-[#888] dark:text-[#6A6A5A]">%</span>
             </div>
-            <p className="text-[11px] text-[#999] dark:text-[#5A5A4A]">{t('field_commission_hint')}</p>
+            <p className="text-[11px] text-[#999] dark:text-[#8A8A7A]">{t('field_commission_hint')}</p>
             {commissionError && <p className="text-[11px] font-semibold text-red-500">{commissionError}</p>}
           </div>
 

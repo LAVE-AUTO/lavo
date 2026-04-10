@@ -90,7 +90,7 @@ export function AdminDisputesContainer() {
                 {open} {t('chip_open')}
               </span>
             )}
-            <span className="flex items-center gap-1.5 rounded-full border border-[#D8D4C8] bg-white px-3 py-1 text-[11px] font-bold text-[#888] dark:border-[#243020] dark:bg-[#131E10] dark:text-[#5A5A4A]">
+            <span className="flex items-center gap-1.5 rounded-full border border-[#D8D4C8] bg-white px-3 py-1 text-[11px] font-bold text-[#888] dark:border-[#243020] dark:bg-[#131E10] dark:text-[#8A8A7A]">
               {total} {t('chip_total')}
             </span>
           </div>

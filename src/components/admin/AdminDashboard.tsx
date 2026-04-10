@@ -37,7 +37,7 @@ export function AdminDashboard() {
             <h1 className="text-[20px] font-black leading-tight text-[#0F1A0C] dark:text-[#F0EDD4]">
               {t('page_title')}
             </h1>
-            <p className="mt-0.5 text-[11px] capitalize text-[#999] dark:text-[#5A5A4A]">{today}</p>
+            <p className="mt-0.5 text-[11px] capitalize text-[#999] dark:text-[#8A8A7A]">{today}</p>
           </div>
           <StatusDot />
         </div>
