@@ -258,6 +258,7 @@ export function StationQueuePage() {
         cancelLabel={t('btn_cancel')}
         variant={pending?.type === 'complete' ? 'default' : 'default'}
         loading={actionLoading}
+        blocking
         onConfirm={executeAction}
         onCancel={() => { setPending(null); setActionError(null); }}
       />

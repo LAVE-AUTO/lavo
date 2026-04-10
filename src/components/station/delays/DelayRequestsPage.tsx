@@ -254,6 +254,7 @@ export function DelayRequestsPage() {
           cancelLabel={t('btn_cancel')}
           variant="default"
           loading={actionLoading}
+          blocking
           onConfirm={executeAccept}
           onCancel={() => { setPending(null); setActionError(null); }}
         />

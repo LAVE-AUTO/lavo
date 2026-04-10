@@ -215,6 +215,7 @@ export function StationReservationsPage() {
         message={actionError ? `${confirm.message}\n\n${actionError}` : confirm.message}
         variant={confirm.variant}
         loading={actionLoading}
+        blocking
         confirmLabel={pending?.type === 'cancel' ? t('btn_cancel_entry') : pending?.type === 'validate' ? t('btn_validate') : t('btn_start_service')}
         cancelLabel={t('btn_cancel')}
         onConfirm={executeAction}
