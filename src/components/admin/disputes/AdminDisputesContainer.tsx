@@ -78,7 +78,7 @@ export function AdminDisputesContainer() {
         <div className="flex items-start justify-between gap-4">
           <div>
             <h1 className="text-[22px] font-black text-[#1A1A0A] dark:text-[#F0EDD4]">{t('page_title')}</h1>
-            <p className="mt-1 text-[12px] text-[#888] dark:text-[#6A6A5A]">{t('page_subtitle')}</p>
+            <p className="mt-1 text-[12px] text-[#888] dark:text-[#9A9A8A]">{t('page_subtitle')}</p>
           </div>
           <div className="flex shrink-0 items-center gap-2 pt-1">
             {open > 0 && (
@@ -90,7 +90,7 @@ export function AdminDisputesContainer() {
                 {open} {t('chip_open')}
               </span>
             )}
-            <span className="flex items-center gap-1.5 rounded-full border border-[#D8D4C8] bg-white px-3 py-1 text-[11px] font-bold text-[#888] dark:border-[#243020] dark:bg-[#131E10] dark:text-[#8A8A7A]">
+            <span className="flex items-center gap-1.5 rounded-full border border-[#D8D4C8] bg-white px-3 py-1 text-[11px] font-bold text-[#888] dark:border-[#243020] dark:bg-[#131E10] dark:text-[#A0A090]">
               {total} {t('chip_total')}
             </span>
           </div>
@@ -114,7 +114,7 @@ export function AdminDisputesContainer() {
           </div>
         ) : fetchError ? (
           <div className="flex flex-col items-center gap-3 py-24 text-center">
-            <p className="text-[13px] font-semibold text-[#999] dark:text-[#6A6A5A]">{t('fetch_error')}</p>
+            <p className="text-[13px] font-semibold text-[#999] dark:text-[#9A9A8A]">{t('fetch_error')}</p>
             <button type="button" onClick={loadDisputes} className="rounded-xl bg-[#C49A1E] px-4 py-2 text-[12px] font-bold text-[#0C1209] transition-colors hover:bg-[#B08A14]">
               {t('btn_retry')}
             </button>

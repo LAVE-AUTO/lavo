@@ -49,7 +49,7 @@ export function StationTopNav({ stationName, notifCount = 0 }: StationTopNavProp
             />
           )}
         </Link>
-        <div className="mt-0.5 text-[10px] font-medium text-[#666] dark:text-[#8A8A7A]">
+        <div className="mt-0.5 text-[10px] font-medium text-[#666] dark:text-[#A0A090]">
           {displayName}
         </div>
       </div>

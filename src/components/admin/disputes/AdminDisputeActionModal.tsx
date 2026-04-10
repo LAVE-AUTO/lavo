@@ -83,7 +83,7 @@ export function AdminDisputeActionModal({ mode, maxAmount, busy, onConfirm, onCl
                 <span className="shrink-0 border-l border-[#E8E4DC] bg-[#F9F8F5] px-3 py-2 text-[11px] font-bold text-[#888] dark:border-[#1E2E18] dark:bg-[#131E10]">CAD</span>
               </div>
               {maxAmount !== undefined && (
-                <p className="text-[11px] text-[#BBBBAA] dark:text-[#8A8A7A]">Max : {maxAmount.toLocaleString('fr-CA', { style: 'currency', currency: 'CAD' })}</p>
+                <p className="text-[11px] text-[#BBBBAA] dark:text-[#A0A090]">Max : {maxAmount.toLocaleString('fr-CA', { style: 'currency', currency: 'CAD' })}</p>
               )}
             </div>
           )}

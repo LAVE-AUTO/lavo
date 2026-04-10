@@ -110,7 +110,7 @@ function EntryBlock({ entry, onComplete, onCancel, onStart }: {
         {entry.serviceLabel}{entry.price ? ` \u2022 ${entry.price}$` : ''}
       </div>
       {entry.clientName && (
-        <div className="mb-1 text-[10px] text-[#666] dark:text-[#8A8A7A]">{entry.clientName}</div>
+        <div className="mb-1 text-[10px] text-[#666] dark:text-[#A0A090]">{entry.clientName}</div>
       )}
       {entry.marginText && (
         <div className="text-[9px] text-[#2ECC71]">{entry.marginText}</div>
@@ -146,7 +146,7 @@ export function DashboardPostGrid({ posts, onCompleteEntry, onCancelEntry, onSta
 
   if (posts.length === 0) {
     return (
-      <div className="flex flex-1 items-center justify-center text-[13px] text-[#666] dark:text-[#8A8A7A]">
+      <div className="flex flex-1 items-center justify-center text-[13px] text-[#666] dark:text-[#A0A090]">
         {t('empty_post')}
       </div>
     );

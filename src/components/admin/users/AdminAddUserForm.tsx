@@ -46,7 +46,7 @@ export function AdminAddUserForm({
                   'flex-1 rounded-[8px] py-2 text-[12px] font-bold transition-all duration-150',
                   role === r
                     ? 'bg-[#C49A1E] text-[#0C1209] shadow-sm'
-                    : 'text-[#888] hover:text-[#555] dark:text-[#6A6A5A] dark:hover:text-[#9A9A8A]',
+                    : 'text-[#888] hover:text-[#555] dark:text-[#9A9A8A] dark:hover:text-[#9A9A8A]',
                 ].join(' ')}>
                 {t(`role_${r}`)}
               </button>
@@ -86,7 +86,7 @@ export function AdminAddUserForm({
           <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#C49A1E" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="mt-0.5 shrink-0" aria-hidden="true">
             <circle cx="12" cy="12" r="10" /><line x1="12" y1="8" x2="12" y2="12" /><line x1="12" y1="16" x2="12.01" y2="16" />
           </svg>
-          <p className="text-[11px] leading-snug text-[#666] dark:text-[#8A8A7A]">{t('form_password_notice')}</p>
+          <p className="text-[11px] leading-snug text-[#666] dark:text-[#A0A090]">{t('form_password_notice')}</p>
         </div>
 
         {/* Preview notice — endpoint not yet available */}

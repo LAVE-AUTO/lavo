@@ -54,7 +54,7 @@ function KpiCard({ icon, value, label, trend, trendType, animationDelay }: KpiCa
       <div className="mb-0.5 text-[26px] font-black leading-none text-[#1A1A0A] dark:text-[#F0EDD4]">
         {value}
       </div>
-      <div className="text-[11px] font-medium text-[#666] dark:text-[#8A8A7A]">
+      <div className="text-[11px] font-medium text-[#666] dark:text-[#A0A090]">
         {label}
       </div>
       <div className="mt-1 flex items-center gap-1 text-[10px] font-bold" style={{ color: trendColor }}>

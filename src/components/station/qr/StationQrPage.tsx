@@ -99,7 +99,7 @@ export function StationQrPage() {
   if (error || !stationId) {
     return (
       <div className="flex flex-1 flex-col items-center justify-center gap-3 text-center">
-        <span className="text-[14px] font-semibold text-[#999] dark:text-[#6A6A5A]">
+        <span className="text-[14px] font-semibold text-[#999] dark:text-[#9A9A8A]">
           {t('error_load')}
         </span>
         <button
@@ -119,7 +119,7 @@ export function StationQrPage() {
       <h1 className="text-center text-[20px] font-bold text-[#1A1A0A] dark:text-[#F0EDD4]">
         {t('page_title')}
       </h1>
-      <p className="mt-1 max-w-md text-center text-[13px] text-[#888] dark:text-[#6A6A5A]">
+      <p className="mt-1 max-w-md text-center text-[13px] text-[#888] dark:text-[#9A9A8A]">
         {t('page_subtitle')}
       </p>
 
@@ -143,7 +143,7 @@ export function StationQrPage() {
           <span className="block text-[10px] font-semibold uppercase tracking-wider text-[#BBBBAA] dark:text-[#4A4A3A]">
             {t('station_url_label')}
           </span>
-          <p className="mt-0.5 break-all font-mono text-[12px] text-[#666] dark:text-[#8A8A7A]">
+          <p className="mt-0.5 break-all font-mono text-[12px] text-[#666] dark:text-[#A0A090]">
             {publicUrl}
           </p>
         </div>

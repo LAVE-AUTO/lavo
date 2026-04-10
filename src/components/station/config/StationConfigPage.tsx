@@ -115,7 +115,7 @@ export function StationConfigPage() {
 
   if (loading) {
     return (
-      <div className="flex flex-1 items-center justify-center text-[13px] text-[#666] dark:text-[#8A8A7A]">
+      <div className="flex flex-1 items-center justify-center text-[13px] text-[#666] dark:text-[#A0A090]">
         {t('loading')}
       </div>
     );

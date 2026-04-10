@@ -73,7 +73,7 @@ export function AdminStationsManagement({ stations, loading, error, query, onAct
       {/* Table header */}
       <div className="grid grid-cols-[40px_1fr_1fr_120px_140px] items-center gap-4 border-b border-[#E8E4DC] bg-[#F9F8F5] px-5 py-3 dark:border-[#1E2E18] dark:bg-[#0E1A0C]">
         {['', t('col_account'), t('col_location'), t('col_status'), t('col_actions')].map((h, i) => (
-          <span key={i} className={`text-[10px] font-black uppercase tracking-widest text-[#AAAAAA] dark:text-[#8A8A7A] ${i === 4 ? 'text-right' : ''}`}>{h}</span>
+          <span key={i} className={`text-[10px] font-black uppercase tracking-widest text-[#AAAAAA] dark:text-[#A0A090] ${i === 4 ? 'text-right' : ''}`}>{h}</span>
         ))}
       </div>
 
@@ -105,10 +105,10 @@ export function AdminStationsManagement({ stations, loading, error, query, onAct
                 className="block truncate text-[13px] font-bold text-[#1A1A0A] underline-offset-2 hover:text-[#C49A1E] hover:underline dark:text-[#F0EDD4]">
                 {station.name}
               </Link>
-              <p className="truncate text-[11px] text-[#BBBBAA] dark:text-[#8A8A7A]">{formatDate(station.created_at)}</p>
+              <p className="truncate text-[11px] text-[#BBBBAA] dark:text-[#A0A090]">{formatDate(station.created_at)}</p>
             </div>
 
-            <p className="truncate text-[12px] text-[#777] dark:text-[#6A6A5A]">{station.city ?? '—'}</p>
+            <p className="truncate text-[12px] text-[#777] dark:text-[#9A9A8A]">{station.city ?? '—'}</p>
 
             {s ? (
               <span className={`inline-flex w-fit items-center gap-1.5 rounded-full px-2.5 py-1 text-[11px] font-semibold ${s.badge}`}>

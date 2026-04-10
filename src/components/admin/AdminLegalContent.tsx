@@ -78,7 +78,7 @@ export function AdminLegalContent() {
       {/* Header */}
       <div>
         <p className="text-[10px] font-black uppercase tracking-[0.15em] text-[#C49A1E]">{t('section_title')}</p>
-        <p className="mt-0.5 text-[12px] text-[#888] dark:text-[#6A6A5A]">{t('section_subtitle')}</p>
+        <p className="mt-0.5 text-[12px] text-[#888] dark:text-[#9A9A8A]">{t('section_subtitle')}</p>
       </div>
 
       <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:gap-6">

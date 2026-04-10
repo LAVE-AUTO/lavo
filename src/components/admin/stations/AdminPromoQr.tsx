@@ -112,7 +112,7 @@ export function AdminPromoQr({ stationId, stationName }: Props) {
       <div className="mb-5 flex items-center justify-between">
         <div>
           <p className="text-[10px] font-black uppercase tracking-[0.15em] text-[#C49A1E]">{t('section_title')}</p>
-          <p className="mt-0.5 text-[11px] text-[#888] dark:text-[#6A6A5A]">{t('section_subtitle')}</p>
+          <p className="mt-0.5 text-[11px] text-[#888] dark:text-[#9A9A8A]">{t('section_subtitle')}</p>
         </div>
         {appliedRate && (
           <span className="rounded-full border border-[#C49A1E]/30 bg-[#C49A1E]/10 px-3 py-1 text-[10px] font-black text-[#C49A1E]">
@@ -140,9 +140,9 @@ export function AdminPromoQr({ stationId, stationName }: Props) {
                 onChange={(e) => { setCommission(e.target.value); setCommissionError(null); }}
                 className={`w-32 ${inputBase} ${commissionError ? 'border-red-400 focus:border-red-400' : ''}`}
               />
-              <span className="text-[13px] font-bold text-[#888] dark:text-[#6A6A5A]">%</span>
+              <span className="text-[13px] font-bold text-[#888] dark:text-[#9A9A8A]">%</span>
             </div>
-            <p className="text-[11px] text-[#999] dark:text-[#8A8A7A]">{t('field_commission_hint')}</p>
+            <p className="text-[11px] text-[#999] dark:text-[#A0A090]">{t('field_commission_hint')}</p>
             {commissionError && <p className="text-[11px] font-semibold text-red-500">{commissionError}</p>}
           </div>
 
@@ -167,7 +167,7 @@ export function AdminPromoQr({ stationId, stationName }: Props) {
             </svg>
             <div>
               <p className="text-[11px] font-bold text-[#1A1A0A] dark:text-[#F0EDD4]">{t('qr_notice_title')}</p>
-              <p className="mt-0.5 text-[11px] leading-relaxed text-[#666] dark:text-[#8A8A7A]">{t('qr_notice_body')}</p>
+              <p className="mt-0.5 text-[11px] leading-relaxed text-[#666] dark:text-[#A0A090]">{t('qr_notice_body')}</p>
             </div>
           </div>
         </div>
@@ -182,7 +182,7 @@ export function AdminPromoQr({ stationId, stationName }: Props) {
             {/* Referral URL */}
             <div className="w-full max-w-[240px] rounded-lg border border-[#E8E4DC] bg-[#F8F6F2] px-3 py-2 dark:border-[#243020] dark:bg-[#0F1A0C]">
               <p className="mb-0.5 text-[9px] font-bold uppercase tracking-wider text-[#BBBBAA]">{t('referral_url_label')}</p>
-              <p className="break-all text-[9px] text-[#888] dark:text-[#6A6A5A]">{promoUrl}</p>
+              <p className="break-all text-[9px] text-[#888] dark:text-[#9A9A8A]">{promoUrl}</p>
             </div>
 
             {/* Download + Print */}

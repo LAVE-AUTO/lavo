@@ -21,7 +21,7 @@ function NumericField({
 }) {
   return (
     <div className="flex flex-col gap-2">
-      <label className="text-[11px] font-black uppercase tracking-wider text-[#8A8A7A] dark:text-[#6A6A5A]">{label}</label>
+      <label className="text-[11px] font-black uppercase tracking-wider text-[#A0A090] dark:text-[#9A9A8A]">{label}</label>
       <div className={[
         'flex overflow-hidden rounded-[10px] border-2 transition-all duration-200',
         readOnly
@@ -34,14 +34,14 @@ function NumericField({
           className={[
             'flex-1 bg-transparent px-4 py-3 text-[18px] font-bold outline-none',
             '[appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none',
-            readOnly ? 'cursor-not-allowed text-[#9A9A8A] dark:text-[#8A8A7A]' : 'text-[#1A1A0A] dark:text-[#F0EDD4]',
+            readOnly ? 'cursor-not-allowed text-[#9A9A8A] dark:text-[#A0A090]' : 'text-[#1A1A0A] dark:text-[#F0EDD4]',
           ].join(' ')}
         />
-        <span className="flex items-center border-l border-[#E8E4D8] bg-[#F0EDE0] px-3.5 text-[12px] font-black text-[#8A8A6A] dark:border-[#243020] dark:bg-[#141E10] dark:text-[#8A8A7A]">
+        <span className="flex items-center border-l border-[#E8E4D8] bg-[#F0EDE0] px-3.5 text-[12px] font-black text-[#8A8A6A] dark:border-[#243020] dark:bg-[#141E10] dark:text-[#A0A090]">
           {unit}
         </span>
       </div>
-      {hint && <p className="mt-1 text-[11px] leading-relaxed text-[#AAAAAA] dark:text-[#8A8A7A]">{hint}</p>}
+      {hint && <p className="mt-1 text-[11px] leading-relaxed text-[#AAAAAA] dark:text-[#A0A090]">{hint}</p>}
     </div>
   );
 }
@@ -160,11 +160,11 @@ export function AdminPlatformSettings() {
       <div className="sticky top-0 z-10 flex shrink-0 items-center justify-between border-b border-[#E0DCD0] bg-[#F5F5EE]/95 px-6 py-4 backdrop-blur-sm dark:border-[#1A2A14] dark:bg-[#0C1209]/95">
         <div>
           <h1 className="text-[18px] font-black text-[#1A1A0A] dark:text-[#F0EDD4]">{t('page_title')}</h1>
-          <p className="text-[12px] text-[#888] dark:text-[#6A6A5A]">{t('page_subtitle')}</p>
+          <p className="text-[12px] text-[#888] dark:text-[#9A9A8A]">{t('page_subtitle')}</p>
         </div>
         <div className="flex items-center gap-3">
           {isDirty && !saving && (
-            <span className="text-[11px] font-semibold text-[#AAAAAA] dark:text-[#8A8A7A]">{t('label_unsaved')}</span>
+            <span className="text-[11px] font-semibold text-[#AAAAAA] dark:text-[#A0A090]">{t('label_unsaved')}</span>
           )}
           <button type="submit" disabled={saving}
             className="relative flex items-center gap-2 rounded-[10px] bg-[#C49A1E] px-6 py-2.5 text-[13px] font-bold text-[#0C1209] shadow-sm transition-all duration-200 hover:bg-[#D4A830] hover:shadow-md active:scale-[0.98] disabled:opacity-50">

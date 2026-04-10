@@ -230,7 +230,7 @@ export function SlotModal({ mode, selectedDate, onClose, onCreated }: SlotModalP
           <button
             type="button"
             onClick={onClose}
-            className="flex-1 rounded-[8px] border border-[#D8D4C8] py-2.5 text-[12px] font-semibold text-[#666] transition-colors hover:bg-[#F7F6F2] dark:border-[#243020] dark:text-[#8A8A7A] dark:hover:bg-[#0F1A0C]"
+            className="flex-1 rounded-[8px] border border-[#D8D4C8] py-2.5 text-[12px] font-semibold text-[#666] transition-colors hover:bg-[#F7F6F2] dark:border-[#243020] dark:text-[#A0A090] dark:hover:bg-[#0F1A0C]"
           >
             {t('modal_btn_cancel')}
           </button>

@@ -82,7 +82,7 @@ export function AdminAddStationAccount({ data, errors, busy, onChange, onNext, o
           <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#C49A1E" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="mt-0.5 shrink-0" aria-hidden="true">
             <circle cx="12" cy="12" r="10" /><line x1="12" y1="8" x2="12" y2="12" /><line x1="12" y1="16" x2="12.01" y2="16" />
           </svg>
-          <p className="text-[11px] leading-snug text-[#666] dark:text-[#8A8A7A]">{t('password_notice')}</p>
+          <p className="text-[11px] leading-snug text-[#666] dark:text-[#A0A090]">{t('password_notice')}</p>
         </div>
       </div>
 

@@ -65,9 +65,9 @@ function KpiCard({ icon, value, label, trendValue, trendLabel, trendUp, sparklin
       <div className="mb-0.5 text-[28px] font-black leading-none tracking-tight text-[#0F1A0C] dark:text-[#F0EDD4]">
         {value}
       </div>
-      <div className="mb-4 text-[11px] font-medium text-[#888] dark:text-[#6A6A5A]">
+      <div className="mb-4 text-[11px] font-medium text-[#888] dark:text-[#9A9A8A]">
         {label}
-        <span className="ml-1.5 text-[#AAA] dark:text-[#8A8A7A]">— {trendLabel}</span>
+        <span className="ml-1.5 text-[#AAA] dark:text-[#A0A090]">— {trendLabel}</span>
       </div>
 
       {/* Sparkline */}

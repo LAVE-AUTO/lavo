@@ -104,7 +104,7 @@ export function StationRejectedView({ stationName, rejectionReason }: Props) {
       <div className="flex items-center justify-between border-b border-[#E0DCD0] bg-white px-6 py-3.5 dark:border-[#1A2A14] dark:bg-[#111A0E]">
         <span className="text-[14px] font-black text-[#1A1A0A] dark:text-[#F0EDD4]">Slowtime</span>
         <button type="button" onClick={logout}
-          className="flex items-center gap-1.5 rounded-[8px] border border-[#E0DCD0] px-3 py-1.5 text-[12px] font-semibold text-[#888] transition-colors hover:bg-[#F0EDE0] dark:border-[#243020] dark:text-[#6A6A5A]">
+          className="flex items-center gap-1.5 rounded-[8px] border border-[#E0DCD0] px-3 py-1.5 text-[12px] font-semibold text-[#888] transition-colors hover:bg-[#F0EDE0] dark:border-[#243020] dark:text-[#9A9A8A]">
           <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
             <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" /><polyline points="16 17 21 12 16 7" /><line x1="21" y1="12" x2="9" y2="12" />
           </svg>
@@ -124,7 +124,7 @@ export function StationRejectedView({ stationName, rejectionReason }: Props) {
                 </svg>
               </div>
               <h2 className="text-[20px] font-black text-[#1A1A0A] dark:text-[#F0EDD4]">{t('resubmit_success_title')}</h2>
-              <p className="mt-2 text-[14px] text-[#666] dark:text-[#8A8A7A]">{t('resubmit_success_desc')}</p>
+              <p className="mt-2 text-[14px] text-[#666] dark:text-[#A0A090]">{t('resubmit_success_desc')}</p>
               <p className="mt-4 flex items-center gap-2 text-[12px] font-semibold text-[#C49A1E]">
                 <span className="h-4 w-4 animate-spin rounded-full border-2 border-[#C49A1E] border-t-transparent" />
                 {t('resubmit_redirect', { n: countdown })}
@@ -140,7 +140,7 @@ export function StationRejectedView({ stationName, rejectionReason }: Props) {
                   </svg>
                 </div>
                 <h1 className="text-[20px] font-black text-[#1A1A0A] dark:text-[#F0EDD4]">{t('title')}</h1>
-                <p className="mt-1.5 text-[13px] text-[#666] dark:text-[#8A8A7A]">{t('subtitle', { name: stationName })}</p>
+                <p className="mt-1.5 text-[13px] text-[#666] dark:text-[#A0A090]">{t('subtitle', { name: stationName })}</p>
 
                 {rejectionReason && (
                   <div className="mt-5 rounded-[10px] border border-[#EF4444]/20 bg-[#FEF2F2] p-4 dark:border-[#3A1A1A] dark:bg-[#200D0D]">

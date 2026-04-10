@@ -97,7 +97,7 @@ export function AdminMerchantsClients() {
         <div className="flex items-start justify-between gap-4">
           <div>
             <h1 className="text-[22px] font-black text-[#1A1A0A] dark:text-[#F0EDD4]">{t('page_title')}</h1>
-            <p className="mt-1 text-[12px] text-[#888] dark:text-[#6A6A5A]">{t('page_subtitle')}</p>
+            <p className="mt-1 text-[12px] text-[#888] dark:text-[#9A9A8A]">{t('page_subtitle')}</p>
           </div>
           {/* Live status chips + add button */}
           <div className="flex shrink-0 items-center gap-2 pt-1">
@@ -124,11 +124,11 @@ export function AdminMerchantsClients() {
               <button key={id} type="button" onClick={() => { setTab(id); setQuery(''); }}
                 className={[
                   'relative flex items-center gap-2 px-5 py-2.5 text-[13px] font-bold transition-colors duration-150',
-                  tab === id ? 'text-[#1A1A0A] dark:text-[#F0EDD4]' : 'text-[#999] hover:text-[#555] dark:text-[#8A8A7A] dark:hover:text-[#9A9A8A]',
+                  tab === id ? 'text-[#1A1A0A] dark:text-[#F0EDD4]' : 'text-[#999] hover:text-[#555] dark:text-[#A0A090] dark:hover:text-[#9A9A8A]',
                 ].join(' ')}>
                 {t(`tab_${id}`)}
                 <span className={['min-w-[20px] rounded-full px-1.5 py-0.5 text-center text-[10px] font-black',
-                  tab === id ? 'bg-[#C49A1E] text-[#0C1209]' : 'bg-[#E0DCD0] text-[#999] dark:bg-[#1E2E18] dark:text-[#8A8A7A]',
+                  tab === id ? 'bg-[#C49A1E] text-[#0C1209]' : 'bg-[#E0DCD0] text-[#999] dark:bg-[#1E2E18] dark:text-[#A0A090]',
                 ].join(' ')}>{count}</span>
                 {tab === id && <span className="absolute bottom-0 left-0 right-0 h-[2.5px] rounded-t-full bg-[#C49A1E]" />}
               </button>

@@ -197,7 +197,7 @@ export function ServiceModal({ service, vehicleFormats, onClose, onSaved }: Prop
                 className={`rounded-[8px] px-4 py-1.5 text-[12px] font-bold transition-all ${
                   isActive
                     ? 'bg-[#C49A1E] text-[#0C1209]'
-                    : 'border border-[#D8D4C8] text-[#888] dark:border-[#243020] dark:text-[#6A6A5A]'
+                    : 'border border-[#D8D4C8] text-[#888] dark:border-[#243020] dark:text-[#9A9A8A]'
                 }`}
               >
                 {isActive ? t('badge_active') : t('badge_inactive')}

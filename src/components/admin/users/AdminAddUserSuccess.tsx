@@ -45,7 +45,7 @@ export function AdminAddUserSuccess({ data, onClose }: Props) {
                 {t(`role_${data.role}`)}
               </span>
             </p>
-            <p className="text-[12px] text-[#888] dark:text-[#6A6A5A]">{t('success_account_created')}</p>
+            <p className="text-[12px] text-[#888] dark:text-[#9A9A8A]">{t('success_account_created')}</p>
           </div>
         </div>
 
@@ -57,7 +57,7 @@ export function AdminAddUserSuccess({ data, onClose }: Props) {
           </svg>
           <div className="flex flex-col gap-0.5">
             <p className="text-[12px] font-bold text-[#1A1A0A] dark:text-[#F0EDD4]">{t('success_email_sent_title')}</p>
-            <p className="text-[11px] leading-relaxed text-[#555] dark:text-[#8A8A7A]">
+            <p className="text-[11px] leading-relaxed text-[#555] dark:text-[#A0A090]">
               {t('success_email_sent_body', { email: data.email })}
             </p>
           </div>

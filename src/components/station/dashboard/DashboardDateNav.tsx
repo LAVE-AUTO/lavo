@@ -117,7 +117,7 @@ export function DashboardDateNav({ selectedDate, onDateChange, view, onViewChang
             className={
               view === v
                 ? 'rounded-md px-3.5 py-1.5 text-[12px] font-bold bg-[#C49A1E] text-[#0C1209] transition-all duration-150'
-                : 'rounded-md px-3.5 py-1.5 text-[12px] font-bold text-[#666] transition-all duration-150 dark:text-[#8A8A7A]'
+                : 'rounded-md px-3.5 py-1.5 text-[12px] font-bold text-[#666] transition-all duration-150 dark:text-[#A0A090]'
             }
           >
             {t(v === 'weekly' ? 'view_weekly' : 'view_monthly')}

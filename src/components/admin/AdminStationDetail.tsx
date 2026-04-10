@@ -131,12 +131,12 @@ export function AdminStationDetail({ id }: Props) {
       {/* ── Sticky sub-header ── */}
       <div className="flex items-center gap-4 border-b border-[#E8E4D8] bg-white px-7 py-4 dark:border-[#1A2A14] dark:bg-[#111A0E]">
         <Link href={'/admin/stations' as Parameters<typeof Link>[0]['href']}
-          className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-[#F0EDE0] text-[#888] transition-colors hover:bg-[#E8E4D8] dark:bg-[#1E2A1A] dark:text-[#6A6A5A]">
+          className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-[#F0EDE0] text-[#888] transition-colors hover:bg-[#E8E4D8] dark:bg-[#1E2A1A] dark:text-[#9A9A8A]">
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="15 18 9 12 15 6" /></svg>
         </Link>
         <div className="min-w-0 flex-1">
           <h1 className="truncate pb-0.5 text-[16px] font-black text-[#0F1A0C] dark:text-[#F0EDD4]">{station.name}</h1>
-          <p className="text-[11px] text-[#999] dark:text-[#8A8A7A]">{station.city}</p>
+          <p className="text-[11px] text-[#999] dark:text-[#A0A090]">{station.city}</p>
         </div>
         <span className="shrink-0 rounded-full bg-[#C49A1E]/10 px-3 py-1 text-[10px] font-black uppercase tracking-wider text-[#C49A1E]">
           KYC
@@ -158,12 +158,12 @@ export function AdminStationDetail({ id }: Props) {
             </div>
             <div className="min-w-0 flex-1">
               <h2 className="text-[19px] font-black text-[#0F1A0C] dark:text-[#F0EDD4]">{station.name}</h2>
-              <p className="mt-0.5 text-[12px] text-[#888] dark:text-[#6A6A5A]">
+              <p className="mt-0.5 text-[12px] text-[#888] dark:text-[#9A9A8A]">
                 {station.city}{station.address ? ` · ${station.address}` : ''}
               </p>
               <div className="mt-3 flex flex-wrap items-center gap-2">
                 {/* Date badge */}
-                <span className="flex items-center gap-1.5 rounded-lg bg-[#F5F3ED] px-2.5 py-1 text-[11px] font-semibold text-[#777] dark:bg-[#1E2A1A] dark:text-[#6A6A5A]">
+                <span className="flex items-center gap-1.5 rounded-lg bg-[#F5F3ED] px-2.5 py-1 text-[11px] font-semibold text-[#777] dark:bg-[#1E2A1A] dark:text-[#9A9A8A]">
                   <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
                     <rect x="3" y="4" width="18" height="18" rx="2" ry="2" /><line x1="16" y1="2" x2="16" y2="6" /><line x1="8" y1="2" x2="8" y2="6" /><line x1="3" y1="10" x2="21" y2="10" />
                   </svg>
@@ -171,7 +171,7 @@ export function AdminStationDetail({ id }: Props) {
                 </span>
                 {/* Doc count badge */}
                 {station.documents.length > 0 && (
-                  <span className="flex items-center gap-1.5 rounded-lg bg-[#F5F3ED] px-2.5 py-1 text-[11px] font-semibold text-[#777] dark:bg-[#1E2A1A] dark:text-[#6A6A5A]">
+                  <span className="flex items-center gap-1.5 rounded-lg bg-[#F5F3ED] px-2.5 py-1 text-[11px] font-semibold text-[#777] dark:bg-[#1E2A1A] dark:text-[#9A9A8A]">
                     <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
                       <path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z" /><polyline points="14 2 14 8 20 8" />
                     </svg>
@@ -301,7 +301,7 @@ export function AdminStationDetail({ id }: Props) {
           ) : (
             <div className="space-y-3">
               <div>
-                <label htmlFor="reject-reason" className="mb-1.5 block text-[11px] font-bold uppercase tracking-wider text-[#888] dark:text-[#6A6A5A]">
+                <label htmlFor="reject-reason" className="mb-1.5 block text-[11px] font-bold uppercase tracking-wider text-[#888] dark:text-[#9A9A8A]">
                   {t('reject_reason_label')}
                 </label>
                 <textarea
@@ -318,7 +318,7 @@ export function AdminStationDetail({ id }: Props) {
                   <span className={`text-[10px] font-semibold transition-colors ${rejectReason.trim().length > 0 && rejectReason.trim().length < MIN_REASON ? 'text-[#EF4444]' : 'text-transparent'}`}>
                     {t('reject_reason_min', { n: MIN_REASON })}
                   </span>
-                  <span className="text-[10px] text-[#CCC] dark:text-[#8A8A7A]">{rejectReason.length}/{MAX_REASON}</span>
+                  <span className="text-[10px] text-[#CCC] dark:text-[#A0A090]">{rejectReason.length}/{MAX_REASON}</span>
                 </div>
               </div>
               <div className="flex gap-3">
@@ -346,7 +346,7 @@ export function AdminStationDetail({ id }: Props) {
 function InfoField({ label, value, full }: { label: string; value: string; full?: boolean }) {
   return (
     <div className={full ? 'col-span-2' : ''}>
-      <p className="mb-0.5 text-[10px] font-bold uppercase tracking-wider text-[#C8C4B4] dark:text-[#8A8A7A]">{label}</p>
+      <p className="mb-0.5 text-[10px] font-bold uppercase tracking-wider text-[#C8C4B4] dark:text-[#A0A090]">{label}</p>
       <p className="text-[13px] font-semibold text-[#0F1A0C] dark:text-[#F0EDD4]">{value}</p>
     </div>
   );
@@ -446,7 +446,7 @@ function TimelineEvent({
       <div className="flex flex-1 flex-col gap-0.5 pt-1">
         <p className="text-[13px] font-bold" style={{ color: c.text }}>{label}</p>
         {formattedDate && (
-          <p className="text-[11px] text-[#999] dark:text-[#8A8A7A]">{formattedDate}</p>
+          <p className="text-[11px] text-[#999] dark:text-[#A0A090]">{formattedDate}</p>
         )}
         {note && (
           <div className="mt-2 rounded-[8px] border border-[#EF4444]/20 bg-[#FEF2F2] px-3 py-2 dark:border-[#3A1A1A] dark:bg-[#200D0D]">

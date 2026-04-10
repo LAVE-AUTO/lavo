@@ -62,13 +62,13 @@ export function AdminSupportList({ tickets, query }: Props) {
                 'flex items-center gap-2 rounded-xl px-3.5 py-1.5 text-[12px] font-bold transition-all duration-150',
                 isActive
                   ? 'bg-white text-[#1A1A0A] shadow-[0_2px_8px_rgba(0,0,0,0.10)] ring-1 ring-[#E0DCD0] dark:bg-[#1E2E18] dark:text-[#F0EDD4] dark:ring-[#2A3820]'
-                  : 'text-[#999] hover:text-[#555] hover:bg-white/60 dark:text-[#8A8A7A] dark:hover:text-[#9A9A8A]',
+                  : 'text-[#999] hover:text-[#555] hover:bg-white/60 dark:text-[#A0A090] dark:hover:text-[#9A9A8A]',
               ].join(' ')}>
               {color && <span className="h-2 w-2 rounded-full" style={{ background: isActive ? color : '#CCCCCC' }} />}
               {label}
               <span className={[
                 'min-w-[18px] rounded-full px-1.5 py-0.5 text-center text-[10px] font-black',
-                isActive ? 'bg-[#C49A1E] text-[#0C1209]' : 'bg-[#E8E4DC] text-[#AAAAAA] dark:bg-[#1E2E18] dark:text-[#8A8A7A]',
+                isActive ? 'bg-[#C49A1E] text-[#0C1209]' : 'bg-[#E8E4DC] text-[#AAAAAA] dark:bg-[#1E2E18] dark:text-[#A0A090]',
               ].join(' ')}>{count}</span>
             </button>
           );
@@ -112,23 +112,23 @@ export function AdminSupportList({ tickets, query }: Props) {
                       <span className={`shrink-0 inline-flex items-center gap-1.5 rounded-full px-2.5 py-0.5 text-[11px] font-bold ${s.badge}`}>
                         <span className={`h-1.5 w-1.5 rounded-full ${s.dot}`} />{t(s.label)}
                       </span>
-                      <span className="shrink-0 rounded-full bg-[#F0EDE0] px-2 py-0.5 text-[10px] font-bold text-[#888] dark:bg-[#1A2A14] dark:text-[#8A8A7A]">
+                      <span className="shrink-0 rounded-full bg-[#F0EDE0] px-2 py-0.5 text-[10px] font-bold text-[#888] dark:bg-[#1A2A14] dark:text-[#A0A090]">
                         {ROLE_LABEL[tk.role]}
                       </span>
                     </div>
                     {lastMsg ? (
-                      <p className="mt-0.5 truncate text-[12px] text-[#AAAAAA] dark:text-[#8A8A7A]">
+                      <p className="mt-0.5 truncate text-[12px] text-[#AAAAAA] dark:text-[#A0A090]">
                         {lastMsg.body}
                       </p>
                     ) : null}
-                    <p className="mt-0.5 text-[11px] text-[#CCCCBB] dark:text-[#8A8A7A]">
+                    <p className="mt-0.5 text-[11px] text-[#CCCCBB] dark:text-[#A0A090]">
                       {tk.created_by} · {formatDate(tk.created_at)}
-                      {msgCount > 0 && <span className="ml-2 text-[#BBBBAA] dark:text-[#8A8A7A]">· {t('label_msg', { count: msgCount })}</span>}
+                      {msgCount > 0 && <span className="ml-2 text-[#BBBBAA] dark:text-[#A0A090]">· {t('label_msg', { count: msgCount })}</span>}
                     </p>
                   </div>
 
                   {/* Arrow */}
-                  <div className="flex shrink-0 items-center gap-1 text-[11px] font-bold text-[#CCCCBB] transition-colors group-hover:text-[#C49A1E] dark:text-[#8A8A7A]">
+                  <div className="flex shrink-0 items-center gap-1 text-[11px] font-bold text-[#CCCCBB] transition-colors group-hover:text-[#C49A1E] dark:text-[#A0A090]">
                     {t('btn_detail')}
                     <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" aria-hidden="true"><polyline points="9 18 15 12 9 6" /></svg>
                   </div>

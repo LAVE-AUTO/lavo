@@ -186,13 +186,13 @@ export function AdminDisputeDetail({ id }: Props) {
                     <span className={`h-1.5 w-1.5 rounded-full ${s.dot}`} />{t(s.label)}
                   </span>
                 </div>
-                <p className="mt-0.5 text-[12px] text-[#999] dark:text-[#6A6A5A]">
+                <p className="mt-0.5 text-[12px] text-[#999] dark:text-[#9A9A8A]">
                   {dispute.station.name} · {dispute.station.city} · {formatDate(dispute.created_at, true)}
                 </p>
               </div>
             </div>
             <div className="shrink-0 text-right">
-              <p className="text-[11px] font-bold uppercase tracking-wider text-[#AAAAAA] dark:text-[#8A8A7A]">{t('label_amount_paid')}</p>
+              <p className="text-[11px] font-bold uppercase tracking-wider text-[#AAAAAA] dark:text-[#A0A090]">{t('label_amount_paid')}</p>
               <p className="text-[26px] font-black text-[#1A1A0A] dark:text-[#F0EDD4]">{formatAmount(dispute.reservation.amount_paid)}</p>
             </div>
           </div>
@@ -211,7 +211,7 @@ export function AdminDisputeDetail({ id }: Props) {
                   <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2" strokeLinecap="round"><path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z" /><line x1="12" y1="9" x2="12" y2="13" /><line x1="12" y1="17" x2="12.01" y2="17" /></svg>
                 </div>
                 <div>
-                  <p className="mb-1 text-[10px] font-black uppercase tracking-widest text-[#AAAAAA] dark:text-[#8A8A7A]">{t('label_reason')}</p>
+                  <p className="mb-1 text-[10px] font-black uppercase tracking-widest text-[#AAAAAA] dark:text-[#A0A090]">{t('label_reason')}</p>
                   <p className="text-[14px] leading-relaxed text-[#333] dark:text-[#C0C0B0]">{dispute.reason}</p>
                 </div>
               </div>
@@ -219,7 +219,7 @@ export function AdminDisputeDetail({ id }: Props) {
               {/* Reservation card */}
               <div className="overflow-hidden rounded-2xl border border-[#E8E4DC] bg-white shadow-sm dark:border-[#1E2E18] dark:bg-[#131E10]">
                 <div className="border-b border-[#F0EDE6] bg-[#F9F8F5] px-5 py-3 dark:border-[#1A2A14] dark:bg-[#0E1A0C]">
-                  <p className="text-[11px] font-black uppercase tracking-widest text-[#AAAAAA] dark:text-[#8A8A7A]">{t('section_reservation')}</p>
+                  <p className="text-[11px] font-black uppercase tracking-widest text-[#AAAAAA] dark:text-[#A0A090]">{t('section_reservation')}</p>
                 </div>
                 <div className="grid grid-cols-3 divide-x divide-[#F0EDE6] dark:divide-[#1A2A14]">
                   {[
@@ -228,7 +228,7 @@ export function AdminDisputeDetail({ id }: Props) {
                     { label: t('label_amount_paid'), value: formatAmount(dispute.reservation.amount_paid) },
                   ].map(({ label, value }) => (
                     <div key={label} className="flex flex-col items-center gap-1 px-5 py-4 text-center">
-                      <p className="text-[10px] font-black uppercase tracking-widest text-[#AAAAAA] dark:text-[#8A8A7A]">{label}</p>
+                      <p className="text-[10px] font-black uppercase tracking-widest text-[#AAAAAA] dark:text-[#A0A090]">{label}</p>
                       <p className="text-[15px] font-black text-[#1A1A0A] dark:text-[#F0EDD4]">{value}</p>
                     </div>
                   ))}
@@ -238,7 +238,7 @@ export function AdminDisputeDetail({ id }: Props) {
               {/* Timeline */}
               <div className="overflow-hidden rounded-2xl border border-[#E8E4DC] bg-white shadow-sm dark:border-[#1E2E18] dark:bg-[#131E10]">
                 <div className="border-b border-[#F0EDE6] bg-[#F9F8F5] px-5 py-3 dark:border-[#1A2A14] dark:bg-[#0E1A0C]">
-                  <p className="text-[11px] font-black uppercase tracking-widest text-[#AAAAAA] dark:text-[#8A8A7A]">{t('section_timeline')}</p>
+                  <p className="text-[11px] font-black uppercase tracking-widest text-[#AAAAAA] dark:text-[#A0A090]">{t('section_timeline')}</p>
                 </div>
                 <div className="p-5">
                   {dispute.events.map((ev, i) => {
@@ -260,7 +260,7 @@ export function AdminDisputeDetail({ id }: Props) {
                             <span className={`rounded-lg px-2 py-0.5 text-[10px] font-black uppercase tracking-wide ${a.bg} ${a.text}`}>
                               {t(a.label)}
                             </span>
-                            <span className="text-[11px] text-[#BBBBAA] dark:text-[#8A8A7A]">{formatDate(ev.date)}</span>
+                            <span className="text-[11px] text-[#BBBBAA] dark:text-[#A0A090]">{formatDate(ev.date)}</span>
                           </div>
                           <p className="text-[13px] leading-relaxed text-[#444] dark:text-[#9A9A8A]">{ev.label}</p>
                         </div>
@@ -276,7 +276,7 @@ export function AdminDisputeDetail({ id }: Props) {
               {/* Actions */}
               <div className="overflow-hidden rounded-2xl border border-[#E8E4DC] bg-white shadow-sm dark:border-[#1E2E18] dark:bg-[#131E10]">
                 <div className="border-b border-[#F0EDE6] bg-[#F9F8F5] px-5 py-3 dark:border-[#1A2A14] dark:bg-[#0E1A0C]">
-                  <p className="text-[11px] font-black uppercase tracking-widest text-[#AAAAAA] dark:text-[#8A8A7A]">{t('section_actions')}</p>
+                  <p className="text-[11px] font-black uppercase tracking-widest text-[#AAAAAA] dark:text-[#A0A090]">{t('section_actions')}</p>
                 </div>
                 <div className="flex flex-col gap-2.5 p-4">
                   {isResolved ? (
@@ -284,7 +284,7 @@ export function AdminDisputeDetail({ id }: Props) {
                       <div className={`flex h-10 w-10 items-center justify-center rounded-xl ${s.bar}`}>
                         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2.5" strokeLinecap="round"><polyline points="20 6 9 17 4 12" /></svg>
                       </div>
-                      <p className="text-center text-[12px] font-semibold text-[#999] dark:text-[#8A8A7A]">{t('already_resolved')}</p>
+                      <p className="text-center text-[12px] font-semibold text-[#999] dark:text-[#A0A090]">{t('already_resolved')}</p>
                     </div>
                   ) : (
                     <>
@@ -318,7 +318,7 @@ export function AdminDisputeDetail({ id }: Props) {
               {/* Client card */}
               <div className="overflow-hidden rounded-2xl border border-[#E8E4DC] bg-white shadow-sm dark:border-[#1E2E18] dark:bg-[#131E10]">
                 <div className="border-b border-[#F0EDE6] bg-[#F9F8F5] px-5 py-3 dark:border-[#1A2A14] dark:bg-[#0E1A0C]">
-                  <p className="text-[11px] font-black uppercase tracking-widest text-[#AAAAAA] dark:text-[#8A8A7A]">{t('label_client')}</p>
+                  <p className="text-[11px] font-black uppercase tracking-widest text-[#AAAAAA] dark:text-[#A0A090]">{t('label_client')}</p>
                 </div>
                 <div className="flex items-center gap-3 p-4">
                   <div className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-xl text-[12px] font-black text-white ${s.bar}`}>
@@ -326,7 +326,7 @@ export function AdminDisputeDetail({ id }: Props) {
                   </div>
                   <div className="min-w-0">
                     <p className="truncate text-[13px] font-bold text-[#1A1A0A] dark:text-[#F0EDD4]">{dispute.client.name}</p>
-                    <p className="truncate text-[11px] text-[#BBBBAA] dark:text-[#8A8A7A]">{dispute.client.email}</p>
+                    <p className="truncate text-[11px] text-[#BBBBAA] dark:text-[#A0A090]">{dispute.client.email}</p>
                   </div>
                 </div>
               </div>
@@ -334,7 +334,7 @@ export function AdminDisputeDetail({ id }: Props) {
               {/* Station card */}
               <div className="overflow-hidden rounded-2xl border border-[#E8E4DC] bg-white shadow-sm dark:border-[#1E2E18] dark:bg-[#131E10]">
                 <div className="border-b border-[#F0EDE6] bg-[#F9F8F5] px-5 py-3 dark:border-[#1A2A14] dark:bg-[#0E1A0C]">
-                  <p className="text-[11px] font-black uppercase tracking-widest text-[#AAAAAA] dark:text-[#8A8A7A]">{t('label_station')}</p>
+                  <p className="text-[11px] font-black uppercase tracking-widest text-[#AAAAAA] dark:text-[#A0A090]">{t('label_station')}</p>
                 </div>
                 <div className="flex items-center gap-3 p-4">
                   <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-[#F0EDE6] dark:bg-[#1A2A14]">
@@ -342,7 +342,7 @@ export function AdminDisputeDetail({ id }: Props) {
                   </div>
                   <div className="min-w-0">
                     <p className="truncate text-[13px] font-bold text-[#1A1A0A] dark:text-[#F0EDD4]">{dispute.station.name}</p>
-                    <p className="truncate text-[11px] text-[#BBBBAA] dark:text-[#8A8A7A]">{dispute.station.city}</p>
+                    <p className="truncate text-[11px] text-[#BBBBAA] dark:text-[#A0A090]">{dispute.station.city}</p>
                   </div>
                 </div>
               </div>

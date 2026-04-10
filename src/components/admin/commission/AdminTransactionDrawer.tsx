@@ -109,12 +109,12 @@ export function AdminTransactionDrawer({ tx, onClose }: Props) {
             <span className={`inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-[12px] font-bold ${s.badge}`}>
               <span className={`h-2 w-2 rounded-full ${s.dot}`} />{STATUS_LABELS[tx.status]}
             </span>
-            <p className="text-[12px] text-[#888] dark:text-[#8A8A7A]">{formatDateTime(tx.date)}</p>
+            <p className="text-[12px] text-[#888] dark:text-[#A0A090]">{formatDateTime(tx.date)}</p>
           </div>
 
           {/* Amounts */}
           <div className="rounded-2xl border border-[#E8E4DC] bg-[#F9F8F5] p-5 dark:border-[#1E2E18] dark:bg-[#0E1A0C]">
-            <p className="mb-4 text-[10px] font-black uppercase tracking-widest text-[#AAAAAA] dark:text-[#8A8A7A]">{t('section_amounts')}</p>
+            <p className="mb-4 text-[10px] font-black uppercase tracking-widest text-[#AAAAAA] dark:text-[#A0A090]">{t('section_amounts')}</p>
             <div className="flex flex-col gap-3">
               <div className="flex justify-between">
                 <span className="text-[13px] text-[#666] dark:text-[#9A9A8A]">{t('drawer_gross')}</span>
@@ -134,7 +134,7 @@ export function AdminTransactionDrawer({ tx, onClose }: Props) {
 
           {/* Parties */}
           <div className="rounded-2xl border border-[#E8E4DC] bg-[#F9F8F5] p-5 dark:border-[#1E2E18] dark:bg-[#0E1A0C]">
-            <p className="mb-4 text-[10px] font-black uppercase tracking-widest text-[#AAAAAA] dark:text-[#8A8A7A]">{t('section_parties')}</p>
+            <p className="mb-4 text-[10px] font-black uppercase tracking-widest text-[#AAAAAA] dark:text-[#A0A090]">{t('section_parties')}</p>
             <div className="flex flex-col gap-3">
               <div className="flex items-center justify-between gap-3">
                 <span className="text-[13px] text-[#666] dark:text-[#9A9A8A]">{t('drawer_station')}</span>
@@ -149,7 +149,7 @@ export function AdminTransactionDrawer({ tx, onClose }: Props) {
 
           {/* Stripe ID */}
           <div className="rounded-2xl border border-[#E8E4DC] bg-[#F9F8F5] p-5 dark:border-[#1E2E18] dark:bg-[#0E1A0C]">
-            <p className="mb-3 text-[10px] font-black uppercase tracking-widest text-[#AAAAAA] dark:text-[#8A8A7A]">{t('drawer_stripe_id')}</p>
+            <p className="mb-3 text-[10px] font-black uppercase tracking-widest text-[#AAAAAA] dark:text-[#A0A090]">{t('drawer_stripe_id')}</p>
             <p className="break-all font-mono text-[11px] leading-relaxed text-[#555] dark:text-[#9A9A8A]">{tx.stripe_id}</p>
           </div>
         </div>

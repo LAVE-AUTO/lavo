@@ -140,7 +140,7 @@ export function StationSlotList({
         ) : (
           <div className="flex flex-col gap-2">
             {slots.length > 1 && (
-              <label className="flex items-center gap-2 px-4 py-1 text-[11px] font-semibold text-[#888] dark:text-[#6A6A5A] cursor-pointer select-none">
+              <label className="flex items-center gap-2 px-4 py-1 text-[11px] font-semibold text-[#888] dark:text-[#9A9A8A] cursor-pointer select-none">
                 <input
                   type="checkbox"
                   checked={selected.size === slots.length}
@@ -178,7 +178,7 @@ export function StationSlotList({
                       <div className="h-1 w-24 overflow-hidden rounded-full bg-[#E8E4DC] dark:bg-[#243020]">
                         <div className="h-full rounded-full transition-all duration-300" style={{ width: `${fillPct}%`, background: st.color }} />
                       </div>
-                      <span className="text-[11px] text-[#999] dark:text-[#6A6A5A]">
+                      <span className="text-[11px] text-[#999] dark:text-[#9A9A8A]">
                         {t('slot_booked', { n: slot.booked_count, total: slot.capacity })}
                       </span>
                     </div>

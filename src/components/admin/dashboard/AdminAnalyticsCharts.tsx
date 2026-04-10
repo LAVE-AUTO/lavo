@@ -72,7 +72,7 @@ function BarChart({ series, color, groupBy, isCurrency, loading, locale }: {
   }
 
   if (series.length === 0) {
-    return <p className="py-8 text-center text-[11px] text-[#AAA] dark:text-[#8A8A7A]">-</p>;
+    return <p className="py-8 text-center text-[11px] text-[#AAA] dark:text-[#A0A090]">-</p>;
   }
 
   const values = series.map((p) => typeof p.value === 'string' ? parseFloat(p.value) : p.value);
@@ -101,7 +101,7 @@ function BarChart({ series, color, groupBy, isCurrency, loading, locale }: {
           );
         })}
       </div>
-      <div className="mt-1.5 flex justify-between text-[9px] text-[#BBBBAA] dark:text-[#8A8A7A]">
+      <div className="mt-1.5 flex justify-between text-[9px] text-[#BBBBAA] dark:text-[#A0A090]">
         <span>{formatLabel(series[0].date, groupBy, locale)}</span>
         <span>{formatLabel(series[series.length - 1].date, groupBy, locale)}</span>
       </div>
@@ -166,7 +166,7 @@ export function AdminAnalyticsCharts() {
                 'rounded-lg px-2.5 py-1 text-[10px] font-bold transition-all',
                 groupBy === key
                   ? 'bg-[#C49A1E]/10 text-[#C49A1E]'
-                  : 'text-[#AAA] hover:text-[#666] dark:text-[#8A8A7A] dark:hover:text-[#8A8A7A]',
+                  : 'text-[#AAA] hover:text-[#666] dark:text-[#A0A090] dark:hover:text-[#A0A090]',
               ].join(' ')}
             >
               {t(labelKey)}
@@ -181,7 +181,7 @@ export function AdminAnalyticsCharts() {
           <div key={metric} className="overflow-hidden rounded-2xl bg-white p-5 shadow-sm ring-1 ring-black/[0.04] dark:bg-[#1A2416] dark:ring-white/[0.06]">
             <div className="mb-3 flex items-center gap-2">
               <span className="h-2 w-2 rounded-full" style={{ background: color }} />
-              <span className="text-[11px] font-black uppercase tracking-wider text-[#8A8A7A] dark:text-[#8A8A7A]">{t(labelKey)}</span>
+              <span className="text-[11px] font-black uppercase tracking-wider text-[#A0A090] dark:text-[#A0A090]">{t(labelKey)}</span>
             </div>
             <BarChart
               series={seriesMap[metric] ?? []}

@@ -171,14 +171,14 @@ export function StationLocationForm({ location, onSaved, locked = false }: Props
               <div className="flex flex-col gap-0.5">
                 <p className="text-[10px] font-semibold uppercase tracking-wider text-[#AAAAAA] dark:text-[#4A4A3A]">{t('field_address')}</p>
                 <p className="text-[14px] font-bold text-[#1A1A0A] dark:text-[#F0EDD4]">{location.address || '—'}</p>
-                <p className="text-[12px] font-semibold text-[#888] dark:text-[#6A6A5A]">{location.city || '—'}</p>
+                <p className="text-[12px] font-semibold text-[#888] dark:text-[#9A9A8A]">{location.city || '—'}</p>
               </div>
             </div>
             {(location.latitude || location.longitude) && (
               <div className="flex items-center gap-3">
                 <div className="flex flex-col gap-0.5">
                   <p className="text-[10px] font-semibold uppercase tracking-wider text-[#C8C4B4] dark:text-[#2E3C2A]">{t('field_latitude')} / {t('field_longitude')}</p>
-                  <p className="font-mono text-[12px] font-semibold text-[#888] dark:text-[#6A6A5A]">
+                  <p className="font-mono text-[12px] font-semibold text-[#888] dark:text-[#9A9A8A]">
                     {[location.latitude, location.longitude].filter(Boolean).join(', ')}
                   </p>
                 </div>

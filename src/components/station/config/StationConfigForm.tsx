@@ -208,7 +208,7 @@ export function StationConfigForm({ config, posts, onSaved, locked = false }: St
                   <span className="h-8 w-px bg-[#E0DCD0] dark:bg-[#243020]" />
                   <div className="flex flex-col gap-0.5">
                     <span className="text-[10px] font-semibold uppercase tracking-wider text-[#AAAAAA] dark:text-[#4A4A3A]">{t('field_break_start')}</span>
-                    <span className="text-[15px] font-bold tabular-nums text-[#888] dark:text-[#6A6A5A]">{config.break_start} – {config.break_end}</span>
+                    <span className="text-[15px] font-bold tabular-nums text-[#888] dark:text-[#9A9A8A]">{config.break_start} – {config.break_end}</span>
                   </div>
                 </>
               )}
@@ -290,7 +290,7 @@ export function StationConfigForm({ config, posts, onSaved, locked = false }: St
                   className={`flex items-center gap-2.5 rounded-[10px] border px-4 py-2.5 text-[12px] font-semibold transition-all duration-150 ${
                     active
                       ? 'border-[#C49A1E] bg-[#C49A1E] text-[#0C1209] shadow-sm'
-                      : 'border-[#D8D4C8] bg-[#F7F6F2] text-[#888] dark:border-[#243020] dark:bg-[#0F1A0C] dark:text-[#6A6A5A]'
+                      : 'border-[#D8D4C8] bg-[#F7F6F2] text-[#888] dark:border-[#243020] dark:bg-[#0F1A0C] dark:text-[#9A9A8A]'
                   } ${!isEditing ? 'cursor-default' : 'hover:opacity-80'}`}
                 >
                   <span className={`h-1.5 w-1.5 rounded-full transition-colors ${active ? 'bg-[#0C1209]' : 'bg-[#D0D0C0] dark:bg-[#3A3A2A]'}`} />

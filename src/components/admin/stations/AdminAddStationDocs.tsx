@@ -38,9 +38,9 @@ function ModeCard({ selected, onClick, icon, label, sub }: {
           ? 'border-[#C49A1E] bg-[#C49A1E]/8 shadow-sm'
           : 'border-[#D8D4C8] bg-white hover:border-[#C49A1E]/50 dark:border-[#243020] dark:bg-[#0F1A0C]',
       ].join(' ')}>
-      <span className={`mb-0.5 ${selected ? 'text-[#C49A1E]' : 'text-[#888] dark:text-[#6A6A5A]'}`}>{icon}</span>
+      <span className={`mb-0.5 ${selected ? 'text-[#C49A1E]' : 'text-[#888] dark:text-[#9A9A8A]'}`}>{icon}</span>
       <span className={`text-[12px] font-bold ${selected ? 'text-[#1A1A0A] dark:text-[#F0EDD4]' : 'text-[#555] dark:text-[#9A9A8A]'}`}>{label}</span>
-      <span className={`text-[10px] leading-snug ${selected ? 'text-[#C49A1E]/70' : 'text-[#999] dark:text-[#8A8A7A]'}`}>{sub}</span>
+      <span className={`text-[10px] leading-snug ${selected ? 'text-[#C49A1E]/70' : 'text-[#999] dark:text-[#A0A090]'}`}>{sub}</span>
     </button>
   );
 }

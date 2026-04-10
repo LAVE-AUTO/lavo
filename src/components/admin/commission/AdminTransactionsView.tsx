@@ -132,7 +132,7 @@ export function AdminTransactionsView() {
         <div className="flex items-start justify-between gap-4">
           <div>
             <h1 className="text-[22px] font-black text-[#1A1A0A] dark:text-[#F0EDD4]">{t('page_title')}</h1>
-            <p className="mt-1 text-[12px] text-[#888] dark:text-[#6A6A5A]">{t('page_subtitle')}</p>
+            <p className="mt-1 text-[12px] text-[#888] dark:text-[#9A9A8A]">{t('page_subtitle')}</p>
           </div>
           <div className="flex shrink-0 flex-wrap items-center gap-2 pt-1">
             <span className="rounded-full border border-[#C49A1E]/30 bg-[#C49A1E]/10 px-3 py-1 text-[11px] font-black text-[#7A5E0A] dark:border-[#C49A1E]/20 dark:text-[#C49A1E]">
@@ -141,7 +141,7 @@ export function AdminTransactionsView() {
             <span className="rounded-full border border-[#22C55E]/20 bg-[#F0FDF4] px-3 py-1 text-[11px] font-black text-[#15803D] dark:border-[#22C55E]/15 dark:bg-[#0A2010] dark:text-[#4ADE80]">
               {fmt(commTotal)} {t('chip_commissions')}
             </span>
-            <span className="rounded-full border border-[#D8D4C8] bg-white px-3 py-1 text-[11px] font-bold text-[#888] dark:border-[#243020] dark:bg-[#131E10] dark:text-[#8A8A7A]">
+            <span className="rounded-full border border-[#D8D4C8] bg-white px-3 py-1 text-[11px] font-bold text-[#888] dark:border-[#243020] dark:bg-[#131E10] dark:text-[#A0A090]">
               {transactions.length} {t('chip_count')}
             </span>
           </div>
@@ -152,10 +152,10 @@ export function AdminTransactionsView() {
           <div className="flex flex-wrap gap-2">
             {FILTERS.map(({ key, label, dot }) => (
               <button key={key} type="button" onClick={() => setFilter(key)}
-                className={['flex items-center gap-1.5 rounded-xl px-3 py-1.5 text-[11px] font-bold transition-all', filter === key ? 'bg-white text-[#1A1A0A] shadow-sm ring-1 ring-[#E0DCD0] dark:bg-[#1E2E18] dark:text-[#F0EDD4] dark:ring-[#2A3820]' : 'text-[#999] hover:text-[#555] dark:text-[#8A8A7A] dark:hover:text-[#9A9A8A]'].join(' ')}>
+                className={['flex items-center gap-1.5 rounded-xl px-3 py-1.5 text-[11px] font-bold transition-all', filter === key ? 'bg-white text-[#1A1A0A] shadow-sm ring-1 ring-[#E0DCD0] dark:bg-[#1E2E18] dark:text-[#F0EDD4] dark:ring-[#2A3820]' : 'text-[#999] hover:text-[#555] dark:text-[#A0A090] dark:hover:text-[#9A9A8A]'].join(' ')}>
                 {dot && <span className="h-1.5 w-1.5 rounded-full" style={{ background: filter === key ? dot : '#CCCCCC' }} />}
                 {label}
-                <span className={['min-w-[16px] rounded-full px-1 py-0.5 text-center text-[10px] font-black', filter === key ? 'bg-[#C49A1E] text-[#0C1209]' : 'bg-[#E8E4DC] text-[#AAAAAA] dark:bg-[#1E2E18] dark:text-[#8A8A7A]'].join(' ')}>{counts[key] ?? 0}</span>
+                <span className={['min-w-[16px] rounded-full px-1 py-0.5 text-center text-[10px] font-black', filter === key ? 'bg-[#C49A1E] text-[#0C1209]' : 'bg-[#E8E4DC] text-[#AAAAAA] dark:bg-[#1E2E18] dark:text-[#A0A090]'].join(' ')}>{counts[key] ?? 0}</span>
               </button>
             ))}
           </div>
@@ -214,7 +214,7 @@ export function AdminTransactionsView() {
                     </div>
                     <p className="truncate text-[12px] text-[#666] dark:text-[#9A9A8A]">
                       <span className="font-semibold text-[#1A1A0A] dark:text-[#F0EDD4]">{tx.station}</span>
-                      <span className="mx-1.5 text-[#CCCCCC] dark:text-[#8A8A7A]">·</span>
+                      <span className="mx-1.5 text-[#CCCCCC] dark:text-[#A0A090]">·</span>
                       {tx.client}
                     </p>
                   </div>
@@ -224,16 +224,16 @@ export function AdminTransactionsView() {
                     <span className="text-[17px] font-black text-[#1A1A0A] dark:text-[#F0EDD4]">{fmt(tx.gross)}</span>
                     <div className="flex items-center gap-2">
                       <span className="text-[11px] font-bold text-[#C49A1E]">{fmt(tx.commission)}</span>
-                      <span className="text-[10px] text-[#CCCCCC] dark:text-[#8A8A7A]">·</span>
-                      <span className="text-[11px] text-[#888] dark:text-[#8A8A7A]">{fmt(tx.payout)}</span>
+                      <span className="text-[10px] text-[#CCCCCC] dark:text-[#A0A090]">·</span>
+                      <span className="text-[11px] text-[#888] dark:text-[#A0A090]">{fmt(tx.payout)}</span>
                     </div>
                   </div>
 
                   {/* Date + arrow */}
                   <div className="flex shrink-0 flex-col items-end gap-0.5 py-4 pr-4 pl-2">
                     <span className="text-[12px] font-semibold text-[#555] dark:text-[#9A9A8A]">{formatDate(tx.date)}</span>
-                    <span className="text-[11px] text-[#BBBBAA] dark:text-[#8A8A7A]">{formatTime(tx.date)}</span>
-                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="mt-1 text-[#CCCCCC] transition-colors group-hover:text-[#C49A1E] dark:text-[#8A8A7A]"><path d="m9 18 6-6-6-6" /></svg>
+                    <span className="text-[11px] text-[#BBBBAA] dark:text-[#A0A090]">{formatTime(tx.date)}</span>
+                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="mt-1 text-[#CCCCCC] transition-colors group-hover:text-[#C49A1E] dark:text-[#A0A090]"><path d="m9 18 6-6-6-6" /></svg>
                   </div>
                 </div>
               );

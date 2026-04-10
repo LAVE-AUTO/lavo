@@ -31,7 +31,7 @@ export function AdminTopNav({ onToggleSidebar }: AdminTopNavProps) {
             className="flex h-9 w-9 items-center justify-center rounded-full bg-[#EEE9D8] transition-opacity hover:opacity-80 dark:bg-[#182214] lg:hidden"
             aria-label="Menu"
           >
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-[#666] dark:text-[#8A8A7A]">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-[#666] dark:text-[#A0A090]">
               <line x1="3" y1="6" x2="21" y2="6" /><line x1="3" y1="12" x2="21" y2="12" /><line x1="3" y1="18" x2="21" y2="18" />
             </svg>
           </button>
@@ -60,7 +60,7 @@ export function AdminTopNav({ onToggleSidebar }: AdminTopNavProps) {
             />
           )}
         </Link>
-        <div className="mt-0.5 text-[10px] font-medium text-[#666] dark:text-[#8A8A7A]">
+        <div className="mt-0.5 text-[10px] font-medium text-[#666] dark:text-[#A0A090]">
           Administration
         </div>
       </div>

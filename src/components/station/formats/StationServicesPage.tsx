@@ -82,7 +82,7 @@ export function StationServicesPage() {
 
   if (loading) {
     return (
-      <div className="flex flex-1 items-center justify-center text-[13px] text-[#666] dark:text-[#8A8A7A]">
+      <div className="flex flex-1 items-center justify-center text-[13px] text-[#666] dark:text-[#A0A090]">
         {t('loading')}
       </div>
     );
@@ -91,7 +91,7 @@ export function StationServicesPage() {
   if (loadError) {
     return (
       <div className="flex flex-1 flex-col items-center justify-center gap-3 text-center">
-        <span className="text-[14px] font-semibold text-[#999] dark:text-[#6A6A5A]">{t('load_error')}</span>
+        <span className="text-[14px] font-semibold text-[#999] dark:text-[#9A9A8A]">{t('load_error')}</span>
         <button
           type="button"
           onClick={loadData}
@@ -110,7 +110,7 @@ export function StationServicesPage() {
         <div className="flex items-center justify-between pb-3">
           <div>
             <div className="text-[16px] font-black text-[#1A1A0A] dark:text-[#F0EDD4]">{t('page_title')}</div>
-            <div className="text-[12px] text-[#888] dark:text-[#6A6A5A]">{t('page_subtitle')}</div>
+            <div className="text-[12px] text-[#888] dark:text-[#9A9A8A]">{t('page_subtitle')}</div>
           </div>
           {activeTab === 'services' && (
             <button
@@ -168,14 +168,14 @@ export function StationServicesPage() {
         {activeTab === 'services' && (
           services.length === 0 ? (
             <div className="flex flex-col items-center justify-center gap-2 py-16 text-center">
-              <span className="text-[14px] font-semibold text-[#999] dark:text-[#6A6A5A]">{t('empty')}</span>
+              <span className="text-[14px] font-semibold text-[#999] dark:text-[#9A9A8A]">{t('empty')}</span>
               <span className="text-[12px] text-[#BBBBAA] dark:text-[#4A4A3A]">{t('empty_hint')}</span>
             </div>
           ) : (
             <>
               <div className="mb-4 flex items-center gap-2">
                 <span className="text-[11px] font-black tracking-[.08em] text-[#C49A1E] uppercase">{t('section_base')}</span>
-                <span className="text-[11px] text-[#888] dark:text-[#6A6A5A]">{t('services_active_count', { count: activeCount })}</span>
+                <span className="text-[11px] text-[#888] dark:text-[#9A9A8A]">{t('services_active_count', { count: activeCount })}</span>
               </div>
               <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
                 {services.map((service) => (
