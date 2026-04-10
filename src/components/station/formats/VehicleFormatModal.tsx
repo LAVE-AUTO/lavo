@@ -106,7 +106,7 @@ export function VehicleFormatModal({ format, existingFormats, onClose, onSaved }
                 {isEdit ? t('format_modal_edit') : t('format_modal_new')}
               </div>
               {!isEdit && (
-                <div className="mt-0.5 text-[11px] text-[#BBBBAA] dark:text-[#4A4A3A]">
+                <div className="mt-0.5 text-[12px] text-[#BBBBAA] dark:text-[#4A4A3A]">
                   {t('format_choose_vehicle')}
                 </div>
               )}
@@ -126,7 +126,7 @@ export function VehicleFormatModal({ format, existingFormats, onClose, onSaved }
           <form onSubmit={handleSaveClick} className="flex flex-col gap-4 p-5">
             {/* Label field */}
             <div className="flex flex-col gap-1.5">
-              <label className="text-[12px] font-semibold text-[#5A5A4A] dark:text-[#9A9A8A]">
+              <label className="text-[13px] font-semibold text-[#5A5A4A] dark:text-[#9A9A8A]">
                 {t('format_field_label')} <span className="text-[#EF4444]">*</span>
               </label>
               <VehicleLabelAutocomplete
@@ -138,7 +138,7 @@ export function VehicleFormatModal({ format, existingFormats, onClose, onSaved }
                 placeholder={t('format_placeholder_label')}
               />
               {isDuplicate && (
-                <p className="flex items-center gap-1 text-[11px] font-semibold text-[#FF8800]">
+                <p className="flex items-center gap-1 text-[12px] font-semibold text-[#FF8800]">
                   <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.5}>
                     <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v4m0 4h.01M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z" />
                   </svg>
@@ -149,7 +149,7 @@ export function VehicleFormatModal({ format, existingFormats, onClose, onSaved }
 
             {/* Price field */}
             <div className="flex flex-col gap-1.5">
-              <label className="text-[12px] font-semibold text-[#5A5A4A] dark:text-[#9A9A8A]">
+              <label className="text-[13px] font-semibold text-[#5A5A4A] dark:text-[#9A9A8A]">
                 {t('format_field_price')} <span className="text-[#EF4444]">*</span>
               </label>
               <div className={`flex items-center gap-2 rounded-[8px] border bg-[#F7F6F2] px-3 py-2.5 transition-all focus-within:shadow-[0_0_0_3px_rgba(196,154,30,0.12)] dark:bg-[#0F1A0C] ${
@@ -170,10 +170,10 @@ export function VehicleFormatModal({ format, existingFormats, onClose, onSaved }
                   required
                   className="flex-1 bg-transparent font-mono text-[14px] font-bold text-[#1A1A0A] outline-none placeholder:font-sans placeholder:text-[13px] placeholder:font-normal placeholder:text-[#BBBBAA] dark:text-[#F0EDD4] dark:placeholder:text-[#4A4A3A]"
                 />
-                <span className="shrink-0 text-[11px] font-semibold text-[#BBBBAA] dark:text-[#4A4A3A]">CAD</span>
+                <span className="shrink-0 text-[12px] font-semibold text-[#BBBBAA] dark:text-[#4A4A3A]">CAD</span>
               </div>
               {priceError && (
-                <p className="flex items-center gap-1 text-[11px] font-semibold text-[#EF4444]">
+                <p className="flex items-center gap-1 text-[12px] font-semibold text-[#EF4444]">
                   <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.5}>
                     <circle cx="12" cy="12" r="10" />
                     <path strokeLinecap="round" strokeLinejoin="round" d="M12 8v4m0 4h.01" />
@@ -190,7 +190,7 @@ export function VehicleFormatModal({ format, existingFormats, onClose, onSaved }
                   <circle cx="12" cy="12" r="10" />
                   <path strokeLinecap="round" strokeLinejoin="round" d="M12 8v4m0 4h.01" />
                 </svg>
-                <span className="text-[12px] font-semibold text-[#EF4444] dark:text-[#FF8A80]">{apiError}</span>
+                <span className="text-[13px] font-semibold text-[#EF4444] dark:text-[#FF8A80]">{apiError}</span>
               </div>
             )}
 

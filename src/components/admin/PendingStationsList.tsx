@@ -60,7 +60,7 @@ function TabButton({
     <button
       type="button"
       onClick={onClick}
-      className="relative flex flex-col items-center gap-0.5 px-4 py-2.5 text-[12px] font-bold transition-colors duration-150 focus:outline-none"
+      className="relative flex flex-col items-center gap-0.5 px-4 py-2.5 text-[13px] font-bold transition-colors duration-150 focus:outline-none"
       style={{ color: active ? (color ?? '#C49A1E') : undefined }}
     >
       <span className={active ? '' : 'text-[#888] dark:text-[#5A5A5A]'}>{label}</span>
@@ -139,14 +139,14 @@ function StationCard({
           </div>
 
           {/* Location */}
-          <p className="mt-0.5 truncate text-[11px] text-[#AAA] dark:text-[#555]">
+          <p className="mt-0.5 truncate text-[12px] text-[#AAA] dark:text-[#555]">
             {[s.city, s.address].filter(Boolean).join(' · ')}
           </p>
 
           {/* Meta row */}
           <div className="mt-2 flex flex-wrap items-center gap-2">
             {/* Date */}
-            <span className="flex items-center gap-1 text-[10px] font-semibold text-[#999] dark:text-[#A0A090]">
+            <span className="flex items-center gap-1 text-[11px] font-semibold text-[#999] dark:text-[#A0A090]">
               <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
                 <rect x="3" y="4" width="18" height="18" rx="2" /><line x1="16" y1="2" x2="16" y2="6" /><line x1="8" y1="2" x2="8" y2="6" /><line x1="3" y1="10" x2="21" y2="10" />
               </svg>
@@ -159,7 +159,7 @@ function StationCard({
 
             {/* Docs count */}
             {isPending && docCount > 0 && (
-              <span className="flex items-center gap-1 text-[10px] font-semibold text-[#999] dark:text-[#A0A090]">
+              <span className="flex items-center gap-1 text-[11px] font-semibold text-[#999] dark:text-[#A0A090]">
                 <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
                   <path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z" /><polyline points="14 2 14 8 20 8" />
                 </svg>
@@ -171,7 +171,7 @@ function StationCard({
             {s.rejection_count > 0 && (
               <>
                 <span className="text-[#DDD] dark:text-[#9A9A8A]">·</span>
-                <span className="flex items-center gap-1 text-[10px] font-semibold" style={{ color: '#EF4444' }}>
+                <span className="flex items-center gap-1 text-[11px] font-semibold" style={{ color: '#EF4444' }}>
                   <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
                     <circle cx="12" cy="12" r="10" /><line x1="15" y1="9" x2="9" y2="15" /><line x1="9" y1="9" x2="15" y2="15" />
                   </svg>
@@ -183,7 +183,7 @@ function StationCard({
 
           {/* Rejection reason */}
           {isRejected && s.rejection_reason && (
-            <p className="mt-2 line-clamp-1 rounded-[6px] bg-[#FEF2F2] px-2 py-1 text-[10px] italic leading-relaxed text-[#EF4444]/80 dark:bg-[#1E0A0A] dark:text-[#EF4444]/60">
+            <p className="mt-2 line-clamp-1 rounded-[6px] bg-[#FEF2F2] px-2 py-1 text-[11px] italic leading-relaxed text-[#EF4444]/80 dark:bg-[#1E0A0A] dark:text-[#EF4444]/60">
               {s.rejection_reason}
             </p>
           )}
@@ -192,7 +192,7 @@ function StationCard({
         {/* CTA */}
         <Link
           href={`/admin/stations/${s.id}` as Parameters<typeof Link>[0]['href']}
-          className="flex shrink-0 items-center gap-1.5 self-center rounded-[10px] px-3.5 py-2 text-[11px] font-bold text-white transition-opacity hover:opacity-80"
+          className="flex shrink-0 items-center gap-1.5 self-center rounded-[10px] px-3.5 py-2 text-[12px] font-bold text-white transition-opacity hover:opacity-80"
           style={{ background: style.dot }}
         >
           {t('btn_review')}
@@ -268,12 +268,12 @@ export function PendingStationsList() {
                   {t('page_title_history')}
                 </h1>
                 {!loading && counts.pending > 0 && (
-                  <span className="flex h-5 min-w-[20px] items-center justify-center rounded-full bg-[#C49A1E] px-1.5 text-[10px] font-black text-white">
+                  <span className="flex h-5 min-w-[20px] items-center justify-center rounded-full bg-[#C49A1E] px-1.5 text-[11px] font-black text-white">
                     {counts.pending}
                   </span>
                 )}
               </div>
-              <p className="mt-0.5 text-[11px] text-[#AAA] dark:text-[#A0A090]">
+              <p className="mt-0.5 text-[12px] text-[#AAA] dark:text-[#A0A090]">
                 {t('page_subtitle_history')}
               </p>
             </div>
@@ -285,7 +285,7 @@ export function PendingStationsList() {
                   <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-[#C49A1E] opacity-60" />
                   <span className="relative inline-flex h-1.5 w-1.5 rounded-full bg-[#C49A1E]" />
                 </span>
-                <span className="text-[10px] font-black uppercase tracking-widest text-[#C49A1E]">KYC</span>
+                <span className="text-[11px] font-black uppercase tracking-widest text-[#C49A1E]">KYC</span>
               </div>
             )}
           </div>
@@ -327,7 +327,7 @@ export function PendingStationsList() {
           <div className="flex flex-1 flex-col items-center justify-center gap-3 py-24 text-center">
             <p className="text-[13px] font-semibold text-[#888] dark:text-[#9A9A8A]">{t('error_load')}</p>
             <button type="button" onClick={loadStations}
-              className="rounded-xl border border-[#C49A1E]/40 px-4 py-2 text-[12px] font-bold text-[#C49A1E] transition-colors hover:bg-[#C49A1E]/8">
+              className="rounded-xl border border-[#C49A1E]/40 px-4 py-2 text-[13px] font-bold text-[#C49A1E] transition-colors hover:bg-[#C49A1E]/8">
               {t('btn_retry')}
             </button>
           </div>

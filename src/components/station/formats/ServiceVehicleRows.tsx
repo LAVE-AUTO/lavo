@@ -10,7 +10,7 @@ interface Props {
 }
 
 const inputClass =
-  'w-full rounded-[6px] border border-[#D8D4C8] bg-[#F7F6F2] px-2.5 py-2 text-[12px] text-[#1A1A0A] outline-none transition-colors focus:border-[#C49A1E] focus:bg-white dark:border-[#243020] dark:bg-[#0F1A0C] dark:text-[#F0EDD4] dark:focus:bg-[#182214]';
+  'w-full rounded-[6px] border border-[#D8D4C8] bg-[#F7F6F2] px-2.5 py-2 text-[13px] text-[#1A1A0A] outline-none transition-colors focus:border-[#C49A1E] focus:bg-white dark:border-[#243020] dark:bg-[#0F1A0C] dark:text-[#F0EDD4] dark:focus:bg-[#182214]';
 
 export function ServiceVehicleRows({ formats, entries, onChange }: Props) {
   const t = useTranslations('station_services');
@@ -21,7 +21,7 @@ export function ServiceVehicleRows({ formats, entries, onChange }: Props) {
 
   if (formats.length === 0) {
     return (
-      <p className="rounded-[8px] border border-dashed border-[#D8D4C8] p-3 text-[12px] text-[#888] dark:border-[#243020] dark:text-[#5A5A4A]">
+      <p className="rounded-[8px] border border-dashed border-[#D8D4C8] p-3 text-[13px] text-[#888] dark:border-[#243020] dark:text-[#5A5A4A]">
         {t('no_formats')}
       </p>
     );
@@ -35,7 +35,7 @@ export function ServiceVehicleRows({ formats, entries, onChange }: Props) {
           className="flex items-center gap-2.5 rounded-[10px] bg-[#F7F6F0] px-3 py-2.5 dark:bg-[#0F1A0C]"
         >
           {/* Format label */}
-          <span className="w-[76px] shrink-0 text-[10px] font-black tracking-[.06em] text-[#C49A1E] uppercase">
+          <span className="w-[76px] shrink-0 text-[11px] font-black tracking-[.06em] text-[#C49A1E] uppercase">
             {entry.vehicle_label}
           </span>
 
@@ -91,7 +91,7 @@ export function ServiceVehicleRows({ formats, entries, onChange }: Props) {
           <button
             type="button"
             onClick={() => update(entry.vehicle_format_id, 'is_active', !entry.is_active)}
-            className={`mt-4 w-[52px] shrink-0 rounded-[6px] py-2 text-[10px] font-bold transition-all ${
+            className={`mt-4 w-[52px] shrink-0 rounded-[6px] py-2 text-[11px] font-bold transition-all ${
               entry.is_active
                 ? 'bg-[#C49A1E] text-[#0C1209]'
                 : 'border border-[#D8D4C8] bg-[#F0EDE4] text-[#AAA] dark:border-[#243020] dark:bg-[#1A1A0A] dark:text-[#5A5A4A]'

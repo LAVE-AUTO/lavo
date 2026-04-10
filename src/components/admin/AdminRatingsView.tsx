@@ -149,7 +149,7 @@ export function AdminRatingsView() {
             type="button"
             onClick={() => setVisibilityFilter(v)}
             className={[
-              'rounded-full px-3 py-1.5 text-[12px] font-bold transition-colors',
+              'rounded-full px-3 py-1.5 text-[13px] font-bold transition-colors',
               visibilityFilter === v
                 ? 'bg-[#C49A1E] text-[#0C1209]'
                 : 'bg-[#F0EDE6] text-[#666] hover:bg-[#E8E4DC] dark:bg-[#1A2A14] dark:text-[#9A9A8A] dark:hover:bg-[#1E2E18]',
@@ -168,7 +168,7 @@ export function AdminRatingsView() {
             type="button"
             onClick={() => setScoreFilter(sf.value)}
             className={[
-              'rounded-full px-3 py-1.5 text-[12px] font-bold transition-colors',
+              'rounded-full px-3 py-1.5 text-[13px] font-bold transition-colors',
               scoreFilter === sf.value
                 ? 'bg-[#1A1A0A] text-[#F0EDD4] dark:bg-[#F0EDD4] dark:text-[#0C1209]'
                 : 'bg-[#F0EDE6] text-[#666] hover:bg-[#E8E4DC] dark:bg-[#1A2A14] dark:text-[#9A9A8A] dark:hover:bg-[#1E2E18]',
@@ -179,7 +179,7 @@ export function AdminRatingsView() {
         ))}
 
         {meta && (
-          <span className="ml-auto text-[12px] text-[#AAA] dark:text-[#A0A090]">
+          <span className="ml-auto text-[13px] text-[#AAA] dark:text-[#A0A090]">
             {t('meta_total', { count: meta.total })}
           </span>
         )}
@@ -221,7 +221,7 @@ export function AdminRatingsView() {
                   {[t('col_station'), t('col_client'), t('col_score'), t('col_comment'), t('col_date'), t('col_visibility'), ''].map((h, i) => (
                     <th
                       key={i}
-                      className="px-4 py-3 text-left text-[10px] font-black uppercase tracking-widest text-[#AAAAAA] dark:text-[#A0A090]"
+                      className="px-4 py-3 text-left text-[11px] font-black uppercase tracking-widest text-[#AAAAAA] dark:text-[#A0A090]"
                     >
                       {h}
                     </th>
@@ -268,7 +268,7 @@ export function AdminRatingsView() {
                     {/* Visibility badge */}
                     <td className="px-4 py-3">
                       <span className={[
-                        'inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-[11px] font-bold',
+                        'inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-[12px] font-bold',
                         item.is_visible
                           ? 'bg-[#F0FDF4] text-[#15803D] ring-1 ring-[#22C55E]/20 dark:bg-[#0A2010] dark:text-[#4ADE80]'
                           : 'bg-[#FFF1F2] text-[#BE123C] ring-1 ring-[#FB7185]/20 dark:bg-[#200A10] dark:text-[#F87171]',
@@ -285,7 +285,7 @@ export function AdminRatingsView() {
                         disabled={togglingId === item.id}
                         onClick={() => handleToggle(item)}
                         className={[
-                          'rounded-lg px-3 py-1.5 text-[12px] font-bold transition-all',
+                          'rounded-lg px-3 py-1.5 text-[13px] font-bold transition-all',
                           togglingId === item.id
                             ? 'cursor-wait opacity-50'
                             : item.is_visible

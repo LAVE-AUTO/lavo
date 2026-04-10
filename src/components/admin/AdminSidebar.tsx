@@ -45,7 +45,7 @@ export function AdminSidebar({ open = false, onClose }: AdminSidebarProps) {
     { href: '/admin/legal-content',     labelKey: 'nav_legal_content', icon: <LegalIcon /> },
   ];
 
-  const base   = 'flex items-center gap-2 rounded-lg px-3 py-2 text-[12px] font-semibold transition-colors duration-150';
+  const base   = 'flex items-center gap-2 rounded-lg px-3 py-2 text-[13px] font-semibold transition-colors duration-150';
   const active = `${base} bg-[#C49A1E] text-[#0C1209]`;
   const idle   = `${base} text-[#666] hover:bg-[#E8E4D8] dark:text-[#A0A090] dark:hover:bg-[#182214]`;
 
@@ -61,7 +61,7 @@ export function AdminSidebar({ open = false, onClose }: AdminSidebarProps) {
     <>
       {/* Brand */}
       <div className="mb-4 px-3 pt-1">
-        <span className="text-[10px] font-black uppercase tracking-[0.2em] text-[#C49A1E]">Administration</span>
+        <span className="text-[11px] font-black uppercase tracking-[0.2em] text-[#C49A1E]">Administration</span>
       </div>
 
       <nav className="flex flex-col gap-1">
@@ -83,7 +83,7 @@ export function AdminSidebar({ open = false, onClose }: AdminSidebarProps) {
         <button
           type="button"
           onClick={() => logout()}
-          className="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-[12px] font-semibold text-[#888] transition-colors hover:bg-[#FEF2F2] hover:text-[#EF4444] dark:text-[#9A9A8A] dark:hover:bg-[#2A0A0A] dark:hover:text-[#FF8A80]"
+          className="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-[13px] font-semibold text-[#888] transition-colors hover:bg-[#FEF2F2] hover:text-[#EF4444] dark:text-[#9A9A8A] dark:hover:bg-[#2A0A0A] dark:hover:text-[#FF8A80]"
         >
           <LogoutIcon />
           {t('nav_logout')}

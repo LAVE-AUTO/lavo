@@ -21,7 +21,7 @@ function NumericField({
 }) {
   return (
     <div className="flex flex-col gap-2">
-      <label className="text-[11px] font-black uppercase tracking-wider text-[#A0A090] dark:text-[#9A9A8A]">{label}</label>
+      <label className="text-[12px] font-black uppercase tracking-wider text-[#A0A090] dark:text-[#9A9A8A]">{label}</label>
       <div className={[
         'flex overflow-hidden rounded-[10px] border-2 transition-all duration-200',
         readOnly
@@ -37,11 +37,11 @@ function NumericField({
             readOnly ? 'cursor-not-allowed text-[#9A9A8A] dark:text-[#A0A090]' : 'text-[#1A1A0A] dark:text-[#F0EDD4]',
           ].join(' ')}
         />
-        <span className="flex items-center border-l border-[#E8E4D8] bg-[#F0EDE0] px-3.5 text-[12px] font-black text-[#8A8A6A] dark:border-[#243020] dark:bg-[#141E10] dark:text-[#A0A090]">
+        <span className="flex items-center border-l border-[#E8E4D8] bg-[#F0EDE0] px-3.5 text-[13px] font-black text-[#8A8A6A] dark:border-[#243020] dark:bg-[#141E10] dark:text-[#A0A090]">
           {unit}
         </span>
       </div>
-      {hint && <p className="mt-1 text-[11px] leading-relaxed text-[#AAAAAA] dark:text-[#A0A090]">{hint}</p>}
+      {hint && <p className="mt-1 text-[12px] leading-relaxed text-[#AAAAAA] dark:text-[#A0A090]">{hint}</p>}
     </div>
   );
 }
@@ -160,11 +160,11 @@ export function AdminPlatformSettings() {
       <div className="sticky top-0 z-10 flex shrink-0 items-center justify-between border-b border-[#E0DCD0] bg-[#F5F5EE]/95 px-6 py-4 backdrop-blur-sm dark:border-[#1A2A14] dark:bg-[#0C1209]/95">
         <div>
           <h1 className="text-[18px] font-black text-[#1A1A0A] dark:text-[#F0EDD4]">{t('page_title')}</h1>
-          <p className="text-[12px] text-[#888] dark:text-[#9A9A8A]">{t('page_subtitle')}</p>
+          <p className="text-[13px] text-[#888] dark:text-[#9A9A8A]">{t('page_subtitle')}</p>
         </div>
         <div className="flex items-center gap-3">
           {isDirty && !saving && (
-            <span className="text-[11px] font-semibold text-[#AAAAAA] dark:text-[#A0A090]">{t('label_unsaved')}</span>
+            <span className="text-[12px] font-semibold text-[#AAAAAA] dark:text-[#A0A090]">{t('label_unsaved')}</span>
           )}
           <button type="submit" disabled={saving}
             className="relative flex items-center gap-2 rounded-[10px] bg-[#C49A1E] px-6 py-2.5 text-[13px] font-bold text-[#0C1209] shadow-sm transition-all duration-200 hover:bg-[#D4A830] hover:shadow-md active:scale-[0.98] disabled:opacity-50">
@@ -198,7 +198,7 @@ export function AdminPlatformSettings() {
                   style={{ width: `${Math.max(1, adminShare)}%` }}
                 />
               </div>
-              <div className="mt-2 flex justify-between text-[11px] font-bold">
+              <div className="mt-2 flex justify-between text-[12px] font-bold">
                 <span className="text-[#C49A1E]">{t('label_platform')} · {adminShare}%</span>
                 <span className="text-[#5A8A50] dark:text-[#7AAA6A]">{t('label_station')} · {stationShare}%</span>
               </div>

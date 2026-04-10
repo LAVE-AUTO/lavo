@@ -83,7 +83,7 @@ export function HistoryCard({ entry }: Props) {
               {isReservation ? t('type_reservation') : t('type_queue')}
             </span>
           </div>
-          <div className="mt-0.5 flex items-center gap-2 text-[11px] text-[#000717]/50 dark:text-[#FFFFF0]/50">
+          <div className="mt-0.5 flex items-center gap-2 text-[12px] text-[#000717]/50 dark:text-[#FFFFF0]/50">
             <span className="font-mono font-semibold">{timeLabel}</span>
             {entry.vehicle_format_label && (
               <>
@@ -101,7 +101,7 @@ export function HistoryCard({ entry }: Props) {
 
         {/* Status */}
         <span
-          className="shrink-0 rounded-md px-2.5 py-1 text-[10px] font-bold"
+          className="shrink-0 rounded-md px-2.5 py-1 text-[11px] font-bold"
           style={{ background: badge.bg, color: badge.text }}
         >
           {t(statusKey)}
@@ -118,7 +118,7 @@ export function HistoryCard({ entry }: Props) {
         <div className="overflow-hidden">
           <div className="border-t border-[#B8B8A4] px-5 pb-4 pt-3 dark:border-[#3A4A36]">
             {/* Info section */}
-            <div className="grid grid-cols-2 gap-x-6 gap-y-2 text-[12px] sm:grid-cols-3">
+            <div className="grid grid-cols-2 gap-x-6 gap-y-2 text-[13px] sm:grid-cols-3">
               <DetailRow label={t('detail_entry_id')} value={`#${entry.id.slice(0, 8)}`} mono />
               <DetailRow label={t('col_date')} value={dateLabel} />
               <DetailRow label={t('col_type')} value={isReservation ? t('type_reservation') : t('type_queue')} />
@@ -132,10 +132,10 @@ export function HistoryCard({ entry }: Props) {
 
             {/* Financial section */}
             <div className="mt-3 rounded-xl bg-white/40 p-3 dark:bg-[#243020]/60">
-              <p className="mb-2 text-[10px] font-bold uppercase tracking-wider text-[#000717]/35 dark:text-[#FFFFF0]/30">
+              <p className="mb-2 text-[11px] font-bold uppercase tracking-wider text-[#000717]/35 dark:text-[#FFFFF0]/30">
                 {t('col_amount')}
               </p>
-              <div className="grid grid-cols-2 gap-x-6 gap-y-1.5 text-[12px] sm:grid-cols-3">
+              <div className="grid grid-cols-2 gap-x-6 gap-y-1.5 text-[13px] sm:grid-cols-3">
                 <DetailRow label={t('col_amount')} value={`${parseFloat(entry.amount_paid).toFixed(2)}$`} gold />
                 {entry.station_payout && (
                   <DetailRow label={t('col_payout')} value={`${parseFloat(entry.station_payout).toFixed(2)}$`} gold />

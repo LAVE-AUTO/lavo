@@ -60,7 +60,7 @@ export function AdminTopNav({ onToggleSidebar }: AdminTopNavProps) {
             />
           )}
         </Link>
-        <div className="mt-0.5 text-[10px] font-medium text-[#666] dark:text-[#A0A090]">
+        <div className="mt-0.5 text-[11px] font-medium text-[#666] dark:text-[#A0A090]">
           Administration
         </div>
       </div>

@@ -154,14 +154,14 @@ export function DelayRequestsPage() {
         <div className="flex items-end justify-between gap-4">
           <div>
             <h1 className="text-[20px] font-black text-[#1A1A0A] dark:text-[#F0EDD4]">{t('page_title')}</h1>
-            <p className="mt-0.5 mb-3 text-[12px] text-[#555]/60 dark:text-[#FFFFF0]/40">
+            <p className="mt-0.5 mb-3 text-[13px] text-[#555]/60 dark:text-[#FFFFF0]/40">
               {requests.length > 0 ? t('pending_n', { n: requests.length }) : t('no_pending')}
             </p>
           </div>
           {requests.length > 0 && (
             <div className="mb-3 flex items-center gap-1.5 rounded-full bg-[#C09A18]/15 px-3 py-1">
               <span className="h-1.5 w-1.5 animate-ping rounded-full bg-[#C09A18] opacity-75" />
-              <span className="text-[11px] font-bold text-[#C09A18]">{requests.length} {t('badge_pending')}</span>
+              <span className="text-[12px] font-bold text-[#C09A18]">{requests.length} {t('badge_pending')}</span>
             </div>
           )}
         </div>
@@ -175,7 +175,7 @@ export function DelayRequestsPage() {
               role="tab"
               aria-selected={tab === t_}
               onClick={() => setTab(t_)}
-              className={`flex items-center gap-1.5 border-b-2 px-4 py-2.5 text-[12px] font-bold transition-all duration-150 ${
+              className={`flex items-center gap-1.5 border-b-2 px-4 py-2.5 text-[13px] font-bold transition-all duration-150 ${
                 tab === t_
                   ? 'border-[#C09A18] text-[#C09A18]'
                   : 'border-transparent text-[#555]/50 hover:text-[#555]/80 dark:text-[#FFFFF0]/30 dark:hover:text-[#FFFFF0]/60'
@@ -300,7 +300,7 @@ function PendingCard({ request, animationDelay, onAccept, onRefuse, acceptLabel,
       <div className="px-5 py-4">
         {/* Client row */}
         <div className="flex items-start gap-3">
-          <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-[#C09A18]/15 text-[11px] font-black text-[#C09A18]">
+          <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-[#C09A18]/15 text-[12px] font-black text-[#C09A18]">
             {initials.slice(0, 2)}
           </div>
           <div className="flex-1 min-w-0">
@@ -310,10 +310,10 @@ function PendingCard({ request, animationDelay, onAccept, onRefuse, acceptLabel,
                 {badgeLabel}
               </span>
             </div>
-            <p className="mt-1.5 text-[12px] italic leading-relaxed text-[#333]/65 dark:text-[#FFFFF0]/55">
+            <p className="mt-1.5 text-[13px] italic leading-relaxed text-[#333]/65 dark:text-[#FFFFF0]/55">
               « {request.message} »
             </p>
-            <span className="mt-1.5 inline-flex items-center gap-1 text-[10px] text-[#555]/40 dark:text-[#FFFFF0]/30">
+            <span className="mt-1.5 inline-flex items-center gap-1 text-[11px] text-[#555]/40 dark:text-[#FFFFF0]/30">
               <ClockMiniIcon />
               {agoLabel}
             </span>
@@ -325,14 +325,14 @@ function PendingCard({ request, animationDelay, onAccept, onRefuse, acceptLabel,
           <button
             type="button"
             onClick={onRefuse}
-            className="rounded-[8px] border border-[#E8472A]/30 py-2.5 text-[12px] font-bold text-[#E8472A] transition-all duration-150 hover:bg-[#E8472A]/08 dark:border-[#E8472A]/30"
+            className="rounded-[8px] border border-[#E8472A]/30 py-2.5 text-[13px] font-bold text-[#E8472A] transition-all duration-150 hover:bg-[#E8472A]/08 dark:border-[#E8472A]/30"
           >
             {refuseLabel}
           </button>
           <button
             type="button"
             onClick={onAccept}
-            className="rounded-[8px] bg-[#00C851] py-2.5 text-[12px] font-bold text-white shadow-sm transition-all duration-150 hover:bg-[#00B048] hover:shadow-md"
+            className="rounded-[8px] bg-[#00C851] py-2.5 text-[13px] font-bold text-white shadow-sm transition-all duration-150 hover:bg-[#00B048] hover:shadow-md"
           >
             {acceptLabel}
           </button>
@@ -364,14 +364,14 @@ function HistoryCard({ request, animationDelay, statusLabel, agoLabel }: History
 
       <div className="flex flex-1 items-start gap-3 px-4 py-3.5">
         <div
-          className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-[10px] font-black text-white"
+          className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-[11px] font-black text-white"
           style={{ background: accentColor }}
         >
           {initials.slice(0, 2)}
         </div>
         <div className="flex-1 min-w-0">
           <div className="flex items-center justify-between gap-2">
-            <span className="text-[12px] font-bold text-[#1A1A0A] dark:text-[#F0EDD4]">{request.client_name}</span>
+            <span className="text-[13px] font-bold text-[#1A1A0A] dark:text-[#F0EDD4]">{request.client_name}</span>
             <span
               className="shrink-0 rounded-full px-2 py-0.5 text-[9px] font-bold uppercase tracking-wide text-white"
               style={{ background: accentColor }}
@@ -379,15 +379,15 @@ function HistoryCard({ request, animationDelay, statusLabel, agoLabel }: History
               {statusLabel}
             </span>
           </div>
-          <p className="mt-1 text-[11px] italic text-[#333]/50 dark:text-[#FFFFF0]/40 leading-relaxed">
+          <p className="mt-1 text-[12px] italic text-[#333]/50 dark:text-[#FFFFF0]/40 leading-relaxed">
             « {request.message} »
           </p>
           {!accepted && request.refusal_reason && (
-            <p className="mt-1.5 rounded-[6px] bg-[#FEF2F2] px-2.5 py-1.5 text-[10px] text-[#991B1B]/70 dark:bg-[#2A0A0A] dark:text-[#FCA5A5]/60">
+            <p className="mt-1.5 rounded-[6px] bg-[#FEF2F2] px-2.5 py-1.5 text-[11px] text-[#991B1B]/70 dark:bg-[#2A0A0A] dark:text-[#FCA5A5]/60">
               {request.refusal_reason}
             </p>
           )}
-          <span className="mt-1.5 inline-flex items-center gap-1 text-[10px] text-[#555]/35 dark:text-[#FFFFF0]/25">
+          <span className="mt-1.5 inline-flex items-center gap-1 text-[11px] text-[#555]/35 dark:text-[#FFFFF0]/25">
             <ClockMiniIcon />
             {agoLabel}
           </span>
@@ -411,7 +411,7 @@ function EmptyState({ icon, label, sublabel }: { icon: 'check' | 'clock'; label:
       )}
       <div>
         <p className="text-[13px] font-bold text-[#1A1A0A]/50 dark:text-[#FFF8EC]/30">{label}</p>
-        <p className="mt-0.5 text-[11px] text-[#1A1A0A]/30 dark:text-[#FFF8EC]/20">{sublabel}</p>
+        <p className="mt-0.5 text-[12px] text-[#1A1A0A]/30 dark:text-[#FFF8EC]/20">{sublabel}</p>
       </div>
     </div>
   );

@@ -51,7 +51,7 @@ function KpiCard({ icon, value, label, trendValue, trendLabel, trendUp, sparklin
           {icon}
         </div>
         <span
-          className="flex items-center gap-1 rounded-full px-2.5 py-1 text-[10px] font-black"
+          className="flex items-center gap-1 rounded-full px-2.5 py-1 text-[11px] font-black"
           style={{
             background: trendUp ? '#00C85118' : '#EF444418',
             color: trendUp ? '#00A041' : '#EF4444',
@@ -65,7 +65,7 @@ function KpiCard({ icon, value, label, trendValue, trendLabel, trendUp, sparklin
       <div className="mb-0.5 text-[28px] font-black leading-none tracking-tight text-[#0F1A0C] dark:text-[#F0EDD4]">
         {value}
       </div>
-      <div className="mb-4 text-[11px] font-medium text-[#888] dark:text-[#9A9A8A]">
+      <div className="mb-4 text-[12px] font-medium text-[#888] dark:text-[#9A9A8A]">
         {label}
         <span className="ml-1.5 text-[#AAA] dark:text-[#A0A090]">— {trendLabel}</span>
       </div>

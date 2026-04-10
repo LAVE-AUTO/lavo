@@ -105,17 +105,17 @@ export function AdminPromoQr({ stationId, stationName }: Props) {
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#F97316" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="mt-0.5 shrink-0" aria-hidden="true">
           <path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z" /><line x1="12" y1="9" x2="12" y2="13" /><line x1="12" y1="17" x2="12.01" y2="17" />
         </svg>
-        <p className="text-[12px] leading-snug text-orange-700 dark:text-orange-400">{t('preview_only_notice')}</p>
+        <p className="text-[13px] leading-snug text-orange-700 dark:text-orange-400">{t('preview_only_notice')}</p>
       </div>
 
       {/* Section header */}
       <div className="mb-5 flex items-center justify-between">
         <div>
-          <p className="text-[10px] font-black uppercase tracking-[0.15em] text-[#C49A1E]">{t('section_title')}</p>
-          <p className="mt-0.5 text-[11px] text-[#888] dark:text-[#9A9A8A]">{t('section_subtitle')}</p>
+          <p className="text-[11px] font-black uppercase tracking-[0.15em] text-[#C49A1E]">{t('section_title')}</p>
+          <p className="mt-0.5 text-[12px] text-[#888] dark:text-[#9A9A8A]">{t('section_subtitle')}</p>
         </div>
         {appliedRate && (
-          <span className="rounded-full border border-[#C49A1E]/30 bg-[#C49A1E]/10 px-3 py-1 text-[10px] font-black text-[#C49A1E]">
+          <span className="rounded-full border border-[#C49A1E]/30 bg-[#C49A1E]/10 px-3 py-1 text-[11px] font-black text-[#C49A1E]">
             {t('commission_active_badge', { rate: appliedRate })}
           </span>
         )}
@@ -128,7 +128,7 @@ export function AdminPromoQr({ stationId, stationName }: Props) {
 
           {/* Commission input */}
           <div className="flex flex-col gap-1.5">
-            <label htmlFor="promo-commission" className="text-[12px] font-bold text-[#555] dark:text-[#9A9A8A]">
+            <label htmlFor="promo-commission" className="text-[13px] font-bold text-[#555] dark:text-[#9A9A8A]">
               {t('field_commission')}<span className="ml-0.5 text-[#C49A1E]">*</span>
             </label>
             <div className="flex items-center gap-2">
@@ -142,8 +142,8 @@ export function AdminPromoQr({ stationId, stationName }: Props) {
               />
               <span className="text-[13px] font-bold text-[#888] dark:text-[#9A9A8A]">%</span>
             </div>
-            <p className="text-[11px] text-[#999] dark:text-[#A0A090]">{t('field_commission_hint')}</p>
-            {commissionError && <p className="text-[11px] font-semibold text-red-500">{commissionError}</p>}
+            <p className="text-[12px] text-[#999] dark:text-[#A0A090]">{t('field_commission_hint')}</p>
+            {commissionError && <p className="text-[12px] font-semibold text-red-500">{commissionError}</p>}
           </div>
 
           {/* Generate button */}
@@ -166,8 +166,8 @@ export function AdminPromoQr({ stationId, stationName }: Props) {
               <circle cx="12" cy="12" r="10" /><line x1="12" y1="8" x2="12" y2="12" /><line x1="12" y1="16" x2="12.01" y2="16" />
             </svg>
             <div>
-              <p className="text-[11px] font-bold text-[#1A1A0A] dark:text-[#F0EDD4]">{t('qr_notice_title')}</p>
-              <p className="mt-0.5 text-[11px] leading-relaxed text-[#666] dark:text-[#A0A090]">{t('qr_notice_body')}</p>
+              <p className="text-[12px] font-bold text-[#1A1A0A] dark:text-[#F0EDD4]">{t('qr_notice_title')}</p>
+              <p className="mt-0.5 text-[12px] leading-relaxed text-[#666] dark:text-[#A0A090]">{t('qr_notice_body')}</p>
             </div>
           </div>
         </div>
@@ -188,14 +188,14 @@ export function AdminPromoQr({ stationId, stationName }: Props) {
             {/* Download + Print */}
             <div className="flex w-full max-w-[240px] gap-2">
               <button type="button" onClick={downloadPng}
-                className="flex flex-1 items-center justify-center gap-1.5 rounded-lg bg-[#C49A1E] px-3 py-2 text-[11px] font-bold text-[#0C1209] hover:bg-[#B08A14]">
+                className="flex flex-1 items-center justify-center gap-1.5 rounded-lg bg-[#C49A1E] px-3 py-2 text-[12px] font-bold text-[#0C1209] hover:bg-[#B08A14]">
                 <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" aria-hidden="true">
                   <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" /><polyline points="7 10 12 15 17 10" /><line x1="12" y1="15" x2="12" y2="3" />
                 </svg>
                 {t('btn_download_png')}
               </button>
               <button type="button" onClick={printPdf}
-                className="flex flex-1 items-center justify-center gap-1.5 rounded-lg border border-[#D8D4C8] px-3 py-2 text-[11px] font-semibold text-[#555] hover:bg-[#F5F3EE] dark:border-[#243020] dark:text-[#9A9A8A] dark:hover:bg-[#1A2A14]">
+                className="flex flex-1 items-center justify-center gap-1.5 rounded-lg border border-[#D8D4C8] px-3 py-2 text-[12px] font-semibold text-[#555] hover:bg-[#F5F3EE] dark:border-[#243020] dark:text-[#9A9A8A] dark:hover:bg-[#1A2A14]">
                 <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" aria-hidden="true">
                   <polyline points="6 9 6 2 18 2 18 9" /><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2" /><rect x="6" y="14" width="12" height="8" />
                 </svg>

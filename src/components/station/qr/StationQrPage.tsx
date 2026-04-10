@@ -127,7 +127,7 @@ export function StationQrPage() {
       <div className="mt-8 w-full max-w-sm rounded-xl border border-[#E8E4DC] bg-white p-6 shadow-sm dark:border-[#1A2A14] dark:bg-[#182214]">
         {/* Station name */}
         <div className="mb-5 text-center">
-          <span className="text-[11px] font-semibold uppercase tracking-wider text-[#BBBBAA] dark:text-[#4A4A3A]">
+          <span className="text-[12px] font-semibold uppercase tracking-wider text-[#BBBBAA] dark:text-[#4A4A3A]">
             {t('station_name_label')}
           </span>
           <p className="mt-0.5 text-[16px] font-bold text-[#1A1A0A] dark:text-[#F0EDD4]">
@@ -140,10 +140,10 @@ export function StationQrPage() {
 
         {/* Public URL preview */}
         <div className="mt-4 rounded-lg bg-[#F7F6F2] px-3 py-2 dark:bg-[#0F1A0C]">
-          <span className="block text-[10px] font-semibold uppercase tracking-wider text-[#BBBBAA] dark:text-[#4A4A3A]">
+          <span className="block text-[11px] font-semibold uppercase tracking-wider text-[#BBBBAA] dark:text-[#4A4A3A]">
             {t('station_url_label')}
           </span>
-          <p className="mt-0.5 break-all font-mono text-[12px] text-[#666] dark:text-[#A0A090]">
+          <p className="mt-0.5 break-all font-mono text-[13px] text-[#666] dark:text-[#A0A090]">
             {publicUrl}
           </p>
         </div>
@@ -153,7 +153,7 @@ export function StationQrPage() {
       </div>
 
       {/* Print hint */}
-      <p className="mt-6 max-w-sm text-center text-[12px] text-[#BBBBAA] dark:text-[#4A4A3A]">
+      <p className="mt-6 max-w-sm text-center text-[13px] text-[#BBBBAA] dark:text-[#4A4A3A]">
         {t('print_hint')}
       </p>
     </div>

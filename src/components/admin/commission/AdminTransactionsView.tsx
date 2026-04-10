@@ -132,16 +132,16 @@ export function AdminTransactionsView() {
         <div className="flex items-start justify-between gap-4">
           <div>
             <h1 className="text-[22px] font-black text-[#1A1A0A] dark:text-[#F0EDD4]">{t('page_title')}</h1>
-            <p className="mt-1 text-[12px] text-[#888] dark:text-[#9A9A8A]">{t('page_subtitle')}</p>
+            <p className="mt-1 text-[13px] text-[#888] dark:text-[#9A9A8A]">{t('page_subtitle')}</p>
           </div>
           <div className="flex shrink-0 flex-wrap items-center gap-2 pt-1">
-            <span className="rounded-full border border-[#C49A1E]/30 bg-[#C49A1E]/10 px-3 py-1 text-[11px] font-black text-[#7A5E0A] dark:border-[#C49A1E]/20 dark:text-[#C49A1E]">
+            <span className="rounded-full border border-[#C49A1E]/30 bg-[#C49A1E]/10 px-3 py-1 text-[12px] font-black text-[#7A5E0A] dark:border-[#C49A1E]/20 dark:text-[#C49A1E]">
               {fmt(volume)} {t('chip_volume')}
             </span>
-            <span className="rounded-full border border-[#22C55E]/20 bg-[#F0FDF4] px-3 py-1 text-[11px] font-black text-[#15803D] dark:border-[#22C55E]/15 dark:bg-[#0A2010] dark:text-[#4ADE80]">
+            <span className="rounded-full border border-[#22C55E]/20 bg-[#F0FDF4] px-3 py-1 text-[12px] font-black text-[#15803D] dark:border-[#22C55E]/15 dark:bg-[#0A2010] dark:text-[#4ADE80]">
               {fmt(commTotal)} {t('chip_commissions')}
             </span>
-            <span className="rounded-full border border-[#D8D4C8] bg-white px-3 py-1 text-[11px] font-bold text-[#888] dark:border-[#243020] dark:bg-[#131E10] dark:text-[#A0A090]">
+            <span className="rounded-full border border-[#D8D4C8] bg-white px-3 py-1 text-[12px] font-bold text-[#888] dark:border-[#243020] dark:bg-[#131E10] dark:text-[#A0A090]">
               {transactions.length} {t('chip_count')}
             </span>
           </div>
@@ -152,17 +152,17 @@ export function AdminTransactionsView() {
           <div className="flex flex-wrap gap-2">
             {FILTERS.map(({ key, label, dot }) => (
               <button key={key} type="button" onClick={() => setFilter(key)}
-                className={['flex items-center gap-1.5 rounded-xl px-3 py-1.5 text-[11px] font-bold transition-all', filter === key ? 'bg-white text-[#1A1A0A] shadow-sm ring-1 ring-[#E0DCD0] dark:bg-[#1E2E18] dark:text-[#F0EDD4] dark:ring-[#2A3820]' : 'text-[#999] hover:text-[#555] dark:text-[#A0A090] dark:hover:text-[#9A9A8A]'].join(' ')}>
+                className={['flex items-center gap-1.5 rounded-xl px-3 py-1.5 text-[12px] font-bold transition-all', filter === key ? 'bg-white text-[#1A1A0A] shadow-sm ring-1 ring-[#E0DCD0] dark:bg-[#1E2E18] dark:text-[#F0EDD4] dark:ring-[#2A3820]' : 'text-[#999] hover:text-[#555] dark:text-[#A0A090] dark:hover:text-[#9A9A8A]'].join(' ')}>
                 {dot && <span className="h-1.5 w-1.5 rounded-full" style={{ background: filter === key ? dot : '#CCCCCC' }} />}
                 {label}
-                <span className={['min-w-[16px] rounded-full px-1 py-0.5 text-center text-[10px] font-black', filter === key ? 'bg-[#C49A1E] text-[#0C1209]' : 'bg-[#E8E4DC] text-[#AAAAAA] dark:bg-[#1E2E18] dark:text-[#A0A090]'].join(' ')}>{counts[key] ?? 0}</span>
+                <span className={['min-w-[16px] rounded-full px-1 py-0.5 text-center text-[11px] font-black', filter === key ? 'bg-[#C49A1E] text-[#0C1209]' : 'bg-[#E8E4DC] text-[#AAAAAA] dark:bg-[#1E2E18] dark:text-[#A0A090]'].join(' ')}>{counts[key] ?? 0}</span>
               </button>
             ))}
           </div>
           <div className="relative mb-2.5">
             <svg className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-[#BBBBAA]" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"><circle cx="11" cy="11" r="8" /><path d="m21 21-4.35-4.35" /></svg>
             <input type="text" value={query} onChange={(e) => setQuery(e.target.value)} placeholder={t('search_placeholder')}
-              className="w-[220px] rounded-[8px] border border-[#D8D4C8] bg-white py-1.5 pl-8 pr-3 text-[12px] text-[#1A1A0A] outline-none transition-all focus:border-[#C49A1E] focus:shadow-[0_0_0_3px_rgba(196,154,30,0.10)] dark:border-[#243020] dark:bg-[#0F1A0C] dark:text-[#F0EDD4] dark:focus:border-[#C49A1E]" />
+              className="w-[220px] rounded-[8px] border border-[#D8D4C8] bg-white py-1.5 pl-8 pr-3 text-[13px] text-[#1A1A0A] outline-none transition-all focus:border-[#C49A1E] focus:shadow-[0_0_0_3px_rgba(196,154,30,0.10)] dark:border-[#243020] dark:bg-[#0F1A0C] dark:text-[#F0EDD4] dark:focus:border-[#C49A1E]" />
           </div>
         </div>
       </div>
@@ -183,7 +183,7 @@ export function AdminTransactionsView() {
         ) : (
           <div className="flex flex-col gap-2.5">
             {truncated && (
-              <p className="mb-2 rounded-xl bg-[#FFF4EC] px-4 py-2 text-center text-[11px] font-semibold text-[#C2410C] dark:bg-[#2A1408] dark:text-[#FDBA74]">
+              <p className="mb-2 rounded-xl bg-[#FFF4EC] px-4 py-2 text-center text-[12px] font-semibold text-[#C2410C] dark:bg-[#2A1408] dark:text-[#FDBA74]">
                 {t('truncated_warning')}
               </p>
             )}
@@ -202,17 +202,17 @@ export function AdminTransactionsView() {
                     <div className="flex items-center gap-2">
                       <button type="button" onClick={(e) => copyId(e, tx.stripe_id)}
                         className="flex items-center gap-1.5 rounded-lg border border-[#E8E4DC] bg-[#F5F2EC] px-2 py-0.5 transition-colors hover:border-[#C49A1E]/40 hover:bg-[#FFF8E8] dark:border-[#1E2E18] dark:bg-[#0E1A0C] dark:hover:border-[#C49A1E]/30">
-                        <span className="font-mono text-[11px] font-bold text-[#555] dark:text-[#9A9A8A]">{shortId(tx.stripe_id)}</span>
+                        <span className="font-mono text-[12px] font-bold text-[#555] dark:text-[#9A9A8A]">{shortId(tx.stripe_id)}</span>
                         {copied === tx.stripe_id
-                          ? <span className="text-[10px] font-bold text-[#22C55E]">{t('copied')}</span>
+                          ? <span className="text-[11px] font-bold text-[#22C55E]">{t('copied')}</span>
                           : <svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" className="text-[#BBBBAA]"><rect x="9" y="9" width="13" height="13" rx="2" /><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1" /></svg>
                         }
                       </button>
-                      <span className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-bold ${s.badge}`}>
+                      <span className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[11px] font-bold ${s.badge}`}>
                         <span className={`h-1.5 w-1.5 rounded-full ${s.dot}`} />{STATUS_LABELS[tx.status]}
                       </span>
                     </div>
-                    <p className="truncate text-[12px] text-[#666] dark:text-[#9A9A8A]">
+                    <p className="truncate text-[13px] text-[#666] dark:text-[#9A9A8A]">
                       <span className="font-semibold text-[#1A1A0A] dark:text-[#F0EDD4]">{tx.station}</span>
                       <span className="mx-1.5 text-[#CCCCCC] dark:text-[#A0A090]">·</span>
                       {tx.client}
@@ -223,16 +223,16 @@ export function AdminTransactionsView() {
                   <div className="flex shrink-0 flex-col items-end gap-1 py-4">
                     <span className="text-[17px] font-black text-[#1A1A0A] dark:text-[#F0EDD4]">{fmt(tx.gross)}</span>
                     <div className="flex items-center gap-2">
-                      <span className="text-[11px] font-bold text-[#C49A1E]">{fmt(tx.commission)}</span>
-                      <span className="text-[10px] text-[#CCCCCC] dark:text-[#A0A090]">·</span>
-                      <span className="text-[11px] text-[#888] dark:text-[#A0A090]">{fmt(tx.payout)}</span>
+                      <span className="text-[12px] font-bold text-[#C49A1E]">{fmt(tx.commission)}</span>
+                      <span className="text-[11px] text-[#CCCCCC] dark:text-[#A0A090]">·</span>
+                      <span className="text-[12px] text-[#888] dark:text-[#A0A090]">{fmt(tx.payout)}</span>
                     </div>
                   </div>
 
                   {/* Date + arrow */}
                   <div className="flex shrink-0 flex-col items-end gap-0.5 py-4 pr-4 pl-2">
-                    <span className="text-[12px] font-semibold text-[#555] dark:text-[#9A9A8A]">{formatDate(tx.date)}</span>
-                    <span className="text-[11px] text-[#BBBBAA] dark:text-[#A0A090]">{formatTime(tx.date)}</span>
+                    <span className="text-[13px] font-semibold text-[#555] dark:text-[#9A9A8A]">{formatDate(tx.date)}</span>
+                    <span className="text-[12px] text-[#BBBBAA] dark:text-[#A0A090]">{formatTime(tx.date)}</span>
                     <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="mt-1 text-[#CCCCCC] transition-colors group-hover:text-[#C49A1E] dark:text-[#A0A090]"><path d="m9 18 6-6-6-6" /></svg>
                   </div>
                 </div>

@@ -45,7 +45,7 @@ const EditIcon = () => (
 function Field({ label, children }: { label: string; children: React.ReactNode }) {
   return (
     <div className="flex flex-col gap-1.5">
-      <label className="text-[12px] font-medium text-[#5A5A4A] dark:text-[#9A9A8A]">{label}</label>
+      <label className="text-[13px] font-medium text-[#5A5A4A] dark:text-[#9A9A8A]">{label}</label>
       {children}
     </div>
   );
@@ -55,10 +55,10 @@ function StatCard({ label, value, unit }: { label: string; value: string | numbe
   const v = value !== null && value !== '' ? String(value) : '—';
   return (
     <div className="flex flex-col gap-1 rounded-[10px] bg-[#F7F6F2] px-4 py-3 dark:bg-[#0F1A0C]">
-      <span className="text-[10px] font-semibold uppercase tracking-wider text-[#AAAAAA] dark:text-[#4A4A3A]">{label}</span>
+      <span className="text-[11px] font-semibold uppercase tracking-wider text-[#AAAAAA] dark:text-[#4A4A3A]">{label}</span>
       <div className="flex items-baseline gap-1.5">
         <span className="text-[20px] font-black tabular-nums leading-none text-[#1A1A0A] dark:text-[#F0EDD4]">{v}</span>
-        {unit && v !== '—' && <span className="text-[11px] font-semibold text-[#C8C4B4] dark:text-[#4A4A3A]">{unit}</span>}
+        {unit && v !== '—' && <span className="text-[12px] font-semibold text-[#C8C4B4] dark:text-[#4A4A3A]">{unit}</span>}
       </div>
     </div>
   );
@@ -82,7 +82,7 @@ function NumberInput({ value, onChange, min, step, unit }: {
         className={inputClass + (unit ? ' pr-12' : '')}
       />
       {unit && (
-        <span className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 select-none text-[11px] font-semibold text-[#BBBBAA] dark:text-[#4A4A3A]">
+        <span className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 select-none text-[12px] font-semibold text-[#BBBBAA] dark:text-[#4A4A3A]">
           {unit}
         </span>
       )}
@@ -173,7 +173,7 @@ export function StationConfigForm({ config, posts, onSaved, locked = false }: St
 
   const editBtn = !isEditing && !locked && (
     <button type="button" onClick={() => setIsEditing(true)}
-      className="flex items-center gap-1.5 rounded-[8px] border border-[#C49A1E]/40 px-3 py-1 text-[12px] font-semibold text-[#C49A1E] transition-colors hover:bg-[#C49A1E]/8">
+      className="flex items-center gap-1.5 rounded-[8px] border border-[#C49A1E]/40 px-3 py-1 text-[13px] font-semibold text-[#C49A1E] transition-colors hover:bg-[#C49A1E]/8">
       <EditIcon />{t('btn_edit')}
     </button>
   );
@@ -195,19 +195,19 @@ export function StationConfigForm({ config, posts, onSaved, locked = false }: St
           {!isEditing ? (
             <div className="flex flex-wrap items-center gap-5 rounded-[10px] bg-[#F7F6F2] px-5 py-4 dark:bg-[#0F1A0C]">
               <div className="flex flex-col gap-0.5">
-                <span className="text-[10px] font-semibold uppercase tracking-wider text-[#AAAAAA] dark:text-[#4A4A3A]">{t('field_opening_time')}</span>
+                <span className="text-[11px] font-semibold uppercase tracking-wider text-[#AAAAAA] dark:text-[#4A4A3A]">{t('field_opening_time')}</span>
                 <span className="text-[22px] font-black tabular-nums leading-none text-[#1A1A0A] dark:text-[#F0EDD4]">{config.opening_time || '—'}</span>
               </div>
               <span className="text-[20px] font-light text-[#C49A1E]">→</span>
               <div className="flex flex-col gap-0.5">
-                <span className="text-[10px] font-semibold uppercase tracking-wider text-[#AAAAAA] dark:text-[#4A4A3A]">{t('field_closing_time')}</span>
+                <span className="text-[11px] font-semibold uppercase tracking-wider text-[#AAAAAA] dark:text-[#4A4A3A]">{t('field_closing_time')}</span>
                 <span className="text-[22px] font-black tabular-nums leading-none text-[#1A1A0A] dark:text-[#F0EDD4]">{config.closing_time || '—'}</span>
               </div>
               {(config.break_start || config.break_end) && (
                 <>
                   <span className="h-8 w-px bg-[#E0DCD0] dark:bg-[#243020]" />
                   <div className="flex flex-col gap-0.5">
-                    <span className="text-[10px] font-semibold uppercase tracking-wider text-[#AAAAAA] dark:text-[#4A4A3A]">{t('field_break_start')}</span>
+                    <span className="text-[11px] font-semibold uppercase tracking-wider text-[#AAAAAA] dark:text-[#4A4A3A]">{t('field_break_start')}</span>
                     <span className="text-[15px] font-bold tabular-nums text-[#888] dark:text-[#9A9A8A]">{config.break_start} – {config.break_end}</span>
                   </div>
                 </>
@@ -287,7 +287,7 @@ export function StationConfigForm({ config, posts, onSaved, locked = false }: St
                   type="button"
                   disabled={!isEditing}
                   onClick={() => setPostStates((prev) => ({ ...prev, [post.id]: !(prev[post.id] ?? post.is_active) }))}
-                  className={`flex items-center gap-2.5 rounded-[10px] border px-4 py-2.5 text-[12px] font-semibold transition-all duration-150 ${
+                  className={`flex items-center gap-2.5 rounded-[10px] border px-4 py-2.5 text-[13px] font-semibold transition-all duration-150 ${
                     active
                       ? 'border-[#C49A1E] bg-[#C49A1E] text-[#0C1209] shadow-sm'
                       : 'border-[#D8D4C8] bg-[#F7F6F2] text-[#888] dark:border-[#243020] dark:bg-[#0F1A0C] dark:text-[#9A9A8A]'
@@ -295,7 +295,7 @@ export function StationConfigForm({ config, posts, onSaved, locked = false }: St
                 >
                   <span className={`h-1.5 w-1.5 rounded-full transition-colors ${active ? 'bg-[#0C1209]' : 'bg-[#D0D0C0] dark:bg-[#3A3A2A]'}`} />
                   {t('post_label', { n: post.position })}
-                  <span className={`text-[10px] ${active ? 'opacity-60' : 'opacity-50'}`}>
+                  <span className={`text-[11px] ${active ? 'opacity-60' : 'opacity-50'}`}>
                     {active ? t('post_active') : t('post_inactive')}
                   </span>
                 </button>
@@ -309,7 +309,7 @@ export function StationConfigForm({ config, posts, onSaved, locked = false }: St
       {isEditing ? (
         <div className="flex items-center justify-between">
           {feedback ? (
-            <span className="text-[12px] font-semibold" style={{ color: feedback.ok ? '#00C851' : '#EF4444' }}>{feedback.msg}</span>
+            <span className="text-[13px] font-semibold" style={{ color: feedback.ok ? '#00C851' : '#EF4444' }}>{feedback.msg}</span>
           ) : <span />}
           <div className="flex items-center gap-2">
             <button type="button" onClick={handleCancel} disabled={saving}
@@ -324,7 +324,7 @@ export function StationConfigForm({ config, posts, onSaved, locked = false }: St
         </div>
       ) : (
         feedback && (
-          <p className="text-[12px] font-semibold" style={{ color: feedback.ok ? '#00C851' : '#EF4444' }}>{feedback.msg}</p>
+          <p className="text-[13px] font-semibold" style={{ color: feedback.ok ? '#00C851' : '#EF4444' }}>{feedback.msg}</p>
         )
       )}
     </form>

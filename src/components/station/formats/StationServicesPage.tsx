@@ -110,7 +110,7 @@ export function StationServicesPage() {
         <div className="flex items-center justify-between pb-3">
           <div>
             <div className="text-[16px] font-black text-[#1A1A0A] dark:text-[#F0EDD4]">{t('page_title')}</div>
-            <div className="text-[12px] text-[#888] dark:text-[#9A9A8A]">{t('page_subtitle')}</div>
+            <div className="text-[13px] text-[#888] dark:text-[#9A9A8A]">{t('page_subtitle')}</div>
           </div>
           {activeTab === 'services' && (
             <button
@@ -141,14 +141,14 @@ export function StationServicesPage() {
             >
               {label}
               {key === 'services' && services.length > 0 && (
-                <span className={`ml-1.5 rounded-full px-1.5 py-0.5 text-[10px] font-bold ${
+                <span className={`ml-1.5 rounded-full px-1.5 py-0.5 text-[11px] font-bold ${
                   activeTab === key ? 'bg-[#FDF3D8] text-[#C49A1E] dark:bg-[#2A1E08]' : 'bg-[#F0EFEB] text-[#BBBBAA] dark:bg-[#1A2A14] dark:text-[#4A4A3A]'
                 }`}>
                   {activeCount}
                 </span>
               )}
               {key === 'formats' && formats.length > 0 && (
-                <span className={`ml-1.5 rounded-full px-1.5 py-0.5 text-[10px] font-bold ${
+                <span className={`ml-1.5 rounded-full px-1.5 py-0.5 text-[11px] font-bold ${
                   activeTab === key ? 'bg-[#FDF3D8] text-[#C49A1E] dark:bg-[#2A1E08]' : 'bg-[#F0EFEB] text-[#BBBBAA] dark:bg-[#1A2A14] dark:text-[#4A4A3A]'
                 }`}>
                   {formats.length}
@@ -169,13 +169,13 @@ export function StationServicesPage() {
           services.length === 0 ? (
             <div className="flex flex-col items-center justify-center gap-2 py-16 text-center">
               <span className="text-[14px] font-semibold text-[#999] dark:text-[#9A9A8A]">{t('empty')}</span>
-              <span className="text-[12px] text-[#BBBBAA] dark:text-[#4A4A3A]">{t('empty_hint')}</span>
+              <span className="text-[13px] text-[#BBBBAA] dark:text-[#4A4A3A]">{t('empty_hint')}</span>
             </div>
           ) : (
             <>
               <div className="mb-4 flex items-center gap-2">
-                <span className="text-[11px] font-black tracking-[.08em] text-[#C49A1E] uppercase">{t('section_base')}</span>
-                <span className="text-[11px] text-[#888] dark:text-[#9A9A8A]">{t('services_active_count', { count: activeCount })}</span>
+                <span className="text-[12px] font-black tracking-[.08em] text-[#C49A1E] uppercase">{t('section_base')}</span>
+                <span className="text-[12px] text-[#888] dark:text-[#9A9A8A]">{t('services_active_count', { count: activeCount })}</span>
               </div>
               <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
                 {services.map((service) => (

@@ -123,10 +123,10 @@ export function AdminSupportSettings() {
         </div>
         <div className="flex items-center gap-2">
           {isDirty && !saving && (
-            <span className="text-[11px] font-semibold text-[#AAAAAA] dark:text-[#A0A090]">{t('settings_unsaved')}</span>
+            <span className="text-[12px] font-semibold text-[#AAAAAA] dark:text-[#A0A090]">{t('settings_unsaved')}</span>
           )}
           <button type="submit" disabled={saving || !isDirty}
-            className="relative rounded-[10px] bg-[#C49A1E] px-5 py-2 text-[12px] font-bold text-[#0C1209] shadow-sm transition-all hover:bg-[#D4A830] disabled:opacity-50">
+            className="relative rounded-[10px] bg-[#C49A1E] px-5 py-2 text-[13px] font-bold text-[#0C1209] shadow-sm transition-all hover:bg-[#D4A830] disabled:opacity-50">
             {saving ? t('settings_saving') : t('settings_save')}
           </button>
         </div>
@@ -135,40 +135,40 @@ export function AdminSupportSettings() {
       <div className="grid gap-4 sm:grid-cols-2">
         {/* Support email */}
         <div className="flex flex-col gap-1.5">
-          <label htmlFor="support-email" className="text-[11px] font-black uppercase tracking-wider text-[#A0A090] dark:text-[#9A9A8A]">{t('settings_email_label')}</label>
+          <label htmlFor="support-email" className="text-[12px] font-black uppercase tracking-wider text-[#A0A090] dark:text-[#9A9A8A]">{t('settings_email_label')}</label>
           <input id="support-email" type="email" maxLength={254} value={settings.support_email}
             onChange={(e) => setSettings((s) => ({ ...s, support_email: e.target.value }))}
             placeholder="support@lavo.ca"
             className="rounded-[10px] border-2 border-[#D8D4C8] bg-white px-4 py-2.5 text-[13px] text-[#1A1A0A] outline-none transition-all focus:border-[#C49A1E] focus:shadow-[0_0_0_4px_rgba(196,154,30,0.12)] dark:border-[#243020] dark:bg-[#0F1A0C] dark:text-[#F0EDD4] dark:focus:border-[#C49A1E]" />
-          <p className="text-[11px] text-[#AAAAAA] dark:text-[#A0A090]">{t('settings_email_hint')}</p>
+          <p className="text-[12px] text-[#AAAAAA] dark:text-[#A0A090]">{t('settings_email_hint')}</p>
         </div>
 
         {/* Max open tickets */}
         <div className="flex flex-col gap-1.5">
-          <label htmlFor="max-tickets" className="text-[11px] font-black uppercase tracking-wider text-[#A0A090] dark:text-[#9A9A8A]">{t('settings_max_tickets_label')}</label>
+          <label htmlFor="max-tickets" className="text-[12px] font-black uppercase tracking-wider text-[#A0A090] dark:text-[#9A9A8A]">{t('settings_max_tickets_label')}</label>
           <input id="max-tickets" type="number" min={0} max={100} value={settings.max_open_tickets_per_user}
             onChange={(e) => setSettings((s) => ({ ...s, max_open_tickets_per_user: e.target.value }))}
             className="rounded-[10px] border-2 border-[#D8D4C8] bg-white px-4 py-2.5 text-[13px] text-[#1A1A0A] outline-none transition-all [appearance:textfield] focus:border-[#C49A1E] focus:shadow-[0_0_0_4px_rgba(196,154,30,0.12)] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none dark:border-[#243020] dark:bg-[#0F1A0C] dark:text-[#F0EDD4] dark:focus:border-[#C49A1E]" />
-          <p className="text-[11px] text-[#AAAAAA] dark:text-[#A0A090]">{t('settings_max_tickets_hint')}</p>
+          <p className="text-[12px] text-[#AAAAAA] dark:text-[#A0A090]">{t('settings_max_tickets_hint')}</p>
         </div>
 
         {/* Auto close days */}
         <div className="flex flex-col gap-1.5">
-          <label htmlFor="auto-close" className="text-[11px] font-black uppercase tracking-wider text-[#A0A090] dark:text-[#9A9A8A]">{t('settings_auto_close_label')}</label>
+          <label htmlFor="auto-close" className="text-[12px] font-black uppercase tracking-wider text-[#A0A090] dark:text-[#9A9A8A]">{t('settings_auto_close_label')}</label>
           <input id="auto-close" type="number" min={1} max={365} value={settings.auto_close_days}
             onChange={(e) => setSettings((s) => ({ ...s, auto_close_days: e.target.value }))}
             className="rounded-[10px] border-2 border-[#D8D4C8] bg-white px-4 py-2.5 text-[13px] text-[#1A1A0A] outline-none transition-all [appearance:textfield] focus:border-[#C49A1E] focus:shadow-[0_0_0_4px_rgba(196,154,30,0.12)] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none dark:border-[#243020] dark:bg-[#0F1A0C] dark:text-[#F0EDD4] dark:focus:border-[#C49A1E]" />
-          <p className="text-[11px] text-[#AAAAAA] dark:text-[#A0A090]">{t('settings_auto_close_hint')}</p>
+          <p className="text-[12px] text-[#AAAAAA] dark:text-[#A0A090]">{t('settings_auto_close_hint')}</p>
         </div>
 
         {/* Welcome message */}
         <div className="flex flex-col gap-1.5 sm:col-span-2">
-          <label htmlFor="welcome-msg" className="text-[11px] font-black uppercase tracking-wider text-[#A0A090] dark:text-[#9A9A8A]">{t('settings_welcome_label')}</label>
+          <label htmlFor="welcome-msg" className="text-[12px] font-black uppercase tracking-wider text-[#A0A090] dark:text-[#9A9A8A]">{t('settings_welcome_label')}</label>
           <textarea id="welcome-msg" rows={3} maxLength={500} value={settings.welcome_message}
             onChange={(e) => setSettings((s) => ({ ...s, welcome_message: e.target.value }))}
             placeholder={t('settings_welcome_placeholder')}
             className="w-full resize-none rounded-[10px] border-2 border-[#D8D4C8] bg-white px-4 py-2.5 text-[13px] text-[#1A1A0A] outline-none transition-all focus:border-[#C49A1E] focus:shadow-[0_0_0_4px_rgba(196,154,30,0.12)] dark:border-[#243020] dark:bg-[#0F1A0C] dark:text-[#F0EDD4] dark:focus:border-[#C49A1E]" />
-          <p className="text-[11px] text-[#AAAAAA] dark:text-[#A0A090]">{t('settings_welcome_hint')}</p>
+          <p className="text-[12px] text-[#AAAAAA] dark:text-[#A0A090]">{t('settings_welcome_hint')}</p>
         </div>
       </div>
     </form>

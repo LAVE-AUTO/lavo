@@ -41,7 +41,7 @@ export function StatusTabs({ active, counts, onChange }: Props) {
             key={key}
             type="button"
             onClick={() => onChange(key)}
-            className={`flex shrink-0 items-center gap-1.5 rounded-[8px] px-3 py-1.5 text-[12px] font-semibold transition-all ${
+            className={`flex shrink-0 items-center gap-1.5 rounded-[8px] px-3 py-1.5 text-[13px] font-semibold transition-all ${
               isActive
                 ? 'bg-[#C09A18] text-[#1A2116]'
                 : 'text-[#000717]/60 hover:bg-[#B8B8A4]/50 dark:text-[#FFFFF0]/60 dark:hover:bg-[#243020]'
@@ -55,7 +55,7 @@ export function StatusTabs({ active, counts, onChange }: Props) {
             )}
             {labelMap[key]}
             {count > 0 && (
-              <span className={`min-w-[18px] rounded px-1 py-[1px] text-center text-[10px] font-bold leading-tight ${
+              <span className={`min-w-[18px] rounded px-1 py-[1px] text-center text-[11px] font-bold leading-tight ${
                 isActive
                   ? 'bg-[#1A2116]/15 text-[#1A2116]'
                   : 'bg-[#000C1F]/8 text-[#000717]/50 dark:bg-[#FFF8EC]/10 dark:text-[#FFF8EC]/50'

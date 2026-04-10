@@ -49,7 +49,7 @@ export function QueueCard({ entry, onCall, onPick, onMoveUp, onMoveDown, callLab
         <div className="p-5">
           {/* Header */}
           <div className="mb-4 flex items-center justify-between">
-            <div className="flex items-center gap-2 text-[10px] font-bold uppercase tracking-wider" style={{ color: badgeColor ?? '#FF2525' }}>
+            <div className="flex items-center gap-2 text-[11px] font-bold uppercase tracking-wider" style={{ color: badgeColor ?? '#FF2525' }}>
               <span className="relative flex h-2.5 w-2.5">
                 <span className="absolute inline-flex h-full w-full animate-ping rounded-full opacity-75" style={{ background: badgeColor ?? '#FF2525' }} />
                 <span className="relative inline-flex h-2.5 w-2.5 rounded-full" style={{ background: badgeColor ?? '#FF2525' }} />
@@ -66,7 +66,7 @@ export function QueueCard({ entry, onCall, onPick, onMoveUp, onMoveDown, callLab
             {entry.clientName}
           </div>
           {(entry.time || entry.serviceLabel) && (
-            <div className="mb-4 flex flex-wrap items-center gap-2 text-[12px] text-[#000717]/60 dark:text-[#FFFFF0]/60">
+            <div className="mb-4 flex flex-wrap items-center gap-2 text-[13px] text-[#000717]/60 dark:text-[#FFFFF0]/60">
               {entry.time && (
                 <span className="flex items-center gap-1 font-mono font-semibold text-[#000C1F] dark:text-[#FFF8EC]">
                   <ClockMini />
@@ -82,7 +82,7 @@ export function QueueCard({ entry, onCall, onPick, onMoveUp, onMoveDown, callLab
 
           {/* Margin progress bar */}
           {entry.marginMin !== undefined && entry.marginMax !== undefined && entry.marginMax > 0 && (
-            <div className="mb-4 flex items-center gap-2 text-[10px] text-[#000717]/60 dark:text-[#FFFFF0]/60">
+            <div className="mb-4 flex items-center gap-2 text-[11px] text-[#000717]/60 dark:text-[#FFFFF0]/60">
               <span className="h-2 w-2 shrink-0 rounded-full bg-[#00C851]" />
               <span>{t('queue_margin')}</span>
               <span className="font-bold text-[#00C851]">
@@ -133,7 +133,7 @@ export function QueueCard({ entry, onCall, onPick, onMoveUp, onMoveDown, callLab
               {tagLabel}
             </span>
           </div>
-          <div className="mt-0.5 flex items-center gap-2 text-[11px] text-[#000717]/50 dark:text-[#FFFFF0]/50">
+          <div className="mt-0.5 flex items-center gap-2 text-[12px] text-[#000717]/50 dark:text-[#FFFFF0]/50">
             {entry.time && <span className="font-mono font-semibold text-[#000C1F] dark:text-[#FFF8EC]">{entry.time}</span>}
             {entry.serviceLabel && <span>{entry.serviceLabel}</span>}
             {entry.price !== undefined && (
@@ -151,7 +151,7 @@ export function QueueCard({ entry, onCall, onPick, onMoveUp, onMoveDown, callLab
       >
         <div className="overflow-hidden">
           <div className="border-t border-[#B8B8A4] px-4 pb-3.5 pt-3 dark:border-[#3A4A36]">
-            <div className="grid grid-cols-2 gap-x-4 gap-y-2 text-[11px]">
+            <div className="grid grid-cols-2 gap-x-4 gap-y-2 text-[12px]">
               {entry.time && <DetailRow label={t('queue_detail_time')} value={entry.time} />}
               {entry.serviceLabel && <DetailRow label={t('queue_detail_service')} value={entry.serviceLabel} />}
               {entry.price !== undefined && <DetailRow label={t('queue_detail_price')} value={`${entry.price}$`} gold />}
@@ -187,7 +187,7 @@ export function QueueCard({ entry, onCall, onPick, onMoveUp, onMoveDown, callLab
                   <button
                     type="button"
                     onClick={() => onPick(entry.id)}
-                    className="rounded-lg bg-[#C09A18] px-3 py-1.5 text-[11px] font-bold text-[#1A2116] transition-opacity hover:opacity-80"
+                    className="rounded-lg bg-[#C09A18] px-3 py-1.5 text-[12px] font-bold text-[#1A2116] transition-opacity hover:opacity-80"
                   >
                     {t('queue_pick_now')}
                   </button>

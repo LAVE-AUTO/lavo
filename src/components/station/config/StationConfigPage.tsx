@@ -142,7 +142,7 @@ export function StationConfigPage() {
             </div>
             <div>
               <p className="text-[13px] font-bold text-[#8A6A00] dark:text-[#C49A1E]">{t('pending_banner_title')}</p>
-              <p className="mt-0.5 text-[12px] text-[#8A6A00]/80 dark:text-[#C49A1E]/70">{t('pending_banner_desc')}</p>
+              <p className="mt-0.5 text-[13px] text-[#8A6A00]/80 dark:text-[#C49A1E]/70">{t('pending_banner_desc')}</p>
             </div>
           </div>
         )}

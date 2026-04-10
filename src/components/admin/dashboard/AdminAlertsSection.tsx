@@ -60,7 +60,7 @@ function SectionPanel({
           <span className="text-[13px] font-black text-[#0F1A0C] dark:text-[#F0EDD4]">{title}</span>
           {count > 0 && (
             <span
-              className="flex h-5 min-w-[20px] items-center justify-center rounded-full px-1.5 text-[10px] font-black text-white"
+              className="flex h-5 min-w-[20px] items-center justify-center rounded-full px-1.5 text-[11px] font-black text-white"
               style={{ background: color }}
             >
               {count}
@@ -74,7 +74,7 @@ function SectionPanel({
         </div>
         <Link
           href={actionHref as Parameters<typeof Link>[0]['href']}
-          className="rounded-lg px-3 py-1.5 text-[11px] font-bold transition-colors hover:bg-[#F0EDE0] dark:hover:bg-[#182214]"
+          className="rounded-lg px-3 py-1.5 text-[12px] font-bold transition-colors hover:bg-[#F0EDE0] dark:hover:bg-[#182214]"
           style={{ color }}
         >
           Voir tout →
@@ -89,7 +89,7 @@ function SectionPanel({
         {empty ? (
           <div className="flex flex-col items-center justify-center py-10 text-center">
             <div className="mb-2 text-[28px] opacity-20" aria-hidden="true">✓</div>
-            <p className="text-[12px] font-medium text-[#AAA] dark:text-[#A0A090]">{emptyLabel}</p>
+            <p className="text-[13px] font-medium text-[#AAA] dark:text-[#A0A090]">{emptyLabel}</p>
           </div>
         ) : children}
       </div>
@@ -173,10 +173,10 @@ export function AdminAlertsSection() {
         emptyLabel={t('alert_kyc_empty')}
       >
         {kycLoading && (
-          <div className="px-5 py-4 text-[11px] text-[#AAA] dark:text-[#A0A090]">{t('alert_kyc_loading')}</div>
+          <div className="px-5 py-4 text-[12px] text-[#AAA] dark:text-[#A0A090]">{t('alert_kyc_loading')}</div>
         )}
         {!kycLoading && kycError && (
-          <div className="px-5 py-4 text-[11px] text-[#E8472A]">{t('alert_kyc_error')}</div>
+          <div className="px-5 py-4 text-[12px] text-[#E8472A]">{t('alert_kyc_error')}</div>
         )}
         {!kycLoading && stations.map((s, i) => (
           <Link
@@ -184,12 +184,12 @@ export function AdminAlertsSection() {
             href={`/admin/stations/${s.id}` as Parameters<typeof Link>[0]['href']}
             className={`flex items-center gap-3 px-5 py-3 transition-colors hover:bg-[#F8F6EE] dark:hover:bg-[#182214]${i > 0 ? ' border-t border-[#F0EDE0] dark:border-[#1E2A1A]' : ''}`}
           >
-            <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-[#C49A1E]/10 text-[11px] font-black text-[#C49A1E]">
+            <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-[#C49A1E]/10 text-[12px] font-black text-[#C49A1E]">
               {initials(s.name)}
             </div>
             <div className="min-w-0 flex-1">
-              <div className="truncate text-[12px] font-bold text-[#0F1A0C] dark:text-[#F0EDD4]">{s.name}</div>
-              <div className="text-[10px] text-[#AAA] dark:text-[#A0A090]">{formatDate(s.created_at)}</div>
+              <div className="truncate text-[13px] font-bold text-[#0F1A0C] dark:text-[#F0EDD4]">{s.name}</div>
+              <div className="text-[11px] text-[#AAA] dark:text-[#A0A090]">{formatDate(s.created_at)}</div>
             </div>
             <span className="shrink-0 rounded-full bg-[#C49A1E]/10 px-2 py-0.5 text-[9px] font-black uppercase tracking-wider text-[#C49A1E]">
               KYC
@@ -210,7 +210,7 @@ export function AdminAlertsSection() {
         emptyLabel={t('alert_disputes_empty')}
       >
         {disputesLoading && (
-          <div className="px-5 py-4 text-[11px] text-[#AAA] dark:text-[#A0A090]">{t('alert_disputes_loading')}</div>
+          <div className="px-5 py-4 text-[12px] text-[#AAA] dark:text-[#A0A090]">{t('alert_disputes_loading')}</div>
         )}
         {!disputesLoading && disputes.map((d, i) => (
           <Link
@@ -218,15 +218,15 @@ export function AdminAlertsSection() {
             href={`/admin/disputes/${d.id}` as Parameters<typeof Link>[0]['href']}
             className={`flex items-center gap-3 px-5 py-3 transition-colors hover:bg-[#F8F6EE] dark:hover:bg-[#182214]${i > 0 ? ' border-t border-[#F0EDE0] dark:border-[#1E2A1A]' : ''}`}
           >
-            <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-[#E8472A]/10 text-[11px] font-black text-[#E8472A]">
+            <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-[#E8472A]/10 text-[12px] font-black text-[#E8472A]">
               {initials(d.client)}
             </div>
             <div className="min-w-0 flex-1">
-              <div className="truncate text-[12px] font-bold text-[#0F1A0C] dark:text-[#F0EDD4]">{d.client}</div>
-              <div className="text-[10px] text-[#AAA] dark:text-[#A0A090]">{formatDate(d.date)}</div>
+              <div className="truncate text-[13px] font-bold text-[#0F1A0C] dark:text-[#F0EDD4]">{d.client}</div>
+              <div className="text-[11px] text-[#AAA] dark:text-[#A0A090]">{formatDate(d.date)}</div>
             </div>
             <div className="flex shrink-0 flex-col items-end gap-1">
-              <span className="text-[12px] font-black text-[#E8472A]">{d.amount}</span>
+              <span className="text-[13px] font-black text-[#E8472A]">{d.amount}</span>
               {d.urgent && (
                 <span className="rounded-full bg-[#FEF2F2] px-1.5 py-0.5 text-[8px] font-black uppercase tracking-wider text-[#E8472A] dark:bg-[#2A0A0A]">
                   Urgent

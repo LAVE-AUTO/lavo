@@ -38,12 +38,12 @@ export function DashboardQueuePanel({ entries, onCallEntry, onCompleteEntry }: D
           </div>
           <Link
             href={`/${locale}/station/queue`}
-            className="text-[10px] font-bold text-[#C09A18] hover:text-[#D4A820] transition-colors"
+            className="text-[11px] font-bold text-[#C09A18] hover:text-[#D4A820] transition-colors"
           >
             {t('queue_see_all')} →
           </Link>
         </div>
-        <div className="mt-0.5 text-[11px] text-[#666] dark:text-[#A0A090]">
+        <div className="mt-0.5 text-[12px] text-[#666] dark:text-[#A0A090]">
           {waitingCount > 0
             ? t('queue_waiting', { n: waitingCount })
             : t('queue_empty')}
@@ -53,7 +53,7 @@ export function DashboardQueuePanel({ entries, onCallEntry, onCompleteEntry }: D
       {/* Entries */}
       <div className="flex flex-1 flex-col gap-2 overflow-y-auto p-2.5">
         {entries.length === 0 ? (
-          <div className="flex flex-1 items-center justify-center text-[12px] text-[#666] dark:text-[#A0A090]">
+          <div className="flex flex-1 items-center justify-center text-[13px] text-[#666] dark:text-[#A0A090]">
             {t('queue_empty')}
           </div>
         ) : (

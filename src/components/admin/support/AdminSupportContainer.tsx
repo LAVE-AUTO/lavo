@@ -31,14 +31,14 @@ export function AdminSupportContainer() {
         <div className="flex flex-wrap items-start justify-between gap-4">
           <div>
             <h1 className="text-[22px] font-black text-[#1A1A0A] dark:text-[#F0EDD4]">{t('page_title')}</h1>
-            <p className="mt-0.5 text-[12px] text-[#888] dark:text-[#9A9A8A]">{t('page_subtitle')}</p>
+            <p className="mt-0.5 text-[13px] text-[#888] dark:text-[#9A9A8A]">{t('page_subtitle')}</p>
           </div>
 
           {/* Search + settings toggle */}
           <div className="flex items-center gap-2 mt-1">
             <button type="button" onClick={() => setShowSettings((v) => !v)}
               className={[
-                'flex items-center gap-1.5 rounded-[8px] border px-3 py-2 text-[12px] font-semibold transition-colors',
+                'flex items-center gap-1.5 rounded-[8px] border px-3 py-2 text-[13px] font-semibold transition-colors',
                 showSettings
                   ? 'border-[#C49A1E]/40 bg-[#C49A1E]/10 text-[#C49A1E]'
                   : 'border-[#D8D4C8] text-[#888] hover:border-[#C49A1E]/40 hover:text-[#C49A1E] dark:border-[#243020] dark:text-[#9A9A8A]',
@@ -55,7 +55,7 @@ export function AdminSupportContainer() {
                 value={query}
                 onChange={(e) => setQuery(e.target.value)}
                 placeholder={t('search_placeholder')}
-                className="w-[220px] rounded-[8px] border border-[#D8D4C8] bg-white py-2 pl-8 pr-3 text-[12px] text-[#1A1A0A] outline-none transition-all focus:border-[#C49A1E] focus:shadow-[0_0_0_3px_rgba(196,154,30,0.10)] dark:border-[#243020] dark:bg-[#0F1A0C] dark:text-[#F0EDD4] dark:focus:border-[#C49A1E]"
+                className="w-[220px] rounded-[8px] border border-[#D8D4C8] bg-white py-2 pl-8 pr-3 text-[13px] text-[#1A1A0A] outline-none transition-all focus:border-[#C49A1E] focus:shadow-[0_0_0_3px_rgba(196,154,30,0.10)] dark:border-[#243020] dark:bg-[#0F1A0C] dark:text-[#F0EDD4] dark:focus:border-[#C49A1E]"
               />
             </div>
           </div>
@@ -68,7 +68,7 @@ export function AdminSupportContainer() {
               <span className={`text-[22px] font-black leading-none ${text}`}>
                 {counts[key as keyof typeof counts]}
               </span>
-              <span className={`text-[11px] font-bold leading-tight ${text} opacity-80`}>
+              <span className={`text-[12px] font-bold leading-tight ${text} opacity-80`}>
                 {t(labelKey)}
               </span>
             </div>

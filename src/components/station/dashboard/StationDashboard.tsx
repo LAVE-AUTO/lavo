@@ -193,7 +193,7 @@ export function StationDashboard() {
         onViewChange={setView}
       />
       {actionError && (
-        <div className="border-b border-[#E8472A]/20 bg-[#FEF2F2] px-5 py-2 text-[12px] font-medium text-[#E8472A] dark:border-[#E8472A]/20 dark:bg-[#2A0A0A] dark:text-[#F87171]">
+        <div className="border-b border-[#E8472A]/20 bg-[#FEF2F2] px-5 py-2 text-[13px] font-medium text-[#E8472A] dark:border-[#E8472A]/20 dark:bg-[#2A0A0A] dark:text-[#F87171]">
           {actionError}
         </div>
       )}

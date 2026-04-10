@@ -29,7 +29,7 @@ export function LegalEditor({ pageKey, html, onChange, disabled = false }: Props
   }
 
   const btn = [
-    'px-2 py-1 text-[11px] rounded transition-colors',
+    'px-2 py-1 text-[12px] rounded transition-colors',
     'text-[#555] hover:bg-[#E8E4DC] dark:text-[#9A9A8A] dark:hover:bg-[#243020]',
     'disabled:opacity-40 disabled:cursor-not-allowed',
   ].join(' ');
