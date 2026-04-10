@@ -1,5 +1,6 @@
 'use client';
 
+import { useEffect } from 'react';
 import { useTranslations } from 'next-intl';
 import { usePathname } from 'next/navigation';
 import { Link } from '@/i18n/navigation';
@@ -47,6 +48,14 @@ export function AdminSidebar({ open = false, onClose }: AdminSidebarProps) {
   const base   = 'flex items-center gap-2 rounded-lg px-3 py-2 text-[12px] font-semibold transition-colors duration-150';
   const active = `${base} bg-[#C49A1E] text-[#0C1209]`;
   const idle   = `${base} text-[#666] hover:bg-[#E8E4D8] dark:text-[#8A8A7A] dark:hover:bg-[#182214]`;
+
+  /* Close mobile sidebar on Escape */
+  useEffect(() => {
+    if (!open || !onClose) return;
+    const handler = (e: KeyboardEvent) => { if (e.key === 'Escape') onClose(); };
+    document.addEventListener('keydown', handler);
+    return () => document.removeEventListener('keydown', handler);
+  }, [open, onClose]);
 
   const sidebarContent = (
     <>
@@ -98,7 +107,7 @@ export function AdminSidebar({ open = false, onClose }: AdminSidebarProps) {
         >
           <div className="absolute inset-0 bg-black/40" />
           <aside
-            className="relative flex w-[220px] shrink-0 flex-col border-r border-[#E0DCD0] bg-[#F0EDE0] p-3 shadow-xl animate-fade-in dark:border-[#1A2A14] dark:bg-[#111A0E]"
+            className="relative flex h-full w-[220px] shrink-0 flex-col border-r border-[#E0DCD0] bg-[#F0EDE0] p-3 shadow-xl animate-fade-in dark:border-[#1A2A14] dark:bg-[#111A0E]"
             onClick={(e) => e.stopPropagation()}
           >
             {sidebarContent}
