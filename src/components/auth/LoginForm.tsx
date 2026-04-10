@@ -165,7 +165,7 @@ export function LoginForm({
           return;
         }
 
-        if (userRole === 'station')    router.push('/station');
+        if (userRole === 'station')    router.push('/station/dashboard');
         else if (userRole === 'admin') router.push('/admin');
         else                           router.push('/stations');
         return;
