@@ -931,7 +931,9 @@
     "upgrade_error": "Unable to upgrade to reservation. Please try again.",
     "upgrade_error_slot_full": "This time slot is full. Please choose another one.",
     "upgrade_error_payment": "Payment failed. Please try again.",
-    "upgrade_error_stripe": "Payment service is unavailable. Please try again later."
+    "upgrade_error_stripe": "Payment service is unavailable. Please try again later.",
+    "error_load": "Unable to load queue information.",
+    "error_not_found": "This queue entry could not be found."
   },
   "favorites": {
     "title": "My favorites",

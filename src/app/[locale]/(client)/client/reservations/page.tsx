@@ -196,6 +196,7 @@ export default function ClientReservationsPage() {
     if (!ok) {
       setLoadError(true);
       setLoading(false);
+      error(t('error_load'));
       return;
     }
 
