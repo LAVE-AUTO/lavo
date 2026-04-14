@@ -31,7 +31,9 @@ export type NotifyEntryParams = {
     | 'support_ticket_created'
     | 'support_message_received'
     | 'tip_received'
-    | 'tip_sent';
+    | 'tip_sent'
+    | 'extra_time_delay'
+    | 'slot_beyond_closing';
   payload?: Record<string, unknown>;
 };
 
@@ -58,6 +60,8 @@ const PUSH_MESSAGES: Record<NotifyEntryParams['type'], { title: string; body: st
   support_message_received: { title: 'New support message', body: 'You have received a reply to your support ticket.' },
   tip_received: { title: 'Tip received', body: 'A client has left you a tip for their recent service.' },
   tip_sent: { title: 'Tip sent', body: 'Your tip has been sent successfully. Thank you!' },
+  extra_time_delay: { title: 'Appointment delayed', body: 'Your appointment has been delayed. Please check the app for your updated time.' },
+  slot_beyond_closing: { title: 'Appointment moved past closing time', body: 'Due to a service overrun, your slot now falls outside station hours. You may cancel for a full refund or keep your appointment — the station will accommodate you.' },
 };
 
 /**

@@ -21,6 +21,7 @@
 import { db } from '@/lib/db';
 import { ConflictError, NotFoundError } from '@/lib/errors';
 import { getCancellationPolicy } from '@/server/admin/platform-settings-service';
+import { getConfigByStationId } from '@/server/station/config-repository';
 import { notifyEntry } from '@/server/notifications/notification-service';
 import {
   capturePaymentIntent,
@@ -37,6 +38,29 @@ import {
 import { decrementSlotBookedCount } from '@/server/station/slot-repository';
 
 const CANCELLABLE_STATUSES = ['confirmed'] as const;
+
+/**
+ * Returns true if the reservation's current slot starts at or after the station's closing time.
+ * This indicates a station-fault situation: an overrun cascade pushed the slot outside hours.
+ * In this case the penalty is waived and the client receives a full refund.
+ */
+async function isStationFaultCancellation(
+  slotStartTime: Date | null,
+  stationId: string
+): Promise<boolean> {
+  if (!slotStartTime) return false;
+  const config = await getConfigByStationId(stationId);
+  if (!config?.closing_time) return false;
+
+  const dateStr = slotStartTime.toISOString().slice(0, 10);
+  let t = (config.closing_time as string).trim();
+  if (t.length === 5) t += ':00';
+  if (!t.endsWith('Z') && !t.includes('+')) t += 'Z';
+  if (t.endsWith('+00')) t = t.slice(0, -3) + 'Z';
+  const closingDate = new Date(`${dateStr}T${t}`);
+
+  return slotStartTime >= closingDate;
+}
 
 export type CancelReservationResult = {
   entry: Entry;
@@ -67,7 +91,10 @@ export async function cancelReservation(
     );
   }
 
-  const policy = await getCancellationPolicy();
+  const [policy, stationFault] = await Promise.all([
+    getCancellationPolicy(),
+    isStationFaultCancellation(reservation.slotStartTime, reservation.station_id),
+  ]);
 
   const amountPaid = parseFloat(reservation.amount_paid);
   const now = new Date();
@@ -77,7 +104,9 @@ export async function cancelReservation(
     ? (slotStart.getTime() - now.getTime()) / 60_000
     : policy.freeWindowMinutes; // no slot => treat as free cancellation
 
-  const isLateCancellation = minutesUntilService < policy.freeWindowMinutes;
+  // Station-fault: slot was pushed past closing time by an overrun cascade.
+  // The penalty is waived unconditionally — the client bears no responsibility.
+  const isLateCancellation = !stationFault && minutesUntilService < policy.freeWindowMinutes;
 
   const penaltyAmount = isLateCancellation
     ? Math.round(amountPaid * policy.penaltyRate * 100) / 100

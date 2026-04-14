@@ -114,6 +114,19 @@ export const stationPatchPositionBodySchema = z
   })
   .strict();
 
+/** POST /station/extra-time — add overrun time to a reservation and cascade-shift subsequent slots. */
+export const extraTimeBodySchema = z
+  .object({
+    reservation_id: uuidSchema,
+    extra_minutes: z
+      .number({ invalid_type_error: 'extra_minutes must be a number' })
+      .int('extra_minutes must be an integer')
+      .positive('extra_minutes must be a positive integer'),
+  })
+  .strict();
+
+export type ExtraTimeBody = z.infer<typeof extraTimeBodySchema>;
+
 /** Query params for paginated entry listing (GET /me/entries, GET /station/entries). */
 export const listEntriesQuerySchema = z.object({
   status: z.string().optional(),

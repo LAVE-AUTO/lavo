@@ -1,4 +1,8 @@
 /**
+ * GET /api/v1/station/slots
+ * Lists slots for the station on a given date with dynamic availability.
+ * Auth STATION. Query: date (YYYY-MM-DD, optional — defaults to today).
+ *
  * POST /api/v1/station/slots
  * Creates a single time slot. Auth STATION. Body: start_time, end_time, capacity.
  *
@@ -10,9 +14,35 @@ import { successResponse, error400, error404, error500, fromAppError } from '@/l
 import { ApiCode } from '@/types/api-codes';
 import { findStationByUserId } from '@/server/station/station-repository';
 import { createSlot, deleteSlot } from '@/server/station/slot-service';
+import { getStationSlotAvailability } from '@/server/station/availability-service';
 import { createSlotBodySchema, deleteSlotsBodySchema, mapZodErrors } from '@/validators/station';
 import { AppError, NotFoundError, ConflictError } from '@/lib/errors';
 import type { NextResponse } from 'next/server';
+
+const DATE_REGEX = /^\d{4}-\d{2}-\d{2}$/;
+
+export async function GET(request: Request): Promise<NextResponse> {
+  const auth = await requireRole(request, 'station');
+  if (auth instanceof Response) return auth as NextResponse;
+
+  const station = await findStationByUserId(auth.sub);
+  if (!station) return error404('No station associated with this account');
+
+  const { searchParams } = new URL(request.url);
+  const dateParam = searchParams.get('date') ?? undefined;
+
+  if (dateParam !== undefined && !DATE_REGEX.test(dateParam)) {
+    return error400('date must be in YYYY-MM-DD format', ApiCode.VALIDATION_FAILED);
+  }
+
+  try {
+    const slots = await getStationSlotAvailability(station.id, dateParam);
+    return successResponse({ slots });
+  } catch (e) {
+    if (e instanceof AppError) return fromAppError(e);
+    return error500(e);
+  }
+}
 
 export async function DELETE(request: Request): Promise<NextResponse> {
   const auth = await requireRole(request, 'station');

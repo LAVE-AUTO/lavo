@@ -19,6 +19,7 @@ import {
   hasActiveEntryAtStation,
   updateEntry,
   shiftQueuePositions,
+  findFirstActiveQueueEntry,
   type Entry,
 } from './entry-repository';
 import { computeReservationSplit } from './compute-reservation-split';
@@ -213,6 +214,19 @@ export async function pickQueueEntry(stationId: string, queueEntryId: string): P
   }
 
   return updated;
+}
+
+/**
+ * Picks the first active client in the walk-in queue (lowest queue_position).
+ * Used by POST /api/v1/station/queue/next to automatically serve the next client in line.
+ *
+ * Equivalent to pickQueueEntry on the entry with the smallest queue_position.
+ * Throws NotFoundError if the queue is empty (no active entries).
+ */
+export async function callNextInQueue(stationId: string): Promise<Entry> {
+  const next = await findFirstActiveQueueEntry(stationId);
+  if (!next) throw new NotFoundError('No active clients in queue');
+  return pickQueueEntry(stationId, next.id);
 }
 
 /**
