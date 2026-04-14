@@ -3979,6 +3979,330 @@
           }
         }
       ]
+    },
+    {
+      "name": "Dépassement de temps",
+      "description": "POST /api/v1/station/extra-time — Déclare un dépassement sur une réservation en cours et décale en cascade tous les créneaux suivants du même jour.\n\nAuth STATION requise. Les clients dont le créneau reste dans les horaires reçoivent extra_time_delay. Ceux dont le créneau dépasse closing_time reçoivent slot_beyond_closing et peuvent annuler sans pénalité.",
+      "item": [
+        {
+          "name": "Extra time — succes (200)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 200', () => pm.response.to.have.status(200));",
+                  "pm.test('Retourne le resume du decalage', () => {",
+                  "  const json = pm.response.json();",
+                  "  pm.expect(json.data).to.have.property('reservation_id');",
+                  "  pm.expect(json.data).to.have.property('extra_minutes');",
+                  "  pm.expect(json.data).to.have.property('shifted_slots');",
+                  "  pm.expect(json.data).to.have.property('notified_delayed');",
+                  "  pm.expect(json.data).to.have.property('notified_beyond_closing');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "response": [],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": {
+              "raw": "{{base_url}}/api/v1/station/extra-time",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "station", "extra-time"]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"reservation_id\": \"{{reservation_id}}\",\n  \"extra_minutes\": 10\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "description": "Déclare 10 minutes de dépassement sur la réservation en cours. Décale atomiquement tous les créneaux suivants du jour. Retourne shifted_slots, notified_delayed et notified_beyond_closing."
+          }
+        },
+        {
+          "name": "Extra time — reservation introuvable (404)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 404', () => pm.response.to.have.status(404));",
+                  "pm.test('Code NOT_FOUND', () => {",
+                  "  pm.expect(pm.response.json().code).to.eql('NOT_FOUND');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "response": [],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": {
+              "raw": "{{base_url}}/api/v1/station/extra-time",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "station", "extra-time"]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"reservation_id\": \"00000000-0000-0000-0000-000000000000\",\n  \"extra_minutes\": 10\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "description": "404 NOT_FOUND — reservation_id inexistant ou n'appartenant pas à cette station."
+          }
+        },
+        {
+          "name": "Extra time — statut invalide (409)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 409', () => pm.response.to.have.status(409));",
+                  "pm.test('Code CONFLICT', () => {",
+                  "  pm.expect(pm.response.json().code).to.eql('CONFLICT');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "response": [],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": {
+              "raw": "{{base_url}}/api/v1/station/extra-time",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "station", "extra-time"]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"reservation_id\": \"{{reservation_id}}\",\n  \"extra_minutes\": 10\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "description": "409 CONFLICT — la réservation n'est pas in_progress ou confirmed (ex: déjà completed ou cancelled)."
+          }
+        },
+        {
+          "name": "Extra time — body invalide (400)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 400', () => pm.response.to.have.status(400));",
+                  "pm.test('Code VALIDATION_FAILED', () => {",
+                  "  pm.expect(pm.response.json().code).to.eql('VALIDATION_FAILED');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "response": [],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": {
+              "raw": "{{base_url}}/api/v1/station/extra-time",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "station", "extra-time"]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"reservation_id\": \"{{reservation_id}}\",\n  \"extra_minutes\": -5\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "description": "400 VALIDATION_FAILED — extra_minutes doit être un entier strictement positif."
+          }
+        },
+        {
+          "name": "Extra time — pas de station associee (403)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 403', () => pm.response.to.have.status(403));"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "response": [],
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{client_access_token}}" }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/station/extra-time",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "station", "extra-time"]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"reservation_id\": \"{{reservation_id}}\",\n  \"extra_minutes\": 10\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "description": "403 FORBIDDEN — token client utilisé à la place du token station."
+          }
+        },
+        {
+          "name": "Extra time — non authentifie (401)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 401', () => pm.response.to.have.status(401));"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "response": [],
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer invalid_token" }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/station/extra-time",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "station", "extra-time"]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"reservation_id\": \"{{reservation_id}}\",\n  \"extra_minutes\": 10\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "description": "401 UNAUTHORIZED — token absent ou invalide."
+          }
+        }
+      ]
+    },
+    {
+      "name": "File d'attente — Appeler le suivant",
+      "description": "POST /api/v1/station/queue/next — Appelle automatiquement le premier client actif en file d'attente (queue_position la plus basse parmi pending / confirmed / late).\n\nAuth STATION requise. Passe l'entrée en in_progress, décale les positions des clients restants, envoie la notification queue_pick au client appelé.",
+      "item": [
+        {
+          "name": "Queue next — succes (200)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 200', () => pm.response.to.have.status(200));",
+                  "pm.test('Entree passee en in_progress', () => {",
+                  "  const json = pm.response.json();",
+                  "  pm.expect(json.data).to.have.property('entry');",
+                  "  pm.expect(json.data.entry.status).to.eql('in_progress');",
+                  "  pm.expect(json.data.entry.queue_position).to.be.null;",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "response": [],
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/v1/station/queue/next",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "station", "queue", "next"]
+            },
+            "description": "Appelle le premier client de la file (position 1). L'entrée passe en in_progress, queue_position est vidé, les autres clients voient leur position décalée de -1."
+          }
+        },
+        {
+          "name": "Queue next — file vide (404)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 404', () => pm.response.to.have.status(404));",
+                  "pm.test('Code NOT_FOUND', () => {",
+                  "  pm.expect(pm.response.json().code).to.eql('NOT_FOUND');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "response": [],
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/v1/station/queue/next",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "station", "queue", "next"]
+            },
+            "description": "404 NOT_FOUND — aucun client actif en file (file vide ou tous en statuts terminaux)."
+          }
+        },
+        {
+          "name": "Queue next — pas de station associee (403)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 403', () => pm.response.to.have.status(403));"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "response": [],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Authorization", "value": "Bearer {{client_access_token}}" }],
+            "url": {
+              "raw": "{{base_url}}/api/v1/station/queue/next",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "station", "queue", "next"]
+            },
+            "description": "403 FORBIDDEN — token client utilisé à la place du token station."
+          }
+        },
+        {
+          "name": "Queue next — non authentifie (401)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 401', () => pm.response.to.have.status(401));"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "response": [],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Authorization", "value": "Bearer invalid_token" }],
+            "url": {
+              "raw": "{{base_url}}/api/v1/station/queue/next",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "station", "queue", "next"]
+            },
+            "description": "401 UNAUTHORIZED — token absent ou invalide."
+          }
+        }
+      ]
     }
   ]
 }
