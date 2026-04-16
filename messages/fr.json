@@ -931,7 +931,9 @@
     "upgrade_error": "Impossible de convertir en réservation. Veuillez réessayer.",
     "upgrade_error_slot_full": "Ce créneau est complet. Veuillez en choisir un autre.",
     "upgrade_error_payment": "Le paiement a échoué. Veuillez réessayer.",
-    "upgrade_error_stripe": "Le service de paiement est indisponible. Veuillez réessayer plus tard."
+    "upgrade_error_stripe": "Le service de paiement est indisponible. Veuillez réessayer plus tard.",
+    "error_load": "Impossible de charger les informations de la file d'attente.",
+    "error_not_found": "Cette entrée dans la file d'attente est introuvable."
   },
   "favorites": {
     "title": "Mes favoris",

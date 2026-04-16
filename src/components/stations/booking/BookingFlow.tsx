@@ -466,13 +466,17 @@ export function BookingFlow({ station, forfait, qrToken, qrVersion, onClose }: B
   return (
     <>
       {/* Desktop: Modal overlay */}
-        <div className="hidden md:flex fixed inset-0 z-[60] items-center justify-center bg-black/50 backdrop-blur-sm">
+        <div
+          className="hidden md:flex fixed inset-0 z-[60] items-center justify-center bg-black/50 backdrop-blur-sm"
+          onClick={onClose}
+        >
           <div
             ref={dialogRootRef}
             className="relative w-full max-w-2xl bg-[#F5F5E6] dark:bg-dark-card rounded-2xl shadow-2xl flex flex-col max-h-[90vh]"
             role="dialog"
             aria-modal="true"
             aria-labelledby="booking-dialog-title-desktop"
+            onClick={(e) => e.stopPropagation()}
           >
           {/* Header */}
           <div className="p-5 pb-4 border-b border-[#D0D0C0] dark:border-tab-inactive">

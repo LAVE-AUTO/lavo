@@ -220,6 +220,7 @@ export function StationDashboard() {
         cancelLabel={t('confirm_btn_cancel')}
         variant={pending?.type === 'cancel' ? 'danger' : 'default'}
         loading={actionLoading}
+        blocking
         onConfirm={executeAction}
         onCancel={() => { if (!actionLoading) setPending(null); }}
       />

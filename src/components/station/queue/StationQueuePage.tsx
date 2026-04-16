@@ -9,6 +9,7 @@
 import { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import { useTranslations } from 'next-intl';
 import { getFromApi, patchWithApi, postWithApi } from '@/services';
+import { useToast } from '@/context/toast-context';
 import { ConfirmDialog } from '@/components/ui/ConfirmDialog';
 import { QueueCard, type QueueEntry } from '@/components/station/dashboard/QueueCard';
 
@@ -40,6 +41,7 @@ function toQueueEntry(e: RawEntry, idx: number, isNext: boolean): QueueEntry {
 
 export function StationQueuePage() {
   const t = useTranslations('station_queue');
+  const { error: showError } = useToast();
   const mountedRef = useRef(true);
   useEffect(() => { mountedRef.current = true; return () => { mountedRef.current = false; }; }, []);
 
@@ -61,6 +63,7 @@ export function StationQueuePage() {
       setLastUpdated(new Date());
     } else if (!silent) {
       setLoadError(true);
+      showError(t('error_load'));
     }
     if (!silent) setLoading(false);
   }, []);
@@ -100,8 +103,10 @@ export function StationQueuePage() {
       setPending(null);
       await loadData(true);
     } else {
-      const raw = (data as { message?: string })?.message ?? '';
-      setActionError(raw.includes('Cannot transition') ? t('error_invalid_transition') : t('error_action'));
+      const msg = (data as { message?: string })?.message ?? '';
+      const errMsg = msg.includes('Cannot transition') ? t('error_invalid_transition') : t('error_action');
+      setActionError(errMsg);
+      showError(errMsg);
     }
   }
 
@@ -119,8 +124,9 @@ export function StationQueuePage() {
     if (ok) {
       await loadData(true);
     } else {
-      const raw = (data as { message?: string })?.message ?? '';
-      setActionError(raw || t('error_action'));
+      const msg = (data as { message?: string })?.message || t('error_action');
+      setActionError(msg);
+      showError(msg);
     }
   }
 
@@ -258,6 +264,7 @@ export function StationQueuePage() {
         cancelLabel={t('btn_cancel')}
         variant={pending?.type === 'complete' ? 'default' : 'default'}
         loading={actionLoading}
+        blocking
         onConfirm={executeAction}
         onCancel={() => { setPending(null); setActionError(null); }}
       />

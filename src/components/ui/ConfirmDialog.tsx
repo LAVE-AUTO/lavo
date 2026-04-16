@@ -12,6 +12,9 @@ interface Props {
   cancelLabel?: string;
   variant?: ConfirmDialogVariant;
   loading?: boolean;
+  /** When true, the dialog cannot be dismissed by clicking outside or pressing Escape.
+   *  Use for critical actions (cancel reservation, call next, accept/refuse delay). */
+  blocking?: boolean;
   onConfirm: () => void;
   onCancel: () => void;
 }
@@ -49,6 +52,7 @@ export function ConfirmDialog({
   cancelLabel = 'Annuler',
   variant = 'default',
   loading = false,
+  blocking = false,
   onConfirm,
   onCancel,
 }: Props) {
@@ -61,13 +65,13 @@ export function ConfirmDialog({
     return () => clearTimeout(id);
   }, [open]);
 
-  /* Close on Escape */
+  /* Close on Escape (disabled when blocking) */
   useEffect(() => {
-    if (!open) return;
+    if (!open || blocking) return;
     const handler = (e: KeyboardEvent) => { if (e.key === 'Escape') onCancel(); };
     document.addEventListener('keydown', handler);
     return () => document.removeEventListener('keydown', handler);
-  }, [open, onCancel]);
+  }, [open, blocking, onCancel]);
 
   if (!open) return null;
 
@@ -78,7 +82,7 @@ export function ConfirmDialog({
       className="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-fade-in"
       aria-modal="true"
       role="alertdialog"
-      onClick={(e) => { if (e.target === e.currentTarget) onCancel(); }}
+      onClick={(e) => { if (!blocking && e.target === e.currentTarget) onCancel(); }}
     >
       <div className="w-full max-w-[340px] rounded-xl border border-[#E8E4DC] bg-white shadow-2xl dark:border-[#1A2A14] dark:bg-[#182214] animate-fade-in-up">
         <div className="flex flex-col items-center gap-3 px-6 pb-5 pt-6 text-center">

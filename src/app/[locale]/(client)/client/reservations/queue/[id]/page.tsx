@@ -5,7 +5,7 @@ import { useTranslations } from 'next-intl';
 import { Link, useRouter } from '@/i18n/navigation';
 import { getFromApi } from '@/services/axios-service';
 import { useAuth } from '@/context/auth-context';
-import { notFound } from 'next/navigation';
+import { useToast } from '@/context/toast-context';
 import UpgradeToReservationModal from '@/components/reservations/UpgradeToReservationModal';
 
 /* ------------------------------------------------------------------ */
@@ -74,6 +74,7 @@ export default function QueueDetailPage({ params }: PageProps) {
   const { id } = use(params);
   const t = useTranslations('queue_detail');
   const router = useRouter();
+  const { error: showError } = useToast();
   const { isLoading: authLoading } = useAuth();
   const [showUpgradeModal, setShowUpgradeModal] = useState(false);
 
@@ -90,12 +91,12 @@ export default function QueueDetailPage({ params }: PageProps) {
       const [ok, data] = await getFromApi('/me/entries?per_page=100');
       if (!mountedRef.current) return;
 
-      if (!ok) { setMissing(true); return; }
+      if (!ok) { setMissing(true); showError(t('error_load')); return; }
 
       const res = data as { data: { entries: ApiEntry[] } };
       const found = (res?.data?.entries ?? []).find((e) => e.id === id && e.entry_type === 'queue');
 
-      if (!found) { setMissing(true); return; }
+      if (!found) { setMissing(true); showError(t('error_not_found')); return; }
 
       const [stationOk, stationData] = await getFromApi(`/stations/${found.station_id}`);
       if (!mountedRef.current) return;
@@ -119,7 +120,7 @@ export default function QueueDetailPage({ params }: PageProps) {
         status: found.status === 'in_progress' ? 'in_progress' : 'waiting',
       });
     } catch {
-      if (mountedRef.current) setMissing(true);
+      if (mountedRef.current) { setMissing(true); showError(t('error_load')); }
     } finally {
       if (mountedRef.current) setLoading(false);
     }
@@ -139,7 +140,19 @@ export default function QueueDetailPage({ params }: PageProps) {
     );
   }
 
-  if (missing || !entry) notFound();
+  if (missing || !entry) {
+    return (
+      <main className="min-h-screen bg-[#F5F5E6] dark:bg-dark-bg flex flex-col items-center justify-center gap-4 pb-24">
+        <p className="text-[14px] font-semibold text-[#555] dark:text-[#B0B0A0]">{t('error_not_found')}</p>
+        <Link
+          href="/client/reservations"
+          className="rounded-[10px] border-[1.5px] border-gold/50 px-4 py-2 text-[13px] font-semibold text-gold hover:bg-gold/10 transition-colors"
+        >
+          {t('back')}
+        </Link>
+      </main>
+    );
+  }
 
   const q        = entry;
   const isActive = q.status === 'in_progress';

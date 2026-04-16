@@ -190,12 +190,7 @@ export default function ReservationDetailPage() {
       focusable?.focus();
     }
 
-    const handleKeyDown = (event: KeyboardEvent) => {
-      if (event.key === 'Escape') { event.preventDefault(); setShowCancelModal(false); }
-    };
-    document.addEventListener('keydown', handleKeyDown);
     return () => {
-      document.removeEventListener('keydown', handleKeyDown);
       previouslyFocused?.focus();
     };
   }, [showCancelModal]);
@@ -649,7 +644,6 @@ export default function ReservationDetailPage() {
         <>
           <div
             className="fixed inset-0 z-[60] bg-black/50 backdrop-blur-sm"
-            onClick={() => setShowCancelModal(false)}
           />
           <div className="fixed inset-0 z-[60] flex items-center justify-center p-4">
             <div

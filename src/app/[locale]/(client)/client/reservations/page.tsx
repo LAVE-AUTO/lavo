@@ -196,6 +196,7 @@ export default function ClientReservationsPage() {
     if (!ok) {
       setLoadError(true);
       setLoading(false);
+      error(t('error_load'));
       return;
     }
 
@@ -560,15 +561,10 @@ function CancelModal({
     const previouslyFocused = document.activeElement as HTMLElement | null;
     dialogRef.current?.querySelector<HTMLElement>('button')?.focus();
 
-    const onKeyDown = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') { e.preventDefault(); onClose(); }
-    };
-    document.addEventListener('keydown', onKeyDown);
     return () => {
-      document.removeEventListener('keydown', onKeyDown);
       previouslyFocused?.focus();
     };
-  }, [onClose]);
+  }, []);
 
   const showFeesWarning = isWithinOneHour(r.date, r.timeSlot);
   const dateLabel = new Date(`${r.date}T${r.timeSlot}`).toLocaleDateString(
@@ -579,7 +575,6 @@ function CancelModal({
   return (
     <div
       className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/60 backdrop-blur-sm animate-fade-in"
-      onClick={onClose}
     >
       <div
         ref={dialogRef}
@@ -587,7 +582,6 @@ function CancelModal({
         aria-modal="true"
         aria-labelledby="cancel-modal-title"
         className="w-full sm:max-w-sm bg-[#F5F5E6] dark:bg-dark-surface rounded-t-2xl sm:rounded-2xl shadow-2xl overflow-hidden animate-fade-in-up mb-14 sm:mb-0"
-        onClick={(e) => e.stopPropagation()}
       >
         {/* Header */}
         <div className="px-5 py-4 border-b border-[#D0D0C0] dark:border-tab-inactive">
