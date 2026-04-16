@@ -149,7 +149,7 @@ function enrichEntry(entry: ApiEntry, stationsMap: Map<string, ApiStation>): Cli
   return {
     id: entry.id,
     ...base,
-    position: entry.queue_position ?? 0,
+    position: entry.queue_position ?? 1,
     estimatedWaitMinutes: 0,
     totalPrice,
     status: (entry.status === 'in_progress' ? 'in_progress' : 'waiting') as QueueStatus,

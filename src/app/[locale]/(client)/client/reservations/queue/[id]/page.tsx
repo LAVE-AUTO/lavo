@@ -115,7 +115,7 @@ export default function QueueDetailPage({ params }: PageProps) {
         stationLatitude: parseFloat(station?.latitude ?? '0'),
         stationLongitude: parseFloat(station?.longitude ?? '0'),
         forfaitName: format?.label ?? '—',
-        position: found.queue_position ?? 0,
+        position: found.queue_position ?? 1,
         totalPrice: parseFloat(found.amount_paid ?? '0'),
         status: found.status === 'in_progress' ? 'in_progress' : 'waiting',
       });
@@ -130,7 +130,7 @@ export default function QueueDetailPage({ params }: PageProps) {
     if (!authLoading) loadEntry();
   }, [authLoading, loadEntry]);
 
-  const position = useRealtimePosition(entry?.position ?? 0);
+  const position = useRealtimePosition(entry?.position ?? 1);
 
   if (loading) {
     return (
