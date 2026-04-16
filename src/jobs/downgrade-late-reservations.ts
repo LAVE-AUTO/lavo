@@ -3,6 +3,7 @@
  * moveReservationToQueue (uses queue-position helper), then send notifications.
  * Invoked by GET /api/cron/downgrade-late-reservations (with CRON_SECRET header).
  */
+import { runWithConcurrencyLimit } from '@/helpers/concurrency';
 import { listLateUnconfirmedReservations } from '@/server/reservations/entry-repository';
 import { moveReservationToQueue } from '@/server/reservations/queue-service';
 
@@ -18,23 +19,6 @@ export type DowngradeLateReservationsResult = {
  */
 const DOWNGRADE_CONCURRENCY = 8;
 
-/**
- * Runs async work in fixed-size batches with Promise.allSettled (bounded concurrency).
- */
-async function runWithConcurrencyLimit<T>(
-  items: T[],
-  concurrency: number,
-  fn: (item: T) => Promise<void>
-): Promise<PromiseSettledResult<void>[]> {
-  const results: PromiseSettledResult<void>[] = [];
-  const limit = Math.max(1, Math.min(concurrency, 10));
-  for (let i = 0; i < items.length; i += limit) {
-    const chunk = items.slice(i, i + limit);
-    const settled = await Promise.allSettled(chunk.map((item) => fn(item)));
-    results.push(...settled);
-  }
-  return results;
-}
 
 export async function runDowngradeLateReservations(): Promise<DowngradeLateReservationsResult> {
   const entries = await listLateUnconfirmedReservations();

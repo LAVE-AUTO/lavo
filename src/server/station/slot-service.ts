@@ -3,6 +3,7 @@
  * Used by POST /api/v1/station/slots, bulk, generate, and DELETE.
  */
 import { NotFoundError, ConflictError } from '@/lib/errors';
+import { parseTimeForDate } from '@/helpers/date-helper';
 import type { StationConfig } from './config-repository';
 import { getConfigByStationId } from './config-repository';
 import {
@@ -15,16 +16,6 @@ import {
 
 const DEFAULT_SLOT_INTERVAL_MINUTES = 30;
 
-/**
- * Parses a date string (YYYY-MM-DD) and time string (HH:mm or HH:mm:ss, optional +00) into a Date (UTC).
- */
-function toDateAtTime(dateStr: string, timeStr: string): Date {
-  let t = timeStr.trim();
-  if (t.length === 5) t += ':00';
-  if (!t.endsWith('Z') && !t.includes('+')) t += 'Z';
-  if (t.endsWith('+00')) t = t.slice(0, -3) + 'Z';
-  return new Date(`${dateStr}T${t}`);
-}
 
 /**
  * Generates non-overlapping time slots for the given date(s) using station config.
@@ -56,10 +47,10 @@ export function generateSlotsFromConfig(
 
   for (let d = new Date(startDate); d <= endDate; d.setDate(d.getDate() + 1)) {
     const dayStr = d.toISOString().slice(0, 10);
-    let slotStart = toDateAtTime(dayStr, openTime);
-    const dayEnd = toDateAtTime(dayStr, closeTime);
-    const dayBreakStart = breakStart ? toDateAtTime(dayStr, breakStart) : null;
-    const dayBreakEnd = breakEnd ? toDateAtTime(dayStr, breakEnd) : null;
+    let slotStart = parseTimeForDate(dayStr, openTime);
+    const dayEnd = parseTimeForDate(dayStr, closeTime);
+    const dayBreakStart = breakStart ? parseTimeForDate(dayStr, breakStart) : null;
+    const dayBreakEnd = breakEnd ? parseTimeForDate(dayStr, breakEnd) : null;
 
     while (slotStart < dayEnd) {
       const slotEnd = new Date(slotStart.getTime() + resolvedInterval * 60 * 1000);

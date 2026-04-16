@@ -7,7 +7,7 @@ import { NotFoundError, ConflictError } from '@/lib/errors';
 import { db } from '@/lib/db';
 import { findFormatByIdAndStation } from '@/server/station/format-repository';
 import { decrementSlotBookedCount } from '@/server/station/slot-repository';
-import { createPaymentIntent, capturePaymentIntent, updatePaymentIntentMetadata } from '@/server/payments/payment-service';
+import { createPaymentIntent, updatePaymentIntentMetadata } from '@/server/payments/payment-service';
 import { notifyEntry } from '@/server/notifications/notification-service';
 import { getQueuePositionWhenMovingFromReservation } from './queue-position-helper';
 import {
@@ -26,10 +26,8 @@ import { computeReservationSplit } from './compute-reservation-split';
 
 export type JoinQueueResult = { entry: Entry; clientSecret: string };
 
-const STATUS_PENDING = 'pending';
 const STATUS_PENDING_PAYMENT = 'pending_payment';
 const STATUS_LATE = 'late';
-const STATUS_CANCELLED = 'cancelled';
 
 /**
  * Joins the walk-in queue at the station for the given vehicle format.
@@ -153,20 +151,9 @@ export async function moveReservationToQueue(entryId: string): Promise<Entry> {
     return result;
   });
 
-  // Capture the payment immediately — no refund for late clients.
-  // Distribution (station payout + platform commission) happens at capture time.
-  // Kept outside the transaction: Stripe is an external call and must not hold DB locks.
-  if (entry.stripe_payment_id) {
-    try {
-      await capturePaymentIntent(entry.stripe_payment_id);
-    } catch (e) {
-      console.error('[CAPTURE_FAILED] Late entry moved to queue but Stripe capture failed — manual resolution required', {
-        entryId,
-        stripe_payment_id: entry.stripe_payment_id,
-        error: e instanceof Error ? e.message : String(e),
-      });
-    }
-  }
+  // Payment is NOT captured here. The PaymentIntent stays authorized.
+  // Capture happens on service completion (station marks completed) or cancellation/no-show
+  // (cancellation fee applied at that point). This mirrors the walk-in queue payment flow.
 
   await notifyEntry({
     entryId,

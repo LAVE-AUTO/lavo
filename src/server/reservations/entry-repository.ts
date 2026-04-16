@@ -224,6 +224,19 @@ export async function listEntriesByStation(stationId: string): Promise<Entry[]> 
 }
 
 /**
+ * Returns all active queue entries across all stations (pending, confirmed, late).
+ * Used by the no-show cron to detect clients still in queue after station closing.
+ */
+export async function listActiveQueueEntries(): Promise<Entry[]> {
+  return db.query.reservations.findMany({
+    where: and(
+      eq(reservations.entry_type, 'queue'),
+      inArray(reservations.status, ['pending', 'confirmed', 'late'])
+    ),
+  });
+}
+
+/**
  * Lists queue-only entries for a station, ordered by queue_position.
  */
 export async function listQueueByStation(stationId: string): Promise<Entry[]> {

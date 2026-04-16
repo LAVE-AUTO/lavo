@@ -20,6 +20,7 @@
  */
 import { db } from '@/lib/db';
 import { ConflictError, NotFoundError } from '@/lib/errors';
+import { parseTimeForDate } from '@/helpers/date-helper';
 import { getCancellationPolicy } from '@/server/admin/platform-settings-service';
 import { getConfigByStationId } from '@/server/station/config-repository';
 import { notifyEntry } from '@/server/notifications/notification-service';
@@ -53,11 +54,7 @@ async function isStationFaultCancellation(
   if (!config?.closing_time) return false;
 
   const dateStr = slotStartTime.toISOString().slice(0, 10);
-  let t = (config.closing_time as string).trim();
-  if (t.length === 5) t += ':00';
-  if (!t.endsWith('Z') && !t.includes('+')) t += 'Z';
-  if (t.endsWith('+00')) t = t.slice(0, -3) + 'Z';
-  const closingDate = new Date(`${dateStr}T${t}`);
+  const closingDate = parseTimeForDate(dateStr, config.closing_time as string);
 
   return slotStartTime >= closingDate;
 }

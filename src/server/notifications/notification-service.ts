@@ -33,7 +33,9 @@ export type NotifyEntryParams = {
     | 'tip_received'
     | 'tip_sent'
     | 'extra_time_delay'
-    | 'slot_beyond_closing';
+    | 'slot_beyond_closing'
+    | 'queue_cancelled_by_client'
+    | 'queue_no_show';
   payload?: Record<string, unknown>;
 };
 
@@ -62,6 +64,8 @@ const PUSH_MESSAGES: Record<NotifyEntryParams['type'], { title: string; body: st
   tip_sent: { title: 'Tip sent', body: 'Your tip has been sent successfully. Thank you!' },
   extra_time_delay: { title: 'Appointment delayed', body: 'Your appointment has been delayed. Please check the app for your updated time.' },
   slot_beyond_closing: { title: 'Appointment moved past closing time', body: 'Due to a service overrun, your slot now falls outside station hours. You may cancel for a full refund or keep your appointment — the station will accommodate you.' },
+  queue_cancelled_by_client: { title: 'Queue booking cancelled', body: 'You have cancelled your place in the queue. A cancellation fee has been applied.' },
+  queue_no_show: { title: 'No-show: booking cancelled', body: 'Your queue booking has been cancelled because the station has closed for the day. A cancellation fee has been applied.' },
 };
 
 /**

@@ -1062,7 +1062,7 @@
     },
     {
       "name": "Annulation entree (file / pending_payment)",
-      "description": "PATCH /api/v1/me/entries/:entryId/cancel — Annule une entree de file d'attente ou une reservation en attente de paiement.\n\nPas de remboursement Stripe : annule le PaymentIntent si pending_payment, reordonne la file si queue.\nPour les reservations confirmed, utiliser POST /reservations/:id/cancel.",
+      "description": "PATCH /api/v1/me/entries/:entryId/cancel — Annule une entrée de file d'attente ou une réservation en attente de paiement.\n\nComportement selon le statut :\n• pending_payment : PaymentIntent annulé, aucun débit.\n• confirmed / late / pending (file d'attente) : frais d'annulation appliqués — capture du PaymentIntent, remboursement partiel (amountPaid - penalty), distribution de la pénalité. Le champ penalty_amount est renseigné dans la réponse.\n\nPour les réservations confirmed, utiliser POST /reservations/:id/cancel.",
       "item": [
         {
           "name": "Annuler entree — succes (200)",
@@ -1172,6 +1172,133 @@
               ]
             },
             "description": "404 NOT_FOUND — entree inexistante."
+          }
+        },
+        {
+          "name": "Annuler depuis la file (confirmed — frais d'annulation) — 200",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 200', () => pm.response.to.have.status(200));",
+                  "pm.test('Statut cancelled avec pénalité', () => {",
+                  "  const json = pm.response.json();",
+                  "  pm.expect(json.data.status).to.eql('cancelled');",
+                  "  pm.expect(json.data.penalty_amount).to.not.be.null;",
+                  "  pm.expect(json.data.isLateCancellation).to.be.true;",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "response": [],
+          "request": {
+            "method": "PATCH",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"reason\": \"Je ne peux plus attendre\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{base_url}}/api/v1/me/entries/{{queue_entry_id}}/cancel",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "me",
+                "entries",
+                "{{queue_entry_id}}",
+                "cancel"
+              ]
+            },
+            "description": "Annule une entrée de file d'attente confirmée. Le PaymentIntent est capturé, la pénalité est appliquée et le reste est remboursé."
+          }
+        },
+        {
+          "name": "Annuler depuis la file (late — frais d'annulation) — 200",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 200', () => pm.response.to.have.status(200));",
+                  "pm.test('Statut cancelled avec pénalité (late)', () => {",
+                  "  const json = pm.response.json();",
+                  "  pm.expect(json.data.status).to.eql('cancelled');",
+                  "  pm.expect(json.data.penalty_amount).to.not.be.null;",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "response": [],
+          "request": {
+            "method": "PATCH",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/v1/me/entries/{{late_queue_entry_id}}/cancel",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "me",
+                "entries",
+                "{{late_queue_entry_id}}",
+                "cancel"
+              ]
+            },
+            "description": "Annule une entrée de file avec statut 'late' (client en retard transféré depuis une réservation). Frais d'annulation appliqués."
+          }
+        },
+        {
+          "name": "Annuler depuis la file (pending_payment — sans frais) — 200",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 200', () => pm.response.to.have.status(200));",
+                  "pm.test('Statut cancelled sans pénalité', () => {",
+                  "  const json = pm.response.json();",
+                  "  pm.expect(json.data.status).to.eql('cancelled');",
+                  "  pm.expect(json.data.penalty_amount).to.be.null;",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "response": [],
+          "request": {
+            "method": "PATCH",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/v1/me/entries/{{pending_queue_entry_id}}/cancel",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "me",
+                "entries",
+                "{{pending_queue_entry_id}}",
+                "cancel"
+              ]
+            },
+            "description": "Annule une entrée de file avant confirmation Stripe (pending_payment). Le PaymentIntent est annulé sans capture — aucun débit."
           }
         }
       ]
@@ -3711,17 +3838,30 @@
           "request": {
             "method": "POST",
             "header": [
-              { "key": "Content-Type", "value": "application/json" }
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
             ],
             "url": {
               "raw": "{{base_url}}/api/v1/disputes",
-              "host": ["{{base_url}}"],
-              "path": ["api", "v1", "disputes"]
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "disputes"
+              ]
             },
             "body": {
               "mode": "raw",
               "raw": "{\n  \"reservation_id\": \"{{reservation_id}}\",\n  \"reason\": \"Le véhicule a été rayé pendant le lavage.\",\n  \"description\": \"J'ai constaté une rayure sur le capot après le passage en station.\",\n  \"requested_amount\": 150.00\n}",
-              "options": { "raw": { "language": "json" } }
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
             },
             "description": "Crée un litige pour une réservation terminée. Champs :\n- `reservation_id` (obligatoire, UUID)\n- `reason` (obligatoire, 1-500 chars)\n- `description` (optionnel, max 2000 chars)\n- `requested_amount` (optionnel, montant en EUR)\n\nReponse : `{ message, data: dispute }` avec status=open."
           }
@@ -3749,17 +3889,30 @@
           "request": {
             "method": "POST",
             "header": [
-              { "key": "Content-Type", "value": "application/json" }
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
             ],
             "url": {
               "raw": "{{base_url}}/api/v1/disputes",
-              "host": ["{{base_url}}"],
-              "path": ["api", "v1", "disputes"]
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "disputes"
+              ]
             },
             "body": {
               "mode": "raw",
               "raw": "{\n  \"reservation_id\": \"{{reservation_id}}\",\n  \"reason\": \"Service non conforme.\"\n}",
-              "options": { "raw": { "language": "json" } }
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
             },
             "description": "Litige minimal — seuls reservation_id et reason sont fournis."
           }
@@ -3785,17 +3938,30 @@
           "request": {
             "method": "POST",
             "header": [
-              { "key": "Content-Type", "value": "application/json" }
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
             ],
             "url": {
               "raw": "{{base_url}}/api/v1/disputes",
-              "host": ["{{base_url}}"],
-              "path": ["api", "v1", "disputes"]
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "disputes"
+              ]
             },
             "body": {
               "mode": "raw",
               "raw": "{\n  \"reservation_id\": \"{{reservation_id}}\",\n  \"reason\": \"La réservation est encore en cours.\"\n}",
-              "options": { "raw": { "language": "json" } }
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
             },
             "description": "400 VALIDATION_FAILED — réservation avec status != completed. Seules les réservations terminées peuvent faire l'objet d'un litige."
           }
@@ -3821,17 +3987,30 @@
           "request": {
             "method": "POST",
             "header": [
-              { "key": "Content-Type", "value": "application/json" }
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
             ],
             "url": {
               "raw": "{{base_url}}/api/v1/disputes",
-              "host": ["{{base_url}}"],
-              "path": ["api", "v1", "disputes"]
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "disputes"
+              ]
             },
             "body": {
               "mode": "raw",
               "raw": "{\n  \"reservation_id\": \"{{reservation_id}}\",\n  \"reason\": \"Deuxième tentative de litige sur la même réservation.\"\n}",
-              "options": { "raw": { "language": "json" } }
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
             },
             "description": "409 DISPUTE_ALREADY_EXISTS — un litige existe déjà pour cette réservation. Un seul litige par réservation."
           }
@@ -3857,17 +4036,30 @@
           "request": {
             "method": "POST",
             "header": [
-              { "key": "Content-Type", "value": "application/json" }
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
             ],
             "url": {
               "raw": "{{base_url}}/api/v1/disputes",
-              "host": ["{{base_url}}"],
-              "path": ["api", "v1", "disputes"]
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "disputes"
+              ]
             },
             "body": {
               "mode": "raw",
               "raw": "{\n  \"reservation_id\": \"{{reservation_id}}\",\n  \"reason\": \"Litige sur la réservation d'un autre client.\"\n}",
-              "options": { "raw": { "language": "json" } }
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
             },
             "description": "403 FORBIDDEN — la réservation appartient à un autre client que celui authentifié."
           }
@@ -3893,17 +4085,30 @@
           "request": {
             "method": "POST",
             "header": [
-              { "key": "Content-Type", "value": "application/json" }
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
             ],
             "url": {
               "raw": "{{base_url}}/api/v1/disputes",
-              "host": ["{{base_url}}"],
-              "path": ["api", "v1", "disputes"]
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "disputes"
+              ]
             },
             "body": {
               "mode": "raw",
               "raw": "{\n  \"reservation_id\": \"00000000-0000-0000-0000-000000000000\",\n  \"reason\": \"Réservation inexistante.\"\n}",
-              "options": { "raw": { "language": "json" } }
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
             },
             "description": "404 NOT_FOUND — UUID valide mais réservation inexistante."
           }
@@ -3930,17 +4135,30 @@
           "request": {
             "method": "POST",
             "header": [
-              { "key": "Content-Type", "value": "application/json" }
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
             ],
             "url": {
               "raw": "{{base_url}}/api/v1/disputes",
-              "host": ["{{base_url}}"],
-              "path": ["api", "v1", "disputes"]
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "disputes"
+              ]
             },
             "body": {
               "mode": "raw",
               "raw": "{\n  \"reason\": \"Raison fournie mais reservation_id absent.\"\n}",
-              "options": { "raw": { "language": "json" } }
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
             },
             "description": "400 VALIDATION_FAILED — `reservation_id` est obligatoire."
           }
@@ -3962,18 +4180,34 @@
           "request": {
             "method": "POST",
             "header": [
-              { "key": "Content-Type", "value": "application/json" },
-              { "key": "Authorization", "value": "Bearer invalid_token" }
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer invalid_token"
+              }
             ],
             "url": {
               "raw": "{{base_url}}/api/v1/disputes",
-              "host": ["{{base_url}}"],
-              "path": ["api", "v1", "disputes"]
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "disputes"
+              ]
             },
             "body": {
               "mode": "raw",
               "raw": "{\n  \"reservation_id\": \"{{reservation_id}}\",\n  \"reason\": \"Test sans auth valide.\"\n}",
-              "options": { "raw": { "language": "json" } }
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
             },
             "description": "401 UNAUTHORIZED — token absent ou invalide."
           }
@@ -4008,16 +4242,32 @@
           "response": [],
           "request": {
             "method": "POST",
-            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
             "url": {
               "raw": "{{base_url}}/api/v1/station/extra-time",
-              "host": ["{{base_url}}"],
-              "path": ["api", "v1", "station", "extra-time"]
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "station",
+                "extra-time"
+              ]
             },
             "body": {
               "mode": "raw",
               "raw": "{\n  \"reservation_id\": \"{{reservation_id}}\",\n  \"extra_minutes\": 10\n}",
-              "options": { "raw": { "language": "json" } }
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
             },
             "description": "Déclare 10 minutes de dépassement sur la réservation en cours. Décale atomiquement tous les créneaux suivants du jour. Retourne shifted_slots, notified_delayed et notified_beyond_closing."
           }
@@ -4041,16 +4291,32 @@
           "response": [],
           "request": {
             "method": "POST",
-            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
             "url": {
               "raw": "{{base_url}}/api/v1/station/extra-time",
-              "host": ["{{base_url}}"],
-              "path": ["api", "v1", "station", "extra-time"]
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "station",
+                "extra-time"
+              ]
             },
             "body": {
               "mode": "raw",
               "raw": "{\n  \"reservation_id\": \"00000000-0000-0000-0000-000000000000\",\n  \"extra_minutes\": 10\n}",
-              "options": { "raw": { "language": "json" } }
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
             },
             "description": "404 NOT_FOUND — reservation_id inexistant ou n'appartenant pas à cette station."
           }
@@ -4074,16 +4340,32 @@
           "response": [],
           "request": {
             "method": "POST",
-            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
             "url": {
               "raw": "{{base_url}}/api/v1/station/extra-time",
-              "host": ["{{base_url}}"],
-              "path": ["api", "v1", "station", "extra-time"]
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "station",
+                "extra-time"
+              ]
             },
             "body": {
               "mode": "raw",
               "raw": "{\n  \"reservation_id\": \"{{reservation_id}}\",\n  \"extra_minutes\": 10\n}",
-              "options": { "raw": { "language": "json" } }
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
             },
             "description": "409 CONFLICT — la réservation n'est pas in_progress ou confirmed (ex: déjà completed ou cancelled)."
           }
@@ -4107,16 +4389,32 @@
           "response": [],
           "request": {
             "method": "POST",
-            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
             "url": {
               "raw": "{{base_url}}/api/v1/station/extra-time",
-              "host": ["{{base_url}}"],
-              "path": ["api", "v1", "station", "extra-time"]
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "station",
+                "extra-time"
+              ]
             },
             "body": {
               "mode": "raw",
               "raw": "{\n  \"reservation_id\": \"{{reservation_id}}\",\n  \"extra_minutes\": -5\n}",
-              "options": { "raw": { "language": "json" } }
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
             },
             "description": "400 VALIDATION_FAILED — extra_minutes doit être un entier strictement positif."
           }
@@ -4138,18 +4436,35 @@
           "request": {
             "method": "POST",
             "header": [
-              { "key": "Content-Type", "value": "application/json" },
-              { "key": "Authorization", "value": "Bearer {{client_access_token}}" }
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{client_access_token}}"
+              }
             ],
             "url": {
               "raw": "{{base_url}}/api/v1/station/extra-time",
-              "host": ["{{base_url}}"],
-              "path": ["api", "v1", "station", "extra-time"]
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "station",
+                "extra-time"
+              ]
             },
             "body": {
               "mode": "raw",
               "raw": "{\n  \"reservation_id\": \"{{reservation_id}}\",\n  \"extra_minutes\": 10\n}",
-              "options": { "raw": { "language": "json" } }
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
             },
             "description": "403 FORBIDDEN — token client utilisé à la place du token station."
           }
@@ -4171,18 +4486,35 @@
           "request": {
             "method": "POST",
             "header": [
-              { "key": "Content-Type", "value": "application/json" },
-              { "key": "Authorization", "value": "Bearer invalid_token" }
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer invalid_token"
+              }
             ],
             "url": {
               "raw": "{{base_url}}/api/v1/station/extra-time",
-              "host": ["{{base_url}}"],
-              "path": ["api", "v1", "station", "extra-time"]
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "station",
+                "extra-time"
+              ]
             },
             "body": {
               "mode": "raw",
               "raw": "{\n  \"reservation_id\": \"{{reservation_id}}\",\n  \"extra_minutes\": 10\n}",
-              "options": { "raw": { "language": "json" } }
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
             },
             "description": "401 UNAUTHORIZED — token absent ou invalide."
           }
@@ -4218,8 +4550,16 @@
             "header": [],
             "url": {
               "raw": "{{base_url}}/api/v1/station/queue/next",
-              "host": ["{{base_url}}"],
-              "path": ["api", "v1", "station", "queue", "next"]
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "station",
+                "queue",
+                "next"
+              ]
             },
             "description": "Appelle le premier client de la file (position 1). L'entrée passe en in_progress, queue_position est vidé, les autres clients voient leur position décalée de -1."
           }
@@ -4246,8 +4586,16 @@
             "header": [],
             "url": {
               "raw": "{{base_url}}/api/v1/station/queue/next",
-              "host": ["{{base_url}}"],
-              "path": ["api", "v1", "station", "queue", "next"]
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "station",
+                "queue",
+                "next"
+              ]
             },
             "description": "404 NOT_FOUND — aucun client actif en file (file vide ou tous en statuts terminaux)."
           }
@@ -4268,11 +4616,24 @@
           "response": [],
           "request": {
             "method": "POST",
-            "header": [{ "key": "Authorization", "value": "Bearer {{client_access_token}}" }],
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{client_access_token}}"
+              }
+            ],
             "url": {
               "raw": "{{base_url}}/api/v1/station/queue/next",
-              "host": ["{{base_url}}"],
-              "path": ["api", "v1", "station", "queue", "next"]
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "station",
+                "queue",
+                "next"
+              ]
             },
             "description": "403 FORBIDDEN — token client utilisé à la place du token station."
           }
@@ -4293,11 +4654,24 @@
           "response": [],
           "request": {
             "method": "POST",
-            "header": [{ "key": "Authorization", "value": "Bearer invalid_token" }],
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer invalid_token"
+              }
+            ],
             "url": {
               "raw": "{{base_url}}/api/v1/station/queue/next",
-              "host": ["{{base_url}}"],
-              "path": ["api", "v1", "station", "queue", "next"]
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "station",
+                "queue",
+                "next"
+              ]
             },
             "description": "401 UNAUTHORIZED — token absent ou invalide."
           }

@@ -21,6 +21,7 @@
  */
 import { NotFoundError, ConflictError } from '@/lib/errors';
 import { db } from '@/lib/db';
+import { parseTimeForDate } from '@/helpers/date-helper';
 import { findEntryByIdAndStation, findActiveReservationsBySlotIds } from './entry-repository';
 import {
   findSlotById,
@@ -42,17 +43,6 @@ export type ExtraTimeResult = {
   notified_beyond_closing: number;
 };
 
-/**
- * Parses a time string (HH:mm or HH:mm:ss, optional +00) combined with a YYYY-MM-DD date
- * into a UTC Date. Used to compute the closing-time boundary for a given day.
- */
-function parseClosingTimeForDate(dateStr: string, timeStr: string): Date {
-  let t = timeStr.trim();
-  if (t.length === 5) t += ':00';
-  if (!t.endsWith('Z') && !t.includes('+')) t += 'Z';
-  if (t.endsWith('+00')) t = t.slice(0, -3) + 'Z';
-  return new Date(`${dateStr}T${t}`);
-}
 
 /**
  * Applies extra time to a reservation currently in progress or confirmed, then cascades
@@ -92,7 +82,7 @@ export async function addExtraTime(
   const slotDateStr = slot.start_time.toISOString().slice(0, 10);
   const closingTime: Date | null =
     config?.closing_time
-      ? parseClosingTimeForDate(slotDateStr, config.closing_time as string)
+      ? parseTimeForDate(slotDateStr, config.closing_time as string)
       : null;
 
   // Atomic: extend current slot end_time and shift all subsequent slots on the same day.
