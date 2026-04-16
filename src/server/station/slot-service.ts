@@ -30,13 +30,18 @@ function toDateAtTime(dateStr: string, timeStr: string): Date {
  * Generates non-overlapping time slots for the given date(s) using station config.
  * Uses opening_time, closing_time, break_start/break_end, interval_minutes, and capacity
  * (max_concurrent_posts or wash_post_count). Excludes the break window.
+ *
+ * intervalMinutes defaults to config.wash_duration_minutes if not explicitly provided,
+ * so generated slots align with the real service duration.
  */
 export function generateSlotsFromConfig(
   config: StationConfig,
   dateStr: string,
   endDateStr?: string,
-  intervalMinutes: number = DEFAULT_SLOT_INTERVAL_MINUTES
+  intervalMinutes?: number
 ): Array<{ start_time: Date; end_time: Date; capacity: number }> {
+  const resolvedInterval =
+    intervalMinutes ?? (config.wash_duration_minutes ?? DEFAULT_SLOT_INTERVAL_MINUTES);
   const capacity =
     config.max_concurrent_posts ?? config.wash_post_count ?? 1;
   const slots: Array<{ start_time: Date; end_time: Date; capacity: number }> = [];
@@ -57,7 +62,7 @@ export function generateSlotsFromConfig(
     const dayBreakEnd = breakEnd ? toDateAtTime(dayStr, breakEnd) : null;
 
     while (slotStart < dayEnd) {
-      const slotEnd = new Date(slotStart.getTime() + intervalMinutes * 60 * 1000);
+      const slotEnd = new Date(slotStart.getTime() + resolvedInterval * 60 * 1000);
       if (slotEnd > dayEnd) break;
       if (dayBreakStart && dayBreakEnd && slotStart < dayBreakEnd && slotEnd > dayBreakStart) {
         slotStart = dayBreakEnd;

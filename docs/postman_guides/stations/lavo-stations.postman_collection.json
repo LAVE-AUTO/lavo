@@ -975,6 +975,135 @@
           }
         }
       ]
+    },
+    {
+      "name": "Station — Créneaux",
+      "description": "GET /api/v1/station/slots — Liste les créneaux de la station pour une date donnée avec disponibilité dynamique.\n\nAuth STATION requise. Chaque slot expose : available_spots, is_available, is_past, exceeds_closing_time.\nParamètre optionnel : date (YYYY-MM-DD). Défaut : aujourd'hui.",
+      "item": [
+        {
+          "name": "Slots aujourd'hui — sans date (200)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 200', () => pm.response.to.have.status(200));",
+                  "pm.test('Retourne un tableau de slots', () => {",
+                  "  const json = pm.response.json();",
+                  "  pm.expect(json.data).to.have.property('slots');",
+                  "  pm.expect(json.data.slots).to.be.an('array');",
+                  "});",
+                  "pm.test('Chaque slot a les champs de disponibilite', () => {",
+                  "  const slots = pm.response.json().data.slots;",
+                  "  if (slots.length > 0) {",
+                  "    pm.expect(slots[0]).to.have.property('available_spots');",
+                  "    pm.expect(slots[0]).to.have.property('is_available');",
+                  "    pm.expect(slots[0]).to.have.property('is_past');",
+                  "    pm.expect(slots[0]).to.have.property('exceeds_closing_time');",
+                  "  }",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "response": [],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/v1/station/slots",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "station", "slots"]
+            },
+            "description": "Retourne les créneaux du jour avec disponibilité dynamique. Pas de paramètre date : utilise aujourd'hui."
+          }
+        },
+        {
+          "name": "Slots avec date specifique — succes (200)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 200', () => pm.response.to.have.status(200));",
+                  "pm.test('Retourne les slots de la date demandee', () => {",
+                  "  const json = pm.response.json();",
+                  "  pm.expect(json.data.slots).to.be.an('array');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "response": [],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/v1/station/slots?date=2026-05-01",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "station", "slots"],
+              "query": [{ "key": "date", "value": "2026-05-01" }]
+            },
+            "description": "Retourne les créneaux pour le 2026-05-01. Modifier la date selon le besoin."
+          }
+        },
+        {
+          "name": "Slots — date invalide (400)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 400', () => pm.response.to.have.status(400));",
+                  "pm.test('Code VALIDATION_FAILED', () => {",
+                  "  pm.expect(pm.response.json().code).to.eql('VALIDATION_FAILED');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "response": [],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/v1/station/slots?date=01-05-2026",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "station", "slots"],
+              "query": [{ "key": "date", "value": "01-05-2026" }]
+            },
+            "description": "400 VALIDATION_FAILED — date doit être au format YYYY-MM-DD."
+          }
+        },
+        {
+          "name": "Slots — non authentifie (401)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 401', () => pm.response.to.have.status(401));"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "response": [],
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer invalid_token" }],
+            "url": {
+              "raw": "{{base_url}}/api/v1/station/slots",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "station", "slots"]
+            },
+            "description": "401 UNAUTHORIZED — token absent ou invalide."
+          }
+        }
+      ]
     }
   ]
 }

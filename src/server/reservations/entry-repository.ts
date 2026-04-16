@@ -636,6 +636,40 @@ export async function listLateUnconfirmedReservations(): Promise<Entry[]> {
 }
 
 /**
+ * Returns the first active queue entry (lowest queue_position) for a station.
+ * Active statuses for queue pickup: pending, confirmed, late.
+ * Used by POST /station/queue/next to automatically pick the next client in line.
+ */
+export async function findFirstActiveQueueEntry(
+  stationId: string,
+  tx?: DbTransaction
+): Promise<Entry | undefined> {
+  const client = tx ?? db;
+  return client.query.reservations.findFirst({
+    where: and(
+      eq(reservations.station_id, stationId),
+      eq(reservations.entry_type, 'queue'),
+      inArray(reservations.status, ['pending', 'confirmed', 'late'])
+    ),
+    orderBy: asc(reservations.queue_position),
+  });
+}
+
+/**
+ * Returns all active (confirmed or pending_payment) reservations linked to the given slot IDs.
+ * Used to identify clients impacted by a cascade time shift after an overrun.
+ */
+export async function findActiveReservationsBySlotIds(slotIds: string[]): Promise<Entry[]> {
+  if (slotIds.length === 0) return [];
+  return db.query.reservations.findMany({
+    where: and(
+      inArray(reservations.time_slot_id, slotIds),
+      inArray(reservations.status, ['confirmed', 'pending_payment', 'in_progress'])
+    ),
+  });
+}
+
+/**
  * Returns queue entries with status 'pending_payment', no stripe_payment_id, and created_at
  * older than olderThanMinutes minutes. Used by orphan cleanup cron to find stuck entries
  * where the server crashed after the DB insert but before the Stripe PaymentIntent was created.

@@ -1,7 +1,7 @@
 /**
  * Data access for time_slots. Create, delete, and count reservations per slot.
  */
-import { eq, and, ne, sql } from 'drizzle-orm';
+import { eq, and, ne, gt, sql, inArray } from 'drizzle-orm';
 import { db, type DbTransaction } from '@/lib/db';
 import { timeSlots } from '@/lib/db/schema';
 import { reservations } from '@/lib/db/schema';
@@ -139,4 +139,81 @@ export async function decrementSlotBookedCount(slotId: string, tx?: DbTransactio
       booked_count: sql`GREATEST(0, ${timeSlots.booked_count} - 1)`,
     })
     .where(eq(timeSlots.id, slotId));
+}
+
+/**
+ * Lists all slots for a station on a specific date (YYYY-MM-DD), ordered by start_time ascending.
+ * Matches on the date part of start_time (UTC).
+ */
+export async function listSlotsByStationAndDate(
+  stationId: string,
+  dateStr: string
+): Promise<TimeSlot[]> {
+  return db
+    .select()
+    .from(timeSlots)
+    .where(
+      and(
+        eq(timeSlots.station_id, stationId),
+        sql`${timeSlots.start_time}::date = ${dateStr}::date`
+      )
+    )
+    .orderBy(timeSlots.start_time);
+}
+
+/**
+ * Extends the end_time of a single slot by extraMinutes. Used when the current service overruns.
+ * Returns the updated slot.
+ */
+export async function extendSlotEndTime(
+  slotId: string,
+  extraMinutes: number,
+  tx?: DbTransaction
+): Promise<TimeSlot> {
+  const client = tx ?? db;
+  const [row] = await client
+    .update(timeSlots)
+    .set({
+      end_time: sql`${timeSlots.end_time} + (${extraMinutes} * interval '1 minute')`,
+    })
+    .where(eq(timeSlots.id, slotId))
+    .returning();
+  return row;
+}
+
+/**
+ * Shifts start_time and end_time of all slots that begin strictly after afterStartTime,
+ * on the same day and station, by extraMinutes. Used for cascade delay after an overrun.
+ * Returns all updated slots.
+ */
+export async function shiftSubsequentSlots(
+  stationId: string,
+  afterStartTime: Date,
+  extraMinutes: number,
+  tx?: DbTransaction
+): Promise<TimeSlot[]> {
+  const client = tx ?? db;
+  const dateStr = afterStartTime.toISOString().slice(0, 10);
+  return client
+    .update(timeSlots)
+    .set({
+      start_time: sql`${timeSlots.start_time} + (${extraMinutes} * interval '1 minute')`,
+      end_time: sql`${timeSlots.end_time} + (${extraMinutes} * interval '1 minute')`,
+    })
+    .where(
+      and(
+        eq(timeSlots.station_id, stationId),
+        gt(timeSlots.start_time, afterStartTime),
+        sql`${timeSlots.start_time}::date = ${dateStr}::date`
+      )
+    )
+    .returning();
+}
+
+/**
+ * Returns slots matching the given list of ids.
+ */
+export async function findSlotsByIds(slotIds: string[]): Promise<TimeSlot[]> {
+  if (slotIds.length === 0) return [];
+  return db.select().from(timeSlots).where(inArray(timeSlots.id, slotIds));
 }
