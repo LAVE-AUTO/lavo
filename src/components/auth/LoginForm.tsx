@@ -165,17 +165,22 @@ export function LoginForm({
           return;
         }
 
-        if (userRole === 'station')    router.push('/station');
+        if (userRole === 'station')    router.push('/station/dashboard');
         else if (userRole === 'admin') router.push('/admin');
         else                           router.push('/stations');
         return;
       }
 
-      const data = response as { code?: string };
+      const data = response as { code?: string; message?: string };
       if (data?.code === 'TOO_MANY_REQUESTS') {
         showError(t('error_rate_limit'));
+      } else if (data?.code === 'BUSINESS_NOT_APPROVED') {
+        showError(t('error_account_pending'));
+      } else if (data?.code === 'BUSINESS_REJECTED') {
+        showError(t('error_account_rejected'));
       } else if (data?.code === 'FORBIDDEN') {
-        showError(t('error_account_suspended'));
+        // TODO: connect to API once backend returns distinct codes for all statuses at login
+        showError(t('error_account_not_active'));
       } else if (data?.code === 'INVALID_CREDENTIALS' || data?.code === 'UNAUTHORIZED') {
         setErrors({
           email:    t('error_invalid_credentials'),
