@@ -1,5 +1,6 @@
 'use client';
 
+import { useEffect } from 'react';
 import { useTranslations } from 'next-intl';
 import { usePathname } from 'next/navigation';
 import { Link } from '@/i18n/navigation';
@@ -20,7 +21,12 @@ const RatingsIcon  = () => <svg width="15" height="15" viewBox="0 0 24 24" fill=
 const LegalIcon    = () => <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z" /><polyline points="14 2 14 8 20 8" /><line x1="16" y1="13" x2="8" y2="13" /><line x1="16" y1="17" x2="8" y2="17" /></svg>;
 const LogoutIcon   = () => <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4" /><polyline points="16 17 21 12 16 7" /><line x1="21" y1="12" x2="9" y2="12" /></svg>;
 
-export function AdminSidebar() {
+interface AdminSidebarProps {
+  open?: boolean;
+  onClose?: () => void;
+}
+
+export function AdminSidebar({ open = false, onClose }: AdminSidebarProps) {
   const t       = useTranslations('admin_dashboard');
   const pathname = usePathname();
   const { logout } = useAuth();
@@ -39,15 +45,23 @@ export function AdminSidebar() {
     { href: '/admin/legal-content',     labelKey: 'nav_legal_content', icon: <LegalIcon /> },
   ];
 
-  const base   = 'flex items-center gap-2 rounded-lg px-3 py-2 text-[12px] font-semibold transition-colors duration-150';
+  const base   = 'flex items-center gap-2 rounded-lg px-3 py-2 text-[13px] font-semibold transition-colors duration-150';
   const active = `${base} bg-[#C49A1E] text-[#0C1209]`;
-  const idle   = `${base} text-[#666] hover:bg-[#E8E4D8] dark:text-[#8A8A7A] dark:hover:bg-[#182214]`;
+  const idle   = `${base} text-[#666] hover:bg-[#E8E4D8] dark:text-[#A0A090] dark:hover:bg-[#182214]`;
 
-  return (
-    <aside className="flex w-[190px] shrink-0 flex-col border-r border-[#E0DCD0] bg-[#F0EDE0] p-3 dark:border-[#1A2A14] dark:bg-[#111A0E]">
+  /* Close mobile sidebar on Escape */
+  useEffect(() => {
+    if (!open || !onClose) return;
+    const handler = (e: KeyboardEvent) => { if (e.key === 'Escape') onClose(); };
+    document.addEventListener('keydown', handler);
+    return () => document.removeEventListener('keydown', handler);
+  }, [open, onClose]);
+
+  const sidebarContent = (
+    <>
       {/* Brand */}
       <div className="mb-4 px-3 pt-1">
-        <span className="text-[10px] font-black uppercase tracking-[0.2em] text-[#C49A1E]">Administration</span>
+        <span className="text-[11px] font-black uppercase tracking-[0.2em] text-[#C49A1E]">Administration</span>
       </div>
 
       <nav className="flex flex-col gap-1">
@@ -56,6 +70,7 @@ export function AdminSidebar() {
             key={item.href}
             href={item.href as Parameters<typeof Link>[0]['href']}
             className={pathname.includes(item.href) ? active : idle}
+            onClick={onClose}
           >
             {item.icon}
             {t(item.labelKey)}
@@ -68,12 +83,37 @@ export function AdminSidebar() {
         <button
           type="button"
           onClick={() => logout()}
-          className="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-[12px] font-semibold text-[#888] transition-colors hover:bg-[#FEF2F2] hover:text-[#EF4444] dark:text-[#6A6A5A] dark:hover:bg-[#2A0A0A] dark:hover:text-[#FF8A80]"
+          className="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-[13px] font-semibold text-[#888] transition-colors hover:bg-[#FEF2F2] hover:text-[#EF4444] dark:text-[#9A9A8A] dark:hover:bg-[#2A0A0A] dark:hover:text-[#FF8A80]"
         >
           <LogoutIcon />
           {t('nav_logout')}
         </button>
       </div>
-    </aside>
+    </>
+  );
+
+  return (
+    <>
+      {/* Desktop sidebar — always visible at lg+ */}
+      <aside className="hidden lg:flex w-[190px] shrink-0 flex-col border-r border-[#E0DCD0] bg-[#F0EDE0] p-3 dark:border-[#1A2A14] dark:bg-[#111A0E]">
+        {sidebarContent}
+      </aside>
+
+      {/* Mobile/tablet overlay sidebar — below lg */}
+      {open && (
+        <div
+          className="fixed inset-0 z-50 flex lg:hidden"
+          onClick={onClose}
+        >
+          <div className="absolute inset-0 bg-black/40" />
+          <aside
+            className="relative flex h-full w-[220px] shrink-0 flex-col border-r border-[#E0DCD0] bg-[#F0EDE0] p-3 shadow-xl animate-fade-in dark:border-[#1A2A14] dark:bg-[#111A0E]"
+            onClick={(e) => e.stopPropagation()}
+          >
+            {sidebarContent}
+          </aside>
+        </div>
+      )}
+    </>
   );
 }

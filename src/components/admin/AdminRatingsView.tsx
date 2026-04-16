@@ -136,7 +136,7 @@ export function AdminRatingsView() {
       {/* Header */}
       <div className="shrink-0 border-b border-[#E0DCD0] bg-[#F5F5EE] px-6 py-5 dark:border-[#1A2A14] dark:bg-[#0C1209]">
         <h1 className="text-[22px] font-black text-[#1A1A0A] dark:text-[#F0EDD4]">{t('page_title')}</h1>
-        <p className="mt-1 text-[13px] text-[#888] dark:text-[#5A5A4A]">{t('page_subtitle')}</p>
+        <p className="mt-1 text-[13px] text-[#888] dark:text-[#A0A090]">{t('page_subtitle')}</p>
       </div>
 
       {/* Filters */}
@@ -149,7 +149,7 @@ export function AdminRatingsView() {
             type="button"
             onClick={() => setVisibilityFilter(v)}
             className={[
-              'rounded-full px-3 py-1.5 text-[12px] font-bold transition-colors',
+              'rounded-full px-3 py-1.5 text-[13px] font-bold transition-colors',
               visibilityFilter === v
                 ? 'bg-[#C49A1E] text-[#0C1209]'
                 : 'bg-[#F0EDE6] text-[#666] hover:bg-[#E8E4DC] dark:bg-[#1A2A14] dark:text-[#9A9A8A] dark:hover:bg-[#1E2E18]',
@@ -168,7 +168,7 @@ export function AdminRatingsView() {
             type="button"
             onClick={() => setScoreFilter(sf.value)}
             className={[
-              'rounded-full px-3 py-1.5 text-[12px] font-bold transition-colors',
+              'rounded-full px-3 py-1.5 text-[13px] font-bold transition-colors',
               scoreFilter === sf.value
                 ? 'bg-[#1A1A0A] text-[#F0EDD4] dark:bg-[#F0EDD4] dark:text-[#0C1209]'
                 : 'bg-[#F0EDE6] text-[#666] hover:bg-[#E8E4DC] dark:bg-[#1A2A14] dark:text-[#9A9A8A] dark:hover:bg-[#1E2E18]',
@@ -179,7 +179,7 @@ export function AdminRatingsView() {
         ))}
 
         {meta && (
-          <span className="ml-auto text-[12px] text-[#AAA] dark:text-[#5A5A4A]">
+          <span className="ml-auto text-[13px] text-[#AAA] dark:text-[#A0A090]">
             {t('meta_total', { count: meta.total })}
           </span>
         )}
@@ -196,7 +196,7 @@ export function AdminRatingsView() {
 
         {!loading && loadError && (
           <div className="flex flex-col items-center gap-3 py-20">
-            <p className="text-[14px] text-[#888] dark:text-[#5A5A4A]">{t('error_load')}</p>
+            <p className="text-[14px] text-[#888] dark:text-[#A0A090]">{t('error_load')}</p>
             <button
               type="button"
               onClick={() => loadData(page, visibilityFilter, scoreFilter)}
@@ -209,7 +209,7 @@ export function AdminRatingsView() {
 
         {!loading && !loadError && items.length === 0 && (
           <div className="flex justify-center py-20">
-            <p className="text-[14px] text-[#AAA] dark:text-[#5A5A4A]">{t('no_results')}</p>
+            <p className="text-[14px] text-[#AAA] dark:text-[#A0A090]">{t('no_results')}</p>
           </div>
         )}
 
@@ -221,7 +221,7 @@ export function AdminRatingsView() {
                   {[t('col_station'), t('col_client'), t('col_score'), t('col_comment'), t('col_date'), t('col_visibility'), ''].map((h, i) => (
                     <th
                       key={i}
-                      className="px-4 py-3 text-left text-[10px] font-black uppercase tracking-widest text-[#AAAAAA] dark:text-[#4A4A3A]"
+                      className="px-4 py-3 text-left text-[11px] font-black uppercase tracking-widest text-[#AAAAAA] dark:text-[#A0A090]"
                     >
                       {h}
                     </th>
@@ -256,19 +256,19 @@ export function AdminRatingsView() {
                     <td className="max-w-[220px] px-4 py-3 text-[#666] dark:text-[#7A7A6A]">
                       {item.comment
                         ? <span className="line-clamp-2 leading-relaxed">{item.comment}</span>
-                        : <span className="italic text-[#BBB] dark:text-[#4A4A3A]">{t('no_comment')}</span>
+                        : <span className="italic text-[#BBB] dark:text-[#A0A090]">{t('no_comment')}</span>
                       }
                     </td>
 
                     {/* Date */}
-                    <td className="whitespace-nowrap px-4 py-3 text-[#999] dark:text-[#5A5A4A]">
+                    <td className="whitespace-nowrap px-4 py-3 text-[#999] dark:text-[#A0A090]">
                       {formatDate(item.created_at)}
                     </td>
 
                     {/* Visibility badge */}
                     <td className="px-4 py-3">
                       <span className={[
-                        'inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-[11px] font-bold',
+                        'inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-[12px] font-bold',
                         item.is_visible
                           ? 'bg-[#F0FDF4] text-[#15803D] ring-1 ring-[#22C55E]/20 dark:bg-[#0A2010] dark:text-[#4ADE80]'
                           : 'bg-[#FFF1F2] text-[#BE123C] ring-1 ring-[#FB7185]/20 dark:bg-[#200A10] dark:text-[#F87171]',
@@ -285,7 +285,7 @@ export function AdminRatingsView() {
                         disabled={togglingId === item.id}
                         onClick={() => handleToggle(item)}
                         className={[
-                          'rounded-lg px-3 py-1.5 text-[12px] font-bold transition-all',
+                          'rounded-lg px-3 py-1.5 text-[13px] font-bold transition-all',
                           togglingId === item.id
                             ? 'cursor-wait opacity-50'
                             : item.is_visible
@@ -314,7 +314,7 @@ export function AdminRatingsView() {
               aria-label={t('pagination_prev')}
               disabled={page === 1}
               onClick={() => loadData(page - 1, visibilityFilter, scoreFilter)}
-              className="flex h-8 w-8 items-center justify-center rounded-lg border border-[#D8D4CC] text-[#888] transition-colors hover:border-[#C49A1E] hover:text-[#C49A1E] disabled:opacity-40 dark:border-[#1A2A14] dark:text-[#5A5A4A]"
+              className="flex h-8 w-8 items-center justify-center rounded-lg border border-[#D8D4CC] text-[#888] transition-colors hover:border-[#C49A1E] hover:text-[#C49A1E] disabled:opacity-40 dark:border-[#1A2A14] dark:text-[#A0A090]"
             >
               <svg aria-hidden="true" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"><polyline points="15 18 9 12 15 6" /></svg>
             </button>
@@ -327,7 +327,7 @@ export function AdminRatingsView() {
                   'flex h-8 w-8 items-center justify-center rounded-lg text-[13px] font-bold transition-colors',
                   p === page
                     ? 'bg-[#C49A1E] text-[#0C1209]'
-                    : 'border border-[#D8D4CC] text-[#888] hover:border-[#C49A1E] hover:text-[#C49A1E] dark:border-[#1A2A14] dark:text-[#5A5A4A]',
+                    : 'border border-[#D8D4CC] text-[#888] hover:border-[#C49A1E] hover:text-[#C49A1E] dark:border-[#1A2A14] dark:text-[#A0A090]',
                 ].join(' ')}
               >
                 {p}
@@ -338,7 +338,7 @@ export function AdminRatingsView() {
               aria-label={t('pagination_next')}
               disabled={page === totalPages}
               onClick={() => loadData(page + 1, visibilityFilter, scoreFilter)}
-              className="flex h-8 w-8 items-center justify-center rounded-lg border border-[#D8D4CC] text-[#888] transition-colors hover:border-[#C49A1E] hover:text-[#C49A1E] disabled:opacity-40 dark:border-[#1A2A14] dark:text-[#5A5A4A]"
+              className="flex h-8 w-8 items-center justify-center rounded-lg border border-[#D8D4CC] text-[#888] transition-colors hover:border-[#C49A1E] hover:text-[#C49A1E] disabled:opacity-40 dark:border-[#1A2A14] dark:text-[#A0A090]"
             >
               <svg aria-hidden="true" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"><polyline points="9 18 15 12 9 6" /></svg>
             </button>

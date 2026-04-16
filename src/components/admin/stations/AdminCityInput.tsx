@@ -89,7 +89,7 @@ export function AdminCityInput({ label, required, value, error, placeholder, onC
 
   return (
     <div className="relative flex flex-col gap-1.5" ref={containerRef}>
-      <label htmlFor={inputId} className="text-[12px] font-bold text-[#555] dark:text-[#9A9A8A]">
+      <label htmlFor={inputId} className="text-[13px] font-bold text-[#555] dark:text-[#9A9A8A]">
         {label}{required && <span className="ml-0.5 text-[#C49A1E]">*</span>}
       </label>
       <input
@@ -108,7 +108,7 @@ export function AdminCityInput({ label, required, value, error, placeholder, onC
             <li key={city} id={`${listId}-opt-${i}`} role="option" aria-selected={i === activeIdx}
               onMouseDown={() => select(city)}
               className={[
-                'cursor-pointer px-3 py-2 text-[12px] transition-colors',
+                'cursor-pointer px-3 py-2 text-[13px] transition-colors',
                 i === activeIdx ? 'bg-[#C49A1E]/12 text-[#C49A1E]' : 'text-[#1A1A0A] hover:bg-[#F5F3EE] dark:text-[#F0EDD4] dark:hover:bg-[#1A2A14]',
               ].join(' ')}>
               {city}
@@ -116,7 +116,7 @@ export function AdminCityInput({ label, required, value, error, placeholder, onC
           ))}
         </ul>
       )}
-      {error && <p className="text-[11px] font-semibold text-red-500">{error}</p>}
+      {error && <p className="text-[12px] font-semibold text-red-500">{error}</p>}
     </div>
   );
 }

@@ -129,7 +129,7 @@ export function VehicleLabelAutocomplete({
               >
                 <span className="font-medium">{s}</span>
                 {isUsed(s) && (
-                  <span className="text-[10px] text-[#BBBBAA] dark:text-[#4A4A3A]">
+                  <span className="text-[11px] text-[#BBBBAA] dark:text-[#4A4A3A]">
                     {t('label_added')}
                   </span>
                 )}
@@ -142,7 +142,7 @@ export function VehicleLabelAutocomplete({
       {/* Quick-pick chips on focus */}
       {showChips && (
         <div className="absolute left-0 right-0 top-full z-20 mt-1 rounded-[10px] border border-[#E8E4DC] bg-white p-3 shadow-lg dark:border-[#243020] dark:bg-[#182214]">
-          <p className="mb-2 text-[10px] font-bold tracking-[.07em] text-[#BBBBAA] uppercase dark:text-[#4A4A3A]">
+          <p className="mb-2 text-[11px] font-bold tracking-[.07em] text-[#BBBBAA] uppercase dark:text-[#4A4A3A]">
             {t('label_common_types')}
           </p>
           <div className="flex flex-wrap gap-1.5">
@@ -150,7 +150,7 @@ export function VehicleLabelAutocomplete({
               <button
                 key={q} type="button" onMouseDown={() => pick(q)}
                 disabled={isUsed(q)}
-                className={`rounded-[20px] border px-3 py-1 text-[12px] font-semibold transition-all ${
+                className={`rounded-[20px] border px-3 py-1 text-[13px] font-semibold transition-all ${
                   isUsed(q)
                     ? 'border-[#E0DCD0] text-[#CCCCCC] dark:border-[#1A2A14] dark:text-[#3A3A2A]'
                     : 'border-[#D8D4C8] text-[#5A5A4A] hover:border-[#C49A1E] hover:text-[#C49A1E] dark:border-[#243020] dark:text-[#9A9A8A]'
@@ -160,7 +160,7 @@ export function VehicleLabelAutocomplete({
               </button>
             ))}
           </div>
-          <p className="mt-2 text-[10px] text-[#CCCCBB] dark:text-[#3A3A2A]">
+          <p className="mt-2 text-[11px] text-[#CCCCBB] dark:text-[#3A3A2A]">
             {t('label_custom_name')}
           </p>
         </div>

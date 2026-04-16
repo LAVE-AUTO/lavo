@@ -164,7 +164,7 @@ export function StationQueuePage() {
         <div className="flex items-center justify-between gap-4">
           <div>
             <h1 className="text-[20px] font-bold text-[#000C1F] dark:text-[#FFF8EC]">{t('page_title')}</h1>
-            <p className="mt-0.5 text-[12px] text-[#000717]/50 dark:text-[#FFFFF0]/50">
+            <p className="mt-0.5 text-[13px] text-[#000717]/50 dark:text-[#FFFFF0]/50">
               {totalWaiting > 0 ? t('waiting_n', { n: totalWaiting }) : t('queue_empty_short')}
             </p>
           </div>
@@ -175,7 +175,7 @@ export function StationQueuePage() {
             {reservedCount > 0 && <StatChip count={reservedCount} color="#00C851" label={t('stat_reserved')} />}
             {walkInCount > 0   && <StatChip count={walkInCount}   color="#0044FF" label={t('stat_walkin')} />}
             <button type="button" onClick={() => loadData()}
-              className="flex items-center gap-1.5 rounded-[8px] border border-[#C0C0B0] bg-[#C8C8B4] px-3 py-1.5 text-[11px] font-semibold text-[#000717]/60 transition-colors hover:border-[#C09A18]/50 hover:text-[#C09A18] dark:border-[#3A4A36] dark:bg-[#1E2A1A] dark:text-[#FFFFF0]/50">
+              className="flex items-center gap-1.5 rounded-[8px] border border-[#C0C0B0] bg-[#C8C8B4] px-3 py-1.5 text-[12px] font-semibold text-[#000717]/60 transition-colors hover:border-[#C09A18]/50 hover:text-[#C09A18] dark:border-[#3A4A36] dark:bg-[#1E2A1A] dark:text-[#FFFFF0]/50">
               <RefreshIcon />
               {t('btn_refresh')}
             </button>
@@ -187,7 +187,7 @@ export function StationQueuePage() {
               <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-[#00C851] opacity-60" />
               <span className="relative inline-flex h-1.5 w-1.5 rounded-full bg-[#00C851]" />
             </span>
-            <p className="text-[10px] text-[#000717]/30 dark:text-[#FFFFF0]/25">{lastUpdatedLabel}</p>
+            <p className="text-[11px] text-[#000717]/30 dark:text-[#FFFFF0]/25">{lastUpdatedLabel}</p>
           </div>
         )}
       </div>
@@ -279,7 +279,7 @@ function StatChip({ count, color, label }: { count: number; color: string; label
     <div className="hidden items-center gap-1.5 rounded-[8px] bg-[#C8C8B4] px-3 py-1.5 sm:flex dark:bg-[#1E2A1A]">
       <span className="inline-block h-2 w-2 rounded-full" style={{ background: color }} />
       <span className="font-mono text-[14px] font-bold text-[#000C1F] dark:text-[#FFF8EC]">{count}</span>
-      <span className="text-[10px] font-semibold text-[#000717]/50 dark:text-[#FFFFF0]/50">{label}</span>
+      <span className="text-[11px] font-semibold text-[#000717]/50 dark:text-[#FFFFF0]/50">{label}</span>
     </div>
   );
 }
@@ -288,7 +288,7 @@ function SectionLabel({ label, color }: { label: string; color?: string }) {
   return (
     <div className="flex items-center gap-2">
       <span className="inline-block h-2.5 w-2.5 rounded-full" style={{ background: color ?? '#888' }} />
-      <span className="text-[11px] font-bold uppercase tracking-wider text-[#000717]/50 dark:text-[#FFFFF0]/40">{label}</span>
+      <span className="text-[12px] font-bold uppercase tracking-wider text-[#000717]/50 dark:text-[#FFFFF0]/40">{label}</span>
     </div>
   );
 }

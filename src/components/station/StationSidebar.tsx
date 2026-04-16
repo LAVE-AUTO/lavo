@@ -96,7 +96,7 @@ export function StationSidebar() {
 
   const linkBase = 'flex items-center gap-2 rounded-lg px-3 py-2.5 text-[13px] font-semibold transition-colors duration-150';
   const linkActive = `${linkBase} bg-[#C49A1E] text-[#0C1209]`;
-  const linkIdle = `${linkBase} text-[#666] hover:bg-[#E8E4D8] dark:text-[#8A8A7A] dark:hover:bg-[#182214]`;
+  const linkIdle = `${linkBase} text-[#666] hover:bg-[#E8E4D8] dark:text-[#A0A090] dark:hover:bg-[#182214]`;
 
   return (
     <aside className="flex w-[180px] flex-shrink-0 flex-col border-r border-[#E0DCD0] bg-[#F0EDE0] p-3 dark:border-[#1A2A14] dark:bg-[#111A0E]">
@@ -121,7 +121,7 @@ export function StationSidebar() {
         <button
           type="button"
           onClick={() => logout()}
-          className="flex w-full items-center gap-2 rounded-lg px-3 py-2.5 text-[13px] font-semibold text-[#888] transition-colors duration-150 hover:bg-[#FEF2F2] hover:text-[#EF4444] dark:text-[#6A6A5A] dark:hover:bg-[#2A0A0A] dark:hover:text-[#FF8A80]"
+          className="flex w-full items-center gap-2 rounded-lg px-3 py-2.5 text-[13px] font-semibold text-[#888] transition-colors duration-150 hover:bg-[#FEF2F2] hover:text-[#EF4444] dark:text-[#9A9A8A] dark:hover:bg-[#2A0A0A] dark:hover:text-[#FF8A80]"
         >
           <LogoutIcon />
           {t('nav_logout')}

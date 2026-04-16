@@ -75,22 +75,22 @@ export function AdminDisputeActionModal({ mode, maxAmount, busy, onConfirm, onCl
 
           {mode === 'refund_partial' && (
             <div className="flex flex-col gap-2">
-              <label className="text-[12px] font-bold text-[#555] dark:text-[#9A9A8A]">{t('modal_amount_label')}</label>
+              <label className="text-[13px] font-bold text-[#555] dark:text-[#9A9A8A]">{t('modal_amount_label')}</label>
               <div className={`flex items-center overflow-hidden rounded-lg border transition-all ${error ? 'border-red-400' : 'border-[#D8D4C8] focus-within:border-[#C49A1E] focus-within:shadow-[0_0_0_3px_rgba(196,154,30,0.10)] dark:border-[#243020] dark:focus-within:border-[#C49A1E]'}`}>
                 <input ref={inputRef as React.RefObject<HTMLInputElement>} type="number" min="0.01" step="0.01" max={maxAmount}
                   value={amount} onChange={(e) => setAmount(e.target.value)} placeholder={t('modal_amount_placeholder')}
                   className="flex-1 bg-transparent px-3 py-2 text-[13px] text-[#1A1A0A] outline-none [appearance:textfield] dark:text-[#F0EDD4]" />
-                <span className="shrink-0 border-l border-[#E8E4DC] bg-[#F9F8F5] px-3 py-2 text-[11px] font-bold text-[#888] dark:border-[#1E2E18] dark:bg-[#131E10]">CAD</span>
+                <span className="shrink-0 border-l border-[#E8E4DC] bg-[#F9F8F5] px-3 py-2 text-[12px] font-bold text-[#888] dark:border-[#1E2E18] dark:bg-[#131E10]">CAD</span>
               </div>
               {maxAmount !== undefined && (
-                <p className="text-[11px] text-[#BBBBAA] dark:text-[#4A4A3A]">Max : {maxAmount.toLocaleString('fr-CA', { style: 'currency', currency: 'CAD' })}</p>
+                <p className="text-[12px] text-[#BBBBAA] dark:text-[#A0A090]">Max : {maxAmount.toLocaleString('fr-CA', { style: 'currency', currency: 'CAD' })}</p>
               )}
             </div>
           )}
 
           {mode === 'close_dispute' && (
             <div className="flex flex-col gap-2">
-              <label className="text-[12px] font-bold text-[#555] dark:text-[#9A9A8A]">{t('modal_reason_label')}</label>
+              <label className="text-[13px] font-bold text-[#555] dark:text-[#9A9A8A]">{t('modal_reason_label')}</label>
               <textarea ref={inputRef as React.RefObject<HTMLTextAreaElement>}
                 value={reason} onChange={(e) => setReason(e.target.value)} rows={4} maxLength={500}
                 placeholder={t('modal_reason_placeholder')}
@@ -98,18 +98,18 @@ export function AdminDisputeActionModal({ mode, maxAmount, busy, onConfirm, onCl
             </div>
           )}
 
-          {error && <p className="mt-2 text-[11px] font-semibold text-red-500">{error}</p>}
+          {error && <p className="mt-2 text-[12px] font-semibold text-red-500">{error}</p>}
         </div>
 
         {/* Footer */}
         <div className="flex justify-end gap-2 border-t border-[#F0EDE6] px-6 py-4 dark:border-[#1A2A14]">
           <button type="button" onClick={onClose} disabled={busy}
-            className="rounded-lg border border-[#D8D4C8] px-4 py-2 text-[12px] font-semibold text-[#666] transition-colors hover:bg-[#F5F3EE] disabled:opacity-50 dark:border-[#243020] dark:text-[#9A9A8A]">
+            className="rounded-lg border border-[#D8D4C8] px-4 py-2 text-[13px] font-semibold text-[#666] transition-colors hover:bg-[#F5F3EE] disabled:opacity-50 dark:border-[#243020] dark:text-[#9A9A8A]">
             {t('btn_cancel')}
           </button>
           <button type="button" onClick={handleSubmit} disabled={busy}
             className={[
-              'rounded-lg px-4 py-2 text-[12px] font-bold text-white transition-colors disabled:opacity-50',
+              'rounded-lg px-4 py-2 text-[13px] font-bold text-white transition-colors disabled:opacity-50',
               isDestructive ? 'bg-[#6B7280] hover:bg-[#555]' : 'bg-[#C49A1E] hover:bg-[#B08A14]',
             ].join(' ')}>
             {busy ? '…' : t('btn_confirm')}

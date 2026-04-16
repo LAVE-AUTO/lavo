@@ -22,7 +22,7 @@ const inputClass =
 function Field({ label, children }: { label: string; children: React.ReactNode }) {
   return (
     <div className="flex flex-col gap-1.5">
-      <label className="text-[12px] font-medium text-[#5A5A4A] dark:text-[#9A9A8A]">{label}</label>
+      <label className="text-[13px] font-medium text-[#5A5A4A] dark:text-[#9A9A8A]">{label}</label>
       {children}
     </div>
   );
@@ -31,7 +31,7 @@ function Field({ label, children }: { label: string; children: React.ReactNode }
 function ReadField({ label, value }: { label: string; value: string }) {
   return (
     <div>
-      <p className="mb-0.5 text-[10px] font-bold uppercase tracking-wider text-[#C8C4B4] dark:text-[#2E3C2A]">{label}</p>
+      <p className="mb-0.5 text-[11px] font-bold uppercase tracking-wider text-[#C8C4B4] dark:text-[#2E3C2A]">{label}</p>
       <p className="text-[13px] font-semibold text-[#1A1A0A] dark:text-[#F0EDD4]">{value || '—'}</p>
     </div>
   );
@@ -146,7 +146,7 @@ export function StationLocationForm({ location, onSaved, locked = false }: Props
           <button
             type="button"
             onClick={() => setIsEditing(true)}
-            className="flex items-center gap-1.5 rounded-[8px] border border-[#C49A1E]/40 px-3 py-1 text-[12px] font-semibold text-[#C49A1E] transition-colors hover:bg-[#C49A1E]/8"
+            className="flex items-center gap-1.5 rounded-[8px] border border-[#C49A1E]/40 px-3 py-1 text-[13px] font-semibold text-[#C49A1E] transition-colors hover:bg-[#C49A1E]/8"
           >
             <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
               <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" />
@@ -169,23 +169,23 @@ export function StationLocationForm({ location, onSaved, locked = false }: Props
                 </svg>
               </div>
               <div className="flex flex-col gap-0.5">
-                <p className="text-[10px] font-semibold uppercase tracking-wider text-[#AAAAAA] dark:text-[#4A4A3A]">{t('field_address')}</p>
+                <p className="text-[11px] font-semibold uppercase tracking-wider text-[#AAAAAA] dark:text-[#4A4A3A]">{t('field_address')}</p>
                 <p className="text-[14px] font-bold text-[#1A1A0A] dark:text-[#F0EDD4]">{location.address || '—'}</p>
-                <p className="text-[12px] font-semibold text-[#888] dark:text-[#6A6A5A]">{location.city || '—'}</p>
+                <p className="text-[13px] font-semibold text-[#888] dark:text-[#9A9A8A]">{location.city || '—'}</p>
               </div>
             </div>
             {(location.latitude || location.longitude) && (
               <div className="flex items-center gap-3">
                 <div className="flex flex-col gap-0.5">
-                  <p className="text-[10px] font-semibold uppercase tracking-wider text-[#C8C4B4] dark:text-[#2E3C2A]">{t('field_latitude')} / {t('field_longitude')}</p>
-                  <p className="font-mono text-[12px] font-semibold text-[#888] dark:text-[#6A6A5A]">
+                  <p className="text-[11px] font-semibold uppercase tracking-wider text-[#C8C4B4] dark:text-[#2E3C2A]">{t('field_latitude')} / {t('field_longitude')}</p>
+                  <p className="font-mono text-[13px] font-semibold text-[#888] dark:text-[#9A9A8A]">
                     {[location.latitude, location.longitude].filter(Boolean).join(', ')}
                   </p>
                 </div>
               </div>
             )}
             {feedback && (
-              <p className="text-[12px] font-semibold" style={{ color: feedback.ok ? '#00C851' : '#EF4444' }}>
+              <p className="text-[13px] font-semibold" style={{ color: feedback.ok ? '#00C851' : '#EF4444' }}>
                 {feedback.msg}
               </p>
             )}
@@ -211,16 +211,16 @@ export function StationLocationForm({ location, onSaved, locked = false }: Props
               </Field>
               <div className="col-span-2 flex flex-col gap-1">
                 <button type="button" onClick={handleGeolocate} disabled={geoLoading}
-                  className="flex w-fit items-center gap-2 rounded-[8px] border border-[#C49A1E] px-4 py-2 text-[12px] font-semibold text-[#C49A1E] transition-colors hover:bg-[#C49A1E] hover:text-[#0C1209] disabled:opacity-50">
+                  className="flex w-fit items-center gap-2 rounded-[8px] border border-[#C49A1E] px-4 py-2 text-[13px] font-semibold text-[#C49A1E] transition-colors hover:bg-[#C49A1E] hover:text-[#0C1209] disabled:opacity-50">
                   <GeoIcon />
                   {geoLoading ? t('geolocating') : t('btn_geolocate')}
                 </button>
-                {geoError && <p className="text-[11px] font-semibold text-[#EF4444]">{t('geo_error')}</p>}
+                {geoError && <p className="text-[12px] font-semibold text-[#EF4444]">{t('geo_error')}</p>}
               </div>
             </div>
             <div className="mt-5 flex items-center justify-between">
               {feedback ? (
-                <span className="text-[12px] font-semibold" style={{ color: feedback.ok ? '#00C851' : '#EF4444' }}>{feedback.msg}</span>
+                <span className="text-[13px] font-semibold" style={{ color: feedback.ok ? '#00C851' : '#EF4444' }}>{feedback.msg}</span>
               ) : <span />}
               <div className="flex items-center gap-2">
                 <button type="button" onClick={handleCancel} disabled={saving}

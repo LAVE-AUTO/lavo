@@ -87,8 +87,8 @@ export function StationPhotosForm({ locked = false }: Props) {
   return (
     <div className="flex flex-col rounded-2xl bg-white shadow-sm ring-1 ring-black/[0.04] dark:bg-[#1A2416] dark:ring-white/[0.06]">
       <div className="border-b border-[#F0EDE0] px-6 py-4 dark:border-[#1E2E18]">
-        <p className="text-[12px] font-black uppercase tracking-wider text-[#1A1A0A] dark:text-[#F0EDD4]">{t('section_photos')}</p>
-        <p className="mt-0.5 text-[11px] text-[#AAAAAA] dark:text-[#4A4A3A]">{t('section_photos_hint')}</p>
+        <p className="text-[13px] font-black uppercase tracking-wider text-[#1A1A0A] dark:text-[#F0EDD4]">{t('section_photos')}</p>
+        <p className="mt-0.5 text-[12px] text-[#AAAAAA] dark:text-[#4A4A3A]">{t('section_photos_hint')}</p>
       </div>
 
       <div className="p-6">
@@ -146,10 +146,10 @@ export function StationPhotosForm({ locked = false }: Props) {
               <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#F97316" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="mt-0.5 shrink-0" aria-hidden="true">
                 <path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z" /><line x1="12" y1="9" x2="12" y2="13" /><line x1="12" y1="17" x2="12.01" y2="17" />
               </svg>
-              <p className="text-[11px] leading-snug text-orange-700 dark:text-orange-400">{t('photos_save_unavailable')}</p>
+              <p className="text-[12px] leading-snug text-orange-700 dark:text-orange-400">{t('photos_save_unavailable')}</p>
             </div>
             <div className="flex items-center justify-between">
-              <p className="text-[11px] text-[#FF8800]">{t('photos_unsaved')}</p>
+              <p className="text-[12px] text-[#FF8800]">{t('photos_unsaved')}</p>
               {/* Save button disabled — TODO: enable once PATCH /station/photos endpoint is available */}
               <button type="button" onClick={handleSave} disabled
                 title={t('photos_save_unavailable')}

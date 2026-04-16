@@ -106,11 +106,11 @@ function EntryBlock({ entry, onComplete, onCancel, onStart }: {
           </button>
         )}
       </div>
-      <div className="mb-0.5 text-[11px] font-black text-[#1A1A0A] dark:text-[#F0EDD4]">
+      <div className="mb-0.5 text-[12px] font-black text-[#1A1A0A] dark:text-[#F0EDD4]">
         {entry.serviceLabel}{entry.price ? ` \u2022 ${entry.price}$` : ''}
       </div>
       {entry.clientName && (
-        <div className="mb-1 text-[10px] text-[#666] dark:text-[#8A8A7A]">{entry.clientName}</div>
+        <div className="mb-1 text-[11px] text-[#666] dark:text-[#A0A090]">{entry.clientName}</div>
       )}
       {entry.marginText && (
         <div className="text-[9px] text-[#2ECC71]">{entry.marginText}</div>
@@ -119,7 +119,7 @@ function EntryBlock({ entry, onComplete, onCancel, onStart }: {
         <button
           type="button"
           onClick={onComplete}
-          className="mt-2 flex w-full items-center justify-center gap-2 rounded-lg bg-[#C49A1E] py-2 text-[11px] font-black text-[#0C1209] transition-opacity hover:opacity-80"
+          className="mt-2 flex w-full items-center justify-center gap-2 rounded-lg bg-[#C49A1E] py-2 text-[12px] font-black text-[#0C1209] transition-opacity hover:opacity-80"
         >
           <span className="flex h-5 w-5 items-center justify-center rounded-full bg-black/10">
             <ChevronDoubleRight />
@@ -131,7 +131,7 @@ function EntryBlock({ entry, onComplete, onCancel, onStart }: {
         <button
           type="button"
           onClick={onStart}
-          className="mt-2 flex w-full items-center justify-center gap-2 rounded-lg border border-[#C49A1E] py-2 text-[11px] font-bold text-[#C49A1E] transition-opacity hover:opacity-80"
+          className="mt-2 flex w-full items-center justify-center gap-2 rounded-lg border border-[#C49A1E] py-2 text-[12px] font-bold text-[#C49A1E] transition-opacity hover:opacity-80"
         >
           <PlayIcon />
           {t('btn_start')}
@@ -146,7 +146,7 @@ export function DashboardPostGrid({ posts, onCompleteEntry, onCancelEntry, onSta
 
   if (posts.length === 0) {
     return (
-      <div className="flex flex-1 items-center justify-center text-[13px] text-[#666] dark:text-[#8A8A7A]">
+      <div className="flex flex-1 items-center justify-center text-[13px] text-[#666] dark:text-[#A0A090]">
         {t('empty_post')}
       </div>
     );
@@ -166,7 +166,7 @@ export function DashboardPostGrid({ posts, onCompleteEntry, onCancelEntry, onSta
               <div className="text-[13px] font-black text-[#1A1A0A] dark:text-[#F0EDD4]">
                 {t('filter_post', { n: post.position })}
               </div>
-              <div className="mt-0.5 flex items-center justify-center gap-1 text-[10px] font-semibold">
+              <div className="mt-0.5 flex items-center justify-center gap-1 text-[11px] font-semibold">
                 <div
                   className="h-1.5 w-1.5 rounded-full"
                   style={{ background: post.isActive ? '#2ECC71' : '#3B82F6' }}

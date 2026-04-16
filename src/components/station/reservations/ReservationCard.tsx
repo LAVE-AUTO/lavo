@@ -76,14 +76,14 @@ export function ReservationCard({ entry, onValidate, onStart, onCancel }: Props)
             </span>
           </div>
           {entry.amount_paid && (
-            <span className="mt-0.5 block font-mono text-[12px] font-bold text-[#C09A18]">
+            <span className="mt-0.5 block font-mono text-[13px] font-bold text-[#C09A18]">
               {parseFloat(entry.amount_paid).toFixed(2)}$
             </span>
           )}
         </div>
 
         <span
-          className="shrink-0 rounded-md px-2.5 py-1 text-[10px] font-bold"
+          className="shrink-0 rounded-md px-2.5 py-1 text-[11px] font-bold"
           style={{ background: st.bg, color: st.text }}
         >
           {t(st.i18nKey)}
@@ -99,7 +99,7 @@ export function ReservationCard({ entry, onValidate, onStart, onCancel }: Props)
       >
         <div className="overflow-hidden">
           <div className="border-t border-[#B8B8A4] px-5 pb-4 pt-3 dark:border-[#3A4A36]">
-            <div className="mb-3 grid grid-cols-2 gap-x-6 gap-y-2 text-[12px]">
+            <div className="mb-3 grid grid-cols-2 gap-x-6 gap-y-2 text-[13px]">
               <DetailRow label={t('detail_entry_type')} value={isReservation ? t('type_reservation') : t('type_queue')} />
               <DetailRow label={t('detail_entry_id')} value={`#${entry.id.slice(0, 8)}`} mono />
               <DetailRow label={t('detail_created_at')} value={formatTime(entry.created_at)} />
@@ -127,7 +127,7 @@ export function ReservationCard({ entry, onValidate, onStart, onCancel }: Props)
                   <button
                     type="button"
                     onClick={(e) => { e.stopPropagation(); onValidate(entry.id); }}
-                    className="flex items-center gap-1.5 rounded-[10px] bg-[#00C851] px-4 py-2 text-[12px] font-bold text-white transition-all hover:opacity-90 active:scale-[0.98]"
+                    className="flex items-center gap-1.5 rounded-[10px] bg-[#00C851] px-4 py-2 text-[13px] font-bold text-white transition-all hover:opacity-90 active:scale-[0.98]"
                   >
                     <CheckIcon />
                     {t('btn_validate')}
@@ -137,7 +137,7 @@ export function ReservationCard({ entry, onValidate, onStart, onCancel }: Props)
                   <button
                     type="button"
                     onClick={(e) => { e.stopPropagation(); onStart(entry.id); }}
-                    className="flex items-center gap-1.5 rounded-[10px] bg-[#C09A18] px-4 py-2 text-[12px] font-bold text-[#1A2116] transition-all hover:bg-[#D4A820] active:scale-[0.98]"
+                    className="flex items-center gap-1.5 rounded-[10px] bg-[#C09A18] px-4 py-2 text-[13px] font-bold text-[#1A2116] transition-all hover:bg-[#D4A820] active:scale-[0.98]"
                   >
                     <PlayIcon />
                     {t('btn_start_service')}
@@ -147,7 +147,7 @@ export function ReservationCard({ entry, onValidate, onStart, onCancel }: Props)
                   <button
                     type="button"
                     onClick={(e) => { e.stopPropagation(); onCancel(entry.id); }}
-                    className="flex items-center gap-1.5 rounded-[10px] border-[1.5px] border-[#FF2525]/30 px-3 py-2 text-[12px] font-semibold text-[#FF2525] transition-all hover:bg-[#FF2525]/10 active:scale-[0.98]"
+                    className="flex items-center gap-1.5 rounded-[10px] border-[1.5px] border-[#FF2525]/30 px-3 py-2 text-[13px] font-semibold text-[#FF2525] transition-all hover:bg-[#FF2525]/10 active:scale-[0.98]"
                   >
                     <CancelIcon />
                     {t('btn_cancel_entry')}

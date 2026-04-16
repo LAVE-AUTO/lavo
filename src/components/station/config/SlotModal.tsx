@@ -33,7 +33,7 @@ const inputClass =
 function Field({ label, children }: { label: string; children: React.ReactNode }) {
   return (
     <div className="flex flex-col gap-1.5">
-      <label className="text-[12px] font-medium text-[#5A5A4A] dark:text-[#9A9A8A]">{label}</label>
+      <label className="text-[13px] font-medium text-[#5A5A4A] dark:text-[#9A9A8A]">{label}</label>
       {children}
     </div>
   );
@@ -205,22 +205,22 @@ export function SlotModal({ mode, selectedDate, onClose, onCreated }: SlotModalP
               {bulkRows.map((row, idx) => (
                 <div key={row.key} className="flex items-center gap-1.5">
                   <input type="time" className={`${inputClass} flex-1`} value={row.startTime} onChange={(e) => updateBulkRow(idx, 'startTime', e.target.value)} />
-                  <span className="text-[11px] text-[#888]">–</span>
+                  <span className="text-[12px] text-[#888]">–</span>
                   <input type="time" className={`${inputClass} flex-1`} value={row.endTime} onChange={(e) => updateBulkRow(idx, 'endTime', e.target.value)} />
                   <input type="number" min={1} className={`${inputClass} w-16`} value={row.capacity} onChange={(e) => updateBulkRow(idx, 'capacity', e.target.value)} />
                   {bulkRows.length > 1 && (
-                    <button type="button" onClick={() => removeBulkRow(idx)} className="shrink-0 rounded px-1.5 py-1 text-[11px] font-bold text-[#EF4444] hover:bg-[#FEE2E2] dark:hover:bg-[#3A1A1A]">×</button>
+                    <button type="button" onClick={() => removeBulkRow(idx)} className="shrink-0 rounded px-1.5 py-1 text-[12px] font-bold text-[#EF4444] hover:bg-[#FEE2E2] dark:hover:bg-[#3A1A1A]">×</button>
                   )}
                 </div>
               ))}
-              <button type="button" onClick={addBulkRow} className="mt-1 self-start rounded-lg border border-[#C49A1E] px-3 py-1 text-[11px] font-bold text-[#C49A1E] hover:bg-[#C49A1E] hover:text-[#0C1209] transition-colors">
+              <button type="button" onClick={addBulkRow} className="mt-1 self-start rounded-lg border border-[#C49A1E] px-3 py-1 text-[12px] font-bold text-[#C49A1E] hover:bg-[#C49A1E] hover:text-[#0C1209] transition-colors">
                 + {t('modal_bulk_add_row')}
               </button>
             </div>
           )}
 
           {error && (
-            <p className="text-[11px] font-semibold" style={{ color: '#EF4444' }}>
+            <p className="text-[12px] font-semibold" style={{ color: '#EF4444' }}>
               {t('save_error')}
             </p>
           )}
@@ -230,7 +230,7 @@ export function SlotModal({ mode, selectedDate, onClose, onCreated }: SlotModalP
           <button
             type="button"
             onClick={onClose}
-            className="flex-1 rounded-[8px] border border-[#D8D4C8] py-2.5 text-[12px] font-semibold text-[#666] transition-colors hover:bg-[#F7F6F2] dark:border-[#243020] dark:text-[#8A8A7A] dark:hover:bg-[#0F1A0C]"
+            className="flex-1 rounded-[8px] border border-[#D8D4C8] py-2.5 text-[13px] font-semibold text-[#666] transition-colors hover:bg-[#F7F6F2] dark:border-[#243020] dark:text-[#A0A090] dark:hover:bg-[#0F1A0C]"
           >
             {t('modal_btn_cancel')}
           </button>
@@ -238,7 +238,7 @@ export function SlotModal({ mode, selectedDate, onClose, onCreated }: SlotModalP
             type="button"
             onClick={handleConfirm}
             disabled={loading}
-            className="flex-1 rounded-[8px] bg-[#C49A1E] py-2.5 text-[12px] font-bold text-[#0C1209] transition-opacity hover:opacity-80 disabled:opacity-50"
+            className="flex-1 rounded-[8px] bg-[#C49A1E] py-2.5 text-[13px] font-bold text-[#0C1209] transition-opacity hover:opacity-80 disabled:opacity-50"
           >
             {btnLabel}
           </button>

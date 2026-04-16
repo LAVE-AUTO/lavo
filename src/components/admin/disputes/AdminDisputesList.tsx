@@ -62,18 +62,18 @@ export function AdminDisputesList({ disputes, query }: Props) {
           return (
             <button key={key} type="button" onClick={() => setFilter(key)}
               className={[
-                'flex items-center gap-2 rounded-xl px-3.5 py-1.5 text-[12px] font-bold transition-all duration-150',
+                'flex items-center gap-2 rounded-xl px-3.5 py-1.5 text-[13px] font-bold transition-all duration-150',
                 isActive
                   ? 'bg-white text-[#1A1A0A] shadow-[0_2px_8px_rgba(0,0,0,0.10)] ring-1 ring-[#E0DCD0] dark:bg-[#1E2E18] dark:text-[#F0EDD4] dark:ring-[#2A3820]'
-                  : 'text-[#999] hover:text-[#555] hover:bg-white/60 dark:text-[#5A5A4A] dark:hover:text-[#9A9A8A] dark:hover:bg-[#1A2A14]/60',
+                  : 'text-[#999] hover:text-[#555] hover:bg-white/60 dark:text-[#A0A090] dark:hover:text-[#9A9A8A] dark:hover:bg-[#1A2A14]/60',
               ].join(' ')}>
               {color && (
                 <span className="h-2 w-2 rounded-full" style={{ background: isActive ? color : '#CCCCCC' }} />
               )}
               {label}
               <span className={[
-                'min-w-[18px] rounded-full px-1.5 py-0.5 text-center text-[10px] font-black transition-colors',
-                isActive ? 'bg-[#C49A1E] text-[#0C1209]' : 'bg-[#E8E4DC] text-[#AAAAAA] dark:bg-[#1E2E18] dark:text-[#4A4A3A]',
+                'min-w-[18px] rounded-full px-1.5 py-0.5 text-center text-[11px] font-black transition-colors',
+                isActive ? 'bg-[#C49A1E] text-[#0C1209]' : 'bg-[#E8E4DC] text-[#AAAAAA] dark:bg-[#1E2E18] dark:text-[#A0A090]',
               ].join(' ')}>{count}</span>
             </button>
           );
@@ -102,7 +102,7 @@ export function AdminDisputesList({ disputes, query }: Props) {
                 {/* Content */}
                 <div className="flex min-w-0 flex-1 items-center gap-5 px-5 py-4">
                   {/* Avatar */}
-                  <div className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-xl text-[12px] font-black text-white ${s.bar}`}>
+                  <div className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-xl text-[13px] font-black text-white ${s.bar}`}>
                     {initials(d.client.name)}
                   </div>
 
@@ -110,20 +110,20 @@ export function AdminDisputesList({ disputes, query }: Props) {
                   <div className="min-w-0 flex-1">
                     <div className="flex items-center gap-2">
                       <p className="truncate text-[14px] font-bold text-[#1A1A0A] dark:text-[#F0EDD4]">{d.client.name}</p>
-                      <span className={`shrink-0 inline-flex items-center gap-1.5 rounded-full px-2.5 py-0.5 text-[11px] font-bold ${s.badge}`}>
+                      <span className={`shrink-0 inline-flex items-center gap-1.5 rounded-full px-2.5 py-0.5 text-[12px] font-bold ${s.badge}`}>
                         <span className={`h-1.5 w-1.5 rounded-full ${s.dot}`} />{t(s.label)}
                       </span>
                     </div>
-                    <p className="mt-0.5 truncate text-[12px] text-[#AAAAAA] dark:text-[#4A4A3A]">
+                    <p className="mt-0.5 truncate text-[13px] text-[#AAAAAA] dark:text-[#A0A090]">
                       {d.station.name} · {d.station.city} · {formatDate(d.created_at)}
                     </p>
-                    <p className="mt-1.5 line-clamp-1 text-[12px] text-[#666] dark:text-[#7A7A6A]">{d.reason}</p>
+                    <p className="mt-1.5 line-clamp-1 text-[13px] text-[#666] dark:text-[#7A7A6A]">{d.reason}</p>
                   </div>
 
                   {/* Amount + arrow */}
                   <div className="flex shrink-0 flex-col items-end gap-2">
                     <p className={`text-[18px] font-black ${AMOUNT_COLOR[d.status]}`}>{formatAmount(d.reservation.amount_paid)}</p>
-                    <div className="flex items-center gap-1 text-[11px] font-bold text-[#BBBBAA] transition-colors group-hover:text-[#C49A1E] dark:text-[#4A4A3A]">
+                    <div className="flex items-center gap-1 text-[12px] font-bold text-[#BBBBAA] transition-colors group-hover:text-[#C49A1E] dark:text-[#A0A090]">
                       {t('btn_detail')}
                       <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"><polyline points="9 18 15 12 9 6" /></svg>
                     </div>

@@ -22,10 +22,10 @@ export function StationPendingView() {
 
         {/* Text */}
         <div className="flex-1">
-          <p className="text-[12px] font-bold text-[#9A7A10] dark:text-[#C49A1E]">
+          <p className="text-[13px] font-bold text-[#9A7A10] dark:text-[#C49A1E]">
             {t('title')}
           </p>
-          <p className="text-[11px] text-[#B09030] dark:text-[#8A7030]">
+          <p className="text-[12px] text-[#B09030] dark:text-[#8A7030]">
             {t('notice')}
           </p>
         </div>
@@ -36,7 +36,7 @@ export function StationPendingView() {
             <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-[#C49A1E] opacity-60" />
             <span className="relative inline-flex h-1.5 w-1.5 rounded-full bg-[#C49A1E]" />
           </span>
-          <span className="text-[10px] font-black uppercase tracking-wider text-[#C49A1E]">
+          <span className="text-[11px] font-black uppercase tracking-wider text-[#C49A1E]">
             {t('status_label')}
           </span>
         </span>

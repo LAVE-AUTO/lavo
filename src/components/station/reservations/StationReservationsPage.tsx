@@ -169,7 +169,7 @@ export function StationReservationsPage() {
             <h1 className="text-[20px] font-bold text-[#000C1F] dark:text-[#FFF8EC]">
               {t('page_title')}
             </h1>
-            <p className="mt-0.5 text-[12px] text-[#000717]/50 dark:text-[#FFFFF0]/50">
+            <p className="mt-0.5 text-[13px] text-[#000717]/50 dark:text-[#FFFFF0]/50">
               {t('page_subtitle', { count: entries.length })}
             </p>
           </div>
@@ -230,7 +230,7 @@ function KpiChip({ value, color, label }: { value: string | number; color: strin
     <div className="flex items-center gap-1.5 rounded-[8px] bg-[#C8C8B4] px-3 py-1.5 dark:bg-[#1E2A1A]">
       <span className="inline-block h-2 w-2 rounded-full" style={{ background: color }} />
       <span className="font-mono text-[14px] font-bold text-[#000C1F] dark:text-[#FFF8EC]">{value}</span>
-      <span className="text-[10px] font-semibold text-[#000717]/50 dark:text-[#FFFFF0]/50">{label}</span>
+      <span className="text-[11px] font-semibold text-[#000717]/50 dark:text-[#FFFFF0]/50">{label}</span>
     </div>
   );
 }

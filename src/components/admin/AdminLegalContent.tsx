@@ -66,7 +66,7 @@ export function AdminLegalContent() {
   }
 
   const pageBtn = (key: PageKey) => [
-    'flex w-full items-center justify-between gap-2 rounded-lg px-3 py-2.5 text-left text-[12px] font-semibold transition-colors',
+    'flex w-full items-center justify-between gap-2 rounded-lg px-3 py-2.5 text-left text-[13px] font-semibold transition-colors',
     activePage === key
       ? 'bg-[#C49A1E] text-[#0C1209]'
       : 'text-[#555] hover:bg-[#E8E4D8] dark:text-[#9A9A8A] dark:hover:bg-[#182214]',
@@ -77,8 +77,8 @@ export function AdminLegalContent() {
 
       {/* Header */}
       <div>
-        <p className="text-[10px] font-black uppercase tracking-[0.15em] text-[#C49A1E]">{t('section_title')}</p>
-        <p className="mt-0.5 text-[12px] text-[#888] dark:text-[#6A6A5A]">{t('section_subtitle')}</p>
+        <p className="text-[11px] font-black uppercase tracking-[0.15em] text-[#C49A1E]">{t('section_title')}</p>
+        <p className="mt-0.5 text-[13px] text-[#888] dark:text-[#9A9A8A]">{t('section_subtitle')}</p>
       </div>
 
       <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:gap-6">
@@ -106,7 +106,7 @@ export function AdminLegalContent() {
 
           <div className="flex items-center justify-between">
             {dirty.has(activePage) && (
-              <p className="text-[11px] text-[#FF8800]">{t('unsaved_changes')}</p>
+              <p className="text-[12px] text-[#FF8800]">{t('unsaved_changes')}</p>
             )}
             <div className="ml-auto">
               <button

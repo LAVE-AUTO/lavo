@@ -119,7 +119,7 @@ export function DateRangePicker({ value, onChange }: Props) {
             <button
               type="button"
               onClick={clearRange}
-              className={`rounded-[8px] px-2.5 py-1 text-[11px] font-bold transition-all active:scale-[0.97] ${
+              className={`rounded-[8px] px-2.5 py-1 text-[12px] font-bold transition-all active:scale-[0.97] ${
                 !value.from
                   ? 'bg-[#C09A18] text-[#1A2116]'
                   : 'bg-[#C8C8B4] text-[#000717]/50 hover:bg-[#BDBDA8] dark:bg-[#243020] dark:text-[#FFFFF0]/50 dark:hover:bg-[#2A3626]'
@@ -132,7 +132,7 @@ export function DateRangePicker({ value, onChange }: Props) {
                 key={key}
                 type="button"
                 onClick={() => applyPreset(key)}
-                className="rounded-[8px] bg-[#C8C8B4] px-2.5 py-1 text-[11px] font-bold text-[#000717]/50 transition-all hover:bg-[#BDBDA8] active:scale-[0.97] dark:bg-[#243020] dark:text-[#FFFFF0]/50 dark:hover:bg-[#2A3626]"
+                className="rounded-[8px] bg-[#C8C8B4] px-2.5 py-1 text-[12px] font-bold text-[#000717]/50 transition-all hover:bg-[#BDBDA8] active:scale-[0.97] dark:bg-[#243020] dark:text-[#FFFFF0]/50 dark:hover:bg-[#2A3626]"
               >
                 {t(`period_${key}`)}
               </button>
@@ -235,7 +235,7 @@ function CalendarGrid({ locale, range, onChange }: CalendarGridProps) {
       {/* Day header */}
       <div className="mb-1 grid grid-cols-7 gap-0">
         {dayNames.map((name, i) => (
-          <div key={i} className="flex h-8 items-center justify-center text-[10px] font-bold uppercase tracking-wider text-[#000717]/35 dark:text-[#FFFFF0]/30">
+          <div key={i} className="flex h-8 items-center justify-center text-[11px] font-bold uppercase tracking-wider text-[#000717]/35 dark:text-[#FFFFF0]/30">
             {name}
           </div>
         ))}
@@ -287,7 +287,7 @@ function CalendarGrid({ locale, range, onChange }: CalendarGridProps) {
 
       {/* Selection hint */}
       <div className="mt-3 flex items-center justify-between">
-        <p className="text-[10px] font-semibold text-[#000717]/35 dark:text-[#FFFFF0]/30">
+        <p className="text-[11px] font-semibold text-[#000717]/35 dark:text-[#FFFFF0]/30">
           {selecting === 'from' ? t('calendar_select_start') : t('calendar_select_end')}
         </p>
         {range.from && (
@@ -297,7 +297,7 @@ function CalendarGrid({ locale, range, onChange }: CalendarGridProps) {
               onChange({ from: null, to: null });
               setSelecting('from');
             }}
-            className="text-[10px] font-bold text-[#FF2525]/70 transition-colors hover:text-[#FF2525]"
+            className="text-[11px] font-bold text-[#FF2525]/70 transition-colors hover:text-[#FF2525]"
           >
             {t('calendar_clear')}
           </button>

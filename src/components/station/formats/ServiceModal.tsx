@@ -114,7 +114,7 @@ export function ServiceModal({ service, vehicleFormats, onClose, onSaved }: Prop
           <div className="flex flex-col gap-4 overflow-y-auto p-5">
             {/* Name */}
             <div className="flex flex-col gap-1.5">
-              <label className="text-[12px] font-medium text-[#5A5A4A] dark:text-[#9A9A8A]">{t('field_name')}</label>
+              <label className="text-[13px] font-medium text-[#5A5A4A] dark:text-[#9A9A8A]">{t('field_name')}</label>
               <input
                 type="text"
                 value={name}
@@ -128,14 +128,14 @@ export function ServiceModal({ service, vehicleFormats, onClose, onSaved }: Prop
 
             {/* Category chips */}
             <div className="flex flex-col gap-1.5">
-              <label className="text-[12px] font-medium text-[#5A5A4A] dark:text-[#9A9A8A]">{t('field_category')}</label>
+              <label className="text-[13px] font-medium text-[#5A5A4A] dark:text-[#9A9A8A]">{t('field_category')}</label>
               <div className="flex flex-wrap gap-2">
                 {CATEGORIES.map((key) => (
                   <button
                     key={key}
                     type="button"
                     onClick={() => setCategory(key)}
-                    className={`rounded-[8px] px-3.5 py-2 text-[12px] font-semibold transition-all ${
+                    className={`rounded-[8px] px-3.5 py-2 text-[13px] font-semibold transition-all ${
                       category === key
                         ? 'bg-[#C49A1E] text-[#0C1209]'
                         : 'border border-[#D8D4C8] text-[#5A5A4A] hover:border-[#C49A1E] dark:border-[#243020] dark:text-[#9A9A8A]'
@@ -149,14 +149,14 @@ export function ServiceModal({ service, vehicleFormats, onClose, onSaved }: Prop
 
             {/* Type chips */}
             <div className="flex flex-col gap-1.5">
-              <label className="text-[12px] font-medium text-[#5A5A4A] dark:text-[#9A9A8A]">{t('field_type')}</label>
+              <label className="text-[13px] font-medium text-[#5A5A4A] dark:text-[#9A9A8A]">{t('field_type')}</label>
               <div className="flex flex-wrap gap-2">
                 {TYPES.map((key) => (
                   <button
                     key={key}
                     type="button"
                     onClick={() => setServiceType(key)}
-                    className={`rounded-[8px] px-3.5 py-2 text-[12px] font-semibold transition-all ${
+                    className={`rounded-[8px] px-3.5 py-2 text-[13px] font-semibold transition-all ${
                       serviceType === key
                         ? 'bg-[#C49A1E] text-[#0C1209]'
                         : 'border border-[#D8D4C8] text-[#5A5A4A] hover:border-[#C49A1E] dark:border-[#243020] dark:text-[#9A9A8A]'
@@ -170,7 +170,7 @@ export function ServiceModal({ service, vehicleFormats, onClose, onSaved }: Prop
 
             {/* Description */}
             <div className="flex flex-col gap-1.5">
-              <label className="text-[12px] font-medium text-[#5A5A4A] dark:text-[#9A9A8A]">{t('field_description')}</label>
+              <label className="text-[13px] font-medium text-[#5A5A4A] dark:text-[#9A9A8A]">{t('field_description')}</label>
               <textarea
                 value={description}
                 onChange={(e) => setDescription(e.target.value)}
@@ -182,7 +182,7 @@ export function ServiceModal({ service, vehicleFormats, onClose, onSaved }: Prop
 
             {/* Vehicle pricing */}
             <div className="flex flex-col gap-2">
-              <span className="text-[11px] font-black tracking-[.08em] text-[#C49A1E] uppercase">
+              <span className="text-[12px] font-black tracking-[.08em] text-[#C49A1E] uppercase">
                 {t('section_vehicle_pricing')}
               </span>
               <ServiceVehicleRows formats={vehicleFormats} entries={entries} onChange={setEntries} />
@@ -194,17 +194,17 @@ export function ServiceModal({ service, vehicleFormats, onClose, onSaved }: Prop
               <button
                 type="button"
                 onClick={() => setIsActive(!isActive)}
-                className={`rounded-[8px] px-4 py-1.5 text-[12px] font-bold transition-all ${
+                className={`rounded-[8px] px-4 py-1.5 text-[13px] font-bold transition-all ${
                   isActive
                     ? 'bg-[#C49A1E] text-[#0C1209]'
-                    : 'border border-[#D8D4C8] text-[#888] dark:border-[#243020] dark:text-[#6A6A5A]'
+                    : 'border border-[#D8D4C8] text-[#888] dark:border-[#243020] dark:text-[#9A9A8A]'
                 }`}
               >
                 {isActive ? t('badge_active') : t('badge_inactive')}
               </button>
             </div>
 
-            {error && <p className="text-[12px] font-semibold text-[#EF4444]">{error}</p>}
+            {error && <p className="text-[13px] font-semibold text-[#EF4444]">{error}</p>}
           </div>
 
           {/* Footer */}

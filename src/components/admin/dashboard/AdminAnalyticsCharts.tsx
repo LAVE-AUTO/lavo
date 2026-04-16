@@ -72,7 +72,7 @@ function BarChart({ series, color, groupBy, isCurrency, loading, locale }: {
   }
 
   if (series.length === 0) {
-    return <p className="py-8 text-center text-[11px] text-[#AAA] dark:text-[#4A4A3A]">-</p>;
+    return <p className="py-8 text-center text-[12px] text-[#AAA] dark:text-[#A0A090]">-</p>;
   }
 
   const values = series.map((p) => typeof p.value === 'string' ? parseFloat(p.value) : p.value);
@@ -94,14 +94,14 @@ function BarChart({ series, color, groupBy, isCurrency, loading, locale }: {
                 className="absolute bottom-0 w-full rounded-t-sm transition-all duration-300"
                 style={{ height: `${h}%`, background: i === series.length - 1 ? color : `${color}60` }}
               />
-              <div className="pointer-events-none absolute -top-8 left-1/2 z-10 hidden -translate-x-1/2 whitespace-nowrap rounded-md bg-[#1A1A0A] px-2 py-1 text-[10px] font-bold text-white shadow-lg group-hover:block dark:bg-[#F0EDD4] dark:text-[#0C1209]">
+              <div className="pointer-events-none absolute -top-8 left-1/2 z-10 hidden -translate-x-1/2 whitespace-nowrap rounded-md bg-[#1A1A0A] px-2 py-1 text-[11px] font-bold text-white shadow-lg group-hover:block dark:bg-[#F0EDD4] dark:text-[#0C1209]">
                 {formatLabel(p.date, groupBy, locale)}: {formatValue(v, isCurrency)}
               </div>
             </div>
           );
         })}
       </div>
-      <div className="mt-1.5 flex justify-between text-[9px] text-[#BBBBAA] dark:text-[#4A4A3A]">
+      <div className="mt-1.5 flex justify-between text-[9px] text-[#BBBBAA] dark:text-[#A0A090]">
         <span>{formatLabel(series[0].date, groupBy, locale)}</span>
         <span>{formatLabel(series[series.length - 1].date, groupBy, locale)}</span>
       </div>
@@ -152,7 +152,7 @@ export function AdminAnalyticsCharts() {
     <div>
       {/* Section header with group_by toggle */}
       <div className="mb-3 flex items-center gap-2">
-        <span className="text-[10px] font-black uppercase tracking-[0.15em] text-[#C49A1E]">
+        <span className="text-[11px] font-black uppercase tracking-[0.15em] text-[#C49A1E]">
           {t('section_analytics')}
         </span>
         <span className="h-px flex-1 bg-[#E8E4D8] dark:bg-[#1A2A14]" />
@@ -163,10 +163,10 @@ export function AdminAnalyticsCharts() {
               type="button"
               onClick={() => setGroupBy(key)}
               className={[
-                'rounded-lg px-2.5 py-1 text-[10px] font-bold transition-all',
+                'rounded-lg px-2.5 py-1 text-[11px] font-bold transition-all',
                 groupBy === key
                   ? 'bg-[#C49A1E]/10 text-[#C49A1E]'
-                  : 'text-[#AAA] hover:text-[#666] dark:text-[#4A4A3A] dark:hover:text-[#8A8A7A]',
+                  : 'text-[#AAA] hover:text-[#666] dark:text-[#A0A090] dark:hover:text-[#A0A090]',
               ].join(' ')}
             >
               {t(labelKey)}
@@ -181,7 +181,7 @@ export function AdminAnalyticsCharts() {
           <div key={metric} className="overflow-hidden rounded-2xl bg-white p-5 shadow-sm ring-1 ring-black/[0.04] dark:bg-[#1A2416] dark:ring-white/[0.06]">
             <div className="mb-3 flex items-center gap-2">
               <span className="h-2 w-2 rounded-full" style={{ background: color }} />
-              <span className="text-[11px] font-black uppercase tracking-wider text-[#8A8A7A] dark:text-[#5A5A4A]">{t(labelKey)}</span>
+              <span className="text-[12px] font-black uppercase tracking-wider text-[#A0A090] dark:text-[#A0A090]">{t(labelKey)}</span>
             </div>
             <BarChart
               series={seriesMap[metric] ?? []}

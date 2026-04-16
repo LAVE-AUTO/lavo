@@ -23,8 +23,8 @@ function Field({ label, hint, children }: { label: string; hint?: string; childr
   return (
     <div className="flex flex-col gap-1.5">
       <div className="flex items-baseline gap-2">
-        <label className="text-[12px] font-medium text-[#5A5A4A] dark:text-[#9A9A8A]">{label}</label>
-        {hint && <span className="text-[11px] text-[#BBBBAA] dark:text-[#4A4A3A]">{hint}</span>}
+        <label className="text-[13px] font-medium text-[#5A5A4A] dark:text-[#9A9A8A]">{label}</label>
+        {hint && <span className="text-[12px] text-[#BBBBAA] dark:text-[#4A4A3A]">{hint}</span>}
       </div>
       {children}
     </div>
@@ -34,7 +34,7 @@ function Field({ label, hint, children }: { label: string; hint?: string; childr
 function ReadField({ label, value }: { label: string; value: string }) {
   return (
     <div>
-      <p className="mb-0.5 text-[10px] font-bold uppercase tracking-wider text-[#C8C4B4] dark:text-[#2E3C2A]">{label}</p>
+      <p className="mb-0.5 text-[11px] font-bold uppercase tracking-wider text-[#C8C4B4] dark:text-[#2E3C2A]">{label}</p>
       <p className="text-[13px] font-semibold text-[#1A1A0A] dark:text-[#F0EDD4]">{value || '—'}</p>
     </div>
   );
@@ -92,7 +92,7 @@ export function StationProfileForm({ profile, onSaved, locked = false }: Props) 
           <button
             type="button"
             onClick={() => setIsEditing(true)}
-            className="flex items-center gap-1.5 rounded-[8px] border border-[#C49A1E]/40 px-3 py-1 text-[12px] font-semibold text-[#C49A1E] transition-colors hover:bg-[#C49A1E]/8"
+            className="flex items-center gap-1.5 rounded-[8px] border border-[#C49A1E]/40 px-3 py-1 text-[13px] font-semibold text-[#C49A1E] transition-colors hover:bg-[#C49A1E]/8"
           >
             <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
               <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" />
@@ -115,7 +115,7 @@ export function StationProfileForm({ profile, onSaved, locked = false }: Props) 
               <div className="flex flex-col gap-0.5">
                 <p className="text-[16px] font-black text-[#1A1A0A] dark:text-[#F0EDD4]">{profile.name || '—'}</p>
                 {profile.service_scope && (
-                  <span className="w-fit rounded-full bg-[#FDF3D8] px-2.5 py-0.5 text-[11px] font-semibold text-[#C49A1E] dark:bg-[#2A1E08]">
+                  <span className="w-fit rounded-full bg-[#FDF3D8] px-2.5 py-0.5 text-[12px] font-semibold text-[#C49A1E] dark:bg-[#2A1E08]">
                     {scopeLabels[profile.service_scope as ScopeValue] ?? profile.service_scope}
                   </span>
                 )}
@@ -125,10 +125,10 @@ export function StationProfileForm({ profile, onSaved, locked = false }: Props) 
             <div className="grid grid-cols-2 gap-x-8 gap-y-4">
               {user?.email && (
                 <div className="col-span-2">
-                  <p className="mb-0.5 text-[10px] font-bold uppercase tracking-wider text-[#C8C4B4] dark:text-[#2E3C2A]">{t('field_email')}</p>
+                  <p className="mb-0.5 text-[11px] font-bold uppercase tracking-wider text-[#C8C4B4] dark:text-[#2E3C2A]">{t('field_email')}</p>
                   <div className="flex items-center gap-2">
                     <span className="text-[13px] font-semibold text-[#1A1A0A] dark:text-[#F0EDD4]">{user.email}</span>
-                    <span className="rounded-full bg-[#E8E4DC] px-2 py-0.5 text-[10px] font-semibold text-[#AAAAAA] dark:bg-[#1A2A14] dark:text-[#4A4A3A]">
+                    <span className="rounded-full bg-[#E8E4DC] px-2 py-0.5 text-[11px] font-semibold text-[#AAAAAA] dark:bg-[#1A2A14] dark:text-[#4A4A3A]">
                       {t('field_email_readonly')}
                     </span>
                   </div>
@@ -140,7 +140,7 @@ export function StationProfileForm({ profile, onSaved, locked = false }: Props) 
                 </div>
               )}
               {feedback && (
-                <p className="col-span-2 text-[12px] font-semibold" style={{ color: feedback.ok ? '#00C851' : '#EF4444' }}>
+                <p className="col-span-2 text-[13px] font-semibold" style={{ color: feedback.ok ? '#00C851' : '#EF4444' }}>
                   {feedback.msg}
                 </p>
               )}
@@ -159,7 +159,7 @@ export function StationProfileForm({ profile, onSaved, locked = false }: Props) 
                         <polyline points="3 7 12 13 21 7" />
                       </svg>
                       <span className="text-[13px] text-[#999] dark:text-[#5A5A4A]">{user.email}</span>
-                      <span className="ml-auto rounded-full bg-[#E8E4DC] px-2 py-0.5 text-[10px] font-semibold text-[#AAAAAA] dark:bg-[#1A2A14] dark:text-[#4A4A3A]">
+                      <span className="ml-auto rounded-full bg-[#E8E4DC] px-2 py-0.5 text-[11px] font-semibold text-[#AAAAAA] dark:bg-[#1A2A14] dark:text-[#4A4A3A]">
                         {t('field_email_readonly')}
                       </span>
                     </div>
@@ -175,12 +175,12 @@ export function StationProfileForm({ profile, onSaved, locked = false }: Props) 
                 <Field label={t('field_service_scope')}>
                   <div className="flex gap-1 rounded-[10px] border border-[#D8D4C8] bg-[#F7F6F2] p-1 dark:border-[#243020] dark:bg-[#0F1A0C]">
                     <button type="button" onClick={() => setServiceScope('')}
-                      className={`rounded-[7px] px-3 py-1.5 text-[12px] font-semibold transition-all duration-150 ${!serviceScope ? 'bg-white text-[#5A5A4A] shadow-sm dark:bg-[#182214] dark:text-[#9A9A8A]' : 'text-[#BBBBAA] hover:text-[#888] dark:text-[#3A3A2A] dark:hover:text-[#6A6A5A]'}`}>
+                      className={`rounded-[7px] px-3 py-1.5 text-[13px] font-semibold transition-all duration-150 ${!serviceScope ? 'bg-white text-[#5A5A4A] shadow-sm dark:bg-[#182214] dark:text-[#9A9A8A]' : 'text-[#BBBBAA] hover:text-[#888] dark:text-[#3A3A2A] dark:hover:text-[#9A9A8A]'}`}>
                       —
                     </button>
                     {SCOPE_VALUES.map((v) => (
                       <button key={v} type="button" onClick={() => setServiceScope(v)}
-                        className={`flex-1 rounded-[7px] py-1.5 text-[12px] font-semibold transition-all duration-150 ${serviceScope === v ? 'bg-[#C49A1E] text-[#0C1209] shadow-sm' : 'text-[#AAAAAA] hover:text-[#5A5A4A] dark:text-[#4A4A3A] dark:hover:text-[#9A9A8A]'}`}>
+                        className={`flex-1 rounded-[7px] py-1.5 text-[13px] font-semibold transition-all duration-150 ${serviceScope === v ? 'bg-[#C49A1E] text-[#0C1209] shadow-sm' : 'text-[#AAAAAA] hover:text-[#5A5A4A] dark:text-[#4A4A3A] dark:hover:text-[#9A9A8A]'}`}>
                         {scopeLabels[v]}
                       </button>
                     ))}
@@ -196,7 +196,7 @@ export function StationProfileForm({ profile, onSaved, locked = false }: Props) 
             </div>
             <div className="mt-5 flex items-center justify-between">
               {feedback ? (
-                <span className="text-[12px] font-semibold" style={{ color: feedback.ok ? '#00C851' : '#EF4444' }}>{feedback.msg}</span>
+                <span className="text-[13px] font-semibold" style={{ color: feedback.ok ? '#00C851' : '#EF4444' }}>{feedback.msg}</span>
               ) : <span />}
               <div className="flex items-center gap-2">
                 <button type="button" onClick={handleCancel} disabled={saving}

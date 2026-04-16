@@ -100,7 +100,7 @@ export function StationExtrasForm({ extras, onSaved }: Props) {
               key={key}
               type="button"
               onClick={() => setTab(key)}
-              className={`relative px-5 pb-3 text-[12px] font-semibold transition-colors duration-150 ${
+              className={`relative px-5 pb-3 text-[13px] font-semibold transition-colors duration-150 ${
                 tab === key
                   ? 'text-[#C49A1E]'
                   : 'text-[#AAAAAA] hover:text-[#5A5A4A] dark:text-[#4A4A3A] dark:hover:text-[#9A9A8A]'
@@ -111,7 +111,7 @@ export function StationExtrasForm({ extras, onSaved }: Props) {
                 <span className="absolute bottom-0 left-0 right-0 h-[2px] rounded-t-full bg-[#C49A1E]" />
               )}
               {lists[key].length > 0 && (
-                <span className={`ml-1.5 rounded-full px-1.5 py-0.5 text-[10px] font-bold ${
+                <span className={`ml-1.5 rounded-full px-1.5 py-0.5 text-[11px] font-bold ${
                   tab === key ? 'bg-[#FDF3D8] text-[#C49A1E] dark:bg-[#2A1E08]' : 'bg-[#F0EFEB] text-[#BBBBAA] dark:bg-[#1A2A14] dark:text-[#4A4A3A]'
                 }`}>
                   {lists[key].length}
@@ -124,7 +124,7 @@ export function StationExtrasForm({ extras, onSaved }: Props) {
         <div className="p-5">
           {/* Extra cards */}
           {currentList.length === 0 ? (
-            <div className="mb-4 flex h-16 items-center justify-center rounded-[10px] border border-dashed border-[#E0DCD4] text-[12px] text-[#BBBBAA] dark:border-[#243020] dark:text-[#4A4A3A]">
+            <div className="mb-4 flex h-16 items-center justify-center rounded-[10px] border border-dashed border-[#E0DCD4] text-[13px] text-[#BBBBAA] dark:border-[#243020] dark:text-[#4A4A3A]">
               {t('extras_empty')}
             </div>
           ) : (
@@ -146,7 +146,7 @@ export function StationExtrasForm({ extras, onSaved }: Props) {
 
                     {/* Price with $ prefix */}
                     <div className="relative w-[110px] flex-none">
-                      <span className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 select-none text-[12px] font-semibold text-[#C49A1E]">$</span>
+                      <span className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 select-none text-[13px] font-semibold text-[#C49A1E]">$</span>
                       <input
                         type="number"
                         min={0}
@@ -162,7 +162,7 @@ export function StationExtrasForm({ extras, onSaved }: Props) {
                     <button
                       type="button"
                       onClick={() => updateExtra(tab, extra.id, 'is_active', !extra.is_active)}
-                      className={`flex-none rounded-[7px] px-3 py-2.5 text-[11px] font-bold transition-all duration-150 ${
+                      className={`flex-none rounded-[7px] px-3 py-2.5 text-[12px] font-bold transition-all duration-150 ${
                         extra.is_active
                           ? 'bg-[#C49A1E] text-[#0C1209]'
                           : 'border border-[#D8D4C8] bg-[#F7F6F2] text-[#AAAAAA] dark:border-[#243020] dark:bg-[#0F1A0C] dark:text-[#5A5A4A]'
@@ -185,7 +185,7 @@ export function StationExtrasForm({ extras, onSaved }: Props) {
                   <div className="mt-2.5">
                     <input
                       type="text"
-                      className={inputClass + ' text-[12px]'}
+                      className={inputClass + ' text-[13px]'}
                       placeholder={t('extras_placeholder_description')}
                       value={extra.description}
                       onChange={(e) => updateExtra(tab, extra.id, 'description', e.target.value)}
@@ -200,7 +200,7 @@ export function StationExtrasForm({ extras, onSaved }: Props) {
           <button
             type="button"
             onClick={addExtra}
-            className="flex items-center gap-2 rounded-[8px] border border-dashed border-[#C49A1E]/50 px-4 py-2 text-[12px] font-semibold text-[#C49A1E] transition-all hover:border-[#C49A1E] hover:bg-[#FDF8EC] dark:hover:bg-[#1A1A08]"
+            className="flex items-center gap-2 rounded-[8px] border border-dashed border-[#C49A1E]/50 px-4 py-2 text-[13px] font-semibold text-[#C49A1E] transition-all hover:border-[#C49A1E] hover:bg-[#FDF8EC] dark:hover:bg-[#1A1A08]"
           >
             <span className="text-[15px] leading-none font-light">+</span>
             {t('extras_btn_add')}
@@ -209,7 +209,7 @@ export function StationExtrasForm({ extras, onSaved }: Props) {
           {/* Footer */}
           <div className="mt-5 flex items-center justify-between">
             {feedback ? (
-              <span className="text-[12px] font-semibold" style={{ color: feedback.ok ? '#00C851' : '#EF4444' }}>
+              <span className="text-[13px] font-semibold" style={{ color: feedback.ok ? '#00C851' : '#EF4444' }}>
                 {feedback.msg}
               </span>
             ) : <span />}

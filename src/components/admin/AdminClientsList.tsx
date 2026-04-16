@@ -67,7 +67,7 @@ export function AdminClientsList({ query, onAction }: Props) {
       {/* Table header */}
       <div className="grid grid-cols-[40px_1fr_1fr_120px_160px] items-center gap-4 border-b border-[#E8E4DC] bg-[#F9F8F5] px-5 py-3 dark:border-[#1E2E18] dark:bg-[#0E1A0C]">
         {['', t('col_account'), t('col_contact'), t('col_status'), t('col_actions')].map((h, i) => (
-          <span key={i} className={`text-[10px] font-black uppercase tracking-widest text-[#AAAAAA] dark:text-[#4A4A3A] ${i === 4 ? 'text-right' : ''}`}>{h}</span>
+          <span key={i} className={`text-[11px] font-black uppercase tracking-widest text-[#AAAAAA] dark:text-[#A0A090] ${i === 4 ? 'text-right' : ''}`}>{h}</span>
         ))}
       </div>
 
@@ -89,7 +89,7 @@ export function AdminClientsList({ query, onAction }: Props) {
                   : 'border-[#F2EFE8] bg-[#FAFAF7] hover:bg-[#FEFCF5] dark:border-[#1A2A14] dark:bg-[#111C0E] dark:hover:bg-[#182416]',
             ].join(' ')}>
 
-            <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl text-[11px] font-black text-white"
+            <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl text-[12px] font-black text-white"
               style={{ background: color }}>
               {initials(client.first_name, client.last_name)}
             </div>
@@ -99,16 +99,16 @@ export function AdminClientsList({ query, onAction }: Props) {
               <p className="block truncate text-[13px] font-bold text-[#1A1A0A] dark:text-[#F0EDD4]">
                 {client.first_name} {client.last_name}
               </p>
-              <p className="truncate text-[11px] text-[#BBBBAA] dark:text-[#4A4A3A]">{formatDate(client.created_at)}</p>
+              <p className="truncate text-[12px] text-[#BBBBAA] dark:text-[#A0A090]">{formatDate(client.created_at)}</p>
             </div>
 
             <div className="min-w-0">
-              <p className="truncate text-[12px] text-[#555] dark:text-[#9A9A8A]">{client.email}</p>
-              <p className="truncate text-[11px] text-[#BBBBAA] dark:text-[#4A4A3A]">{client.phone}</p>
+              <p className="truncate text-[13px] text-[#555] dark:text-[#9A9A8A]">{client.email}</p>
+              <p className="truncate text-[12px] text-[#BBBBAA] dark:text-[#A0A090]">{client.phone}</p>
             </div>
 
             {s ? (
-              <span className={`inline-flex w-fit items-center gap-1.5 rounded-full px-2.5 py-1 text-[11px] font-semibold ${s.badge}`}>
+              <span className={`inline-flex w-fit items-center gap-1.5 rounded-full px-2.5 py-1 text-[12px] font-semibold ${s.badge}`}>
                 <span className={`h-1.5 w-1.5 rounded-full ${s.dot}`} />{t(s.label)}
               </span>
             ) : <span />}
@@ -117,27 +117,27 @@ export function AdminClientsList({ query, onAction }: Props) {
               {isConfirming ? (
                 <>
                   <button type="button" disabled={isBusy} onClick={() => doAction(client.id, 'suspend')}
-                    className="rounded-lg bg-red-500 px-3 py-1.5 text-[11px] font-bold text-white hover:bg-red-600 disabled:opacity-50">
+                    className="rounded-lg bg-red-500 px-3 py-1.5 text-[12px] font-bold text-white hover:bg-red-600 disabled:opacity-50">
                     {isBusy ? '…' : t('btn_confirm')}
                   </button>
                   <button type="button" onClick={() => setConfirmId(null)}
-                    className="rounded-lg border border-[#D8D4C8] px-3 py-1.5 text-[11px] font-semibold text-[#666] hover:bg-[#F5F3EE] dark:border-[#243020] dark:text-[#9A9A8A]">
+                    className="rounded-lg border border-[#D8D4C8] px-3 py-1.5 text-[12px] font-semibold text-[#666] hover:bg-[#F5F3EE] dark:border-[#243020] dark:text-[#9A9A8A]">
                     {t('btn_cancel')}
                   </button>
                 </>
               ) : client.status === 'active' ? (
                 <button type="button" disabled={isBusy} onClick={() => setConfirmId(client.id)}
-                  className="rounded-lg border border-orange-200 px-3 py-1.5 text-[11px] font-bold text-orange-600 hover:bg-orange-50 disabled:opacity-50 dark:border-orange-900/40 dark:text-orange-400 dark:hover:bg-orange-950/30">
+                  className="rounded-lg border border-orange-200 px-3 py-1.5 text-[12px] font-bold text-orange-600 hover:bg-orange-50 disabled:opacity-50 dark:border-orange-900/40 dark:text-orange-400 dark:hover:bg-orange-950/30">
                   {t('btn_suspend')}
                 </button>
               ) : (
                 <div className="flex gap-1.5">
                   <button type="button" disabled={isBusy} onClick={() => doAction(client.id, 'activate')}
-                    className="rounded-lg border border-green-200 px-3 py-1.5 text-[11px] font-bold text-green-700 hover:bg-green-50 disabled:opacity-50 dark:border-green-900/40 dark:text-green-400 dark:hover:bg-green-950/30">
+                    className="rounded-lg border border-green-200 px-3 py-1.5 text-[12px] font-bold text-green-700 hover:bg-green-50 disabled:opacity-50 dark:border-green-900/40 dark:text-green-400 dark:hover:bg-green-950/30">
                     {isBusy ? '…' : t('btn_activate')}
                   </button>
                   <button type="button" disabled={isBusy} onClick={() => doAction(client.id, 'unblock')}
-                    className="rounded-lg border border-blue-200 px-3 py-1.5 text-[11px] font-bold text-blue-600 hover:bg-blue-50 disabled:opacity-50 dark:border-blue-900/40 dark:text-blue-400 dark:hover:bg-blue-950/30">
+                    className="rounded-lg border border-blue-200 px-3 py-1.5 text-[12px] font-bold text-blue-600 hover:bg-blue-50 disabled:opacity-50 dark:border-blue-900/40 dark:text-blue-400 dark:hover:bg-blue-950/30">
                     {isBusy ? '…' : t('btn_unblock')}
                   </button>
                 </div>
