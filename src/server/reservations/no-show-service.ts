@@ -9,10 +9,11 @@
  *   4. Distributes the penalty share between the platform and the station.
  *   5. Notifies the client.
  *
- * The "effective date" of a queue entry is determined by updated_at:
- *   - For late reservations moved to queue: updated_at = the moment of the downgrade (day of service).
- *   - For walk-in entries: updated_at defaults to created_at (join day).
- * Closing time is resolved against that date to avoid false positives during early-morning cron runs.
+ * The "effective date" of a queue entry is determined by created_at:
+ *   - For walk-in entries: created_at is the day the client joined the queue.
+ *   - For late reservations moved to queue: created_at reflects the original booking date.
+ * Using created_at avoids false date shifts caused by position updates or refund ID writes,
+ * which modify updated_at without changing the service date.
  */
 import { parseTimeForDate } from '@/helpers/date-helper';
 import { runWithConcurrencyLimit } from '@/helpers/concurrency';
@@ -24,7 +25,12 @@ import {
   distributePenalty,
 } from '@/server/payments/payment-service';
 import { notifyEntry } from '@/server/notifications/notification-service';
-import { listActiveQueueEntries, updateEntry, type Entry } from './entry-repository';
+import {
+  listActiveQueueEntries,
+  updateEntry,
+  cancelQueueEntryForNoShowIfEligible,
+  type Entry,
+} from './entry-repository';
 
 export type MarkNoShowsResult = {
   processed: number;
@@ -59,7 +65,7 @@ export async function markQueueNoShows(): Promise<MarkNoShowsResult> {
   const toProcess: Entry[] = entries.filter((entry) => {
     const config = configMap.get(entry.station_id);
     if (!config?.closing_time) return false;
-    const effectiveDateStr = entry.updated_at.toISOString().slice(0, 10);
+    const effectiveDateStr = entry.created_at.toISOString().slice(0, 10);
     const closingTime = parseTimeForDate(effectiveDateStr, config.closing_time as string);
     return now > closingTime;
   });
@@ -67,18 +73,37 @@ export async function markQueueNoShows(): Promise<MarkNoShowsResult> {
   result.processed = toProcess.length;
 
   const settled = await runWithConcurrencyLimit(toProcess, NO_SHOW_CONCURRENCY, async (entry) => {
-    const amountPaid = parseFloat(String(entry.amount_paid));
-    const penaltyAmount = Math.round(amountPaid * policy.penaltyRate * 100) / 100;
-    const refundedAmount = Math.round((amountPaid - penaltyAmount) * 100) / 100;
+    // Defensive: DB could theoretically contain a non-numeric or negative amount_paid
+    // (data-migration bug, manual edit). Clamp to a non-negative finite number so we can
+    // never compute negative Stripe cents, which would be rejected or misapplied.
+    const rawAmount = parseFloat(String(entry.amount_paid));
+    const amountPaid = Number.isFinite(rawAmount) && rawAmount > 0 ? rawAmount : 0;
+    const penaltyAmount = Math.max(
+      0,
+      Math.round(amountPaid * policy.penaltyRate * 100) / 100
+    );
+    const refundedAmount = Math.max(
+      0,
+      Math.round((amountPaid - penaltyAmount) * 100) / 100
+    );
 
-    // Mark cancelled in DB before touching Stripe.
-    await updateEntry(entry.id, {
-      status: 'cancelled',
-      cancellation_reason: 'no_show',
-      penalty_amount: penaltyAmount > 0 ? penaltyAmount.toFixed(2) : null,
-    });
+    // Guarded cancel: only proceed if the row is still in an active status. If a previous
+    // cron run (or a concurrent overlap) has already cancelled this entry, the conditional
+    // update returns undefined and we skip the Stripe side entirely. Prevents double-capture,
+    // double-refund, and double-penalty-reversal — all of which are real financial risks.
+    const cancelled = await cancelQueueEntryForNoShowIfEligible(
+      entry.id,
+      penaltyAmount > 0 ? penaltyAmount.toFixed(2) : null
+    );
+    if (!cancelled) {
+      return; // Another run already processed this entry.
+    }
 
     // Stripe: capture → partial refund → distribute penalty.
+    // Idempotency keys scoped to the entry ID so cron retries after a network timeout do not
+    // create a second refund or a second transfer reversal. Stripe's capture is naturally
+    // idempotent on a PaymentIntent (subsequent captures return the same charge), so no key is
+    // required there.
     if (entry.stripe_payment_id) {
       let captured = false;
       try {
@@ -95,7 +120,8 @@ export async function markQueueNoShows(): Promise<MarkNoShowsResult> {
         try {
           const refundId = await refundPaymentIntent(
             entry.stripe_payment_id,
-            Math.round(refundedAmount * 100)
+            Math.round(refundedAmount * 100),
+            `no-show-refund:${entry.id}`
           );
           await updateEntry(entry.id, { stripe_refund_id: refundId });
         } catch (e) {
@@ -121,13 +147,23 @@ export async function markQueueNoShows(): Promise<MarkNoShowsResult> {
       }
     }
 
-    await notifyEntry({
-      entryId: entry.id,
-      userId: entry.user_id,
-      stationId: entry.station_id,
-      type: 'queue_no_show',
-      payload: { penaltyAmount, refundedAmount },
-    });
+    // Notification failures must not re-classify this entry as "failed": the DB is already
+    // cancelled and the Stripe side has already run. Log the failure and keep the outer
+    // promise resolved so the result counters reflect financial state, not delivery state.
+    try {
+      await notifyEntry({
+        entryId: entry.id,
+        userId: entry.user_id,
+        stationId: entry.station_id,
+        type: 'queue_no_show',
+        payload: { penaltyAmount, refundedAmount },
+      });
+    } catch (e) {
+      console.error('[NO_SHOW_NOTIFY_FAILED]', {
+        entryId: entry.id,
+        error: e instanceof Error ? e.message : String(e),
+      });
+    }
   });
 
   settled.forEach((outcome, index) => {

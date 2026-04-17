@@ -341,7 +341,8 @@ export async function cancelEntry(
       try {
         const refundId = await refundPaymentIntent(
           entry.stripe_payment_id,
-          Math.round(refundedAmount * 100)
+          Math.round(refundedAmount * 100),
+          `queue-cancel-refund:${entryId}`
         );
         await updateEntry(entryId, { stripe_refund_id: refundId });
       } catch (e) {

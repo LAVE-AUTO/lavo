@@ -168,7 +168,8 @@ export async function cancelReservation(
         try {
           const refundId = await refundPaymentIntent(
             reservation.stripe_payment_id,
-            Math.round(refundedAmount * 100)
+            Math.round(refundedAmount * 100),
+            `reservation-cancel-refund:${reservationId}`
           );
           await updateEntry(reservationId, { stripe_refund_id: refundId });
         } catch (e) {
