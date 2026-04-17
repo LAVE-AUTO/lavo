@@ -1,8 +1,5 @@
-export default function StationDashboardPage() {
-  return (
-    <main className="p-6">
-      <h1 className="text-xl font-semibold">Espace station - Dashboard</h1>
-    </main>
-  );
-}
+import { StationDashboard } from '@/components/station/dashboard/StationDashboard';
 
+export default function StationDashboardPage() {
+  return <StationDashboard />;
+}

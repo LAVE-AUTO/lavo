@@ -1,8 +1,5 @@
-export default function AdminPlatformSettingsPage() {
-  return (
-    <main className="p-6">
-      <h1 className="text-xl font-semibold">Paramètres plateforme</h1>
-    </main>
-  );
-}
+import { AdminPlatformSettings } from '@/components/admin/AdminPlatformSettings';
 
+export default function AdminPlatformSettingsPage() {
+  return <AdminPlatformSettings />;
+}

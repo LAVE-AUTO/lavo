@@ -1,0 +1,883 @@
+{
+  "info": {
+    "name": "LAVO — Support API",
+    "description": "Collection pour les endpoints du module support LAVO.\n\nVariable requise : `base_url` (ex: http://localhost:3000)\nVariable requise : `access_token` (JWT client ou admin selon le groupe testé)\nVariable requise : `ticket_id` (UUID auto-rempli par le script de test de création)\n\n## Groupes\n- **Support — Client** : créer un ticket, lister ses tickets, consulter le détail, ajouter un message\n- **Support — Admin** : lister tous les tickets, changer le statut, assigner un ticket",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    {
+      "key": "base_url",
+      "value": "http://localhost:3000",
+      "type": "string"
+    },
+    {
+      "key": "access_token",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "ticket_id",
+      "value": "",
+      "type": "string"
+    }
+  ],
+  "item": [
+    {
+      "name": "Support — Client",
+      "item": [
+        {
+          "name": "Créer ticket — succès (201)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 201', () => pm.response.to.have.status(201));",
+                  "pm.test('Retourne le ticket créé avec un id', () => {",
+                  "  const json = pm.response.json();",
+                  "  pm.expect(json.data).to.have.property('id');",
+                  "  pm.expect(json.data).to.have.property('subject');",
+                  "  pm.expect(json.data).to.have.property('status');",
+                  "  pm.expect(json.data.status).to.eql('ouvert');",
+                  "  pm.collectionVariables.set('ticket_id', json.data.id);",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "response": [],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/support",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "support"]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"subject\": \"Problème avec mon lavage\",\n  \"message\": \"Ma réservation n'a pas été confirmée après le paiement.\",\n  \"category\": \"technique\",\n  \"priority\": \"normal\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "description": "Crée un nouveau ticket de support avec un message initial.\n\nChamps requis : `subject` (5–255 caractères), `message` (10–5000 caractères).\nChamps optionnels : `category` (technique | facturation | bug | autre, défaut: autre), `priority` (bas | normal | urgent, défaut: normal).\n\nLe script de test capture automatiquement `json.data.id` dans la variable de collection `ticket_id`.\n\nLimite : 5 tickets par heure par utilisateur (fenêtre glissante). Retourne 429 si dépassé."
+          }
+        },
+        {
+          "name": "Créer ticket — body invalide (400)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 400', () => pm.response.to.have.status(400));",
+                  "pm.test('Retourne des erreurs de validation', () => {",
+                  "  const json = pm.response.json();",
+                  "  pm.expect(json).to.have.property('errors');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "response": [],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/support",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "support"]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"subject\": \"ok\",\n  \"message\": \"court\",\n  \"category\": \"invalide\",\n  \"priority\": \"maximum\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "description": "400 VALIDATION_FAILED — plusieurs erreurs simultanées :\n- `subject` trop court (moins de 5 caractères)\n- `message` trop court (moins de 10 caractères)\n- `category` n'appartient pas à l'enum autorisé (technique | facturation | bug | autre)\n- `priority` n'appartient pas à l'enum autorisé (bas | normal | urgent)"
+          }
+        },
+        {
+          "name": "Créer ticket — rate limit (429)",
+          "response": [],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/support",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "support"]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"subject\": \"Ticket de test rate limit\",\n  \"message\": \"Ce message est envoyé pour tester la limite de débit.\",\n  \"category\": \"autre\",\n  \"priority\": \"bas\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "description": "429 TOO_MANY_REQUESTS — fenêtre glissante de 5 tickets par heure dépassée.\n\nCe cas ne peut pas être déclenché par une seule requête. Pour le reproduire : envoyer cette même requête 6 fois de suite en moins d'une heure avec le même token. La 6e retournera 429. Le quota se réinitialise automatiquement au fil de la fenêtre glissante de 3600 secondes."
+          }
+        },
+        {
+          "name": "Mes tickets (200)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 200', () => pm.response.to.have.status(200));",
+                  "pm.test('Retourne la liste des tickets', () => {",
+                  "  const json = pm.response.json();",
+                  "  pm.expect(json.data).to.be.an('array');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "response": [],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/support",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "support"]
+            },
+            "description": "Retourne la liste des tickets appartenant à l'utilisateur authentifié.\n\nFiltrage optionnel par statut via le paramètre `?status=` (ouvert | en_cours | resolu | ferme).\nUn admin connecté avec ce même endpoint verra tous les tickets du système."
+          }
+        },
+        {
+          "name": "Mes tickets — filtre statut ouvert (200)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 200', () => pm.response.to.have.status(200));",
+                  "pm.test('Retourne uniquement des tickets ouverts', () => {",
+                  "  const json = pm.response.json();",
+                  "  pm.expect(json.data).to.be.an('array');",
+                  "  json.data.forEach(ticket => {",
+                  "    pm.expect(ticket.status).to.eql('ouvert');",
+                  "  });",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "response": [],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/support?status=ouvert",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "support"],
+              "query": [
+                {
+                  "key": "status",
+                  "value": "ouvert"
+                }
+              ]
+            },
+            "description": "Filtre les tickets par statut `ouvert`. Valeurs autorisées : ouvert | en_cours | resolu | ferme."
+          }
+        },
+        {
+          "name": "Détail ticket (200)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 200', () => pm.response.to.have.status(200));",
+                  "pm.test('Retourne le ticket avec ses messages', () => {",
+                  "  const json = pm.response.json();",
+                  "  pm.expect(json.data).to.have.property('id');",
+                  "  pm.expect(json.data).to.have.property('subject');",
+                  "  pm.expect(json.data).to.have.property('status');",
+                  "  pm.expect(json.data).to.have.property('messages');",
+                  "  pm.expect(json.data.messages).to.be.an('array');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "response": [],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/support/{{ticket_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "support", "{{ticket_id}}"]
+            },
+            "description": "Retourne le détail complet du ticket identifié par `ticket_id`, y compris le fil de messages.\n\nPrérequis : exécuter d'abord «Créer ticket — succès (201)» pour que `ticket_id` soit défini.\nUn client ne peut consulter que ses propres tickets. Un admin peut consulter n'importe quel ticket."
+          }
+        },
+        {
+          "name": "Détail ticket — introuvable (404)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 404', () => pm.response.to.have.status(404));"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "response": [],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/support/00000000-0000-0000-0000-000000000000",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "support", "00000000-0000-0000-0000-000000000000"]
+            },
+            "description": "404 NOT_FOUND — UUID valide mais aucun ticket correspondant, ou ticket appartenant à un autre utilisateur."
+          }
+        },
+        {
+          "name": "Ajouter message (201)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 201', () => pm.response.to.have.status(201));",
+                  "pm.test('Retourne le message créé', () => {",
+                  "  const json = pm.response.json();",
+                  "  pm.expect(json.data).to.have.property('id');",
+                  "  pm.expect(json.data).to.have.property('content');",
+                  "  pm.expect(json.data).to.have.property('created_at');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "response": [],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/support/{{ticket_id}}/messages",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "support", "{{ticket_id}}", "messages"]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"content\": \"Merci pour votre retour. Pouvez-vous me donner plus de détails sur l'heure de la panne ?\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "description": "Ajoute un message au fil du ticket.\n\nChamp requis : `content` (1–5000 caractères). Attention : le champ s'appelle `content`, pas `message`.\n\nPrérequis : `ticket_id` défini (exécuter «Créer ticket — succès» au préalable).\nLimite : 30 messages par heure par utilisateur (fenêtre glissante, tous tickets confondus)."
+          }
+        },
+        {
+          "name": "Ajouter message — body invalide (400)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 400', () => pm.response.to.have.status(400));",
+                  "pm.test('Retourne des erreurs de validation', () => {",
+                  "  const json = pm.response.json();",
+                  "  pm.expect(json).to.have.property('errors');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "response": [],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/support/{{ticket_id}}/messages",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "support", "{{ticket_id}}", "messages"]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "description": "400 VALIDATION_FAILED — le champ `content` est absent ou vide."
+          }
+        },
+        {
+          "name": "Créer ticket — non authentifié (401)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 401', () => pm.response.to.have.status(401));"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "response": [],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/support",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "support"]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"subject\": \"Problème avec mon lavage\",\n  \"message\": \"Description du problème rencontré lors du lavage.\",\n  \"category\": \"technique\",\n  \"priority\": \"normal\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "description": "401 UNAUTHORIZED — aucun header Authorization fourni. Valable pour tous les endpoints du module support."
+          }
+        }
+      ]
+    },
+    {
+      "name": "Support — Admin",
+      "item": [
+        {
+          "name": "Liste tous les tickets (200)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 200', () => pm.response.to.have.status(200));",
+                  "pm.test('Retourne la liste complète des tickets', () => {",
+                  "  const json = pm.response.json();",
+                  "  pm.expect(json.data).to.be.an('array');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "response": [],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/support",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "support"]
+            },
+            "description": "Lorsqu'un utilisateur avec le rôle `admin` appelle GET /api/v1/support, il reçoit tous les tickets du système (tous utilisateurs confondus), contrairement aux clients qui ne voient que les leurs.\n\nRemplacer `access_token` par un JWT admin avant d'exécuter."
+          }
+        },
+        {
+          "name": "Liste — filtre statut (200)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 200', () => pm.response.to.have.status(200));",
+                  "pm.test('Retourne uniquement des tickets avec le statut filtré', () => {",
+                  "  const json = pm.response.json();",
+                  "  pm.expect(json.data).to.be.an('array');",
+                  "  json.data.forEach(ticket => {",
+                  "    pm.expect(ticket.status).to.eql('ouvert');",
+                  "  });",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "response": [],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/support?status=ouvert",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "support"],
+              "query": [
+                {
+                  "key": "status",
+                  "value": "ouvert"
+                }
+              ]
+            },
+            "description": "Filtre admin par statut. Valeurs autorisées : ouvert | en_cours | resolu | ferme.\n\nRemplacer la valeur du paramètre `status` pour tester les autres statuts."
+          }
+        },
+        {
+          "name": "Détail ticket admin (200)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 200', () => pm.response.to.have.status(200));",
+                  "pm.test('Retourne le ticket avec ses messages', () => {",
+                  "  const json = pm.response.json();",
+                  "  pm.expect(json.data).to.have.property('id');",
+                  "  pm.expect(json.data).to.have.property('subject');",
+                  "  pm.expect(json.data).to.have.property('status');",
+                  "  pm.expect(json.data).to.have.property('messages');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "response": [],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/support/{{ticket_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "support", "{{ticket_id}}"]
+            },
+            "description": "Un admin peut consulter le détail de n'importe quel ticket, qu'il en soit le créateur ou non.\n\nPrérequis : `ticket_id` défini. Remplacer `access_token` par un JWT admin."
+          }
+        },
+        {
+          "name": "Changer statut — en_cours (200)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 200', () => pm.response.to.have.status(200));",
+                  "pm.test('Retourne le ticket mis à jour', () => {",
+                  "  const json = pm.response.json();",
+                  "  pm.expect(json.data).to.have.property('id');",
+                  "  pm.expect(json.data).to.have.property('status');",
+                  "  pm.expect(json.data.status).to.eql('en_cours');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "response": [],
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/support/{{ticket_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "support", "{{ticket_id}}"]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"status\": \"en_cours\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "description": "Passe le ticket en statut `en_cours`. Réservé aux admins.\n\nValeurs de statut autorisées : ouvert | en_cours | resolu | ferme.\nPrérequis : `ticket_id` défini. Remplacer `access_token` par un JWT admin."
+          }
+        },
+        {
+          "name": "Changer statut — ferme (200)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 200', () => pm.response.to.have.status(200));",
+                  "pm.test('Retourne le ticket avec statut ferme', () => {",
+                  "  const json = pm.response.json();",
+                  "  pm.expect(json.data).to.have.property('id');",
+                  "  pm.expect(json.data).to.have.property('status');",
+                  "  pm.expect(json.data.status).to.eql('ferme');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "response": [],
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/support/{{ticket_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "support", "{{ticket_id}}"]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"status\": \"ferme\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "description": "Ferme le ticket. Réservé aux admins.\n\nNote : le statut s'écrit `ferme` (sans accent) dans l'API. Le statut `resolu` fonctionne de la même façon avec `{ \"status\": \"resolu\" }`."
+          }
+        },
+        {
+          "name": "Changer statut — statut invalide (400)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 400', () => pm.response.to.have.status(400));",
+                  "pm.test('Retourne des erreurs de validation', () => {",
+                  "  const json = pm.response.json();",
+                  "  pm.expect(json).to.have.property('errors');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "response": [],
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/support/{{ticket_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "support", "{{ticket_id}}"]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"status\": \"fermé\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "description": "400 VALIDATION_FAILED — `fermé` (avec accent) n'est pas une valeur valide. L'API attend `ferme` (sans accent). Valeurs autorisées : ouvert | en_cours | resolu | ferme."
+          }
+        },
+        {
+          "name": "Assigner ticket (200)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 200', () => pm.response.to.have.status(200));",
+                  "pm.test('Retourne le ticket avec l\\'assignation mise à jour', () => {",
+                  "  const json = pm.response.json();",
+                  "  pm.expect(json.data).to.have.property('id');",
+                  "  pm.expect(json.data).to.have.property('assigned_to');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "response": [],
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/admin/support/{{ticket_id}}/assign",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "admin", "support", "{{ticket_id}}", "assign"]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"assigned_to\": \"00000000-0000-0000-0000-000000000001\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "description": "Assigne le ticket à un admin identifié par son UUID.\n\nRègles :\n- `assigned_to` doit être un UUID valide appartenant à un utilisateur de rôle `admin`.\n- Remplacer `00000000-0000-0000-0000-000000000001` par l'UUID réel d'un admin de votre environnement.\n- 404 si le ticket n'existe pas.\n- 422 UNPROCESSABLE_ENTITY si l'utilisateur cible n'est pas un admin."
+          }
+        },
+        {
+          "name": "Désassigner ticket (200)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 200', () => pm.response.to.have.status(200));",
+                  "pm.test('Retourne le ticket avec assigned_to null', () => {",
+                  "  const json = pm.response.json();",
+                  "  pm.expect(json.data).to.have.property('id');",
+                  "  pm.expect(json.data.assigned_to).to.be.null;",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "response": [],
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/admin/support/{{ticket_id}}/assign",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "admin", "support", "{{ticket_id}}", "assign"]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"assigned_to\": null\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "description": "Retire l'assignation du ticket en passant `assigned_to` à `null`. Le ticket reste actif mais n'est plus attribué à aucun admin."
+          }
+        },
+        {
+          "name": "Admin — non authentifié (401)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 401', () => pm.response.to.have.status(401));"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "response": [],
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/admin/support/{{ticket_id}}/assign",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "admin", "support", "{{ticket_id}}", "assign"]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"assigned_to\": null\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "description": "401 UNAUTHORIZED — aucun header Authorization fourni sur un endpoint admin."
+          }
+        },
+        {
+          "name": "Admin — mauvais rôle (403)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 403', () => pm.response.to.have.status(403));"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "response": [],
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/admin/support/{{ticket_id}}/assign",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "admin", "support", "{{ticket_id}}", "assign"]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"assigned_to\": null\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "description": "403 FORBIDDEN — token valide mais utilisateur de rôle `client` ou `station`.\n\nPour reproduire : remplacer `access_token` par un JWT appartenant à un utilisateur non-admin, puis envoyer la requête."
+          }
+        }
+      ]
+    }
+  ]
+}

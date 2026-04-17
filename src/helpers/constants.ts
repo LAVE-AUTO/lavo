@@ -13,6 +13,7 @@ export const API_BASE_URL =
 export const API_TIMEOUT = 30000;
 
 export const MIN_PASSWORD_LENGTH = 8;
+export const MAX_PASSWORD_LENGTH = 128;
 export const MAX_TEXT_LENGTH = 500;
 export const MIN_USERNAME_LENGTH = 3;
 export const MAX_USERNAME_LENGTH = 30;
@@ -25,11 +26,21 @@ export const DEFAULT_PAGE_SIZE = 20;
 export const MAX_PAGE_SIZE = 100;
 
 export const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5MB
+/** Max size for station application documents (images + PDF). */
+export const STATION_DOC_MAX_SIZE = 10 * 1024 * 1024; // 10MB
 export const ALLOWED_IMAGE_TYPES = [
   'image/jpeg',
   'image/png',
   'image/webp',
   'image/gif',
+];
+/** MIME types allowed for station documents (onboarding). */
+export const ALLOWED_DOCUMENT_TYPES = [
+  'image/jpeg',
+  'image/png',
+  'image/webp',
+  'image/gif',
+  'application/pdf',
 ];
 
 export const HTTP_STATUS = {
@@ -41,5 +52,18 @@ export const HTTP_STATUS = {
   FORBIDDEN: 403,
   NOT_FOUND: 404,
   CONFLICT: 409,
+  UNPROCESSABLE_ENTITY: 422,
+  TOO_MANY_REQUESTS: 429,
   SERVER_ERROR: 500,
+  NOT_IMPLEMENTED: 501,
 } as const;
+
+// SERVER-ONLY constants have been moved to src/helpers/server-constants.ts.
+// Do NOT import them here. Use '@/helpers/server-constants' in server-side code only.
+
+/**
+ * Maximum number of days in advance a reservation can be booked.
+ * Stripe card authorizations expire after 7 days — bookings beyond this window
+ * would result in an expired authorization before service completion.
+ */
+export const MAX_ADVANCE_BOOKING_DAYS = 7;

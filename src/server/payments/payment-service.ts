@@ -1,7 +1,317 @@
 /**
- * Placeholder for payment services (PaymentIntent, redistribution).
+ * Payment service: Stripe Connect PaymentIntent creation and transfer.
+ * Creates a PaymentIntent with application_fee_amount for the platform commission.
+ * The station's stripe_account_id is used as the connected account (destination).
  */
-export function paymentServicePlaceholder() {
-  // TODO: implement payment logic
+import { stripe } from '@/lib/stripe';
+import { APP_URL } from '@/helpers/constants';
+import { NotImplementedError, ValidationError } from '@/lib/errors';
+
+// ─── Legacy queue payment (immediate charge) ────────────────────────────────
+
+export type ProcessPaymentParams = {
+  amountCents: number;
+  currency?: string;
+  userId: string;
+  stationId: string;
+  entryId?: string;
+  metadata?: Record<string, string>;
+};
+
+export type ProcessPaymentResult = {
+  success: boolean;
+  stripePaymentId?: string | null;
+  error?: string;
+};
+
+/**
+ * Processes an immediate payment for queue entries.
+ * TODO: Wire real Stripe confirm flow when queue payment UX is defined.
+ * Until then, this throws NotImplementedError so the join-queue endpoint
+ * returns a 501 instead of silently accepting unpaid entries.
+ */
+export async function processPayment(
+  params: ProcessPaymentParams
+): Promise<ProcessPaymentResult> {
+  void params;
+  throw new NotImplementedError('Queue payment is not yet implemented');
 }
 
+// ─── Reservation payment (Stripe Connect with client_secret) ─────────────────
+
+export type CreatePaymentIntentParams = {
+  amountCents: number;
+  currency?: string;
+  userId: string;
+  stationId: string;
+  stationStripeAccountId: string;
+  commissionCents: number;
+  metadata?: Record<string, string>;
+};
+
+export type CreatePaymentIntentResult = {
+  paymentIntentId: string;
+  clientSecret: string;
+};
+
+/**
+ * Creates a Stripe Connect PaymentIntent with manual capture.
+ * The client's card is authorized (funds blocked) at booking time.
+ * The actual capture — which transfers (amount - application_fee) to the station and retains
+ * the commission for the platform — is triggered only when the service is marked as completed
+ * or when the client is detected as late (no refund in the late case).
+ */
+export async function createPaymentIntent(
+  params: CreatePaymentIntentParams
+): Promise<CreatePaymentIntentResult> {
+  const {
+    amountCents,
+    currency = 'eur',
+    stationStripeAccountId,
+    commissionCents,
+    metadata = {},
+  } = params;
+
+  if (!Number.isInteger(amountCents) || amountCents <= 0) {
+    throw new ValidationError('Invalid payment amount');
+  }
+  if (!Number.isInteger(commissionCents) || commissionCents < 0 || commissionCents > amountCents) {
+    throw new ValidationError('Invalid commission amount');
+  }
+  const destination = stationStripeAccountId.trim();
+  if (!destination.startsWith('acct_')) {
+    throw new ValidationError('Invalid connected account');
+  }
+
+  const mergedMetadata: Record<string, string> = {
+    ...metadata,
+    user_id: params.userId,
+    station_id: params.stationId,
+  };
+
+  const paymentIntent = await stripe.paymentIntents.create({
+    amount: amountCents,
+    currency,
+    capture_method: 'manual',
+    application_fee_amount: commissionCents,
+    transfer_data: {
+      destination,
+    },
+    metadata: mergedMetadata,
+    automatic_payment_methods: { enabled: true, allow_redirects: 'never' },
+  });
+
+  if (!paymentIntent.client_secret) {
+    throw new Error('Stripe did not return a client_secret');
+  }
+
+  return {
+    paymentIntentId: paymentIntent.id,
+    clientSecret: paymentIntent.client_secret,
+  };
+}
+
+/**
+ * Captures a previously authorized PaymentIntent.
+ * Triggers fund distribution: station receives (amount - application_fee), platform retains the commission.
+ * Called when a reservation is marked as completed by the station, or when a client is detected as late
+ * (no refund — distribution proceeds as if the service was rendered).
+ */
+export async function capturePaymentIntent(paymentIntentId: string): Promise<void> {
+  await stripe.paymentIntents.capture(paymentIntentId);
+}
+
+/**
+ * Cancels a Stripe PaymentIntent. Used when a reservation is cancelled while still pending payment.
+ */
+export async function cancelPaymentIntent(paymentIntentId: string): Promise<void> {
+  await stripe.paymentIntents.cancel(paymentIntentId);
+}
+
+/**
+ * Issues a Stripe refund for a PaymentIntent.
+ * Uses reverse_transfer: false so the refund comes from the platform balance.
+ * The station's transfer is handled separately via distributePenalty.
+ * If amountCents is provided, issues a partial refund; otherwise refunds the full amount.
+ * An optional idempotencyKey prevents double-refunds when the caller retries on timeout.
+ * Returns the Stripe refund ID for tracking.
+ */
+export async function refundPaymentIntent(
+  paymentIntentId: string,
+  amountCents?: number,
+  idempotencyKey?: string
+): Promise<string> {
+  const refund = await stripe.refunds.create(
+    {
+      payment_intent: paymentIntentId,
+      reverse_transfer: false,
+      ...(amountCents !== undefined && { amount: amountCents }),
+    },
+    idempotencyKey ? { idempotencyKey } : undefined
+  );
+  return refund.id;
+}
+
+/**
+ * Updates the metadata on an existing Stripe PaymentIntent.
+ * Used when a reservation is rescheduled without penalty to re-point the PI to the new reservation.
+ */
+export async function updatePaymentIntentMetadata(
+  paymentIntentId: string,
+  metadata: Record<string, string>
+): Promise<void> {
+  await stripe.paymentIntents.update(paymentIntentId, { metadata });
+}
+
+/**
+ * Distributes the penalty amount between platform and station after a late cancellation.
+ * Claws back the platform's share from the station via a Stripe transfer reversal.
+ *
+ * Mechanics:
+ *   - The client refund (reverse_transfer: false) already came from the platform balance.
+ *   - This function reverses (penalty - station_share) from the station's transfer.
+ *   - Result: platform nets its penalty share, station nets its penalty share.
+ *
+ * Returns the Stripe transfer reversal ID, or null if no transfer exists or nothing to claw back.
+ */
+export async function distributePenalty(
+  paymentIntentId: string,
+  penaltyCents: number,
+  stationPenaltyShare: number // fraction [0, 1]
+): Promise<string | null> {
+  if (penaltyCents <= 0) return null;
+
+  const pi = await stripe.paymentIntents.retrieve(paymentIntentId);
+  const chargeId = typeof pi.latest_charge === 'string' ? pi.latest_charge : pi.latest_charge?.id;
+  if (!chargeId) return null;
+
+  const charge = await stripe.charges.retrieve(chargeId);
+  const transferId = typeof charge.transfer === 'string' ? charge.transfer : charge.transfer?.id;
+  if (!transferId) return null;
+
+  const stationKeepsCents = Math.round(penaltyCents * stationPenaltyShare);
+  const clawbackCents = penaltyCents - stationKeepsCents;
+  if (clawbackCents <= 0) return null;
+
+  const reversal = await stripe.transfers.createReversal(transferId, {
+    amount: clawbackCents,
+  });
+  return reversal.id;
+}
+
+// ─── Tip payment (destination charge, 0% platform fee) ───────────────────────
+
+export type CreateTipPaymentIntentParams = {
+  amountCents: number;
+  currency: string;
+  userId: string;
+  stationId: string;
+  stationStripeAccountId: string;
+  reservationId: string;
+  metadata?: Record<string, string>;
+};
+
+/**
+ * Creates a Stripe PaymentIntent for a client tip.
+ * Uses a destination charge (transfer_data.destination) with no application_fee_amount,
+ * so 100% of the tip flows directly to the station's connected account.
+ * capture_method is 'automatic' — funds are captured immediately on confirmation.
+ */
+export async function createTipPaymentIntent(
+  params: CreateTipPaymentIntentParams
+): Promise<CreatePaymentIntentResult> {
+  const { amountCents, currency, stationStripeAccountId, metadata = {} } = params;
+
+  if (!Number.isInteger(amountCents) || amountCents <= 0) {
+    throw new ValidationError('Invalid tip amount');
+  }
+  const destination = stationStripeAccountId.trim();
+  if (!destination.startsWith('acct_')) {
+    throw new ValidationError('Invalid connected account');
+  }
+
+  const mergedMetadata: Record<string, string> = {
+    ...metadata,
+    user_id: params.userId,
+    station_id: params.stationId,
+    reservation_id: params.reservationId,
+    type: 'tip',
+  };
+
+  const paymentIntent = await stripe.paymentIntents.create({
+    amount: amountCents,
+    currency,
+    capture_method: 'automatic',
+    transfer_data: { destination },
+    metadata: mergedMetadata,
+    automatic_payment_methods: { enabled: true, allow_redirects: 'never' },
+  });
+
+  if (!paymentIntent.client_secret) {
+    throw new Error('Stripe did not return a client_secret');
+  }
+
+  return {
+    paymentIntentId: paymentIntent.id,
+    clientSecret: paymentIntent.client_secret,
+  };
+}
+
+// ─── Stripe Connect onboarding ────────────────────────────────────────────────
+
+/**
+ * Creates a Stripe Connect Express account for a station.
+ * Returns the new account ID (acct_xxx) to be stored in stations.stripe_account_id.
+ */
+export async function createStripeConnectAccount(
+  email: string,
+  stationId: string
+): Promise<string> {
+  if (!email.trim()) {
+    throw new ValidationError('Invalid email for Stripe Connect account');
+  }
+  if (!stationId.trim()) {
+    throw new ValidationError('Invalid station id for Stripe Connect account');
+  }
+  const account = await stripe.accounts.create({
+    type: 'express',
+    email,
+    metadata: { station_id: stationId },
+  });
+  return account.id;
+}
+
+/**
+ * Generates a Stripe Connect onboarding link for a connected account.
+ * The station owner uses this URL to complete their Stripe profile and add bank details.
+ */
+export async function createStripeOnboardingLink(accountId: string): Promise<string> {
+  if (!accountId.trim().startsWith('acct_')) {
+    throw new ValidationError('Invalid connected account id for onboarding link');
+  }
+  const link = await stripe.accountLinks.create({
+    account: accountId,
+    refresh_url: `${APP_URL}/station/stripe-refresh`,
+    return_url: `${APP_URL}/station/stripe-return`,
+    type: 'account_onboarding',
+  });
+  return link.url;
+}
+
+/**
+ * Returns the Stripe receipt URL for a PaymentIntent when available.
+ * Returns null when no charge/receipt exists yet.
+ */
+export async function getStripeReceiptUrl(paymentIntentId: string): Promise<string | null> {
+  const pi = await stripe.paymentIntents.retrieve(paymentIntentId, { expand: ['latest_charge'] });
+
+  const latestCharge = pi.latest_charge;
+  if (!latestCharge) return null;
+
+  if (typeof latestCharge !== 'string') {
+    return latestCharge.receipt_url ?? null;
+  }
+
+  const charge = await stripe.charges.retrieve(latestCharge);
+  return charge.receipt_url ?? null;
+}

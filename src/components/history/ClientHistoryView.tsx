@@ -1,0 +1,278 @@
+'use client';
+
+import { useState, useMemo, useEffect } from 'react';
+import { useTranslations, useLocale } from 'next-intl';
+import { getFromApi } from '@/services/axios-service';
+import { MOCK_RESERVATIONS, type MockReservation } from '@/data/reservations-mock';
+import { ReceiptModal } from './ReceiptModal';
+import { PageSpinner } from '@/components/ui/PageSpinner';
+
+type PeriodKey = 'all' | 'week' | 'month' | '3months' | 'year';
+type StatusKey  = 'all' | 'completed' | 'cancelled';
+
+const HISTORY_STATUSES: MockReservation['status'][] = ['completed', 'cancelled'];
+
+function getPeriodStart(period: PeriodKey): Date | null {
+  if (period === 'all') return null;
+  const d = new Date();
+  if (period === 'week')    d.setDate(d.getDate() - 7);
+  if (period === 'month')   d.setMonth(d.getMonth() - 1);
+  if (period === '3months') d.setMonth(d.getMonth() - 3);
+  if (period === 'year')    d.setFullYear(d.getFullYear() - 1);
+  return d;
+}
+
+/**
+ * Client history view.
+ * Calls GET /history/client; falls back to mock data if the endpoint is not yet implemented.
+ */
+export function ClientHistoryView() {
+  const t      = useTranslations('history');
+  const locale = useLocale();
+
+  const [entries,  setEntries]  = useState<MockReservation[]>([]);
+  const [loading,  setLoading]  = useState(true);
+  const [period,   setPeriod]   = useState<PeriodKey>('all');
+  const [status,   setStatus]   = useState<StatusKey>('all');
+  const [selected, setSelected] = useState<MockReservation | null>(null);
+
+  useEffect(() => {
+    let aborted = false;
+    (async () => {
+      const [ok, data] = await getFromApi<{ data: { entries: MockReservation[] } }>('/history/client');
+      if (aborted) return;
+
+      const raw = ok && data && typeof data === 'object' && 'data' in data
+        ? (data as { data: { entries?: MockReservation[] } }).data?.entries
+        : null;
+
+      setEntries(
+        Array.isArray(raw)
+          ? raw.filter((e) => HISTORY_STATUSES.includes(e.status))
+          : MOCK_RESERVATIONS.filter((r) => HISTORY_STATUSES.includes(r.status)),
+      );
+      setLoading(false);
+    })();
+    return () => { aborted = true; };
+  }, []);
+
+  const filtered = useMemo(() => {
+    const start = getPeriodStart(period);
+    return entries
+      .filter((e) => status === 'all' || e.status === status)
+      .filter((e) => !start || new Date(e.date) >= start)
+      .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+  }, [entries, period, status]);
+
+  const totalSpent = useMemo(
+    () => filtered
+      .filter((e) => e.status === 'completed')
+      .reduce((sum, e) => sum + e.totalPrice, 0),
+    [filtered],
+  );
+
+  const PERIODS: { key: PeriodKey; label: string }[] = [
+    { key: 'all',     label: t('period_all') },
+    { key: 'week',    label: t('period_week') },
+    { key: 'month',   label: t('period_month') },
+    { key: '3months', label: t('period_3months') },
+    { key: 'year',    label: t('period_year') },
+  ];
+
+  const STATUSES: { key: StatusKey; label: string }[] = [
+    { key: 'all',       label: t('status_all') },
+    { key: 'completed', label: t('status_completed') },
+    { key: 'cancelled', label: t('status_cancelled') },
+  ];
+
+  if (loading) return <PageSpinner py="py-20" />;
+
+  return (
+    <div className="animate-fade-in">
+
+      {/* Stats */}
+      {entries.length > 0 && (
+        <div className="grid grid-cols-2 gap-3 mb-6">
+          <div className="bg-[#E8E8D8] dark:bg-dark-card rounded-xl p-4 border border-[#D0D0C0] dark:border-tab-inactive text-center">
+            <div className="text-[24px] font-black text-[#0A0A14] dark:text-white leading-none">{filtered.length}</div>
+            <div className="text-[11px] text-[#666] dark:text-[#B0B0A0] mt-1.5 uppercase tracking-wider font-bold">
+              {t('total_entries')}
+            </div>
+          </div>
+          <div className="bg-[#E8E8D8] dark:bg-dark-card rounded-xl p-4 border border-[#D0D0C0] dark:border-tab-inactive text-center">
+            <div className="text-[24px] font-black text-gold leading-none">{totalSpent}$</div>
+            <div className="text-[11px] text-[#666] dark:text-[#B0B0A0] mt-1.5 uppercase tracking-wider font-bold">
+              {t('total_spent')}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Period filter */}
+      <div className="mb-4">
+        <p className="text-[11px] font-black text-[#555] dark:text-[#A0A090] uppercase tracking-wider mb-2">
+          {t('filter_period')}
+        </p>
+        <div className="flex gap-1.5 flex-wrap">
+          {PERIODS.map(({ key, label }) => (
+            <button
+              key={key}
+              type="button"
+              onClick={() => setPeriod(key)}
+              className={[
+                'px-3 py-1.5 rounded-full text-[13px] font-bold transition-colors',
+                period === key
+                  ? 'bg-gold text-dark-bg'
+                  : 'bg-[#E0E0D0] dark:bg-dark-card text-[#555] dark:text-[#C0C0B0] hover:bg-[#D0D0C0] dark:hover:bg-tab-inactive',
+              ].join(' ')}
+            >
+              {label}
+            </button>
+          ))}
+        </div>
+      </div>
+
+      {/* Status filter */}
+      <div className="mb-6">
+        <p className="text-[11px] font-black text-[#555] dark:text-[#A0A090] uppercase tracking-wider mb-2">
+          {t('filter_status')}
+        </p>
+        <div className="flex gap-1.5">
+          {STATUSES.map(({ key, label }) => (
+            <button
+              key={key}
+              type="button"
+              onClick={() => setStatus(key)}
+              className={[
+                'px-3 py-1.5 rounded-full text-[13px] font-bold transition-colors',
+                status === key
+                  ? key === 'completed' ? 'bg-lavo-success text-white'
+                  : key === 'cancelled' ? 'bg-lavo-error text-white'
+                  : 'bg-gold text-dark-bg'
+                  : 'bg-[#E0E0D0] dark:bg-dark-card text-[#555] dark:text-[#C0C0B0] hover:bg-[#D0D0C0] dark:hover:bg-tab-inactive',
+              ].join(' ')}
+            >
+              {label}
+            </button>
+          ))}
+        </div>
+      </div>
+
+      {/* List */}
+      {filtered.length === 0 ? (
+        <HistoryEmpty t={t} />
+      ) : (
+        <div className="space-y-3">
+          {filtered.map((entry) => (
+            <HistoryCard
+              key={entry.id}
+              entry={entry}
+              locale={locale}
+              t={t}
+              onSelect={() => setSelected(entry)}
+            />
+          ))}
+        </div>
+      )}
+
+      {/* Receipt modal */}
+      {selected && (
+        <ReceiptModal entry={selected} locale={locale} onClose={() => setSelected(null)} />
+      )}
+    </div>
+  );
+}
+
+/* ------------------------------------------------------------------ */
+/* History card                                                         */
+/* ------------------------------------------------------------------ */
+
+interface HistoryCardProps {
+  entry: MockReservation;
+  locale: string;
+  t: ReturnType<typeof useTranslations>;
+  onSelect: () => void;
+}
+
+function HistoryCard({ entry: e, locale, t, onSelect }: HistoryCardProps) {
+  const dateLabel = new Date(e.date).toLocaleDateString(
+    locale === 'en' ? 'en-CA' : 'fr-CA',
+    { day: 'numeric', month: 'short', year: 'numeric' },
+  );
+
+  const isCompleted = e.status === 'completed';
+
+  return (
+    <button
+      type="button"
+      onClick={onSelect}
+      className="w-full text-left bg-[#E8E8D8] dark:bg-dark-card rounded-xl border border-[#D0D0C0] dark:border-tab-inactive p-4 hover:border-gold/30 transition-colors"
+    >
+      <div className="flex gap-3 items-center">
+        {/* Thumbnail */}
+        <div className="w-14 h-14 rounded-lg overflow-hidden shrink-0 bg-[#D0D0C0] dark:bg-tab-inactive">
+          {e.stationImageUrl && (
+            <img src={e.stationImageUrl} alt={e.stationName} className="w-full h-full object-cover" />
+          )}
+        </div>
+
+        {/* Info */}
+        <div className="flex-1 min-w-0">
+          <div className="flex items-start justify-between gap-2">
+            <span className="text-[15px] font-bold text-[#0A0A14] dark:text-white leading-tight line-clamp-1">
+              {e.stationName}
+            </span>
+            <span className={[
+              'shrink-0 px-2 py-0.5 rounded-full text-[11px] font-bold',
+              isCompleted
+                ? 'bg-lavo-success/15 text-lavo-success'
+                : 'bg-lavo-error/15 text-lavo-error',
+            ].join(' ')}>
+              {t(`status_${e.status}`)}
+            </span>
+          </div>
+
+          <p className="text-[13px] text-[#666] dark:text-[#B0B0A0] mt-0.5 truncate">
+            {e.forfaitName} · {e.categoryLabel}
+          </p>
+
+          <div className="flex items-center gap-3 mt-1.5 text-[13px]">
+            <span className="text-[#777] dark:text-[#C0C0B0]">{dateLabel}</span>
+            <span className="text-[#777] dark:text-[#C0C0B0]">{e.timeSlot}</span>
+            <span className="ml-auto font-black text-gold">{e.totalPrice}$</span>
+          </div>
+        </div>
+
+        {/* Chevron — only for completed (receipt available) */}
+        {isCompleted && (
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#af8408" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true" className="shrink-0">
+            <polyline points="9 18 15 12 9 6" />
+          </svg>
+        )}
+      </div>
+    </button>
+  );
+}
+
+/* ------------------------------------------------------------------ */
+/* Empty state                                                          */
+/* ------------------------------------------------------------------ */
+
+function HistoryEmpty({ t }: { t: ReturnType<typeof useTranslations> }) {
+  return (
+    <div className="flex flex-col items-center justify-center py-20 gap-4 text-center">
+      <div className="w-16 h-16 rounded-full bg-[#E0E0D0] dark:bg-dark-card flex items-center justify-center">
+        <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#9A9A8A" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+          <path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z" />
+          <polyline points="14 2 14 8 20 8" />
+          <line x1="16" y1="13" x2="8" y2="13" />
+          <line x1="16" y1="17" x2="8" y2="17" />
+        </svg>
+      </div>
+      <div>
+        <p className="text-[16px] font-bold text-[#0A0A14] dark:text-white">{t('empty_title')}</p>
+        <p className="text-[14px] text-[#666] dark:text-[#B0B0A0] mt-1 max-w-xs">{t('empty_desc')}</p>
+      </div>
+    </div>
+  );
+}

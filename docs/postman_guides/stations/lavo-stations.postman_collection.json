@@ -1,0 +1,1109 @@
+{
+  "info": {
+    "name": "LAVO — Stations API",
+    "description": "Collection pour les endpoints liés aux stations de lavage.\n\nVariable requise : `base_url` (ex: http://localhost:3000)\nVariable auto-remplie : `access_token` (depuis la collection Auth)\n\n## Groupes\n- **Stations Publiques** : liste et detail des stations (sans auth) — point de depart pour creer une reservation\n- **Station Onboarding** : inscription station en 3 étapes (validate/step1, validate/step2, submit)\n- **Station — Profil** : lecture du profil station authentifiée",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    {
+      "key": "base_url",
+      "value": "http://localhost:3000",
+      "type": "string"
+    },
+    {
+      "key": "access_token",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "station_id",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "vehicle_format_id",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "time_slot_id",
+      "value": "",
+      "type": "string"
+    }
+  ],
+  "item": [
+    {
+      "name": "Stations Publiques",
+      "description": "Endpoints publics (aucune authentification requise) pour consulter la liste des stations et le detail d'une station. Utilises avant de creer une reservation pour recuperer vehicle_format_id et time_slot_id.",
+      "item": [
+        {
+          "name": "Liste des stations (200)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 200', () => pm.response.to.have.status(200));",
+                  "pm.test('Retourne les stations', () => {",
+                  "  const json = pm.response.json();",
+                  "  pm.expect(json.data).to.have.property('all');",
+                  "  pm.expect(json.data.all).to.be.an('array');",
+                  "});",
+                  "const json = pm.response.json();",
+                  "if (json.data && json.data.all && json.data.all.length > 0) {",
+                  "  pm.collectionVariables.set('station_id', json.data.all[0].id);",
+                  "  console.log('station_id enregistre :', json.data.all[0].id);",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "response": [],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/v1/stations",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "stations"]
+            },
+            "description": "Retourne la liste des stations actives avec groupement (all, available_now, most_appreciated, most_visited). Le test script sauvegarde automatiquement station_id depuis la premiere station retournee."
+          }
+        },
+        {
+          "name": "Liste des stations — avec filtres (200)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 200', () => pm.response.to.have.status(200));",
+                  "pm.test('Meta de pagination presente', () => {",
+                  "  const json = pm.response.json();",
+                  "  pm.expect(json.meta).to.have.property('total');",
+                  "  pm.expect(json.meta).to.have.property('page');",
+                  "  pm.expect(json.meta).to.have.property('per_page');",
+                  "  pm.expect(json.meta).to.have.property('total_pages');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "response": [],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/v1/stations?city=Paris&page=1&per_page=10",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "stations"],
+              "query": [
+                { "key": "city", "value": "Paris" },
+                { "key": "page", "value": "1" },
+                { "key": "per_page", "value": "10" }
+              ]
+            },
+            "description": "Filtrage par ville avec pagination. Params disponibles : city, search, sort, page, per_page."
+          }
+        },
+        {
+          "name": "Detail d'une station (200)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 200', () => pm.response.to.have.status(200));",
+                  "pm.test('Retourne vehicleFormats et timeSlots', () => {",
+                  "  const json = pm.response.json();",
+                  "  pm.expect(json.data).to.have.property('vehicleFormats');",
+                  "  pm.expect(json.data).to.have.property('timeSlots');",
+                  "  pm.expect(json.data.vehicleFormats).to.be.an('array');",
+                  "  pm.expect(json.data.timeSlots).to.be.an('array');",
+                  "});",
+                  "const json = pm.response.json();",
+                  "if (json.data && json.data.vehicleFormats && json.data.vehicleFormats.length > 0) {",
+                  "  pm.collectionVariables.set('vehicle_format_id', json.data.vehicleFormats[0].id);",
+                  "  console.log('vehicle_format_id enregistre :', json.data.vehicleFormats[0].id);",
+                  "}",
+                  "if (json.data && json.data.timeSlots && json.data.timeSlots.length > 0) {",
+                  "  const futureSlots = json.data.timeSlots.filter(s => s.status === 'active' && s.booked_count < s.capacity);",
+                  "  const slot = futureSlots.length > 0 ? futureSlots[0] : json.data.timeSlots[0];",
+                  "  pm.collectionVariables.set('time_slot_id', slot.id);",
+                  "  console.log('time_slot_id enregistre :', slot.id);",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "response": [],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/v1/stations/{{station_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "stations", "{{station_id}}"]
+            },
+            "description": "Retourne le detail complet d'une station : stationConfig, vehicleFormats[], timeSlots[], plus les champs calcules available_slots, available, completed_count. Le test script enregistre automatiquement vehicle_format_id (premier format actif) et time_slot_id (premier creneau disponible)."
+          }
+        },
+        {
+          "name": "Detail d'une station — ID inexistant (404)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 404', () => pm.response.to.have.status(404));",
+                  "pm.test('Code NOT_FOUND', () => {",
+                  "  const json = pm.response.json();",
+                  "  pm.expect(json.code).to.eql('NOT_FOUND');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "response": [],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/v1/stations/00000000-0000-0000-0000-000000000000",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "stations", "00000000-0000-0000-0000-000000000000"]
+            },
+            "description": "404 NOT_FOUND — aucune station active avec cet ID."
+          }
+        }
+      ]
+    },
+    {
+      "name": "Station Onboarding",
+      "description": "Flux en 3 etapes. Les endpoints validate/* ne font aucune ecriture en base — ils permettent au frontend de valider chaque etape avant de passer a la suivante. Toutes les operations DB sont declenchees uniquement par /submit.",
+      "item": [
+        {
+          "name": "validate/step1 — succes (200)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 200', () => pm.response.to.have.status(200));"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "response": [],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/stations/onboarding/validate/step1",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "stations",
+                "onboarding",
+                "validate",
+                "step1"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\"email\":\"station@example.com\",\"phone\":\"+33612345678\",\"password\":\"StationPass1!\",\"confirm_password\":\"StationPass1!\"}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "description": "Valide les champs step 1 sans ecriture en base. Aucun compte n'est cree."
+          }
+        },
+        {
+          "name": "validate/step1 — confirm_password invalide (400)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 400', () => pm.response.to.have.status(400));",
+                  "pm.test('Erreur confirm_password', () => {",
+                  "  const json = pm.response.json();",
+                  "  pm.expect(json.code).to.eql('VALIDATION_FAILED');",
+                  "  pm.expect(json.errors.some(e => e.field === 'confirm_password')).to.be.true;",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "response": [],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/stations/onboarding/validate/step1",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "stations",
+                "onboarding",
+                "validate",
+                "step1"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\"email\":\"station@example.com\",\"phone\":\"+33612345678\",\"password\":\"StationPass1!\",\"confirm_password\":\"Different!\"}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "description": "400 VALIDATION_FAILED — confirm_password ne correspond pas."
+          }
+        },
+        {
+          "name": "validate/step2 — succes (200)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 200', () => pm.response.to.have.status(200));"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "response": [],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/stations/onboarding/validate/step2",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "stations",
+                "onboarding",
+                "validate",
+                "step2"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\"station_name\":\"Lavo Station Paris 15\",\"legal_name\":\"Lavo SAS\",\"registration_number\":\"RCS PARIS 123456789\",\"address\":\"12 rue de la Paix\",\"city\":\"Paris\",\"latitude\":48.8566,\"longitude\":2.3522,\"wash_post_count\":4,\"wash_type\":\"automatic\",\"description\":\"Station de lavage automatique au coeur de Paris.\"}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "description": "Valide les champs step 2 sans ecriture en base. Aucune station n'est creee."
+          }
+        },
+        {
+          "name": "validate/step2 — wash_type invalide (400)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 400', () => pm.response.to.have.status(400));",
+                  "pm.test('Erreur wash_type', () => {",
+                  "  const json = pm.response.json();",
+                  "  pm.expect(json.code).to.eql('VALIDATION_FAILED');",
+                  "  pm.expect(json.errors.some(e => e.field === 'wash_type')).to.be.true;",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "response": [],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/stations/onboarding/validate/step2",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "stations",
+                "onboarding",
+                "validate",
+                "step2"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\"station_name\":\"Test\",\"address\":\"1 rue Test\",\"city\":\"Lyon\",\"wash_post_count\":2,\"wash_type\":\"invalid\"}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "description": "400 VALIDATION_FAILED — wash_type n'est pas une valeur autorisee."
+          }
+        },
+        {
+          "name": "submit — succes (201)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 201', () => pm.response.to.have.status(201));",
+                  "pm.test('Retourne user + station', () => {",
+                  "  const json = pm.response.json();",
+                  "  pm.expect(json.data).to.have.property('user');",
+                  "  pm.expect(json.data).to.have.property('station');",
+                  "  pm.expect(json.data.user).to.not.have.property('password_hash');",
+                  "  pm.expect(json.data.user.role).to.eql('station');",
+                  "  pm.expect(json.data.station.status).to.eql('pending_admin_validation');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "response": [],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/stations/onboarding/submit",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "stations",
+                "onboarding",
+                "submit"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"station@example.com\",\n  \"phone\": \"+33612345678\",\n  \"password\": \"StationPass1!\",\n  \"confirm_password\": \"StationPass1!\",\n  \"station_name\": \"Lavo Station Paris 15\",\n  \"legal_name\": \"Lavo SAS\",\n  \"registration_number\": \"RCS PARIS 123456789\",\n  \"address\": \"12 rue de la Paix\",\n  \"city\": \"Paris\",\n  \"latitude\": 48.8566,\n  \"longitude\": 2.3522,\n  \"wash_post_count\": 4,\n  \"wash_type\": \"automatic\",\n  \"description\": \"Station de lavage automatique au coeur de Paris.\",\n  \"documents\": [\n    {\"document_type\": \"registre_commerce\", \"file_url\": \"https://storage.example.com/doc1.pdf\"},\n    {\"document_type\": \"piece_identite\", \"file_url\": \"https://storage.example.com/doc2.pdf\"}\n  ],\n  \"terms_accepted\": true\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "description": "Cree le compte, la station et les documents en une seule transaction. Email de verification envoye. Aucune ecriture en base avant cet appel."
+          }
+        },
+        {
+          "name": "submit — email deja utilise (409)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 409', () => pm.response.to.have.status(409));",
+                  "pm.test('Code EMAIL_ALREADY_EXISTS', () => {",
+                  "  const json = pm.response.json();",
+                  "  pm.expect(json.code).to.eql('EMAIL_ALREADY_EXISTS');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "response": [],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/stations/onboarding/submit",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "stations",
+                "onboarding",
+                "submit"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"station@example.com\",\n  \"phone\": \"+33612345678\",\n  \"password\": \"StationPass1!\",\n  \"confirm_password\": \"StationPass1!\",\n  \"station_name\": \"Lavo Station Paris 15\",\n  \"address\": \"12 rue de la Paix\",\n  \"city\": \"Paris\",\n  \"wash_post_count\": 4,\n  \"wash_type\": \"automatic\",\n  \"documents\": [{\"document_type\": \"registre_commerce\", \"file_url\": \"https://storage.example.com/doc1.pdf\"}],\n  \"terms_accepted\": true\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "description": "409 EMAIL_ALREADY_EXISTS — l'email est deja associe a un compte."
+          }
+        },
+        {
+          "name": "submit — confirm_password invalide (400)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 400', () => pm.response.to.have.status(400));",
+                  "pm.test('Erreur confirm_password', () => {",
+                  "  const json = pm.response.json();",
+                  "  pm.expect(json.code).to.eql('VALIDATION_FAILED');",
+                  "  pm.expect(json.errors.some(e => e.field === 'confirm_password')).to.be.true;",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "response": [],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/stations/onboarding/submit",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "stations",
+                "onboarding",
+                "submit"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"station2@example.com\",\n  \"phone\": \"+33612345678\",\n  \"password\": \"StationPass1!\",\n  \"confirm_password\": \"Different!\",\n  \"station_name\": \"Lavo Station Lyon\",\n  \"address\": \"5 rue Bellecour\",\n  \"city\": \"Lyon\",\n  \"wash_post_count\": 2,\n  \"wash_type\": \"hand_wash\",\n  \"documents\": [{\"document_type\": \"registre_commerce\", \"file_url\": \"https://storage.example.com/doc1.pdf\"}],\n  \"terms_accepted\": true\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "description": "400 VALIDATION_FAILED — confirm_password ne correspond pas."
+          }
+        },
+        {
+          "name": "submit — CGU non acceptees (400)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 400', () => pm.response.to.have.status(400));",
+                  "pm.test('Erreur terms_accepted', () => {",
+                  "  const json = pm.response.json();",
+                  "  pm.expect(json.code).to.eql('VALIDATION_FAILED');",
+                  "  pm.expect(json.errors.some(e => e.field === 'terms_accepted')).to.be.true;",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "response": [],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/stations/onboarding/submit",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "stations",
+                "onboarding",
+                "submit"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"station3@example.com\",\n  \"phone\": \"+33612345678\",\n  \"password\": \"StationPass1!\",\n  \"confirm_password\": \"StationPass1!\",\n  \"station_name\": \"Lavo Station Marseille\",\n  \"address\": \"3 rue Paradis\",\n  \"city\": \"Marseille\",\n  \"wash_post_count\": 3,\n  \"wash_type\": \"self_service\",\n  \"documents\": [{\"document_type\": \"registre_commerce\", \"file_url\": \"https://storage.example.com/doc1.pdf\"}],\n  \"terms_accepted\": false\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "description": "400 VALIDATION_FAILED — terms_accepted doit etre true."
+          }
+        }
+      ]
+    },
+    {
+      "name": "Station — Historique",
+      "description": "GET /api/v1/history/station — historique d'activite pagine de la station authentifiee. Combine reservations et donnees financieres (commission, pourboire, payout). Auth: role station + station active.",
+      "item": [
+        {
+          "name": "Historique station — succes sans filtres (200)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 200', () => pm.response.to.have.status(200));",
+                  "pm.test('Body has items and meta', () => {",
+                  "  const json = pm.response.json();",
+                  "  pm.expect(json.data).to.have.property('items').that.is.an('array');",
+                  "  pm.expect(json.data).to.have.property('meta');",
+                  "  pm.expect(json.data.meta).to.have.all.keys('total', 'page', 'limit', 'total_pages');",
+                  "  pm.expect(json.data.meta.page).to.eql(1);",
+                  "  pm.expect(json.data.meta.limit).to.eql(20);",
+                  "});",
+                  "pm.test('Items have expected shape', () => {",
+                  "  const json = pm.response.json();",
+                  "  if (json.data.items.length > 0) {",
+                  "    const item = json.data.items[0];",
+                  "    pm.expect(item).to.have.property('id');",
+                  "    pm.expect(item).to.have.property('date');",
+                  "    pm.expect(item).to.have.property('status');",
+                  "    pm.expect(item).to.have.property('amount_paid');",
+                  "    pm.expect(item).to.have.property('reservation_ref');",
+                  "    pm.expect(item).to.not.have.property('password_hash');",
+                  "  }",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "response": [],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/v1/history/station",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "history", "station"]
+            },
+            "description": "Retourne la premiere page (20 elements) de l'historique complet. Auth: cookie JWT station active."
+          }
+        },
+        {
+          "name": "Historique station — avec pagination (200)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 200', () => pm.response.to.have.status(200));",
+                  "pm.test('Pagination correcte', () => {",
+                  "  const json = pm.response.json();",
+                  "  pm.expect(json.data.meta.page).to.eql(2);",
+                  "  pm.expect(json.data.meta.limit).to.eql(5);",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "response": [],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/v1/history/station?page=2&limit=5",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "history", "station"],
+              "query": [
+                { "key": "page", "value": "2" },
+                { "key": "limit", "value": "5" }
+              ]
+            },
+            "description": "Page 2 avec 5 elements par page. Verifie que page et limit sont bien repercutes dans meta."
+          }
+        },
+        {
+          "name": "Historique station — filtres date + statut (200)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 200', () => pm.response.to.have.status(200));",
+                  "pm.test('Body valide', () => {",
+                  "  const json = pm.response.json();",
+                  "  pm.expect(json.data.items).to.be.an('array');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "response": [],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/v1/history/station?from=2026-01-01&to=2026-03-31&status=completed",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "history", "station"],
+              "query": [
+                { "key": "from", "value": "2026-01-01" },
+                { "key": "to", "value": "2026-03-31" },
+                { "key": "status", "value": "completed" }
+              ]
+            },
+            "description": "Filtre par periode (from/to inclusif) et statut completed."
+          }
+        },
+        {
+          "name": "Historique station — filtres montant (200)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 200', () => pm.response.to.have.status(200));",
+                  "pm.test('Body valide', () => {",
+                  "  const json = pm.response.json();",
+                  "  pm.expect(json.data.items).to.be.an('array');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "response": [],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/v1/history/station?amount_min=10&amount_max=50",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "history", "station"],
+              "query": [
+                { "key": "amount_min", "value": "10" },
+                { "key": "amount_max", "value": "50" }
+              ]
+            },
+            "description": "Filtre par montant min (10) et max (50) — inclusif. Cast SQL ::numeric applique cote serveur."
+          }
+        },
+        {
+          "name": "Historique station — page invalide (400)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 400', () => pm.response.to.have.status(400));",
+                  "pm.test('Code VALIDATION_FAILED + champ page', () => {",
+                  "  const json = pm.response.json();",
+                  "  pm.expect(json.code).to.eql('VALIDATION_FAILED');",
+                  "  pm.expect(json.errors.some(e => e.field === 'page')).to.be.true;",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "response": [],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/v1/history/station?page=0",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "history", "station"],
+              "query": [{ "key": "page", "value": "0" }]
+            },
+            "description": "400 VALIDATION_FAILED — page=0 invalide (min: 1)."
+          }
+        },
+        {
+          "name": "Historique station — from > to (400)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 400', () => pm.response.to.have.status(400));",
+                  "pm.test('Code VALIDATION_FAILED + champ from', () => {",
+                  "  const json = pm.response.json();",
+                  "  pm.expect(json.code).to.eql('VALIDATION_FAILED');",
+                  "  pm.expect(json.errors.some(e => e.field === 'from')).to.be.true;",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "response": [],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/v1/history/station?from=2026-12-31&to=2026-01-01",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "history", "station"],
+              "query": [
+                { "key": "from", "value": "2026-12-31" },
+                { "key": "to", "value": "2026-01-01" }
+              ]
+            },
+            "description": "400 VALIDATION_FAILED — from posterieur a to."
+          }
+        },
+        {
+          "name": "Historique station — amount_min > amount_max (400)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 400', () => pm.response.to.have.status(400));",
+                  "pm.test('Code VALIDATION_FAILED + champ amount_min', () => {",
+                  "  const json = pm.response.json();",
+                  "  pm.expect(json.code).to.eql('VALIDATION_FAILED');",
+                  "  pm.expect(json.errors.some(e => e.field === 'amount_min')).to.be.true;",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "response": [],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/v1/history/station?amount_min=100&amount_max=10",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "history", "station"],
+              "query": [
+                { "key": "amount_min", "value": "100" },
+                { "key": "amount_max", "value": "10" }
+              ]
+            },
+            "description": "400 VALIDATION_FAILED — amount_min superieur a amount_max."
+          }
+        },
+        {
+          "name": "Historique station — non authentifiee (401)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 401', () => pm.response.to.have.status(401));",
+                  "pm.test('Code UNAUTHORIZED', () => {",
+                  "  pm.expect(pm.response.json().code).to.eql('UNAUTHORIZED');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "response": [],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/v1/history/station",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "history", "station"]
+            },
+            "description": "401 UNAUTHORIZED — aucun cookie JWT. Requete sans session."
+          }
+        },
+        {
+          "name": "Historique station — mauvais role (403)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 403', () => pm.response.to.have.status(403));",
+                  "pm.test('Code FORBIDDEN ou BUSINESS_NOT_APPROVED', () => {",
+                  "  const code = pm.response.json().code;",
+                  "  pm.expect(['FORBIDDEN', 'BUSINESS_NOT_APPROVED']).to.include(code);",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "response": [],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/v1/history/station",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "history", "station"]
+            },
+            "description": "403 FORBIDDEN — session client (role != station) ou station non approuvee (BUSINESS_NOT_APPROVED)."
+          }
+        }
+      ]
+    },
+    {
+      "name": "Station — Profil",
+      "item": [
+        {
+          "name": "Station Me — approuvee (200)",
+          "response": [],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/v1/station/me",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "station",
+                "me"
+              ]
+            },
+            "description": "Authentifie station avec status=active. Retourne la station et ses documents."
+          }
+        },
+        {
+          "name": "Station Me — non approuvee (403 BUSINESS_NOT_APPROVED)",
+          "response": [],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/v1/station/me",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "station",
+                "me"
+              ]
+            },
+            "description": "403 BUSINESS_NOT_APPROVED — station non encore approuvee."
+          }
+        },
+        {
+          "name": "Station Me — non authentifiee (401)",
+          "response": [],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/v1/station/me",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "station",
+                "me"
+              ]
+            },
+            "description": "401 UNAUTHORIZED."
+          }
+        }
+      ]
+    },
+    {
+      "name": "Station — Créneaux",
+      "description": "GET /api/v1/station/slots — Liste les créneaux de la station pour une date donnée avec disponibilité dynamique.\n\nAuth STATION requise. Chaque slot expose : available_spots, is_available, is_past, exceeds_closing_time.\nParamètre optionnel : date (YYYY-MM-DD). Défaut : aujourd'hui.",
+      "item": [
+        {
+          "name": "Slots aujourd'hui — sans date (200)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 200', () => pm.response.to.have.status(200));",
+                  "pm.test('Retourne un tableau de slots', () => {",
+                  "  const json = pm.response.json();",
+                  "  pm.expect(json.data).to.have.property('slots');",
+                  "  pm.expect(json.data.slots).to.be.an('array');",
+                  "});",
+                  "pm.test('Chaque slot a les champs de disponibilite', () => {",
+                  "  const slots = pm.response.json().data.slots;",
+                  "  if (slots.length > 0) {",
+                  "    pm.expect(slots[0]).to.have.property('available_spots');",
+                  "    pm.expect(slots[0]).to.have.property('is_available');",
+                  "    pm.expect(slots[0]).to.have.property('is_past');",
+                  "    pm.expect(slots[0]).to.have.property('exceeds_closing_time');",
+                  "  }",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "response": [],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/v1/station/slots",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "station", "slots"]
+            },
+            "description": "Retourne les créneaux du jour avec disponibilité dynamique. Pas de paramètre date : utilise aujourd'hui."
+          }
+        },
+        {
+          "name": "Slots avec date specifique — succes (200)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 200', () => pm.response.to.have.status(200));",
+                  "pm.test('Retourne les slots de la date demandee', () => {",
+                  "  const json = pm.response.json();",
+                  "  pm.expect(json.data.slots).to.be.an('array');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "response": [],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/v1/station/slots?date=2026-05-01",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "station", "slots"],
+              "query": [{ "key": "date", "value": "2026-05-01" }]
+            },
+            "description": "Retourne les créneaux pour le 2026-05-01. Modifier la date selon le besoin."
+          }
+        },
+        {
+          "name": "Slots — date invalide (400)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 400', () => pm.response.to.have.status(400));",
+                  "pm.test('Code VALIDATION_FAILED', () => {",
+                  "  pm.expect(pm.response.json().code).to.eql('VALIDATION_FAILED');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "response": [],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/v1/station/slots?date=01-05-2026",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "station", "slots"],
+              "query": [{ "key": "date", "value": "01-05-2026" }]
+            },
+            "description": "400 VALIDATION_FAILED — date doit être au format YYYY-MM-DD."
+          }
+        },
+        {
+          "name": "Slots — non authentifie (401)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 401', () => pm.response.to.have.status(401));"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "response": [],
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer invalid_token" }],
+            "url": {
+              "raw": "{{base_url}}/api/v1/station/slots",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "station", "slots"]
+            },
+            "description": "401 UNAUTHORIZED — token absent ou invalide."
+          }
+        }
+      ]
+    }
+  ]
+}

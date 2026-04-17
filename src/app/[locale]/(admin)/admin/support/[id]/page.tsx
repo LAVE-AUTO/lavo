@@ -1,17 +1,10 @@
-interface AdminSupportTicketDetailPageProps {
-  params: {
-    id: string;
-  };
-}
+import { setRequestLocale } from 'next-intl/server';
+import { AdminSupportDetail } from '@/components/admin/support/AdminSupportDetail';
 
-export default function AdminSupportTicketDetailPage({
-  params,
-}: AdminSupportTicketDetailPageProps) {
-  return (
-    <main className="p-6">
-      <h1 className="text-xl font-semibold">Détail ticket support</h1>
-      <p className="mt-2 text-sm text-zinc-600">ID: {params.id}</p>
-    </main>
-  );
-}
+type Props = { params: Promise<{ locale: string; id: string }> };
 
+export default async function AdminSupportTicketDetailPage({ params }: Props) {
+  const { locale, id } = await params;
+  setRequestLocale(locale);
+  return <AdminSupportDetail id={id} />;
+}

@@ -1,0 +1,52 @@
+import { NextResponse } from 'next/server';
+import { auth } from '@/auth';
+import { findOrCreateOAuthUser } from '@/server/auth/auth-service';
+import { buildRefreshCookieOptions } from '@/lib/jwt';
+import { REFRESH_COOKIE_NAME } from '@/helpers/server-constants';
+
+/**
+ * GET /api/v1/auth/oauth/finalize
+ * Bridge between NextAuth OAuth callback and our custom JWT session.
+ * Creates or retrieves the user, then redirects to /fr/auth/callback
+ * with the tokens as query parameters for the frontend to store.
+ *
+ * This route is the redirect target configured in auth.ts.
+ */
+export async function GET(request: Request) {
+  const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? 'http://localhost:3000';
+  const acceptLang = request.headers.get('accept-language') ?? '';
+  const locale = acceptLang.startsWith('en') ? 'en' : 'fr';
+  const loginUrl = `${appUrl}/${locale}/login?error=oauth_failed`;
+
+  try {
+    const session = await auth();
+    const { oauthEmail, oauthFirstName, oauthLastName } =
+      (session as unknown) as Record<string, unknown>;
+
+    if (!oauthEmail || typeof oauthEmail !== 'string') {
+      return NextResponse.redirect(loginUrl);
+    }
+
+    const { tokens } = await findOrCreateOAuthUser({
+      email: oauthEmail,
+      firstName: typeof oauthFirstName === 'string' ? oauthFirstName : '',
+      lastName: typeof oauthLastName === 'string' ? oauthLastName : '',
+    });
+
+    const params = new URLSearchParams({
+      access_token: tokens.accessJwt,
+      token_type: 'Bearer',
+      expires_in: String(tokens.expiresIn),
+    });
+
+    const response = NextResponse.redirect(`${appUrl}/${locale}/auth/callback?${params}`);
+    response.cookies.set(
+      REFRESH_COOKIE_NAME,
+      tokens.rawRefreshToken,
+      buildRefreshCookieOptions(),
+    );
+    return response;
+  } catch {
+    return NextResponse.redirect(loginUrl);
+  }
+}

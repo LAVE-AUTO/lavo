@@ -6,23 +6,23 @@ import {
   useEffect,
   useState,
   useCallback,
+  useRef,
   type ReactNode,
 } from 'react';
 import { useLocale } from 'next-intl';
-import { initAxiosService, refreshAxiosService } from '@/services/axios-service';
+import { initAxiosService, refreshAxiosService, postWithApi, setAxiosLocale } from '@/services/axios-service';
 
-const AUTH_TOKEN_KEY = 'lavo_auth_token';
-const AUTH_USER_KEY = 'lavo_auth_user';
-
-export type UserRole = 'CLIENT' | 'STATION' | 'SUPER_ADMIN';
+export type UserRole = 'client' | 'station' | 'admin';
 
 export interface AuthUser {
   id: string;
   email: string;
   first_name?: string;
   last_name?: string;
+  phone?: string;
   role: UserRole;
   station_id?: string | null;
+  force_password_change?: boolean;
 }
 
 interface AuthContextValue {
@@ -40,33 +40,23 @@ interface AuthContextValue {
 
 const AuthContext = createContext<AuthContextValue | undefined>(undefined);
 
-function getStoredToken(): string | null {
-  if (typeof window === 'undefined') return null;
-  return localStorage.getItem(AUTH_TOKEN_KEY);
+/** Returns "; Secure" when the page is served over HTTPS. */
+function secureFlag(): string {
+  return typeof window !== 'undefined' && window.isSecureContext ? '; Secure' : '';
 }
 
-function getStoredUser(): AuthUser | null {
-  if (typeof window === 'undefined') return null;
-  try {
-    const raw = localStorage.getItem(AUTH_USER_KEY);
-    return raw ? (JSON.parse(raw) as AuthUser) : null;
-  } catch {
-    return null;
-  }
+function normalizeRole(role: string): UserRole {
+  const lower = role.toLowerCase();
+  if (lower === 'admin') return 'admin';
+  if (lower === 'station') return 'station';
+  return 'client';
 }
 
-function setStoredAuth(token: string | null, user: AuthUser | null): void {
-  if (typeof window === 'undefined') return;
-  if (token) {
-    localStorage.setItem(AUTH_TOKEN_KEY, token);
-  } else {
-    localStorage.removeItem(AUTH_TOKEN_KEY);
-  }
-  if (user) {
-    localStorage.setItem(AUTH_USER_KEY, JSON.stringify(user));
-  } else {
-    localStorage.removeItem(AUTH_USER_KEY);
-  }
+function normalizeUser(raw: Record<string, unknown>): AuthUser {
+  return {
+    ...raw,
+    role: normalizeRole(String(raw.role || 'client')),
+  } as AuthUser;
 }
 
 export function AuthProvider({ children }: { children: ReactNode }) {
@@ -78,87 +68,171 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [token, setToken] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
-  const handleUnauthorized = useCallback(() => {
-    setStoredAuth(null, null);
-    setToken(null);
-    setUser(null);
-    if (typeof window !== 'undefined') {
-      window.location.href = loginPath;
-    }
-  }, [loginPath]);
+  // Ref to hold current token for the tokenGetter closure (avoids stale closures)
+  const tokenRef = useRef<string | null>(null);
 
+  // Race-condition guard for concurrent 401 refresh attempts
+  const isRefreshingRef = useRef(false);
+  const refreshPromiseRef = useRef<Promise<string | null> | null>(null);
+
+  // Keep axios Accept-Language in sync with the app locale
   useEffect(() => {
-    const storedToken = getStoredToken();
-    const storedUser = getStoredUser();
+    setAxiosLocale(locale);
+  }, [locale]);
 
-    if (storedToken) {
-      setToken(storedToken);
-      setUser(storedUser);
-
-      refreshAxiosService({
-        baseURL: process.env.NEXT_PUBLIC_API_URL || '/api/v1',
-        tokenGetter: () => getStoredToken(),
-        onUnauthorized: handleUnauthorized,
+  const refreshAccessToken = useCallback(async (): Promise<string | null> => {
+    try {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || '/api/v1'}/auth/refresh`, {
+        method: 'POST',
+        credentials: 'include',
+        headers: { 'Content-Type': 'application/json' },
       });
-    } else {
-      initAxiosService({
-        baseURL: process.env.NEXT_PUBLIC_API_URL || '/api/v1',
-      });
+      if (res.ok) {
+        const body = await res.json();
+        const data = body.data;
+        if (data && data.access_token && data.user) {
+          const normalized = normalizeUser(data.user);
+          tokenRef.current = data.access_token;
+          setToken(data.access_token);
+          setUser(normalized);
+          // Hint cookie for middleware-level admin guard (non-httpOnly, non-sensitive)
+          if (typeof document !== 'undefined') {
+            if (normalized.role === 'admin') {
+              document.cookie = `lavo_admin_session=1; path=/; SameSite=Lax${secureFlag()}`;
+            } else {
+              document.cookie = `lavo_admin_session=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT; SameSite=Lax${secureFlag()}`;
+            }
+          }
+          return data.access_token;
+        }
+      }
+    } catch {
+      // Refresh failed
     }
+    return null;
+  }, []);
 
-    setIsLoading(false);
-  }, [handleUnauthorized, loginPath]);
-
-  const login = useCallback((newToken: string, newUser: AuthUser) => {
-    setStoredAuth(newToken, newUser);
-    setToken(newToken);
-    setUser(newUser);
-    refreshAxiosService({
-      baseURL: process.env.NEXT_PUBLIC_API_URL || '/api/v1',
-      tokenGetter: () => getStoredToken(),
-      onUnauthorized: () => {
-        setStoredAuth(null, null);
-        setToken(null);
-        setUser(null);
-        if (typeof window !== 'undefined') window.location.href = loginPath;
-      },
-    });
-  }, [loginPath]);
-
-  const logout = useCallback(() => {
-    setStoredAuth(null, null);
+  const clearAuth = useCallback(() => {
+    tokenRef.current = null;
     setToken(null);
     setUser(null);
     initAxiosService({
       baseURL: process.env.NEXT_PUBLIC_API_URL || '/api/v1',
     });
+    if (typeof document !== 'undefined') {
+      document.cookie = `lavo_admin_session=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT; SameSite=Lax${secureFlag()}`;
+    }
+    if (typeof window !== 'undefined') {
+      window.location.href = loginPath;
+    }
+  }, [loginPath]);
+
+  const handleUnauthorized = useCallback(async () => {
+    if (!isRefreshingRef.current) {
+      isRefreshingRef.current = true;
+      refreshPromiseRef.current = refreshAccessToken().finally(() => {
+        isRefreshingRef.current = false;
+        refreshPromiseRef.current = null;
+      });
+    }
+
+    const newToken = await refreshPromiseRef.current;
+    if (newToken) {
+      refreshAxiosService({
+        baseURL: process.env.NEXT_PUBLIC_API_URL || '/api/v1',
+        tokenGetter: () => tokenRef.current,
+        onUnauthorized: () => { clearAuth(); },
+      });
+    } else {
+      clearAuth();
+    }
+  }, [refreshAccessToken, clearAuth]);
+
+  // On mount: restore session from the httpOnly refresh token cookie.
+  // The user object is fetched from the server — nothing is read from localStorage.
+  useEffect(() => {
+    refreshAccessToken().then((newToken) => {
+      if (newToken) {
+        refreshAxiosService({
+          baseURL: process.env.NEXT_PUBLIC_API_URL || '/api/v1',
+          tokenGetter: () => tokenRef.current,
+          onUnauthorized: handleUnauthorized,
+        });
+      } else {
+        initAxiosService({
+          baseURL: process.env.NEXT_PUBLIC_API_URL || '/api/v1',
+        });
+      }
+      setIsLoading(false);
+    });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  const login = useCallback((newToken: string, newUser: AuthUser) => {
+    const normalized = normalizeUser(newUser as unknown as Record<string, unknown>);
+    tokenRef.current = newToken;
+    setToken(newToken);
+    setUser(normalized);
+    // Hint cookie for middleware-level admin guard (non-httpOnly, non-sensitive)
+    if (typeof document !== 'undefined') {
+      if (normalized.role === 'admin') {
+        document.cookie = `lavo_admin_session=1; path=/; SameSite=Lax${secureFlag()}`;
+      } else {
+        document.cookie = `lavo_admin_session=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT; SameSite=Lax${secureFlag()}`;
+      }
+    }
+    refreshAxiosService({
+      baseURL: process.env.NEXT_PUBLIC_API_URL || '/api/v1',
+      tokenGetter: () => tokenRef.current,
+      onUnauthorized: () => {
+        clearAuth();
+      },
+    });
+  }, [clearAuth]);
+
+  const logout = useCallback(async () => {
+    try {
+      await postWithApi('/auth/logout', null, { successStatus: 200 });
+    } catch {
+      // Logout API failure is non-blocking
+    }
+    tokenRef.current = null;
+    setToken(null);
+    setUser(null);
+    initAxiosService({
+      baseURL: process.env.NEXT_PUBLIC_API_URL || '/api/v1',
+    });
+    if (typeof document !== 'undefined') {
+      document.cookie = `lavo_admin_session=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT; SameSite=Lax${secureFlag()}`;
+    }
     if (typeof window !== 'undefined') {
       window.location.href = homePath;
     }
   }, [homePath]);
 
   const refetchUser = useCallback(async () => {
-    if (!token) return;
+    const currentToken = tokenRef.current;
+    if (!currentToken) return;
     try {
       const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || '/api/v1'}/auth/me`, {
-        headers: { Authorization: `Bearer ${token}` },
+        headers: { Authorization: `Bearer ${currentToken}` },
+        credentials: 'include',
       });
       if (res.status === 401) {
-        handleUnauthorized();
+        await handleUnauthorized();
         return;
       }
       if (res.ok) {
         const data = await res.json();
-        const u = data?.data ?? data?.user;
+        const u = data?.data;
         if (u) {
-          setUser(u);
-          setStoredAuth(token, u);
+          setUser(normalizeUser(u));
         }
       }
     } catch {
       // Silent fail; keep current user
     }
-  }, [token, handleUnauthorized]);
+  }, [handleUnauthorized]);
 
   const value: AuthContextValue = {
     user,
@@ -168,9 +242,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     login,
     logout,
     refetchUser,
-    isClient: user?.role === 'CLIENT',
-    isStation: user?.role === 'STATION',
-    isSuperAdmin: user?.role === 'SUPER_ADMIN',
+    isClient: user?.role === 'client',
+    isStation: user?.role === 'station',
+    isSuperAdmin: user?.role === 'admin',
   };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

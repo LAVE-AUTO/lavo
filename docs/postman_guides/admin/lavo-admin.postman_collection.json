@@ -1,0 +1,1748 @@
+{
+  "info": {
+    "name": "LAVO — Admin API",
+    "description": "Collection pour les endpoints d'administration LAVO.\n\nVariable requise : `base_url` (ex: http://localhost:3000)\nVariable requise : `access_token` (JWT admin, obtenu après login admin)\nVariable requise : `station_id` (UUID de la station ciblée)\nVariable requise : `user_id` (UUID de l'utilisateur ciblé)\nVariable requise : `dispute_id` (UUID du litige ciblé)\n\n## Groupes\n- **Admin — Stations** : lister (paginé), détailler, approuver, rejeter, modifier les stations\n- **Admin — Users** : modifier les informations, débloquer un compte utilisateur\n- **Admin — Litiges** : lister (paginé + filtres), rembourser, clôturer (résoudre/rejeter)",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    {
+      "key": "base_url",
+      "value": "http://localhost:3000",
+      "type": "string"
+    },
+    {
+      "key": "access_token",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "station_id",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "user_id",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "dispute_id",
+      "value": "",
+      "type": "string"
+    }
+  ],
+  "item": [
+    {
+      "name": "Admin — Stations",
+      "item": [
+        {
+          "name": "Lister stations en attente (200)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 200', () => pm.response.to.have.status(200));",
+                  "pm.test('Retourne stations paginées', () => {",
+                  "  const json = pm.response.json();",
+                  "  pm.expect(json.data).to.have.property('stations');",
+                  "  pm.expect(json.data).to.have.property('meta');",
+                  "  pm.expect(json.data.meta).to.have.property('total');",
+                  "  pm.expect(json.data.meta).to.have.property('page');",
+                  "  pm.expect(json.data.meta).to.have.property('per_page');",
+                  "  pm.expect(json.data.meta).to.have.property('total_pages');",
+                  "  pm.expect(json.data.stations).to.be.an('array');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "response": [],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/v1/admin/stations?page=1&per_page=20",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "admin",
+                "stations"
+              ],
+              "query": [
+                {
+                  "key": "page",
+                  "value": "1"
+                },
+                {
+                  "key": "per_page",
+                  "value": "20"
+                }
+              ]
+            },
+            "description": "Authentifie admin. Retourne les stations avec status=pending_admin_validation.\n\nPagination : `page` (defaut: 1), `per_page` (defaut: 20, max: 100).\nReponse : `{ data: { stations: [...], meta: { total, page, per_page, total_pages } } }`"
+          }
+        },
+        {
+          "name": "Lister stations — page 2 (200)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 200', () => pm.response.to.have.status(200));",
+                  "pm.test('Pagination correcte — page 2', () => {",
+                  "  const json = pm.response.json();",
+                  "  pm.expect(json.data.meta.page).to.eql(2);",
+                  "  pm.expect(json.data.meta.per_page).to.eql(10);",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "response": [],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/v1/admin/stations?page=2&per_page=10",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "admin",
+                "stations"
+              ],
+              "query": [
+                {
+                  "key": "page",
+                  "value": "2"
+                },
+                {
+                  "key": "per_page",
+                  "value": "10"
+                }
+              ]
+            },
+            "description": "Pagination : page 2, 10 resultats par page."
+          }
+        },
+        {
+          "name": "Detail station (200)",
+          "response": [],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/v1/admin/stations/{{station_id}}",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "admin",
+                "stations",
+                "{{station_id}}"
+              ]
+            },
+            "description": "Detail station incluant les documents soumis."
+          }
+        },
+        {
+          "name": "Modifier station (200)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 200', () => pm.response.to.have.status(200));",
+                  "pm.test('Retourne la station mise a jour', () => {",
+                  "  const json = pm.response.json();",
+                  "  pm.expect(json.data).to.have.property('id');",
+                  "  pm.expect(json.data.status).to.eql('suspended');",
+                  "  pm.expect(json).to.have.property('message');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "response": [],
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/admin/stations/{{station_id}}",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "admin",
+                "stations",
+                "{{station_id}}"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"status\": \"suspended\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "description": "Modifie les champs whitelistés d'une station et enregistre un log admin.\n\nChamps autorisés : `name`, `legal_name`, `address`, `city`, `latitude`, `longitude`, `description`, `service_scope` (exterior|interior|both), `status` (active|suspended|disabled), `is_open`.\n\nAu moins un champ requis. Log `UPDATE_STATION` avec before/after créé dans admin_logs.\n\nReponse : `{ message, data: station }`"
+          }
+        },
+        {
+          "name": "Modifier station — plusieurs champs (200)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 200', () => pm.response.to.have.status(200));",
+                  "pm.test('Champs mis a jour', () => {",
+                  "  const json = pm.response.json();",
+                  "  pm.expect(json.data.city).to.eql('Abidjan');",
+                  "  pm.expect(json.data.is_open).to.eql(false);",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "response": [],
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/admin/stations/{{station_id}}",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "admin",
+                "stations",
+                "{{station_id}}"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"city\": \"Abidjan\",\n  \"is_open\": false,\n  \"description\": \"Station mise a jour par admin.\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "description": "Mise a jour de plusieurs champs simultanément."
+          }
+        },
+        {
+          "name": "Modifier station — body vide (400)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 400', () => pm.response.to.have.status(400));",
+                  "pm.test('Code VALIDATION_FAILED', () => {",
+                  "  const json = pm.response.json();",
+                  "  pm.expect(json.code).to.eql('VALIDATION_FAILED');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "response": [],
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/admin/stations/{{station_id}}",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "admin",
+                "stations",
+                "{{station_id}}"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "description": "400 VALIDATION_FAILED — body vide, au moins un champ requis."
+          }
+        },
+        {
+          "name": "Modifier station — statut invalide (400)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 400', () => pm.response.to.have.status(400));",
+                  "pm.test('Code VALIDATION_FAILED', () => {",
+                  "  const json = pm.response.json();",
+                  "  pm.expect(json.code).to.eql('VALIDATION_FAILED');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "response": [],
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/admin/stations/{{station_id}}",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "admin",
+                "stations",
+                "{{station_id}}"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"status\": \"rejected\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "description": "400 VALIDATION_FAILED — statut 'rejected' non autorisé via PUT (utiliser /reject à la place). Valeurs acceptées : active, suspended, disabled."
+          }
+        },
+        {
+          "name": "Modifier station — introuvable (404)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 404', () => pm.response.to.have.status(404));",
+                  "pm.test('Code NOT_FOUND', () => {",
+                  "  const json = pm.response.json();",
+                  "  pm.expect(json.code).to.eql('NOT_FOUND');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "response": [],
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/admin/stations/00000000-0000-0000-0000-000000000000",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "admin",
+                "stations",
+                "00000000-0000-0000-0000-000000000000"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"status\": \"active\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "description": "404 NOT_FOUND — UUID valide mais station inexistante."
+          }
+        },
+        {
+          "name": "Approuver station (200)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 200', () => pm.response.to.have.status(200));"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "response": [],
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/v1/admin/stations/{{station_id}}/approve",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "admin",
+                "stations",
+                "{{station_id}}",
+                "approve"
+              ]
+            },
+            "description": "Approuve la station — status=active.\n\nRetourne 409 CONFLICT si la station est deja approuvee ou dans un statut terminal (active, rejected)."
+          }
+        },
+        {
+          "name": "Approuver station deja approuvee (409)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 409', () => pm.response.to.have.status(409));",
+                  "pm.test('Code CONFLICT', () => {",
+                  "  const json = pm.response.json();",
+                  "  pm.expect(json.code).to.eql('CONFLICT');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "response": [],
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/v1/admin/stations/{{station_id}}/approve",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "admin",
+                "stations",
+                "{{station_id}}",
+                "approve"
+              ]
+            },
+            "description": "409 CONFLICT — la station est deja approuvee (status=active) ou dans un statut terminal. Executer apres avoir deja approuve la meme station."
+          }
+        },
+        {
+          "name": "Rejeter station (200)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 200', () => pm.response.to.have.status(200));"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "response": [],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/admin/stations/{{station_id}}/reject",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "admin",
+                "stations",
+                "{{station_id}}",
+                "reject"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\"rejection_reason\":\"Documents fournis incomplets ou invalides.\"}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "description": "Rejette la station — status=rejected avec raison.\n\nRetourne 409 CONFLICT si la station est deja rejetee ou dans un statut terminal (active, rejected)."
+          }
+        },
+        {
+          "name": "Rejeter station deja rejetee (409)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 409', () => pm.response.to.have.status(409));",
+                  "pm.test('Code CONFLICT', () => {",
+                  "  const json = pm.response.json();",
+                  "  pm.expect(json.code).to.eql('CONFLICT');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "response": [],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/admin/stations/{{station_id}}/reject",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "admin",
+                "stations",
+                "{{station_id}}",
+                "reject"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\"rejection_reason\":\"Documents fournis incomplets ou invalides.\"}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "description": "409 CONFLICT — la station est deja rejetee ou dans un statut terminal. Executer apres avoir deja rejete la meme station."
+          }
+        },
+        {
+          "name": "Rejeter — raison trop courte (400)",
+          "response": [],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/admin/stations/{{station_id}}/reject",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "admin",
+                "stations",
+                "{{station_id}}",
+                "reject"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\"rejection_reason\":\"Non\"}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "description": "400 VALIDATION_FAILED — rejection_reason trop courte."
+          }
+        },
+        {
+          "name": "Admin — non autorise (403)",
+          "response": [],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/v1/admin/stations",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "admin",
+                "stations"
+              ]
+            },
+            "description": "403 FORBIDDEN — role != admin."
+          }
+        }
+      ]
+    },
+    {
+      "name": "Admin — Users",
+      "item": [
+        {
+          "name": "Modifier utilisateur (200)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 200', () => pm.response.to.have.status(200));",
+                  "pm.test('Retourne utilisateur mis a jour', () => {",
+                  "  const json = pm.response.json();",
+                  "  pm.expect(json.data).to.have.property('id');",
+                  "  pm.expect(json.data).to.not.have.property('password_hash');",
+                  "  pm.expect(json.data.status).to.eql('suspended');",
+                  "  pm.expect(json).to.have.property('message');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "response": [],
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/admin/users/{{user_id}}",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "admin",
+                "users",
+                "{{user_id}}"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"status\": \"suspended\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "description": "Modifie les champs whitelistés d'un utilisateur et enregistre un log admin.\n\nChamps autorisés : `first_name`, `last_name`, `phone` (format E.164), `status` (active|suspended|blocked|pending_verification).\n\nAu moins un champ requis. Log `UPDATE_USER` avec before/after créé dans admin_logs.\n\nReponse : `{ message, data: user }` — `password_hash` exclu de la réponse."
+          }
+        },
+        {
+          "name": "Modifier utilisateur — plusieurs champs (200)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 200', () => pm.response.to.have.status(200));",
+                  "pm.test('Champs mis a jour', () => {",
+                  "  const json = pm.response.json();",
+                  "  pm.expect(json.data.first_name).to.eql('Jean');",
+                  "  pm.expect(json.data.last_name).to.eql('Dupont');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "response": [],
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/admin/users/{{user_id}}",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "admin",
+                "users",
+                "{{user_id}}"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"first_name\": \"Jean\",\n  \"last_name\": \"Dupont\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "description": "Mise a jour de plusieurs champs simultanément."
+          }
+        },
+        {
+          "name": "Modifier utilisateur — body vide (400)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 400', () => pm.response.to.have.status(400));",
+                  "pm.test('Code VALIDATION_FAILED', () => {",
+                  "  const json = pm.response.json();",
+                  "  pm.expect(json.code).to.eql('VALIDATION_FAILED');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "response": [],
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/admin/users/{{user_id}}",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "admin",
+                "users",
+                "{{user_id}}"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "description": "400 VALIDATION_FAILED — body vide, au moins un champ requis."
+          }
+        },
+        {
+          "name": "Modifier utilisateur — champ non autorise (400)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 400', () => pm.response.to.have.status(400));",
+                  "pm.test('Code VALIDATION_FAILED', () => {",
+                  "  const json = pm.response.json();",
+                  "  pm.expect(json.code).to.eql('VALIDATION_FAILED');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "response": [],
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/admin/users/{{user_id}}",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "admin",
+                "users",
+                "{{user_id}}"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"role\": \"admin\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "description": "400 VALIDATION_FAILED — champ `role` non autorisé (strict whitelist). Idem pour `email`, `password_hash`, `stripe_customer_id`."
+          }
+        },
+        {
+          "name": "Modifier utilisateur — UUID invalide (400)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 400', () => pm.response.to.have.status(400));",
+                  "pm.test('Code VALIDATION_FAILED', () => {",
+                  "  const json = pm.response.json();",
+                  "  pm.expect(json.code).to.eql('VALIDATION_FAILED');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "response": [],
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/admin/users/not-a-uuid",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "admin",
+                "users",
+                "not-a-uuid"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"status\": \"active\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "description": "400 VALIDATION_FAILED — paramètre :id non UUID."
+          }
+        },
+        {
+          "name": "Modifier utilisateur — introuvable (404)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 404', () => pm.response.to.have.status(404));",
+                  "pm.test('Code NOT_FOUND', () => {",
+                  "  const json = pm.response.json();",
+                  "  pm.expect(json.code).to.eql('NOT_FOUND');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "response": [],
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/admin/users/00000000-0000-0000-0000-000000000000",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "admin",
+                "users",
+                "00000000-0000-0000-0000-000000000000"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"status\": \"active\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "description": "404 NOT_FOUND — UUID valide mais utilisateur inexistant."
+          }
+        },
+        {
+          "name": "Débloquer utilisateur (200)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 200', () => pm.response.to.have.status(200));",
+                  "pm.test('Compte debloque — status active', () => {",
+                  "  const json = pm.response.json();",
+                  "  pm.expect(json.data).to.have.property('id');",
+                  "  pm.expect(json.data.status).to.eql('active');",
+                  "  pm.expect(json.data).to.not.have.property('password_hash');",
+                  "  pm.expect(json).to.have.property('message');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "response": [],
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/v1/admin/users/{{user_id}}/unblock",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "admin",
+                "users",
+                "{{user_id}}",
+                "unblock"
+              ]
+            },
+            "description": "Débloque un compte utilisateur : status → active + reset du rate-limit auth (clé email).\nLog `UNBLOCK_ACCOUNT` créé dans admin_logs avec before/after status.\n\nPrérequis : utilisateur avec status != active (ex: suspended, blocked).\nReponse : `{ message, data: user }`"
+          }
+        },
+        {
+          "name": "Débloquer utilisateur déjà actif (409)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 409', () => pm.response.to.have.status(409));",
+                  "pm.test('Code CONFLICT', () => {",
+                  "  const json = pm.response.json();",
+                  "  pm.expect(json.code).to.eql('CONFLICT');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "response": [],
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/v1/admin/users/{{user_id}}/unblock",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "admin",
+                "users",
+                "{{user_id}}",
+                "unblock"
+              ]
+            },
+            "description": "409 CONFLICT — compte déjà actif. Exécuter après un unblock réussi sur le même utilisateur."
+          }
+        },
+        {
+          "name": "Débloquer utilisateur — introuvable (404)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 404', () => pm.response.to.have.status(404));",
+                  "pm.test('Code NOT_FOUND', () => {",
+                  "  const json = pm.response.json();",
+                  "  pm.expect(json.code).to.eql('NOT_FOUND');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "response": [],
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/v1/admin/users/00000000-0000-0000-0000-000000000000/unblock",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "admin",
+                "users",
+                "00000000-0000-0000-0000-000000000000",
+                "unblock"
+              ]
+            },
+            "description": "404 NOT_FOUND — UUID valide mais utilisateur inexistant."
+          }
+        },
+        {
+          "name": "Débloquer utilisateur — UUID invalide (400)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 400', () => pm.response.to.have.status(400));",
+                  "pm.test('Code VALIDATION_FAILED', () => {",
+                  "  const json = pm.response.json();",
+                  "  pm.expect(json.code).to.eql('VALIDATION_FAILED');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "response": [],
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/v1/admin/users/not-a-uuid/unblock",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "admin",
+                "users",
+                "not-a-uuid",
+                "unblock"
+              ]
+            },
+            "description": "400 VALIDATION_FAILED — paramètre :id non UUID."
+          }
+        },
+        {
+          "name": "Admin — non autorise (403)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 403', () => pm.response.to.have.status(403));",
+                  "pm.test('Code FORBIDDEN', () => {",
+                  "  const json = pm.response.json();",
+                  "  pm.expect(json.code).to.eql('FORBIDDEN');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "response": [],
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/admin/users/{{user_id}}",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "admin",
+                "users",
+                "{{user_id}}"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"status\": \"active\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "description": "403 FORBIDDEN — appel effectué avec un token client ou station (role != admin)."
+          }
+        }
+      ]
+    },
+    {
+      "name": "Admin — Litiges",
+      "description": "Gestion des litiges : liste paginée avec filtres, remboursement Stripe, clôture (résolution ou rejet).\n\nPrerequis : token admin valide dans `access_token`, UUID du litige dans `dispute_id`.\n\nChaque action admin (REFUND_DISPUTE, CLOSE_DISPUTE) est tracée dans admin_logs.",
+      "item": [
+        {
+          "name": "Lister litiges (200)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 200', () => pm.response.to.have.status(200));",
+                  "pm.test('Retourne litiges paginés avec station', () => {",
+                  "  const json = pm.response.json();",
+                  "  pm.expect(json.data).to.have.property('items');",
+                  "  pm.expect(json.data).to.have.property('meta');",
+                  "  pm.expect(json.data.meta).to.have.property('total');",
+                  "  pm.expect(json.data.meta).to.have.property('page');",
+                  "  pm.expect(json.data.meta).to.have.property('per_page');",
+                  "  pm.expect(json.data.meta).to.have.property('total_pages');",
+                  "  pm.expect(json.data.items).to.be.an('array');",
+                  "  if (json.data.items.length > 0) {",
+                  "    const item = json.data.items[0];",
+                  "    pm.expect(item).to.have.property('id');",
+                  "    pm.expect(item).to.have.property('status');",
+                  "    pm.expect(item).to.have.property('station');",
+                  "    if (item.station) {",
+                  "      pm.expect(item.station).to.have.property('name');",
+                  "      pm.expect(item.station).to.have.property('city');",
+                  "    }",
+                  "  }",
+                  "  if (json.data.items.length > 0) {",
+                  "    pm.collectionVariables.set('dispute_id', json.data.items[0].id);",
+                  "  }",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "response": [],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/v1/admin/disputes?page=1&per_page=20",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "admin", "disputes"],
+              "query": [
+                { "key": "page", "value": "1" },
+                { "key": "per_page", "value": "20" }
+              ]
+            },
+            "description": "Retourne la liste paginée de tous les litiges, avec les informations de station embarquées.\n\nChaque item contient le litige complet + `station: { id, name, city, address }` (null si station supprimée).\n\nPagination : `page` (defaut 1), `per_page` (defaut 20, max 100).\nFiltre optionnel : `status` (open|refunded|resolved|rejected), `station_id`, `client_id`, `date_from`, `date_to`.\n\nReponse : `{ data: { items: [...], meta: { total, page, per_page, total_pages } } }`"
+          }
+        },
+        {
+          "name": "Lister litiges — filtre status=open (200)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 200', () => pm.response.to.have.status(200));",
+                  "pm.test('Tous les litiges retournés sont open', () => {",
+                  "  const json = pm.response.json();",
+                  "  json.data.items.forEach(item => {",
+                  "    pm.expect(item.status).to.eql('open');",
+                  "  });",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "response": [],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/v1/admin/disputes?status=open&page=1&per_page=20",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "admin", "disputes"],
+              "query": [
+                { "key": "status", "value": "open" },
+                { "key": "page", "value": "1" },
+                { "key": "per_page", "value": "20" }
+              ]
+            },
+            "description": "Filtre les litiges par status=open. Tous les items retournés doivent avoir status=open."
+          }
+        },
+        {
+          "name": "Lister litiges — filtre date_from (200)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 200', () => pm.response.to.have.status(200));"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "response": [],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/v1/admin/disputes?date_from=2024-01-01T00:00:00Z&date_to=2099-12-31T23:59:59Z",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "admin", "disputes"],
+              "query": [
+                { "key": "date_from", "value": "2024-01-01T00:00:00Z" },
+                { "key": "date_to", "value": "2099-12-31T23:59:59Z" }
+              ]
+            },
+            "description": "Filtre par plage de dates. `date_from` et `date_to` doivent être des datetimes ISO 8601 avec timezone."
+          }
+        },
+        {
+          "name": "Lister litiges — status invalide (400)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 400', () => pm.response.to.have.status(400));",
+                  "pm.test('Code VALIDATION_FAILED', () => {",
+                  "  const json = pm.response.json();",
+                  "  pm.expect(json.code).to.eql('VALIDATION_FAILED');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "response": [],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/v1/admin/disputes?status=invalid_status",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "admin", "disputes"],
+              "query": [
+                { "key": "status", "value": "invalid_status" }
+              ]
+            },
+            "description": "400 VALIDATION_FAILED — status non reconnu (valeurs acceptées : open, refunded, resolved, rejected)."
+          }
+        },
+        {
+          "name": "Lister litiges — non authentifié (401)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 401', () => pm.response.to.have.status(401));"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "response": [],
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Authorization", "value": "Bearer invalid_token" }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/admin/disputes",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "admin", "disputes"]
+            },
+            "description": "401 UNAUTHORIZED — token absent ou invalide."
+          }
+        },
+        {
+          "name": "Rembourser litige — total (200)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 200', () => pm.response.to.have.status(200));",
+                  "pm.test('Litige remboursé', () => {",
+                  "  const json = pm.response.json();",
+                  "  pm.expect(json.data.status).to.eql('refunded');",
+                  "  pm.expect(json.data).to.have.property('refunded_amount');",
+                  "  pm.expect(json.data).to.have.property('stripe_refund_id');",
+                  "  pm.expect(json.message).to.eql('Dispute refunded successfully');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "response": [],
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/v1/admin/disputes/{{dispute_id}}/refund",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "admin", "disputes", "{{dispute_id}}", "refund"]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "description": "Remboursement total du litige via Stripe. Body vide ou sans `amount` → remboursement du montant intégral payé.\n\nPrerequis : litige status=open, reservation sans stripe_transfer_id.\nMettra à jour : status=refunded, refunded_amount, stripe_refund_id.\nLog admin créé : action=REFUND_DISPUTE.\n\nReponse : `{ message, data: dispute }`"
+          }
+        },
+        {
+          "name": "Rembourser litige — partiel (200)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 200', () => pm.response.to.have.status(200));",
+                  "pm.test('Litige partiellement remboursé', () => {",
+                  "  const json = pm.response.json();",
+                  "  pm.expect(json.data.status).to.eql('refunded');",
+                  "  pm.expect(parseFloat(json.data.refunded_amount)).to.eql(5.00);",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "response": [],
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/admin/disputes/{{dispute_id}}/refund",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "admin", "disputes", "{{dispute_id}}", "refund"]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"amount\": 5.00\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "description": "Remboursement partiel : fournir `amount` (en EUR, > 0, <= montant payé)."
+          }
+        },
+        {
+          "name": "Rembourser litige — montant supérieur au payé (400)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 400', () => pm.response.to.have.status(400));",
+                  "pm.test('Code VALIDATION_FAILED', () => {",
+                  "  const json = pm.response.json();",
+                  "  pm.expect(json.code).to.eql('VALIDATION_FAILED');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "response": [],
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/admin/disputes/{{dispute_id}}/refund",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "admin", "disputes", "{{dispute_id}}", "refund"]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"amount\": 99999.00\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "description": "400 VALIDATION_FAILED — amount dépasse le montant payé de la réservation."
+          }
+        },
+        {
+          "name": "Rembourser litige — transfert existant (400)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 400', () => pm.response.to.have.status(400));",
+                  "pm.test('Code REFUND_NOT_ELIGIBLE', () => {",
+                  "  const json = pm.response.json();",
+                  "  pm.expect(json.code).to.eql('REFUND_NOT_ELIGIBLE');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "response": [],
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/v1/admin/disputes/{{dispute_id}}/refund",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "admin", "disputes", "{{dispute_id}}", "refund"]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "description": "400 REFUND_NOT_ELIGIBLE — la réservation a déjà un stripe_transfer_id (transfert vers la station effectué). Remboursement bloqué."
+          }
+        },
+        {
+          "name": "Rembourser litige — déjà clôturé (409)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 409', () => pm.response.to.have.status(409));",
+                  "pm.test('Code DISPUTE_ALREADY_CLOSED', () => {",
+                  "  const json = pm.response.json();",
+                  "  pm.expect(json.code).to.eql('DISPUTE_ALREADY_CLOSED');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "response": [],
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/v1/admin/disputes/{{dispute_id}}/refund",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "admin", "disputes", "{{dispute_id}}", "refund"]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "description": "409 DISPUTE_ALREADY_CLOSED — litige déjà remboursé, résolu ou rejeté."
+          }
+        },
+        {
+          "name": "Rembourser litige — introuvable (404)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 404', () => pm.response.to.have.status(404));",
+                  "pm.test('Code NOT_FOUND', () => {",
+                  "  const json = pm.response.json();",
+                  "  pm.expect(json.code).to.eql('NOT_FOUND');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "response": [],
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/v1/admin/disputes/00000000-0000-0000-0000-000000000000/refund",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "admin", "disputes", "00000000-0000-0000-0000-000000000000", "refund"]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "description": "404 NOT_FOUND — UUID valide mais litige inexistant."
+          }
+        },
+        {
+          "name": "Clôturer litige — résoudre (200)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 200', () => pm.response.to.have.status(200));",
+                  "pm.test('Litige résolu', () => {",
+                  "  const json = pm.response.json();",
+                  "  pm.expect(json.data.status).to.eql('resolved');",
+                  "  pm.expect(json.data).to.have.property('closed_reason');",
+                  "  pm.expect(json.data).to.have.property('closed_by');",
+                  "  pm.expect(json.message).to.eql('Dispute closed successfully');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "response": [],
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/admin/disputes/{{dispute_id}}/close",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "admin", "disputes", "{{dispute_id}}", "close"]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"status\": \"resolved\",\n  \"reason\": \"Le client a été remboursé manuellement hors plateforme.\"\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "description": "Clôture le litige avec status=resolved. Aucun remboursement Stripe — décision purement administrative.\n\nLog admin créé : action=CLOSE_DISPUTE avec previous_status, new_status, reason.\n\nReponse : `{ message, data: dispute }`"
+          }
+        },
+        {
+          "name": "Clôturer litige — rejeter (200)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 200', () => pm.response.to.have.status(200));",
+                  "pm.test('Litige rejeté', () => {",
+                  "  const json = pm.response.json();",
+                  "  pm.expect(json.data.status).to.eql('rejected');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "response": [],
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/admin/disputes/{{dispute_id}}/close",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "admin", "disputes", "{{dispute_id}}", "close"]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"status\": \"rejected\",\n  \"reason\": \"Litige non fondé — preuve insuffisante.\"\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "description": "Clôture le litige avec status=rejected."
+          }
+        },
+        {
+          "name": "Clôturer litige — status manquant (400)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 400', () => pm.response.to.have.status(400));",
+                  "pm.test('Code VALIDATION_FAILED', () => {",
+                  "  const json = pm.response.json();",
+                  "  pm.expect(json.code).to.eql('VALIDATION_FAILED');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "response": [],
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/admin/disputes/{{dispute_id}}/close",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "admin", "disputes", "{{dispute_id}}", "close"]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"reason\": \"Raison fournie mais status absent.\"\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "description": "400 VALIDATION_FAILED — champ `status` obligatoire (resolved|rejected)."
+          }
+        },
+        {
+          "name": "Clôturer litige — déjà clôturé (409)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 409', () => pm.response.to.have.status(409));",
+                  "pm.test('Code DISPUTE_ALREADY_CLOSED', () => {",
+                  "  const json = pm.response.json();",
+                  "  pm.expect(json.code).to.eql('DISPUTE_ALREADY_CLOSED');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "response": [],
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/admin/disputes/{{dispute_id}}/close",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "admin", "disputes", "{{dispute_id}}", "close"]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"status\": \"resolved\",\n  \"reason\": \"Tentative de double cloture.\"\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "description": "409 DISPUTE_ALREADY_CLOSED — litige déjà clôturé (status != open)."
+          }
+        },
+        {
+          "name": "Clôturer litige — introuvable (404)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 404', () => pm.response.to.have.status(404));",
+                  "pm.test('Code NOT_FOUND', () => {",
+                  "  const json = pm.response.json();",
+                  "  pm.expect(json.code).to.eql('NOT_FOUND');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "response": [],
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/admin/disputes/00000000-0000-0000-0000-000000000000/close",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "admin", "disputes", "00000000-0000-0000-0000-000000000000", "close"]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"status\": \"resolved\",\n  \"reason\": \"Litige introuvable.\"\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "description": "404 NOT_FOUND — UUID valide mais litige inexistant."
+          }
+        }
+      ]
+    }
+  ]
+}

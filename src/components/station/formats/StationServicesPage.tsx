@@ -1,0 +1,222 @@
+'use client';
+
+import { useState, useEffect, useCallback } from 'react';
+import { useTranslations } from 'next-intl';
+import { getFromApi } from '@/services';
+import { useAuth } from '@/context/auth-context';
+import { StationExtrasForm, type StationExtras } from '@/components/station/config/StationExtrasForm';
+import type { Service, VehicleFormat } from './types';
+import { ServiceCard } from './ServiceCard';
+import { ServiceModal } from './ServiceModal';
+import { VehicleFormatsTab } from './VehicleFormatsTab';
+
+type Tab = 'services' | 'formats' | 'extras';
+
+interface StationMeData {
+  data: { id: string };
+}
+interface FormatsData {
+  data: VehicleFormat[];
+}
+
+// TODO: connect to API once endpoint is available
+const INITIAL_SERVICES: Service[] = [];
+const INITIAL_EXTRAS: StationExtras = { exterior: [], interior: [], both: [] };
+
+export function StationServicesPage() {
+  const t = useTranslations('station_services');
+  const { isLoading: authLoading } = useAuth();
+
+  const [activeTab, setActiveTab] = useState<Tab>('services');
+  const [services, setServices] = useState<Service[]>(INITIAL_SERVICES);
+  const [formats, setFormats] = useState<VehicleFormat[]>([]);
+  const [extras, setExtras] = useState<StationExtras>(INITIAL_EXTRAS);
+  const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState(false);
+  const [serviceModal, setServiceModal] = useState<Service | null | 'new'>(null);
+
+  const loadData = useCallback(async () => {
+    setLoading(true);
+    setLoadError(false);
+    const [meOk, meData] = await getFromApi('/station/me');
+    if (!meOk) {
+      setLoadError(true);
+      setLoading(false);
+      return;
+    }
+    const stationId = (meData as StationMeData).data.id;
+    const [formatsOk, formatsData] = await getFromApi(`/stations/${stationId}/formats`);
+    if (formatsOk) setFormats((formatsData as FormatsData).data);
+    else setLoadError(true);
+    setLoading(false);
+  }, []);
+
+  useEffect(() => {
+    if (!authLoading) loadData();
+  }, [authLoading, loadData]);
+
+  const handleServiceSaved = useCallback((saved: Service) => {
+    setServices((prev) => {
+      const idx = prev.findIndex((s) => s.id === saved.id);
+      if (idx !== -1) { const next = [...prev]; next[idx] = saved; return next; }
+      return [...prev, saved];
+    });
+    setServiceModal(null);
+  }, []);
+
+  const handleServiceDeleted = useCallback((id: string) => {
+    setServices((prev) => prev.filter((s) => s.id !== id));
+  }, []);
+
+  const handleServiceToggled = useCallback((updated: Service) => {
+    setServices((prev) => prev.map((s) => (s.id === updated.id ? updated : s)));
+  }, []);
+
+  const activeCount = services.filter((s) => s.is_active).length;
+
+  const TABS: { key: Tab; label: string }[] = [
+    { key: 'services', label: t('tab_services') },
+    { key: 'formats', label: t('tab_formats') },
+    { key: 'extras', label: t('tab_extras') },
+  ];
+
+  if (loading) {
+    return (
+      <div className="flex flex-1 items-center justify-center text-[13px] text-[#666] dark:text-[#A0A090]">
+        {t('loading')}
+      </div>
+    );
+  }
+
+  if (loadError) {
+    return (
+      <div className="flex flex-1 flex-col items-center justify-center gap-3 text-center">
+        <span className="text-[14px] font-semibold text-[#999] dark:text-[#9A9A8A]">{t('load_error')}</span>
+        <button
+          type="button"
+          onClick={loadData}
+          className="rounded-[10px] border border-[#C49A1E]/50 px-4 py-2 text-[13px] font-semibold text-[#C49A1E] transition-all hover:border-[#C49A1E] hover:bg-[#FDF8EC] dark:hover:bg-[#1A1A08]"
+        >
+          {t('btn_retry')}
+        </button>
+      </div>
+    );
+  }
+
+  return (
+    <div className="flex flex-1 flex-col overflow-hidden">
+      {/* Page header */}
+      <div className="border-b border-[#E0DCD0] bg-white px-6 pt-4 dark:border-[#1A2A14] dark:bg-[#111A0E]">
+        <div className="flex items-center justify-between pb-3">
+          <div>
+            <div className="text-[16px] font-black text-[#1A1A0A] dark:text-[#F0EDD4]">{t('page_title')}</div>
+            <div className="text-[13px] text-[#888] dark:text-[#9A9A8A]">{t('page_subtitle')}</div>
+          </div>
+          {activeTab === 'services' && (
+            <button
+              type="button"
+              onClick={() => setServiceModal('new')}
+              className="flex items-center gap-2 rounded-[10px] bg-[#C49A1E] px-4 py-2 text-[13px] font-bold text-[#0C1209] transition-opacity hover:opacity-80"
+            >
+              <svg width="14" height="14" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M12 4v16m8-8H4" />
+              </svg>
+              {t('btn_new_service')}
+            </button>
+          )}
+        </div>
+
+        {/* Tab bar */}
+        <div className="flex gap-0">
+          {TABS.map(({ key, label }) => (
+            <button
+              key={key}
+              type="button"
+              onClick={() => setActiveTab(key)}
+              className={`relative px-5 pb-3 text-[13px] font-semibold transition-colors duration-150 ${
+                activeTab === key
+                  ? 'text-[#C49A1E]'
+                  : 'text-[#AAAAAA] hover:text-[#5A5A4A] dark:text-[#4A4A3A] dark:hover:text-[#9A9A8A]'
+              }`}
+            >
+              {label}
+              {key === 'services' && services.length > 0 && (
+                <span className={`ml-1.5 rounded-full px-1.5 py-0.5 text-[11px] font-bold ${
+                  activeTab === key ? 'bg-[#FDF3D8] text-[#C49A1E] dark:bg-[#2A1E08]' : 'bg-[#F0EFEB] text-[#BBBBAA] dark:bg-[#1A2A14] dark:text-[#4A4A3A]'
+                }`}>
+                  {activeCount}
+                </span>
+              )}
+              {key === 'formats' && formats.length > 0 && (
+                <span className={`ml-1.5 rounded-full px-1.5 py-0.5 text-[11px] font-bold ${
+                  activeTab === key ? 'bg-[#FDF3D8] text-[#C49A1E] dark:bg-[#2A1E08]' : 'bg-[#F0EFEB] text-[#BBBBAA] dark:bg-[#1A2A14] dark:text-[#4A4A3A]'
+                }`}>
+                  {formats.length}
+                </span>
+              )}
+              {activeTab === key && (
+                <span className="absolute bottom-0 left-0 right-0 h-[2px] rounded-t-full bg-[#C49A1E]" />
+              )}
+            </button>
+          ))}
+        </div>
+      </div>
+
+      {/* Tab content */}
+      <div className="flex flex-1 flex-col overflow-y-auto p-6">
+        {/* ─── Services tab ─── */}
+        {activeTab === 'services' && (
+          services.length === 0 ? (
+            <div className="flex flex-col items-center justify-center gap-2 py-16 text-center">
+              <span className="text-[14px] font-semibold text-[#999] dark:text-[#9A9A8A]">{t('empty')}</span>
+              <span className="text-[13px] text-[#BBBBAA] dark:text-[#4A4A3A]">{t('empty_hint')}</span>
+            </div>
+          ) : (
+            <>
+              <div className="mb-4 flex items-center gap-2">
+                <span className="text-[12px] font-black tracking-[.08em] text-[#C49A1E] uppercase">{t('section_base')}</span>
+                <span className="text-[12px] text-[#888] dark:text-[#9A9A8A]">{t('services_active_count', { count: activeCount })}</span>
+              </div>
+              <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
+                {services.map((service) => (
+                  <ServiceCard
+                    key={service.id}
+                    service={service}
+                    onEdit={setServiceModal}
+                    onDeleted={handleServiceDeleted}
+                    onToggled={handleServiceToggled}
+                  />
+                ))}
+              </div>
+            </>
+          )
+        )}
+
+        {/* ─── Formats tab ─── */}
+        {activeTab === 'formats' && (
+          <VehicleFormatsTab
+            formats={formats}
+            onAdd={(f) => setFormats((prev) => [...prev, f])}
+            onUpdate={(f) => setFormats((prev) => prev.map((x) => (x.id === f.id ? f : x)))}
+            onDelete={(id) => setFormats((prev) => prev.filter((f) => f.id !== id))}
+          />
+        )}
+
+        {/* ─── Extras tab ─── */}
+        {activeTab === 'extras' && (
+          <StationExtrasForm extras={extras} onSaved={setExtras} />
+        )}
+      </div>
+
+      {/* Service modal */}
+      {serviceModal !== null && (
+        <ServiceModal
+          service={serviceModal === 'new' ? null : serviceModal}
+          vehicleFormats={formats}
+          onClose={() => setServiceModal(null)}
+          onSaved={handleServiceSaved}
+        />
+      )}
+    </div>
+  );
+}
