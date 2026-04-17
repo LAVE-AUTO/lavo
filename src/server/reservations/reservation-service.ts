@@ -15,7 +15,7 @@
  *   - Notifications (fire-and-forget entry updates)
  */
 import { NotFoundError, ConflictError, ActiveReservationExistsError, SlotFullError, ValidationError } from '@/lib/errors';
-import { getPlatformSettingWithFallback } from '@/server/admin/platform-settings-service';
+import { getPlatformSettingWithFallback, getCancellationPolicy } from '@/server/admin/platform-settings-service';
 import { db } from '@/lib/db';
 import { getConfigByStationId } from '@/server/station/config-repository';
 import { findFormatByIdAndStation } from '@/server/station/format-repository';
@@ -25,7 +25,7 @@ import {
   incrementSlotBookedCount,
   decrementSlotBookedCount,
 } from '@/server/station/slot-repository';
-import { createPaymentIntent, cancelPaymentIntent, capturePaymentIntent, updatePaymentIntentMetadata } from '@/server/payments/payment-service';
+import { createPaymentIntent, cancelPaymentIntent, capturePaymentIntent, refundPaymentIntent, distributePenalty, updatePaymentIntentMetadata } from '@/server/payments/payment-service';
 import { cancelReservation } from '@/server/reservations/cancellation-service';
 import { notifyEntry } from '@/server/notifications/notification-service';
 import { sendEscrowReleasedNotificationsForEntry } from '@/server/notifications/escrow-released-notifications';
@@ -294,7 +294,91 @@ export async function cancelEntry(
     };
   }
 
-  // Queue entries and pending_payment reservations: simple cancellation.
+  // Queue entry with authorized (not yet captured) payment: apply cancellation fees.
+  // pending_payment = Stripe has not confirmed yet → just cancel the PI (no charge).
+  if (
+    entry.entry_type === 'queue' &&
+    entry.stripe_payment_id &&
+    entry.status !== STATUS_PENDING_PAYMENT
+  ) {
+    const policy = await getCancellationPolicy();
+    const amountPaid = parseFloat(String(entry.amount_paid));
+    const penaltyAmount = Math.round(amountPaid * policy.penaltyRate * 100) / 100;
+    const refundedAmount = Math.round((amountPaid - penaltyAmount) * 100) / 100;
+
+    const updated = await db.transaction(async (tx) => {
+      const current = await findEntryByIdAndUser(entryId, userId, tx);
+      if (!current) throw new NotFoundError('Entry not found');
+      if (current.status === STATUS_CANCELLED) throw new ConflictError('Entry already cancelled');
+      if (current.entry_type === 'queue' && current.queue_position != null) {
+        await shiftQueuePositions(current.station_id, current.queue_position + 1, -1, tx);
+      }
+      return updateEntry(
+        entryId,
+        {
+          status: STATUS_CANCELLED,
+          cancellation_reason: reason ?? null,
+          penalty_amount: penaltyAmount > 0 ? penaltyAmount.toFixed(2) : null,
+        },
+        tx
+      );
+    });
+
+    // Stripe: capture full amount → partial refund → distribute penalty share.
+    // Kept outside the transaction: Stripe calls must not hold DB locks.
+    let captured = false;
+    try {
+      await capturePaymentIntent(entry.stripe_payment_id);
+      captured = true;
+    } catch (e) {
+      console.error('[QUEUE_CANCEL_CAPTURE_FAILED]', {
+        entryId,
+        stripe_payment_id: entry.stripe_payment_id,
+        error: e instanceof Error ? e.message : String(e),
+      });
+    }
+    if (captured && refundedAmount > 0) {
+      try {
+        const refundId = await refundPaymentIntent(
+          entry.stripe_payment_id,
+          Math.round(refundedAmount * 100)
+        );
+        await updateEntry(entryId, { stripe_refund_id: refundId });
+      } catch (e) {
+        console.error('[QUEUE_CANCEL_REFUND_FAILED]', {
+          entryId,
+          stripe_payment_id: entry.stripe_payment_id,
+          error: e instanceof Error ? e.message : String(e),
+        });
+      }
+    }
+    if (captured && penaltyAmount > 0) {
+      try {
+        await distributePenalty(
+          entry.stripe_payment_id,
+          Math.round(penaltyAmount * 100),
+          policy.stationPenaltyShare
+        );
+      } catch (e) {
+        console.error('[QUEUE_CANCEL_PENALTY_DIST_FAILED]', {
+          entryId,
+          stripe_payment_id: entry.stripe_payment_id,
+          error: e instanceof Error ? e.message : String(e),
+        });
+      }
+    }
+
+    await notifyEntry({
+      entryId,
+      userId,
+      stationId: entry.station_id,
+      type: 'queue_cancelled_by_client',
+      payload: { penaltyAmount, refundedAmount },
+    });
+    return { entry: updated, penaltyAmount, refundedAmount, isLateCancellation: true };
+  }
+
+  // Queue entry with no payment or pending_payment reservation: simple cancellation.
   const updated = await db.transaction(async (tx) => {
     const current = await findEntryByIdAndUser(entryId, userId, tx);
     if (!current) throw new NotFoundError('Entry not found');
@@ -309,19 +393,14 @@ export async function cancelEntry(
     return updateEntry(entryId, { status: STATUS_CANCELLED }, tx);
   });
 
-  // Cancel Stripe PaymentIntent if awaiting payment, or if a paid queue entry (authorized but not captured).
-  const shouldCancelPaymentIntent =
-    entry.stripe_payment_id &&
-    (entry.status === STATUS_PENDING_PAYMENT ||
-      (entry.entry_type === 'queue' && entry.status === STATUS_CONFIRMED));
-  if (shouldCancelPaymentIntent) {
+  // Cancel the PaymentIntent if payment hasn't been confirmed yet (no charge).
+  if (entry.stripe_payment_id && entry.status === STATUS_PENDING_PAYMENT) {
     try {
-      await cancelPaymentIntent(entry.stripe_payment_id!);
+      await cancelPaymentIntent(entry.stripe_payment_id);
     } catch (e) {
-      const error = e instanceof Error ? e.message : String(e);
       console.error('[CANCEL_PAYMENT_INTENT_FAILED]', {
         entryId,
-        error,
+        error: e instanceof Error ? e.message : String(e),
       });
     }
   }

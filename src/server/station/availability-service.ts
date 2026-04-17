@@ -9,6 +9,7 @@
  *
  * Used by GET /api/v1/station/slots to return the dynamic schedule.
  */
+import { parseTimeForDate } from '@/helpers/date-helper';
 import { getConfigByStationId } from './config-repository';
 import { listSlotsByStationAndDate } from './slot-repository';
 import type { TimeSlot } from './slot-repository';
@@ -19,18 +20,6 @@ export type SlotAvailability = TimeSlot & {
   is_past: boolean;
   exceeds_closing_time: boolean;
 };
-
-/**
- * Parses a time string (HH:mm or HH:mm:ss, optional +00) and a date string (YYYY-MM-DD)
- * into a UTC Date. Replicates the logic from slot-service to be self-contained.
- */
-function toDateAtTime(dateStr: string, timeStr: string): Date {
-  let t = timeStr.trim();
-  if (t.length === 5) t += ':00';
-  if (!t.endsWith('Z') && !t.includes('+')) t += 'Z';
-  if (t.endsWith('+00')) t = t.slice(0, -3) + 'Z';
-  return new Date(`${dateStr}T${t}`);
-}
 
 /**
  * Returns slot availability for a station on the given date.
@@ -61,7 +50,7 @@ export async function getStationSlotAvailability(
   // Compute the station closing time for this date to detect cascade overruns.
   let closingTime: Date | null = null;
   if (config?.closing_time) {
-    closingTime = toDateAtTime(targetDate, config.closing_time as string);
+    closingTime = parseTimeForDate(targetDate, config.closing_time as string);
   }
 
   return slots.map((slot) => {

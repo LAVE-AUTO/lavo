@@ -739,6 +739,81 @@
             "description": "401 — Secret manquant ou invalide."
           },
           "response": []
+        },
+        {
+          "name": "No-show file d'attente (200)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 200', () => pm.response.to.have.status(200));",
+                  "pm.test('Résultat no-show', () => {",
+                  "  const json = pm.response.json();",
+                  "  pm.expect(json.data).to.have.property('processed');",
+                  "  pm.expect(json.data).to.have.property('succeeded');",
+                  "  pm.expect(json.data).to.have.property('failed');",
+                  "  pm.expect(json.data).to.have.property('errors');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "response": [],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "x-cron-secret",
+                "value": "{{cron_secret}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/cron/mark-queue-no-shows",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "cron",
+                "mark-queue-no-shows"
+              ]
+            },
+            "description": "GET /api/cron/mark-queue-no-shows — Détecte les entrées de file d'attente encore actives (pending / confirmed / late) après l'heure de fermeture de la station pour leur date effective.\n\nPour chaque no-show :\n1. Annule l'entrée en DB (status = cancelled, cancellation_reason = no_show).\n2. Capture le PaymentIntent Stripe.\n3. Rembourse partiellement (amountPaid - pénalité).\n4. Distribue la pénalité entre plateforme et station.\n5. Notifie le client (queue_no_show).\n\nLa date effective est déterminée par updated_at de l'entrée. Secrétiser via x-cron-secret ou Authorization: Bearer <CRON_SECRET>."
+          }
+        },
+        {
+          "name": "No-show file d'attente — secret manquant (401)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 401', () => pm.response.to.have.status(401));"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "response": [],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/cron/mark-queue-no-shows",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "cron",
+                "mark-queue-no-shows"
+              ]
+            },
+            "description": "Sans x-cron-secret — doit retourner 401."
+          }
         }
       ]
     }
