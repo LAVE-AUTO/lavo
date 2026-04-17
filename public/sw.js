@@ -83,38 +83,41 @@ self.addEventListener('fetch', (event) => {
 });
 
 /* ------------------------------------------------------------------ */
-/*  Push notifications (FCM)                                           */
-/*  TODO: import Firebase scripts and configure once NEXT_PUBLIC_FIREBASE_*
- *  env vars are available. See .env.example for FIREBASE_SERVER_KEY.
- *
- *  Required steps when Firebase is ready:
- *    1. Add NEXT_PUBLIC_FIREBASE_API_KEY, NEXT_PUBLIC_FIREBASE_PROJECT_ID,
- *       NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID, NEXT_PUBLIC_FIREBASE_APP_ID
- *       and NEXT_PUBLIC_FIREBASE_VAPID_KEY to .env.
- *    2. Replace the stub below with:
- *       importScripts('https://www.gstatic.com/firebasejs/<version>/firebase-app-compat.js');
- *       importScripts('https://www.gstatic.com/firebasejs/<version>/firebase-messaging-compat.js');
- *       firebase.initializeApp({ ... });
- *       const messaging = firebase.messaging();
- *       messaging.onBackgroundMessage((payload) => {
- *         self.registration.showNotification(payload.notification.title, {
- *           body: payload.notification.body,
- *           icon: '/icons/icon-192x192.png',
- *         });
- *       });
- * ------------------------------------------------------------------ */
+/*  Firebase Cloud Messaging — background message handler              */
+/*  Handles push notifications when the app tab is in the background.  */
+/*  Uses the compat build so it can be loaded via importScripts.       */
+/* ------------------------------------------------------------------ */
 
-self.addEventListener('push', (event) => {
-  if (!event.data) return;
-  let data = {};
-  try { data = event.data.json(); } catch { data = { title: 'Slowtime', body: event.data.text() }; }
-  event.waitUntil(
-    self.registration.showNotification(data.title || 'Slowtime', {
-      body: data.body || '',
-      icon: '/icons/icon-192x192.png',
-      badge: '/icons/icon-192x192.png',
-    }),
-  );
+importScripts('https://www.gstatic.com/firebasejs/12.12.0/firebase-app-compat.js');
+importScripts('https://www.gstatic.com/firebasejs/12.12.0/firebase-messaging-compat.js');
+
+// These are the NEXT_PUBLIC_FIREBASE_* values — all non-secret client identifiers.
+// Service workers cannot access process.env, so the values are inlined here.
+firebase.initializeApp({
+  apiKey: 'AIzaSyCBFjrozYd9QQpZejqWG6ogqjv4HHWqajE',
+  authDomain: 'lavo-e19b8.firebaseapp.com',
+  projectId: 'lavo-e19b8',
+  messagingSenderId: '699133261235',
+  appId: '1:699133261235:web:5fc63b300714bc1bab07c6',
+});
+
+const messaging = firebase.messaging();
+
+/**
+ * onBackgroundMessage fires when a push message arrives while the app
+ * is either in the background or the tab is closed.
+ * FCM will NOT automatically show a notification in this case — we must
+ * call showNotification ourselves.
+ */
+messaging.onBackgroundMessage((payload) => {
+  const title = payload.notification?.title || 'Lavo';
+  const options = {
+    body: payload.notification?.body || '',
+    icon: '/icons/icon-192x192.png',
+    badge: '/icons/icon-192x192.png',
+    data: payload.data || {},
+  };
+  self.registration.showNotification(title, options);
 });
 
 self.addEventListener('notificationclick', (event) => {
