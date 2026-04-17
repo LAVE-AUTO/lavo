@@ -105,7 +105,7 @@ export function AdminSidebar({ open = false, onClose }: AdminSidebarProps) {
           className="fixed inset-0 z-50 flex lg:hidden"
           onClick={onClose}
         >
-          <div className="absolute inset-0 bg-black/40" />
+          <div className="absolute inset-0 bg-black/40" aria-hidden="true" />
           <aside
             className="relative flex h-full w-[220px] shrink-0 flex-col border-r border-[#E0DCD0] bg-[#F0EDE0] p-3 shadow-xl animate-fade-in dark:border-[#1A2A14] dark:bg-[#111A0E]"
             onClick={(e) => e.stopPropagation()}

@@ -162,7 +162,7 @@ export function SupportTicketCard({ ticket, onMessageSent }: Props) {
                       'flex h-7 w-7 shrink-0 items-center justify-center rounded-full text-[10px] font-black leading-none',
                       isAdmin
                         ? 'bg-[#C49A1E] text-[#0C1209]'
-                        : 'bg-[#E8E4DC] text-[#666] dark:bg-[#1E2E18] dark:text-[#8A8A7A]',
+                        : 'bg-[#E8E4DC] text-[#666] dark:bg-[#1E2E18] dark:text-[#A0A090]',
                     ].join(' ')}>
                       {isAdmin ? 'AD' : 'ME'}
                     </div>
