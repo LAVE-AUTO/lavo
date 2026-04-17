@@ -9,6 +9,39 @@ import { reservations, timeSlots, stationConfigs } from '@/lib/db/schema';
 export type Entry = typeof reservations.$inferSelect;
 export type EntryInsert = typeof reservations.$inferInsert;
 
+/**
+ * Shared column projection for all queries that return a full Entry row.
+ * Keeps the column list in one place so additions to the schema only need one edit.
+ */
+const RESERVATION_COLUMNS = {
+  id: reservations.id,
+  user_id: reservations.user_id,
+  entry_type: reservations.entry_type,
+  booking_source: reservations.booking_source,
+  time_slot_id: reservations.time_slot_id,
+  station_id: reservations.station_id,
+  vehicle_format_id: reservations.vehicle_format_id,
+  status: reservations.status,
+  queue_position: reservations.queue_position,
+  amount_paid: reservations.amount_paid,
+  commission_rate: reservations.commission_rate,
+  commission_amount: reservations.commission_amount,
+  station_payout: reservations.station_payout,
+  tip_amount: reservations.tip_amount,
+  stripe_payment_id: reservations.stripe_payment_id,
+  stripe_transfer_id: reservations.stripe_transfer_id,
+  stripe_refund_id: reservations.stripe_refund_id,
+  stripe_payment_succeeded_at: reservations.stripe_payment_succeeded_at,
+  stripe_payment_succeeded_notified_at: reservations.stripe_payment_succeeded_notified_at,
+  client_confirmed: reservations.client_confirmed,
+  cancellation_reason: reservations.cancellation_reason,
+  penalty_amount: reservations.penalty_amount,
+  confirmed_at: reservations.confirmed_at,
+  completed_at: reservations.completed_at,
+  created_at: reservations.created_at,
+  updated_at: reservations.updated_at,
+} as const;
+
 /** Payload for creating a reservation entry: time_slot_id required. */
 export type CreateReservationEntryData = {
   user_id: string;
@@ -130,41 +163,12 @@ export async function findReservationWithSlot(
   userId: string
 ): Promise<EntryWithSlot | undefined> {
   const rows = await db
-    .select({
-      id: reservations.id,
-      user_id: reservations.user_id,
-      entry_type: reservations.entry_type,
-      booking_source: reservations.booking_source,
-      time_slot_id: reservations.time_slot_id,
-      station_id: reservations.station_id,
-      vehicle_format_id: reservations.vehicle_format_id,
-      status: reservations.status,
-      queue_position: reservations.queue_position,
-      amount_paid: reservations.amount_paid,
-      commission_rate: reservations.commission_rate,
-      commission_amount: reservations.commission_amount,
-      station_payout: reservations.station_payout,
-      tip_amount: reservations.tip_amount,
-      stripe_payment_id: reservations.stripe_payment_id,
-      stripe_transfer_id: reservations.stripe_transfer_id,
-      stripe_refund_id: reservations.stripe_refund_id,
-      stripe_payment_succeeded_at: reservations.stripe_payment_succeeded_at,
-      stripe_payment_succeeded_notified_at: reservations.stripe_payment_succeeded_notified_at,
-      client_confirmed: reservations.client_confirmed,
-      cancellation_reason: reservations.cancellation_reason,
-      penalty_amount: reservations.penalty_amount,
-      confirmed_at: reservations.confirmed_at,
-      completed_at: reservations.completed_at,
-      created_at: reservations.created_at,
-      updated_at: reservations.updated_at,
-      slotStartTime: timeSlots.start_time,
-    })
+    .select({ ...RESERVATION_COLUMNS, slotStartTime: timeSlots.start_time })
     .from(reservations)
     .leftJoin(timeSlots, eq(reservations.time_slot_id, timeSlots.id))
     .where(and(eq(reservations.id, id), eq(reservations.user_id, userId)))
     .limit(1);
-  const row = rows[0];
-  return row;
+  return rows[0];
 }
 
 /**
@@ -183,35 +187,8 @@ export async function findEntryByIdAndStation(
  * Lists all entries for a station: reservations (by time_slot start_time) then queue (by queue_position).
  */
 export async function listEntriesByStation(stationId: string): Promise<Entry[]> {
-  const rows = await db
-    .select({
-      id: reservations.id,
-      user_id: reservations.user_id,
-      entry_type: reservations.entry_type,
-      booking_source: reservations.booking_source,
-      time_slot_id: reservations.time_slot_id,
-      station_id: reservations.station_id,
-      vehicle_format_id: reservations.vehicle_format_id,
-      status: reservations.status,
-      queue_position: reservations.queue_position,
-      amount_paid: reservations.amount_paid,
-      commission_rate: reservations.commission_rate,
-      commission_amount: reservations.commission_amount,
-      station_payout: reservations.station_payout,
-      tip_amount: reservations.tip_amount,
-      stripe_payment_id: reservations.stripe_payment_id,
-      stripe_transfer_id: reservations.stripe_transfer_id,
-      stripe_refund_id: reservations.stripe_refund_id,
-      stripe_payment_succeeded_at: reservations.stripe_payment_succeeded_at,
-      stripe_payment_succeeded_notified_at: reservations.stripe_payment_succeeded_notified_at,
-      client_confirmed: reservations.client_confirmed,
-      cancellation_reason: reservations.cancellation_reason,
-      penalty_amount: reservations.penalty_amount,
-      confirmed_at: reservations.confirmed_at,
-      completed_at: reservations.completed_at,
-      created_at: reservations.created_at,
-      updated_at: reservations.updated_at,
-    })
+  return db
+    .select(RESERVATION_COLUMNS)
     .from(reservations)
     .leftJoin(timeSlots, eq(reservations.time_slot_id, timeSlots.id))
     .where(eq(reservations.station_id, stationId))
@@ -220,37 +197,47 @@ export async function listEntriesByStation(stationId: string): Promise<Entry[]> 
       asc(timeSlots.start_time),
       asc(reservations.queue_position)
     );
-  return rows;
 }
 
 /**
- * Returns all active queue entries across all stations (pending, confirmed, late).
- * Used by the no-show cron to detect clients still in queue after station closing.
+ * Returns all active queue entries across all stations (pending, confirmed, late)
+ * created within the last 2 days. The 2-day window safely covers stations with very
+ * late closing times while excluding genuinely stale entries from previous days.
  */
 export async function listActiveQueueEntries(): Promise<Entry[]> {
+  const twoDaysAgo = new Date(Date.now() - 2 * 24 * 60 * 60 * 1000);
   return db.query.reservations.findMany({
     where: and(
       eq(reservations.entry_type, 'queue'),
-      inArray(reservations.status, ['pending', 'confirmed', 'late'])
+      inArray(reservations.status, ['pending', 'confirmed', 'late']),
+      gte(reservations.created_at, twoDaysAgo)
     ),
   });
 }
 
+/** Active statuses for a live queue entry (excludes cancelled, completed, in_progress). */
+const QUEUE_LIVE_STATUSES = ['pending_payment', 'pending', 'confirmed', 'late'] as const;
+
 /**
- * Lists queue-only entries for a station, ordered by queue_position.
+ * Lists live queue entries for a station, ordered by queue_position.
+ * Only returns entries in an active state (pending_payment, pending, confirmed, late).
+ * Cancelled and completed entries are excluded so the queue view is not polluted.
  */
 export async function listQueueByStation(stationId: string): Promise<Entry[]> {
   return db.query.reservations.findMany({
     where: and(
       eq(reservations.station_id, stationId),
-      eq(reservations.entry_type, 'queue')
+      eq(reservations.entry_type, 'queue'),
+      inArray(reservations.status, [...QUEUE_LIVE_STATUSES])
     ),
     orderBy: asc(reservations.queue_position),
   });
 }
 
 /**
- * Returns the count of queue entries for the station (for queue-position helper context).
+ * Returns the count of live queue entries for the station (for queue-position helper context).
+ * Only counts active entries (pending_payment, pending, confirmed, late) so cancelled entries
+ * do not inflate the count used for position calculation.
  */
 export async function countQueueByStation(stationId: string, tx?: DbTransaction): Promise<number> {
   const client = tx ?? db;
@@ -260,7 +247,8 @@ export async function countQueueByStation(stationId: string, tx?: DbTransaction)
     .where(
       and(
         eq(reservations.station_id, stationId),
-        eq(reservations.entry_type, 'queue')
+        eq(reservations.entry_type, 'queue'),
+        inArray(reservations.status, [...QUEUE_LIVE_STATUSES])
       )
     );
   return result[0]?.count ?? 0;
@@ -268,6 +256,8 @@ export async function countQueueByStation(stationId: string, tx?: DbTransaction)
 
 /**
  * Returns the next available queue_position for the station (max + 1, or 1 if empty).
+ * Only considers live entries (pending_payment, pending, confirmed, late) so that cancelled
+ * entries with a stale non-null queue_position do not inflate the next position number.
  * Accepts an optional transaction so the read is consistent with surrounding writes.
  */
 export async function getNextQueuePosition(stationId: string, tx?: DbTransaction): Promise<number> {
@@ -280,11 +270,12 @@ export async function getNextQueuePosition(stationId: string, tx?: DbTransaction
     .where(
       and(
         eq(reservations.station_id, stationId),
-        eq(reservations.entry_type, 'queue')
+        eq(reservations.entry_type, 'queue'),
+        inArray(reservations.status, [...QUEUE_LIVE_STATUSES])
       )
     );
   const max = result[0]?.max ?? 0;
-  return (max ?? 0) + 1;
+  return max + 1;
 }
 
 /**
@@ -322,7 +313,6 @@ export async function hasActiveEntryAtStation(
     .limit(1);
   return row.length > 0;
 }
-
 
 /**
  * Finds an entry by its Stripe payment ID. Used by webhook handler.
@@ -410,34 +400,7 @@ export async function listEntriesByStationPaginated(
   const [countRows, rows] = await Promise.all([
     db.select({ count: sql<number>`count(*)::int` }).from(reservations).where(where),
     db
-      .select({
-        id: reservations.id,
-        user_id: reservations.user_id,
-        entry_type: reservations.entry_type,
-        booking_source: reservations.booking_source,
-        time_slot_id: reservations.time_slot_id,
-        station_id: reservations.station_id,
-        vehicle_format_id: reservations.vehicle_format_id,
-        status: reservations.status,
-        queue_position: reservations.queue_position,
-        amount_paid: reservations.amount_paid,
-        commission_rate: reservations.commission_rate,
-        commission_amount: reservations.commission_amount,
-        station_payout: reservations.station_payout,
-        tip_amount: reservations.tip_amount,
-        stripe_payment_id: reservations.stripe_payment_id,
-        stripe_transfer_id: reservations.stripe_transfer_id,
-        stripe_refund_id: reservations.stripe_refund_id,
-        stripe_payment_succeeded_at: reservations.stripe_payment_succeeded_at,
-        stripe_payment_succeeded_notified_at: reservations.stripe_payment_succeeded_notified_at,
-        client_confirmed: reservations.client_confirmed,
-        cancellation_reason: reservations.cancellation_reason,
-        penalty_amount: reservations.penalty_amount,
-        confirmed_at: reservations.confirmed_at,
-        completed_at: reservations.completed_at,
-        created_at: reservations.created_at,
-        updated_at: reservations.updated_at,
-      })
+      .select(RESERVATION_COLUMNS)
       .from(reservations)
       .leftJoin(timeSlots, eq(reservations.time_slot_id, timeSlots.id))
       .where(where)
@@ -545,6 +508,41 @@ export async function cancelOrphanedEntryIfEligible(
   return row;
 }
 
+/** Active statuses a queue entry can be in when detected as a no-show. */
+const NO_SHOW_ELIGIBLE_STATUSES = ['pending', 'confirmed', 'late'] as const;
+
+/**
+ * Conditionally cancels a queue entry as a no-show only if it is still in an active status.
+ * Returns the updated row when the guard matched; otherwise undefined. Using a conditional
+ * update here prevents overlapping cron runs from each issuing the Stripe capture/refund/penalty
+ * cascade on the same entry — the second run sees the row already at status='cancelled' and skips.
+ */
+export async function cancelQueueEntryForNoShowIfEligible(
+  id: string,
+  penaltyAmount: string | null,
+  tx?: DbTransaction
+): Promise<Entry | undefined> {
+  const client = tx ?? db;
+  const [row] = await client
+    .update(reservations)
+    .set({
+      status: 'cancelled',
+      cancellation_reason: 'no_show',
+      penalty_amount: penaltyAmount,
+      queue_position: null,
+      updated_at: new Date(),
+    })
+    .where(
+      and(
+        eq(reservations.id, id),
+        eq(reservations.entry_type, 'queue'),
+        inArray(reservations.status, [...NO_SHOW_ELIGIBLE_STATUSES])
+      )
+    )
+    .returning();
+  return row;
+}
+
 const STRIPE_PAYMENT_CANCEL_STATUSES = ['pending_payment', 'confirmed'] as const;
 
 /**
@@ -604,35 +602,8 @@ export async function shiftQueuePositions(
  */
 export async function listLateUnconfirmedReservations(): Promise<Entry[]> {
   const now = new Date();
-  const rows = await db
-    .select({
-      id: reservations.id,
-      user_id: reservations.user_id,
-      entry_type: reservations.entry_type,
-      booking_source: reservations.booking_source,
-      time_slot_id: reservations.time_slot_id,
-      station_id: reservations.station_id,
-      vehicle_format_id: reservations.vehicle_format_id,
-      status: reservations.status,
-      queue_position: reservations.queue_position,
-      amount_paid: reservations.amount_paid,
-      commission_rate: reservations.commission_rate,
-      commission_amount: reservations.commission_amount,
-      station_payout: reservations.station_payout,
-      tip_amount: reservations.tip_amount,
-      stripe_payment_id: reservations.stripe_payment_id,
-      stripe_transfer_id: reservations.stripe_transfer_id,
-      stripe_refund_id: reservations.stripe_refund_id,
-      stripe_payment_succeeded_at: reservations.stripe_payment_succeeded_at,
-      stripe_payment_succeeded_notified_at: reservations.stripe_payment_succeeded_notified_at,
-      client_confirmed: reservations.client_confirmed,
-      cancellation_reason: reservations.cancellation_reason,
-      penalty_amount: reservations.penalty_amount,
-      confirmed_at: reservations.confirmed_at,
-      completed_at: reservations.completed_at,
-      created_at: reservations.created_at,
-      updated_at: reservations.updated_at,
-    })
+  return db
+    .select(RESERVATION_COLUMNS)
     .from(reservations)
     .innerJoin(timeSlots, eq(reservations.time_slot_id, timeSlots.id))
     // `station_configs.id` is the station id (row is 1:1 with `stations`); the table has no `station_id` column.
@@ -645,7 +616,6 @@ export async function listLateUnconfirmedReservations(): Promise<Entry[]> {
         sql`(${timeSlots.start_time} + (${stationConfigs.late_tolerance_minutes} * interval '1 minute')) < ${now}`
       )
     );
-  return rows;
 }
 
 /**

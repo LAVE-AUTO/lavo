@@ -19,7 +19,7 @@
  *
  * Used by POST /api/v1/station/extra-time.
  */
-import { NotFoundError, ConflictError } from '@/lib/errors';
+import { NotFoundError, ConflictError, ValidationError } from '@/lib/errors';
 import { db } from '@/lib/db';
 import { parseTimeForDate } from '@/helpers/date-helper';
 import { findEntryByIdAndStation, findActiveReservationsBySlotIds } from './entry-repository';
@@ -32,6 +32,48 @@ import type { TimeSlot } from '@/server/station/slot-repository';
 import { getConfigByStationId } from '@/server/station/config-repository';
 import { notifyEntry } from '@/server/notifications/notification-service';
 
+type AffectedEntry = { id: string; user_id: string; station_id: string };
+
+/**
+ * Upper bound on extra time per request. A single overrun should not exceed a full working day;
+ * larger values almost certainly indicate a bug or malicious payload. 480 minutes (8 hours) is
+ * a conservative ceiling — higher than any legitimate wash service, lower than the 24h day that
+ * would otherwise allow SQL interval math to flip dates or cascade-shift slots off the schedule.
+ */
+const MAX_EXTRA_MINUTES = 480;
+
+/**
+ * Sends a notification to each affected entry concurrently.
+ * Returns the number of notifications that were delivered successfully.
+ * Individual failures are logged but do not throw.
+ */
+async function notifyAffected(
+  entries: AffectedEntry[],
+  type: 'slot_beyond_closing' | 'extra_time_delay',
+  extraMinutes: number
+): Promise<number> {
+  const results = await Promise.allSettled(
+    entries.map((affected) =>
+      notifyEntry({
+        entryId: affected.id,
+        userId: affected.user_id,
+        stationId: affected.station_id,
+        type,
+        payload: { extra_minutes: extraMinutes },
+      })
+    )
+  );
+  let succeeded = 0;
+  for (const result of results) {
+    if (result.status === 'fulfilled') {
+      succeeded++;
+    } else {
+      console.error(`[EXTRA_TIME] ${type} notification failed`, result.reason);
+    }
+  }
+  return succeeded;
+}
+
 export type ExtraTimeResult = {
   reservation_id: string;
   extra_minutes: number;
@@ -43,10 +85,12 @@ export type ExtraTimeResult = {
   notified_beyond_closing: number;
 };
 
-
 /**
- * Applies extra time to a reservation currently in progress or confirmed, then cascades
+ * Applies extra time to a reservation currently in progress, then cascades
  * the delay to all subsequent slots on the same station day.
+ *
+ * Only reservations with status 'in_progress' are accepted. A reservation in
+ * 'confirmed' status has not started yet — overtime cannot be declared on it.
  *
  * Clients on slots that remain within station hours receive a standard delay notification.
  * Clients on slots that now start at or after closing time receive a station-fault alert
@@ -61,10 +105,26 @@ export async function addExtraTime(
   stationId: string,
   extraMinutes: number
 ): Promise<ExtraTimeResult> {
+  // Defensive server-side validation. Callers (route handlers) should validate too, but this
+  // service is a sensitive mutation path: negative values would move slots backward in time,
+  // non-finite values would corrupt the SQL interval expression, and unbounded values would
+  // cascade-shift the rest of the day off-schedule.
+  if (
+    typeof extraMinutes !== 'number' ||
+    !Number.isFinite(extraMinutes) ||
+    !Number.isInteger(extraMinutes) ||
+    extraMinutes <= 0 ||
+    extraMinutes > MAX_EXTRA_MINUTES
+  ) {
+    throw new ValidationError(
+      `extraMinutes must be a positive integer between 1 and ${MAX_EXTRA_MINUTES}`
+    );
+  }
+
   const entry = await findEntryByIdAndStation(reservationId, stationId);
   if (!entry) throw new NotFoundError('Reservation not found');
   if (entry.entry_type !== 'reservation') throw new ConflictError('Entry is not a reservation');
-  if (!['in_progress', 'confirmed'].includes(entry.status)) {
+  if (entry.status !== 'in_progress') {
     throw new ConflictError(
       `Cannot add extra time to a reservation with status '${entry.status}'`
     );
@@ -104,45 +164,17 @@ export async function addExtraTime(
     }
   }
 
-  // Fetch reservations for each group in parallel.
+  // Short-circuit empty arrays to avoid unnecessary SQL queries.
   const [beyondClosingReservations, delayedReservations] = await Promise.all([
-    findActiveReservationsBySlotIds(beyondClosingSlotIds),
-    findActiveReservationsBySlotIds(delayedSlotIds),
+    beyondClosingSlotIds.length > 0 ? findActiveReservationsBySlotIds(beyondClosingSlotIds) : [],
+    delayedSlotIds.length > 0 ? findActiveReservationsBySlotIds(delayedSlotIds) : [],
   ]);
 
-  // Notify clients outside closing hours — station-fault alert.
-  let notifiedBeyondClosing = 0;
-  for (const affected of beyondClosingReservations) {
-    try {
-      await notifyEntry({
-        entryId: affected.id,
-        userId: affected.user_id,
-        stationId: affected.station_id,
-        type: 'slot_beyond_closing',
-        payload: { extra_minutes: extraMinutes },
-      });
-      notifiedBeyondClosing++;
-    } catch (e) {
-      console.error('[EXTRA_TIME] slot_beyond_closing notification failed for entry', affected.id, e);
-    }
-  }
-
-  // Notify clients with a standard delay.
-  let notifiedDelayed = 0;
-  for (const affected of delayedReservations) {
-    try {
-      await notifyEntry({
-        entryId: affected.id,
-        userId: affected.user_id,
-        stationId: affected.station_id,
-        type: 'extra_time_delay',
-        payload: { extra_minutes: extraMinutes },
-      });
-      notifiedDelayed++;
-    } catch (e) {
-      console.error('[EXTRA_TIME] extra_time_delay notification failed for entry', affected.id, e);
-    }
-  }
+  // Notify clients concurrently; each group runs independently.
+  const [notifiedBeyondClosing, notifiedDelayed] = await Promise.all([
+    notifyAffected(beyondClosingReservations, 'slot_beyond_closing', extraMinutes),
+    notifyAffected(delayedReservations, 'extra_time_delay', extraMinutes),
+  ]);
 
   return {
     reservation_id: reservationId,
