@@ -1,81 +1,83 @@
-'use client';
+import { setRequestLocale, getTranslations } from 'next-intl/server';
+import { safeJsonLd } from '@/lib/json-ld';
+import { PublicNavbar } from '@/components/layout/PublicNavbar';
+import { PublicFooter } from '@/components/layout/PublicFooter';
+import { BottomNav } from '@/components/layout/BottomNav';
+import { HomeRedirectGuard } from '@/components/home/HomeRedirectGuard';
+import { HeroSection } from '@/components/home/HeroSection';
+import { MarqueeBanner } from '@/components/home/MarqueeBanner';
+import { FeaturesSection } from '@/components/home/FeaturesSection';
+import { HowItWorksSection } from '@/components/home/HowItWorksSection';
+import { StationsPreviewSection } from '@/components/home/StationsPreviewSection';
+import { NotificationsSection } from '@/components/home/NotificationsSection';
+import { TestimonialsSection } from '@/components/home/TestimonialsSection';
+import { FaqSection } from '@/components/home/FaqSection';
 
-import { useEffect, useState } from 'react';
-import { useTranslations } from 'next-intl';
-import { getFromApi } from '@/services/axios-service';
+const APP_URL = process.env.NEXT_PUBLIC_APP_URL ?? 'https://lavo.cm';
 
-interface HealthData {
-  status: string;
-  timestamp: string;
-  version: string;
+const organizationJsonLd = {
+  '@context': 'https://schema.org',
+  '@type': 'Organization',
+  name: 'LAVO',
+  url: APP_URL,
+  logo: `${APP_URL}/icons/icon-192x192.png`,
+  description:
+    'LAVO is the booking and payment platform for car wash stations in Cameroon. Find a station, book a slot, and get your car washed effortlessly.',
+  sameAs: [],
+};
+
+type Props = {
+  params: Promise<{ locale: string }>;
+};
+
+export async function generateMetadata({ params }: Props) {
+  const { locale } = await params;
+  const t = await getTranslations({ locale, namespace: 'home' });
+  return {
+    title: t('meta_title'),
+    description: t('meta_desc'),
+    alternates: {
+      canonical: `${APP_URL}/${locale}`,
+      languages: {
+        fr: `${APP_URL}/fr`,
+        en: `${APP_URL}/en`,
+      },
+    },
+    openGraph: {
+      type: 'website' as const,
+      url: `${APP_URL}/${locale}`,
+      title: t('meta_title'),
+      description: t('meta_desc'),
+    },
+  };
 }
 
-export default function WelcomePage() {
-  const t = useTranslations('home');
-  const tCommon = useTranslations('common');
-  const [health, setHealth] = useState<HealthData | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-
-  useEffect(() => {
-    getFromApi<{ data?: HealthData }>('/health')
-      .then(([ok, data]) => {
-        const body = data as { data?: HealthData; message?: string };
-        const payload = body?.data;
-        if (ok && payload && typeof payload === 'object' && 'status' in payload) {
-          setHealth(payload);
-        } else {
-          setError(body?.message ?? 'Service unavailable');
-        }
-      })
-      .catch(() => setError('Service unavailable'))
-      .finally(() => setLoading(false));
-  }, []);
+export default async function LandingPage({ params }: Props) {
+  const { locale } = await params;
+  setRequestLocale(locale);
 
   return (
-    <div className="flex min-h-screen flex-col items-center justify-center bg-zinc-50 px-4 dark:bg-zinc-950">
-      <main className="w-full max-w-2xl rounded-2xl bg-white p-8 shadow-lg dark:bg-zinc-900">
-        <h1 className="mb-4 text-3xl font-bold tracking-tight text-zinc-900 dark:text-zinc-50">
-          {t('title')}
-        </h1>
-        <p className="mb-6 text-zinc-600 dark:text-zinc-400">
-          {t('subtitle')}
-        </p>
-
-        <div className="rounded-xl border border-zinc-200 bg-zinc-50 p-4 dark:border-zinc-700 dark:bg-zinc-800">
-          <h2 className="mb-2 text-sm font-medium text-zinc-500 dark:text-zinc-400">
-            {t('apiStatus')}
-          </h2>
-          {loading && (
-            <p className="text-zinc-600 dark:text-zinc-300">{tCommon('loading')}</p>
-          )}
-          {error && (
-            <p className="text-red-600 dark:text-red-400">{error}</p>
-          )}
-          {health && !loading && (
-            <div className="space-y-1 text-sm">
-              <p>
-                <span className="font-medium">Status:</span>{' '}
-                <span className="text-green-600 dark:text-green-400">
-                  {health.status}
-                </span>
-              </p>
-              <p>
-                <span className="font-medium">Version:</span> {health.version}
-              </p>
-              <p>
-                <span className="font-medium">Timestamp:</span>{' '}
-                {new Date(health.timestamp).toLocaleString()}
-              </p>
-            </div>
-          )}
-        </div>
-
-        <p className="mt-6 text-center text-sm text-zinc-500 dark:text-zinc-400">
-          {t('ready')}
-        </p>
+    <>
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: safeJsonLd(organizationJsonLd) }}
+      />
+      <HomeRedirectGuard />
+      <PublicNavbar />
+      <main className="min-h-screen bg-[#EDEDED] dark:bg-[#0d1f0f] transition-colors">
+        <HeroSection />
+        <MarqueeBanner />
+        <FeaturesSection />
+        <HowItWorksSection />
+        <StationsPreviewSection />
+        <NotificationsSection />
+        <TestimonialsSection />
+        <FaqSection />
       </main>
-    </div>
+      <div className="hidden sm:block">
+        <PublicFooter />
+      </div>
+      <BottomNav />
+    </>
   );
 }
-

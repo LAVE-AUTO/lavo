@@ -1,17 +1,10 @@
-interface AdminStationDetailPageProps {
-  params: {
-    id: string;
-  };
-}
+import { setRequestLocale } from 'next-intl/server';
+import { AdminStationDetail } from '@/components/admin/AdminStationDetail';
 
-export default function AdminStationDetailPage({
-  params,
-}: AdminStationDetailPageProps) {
-  return (
-    <main className="p-6">
-      <h1 className="text-xl font-semibold">Détail station (admin)</h1>
-      <p className="mt-2 text-sm text-zinc-600">ID: {params.id}</p>
-    </main>
-  );
-}
+type Props = { params: Promise<{ locale: string; id: string }> };
 
+export default async function AdminStationDetailPage({ params }: Props) {
+  const { locale, id } = await params;
+  setRequestLocale(locale);
+  return <AdminStationDetail id={id} />;
+}

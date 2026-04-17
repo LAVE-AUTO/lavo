@@ -2,6 +2,7 @@
 
 # project-specific
 .hidden/
+transcripts/
 
 # dependencies
 /node_modules
@@ -42,3 +43,10 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+folder/
+.claude
+
+pr-feat-landing-page.md
+
+CLAUDE.md

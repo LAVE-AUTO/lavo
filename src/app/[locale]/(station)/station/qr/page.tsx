@@ -1,8 +1,5 @@
-export default function StationQrPage() {
-  return (
-    <main className="p-6">
-      <h1 className="text-xl font-semibold">QR Code station</h1>
-    </main>
-  );
-}
+import { StationQrPage } from '@/components/station/qr/StationQrPage';
 
+export default function Page() {
+  return <StationQrPage />;
+}

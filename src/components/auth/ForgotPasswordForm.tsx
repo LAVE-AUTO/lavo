@@ -1,0 +1,140 @@
+'use client';
+
+import { useState, type ChangeEvent, type FormEvent } from 'react';
+import { useTranslations } from 'next-intl';
+import { Link } from '@/i18n/navigation';
+import { useToast } from '@/context/toast-context';
+import { postWithApi } from '@/services/axios-service';
+import { validateEmail } from '@/helpers/validators';
+import { HTTP_STATUS } from '@/helpers/constants';
+import { Button } from '@/components/ui/Button';
+import { FormField } from './FormField';
+
+function MailSentIcon() {
+  return (
+    <svg
+      width="40"
+      height="40"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="#C49A1E"
+      strokeWidth="1.75"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      aria-hidden="true"
+    >
+      <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z" />
+      <polyline points="22,6 12,13 2,6" />
+    </svg>
+  );
+}
+
+interface ForgotPasswordFormProps {
+  /** Destination for "back to login" links. Defaults to /login. */
+  backHref?: string;
+}
+
+/**
+ * Forgot password form.
+ * Submits email and always shows the success card (prevents email enumeration).
+ */
+export function ForgotPasswordForm({ backHref = '/login' }: ForgotPasswordFormProps) {
+  const t = useTranslations('forgot_password');
+  const { error: showError } = useToast();
+
+  const [email, setEmail]       = useState('');
+  const [emailError, setEmailError] = useState('');
+  const [isLoading, setIsLoading]   = useState(false);
+  const [sent, setSent]             = useState(false);
+
+  const handleChange = (e: ChangeEvent<HTMLInputElement>) => {
+    setEmail(e.target.value);
+    if (emailError) setEmailError('');
+  };
+
+  const handleBlur = () => {
+    if (email && !validateEmail(email)) {
+      setEmailError(t('error_generic'));
+    }
+  };
+
+  const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    if (!email.trim() || !validateEmail(email)) {
+      setEmailError(t('error_generic'));
+      return;
+    }
+
+    setIsLoading(true);
+    try {
+      const [, response] = await postWithApi('/auth/forgot-password', { email: email.trim() }, { successStatus: HTTP_STATUS.OK });
+      const data = response as { code?: string };
+      if (data?.code === 'TOO_MANY_REQUESTS') {
+        showError(t('error_rate_limit'));
+        return;
+      }
+      // Always show success regardless of API response (prevent email enumeration)
+      setSent(true);
+    } catch {
+      // Still show success to prevent email enumeration
+      setSent(true);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  if (sent) {
+    return (
+      <div className="px-8 pb-8 text-center animate-fade-in">
+        <div className="w-20 h-20 rounded-full bg-gold/10 border border-gold/25 flex items-center justify-center mx-auto mb-6">
+          <MailSentIcon />
+        </div>
+        <h2 className="text-[22px] font-bold text-dark-bg dark:text-white mb-3">
+          {t('success_title')}
+        </h2>
+        <p className="text-[15px] text-[#555] dark:text-lavo-muted leading-relaxed mb-2">
+          {t('success_message')}
+        </p>
+        <p className="text-[20px] text-[#888] dark:text-lavo-muted mb-8">
+          {t('success_spam')}
+        </p>
+        <Link
+          href={backHref}
+          className="block w-full py-3.5 bg-gold hover:bg-gold-hover rounded-[10px] text-[16px] font-bold text-dark-bg tracking-wide transition-colors duration-150 text-center btn-shine"
+        >
+          {t('back_to_login')}
+        </Link>
+      </div>
+    );
+  }
+
+  return (
+    <form onSubmit={handleSubmit} noValidate className="px-8 pb-8">
+      <FormField
+        label={t('email')}
+        required
+        type="email"
+        placeholder={t('email_placeholder')}
+        value={email}
+        onChange={handleChange}
+        onBlur={handleBlur}
+        error={emailError}
+        autoComplete="email"
+        autoFocus
+      />
+
+      <Button type="submit" fullWidth loading={isLoading} className="mt-2">
+        {isLoading ? t('loading') : t('submit')}
+      </Button>
+
+      <div className="mt-5 text-center">
+        <Link
+          href={backHref}
+          className="text-[14px] font-semibold text-gold hover:text-gold-hover transition-colors"
+        >
+          ← {t('back_to_login')}
+        </Link>
+      </div>
+    </form>
+  );
+}

@@ -1,0 +1,52 @@
+name: Notifications Discord - Next.js
+
+on:
+  push:
+    branches: ["**"]
+  pull_request:
+    branches: ["**"]
+    types: [opened, closed, reopened]
+
+jobs:
+  notifier:
+    runs-on: ubuntu-latest
+    
+    steps:
+      # Notification pour les push
+      - name: Notifier sur push
+        if: github.event_name == 'push'
+        uses: sarisia/actions-status-discord@v1
+        with:
+          webhook: ${{ secrets.LAVO_WEBHOOK_URL }}
+          title: "NEXT.JS - Nouveau Push"
+          description: |
+            **Depot :** ${{ github.repository }}
+            **Branche :** ${{ github.ref_name }}
+            **Auteur :** ${{ github.actor }}
+            **Commit :** ${{ github.event.head_commit.message }}
+            **Commits :** ${{ github.event.commits.length }}
+            **Voir les changements :** ${{ github.event.compare }}
+          color: "000000"
+          username: "Next.js CI"
+          footer: "Push par ${{ github.actor }} • ${{ github.event.repository.updated_at }}"
+
+      # Notification pour les pull requests ouvertes
+      - name: Notifier sur pull request
+        if: github.event_name == 'pull_request'
+        uses: sarisia/actions-status-discord@v1
+        with:
+          webhook: ${{ secrets.LAVO_WEBHOOK_URL }}
+          title: "NEXT.JS - Pull Request ${{ github.event.action }}"
+          description: |
+            **PR :** #${{ github.event.number }} - ${{ github.event.pull_request.title }}
+            **Depot :** ${{ github.repository }}
+            **De :** ${{ github.event.pull_request.head.ref }}
+            **Vers :** ${{ github.event.pull_request.base.ref }}
+            **Auteur :** ${{ github.event.pull_request.user.login }}
+            **Voir la PR :** ${{ github.event.pull_request.html_url }}
+          color: |
+            ${{ github.event.action == 'opened' && '00FF00' ||
+               github.event.action == 'closed' && 'FF0000' ||
+               'FFA500' }}
+          username: "Next.js CI"
+          footer: "PR ${{ github.event.action }} par ${{ github.event.pull_request.user.login }} • ${{ github.event.repository.updated_at }}"

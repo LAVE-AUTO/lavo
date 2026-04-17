@@ -1,57 +1,20 @@
 /**
- * Formats date to readable string.
- *
- * @param date - The date to format
- * @param format - Format type: 'short', 'long', 'iso'
- * @returns Formatted date string
+ * Returns true when the string is a real calendar date in YYYY-MM-DD format.
+ * Rejects phantom dates such as 2024-02-30.
  */
-export function formatDate(
-  date: Date | string | null | undefined,
-  format: 'short' | 'long' | 'iso' = 'long'
-): string {
-  if (!date) return '';
-  const d = new Date(date);
-
-  if (format === 'short') {
-    return d.toLocaleDateString('fr-FR', {
-      month: 'short',
-      day: 'numeric',
-      year: 'numeric',
-    });
-  }
-  if (format === 'long') {
-    return d.toLocaleDateString('fr-FR', {
-      month: 'long',
-      day: 'numeric',
-      year: 'numeric',
-    });
-  }
-  if (format === 'iso') {
-    return d.toISOString().split('T')[0] ?? '';
-  }
-
-  return d.toLocaleDateString();
+export function isValidCalendarDate(s: string): boolean {
+  const d = new Date(s + 'T00:00:00Z');
+  return !Number.isNaN(d.getTime()) && d.toISOString().slice(0, 10) === s;
 }
 
 /**
- * Gets relative time string (e.g., "2 days ago").
- *
- * @param date - The date to compare
- * @returns Relative time string
+ * Combines a YYYY-MM-DD date string and an HH:mm / HH:mm:ss time string into a UTC Date.
+ * Accepts +00 suffix as a synonym for Z to handle DB-stored time values.
  */
-export function getRelativeTime(date: Date | string | number | null | undefined): string {
-  if (!date) return '';
-  const now = new Date();
-  const past = new Date(date);
-  const diff = now.getTime() - past.getTime();
-
-  const seconds = Math.floor(diff / 1000);
-  const minutes = Math.floor(seconds / 60);
-  const hours = Math.floor(minutes / 60);
-  const days = Math.floor(hours / 24);
-
-  if (days > 0) return `Il y a ${days} jour${days > 1 ? 's' : ''}`;
-  if (hours > 0) return `Il y a ${hours} heure${hours > 1 ? 's' : ''}`;
-  if (minutes > 0) return `Il y a ${minutes} minute${minutes > 1 ? 's' : ''}`;
-  return 'À l\'instant';
+export function parseTimeForDate(dateStr: string, timeStr: string): Date {
+  let t = timeStr.trim();
+  if (t.length === 5) t += ':00';
+  if (t.endsWith('+00')) t = t.slice(0, -3) + 'Z';
+  if (!t.endsWith('Z') && !t.includes('+')) t += 'Z';
+  return new Date(`${dateStr}T${t}`);
 }
