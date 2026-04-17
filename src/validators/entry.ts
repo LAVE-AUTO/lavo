@@ -118,10 +118,14 @@ export const stationPatchPositionBodySchema = z
 export const extraTimeBodySchema = z
   .object({
     reservation_id: uuidSchema,
+    // Upper bound mirrors MAX_EXTRA_MINUTES in extra-time-service (defense in depth). 480 minutes
+    // (8 hours) is higher than any legitimate wash overrun and low enough that SQL interval math
+    // cannot flip calendar dates or cascade-shift the rest of the day off-schedule.
     extra_minutes: z
       .number({ invalid_type_error: 'extra_minutes must be a number' })
       .int('extra_minutes must be an integer')
-      .positive('extra_minutes must be a positive integer'),
+      .positive('extra_minutes must be a positive integer')
+      .max(480, 'extra_minutes cannot exceed 480'),
   })
   .strict();
 

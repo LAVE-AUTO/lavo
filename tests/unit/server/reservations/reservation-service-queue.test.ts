@@ -185,4 +185,21 @@ describe('cancelEntry — queue cancellation path', () => {
       expect(result.isLateCancellation).toBe(true);
     });
   });
+
+  describe('in_progress queue entry', () => {
+    it('falls through to simple cancellation path — does not apply fees', async () => {
+      // A queue entry in in_progress is already being served. Clients cannot
+      // trigger the fee-bearing capture/refund path for an entry already at the
+      // station; it should fall through to the simple (no-Stripe) cancel branch.
+      const entry = makeQueueEntry({ status: 'in_progress', queue_position: null });
+      mockFindEntryByIdAndUser.mockResolvedValue(entry);
+      mockUpdateEntry.mockResolvedValue(entry);
+
+      const result = await cancelEntry('entry-1', 'user-1');
+
+      expect(mockCapturePaymentIntent).not.toHaveBeenCalled();
+      expect(mockRefundPaymentIntent).not.toHaveBeenCalled();
+      expect(result.isLateCancellation).toBeUndefined();
+    });
+  });
 });

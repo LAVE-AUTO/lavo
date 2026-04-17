@@ -39,6 +39,7 @@ export type MarkNoShowsResult = {
   errors: Array<{ entryId: string; error: string }>;
 };
 
+// runWithConcurrencyLimit enforces an internal ceiling of 10; keep this value <= 10.
 const NO_SHOW_CONCURRENCY = 8;
 
 /**

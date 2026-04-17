@@ -296,20 +296,39 @@ export async function cancelEntry(
 
   // Queue entry with authorized (not yet captured) payment: apply cancellation fees.
   // pending_payment = Stripe has not confirmed yet → just cancel the PI (no charge).
+  // in_progress = already being served → cannot self-cancel via this path.
   if (
     entry.entry_type === 'queue' &&
     entry.stripe_payment_id &&
-    entry.status !== STATUS_PENDING_PAYMENT
+    entry.status !== STATUS_PENDING_PAYMENT &&
+    entry.status !== 'in_progress'
   ) {
     const policy = await getCancellationPolicy();
-    const amountPaid = parseFloat(String(entry.amount_paid));
-    const penaltyAmount = Math.round(amountPaid * policy.penaltyRate * 100) / 100;
-    const refundedAmount = Math.round((amountPaid - penaltyAmount) * 100) / 100;
+
+    // Compute penalty and refund amounts inside the transaction so they are
+    // derived from the transactionally-consistent amount_paid, not the stale
+    // pre-read value. Declared with let so the Stripe block below can read them.
+    let penaltyAmount = 0;
+    let refundedAmount = 0;
 
     const updated = await db.transaction(async (tx) => {
       const current = await findEntryByIdAndUser(entryId, userId, tx);
       if (!current) throw new NotFoundError('Entry not found');
       if (current.status === STATUS_CANCELLED) throw new ConflictError('Entry already cancelled');
+
+      // Defensive: amount_paid comes from the DB as a string. Clamp to a non-negative
+      // finite number so a corrupt / migrated row cannot produce negative Stripe cents.
+      const rawAmount = parseFloat(String(current.amount_paid));
+      const amountPaid = Number.isFinite(rawAmount) && rawAmount > 0 ? rawAmount : 0;
+      penaltyAmount = Math.max(
+        0,
+        Math.round(amountPaid * policy.penaltyRate * 100) / 100
+      );
+      refundedAmount = Math.max(
+        0,
+        Math.round((amountPaid - penaltyAmount) * 100) / 100
+      );
+
       if (current.entry_type === 'queue' && current.queue_position != null) {
         await shiftQueuePositions(current.station_id, current.queue_position + 1, -1, tx);
       }
@@ -602,8 +621,7 @@ export async function setEntryStatusByStation(
 
   const updated = await updateEntry(entryId, {
     status,
-    completed_at: status === 'completed' ? new Date() : undefined,
-    updated_at: new Date(),
+    ...(status === 'completed' ? { completed_at: new Date() } : {}),
   });
   if (status === 'completed') {
     // Capture the payment (distributes funds to station + platform).
