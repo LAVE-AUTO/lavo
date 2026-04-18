@@ -45,7 +45,7 @@ export default function OAuthCallbackPage() {
         if (user.force_password_change) {
           router.push('/change-password');
         } else if (role === 'station') {
-          router.push('/station');
+          router.push('/station/dashboard');
         } else if (role === 'admin') {
           router.push('/admin');
         } else {
