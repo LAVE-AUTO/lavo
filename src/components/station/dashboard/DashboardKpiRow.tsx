@@ -134,7 +134,7 @@ export function DashboardKpiRow({ data }: DashboardKpiRowProps) {
   ];
 
   return (
-    <div className="grid grid-cols-4 gap-3 border-b border-[#DDD9CC] bg-[#E8E4D4] px-5 py-4 dark:border-[#1A2A14] dark:bg-[#111A0E]">
+    <div className="grid grid-cols-1 gap-3 border-b border-[#DDD9CC] bg-[#E8E4D4] px-5 py-4 sm:grid-cols-2 xl:grid-cols-4 dark:border-[#1A2A14] dark:bg-[#111A0E]">
       {cards.map((card) => (
         <KpiCard key={card.label} {...card} />
       ))}

@@ -54,7 +54,7 @@ export function DashboardDateNav({ selectedDate, onDateChange, view, onViewChang
   }
 
   return (
-    <div className="flex flex-shrink-0 items-center gap-3 border-b border-[#E0DCD0] bg-white px-5 py-3 dark:border-[#1A2A14] dark:bg-[#111A0E]">
+    <div className="flex flex-shrink-0 flex-wrap items-center gap-3 border-b border-[#E0DCD0] bg-white px-5 py-3 dark:border-[#1A2A14] dark:bg-[#111A0E]">
       {/* Month bubble */}
       <div className="rounded-full bg-[#EDE9CC] px-4 py-1.5 text-[14px] font-bold text-[#1A1A0A] dark:bg-[#1E2A1A] dark:text-[#F0EDD4]">
         {MONTH_NAMES_FR[selectedDate.getMonth()]}
@@ -71,7 +71,7 @@ export function DashboardDateNav({ selectedDate, onDateChange, view, onViewChang
       </button>
 
       {/* Day chips */}
-      <div className="flex gap-1.5 overflow-hidden">
+      <div className="flex gap-1.5 overflow-x-auto [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
         {chips.map((chip) => (
           <button
             key={chip.date.toISOString()}
@@ -84,7 +84,7 @@ export function DashboardDateNav({ selectedDate, onDateChange, view, onViewChang
                 : 'bg-[#E8E4D8] text-[#1A1A0A] hover:bg-[#DDD8C4] dark:bg-[#1E2A18] dark:text-[#F0EDD4] dark:hover:bg-[#243020]',
             ].join(' ')}
           >
-            <div className="text-[9px] font-bold tracking-[0.06em]">{chip.name}</div>
+            <div className="text-[10px] font-bold tracking-[0.06em]">{chip.name}</div>
             <div className="text-[16px] font-black">{chip.num}</div>
             {/* Gold dot for today */}
             {chip.isToday && !chip.isActive && (
