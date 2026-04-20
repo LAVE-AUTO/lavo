@@ -22,6 +22,11 @@ export const DEFAULT_MAX_TEXT_FIELD_LENGTH = 50;
 /** Default max length for truncateText when not specified. */
 export const DEFAULT_TRUNCATE_LENGTH = 150;
 
+export const SUPPORT_SUBJECT_MIN_LENGTH = 5;
+export const SUPPORT_SUBJECT_MAX_LENGTH = 255;
+export const SUPPORT_MESSAGE_MIN_LENGTH = 10;
+export const SUPPORT_MESSAGE_MAX_LENGTH = 2000;
+
 export const DEFAULT_PAGE_SIZE = 20;
 export const MAX_PAGE_SIZE = 100;
 
