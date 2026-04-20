@@ -3,10 +3,32 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { useTranslations } from 'next-intl';
 import { getFromApi } from '@/services/axios-service';
+import { ApiCode } from '@/types/api-codes';
 import { SupportCreateForm } from './SupportCreateForm';
 import { SupportTicketCard } from './SupportTicketCard';
 import type { SupportTicketSummary } from '../support-types';
 import { mapApiStatus } from '../support-types';
+
+type LoadErrorKind = 'server' | 'forbidden' | 'unauthorized' | 'network' | 'generic';
+
+function resolveErrorKind(code: unknown): LoadErrorKind {
+  switch (code) {
+    case ApiCode.INTERNAL_ERROR:
+    case ApiCode.NOT_IMPLEMENTED:
+    case ApiCode.TOO_MANY_REQUESTS:
+      return 'server';
+    case ApiCode.FORBIDDEN:
+      return 'forbidden';
+    case ApiCode.UNAUTHORIZED:
+    case ApiCode.TOKEN_EXPIRED:
+      return 'unauthorized';
+    case undefined:
+    case null:
+      return 'network';
+    default:
+      return 'generic';
+  }
+}
 
 const STATS: Array<{ key: 'open' | 'in_progress' | 'resolved' | 'closed'; label: string; dot: string }> = [
   { key: 'open',        label: 'status_open',        dot: 'bg-[#F97316]' },
@@ -24,19 +46,20 @@ export function ClientSupportContainer({ sectionLabel }: Props) {
   const [showForm, setShowForm] = useState(false);
   const [tickets, setTickets] = useState<SupportTicketSummary[]>([]);
   const [loading, setLoading] = useState(true);
-  const [loadError, setLoadError] = useState(false);
+  const [loadErrorKind, setLoadErrorKind] = useState<LoadErrorKind | null>(null);
   const mountedRef = useRef(true);
   useEffect(() => { return () => { mountedRef.current = false; }; }, []);
 
   const loadTickets = useCallback(async () => {
     setLoading(true);
-    setLoadError(false);
+    setLoadErrorKind(null);
     const [ok, data] = await getFromApi<{ data: SupportTicketSummary[] }>('/support');
     if (!mountedRef.current) return;
     if (ok && 'data' in (data as object) && (data as { data: SupportTicketSummary[] }).data) {
       setTickets((data as { data: SupportTicketSummary[] }).data);
     } else {
-      setLoadError(true);
+      const code = (data as { code?: string } | undefined)?.code;
+      setLoadErrorKind(resolveErrorKind(code));
     }
     setLoading(false);
   }, []);
@@ -107,18 +130,32 @@ export function ClientSupportContainer({ sectionLabel }: Props) {
           )}
 
           {/* Error state */}
-          {!loading && loadError && (
-            <div className="flex flex-col items-center gap-3 py-16 text-center">
-              <p className="text-[13px] font-semibold text-[#999]">{t('error_load')}</p>
-              <button type="button" onClick={loadTickets}
-                className="rounded-[10px] border border-[#C49A1E]/50 px-4 py-2 text-[13px] font-semibold text-[#C49A1E] hover:bg-[#C49A1E]/10">
+          {!loading && loadErrorKind && (
+            <div
+              role="alert"
+              aria-live="assertive"
+              className="flex flex-col items-center gap-3 rounded-[10px] border border-[#E8472A]/30 bg-[#E8472A]/5 px-4 py-6 text-center dark:border-[#E8472A]/40 dark:bg-[#E8472A]/10"
+            >
+              <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#E8472A" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                <circle cx="12" cy="12" r="10" />
+                <line x1="12" y1="8" x2="12" y2="12" />
+                <line x1="12" y1="16" x2="12.01" y2="16" />
+              </svg>
+              <p className="text-[13px] font-semibold text-[#B2351F] dark:text-[#F0A090]">
+                {t(`error_load_${loadErrorKind}`)}
+              </p>
+              <button
+                type="button"
+                onClick={loadTickets}
+                className="rounded-[10px] border border-[#C49A1E]/50 px-4 py-2 text-[13px] font-semibold text-[#C49A1E] transition-colors hover:bg-[#C49A1E]/10 focus:outline-none focus-visible:ring-2 focus-visible:ring-[#C49A1E]"
+              >
                 {t('btn_retry')}
               </button>
             </div>
           )}
 
           {/* Ticket list */}
-          {!loading && !loadError && (
+          {!loading && !loadErrorKind && (
             <div className="flex flex-col gap-3">
               {!showForm && (
                 <h2 className="text-[11px] font-black uppercase tracking-wider text-[#AAAAAA] dark:text-[#4A4A3A]">
