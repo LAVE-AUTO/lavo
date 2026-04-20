@@ -2,7 +2,7 @@ import {
   AppError,
   ValidationError,
   NotFoundError,
-  AuthenticationError,
+  UnauthorizedError,
 } from '@/lib/errors';
 
 describe('errors', () => {
@@ -23,8 +23,8 @@ describe('errors', () => {
     expect(err.statusCode).toBe(404);
   });
 
-  it('AuthenticationError has 401 status', () => {
-    const err = new AuthenticationError();
+  it('UnauthorizedError has 401 status', () => {
+    const err = new UnauthorizedError();
     expect(err.statusCode).toBe(401);
   });
 });

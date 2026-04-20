@@ -45,11 +45,15 @@ import {
 } from './station-repository';
 import { findDocumentsByStationId } from './document-repository';
 
+
+// %%%%% Types %%%%%
+
 export type StationOnboardingDto = {
   // Step 1 — account credentials
   email: string;
   phone: string;
   password: string;
+
   // Step 2 — station details
   station_name: string;
   legal_name?: string;
@@ -64,6 +68,7 @@ export type StationOnboardingDto = {
   description?: string;
   /** Type de prestation: optional; persisted as nullable on stations. */
   service_scope?: 'exterior' | 'interior' | 'both';
+
   // Step 3 — documents + legal (storage from onboarding upload; default cloudinary)
   documents: { document_type: string; file_url: string; storage?: 'cloudinary' | 'local' }[];
   terms_accepted: true;
@@ -77,6 +82,12 @@ export type StationOnboardingResult = {
 export type StationWithDocuments = Station & {
   documents: Awaited<ReturnType<typeof findDocumentsByStationId>>;
 };
+
+
+// %%%%% END - Types %%%%%
+
+
+// %%%%% Station onboarding %%%%%
 
 /**
  * Creates the user account, station record, and documents in a single atomic
@@ -95,6 +106,7 @@ export async function completeStationOnboarding(
   const uniqueWashTypeIds = [...new Set(dto.wash_type_ids)];
 
   const { user, station } = await db.transaction(async (tx) => {
+    // Validate wash type ids before inserting
     if (uniqueWashTypeIds.length) {
       const validRows = await tx
         .select({ id: washTypes.id })
@@ -163,6 +175,7 @@ export async function completeStationOnboarding(
       )
       .returning();
 
+    // Queue local files for Cloudinary sync
     for (const row of docRows) {
       if (row.storage === 'local') {
         await tx.insert(pendingUploads).values({
@@ -184,6 +197,12 @@ export async function completeStationOnboarding(
   return { user, station };
 }
 
+
+// %%%%% END - Station onboarding %%%%%
+
+
+// %%%%% Admin station management %%%%%
+
 export type PendingStationsMeta = {
   total: number;
   page: number;
@@ -199,6 +218,11 @@ export type PendingStationsResult = {
   meta: PendingStationsMeta;
 };
 
+
+/**
+ * Returns a paginated list of stations in pending_admin_validation status.
+ * Strips sensitive columns (stripe_account_id, rejection_reason) from each row.
+ */
 export async function getPendingStations(page = 1, perPage = 20): Promise<PendingStationsResult> {
   const safePer = Math.min(100, Math.max(1, perPage)); // M-3: cap perPage in service, not only in validator
   const { rows, total } = await listStationsByStatus('pending_admin_validation', page, safePer);
@@ -214,10 +238,18 @@ export async function getPendingStations(page = 1, perPage = 20): Promise<Pendin
   };
 }
 
+/**
+ * Returns all stations for admin views, optionally filtered by status.
+ */
 export async function getStationsForAdmin(status?: string): Promise<Station[]> {
   return listAllStationsForAdmin(status);
 }
 
+
+/**
+ * Returns a station by id with its associated documents.
+ * Throws NotFoundError if the station does not exist.
+ */
 export async function getStationById(id: string): Promise<StationWithDocuments> {
   const station = await findStationById(id);
   if (!station) throw new NotFoundError('Station not found');
@@ -226,10 +258,21 @@ export async function getStationById(id: string): Promise<StationWithDocuments> 
   return { ...station, documents };
 }
 
+
+/**
+ * Approves a pending station: creates Stripe account, activates status, records audit log,
+ * and optionally persists document expiry dates. Sends approval email fire-and-forget.
+ *
+ * @param adminId              - Admin performing the action
+ * @param stationId            - Target station UUID
+ * @param locale               - Email locale ('fr' | 'en')
+ * @param documentExpiryDates  - Optional per-document expiry dates to record at approval time
+ */
 export async function approveStation(
   adminId: string,
   stationId: string,
-  locale: 'fr' | 'en' = 'fr'
+  locale: 'fr' | 'en' = 'fr',
+  documentExpiryDates?: Array<{ document_id: string; expiry_date: Date }>
 ): Promise<void> {
   const station = await findStationById(stationId);
   if (!station) throw new NotFoundError('Station not found');
@@ -242,7 +285,7 @@ export async function approveStation(
 
   // M-1: Create Stripe account BEFORE activating so the station stays pending if Stripe fails.
   const accountId = await createStripeConnectAccount(stationUser.email, stationId);
-  const stripeOnboardingUrl = await createStripeOnboardingLink(accountId);
+  await createStripeOnboardingLink(accountId);
 
   // C-2 + H-1: Atomic conditional UPDATE + audit log in one transaction.
   // The WHERE on status ensures only one concurrent approve wins — the other gets 0 rows → 409.
@@ -271,6 +314,29 @@ export async function approveStation(
       target_id: stationId,
       details: { stripe_account_id: accountId, stripe_connected: true },
     });
+
+    // Persist document expiry dates if provided. Silently skip any document_id
+    // that does not belong to this station to ensure the approval never fails
+    // because of a bad document reference.
+    if (documentExpiryDates && documentExpiryDates.length > 0) {
+      for (const { document_id, expiry_date } of documentExpiryDates) {
+        const [owned] = await tx
+          .select({ id: stationDocuments.id })
+          .from(stationDocuments)
+          .where(
+            and(
+              eq(stationDocuments.id, document_id),
+              eq(stationDocuments.station_id, stationId)
+            )
+          )
+          .limit(1);
+        if (!owned) continue;
+        await tx
+          .update(stationDocuments)
+          .set({ expiry_date })
+          .where(eq(stationDocuments.id, document_id));
+      }
+    }
   });
 
   let qrPublicUrl: string | undefined;
@@ -288,6 +354,16 @@ export async function approveStation(
     .catch(() => void 0);
 }
 
+
+/**
+ * Rejects a pending station with a mandatory reason string.
+ * Atomically updates status, increments rejection_count, and records audit log.
+ * Sends rejection email fire-and-forget.
+ *
+ * @param adminId   - Admin performing the action
+ * @param stationId - Target station UUID
+ * @param reason    - Human-readable rejection reason (stored and emailed)
+ */
 export async function rejectStation(
   adminId: string,
   stationId: string,
@@ -333,6 +409,16 @@ export async function rejectStation(
     .catch((e) => console.error('[REJECT_EMAIL_FAILED]', { stationId, error: e instanceof Error ? e.message : String(e) }));
 }
 
+
+// %%%%% END - Admin station management %%%%%
+
+
+// %%%%% Station owner (my station) %%%%%
+
+/**
+ * Returns the station associated with the given user id, with its documents.
+ * Throws NotFoundError if no station is linked to this account.
+ */
 export async function getMyStation(userId: string): Promise<StationWithDocuments> {
   const station = await findStationByUserId(userId);
   if (!station) throw new NotFoundError('No station associated with this account');
@@ -341,7 +427,11 @@ export async function getMyStation(userId: string): Promise<StationWithDocuments
   return { ...station, documents };
 }
 
-// ─── Public API (Card 1) ────────────────────────────────────────────────────
+
+// %%%%% END - Station owner (my station) %%%%%
+
+
+// %%%%% Public API (Card 1) %%%%%
 
 /**
  * List item for GET /api/v1/stations. Station row plus available (derived from slots),
@@ -384,7 +474,9 @@ function toListPublicItem(row: StationWithAvailableSlots): StationListPublicItem
 }
 
 /**
- * Returns paginated list of active stations and optional group arrays (available_now, most_appreciated, most_visited).
+ * Returns paginated list of active stations and optional group arrays
+ * (available_now, most_appreciated, most_visited).
+ *
  * Response shape: { data: { all, ...groups }, meta: { total, page, per_page, total_pages } }.
  * Backward compatible: when no groups param, only data.all and meta are set.
  */
@@ -429,6 +521,7 @@ export async function listStationsPublic(
 export async function getStationDetailPublic(id: string) {
   const station = await findActiveStationWithDetail(id);
   if (!station) throw new NotFoundError('Station not found');
+
   const now = new Date();
   const available_slots = (station.timeSlots ?? [])
     .filter((s: { start_time: Date }) => s.start_time > now)
@@ -437,6 +530,7 @@ export async function getStationDetailPublic(id: string) {
         sum + Math.max(0, (s.capacity ?? 0) - (s.booked_count ?? 0)),
       0
     );
+
   // Unavailability derived only from slot availability; no API toggle for is_open (Figma gap).
   const available = available_slots > 0;
   const completed_count = await getCompletedCountForStation(id);
@@ -461,3 +555,5 @@ export async function getStationJoinPublic(id: string): Promise<{ mapsUrl: strin
   return { mapsUrl };
 }
 
+
+// %%%%% END - Public API (Card 1) %%%%%

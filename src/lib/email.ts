@@ -29,16 +29,14 @@ const FROM = process.env.EMAIL_FROM ?? 'noreply@lavo.app';
 type Locale = 'fr' | 'en';
 
 
-// %%%%% Resend client (singleton) %%%%%
-// Lazy initialization with warnings
+// %%%%% END - Constants %%%%%
+
+
+// %%%%% Resend client %%%%%
+// Lazy singleton — never passes undefined to the SDK
 
 let warnedResendApiKeyMissing = false;
 let resendClient: Resend | null | undefined;
-
-
-// %%%%% MODULE — Resend client %%%%%
-// Lazy singleton; never pass undefined to the SDK.
-
 
 /**
  * Returns a Resend client when `RESEND_API_KEY` is set; otherwise null.
@@ -71,7 +69,6 @@ function warnResendMissingOnce(context: string): void {
 
 // %%%%% Security & validation %%%%%
 // HTML escaping, URL validation, recipient sanity checks
-
 
 /**
  * Escapes HTML special characters to prevent injection in email bodies.
@@ -125,7 +122,7 @@ function isReasonableRecipientEmail(to: string): boolean {
 // %%%%% END - Security & validation %%%%%
 
 
-// %%%%% Bilingual email templates %%%%%
+// %%%%% i18n copy (TEXTS) %%%%%
 // Subjects, bodies, and footer text per locale (fr / en)
 
 const TEXTS = {
@@ -266,10 +263,10 @@ const TEXTS = {
 } as const;
 
 
-// %%%%% END - MODULE — i18n copy (TEXTS) %%%%%
+// %%%%% END - i18n copy (TEXTS) %%%%%
 
 
-// %%%%% MODULE — Branded HTML layout %%%%%
+// %%%%% Branded HTML layout %%%%%
 // Table-based template; optional CTA and footnote.
 
 function brandedEmail(
@@ -400,11 +397,11 @@ function brandedEmail(
 }
 
 
-// %%%%% END - MODULE — Branded HTML layout %%%%%
+// %%%%% END - Branded HTML layout %%%%%
 
 
-// %%%%% MODULE — Transactional sends %%%%%
-// Verification, password reset, station lifecycle, payment notices.
+// %%%%% Transactional sends %%%%%
+// Verification, password reset, station lifecycle, payment notices
 
 export async function sendVerificationEmail(
   to: string,
@@ -607,6 +604,7 @@ export async function sendStationApplicationAdminNotification(
     context === 'approval'
       ? `[Slowtime] Station approved with QR: ${safePlainTextSnippet(stationName, 120)}`
       : `[Slowtime] New station application: ${safePlainTextSnippet(stationName, 120)}`;
+
   const bodyHtml = context === 'approval'
     ? `
       <p style="margin: 0 0 8px;"><strong>Station approved:</strong> ${safeName}</p>
@@ -682,8 +680,8 @@ export async function sendPaymentSuccessEmail(params: {
         ctaLabel: t.cta,
       }),
     });
-  } catch {
-    console.error('sendPaymentSuccessEmail: Resend send failed');
+  } catch (e) {
+    console.error('sendPaymentSuccessEmail: Resend send failed', e instanceof Error ? e.message : String(e));
   }
 }
 
@@ -722,17 +720,88 @@ export async function sendPaymentFailedEmail(params: {
         ctaLabel: t.cta,
       }),
     });
-  } catch {
-    console.error('sendPaymentFailedEmail: Resend send failed');
+  } catch (e) {
+    console.error('sendPaymentFailedEmail: Resend send failed', e instanceof Error ? e.message : String(e));
   }
 }
 
 
-// %%%%% END - MODULE — Transactional sends %%%%%
+/**
+ * Sends a KYC document expiry reminder email to a station owner or an admin.
+ *
+ * @param params.toEmail       - Recipient email address
+ * @param params.documentType  - The document type string (e.g. 'kbis', 'assurance')
+ * @param params.expiryDate    - The date the document expires
+ * @param params.thresholdDays - How many days remain before expiry
+ * @param params.stationName   - Name of the station that owns the document
+ * @param params.isAdmin       - True when the recipient is an admin (adjusts copy)
+ */
+export async function sendKycExpiryReminderEmail(params: {
+  toEmail: string;
+  documentType: string;
+  expiryDate: Date;
+  thresholdDays: number;
+  stationName: string;
+  isAdmin: boolean;
+}): Promise<void> {
+  const { toEmail, documentType, expiryDate, thresholdDays, stationName, isAdmin } = params;
+
+  const client = getResendClient();
+  if (!client) {
+    warnResendMissingOnce('sendKycExpiryReminderEmail');
+    return;
+  }
+  if (!isReasonableRecipientEmail(toEmail)) return;
+
+  const safeDocType = escapeHtmlPlain(safePlainTextSnippet(documentType, 50));
+  const safeName = escapeHtmlPlain(safePlainTextSnippet(stationName, 200));
+  const formattedExpiry = expiryDate.toLocaleDateString('fr-FR');
+
+  const subject = isAdmin
+    ? `[Slowtime Admin] Document KYC expirant dans ${thresholdDays} jours — ${safePlainTextSnippet(stationName, 100)}`
+    : `[Slowtime] Votre document KYC expire dans ${thresholdDays} jours`;
+
+  const greeting = isAdmin ? 'Notification administrateur KYC' : 'Bonjour,';
+
+  const bodyHtml = isAdmin
+    ? `
+      <p style="margin: 0 0 8px;">Un document KYC arrive à expiration sous <strong>${thresholdDays} jours</strong>.</p>
+      <p style="margin: 0 0 8px;"><strong>Station :</strong> ${safeName}</p>
+      <p style="margin: 0 0 8px;"><strong>Type de document :</strong> ${safeDocType}</p>
+      <p style="margin: 0 0 8px;"><strong>Date d'expiration :</strong> ${formattedExpiry}</p>
+      <p style="margin: 0; color: #888; font-size: 14px;">Veuillez contacter la station si aucune action n'est entreprise.</p>
+    `
+    : `
+      <p style="margin: 0 0 8px;">
+        Votre document <strong>${safeDocType}</strong> pour la station <strong>${safeName}</strong>
+        expire le <strong>${formattedExpiry}</strong>, soit dans <strong>${thresholdDays} jours</strong>.
+      </p>
+      <p style="margin: 0; color: #444;">
+        Veuillez renouveler ce document et le soumettre depuis votre espace station avant la date d'expiration
+        afin d'éviter toute interruption de service.
+      </p>
+    `;
+
+  await client.emails.send({
+    from: FROM,
+    to: toEmail,
+    subject,
+    html: brandedEmail('fr', {
+      greeting,
+      bodyHtml,
+      footNote: isAdmin
+        ? 'Cet e-mail est envoyé automatiquement au(x) administrateur(s) de la plateforme.'
+        : "Si vous avez déjà renouvelé ce document, veuillez l'envoyer depuis votre espace station.",
+    }),
+  });
+}
 
 
-// %%%%% MODULE — Weekly escrow report & locale %%%%%
-// Admin table email and Accept-Language parsing.
+// %%%%% END - Transactional sends %%%%%
+
+
+// %%%%% Weekly escrow report & locale %%%%%
+// Admin table email and Accept-Language parsing
 
 /** Parses `Accept-Language`; returns `fr` or `en` (default `fr`). */
 export function extractLocale(headerValue: string | null): Locale {
@@ -773,6 +842,13 @@ export async function sendWeeklyEscrowTransactionsReportEmail(
     rows: WeeklyEscrowTransactionRow[];
   }
 ): Promise<void> {
+  const client = getResendClient();
+  if (!client) {
+    warnResendMissingOnce('sendWeeklyEscrowTransactionsReportEmail');
+    return;
+  }
+  if (!isReasonableRecipientEmail(to)) return;
+
   const { locale, weekStart, weekEnd, rows } = params;
 
   const subjectFr = `Rapport hebdomadaire — Transactions escrow (${weekStart.toLocaleDateString('fr-FR')} → ${weekEnd.toLocaleDateString('fr-FR')})`;
@@ -840,13 +916,6 @@ export async function sendWeeklyEscrowTransactionsReportEmail(
     </table>
   `;
 
-  const client = getResendClient();
-  if (!client) {
-    warnResendMissingOnce('sendWeeklyEscrowTransactionsReportEmail');
-    return;
-  }
-  if (!isReasonableRecipientEmail(to)) return;
-
   await client.emails.send({
     from: FROM,
     to,
@@ -859,4 +928,4 @@ export async function sendWeeklyEscrowTransactionsReportEmail(
 }
 
 
-// %%%%% END - MODULE — Weekly escrow report & locale %%%%%
+// %%%%% END - Weekly escrow report & locale %%%%%
