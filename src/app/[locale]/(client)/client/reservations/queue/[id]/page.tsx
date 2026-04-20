@@ -245,7 +245,11 @@ export default function QueueDetailPage({ params }: PageProps) {
         </div>
 
         {/* Live position panel */}
-        <div className="bg-[#E8E8D8] dark:bg-dark-card rounded-xl border border-[#D0D0C0] dark:border-tab-inactive p-5">
+        <div
+          className="bg-[#E8E8D8] dark:bg-dark-card rounded-xl border border-[#D0D0C0] dark:border-tab-inactive p-5"
+          aria-live="polite"
+          aria-atomic="false"
+        >
           <div className="flex items-center gap-2 mb-4">
             <span className={`w-2.5 h-2.5 rounded-full shrink-0 animate-pulse ${isActive ? 'bg-gold' : 'bg-lavo-success'}`} />
             <span className="text-[12px] font-bold text-[#555] dark:text-[#A0A090] uppercase tracking-wider">

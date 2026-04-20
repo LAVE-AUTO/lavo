@@ -68,7 +68,7 @@ export default function ClientReservationConfirmPage() {
   }, []);
 
   const [entry, setEntry] = useState<ConfirmedEntry | null>(null);
-  const [state, setState] = useState<ConfirmState>(
+  const [screen, setScreen] = useState<ConfirmState>(
     redirectStatus === 'failed' ? 'failed' : 'loading',
   );
 
@@ -113,34 +113,34 @@ export default function ClientReservationConfirmPage() {
 
       if (!apiEntry) {
         if (redirectStatus === 'processing' && Date.now() - startedAt < POLL_MAX_MS) {
-          setState('pending');
+          setScreen('pending');
           setTimeout(tick, POLL_INTERVAL_MS);
           return;
         }
-        setState('missing');
+        setScreen('missing');
         return;
       }
 
       const enriched = await enrichWithStation(apiEntry);
       if (!mountedRef.current || cancelled) return;
-      if (!enriched) { setState('missing'); return; }
+      if (!enriched) { setScreen('missing'); return; }
 
       setEntry(enriched);
 
       const isPending = enriched.status === 'pending_payment' || enriched.status === 'pending';
       if (isPending && Date.now() - startedAt < POLL_MAX_MS) {
-        setState('pending');
+        setScreen('pending');
         setTimeout(tick, POLL_INTERVAL_MS);
         return;
       }
-      setState('success');
+      setScreen('success');
     };
 
     tick();
     return () => { cancelled = true; };
   }, [authLoading, redirectStatus, loadEntry, enrichWithStation]);
 
-  if (state === 'loading' || authLoading) {
+  if (screen === 'loading' || authLoading) {
     return (
       <main className="min-h-screen bg-[#F5F5E6] dark:bg-dark-bg flex items-center justify-center pb-24">
         <div className="h-8 w-8 animate-spin rounded-full border-[3px] border-gold border-t-transparent" />
@@ -148,7 +148,7 @@ export default function ClientReservationConfirmPage() {
     );
   }
 
-  if (state === 'missing') {
+  if (screen === 'missing') {
     return (
       <main className="min-h-screen bg-[#F5F5E6] dark:bg-dark-bg flex flex-col items-center justify-center gap-4 px-4 pb-24 text-center">
         <p className="text-[14px] font-semibold text-[#555] dark:text-[#B0B0A0]">
@@ -164,7 +164,7 @@ export default function ClientReservationConfirmPage() {
     );
   }
 
-  if (state === 'failed') {
+  if (screen === 'failed') {
     return (
       <main className="min-h-screen bg-[#F5F5E6] dark:bg-dark-bg px-4 pb-24 sm:pb-8">
         <div className="mx-auto flex min-h-[60vh] max-w-xl flex-col items-center justify-center text-center">
@@ -199,7 +199,7 @@ export default function ClientReservationConfirmPage() {
     );
   }
 
-  if (state === 'pending' || !entry) {
+  if (screen === 'pending' || !entry) {
     return (
       <main className="min-h-screen bg-[#F5F5E6] dark:bg-dark-bg px-4 pb-24 sm:pb-8">
         <div className="mx-auto flex min-h-[60vh] max-w-xl flex-col items-center justify-center text-center">
