@@ -43,7 +43,7 @@ export function StationDetail({ id }: StationDetailProps) {
   const { isAuthenticated } = useAuth();
   const locale = useLocale();
   const mountedRef = useRef(true);
-  useEffect(() => { return () => { mountedRef.current = false; }; }, [mountedRef]);
+  useEffect(() => { mountedRef.current = true; return () => { mountedRef.current = false; }; }, []);
 
   const [station, setStation] = useState<StationDetailData | null | undefined>(undefined);
 

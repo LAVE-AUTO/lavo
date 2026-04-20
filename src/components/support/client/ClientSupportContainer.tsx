@@ -48,7 +48,7 @@ export function ClientSupportContainer({ sectionLabel }: Props) {
   const [loading, setLoading] = useState(true);
   const [loadErrorKind, setLoadErrorKind] = useState<LoadErrorKind | null>(null);
   const mountedRef = useRef(true);
-  useEffect(() => { return () => { mountedRef.current = false; }; }, []);
+  useEffect(() => { mountedRef.current = true; return () => { mountedRef.current = false; }; }, []);
 
   const loadTickets = useCallback(async () => {
     setLoading(true);
