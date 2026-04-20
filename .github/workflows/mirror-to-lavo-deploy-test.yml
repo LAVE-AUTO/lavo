@@ -17,7 +17,7 @@ jobs:
       - name: Push vers lavo-deploy-test
         uses: ad-m/github-push-action@master
         with:
-          github_token: ${{ secrets.REPO2_TOKEN }}
+          github_token: ${{ secrets.LAVO_DEPLOY_TEST_TOKEN }}
           repository: LAVE-AUTO/lavo-deploy-test
           branch: main
           force: true
