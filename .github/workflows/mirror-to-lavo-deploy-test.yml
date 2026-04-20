@@ -1,0 +1,23 @@
+name: Mirror to lavo-deploy-test
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  mirror:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout lavo
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0  # historique complet
+
+      - name: Push vers lavo-deploy-test
+        uses: ad-m/github-push-action@master
+        with:
+          github_token: ${{ secrets.REPO2_TOKEN }}
+          repository: LAVE-AUTO/lavo-deploy-test
+          branch: main
+          force: true
