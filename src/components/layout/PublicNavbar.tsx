@@ -122,10 +122,10 @@ export function PublicNavbar({
     'text-[13px] font-medium tracking-[0.4px] text-[#4a6a4d] dark:text-[#7a9a7d] hover:text-[#c8980a] dark:hover:text-[#c8980a] transition-colors duration-300';
 
   const pillClass =
-    'inline-block border border-[rgba(200,152,10,0.45)] text-[#c8980a] px-[22px] py-[9px] rounded-[2px] text-[13px] font-semibold tracking-[0.8px] uppercase transition-all duration-300 hover:bg-[#c8980a] hover:text-[#0d1f0f]';
+    'inline-block border rounded-md border-[rgba(200,152,10,0.45)] text-[#c8980a] px-[22px] py-[9px] text-[13px] font-semibold tracking-[0.8px] uppercase transition-all duration-300 hover:bg-[#c8980a] hover:text-[#0d1f0f]';
 
   const ctaClass =
-    'btn-shine inline-block bg-[#c8980a] text-[#0d1f0f] px-[26px] py-[10px] rounded-[2px] text-[13px] font-bold tracking-[1px] uppercase transition-all duration-300 hover:bg-[#e8b520] hover:-translate-y-px hover:shadow-[0_6px_24px_rgba(200,152,10,0.4)]';
+    'btn-shine inline-block bg-[#c8980a] rounded-md text-[#0d1f0f] px-[26px] py-[10px] text-[13px] font-bold tracking-[1px] uppercase transition-all duration-300 hover:bg-[#e8b520] hover:-translate-y-px hover:shadow-[0_6px_24px_rgba(200,152,10,0.4)]';
 
   const drawerLinkClass =
     'flex items-center px-4 py-3 text-[15px] font-medium text-[#4a6a4d] dark:text-[#7a9a7d] hover:text-[#c8980a] dark:hover:text-[#c8980a] transition-colors';
@@ -307,7 +307,7 @@ export function PublicNavbar({
                   </div>
                   <Link
                     href="/profile"
-                    className="flex items-center justify-center gap-2.5 py-3 text-[14px] font-semibold text-[#4a6a4d] dark:text-[#7a9a7d] hover:text-[#c8980a] dark:hover:text-[#c8980a] border border-[rgba(200,152,10,0.3)] rounded-[2px] transition-colors"
+                    className="flex items-center justify-center gap-2.5 py-3 text-[14px] font-semibold text-[#4a6a4d] dark:text-[#7a9a7d] hover:text-[#c8980a] dark:hover:text-[#c8980a] border border-[rgba(200,152,10,0.3)] rounded-md transition-colors"
                     onClick={() => setMenuOpen(false)}
                   >
                     <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
@@ -319,7 +319,7 @@ export function PublicNavbar({
                   <button
                     type="button"
                     onClick={() => { logout(); setMenuOpen(false); }}
-                    className="flex items-center justify-center gap-2.5 py-3 text-[14px] font-semibold text-[#e8472a] border border-[rgba(232,71,42,0.3)] rounded-[2px] hover:bg-[rgba(232,71,42,0.07)] transition-colors"
+                    className="flex items-center justify-center gap-2.5 py-3 text-[14px] font-semibold text-[#e8472a] border border-[rgba(232,71,42,0.3)] rounded-md hover:bg-[rgba(232,71,42,0.07)] transition-colors"
                   >
                     <LogoutIcon />
                     {t('logout')}
@@ -329,7 +329,7 @@ export function PublicNavbar({
                 <>
                   <Link
                     href="/merchant"
-                    className="flex items-center justify-center py-3 border border-[rgba(200,152,10,0.45)] text-[14px] font-semibold tracking-[0.8px] uppercase text-[#c8980a] hover:bg-[#c8980a] hover:text-[#0d1f0f] transition-all rounded-[2px]"
+                    className="flex items-center justify-center py-3 border border-[rgba(200,152,10,0.45)] text-[14px] font-semibold tracking-[0.8px] uppercase text-[#c8980a] hover:bg-[#c8980a] hover:text-[#0d1f0f] transition-all rounded-md"
                   >
                     {t('merchant_pill')}
                   </Link>
@@ -341,7 +341,7 @@ export function PublicNavbar({
                   </Link>
                   <Link
                     href="/register"
-                    className="btn-shine flex items-center justify-center py-3 bg-[#c8980a] text-[#0d1f0f] text-[14px] font-bold tracking-[1px] uppercase rounded-[2px] transition-all hover:bg-[#e8b520]"
+                    className="btn-shine flex items-center justify-center py-3 bg-[#c8980a] text-[#0d1f0f] text-[14px] font-bold tracking-[1px] uppercase rounded-md transition-all hover:bg-[#e8b520]"
                   >
                     {t('register')}
                   </Link>
