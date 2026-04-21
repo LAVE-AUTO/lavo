@@ -40,7 +40,7 @@ export function CtaSection() {
         {/* Email form */}
         <form
           onSubmit={handleSubmit}
-          className="mx-auto mb-4 flex max-w-[440px] overflow-hidden rounded-[3px] shadow-[0_16px_48px_rgba(0,0,0,0.2)]"
+          className="mx-auto mb-4 flex max-w-[440px] overflow-hidden rounded-md shadow-[0_16px_48px_rgba(0,0,0,0.2)]"
         >
           <input
             type="email"
