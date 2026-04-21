@@ -185,7 +185,6 @@ export async function completeStationOnboarding(
       }
     }
 
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     const { password_hash: _, ...safeUser } = newUser;
     return { user: safeUser as SafeUser, station: newStation };
   });
