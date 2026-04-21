@@ -508,16 +508,16 @@ function DocCard({
             />
             <div className="flex flex-wrap gap-2">
               <button type="button" onClick={handleSave} disabled={!draft}
-                className="flex-1 rounded-lg bg-[#C49A1E] px-3 py-1.5 text-[11px] font-bold text-[#0C1209] transition-opacity hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-50">
+                className="flex-1 rounded-lg bg-[#C49A1E] px-3 py-1.5 text-[11px] font-bold text-[#0C1209] transition-opacity hover:opacity-90 focus:outline-none focus-visible:ring-2 focus-visible:ring-[#C49A1E] focus-visible:ring-offset-1 disabled:cursor-not-allowed disabled:opacity-50">
                 {labels.save}
               </button>
               <button type="button" onClick={handleCancel}
-                className="rounded-lg border border-[#E0DCD0] px-3 py-1.5 text-[11px] font-semibold text-[#666] transition-colors hover:bg-[#F0EDE0] dark:border-[#243020] dark:text-[#9A9A8A] dark:hover:bg-[#1E2A1A]">
+                className="rounded-lg border border-[#E0DCD0] px-3 py-1.5 text-[11px] font-semibold text-[#666] transition-colors hover:bg-[#F0EDE0] focus:outline-none focus-visible:ring-2 focus-visible:ring-[#C49A1E] dark:border-[#243020] dark:text-[#9A9A8A] dark:hover:bg-[#1E2A1A]">
                 {labels.cancel}
               </button>
               {expiry && (
                 <button type="button" onClick={handleClear}
-                  className="rounded-lg border border-[#EF4444]/40 px-3 py-1.5 text-[11px] font-semibold text-[#B2351F] transition-colors hover:bg-[#EF4444]/8 dark:text-[#F0A090]">
+                  className="rounded-lg border border-[#EF4444]/40 px-3 py-1.5 text-[11px] font-semibold text-[#B2351F] transition-colors hover:bg-[#EF4444]/8 focus:outline-none focus-visible:ring-2 focus-visible:ring-[#EF4444] dark:text-[#F0A090]">
                   {labels.clear}
                 </button>
               )}
@@ -531,7 +531,7 @@ function DocCard({
         href={doc.file_url}
         target="_blank"
         rel="noopener noreferrer"
-        className="flex items-center gap-1 text-[12px] font-semibold text-[#C49A1E] transition-colors hover:text-[#B08A10]"
+        className="flex items-center gap-1 rounded text-[12px] font-semibold text-[#C49A1E] transition-colors hover:text-[#B08A10] focus:outline-none focus-visible:ring-2 focus-visible:ring-[#C49A1E]"
       >
         {openLabel}
         <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
