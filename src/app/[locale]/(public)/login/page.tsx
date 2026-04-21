@@ -30,7 +30,7 @@ export default async function LoginPage({ params, searchParams }: Props) {
   const t = await getTranslations({ locale, namespace: 'login' });
 
   return (
-    <AuthRedirectGuard>
+    <AuthRedirectGuard locale={locale}>
       <AuthPageLayout>
         <div className="w-full max-w-lg animate-fade-in">
           <AuthHeader
