@@ -100,18 +100,24 @@ export function StationConfigPage() {
       });
     }
 
-    const [slotsOk, slotsData] = await getFromApi('/station/slots');
+    setLoading(false);
+  }, []);
+
+  const loadSlots = useCallback(async (date: string) => {
+    const [slotsOk, slotsData] = await getFromApi(`/station/slots?date=${date}`);
     if (slotsOk) {
       const res = slotsData as { data: { slots: CreatedSlot[] } };
       setSlots(res.data.slots ?? []);
     }
-
-    setLoading(false);
   }, []);
 
   useEffect(() => {
     if (!authLoading) loadData();
   }, [authLoading, loadData]);
+
+  useEffect(() => {
+    if (!authLoading && !isPendingApproval) loadSlots(selectedDate);
+  }, [authLoading, isPendingApproval, selectedDate, loadSlots]);
 
   if (loading) {
     return (
