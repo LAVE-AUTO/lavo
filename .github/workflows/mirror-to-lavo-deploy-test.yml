@@ -12,12 +12,9 @@ jobs:
       - name: Checkout lavo
         uses: actions/checkout@v4
         with:
-          fetch-depth: 0  # historique complet
+          fetch-depth: 0
 
       - name: Push vers lavo-deploy-test
-        uses: ad-m/github-push-action@master
-        with:
-          github_token: ${{ secrets.LAVO_DEPLOY_TEST_TOKEN }}
-          repository: LAVE-AUTO/lavo-deploy-test
-          branch: main
-          force: true
+        run: |
+          git remote add deploy https://x-access-token:${{ secrets.LAVO_DEPLOY_TEST_TOKEN }}@github.com/LAVE-AUTO/lavo-deploy-test.git
+          git push deploy main --force
