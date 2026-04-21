@@ -33,7 +33,7 @@ export function ReceiptModal({ entry: e, locale, onClose }: ReceiptModalProps) {
   const [downloading, setDownloading] = useState(false);
   const [stripeReceiptUrl, setStripeReceiptUrl] = useState<string | null>(null);
   const mountedRef = useRef(true);
-  useEffect(() => () => { mountedRef.current = false; }, []);
+  useEffect(() => { mountedRef.current = true; return () => { mountedRef.current = false; }; }, []);
 
   // Fetch receipt detail to check for Stripe receipt URL
   useEffect(() => {

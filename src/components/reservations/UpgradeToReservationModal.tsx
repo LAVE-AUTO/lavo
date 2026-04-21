@@ -60,7 +60,7 @@ function UpgradeCardForm({
   const [error, setError] = useState<string | null>(null);
   const [processing, setProcessing] = useState(false);
   const mountedRef = useRef(true);
-  useEffect(() => () => { mountedRef.current = false; }, []);
+  useEffect(() => { mountedRef.current = true; return () => { mountedRef.current = false; }; }, []);
 
   const handlePay = async () => {
     if (!stripe || !elements) return;
@@ -150,7 +150,7 @@ export default function UpgradeToReservationModal({ entryId, stationId, onClose,
   const { success: toastSuccess, error: toastError } = useToast();
   const dialogRef = useRef<HTMLDivElement | null>(null);
   const mountedRef = useRef(true);
-  useEffect(() => () => { mountedRef.current = false; }, []);
+  useEffect(() => { mountedRef.current = true; return () => { mountedRef.current = false; }; }, []);
 
   // Steps: 'slot' → 'payment' → 'done'
   const [step, setStep] = useState<'slot' | 'payment'>('slot');

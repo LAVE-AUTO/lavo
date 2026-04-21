@@ -42,7 +42,7 @@ export function SupportTicketCard({ ticket, onMessageSent }: Props) {
   const [replyContent, setReplyContent] = useState('');
   const [sending, setSending] = useState(false);
   const mountedRef = useRef(true);
-  useEffect(() => { return () => { mountedRef.current = false; }; }, []);
+  useEffect(() => { mountedRef.current = true; return () => { mountedRef.current = false; }; }, []);
 
   const status = mapApiStatus(ticket.status);
   const s = STATUS[status];

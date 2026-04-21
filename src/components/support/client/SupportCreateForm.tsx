@@ -4,6 +4,12 @@ import { useState, useRef, useEffect } from 'react';
 import { useTranslations } from 'next-intl';
 import { useToast } from '@/context/toast-context';
 import { postWithApi } from '@/services/axios-service';
+import {
+  SUPPORT_SUBJECT_MIN_LENGTH,
+  SUPPORT_SUBJECT_MAX_LENGTH,
+  SUPPORT_MESSAGE_MIN_LENGTH,
+  SUPPORT_MESSAGE_MAX_LENGTH,
+} from '@/helpers/constants';
 
 interface Props {
   onCreated: () => void;
@@ -17,19 +23,35 @@ export function SupportCreateForm({ onCreated, onCancel }: Props) {
   const t      = useTranslations('client_support');
   const { success: toastSuccess, error: toastError } = useToast();
   const mountedRef = useRef(true);
-  useEffect(() => { return () => { mountedRef.current = false; }; }, []);
+  useEffect(() => { mountedRef.current = true; return () => { mountedRef.current = false; }; }, []);
 
   const [subject, setSubject] = useState('');
   const [message, setMessage] = useState('');
   const [saving,  setSaving]  = useState(false);
 
+  const subjectTrimmed = subject.trim();
+  const messageTrimmed = message.trim();
+  const subjectLen = subjectTrimmed.length;
+  const messageLen = messageTrimmed.length;
+  const subjectTooShort = subjectLen > 0 && subjectLen < SUPPORT_SUBJECT_MIN_LENGTH;
+  const messageTooShort = messageLen > 0 && messageLen < SUPPORT_MESSAGE_MIN_LENGTH;
+  const canSubmit = subjectLen >= SUPPORT_SUBJECT_MIN_LENGTH && messageLen >= SUPPORT_MESSAGE_MIN_LENGTH;
+
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
-    if (!subject.trim()) { toastError(t('error_subject_empty')); return; }
-    if (!message.trim()) { toastError(t('error_message_empty')); return; }
+    if (!subjectTrimmed) { toastError(t('error_subject_empty')); return; }
+    if (subjectLen < SUPPORT_SUBJECT_MIN_LENGTH) {
+      toastError(t('error_subject_too_short', { min: SUPPORT_SUBJECT_MIN_LENGTH }));
+      return;
+    }
+    if (!messageTrimmed) { toastError(t('error_message_empty')); return; }
+    if (messageLen < SUPPORT_MESSAGE_MIN_LENGTH) {
+      toastError(t('error_message_too_short', { min: SUPPORT_MESSAGE_MIN_LENGTH }));
+      return;
+    }
     setSaving(true);
     try {
-      const [ok] = await postWithApi('/support', { subject: subject.trim(), message: message.trim() });
+      const [ok] = await postWithApi('/support', { subject: subjectTrimmed, message: messageTrimmed });
       if (!mountedRef.current) return;
       if (ok) {
         toastSuccess(t('submit_success'));
@@ -51,29 +73,53 @@ export function SupportCreateForm({ onCreated, onCancel }: Props) {
         <span className="text-[13px] font-bold text-[#1A1A0A] dark:text-[#F0EDD4]">{t('section_create')}</span>
       </div>
 
-      <form onSubmit={handleSubmit} className="flex flex-col gap-4 p-5">
+      <form onSubmit={handleSubmit} className="flex flex-col gap-4 p-5" noValidate>
         <div className="flex flex-col gap-1.5">
           <label htmlFor="support-subject" className="text-[12px] font-medium text-[#5A5A4A] dark:text-[#9A9A8A]">{t('field_subject')}</label>
           <input
             id="support-subject"
-            type="text" maxLength={255}
+            type="text"
+            minLength={SUPPORT_SUBJECT_MIN_LENGTH}
+            maxLength={SUPPORT_SUBJECT_MAX_LENGTH}
             className={inputClass}
             placeholder={t('field_subject_placeholder')}
             value={subject}
             onChange={(e) => setSubject(e.target.value)}
+            aria-invalid={subjectTooShort || undefined}
+            aria-describedby="support-subject-hint"
           />
+          <div id="support-subject-hint" className="flex items-center justify-between text-[11px]">
+            <span className={subjectTooShort ? 'text-[#B2351F] dark:text-[#F0A090]' : 'text-[#7A7A6A] dark:text-[#6A6A5A]'}>
+              {subjectTooShort
+                ? t('error_subject_too_short', { min: SUPPORT_SUBJECT_MIN_LENGTH })
+                : t('hint_subject_min', { min: SUPPORT_SUBJECT_MIN_LENGTH })}
+            </span>
+            <span className="tabular-nums text-[#AAAAAA] dark:text-[#4A4A3A]">{subject.length}/{SUPPORT_SUBJECT_MAX_LENGTH}</span>
+          </div>
         </div>
 
         <div className="flex flex-col gap-1.5">
           <label htmlFor="support-message" className="text-[12px] font-medium text-[#5A5A4A] dark:text-[#9A9A8A]">{t('field_message')}</label>
           <textarea
             id="support-message"
-            rows={5} maxLength={2000}
+            rows={5}
+            minLength={SUPPORT_MESSAGE_MIN_LENGTH}
+            maxLength={SUPPORT_MESSAGE_MAX_LENGTH}
             className={inputClass + ' resize-none leading-relaxed'}
             placeholder={t('field_message_placeholder')}
             value={message}
             onChange={(e) => setMessage(e.target.value)}
+            aria-invalid={messageTooShort || undefined}
+            aria-describedby="support-message-hint"
           />
+          <div id="support-message-hint" className="flex items-center justify-between text-[11px]">
+            <span className={messageTooShort ? 'text-[#B2351F] dark:text-[#F0A090]' : 'text-[#7A7A6A] dark:text-[#6A6A5A]'}>
+              {messageTooShort
+                ? t('error_message_too_short', { min: SUPPORT_MESSAGE_MIN_LENGTH })
+                : t('hint_message_min', { min: SUPPORT_MESSAGE_MIN_LENGTH })}
+            </span>
+            <span className="tabular-nums text-[#AAAAAA] dark:text-[#4A4A3A]">{message.length}/{SUPPORT_MESSAGE_MAX_LENGTH}</span>
+          </div>
         </div>
 
         <div className="flex items-center justify-end gap-2">
@@ -81,8 +127,8 @@ export function SupportCreateForm({ onCreated, onCancel }: Props) {
             className="rounded-[10px] border border-[#E0DCD0] px-4 py-2.5 text-[13px] font-semibold text-[#666] transition-colors hover:bg-[#F0EDE0] disabled:opacity-50 dark:border-[#243020] dark:text-[#9A9A8A]">
             {t('btn_cancel')}
           </button>
-          <button type="submit" disabled={saving}
-            className="rounded-[10px] bg-[#C49A1E] px-6 py-2.5 text-[13px] font-bold text-[#0C1209] transition-opacity hover:opacity-80 disabled:opacity-50">
+          <button type="submit" disabled={saving || !canSubmit}
+            className="rounded-[10px] bg-[#C49A1E] px-6 py-2.5 text-[13px] font-bold text-[#0C1209] transition-opacity hover:opacity-80 disabled:cursor-not-allowed disabled:opacity-50">
             {saving ? t('btn_submitting') : t('btn_submit')}
           </button>
         </div>
