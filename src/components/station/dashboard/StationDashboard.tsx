@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { useTranslations } from 'next-intl';
-import { getFromApi, patchWithApi } from '@/services';
+import { getFromApi, patchWithApi, postWithApi } from '@/services';
 import { useAuth } from '@/context/auth-context';
 import { ConfirmDialog } from '@/components/ui/ConfirmDialog';
 import { DashboardKpiRow, type KpiData } from './DashboardKpiRow';
@@ -35,7 +35,7 @@ interface RawConfig {
   posts: { id: string; position: number; is_active: boolean }[];
 }
 
-type DashboardAction = 'call' | 'complete' | 'cancel' | 'start';
+type DashboardAction = 'call' | 'complete' | 'cancel' | 'start' | 'call_next';
 
 interface PendingAction {
   type: DashboardAction;
@@ -87,7 +87,7 @@ function buildPosts(rawConfig: RawConfig, rawEntries: RawEntry[]): Post[] {
   });
 }
 
-const ACTION_STATUS_MAP: Record<DashboardAction, string> = {
+const ACTION_STATUS_MAP: Partial<Record<DashboardAction, string>> = {
   call: 'in_progress',
   complete: 'completed',
   cancel: 'cancelled',
@@ -136,6 +136,25 @@ export function StationDashboard() {
     if (!pending) return;
     setActionLoading(true);
     setActionError(null);
+
+    if (pending.type === 'call_next') {
+      const [ok, data] = await postWithApi('/station/queue/next', {});
+      if (!mountedRef.current) return;
+      setActionLoading(false);
+      if (ok) {
+        setPending(null);
+        await loadData();
+        return;
+      }
+      const payload = data as { message?: string; code?: string } | null;
+      const raw = payload?.message ?? '';
+      const errorMsg = payload?.code === 'NOT_FOUND'
+        ? t('error_queue_empty')
+        : raw || t('action_error_generic');
+      setActionError(errorMsg);
+      return;
+    }
+
     const newStatus = ACTION_STATUS_MAP[pending.type];
     const [ok, data] = await patchWithApi(`/station/entries/${pending.entryId}`, { status: newStatus });
     if (!mountedRef.current) return;
@@ -160,6 +179,7 @@ export function StationDashboard() {
       complete: t('confirm_complete_title'),
       cancel: t('confirm_cancel_title'),
       start: t('confirm_start_title'),
+      call_next: t('confirm_call_next_title'),
     };
     return labels[pending.type];
   }
@@ -171,6 +191,7 @@ export function StationDashboard() {
       complete: t('confirm_complete_message'),
       cancel: t('confirm_cancel_message'),
       start: t('confirm_start_message'),
+      call_next: t('confirm_call_next_message'),
     };
     return labels[pending.type];
   }
@@ -202,6 +223,7 @@ export function StationDashboard() {
           entries={queueEntries}
           onCallEntry={(id) => requestAction('call', id)}
           onCompleteEntry={(id) => requestAction('complete', id)}
+          onCallNext={() => requestAction('call_next', '')}
         />
         <DashboardPostGrid
           posts={posts}

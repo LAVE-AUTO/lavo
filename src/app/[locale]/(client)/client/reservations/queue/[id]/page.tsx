@@ -32,6 +32,7 @@ interface ApiStation {
   latitude: string | null;
   longitude: string | null;
   vehicleFormats: ApiVehicleFormat[];
+  stationConfig?: { wash_duration_minutes: number } | null;
 }
 
 interface QueueEntry {
@@ -44,23 +45,15 @@ interface QueueEntry {
   forfaitName: string;
   position: number;
   totalPrice: number;
+  washDurationMinutes: number;
   status: 'waiting' | 'in_progress';
 }
 
 /* ------------------------------------------------------------------ */
-/* Simulate real-time position by decrementing every 30s               */
+/* Polling config                                                       */
 /* ------------------------------------------------------------------ */
 
-function useRealtimePosition(initial: number) {
-  const [position, setPosition] = useState(initial);
-  useEffect(() => { setPosition(initial); }, [initial]);
-  useEffect(() => {
-    if (position <= 1) return;
-    const id = setInterval(() => setPosition((p) => (p > 1 ? p - 1 : p)), 30_000);
-    return () => clearInterval(id);
-  }, [position]);
-  return position;
-}
+const POLL_INTERVAL_MS = 15_000;
 
 /* ------------------------------------------------------------------ */
 /* Page                                                                 */
@@ -81,7 +74,7 @@ export default function QueueDetailPage({ params }: PageProps) {
   const mountedRef = useRef(true);
   useEffect(() => { mountedRef.current = true; return () => { mountedRef.current = false; }; }, []);
 
-  const [entry, setEntry]   = useState<QueueEntry | null>(null);
+  const [entry, setEntry] = useState<QueueEntry | null>(null);
   const [loading, setLoading] = useState(true);
   const [missing, setMissing] = useState(false);
 
@@ -117,6 +110,7 @@ export default function QueueDetailPage({ params }: PageProps) {
         forfaitName: format?.label ?? '—',
         position: found.queue_position ?? 1,
         totalPrice: parseFloat(found.amount_paid ?? '0'),
+        washDurationMinutes: station?.stationConfig?.wash_duration_minutes ?? 15,
         status: found.status === 'in_progress' ? 'in_progress' : 'waiting',
       });
     } catch {
@@ -124,13 +118,78 @@ export default function QueueDetailPage({ params }: PageProps) {
     } finally {
       if (mountedRef.current) setLoading(false);
     }
-  }, [id]);
+  }, [id, showError, t]);
 
   useEffect(() => {
     if (!authLoading) loadEntry();
   }, [authLoading, loadEntry]);
 
-  const position = useRealtimePosition(entry?.position ?? 1);
+  // Real-time position polling.
+  // Starts once the initial entry load completes; keeps running every
+  // POLL_INTERVAL_MS until the entry transitions to in_progress or the
+  // page unmounts. Pauses while the tab is hidden to avoid needless
+  // background requests and resumes when it becomes visible again.
+  const entryLoaded = entry !== null;
+  useEffect(() => {
+    if (!entryLoaded) return;
+
+    let cancelled = false;
+    let stopped = false;
+    let timeoutId: ReturnType<typeof setTimeout> | null = null;
+
+    const schedule = () => {
+      if (cancelled || stopped) return;
+      timeoutId = setTimeout(tick, POLL_INTERVAL_MS);
+    };
+
+    const tick = async () => {
+      if (cancelled || stopped || !mountedRef.current) return;
+      if (typeof document !== 'undefined' && document.visibilityState === 'hidden') {
+        schedule();
+        return;
+      }
+
+      const [ok, data] = await getFromApi('/me/entries?per_page=100');
+      if (cancelled || stopped || !mountedRef.current) return;
+
+      if (ok) {
+        const res = data as { data: { entries: ApiEntry[] } } | null;
+        const found = (res?.data?.entries ?? []).find(
+          (e) => e.id === id && e.entry_type === 'queue',
+        );
+        if (found) {
+          const nextStatus: 'waiting' | 'in_progress' =
+            found.status === 'in_progress' ? 'in_progress' : 'waiting';
+          const nextPosition = found.queue_position ?? 1;
+          setEntry((prev) =>
+            prev ? { ...prev, position: nextPosition, status: nextStatus } : prev,
+          );
+          if (nextStatus === 'in_progress') { stopped = true; return; }
+        }
+      }
+      schedule();
+    };
+
+    const onVisibilityChange = () => {
+      if (document.visibilityState === 'visible' && !cancelled && !stopped) {
+        if (timeoutId) clearTimeout(timeoutId);
+        tick();
+      }
+    };
+
+    schedule();
+    if (typeof document !== 'undefined') {
+      document.addEventListener('visibilitychange', onVisibilityChange);
+    }
+
+    return () => {
+      cancelled = true;
+      if (timeoutId) clearTimeout(timeoutId);
+      if (typeof document !== 'undefined') {
+        document.removeEventListener('visibilitychange', onVisibilityChange);
+      }
+    };
+  }, [entryLoaded, id]);
 
   if (loading) {
     return (
@@ -156,6 +215,7 @@ export default function QueueDetailPage({ params }: PageProps) {
 
   const q        = entry;
   const isActive = q.status === 'in_progress';
+  const waitMinutes = isActive ? 0 : Math.max(0, (q.position - 1)) * q.washDurationMinutes;
 
   const mapsUrl = q.stationLatitude !== 0
     ? `https://www.google.com/maps/dir/?api=1&destination=${q.stationLatitude},${q.stationLongitude}`
@@ -185,7 +245,11 @@ export default function QueueDetailPage({ params }: PageProps) {
         </div>
 
         {/* Live position panel */}
-        <div className="bg-[#E8E8D8] dark:bg-dark-card rounded-xl border border-[#D0D0C0] dark:border-tab-inactive p-5">
+        <div
+          className="bg-[#E8E8D8] dark:bg-dark-card rounded-xl border border-[#D0D0C0] dark:border-tab-inactive p-5"
+          aria-live="polite"
+          aria-atomic="false"
+        >
           <div className="flex items-center gap-2 mb-4">
             <span className={`w-2.5 h-2.5 rounded-full shrink-0 animate-pulse ${isActive ? 'bg-gold' : 'bg-lavo-success'}`} />
             <span className="text-[12px] font-bold text-[#555] dark:text-[#A0A090] uppercase tracking-wider">
@@ -195,16 +259,16 @@ export default function QueueDetailPage({ params }: PageProps) {
 
           <div className="grid grid-cols-2 gap-4 text-center">
             <div className="bg-white/50 dark:bg-dark-bg/40 rounded-xl py-5">
-              <div className="text-[44px] font-black text-gold leading-none">#{position}</div>
+              <div className="text-[44px] font-black text-gold leading-none">#{q.position}</div>
               <div className="text-[13px] text-[#555] dark:text-[#B0B0A0] mt-2 font-semibold">{t('your_position')}</div>
             </div>
             <div className="bg-white/50 dark:bg-dark-bg/40 rounded-xl py-5">
-              <div className="text-[44px] font-black text-[#0A0A14] dark:text-white leading-none">{position}</div>
+              <div className="text-[44px] font-black text-[#0A0A14] dark:text-white leading-none">{waitMinutes}</div>
               <div className="text-[13px] text-[#555] dark:text-[#B0B0A0] mt-2 font-semibold">{t('wait_minutes')}</div>
             </div>
           </div>
 
-          {position === 1 && (
+          {q.position === 1 && !isActive && (
             <div className="mt-4 px-4 py-3 bg-lavo-success/10 border border-lavo-success/30 rounded-xl text-center">
               <span className="text-[14px] font-bold text-lavo-success">{t('next_up')}</span>
             </div>
