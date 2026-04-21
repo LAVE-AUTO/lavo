@@ -224,7 +224,6 @@ export async function findOrCreateOAuthUser(data: {
 
   const existing = await findByEmail(data.email);
   if (existing) {
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars -- strip password_hash
     const { password_hash: _, ...safe } = existing;
     user = safe;
   } else {
@@ -293,7 +292,6 @@ export async function login(dto: LoginDto): Promise<AuthResult> {
     throw new ForbiddenError('Access to this space is not allowed for your account type');
   }
 
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars -- strip password_hash
   const { password_hash: _, ...safeUser } = user;
   const tokens = await issueTokenPair(safeUser, dto.remember_me);
   return { user: safeUser, tokens, rememberMe: dto.remember_me };

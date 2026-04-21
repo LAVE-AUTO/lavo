@@ -39,6 +39,7 @@ import {
   listActiveStationsGroup,
   listStationsByStatus,
   listAllStationsForAdmin,
+  updateStationInfo,
   type ListActiveStationsFilters,
   type Station,
   type StationWithAvailableSlots,
@@ -185,7 +186,6 @@ export async function completeStationOnboarding(
       }
     }
 
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     const { password_hash: _, ...safeUser } = newUser;
     return { user: safeUser as SafeUser, station: newStation };
   });
@@ -426,6 +426,78 @@ export async function getMyStation(userId: string): Promise<StationWithDocuments
 
   const documents = await findDocumentsByStationId(station.id);
   return { ...station, documents };
+}
+
+/**
+ * Partially updates the profile fields of the station owned by the given user.
+ * Only provided fields are updated; omitted fields are left unchanged.
+ * Throws NotFoundError if no station is linked to this account.
+ */
+export async function updateMyStation(
+  userId: string,
+  data: {
+    name?: string;
+    description?: string | null;
+    address?: string;
+    city?: string;
+    latitude?: number | null;
+    longitude?: number | null;
+    service_scope?: 'exterior' | 'interior' | 'both' | null;
+    wash_post_count?: number;
+  }
+): Promise<Station> {
+  const station = await findStationByUserId(userId);
+  if (!station) throw new NotFoundError('No station associated with this account');
+
+  const payload: Parameters<typeof updateStationInfo>[1] = {};
+  if (data.name !== undefined) payload.name = data.name;
+  if (data.description !== undefined) payload.description = data.description;
+  if (data.address !== undefined) payload.address = data.address;
+  if (data.city !== undefined) payload.city = data.city;
+  if (data.latitude !== undefined) payload.latitude = data.latitude != null ? String(data.latitude) : null;
+  if (data.longitude !== undefined) payload.longitude = data.longitude != null ? String(data.longitude) : null;
+  if (data.service_scope !== undefined) payload.service_scope = data.service_scope;
+  if (data.wash_post_count !== undefined) payload.wash_post_count = data.wash_post_count;
+
+  const updated = await updateStationInfo(station.id, payload);
+  if (!updated) throw new NotFoundError('No station associated with this account');
+  return updated;
+}
+
+/**
+ * Replaces all station photos (documents with document_type = 'photo') for the station
+ * owned by the given user. Existing photos are deleted and new ones are inserted atomically.
+ * Throws NotFoundError if no station is linked to this account.
+ */
+export async function updateMyStationPhotos(
+  userId: string,
+  photoUrls: string[]
+): Promise<string[]> {
+  const station = await findStationByUserId(userId);
+  if (!station) throw new NotFoundError('No station associated with this account');
+
+  const inserted = await db.transaction(async (tx) => {
+    await tx
+      .delete(stationDocuments)
+      .where(
+        and(
+          eq(stationDocuments.station_id, station.id),
+          eq(stationDocuments.document_type, 'photo')
+        )
+      );
+
+    return tx.insert(stationDocuments).values(
+      photoUrls.map((url) => ({
+        station_id: station.id,
+        document_type: 'photo',
+        file_url: url,
+        storage: 'cloudinary' as const,
+        terms_accepted: true,
+      }))
+    ).returning();
+  });
+
+  return inserted.map((row) => row.file_url);
 }
 
 
