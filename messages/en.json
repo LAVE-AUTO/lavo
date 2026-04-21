@@ -1895,6 +1895,7 @@
     "expiry_badge_valid": "Valid",
     "expiry_badge_warning": "Expiring soon",
     "expiry_badge_expired": "Expired",
+    "expiry_unsaved_notice": "Expiry dates are not yet persisted server-side — they will be lost on page reload.",
     "label_submitted_on": "Submitted on",
     "confirm_approve_label": "Confirm",
     "detail_history": "History",

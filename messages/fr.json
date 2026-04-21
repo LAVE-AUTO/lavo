@@ -1895,6 +1895,7 @@
     "expiry_badge_valid": "Valide",
     "expiry_badge_warning": "Bientôt expiré",
     "expiry_badge_expired": "Expiré",
+    "expiry_unsaved_notice": "Les dates d'expiration ne sont pas encore sauvegardées côté serveur — elles seront perdues au rechargement de la page.",
     "label_submitted_on": "Soumis le",
     "confirm_approve_label": "Confirmer",
     "detail_history": "Historique",

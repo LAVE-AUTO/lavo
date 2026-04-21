@@ -137,6 +137,8 @@ export function StationDashboard() {
     setActionLoading(true);
     setActionError(null);
 
+    // call_next hits a queue-scoped endpoint (promote the next waiting
+    // entry); every other action targets a specific entry by id.
     if (pending.type === 'call_next') {
       const [ok, data] = await postWithApi('/station/queue/next', {});
       if (!mountedRef.current) return;
