@@ -2064,7 +2064,16 @@
     "refuse_reason_placeholder": "Ex. : Le créneau a été attribué à un autre client...",
     "refuse_reason_hint": "Optionnel — laissez vide pour refuser sans motif.",
     "optional": "optionnel",
-    "error_action": "L'opération a échoué. Veuillez réessayer."
+    "error_action": "L'opération a échoué. Veuillez réessayer.",
+    "error_load": "Impossible de charger les demandes de retard.",
+    "btn_retry": "Réessayer",
+    "btn_retry_aria": "Réessayer le chargement des demandes de retard",
+    "toast_accepted": "Demande de retard acceptée.",
+    "toast_refused": "Demande de retard refusée.",
+    "impact_scheduled_at": "Créneau prévu",
+    "impact_format": "Format véhicule",
+    "impact_scheduled_unknown": "Non renseigné",
+    "impact_format_unknown": "Non renseigné"
   },
   "admin_clients": {
     "page_title": "Gestion marchands & clients",

@@ -2064,7 +2064,16 @@
     "refuse_reason_placeholder": "e.g. The slot was assigned to another client...",
     "refuse_reason_hint": "Optional — leave empty to refuse without a reason.",
     "optional": "optional",
-    "error_action": "Action failed. Please try again."
+    "error_action": "Action failed. Please try again.",
+    "error_load": "Unable to load delay requests.",
+    "btn_retry": "Retry",
+    "btn_retry_aria": "Retry loading delay requests",
+    "toast_accepted": "Delay request accepted.",
+    "toast_refused": "Delay request refused.",
+    "impact_scheduled_at": "Scheduled slot",
+    "impact_format": "Vehicle format",
+    "impact_scheduled_unknown": "Not provided",
+    "impact_format_unknown": "Not provided"
   },
   "admin_clients": {
     "page_title": "Merchants & clients management",

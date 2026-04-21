@@ -1,56 +1,43 @@
 'use client';
 
 /**
- * DelayRequestsPage — STA-2
+ * DelayRequestsPage — STA-5
  * Station interface: pending delay requests (accept/refuse) + history.
- * No GET listing endpoint exists yet — using mock data.
- * Accept/refuse actions call real API endpoints.
+ * Wired to GET /station/delays (paginated, status-filtered).
  */
 
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { useTranslations } from 'next-intl';
-import { postWithApi } from '@/services';
+import { getFromApi, postWithApi } from '@/services';
+import { useToast } from '@/context/toast-context';
 import { ConfirmDialog } from '@/components/ui/ConfirmDialog';
 import { RefuseReasonModal } from './RefuseReasonModal';
 
-// TODO: connect to API once GET /station/delay-requests endpoint is available
-const MOCK_PENDING: DelayRequest[] = [
-  {
-    id: 'dr-001',
-    reservation_id: 'res-aaa111',
-    client_name: 'Client #A4F2',
-    message: 'Je serai en retard d\'environ 15 minutes, il y a des travaux sur l\'autoroute.',
-    requested_at: new Date(Date.now() - 8 * 60 * 1000).toISOString(),
-  },
-  {
-    id: 'dr-002',
-    reservation_id: 'res-bbb222',
-    client_name: 'Client #C8D1',
-    message: 'Retard de 10 min, je suis coincé dans le trafic.',
-    requested_at: new Date(Date.now() - 22 * 60 * 1000).toISOString(),
-  },
-];
+const LIST_PAGE_SIZE = 100;
 
-// TODO: connect to API once GET /station/delay-requests?status=resolved endpoint is available
-const MOCK_HISTORY: ResolvedRequest[] = [
-  {
-    id: 'dr-h01',
-    reservation_id: 'res-ccc333',
-    client_name: 'Client #F7A3',
-    message: 'Je serai en retard d\'une vingtaine de minutes, accident sur le périphérique.',
-    status: 'accepted',
-    resolved_at: new Date(Date.now() - 45 * 60 * 1000).toISOString(),
-  },
-  {
-    id: 'dr-h02',
-    reservation_id: 'res-ddd444',
-    client_name: 'Client #B2E9',
-    message: 'Retard d\'environ 30 min, j\'ai eu un imprévu.',
-    status: 'refused',
-    refusal_reason: 'Le créneau a été attribué à un autre client.',
-    resolved_at: new Date(Date.now() - 2 * 60 * 60 * 1000).toISOString(),
-  },
-];
+interface RawDelayReservation {
+  id: string;
+  scheduled_at: string | null;
+  vehicle_format_id: string | null;
+}
+
+interface RawDelayItem {
+  id: string;
+  reservation_id: string;
+  user_id: string;
+  station_id: string;
+  status: 'pending' | 'accepted' | 'refused';
+  message: string;
+  refusal_reason: string | null;
+  created_at: string;
+  updated_at: string;
+  reservation: RawDelayReservation | null;
+}
+
+interface RawFormat {
+  id: string;
+  label: string;
+}
 
 export interface DelayRequest {
   id: string;
@@ -58,6 +45,8 @@ export interface DelayRequest {
   client_name: string;
   message: string;
   requested_at: string;
+  scheduled_at: string | null;
+  format_label: string | null;
 }
 
 export interface ResolvedRequest {
@@ -75,8 +64,34 @@ interface PendingAccept { type: 'accept'; request: DelayRequest }
 interface PendingRefuse { type: 'refuse'; request: DelayRequest }
 type PendingAction = PendingAccept | PendingRefuse;
 
+function mapPending(item: RawDelayItem, formats: Map<string, string>): DelayRequest {
+  const formatId = item.reservation?.vehicle_format_id ?? null;
+  return {
+    id: item.id,
+    reservation_id: item.reservation_id,
+    client_name: `Client #${item.user_id.slice(0, 4).toUpperCase()}`,
+    message: item.message,
+    requested_at: item.created_at,
+    scheduled_at: item.reservation?.scheduled_at ?? null,
+    format_label: formatId ? formats.get(formatId) ?? null : null,
+  };
+}
+
+function mapResolved(item: RawDelayItem): ResolvedRequest {
+  return {
+    id: item.id,
+    reservation_id: item.reservation_id,
+    client_name: `Client #${item.user_id.slice(0, 4).toUpperCase()}`,
+    message: item.message,
+    status: item.status === 'accepted' ? 'accepted' : 'refused',
+    refusal_reason: item.refusal_reason ?? undefined,
+    resolved_at: item.updated_at,
+  };
+}
+
 export function DelayRequestsPage() {
   const t = useTranslations('station_delays');
+  const { success: toastSuccess, error: toastError } = useToast();
   const mountedRef = useRef(true);
   useEffect(() => { mountedRef.current = true; return () => { mountedRef.current = false; }; }, []);
 
@@ -84,16 +99,56 @@ export function DelayRequestsPage() {
   const [requests, setRequests] = useState<DelayRequest[]>([]);
   const [history, setHistory] = useState<ResolvedRequest[]>([]);
   const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState(false);
   const [pending, setPending] = useState<PendingAction | null>(null);
   const [actionLoading, setActionLoading] = useState(false);
   const [actionError, setActionError] = useState<string | null>(null);
 
   const loadData = useCallback(async () => {
     setLoading(true);
-    await new Promise((r) => setTimeout(r, 280));
+    setLoadError(false);
+
+    const [meResult, delaysResult] = await Promise.all([
+      getFromApi('/station/me'),
+      getFromApi(`/station/delays?status=all&per_page=${LIST_PAGE_SIZE}`),
+    ]);
+    const [meOk, meData] = meResult;
+    const [delaysOk, delaysData] = delaysResult;
+
     if (!mountedRef.current) return;
-    setRequests(MOCK_PENDING);
-    setHistory(MOCK_HISTORY);
+
+    if (!delaysOk) {
+      setLoadError(true);
+      setLoading(false);
+      return;
+    }
+
+    const formats = new Map<string, string>();
+    if (meOk) {
+      const stationId = (meData as { data: { id: string } }).data.id;
+      const [formatsOk, formatsData] = await getFromApi(`/stations/${stationId}/formats`);
+      if (!mountedRef.current) return;
+      if (formatsOk) {
+        const list = (formatsData as { data: RawFormat[] }).data ?? [];
+        for (const f of list) formats.set(f.id, f.label);
+      }
+    }
+
+    const items = (delaysData as { data: { items: RawDelayItem[] } }).data?.items ?? [];
+    const nextPending: DelayRequest[] = [];
+    const nextHistory: ResolvedRequest[] = [];
+    for (const item of items) {
+      if (item.status === 'pending') {
+        nextPending.push(mapPending(item, formats));
+      } else {
+        nextHistory.push(mapResolved(item));
+      }
+    }
+    nextPending.sort((a, b) => a.requested_at.localeCompare(b.requested_at));
+    nextHistory.sort((a, b) => b.resolved_at.localeCompare(a.resolved_at));
+
+    setRequests(nextPending);
+    setHistory(nextHistory);
     setLoading(false);
   }, []);
 
@@ -107,12 +162,12 @@ export function DelayRequestsPage() {
     if (!mountedRef.current) return;
     setActionLoading(false);
     if (ok) {
-      const resolved: ResolvedRequest = { ...pending.request, status: 'accepted', resolved_at: new Date().toISOString() };
-      setRequests((prev) => prev.filter((r) => r.id !== pending.request.id));
-      setHistory((prev) => [resolved, ...prev]);
       setPending(null);
+      toastSuccess(t('toast_accepted'));
+      await loadData();
     } else {
       setActionError(t('error_action'));
+      toastError(t('error_action'));
     }
   }
 
@@ -125,17 +180,12 @@ export function DelayRequestsPage() {
     if (!mountedRef.current) return;
     setActionLoading(false);
     if (ok) {
-      const resolved: ResolvedRequest = {
-        ...pending.request,
-        status: 'refused',
-        refusal_reason: reason.trim() || undefined,
-        resolved_at: new Date().toISOString(),
-      };
-      setRequests((prev) => prev.filter((r) => r.id !== pending.request.id));
-      setHistory((prev) => [resolved, ...prev]);
       setPending(null);
+      toastSuccess(t('toast_refused'));
+      await loadData();
     } else {
       setActionError(t('error_action'));
+      toastError(t('error_action'));
     }
   }
 
@@ -143,6 +193,22 @@ export function DelayRequestsPage() {
     return (
       <div className="flex flex-1 items-center justify-center">
         <div className="h-8 w-8 animate-spin rounded-full border-[3px] border-[#C09A18] border-t-transparent" />
+      </div>
+    );
+  }
+
+  if (loadError) {
+    return (
+      <div className="flex flex-1 flex-col items-center justify-center gap-3 px-6 text-center">
+        <p className="text-[13px] font-semibold text-[#B2351F] dark:text-[#F0A090]">{t('error_load')}</p>
+        <button
+          type="button"
+          onClick={loadData}
+          aria-label={t('btn_retry_aria')}
+          className="rounded-[10px] border border-[#C09A18]/50 px-4 py-2 text-[13px] font-semibold text-[#C09A18] transition-colors hover:bg-[#C09A18]/10 focus:outline-none focus-visible:ring-2 focus-visible:ring-[#C09A18]"
+        >
+          {t('btn_retry')}
+        </button>
       </div>
     );
   }
@@ -219,6 +285,10 @@ export function DelayRequestsPage() {
                   refuseLabel={t('btn_refuse')}
                   badgeLabel={t('badge_waiting')}
                   agoLabel={formatAgo(req.requested_at, t)}
+                  impactScheduledLabel={t('impact_scheduled_at')}
+                  impactFormatLabel={t('impact_format')}
+                  impactFormatFallback={t('impact_format_unknown')}
+                  impactScheduledFallback={t('impact_scheduled_unknown')}
                 />
               ))}
             </div>
@@ -274,8 +344,6 @@ export function DelayRequestsPage() {
   );
 }
 
-/* ---- Sub-components ---- */
-
 interface PendingCardProps {
   request: DelayRequest;
   animationDelay: string;
@@ -285,20 +353,45 @@ interface PendingCardProps {
   refuseLabel: string;
   badgeLabel: string;
   agoLabel: string;
+  impactScheduledLabel: string;
+  impactFormatLabel: string;
+  impactFormatFallback: string;
+  impactScheduledFallback: string;
 }
 
-function PendingCard({ request, animationDelay, onAccept, onRefuse, acceptLabel, refuseLabel, badgeLabel, agoLabel }: PendingCardProps) {
+function PendingCard({
+  request,
+  animationDelay,
+  onAccept,
+  onRefuse,
+  acceptLabel,
+  refuseLabel,
+  badgeLabel,
+  agoLabel,
+  impactScheduledLabel,
+  impactFormatLabel,
+  impactFormatFallback,
+  impactScheduledFallback,
+}: PendingCardProps) {
   const initials = request.client_name.replace('Client #', '');
+  const scheduledText = request.scheduled_at
+    ? new Date(request.scheduled_at).toLocaleString('fr-CA', {
+        day: '2-digit',
+        month: 'short',
+        hour: '2-digit',
+        minute: '2-digit',
+      })
+    : impactScheduledFallback;
+  const formatText = request.format_label ?? impactFormatFallback;
+
   return (
     <div
       className="animate-fade-in-up overflow-hidden rounded-[14px] border border-[#DDD9CC] bg-white shadow-sm transition-all duration-200 hover:-translate-y-0.5 hover:shadow-md dark:border-[#2A3826] dark:bg-[#1A2416]"
       style={{ animationDelay }}
     >
-      {/* Accent top bar */}
       <div className="h-[3px] w-full bg-gradient-to-r from-[#C09A18] to-[#E8C040]" />
 
       <div className="px-5 py-4">
-        {/* Client row */}
         <div className="flex items-start gap-3">
           <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-[#C09A18]/15 text-[12px] font-black text-[#C09A18]">
             {initials.slice(0, 2)}
@@ -320,7 +413,26 @@ function PendingCard({ request, animationDelay, onAccept, onRefuse, acceptLabel,
           </div>
         </div>
 
-        {/* Actions */}
+        {/* Impact summary */}
+        <dl className="mt-4 grid grid-cols-2 gap-2 rounded-[8px] border border-[#E8E4D4] bg-[#FAF9F2] px-3 py-2.5 text-[11px] dark:border-[#243020] dark:bg-[#111A0E]">
+          <div>
+            <dt className="font-bold uppercase tracking-wide text-[#555]/50 dark:text-[#FFFFF0]/30">
+              {impactScheduledLabel}
+            </dt>
+            <dd className="mt-0.5 font-semibold text-[#1A1A0A] dark:text-[#F0EDD4]">
+              {scheduledText}
+            </dd>
+          </div>
+          <div>
+            <dt className="font-bold uppercase tracking-wide text-[#555]/50 dark:text-[#FFFFF0]/30">
+              {impactFormatLabel}
+            </dt>
+            <dd className="mt-0.5 font-semibold text-[#1A1A0A] dark:text-[#F0EDD4]">
+              {formatText}
+            </dd>
+          </div>
+        </dl>
+
         <div className="mt-4 grid grid-cols-2 gap-2">
           <button
             type="button"
@@ -359,7 +471,6 @@ function HistoryCard({ request, animationDelay, statusLabel, agoLabel }: History
       className="animate-fade-in-up flex gap-0 overflow-hidden rounded-[12px] border border-[#DDD9CC]/70 bg-white/70 dark:border-[#2A3826] dark:bg-[#1A2416]/70"
       style={{ animationDelay }}
     >
-      {/* Left accent */}
       <div className="w-1 shrink-0 rounded-l-[12px]" style={{ background: accentColor }} />
 
       <div className="flex flex-1 items-start gap-3 px-4 py-3.5">
