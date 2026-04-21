@@ -3,6 +3,10 @@
  * Use with query.with() for eager loading. No circular imports: tables
  * are imported from domain files and relations reference them here.
  */
+
+
+// %%%%% Imports %%%%%
+
 import { relations } from "drizzle-orm";
 import { adminLogs } from "./admins";
 import { commissionSettings } from "./commission";
@@ -19,6 +23,7 @@ import {
   pendingUploads,
   stationConfigs,
   stationDocuments,
+  stationPhotos,
   stationPosts,
   stations,
   stationWashTypes,
@@ -28,6 +33,12 @@ import {
 import { supportMessages, supportSettings, supportTickets } from "./support";
 import { reservationTips } from "./tips";
 import { timeSlots } from "./slots";
+
+
+// %%%%% END - Imports %%%%%
+
+
+// %%%%% Re-exports %%%%%
 
 export * from "./users";
 export * from "./admins";
@@ -46,6 +57,12 @@ export * from "./reschedule-requests";
 export * from "./tips";
 export * from "./disputes";
 export * from "./device-tokens";
+
+
+// %%%%% END - Re-exports %%%%%
+
+
+// %%%%% Relations — users & auth %%%%%
 
 export const usersRelations = relations(users, ({ one, many }) => ({
   station: one(stations, {
@@ -87,6 +104,19 @@ export const adminLogsRelations = relations(adminLogs, ({ one }) => ({
   }),
 }));
 
+export const deviceTokensRelations = relations(deviceTokens, ({ one }) => ({
+  user: one(users, {
+    fields: [deviceTokens.user_id],
+    references: [users.id],
+  }),
+}));
+
+
+// %%%%% END - Relations — users & auth %%%%%
+
+
+// %%%%% Relations — stations %%%%%
+
 export const stationsRelations = relations(stations, ({ one, many }) => ({
   manager: one(users, {
     fields: [stations.user_id],
@@ -102,6 +132,7 @@ export const stationsRelations = relations(stations, ({ one, many }) => ({
   stationPosts: many(stationPosts),
   stationWashTypes: many(stationWashTypes),
   documents: many(stationDocuments),
+  photos: many(stationPhotos),
   vehicleFormats: many(vehicleFormats),
   timeSlots: many(timeSlots),
   reservations: many(reservations, { relationName: "stationReservations" }),
@@ -139,6 +170,13 @@ export const pendingUploadsRelations = relations(pendingUploads, ({ one }) => ({
   }),
 }));
 
+export const stationPhotosRelations = relations(stationPhotos, ({ one }) => ({
+  station: one(stations, {
+    fields: [stationPhotos.station_id],
+    references: [stations.id],
+  }),
+}));
+
 export const stationConfigsRelations = relations(stationConfigs, ({ one }) => ({
   station: one(stations, {
     fields: [stationConfigs.id],
@@ -159,6 +197,12 @@ export const vehicleFormatsRelations = relations(vehicleFormats, ({ one }) => ({
     references: [stations.id],
   }),
 }));
+
+
+// %%%%% END - Relations — stations %%%%%
+
+
+// %%%%% Relations — reservations & slots %%%%%
 
 export const timeSlotsRelations = relations(timeSlots, ({ one, many }) => ({
   station: one(stations, {
@@ -220,6 +264,12 @@ export const ratingsRelations = relations(ratings, ({ one }) => ({
   }),
 }));
 
+
+// %%%%% END - Relations — reservations & slots %%%%%
+
+
+// %%%%% Relations — notifications & commission %%%%%
+
 export const notificationsRelations = relations(notifications, ({ one }) => ({
   user: one(users, {
     fields: [notifications.user_id],
@@ -244,6 +294,12 @@ export const commissionSettingsRelations = relations(
     }),
   })
 );
+
+
+// %%%%% END - Relations — notifications & commission %%%%%
+
+
+// %%%%% Relations — support %%%%%
 
 export const supportTicketsRelations = relations(supportTickets, ({ one, many }) => ({
   createdByUser: one(users, {
@@ -271,6 +327,12 @@ export const supportMessagesRelations = relations(supportMessages, ({ one }) => 
     relationName: "messageSender",
   }),
 }));
+
+
+// %%%%% END - Relations — support %%%%%
+
+
+// %%%%% Relations — reschedule, delay, tips & disputes %%%%%
 
 export const rescheduleRequestsRelations = relations(rescheduleRequests, ({ one }) => ({
   originalReservation: one(reservations, {
@@ -323,13 +385,6 @@ export const reservationTipsRelations = relations(reservationTips, ({ one }) => 
   }),
 }));
 
-export const deviceTokensRelations = relations(deviceTokens, ({ one }) => ({
-  user: one(users, {
-    fields: [deviceTokens.user_id],
-    references: [users.id],
-  }),
-}));
-
 export const disputesRelations = relations(disputes, ({ one }) => ({
   reservation: one(reservations, {
     fields: [disputes.reservation_id],
@@ -350,3 +405,6 @@ export const disputesRelations = relations(disputes, ({ one }) => ({
     relationName: "disputeClosedBy",
   }),
 }));
+
+
+// %%%%% END - Relations — reschedule, delay, tips & disputes %%%%%
