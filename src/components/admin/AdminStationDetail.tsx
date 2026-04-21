@@ -13,6 +13,10 @@ const EXPIRY_WARNING_DAYS = 30;
 
 type ExpiryStatus = 'none' | 'valid' | 'warning' | 'expired';
 
+// Comparison is intentionally performed in UTC (YYYY-MM-DDT00:00:00Z) so
+// two admins in different timezones see the same status for a given date.
+// Trade-off: a date marked "today" turns expired at 00:00 UTC, which may
+// feel early for admins west of UTC — acceptable for internal tooling.
 function computeExpiryStatus(iso: string | null): ExpiryStatus {
   if (!iso) return 'none';
   const expiry = new Date(`${iso}T00:00:00Z`).getTime();
@@ -227,7 +231,10 @@ export function AdminStationDetail({ id }: Props) {
         {/* ── Documents card ── */}
         {station.documents.length > 0 && (
           <div className="rounded-2xl bg-white p-6 shadow-sm ring-1 ring-black/[0.04] dark:bg-[#1A2416] dark:ring-white/[0.06]">
-            <p className="mb-5 text-[11px] font-black uppercase tracking-[0.15em] text-[#C49A1E]">{t('detail_docs')}</p>
+            <p className="mb-3 text-[11px] font-black uppercase tracking-[0.15em] text-[#C49A1E]">{t('detail_docs')}</p>
+            <p className="mb-4 rounded-lg border border-[#C49A1E]/30 bg-[#C49A1E]/10 px-3 py-2 text-[11px] leading-relaxed text-[#7A5A00] dark:text-[#E0C060]">
+              {t('expiry_unsaved_notice')}
+            </p>
             <div className="grid grid-cols-2 gap-3">
               {station.documents.map((doc) => (
                 <DocCard
