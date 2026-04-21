@@ -26,7 +26,7 @@ export default async function RegisterPage({ params }: Props) {
   const t = await getTranslations({ locale, namespace: 'register' });
 
   return (
-    <AuthRedirectGuard>
+    <AuthRedirectGuard locale={locale}>
       <AuthPageLayout>
         <div className="w-full max-w-xl animate-fade-in">
           <AuthHeader
