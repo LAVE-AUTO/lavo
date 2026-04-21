@@ -14,6 +14,7 @@
  * (SEED_PASSWORD_HASH_ADMIN, SEED_PASSWORD_HASH_CLIENT, SEED_PASSWORD_HASH_STATION).
  */
 import "dotenv/config";
+import { parseTimeForDate } from "../src/helpers/date-helper";
 import { eq, and, isNull, inArray, sql } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/node-postgres";
 import { Pool } from "pg";
@@ -53,6 +54,56 @@ import {
   SEED_STATION_MANAGER_EMAILS,
   SEED_STRIPE_ACCOUNT_ID,
 } from "./seed-data";
+
+/** Returns YYYY-MM-DD (UTC) offset by the given number of days from today. */
+function utcDateStr(offsetDays: number): string {
+  const d = new Date();
+  d.setUTCDate(d.getUTCDate() + offsetDays);
+  return d.toISOString().slice(0, 10);
+}
+
+/**
+ * Generates time slots from station config (opening/closing hours + wash duration).
+ * Mirrors slot-service.ts::generateSlotsFromConfig — inlined here to avoid
+ * @/ path alias issues with ts-node's moduleResolution:node.
+ */
+function generateSlotsFromConfig(
+  config: {
+    opening_time: string;
+    closing_time: string;
+    break_start: string | null;
+    break_end: string | null;
+    wash_duration_minutes: number;
+    wash_post_count: number;
+  },
+  dateStr: string,
+  endDateStr?: string,
+): Array<{ start_time: Date; end_time: Date; capacity: number }> {
+  const intervalMs = config.wash_duration_minutes * 60 * 1000;
+  const capacity = config.wash_post_count;
+  const slots: Array<{ start_time: Date; end_time: Date; capacity: number }> = [];
+  const endDate = endDateStr ? new Date(endDateStr) : new Date(dateStr);
+
+  for (let d = new Date(dateStr); d <= endDate; d.setUTCDate(d.getUTCDate() + 1)) {
+    const dayStr = d.toISOString().slice(0, 10);
+    let slotStart = parseTimeForDate(dayStr, config.opening_time);
+    const dayEnd = parseTimeForDate(dayStr, config.closing_time);
+    const breakStart = config.break_start ? parseTimeForDate(dayStr, config.break_start) : null;
+    const breakEnd = config.break_end ? parseTimeForDate(dayStr, config.break_end) : null;
+
+    while (slotStart < dayEnd) {
+      const slotEnd = new Date(slotStart.getTime() + intervalMs);
+      if (slotEnd > dayEnd) break;
+      if (breakStart && breakEnd && slotStart < breakEnd && slotEnd > breakStart) {
+        slotStart = breakEnd;
+        continue;
+      }
+      slots.push({ start_time: new Date(slotStart), end_time: slotEnd, capacity });
+      slotStart = slotEnd;
+    }
+  }
+  return slots;
+}
 
 function getPasswordHash(
   plain: string,
@@ -349,74 +400,41 @@ async function seed(): Promise<void> {
       }
       console.log("Stations (with configs, posts, formats, wash_types): " + SEED_STATIONS.length + " created.");
 
-      // ----- Time slots: next 7 days, multiple per day; a few past for history -----
-      const now = new Date();
-      const slotIdsByStationId = new Map<string, string[]>();
-      const durationMs = (SEED_STATION_CONFIG.wash_duration_minutes ?? 15) * 60 * 1000;
+      // ----- Time slots: generated from station config (opening/closing hours + wash duration) -----
+      const slotIdsByStationId = new Map<string, { past: string[]; future: string[] }>();
 
       for (const [idx, station] of SEED_STATIONS.entries()) {
         const sid = stationIdByIndex.get(idx);
         if (!sid) continue;
-        const ids: string[] = [];
         const washPostCount = station.wash_post_count ?? SEED_STATION_CONFIG.wash_post_count;
+        const stationConfig = { ...SEED_STATION_CONFIG, wash_post_count: washPostCount };
 
-        // Past: 2 days ago, a few slots
-        for (let d = -2; d <= 0; d++) {
-          const day = new Date(now);
-          day.setDate(day.getDate() + d);
-          day.setHours(8, 0, 0, 0);
-          for (let s = 0; s < 4; s++) {
-            const start = new Date(day.getTime() + s * durationMs);
-            const end = new Date(start.getTime() + durationMs);
+        const insertSlots = async (slots: Array<{ start_time: Date; end_time: Date; capacity: number }>) => {
+          const ids: string[] = [];
+          for (const slot of slots) {
             const [row] = await tx
               .insert(timeSlots)
-              .values({
-                station_id: sid,
-                start_time: start,
-                end_time: end,
-                capacity: washPostCount,
-                booked_count: 0,
-                status: "available",
-              })
+              .values({ station_id: sid, ...slot, booked_count: 0, status: "available" })
               .returning({ id: timeSlots.id });
             if (row) ids.push(row.id);
           }
-        }
+          return ids;
+        };
 
-        // Future: next 7 days
-        for (let d = 1; d <= 7; d++) {
-          const day = new Date(now);
-          day.setDate(day.getDate() + d);
-          day.setHours(8, 0, 0, 0);
-          const slotsPerDay = 20;
-          for (let s = 0; s < slotsPerDay; s++) {
-            const start = new Date(day.getTime() + s * durationMs);
-            const end = new Date(start.getTime() + durationMs);
-            if (start.getHours() >= 18) break;
-            const [row] = await tx
-              .insert(timeSlots)
-              .values({
-                station_id: sid,
-                start_time: start,
-                end_time: end,
-                capacity: washPostCount,
-                booked_count: 0,
-                status: "available",
-              })
-              .returning({ id: timeSlots.id });
-            if (row) ids.push(row.id);
-          }
-        }
-        slotIdsByStationId.set(sid, ids);
+        const pastSlots = generateSlotsFromConfig(stationConfig, utcDateStr(-2), utcDateStr(0));
+        const futureSlots = generateSlotsFromConfig(stationConfig, utcDateStr(1), utcDateStr(7));
+
+        const [pastIds, futureIds] = await Promise.all([
+          insertSlots(pastSlots),
+          insertSlots(futureSlots),
+        ]);
+
+        slotIdsByStationId.set(sid, { past: pastIds, future: futureIds });
       }
       console.log("Time slots: created for all stations (past + next 7 days).");
 
       // ----- Reservations: completed (with completed_at) + a few confirmed future -----
       const commissionRate = SEED_COMMISSION_RATE;
-      const allSlotIds: { station_id: string; slot_id: string }[] = [];
-      for (const [sid, slotIds] of slotIdsByStationId) {
-        for (const slotId of slotIds) allSlotIds.push({ station_id: sid, slot_id: slotId });
-      }
 
       const completedReservations: { id: string; user_id: string; station_id: string; vehicle_format_id: string; time_slot_id: string }[] = [];
       let slotIndex = 0;
@@ -427,8 +445,7 @@ async function seed(): Promise<void> {
         const sid = stationIdByIndex.get(stationIdx)!;
         const formatIds = vehicleFormatIdsByStationId.get(sid)!;
         const vehicleFormatId = formatIds[r % formatIds.length];
-        const slotIds = slotIdsByStationId.get(sid)!;
-        const pastSlotIds = slotIds.filter((_, i) => i < 4 * 3);
+        const { past: pastSlotIds } = slotIdsByStationId.get(sid)!;
         const timeSlotId = pastSlotIds[r % Math.max(1, pastSlotIds.length)];
         const [inserted] = await tx
           .insert(reservations)
@@ -474,8 +491,7 @@ async function seed(): Promise<void> {
         const sid = stationIdByIndex.get(stationIdx)!;
         const formatIds = vehicleFormatIdsByStationId.get(sid)!;
         const vehicleFormatId = formatIds[r % formatIds.length];
-        const slotIds = slotIdsByStationId.get(sid)!;
-        const futureSlotIds = slotIds.filter((_, i) => i >= 4 * 3);
+        const { future: futureSlotIds } = slotIdsByStationId.get(sid)!;
         const timeSlotId = futureSlotIds[slotIndex % Math.max(1, futureSlotIds.length)];
         slotIndex++;
         await tx.insert(reservations).values({
@@ -579,3 +595,4 @@ if (isMain) {
     process.exit(1);
   });
 }
+
