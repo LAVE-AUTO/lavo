@@ -437,6 +437,64 @@ export const patchFormatBodySchema = z
 // %%%%% END - Vehicle format API %%%%%
 
 
+// %%%%% Station profile update %%%%%
+
+/** PATCH /api/v1/station/me — partial update of station profile text fields. */
+export const updateStationProfileBodySchema = z
+  .object({
+    name: z.string().trim().min(2, 'Name must be at least 2 characters').max(200, 'Name must be at most 200 characters').optional(),
+    description: z.string().trim().max(1000, 'Description must be at most 1000 characters').nullable().optional(),
+    address: z.string().trim().min(5, 'Address must be at least 5 characters').optional(),
+    city: z.string().trim().min(2, 'City must be at least 2 characters').max(100, 'City must be at most 100 characters').optional(),
+    latitude: z.number().min(-90, 'Latitude must be between -90 and 90').max(90, 'Latitude must be between -90 and 90').nullable().optional(),
+    longitude: z.number().min(-180, 'Longitude must be between -180 and 180').max(180, 'Longitude must be between -180 and 180').nullable().optional(),
+    service_scope: z.enum(['exterior', 'interior', 'both']).nullable().optional(),
+    wash_post_count: z.number().int().min(1, 'Wash post count must be at least 1').max(100, 'Wash post count must be at most 100').optional(),
+  })
+  .strict()
+  .refine(
+    (data) => Object.values(data).some((v) => v !== undefined),
+    { message: 'At least one field must be provided' }
+  );
+
+export type UpdateStationProfileBody = z.infer<typeof updateStationProfileBodySchema>;
+
+/** PATCH /api/v1/station/photos — full replacement of station photo URLs. */
+export const stationPhotosBodySchema = z
+  .object({
+    photos: z
+      .array(
+        z
+          .string()
+          .url('Each photo must be a valid URL')
+          .refine(
+            (url) => {
+              const cloudName = process.env.CLOUDINARY_CLOUD_NAME;
+              if (!cloudName) return true; // skip check if not configured
+              try {
+                const { hostname } = new URL(url);
+                return (
+                  hostname === 'res.cloudinary.com' ||
+                  hostname === `${cloudName}.cloudinary.com`
+                );
+              } catch {
+                return false;
+              }
+            },
+            { message: 'Each photo must be a Cloudinary URL from an authorised upload' }
+          )
+      )
+      .min(1, 'At least one photo URL is required')
+      .max(20, 'At most 20 photos allowed'),
+  })
+  .strict();
+
+export type StationPhotosBody = z.infer<typeof stationPhotosBodySchema>;
+
+
+// %%%%% END - Station profile update %%%%%
+
+
 // %%%%% Exported types %%%%%
 
 export type CreateSlotBody = z.infer<typeof createSlotBodySchema>;
