@@ -27,7 +27,7 @@ export default async function AdminLoginPage({ params }: Props) {
   const t = await getTranslations({ locale, namespace: 'admin_login' });
 
   return (
-    <AuthRedirectGuard>
+    <AuthRedirectGuard locale={locale}>
       <div className="min-h-screen flex">
 
         {/* Left brand panel — desktop only */}

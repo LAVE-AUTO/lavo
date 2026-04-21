@@ -43,13 +43,13 @@ export function HeroSection() {
           <div className="animate-fade-in-up animation-delay-400 mb-14 flex flex-wrap gap-3.5">
             <Link
               href={`/${locale}/register`}
-              className="btn-shine inline-block rounded-[2px] bg-[#c8980a] px-9 py-[15px] text-[13px] font-bold uppercase tracking-[1.5px] text-[#0d1f0f] transition-all duration-300 hover:-translate-y-0.5 hover:shadow-[0_10px_32px_rgba(200,152,10,0.45)]"
+              className="btn-shine inline-block rounded-md bg-[#c8980a] px-9 py-[15px] text-[13px] font-bold uppercase tracking-[1.5px] text-[#0d1f0f] transition-all duration-300 hover:-translate-y-0.5 hover:shadow-[0_10px_32px_rgba(200,152,10,0.45)]"
             >
               {t('btn_primary')}
             </Link>
             <a
               href="#how-it-works"
-              className="inline-block rounded-[2px] border border-[rgba(200,152,10,0.4)] px-9 py-[15px] text-[13px] font-semibold uppercase tracking-[1px] text-[#c8980a] transition-all duration-300 hover:border-[#c8980a] hover:bg-[rgba(200,152,10,0.08)]"
+              className="inline-block rounded-md border border-[rgba(200,152,10,0.4)] px-9 py-[15px] text-[13px] font-semibold uppercase tracking-[1px] text-[#c8980a] transition-all duration-300 hover:border-[#c8980a] hover:bg-[rgba(200,152,10,0.08)]"
             >
               {t('btn_secondary')}
             </a>

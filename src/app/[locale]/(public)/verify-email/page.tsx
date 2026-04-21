@@ -28,7 +28,7 @@ export default async function VerifyEmailPage({ params, searchParams }: Props) {
 
   return (
     <>
-      <AuthRedirectGuard />
+      <AuthRedirectGuard locale={locale} />
       <AuthPageLayout>
       <div className="w-full max-w-lg animate-fade-in">
         <AuthHeader
