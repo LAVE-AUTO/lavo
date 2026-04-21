@@ -9,14 +9,15 @@ import { SupportTicketCard } from './SupportTicketCard';
 import type { SupportTicketSummary } from '../support-types';
 import { mapApiStatus } from '../support-types';
 
-type LoadErrorKind = 'server' | 'forbidden' | 'unauthorized' | 'network' | 'generic';
+type LoadErrorKind = 'server' | 'rate_limited' | 'forbidden' | 'unauthorized' | 'network' | 'generic';
 
 function resolveErrorKind(code: unknown): LoadErrorKind {
   switch (code) {
     case ApiCode.INTERNAL_ERROR:
     case ApiCode.NOT_IMPLEMENTED:
-    case ApiCode.TOO_MANY_REQUESTS:
       return 'server';
+    case ApiCode.TOO_MANY_REQUESTS:
+      return 'rate_limited';
     case ApiCode.FORBIDDEN:
       return 'forbidden';
     case ApiCode.UNAUTHORIZED:
@@ -147,6 +148,7 @@ export function ClientSupportContainer({ sectionLabel }: Props) {
               <button
                 type="button"
                 onClick={loadTickets}
+                aria-label={t('btn_retry_aria')}
                 className="rounded-[10px] border border-[#C49A1E]/50 px-4 py-2 text-[13px] font-semibold text-[#C49A1E] transition-colors hover:bg-[#C49A1E]/10 focus:outline-none focus-visible:ring-2 focus-visible:ring-[#C49A1E]"
               >
                 {t('btn_retry')}

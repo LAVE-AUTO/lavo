@@ -102,8 +102,8 @@ export function StationConfigPage() {
 
     const [slotsOk, slotsData] = await getFromApi('/station/slots');
     if (slotsOk) {
-      const res = slotsData as { data: CreatedSlot[] };
-      setSlots(res.data ?? []);
+      const res = slotsData as { data: { slots: CreatedSlot[] } };
+      setSlots(res.data.slots ?? []);
     }
 
     setLoading(false);

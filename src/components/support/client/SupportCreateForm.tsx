@@ -35,7 +35,15 @@ export function SupportCreateForm({ onCreated, onCancel }: Props) {
   const messageLen = messageTrimmed.length;
   const subjectTooShort = subjectLen > 0 && subjectLen < SUPPORT_SUBJECT_MIN_LENGTH;
   const messageTooShort = messageLen > 0 && messageLen < SUPPORT_MESSAGE_MIN_LENGTH;
-  const canSubmit = subjectLen >= SUPPORT_SUBJECT_MIN_LENGTH && messageLen >= SUPPORT_MESSAGE_MIN_LENGTH;
+  const subjectValid = subjectLen >= SUPPORT_SUBJECT_MIN_LENGTH;
+  const messageValid = messageLen >= SUPPORT_MESSAGE_MIN_LENGTH;
+  const canSubmit = subjectValid && messageValid;
+
+  function hintClass(tooShort: boolean, valid: boolean): string {
+    if (tooShort) return 'text-[#B2351F] dark:text-[#F0A090]';
+    if (valid) return 'text-[#1F7A35] dark:text-[#8AD8A0]';
+    return 'text-[#7A7A6A] dark:text-[#6A6A5A]';
+  }
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -89,10 +97,12 @@ export function SupportCreateForm({ onCreated, onCancel }: Props) {
             aria-describedby="support-subject-hint"
           />
           <div id="support-subject-hint" className="flex items-center justify-between text-[11px]">
-            <span className={subjectTooShort ? 'text-[#B2351F] dark:text-[#F0A090]' : 'text-[#7A7A6A] dark:text-[#6A6A5A]'}>
+            <span className={hintClass(subjectTooShort, subjectValid)}>
               {subjectTooShort
                 ? t('error_subject_too_short', { min: SUPPORT_SUBJECT_MIN_LENGTH })
-                : t('hint_subject_min', { min: SUPPORT_SUBJECT_MIN_LENGTH })}
+                : subjectValid
+                  ? t('hint_subject_ok')
+                  : t('hint_subject_min', { min: SUPPORT_SUBJECT_MIN_LENGTH })}
             </span>
             <span className="tabular-nums text-[#AAAAAA] dark:text-[#4A4A3A]">{subject.length}/{SUPPORT_SUBJECT_MAX_LENGTH}</span>
           </div>
@@ -113,10 +123,12 @@ export function SupportCreateForm({ onCreated, onCancel }: Props) {
             aria-describedby="support-message-hint"
           />
           <div id="support-message-hint" className="flex items-center justify-between text-[11px]">
-            <span className={messageTooShort ? 'text-[#B2351F] dark:text-[#F0A090]' : 'text-[#7A7A6A] dark:text-[#6A6A5A]'}>
+            <span className={hintClass(messageTooShort, messageValid)}>
               {messageTooShort
                 ? t('error_message_too_short', { min: SUPPORT_MESSAGE_MIN_LENGTH })
-                : t('hint_message_min', { min: SUPPORT_MESSAGE_MIN_LENGTH })}
+                : messageValid
+                  ? t('hint_message_ok')
+                  : t('hint_message_min', { min: SUPPORT_MESSAGE_MIN_LENGTH })}
             </span>
             <span className="tabular-nums text-[#AAAAAA] dark:text-[#4A4A3A]">{message.length}/{SUPPORT_MESSAGE_MAX_LENGTH}</span>
           </div>

@@ -9,9 +9,10 @@ interface DashboardQueuePanelProps {
   entries: QueueEntry[];
   onCallEntry: (id: string) => void;
   onCompleteEntry?: (id: string) => void;
+  onCallNext?: () => void;
 }
 
-export function DashboardQueuePanel({ entries, onCallEntry, onCompleteEntry }: DashboardQueuePanelProps) {
+export function DashboardQueuePanel({ entries, onCallEntry, onCompleteEntry, onCallNext }: DashboardQueuePanelProps) {
   const t = useTranslations('station_dashboard');
   const locale = useLocale();
 
@@ -20,9 +21,10 @@ export function DashboardQueuePanel({ entries, onCallEntry, onCompleteEntry }: D
   const waitingEntries = entries.filter((e) => e.status === 'pending');
   const waitingCount = waitingEntries.length;
   const totalCount = entries.length;
+  const canCallNext = Boolean(onCallNext) && waitingCount > 0;
 
   return (
-    <div className="flex w-full flex-shrink-0 flex-col overflow-hidden border-b border-[#E0DCD0] bg-[#F0EDE0] md:w-[280px] md:border-b-0 md:border-r dark:border-[#1A2A14] dark:bg-[#182214]">
+    <div className="flex w-full max-h-[40vh] flex-shrink-0 flex-col overflow-hidden border-b border-[#E0DCD0] bg-[#F0EDE0] md:max-h-none md:w-[280px] md:border-b-0 md:border-r dark:border-[#1A2A14] dark:bg-[#182214]">
       {/* Header */}
       <div className="border-b border-[#E0DCD0] px-4 py-3.5 dark:border-[#1A2A14]">
         <div className="flex items-center justify-between">
@@ -48,6 +50,19 @@ export function DashboardQueuePanel({ entries, onCallEntry, onCompleteEntry }: D
             ? t('queue_waiting', { n: waitingCount })
             : t('queue_empty')}
         </div>
+        {onCallNext && (
+          <button
+            type="button"
+            onClick={onCallNext}
+            disabled={!canCallNext}
+            className="mt-3 flex w-full items-center justify-center gap-2 rounded-lg bg-[#C09A18] px-3 py-2 text-[12px] font-black text-[#0C1209] transition-opacity hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-40"
+          >
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+              <polygon points="5 3 19 12 5 21 5 3" />
+            </svg>
+            {t('btn_call_next')}
+          </button>
+        )}
       </div>
 
       {/* Entries */}
