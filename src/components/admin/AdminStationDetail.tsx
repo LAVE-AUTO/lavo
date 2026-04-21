@@ -238,7 +238,7 @@ export function AdminStationDetail({ id }: Props) {
                   expiry={expiries[doc.id] ?? null}
                   onSaveExpiry={(value) => {
                     setExpiries((prev) => ({ ...prev, [doc.id]: value }));
-                    success(t('expiry_saved'));
+                    success(value ? t('expiry_saved') : t('expiry_removed'));
                   }}
                   labels={{
                     set: t('expiry_set'),
@@ -432,33 +432,25 @@ function DocCard({
   const formattedExpiry = expiry
     ? new Date(`${expiry}T00:00:00Z`).toLocaleDateString(
         locale === 'en' ? 'en-CA' : 'fr-CA',
-        { day: 'numeric', month: 'long', year: 'numeric' },
+        { day: 'numeric', month: 'long', year: 'numeric', timeZone: 'UTC' },
       )
     : null;
 
-  const startEditing = (e: React.MouseEvent) => {
-    e.preventDefault();
-    e.stopPropagation();
+  const startEditing = () => {
     setDraft(expiry ?? '');
     setEditing(true);
   };
 
-  const handleSave = (e: React.MouseEvent) => {
-    e.preventDefault();
-    e.stopPropagation();
+  const handleSave = () => {
     onSaveExpiry(draft || null);
     setEditing(false);
   };
 
-  const handleCancel = (e: React.MouseEvent) => {
-    e.preventDefault();
-    e.stopPropagation();
+  const handleCancel = () => {
     setEditing(false);
   };
 
-  const handleClear = (e: React.MouseEvent) => {
-    e.preventDefault();
-    e.stopPropagation();
+  const handleClear = () => {
     setDraft('');
     onSaveExpiry(null);
     setEditing(false);

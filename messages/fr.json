@@ -1891,6 +1891,7 @@
     "expiry_clear": "Supprimer",
     "expiry_none": "Aucune date définie",
     "expiry_saved": "Date d'expiration enregistrée.",
+    "expiry_removed": "Date d'expiration supprimée.",
     "expiry_badge_valid": "Valide",
     "expiry_badge_warning": "Bientôt expiré",
     "expiry_badge_expired": "Expiré",
