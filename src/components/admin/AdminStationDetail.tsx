@@ -8,6 +8,20 @@ import { useToast } from '@/context';
 import { AdminPromoQr } from './stations/AdminPromoQr';
 
 const MAX_REASON = 500;
+/** Expiry warning threshold (days) — show orange badge when expiry is within this window. */
+const EXPIRY_WARNING_DAYS = 30;
+
+type ExpiryStatus = 'none' | 'valid' | 'warning' | 'expired';
+
+function computeExpiryStatus(iso: string | null): ExpiryStatus {
+  if (!iso) return 'none';
+  const expiry = new Date(`${iso}T00:00:00Z`).getTime();
+  if (Number.isNaN(expiry)) return 'none';
+  const now = Date.now();
+  if (expiry < now) return 'expired';
+  const diffDays = (expiry - now) / 86_400_000;
+  return diffDays <= EXPIRY_WARNING_DAYS ? 'warning' : 'valid';
+}
 
 interface ApiDocument { id: string; document_type: string; file_url: string; }
 interface ApiStation {
@@ -33,6 +47,10 @@ export function AdminStationDetail({ id }: Props) {
   const [station, setStation]           = useState<ApiStation | null>(null);
   const [loading, setLoading]           = useState(true);
   const [loadError, setLoadError]       = useState(false);
+  // TODO: connect to API once endpoint is available (ADM-14).
+  // Backend schema currently has no `expiry_date` column on `station_documents`;
+  // expiries live in client state only and do not persist across sessions.
+  const [expiries, setExpiries]         = useState<Record<string, string | null>>({});
   const [approving, setApproving]       = useState(false);
   const [confirmApprove, setConfirmApprove] = useState(false);
   const [showReject, setShowReject]     = useState(false);
@@ -212,7 +230,30 @@ export function AdminStationDetail({ id }: Props) {
             <p className="mb-5 text-[11px] font-black uppercase tracking-[0.15em] text-[#C49A1E]">{t('detail_docs')}</p>
             <div className="grid grid-cols-2 gap-3">
               {station.documents.map((doc) => (
-                <DocCard key={doc.id} doc={doc} label={docLabel(doc.document_type)} openLabel={t('doc_open')} />
+                <DocCard
+                  key={doc.id}
+                  doc={doc}
+                  label={docLabel(doc.document_type)}
+                  openLabel={t('doc_open')}
+                  expiry={expiries[doc.id] ?? null}
+                  onSaveExpiry={(value) => {
+                    setExpiries((prev) => ({ ...prev, [doc.id]: value }));
+                    success(value ? t('expiry_saved') : t('expiry_removed'));
+                  }}
+                  labels={{
+                    set: t('expiry_set'),
+                    edit: t('expiry_edit'),
+                    save: t('expiry_save'),
+                    cancel: t('btn_cancel'),
+                    clear: t('expiry_clear'),
+                    noExpiry: t('expiry_none'),
+                    valid: t('expiry_badge_valid'),
+                    warning: t('expiry_badge_warning'),
+                    expired: t('expiry_badge_expired'),
+                    fieldLabel: t('expiry_field_label'),
+                  }}
+                  locale={locale}
+                />
               ))}
             </div>
           </div>
@@ -352,38 +393,154 @@ function InfoField({ label, value, full }: { label: string; value: string; full?
   );
 }
 
-function DocCard({ doc, label, openLabel }: { doc: ApiDocument; label: string; openLabel: string }) {
+interface ExpiryLabels {
+  set: string;
+  edit: string;
+  save: string;
+  cancel: string;
+  clear: string;
+  noExpiry: string;
+  valid: string;
+  warning: string;
+  expired: string;
+  fieldLabel: string;
+}
+
+function DocCard({
+  doc, label, openLabel, expiry, onSaveExpiry, labels, locale,
+}: {
+  doc: ApiDocument;
+  label: string;
+  openLabel: string;
+  expiry: string | null;
+  onSaveExpiry: (value: string | null) => void;
+  labels: ExpiryLabels;
+  locale: string;
+}) {
+  const [editing, setEditing] = useState(false);
+  const [draft, setDraft] = useState<string>(expiry ?? '');
+  const inputId = `expiry-${doc.id}`;
+  const status = computeExpiryStatus(expiry);
+
+  const badgeStyle: Record<ExpiryStatus, { bg: string; text: string; label: string } | null> = {
+    none:    null,
+    valid:   { bg: 'bg-[#DCFCE7] dark:bg-[#0A2A14]', text: 'text-[#166534] dark:text-[#86EFAC]', label: labels.valid },
+    warning: { bg: 'bg-[#FEF3C7] dark:bg-[#3A2800]', text: 'text-[#92400E] dark:text-[#FCD34D]', label: labels.warning },
+    expired: { bg: 'bg-[#FEE2E2] dark:bg-[#2A0A0A]', text: 'text-[#991B1B] dark:text-[#FCA5A5]', label: labels.expired },
+  };
+  const badge = badgeStyle[status];
+  const formattedExpiry = expiry
+    ? new Date(`${expiry}T00:00:00Z`).toLocaleDateString(
+        locale === 'en' ? 'en-CA' : 'fr-CA',
+        { day: 'numeric', month: 'long', year: 'numeric', timeZone: 'UTC' },
+      )
+    : null;
+
+  const startEditing = () => {
+    setDraft(expiry ?? '');
+    setEditing(true);
+  };
+
+  const handleSave = () => {
+    onSaveExpiry(draft || null);
+    setEditing(false);
+  };
+
+  const handleCancel = () => {
+    setEditing(false);
+  };
+
+  const handleClear = () => {
+    setDraft('');
+    onSaveExpiry(null);
+    setEditing(false);
+  };
+
   return (
-    <a
-      href={doc.file_url}
-      target="_blank"
-      rel="noopener noreferrer"
-      className="group flex flex-col gap-3 rounded-xl border border-[#E8E4D8] bg-[#FAFAF6] p-4 transition-all hover:border-[#C49A1E]/40 hover:bg-white hover:shadow-sm dark:border-[#1E2A1A] dark:bg-[#151E12] dark:hover:border-[#C49A1E]/30 dark:hover:bg-[#1A2416]"
-    >
-      {/* Doc icon */}
-      <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-[#C49A1E]/10 transition-colors group-hover:bg-[#C49A1E]/15">
-        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#C49A1E" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-          <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
-          <polyline points="14 2 14 8 20 8" />
-          <line x1="16" y1="13" x2="8" y2="13" />
-          <line x1="16" y1="17" x2="8" y2="17" />
-          <line x1="10" y1="9" x2="8" y2="9" />
-        </svg>
+    <div className="flex flex-col gap-3 rounded-xl border border-[#E8E4D8] bg-[#FAFAF6] p-4 transition-all hover:border-[#C49A1E]/40 hover:bg-white hover:shadow-sm dark:border-[#1E2A1A] dark:bg-[#151E12] dark:hover:border-[#C49A1E]/30 dark:hover:bg-[#1A2416]">
+      <div className="flex items-start justify-between gap-2">
+        {/* Doc icon */}
+        <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-[#C49A1E]/10">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#C49A1E" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
+            <polyline points="14 2 14 8 20 8" />
+            <line x1="16" y1="13" x2="8" y2="13" />
+            <line x1="16" y1="17" x2="8" y2="17" />
+            <line x1="10" y1="9" x2="8" y2="9" />
+          </svg>
+        </div>
+        {badge && (
+          <span className={`shrink-0 rounded-full px-2 py-0.5 text-[10px] font-black uppercase tracking-wider ${badge.bg} ${badge.text}`}>
+            {badge.label}
+          </span>
+        )}
       </div>
-      {/* Label */}
-      <div className="flex-1">
-        <p className="text-[13px] font-bold leading-snug text-[#0F1A0C] dark:text-[#F0EDD4]">{label}</p>
+
+      <p className="text-[13px] font-bold leading-snug text-[#0F1A0C] dark:text-[#F0EDD4]">{label}</p>
+
+      {/* Expiry section */}
+      <div className="flex flex-col gap-1.5">
+        {!editing ? (
+          <div className="flex items-center justify-between gap-2">
+            <span className="text-[11px] text-[#888] dark:text-[#9A9A8A]">
+              {formattedExpiry ?? labels.noExpiry}
+            </span>
+            <button
+              type="button"
+              onClick={startEditing}
+              aria-label={expiry ? labels.edit : labels.set}
+              className="rounded-lg border border-[#C49A1E]/40 bg-[#C49A1E]/10 px-2.5 py-1 text-[11px] font-bold text-[#9A7A10] transition-colors hover:bg-[#C49A1E]/15 focus:outline-none focus-visible:ring-2 focus-visible:ring-[#C49A1E] dark:border-[#C49A1E]/30 dark:text-[#C49A1E]"
+            >
+              {expiry ? labels.edit : labels.set}
+            </button>
+          </div>
+        ) : (
+          <div className="flex flex-col gap-2">
+            <label htmlFor={inputId} className="text-[11px] font-bold uppercase tracking-wider text-[#888] dark:text-[#9A9A8A]">
+              {labels.fieldLabel}
+            </label>
+            <input
+              id={inputId}
+              type="date"
+              value={draft}
+              onChange={(e) => setDraft(e.target.value)}
+              className="w-full rounded-lg border border-[#E8E4D8] bg-white px-3 py-1.5 text-[12px] text-[#0F1A0C] outline-none transition focus:border-[#C49A1E]/50 focus:ring-2 focus:ring-[#C49A1E]/10 dark:border-[#1E2A1A] dark:bg-[#0F1A0C] dark:text-[#F0EDD4] [color-scheme:light] dark:[color-scheme:dark]"
+            />
+            <div className="flex flex-wrap gap-2">
+              <button type="button" onClick={handleSave} disabled={!draft}
+                className="flex-1 rounded-lg bg-[#C49A1E] px-3 py-1.5 text-[11px] font-bold text-[#0C1209] transition-opacity hover:opacity-90 focus:outline-none focus-visible:ring-2 focus-visible:ring-[#C49A1E] focus-visible:ring-offset-1 disabled:cursor-not-allowed disabled:opacity-50">
+                {labels.save}
+              </button>
+              <button type="button" onClick={handleCancel}
+                className="rounded-lg border border-[#E0DCD0] px-3 py-1.5 text-[11px] font-semibold text-[#666] transition-colors hover:bg-[#F0EDE0] focus:outline-none focus-visible:ring-2 focus-visible:ring-[#C49A1E] dark:border-[#243020] dark:text-[#9A9A8A] dark:hover:bg-[#1E2A1A]">
+                {labels.cancel}
+              </button>
+              {expiry && (
+                <button type="button" onClick={handleClear}
+                  className="rounded-lg border border-[#EF4444]/40 px-3 py-1.5 text-[11px] font-semibold text-[#B2351F] transition-colors hover:bg-[#EF4444]/8 focus:outline-none focus-visible:ring-2 focus-visible:ring-[#EF4444] dark:text-[#F0A090]">
+                  {labels.clear}
+                </button>
+              )}
+            </div>
+          </div>
+        )}
       </div>
+
       {/* Open link */}
-      <div className="flex items-center gap-1 text-[12px] font-semibold text-[#C49A1E] transition-colors group-hover:text-[#B08A10]">
+      <a
+        href={doc.file_url}
+        target="_blank"
+        rel="noopener noreferrer"
+        className="flex items-center gap-1 rounded text-[12px] font-semibold text-[#C49A1E] transition-colors hover:text-[#B08A10] focus:outline-none focus-visible:ring-2 focus-visible:ring-[#C49A1E]"
+      >
         {openLabel}
         <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
           <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6" />
           <polyline points="15 3 21 3 21 9" />
           <line x1="10" y1="14" x2="21" y2="3" />
         </svg>
-      </div>
-    </a>
+      </a>
+    </div>
   );
 }
 

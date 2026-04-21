@@ -124,17 +124,17 @@ export function DelayRequestsPage() {
     }
 
     const formats = new Map<string, string>();
-    if (meOk) {
-      const stationId = (meData as { data: { id: string } }).data.id;
+    const stationId = meOk ? (meData as { data?: { id?: string } })?.data?.id : null;
+    if (stationId) {
       const [formatsOk, formatsData] = await getFromApi(`/stations/${stationId}/formats`);
       if (!mountedRef.current) return;
       if (formatsOk) {
-        const list = (formatsData as { data: RawFormat[] }).data ?? [];
+        const list = (formatsData as { data?: RawFormat[] })?.data ?? [];
         for (const f of list) formats.set(f.id, f.label);
       }
     }
 
-    const items = (delaysData as { data: { items: RawDelayItem[] } }).data?.items ?? [];
+    const items = (delaysData as { data?: { items?: RawDelayItem[] } })?.data?.items ?? [];
     const nextPending: DelayRequest[] = [];
     const nextHistory: ResolvedRequest[] = [];
     for (const item of items) {
