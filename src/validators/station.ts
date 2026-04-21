@@ -1,11 +1,15 @@
 import { z } from 'zod';
 import { mapZodErrors } from './auth';
-import { phoneSchema } from './shared';
+import { phoneSchema, passwordSchema } from './shared';
 import { isValidCalendarDate } from '@/helpers/date-helper';
 
 export { mapZodErrors };
 
-// ─── Base objects (reused in the submit schema) ──────────────────────────────
+
+// %%%%% Onboarding base objects %%%%%
+// Reused in per-step and full-submit schemas
+
+// ooooo Step 1: Account credentials ooooo
 
 const _step1Base = z.object({
   email: z
@@ -14,20 +18,15 @@ const _step1Base = z.object({
     .max(320, 'Email must not exceed 320 characters')
     .refine((s) => !s.includes('..'), { message: 'Email cannot contain consecutive dots' }),
   phone: phoneSchema,
-  password: z
-    .string()
-    .min(8, 'Password must be at least 8 characters')
-    .max(128, 'Password must not exceed 128 characters')
-    .regex(/[A-Z]/, 'Password must contain at least one uppercase letter')
-    .regex(/[a-z]/, 'Password must contain at least one lowercase letter')
-    .regex(/[0-9]/, 'Password must contain at least one number')
-    .regex(/[@$!%*#?&_\-+=]/, 'Password must contain at least one special character. Allowed: @ $ ! % * # ? & _ - + =')
-    .regex(/^[A-Za-z0-9@$!%*#?&_\-+=]+$/, 'Password contains invalid characters. Only letters, numbers, and these special characters are allowed: @ $ ! % * # ? & _ - + ='),
+  password: passwordSchema,
   confirm_password: z.string().min(1, 'Password confirmation is required'),
 });
 
 /** Allowed values for type de prestation (exterior, interior, or both). */
 const serviceScopeEnum = z.enum(['exterior', 'interior', 'both']);
+
+
+// ooooo Step 2: Station details ooooo
 
 const _step2Base = z.object({
   station_name: z.string().min(2).max(200),
@@ -47,6 +46,9 @@ const _step2Base = z.object({
   service_scope: serviceScopeEnum.optional(),
 });
 
+
+// ooooo Step 3: Documents + legal ooooo
+
 const _step3Base = z.object({
   documents: z
     .array(
@@ -62,7 +64,12 @@ const _step3Base = z.object({
   }),
 });
 
-// ─── Per-step validation schemas (no DB — used by validate endpoints) ────────
+
+// %%%%% END - Onboarding base objects %%%%%
+
+
+// %%%%% Per-step validation schemas %%%%%
+// No DB operations — used by validate endpoints only
 
 // Step 1: account credentials
 export const registerStationSchema = _step1Base.refine(
@@ -76,7 +83,12 @@ export const stationInfoSchema = _step2Base;
 // Step 3: documents + legal confirmation
 export const stationDocumentsSchema = _step3Base;
 
-// ─── Final submit schema (all steps merged — triggers DB operations) ─────────
+
+// %%%%% END - Per-step validation schemas %%%%%
+
+
+// %%%%% Full submit schema %%%%%
+// All steps merged — triggers DB operations
 
 export const stationOnboardingSubmitSchema = _step1Base
   .merge(_step2Base)
@@ -86,14 +98,46 @@ export const stationOnboardingSubmitSchema = _step1Base
     path: ['confirm_password'],
   });
 
-// ─── Admin ────────────────────────────────────────────────────────────────────
+
+// %%%%% END - Full submit schema %%%%%
+
+
+// %%%%% Admin schemas %%%%%
 
 /** Path param id for admin station routes (GET/approve/reject). */
 export const adminStationIdParamSchema = z.object({
   id: z.string().uuid('Invalid station id (must be a valid UUID)'),
 });
 
-// Admin: reject a station
+/**
+ * Optional body for POST /api/v1/admin/stations/:id/approve.
+ * Allows the admin to set document expiry dates at approval time.
+ * Accepts ISO 8601 datetime strings or YYYY-MM-DD date strings.
+ */
+export const approveStationBodySchema = z.object({
+  document_expiry_dates: z
+    .array(
+      z.object({
+        document_id: z.string().uuid('document_id must be a valid UUID'),
+        expiry_date: z
+          .string()
+          .datetime({ message: 'expiry_date must be a valid ISO 8601 datetime or YYYY-MM-DD date' })
+          .or(z.string().regex(/^\d{4}-\d{2}-\d{2}$/, 'expiry_date must be a valid ISO 8601 datetime or YYYY-MM-DD date'))
+          .refine(
+            (s) => new Date(s) > new Date(),
+            { message: 'expiry_date must be a future date' }
+          ),
+      })
+    )
+    // A station cannot have more documents than this cap; an unbounded array would let
+    // an admin POST cause O(N) ownership queries inside the approval transaction.
+    .max(50, 'Cannot set expiry dates for more than 50 documents at once')
+    .optional(),
+});
+
+export type ApproveStationBody = z.infer<typeof approveStationBodySchema>;
+
+/** Admin: reject a station with a mandatory reason. */
 export const rejectStationSchema = z.object({
   rejection_reason: z
     .string()
@@ -109,19 +153,11 @@ export const listPendingStationsQuerySchema = z.object({
 
 export type ListPendingStationsQuery = z.infer<typeof listPendingStationsQuerySchema>;
 
-// Auth: change password
+/** Auth: change password for station account. */
 export const changePasswordSchema = z
   .object({
     current_password: z.string().min(1, 'Current password is required').max(128, 'Password must not exceed 128 characters'),
-    new_password: z
-      .string()
-      .min(8, 'Password must be at least 8 characters')
-      .max(128, 'Password must not exceed 128 characters')
-      .regex(/[A-Z]/, 'Password must contain at least one uppercase letter')
-      .regex(/[a-z]/, 'Password must contain at least one lowercase letter')
-      .regex(/[0-9]/, 'Password must contain at least one number')
-      .regex(/[@$!%*#?&_\-+=]/, 'Password must contain at least one special character. Allowed: @ $ ! % * # ? & _ - + =')
-      .regex(/^[A-Za-z0-9@$!%*#?&_\-+=]+$/, 'Password contains invalid characters. Only letters, numbers, and these special characters are allowed: @ $ ! % * # ? & _ - + ='),
+    new_password: passwordSchema,
     confirm_new_password: z.string().min(1, 'Password confirmation is required'),
   })
   .refine((data) => data.new_password === data.confirm_new_password, {
@@ -129,7 +165,42 @@ export const changePasswordSchema = z
     path: ['confirm_new_password'],
   });
 
-// ─── Public API (Card 1) ─────────────────────────────────────────────────────
+
+// %%%%% END - Admin schemas %%%%%
+
+
+// %%%%% Public API schemas (Card 1) %%%%%
+
+// ---- Internal helpers for listStationsQuerySchema ----
+
+/**
+ * Optional string field: trims whitespace, converts empty strings to undefined,
+ * and enforces a maximum length. Used for `q` and `city` query params.
+ */
+function optionalTrimmedString(maxLen: number, message: string) {
+  return z
+    .string()
+    .optional()
+    .transform((s) => (typeof s === 'string' ? s.trim() : undefined) || undefined)
+    .refine((s) => s === undefined || s.length <= maxLen, { message });
+}
+
+/**
+ * Optional string field: converts empty strings to undefined, then validates
+ * the non-undefined value with the provided refine function.
+ */
+function optionalEmptyToUndefined<T extends string>(
+  refineFn: (s: string) => boolean,
+  message: string
+) {
+  return z
+    .string()
+    .optional()
+    .transform((s): string | undefined => (s === '' || s === undefined ? undefined : s))
+    .refine((s): s is T | undefined => s === undefined || refineFn(s), { message });
+}
+
+// ---- End internal helpers ----
 
 /** Path param id for GET /stations/:id and POST /stations/:id/join. */
 export const stationIdParamSchema = z.object({
@@ -138,20 +209,8 @@ export const stationIdParamSchema = z.object({
 
 /** Query params for GET /api/v1/stations (list active stations). */
 export const listStationsQuerySchema = z.object({
-  q: z
-    .string()
-    .optional()
-    .transform((s) => (typeof s === 'string' ? s.trim() : undefined) || undefined)
-    .refine((s) => s === undefined || s.length <= 200, {
-      message: 'Search must be at most 200 characters',
-    }),
-  city: z
-    .string()
-    .optional()
-    .transform((s) => (typeof s === 'string' ? s.trim() : undefined) || undefined)
-    .refine((s) => s === undefined || s.length <= 100, {
-      message: 'City must be at most 100 characters',
-    }),
+  q: optionalTrimmedString(200, 'Search must be at most 200 characters'),
+  city: optionalTrimmedString(100, 'City must be at most 100 characters'),
   sort: z
     .string()
     .optional()
@@ -213,7 +272,6 @@ export const listStationsQuerySchema = z.object({
       if (!s) return undefined;
       return s.split(',').map((t) => t.trim()).filter(Boolean);
     })
-    .optional()
     .refine(
       (arr) =>
         arr === undefined ||
@@ -222,22 +280,14 @@ export const listStationsQuerySchema = z.object({
           arr.every((id) => z.string().uuid().safeParse(id).success)),
       { message: 'wash_type_ids must be comma-separated UUIDs (max 50)' }
     ),
-  service_scope: z
-    .string()
-    .optional()
-    .transform((s) => (s === '' || s === undefined ? undefined : s))
-    .refine(
-      (s) => s === undefined || serviceScopeEnum.safeParse(s).success,
-      { message: 'service_scope must be exterior, interior, or both' }
-    ),
-  format_id: z
-    .string()
-    .optional()
-    .transform((s) => (s === '' || s === undefined ? undefined : s))
-    .refine(
-      (s) => s === undefined || z.string().uuid().safeParse(s).success,
-      { message: 'format_id must be a valid UUID' }
-    ),
+  service_scope: optionalEmptyToUndefined(
+    (s) => serviceScopeEnum.safeParse(s).success,
+    'service_scope must be exterior, interior, or both'
+  ),
+  format_id: optionalEmptyToUndefined(
+    (s) => z.string().uuid().safeParse(s).success,
+    'format_id must be a valid UUID'
+  ),
   date: z
     .string()
     .regex(/^\d{4}-\d{2}-\d{2}$/, 'date must be YYYY-MM-DD')
@@ -252,7 +302,11 @@ export const listStationsQuerySchema = z.object({
     ),
 });
 
-// ─── Station config API (Unit 2) ─────────────────────────────────────────────
+
+// %%%%% END - Public API schemas (Card 1) %%%%%
+
+
+// %%%%% Station config API (Unit 2) %%%%%
 
 /** Time string HH:mm or HH:mm:ss (optional timezone suffix). */
 const timeStringSchema = z
@@ -338,11 +392,11 @@ export const generateSlotsBodySchema = z
     { message: 'end_date must be on or after date', path: ['end_date'] }
   );
 
-export type CreateSlotBody = z.infer<typeof createSlotBodySchema>;
-export type CreateSlotsBulkBody = z.infer<typeof createSlotsBulkBodySchema>;
-export type GenerateSlotsBody = z.infer<typeof generateSlotsBodySchema>;
 
-// ─── Vehicle format API ──────────────────────────────────────────────────────
+// %%%%% END - Station config API (Unit 2) %%%%%
+
+
+// %%%%% Vehicle format API %%%%%
 
 /** Path param id for PUT/PATCH/DELETE /station/formats/:id. */
 export const formatIdParamSchema = z.object({
@@ -379,12 +433,20 @@ export const patchFormatBodySchema = z
     message: 'At least one field (label, price, is_active) is required',
   });
 
+
+// %%%%% END - Vehicle format API %%%%%
+
+
+// %%%%% Exported types %%%%%
+
+export type CreateSlotBody = z.infer<typeof createSlotBodySchema>;
+export type CreateSlotsBulkBody = z.infer<typeof createSlotsBulkBodySchema>;
+export type GenerateSlotsBody = z.infer<typeof generateSlotsBodySchema>;
+
 export type CreateFormatBody = z.infer<typeof createFormatBodySchema>;
 export type UpdateFormatBody = z.infer<typeof updateFormatBodySchema>;
 export type PatchFormatBody = z.infer<typeof patchFormatBodySchema>;
 export type FormatIdParam = z.infer<typeof formatIdParamSchema>;
-
-// ─── Public API (Card 1) ─────────────────────────────────────────────────────
 
 export type StationIdParam = z.infer<typeof stationIdParamSchema>;
 export type ListStationsQuery = z.infer<typeof listStationsQuerySchema>;
@@ -396,3 +458,6 @@ export type StationOnboardingSubmitDto = z.infer<typeof stationOnboardingSubmitS
 export type AdminStationIdParam = z.infer<typeof adminStationIdParamSchema>;
 export type RejectStationDto = z.infer<typeof rejectStationSchema>;
 export type ChangePasswordDto = z.infer<typeof changePasswordSchema>;
+
+
+// %%%%% END - Exported types %%%%%

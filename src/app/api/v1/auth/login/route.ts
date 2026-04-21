@@ -1,5 +1,4 @@
 import { headers } from 'next/headers';
-import { NextResponse } from 'next/server';
 import { login } from '@/server/auth/auth-service';
 import { loginSchema, mapZodErrors } from '@/validators/auth';
 import {
@@ -17,6 +16,10 @@ import { checkRateLimit, recordFailedAttempt, resetOnSuccess } from '@/lib/rate-
 import { getClientRateLimitKey } from '@/lib/request-ip';
 import { buildRefreshCookieOptions } from '@/lib/jwt';
 import { REFRESH_COOKIE_NAME } from '@/helpers/server-constants';
+
+
+// %%%%% POST /api/v1/auth/login %%%%%
+// Authenticate a user with email + password and issue an access/refresh token pair.
 
 /**
  * @swagger
@@ -100,13 +103,17 @@ import { REFRESH_COOKIE_NAME } from '@/helpers/server-constants';
  *             schema:
  *               $ref: '#/components/schemas/ErrorEnvelope'
  */
-export async function POST(request: Request) {
+export async function POST(request: Request): Promise<Response> {
+
+  // ===== Rate limit check =====
   const headersList = await headers();
-  const ip = getClientRateLimitKey(headersList as unknown as Headers);
+  const ip = getClientRateLimitKey(headersList);
 
   const { blocked } = await checkRateLimit(ip);
   if (blocked) return error429();
 
+
+  // ===== Body parsing & validation =====
   let body: unknown;
   try {
     body = await request.json();
@@ -119,34 +126,49 @@ export async function POST(request: Request) {
     return error400('Validation failed', ApiCode.VALIDATION_FAILED, mapZodErrors(parsed.error));
   }
 
+
+  // ===== Authentication & token issuance =====
   try {
     const { user, tokens } = await login(parsed.data);
 
     await resetOnSuccess(ip);
 
-    const res = successResponse({
+    const response = successResponse({
       user,
       access_token: tokens.accessJwt,
       token_type: 'Bearer',
       expires_in: tokens.expiresIn,
     }, 'Login successful');
 
-    const response = NextResponse.json(await res.json(), { status: res.status });
+    // Attach the httpOnly refresh token cookie to the response
     response.cookies.set(
       REFRESH_COOKIE_NAME,
       tokens.rawRefreshToken,
       buildRefreshCookieOptions(parsed.data.remember_me),
     );
     return response;
+
   } catch (e) {
+
+    // Record failed attempt for rate-limiting before returning 401
     if (e instanceof UnauthorizedError) {
       await recordFailedAttempt(ip);
       return error401('Invalid credentials', ApiCode.INVALID_CREDENTIALS);
     }
+
     if (e instanceof ForbiddenError) {
-      return error403(e.message);
+      // Record failed attempt so rate-limiting applies to status-based probing too.
+      // An attacker who knows a valid email+password can cycle expected_role or trigger
+      // account-state codes (BUSINESS_NOT_APPROVED, etc.) without this guard.
+      await recordFailedAttempt(ip);
+      return error403(e.message, e.code as ApiCode | undefined);
     }
+
     if (e instanceof AppError) return fromAppError(e);
+
     return error500(e);
   }
 }
+
+
+// %%%%% END - POST /api/v1/auth/login %%%%%

@@ -4,6 +4,7 @@
  */
 import {
   boolean,
+  date,
   decimal,
   index,
   integer,
@@ -16,6 +17,9 @@ import {
   varchar,
 } from "drizzle-orm/pg-core";
 import { users } from "./users";
+
+
+// %%%%% Wash types %%%%%
 
 /**
  * Reference table for wash types (e.g. hand_wash, automatic, self_service).
@@ -50,6 +54,12 @@ export const stationWashTypes = pgTable(
     ),
   ]
 );
+
+
+// %%%%% END - Wash types %%%%%
+
+
+// %%%%% Stations %%%%%
 
 /**
  * Station identity, approval lifecycle, and operational flags.
@@ -106,6 +116,12 @@ export const stations = pgTable(
     index("stations_service_scope_idx").on(table.service_scope),
   ]
 );
+
+
+// %%%%% END - Stations %%%%%
+
+
+// %%%%% Station config & posts %%%%%
 
 /**
  * One-to-one operational config per station. id = station id.
@@ -172,6 +188,12 @@ export const stationPosts = pgTable(
   ]
 );
 
+
+// %%%%% END - Station config & posts %%%%%
+
+
+// %%%%% Vehicle formats %%%%%
+
 /**
  * Per-station vehicle format and price (e.g. Petit, Moyen, SUV).
  */
@@ -197,27 +219,57 @@ export const vehicleFormats = pgTable("vehicle_formats", {
     .defaultNow(),
 });
 
+
+// %%%%% END - Vehicle formats %%%%%
+
+
+// %%%%% Station documents %%%%%
+
 /**
  * Documents submitted during station onboarding (step 3).
  * One row per document; terms_accepted records the legal confirmation checkbox.
  * storage: 'cloudinary' (default) or 'local'; local files are synced to Cloudinary by cron.
  */
-export const stationDocuments = pgTable("station_documents", {
-  id: uuid("id").primaryKey().defaultRandom(),
-  station_id: uuid("station_id")
-    .notNull()
-    .references(() => stations.id, { onDelete: "cascade" }),
-  document_type: varchar("document_type", { length: 50 }).notNull(),
-  file_url: text("file_url").notNull(),
-  storage: varchar("storage", { length: 20 }).notNull().default("cloudinary"),
-  terms_accepted: boolean("terms_accepted").notNull().default(false),
-  created_at: timestamp("created_at", {
-    mode: "date",
-    withTimezone: true,
-  })
-    .notNull()
-    .defaultNow(),
-});
+export const stationDocuments = pgTable(
+  "station_documents",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    station_id: uuid("station_id")
+      .notNull()
+      .references(() => stations.id, { onDelete: "cascade" }),
+    document_type: varchar("document_type", { length: 50 }).notNull(),
+    file_url: text("file_url").notNull(),
+    storage: varchar("storage", { length: 20 }).notNull().default("cloudinary"),
+    terms_accepted: boolean("terms_accepted").notNull().default(false),
+    /** Date when the document expires. Set during station approval. Null = no expiry tracked. */
+    expiry_date: date("expiry_date", { mode: "date" }),
+    /** Timestamp when the first expiry reminder was sent (anti-duplicate flag). */
+    reminder_first_sent_at: timestamp("reminder_first_sent_at", {
+      mode: "date",
+      withTimezone: true,
+    }),
+    /** Timestamp when the second expiry reminder was sent (anti-duplicate flag). */
+    reminder_second_sent_at: timestamp("reminder_second_sent_at", {
+      mode: "date",
+      withTimezone: true,
+    }),
+    created_at: timestamp("created_at", {
+      mode: "date",
+      withTimezone: true,
+    })
+      .notNull()
+      .defaultNow(),
+  },
+  (table) => [
+    index("station_documents_expiry_date_idx").on(table.expiry_date),
+  ]
+);
+
+
+// %%%%% END - Station documents %%%%%
+
+
+// %%%%% Pending uploads %%%%%
 
 /**
  * Rows to process by sync-pending-uploads job: local files to upload to Cloudinary.
@@ -239,3 +291,6 @@ export const pendingUploads = pgTable(
   },
   (table) => [index("pending_uploads_created_at_idx").on(table.created_at)]
 );
+
+
+// %%%%% END - Pending uploads %%%%%
