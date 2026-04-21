@@ -12,6 +12,7 @@ import {
   error500,
 } from '@/lib/responses';
 import { ApiCode } from '@/types/api-codes';
+import { ConflictError, NotFoundError } from '@/lib/errors';
 import { checkRateLimit, recordFailedAttempt } from '@/lib/rate-limiter';
 import { getClientRateLimitKey } from '@/lib/request-ip';
 
@@ -70,9 +71,7 @@ export async function POST(request: Request) {
     await resendVerificationEmail(parsed.data.email, locale);
   } catch (e) {
     // Log unexpected server errors only; domain errors (NotFound/Conflict) are intentionally swallowed.
-    const isExpectedDomainError =
-      e instanceof Error &&
-      (e.constructor.name === 'NotFoundError' || e.constructor.name === 'ConflictError');
+    const isExpectedDomainError = e instanceof NotFoundError || e instanceof ConflictError;
 
     if (!isExpectedDomainError) {
       console.error(
