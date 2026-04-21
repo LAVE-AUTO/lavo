@@ -37,6 +37,7 @@ interface ApiStation {
   vehicleFormats: ApiVehicleFormat[];
   timeSlots: ApiTimeSlot[];
   stationConfig?: { wash_duration_minutes: number } | null;
+  free_cancellation_minutes?: number;
 }
 
 /* ------------------------------------------------------------------ */
@@ -56,6 +57,7 @@ interface EnrichedReservation {
   duration: number;
   totalPrice: number;
   status: string;
+  freeCancellationMinutes: number;
 }
 
 function slotToDateParts(startTime: string): { date: string; timeSlot: string } {
@@ -118,6 +120,7 @@ export default function ReservationDetailPage() {
         duration: mock.duration,
         totalPrice: mock.totalPrice,
         status: mock.status,
+        freeCancellationMinutes: 60,
       });
       setLoading(false);
       return;
@@ -172,6 +175,7 @@ export default function ReservationDetailPage() {
       duration: station?.stationConfig?.wash_duration_minutes ?? 30,
       totalPrice: parseFloat(entry.amount_paid ?? '0'),
       status: entry.status,
+      freeCancellationMinutes: station?.free_cancellation_minutes ?? 60,
     });
     setLoading(false);
   }, [id]);
@@ -244,8 +248,8 @@ export default function ReservationDetailPage() {
 
   /* Start button: active 30–45 min before slot time */
   const canStart = minutesUntilSlot >= 0 && minutesUntilSlot <= 45;
-  /* Cancel warning: if less than 1h before slot, warn about fees */
-  const cancelHasFees = minutesUntilSlot < 60 && minutesUntilSlot >= 0;
+  /* Cancel warning: if inside the free cancellation window, warn about fees */
+  const cancelHasFees = minutesUntilSlot >= 0 && minutesUntilSlot < reservation.freeCancellationMinutes;
   const isUpcoming = reservation.status === 'confirmed' && minutesUntilSlot > 0;
   const isPast = reservation.status === 'completed' || reservation.status === 'cancelled';
 
@@ -674,7 +678,7 @@ export default function ReservationDetailPage() {
                     <line x1="12" y1="9" x2="12" y2="13" /><line x1="12" y1="17" x2="12.01" y2="17" />
                   </svg>
                   <p className="text-[12px] font-semibold text-lavo-error leading-relaxed">
-                    {t('cancel_modal_fees_warning')}
+                    {t('cancel_modal_fees_warning', { minutes: reservation.freeCancellationMinutes })}
                   </p>
                 </div>
               )}
