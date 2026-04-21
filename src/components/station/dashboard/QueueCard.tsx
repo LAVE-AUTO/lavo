@@ -56,7 +56,7 @@ export function QueueCard({ entry, onCall, onPick, onMoveUp, onMoveDown, callLab
               </span>
               {badgeLabel ?? t('queue_next')}
             </div>
-            <span className="rounded-md px-2.5 py-0.5 text-[9px] font-bold uppercase tracking-wide text-white" style={{ background: tagBg }}>
+            <span className="rounded-md px-2.5 py-0.5 text-[10px] font-bold uppercase tracking-wide text-white" style={{ background: tagBg }}>
               {tagLabel}
             </span>
           </div>
@@ -129,7 +129,7 @@ export function QueueCard({ entry, onCall, onPick, onMoveUp, onMoveDown, callLab
             <span className="truncate text-[13px] font-semibold text-[#000C1F] dark:text-[#FFF8EC]">
               {entry.clientName}
             </span>
-            <span className="shrink-0 rounded-md px-2 py-[2px] text-[8px] font-bold uppercase tracking-wide text-white" style={{ background: tagBg }}>
+            <span className="shrink-0 rounded-md px-2 py-[2px] text-[10px] font-bold uppercase tracking-wide text-white" style={{ background: tagBg }}>
               {tagLabel}
             </span>
           </div>

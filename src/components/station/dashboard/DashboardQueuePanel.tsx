@@ -22,7 +22,7 @@ export function DashboardQueuePanel({ entries, onCallEntry, onCompleteEntry }: D
   const totalCount = entries.length;
 
   return (
-    <div className="flex w-[280px] flex-shrink-0 flex-col overflow-hidden border-r border-[#E0DCD0] bg-[#F0EDE0] dark:border-[#1A2A14] dark:bg-[#182214]">
+    <div className="flex w-full flex-shrink-0 flex-col overflow-hidden border-b border-[#E0DCD0] bg-[#F0EDE0] md:w-[280px] md:border-b-0 md:border-r dark:border-[#1A2A14] dark:bg-[#182214]">
       {/* Header */}
       <div className="border-b border-[#E0DCD0] px-4 py-3.5 dark:border-[#1A2A14]">
         <div className="flex items-center justify-between">
@@ -31,7 +31,7 @@ export function DashboardQueuePanel({ entries, onCallEntry, onCompleteEntry }: D
               {t('queue_title')}
             </div>
             {totalCount > 0 && (
-              <span className="rounded-full bg-[#C09A18] px-2 py-0.5 text-[9px] font-black text-[#0C1209] leading-tight">
+              <span className="rounded-full bg-[#C09A18] px-2 py-0.5 text-[10px] font-black text-[#0C1209] leading-tight">
                 {totalCount}
               </span>
             )}

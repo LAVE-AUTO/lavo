@@ -78,11 +78,11 @@ function EntryBlock({ entry, onComplete, onCancel, onStart }: {
   return (
     <div className={`rounded-xl border p-3 transition-all duration-200 hover:shadow-sm ${style.bg} ${style.border}`}>
       <div className="mb-2 flex items-center gap-2">
-        <span className="font-mono text-[9px] font-bold text-[#555] dark:text-[#F0EDD4]/60">
+        <span className="font-mono text-[10px] font-bold text-[#555] dark:text-[#F0EDD4]/60">
           {entry.timeRange}
         </span>
         <span
-          className="rounded-full px-2 py-0.5 text-[9px] font-bold"
+          className="rounded-full px-2 py-0.5 text-[10px] font-bold"
           style={{ background: style.badgeBg, color: style.badgeColor }}
         >
           {badgeLabel}
@@ -91,7 +91,7 @@ function EntryBlock({ entry, onComplete, onCancel, onStart }: {
           <button
             type="button"
             onClick={onComplete}
-            className="ml-auto rounded-md bg-[#C49A1E] px-2 py-0.5 text-[9px] font-black text-[#0C1209] transition-opacity hover:opacity-80"
+            className="ml-auto rounded-md bg-[#C49A1E] px-2 py-0.5 text-[10px] font-black text-[#0C1209] transition-opacity hover:opacity-80"
           >
             {t('btn_add_time')}
           </button>
@@ -100,7 +100,7 @@ function EntryBlock({ entry, onComplete, onCancel, onStart }: {
           <button
             type="button"
             onClick={onCancel}
-            className="ml-auto rounded-md border border-[#EF4444] bg-[rgba(239,68,68,0.1)] px-2 py-0.5 text-[9px] font-bold text-[#EF4444] transition-opacity hover:opacity-80"
+            className="ml-auto rounded-md border border-[#EF4444] bg-[rgba(239,68,68,0.1)] px-2 py-0.5 text-[10px] font-bold text-[#EF4444] transition-opacity hover:opacity-80"
           >
             ! {t('btn_cancel')}
           </button>
@@ -113,7 +113,7 @@ function EntryBlock({ entry, onComplete, onCancel, onStart }: {
         <div className="mb-1 text-[11px] text-[#666] dark:text-[#A0A090]">{entry.clientName}</div>
       )}
       {entry.marginText && (
-        <div className="text-[9px] text-[#2ECC71]">{entry.marginText}</div>
+        <div className="text-[10px] text-[#2ECC71]">{entry.marginText}</div>
       )}
       {entry.status === 'active' && (
         <button

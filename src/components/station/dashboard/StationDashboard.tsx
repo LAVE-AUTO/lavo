@@ -197,7 +197,7 @@ export function StationDashboard() {
           {actionError}
         </div>
       )}
-      <div className="flex flex-1 overflow-hidden">
+      <div className="flex flex-1 flex-col overflow-auto md:flex-row md:overflow-hidden">
         <DashboardQueuePanel
           entries={queueEntries}
           onCallEntry={(id) => requestAction('call', id)}

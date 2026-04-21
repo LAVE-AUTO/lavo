@@ -477,3 +477,23 @@ button,
     opacity: 1;
     transform: translateY(0);
 }
+
+
+/* Responsive font scaling for admin and station dashboards.
+   Targets .app-shell (set on AdminShell and StationShell roots) so the
+   public site, client area, and auth pages keep their designed sizes.
+   At >=1024px bump small text by 1px; at >=1280px bump by 2px. */
+
+@media (min-width: 1024px) {
+    .app-shell .text-\[10px\] { font-size: 11px; }
+    .app-shell .text-\[11px\] { font-size: 12px; }
+    .app-shell .text-\[12px\] { font-size: 13px; }
+    .app-shell .text-\[13px\] { font-size: 14px; }
+}
+
+@media (min-width: 1280px) {
+    .app-shell .text-\[10px\] { font-size: 12px; }
+    .app-shell .text-\[11px\] { font-size: 13px; }
+    .app-shell .text-\[12px\] { font-size: 14px; }
+    .app-shell .text-\[13px\] { font-size: 15px; }
+}
