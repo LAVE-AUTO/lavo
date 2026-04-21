@@ -9,6 +9,7 @@ import {
   TokenExpiredError,
   UnauthorizedError,
 } from '@/lib/errors';
+import { ApiCode } from '@/types/api-codes';
 import { ACCESS_TOKEN_MAX_AGE, JWT_DEFAULT_MAX_AGE, JWT_REMEMBER_MAX_AGE } from '@/helpers/server-constants';
 import {
   findByEmail,
@@ -33,6 +34,19 @@ import {
   revokeRefreshToken,
 } from './refresh-token-repository';
 
+// Domain logic for registration, login, email verification, password management,
+// OAuth user provisioning, and session refresh.
+
+// Token TTLs in milliseconds
+const EMAIL_VERIFICATION_TTL_MS = 24 * 60 * 60 * 1000; // 24 hours
+const PASSWORD_RESET_TTL_MS = 60 * 60 * 1000;           // 1 hour
+
+// Pre-computed bcrypt hash used as a timing-attack guard when the user is not found.
+// bcrypt.compare always runs a full comparison so login timing is consistent.
+const DUMMY_BCRYPT_HASH = '$2b$12$invalidhashfortimingprotection000000000000000000000000';
+
+// --- Types ---
+
 export type RegisterDto = {
   first_name: string;
   last_name: string;
@@ -40,6 +54,13 @@ export type RegisterDto = {
   phone: string;
   password: string;
   remember_me: boolean;
+};
+
+export type LoginDto = {
+  email: string;
+  password: string;
+  remember_me: boolean;
+  expected_role: 'client' | 'station' | 'admin';
 };
 
 export type AuthTokens = {
@@ -54,6 +75,19 @@ export type AuthResult = {
   rememberMe: boolean;
 };
 
+// --- Internal helpers ---
+
+/**
+ * Sign a JWT access token and persist a new refresh token for the given user.
+ *
+ * The refresh token TTL is determined by `rememberMe`:
+ * - `true`  → JWT_REMEMBER_MAX_AGE
+ * - `false` → JWT_DEFAULT_MAX_AGE
+ *
+ * @param user       Safe (password-stripped) user record.
+ * @param rememberMe Whether to issue an extended-lifetime refresh token.
+ * @returns Signed access JWT, raw refresh token, and access token TTL in seconds.
+ */
 async function issueTokenPair(
   user: SafeUser,
   rememberMe: boolean
@@ -76,6 +110,19 @@ async function issueTokenPair(
   return { accessJwt, rawRefreshToken, expiresIn: ACCESS_TOKEN_MAX_AGE };
 }
 
+// --- Registration ---
+
+/**
+ * Register a new client account with email + password credentials.
+ *
+ * Creates the user record, issues a 24-hour email verification token, and
+ * sends the verification email fire-and-forget (failures are logged, not thrown).
+ * A token pair is issued immediately so the caller can log the user in right away.
+ *
+ * @param dto    Registration payload including credentials and remember-me preference.
+ * @param locale Email locale for the verification message.
+ * @throws {ConflictError} Email is already in use.
+ */
 export async function registerWithPassword(dto: RegisterDto, locale: 'fr' | 'en' = 'fr'): Promise<AuthResult> {
   const existing = await findByEmail(dto.email);
   if (existing) throw new ConflictError('Email already in use');
@@ -96,7 +143,7 @@ export async function registerWithPassword(dto: RegisterDto, locale: 'fr' | 'en'
     user_id: user.id,
     token: randomUUID(),
     type: 'email_verification',
-    expires_at: new Date(Date.now() + 24 * 60 * 60 * 1000),
+    expires_at: new Date(Date.now() + EMAIL_VERIFICATION_TTL_MS),
   });
 
   // Fire-and-forget: do not block registration on email failure
@@ -108,6 +155,18 @@ export async function registerWithPassword(dto: RegisterDto, locale: 'fr' | 'en'
   return { user, tokens, rememberMe: dto.remember_me };
 }
 
+// --- Email verification ---
+
+/**
+ * Mark a user's email as verified by consuming a valid verification token.
+ *
+ * Distinguishes expired/used tokens from tokens that never existed to allow
+ * the caller to surface the correct error message.
+ *
+ * @param token Raw verification token from the email link.
+ * @throws {TokenExpiredError} Token exists but has already been used or has expired.
+ * @throws {NotFoundError}     Token does not exist at all.
+ */
 export async function verifyEmail(token: string): Promise<void> {
   const record = await findValidToken(token, 'email_verification');
 
@@ -122,6 +181,14 @@ export async function verifyEmail(token: string): Promise<void> {
   await markTokenUsed(record.id);
 }
 
+/**
+ * Re-send a verification email for a pending account.
+ *
+ * @param email  Account email address.
+ * @param locale Email locale for the verification message.
+ * @throws {NotFoundError}  No account found with this email.
+ * @throws {ConflictError}  Account email is already verified.
+ */
 export async function resendVerificationEmail(email: string, locale: 'fr' | 'en' = 'fr'): Promise<void> {
   const user = await findByEmail(email);
   if (!user) throw new NotFoundError('No account found with this email address');
@@ -131,12 +198,23 @@ export async function resendVerificationEmail(email: string, locale: 'fr' | 'en'
     user_id: user.id,
     token: randomUUID(),
     type: 'email_verification',
-    expires_at: new Date(Date.now() + 24 * 60 * 60 * 1000),
+    expires_at: new Date(Date.now() + EMAIL_VERIFICATION_TTL_MS),
   });
 
   await sendVerificationEmail(user.email, user.first_name ?? '', token.token, locale);
 }
 
+// --- OAuth ---
+
+/**
+ * Retrieve an existing account or create a new one for an OAuth-authenticated user.
+ *
+ * Newly created accounts are immediately marked active with a verified email
+ * since identity has been confirmed by the OAuth provider.
+ *
+ * @param data Basic profile data returned by the OAuth provider.
+ * @returns Auth result with a non-extended-lifetime token pair.
+ */
 export async function findOrCreateOAuthUser(data: {
   email: string;
   firstName: string;
@@ -165,21 +243,28 @@ export async function findOrCreateOAuthUser(data: {
   return { user, tokens, rememberMe: false };
 }
 
-export type LoginDto = {
-  email: string;
-  password: string;
-  remember_me: boolean;
-  expected_role: 'client' | 'station' | 'admin';
-};
+// --- Login ---
 
+/**
+ * Authenticate a user with email and password.
+ *
+ * Always performs a bcrypt comparison (even when the user is not found) to
+ * prevent timing-based email enumeration attacks.
+ *
+ * @param dto Login payload including credentials, remember-me, and expected role.
+ * @throws {UnauthorizedError} INVALID_CREDENTIALS — email not found or password mismatch.
+ * @throws {ForbiddenError}    BUSINESS_NOT_APPROVED — account is pending validation.
+ * @throws {ForbiddenError}    BUSINESS_REJECTED — account has been rejected.
+ * @throws {ForbiddenError}    FORBIDDEN — account is suspended or in an unknown non-active state.
+ * @throws {ForbiddenError}    FORBIDDEN — role does not match the expected login space.
+ */
 export async function login(dto: LoginDto): Promise<AuthResult> {
   const user = await findByEmail(dto.email);
 
-  // Use constant-time comparison to prevent timing attacks even when user not found
-  const dummyHash = '$2b$12$invalidhashfortimingprotection000000000000000000000000';
+  // Constant-time comparison prevents timing-based email enumeration when user is not found.
   const passwordMatches = await bcrypt.compare(
     dto.password,
-    user?.password_hash ?? dummyHash
+    user?.password_hash ?? DUMMY_BCRYPT_HASH
   );
 
   if (!user || !passwordMatches) {
@@ -187,7 +272,19 @@ export async function login(dto: LoginDto): Promise<AuthResult> {
   }
 
   if (user.status !== 'active') {
-    throw new ForbiddenError('Account is not active');
+    switch (user.status) {
+      case 'pending_verification':
+        throw new ForbiddenError('Account is pending validation', ApiCode.BUSINESS_NOT_APPROVED);
+
+      case 'suspended':
+        throw new ForbiddenError('Account has been suspended', ApiCode.FORBIDDEN);
+
+      case 'rejected':
+        throw new ForbiddenError('Account has been rejected', ApiCode.BUSINESS_REJECTED);
+
+      default:
+        throw new ForbiddenError('Account is not active');
+    }
   }
 
   // Enforce space separation server-side: the user's role must match the
@@ -202,6 +299,20 @@ export async function login(dto: LoginDto): Promise<AuthResult> {
   return { user: safeUser, tokens, rememberMe: dto.remember_me };
 }
 
+// --- Password management ---
+
+/**
+ * Change the password for an authenticated user.
+ *
+ * For admin-created accounts that have no password hash yet, the current
+ * password check is skipped when `force_password_change` is set.
+ *
+ * @param userId          ID of the user changing their password.
+ * @param currentPassword Current plaintext password (may be unused for forced resets).
+ * @param newPassword     New plaintext password to hash and store.
+ * @throws {NotFoundError}     User not found.
+ * @throws {UnauthorizedError} Current password is incorrect.
+ */
 export async function changePassword(
   userId: string,
   currentPassword: string,
@@ -222,6 +333,15 @@ export async function changePassword(
   await updateForcePasswordChange(userId, false);
 }
 
+/**
+ * Initiate the forgot-password flow by sending a reset email.
+ *
+ * Always returns silently — even when the email is unknown or the account is
+ * inactive — to prevent email enumeration.
+ *
+ * @param email  Account email address.
+ * @param locale Email locale for the reset message.
+ */
 export async function forgotPassword(email: string, locale: 'fr' | 'en' = 'fr'): Promise<void> {
   const user = await findByEmail(email);
 
@@ -232,7 +352,7 @@ export async function forgotPassword(email: string, locale: 'fr' | 'en' = 'fr'):
     user_id: user.id,
     token: randomUUID(),
     type: 'password_reset',
-    expires_at: new Date(Date.now() + 60 * 60 * 1000), // 1 hour
+    expires_at: new Date(Date.now() + PASSWORD_RESET_TTL_MS),
   });
 
   // Fire-and-forget: do not fail silently in case of email error
@@ -241,6 +361,15 @@ export async function forgotPassword(email: string, locale: 'fr' | 'en' = 'fr'):
   });
 }
 
+/**
+ * Complete the forgot-password flow by consuming a valid reset token and
+ * persisting the new password hash.
+ *
+ * @param token       Raw reset token from the email link.
+ * @param newPassword New plaintext password to hash and store.
+ * @throws {TokenExpiredError} Token exists but has already been used or has expired.
+ * @throws {NotFoundError}     Token does not exist at all.
+ */
 export async function resetPassword(token: string, newPassword: string): Promise<void> {
   const record = await findValidToken(token, 'password_reset');
 
@@ -255,6 +384,18 @@ export async function resetPassword(token: string, newPassword: string): Promise
   await markTokenUsed(record.id);
 }
 
+// --- Session refresh ---
+
+/**
+ * Rotate a refresh token and issue a new token pair.
+ *
+ * The consumed token is revoked immediately (rotation). The `rememberMe` flag
+ * is inferred from the remaining TTL of the old token: if more than
+ * JWT_DEFAULT_MAX_AGE seconds remain, the session is considered a long-lived one.
+ *
+ * @param rawRefreshToken Raw refresh token from the httpOnly cookie.
+ * @throws {UnauthorizedError} Token is invalid, expired, or the associated user no longer exists.
+ */
 export async function refreshSession(rawRefreshToken: string): Promise<AuthResult> {
   const record = await findValidRefreshToken(rawRefreshToken);
   if (!record) throw new UnauthorizedError('Invalid or expired refresh token');
@@ -272,3 +413,4 @@ export async function refreshSession(rawRefreshToken: string): Promise<AuthResul
   const tokens = await issueTokenPair(user, rememberMe);
   return { user, tokens, rememberMe };
 }
+

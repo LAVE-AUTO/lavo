@@ -3,6 +3,23 @@ import { isValidPhoneNumber, parsePhoneNumber } from 'libphonenumber-js';
 import type { ApiErrorBody } from '@/types/api';
 
 /**
+ * Shared password validation rules used in client register, station register,
+ * change-password, and reset-password schemas.
+ *
+ * Allowed characters: letters, digits, and @ $ ! % * # ? & _ - + =
+ * Requirements: min 8, max 128, uppercase, lowercase, digit, special char.
+ */
+export const passwordSchema = z
+  .string()
+  .min(8, 'Password must be at least 8 characters')
+  .max(128, 'Password must not exceed 128 characters')
+  .regex(/[A-Z]/, 'Password must contain at least one uppercase letter')
+  .regex(/[a-z]/, 'Password must contain at least one lowercase letter')
+  .regex(/[0-9]/, 'Password must contain at least one number')
+  .regex(/[@$!%*#?&_\-+=]/, 'Password must contain at least one special character. Allowed: @ $ ! % * # ? & _ - + =')
+  .regex(/^[A-Za-z0-9@$!%*#?&_\-+=]+$/, 'Password contains invalid characters. Only letters, numbers, and these special characters are allowed: @ $ ! % * # ? & _ - + =');
+
+/**
  * Validates and normalizes a phone number to E.164 format (e.g. +14165551234).
  * Expects the frontend to send the full international number with country code prefix.
  *
