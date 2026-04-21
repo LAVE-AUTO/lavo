@@ -44,6 +44,7 @@ import {
   type StationWithAvailableSlots,
 } from './station-repository';
 import { findDocumentsByStationId } from './document-repository';
+import { getCancellationPolicy } from '@/server/admin/platform-settings-service';
 
 
 // %%%%% Types %%%%%
@@ -533,8 +534,17 @@ export async function getStationDetailPublic(id: string) {
 
   // Unavailability derived only from slot availability; no API toggle for is_open (Figma gap).
   const available = available_slots > 0;
-  const completed_count = await getCompletedCountForStation(id);
-  return { ...station, available_slots, available, completed_count };
+  const [completed_count, cancellationPolicy] = await Promise.all([
+    getCompletedCountForStation(id),
+    getCancellationPolicy(),
+  ]);
+  return {
+    ...station,
+    available_slots,
+    available,
+    completed_count,
+    free_cancellation_minutes: cancellationPolicy.freeWindowMinutes,
+  };
 }
 
 /**

@@ -861,7 +861,7 @@
     "cancel_reservation": "Cancel reservation",
     "cancel_modal_title": "Cancel reservation?",
     "cancel_modal_desc": "You will receive a full refund.",
-    "cancel_modal_fees_warning": "Warning: cancelling less than 1 hour before the slot incurs cancellation fees.",
+    "cancel_modal_fees_warning": "Warning: cancelling less than {minutes} minutes before your slot may incur fees.",
     "cancel_modal_keep": "Keep it",
     "cancel_modal_confirm": "Cancel",
     "past_completed": "This reservation is completed.",

@@ -861,7 +861,7 @@
     "cancel_reservation": "Annuler la réservation",
     "cancel_modal_title": "Annuler la réservation ?",
     "cancel_modal_desc": "Vous recevrez un remboursement complet.",
-    "cancel_modal_fees_warning": "Attention : l'annulation à moins d'une heure du créneau entraine des frais d'annulation.",
+    "cancel_modal_fees_warning": "Attention : l'annulation à moins de {minutes} minutes du créneau peut entraîner des frais.",
     "cancel_modal_keep": "Garder",
     "cancel_modal_confirm": "Annuler",
     "past_completed": "Cette réservation est terminée.",

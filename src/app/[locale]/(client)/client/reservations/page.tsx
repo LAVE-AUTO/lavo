@@ -40,6 +40,7 @@ interface ApiStation {
   vehicleFormats: ApiVehicleFormat[];
   timeSlots: ApiTimeSlot[];
   stationConfig?: { wash_duration_minutes: number } | null;
+  free_cancellation_minutes?: number;
 }
 
 /* ------------------------------------------------------------------ */
@@ -63,6 +64,7 @@ interface ClientReservation {
   totalPrice: number;
   status: ReservationStatus;
   createdAt: string;
+  freeCancellationMinutes: number;
 }
 
 interface ClientQueueEntry {
@@ -87,10 +89,10 @@ interface ClientQueueEntry {
 /* Helpers                                                              */
 /* ------------------------------------------------------------------ */
 
-function isWithinOneHour(date: string, timeSlot: string): boolean {
+function isWithinFreeWindow(date: string, timeSlot: string, freeWindowMinutes: number): boolean {
   const slotTime = new Date(`${date}T${timeSlot}`);
   const diff = slotTime.getTime() - Date.now();
-  return diff > 0 && diff < 60 * 60 * 1000;
+  return diff > 0 && diff < freeWindowMinutes * 60 * 1000;
 }
 
 function slotToDateParts(startTime: string): { date: string; timeSlot: string } {
@@ -143,6 +145,7 @@ function enrichEntry(entry: ApiEntry, stationsMap: Map<string, ApiStation>): Cli
       totalPrice,
       status: entry.status as ReservationStatus,
       createdAt: entry.created_at,
+      freeCancellationMinutes: station?.free_cancellation_minutes ?? 60,
     };
   }
 
@@ -586,7 +589,7 @@ function CancelModal({
     };
   }, []);
 
-  const showFeesWarning = isWithinOneHour(r.date, r.timeSlot);
+  const showFeesWarning = isWithinFreeWindow(r.date, r.timeSlot, r.freeCancellationMinutes);
   const dateLabel = new Date(`${r.date}T${r.timeSlot}`).toLocaleDateString(
     locale === 'en' ? 'en-CA' : 'fr-CA',
     { weekday: 'short', day: 'numeric', month: 'short' },
@@ -627,7 +630,7 @@ function CancelModal({
                 <line x1="12" y1="9" x2="12" y2="13" /><line x1="12" y1="17" x2="12.01" y2="17" />
               </svg>
               <p className="text-[12px] font-semibold text-lavo-error leading-relaxed">
-                {t('cancel_modal_fees_warning')}
+                {t('cancel_modal_fees_warning', { minutes: r.freeCancellationMinutes })}
               </p>
             </div>
           )}
