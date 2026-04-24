@@ -51,7 +51,7 @@ export function NotificationsSection() {
   ];
 
   return (
-    <section className="landing-alt-bg px-6 py-28 lg:px-16" id="notifications">
+    <section className="landing-alt-bg px-6 py-16 lg:px-16 lg:py-20" id="notifications">
       <div className="mx-auto max-w-[1280px]">
         <RevealOnScroll>
           <div className="grid grid-cols-1 gap-10 lg:grid-cols-2 lg:gap-[72px] items-center">
