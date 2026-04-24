@@ -273,22 +273,12 @@ export function PublicNavbar({
               )}
             </div>
 
-            {/* Merchant pill — mobile/tablet, always visible without opening a menu.
-               Desktop renders the full pill inside the authenticated/guest actions block above. */}
-            {!isAuthenticated && (
-              <Link
-                href="/merchant"
-                className="lg:hidden inline-flex items-center rounded-md border border-[rgba(200,152,10,0.45)] px-3 py-1.5 text-[11px] font-semibold uppercase tracking-[0.6px] text-[#c8980a] transition-colors hover:bg-[#c8980a] hover:text-[#0d1f0f]"
-              >
-                {t('merchant_pill')}
-              </Link>
-            )}
-
-            {/* Hamburger — tablet only; mobile uses BottomNav plus the merchant pill above. */}
+            {/* Hamburger — mobile + tablet. Mobile BottomNav covers primary nav but lacks
+               the merchant/login/register actions, so the drawer provides them here. */}
             <button
               type="button"
               onClick={() => setMenuOpen((v) => !v)}
-              className="hidden sm:flex lg:hidden w-9 h-9 items-center justify-center text-[#4a6a4d] dark:text-[#7a9a7d] hover:text-[#c8980a] dark:hover:text-[#c8980a] transition-colors"
+              className="flex lg:hidden w-9 h-9 items-center justify-center text-[#4a6a4d] dark:text-[#7a9a7d] hover:text-[#c8980a] dark:hover:text-[#c8980a] transition-colors"
               aria-label={menuOpen ? 'Fermer le menu' : 'Ouvrir le menu'}
               aria-expanded={menuOpen}
             >

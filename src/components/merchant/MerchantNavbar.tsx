@@ -93,7 +93,13 @@ export function MerchantNavbar() {
                 </div>
               ) : (
                 <>
-                  <Link href="/station/login" className={pillClass}>
+                  <Link href="/" className={pillClass}>
+                    {t('client_pill')}
+                  </Link>
+                  <Link
+                    href="/station/login"
+                    className="text-[13px] font-medium tracking-[0.4px] text-[#4a6a4d] dark:text-[#7a9a7d] hover:text-[#c8980a] dark:hover:text-[#c8980a] transition-colors px-2"
+                  >
                     {t('login_pill')}
                   </Link>
                   <Link href="/station/apply" className={ctaClass}>
@@ -103,10 +109,12 @@ export function MerchantNavbar() {
               )}
             </div>
 
+            {/* Hamburger — mobile + tablet. Drawer holds the client-landing link plus
+               the login / partner CTAs so the full merchant navbar collapses gracefully. */}
             <button
               type="button"
               onClick={() => setMenuOpen((v) => !v)}
-              className="hidden sm:flex lg:hidden w-9 h-9 items-center justify-center text-[#4a6a4d] dark:text-[#7a9a7d] hover:text-[#c8980a] dark:hover:text-[#c8980a] transition-colors"
+              className="flex lg:hidden w-9 h-9 items-center justify-center text-[#4a6a4d] dark:text-[#7a9a7d] hover:text-[#c8980a] dark:hover:text-[#c8980a] transition-colors"
               aria-label={menuOpen ? 'Fermer le menu' : 'Ouvrir le menu'}
               aria-expanded={menuOpen}
             >
@@ -136,8 +144,14 @@ export function MerchantNavbar() {
               ) : (
                 <>
                   <Link
-                    href="/station/login"
+                    href="/"
                     className="flex items-center justify-center py-3 border border-[rgba(200,152,10,0.45)] text-[14px] font-semibold tracking-[0.8px] uppercase text-[#c8980a] hover:bg-[#c8980a] hover:text-[#0d1f0f] transition-all rounded-[2px]"
+                  >
+                    {t('client_pill')}
+                  </Link>
+                  <Link
+                    href="/station/login"
+                    className="flex items-center justify-center py-3 text-[14px] font-medium text-[#4a6a4d] dark:text-[#7a9a7d] hover:text-[#c8980a] dark:hover:text-[#c8980a] transition-colors"
                   >
                     {t('login_pill')}
                   </Link>
