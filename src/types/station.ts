@@ -8,6 +8,8 @@ export interface Station {
   city: string;
   rating: number;
   reviewCount: number;
+  /** Total reservations completed at this station (Services terminés). Used to decide "most visited" section membership. */
+  completedCount: number;
   availableSlots: number;
   totalSlots: number;
   priceFrom: number;

@@ -139,13 +139,27 @@ export function StationListView({ washTypes }: StationListViewProps) {
   const toggleWashType = (id: string) =>
     setSelectedWashTypes((prev) => prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id]);
 
-  /* Groups already reflect backend filters; only "available only" is applied client-side. */
+  /* Groups already reflect backend filters; layered client-side rules:
+     - Section qualification (backend sorts but doesn't exclude empties):
+       * available_now    → availableSlots > 0 (redundant w/ backend, defensive)
+       * most_appreciated → reviewCount > 0 (don't show unrated stations)
+       * most_visited     → completedCount > 0 (don't show never-visited stations)
+     - User-driven "available only" toggle. */
   const filterAvail = (list: StationDetailData[]) =>
     onlyAvail ? list.filter((s) => s.availableSlots > 0) : list;
 
-  const availableNow  = useMemo(() => filterAvail(apiGroups.available_now),    [apiGroups, onlyAvail]);
-  const topRated      = useMemo(() => filterAvail(apiGroups.most_appreciated), [apiGroups, onlyAvail]);
-  const mostRevisited = useMemo(() => filterAvail(apiGroups.most_visited),     [apiGroups, onlyAvail]);
+  const availableNow  = useMemo(
+    () => filterAvail(apiGroups.available_now.filter((s) => s.availableSlots > 0)),
+    [apiGroups, onlyAvail],
+  );
+  const topRated      = useMemo(
+    () => filterAvail(apiGroups.most_appreciated.filter((s) => s.reviewCount > 0)),
+    [apiGroups, onlyAvail],
+  );
+  const mostRevisited = useMemo(
+    () => filterAvail(apiGroups.most_visited.filter((s) => s.completedCount > 0)),
+    [apiGroups, onlyAvail],
+  );
 
   const [expandedSections, setExpandedSections] = useState<Record<string, boolean>>({});
 

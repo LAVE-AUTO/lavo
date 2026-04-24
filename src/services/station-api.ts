@@ -209,6 +209,7 @@ function mapApiStationToStation(s: ApiStationListItem): Station {
         city: s.city,
         rating: parseFloat(s.average_score || '0') || 0,
         reviewCount: s.total_ratings || 0,
+        completedCount: s.completed_count ?? 0,
         availableSlots: process.env.NODE_ENV === 'production' ? (s.available_slots || 0) : mockAvailableSlots(s.id, s.available_slots || 0),
         totalSlots: s.wash_post_count || 0,
         priceFrom: 0,
