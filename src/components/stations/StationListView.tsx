@@ -96,7 +96,8 @@ export function StationListView({ washTypes }: StationListViewProps) {
     return () => clearTimeout(id);
   }, [cityQuery, nameSearch]);
 
-  /* API-fetched groups */
+  /* API-fetched list + groups */
+  const [allStations, setAllStations] = useState<StationDetailData[]>([]);
   const [apiGroups, setApiGroups] = useState<FetchStationsResult['groups']>({
     available_now:    [],
     most_appreciated: [],
@@ -118,6 +119,7 @@ export function StationListView({ washTypes }: StationListViewProps) {
 
     fetchStations(params).then((result) => {
       if (cancelled) return;
+      setAllStations(result.stations);
       setApiGroups(result.groups);
       setLoading(false);
     }).catch(() => {
@@ -139,27 +141,31 @@ export function StationListView({ washTypes }: StationListViewProps) {
   const toggleWashType = (id: string) =>
     setSelectedWashTypes((prev) => prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id]);
 
-  /* Groups already reflect backend filters; layered client-side rules:
-     - Section qualification (backend sorts but doesn't exclude empties):
+  /* Layered client-side rules on top of the backend response:
+     - Section qualification (backend sorts but does not exclude empties):
        * available_now    → availableSlots > 0 (redundant w/ backend, defensive)
-       * most_appreciated → reviewCount > 0 (don't show unrated stations)
-       * most_visited     → completedCount > 0 (don't show never-visited stations)
-     - User-driven "available only" toggle. */
+       * most_appreciated → reviewCount > 0 (hide unrated stations)
+       * most_visited     → completedCount > 0 (hide never-visited stations)
+     - User-driven "available only" toggle applies to every visible list.
+
+     Discovery mode (no active search/sort) shows the three category sections;
+     as soon as the user searches, picks a filter or selects a sort chip the UI
+     collapses into a single "Résultats" list so the effect of the chosen sort
+     is immediately visible — `allStations` is already ordered by the backend. */
   const filterAvail = (list: StationDetailData[]) =>
     onlyAvail ? list.filter((s) => s.availableSlots > 0) : list;
 
-  const availableNow  = useMemo(
-    () => filterAvail(apiGroups.available_now.filter((s) => s.availableSlots > 0)),
-    [apiGroups, onlyAvail],
-  );
-  const topRated      = useMemo(
-    () => filterAvail(apiGroups.most_appreciated.filter((s) => s.reviewCount > 0)),
-    [apiGroups, onlyAvail],
-  );
-  const mostRevisited = useMemo(
-    () => filterAvail(apiGroups.most_visited.filter((s) => s.completedCount > 0)),
-    [apiGroups, onlyAvail],
-  );
+  const hasActiveSearch =
+    debouncedText.q !== '' ||
+    debouncedText.city !== '' ||
+    selectedWashTypes.length > 0 ||
+    serviceScope !== '' ||
+    sort !== 'default';
+
+  const flatResults   = useMemo(() => filterAvail(allStations),                                          [allStations,          onlyAvail]);
+  const availableNow  = useMemo(() => filterAvail(apiGroups.available_now.filter((s) => s.availableSlots > 0)),    [apiGroups, onlyAvail]);
+  const topRated      = useMemo(() => filterAvail(apiGroups.most_appreciated.filter((s) => s.reviewCount > 0)),     [apiGroups, onlyAvail]);
+  const mostRevisited = useMemo(() => filterAvail(apiGroups.most_visited.filter((s) => s.completedCount > 0)),      [apiGroups, onlyAvail]);
 
   const [expandedSections, setExpandedSections] = useState<Record<string, boolean>>({});
 
@@ -348,6 +354,29 @@ export function StationListView({ washTypes }: StationListViewProps) {
       {/* Results */}
       {loading ? (
         <PageSpinner py="py-20" />
+      ) : hasActiveSearch ? (
+        flatResults.length === 0 ? (
+          <EmptyState
+            title={t('empty_title')}
+            description={t('empty_desc')}
+            icon={
+              <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                <circle cx="11" cy="11" r="8" />
+                <line x1="21" y1="21" x2="16.65" y2="16.65" />
+              </svg>
+            }
+          />
+        ) : (
+          <StationSection
+            id="results"
+            label={t('section_results')}
+            stations={flatResults}
+            expanded={!!expandedSections['results']}
+            onToggle={() => setExpandedSections((s) => ({ ...s, results: !s['results'] }))}
+            seeMoreLabel={t('see_more')}
+            accent
+          />
+        )
       ) : availableNow.length === 0 && topRated.length === 0 && mostRevisited.length === 0 ? (
         <EmptyState
           title={t('empty_title')}
