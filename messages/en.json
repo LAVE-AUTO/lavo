@@ -526,6 +526,16 @@
     "filter_scope_exterior": "Exterior",
     "filter_scope_interior": "Interior",
     "filter_scope_both": "Exterior + Interior",
+    "hero_badge_active": "{count} active stations",
+    "hero_stat_partners": "Partner stations",
+    "hero_stat_rating": "Average rating",
+    "hero_stat_wait": "Typical wait",
+    "hero_stat_wait_value": "< 30min",
+    "hero_bottom_completed": "Washes completed",
+    "hero_bottom_reviews": "Customer reviews",
+    "hero_bottom_availability": "Availability",
+    "hero_bottom_availability_value": "7/7",
+    "hero_stat_empty": "—",
     "stat_distance": "Distance"
   },
   "merchant": {

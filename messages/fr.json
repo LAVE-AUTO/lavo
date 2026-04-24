@@ -526,6 +526,16 @@
     "filter_scope_exterior": "Extérieur",
     "filter_scope_interior": "Intérieur",
     "filter_scope_both": "Extérieur + Intérieur",
+    "hero_badge_active": "{count} stations actives",
+    "hero_stat_partners": "Stations partenaires",
+    "hero_stat_rating": "Note moyenne",
+    "hero_stat_wait": "Attente typique",
+    "hero_stat_wait_value": "< 30min",
+    "hero_bottom_completed": "Lavages réalisés",
+    "hero_bottom_reviews": "Avis clients",
+    "hero_bottom_availability": "Disponibilité",
+    "hero_bottom_availability_value": "7j/7",
+    "hero_stat_empty": "—",
     "stat_distance": "Distance"
   },
   "merchant": {
