@@ -13,10 +13,10 @@ export function MerchantTestimonialsSection() {
   ];
 
   return (
-    <section className="px-6 py-28 lg:px-16" id="testimonials">
+    <section className="px-6 py-16 lg:px-16 lg:py-20" id="testimonials">
       <div className="mx-auto max-w-[1280px]">
         <RevealOnScroll className="text-center mb-2">
-          <div className="font-dm-mono mb-4 flex items-center justify-center gap-3 text-[11px] uppercase tracking-[3px] text-[#c8980a]">
+          <div className="font-dm-mono mb-3 flex items-center justify-center gap-3 text-[11px] uppercase tracking-[3px] text-[#c8980a]">
             {t('tag')}
             <span className="h-px w-9 bg-[#c8980a] opacity-50" />
           </div>
@@ -26,7 +26,7 @@ export function MerchantTestimonialsSection() {
           </h2>
         </RevealOnScroll>
 
-        <div className="mt-14 grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3">
+        <div className="mt-10 grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3">
           {testimonials.map((item) => (
             <RevealOnScroll key={item.name}>
               <div className="group flex flex-col rounded-[12px] border border-[rgba(245,237,214,0.07)] bg-[rgba(245,237,214,0.03)] p-6 transition-all duration-300 hover:-translate-y-1 hover:border-[rgba(200,152,10,0.3)]">

@@ -31,10 +31,10 @@ export function MerchantHowItWorksSection() {
   ];
 
   return (
-    <section className="landing-alt-bg px-6 py-28 lg:px-16" id="how-it-works">
+    <section className="landing-alt-bg px-6 py-16 lg:px-16 lg:py-20" id="how-it-works">
       <div className="mx-auto max-w-[1280px]">
         <RevealOnScroll className="text-center">
-          <div className="font-dm-mono mb-4 flex items-center justify-center gap-3 text-[11px] uppercase tracking-[3px] text-[#c8980a]">
+          <div className="font-dm-mono mb-3 flex items-center justify-center gap-3 text-[11px] uppercase tracking-[3px] text-[#c8980a]">
             {t('tag')}
             <span className="h-px w-9 bg-[#c8980a] opacity-50" />
           </div>
@@ -44,7 +44,7 @@ export function MerchantHowItWorksSection() {
           </h2>
         </RevealOnScroll>
 
-        <div className="mt-14 grid grid-cols-1 gap-12 lg:grid-cols-3 lg:gap-12">
+        <div className="mt-10 grid grid-cols-1 gap-10 lg:grid-cols-3 lg:gap-12">
           {steps.map((step, i) => (
             <RevealOnScroll key={step.n} className="relative">
               {i < 2 && (
@@ -52,7 +52,7 @@ export function MerchantHowItWorksSection() {
                   →
                 </div>
               )}
-              <div className="font-playfair mb-3 text-[52px] font-black leading-none text-[rgba(200,152,10,0.1)]">
+              <div className="font-playfair mb-3 text-[52px] font-black leading-none text-[#c8980a]">
                 {step.n}
               </div>
               <div className="mb-3.5 flex h-[46px] w-[46px] items-center justify-center rounded-[8px] border border-[rgba(200,152,10,0.3)] bg-[rgba(200,152,10,0.1)]">

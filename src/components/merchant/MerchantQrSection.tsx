@@ -73,12 +73,12 @@ export function MerchantQrSection() {
 
   return (
     <RevealOnScroll>
-      <section className="landing-alt-bg px-6 py-28 lg:px-16" id="qr">
+      <section className="landing-alt-bg px-6 py-16 lg:px-16 lg:py-20" id="qr">
         <div className="mx-auto max-w-[1280px]">
-          <div className="grid grid-cols-1 gap-16 lg:grid-cols-2 lg:gap-20 items-center">
+          <div className="grid grid-cols-1 gap-10 lg:grid-cols-2 lg:gap-20 items-center">
             {/* Left */}
             <div>
-              <div className="font-dm-mono mb-5 flex items-center gap-3 text-[11px] uppercase tracking-[3px] text-[#c8980a]">
+              <div className="font-dm-mono mb-4 flex items-center gap-3 text-[11px] uppercase tracking-[3px] text-[#c8980a]">
                 {t('tag')}
                 <span className="h-px w-9 bg-[#c8980a] opacity-50" />
               </div>
@@ -86,7 +86,7 @@ export function MerchantQrSection() {
                 {t('title')}{' '}
                 <em className="italic text-[#c8980a]">{t('title_accent')}</em>
               </h2>
-              <p className="mb-10 text-[15px] leading-[1.8] text-[#4a6a4d] dark:text-[#7a9a7d] max-w-[420px]">
+              <p className="mb-8 text-[15px] leading-[1.8] text-[#4a6a4d] dark:text-[#7a9a7d] max-w-[420px]">
                 {t('desc')}
               </p>
               <div className="flex flex-col gap-5">
