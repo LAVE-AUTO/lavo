@@ -1392,7 +1392,9 @@
     "success_cta_home": "Back to home",
     "success_cta_login": "Sign in",
     "already_member": "Already have an account?",
-    "login_link": "Sign in"
+    "login_link": "Sign in",
+    "tab_login": "Sign in",
+    "tab_register": "Sign up"
   },
   "station_panel": {
     "headline": "Manage your station,",
@@ -1431,7 +1433,9 @@
     "welcome_title": "Merchant portal",
     "welcome_subtitle": "Sign in to access your station dashboard.",
     "no_account": "Not a partner yet?",
-    "register_link": "Join Slowtime"
+    "register_link": "Join Slowtime",
+    "tab_login": "Sign in",
+    "tab_register": "Sign up"
   },
   "admin_login": {
     "meta_title": "Administration — Slowtime",

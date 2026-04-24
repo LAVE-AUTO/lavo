@@ -2,10 +2,10 @@
 
 import { useState } from 'react';
 import { useTranslations } from 'next-intl';
-import { Link } from '@/i18n/navigation';
 import { StationBrandPanel } from './StationBrandPanel';
 import { StationApplyForm } from './StationApplyForm';
 import { AuthModeSwitcher } from '@/components/auth/AuthModeSwitcher';
+import { TabSwitcher } from '@/components/auth/TabSwitcher';
 import { ThemeToggle } from '@/components/auth/ThemeToggle';
 import { LangToggle } from '@/components/auth/LangToggle';
 import { type WashTypeOption } from './StepCommerce';
@@ -59,18 +59,17 @@ export function StationApplyShell({ washTypes }: StationApplyShellProps) {
           <AuthModeSwitcher mode="merchant" />
 
           <div className="bg-white dark:bg-dark-card rounded-2xl shadow-[0_4px_24px_rgba(0,0,0,0.08),_0_1px_2px_rgba(0,0,0,0.04)] dark:shadow-[0_8px_40px_rgba(0,0,0,0.5)] dark:ring-1 dark:ring-gold/10 py-8 px-6 sm:px-8 animate-fade-in-up">
+            <div className="-mt-2 mb-6">
+              <TabSwitcher
+                activeTab="register"
+                loginLabel={t('tab_login')}
+                registerLabel={t('tab_register')}
+                loginHref="/station/login"
+                registerHref="/station/apply"
+              />
+            </div>
             <StationApplyForm washTypes={washTypes} onStepChange={setCurrentStep} />
           </div>
-
-          <p className="text-center mt-6 text-[14px] text-[#666] dark:text-lavo-muted">
-            {t('already_member')}{' '}
-            <Link
-              href="/station/login"
-              className="text-gold font-semibold hover:underline"
-            >
-              {t('login_link')}
-            </Link>
-          </p>
         </div>
       </main>
     </div>
