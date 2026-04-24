@@ -50,7 +50,7 @@ export function HowItWorksSection() {
                 </div>
               )}
 
-              <div className="font-playfair mb-3 text-[52px] font-black leading-none text-[rgba(200,152,10,0.1)]">
+              <div className="font-playfair mb-3 text-[52px] font-black leading-none text-[#c8980a]">
                 {step.n}
               </div>
 
