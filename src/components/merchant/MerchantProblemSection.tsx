@@ -55,7 +55,7 @@ export function MerchantProblemSection() {
               </p>
               <Link
                 href="/station/apply"
-                className="btn-shine inline-block rounded-[2px] bg-[#c8980a] px-9 py-[15px] text-[13px] font-bold uppercase tracking-[1.5px] text-[#0d1f0f] transition-all duration-300 hover:-translate-y-0.5 hover:shadow-[0_10px_32px_rgba(200,152,10,0.45)]"
+                className="btn-shine inline-block rounded-md bg-[#c8980a] px-9 py-[15px] text-[13px] font-bold uppercase tracking-[1.5px] text-[#0d1f0f] transition-all duration-300 hover:-translate-y-0.5 hover:shadow-[0_10px_32px_rgba(200,152,10,0.45)]"
               >
                 {t('btn')}
               </Link>

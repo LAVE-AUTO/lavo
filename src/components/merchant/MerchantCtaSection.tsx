@@ -27,7 +27,7 @@ export function MerchantCtaSection() {
           onSubmit={(e) => { e.preventDefault(); (e.currentTarget as HTMLFormElement).reset(); }}
           className="mx-auto max-w-[460px]"
         >
-          <div className="flex rounded-[3px] overflow-hidden shadow-[0_16px_48px_rgba(0,0,0,0.2)]">
+          <div className="flex rounded-md overflow-hidden shadow-[0_16px_48px_rgba(0,0,0,0.2)]">
             <input
               type="email"
               required
