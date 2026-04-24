@@ -77,6 +77,7 @@ export const stations = pgTable(
     registration_number: varchar("registration_number", { length: 100 }),
     address: text("address").notNull(),
     city: varchar("city", { length: 100 }).notNull(),
+    postal_code: varchar("postal_code", { length: 20 }),
     latitude: decimal("latitude", { precision: 10, scale: 7 }),
     longitude: decimal("longitude", { precision: 10, scale: 7 }),
     description: text("description"),
@@ -294,3 +295,30 @@ export const pendingUploads = pgTable(
 
 
 // %%%%% END - Pending uploads %%%%%
+
+
+// %%%%% Station photos %%%%%
+
+/**
+ * Dedicated table for station photo URLs.
+ * Replaces the previous approach of storing photos in station_documents
+ * with document_type = 'photo'. position is 0-based; ordered ascending.
+ */
+export const stationPhotos = pgTable(
+  "station_photos",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    station_id: uuid("station_id")
+      .notNull()
+      .references(() => stations.id, { onDelete: "cascade" }),
+    url: text("url").notNull(),
+    position: integer("position").notNull().default(0),
+    created_at: timestamp("created_at", { mode: "date", withTimezone: true })
+      .notNull()
+      .defaultNow(),
+  },
+  (table) => [index("station_photos_station_id_idx").on(table.station_id)]
+);
+
+
+// %%%%% END - Station photos %%%%%

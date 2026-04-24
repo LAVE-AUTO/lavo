@@ -6,6 +6,31 @@ import { isValidCalendarDate } from '@/helpers/date-helper';
 export { mapZodErrors };
 
 
+// %%%%% Shared refinements %%%%%
+// Reusable predicate and constant lifted to avoid inline duplication
+
+/** Rejects any date string that does not represent a moment strictly after now. */
+const isFutureDate = (s: string) => new Date(s) > new Date();
+
+/** Union of recognised group keys for GET /api/v1/stations?groups=. */
+type StationGroup = 'available_now' | 'most_appreciated' | 'most_visited';
+
+/** All recognised sort tokens for GET /api/v1/stations. */
+const VALID_SORT_TOKENS = [
+  'slots_asc', 'slots_desc',
+  'name_asc', 'name_desc',
+  'rating_asc', 'rating_desc',
+  'total_ratings_asc', 'total_ratings_desc',
+  'completed_count_asc', 'completed_count_desc',
+] as const;
+
+const VALID_SORT_MESSAGE =
+  'Invalid sort value(s). Use comma-separated: ' + VALID_SORT_TOKENS.join(', ');
+
+
+// %%%%% END - Shared refinements %%%%%
+
+
 // %%%%% Onboarding base objects %%%%%
 // Reused in per-step and full-submit schemas
 
@@ -121,12 +146,21 @@ export const approveStationBodySchema = z.object({
         document_id: z.string().uuid('document_id must be a valid UUID'),
         expiry_date: z
           .string()
-          .datetime({ message: 'expiry_date must be a valid ISO 8601 datetime or YYYY-MM-DD date' })
-          .or(z.string().regex(/^\d{4}-\d{2}-\d{2}$/, 'expiry_date must be a valid ISO 8601 datetime or YYYY-MM-DD date'))
+          // Accept either ISO 8601 datetime or bare YYYY-MM-DD date strings and
+          // ensure the string resolves to a real calendar date (rejects 2024-02-30T00:00:00Z, etc.).
           .refine(
-            (s) => new Date(s) > new Date(),
-            { message: 'expiry_date must be a future date' }
-          ),
+            (s) => {
+              const d = new Date(s);
+              if (Number.isNaN(d.getTime())) return false;
+              // For bare dates, reuse the calendar-sanity check.
+              if (/^\d{4}-\d{2}-\d{2}$/.test(s)) return isValidCalendarDate(s);
+              // For datetime strings, round-trip through the date and verify the date part is stable.
+              const datePart = d.toISOString().slice(0, 10);
+              return isValidCalendarDate(datePart);
+            },
+            { message: 'expiry_date must be a valid ISO 8601 datetime or YYYY-MM-DD date' }
+          )
+          .refine(isFutureDate, { message: 'expiry_date must be a future date' }),
       })
     )
     // A station cannot have more documents than this cap; an unbounded array would let
@@ -171,7 +205,7 @@ export const changePasswordSchema = z
 
 // %%%%% Public API schemas (Card 1) %%%%%
 
-// ---- Internal helpers for listStationsQuerySchema ----
+// oooo Internal helpers for listStationsQuerySchema oooo
 
 /**
  * Optional string field: trims whitespace, converts empty strings to undefined,
@@ -189,23 +223,42 @@ function optionalTrimmedString(maxLen: number, message: string) {
  * Optional string field: converts empty strings to undefined, then validates
  * the non-undefined value with the provided refine function.
  */
-function optionalEmptyToUndefined<T extends string>(
-  refineFn: (s: string) => boolean,
-  message: string
-) {
+function optionalEmptyToUndefined(refineFn: (s: string) => boolean, message: string) {
   return z
     .string()
     .optional()
     .transform((s): string | undefined => (s === '' || s === undefined ? undefined : s))
-    .refine((s): s is T | undefined => s === undefined || refineFn(s), { message });
+    .refine((s) => s === undefined || refineFn(s), { message });
 }
 
-// ---- End internal helpers ----
+// oooo END - Internal helpers oooo
 
 /** Path param id for GET /stations/:id and POST /stations/:id/join. */
 export const stationIdParamSchema = z.object({
   id: z.string().uuid('Invalid station id (must be a valid UUID)'),
 });
+
+/** Path param docId for PATCH /admin/stations/:id/documents/:docId. */
+export const adminDocumentIdParamSchema = z.object({
+  docId: z.string().uuid('Invalid document id (must be a valid UUID)'),
+});
+
+/**
+ * Request body for PATCH /admin/stations/:id/documents/:docId.
+ * expiry_date must be a YYYY-MM-DD string representing a real future calendar date,
+ * or null to clear the field.
+ */
+export const updateDocumentExpirySchema = z.object({
+  expiry_date: z
+    .string()
+    .regex(/^\d{4}-\d{2}-\d{2}$/, 'expiry_date must be YYYY-MM-DD')
+    .refine(isValidCalendarDate, { message: 'expiry_date must be a valid calendar date' })
+    .refine(isFutureDate, { message: 'expiry_date must be a future date' })
+    .nullable(),
+});
+
+export type AdminDocumentIdParam = z.infer<typeof adminDocumentIdParamSchema>;
+export type UpdateDocumentExpiryBody = z.infer<typeof updateDocumentExpirySchema>;
 
 /** Query params for GET /api/v1/stations (list active stations). */
 export const listStationsQuerySchema = z.object({
@@ -218,32 +271,25 @@ export const listStationsQuerySchema = z.object({
     .refine(
       (s) => {
         if (!s) return true;
+        // Sort tokens are comma-separated in the query string.
         const tokens = s.split(',').map((t) => t.trim()).filter(Boolean);
-        return tokens.every((t) =>
-          ['slots_asc', 'slots_desc', 'name_asc', 'name_desc', 'rating_asc', 'rating_desc', 'total_ratings_asc', 'total_ratings_desc', 'completed_count_asc', 'completed_count_desc'].includes(t)
-        );
+        return tokens.every((t) => (VALID_SORT_TOKENS as readonly string[]).includes(t));
       },
-      { message: 'Invalid sort value(s). Use comma-separated: slots_asc, slots_desc, name_asc, name_desc, rating_asc, rating_desc, total_ratings_asc, total_ratings_desc, completed_count_asc, completed_count_desc' }
+      { message: VALID_SORT_MESSAGE }
     ),
   groups: z
     .string()
     .optional()
+    .transform((s): StationGroup[] | undefined => {
+      if (!s) return undefined;
+      const allowed = new Set<string>(['available_now', 'most_appreciated', 'most_visited']);
+      const tokens = s.split(',').map((t) => t.trim()).filter((t) => allowed.has(t));
+      return tokens.length ? ([...new Set(tokens)] as StationGroup[]) : undefined;
+    })
     .refine(
-      (s) => {
-        if (!s || typeof s !== 'string') return true;
-        const allowed = new Set(['available_now', 'most_appreciated', 'most_visited']);
-        const tokens = s.split(',').map((t) => t.trim()).filter(Boolean);
-        return tokens.every((t) => allowed.has(t));
-      },
+      (arr) => arr === undefined || arr.length > 0,
       { message: 'groups must be comma-separated: available_now, most_appreciated, most_visited' }
-    )
-    .transform((s) => {
-      if (!s || typeof s !== 'string') return undefined;
-      const allowed = new Set(['available_now', 'most_appreciated', 'most_visited']);
-      const arr = s.split(',').map((t) => t.trim()).filter((t) => allowed.has(t));
-      const unique = arr.length ? [...new Set(arr)] as ('available_now' | 'most_appreciated' | 'most_visited')[] : undefined;
-      return unique;
-    }),
+    ),
   page: z
     .string()
     .optional()
@@ -291,15 +337,8 @@ export const listStationsQuerySchema = z.object({
   date: z
     .string()
     .regex(/^\d{4}-\d{2}-\d{2}$/, 'date must be YYYY-MM-DD')
-    .optional()
-    .refine(
-      (s) => {
-        if (!s) return true;
-        const d = new Date(s + 'T00:00:00Z');
-        return !Number.isNaN(d.getTime()) && d.toISOString().slice(0, 10) === s;
-      },
-      { message: 'date must be a valid calendar date' }
-    ),
+    .refine(isValidCalendarDate, { message: 'date must be a valid calendar date' })
+    .optional(),
 });
 
 
@@ -439,17 +478,22 @@ export const patchFormatBodySchema = z
 
 // %%%%% Station profile update %%%%%
 
-/** PATCH /api/v1/station/me — partial update of station profile text fields. */
+/**
+ * PATCH /api/v1/station/me — partial update of station profile fields.
+ * wash_post_count is intentionally excluded: it is managed via station config
+ * to avoid desync with station_configs.wash_post_count.
+ */
 export const updateStationProfileBodySchema = z
   .object({
     name: z.string().trim().min(2, 'Name must be at least 2 characters').max(200, 'Name must be at most 200 characters').optional(),
     description: z.string().trim().max(1000, 'Description must be at most 1000 characters').nullable().optional(),
     address: z.string().trim().min(5, 'Address must be at least 5 characters').optional(),
     city: z.string().trim().min(2, 'City must be at least 2 characters').max(100, 'City must be at most 100 characters').optional(),
+    postal_code: z.string().trim().max(20, 'Postal code must be at most 20 characters').nullable().optional(),
     latitude: z.number().min(-90, 'Latitude must be between -90 and 90').max(90, 'Latitude must be between -90 and 90').nullable().optional(),
     longitude: z.number().min(-180, 'Longitude must be between -180 and 180').max(180, 'Longitude must be between -180 and 180').nullable().optional(),
     service_scope: z.enum(['exterior', 'interior', 'both']).nullable().optional(),
-    wash_post_count: z.number().int().min(1, 'Wash post count must be at least 1').max(100, 'Wash post count must be at most 100').optional(),
+    wash_types: z.array(z.string().uuid('Each wash type must be a valid UUID')).min(1, 'At least one wash type is required').optional(),
   })
   .strict()
   .refine(
@@ -459,33 +503,44 @@ export const updateStationProfileBodySchema = z
 
 export type UpdateStationProfileBody = z.infer<typeof updateStationProfileBodySchema>;
 
-/** PATCH /api/v1/station/photos — full replacement of station photo URLs. */
+/** PATCH /api/v1/station/photos — full replacement of station photos (url + position pairs). */
 export const stationPhotosBodySchema = z
   .object({
     photos: z
       .array(
-        z
-          .string()
-          .url('Each photo must be a valid URL')
-          .refine(
-            (url) => {
-              const cloudName = process.env.CLOUDINARY_CLOUD_NAME;
-              if (!cloudName) return true; // skip check if not configured
-              try {
-                const { hostname } = new URL(url);
-                return (
-                  hostname === 'res.cloudinary.com' ||
-                  hostname === `${cloudName}.cloudinary.com`
-                );
-              } catch {
-                return false;
-              }
-            },
-            { message: 'Each photo must be a Cloudinary URL from an authorised upload' }
-          )
+        z.object({
+          url: z
+            .string()
+            .url('Each photo must be a valid URL')
+            .refine(
+              (val) => {
+                const cloudName = process.env.CLOUDINARY_CLOUD_NAME;
+                // Fail closed: if the env var is absent the server is misconfigured —
+                // reject every URL rather than silently accepting arbitrary origins.
+                if (!cloudName) return false;
+                try {
+                  const host = new URL(val).hostname;
+                  return (
+                    host === 'res.cloudinary.com' ||
+                    host === `${cloudName}.cloudinary.com`
+                  );
+                } catch {
+                  return false;
+                }
+              },
+              { message: 'URL must be a valid Cloudinary URL' }
+            ),
+          position: z.number().int().min(0),
+        })
       )
-      .min(1, 'At least one photo URL is required')
-      .max(20, 'At most 20 photos allowed'),
+      .max(20, 'At most 20 photos allowed')
+      .refine(
+        (photos) => {
+          const positions = photos.map((p) => p.position);
+          return new Set(positions).size === positions.length;
+        },
+        { message: 'Duplicate position values are not allowed' }
+      ),
   })
   .strict();
 

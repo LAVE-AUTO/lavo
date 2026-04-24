@@ -3,7 +3,7 @@
 import { and, asc, eq, inArray, isNull, sql } from 'drizzle-orm';
 
 import { db } from '@/lib/db';
-import { pendingUploads, stationDocuments, stations, users } from '@/lib/db/schema';
+import { pendingUploads, stationDocuments, stationPhotos, stations, users } from '@/lib/db/schema';
 
 
 // %%%%% END - Imports %%%%%
@@ -13,6 +13,7 @@ import { pendingUploads, stationDocuments, stations, users } from '@/lib/db/sche
 
 export type StationDocument = typeof stationDocuments.$inferSelect;
 export type PendingUpload   = typeof pendingUploads.$inferSelect;
+export type StationPhoto    = typeof stationPhotos.$inferSelect;
 
 type DocumentInput = {
   document_type: string;
@@ -37,24 +38,14 @@ export type DocumentReminderRow = {
 // %%%%% Helpers %%%%%
 
 /**
- * Maps a reminder field name to its Drizzle column reference.
+ * Returns the Drizzle column reference and update payload for a given reminder field.
  * Centralises the first/second branch so callers never repeat the ternary.
  */
-function reminderColumn(field: ReminderField) {
-  return field === 'first'
-    ? stationDocuments.reminder_first_sent_at
-    : stationDocuments.reminder_second_sent_at;
-}
-
-/**
- * Maps a reminder field name to its update payload.
- * Used by setReminderSent to avoid duplicating the ternary assignment.
- */
-function reminderUpdatePayload(field: ReminderField) {
+function reminderMeta(field: ReminderField) {
   const now = new Date();
   return field === 'first'
-    ? { reminder_first_sent_at: now }
-    : { reminder_second_sent_at: now };
+    ? { column: stationDocuments.reminder_first_sent_at, payload: { reminder_first_sent_at: now } }
+    : { column: stationDocuments.reminder_second_sent_at, payload: { reminder_second_sent_at: now } };
 }
 
 
@@ -94,6 +85,36 @@ export async function findDocumentsByStationId(stationId: string): Promise<Stati
 
 
 /**
+ * Returns all photos for a station, ordered by position ascending.
+ */
+export async function findPhotosByStationId(stationId: string): Promise<StationPhoto[]> {
+  return db.query.stationPhotos.findMany({
+    where: eq(stationPhotos.station_id, stationId),
+    orderBy: [asc(stationPhotos.position)],
+  });
+}
+
+
+/**
+ * Replaces all photos for a station atomically (delete all, then insert new set).
+ * Returns the inserted rows ordered by position. Returns empty array when photos is empty.
+ */
+export async function replaceStationPhotos(
+  stationId: string,
+  photos: { url: string; position: number }[]
+): Promise<StationPhoto[]> {
+  return db.transaction(async (tx) => {
+    await tx.delete(stationPhotos).where(eq(stationPhotos.station_id, stationId));
+    if (photos.length === 0) return [];
+    return tx
+      .insert(stationPhotos)
+      .values(photos.map((p) => ({ station_id: stationId, url: p.url, position: p.position })))
+      .returning();
+  });
+}
+
+
+/**
  * Returns a single station document by id, or undefined.
  */
 export async function findDocumentById(id: string): Promise<StationDocument | undefined> {
@@ -113,6 +134,29 @@ export async function findDocumentsByIds(ids: string[]): Promise<StationDocument
   return db.query.stationDocuments.findMany({
     where: inArray(stationDocuments.id, ids),
   });
+}
+
+
+/**
+ * Updates expiry_date for a station document, scoped to the given station.
+ * Combines ownership check and update in one query: returns undefined when no
+ * row matches (document not found or belongs to a different station).
+ *
+ * @param docId      - UUID of the station_documents row
+ * @param stationId  - UUID of the station that must own the document
+ * @param expiryDate - ISO date string (YYYY-MM-DD) to set, or null to clear
+ */
+export async function updateDocumentExpiry(
+  docId:      string,
+  stationId:  string,
+  expiryDate: string | null
+): Promise<StationDocument | undefined> {
+  const [updated] = await db
+    .update(stationDocuments)
+    .set({ expiry_date: expiryDate ? new Date(expiryDate) : null })
+    .where(and(eq(stationDocuments.id, docId), eq(stationDocuments.station_id, stationId)))
+    .returning();
+  return updated;
 }
 
 
@@ -201,7 +245,7 @@ export async function findDocumentsNeedingReminder(
           AND ${stationDocuments.expiry_date} >= CURRENT_DATE
           AND ${stationDocuments.expiry_date} <= CURRENT_DATE + ${thresholdDays} * INTERVAL '1 day'
         `,
-        isNull(reminderColumn(reminderField)),
+        isNull(reminderMeta(reminderField).column),
         eq(stations.status, 'active')
       )
     );
@@ -231,7 +275,7 @@ export async function setReminderSent(
 ): Promise<void> {
   await db
     .update(stationDocuments)
-    .set(reminderUpdatePayload(reminderField))
+    .set(reminderMeta(reminderField).payload)
     .where(eq(stationDocuments.id, documentId));
 }
 

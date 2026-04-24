@@ -7,16 +7,20 @@ import { stationPhotosBodySchema, mapZodErrors } from '@/validators/station';
 import { ApiCode } from '@/types/api-codes';
 import type { NextResponse } from 'next/server';
 
+
+// %%%%% Route handlers %%%%%
+
 /**
  * PATCH /api/v1/station/photos
- * Replace all station photo URLs. Existing photos are deleted and replaced with the provided list.
- * URLs must come from a prior call to POST /api/v1/upload (Cloudinary or local fallback).
+ * Replace all station photos. Existing photos are deleted and replaced with the provided list.
+ * Each item must be a Cloudinary URL with a 0-based position.
+ * An empty array clears all photos.
  *
  * Body:
- *   { "photos": ["https://res.cloudinary.com/...", ...] }  — 1 to 20 URLs
+ *   { "photos": [{ "url": "https://res.cloudinary.com/...", "position": 0 }, ...] }  — 0 to 20 items
  *
  * Responses:
- *   200 { data: { photos: string[] } }
+ *   200 { data: { photos: StationPhoto[] } }
  *   400 VALIDATION_FAILED
  *   401 UNAUTHORIZED
  *   403 FORBIDDEN
@@ -42,8 +46,8 @@ export async function PATCH(request: Request): Promise<NextResponse> {
   }
 
   try {
-    const photos = await updateMyStationPhotos(auth.sub, parsed.data.photos);
-    return applyNoStoreHeaders(successResponse({ photos }, 'Photos updated successfully'));
+    const result = await updateMyStationPhotos(auth.sub, parsed.data.photos);
+    return applyNoStoreHeaders(successResponse({ photos: result }, 'Photos updated successfully'));
   } catch (e) {
     if (e instanceof NotFoundError) return applyNoStoreHeaders(error404(e.message));
     if (e instanceof ForbiddenError) return applyNoStoreHeaders(error403(e.message));
@@ -51,3 +55,6 @@ export async function PATCH(request: Request): Promise<NextResponse> {
     return applyNoStoreHeaders(error500(e));
   }
 }
+
+
+// %%%%% END - Route handlers %%%%%
