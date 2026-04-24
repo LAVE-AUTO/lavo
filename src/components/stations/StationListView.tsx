@@ -297,24 +297,20 @@ export function StationListView({ washTypes }: StationListViewProps) {
                 />
               </div>
               <div>
-                <label className="block text-[11px] sm:text-[13px] font-bold text-[#333333] dark:text-[#C0C0B0] uppercase tracking-wider mb-1.5">
+                <p className="block text-[11px] sm:text-[13px] font-bold text-[#333333] dark:text-[#C0C0B0] uppercase tracking-wider mb-1.5">
                   {t('filter_scope_label')}
-                </label>
-                <select
+                </p>
+                <CustomSelect
                   value={serviceScope}
-                  onChange={(e) => setServiceScope(e.target.value as ServiceScope)}
-                  className={[
-                    'w-full h-[42px] px-2.5 sm:px-3 rounded-lg border text-[13px] sm:text-[14px] font-semibold outline-none transition-all duration-150 cursor-pointer',
-                    serviceScope
-                      ? 'border-gold bg-gold/5 dark:bg-gold/10 text-[#1A1A1A] dark:text-white'
-                      : 'border-[#E0E0D0] dark:border-tab-inactive bg-[#F5F5EE] dark:bg-tab-inactive text-[#555] dark:text-[#C0C0B0]',
-                  ].join(' ')}
-                >
-                  <option value="">{t('filter_scope_all')}</option>
-                  <option value="exterior">{t('filter_scope_exterior')}</option>
-                  <option value="interior">{t('filter_scope_interior')}</option>
-                  <option value="both">{t('filter_scope_both')}</option>
-                </select>
+                  onChange={(v) => setServiceScope(v as ServiceScope)}
+                  placeholder={t('filter_scope_all')}
+                  options={[
+                    { value: '',         label: t('filter_scope_all') },
+                    { value: 'exterior', label: t('filter_scope_exterior') },
+                    { value: 'interior', label: t('filter_scope_interior') },
+                    { value: 'both',     label: t('filter_scope_both') },
+                  ]}
+                />
               </div>
             </div>
 
@@ -544,6 +540,110 @@ function CustomMultiSelect({ options, selected, onToggle, placeholder }: CustomM
                 key={opt.value}
                 type="button"
                 onClick={() => onToggle(opt.value)}
+                role="option"
+                aria-selected={isSel}
+                className={[
+                  'w-full flex items-center justify-between px-3.5 py-2.5 text-[14px] font-semibold text-left transition-colors duration-100',
+                  isSel
+                    ? 'text-gold bg-gold/5 dark:bg-gold/10'
+                    : 'text-[#1A1A1A] dark:text-white hover:bg-[#F5F5EE] dark:hover:bg-tab-inactive',
+                ].join(' ')}
+              >
+                <span>{opt.label}</span>
+                {isSel && (
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true" className="shrink-0 text-gold">
+                    <polyline points="20 6 9 17 4 12" />
+                  </svg>
+                )}
+              </button>
+            );
+          })}
+        </div>
+      )}
+    </div>
+  );
+}
+
+/* ------------------------------------------------------------------ */
+/* Custom select — single value, same visual language as MultiSelect   */
+/* ------------------------------------------------------------------ */
+
+interface SelectOption {
+  value: string;
+  label: string;
+}
+
+interface CustomSelectProps {
+  options: SelectOption[];
+  value: string;
+  onChange: (value: string) => void;
+  placeholder: string;
+}
+
+function CustomSelect({ options, value, onChange, placeholder }: CustomSelectProps) {
+  const [open, setOpen] = useState(false);
+  const ref       = useRef<HTMLDivElement>(null);
+  const listboxId = useId();
+
+  useEffect(() => {
+    if (!open) return;
+    const handleMouseDown = (e: MouseEvent) => {
+      if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false);
+    };
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') { e.preventDefault(); setOpen(false); }
+    };
+    document.addEventListener('mousedown', handleMouseDown);
+    document.addEventListener('keydown', handleKeyDown);
+    return () => {
+      document.removeEventListener('mousedown', handleMouseDown);
+      document.removeEventListener('keydown', handleKeyDown);
+    };
+  }, [open]);
+
+  const selectedOption = options.find((o) => o.value === value);
+  const triggerLabel   = selectedOption && value ? selectedOption.label : placeholder;
+  const isActive       = open || value !== '';
+
+  return (
+    <div ref={ref} className="relative">
+      <button
+        type="button"
+        onClick={() => setOpen((v) => !v)}
+        aria-haspopup="listbox"
+        aria-expanded={open}
+        aria-controls={listboxId}
+        className={[
+          'w-full flex items-center justify-between px-2.5 sm:px-3.5 py-2 sm:py-2.5 rounded-lg border text-[13px] sm:text-[14px] font-semibold transition-all duration-150 select-none',
+          isActive
+            ? 'border-gold bg-gold/5 dark:bg-gold/10 text-[#1A1A1A] dark:text-white'
+            : 'border-[#E0E0D0] dark:border-tab-inactive bg-[#F5F5EE] dark:bg-tab-inactive text-[#555] dark:text-[#C0C0B0]',
+        ].join(' ')}
+      >
+        <span className={`truncate ${value ? 'text-[#1A1A1A] dark:text-white' : ''}`}>{triggerLabel}</span>
+        <svg
+          width="14" height="14" viewBox="0 0 24 24" fill="none"
+          stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"
+          aria-hidden="true"
+          className={`shrink-0 ml-1 transition-transform duration-200 ${open ? 'rotate-180 text-gold' : ''}`}
+        >
+          <polyline points="6 9 12 15 18 9" />
+        </svg>
+      </button>
+
+      {open && (
+        <div
+          id={listboxId}
+          role="listbox"
+          className="absolute top-[calc(100%+6px)] left-0 right-0 bg-white dark:bg-dark-surface border border-[#E0E0D0] dark:border-tab-inactive rounded-xl shadow-[0_8px_32px_rgba(0,0,0,0.12)] dark:shadow-[0_8px_32px_rgba(0,0,0,0.4)] z-50 max-h-60 overflow-y-auto animate-fade-in"
+        >
+          {options.map((opt) => {
+            const isSel = opt.value === value;
+            return (
+              <button
+                key={opt.value || 'all'}
+                type="button"
+                onClick={() => { onChange(opt.value); setOpen(false); }}
                 role="option"
                 aria-selected={isSel}
                 className={[
