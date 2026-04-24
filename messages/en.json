@@ -519,6 +519,13 @@
     "filter_categories_placeholder": "All categories",
     "filter_vehicle_placeholder": "All vehicle types",
     "filter_service_placeholder": "All services",
+    "filter_wash_type_label": "Wash type",
+    "filter_wash_type_placeholder": "All types",
+    "filter_scope_label": "Service scope",
+    "filter_scope_all": "All",
+    "filter_scope_exterior": "Exterior",
+    "filter_scope_interior": "Interior",
+    "filter_scope_both": "Exterior + Interior",
     "stat_distance": "Distance"
   },
   "merchant": {

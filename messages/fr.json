@@ -519,6 +519,13 @@
     "filter_categories_placeholder": "Toutes les catégories",
     "filter_vehicle_placeholder": "Tous les véhicules",
     "filter_service_placeholder": "Tous les services",
+    "filter_wash_type_label": "Type de lavage",
+    "filter_wash_type_placeholder": "Tous les types",
+    "filter_scope_label": "Portée du service",
+    "filter_scope_all": "Toutes",
+    "filter_scope_exterior": "Extérieur",
+    "filter_scope_interior": "Intérieur",
+    "filter_scope_both": "Extérieur + Intérieur",
     "stat_distance": "Distance"
   },
   "merchant": {
