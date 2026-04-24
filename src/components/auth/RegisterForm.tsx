@@ -114,9 +114,9 @@ export function RegisterForm() {
       next.email = t('error_email_invalid');
     }
 
-    if (!formData.phone.localNumber.trim()) {
-      next.phone = t('error_phone_required');
-    } else if (!validatePhone(joinPhoneNumber(formData.phone.country, formData.phone.localNumber))) {
+    // Phone is optional for client registration; validate format only if filled.
+    if (formData.phone.localNumber.trim() &&
+        !validatePhone(joinPhoneNumber(formData.phone.country, formData.phone.localNumber))) {
       next.phone = t('error_phone_invalid');
     }
 
@@ -142,14 +142,18 @@ export function RegisterForm() {
 
     setIsLoading(true);
     try {
-      const [success, response] = await postWithApi('/auth/register', {
+      const trimmedLocal = formData.phone.localNumber.trim();
+      const payload: Record<string, string> = {
         first_name: formData.firstName.trim(),
         last_name:  formData.lastName.trim(),
         email:      formData.email.trim(),
-        phone:      joinPhoneNumber(formData.phone.country, formData.phone.localNumber),
         password:   formData.password,
         confirm_password: formData.confirmPassword,
-      });
+      };
+      if (trimmedLocal) {
+        payload.phone = joinPhoneNumber(formData.phone.country, trimmedLocal);
+      }
+      const [success, response] = await postWithApi('/auth/register', payload);
 
       if (success) {
         const body = response as { data?: { user: { id: string; email: string; role: string }; access_token: string } };
@@ -252,10 +256,9 @@ export function RegisterForm() {
         autoComplete="email"
       />
 
-      {/* Phone — full width for the country selector */}
+      {/* Phone — optional for client sign-up */}
       <PhoneInput
         label={t('phone')}
-        required
         placeholder={t('phone_placeholder')}
         value={formData.phone}
         onChange={(val) => {
