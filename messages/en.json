@@ -512,6 +512,7 @@
     "status_closed": "Closed",
     "status_label": "Status",
     "service_type": "Service type",
+    "detail_choose_format": "Pick your format",
     "continue": "Continue",
     "vehicle_type_sedan": "Sedan",
     "vehicle_type_suv": "SUV",

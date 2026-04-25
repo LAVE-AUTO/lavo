@@ -512,6 +512,7 @@
     "status_closed": "Fermé",
     "status_label": "Statut",
     "service_type": "Type de service",
+    "detail_choose_format": "Choisissez votre format",
     "continue": "Continuer",
     "vehicle_type_sedan": "Berline",
     "vehicle_type_suv": "SUV",

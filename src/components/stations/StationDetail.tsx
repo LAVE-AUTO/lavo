@@ -143,8 +143,11 @@ export function StationDetail({ id }: StationDetailProps) {
         </Badge>
       </div>
 
-      {/* Slot picker — shown when available slots OR station is open (for queue join) */}
-      {(hasSlots || isOpen) && categories.length > 0 && (
+      {/* Category tabs — only render when the backend returns more than one category.
+         Today the mapper synthesises a single fake category from vehicleFormats[],
+         so the tabs would be a one-tab UI that adds noise. The block stays in place
+         for the day backend exposes wash_types[] (hand_wash / automatic / self_service). */}
+      {(hasSlots || isOpen) && categories.length > 1 && (
         <div>
           <label className="block text-[11px] font-bold text-[#555] dark:text-[#A0A090] uppercase tracking-wider mb-2">
             {t('service_type')}
@@ -168,9 +171,13 @@ export function StationDetail({ id }: StationDetailProps) {
         </div>
       )}
 
-      {/* Forfait cards — shown when available slots OR station is open (for queue join) */}
+      {/* Forfait cards — flat list. Header reuses the category label when present
+         (e.g. "Format de véhicule"), otherwise falls back to a generic "Choose your format". */}
       {(hasSlots || isOpen) && currentCategory && (
         <div className="space-y-3">
+          <label className="block text-[11px] font-bold text-[#555] dark:text-[#A0A090] uppercase tracking-wider">
+            {currentCategory.label || t('detail_choose_format')}
+          </label>
           {currentCategory.description && (
             <p className="text-[13px] text-[#555] dark:text-[#B0B0A0] leading-relaxed">
               {currentCategory.description}
@@ -198,7 +205,9 @@ export function StationDetail({ id }: StationDetailProps) {
                       )}
                       <span className="text-[14px] font-bold text-[#000C1F] dark:text-[#FFF8EC]">{forfait.name}</span>
                     </div>
-                    <p className="text-[12px] text-[#555] dark:text-[#B0B0A0] line-clamp-2">{forfait.description}</p>
+                    {forfait.description && forfait.description !== forfait.name && (
+                      <p className="text-[12px] text-[#555] dark:text-[#B0B0A0] line-clamp-2">{forfait.description}</p>
+                    )}
                     <span className="inline-flex items-center gap-1 mt-1.5 text-[11px] text-[#888] dark:text-[#999]">
                       <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10" /><polyline points="12 6 12 12 16 14" /></svg>
                       {forfait.duration} min
