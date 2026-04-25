@@ -1062,6 +1062,8 @@
     "error_name_invalid": "Name must contain at least 2 letters (letters, spaces, hyphens and apostrophes only)",
     "error_mismatch": "Passwords do not match",
     "error_too_short": "Password must be at least 8 characters",
+    "error_old_password": "Current password is incorrect",
+    "error_generic": "Something went wrong. Please try again.",
     "danger_zone": "Danger zone",
     "danger_desc": "Deletion is irreversible. All your data will be permanently erased.",
     "delete_account": "Delete my account",

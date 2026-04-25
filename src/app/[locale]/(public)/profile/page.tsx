@@ -6,6 +6,7 @@ import { Link } from '@/i18n/navigation';
 import { useAuth } from '@/context';
 import { useToast } from '@/context/toast-context';
 import { isPasswordValid, validateName } from '@/helpers/validators';
+import { postWithApi } from '@/services/axios-service';
 
 /* ─── Toggle switch ─── */
 function Toggle({ checked, onChange }: { checked: boolean; onChange: () => void }) {
@@ -507,12 +508,37 @@ function PasswordModal({ onClose, onSuccess }: { onClose: () => void; onSuccess:
   const [confirmPwd, setConfirmPwd] = useState('');
   const [error,      setError]      = useState('');
   const [done,       setDone]       = useState(false);
+  const [submitting, setSubmitting] = useState(false);
 
-  const handleSubmit = () => {
+  const mountedRef = useRef(true);
+  useEffect(() => { mountedRef.current = true; return () => { mountedRef.current = false; }; }, []);
+
+  const handleSubmit = async () => {
     setError('');
     if (!oldPwd || !newPwd || !confirmPwd) { setError(t('error_required')); return; }
     if (newPwd !== confirmPwd) { setError(t('error_mismatch')); return; }
     if (!isPasswordValid(newPwd)) { setError(t('error_too_short')); return; }
+
+    setSubmitting(true);
+    const [ok, data] = await postWithApi(
+      '/auth/change-password',
+      { current_password: oldPwd, new_password: newPwd, confirm_new_password: confirmPwd },
+      { successStatus: 200 },
+    );
+    if (!mountedRef.current) return;
+    setSubmitting(false);
+
+    if (!ok) {
+      const errBody = data as { code?: string; message?: string } | null;
+      // Backend returns 401 UNAUTHORIZED when the current password is wrong.
+      if (errBody?.code === 'UNAUTHORIZED') {
+        setError(t('error_old_password'));
+      } else {
+        setError(t('error_generic'));
+      }
+      return;
+    }
+
     setDone(true);
     onSuccess();
   };
@@ -548,8 +574,15 @@ function PasswordModal({ onClose, onSuccess }: { onClose: () => void; onSuccess:
             {error && <p className="text-[13px] text-lavo-error font-semibold">{error}</p>}
           </div>
           <div className="flex gap-3 mt-6">
-            <button type="button" onClick={onClose} className="flex-1 py-3 border-2 border-[#D0D0C0] dark:border-tab-inactive rounded-xl text-[14px] font-bold text-[#555] dark:text-[#B0B0A0] hover:bg-[#E0E0D0] dark:hover:bg-[#1A1A18] transition-colors cursor-pointer">{t('cancel')}</button>
-            <button type="button" onClick={handleSubmit} className="flex-1 py-3 bg-gold hover:bg-gold-hover rounded-xl text-[14px] font-black text-dark-bg transition-colors cursor-pointer">{t('confirm')}</button>
+            <button type="button" onClick={onClose} disabled={submitting} className="flex-1 py-3 border-2 border-[#D0D0C0] dark:border-tab-inactive rounded-xl text-[14px] font-bold text-[#555] dark:text-[#B0B0A0] hover:bg-[#E0E0D0] dark:hover:bg-[#1A1A18] transition-colors cursor-pointer disabled:opacity-50">{t('cancel')}</button>
+            <button type="button" onClick={handleSubmit} disabled={submitting} className="flex-1 py-3 bg-gold hover:bg-gold-hover rounded-xl text-[14px] font-black text-dark-bg transition-colors cursor-pointer disabled:opacity-60 flex items-center justify-center gap-2">
+              {submitting && (
+                <svg className="animate-spin" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" aria-hidden="true">
+                  <path d="M21 12a9 9 0 11-6.219-8.56" />
+                </svg>
+              )}
+              {t('confirm')}
+            </button>
           </div>
         </>
       )}
