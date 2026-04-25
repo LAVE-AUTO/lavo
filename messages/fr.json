@@ -779,9 +779,21 @@
   "not_found": {
     "meta_title": "Page introuvable",
     "title": "404",
-    "heading": "Page introuvable",
-    "description": "La page que vous cherchez n'existe pas ou a été déplacée.",
-    "back_home": "Retour à l'accueil"
+    "eyebrow": "Erreur 404",
+    "heading": "Cette page s'est",
+    "heading_accent": "envolée",
+    "description": "La page que vous cherchez n'existe pas, a été déplacée ou n'est plus disponible. Reprenez le contrôle depuis l'accueil ou explorez nos stations partenaires.",
+    "back_home": "Retour à l'accueil",
+    "browse_stations": "Voir les stations",
+    "support_hint": "Besoin d'aide ?",
+    "support_link": "Contactez le support"
+  },
+  "location_banner": {
+    "title": "Trouvez les stations près de vous",
+    "description": "Activez votre position pour calculer la distance jusqu'à chaque station partenaire. Aucune donnée n'est stockée, votre navigateur garde le contrôle.",
+    "cta_allow": "Activer ma position",
+    "cta_dismiss": "Plus tard",
+    "aria_close": "Fermer la bannière"
   },
   "booking": {
     "booking_title": "Réservation",

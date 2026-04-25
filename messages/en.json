@@ -779,9 +779,21 @@
   "not_found": {
     "meta_title": "Page not found",
     "title": "404",
-    "heading": "Page not found",
-    "description": "The page you are looking for does not exist or has been moved.",
-    "back_home": "Back to home"
+    "eyebrow": "Error 404",
+    "heading": "This page",
+    "heading_accent": "vanished",
+    "description": "The page you are looking for does not exist, has been moved, or is no longer available. Head back home or explore our partner stations.",
+    "back_home": "Back to home",
+    "browse_stations": "Browse stations",
+    "support_hint": "Need help?",
+    "support_link": "Contact support"
+  },
+  "location_banner": {
+    "title": "Find stations near you",
+    "description": "Enable your location to compute the distance to every partner station. Nothing is stored — your browser stays in control.",
+    "cta_allow": "Enable location",
+    "cta_dismiss": "Later",
+    "aria_close": "Dismiss banner"
   },
   "booking": {
     "booking_title": "Booking",
