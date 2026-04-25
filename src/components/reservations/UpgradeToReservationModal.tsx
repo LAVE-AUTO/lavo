@@ -214,16 +214,29 @@ export default function UpgradeToReservationModal({ entryId, stationId, onClose,
       if (!mountedRef.current) return;
 
       if (!ok) {
-        const msg = (data as { message?: string })?.message ?? '';
-        if (msg.includes('full') || msg.includes('SLOT_FULL')) {
+        const errBody = data as { message?: string; code?: string } | null;
+        const code = errBody?.code ?? '';
+        const msg  = errBody?.message ?? '';
+        // Slot raced into capacity between picker render and submit.
+        if (code === 'SLOT_FULL' || msg.includes('full') || msg.includes('SLOT_FULL')) {
           toastError(t('upgrade_error_slot_full'));
+        // Station has no Stripe Connect account configured (typically dev / sandbox).
+        } else if (code === 'CONFLICT' && msg.toLowerCase().includes('payment')) {
+          toastError(t('upgrade_error_stripe'));
         } else {
           toastError(t('upgrade_error'));
         }
         return;
       }
 
-      const result = (data as { data: { reservation_id: string; stripe_client_secret: string } }).data;
+      // Backend returns successResponse({ reservation_id, stripe_client_secret, ...entryFields }).
+      // Read both shapes defensively in case the wrapper changes.
+      const responseBody = data as { data?: { reservation_id?: string; stripe_client_secret?: string } };
+      const result = responseBody?.data;
+      if (!result?.reservation_id) {
+        toastError(t('upgrade_error'));
+        return;
+      }
 
       if (result.stripe_client_secret) {
         setClientSecret(result.stripe_client_secret);
