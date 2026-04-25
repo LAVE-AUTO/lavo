@@ -211,6 +211,34 @@
       "when": 1743552100000,
       "tag": "0029_device_tokens",
       "breakpoints": true
+    },
+    {
+      "idx": 33,
+      "version": "7",
+      "when": 1777084921058,
+      "tag": "0033_btree_indexes",
+      "breakpoints": true
+    },
+    {
+      "idx": 34,
+      "version": "7",
+      "when": 1745539200000,
+      "tag": "0034_advanced_indexes",
+      "breakpoints": true
+    },
+    {
+      "idx": 35,
+      "version": "7",
+      "when": 1745625600000,
+      "tag": "0035_station_stats_view",
+      "breakpoints": true
+    },
+    {
+      "idx": 36,
+      "version": "7",
+      "when": 1745539200000,
+      "tag": "0036_stripe_charge_id",
+      "breakpoints": true
     }
   ]
 }

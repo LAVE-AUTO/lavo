@@ -3,8 +3,9 @@ import {
   supportMessages,
   supportSettings,
   supportTickets,
+  users,
 } from "@/lib/db/schema";
-import { and, asc, desc, eq, inArray, sql } from "drizzle-orm";
+import { and, asc, desc, eq, getTableColumns, inArray, sql } from "drizzle-orm";
 import { AppError } from "@/lib/errors";
 import { HTTP_STATUS } from "@/helpers/constants";
 import type { z } from "zod";
@@ -140,52 +141,96 @@ export async function findTicketById(id: string) {
   });
 }
 
+/** Safe user columns projected into each ticket row. */
+const SAFE_USER_SELECT = {
+  id: users.id,
+  first_name: users.first_name,
+  last_name: users.last_name,
+  email: users.email,
+  role: users.role,
+} as const;
+
 /**
- * Lists tickets with optional user and status filters.
- * Each ticket includes a `lastMessage` preview: the most recent message's
- * content (truncated to 200 chars) and creation date. Fetching only the
- * last message per ticket avoids loading full message threads in the list view.
+ * Lists tickets with optional user, status, and pagination filters.
+ *
+ * Uses a single SQL query with a LEFT JOIN LATERAL to fetch the most recent
+ * message per ticket in one round-trip, eliminating the N+1 pattern that
+ * `findMany({ with: { messages: { limit: 1 } } })` produces.
+ *
+ * Defaults: page=1, perPage=500 — backward-compatible with callers that pass no
+ * pagination params. A COUNT query runs in parallel for the total row count.
  */
 export async function listTickets(
-  filters: { userId?: string; status?: TicketStatus } = {}
+  filters: {
+    userId?: string;
+    status?: TicketStatus;
+    page?: number;
+    perPage?: number;
+  } = {}
 ) {
-  const conditions = [];
-  if (filters.userId) conditions.push(eq(supportTickets.created_by, filters.userId));
-  if (filters.status) conditions.push(eq(supportTickets.status, filters.status));
+  const { userId, status, page = 1, perPage = 500 } = filters;
+  const limit = Math.min(Math.floor(perPage), 500);
+  const offset = (Math.max(1, Math.floor(page)) - 1) * limit;
 
+  const conditions: ReturnType<typeof eq>[] = [];
+  if (userId) conditions.push(eq(supportTickets.created_by, userId));
+  if (status) conditions.push(eq(supportTickets.status, status));
   const whereClause = conditions.length > 0 ? and(...conditions) : undefined;
 
-  const tickets = await db.query.supportTickets.findMany({
-    where: whereClause,
-    orderBy: [desc(supportTickets.updated_at)],
-    with: {
-      createdByUser: {
-        columns: SAFE_USER_COLUMNS,
-      },
-      messages: {
-        orderBy: [desc(supportMessages.created_at)],
-        limit: 1,
-        columns: {
-          content: true,
-          created_at: true,
-        },
-      },
-    },
+  const ticketCols = getTableColumns(supportTickets);
+
+  const [countRows, rows] = await Promise.all([
+    db
+      .select({ count: sql<number>`count(*)::int` })
+      .from(supportTickets)
+      .where(whereClause),
+    db
+      .select({
+        ...ticketCols,
+        createdByUser: SAFE_USER_SELECT,
+        lm_content: sql<string | null>`lm.content`,
+        // Drizzle does not hydrate Date objects from lateral sub-select columns;
+        // the raw value is an ISO string. We type it as string and convert below.
+        lm_created_at: sql<string | null>`lm.created_at`,
+      })
+      .from(supportTickets)
+      .leftJoin(users, eq(supportTickets.created_by, users.id))
+      .leftJoin(
+        sql`LATERAL (
+          SELECT content, created_at
+          FROM support_messages
+          WHERE ticket_id = ${supportTickets.id}
+          ORDER BY created_at DESC
+          LIMIT 1
+        ) lm`,
+        sql`true`
+      )
+      .where(whereClause)
+      .orderBy(desc(supportTickets.updated_at))
+      .limit(limit)
+      .offset(offset),
+  ]);
+
+  const total = countRows[0]?.count ?? 0;
+
+  const data = rows.map((row) => {
+    const { lm_content, lm_created_at, ...ticket } = row;
+    const lastMessage: LastMessagePreview =
+      lm_content != null && lm_created_at != null
+        ? {
+            content:
+              lm_content.length > 200
+                ? lm_content.slice(0, 200) + "…"
+                : lm_content,
+            // lm_created_at comes from the lateral sub-select as a raw ISO string;
+            // convert explicitly to avoid passing a string where Date is expected.
+            created_at: new Date(lm_created_at),
+          }
+        : null;
+    return { ...ticket, lastMessage };
   });
 
-  return tickets.map((ticket) => {
-    const { messages, ...rest } = ticket;
-    const last = messages[0] ?? null;
-    const lastMessage: LastMessagePreview = last
-      ? {
-          content: last.content.length > 200
-            ? last.content.slice(0, 200) + "…"
-            : last.content,
-          created_at: last.created_at,
-        }
-      : null;
-    return { ...rest, lastMessage };
-  });
+  return { data, total };
 }
 
 /**

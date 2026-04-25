@@ -46,6 +46,7 @@ import {
 } from './entry-repository';
 import { computeReservationSplit } from './compute-reservation-split';
 import { verifyQrToken } from '@/server/qr/qr-token-service';
+import { refreshStationStats } from '@/server/station/station-stats-service';
 
 
 // %%%%% Constants %%%%%
@@ -346,8 +347,10 @@ export async function cancelEntry(
     // Stripe: capture full amount → partial refund → distribute penalty share.
     // Kept outside the transaction: Stripe calls must not hold DB locks.
     let captured = false;
+    let chargeId: string | null = null;
+    let transferId: string | null = null;
     try {
-      await capturePaymentIntent(entry.stripe_payment_id);
+      ({ chargeId, transferId } = await capturePaymentIntent(entry.stripe_payment_id));
       captured = true;
     } catch (e) {
       console.error('[QUEUE_CANCEL_CAPTURE_FAILED]', {
@@ -355,6 +358,17 @@ export async function cancelEntry(
         stripe_payment_id: entry.stripe_payment_id,
         error: e instanceof Error ? e.message : String(e),
       });
+    }
+    if (captured && chargeId) {
+      try {
+        await updateEntry(entryId, { stripe_charge_id: chargeId });
+      } catch (e) {
+        console.error('[QUEUE_CANCEL_STRIPE_CHARGE_ID_UPDATE_FAILED]', {
+          entryId,
+          chargeId,
+          error: e instanceof Error ? e.message : String(e),
+        });
+      }
     }
     if (captured && refundedAmount > 0) {
       try {
@@ -377,7 +391,10 @@ export async function cancelEntry(
         await distributePenalty(
           entry.stripe_payment_id,
           Math.round(penaltyAmount * 100),
-          policy.stationPenaltyShare
+          policy.stationPenaltyShare,
+          `queue-cancel-penalty:${entryId}`,
+          chargeId ?? undefined,
+          transferId ?? undefined,
         );
       } catch (e) {
         console.error('[QUEUE_CANCEL_PENALTY_DIST_FAILED]', {
@@ -627,7 +644,10 @@ export async function setEntryStatusByStation(
     // Capture the payment (distributes funds to station + platform).
     if (entry.stripe_payment_id) {
       try {
-        await capturePaymentIntent(entry.stripe_payment_id);
+        const { chargeId } = await capturePaymentIntent(entry.stripe_payment_id);
+        if (chargeId) {
+          await updateEntry(entryId, { stripe_charge_id: chargeId });
+        }
       } catch (e) {
         const error = e instanceof Error ? e.message : String(e);
         console.error('[CAPTURE_FAILED] Service completed but Stripe capture failed — manual resolution required', {
@@ -665,6 +685,15 @@ export async function setEntryStatusByStation(
 
       // %%%%% END - ESCROW FALLBACK — webhook before "completed" %%%%%
     }
+
+    // Refresh station_stats so completed_count stays current for the "most visited" sort group.
+    // Fire-and-forget: must not block the station's UI response.
+    refreshStationStats().catch((err) => {
+      console.error('[STATION_STATS_REFRESH] Failed after reservation completion', {
+        entryId,
+        error: err instanceof Error ? err.message : String(err),
+      });
+    });
   }
   return updated;
 }

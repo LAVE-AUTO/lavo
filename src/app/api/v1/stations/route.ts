@@ -46,7 +46,9 @@ export async function GET(request: Request) {
       service_scope: parsed.data.service_scope,
       format_id: parsed.data.format_id,
     });
-    return NextResponse.json({ data: result.data, meta: result.meta }, { status: 200 });
+    const response = NextResponse.json({ data: result.data, meta: result.meta }, { status: 200 });
+    response.headers.set('Cache-Control', 'public, s-maxage=30, stale-while-revalidate=60');
+    return response;
   } catch (e) {
     return error500(e);
   }

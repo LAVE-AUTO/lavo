@@ -12,6 +12,8 @@ const config: Config = {
     '^libphonenumber-js$': '<rootDir>/tests/helpers/mocks/libphonenumber-js.ts',
     '^firebase-admin$': '<rootDir>/tests/helpers/mocks/firebase-admin.ts',
     '^isomorphic-dompurify$': '<rootDir>/tests/helpers/mocks/isomorphic-dompurify.ts',
+    '^@upstash/redis$': '<rootDir>/tests/helpers/mocks/upstash-redis.ts',
+    '^@upstash/redis/nodejs$': '<rootDir>/tests/helpers/mocks/upstash-redis.ts',
   },
   testPathIgnorePatterns: [
     '<rootDir>/node_modules/',

@@ -376,7 +376,7 @@ describe('reservation-service', () => {
     const succeededAt = new Date('2024-06-01T12:00:00.000Z');
 
     beforeEach(() => {
-      mockCapturePaymentIntent.mockResolvedValue(undefined);
+      mockCapturePaymentIntent.mockResolvedValue({ chargeId: null, transferId: null });
       mockSetStripePaymentSucceededNotifiedAtIfMissing.mockReset();
       mockClearStripePaymentSucceededNotifiedAt.mockReset().mockResolvedValue(undefined);
       mockSendEscrowReleasedNotificationsForEntry.mockReset().mockResolvedValue(undefined);
