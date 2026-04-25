@@ -83,7 +83,9 @@ export default function FavoritesPage() {
                             {isOpen ? t('open') : t('closed')}
                           </span>
                         </span>
-                        <span className="ml-auto font-bold text-gold">{station.priceFrom}$+</span>
+                        {station.priceFrom != null && (
+                          <span className="ml-auto font-bold text-gold">{station.priceFrom}$+</span>
+                        )}
                       </div>
                     </div>
                   </div>

@@ -401,7 +401,7 @@ export function StationDetail({ id }: StationDetailProps) {
           <div className="max-w-[1440px] mx-auto px-4 sm:px-6 flex items-center gap-3">
             <div>
               <div className="text-[20px] font-black text-[#000C1F] dark:text-[#FFF8EC] leading-none">
-                {currentForfait ? currentForfait.price : station.priceFrom}
+                {currentForfait ? currentForfait.price : (station.priceFrom ?? '—')}
                 <span className="text-[14px] font-semibold ml-1 text-[#555] dark:text-[#C0C0B0]">{t('price_unit')}</span>
               </div>
               <div className="text-[12px] text-[#555] dark:text-[#C0C0B0]">

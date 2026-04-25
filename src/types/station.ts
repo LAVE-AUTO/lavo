@@ -12,7 +12,8 @@ export interface Station {
   completedCount: number;
   availableSlots: number;
   totalSlots: number;
-  priceFrom: number;
+  /** Lowest active format price. Null when the API does not expose it on the list payload. */
+  priceFrom: number | null;
   tags: string[];
   vehicleTypes?: string[];
   imageUrl?: string;

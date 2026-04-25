@@ -92,29 +92,8 @@ interface ApiQueueEntry {
 }
 
 /* ------------------------------------------------------------------ */
-/*  Static mock data (images not yet in DB seed)                      */
+/*  Mock service categories + extras (dev-only; prod returns empty)    */
 /* ------------------------------------------------------------------ */
-
-/**
- * Temporary static image map keyed by station name.
- * Replace with a real CDN field once the backend exposes it.
- */
-const STATION_IMAGE_MAP: Record<string, string> = {
-    'LAVO Paris Centre':
-        'https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=800&q=80',
-    'LAVO Lyon Confluence':
-        'https://images.unsplash.com/photo-1632823471406-4c5c7e4c6f24?w=800&q=80',
-    'LAVO Marseille Vieux-Port':
-        'https://images.unsplash.com/photo-1545558014-8692077e9b5c?w=800&q=80',
-    'LAVO Bordeaux Saint-Pierre':
-        'https://images.unsplash.com/photo-1603052875534-9a0b6ff90f3e?w=800&q=80',
-    'LAVO Toulouse Capitole':
-        'https://images.unsplash.com/photo-1601362840469-51e4d8d58785?w=800&q=80',
-    'LAVO Nantes Commerce':
-        'https://images.unsplash.com/photo-1596995804697-27d11d43652e?w=800&q=80',
-    'LAVO Strasbourg Grande Île':
-        'https://images.unsplash.com/photo-1610647752706-3bb12232b3ab?w=800&q=80',
-};
 
 /**
  * Mock service categories while the backend does not expose them yet.
@@ -212,13 +191,18 @@ function mapApiStationToStation(s: ApiStationListItem): Station {
         completedCount: s.completed_count ?? 0,
         availableSlots: process.env.NODE_ENV === 'production' ? (s.available_slots || 0) : mockAvailableSlots(s.id, s.available_slots || 0),
         totalSlots: s.wash_post_count || 0,
-        priceFrom: 0,
+        /* priceFrom is absent from the list payload — leave it null so the UI
+         * can hide the price block instead of faking a "0 $" value. Populated
+         * on the detail page once vehicle_formats are available. */
+        priceFrom: null,
         tags: [],
         latitude: s.latitude != null ? parseFloat(s.latitude) : undefined,
         longitude: s.longitude != null ? parseFloat(s.longitude) : undefined,
         isOpen: s.is_open,
         description: s.description || undefined,
-        imageUrl: STATION_IMAGE_MAP[s.name] || undefined,
+        /* imageUrl comes from the backend — `GET /stations` does not expose it yet,
+         * so stay undefined and let the placeholder render in the card. */
+        imageUrl: undefined,
     };
 }
 
@@ -246,7 +230,7 @@ function mapApiDetailToStationDetail(
     const activeFormats = (s.vehicleFormats || []).filter((f) => f.is_active);
     const vehicleTypes = activeFormats.map((f) => f.label);
     const prices = activeFormats.map((f) => parseFloat(f.price));
-    const priceFrom = prices.length > 0 ? Math.min(...prices) : 0;
+    const priceFrom = prices.length > 0 ? Math.min(...prices) : null;
 
     let openingHours: string | undefined;
     if (s.stationConfig) {
