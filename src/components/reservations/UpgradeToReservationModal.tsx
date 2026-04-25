@@ -1,13 +1,12 @@
 'use client';
 
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useMemo } from 'react';
 import { useTranslations, useLocale } from 'next-intl';
 import { useRouter } from '@/i18n/navigation';
 import { getFromApi, postWithApi } from '@/services/axios-service';
 import { useToast } from '@/context/toast-context';
 import { loadStripe } from '@stripe/stripe-js';
 import { Elements, CardElement, useStripe, useElements } from '@stripe/react-stripe-js';
-import SlotPicker from './SlotPicker';
 import type { AvailableSlot } from './SlotPicker';
 
 /* ------------------------------------------------------------------ */
@@ -251,82 +250,71 @@ export default function UpgradeToReservationModal({ entryId, stationId, onClose,
   const resolvedStripe = getStripePromise();
 
   return (
-    <>
+    <div
+      className="fixed inset-0 z-[60] flex items-end sm:items-center justify-center p-0 sm:p-4 bg-black/55 backdrop-blur-sm animate-fade-in"
+      onClick={onClose}
+    >
       <div
-        className="fixed inset-0 z-[60] bg-black/50 backdrop-blur-sm"
-        onClick={onClose}
-      />
-      <div className="fixed inset-0 z-[60] flex items-center justify-center p-4">
-        <div
-          ref={dialogRef}
-          role="dialog"
-          aria-modal="true"
-          aria-labelledby="upgrade-modal-title"
-          className="bg-[#F5F5E6] dark:bg-[#1A1A18] rounded-2xl shadow-2xl w-full max-w-md p-6 space-y-4 max-h-[90vh] overflow-y-auto"
+        ref={dialogRef}
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="upgrade-modal-title"
+        onClick={(e) => e.stopPropagation()}
+        className="relative bg-[#F5F5E6] dark:bg-[#1A1A18] rounded-t-2xl sm:rounded-2xl shadow-2xl w-full sm:max-w-md max-h-[92vh] flex flex-col animate-fade-in-up"
+      >
+        {/* Close button */}
+        <button
+          type="button"
+          onClick={onClose}
+          aria-label={t('upgrade_modal_close')}
+          className="absolute top-3 right-3 z-10 w-9 h-9 rounded-full hover:bg-black/5 dark:hover:bg-white/10 flex items-center justify-center text-[#666] dark:text-[#B0B0A0] hover:text-gold transition-colors cursor-pointer"
         >
-          {/* Header */}
-          <div className="text-center">
-            <div className="w-14 h-14 rounded-full bg-gold/15 flex items-center justify-center mx-auto mb-3">
-              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#af8408" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-                <polyline points="17 1 21 5 17 9" /><path d="M3 11V9a4 4 0 014-4h14" />
-                <polyline points="7 23 3 19 7 15" /><path d="M21 13v2a4 4 0 01-4 4H3" />
-              </svg>
-            </div>
-            <h3 id="upgrade-modal-title" className="text-[18px] font-black text-[#0A0A14] dark:text-white">
-              {t('upgrade_modal_title')}
-            </h3>
-            <p className="text-[13px] text-[#666] dark:text-[#B0B0A0] mt-1">
-              {step === 'slot' ? t('upgrade_modal_desc') : t('upgrade_payment_desc')}
-            </p>
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" aria-hidden="true">
+            <line x1="18" y1="6" x2="6" y2="18" />
+            <line x1="6" y1="6" x2="18" y2="18" />
+          </svg>
+        </button>
+
+        {/* Header */}
+        <div className="px-6 pt-6 pb-4 text-center shrink-0">
+          <div className="w-12 h-12 rounded-full bg-gold/15 border border-gold/30 flex items-center justify-center mx-auto mb-3">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#af8408" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+              <polyline points="17 1 21 5 17 9" /><path d="M3 11V9a4 4 0 014-4h14" />
+              <polyline points="7 23 3 19 7 15" /><path d="M21 13v2a4 4 0 01-4 4H3" />
+            </svg>
           </div>
+          <h3 id="upgrade-modal-title" className="text-[18px] font-black text-[#0A0A14] dark:text-white">
+            {t('upgrade_modal_title')}
+          </h3>
+          <p className="text-[13px] text-[#666] dark:text-[#B0B0A0] mt-1">
+            {step === 'slot' ? t('upgrade_modal_desc') : t('upgrade_payment_desc')}
+          </p>
+        </div>
 
-          {/* Step: Slot selection */}
+        {/* Body — scrollable */}
+        <div className="flex-1 overflow-y-auto px-6">
           {step === 'slot' && (
-            <>
-              {loadingSlots ? (
-                <div className="flex items-center justify-center py-8">
-                  <div className="h-6 w-6 animate-spin rounded-full border-[2px] border-gold border-t-transparent" />
-                </div>
-              ) : slots.length === 0 ? (
-                <div className="text-center py-6">
-                  <p className="text-[13px] text-[#999] dark:text-[#666]">{t('upgrade_no_slots')}</p>
-                </div>
-              ) : (
-                <SlotPicker
-                  slots={slots}
-                  selectedSlotId={selectedSlotId}
-                  onSelect={setSelectedSlotId}
-                  locale={locale}
-                />
-              )}
-
-              <div className="flex gap-3 pt-2">
-                <button
-                  type="button"
-                  onClick={onClose}
-                  disabled={upgrading}
-                  className="flex-1 py-3 border-2 border-[#D0D0C0] dark:border-tab-inactive rounded-xl text-[14px] font-bold text-[#555] dark:text-[#B0B0A0] hover:bg-[#E0E0D0] dark:hover:bg-[#222220] transition-colors cursor-pointer disabled:opacity-50"
-                >
-                  {t('upgrade_btn_cancel')}
-                </button>
-                <button
-                  type="button"
-                  onClick={handleUpgrade}
-                  disabled={!selectedSlotId || upgrading}
-                  className="flex-1 py-3 bg-gold hover:bg-gold-hover rounded-xl text-[14px] font-black text-dark-bg transition-colors cursor-pointer disabled:opacity-50 flex items-center justify-center gap-2"
-                >
-                  {upgrading && (
-                    <svg className="animate-spin" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" aria-hidden="true">
-                      <path d="M21 12a9 9 0 11-6.219-8.56" />
-                    </svg>
-                  )}
-                  {upgrading ? t('upgrade_btn_upgrading') : t('upgrade_btn_continue')}
-                </button>
+            loadingSlots ? (
+              <div className="flex items-center justify-center py-10">
+                <div className="h-6 w-6 animate-spin rounded-full border-[2px] border-gold border-t-transparent" />
               </div>
-            </>
+            ) : slots.length === 0 ? (
+              <div className="text-center py-8">
+                <p className="text-[13px] text-[#999] dark:text-[#666]">{t('upgrade_no_slots')}</p>
+              </div>
+            ) : (
+              <SlotStepPicker
+                slots={slots}
+                selectedSlotId={selectedSlotId}
+                onSelect={setSelectedSlotId}
+                locale={locale}
+                pickDateLabel={t('upgrade_pick_date')}
+                pickTimeLabel={t('upgrade_pick_time')}
+                emptyDayLabel={t('upgrade_no_slots_for_date')}
+              />
+            )
           )}
 
-          {/* Step: Stripe payment */}
           {step === 'payment' && clientSecret && (
             resolvedStripe ? (
               <Elements stripe={resolvedStripe} options={{ clientSecret }}>
@@ -337,20 +325,168 @@ export default function UpgradeToReservationModal({ entryId, stationId, onClose,
                 />
               </Elements>
             ) : (
-              <div className="text-center py-6">
+              <div className="text-center py-8">
                 <p className="text-[13px] text-lavo-error">{t('upgrade_error_stripe')}</p>
-                <button
-                  type="button"
-                  onClick={onClose}
-                  className="mt-4 px-4 py-2 border-2 border-[#D0D0C0] dark:border-tab-inactive rounded-xl text-[14px] font-bold text-[#555] dark:text-[#B0B0A0] cursor-pointer"
-                >
-                  {t('upgrade_btn_cancel')}
-                </button>
               </div>
             )
           )}
         </div>
+
+        {/* Footer actions — only on slot step (payment step has its own buttons) */}
+        {step === 'slot' && (
+          <div className="px-6 pt-3 pb-5 border-t border-[#D0D0C0] dark:border-tab-inactive flex gap-3 shrink-0 bg-[#F5F5E6] dark:bg-[#1A1A18]">
+            <button
+              type="button"
+              onClick={onClose}
+              disabled={upgrading}
+              className="flex-1 py-3 border-2 border-[#D0D0C0] dark:border-tab-inactive rounded-xl text-[14px] font-bold text-[#555] dark:text-[#B0B0A0] hover:bg-[#E0E0D0] dark:hover:bg-[#222220] transition-colors cursor-pointer disabled:opacity-50"
+            >
+              {t('upgrade_btn_cancel')}
+            </button>
+            <button
+              type="button"
+              onClick={handleUpgrade}
+              disabled={!selectedSlotId || upgrading || slots.length === 0}
+              className="flex-1 py-3 bg-gold hover:bg-gold-hover rounded-xl text-[14px] font-black text-dark-bg transition-colors cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+            >
+              {upgrading && (
+                <svg className="animate-spin" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" aria-hidden="true">
+                  <path d="M21 12a9 9 0 11-6.219-8.56" />
+                </svg>
+              )}
+              {upgrading ? t('upgrade_btn_upgrading') : t('upgrade_btn_continue')}
+            </button>
+          </div>
+        )}
       </div>
-    </>
+    </div>
+  );
+}
+
+/* ------------------------------------------------------------------ */
+/* Step-paginated slot picker                                          */
+/* ------------------------------------------------------------------ */
+
+interface SlotStepPickerProps {
+  slots: AvailableSlot[];
+  selectedSlotId: string | null;
+  onSelect: (slotId: string) => void;
+  locale: string;
+  pickDateLabel: string;
+  pickTimeLabel: string;
+  emptyDayLabel: string;
+}
+
+function SlotStepPicker({ slots, selectedSlotId, onSelect, locale, pickDateLabel, pickTimeLabel, emptyDayLabel }: SlotStepPickerProps) {
+  const dateFmtLocale = locale === 'en' ? 'en-CA' : 'fr-FR';
+
+  /* Index slots by ISO local date so the chip strip only shows days that have slots. */
+  const grouped = useMemo(() => {
+    const map = new Map<string, AvailableSlot[]>();
+    for (const slot of slots) {
+      const d = new Date(slot.startTime);
+      const key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+      const list = map.get(key) ?? [];
+      list.push(slot);
+      map.set(key, list);
+    }
+    return Array.from(map.entries()).map(([key, daySlots]) => {
+      const sample = new Date(daySlots[0].startTime);
+      return {
+        key,
+        dayShort: sample.toLocaleDateString(dateFmtLocale, { weekday: 'short' }).slice(0, 3),
+        dayFull:  sample.toLocaleDateString(dateFmtLocale, { weekday: 'long', day: 'numeric', month: 'long' }),
+        dateNum:  sample.getDate(),
+        slots:    daySlots.sort((a, b) => new Date(a.startTime).getTime() - new Date(b.startTime).getTime()),
+      };
+    }).sort((a, b) => a.key.localeCompare(b.key));
+  }, [slots, dateFmtLocale]);
+
+  /* Default to the first day that has any slot, or the day of the currently selected slot. */
+  const initialDate = useMemo(() => {
+    if (selectedSlotId) {
+      const sel = slots.find((s) => s.id === selectedSlotId);
+      if (sel) {
+        const d = new Date(sel.startTime);
+        return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+      }
+    }
+    return grouped[0]?.key ?? null;
+  }, [selectedSlotId, slots, grouped]);
+
+  const [activeDate, setActiveDate] = useState<string | null>(initialDate);
+  const activeGroup = grouped.find((g) => g.key === activeDate) ?? null;
+
+  return (
+    <div className="space-y-5 pb-2">
+      {/* Date strip */}
+      <div>
+        <p className="text-[11px] font-bold text-[#555] dark:text-[#A0A090] uppercase tracking-wider mb-2">
+          {pickDateLabel}
+        </p>
+        <div className="flex gap-2 overflow-x-auto pb-1 scrollbar-none -mx-1 px-1">
+          {grouped.map((g) => {
+            const isActive = g.key === activeDate;
+            return (
+              <button
+                key={g.key}
+                type="button"
+                onClick={() => setActiveDate(g.key)}
+                aria-pressed={isActive}
+                aria-label={g.dayFull}
+                className={[
+                  'shrink-0 flex flex-col items-center justify-center w-[56px] py-2 rounded-xl border-2 transition-all cursor-pointer',
+                  isActive
+                    ? 'border-gold bg-gold text-dark-bg shadow-sm'
+                    : 'border-[#D0D0C0] dark:border-tab-inactive text-[#0A0A14] dark:text-white hover:border-gold/60',
+                ].join(' ')}
+              >
+                <span className="text-[10px] font-bold uppercase tracking-wider opacity-75">{g.dayShort}</span>
+                <span className="text-[18px] font-black leading-none mt-0.5">{g.dateNum}</span>
+              </button>
+            );
+          })}
+        </div>
+      </div>
+
+      {/* Time slots for the picked day */}
+      <div>
+        <p className="text-[11px] font-bold text-[#555] dark:text-[#A0A090] uppercase tracking-wider mb-2">
+          {pickTimeLabel}
+        </p>
+        {activeGroup && activeGroup.slots.length > 0 ? (
+          <div className="grid grid-cols-3 gap-2 sm:grid-cols-4">
+            {activeGroup.slots.map((slot) => {
+              const d = new Date(slot.startTime);
+              const time = `${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`;
+              const isSelected = slot.id === selectedSlotId;
+              const isDisabled = slot.isFull;
+              return (
+                <button
+                  key={slot.id}
+                  type="button"
+                  disabled={isDisabled}
+                  onClick={() => onSelect(slot.id)}
+                  aria-pressed={isSelected}
+                  className={[
+                    'py-2.5 rounded-[10px] text-[14px] font-bold border-2 transition-all',
+                    'font-[family-name:var(--font-roboto-mono)]',
+                    isDisabled
+                      ? 'border-[#D0D0C0] dark:border-tab-inactive text-[#CCC] dark:text-[#555] cursor-not-allowed line-through'
+                      : isSelected
+                        ? 'border-gold bg-gold text-dark-bg shadow-sm cursor-pointer'
+                        : 'border-[#D0D0C0] dark:border-tab-inactive text-[#0A0A14] dark:text-white hover:border-gold/60 cursor-pointer',
+                  ].join(' ')}
+                >
+                  {time}
+                </button>
+              );
+            })}
+          </div>
+        ) : (
+          <p className="text-[13px] text-[#999] dark:text-[#666] text-center py-6">{emptyDayLabel}</p>
+        )}
+      </div>
+    </div>
   );
 }
