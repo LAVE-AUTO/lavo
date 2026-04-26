@@ -1011,6 +1011,10 @@
     "profile": {
         "title": "Mon profil",
         "change_photo": "Modifier la photo",
+        "avatar_upload_title": "Téléverser une photo de profil",
+        "avatar_upload_action": "Changer",
+        "avatar_upload_success": "Photo de profil téléversée",
+        "avatar_upload_error": "Impossible de téléverser la photo de profil",
         "verified": "Vérifié",
         "not_verified": "Email non vérifié",
         "coming_soon": "Bientôt disponible",

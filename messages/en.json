@@ -1011,6 +1011,10 @@
     "profile": {
         "title": "My profile",
         "change_photo": "Change photo",
+        "avatar_upload_title": "Upload a profile photo",
+        "avatar_upload_action": "Change",
+        "avatar_upload_success": "Profile photo uploaded",
+        "avatar_upload_error": "Unable to upload the profile photo",
         "verified": "Verified",
         "not_verified": "Email not verified",
         "coming_soon": "Coming soon",

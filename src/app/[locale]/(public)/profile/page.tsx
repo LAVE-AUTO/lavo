@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useRef, useEffect } from 'react';
+import type { ChangeEvent } from 'react';
 import { useTranslations, useLocale } from 'next-intl';
 import { Link } from '@/i18n/navigation';
 import { useAuth } from '@/context';
@@ -70,9 +71,10 @@ export default function ProfilePage() {
   const t      = useTranslations('profile');
   const locale = useLocale();
   const { user } = useAuth();
-  const { success: showSuccess } = useToast();
+  const { success: showSuccess, error: showError } = useToast();
 
-  const [photoUrl] = useState<string | null>(null);
+  const [photoUrl, setPhotoUrl] = useState<string | null>(null);
+  const avatarInputRef = useRef<HTMLInputElement | null>(null);
 
   /* Notification toggles — local-only state until PATCH /me/notifications ships;
      the toggles are visually disabled so the user knows the change won't persist. */
@@ -153,6 +155,49 @@ export default function ProfilePage() {
 
   const isVerified = Boolean(user?.email_verified_at);
 
+  const handleAvatarPick = async (event: ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    event.target.value = '';
+    if (!file) return;
+
+    if (!['image/jpeg', 'image/png', 'image/webp', 'image/gif'].includes(file.type)) {
+      showError(t('avatar_upload_error'));
+      return;
+    }
+
+    if (file.size > 10 * 1024 * 1024) {
+      showError(t('avatar_upload_error'));
+      return;
+    }
+
+    const formData = new FormData();
+    formData.append('file', file);
+
+    try {
+      const response = await fetch('/api/v1/upload', {
+        method: 'POST',
+        body: formData,
+      });
+
+      if (!response.ok) {
+        showError(t('avatar_upload_error'));
+        return;
+      }
+
+      const body = (await response.json()) as { data?: { url?: string } };
+      const url = body?.data?.url ?? null;
+      if (!url) {
+        showError(t('avatar_upload_error'));
+        return;
+      }
+
+      setPhotoUrl(url);
+      showSuccess(t('avatar_upload_success'));
+    } catch {
+      showError(t('avatar_upload_error'));
+    }
+  };
+
   const statsRow = [
     { label: t('stats_washes'), value: completedLabel, icon: (
       <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
@@ -194,17 +239,28 @@ export default function ProfilePage() {
           <div className="flex items-center gap-5">
 
             {/* Avatar — disabled until POST /me/avatar (or PATCH /me { avatar_url }) ships */}
-            <div
-              aria-disabled="true"
-              title={t('coming_soon')}
-              className="relative w-20 h-20 rounded-full bg-gold/15 border-2 border-gold/30 flex items-center justify-center cursor-not-allowed overflow-hidden shrink-0"
+            <button
+              type="button"
+              onClick={() => avatarInputRef.current?.click()}
+              className="relative w-20 h-20 rounded-full bg-gold/15 border-2 border-gold/30 flex items-center justify-center overflow-hidden shrink-0 cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-gold/60 focus-visible:ring-offset-2 focus-visible:ring-offset-transparent"
+              title={t('avatar_upload_title')}
             >
               {photoUrl ? (
                 <img src={photoUrl} alt="avatar" className="w-full h-full object-cover" />
               ) : (
                 <span className="text-[28px] font-black text-gold">{initial}</span>
               )}
-            </div>
+              <span className="absolute inset-x-0 bottom-0 bg-black/45 px-2 py-1 text-[10px] font-bold uppercase tracking-wider text-white">
+                {t('avatar_upload_action')}
+              </span>
+            </button>
+            <input
+              ref={avatarInputRef}
+              type="file"
+              accept="image/jpeg,image/png,image/webp,image/gif"
+              onChange={handleAvatarPick}
+              className="hidden"
+            />
 
             {/* Name + email */}
             <div className="min-w-0 flex-1">
