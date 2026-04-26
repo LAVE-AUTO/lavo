@@ -12,8 +12,8 @@ import type { NextResponse } from 'next/server';
  * Verifies authentication then checks that the caller has one of the allowed roles.
  *
  * For station role: verifies the station account exists and is not blocked.
- * Pending KYC (`pending_admin_validation`) is allowed so station owners can configure
- * their workspace before final validation.
+ * Pending and rejected KYC statuses are allowed so station owners can configure
+ * their workspace before/after validation decisions.
  * For any role: if force_password_change is true, returns 403 PASSWORD_CHANGE_REQUIRED.
  *
  * Usage:
@@ -52,10 +52,6 @@ export async function requireRole(
 
     if (!station) {
       return error403('Station account not found', ApiCode.BUSINESS_NOT_APPROVED);
-    }
-
-    if (station.status === 'rejected') {
-      return error403('Station account has been rejected', ApiCode.BUSINESS_REJECTED);
     }
 
     if (station.status === 'suspended') {

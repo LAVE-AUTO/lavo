@@ -2028,6 +2028,8 @@
     },
     "station_rejected": {
         "title": "Votre demande KYC a été rejetée",
+        "status_label": "Rejeté",
+        "banner_notice": "Votre station reste masquée dans la liste publique tant que le KYC n'est pas validé. Vous pouvez néanmoins configurer entièrement votre interface.",
         "subtitle": "La demande d'adhésion pour {name} n'a pas été approuvée par notre équipe.",
         "reason_label": "Motif du refus",
         "btn_logout": "Se déconnecter",

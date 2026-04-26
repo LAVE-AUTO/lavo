@@ -2028,6 +2028,8 @@
     },
     "station_rejected": {
         "title": "Your KYC application was rejected",
+        "status_label": "Rejected",
+        "banner_notice": "Your station stays hidden from the public list while KYC is not approved. You can still fully configure your workspace.",
         "subtitle": "The membership application for {name} was not approved by our team.",
         "reason_label": "Reason for rejection",
         "btn_logout": "Log out",

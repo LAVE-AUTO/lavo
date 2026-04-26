@@ -7,7 +7,7 @@ import { useLocale } from 'next-intl';
 import { useAuth } from '@/context';
 import { getFromApi } from '@/services/axios-service';
 import { StationShell } from '@/components/station/StationShell';
-import { StationRejectedView } from '@/components/station/StationRejectedView';
+import { StationRejectedBanner } from '@/components/station/StationRejectedBanner';
 import { StationPendingView } from '@/components/station/StationPendingView';
 
 type StationState =
@@ -36,7 +36,26 @@ export default function StationLayout({ children }: { children: ReactNode }) {
       if (!mounted) return;
 
       if (ok) {
-        const name = (data as { data: { name: string } }).data?.name ?? '';
+        const payload = (data as { data: { name?: string; status?: string } }).data;
+        const name = payload?.name ?? '';
+        const status = payload?.status ?? 'active';
+
+        if (status === 'pending_admin_validation') {
+          setState({ kind: 'pending', name });
+          return;
+        }
+
+        if (status === 'rejected') {
+          getFromApi('/station/status').then(([statusOk, statusData]) => {
+            if (!mounted) return;
+            const reason = statusOk
+              ? ((statusData as { data: { rejection_reason: string | null } }).data?.rejection_reason ?? null)
+              : null;
+            setState({ kind: 'rejected', name, reason });
+          });
+          return;
+        }
+
         setState({ kind: 'ok', name });
         return;
       }
@@ -92,7 +111,12 @@ export default function StationLayout({ children }: { children: ReactNode }) {
   }
 
   if (state.kind === 'rejected') {
-    return <StationRejectedView stationName={state.name} rejectionReason={state.reason} />;
+    return (
+      <StationShell stationName={state.name}>
+        <StationRejectedBanner reason={state.reason} />
+        {children}
+      </StationShell>
+    );
   }
 
   return <StationShell stationName={state.name || undefined}>{children}</StationShell>;
