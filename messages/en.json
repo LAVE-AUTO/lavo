@@ -1792,7 +1792,7 @@
         "service_scope_both": "Exterior and interior",
         "error_name_empty": "Station name cannot be empty.",
         "profile_save_success": "Profile updated",
-        "profile_save_error": "Feature not available — API connection coming soon",
+        "profile_save_error": "Unable to update profile.",
         "section_photos": "Station photos",
         "section_photos_hint": "Add up to 8 photos of your station. They are displayed on the station cards for clients.",
         "photos_add": "Add",
@@ -1817,7 +1817,7 @@
         "error_address_empty": "Address cannot be empty.",
         "error_city_empty": "City cannot be empty.",
         "location_save_success": "Location updated",
-        "location_save_error": "Feature not available — API connection coming soon",
+        "location_save_error": "Unable to update location.",
         "section_extras": "Extras by service type",
         "extras_tab_exterior": "Exterior",
         "extras_tab_interior": "Interior",
@@ -1832,7 +1832,7 @@
         "extras_inactive": "Inactive",
         "extras_save_success": "Extras saved",
         "extras_save_error": "Error saving extras",
-        "photos_save_unavailable": "Preview only — save will be available once the API endpoint is connected."
+        "photos_save_unavailable": "Photo save is currently unavailable."
     },
     "station_services": {
         "page_title": "My Services",

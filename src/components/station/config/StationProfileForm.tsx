@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import { useTranslations } from 'next-intl';
 import { useAuth } from '@/context/auth-context';
+import { patchWithApi } from '@/services';
 
 export interface StationProfile {
   name: string;
@@ -76,9 +77,38 @@ export function StationProfileForm({ profile, onSaved, locked = false }: Props) 
       setFeedback({ ok: false, msg: t('error_name_empty') });
       return;
     }
+
     setSaving(true);
-    // TODO: connect to API once endpoint is available — PATCH /station/me does not exist yet
-    setFeedback({ ok: false, msg: t('profile_save_error') });
+
+    const payload = {
+      name: name.trim(),
+      description: description.trim() ? description.trim() : null,
+      service_scope: serviceScope || null,
+    };
+
+    const [ok, data] = await patchWithApi('/station/me', payload);
+
+    if (ok) {
+      const station = (data as {
+        data?: { name?: string; description?: string | null; service_scope?: string | null };
+      })?.data;
+
+      const nextProfile: StationProfile = {
+        name: station?.name ?? payload.name,
+        description: station?.description ?? payload.description,
+        service_scope: station?.service_scope ?? payload.service_scope,
+      };
+
+      onSaved(nextProfile);
+      setName(nextProfile.name);
+      setDescription(nextProfile.description ?? '');
+      setServiceScope((nextProfile.service_scope as ScopeValue) ?? '');
+      setFeedback({ ok: true, msg: t('profile_save_success') });
+      setIsEditing(false);
+    } else {
+      setFeedback({ ok: false, msg: t('profile_save_error') });
+    }
+
     setSaving(false);
   }
 

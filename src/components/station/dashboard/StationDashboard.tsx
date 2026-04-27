@@ -12,8 +12,7 @@ import { DashboardPostGrid, type Post, type PostEntry } from './DashboardPostGri
 import { DashboardLegendBar } from './DashboardLegendBar';
 import type { QueueEntry } from './QueueCard';
 
-// TODO: connect to API once endpoint is available
-const MOCK_KPI: KpiData = { revenue: 165, clients: 8, lateFees: 5, occupancy: 72 };
+const EMPTY_KPI: KpiData = { revenue: 0, clients: 0, lateFees: 0, occupancy: 0 };
 
 interface RawEntry {
   id: string;
@@ -33,6 +32,14 @@ interface RawEntry {
 interface RawConfig {
   config: { wash_post_count: number };
   posts: { id: string; position: number; is_active: boolean }[];
+}
+
+interface RawDashboard {
+  total_revenue: string;
+  total_clients: number;
+  total_completed: number;
+  average_rating: string | null;
+  pending_count: number;
 }
 
 type DashboardAction = 'call' | 'complete' | 'cancel' | 'start' | 'call_next';
@@ -102,6 +109,7 @@ export function StationDashboard() {
 
   const [selectedDate, setSelectedDate] = useState(() => new Date());
   const [view, setView] = useState<'weekly' | 'monthly'>('weekly');
+  const [kpi, setKpi] = useState<KpiData>(EMPTY_KPI);
   const [queueEntries, setQueueEntries] = useState<QueueEntry[]>([]);
   const [posts, setPosts] = useState<Post[]>([]);
   const [loading, setLoading] = useState(true);
@@ -110,16 +118,44 @@ export function StationDashboard() {
   const [actionLoading, setActionLoading] = useState(false);
   const [actionError, setActionError] = useState<string | null>(null);
 
+  function mapDashboardToKpi(raw: RawDashboard): KpiData {
+    const revenue = Number.parseFloat(raw.total_revenue ?? '0');
+    const rating = Number.parseFloat(raw.average_rating ?? '0');
+    return {
+      revenue: Number.isFinite(revenue) ? Math.round(revenue) : 0,
+      clients: raw.total_clients ?? 0,
+      lateFees: raw.pending_count ?? 0,
+      occupancy: Number.isFinite(rating) ? Math.max(0, Math.min(100, Math.round(rating * 20))) : 0,
+    };
+  }
+
   const loadData = useCallback(async () => {
-    const [entriesOk, entriesData] = await getFromApi('/station/entries');
-    const [configOk, configData] = await getFromApi('/station/config');
+    const [entriesResult, configResult, dashboardResult] = await Promise.all([
+      getFromApi('/station/entries'),
+      getFromApi('/station/config'),
+      getFromApi('/station/dashboard'),
+    ]);
+
+    const [entriesOk, entriesData] = entriesResult;
+    const [configOk, configData] = configResult;
+    const [dashboardOk, dashboardData] = dashboardResult;
+
     if (!mountedRef.current) return;
+
     if (entriesOk && configOk) {
       const raw = (entriesData as { data: { entries: RawEntry[] } }).data.entries ?? [];
       const config = (configData as { data: RawConfig }).data;
       setQueueEntries(buildQueueEntries(raw));
       setPosts(buildPosts(config, raw));
     }
+
+    if (dashboardOk) {
+      const dashboard = (dashboardData as { data?: RawDashboard })?.data;
+      if (dashboard) {
+        setKpi(mapDashboardToKpi(dashboard));
+      }
+    }
+
     setLoading(false);
   }, []);
 
@@ -208,7 +244,7 @@ export function StationDashboard() {
 
   return (
     <div className="flex flex-1 flex-col overflow-hidden animate-fade-in">
-      <DashboardKpiRow data={MOCK_KPI} />
+      <DashboardKpiRow data={kpi} />
       <DashboardDateNav
         selectedDate={selectedDate}
         onDateChange={setSelectedDate}

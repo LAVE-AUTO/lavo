@@ -45,6 +45,7 @@ function todayISO() {
 interface StationMeData {
   data: {
     name: string;
+    status: string;
     description: string | null;
     service_scope: string | null;
     address: string;
@@ -71,13 +72,6 @@ export function StationConfigPage() {
   const loadData = useCallback(async () => {
     const [configOk, configData] = await getFromApi('/station/config');
 
-    // Station not yet approved — all station API calls return 403 BUSINESS_NOT_APPROVED
-    if (!configOk && (configData as { code?: string }).code === 'BUSINESS_NOT_APPROVED') {
-      setIsPendingApproval(true);
-      setLoading(false);
-      return;
-    }
-
     if (configOk) {
       const res = configData as { data: { config: StationConfig; posts: StationPost[] } };
       setConfig(res.data.config);
@@ -98,6 +92,9 @@ export function StationConfigPage() {
         latitude: res.data.latitude,
         longitude: res.data.longitude,
       });
+      setIsPendingApproval(res.data.status === 'pending_admin_validation');
+    } else {
+      setIsPendingApproval(false);
     }
 
     setLoading(false);
@@ -152,13 +149,12 @@ export function StationConfigPage() {
             </div>
           </div>
         )}
-        <StationProfileForm profile={profile} onSaved={setProfile} locked={isPendingApproval} />
-        <StationPhotosForm locked={isPendingApproval} />
-        <StationLocationForm location={location} onSaved={setLocation} locked={isPendingApproval} />
+        <StationProfileForm profile={profile} onSaved={setProfile} />
+        <StationPhotosForm />
+        <StationLocationForm location={location} onSaved={setLocation} />
         <StationConfigForm
           config={config}
           posts={posts}
-          locked={isPendingApproval}
           onSaved={(c, p) => {
             setConfig(c);
             setPosts(p);

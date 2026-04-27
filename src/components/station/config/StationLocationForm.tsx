@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import { useTranslations } from 'next-intl';
+import { patchWithApi } from '@/services';
 
 export interface StationLocation {
   address: string;
@@ -130,9 +131,52 @@ export function StationLocationForm({ location, onSaved, locked = false }: Props
       setFeedback({ ok: false, msg: t('geo_invalid_lng') });
       return;
     }
+
     setSaving(true);
-    // TODO: connect to API once endpoint is available — PATCH /station/me does not exist yet
-    setFeedback({ ok: false, msg: t('location_save_error') });
+
+    const payload = {
+      address: address.trim(),
+      city: city.trim(),
+      latitude: lat.trim() ? Number(lat) : null,
+      longitude: lng.trim() ? Number(lng) : null,
+    };
+
+    const [ok, data] = await patchWithApi('/station/me', payload);
+
+    if (ok) {
+      const station = (data as {
+        data?: {
+          address?: string;
+          city?: string;
+          latitude?: number | string | null;
+          longitude?: number | string | null;
+        };
+      })?.data;
+
+      const nextLocation: StationLocation = {
+        address: station?.address ?? payload.address,
+        city: station?.city ?? payload.city,
+        latitude:
+          station?.latitude !== undefined
+            ? (station.latitude == null ? null : String(station.latitude))
+            : (payload.latitude == null ? null : String(payload.latitude)),
+        longitude:
+          station?.longitude !== undefined
+            ? (station.longitude == null ? null : String(station.longitude))
+            : (payload.longitude == null ? null : String(payload.longitude)),
+      };
+
+      onSaved(nextLocation);
+      setAddress(nextLocation.address);
+      setCity(nextLocation.city);
+      setLat(nextLocation.latitude ?? '');
+      setLng(nextLocation.longitude ?? '');
+      setFeedback({ ok: true, msg: t('location_save_success') });
+      setIsEditing(false);
+    } else {
+      setFeedback({ ok: false, msg: t('location_save_error') });
+    }
+
     setSaving(false);
   }
 

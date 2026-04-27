@@ -1792,7 +1792,7 @@
         "service_scope_both": "Extérieur et intérieur",
         "error_name_empty": "Le nom de la station ne peut pas être vide.",
         "profile_save_success": "Profil mis à jour",
-        "profile_save_error": "Fonctionnalité non disponible — connexion API à venir",
+        "profile_save_error": "Erreur lors de la mise à jour du profil.",
         "section_photos": "Photos de la station",
         "section_photos_hint": "Ajoutez jusqu'à 8 photos de votre station. Elles s'affichent sur les fiches station côté client.",
         "photos_add": "Ajouter",
@@ -1817,7 +1817,7 @@
         "error_address_empty": "L'adresse ne peut pas être vide.",
         "error_city_empty": "La ville ne peut pas être vide.",
         "location_save_success": "Localisation mise à jour",
-        "location_save_error": "Fonctionnalité non disponible — connexion API à venir",
+        "location_save_error": "Erreur lors de la mise à jour de la localisation.",
         "section_extras": "Extras par type de service",
         "extras_tab_exterior": "Extérieur",
         "extras_tab_interior": "Intérieur",
@@ -1832,7 +1832,7 @@
         "extras_inactive": "Inactif",
         "extras_save_success": "Extras enregistrés",
         "extras_save_error": "Erreur lors de l'enregistrement",
-        "photos_save_unavailable": "Aperçu uniquement — la sauvegarde ne sera disponible qu'une fois l'API connectée."
+        "photos_save_unavailable": "Enregistrement des photos indisponible pour le moment."
     },
     "station_services": {
         "page_title": "Mes Services",
