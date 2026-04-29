@@ -118,7 +118,7 @@ export function StationAnalytics() {
   }
 
   return (
-    <div className="space-y-6 bg-gradient-to-br from-white to-slate-50 p-6 dark:from-slate-900 dark:to-slate-950">
+    <div className="space-y-6 p-6 bg-white dark:bg-slate-900">
       {/* Header */}
       <div className="flex flex-col items-start justify-between gap-4 sm:flex-row sm:items-center">
         <div>

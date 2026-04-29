@@ -1,5 +1,6 @@
-'use client';
+ 'use client';
 
+import { useState } from 'react';
 import { useTranslations } from 'next-intl';
 import { usePathname } from 'next/navigation';
 import { Link } from '@/i18n/navigation';
@@ -98,6 +99,7 @@ export function StationSidebar() {
   const t = useTranslations('station_dashboard');
   const pathname = usePathname();
   const { logout } = useAuth();
+  const [collapsed, setCollapsed] = useState(false);
 
   const operationsItems: NavItem[] = [
     { href: '/station/queue', labelKey: 'nav_queue', icon: <QueueIcon /> },
@@ -131,20 +133,32 @@ export function StationSidebar() {
         className={isActive ? linkActive : linkIdle}
       >
         {item.icon}
-        {t(item.labelKey)}
+        {!collapsed && <span>{t(item.labelKey)}</span>}
       </Link>
     );
   };
 
   return (
-    <aside className="flex w-[180px] flex-shrink-0 flex-col border-r border-[#E0DCD0] bg-[#F0EDE0] p-3 dark:border-[#1A2A14] dark:bg-[#111A0E]">
+    <aside className={`flex ${collapsed ? 'w-16' : 'w-[220px]'} flex-shrink-0 flex-col border-r border-[#E0DCD0] bg-[#F0EDE0] p-3 dark:border-[#1A2A14] dark:bg-[#111A0E]`}>
+      {/* Collapse toggle */}
+      <div className="flex items-center justify-end mb-2">
+        <button
+          aria-label={collapsed ? t('nav_expand') : t('nav_collapse')}
+          onClick={() => setCollapsed((s) => !s)}
+          className="p-1 rounded hover:bg-[#E8E4D8] dark:hover:bg-[#182214]"
+        >
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="transform transition-transform" aria-hidden>
+            <polyline points="15 18 9 12 15 6" />
+          </svg>
+        </button>
+      </div>
       {/* Home link — always visible */}
       <Link
         href="/station/dashboard"
         className={pathname.includes('/station/dashboard') && !pathname.includes('/station/queue') ? linkActive : linkIdle}
       >
         <HomeIcon />
-        {t('nav_home')}
+        {!collapsed && <span>{t('nav_home')}</span>}
       </Link>
 
       {/* Navigation sections */}
@@ -172,7 +186,7 @@ export function StationSidebar() {
       </nav>
 
       {/* Logout — pushed to bottom */}
-      <div className="mt-auto pt-3">
+        <div className="mt-auto pt-3">
         <div className="mb-3 h-px bg-[#E0DCD0] dark:bg-[#1A2A14]" />
         <button
           type="button"
@@ -180,9 +194,10 @@ export function StationSidebar() {
           className="flex w-full items-center gap-2 rounded-lg px-3 py-2.5 text-[13px] font-semibold text-[#888] transition-colors duration-150 hover:bg-[#FEF2F2] hover:text-[#EF4444] dark:text-[#9A9A8A] dark:hover:bg-[#2A0A0A] dark:hover:text-[#FF8A80]"
         >
           <LogoutIcon />
-          {t('nav_logout')}
+          {!collapsed && <span>{t('nav_logout')}</span>}
         </button>
       </div>
     </aside>
   );
 }
+

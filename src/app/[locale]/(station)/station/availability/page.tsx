@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useRef } from 'react';
 import { useTranslations } from 'next-intl';
-import { useAuth } from '@/context/AuthContext';
+import { useAuth } from '@/context/auth-context';
 import { getFromApi } from '@/services';
 import { AvailabilityViewToggle } from '@/components/station/availability/AvailabilityViewToggle';
 import { MonthCalendar } from '@/components/station/availability/MonthCalendar';
