@@ -4,6 +4,7 @@ import { useTranslations } from 'next-intl';
 import { usePathname } from 'next/navigation';
 import { Link } from '@/i18n/navigation';
 import { useAuth } from '@/context/auth-context';
+import { SidebarSection } from './SidebarSection';
 
 interface NavItem {
   href: string;
@@ -131,6 +132,73 @@ export function StationSidebar() {
             {t(item.labelKey)}
           </Link>
         ))}
+      </nav>
+  const operationsItems = [
+    { href: '/station/queue', labelKey: 'nav_queue', icon: <QueueIcon /> },
+    { href: '/station/reservations', labelKey: 'nav_reservations', icon: <ReservationsIcon /> },
+    { href: '/station/delays', labelKey: 'nav_delays', icon: <DelaysIcon /> },
+    { href: '/station/analytics', labelKey: 'nav_analytics', icon: <AnalyticsIcon /> },
+  ];
+
+  const configurationItems = [
+    { href: '/station/formats', labelKey: 'nav_formats', icon: <FormatsIcon /> },
+    { href: '/station/availability', labelKey: 'nav_availability', icon: <AvailabilityIcon /> },
+    { href: '/station/config', labelKey: 'nav_config', icon: <ConfigIcon /> },
+  ];
+
+  const supportItems = [
+    { href: '/station/history', labelKey: 'nav_history', icon: <HistoryIcon /> },
+    { href: '/station/qr', labelKey: 'nav_qr', icon: <QrIcon /> },
+    { href: '/station/support', labelKey: 'nav_support', icon: <SupportIcon /> },
+  ];
+
+  const renderNavLink = (item: NavItem) => {
+    const isActive = pathname.includes(item.href);
+    return (
+      <Link
+        key={item.href}
+        href={item.href as Parameters<typeof Link>[0]['href']}
+        className={isActive ? linkActive : linkIdle}
+      >
+        {item.icon}
+        {t(item.labelKey)}
+      </Link>
+    );
+  };
+
+  return (
+    <aside className="flex w-[180px] flex-shrink-0 flex-col border-r border-[#E0DCD0] bg-[#F0EDE0] p-3 dark:border-[#1A2A14] dark:bg-[#111A0E]">
+      {/* Home link — always visible */}
+      <Link
+        href="/station/dashboard"
+        className={pathname.includes('/station/dashboard') && !pathname.includes('/station/queue') ? linkActive : linkIdle}
+      >
+        <HomeIcon />
+        {t('nav_home')}
+      </Link>
+
+      {/* Navigation sections */}
+      <nav className="mt-4 flex flex-col gap-3">
+        {/* Opérations Section */}
+        <SidebarSection title={t('nav_section_operations')} defaultOpen>
+          <div className="flex flex-col gap-1">
+            {operationsItems.map(renderNavLink)}
+          </div>
+        </SidebarSection>
+
+        {/* Configuration Section */}
+        <SidebarSection title={t('nav_section_configuration')} defaultOpen>
+          <div className="flex flex-col gap-1">
+            {configurationItems.map(renderNavLink)}
+          </div>
+        </SidebarSection>
+
+        {/* Support & History Section */}
+        <SidebarSection title={t('nav_section_support')} defaultOpen>
+          <div className="flex flex-col gap-1">
+            {supportItems.map(renderNavLink)}
+          </div>
+        </SidebarSection>
       </nav>
 
       {/* Logout — pushed to bottom */}

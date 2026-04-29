@@ -55,6 +55,9 @@
     "availability_no_slots": "No time slots for this date",
     "availability_error_missing_fields": "Please fill all required fields"
     "nav_availability": "Availability"
+    "nav_section_operations": "Operations",
+    "nav_section_configuration": "Configuration",
+    "nav_section_support": "Support & History"
   },
   "home": {
     "meta_title": "Slowtime — Book your car wash online",

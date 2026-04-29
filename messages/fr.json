@@ -1563,6 +1563,9 @@
     "availability_no_slots": "Aucun créneau pour cette date",
     "availability_error_missing_fields": "Veuillez remplir tous les champs"
     "nav_availability": "Disponibilité"
+    "nav_section_operations": "Opérations",
+    "nav_section_configuration": "Configuration",
+    "nav_section_support": "Support & Historique"
   },
   "station_reservations": {
     "page_title": "Réservations du jour",
