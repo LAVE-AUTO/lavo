@@ -74,15 +74,15 @@ const AnalyticsIcon = () => (
   <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
     <polyline points="23 6 13.5 15.5 8.5 10.5 1 17" />
     <polyline points="17 6 23 6 23 12" />
+  </svg>
+);
 
-  const AvailabilityIcon = () => (
-    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-      <rect x="3" y="4" width="18" height="18" rx="2" ry="2" />
-      <line x1="16" y1="2" x2="16" y2="6" />
-      <line x1="8" y1="2" x2="8" y2="6" />
-      <line x1="3" y1="10" x2="21" y2="10" />
-    </svg>
-  );
+const AvailabilityIcon = () => (
+  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <rect x="3" y="4" width="18" height="18" rx="2" ry="2" />
+    <line x1="16" y1="2" x2="16" y2="6" />
+    <line x1="8" y1="2" x2="8" y2="6" />
+    <line x1="3" y1="10" x2="21" y2="10" />
   </svg>
 );
 
@@ -99,58 +99,28 @@ export function StationSidebar() {
   const pathname = usePathname();
   const { logout } = useAuth();
 
-  const navItems: NavItem[] = [
-    { href: '/station/dashboard',    labelKey: 'nav_home',         icon: <HomeIcon /> },
-    { href: '/station/queue',        labelKey: 'nav_queue',        icon: <QueueIcon /> },
-    { href: '/station/reservations', labelKey: 'nav_reservations', icon: <ReservationsIcon /> },
-    { href: '/station/delays',       labelKey: 'nav_delays',       icon: <DelaysIcon /> },
-    { href: '/station/analytics',    labelKey: 'nav_analytics',    icon: <AnalyticsIcon /> },
-      { href: '/station/availability',  labelKey: 'nav_availability', icon: <AvailabilityIcon /> },
-    { href: '/station/formats',      labelKey: 'nav_formats',      icon: <FormatsIcon /> },
-    { href: '/station/config',       labelKey: 'nav_config',       icon: <ConfigIcon /> },
-    { href: '/station/history',      labelKey: 'nav_history',      icon: <HistoryIcon /> },
-    { href: '/station/qr',           labelKey: 'nav_qr',           icon: <QrIcon /> },
-    { href: '/station/support',      labelKey: 'nav_support',      icon: <SupportIcon /> },
-  ];
-
-  const linkBase = 'flex items-center gap-2 rounded-lg px-3 py-2.5 text-[13px] font-semibold transition-colors duration-150';
-  const linkActive = `${linkBase} bg-[#C49A1E] text-[#0C1209]`;
-  const linkIdle = `${linkBase} text-[#666] hover:bg-[#E8E4D8] dark:text-[#A0A090] dark:hover:bg-[#182214]`;
-
-  return (
-    <aside className="flex w-[180px] flex-shrink-0 flex-col border-r border-[#E0DCD0] bg-[#F0EDE0] p-3 dark:border-[#1A2A14] dark:bg-[#111A0E]">
-
-      {/* Navigation items */}
-      <nav className="flex flex-col gap-1.5">
-        {navItems.map((item) => (
-          <Link
-            key={item.href}
-            href={item.href as Parameters<typeof Link>[0]['href']}
-            className={pathname.includes(item.href) ? linkActive : linkIdle}
-          >
-            {item.icon}
-            {t(item.labelKey)}
-          </Link>
-        ))}
-      </nav>
-  const operationsItems = [
+  const operationsItems: NavItem[] = [
     { href: '/station/queue', labelKey: 'nav_queue', icon: <QueueIcon /> },
     { href: '/station/reservations', labelKey: 'nav_reservations', icon: <ReservationsIcon /> },
     { href: '/station/delays', labelKey: 'nav_delays', icon: <DelaysIcon /> },
     { href: '/station/analytics', labelKey: 'nav_analytics', icon: <AnalyticsIcon /> },
   ];
 
-  const configurationItems = [
+  const configurationItems: NavItem[] = [
     { href: '/station/formats', labelKey: 'nav_formats', icon: <FormatsIcon /> },
     { href: '/station/availability', labelKey: 'nav_availability', icon: <AvailabilityIcon /> },
     { href: '/station/config', labelKey: 'nav_config', icon: <ConfigIcon /> },
   ];
 
-  const supportItems = [
+  const supportItems: NavItem[] = [
     { href: '/station/history', labelKey: 'nav_history', icon: <HistoryIcon /> },
     { href: '/station/qr', labelKey: 'nav_qr', icon: <QrIcon /> },
     { href: '/station/support', labelKey: 'nav_support', icon: <SupportIcon /> },
   ];
+
+  const linkBase = 'flex items-center gap-2 rounded-lg px-3 py-2.5 text-[13px] font-semibold transition-colors duration-150';
+  const linkActive = `${linkBase} bg-[#C49A1E] text-[#0C1209]`;
+  const linkIdle = `${linkBase} text-[#666] hover:bg-[#E8E4D8] dark:text-[#A0A090] dark:hover:bg-[#182214]`;
 
   const renderNavLink = (item: NavItem) => {
     const isActive = pathname.includes(item.href);
