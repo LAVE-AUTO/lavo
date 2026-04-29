@@ -495,20 +495,28 @@ export async function updateMyStationPhotos(
 
 // %%%%% END - Station owner — profile update %%%%%
 
-/** Cache TTL in seconds for public station listing. */
+/** Cache TTL in seconds for public station listing (Redis layer). */
 const STATIONS_LIST_TTL = 30;
+
+/** In-process TTL for the station listing — avoids a Redis GET on every request. */
+const STATIONS_LIST_INPROCESS_TTL_MS = 10_000;
+const _stationsListCache = new Map<string, { value: ListStationsPublicResult; expiresAt: number }>();
 
 /**
  * Returns paginated list of active stations and optional group arrays (available_now, most_appreciated, most_visited).
  * Response shape: { data: { all, ...groups }, meta: { total, page, per_page, total_pages } }.
  * Backward compatible: when no groups param, only data.all and meta are set.
- * Results are cached in Redis for 30 seconds per unique parameter combination.
+ * Three-layer cache: in-process (10s) → Redis (30s) → DB.
  */
 export async function listStationsPublic(
   filters: ListActiveStationsFilters
 ): Promise<ListStationsPublicResult> {
   const cacheKey = `stations:list:${JSON.stringify(filters, Object.keys(filters).sort())}`;
-  return getCachedOrFetch(cacheKey, STATIONS_LIST_TTL, async () => {
+
+  const inProcess = _stationsListCache.get(cacheKey);
+  if (inProcess && Date.now() < inProcess.expiresAt) return inProcess.value;
+
+  const result = await getCachedOrFetch(cacheKey, STATIONS_LIST_TTL, async () => {
     const page = Math.max(1, filters.page ?? 1);
     const per_page = Math.min(100, Math.max(1, filters.per_page ?? 20));
     const { rows, total } = await listActiveStations({ ...filters, page, per_page });
@@ -537,6 +545,9 @@ export async function listStationsPublic(
       meta: { total, page, per_page, total_pages },
     };
   });
+
+  _stationsListCache.set(cacheKey, { value: result, expiresAt: Date.now() + STATIONS_LIST_INPROCESS_TTL_MS });
+  return result;
 }
 
 /**
