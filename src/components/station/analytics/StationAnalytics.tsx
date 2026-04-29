@@ -63,17 +63,20 @@ export function StationAnalytics() {
           return;
         }
 
-        // Transform data for charts
+        // Transform data for charts with safe number conversion
+        const transformSeries = (series: Array<{ date: string; value: string }>) =>
+          series.map((item) => ({ date: item.date, value: parseFloat(item.value) || 0 }));
+
         const analyticsData: AnalyticsData = {
-          revenue: revData?.data?.series || [],
-          clients: clientsData?.data?.series || [],
-          completed: completedData?.data?.series || [],
+          revenue: transformSeries(revData?.data?.series || []),
+          clients: transformSeries(clientsData?.data?.series || []),
+          completed: transformSeries(completedData?.data?.series || []),
           kpi: {
-            totalRevenue: dashData?.data?.revenue_total || 0,
-            avgRevenue: dashData?.data?.revenue_avg || 0,
+            totalRevenue: parseFloat(dashData?.data?.total_revenue || '0') || 0,
+            avgRevenue: parseFloat(dashData?.data?.average_revenue || '0') || 0,
             revenueGrowth: dashData?.data?.revenue_growth || 0,
-            uniqueClients: dashData?.data?.unique_clients || 0,
-            completedServices: dashData?.data?.completed_count || 0,
+            uniqueClients: dashData?.data?.total_clients || 0,
+            completedServices: dashData?.data?.total_completed || 0,
             avgFillRate: dashData?.data?.avg_fill_rate || 0,
           },
         };

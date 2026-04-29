@@ -69,6 +69,13 @@ const SupportIcon = () => (
   </svg>
 );
 
+const AnalyticsIcon = () => (
+  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <polyline points="23 6 13.5 15.5 8.5 10.5 1 17" />
+    <polyline points="17 6 23 6 23 12" />
+  </svg>
+);
+
 const LogoutIcon = () => (
   <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
     <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" />
@@ -87,6 +94,7 @@ export function StationSidebar() {
     { href: '/station/queue',        labelKey: 'nav_queue',        icon: <QueueIcon /> },
     { href: '/station/reservations', labelKey: 'nav_reservations', icon: <ReservationsIcon /> },
     { href: '/station/delays',       labelKey: 'nav_delays',       icon: <DelaysIcon /> },
+    { href: '/station/analytics',    labelKey: 'nav_analytics',    icon: <AnalyticsIcon /> },
     { href: '/station/formats',      labelKey: 'nav_formats',      icon: <FormatsIcon /> },
     { href: '/station/config',       labelKey: 'nav_config',       icon: <ConfigIcon /> },
     { href: '/station/history',      labelKey: 'nav_history',      icon: <HistoryIcon /> },

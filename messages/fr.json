@@ -1440,6 +1440,7 @@
   },
   "station_dashboard": {
     "nav_home": "Accueil",
+    "nav_analytics": "Analytique",
     "nav_availability": "Disponibilité",
     "nav_reservations": "Réservations",
     "nav_formats": "Services",
