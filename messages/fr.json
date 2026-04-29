@@ -1514,7 +1514,6 @@
         "confirm_call_next_title": "Appeler le prochain client ?",
         "confirm_call_next_message": "Le premier client en file d'attente sera marqué comme en cours. Cette action est irréversible.",
         "error_queue_empty": "La file d'attente est vide.",
-        "error_invalid_transition": "Cette entrée ne peut pas être modifiée pour le moment. Veuillez actualiser la page et réessayer."
         "error_invalid_transition": "Cette entrée ne peut pas être modifiée pour le moment. Veuillez actualiser la page et réessayer.",
         "manual_queue_title": "Ajouter un client manuellement",
         "manual_queue_format_label": "Format de véhicule",
@@ -1533,7 +1532,7 @@
         "time_extension_minutes_unit": "minutes",
         "time_extension_error_minutes": "Veuillez entrer une durée valide",
         "time_extension_button": "Ajouter le temps",
-        "loading": "Chargement..."
+        "loading": "Chargement...",
         "priority_action_button": "Priorité",
         "priority_action_tooltip": "Déplacer ce client vers le début de la file",
         "slot_block_title": "Bloquer un créneau",
@@ -1546,7 +1545,7 @@
         "slot_block_reason_other": "Autre raison",
         "slot_block_duration_label": "Durée du blocage",
         "slot_block_error_reason": "Veuillez sélectionner une raison",
-        "slot_block_button": "Bloquer le créneau"
+        "slot_block_button": "Bloquer le créneau",
         "availability_title": "Gestion de la disponibilité",
         "availability_subtitle": "Gérez vos créneaux et horaires",
         "availability_view_month": "Vue mois",
@@ -1562,9 +1561,7 @@
         "availability_bay_all": "Tous les postes",
         "availability_bay_label": "Poste",
         "availability_no_slots": "Aucun créneau pour cette date",
-        "availability_error_missing_fields": "Veuillez remplir tous les champs"
         "availability_error_missing_fields": "Veuillez remplir tous les champs",
-        "nav_availability": "Disponibilité",
         "nav_section_operations": "Opérations",
         "nav_section_configuration": "Configuration",
         "nav_section_support": "Support & Historique"
