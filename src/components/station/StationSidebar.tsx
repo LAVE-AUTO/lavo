@@ -73,6 +73,15 @@ const AnalyticsIcon = () => (
   <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
     <polyline points="23 6 13.5 15.5 8.5 10.5 1 17" />
     <polyline points="17 6 23 6 23 12" />
+
+  const AvailabilityIcon = () => (
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <rect x="3" y="4" width="18" height="18" rx="2" ry="2" />
+      <line x1="16" y1="2" x2="16" y2="6" />
+      <line x1="8" y1="2" x2="8" y2="6" />
+      <line x1="3" y1="10" x2="21" y2="10" />
+    </svg>
+  );
   </svg>
 );
 
@@ -95,6 +104,7 @@ export function StationSidebar() {
     { href: '/station/reservations', labelKey: 'nav_reservations', icon: <ReservationsIcon /> },
     { href: '/station/delays',       labelKey: 'nav_delays',       icon: <DelaysIcon /> },
     { href: '/station/analytics',    labelKey: 'nav_analytics',    icon: <AnalyticsIcon /> },
+      { href: '/station/availability',  labelKey: 'nav_availability', icon: <AvailabilityIcon /> },
     { href: '/station/formats',      labelKey: 'nav_formats',      icon: <FormatsIcon /> },
     { href: '/station/config',       labelKey: 'nav_config',       icon: <ConfigIcon /> },
     { href: '/station/history',      labelKey: 'nav_history',      icon: <HistoryIcon /> },

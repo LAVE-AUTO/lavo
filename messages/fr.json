@@ -1546,6 +1546,23 @@
     "slot_block_duration_label": "Durée du blocage",
     "slot_block_error_reason": "Veuillez sélectionner une raison",
     "slot_block_button": "Bloquer le créneau"
+    "availability_title": "Gestion de la disponibilité",
+    "availability_subtitle": "Gérez vos créneaux et horaires",
+    "availability_view_month": "Vue mois",
+    "availability_view_week": "Vue semaine",
+    "availability_day_slots_title": "Créneaux du jour",
+    "availability_add_slot_button": "Ajouter créneau",
+    "availability_add_slot_title": "Nouveau créneau",
+    "availability_start_time": "Heure de début",
+    "availability_end_time": "Heure de fin",
+    "availability_bay": "Poste de lavage",
+    "availability_capacity": "Capacité",
+    "availability_bay_filter_label": "Filtrer par poste",
+    "availability_bay_all": "Tous les postes",
+    "availability_bay_label": "Poste",
+    "availability_no_slots": "Aucun créneau pour cette date",
+    "availability_error_missing_fields": "Veuillez remplir tous les champs"
+    "nav_availability": "Disponibilité"
   },
   "station_reservations": {
     "page_title": "Réservations du jour",

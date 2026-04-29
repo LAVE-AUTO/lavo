@@ -38,6 +38,23 @@
     "slot_block_duration_label": "Block duration",
     "slot_block_error_reason": "Please select a reason",
     "slot_block_button": "Block time slot"
+    "availability_title": "Availability management",
+    "availability_subtitle": "Manage your time slots and schedules",
+    "availability_view_month": "Month view",
+    "availability_view_week": "Week view",
+    "availability_day_slots_title": "Today's slots",
+    "availability_add_slot_button": "Add slot",
+    "availability_add_slot_title": "New time slot",
+    "availability_start_time": "Start time",
+    "availability_end_time": "End time",
+    "availability_bay": "Wash bay",
+    "availability_capacity": "Capacity",
+    "availability_bay_filter_label": "Filter by bay",
+    "availability_bay_all": "All bays",
+    "availability_bay_label": "Bay",
+    "availability_no_slots": "No time slots for this date",
+    "availability_error_missing_fields": "Please fill all required fields"
+    "nav_availability": "Availability"
   },
   "home": {
     "meta_title": "Slowtime — Book your car wash online",
