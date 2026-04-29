@@ -1533,6 +1533,19 @@
     "time_extension_error_minutes": "Veuillez entrer une durée valide",
     "time_extension_button": "Ajouter le temps",
     "loading": "Chargement..."
+    "priority_action_button": "Priorité",
+    "priority_action_tooltip": "Déplacer ce client vers le début de la file",
+    "slot_block_title": "Bloquer un créneau",
+    "slot_block_subtitle": "Fermeture temporaire du créneau",
+    "slot_block_reason_label": "Raison de la fermeture",
+    "slot_block_reason_maintenance": "Maintenance",
+    "slot_block_reason_cleaning": "Nettoyage",
+    "slot_block_reason_staff_break": "Pause personnel",
+    "slot_block_reason_emergency": "Urgence",
+    "slot_block_reason_other": "Autre raison",
+    "slot_block_duration_label": "Durée du blocage",
+    "slot_block_error_reason": "Veuillez sélectionner une raison",
+    "slot_block_button": "Bloquer le créneau"
   },
   "station_reservations": {
     "page_title": "Réservations du jour",

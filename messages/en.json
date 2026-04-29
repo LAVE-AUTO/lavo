@@ -25,6 +25,19 @@
     "time_extension_error_minutes": "Please enter a valid duration",
     "time_extension_button": "Add time",
     "loading": "Loading..."
+    "priority_action_button": "Prioritize",
+    "priority_action_tooltip": "Move this client to the front of the queue",
+    "slot_block_title": "Block time slot",
+    "slot_block_subtitle": "Temporary closure of time slot",
+    "slot_block_reason_label": "Reason for closure",
+    "slot_block_reason_maintenance": "Maintenance",
+    "slot_block_reason_cleaning": "Cleaning",
+    "slot_block_reason_staff_break": "Staff break",
+    "slot_block_reason_emergency": "Emergency",
+    "slot_block_reason_other": "Other reason",
+    "slot_block_duration_label": "Block duration",
+    "slot_block_error_reason": "Please select a reason",
+    "slot_block_button": "Block time slot"
   },
   "home": {
     "meta_title": "Slowtime — Book your car wash online",
