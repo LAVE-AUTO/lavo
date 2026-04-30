@@ -49,7 +49,6 @@ export function ExtraModal({ extra, vehicleFormats, services, onClose, onSaved }
   const [staff, setStaff] = useState('0');
 
   // Edit mode fields
-  const [editName, setEditName] = useState('');
   const [vehicleEntries, setVehicleEntries] = useState<ExtraVehicleEntry[]>([]);
 
   // Shared
@@ -59,7 +58,6 @@ export function ExtraModal({ extra, vehicleFormats, services, onClose, onSaved }
 
   useEffect(() => {
     if (extra) {
-      setEditName(extra.label);
       setVehicleEntries(buildVehicleEntries(vehicleFormats, extra));
       setCompatServiceIds([]);
     } else {
@@ -97,7 +95,7 @@ export function ExtraModal({ extra, vehicleFormats, services, onClose, onSaved }
 
     const payload: StationExtra = {
       id: extra?.id ?? crypto.randomUUID(),
-      label: isEdit ? editName.trim() : name.trim(),
+      label: isEdit ? (extra?.label ?? '') : name.trim(),
       description: '',
       price: isEdit
         ? (vehicleEntries[0]?.price ?? '')
@@ -142,7 +140,7 @@ export function ExtraModal({ extra, vehicleFormats, services, onClose, onSaved }
       onClick={(e) => { if (e.target === e.currentTarget) onClose(); }}
     >
       <div
-        className={`flex max-h-[92vh] w-full flex-col rounded-[10px] border border-[#2A3A20] bg-[#182214] shadow-xl ${isEdit ? 'max-w-2xl' : 'max-w-sm'}`}
+        className={`flex max-h-[92vh] w-full flex-col rounded-[10px] border border-[#2A3A20] bg-[#182214] shadow-xl ${isEdit ? 'max-w-[640px]' : 'max-w-[380px]'}`}
         onClick={(e) => e.stopPropagation()}
       >
         {/* ── Header ── */}
@@ -172,7 +170,7 @@ export function ExtraModal({ extra, vehicleFormats, services, onClose, onSaved }
                 {/* Nom */}
                 <div className="flex flex-col gap-1.5">
                   <label className="block text-[12px] font-bold text-[#9A9A8A]">
-                    ✨ Nom de l&apos;extra
+                    Nom de l&apos;extra
                   </label>
                   <input
                     type="text"
@@ -188,7 +186,7 @@ export function ExtraModal({ extra, vehicleFormats, services, onClose, onSaved }
                 <div className="grid grid-cols-2 gap-3">
                   <div className="flex flex-col gap-1.5">
                     <label className="block text-[12px] font-bold text-[#9A9A8A]">
-                      💰 Prix supplémentaire (CAD)
+                      Prix supplémentaire (CAD)
                     </label>
                     <input
                       type="number"
@@ -202,7 +200,7 @@ export function ExtraModal({ extra, vehicleFormats, services, onClose, onSaved }
                   </div>
                   <div className="flex flex-col gap-1.5">
                     <label className="block text-[12px] font-bold text-[#9A9A8A]">
-                      ● Durée supplémentaire (min)
+                      Durée supplémentaire (min)
                     </label>
                     <input
                       type="number"

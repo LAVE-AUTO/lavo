@@ -93,6 +93,8 @@ export function StationServicesPage() {
   const [loadError, setLoadError] = useState(false);
   const [serviceModal, setServiceModal] = useState<Service | null | 'new'>(null);
   const [extraModal, setExtraModal] = useState<StationExtra | null | 'new'>(null);
+  const [bookingMarkupType, setBookingMarkupType] = useState<'fixed'>('fixed');
+  const [bookingMarkupAmount, setBookingMarkupAmount] = useState('10');
 
   const loadData = useCallback(async () => {
     setLoading(true);
@@ -141,6 +143,10 @@ export function StationServicesPage() {
 
   const activeCount = services.filter((s) => s.is_active).length;
   const allExtras = [...extras.exterior, ...extras.interior, ...extras.both];
+  const previewQueuePrice = 25;
+  const parsedMarkup = parseFloat(bookingMarkupAmount || '0');
+  const safeMarkup = Number.isNaN(parsedMarkup) ? 0 : parsedMarkup;
+  const previewOnlinePrice = (previewQueuePrice + safeMarkup).toFixed(0);
 
   if (loading) {
     return (
@@ -201,6 +207,50 @@ export function StationServicesPage() {
 
       {/* Services content */}
       <div className="flex flex-1 flex-col overflow-y-auto p-6">
+        <div className="mb-5 rounded-[12px] border border-[#D8D4C8] bg-[#F7F6F2] p-4 dark:border-[#243020] dark:bg-[#0F1A0C]">
+          <div className="mb-1 flex items-center gap-2 text-[15px] font-black text-[#1A1A0A] dark:text-[#F0EDD4]">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} aria-hidden="true">
+              <rect x="3" y="4" width="18" height="18" rx="2" />
+              <path d="M16 2v4M8 2v4M3 10h18" />
+            </svg>
+            {t('booking_markup_title')}
+          </div>
+          <div className="mb-3 text-[12px] text-[#777] dark:text-[#9A9A8A]">{t('booking_markup_hint')}</div>
+          <div className="grid grid-cols-1 gap-3 sm:grid-cols-[180px_140px_1fr] sm:items-end">
+            <div>
+              <label className="mb-1 block text-[11px] font-black tracking-[.08em] text-[#5A5A4A] uppercase dark:text-[#9A9A8A]">
+                {t('booking_markup_type')}
+              </label>
+              <select
+                value={bookingMarkupType}
+                onChange={(e) => setBookingMarkupType(e.target.value as 'fixed')}
+                className="w-full rounded-[8px] border border-[#D8D4C8] bg-white px-3 py-2 text-[13px] text-[#1A1A0A] outline-none focus:border-[#C49A1E] dark:border-[#243020] dark:bg-[#182214] dark:text-[#F0EDD4]"
+              >
+                <option value="fixed">$</option>
+              </select>
+            </div>
+            <div>
+              <label className="mb-1 block text-[11px] font-black tracking-[.08em] text-[#5A5A4A] uppercase dark:text-[#9A9A8A]">
+                {t('booking_markup_amount')}
+              </label>
+              <input
+                type="number"
+                min="0"
+                step="1"
+                value={bookingMarkupAmount}
+                onChange={(e) => setBookingMarkupAmount(e.target.value)}
+                className="w-full rounded-[8px] border border-[#D8D4C8] bg-white px-3 py-2 text-[13px] text-[#1A1A0A] outline-none focus:border-[#C49A1E] dark:border-[#243020] dark:bg-[#182214] dark:text-[#F0EDD4]"
+              />
+            </div>
+            <div className="rounded-[8px] border border-[#E0DCD4] bg-white px-3 py-2 text-[12px] text-[#4A4A3A] dark:border-[#243020] dark:bg-[#111A0E] dark:text-[#9A9A8A]">
+              <span className="font-semibold">{t('booking_markup_preview')}</span>
+              <span className="mx-2">{previewQueuePrice}$</span>
+              <span className="font-semibold">-&gt;</span>
+              <span className="mx-2">{previewOnlinePrice}$</span>
+            </div>
+          </div>
+        </div>
+
         {services.length === 0 ? (
           <div className="flex flex-col items-center justify-center gap-2 py-16 text-center">
             <span className="text-[14px] font-semibold text-[#999] dark:text-[#9A9A8A]">{t('empty')}</span>
