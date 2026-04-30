@@ -144,10 +144,15 @@ export function CreateBlockModal({
   const thisWeek = getWeekRange(0);
   const nextWeek = getWeekRange(1);
   const bays = Array.from({ length: numBays }, (_, i) => String(i + 1));
+  const selectedBaysLabel = allBays
+    ? t('availability_block_all_postes')
+    : selectedBays.length > 0
+    ? selectedBays.map((bay) => `${t('availability_modal_poste')} ${bay}`).join(', ')
+    : `—`;
 
   return (
     <Modal
-      isOpen={isOpen}
+      open={isOpen}
       onClose={onClose}
       title={t(editingBlock ? 'availability_edit_block_title' : 'availability_create_block_modal_title')}
     >
@@ -183,6 +188,16 @@ export function CreateBlockModal({
                   </span>
                 ))}
               </div>
+            )}
+
+            {dates.length > 0 && (
+              <button
+                type="button"
+                onClick={() => setDates([])}
+                className="mb-3 cursor-pointer text-xs font-semibold text-[#666] underline decoration-dotted underline-offset-2 transition-colors hover:text-[#FF2525] dark:text-[#A0A090]"
+              >
+                {t('availability_modal_clear_dates')}
+              </button>
             )}
 
             {/* Add date native input */}
@@ -336,6 +351,21 @@ export function CreateBlockModal({
                 {formatWeekLabel(nextWeek)}
               </span>
             </button>
+          </div>
+
+          <div className="mt-5 rounded-xl border border-[#C09A18]/25 bg-[#C09A18]/8 p-3 dark:bg-[#C09A18]/10">
+            <p className="mb-1 text-[10px] font-black uppercase tracking-widest text-[#C09A18]">
+              {t('availability_modal_summary_title')}
+            </p>
+            <p className="text-[11px] text-[#666] dark:text-[#A0A090]">
+              {t('availability_modal_summary_dates')}: <span className="font-semibold text-[#1A1A0A] dark:text-[#F0EDD4]">{dates.length}</span>
+            </p>
+            <p className="text-[11px] text-[#666] dark:text-[#A0A090]">
+              {t('availability_modal_summary_hours')}: <span className="font-semibold text-[#1A1A0A] dark:text-[#F0EDD4]">{startTime} – {endTime}</span>
+            </p>
+            <p className="text-[11px] text-[#666] dark:text-[#A0A090]">
+              {t('availability_modal_summary_postes')}: <span className="font-semibold text-[#1A1A0A] dark:text-[#F0EDD4]">{selectedBaysLabel}</span>
+            </p>
           </div>
         </div>
       </div>

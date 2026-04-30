@@ -106,6 +106,7 @@ export default function StationAvailabilityPage() {
           onMonthChange={setCurrentMonth}
           getBlocksForDate={getBlocksForDate}
           onDayClick={handleDayClick}
+          selectedDateISO={selectedDay}
         />
       </div>
 
@@ -130,46 +131,6 @@ export default function StationAvailabilityPage() {
         onEditBlock={openEditModal}
         onCreateForDay={openCreateForDay}
       />
-    </div>
-  );
-}
-          setIsLoading(false);
-        }
-      }
-    };
-
-    fetchSlots();
-  }, [selectedDate, t]);
-
-  if (isLoading) {
-    return <AvailabilitySkeleton />;
-  }
-
-  return (
-    <div className="space-y-6">
-      {/* Header */}
-      <div>
-        <h1 className="text-2xl font-black text-[#1A1A0A] dark:text-[#F0EDD4]">{t('availability_title')}</h1>
-        <p className="mt-1 text-sm text-[#666] dark:text-[#A0A090]">{t('availability_subtitle')}</p>
-      </div>
-
-      {/* View Toggle */}
-      <AvailabilityViewToggle value={viewType} onChange={setViewType} />
-
-      {/* Error Message */}
-      {error && <div className="rounded-xl bg-[#FF2525]/10 p-4 text-sm font-medium text-[#FF2525]">{error}</div>}
-
-      {/* Calendar / Week View */}
-      <div className="grid gap-6 lg:grid-cols-3">
-        <div className="lg:col-span-1">
-          {viewType === 'month' ? <MonthCalendar selectedDate={selectedDate} onChange={setSelectedDate} /> : <WeekView selectedDate={selectedDate} onChange={setSelectedDate} />}
-        </div>
-
-        {/* Slots List */}
-        <div className="lg:col-span-2">
-          <DaySlotsList date={selectedDate} slots={slots} onSlotsChange={setSlots} />
-        </div>
-      </div>
     </div>
   );
 }
