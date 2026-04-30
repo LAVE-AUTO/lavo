@@ -4,10 +4,11 @@ import { useState, useEffect, useCallback } from 'react';
 import { useTranslations } from 'next-intl';
 import { getFromApi } from '@/services';
 import { useAuth } from '@/context/auth-context';
-import type { StationExtras } from '@/components/station/config/StationExtrasForm';
+import type { StationExtras, StationExtra } from '@/components/station/config/StationExtrasForm';
 import type { Service, VehicleFormat } from './types';
 import { ServiceCard } from './ServiceCard';
 import { ServiceModal } from './ServiceModal';
+import { ExtraModal } from './ExtraModal';
 
 interface StationMeData {
   data: { id: string };
@@ -91,6 +92,7 @@ export function StationServicesPage() {
   const [loading, setLoading] = useState(true);
   const [loadError, setLoadError] = useState(false);
   const [serviceModal, setServiceModal] = useState<Service | null | 'new'>(null);
+  const [extraModal, setExtraModal] = useState<StationExtra | null | 'new'>(null);
 
   const loadData = useCallback(async () => {
     setLoading(true);
@@ -233,6 +235,7 @@ export function StationServicesPage() {
               </div>
               <button
                 type="button"
+                onClick={() => setExtraModal('new')}
                 className="rounded-[8px] border border-[#2A3A20] bg-[#1E2A18] px-3 py-1.5 text-[12px] font-bold text-[#F0EDD4] transition-colors hover:bg-[#243220]"
               >
                 + Extra
@@ -266,6 +269,7 @@ export function StationServicesPage() {
                     <div className="mt-2 flex gap-1.5">
                       <button
                         type="button"
+                        onClick={() => setExtraModal(extra)}
                         className="rounded-[6px] border border-[#D8D4C8] px-2.5 py-1 text-[10px] font-semibold text-[#5A5A4A] dark:border-[#243020] dark:text-[#9A9A8A]"
                       >
                         {t('btn_edit')}
@@ -293,6 +297,19 @@ export function StationServicesPage() {
           availableExtras={extras}
           onClose={() => setServiceModal(null)}
           onSaved={handleServiceSaved}
+        />
+      )}
+
+      {extraModal !== null && (
+        <ExtraModal
+          extra={extraModal === 'new' ? null : extraModal}
+          vehicleFormats={formats}
+          services={services}
+          onClose={() => setExtraModal(null)}
+          onSaved={(saved) => {
+            // TODO: connect to API once endpoint is available — update local extras state
+            setExtraModal(null);
+          }}
         />
       )}
     </div>
