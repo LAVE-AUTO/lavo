@@ -12,9 +12,9 @@ export function StationShell({ children, stationName, notifCount }: StationShell
   return (
     <div className="app-shell flex h-screen flex-col overflow-hidden bg-[#F5F5EE] dark:bg-[#0C1209]">
       <StationTopNav stationName={stationName} notifCount={notifCount} />
-      <div className="flex flex-1 overflow-hidden">
+      <div className="flex flex-1 min-h-0 overflow-hidden">
         <StationSidebar />
-        <main className="flex flex-1 flex-col overflow-hidden">
+        <main className="flex flex-1 min-h-0 flex-col overflow-y-auto">
           {children}
         </main>
       </div>
