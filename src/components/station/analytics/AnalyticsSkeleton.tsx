@@ -6,12 +6,12 @@ export function AnalyticsSkeleton() {
   const t = useTranslations('station_analytics');
 
   return (
-    <div className="space-y-6 bg-gradient-to-br from-white to-slate-50 p-6 dark:from-slate-900 dark:to-slate-950">
+    <div className="space-y-6 bg-[#EDEDED] p-6 dark:bg-[#002001]">
       {/* Header Skeleton */}
       <div className="flex flex-col items-start justify-between gap-4 sm:flex-row sm:items-center">
         <div className="space-y-2">
-          <div className="h-8 w-48 animate-pulse rounded bg-slate-200 dark:bg-slate-700" />
-          <div className="h-4 w-64 animate-pulse rounded bg-slate-100 dark:bg-slate-800" />
+          <div className="h-8 w-48 animate-pulse rounded bg-slate-300 dark:bg-slate-600" />
+          <div className="h-4 w-64 animate-pulse rounded bg-slate-200 dark:bg-slate-700" />
         </div>
         <div className="flex gap-3">
           <div className="h-10 w-40 animate-pulse rounded bg-slate-200 dark:bg-slate-700" />
@@ -29,9 +29,9 @@ export function AnalyticsSkeleton() {
       {/* Charts Skeleton */}
       <div className="space-y-6">
         {Array.from({ length: 3 }).map((_, idx) => (
-          <div key={idx} className="space-y-2 rounded-lg bg-white p-6 dark:bg-slate-800">
-            <div className="h-6 w-40 animate-pulse rounded bg-slate-200 dark:bg-slate-700" />
-            <div className="h-80 animate-pulse rounded bg-slate-100 dark:bg-slate-700" />
+          <div key={idx} className="space-y-2 rounded-lg bg-[#C8C8B4] p-6 dark:bg-[#C8C8B4]">
+            <div className="h-6 w-40 animate-pulse rounded bg-slate-300 dark:bg-slate-600" />
+            <div className="h-80 animate-pulse rounded bg-slate-200 dark:bg-slate-700" />
           </div>
         ))}
       </div>

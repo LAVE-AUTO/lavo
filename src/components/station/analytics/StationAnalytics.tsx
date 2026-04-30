@@ -103,7 +103,7 @@ export function StationAnalytics() {
 
   if (error || !data) {
     return (
-      <div className="flex h-96 items-center justify-center bg-white px-6 dark:bg-slate-900">
+      <div className="flex h-96 items-center justify-center bg-[#EDEDED] px-6 dark:bg-[#002001]">
         <div className="text-center">
           <p className="mb-4 text-sm text-slate-600 dark:text-slate-300">{error || t('no_data')}</p>
           <button
@@ -118,7 +118,7 @@ export function StationAnalytics() {
   }
 
   return (
-    <div className="space-y-6 p-6 bg-white dark:bg-slate-900">
+    <div className="space-y-6 p-6 bg-[#EDEDED] dark:bg-[#002001]">
       {/* Header */}
       <div className="flex flex-col items-start justify-between gap-4 sm:flex-row sm:items-center">
         <div>
