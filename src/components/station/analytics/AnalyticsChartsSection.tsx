@@ -37,7 +37,7 @@ export function AnalyticsChartsSection({ data, period }: AnalyticsChartsSectionP
     <div className="space-y-6">
       {/* Revenue Chart */}
       <div className="rounded-lg bg-[#C8C8B4] p-6 shadow-sm dark:bg-[#C8C8B4]">
-        <h2 className="mb-4 text-lg font-semibold text-slate-900 dark:text-white">{t('chart_revenue_title')}</h2>
+        <h2 className="mb-4 text-lg font-bold text-[#1A1A0A] dark:text-[#F0EDD4]">{t('chart_revenue_title')}</h2>
         {revenueData.length > 0 ? (
           <ResponsiveContainer width="100%" height={300}>
             <LineChart data={revenueData}>
@@ -66,13 +66,13 @@ export function AnalyticsChartsSection({ data, period }: AnalyticsChartsSectionP
             </LineChart>
           </ResponsiveContainer>
         ) : (
-          <div className="flex h-80 items-center justify-center text-slate-500">{t('no_data')}</div>
+          <div className="flex h-80 items-center justify-center text-[#666] dark:text-[#A0A090]">{t('no_data')}</div>
         )}
       </div>
 
       {/* Clients Chart */}
       <div className="rounded-lg bg-[#C8C8B4] p-6 shadow-sm dark:bg-[#C8C8B4]">
-        <h2 className="mb-4 text-lg font-semibold text-slate-900 dark:text-white">{t('chart_clients_title')}</h2>
+        <h2 className="mb-4 text-lg font-bold text-[#1A1A0A] dark:text-[#F0EDD4]">{t('chart_clients_title')}</h2>
         {clientsData.length > 0 ? (
           <ResponsiveContainer width="100%" height={300}>
             <BarChart data={clientsData}>
@@ -93,13 +93,13 @@ export function AnalyticsChartsSection({ data, period }: AnalyticsChartsSectionP
             </BarChart>
           </ResponsiveContainer>
         ) : (
-          <div className="flex h-80 items-center justify-center text-slate-500">{t('no_data')}</div>
+          <div className="flex h-80 items-center justify-center text-[#666] dark:text-[#A0A090]">{t('no_data')}</div>
         )}
       </div>
 
       {/* Completed Services Chart */}
       <div className="rounded-lg bg-[#C8C8B4] p-6 shadow-sm dark:bg-[#C8C8B4]">
-        <h2 className="mb-4 text-lg font-semibold text-slate-900 dark:text-white">{t('chart_completed_title')}</h2>
+        <h2 className="mb-4 text-lg font-bold text-[#1A1A0A] dark:text-[#F0EDD4]">{t('chart_completed_title')}</h2>
         {completedData.length > 0 ? (
           <ResponsiveContainer width="100%" height={300}>
             <BarChart data={completedData}>
@@ -120,7 +120,7 @@ export function AnalyticsChartsSection({ data, period }: AnalyticsChartsSectionP
             </BarChart>
           </ResponsiveContainer>
         ) : (
-          <div className="flex h-80 items-center justify-center text-slate-500">{t('no_data')}</div>
+          <div className="flex h-80 items-center justify-center text-[#666] dark:text-[#A0A090]">{t('no_data')}</div>
         )}
       </div>
     </div>

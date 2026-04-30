@@ -69,8 +69,8 @@ export function AnalyticsKpiCards({ kpi }: AnalyticsKpiCardsProps) {
         >
           <div className="flex items-start justify-between">
             <div>
-              <p className="text-xs font-medium uppercase text-slate-500 dark:text-slate-400">{card.label}</p>
-              <p className="mt-2 text-2xl font-bold text-slate-900 dark:text-white">{card.value}</p>
+              <p className="text-xs font-black uppercase text-[#666] dark:text-[#A0A090]">{card.label}</p>
+              <p className="mt-2 text-2xl font-bold text-[#1A1A0A] dark:text-[#F0EDD4]">{card.value}</p>
             </div>
             <span className="text-2xl">{card.icon}</span>
           </div>

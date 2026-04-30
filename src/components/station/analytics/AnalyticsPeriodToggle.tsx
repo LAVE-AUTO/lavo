@@ -25,10 +25,10 @@ export function AnalyticsPeriodToggle({ value, onChange }: AnalyticsPeriodToggle
         <button
           key={period.id}
           onClick={() => onChange(period.id)}
-          className={`rounded-md px-3 py-2 text-sm font-medium transition-all ${
+          className={`rounded-lg px-3 py-2 text-sm font-black transition-all ${
             value === period.id
-              ? 'bg-amber-600 text-white shadow-md'
-              : 'bg-white text-slate-700 hover:bg-slate-100 dark:bg-slate-800 dark:text-slate-200 dark:hover:bg-slate-700'
+              ? 'bg-[#C09A18] text-[#0C1209] shadow-md hover:opacity-90'
+              : 'bg-[#F0EDE0] text-[#666] hover:bg-[#E8E4D0] dark:bg-[#182214] dark:text-[#A0A090] dark:hover:bg-[#1F3217]'
           }`}
         >
           {period.label}

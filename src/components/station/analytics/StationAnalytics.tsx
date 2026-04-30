@@ -105,10 +105,10 @@ export function StationAnalytics() {
     return (
       <div className="flex h-96 items-center justify-center bg-[#EDEDED] px-6 dark:bg-[#002001]">
         <div className="text-center">
-          <p className="mb-4 text-sm text-slate-600 dark:text-slate-300">{error || t('no_data')}</p>
+          <p className="mb-4 text-sm text-[#666] dark:text-[#A0A090]">{error || t('no_data')}</p>
           <button
             onClick={() => window.location.reload()}
-            className="rounded-md bg-amber-600 px-4 py-2 text-white transition-colors hover:bg-amber-700"
+            className="rounded-lg bg-[#C09A18] px-4 py-2 text-[#0C1209] font-black transition-opacity hover:opacity-90"
           >
             {t('retry')}
           </button>
@@ -122,8 +122,8 @@ export function StationAnalytics() {
       {/* Header */}
       <div className="flex flex-col items-start justify-between gap-4 sm:flex-row sm:items-center">
         <div>
-          <h1 className="text-2xl font-bold text-slate-900 dark:text-white">{t('title')}</h1>
-          <p className="mt-1 text-sm text-slate-600 dark:text-slate-400">{t('subtitle')}</p>
+          <h1 className="text-2xl font-bold text-[#1A1A0A] dark:text-[#F0EDD4]">{t('title')}</h1>
+          <p className="mt-1 text-sm text-[#666] dark:text-[#A0A090]">{t('subtitle')}</p>
         </div>
         <div className="flex gap-3">
           <AnalyticsPeriodToggle value={period} onChange={setPeriod} />
