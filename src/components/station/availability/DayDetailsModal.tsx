@@ -41,9 +41,10 @@ export function DayDetailsModal({
 
   return (
     <Modal
-      isOpen={isOpen}
+      open={isOpen}
       onClose={onClose}
       title={`${t('availability_day_details_title')} — ${displayDate}`}
+      size="xl"
     >
       <div className="p-5">
         {blocks.length === 0 ? (

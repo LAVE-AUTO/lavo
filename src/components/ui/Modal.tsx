@@ -2,7 +2,7 @@
 
 import { useEffect, type ReactNode } from 'react';
 
-export type ModalSize = 'sm' | 'md' | 'lg' | 'xl';
+export type ModalSize = 'sm' | 'md' | 'lg' | 'xl' | '2xl' | '3xl';
 
 export interface ModalProps {
   open: boolean;
@@ -21,6 +21,8 @@ const SIZE_CLASSES: Record<ModalSize, string> = {
   md: 'max-w-md',
   lg: 'max-w-lg',
   xl: 'max-w-xl',
+  '2xl': 'max-w-2xl',
+  '3xl': 'max-w-3xl',
 };
 
 /**

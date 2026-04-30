@@ -155,8 +155,9 @@ export function CreateBlockModal({
       open={isOpen}
       onClose={onClose}
       title={t(editingBlock ? 'availability_edit_block_title' : 'availability_create_block_modal_title')}
+      size="3xl"
     >
-      <div className="grid grid-cols-1 gap-0 md:grid-cols-[1fr_240px]">
+      <div className="grid grid-cols-1 gap-0 md:grid-cols-[1fr_280px]">
         {/* Left: dates + hours + postes */}
         <div className="space-y-5 p-5">
           {/* Dates */}
