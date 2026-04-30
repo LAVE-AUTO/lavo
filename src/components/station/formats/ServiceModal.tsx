@@ -181,9 +181,15 @@ export function ServiceModal({ service, vehicleFormats, availableExtras, onClose
         </div>
 
         <form onSubmit={handleSubmit} className="flex flex-1 flex-col overflow-hidden">
-          <div className="grid flex-1 grid-cols-1 gap-4 overflow-y-auto p-5 lg:grid-cols-[1fr_320px]">
+          <div className={`grid flex-1 grid-cols-1 gap-4 overflow-y-auto p-5 ${isEdit ? '' : 'lg:grid-cols-[1fr_320px]'}`}>
             {/* Left form */}
             <div className="space-y-4">
+              {isEdit && (
+                <div className="rounded-[10px] border border-[#2A3A20] bg-[#1E2A18] px-3 py-2">
+                  <div className="text-[14px] font-black text-[#F0EDD4]">{name || t('placeholder_name')}</div>
+                  <div className="text-[11px] text-[#9A9A8A]">{t('preview_category')}: {t(`cat_${category}`)}</div>
+                </div>
+              )}
               <div className="flex flex-col gap-1.5">
                 <label className="text-[13px] font-medium text-[#5A5A4A] dark:text-[#9A9A8A]">{t('field_name')}</label>
                 <input
@@ -368,7 +374,8 @@ export function ServiceModal({ service, vehicleFormats, availableExtras, onClose
               {error && <p className="text-[13px] font-semibold text-[#EF4444]">{error}</p>}
             </div>
 
-            {/* Right preview */}
+            {/* Right preview (create mode only) */}
+            {!isEdit && (
             <aside className="rounded-[12px] bg-[#3A2A12] p-4 text-[#F0EDD4]">
               <div className="mb-3 text-[13px] font-black">{t('preview_title')}</div>
               <div className="rounded-[10px] bg-[#4A3418] p-3">
@@ -411,6 +418,7 @@ export function ServiceModal({ service, vehicleFormats, availableExtras, onClose
                 </div>
               </div>
             </aside>
+            )}
           </div>
 
           <div className="flex justify-end gap-2.5 border-t border-[#F0EDE4] px-5 py-4 dark:border-[#1A2A14]">

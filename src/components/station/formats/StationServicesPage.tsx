@@ -4,13 +4,10 @@ import { useState, useEffect, useCallback } from 'react';
 import { useTranslations } from 'next-intl';
 import { getFromApi } from '@/services';
 import { useAuth } from '@/context/auth-context';
-import { StationExtrasForm, type StationExtras } from '@/components/station/config/StationExtrasForm';
+import type { StationExtras } from '@/components/station/config/StationExtrasForm';
 import type { Service, VehicleFormat } from './types';
 import { ServiceCard } from './ServiceCard';
 import { ServiceModal } from './ServiceModal';
-import { VehicleFormatsTab } from './VehicleFormatsTab';
-
-type Tab = 'services' | 'formats' | 'extras';
 
 interface StationMeData {
   data: { id: string };
@@ -88,7 +85,6 @@ export function StationServicesPage() {
   const t = useTranslations('station_services');
   const { isLoading: authLoading } = useAuth();
 
-  const [activeTab, setActiveTab] = useState<Tab>('services');
   const [services, setServices] = useState<Service[]>(INITIAL_SERVICES);
   const [formats, setFormats] = useState<VehicleFormat[]>([]);
   const [extras, setExtras] = useState<StationExtras>(INITIAL_EXTRAS);
@@ -143,12 +139,6 @@ export function StationServicesPage() {
 
   const activeCount = services.filter((s) => s.is_active).length;
 
-  const TABS: { key: Tab; label: string }[] = [
-    { key: 'services', label: t('tab_services') },
-    { key: 'formats', label: t('tab_formats') },
-    { key: 'extras', label: t('tab_extras') },
-  ];
-
   if (loading) {
     return (
       <div className="flex flex-1 items-center justify-center text-[13px] text-[#666] dark:text-[#A0A090]">
@@ -181,115 +171,60 @@ export function StationServicesPage() {
             <div className="text-[22px] font-black text-[#1A1A0A] dark:text-[#F0EDD4]">{t('page_title')}</div>
             <div className="text-[13px] text-[#888] dark:text-[#9A9A8A]">{t('page_subtitle')}</div>
           </div>
-          {activeTab === 'services' && (
-            <div className="flex items-center gap-2">
-              <button
-                type="button"
-                className="flex items-center gap-1.5 rounded-[8px] border border-[#2A3A20] bg-[#1E2A18] px-4 py-2 text-[12px] font-bold text-[#F0EDD4] transition-colors hover:bg-[#243220]"
-              >
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true">
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M3 3v18h18" />
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M7 14l3-3 3 2 4-5" />
-                </svg>
-                {t('btn_stats')}
-              </button>
-              <button
-                type="button"
-                onClick={() => setServiceModal('new')}
-                className="flex items-center gap-2 rounded-[8px] bg-[#C49A1E] px-4 py-2 text-[13px] font-black text-[#0C1209] transition-opacity hover:opacity-80"
-              >
-                <svg width="14" height="14" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5} aria-hidden="true">
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M12 4v16m8-8H4" />
-                </svg>
-                {t('btn_new_service')}
-              </button>
-            </div>
-          )}
-        </div>
-
-        {/* Tab bar */}
-        <div className="flex gap-0">
-          {TABS.map(({ key, label }) => (
+          <div className="flex items-center gap-2">
             <button
-              key={key}
               type="button"
-              onClick={() => setActiveTab(key)}
-              className={`relative px-5 pb-3 text-[13px] font-semibold transition-colors duration-150 ${
-                activeTab === key
-                  ? 'text-[#C49A1E]'
-                  : 'text-[#AAAAAA] hover:text-[#5A5A4A] dark:text-[#4A4A3A] dark:hover:text-[#9A9A8A]'
-              }`}
+              className="flex items-center gap-1.5 rounded-[8px] border border-[#2A3A20] bg-[#1E2A18] px-4 py-2 text-[12px] font-bold text-[#F0EDD4] transition-colors hover:bg-[#243220]"
             >
-              {label}
-              {key === 'services' && services.length > 0 && (
-                <span className={`ml-1.5 rounded-full px-1.5 py-0.5 text-[11px] font-bold ${
-                  activeTab === key ? 'bg-[#FDF3D8] text-[#C49A1E] dark:bg-[#2A1E08]' : 'bg-[#F0EFEB] text-[#BBBBAA] dark:bg-[#1A2A14] dark:text-[#4A4A3A]'
-                }`}>
-                  {activeCount}
-                </span>
-              )}
-              {key === 'formats' && formats.length > 0 && (
-                <span className={`ml-1.5 rounded-full px-1.5 py-0.5 text-[11px] font-bold ${
-                  activeTab === key ? 'bg-[#FDF3D8] text-[#C49A1E] dark:bg-[#2A1E08]' : 'bg-[#F0EFEB] text-[#BBBBAA] dark:bg-[#1A2A14] dark:text-[#4A4A3A]'
-                }`}>
-                  {formats.length}
-                </span>
-              )}
-              {activeTab === key && (
-                <span className="absolute bottom-0 left-0 right-0 h-[2px] rounded-t-full bg-[#C49A1E]" />
-              )}
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true">
+                <path strokeLinecap="round" strokeLinejoin="round" d="M3 3v18h18" />
+                <path strokeLinecap="round" strokeLinejoin="round" d="M7 14l3-3 3 2 4-5" />
+              </svg>
+              {t('btn_stats')}
             </button>
-          ))}
+            <button
+              type="button"
+              onClick={() => setServiceModal('new')}
+              className="flex items-center gap-2 rounded-[8px] bg-[#C49A1E] px-4 py-2 text-[13px] font-black text-[#0C1209] transition-opacity hover:opacity-80"
+            >
+              <svg width="14" height="14" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5} aria-hidden="true">
+                <path strokeLinecap="round" strokeLinejoin="round" d="M12 4v16m8-8H4" />
+              </svg>
+              {t('btn_new_service')}
+            </button>
+          </div>
         </div>
       </div>
 
-      {/* Tab content */}
+      {/* Services content */}
       <div className="flex flex-1 flex-col overflow-y-auto p-6">
-        {/* ─── Services tab ─── */}
-        {activeTab === 'services' && (
-          services.length === 0 ? (
-            <div className="flex flex-col items-center justify-center gap-2 py-16 text-center">
-              <span className="text-[14px] font-semibold text-[#999] dark:text-[#9A9A8A]">{t('empty')}</span>
-              <span className="text-[13px] text-[#BBBBAA] dark:text-[#4A4A3A]">{t('empty_hint')}</span>
+        {services.length === 0 ? (
+          <div className="flex flex-col items-center justify-center gap-2 py-16 text-center">
+            <span className="text-[14px] font-semibold text-[#999] dark:text-[#9A9A8A]">{t('empty')}</span>
+            <span className="text-[13px] text-[#BBBBAA] dark:text-[#4A4A3A]">{t('empty_hint')}</span>
+          </div>
+        ) : (
+          <>
+            <div className="mb-4 flex items-center gap-2">
+              <span className="text-[11px] font-black tracking-[.1em] text-[#C09A18] uppercase">{t('section_base')}</span>
+              <span className="text-[11px] font-medium text-[#888] dark:text-[#9A9A8A]">{t('services_active_count', { count: activeCount })}</span>
             </div>
-          ) : (
-            <>
-              <div className="mb-4 flex items-center gap-2">
-                <span className="text-[11px] font-black tracking-[.1em] text-[#C09A18] uppercase">{t('section_base')}</span>
-                <span className="text-[11px] font-medium text-[#888] dark:text-[#9A9A8A]">{t('services_active_count', { count: activeCount })}</span>
-              </div>
-              <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
-                {services.map((service, index) => (
-                  <div
-                    key={service.id}
-                    className={services.length % 2 === 1 && index === services.length - 1 ? 'lg:col-span-2' : ''}
-                  >
-                    <ServiceCard
-                      service={service}
-                      onEdit={setServiceModal}
-                      onDeleted={handleServiceDeleted}
-                      onToggled={handleServiceToggled}
-                    />
-                  </div>
-                ))}
-              </div>
-            </>
-          )
-        )}
-
-        {/* ─── Formats tab ─── */}
-        {activeTab === 'formats' && (
-          <VehicleFormatsTab
-            formats={formats}
-            onAdd={(f) => setFormats((prev) => [...prev, f])}
-            onUpdate={(f) => setFormats((prev) => prev.map((x) => (x.id === f.id ? f : x)))}
-            onDelete={(id) => setFormats((prev) => prev.filter((f) => f.id !== id))}
-          />
-        )}
-
-        {/* ─── Extras tab ─── */}
-        {activeTab === 'extras' && (
-          <StationExtrasForm extras={extras} onSaved={setExtras} />
+            <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
+              {services.map((service, index) => (
+                <div
+                  key={service.id}
+                  className={services.length % 2 === 1 && index === services.length - 1 ? 'lg:col-span-2' : ''}
+                >
+                  <ServiceCard
+                    service={service}
+                    onEdit={setServiceModal}
+                    onDeleted={handleServiceDeleted}
+                    onToggled={handleServiceToggled}
+                  />
+                </div>
+              ))}
+            </div>
+          </>
         )}
       </div>
 
