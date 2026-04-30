@@ -1,4 +1,4 @@
-// Disponibilité — gestion des blocs d'indisponibilité de la station
+// Disponibilité — gestion des blocs de disponibilité de la station
 // TODO: connect to API once /station/availability-blocks endpoint is available
 // See folder/spec/backend-missing-endpoints.md — section 3.10
 'use client';

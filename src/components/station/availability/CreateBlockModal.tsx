@@ -68,6 +68,10 @@ export function CreateBlockModal({
   const [selectedBays, setSelectedBays] = useState<string[]>([]);
   const [allBays, setAllBays] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
+  const [miniCalMonth, setMiniCalMonth] = useState(() => {
+    const d = new Date();
+    return new Date(d.getFullYear(), d.getMonth(), 1);
+  });
 
   // Reset form when modal opens / changes between create vs edit
   useEffect(() => {
@@ -141,14 +145,39 @@ export function CreateBlockModal({
     onClose();
   }
 
+  // Mini-calendar helpers
+  const miniYear = miniCalMonth.getFullYear();
+  const miniMonthIdx = miniCalMonth.getMonth();
+  const miniMonthLabel = miniCalMonth
+    .toLocaleDateString('fr-FR', { month: 'long', year: 'numeric' })
+    .toUpperCase();
+  const miniFirstDay = new Date(miniYear, miniMonthIdx, 1);
+  const miniStartOffset = (miniFirstDay.getDay() + 6) % 7;
+  const miniDaysInMonth = new Date(miniYear, miniMonthIdx + 1, 0).getDate();
+  const miniDaysInPrev = new Date(miniYear, miniMonthIdx, 0).getDate();
+  const miniCells: { iso: string; dayNum: number; inMonth: boolean }[] = [];
+  for (let i = miniStartOffset - 1; i >= 0; i--) {
+    const d = miniDaysInPrev - i;
+    const pm = miniMonthIdx === 0 ? 11 : miniMonthIdx - 1;
+    const py = miniMonthIdx === 0 ? miniYear - 1 : miniYear;
+    miniCells.push({ iso: `${py}-${String(pm + 1).padStart(2, '0')}-${String(d).padStart(2, '0')}`, dayNum: d, inMonth: false });
+  }
+  for (let d = 1; d <= miniDaysInMonth; d++) {
+    miniCells.push({ iso: `${miniYear}-${String(miniMonthIdx + 1).padStart(2, '0')}-${String(d).padStart(2, '0')}`, dayNum: d, inMonth: true });
+  }
+  const miniTrail = 7 - (miniCells.length % 7);
+  if (miniTrail < 7) {
+    const nm = miniMonthIdx === 11 ? 0 : miniMonthIdx + 1;
+    const ny = miniMonthIdx === 11 ? miniYear + 1 : miniYear;
+    for (let d = 1; d <= miniTrail; d++) {
+      miniCells.push({ iso: `${ny}-${String(nm + 1).padStart(2, '0')}-${String(d).padStart(2, '0')}`, dayNum: d, inMonth: false });
+    }
+  }
+  const todayStr = todayISO();
+
   const thisWeek = getWeekRange(0);
   const nextWeek = getWeekRange(1);
   const bays = Array.from({ length: numBays }, (_, i) => String(i + 1));
-  const selectedBaysLabel = allBays
-    ? t('availability_block_all_postes')
-    : selectedBays.length > 0
-    ? selectedBays.map((bay) => `${t('availability_modal_poste')} ${bay}`).join(', ')
-    : `—`;
 
   return (
     <Modal
@@ -312,12 +341,12 @@ export function CreateBlockModal({
           </div>
         </div>
 
-        {/* Right: quick dates */}
+        {/* Right: quick dates + mini-calendar */}
         <div className="border-t border-[#C09A18]/20 p-5 md:border-t-0 md:border-l dark:border-[#C09A18]/10">
           <p className="mb-3 text-[10px] font-black uppercase tracking-widest text-[#C09A18]">
             {t('availability_modal_quick_dates')}
           </p>
-          <div className="flex flex-col gap-2">
+          <div className="mb-5 flex flex-col gap-2">
             <button
               type="button"
               onClick={() => addDate(todayISO())}
@@ -354,19 +383,73 @@ export function CreateBlockModal({
             </button>
           </div>
 
-          <div className="mt-5 rounded-xl border border-[#C09A18]/25 bg-[#C09A18]/8 p-3 dark:bg-[#C09A18]/10">
-            <p className="mb-1 text-[10px] font-black uppercase tracking-widest text-[#C09A18]">
-              {t('availability_modal_summary_title')}
+          {/* Mini-calendar */}
+          <div className="flex items-center gap-2 mb-2">
+            <button
+              type="button"
+              onClick={() => setMiniCalMonth(new Date(miniYear, miniMonthIdx - 1, 1))}
+              aria-label="Mois précédent"
+              className="flex h-[22px] w-[22px] cursor-pointer items-center justify-center rounded-full bg-[#C09A18]/15 text-[#C09A18] text-[10px] hover:bg-[#C09A18]/25"
+            >
+              ◀
+            </button>
+            <p className="flex-1 text-center text-[11px] font-black tracking-wide text-[#C09A18]">
+              {miniMonthLabel}
             </p>
-            <p className="text-[11px] text-[#666] dark:text-[#A0A090]">
-              {t('availability_modal_summary_dates')}: <span className="font-semibold text-[#1A1A0A] dark:text-[#F0EDD4]">{dates.length}</span>
-            </p>
-            <p className="text-[11px] text-[#666] dark:text-[#A0A090]">
-              {t('availability_modal_summary_hours')}: <span className="font-semibold text-[#1A1A0A] dark:text-[#F0EDD4]">{startTime} – {endTime}</span>
-            </p>
-            <p className="text-[11px] text-[#666] dark:text-[#A0A090]">
-              {t('availability_modal_summary_postes')}: <span className="font-semibold text-[#1A1A0A] dark:text-[#F0EDD4]">{selectedBaysLabel}</span>
-            </p>
+            <button
+              type="button"
+              onClick={() => setMiniCalMonth(new Date(miniYear, miniMonthIdx + 1, 1))}
+              aria-label="Mois suivant"
+              className="flex h-[22px] w-[22px] cursor-pointer items-center justify-center rounded-full bg-[#C09A18]/15 text-[#C09A18] text-[10px] hover:bg-[#C09A18]/25"
+            >
+              ▶
+            </button>
+          </div>
+          <div className="grid grid-cols-7 gap-[2px] mb-1">
+            {['L','M','M','J','V','S','D'].map((d, i) => (
+              <div key={i} className="text-center text-[8px] font-bold text-[#666] dark:text-[#A0A090] py-[2px]">{d}</div>
+            ))}
+          </div>
+          <div className="grid grid-cols-7 gap-[2px]">
+            {miniCells.map(({ iso, dayNum, inMonth }) => {
+              const isSelected = dates.includes(iso);
+              const isToday = iso === todayStr;
+              return (
+                <button
+                  key={iso}
+                  type="button"
+                  disabled={!inMonth}
+                  onClick={() => {
+                    if (!inMonth) return;
+                    if (isSelected) {
+                      setDates((prev) => prev.filter((d) => d !== iso));
+                    } else {
+                      addDate(iso);
+                    }
+                  }}
+                  className={[
+                    'rounded-[3px] py-[3px] text-center text-[9px] font-bold transition-colors',
+                    !inMonth ? 'text-[#444] cursor-default' : 'cursor-pointer',
+                    inMonth && isSelected ? 'bg-[#C09A18] text-[#1A1A0A]' :
+                    inMonth && isToday ? 'border border-[#C09A18] bg-[#EDE9CC] text-[#1A1A0A] dark:bg-[#1E2A1A] dark:text-[#F0EDD4]' :
+                    inMonth ? 'bg-[#F0EDE0] text-[#1A1A0A] hover:bg-[#C09A18]/20 dark:bg-[#1E2A1A] dark:text-[#F0EDD4]' : '',
+                  ].join(' ')}
+                >
+                  {dayNum}
+                </button>
+              );
+            })}
+          </div>
+          {/* Mini-cal legend */}
+          <div className="mt-2 flex flex-wrap gap-3 text-[9px] text-[#666] dark:text-[#A0A090]">
+            <span className="flex items-center gap-1">
+              <span className="inline-block h-2.5 w-2.5 rounded-[2px] border border-[#C09A18] bg-[#EDE9CC] dark:bg-[#1E2A1A]" />
+              Aujourd'hui
+            </span>
+            <span className="flex items-center gap-1">
+              <span className="inline-block h-2.5 w-2.5 rounded-[2px] bg-[#C09A18]" />
+              Sélectionné
+            </span>
           </div>
         </div>
       </div>

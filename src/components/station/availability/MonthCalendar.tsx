@@ -119,7 +119,7 @@ export function MonthCalendar({
             {t('availability_legend_today')}
           </span>
           <span className="flex items-center gap-1.5">
-            <span className="inline-block h-3.5 w-3.5 rounded-sm bg-[#C09A18]/30" aria-hidden="true" />
+            <span className="inline-block h-3.5 w-3.5 rounded-sm bg-[#4A3418]" aria-hidden="true" />
             {t('availability_legend_has_bloc')}
           </span>
           <span className="hidden sm:inline">{t('availability_legend_click_hint')}</span>
@@ -154,11 +154,11 @@ export function MonthCalendar({
                 'min-h-[70px] rounded-xl p-1.5 text-left transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#C09A18]',
                 isCurrentMonth ? 'cursor-pointer' : 'cursor-default opacity-40',
                 isSelected
-                  ? 'border-2 border-[#C09A18] bg-[#C09A18]/25 dark:bg-[#C09A18]/20'
+                  ? 'border-2 border-[#4A3418] bg-[#4A3418]'
                   : isToday
                   ? 'border-2 border-[#C09A18] bg-[#F0EDE0] dark:bg-[#1E2A1A]'
                   : hasBloc
-                  ? 'border-2 border-[#C09A18]/50 bg-[#C09A18]/15 hover:bg-[#C09A18]/25 dark:bg-[#C09A18]/10'
+                  ? 'border-2 border-[#4A3418] bg-[#4A3418]/20 hover:bg-[#4A3418]/30'
                   : isCurrentMonth
                   ? 'bg-[#F0EDE0] hover:bg-[#E8E4D2] dark:bg-[#1E2A1A] dark:hover:bg-[#243220]'
                   : 'bg-[#E8E4D2] dark:bg-[#161E10]',
@@ -167,7 +167,9 @@ export function MonthCalendar({
             >
               <span
                 className={`block text-[13px] font-bold ${
-                  isSelected || isToday
+                  isSelected
+                    ? 'text-[#F0EDD4]'
+                    : isToday
                     ? 'text-[#C09A18]'
                     : isCurrentMonth
                     ? 'text-[#1A1A0A] dark:text-[#F0EDD4]'
@@ -177,7 +179,7 @@ export function MonthCalendar({
                 {dayNum}
               </span>
               {blocTag && (
-                <span className="mt-1 block rounded px-1 py-0.5 text-[9px] font-bold text-[#C09A18]" style={{ background: 'rgba(192,154,24,0.2)' }}>
+                <span className="mt-1 block rounded px-1 py-0.5 text-[9px] font-bold text-[#C09A18]" style={{ background: '#4A3418' }}>
                   {blocTag}
                 </span>
               )}
