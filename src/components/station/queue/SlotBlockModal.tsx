@@ -105,11 +105,11 @@ export function SlotBlockModal({ isOpen, onClose, slotId, slotTime, onSuccess }:
               onChange={(e) => setDurationMinutes(e.target.value)}
               className="flex-1 rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 transition-colors dark:border-slate-600 dark:bg-slate-800 dark:text-white"
             >
-              <option value="15">15 min</option>
-              <option value="30">30 min</option>
-              <option value="60">1 heure</option>
-              <option value="120">2 heures</option>
-              <option value="240">4 heures</option>
+              <option value="15">{t('slot_block_duration_15')}</option>
+              <option value="30">{t('slot_block_duration_30')}</option>
+              <option value="60">{t('slot_block_duration_60')}</option>
+              <option value="120">{t('slot_block_duration_120')}</option>
+              <option value="240">{t('slot_block_duration_240')}</option>
             </select>
           </div>
         </div>

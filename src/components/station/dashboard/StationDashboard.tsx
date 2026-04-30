@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect, useCallback, useRef } from 'react';
-import { useTranslations } from 'next-intl';
+import { useLocale, useTranslations } from 'next-intl';
 import { getFromApi, patchWithApi, postWithApi } from '@/services';
 import { useAuth } from '@/context/auth-context';
 import { ConfirmDialog } from '@/components/ui/ConfirmDialog';
@@ -70,7 +70,7 @@ function buildQueueEntries(raw: RawEntry[]): QueueEntry[] {
   return [...inProgress, ...waiting];
 }
 
-function buildPosts(rawConfig: RawConfig, rawEntries: RawEntry[], activeServiceLabel: string): Post[] {
+function buildPosts(rawConfig: RawConfig, rawEntries: RawEntry[], activeServiceLabel: string, locale: string): Post[] {
   const inProgress = rawEntries.filter((e) => e.status === 'in_progress');
   return rawConfig.posts.map((post): Post => {
     const postEntries: PostEntry[] = inProgress
@@ -78,7 +78,7 @@ function buildPosts(rawConfig: RawConfig, rawEntries: RawEntry[], activeServiceL
       .map((e): PostEntry => ({
         id: e.id,
         status: 'active',
-        timeRange: new Date(e.created_at).toLocaleTimeString('fr-CA', { hour: '2-digit', minute: '2-digit' }),
+        timeRange: new Date(e.created_at).toLocaleTimeString(locale, { hour: '2-digit', minute: '2-digit' }),
         serviceLabel: activeServiceLabel,
         clientName: `Client #${e.user_id.slice(0, 4)}`,
         price: e.amount_paid ? parseFloat(e.amount_paid) : undefined,
@@ -105,6 +105,7 @@ const ACTION_STATUS_MAP: Partial<Record<DashboardAction, string>> = {
 export function StationDashboard() {
   const { isLoading: authLoading } = useAuth();
   const t = useTranslations('station_dashboard');
+  const locale = useLocale();
   const mountedRef = useRef(true);
   useEffect(() => { mountedRef.current = true; return () => { mountedRef.current = false; }; }, []);
 
@@ -126,10 +127,10 @@ export function StationDashboard() {
       const raw = (entriesData as { data: { entries: RawEntry[] } }).data.entries ?? [];
       const config = (configData as { data: RawConfig }).data;
       setQueueEntries(buildQueueEntries(raw));
-      setPosts(buildPosts(config, raw, t('status_active')));
+      setPosts(buildPosts(config, raw, t('status_active'), locale));
     }
     setLoading(false);
-  }, [t]);
+  }, [t, locale]);
 
   useEffect(() => {
     if (!authLoading) loadData();

@@ -95,7 +95,7 @@ export function TimeExtensionModal({
                   : 'bg-slate-200 text-slate-700 hover:bg-slate-300 dark:bg-slate-700 dark:text-slate-200 dark:hover:bg-slate-600'
               }`}
             >
-              +{min}min
+              +{min} {t('time_extension_minutes_unit')}
             </button>
           ))}
         </div>
