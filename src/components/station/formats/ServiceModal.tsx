@@ -65,6 +65,7 @@ export function ServiceModal({ service, vehicleFormats, availableExtras, onClose
   const showDurationField = isEdit || !isCreateSelfService;
   const showFormatSection = isEdit || !isCreateSelfService;
   const effectiveServiceType: ServiceType = !isEdit && category !== 'hand_wash' ? 'exterior' : serviceType;
+  const computedCreateName = `${t(`cat_${category}`)} · ${t(`type_${effectiveServiceType}`)}`;
 
   useEffect(() => {
     if (service) {
@@ -113,7 +114,7 @@ export function ServiceModal({ service, vehicleFormats, availableExtras, onClose
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
-    if (!name.trim()) {
+    if (isEdit && !name.trim()) {
       setError(t('name_required'));
       return;
     }
@@ -142,7 +143,7 @@ export function ServiceModal({ service, vehicleFormats, availableExtras, onClose
       }));
 
     const payload = {
-      name: name.trim(),
+      name: isEdit ? name.trim() : computedCreateName,
       category,
       service_type: effectiveServiceType,
       description: description.trim(),
@@ -248,6 +249,7 @@ export function ServiceModal({ service, vehicleFormats, availableExtras, onClose
                   <div className="text-[11px] text-[#9A9A8A]">{t('preview_category')}: {t(`cat_${category}`)}</div>
                 </div>
               )}
+              {isEdit && (
               <div className="flex flex-col gap-1.5">
                 <label className="text-[13px] font-medium text-[#5A5A4A] dark:text-[#9A9A8A]">{t('field_name')}</label>
                 <input
@@ -260,6 +262,7 @@ export function ServiceModal({ service, vehicleFormats, availableExtras, onClose
                   className={inputClass}
                 />
               </div>
+              )}
 
               <div className="flex flex-col gap-1.5">
                 <label className="text-[13px] font-medium text-[#5A5A4A] dark:text-[#9A9A8A]">{t('field_category')}</label>
@@ -507,7 +510,7 @@ export function ServiceModal({ service, vehicleFormats, availableExtras, onClose
             <aside className="rounded-[12px] bg-[#3A2A12] p-4 text-[#F0EDD4]">
               <div className="mb-3 text-[13px] font-black">{t('preview_title')}</div>
               <div className="rounded-[10px] bg-[#4A3418] p-3">
-                <div className="text-[15px] font-black">{name || t('placeholder_name')}</div>
+                <div className="text-[15px] font-black">{computedCreateName}</div>
                 <div className="mt-1 text-[11px] text-[#B7AE8A]">{t('preview_category')}: {t(`cat_${category}`)}</div>
                 <div className="mt-3 space-y-2 text-[12px]">
                   <div className="flex items-center justify-between border-b border-[#5A4630] pb-1">
@@ -551,6 +554,21 @@ export function ServiceModal({ service, vehicleFormats, availableExtras, onClose
                   </div>
                 </div>
               </div>
+
+              <button
+                type="submit"
+                disabled={saving}
+                className="mt-3 w-full rounded-[8px] bg-[#C49A1E] px-4 py-2 text-[13px] font-black text-[#0C1209] transition-opacity hover:opacity-80 disabled:opacity-50"
+              >
+                {saving ? t('btn_saving') : t('modal_title_new')}
+              </button>
+              <button
+                type="button"
+                onClick={onClose}
+                className="mt-2 w-full rounded-[8px] border border-[#5A4630] px-4 py-2 text-[13px] font-semibold text-[#B7AE8A] transition-colors hover:bg-[#4A3418]"
+              >
+                {t('btn_cancel')}
+              </button>
             </aside>
             )}
           </div>

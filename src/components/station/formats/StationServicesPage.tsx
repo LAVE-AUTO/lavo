@@ -138,6 +138,7 @@ export function StationServicesPage() {
   }, []);
 
   const activeCount = services.filter((s) => s.is_active).length;
+  const allExtras = [...extras.exterior, ...extras.interior, ...extras.both];
 
   if (loading) {
     return (
@@ -224,6 +225,62 @@ export function StationServicesPage() {
                 </div>
               ))}
             </div>
+
+            <div className="mt-8 mb-4 flex items-center justify-between gap-3">
+              <div className="flex items-center gap-2">
+                <span className="text-[11px] font-black tracking-[.1em] text-[#C09A18] uppercase">{t('extras_label')}</span>
+                <span className="text-[11px] font-medium text-[#888] dark:text-[#9A9A8A]">{allExtras.length} configuré(s)</span>
+              </div>
+              <button
+                type="button"
+                className="rounded-[8px] border border-[#2A3A20] bg-[#1E2A18] px-3 py-1.5 text-[12px] font-bold text-[#F0EDD4] transition-colors hover:bg-[#243220]"
+              >
+                + Extra
+              </button>
+            </div>
+
+            {allExtras.length === 0 ? (
+              <div className="rounded-[10px] border border-dashed border-[#E0DCD4] py-6 text-center text-[13px] text-[#BBBBAA] dark:border-[#243020] dark:text-[#4A4A3A]">
+                {t('extras_none')}
+              </div>
+            ) : (
+              <div className="grid grid-cols-1 gap-3 md:grid-cols-2 lg:grid-cols-3">
+                {allExtras.map((extra) => (
+                  <div
+                    key={extra.id}
+                    className="rounded-[10px] border border-[#EDEBE5] bg-[#FAFAF7] p-3 dark:border-[#243020] dark:bg-[#0D170A]"
+                  >
+                    <div className="flex items-start justify-between gap-2">
+                      <div>
+                        <div className="text-[13px] font-bold text-[#1A1A0A] dark:text-[#F0EDD4]">{extra.label}</div>
+                        <div className="mt-0.5 text-[11px] text-[#C49A1E]">+{extra.price}$</div>
+                      </div>
+                      <span className={`rounded-full px-2 py-0.5 text-[10px] font-bold ${
+                        extra.is_active
+                          ? 'bg-[rgba(46,204,113,.12)] text-[#2ecc71]'
+                          : 'bg-[rgba(136,136,136,.12)] text-[#888]'
+                      }`}>
+                        {extra.is_active ? t('badge_active') : t('badge_inactive')}
+                      </span>
+                    </div>
+                    <div className="mt-2 flex gap-1.5">
+                      <button
+                        type="button"
+                        className="rounded-[6px] border border-[#D8D4C8] px-2.5 py-1 text-[10px] font-semibold text-[#5A5A4A] dark:border-[#243020] dark:text-[#9A9A8A]"
+                      >
+                        {t('btn_edit')}
+                      </button>
+                      <button
+                        type="button"
+                        className="rounded-[6px] border border-[#FF2525] px-2.5 py-1 text-[10px] font-semibold text-[#FF2525]"
+                      >
+                        {t('btn_delete')}
+                      </button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
           </>
         )}
       </div>
