@@ -1,7 +1,3 @@
-// This file is intentionally left to be replaced — see BlocksPanel.tsx
-// Kept temporarily to avoid import errors during transition
-export {};
-
 import { useTranslations } from 'next-intl';
 
 interface BayFilterProps {
@@ -15,7 +11,7 @@ export function BayFilter({ bays, selectedBay, onBayChange }: BayFilterProps) {
 
   return (
     <div>
-      <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-[#666] dark:text-[#A0A090]">{t('availability_bay_filter_label')}</p>
+      <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-[#666] dark:text-[#A0A090]">{t('filter_all_posts')}</p>
       <div className="flex flex-wrap gap-2">
         <button
           type="button"
@@ -26,7 +22,7 @@ export function BayFilter({ bays, selectedBay, onBayChange }: BayFilterProps) {
               : 'bg-[#C09A18]/10 text-[#1A1A0A] hover:bg-[#C09A18]/20 dark:text-[#F0EDD4]'
           }`}
         >
-          {t('availability_bay_all')}
+          {t('filter_all_posts')}
         </button>
         {bays.map((bay) => (
           <button
@@ -39,7 +35,7 @@ export function BayFilter({ bays, selectedBay, onBayChange }: BayFilterProps) {
                 : 'bg-[#C09A18]/10 text-[#1A1A0A] hover:bg-[#C09A18]/20 dark:text-[#F0EDD4]'
             }`}
           >
-            {t('availability_bay_label')} {bay}
+            {t('filter_post', { n: bay })}
           </button>
         ))}
       </div>

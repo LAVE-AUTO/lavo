@@ -84,9 +84,8 @@ export function StationAnalytics() {
         };
 
         setData(analyticsData);
-      } catch (err) {
+      } catch {
         if (mountedRef.current) {
-          console.error('Analytics error:', err);
           setError(t('error_loading_analytics'));
         }
       } finally {

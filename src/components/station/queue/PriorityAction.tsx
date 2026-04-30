@@ -32,8 +32,7 @@ export function PriorityAction({ entryId, currentPosition, disabled = false, onS
       }
 
       onSuccess();
-    } catch (err) {
-      console.error('Priority action error:', err);
+    } catch {
       setError(t('error_queue_empty'));
     } finally {
       setIsLoading(false);

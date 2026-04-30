@@ -55,8 +55,7 @@ export function ManualQueueAddModal({
 
       onSuccess(data?.data?.id || 'mock-id-' + Date.now());
       onClose();
-    } catch (err) {
-      console.error('Manual queue add error:', err);
+    } catch {
       setError(t('error_queue_empty'));
     } finally {
       setIsLoading(false);
@@ -70,11 +69,12 @@ export function ManualQueueAddModal({
       <div className="space-y-4 p-4">
         {/* Vehicle Format Select */}
         <div>
-          <label className="block text-sm font-medium text-slate-900 dark:text-white">
+          <label htmlFor="manual-queue-format" className="block text-sm font-medium text-slate-900 dark:text-white">
             {t('manual_queue_format_label')}
             <span className="text-red-500">*</span>
           </label>
           <select
+            id="manual-queue-format"
             value={formatId}
             onChange={(e) => setFormatId(e.target.value)}
             className="mt-2 w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 transition-colors dark:border-slate-600 dark:bg-slate-800 dark:text-white"
@@ -90,10 +90,11 @@ export function ManualQueueAddModal({
 
         {/* Slot Select (Optional) */}
         <div>
-          <label className="block text-sm font-medium text-slate-900 dark:text-white">
+          <label htmlFor="manual-queue-slot" className="block text-sm font-medium text-slate-900 dark:text-white">
             {t('manual_queue_slot_label')}
           </label>
           <select
+            id="manual-queue-slot"
             value={slotId}
             onChange={(e) => setSlotId(e.target.value)}
             className="mt-2 w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 transition-colors dark:border-slate-600 dark:bg-slate-800 dark:text-white"
@@ -109,28 +110,33 @@ export function ManualQueueAddModal({
 
         {/* Phone (Optional) */}
         <div>
-          <label className="block text-sm font-medium text-slate-900 dark:text-white">
+          <label htmlFor="manual-queue-phone" className="block text-sm font-medium text-slate-900 dark:text-white">
             {t('manual_queue_phone_label')}
           </label>
           <input
+            id="manual-queue-phone"
             type="tel"
             value={clientPhone}
             onChange={(e) => setClientPhone(e.target.value)}
             placeholder="+15141234567"
+            maxLength={20}
+            inputMode="tel"
             className="mt-2 w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 transition-colors placeholder-slate-400 dark:border-slate-600 dark:bg-slate-800 dark:text-white dark:placeholder-slate-500"
           />
         </div>
 
         {/* Notes (Optional) */}
         <div>
-          <label className="block text-sm font-medium text-slate-900 dark:text-white">
+          <label htmlFor="manual-queue-notes" className="block text-sm font-medium text-slate-900 dark:text-white">
             {t('manual_queue_notes_label')}
           </label>
           <textarea
+            id="manual-queue-notes"
             value={notes}
             onChange={(e) => setNotes(e.target.value)}
             placeholder={t('manual_queue_notes_placeholder')}
             rows={2}
+            maxLength={300}
             className="mt-2 w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 transition-colors placeholder-slate-400 dark:border-slate-600 dark:bg-slate-800 dark:text-white dark:placeholder-slate-500"
           />
         </div>

@@ -33,12 +33,17 @@ export function SlotBlockModal({ isOpen, onClose, slotId, slotTime, onSuccess }:
       setError(t('slot_block_error_reason'));
       return;
     }
+    const duration = parseInt(durationMinutes, 10);
+    if (isNaN(duration) || duration <= 0) {
+      setError(t('slot_block_error_reason'));
+      return;
+    }
 
     try {
       setIsLoading(true);
       setError(null);
 
-      const blockedUntil = new Date(Date.now() + parseInt(durationMinutes, 10) * 60 * 1000).toISOString();
+      const blockedUntil = new Date(Date.now() + duration * 60 * 1000).toISOString();
 
       // TODO: connect to API once POST /station/slots/:id/block endpoint is available
       const [success, data] = await postWithApi(`/station/slots/${slotId}/block`, {
@@ -53,8 +58,7 @@ export function SlotBlockModal({ isOpen, onClose, slotId, slotTime, onSuccess }:
 
       onSuccess();
       onClose();
-    } catch (err) {
-      console.error('Slot block error:', err);
+    } catch {
       setError(t('error_queue_empty'));
     } finally {
       setIsLoading(false);
@@ -70,11 +74,12 @@ export function SlotBlockModal({ isOpen, onClose, slotId, slotTime, onSuccess }:
 
         {/* Reason Select */}
         <div>
-          <label className="block text-sm font-medium text-slate-900 dark:text-white">
+          <label htmlFor="slot-block-reason" className="block text-sm font-medium text-slate-900 dark:text-white">
             {t('slot_block_reason_label')}
             <span className="text-red-500">*</span>
           </label>
           <select
+            id="slot-block-reason"
             value={reason}
             onChange={(e) => setReason(e.target.value)}
             className="mt-2 w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 transition-colors dark:border-slate-600 dark:bg-slate-800 dark:text-white"
@@ -89,12 +94,13 @@ export function SlotBlockModal({ isOpen, onClose, slotId, slotTime, onSuccess }:
 
         {/* Duration Select */}
         <div>
-          <label className="block text-sm font-medium text-slate-900 dark:text-white">
+          <label htmlFor="slot-block-duration" className="block text-sm font-medium text-slate-900 dark:text-white">
             {t('slot_block_duration_label')}
             <span className="text-red-500">*</span>
           </label>
           <div className="mt-2 flex gap-2">
             <select
+              id="slot-block-duration"
               value={durationMinutes}
               onChange={(e) => setDurationMinutes(e.target.value)}
               className="flex-1 rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 transition-colors dark:border-slate-600 dark:bg-slate-800 dark:text-white"

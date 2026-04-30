@@ -70,7 +70,7 @@ function buildQueueEntries(raw: RawEntry[]): QueueEntry[] {
   return [...inProgress, ...waiting];
 }
 
-function buildPosts(rawConfig: RawConfig, rawEntries: RawEntry[]): Post[] {
+function buildPosts(rawConfig: RawConfig, rawEntries: RawEntry[], activeServiceLabel: string): Post[] {
   const inProgress = rawEntries.filter((e) => e.status === 'in_progress');
   return rawConfig.posts.map((post): Post => {
     const postEntries: PostEntry[] = inProgress
@@ -79,7 +79,7 @@ function buildPosts(rawConfig: RawConfig, rawEntries: RawEntry[]): Post[] {
         id: e.id,
         status: 'active',
         timeRange: new Date(e.created_at).toLocaleTimeString('fr-CA', { hour: '2-digit', minute: '2-digit' }),
-        serviceLabel: 'En cours',
+        serviceLabel: activeServiceLabel,
         clientName: `Client #${e.user_id.slice(0, 4)}`,
         price: e.amount_paid ? parseFloat(e.amount_paid) : undefined,
         startMinutes: (() => {
@@ -126,10 +126,10 @@ export function StationDashboard() {
       const raw = (entriesData as { data: { entries: RawEntry[] } }).data.entries ?? [];
       const config = (configData as { data: RawConfig }).data;
       setQueueEntries(buildQueueEntries(raw));
-      setPosts(buildPosts(config, raw));
+      setPosts(buildPosts(config, raw, t('status_active')));
     }
     setLoading(false);
-  }, []);
+  }, [t]);
 
   useEffect(() => {
     if (!authLoading) loadData();

@@ -27,7 +27,7 @@ export function TimeExtensionModal({
 
   const handleExtendTime = useCallback(async () => {
     const mins = parseInt(minutes, 10);
-    if (isNaN(mins) || mins <= 0) {
+    if (isNaN(mins) || mins <= 0 || mins > 120) {
       setError(t('time_extension_error_minutes'));
       return;
     }
@@ -48,8 +48,7 @@ export function TimeExtensionModal({
 
       onSuccess();
       onClose();
-    } catch (err) {
-      console.error('Time extension error:', err);
+    } catch {
       setError(t('error_queue_empty'));
     } finally {
       setIsLoading(false);
@@ -65,12 +64,13 @@ export function TimeExtensionModal({
 
         {/* Minutes Input */}
         <div>
-          <label className="block text-sm font-medium text-slate-900 dark:text-white">
+          <label htmlFor="time-extension-minutes" className="block text-sm font-medium text-slate-900 dark:text-white">
             {t('time_extension_minutes_label')}
             <span className="text-red-500">*</span>
           </label>
           <div className="mt-2 flex gap-2">
             <input
+              id="time-extension-minutes"
               type="number"
               min="1"
               max="120"
