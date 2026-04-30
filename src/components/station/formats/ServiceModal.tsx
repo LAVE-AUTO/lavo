@@ -49,6 +49,9 @@ export function ServiceModal({ service, vehicleFormats, availableExtras, onClose
   const [entries, setEntries] = useState<ServiceVehicleEntry[]>([]);
   const [selectedFormatIds, setSelectedFormatIds] = useState<string[]>([]);
   const [selectedExtraIds, setSelectedExtraIds] = useState<string[]>([]);
+  const [basePrice, setBasePrice] = useState('45');
+  const [baseDuration, setBaseDuration] = useState('60');
+  const [baseStaff, setBaseStaff] = useState('2');
   const [formatSearch, setFormatSearch] = useState('');
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -63,6 +66,10 @@ export function ServiceModal({ service, vehicleFormats, availableExtras, onClose
       setEntries(buildEntries(vehicleFormats, service.vehicle_entries));
       setSelectedFormatIds(service.vehicle_entries.filter((e) => e.is_active).map((e) => e.vehicle_format_id));
       setSelectedExtraIds((service.compatible_extras || []).map((e) => e.id));
+      const firstActive = service.vehicle_entries.find((e) => e.is_active);
+      setBasePrice(firstActive?.price || '45');
+      setBaseDuration(String(firstActive?.duration_min || 60));
+      setBaseStaff(String(firstActive?.staff_required || 2));
     } else {
       setName('');
       setCategory('hand_wash');
@@ -72,6 +79,9 @@ export function ServiceModal({ service, vehicleFormats, availableExtras, onClose
       setEntries(buildEntries(vehicleFormats));
       setSelectedFormatIds(vehicleFormats.map((f) => f.id));
       setSelectedExtraIds([]);
+      setBasePrice('45');
+      setBaseDuration('60');
+      setBaseStaff('2');
     }
     setFormatSearch('');
     setError(null);
@@ -96,16 +106,29 @@ export function ServiceModal({ service, vehicleFormats, availableExtras, onClose
       .filter((e) => selectedExtraIds.includes(e.id))
       .map((e) => ({ id: e.id, name: e.label }));
 
+    const createModeEntries = vehicleFormats
+      .filter((f) => selectedFormatIds.includes(f.id))
+      .map((f) => ({
+        vehicle_format_id: f.id,
+        vehicle_label: f.label,
+        price: basePrice,
+        duration_min: parseInt(baseDuration, 10) || 0,
+        staff_required: parseInt(baseStaff, 10) || 0,
+        is_active: true,
+      }));
+
     const payload = {
       name: name.trim(),
       category,
       service_type: serviceType,
       description: description.trim(),
       is_active: isActive,
-      vehicle_entries: entries.map((entry) => ({
-        ...entry,
-        is_active: selectedFormatIds.includes(entry.vehicle_format_id),
-      })),
+      vehicle_entries: isEdit
+        ? entries.map((entry) => ({
+            ...entry,
+            is_active: selectedFormatIds.includes(entry.vehicle_format_id),
+          }))
+        : createModeEntries,
       compatible_extras: selectedExtras,
       is_popular: service?.is_popular ?? false,
     };
@@ -129,7 +152,18 @@ export function ServiceModal({ service, vehicleFormats, availableExtras, onClose
     });
   }
 
-  const activeEntries = entries.filter((e) => selectedFormatIds.includes(e.vehicle_format_id));
+  const activeEntries = isEdit
+    ? entries.filter((e) => selectedFormatIds.includes(e.vehicle_format_id))
+    : vehicleFormats
+        .filter((f) => selectedFormatIds.includes(f.id))
+        .map((f) => ({
+          vehicle_format_id: f.id,
+          vehicle_label: f.label,
+          price: basePrice,
+          duration_min: parseInt(baseDuration, 10) || 0,
+          staff_required: parseInt(baseStaff, 10) || 0,
+          is_active: true,
+        }));
   const prices = activeEntries.map((e) => parseFloat(e.price || '0')).filter((p) => !Number.isNaN(p) && p > 0);
   const durations = activeEntries.map((e) => e.duration_min).filter((d) => d > 0);
   const minPrice = prices.length > 0 ? Math.min(...prices) : null;
@@ -243,6 +277,7 @@ export function ServiceModal({ service, vehicleFormats, availableExtras, onClose
                 </div>
               </div>
 
+              {!isEdit && (
               <div className="rounded-[10px] border border-[#F0EDE4] bg-[#FAFAF7] p-3 dark:border-[#243020] dark:bg-[#0F1A0C]">
                 <div className="mb-1 text-[11px] font-black tracking-[.08em] text-[#C49A1E] uppercase">
                   {category === 'hand_wash' ? t('field_type_handwash') : t('field_type')}
@@ -255,6 +290,7 @@ export function ServiceModal({ service, vehicleFormats, availableExtras, onClose
                     : t('type_hint_complete')}
                 </p>
               </div>
+              )}
 
               <div className="flex flex-col gap-1.5">
                 <label className="text-[13px] font-medium text-[#5A5A4A] dark:text-[#9A9A8A]">{t('field_description')}</label>
@@ -266,6 +302,44 @@ export function ServiceModal({ service, vehicleFormats, availableExtras, onClose
                   className={inputClass + ' resize-none'}
                 />
               </div>
+
+              {!isEdit && (
+                <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+                  <div className="flex flex-col gap-1.5">
+                    <label className="text-[13px] font-medium text-[#5A5A4A] dark:text-[#9A9A8A]">{t('format_field_price')}</label>
+                    <input
+                      type="number"
+                      min="0"
+                      step="0.01"
+                      value={basePrice}
+                      onChange={(e) => setBasePrice(e.target.value)}
+                      className={inputClass}
+                    />
+                  </div>
+                  <div className="flex flex-col gap-1.5">
+                    <label className="text-[13px] font-medium text-[#5A5A4A] dark:text-[#9A9A8A]">{t('vehicle_col_duration')}</label>
+                    <input
+                      type="number"
+                      min="1"
+                      step="1"
+                      value={baseDuration}
+                      onChange={(e) => setBaseDuration(e.target.value)}
+                      className={inputClass}
+                    />
+                  </div>
+                  <div className="flex flex-col gap-1.5 sm:col-span-2">
+                    <label className="text-[13px] font-medium text-[#5A5A4A] dark:text-[#9A9A8A]">{t('vehicle_col_staff')}</label>
+                    <input
+                      type="number"
+                      min="0"
+                      step="1"
+                      value={baseStaff}
+                      onChange={(e) => setBaseStaff(e.target.value)}
+                      className={inputClass}
+                    />
+                  </div>
+                </div>
+              )}
 
               <div className="flex flex-col gap-1.5">
                 <label className="text-[12px] font-black tracking-[.08em] text-[#C49A1E] uppercase">
@@ -308,6 +382,7 @@ export function ServiceModal({ service, vehicleFormats, availableExtras, onClose
                 )}
               </div>
 
+              {isEdit && (
               <div className="flex flex-col gap-2">
                 <span className="text-[11px] font-black tracking-[.08em] text-[#C49A1E] uppercase">
                   {t('section_vehicle_pricing')}
@@ -325,6 +400,7 @@ export function ServiceModal({ service, vehicleFormats, availableExtras, onClose
                   unavailableMessage={t('format_not_in_list')}
                 />
               </div>
+              )}
 
               <div className="flex flex-col gap-2 rounded-[10px] border border-[#F0EDE4] bg-[#FAFAF7] p-3 dark:border-[#243020] dark:bg-[#0F1A0C]">
                 <span className="text-[11px] font-black tracking-[.08em] text-[#C49A1E] uppercase">
@@ -385,18 +461,18 @@ export function ServiceModal({ service, vehicleFormats, availableExtras, onClose
                   <div className="flex items-center justify-between border-b border-[#5A4630] pb-1">
                     <span className="text-[#B7AE8A]">{t('preview_price')}</span>
                     <span className="font-bold text-[#C49A1E]">
-                      {minPrice !== null ? (minPrice === maxPrice ? `${minPrice}$` : `${minPrice}$ - ${maxPrice}$`) : '--'}
+                      {!isEdit ? `${basePrice || '--'}$` : (minPrice !== null ? (minPrice === maxPrice ? `${minPrice}$` : `${minPrice}$ - ${maxPrice}$`) : '--')}
                     </span>
                   </div>
                   <div className="flex items-center justify-between border-b border-[#5A4630] pb-1">
                     <span className="text-[#B7AE8A]">{t('preview_duration')}</span>
                     <span className="font-bold">
-                      {minDur !== null ? (minDur === maxDur ? `${minDur} min` : `${minDur}-${maxDur} min`) : '--'}
+                      {!isEdit ? `${baseDuration || '--'} min` : (minDur !== null ? (minDur === maxDur ? `${minDur} min` : `${minDur}-${maxDur} min`) : '--')}
                     </span>
                   </div>
                   <div className="flex items-center justify-between border-b border-[#5A4630] pb-1">
                     <span className="text-[#B7AE8A]">{t('preview_staff')}</span>
-                    <span className="font-bold">{activeEntries.length > 0 ? Math.max(...activeEntries.map((e) => e.staff_required)) : '--'}</span>
+                    <span className="font-bold">{!isEdit ? (baseStaff || '--') : (activeEntries.length > 0 ? Math.max(...activeEntries.map((e) => e.staff_required)) : '--')}</span>
                   </div>
                   <div className="pt-1">
                     <span className="text-[#B7AE8A]">{t('preview_formats')}</span>
