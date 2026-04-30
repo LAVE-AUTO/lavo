@@ -15,6 +15,14 @@ interface Props {
   onSaved: (service: Service) => void;
 }
 
+interface AutomaticPackage {
+  id: string;
+  name: string;
+  price: string;
+  duration: string;
+  is_active: boolean;
+}
+
 const CATEGORIES: ServiceCategory[] = ['hand_wash', 'automatic', 'self_service'];
 const TYPES: ServiceType[] = ['exterior', 'interior', 'complete'];
 
@@ -37,6 +45,23 @@ function buildEntries(formats: VehicleFormat[], existing?: ServiceVehicleEntry[]
   });
 }
 
+function buildAutomaticPackages(existing?: ServiceVehicleEntry[]): AutomaticPackage[] {
+  if (existing && existing.length > 0) {
+    return existing.map((entry, index) => ({
+      id: `pkg-${index + 1}-${entry.vehicle_format_id}`,
+      name: entry.vehicle_label || `Forfait ${index + 1}`,
+      price: entry.price || '',
+      duration: String(entry.duration_min || 0),
+      is_active: entry.is_active,
+    }));
+  }
+  return [
+    { id: crypto.randomUUID(), name: 'Forfait 1', price: '15', duration: '20', is_active: true },
+    { id: crypto.randomUUID(), name: 'Forfait 2', price: '25', duration: '35', is_active: true },
+    { id: crypto.randomUUID(), name: 'Forfait 3', price: '35', duration: '45', is_active: true },
+  ];
+}
+
 export function ServiceModal({ service, vehicleFormats, availableExtras, onClose, onSaved }: Props) {
   const t = useTranslations('station_services');
   const isEdit = service !== null;
@@ -52,6 +77,7 @@ export function ServiceModal({ service, vehicleFormats, availableExtras, onClose
   const [basePrice, setBasePrice] = useState('45');
   const [baseDuration, setBaseDuration] = useState('60');
   const [baseStaff, setBaseStaff] = useState('2');
+  const [automaticPackages, setAutomaticPackages] = useState<AutomaticPackage[]>(buildAutomaticPackages());
   const [formatSearch, setFormatSearch] = useState('');
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -64,9 +90,10 @@ export function ServiceModal({ service, vehicleFormats, availableExtras, onClose
   const isCreateSelfService = !isEdit && isSelfService;
   const showTypeSelector = isHandWash;
   const showExtrasSection = isHandWash;
-  const showStaffField = isHandWash || isAutomatic;
-  const showDurationField = !isSelfService;
-  const showFormatSection = !isSelfService;
+  const showStaffField = isHandWash;
+  const showDurationField = true;
+  const showFormatSection = isHandWash;
+  const showAutomaticPackagesSection = isAutomatic;
   const effectiveServiceType: ServiceType = !isEdit && category !== 'hand_wash' ? 'exterior' : serviceType;
   const computedCreateName = `${t(`cat_${category}`)} · ${t(`type_${effectiveServiceType}`)}`;
 
@@ -78,6 +105,7 @@ export function ServiceModal({ service, vehicleFormats, availableExtras, onClose
       setDescription(service.description);
       setIsActive(service.is_active);
       setEntries(buildEntries(vehicleFormats, service.vehicle_entries));
+      setAutomaticPackages(buildAutomaticPackages(service.category === 'automatic' ? service.vehicle_entries : undefined));
       setSelectedFormatIds(service.vehicle_entries.filter((e) => e.is_active).map((e) => e.vehicle_format_id));
       setSelectedExtraIds((service.compatible_extras || []).map((e) => e.id));
       const firstActive = service.vehicle_entries.find((e) => e.is_active);
@@ -91,6 +119,7 @@ export function ServiceModal({ service, vehicleFormats, availableExtras, onClose
       setDescription('');
       setIsActive(true);
       setEntries(buildEntries(vehicleFormats));
+      setAutomaticPackages(buildAutomaticPackages());
       setSelectedFormatIds(vehicleFormats.map((f) => f.id));
       setSelectedExtraIds([]);
       setBasePrice('45');
@@ -105,12 +134,15 @@ export function ServiceModal({ service, vehicleFormats, availableExtras, onClose
     if (category !== 'hand_wash') {
       setServiceType('exterior');
       setSelectedExtraIds([]);
-      setBaseStaff(category === 'automatic' ? '1' : '0');
+      setBaseStaff('0');
       if (category === 'self_service') {
         setSelectedFormatIds(vehicleFormats.map((f) => f.id));
       }
+      if (category === 'automatic' && automaticPackages.length === 0) {
+        setAutomaticPackages(buildAutomaticPackages());
+      }
     }
-  }, [category, vehicleFormats]);
+  }, [category, vehicleFormats, automaticPackages.length];
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -142,18 +174,46 @@ export function ServiceModal({ service, vehicleFormats, availableExtras, onClose
         is_active: true,
       }));
 
+    const automaticModeEntries = automaticPackages
+      .filter((pkg) => pkg.name.trim())
+      .map((pkg) => ({
+        vehicle_format_id: `auto-${pkg.id}`,
+        vehicle_label: pkg.name.trim(),
+        price: pkg.price,
+        duration_min: parseInt(pkg.duration, 10) || 0,
+        staff_required: 0,
+        is_active: pkg.is_active,
+      }));
+
+    const selfServiceEntries = [
+      {
+        vehicle_format_id: 'self-service',
+        vehicle_label: t('cat_self_service'),
+        price: basePrice,
+        duration_min: parseInt(baseDuration, 10) || 0,
+        staff_required: 0,
+        is_active: true,
+      },
+    ];
+
+    const payloadEntries = category === 'automatic'
+      ? automaticModeEntries
+      : category === 'self_service'
+      ? selfServiceEntries
+      : isEdit
+      ? entries.map((entry) => ({
+          ...entry,
+          is_active: selectedFormatIds.includes(entry.vehicle_format_id),
+        }))
+      : createModeEntries;
+
     const payload = {
       name: isEdit ? name.trim() : computedCreateName,
       category,
       service_type: effectiveServiceType,
       description: description.trim(),
       is_active: isActive,
-      vehicle_entries: isEdit
-        ? entries.map((entry) => ({
-            ...entry,
-            is_active: selectedFormatIds.includes(entry.vehicle_format_id),
-          }))
-        : createModeEntries,
+      vehicle_entries: payloadEntries,
       compatible_extras: selectedExtras,
       is_popular: service?.is_popular ?? false,
     };
@@ -177,7 +237,29 @@ export function ServiceModal({ service, vehicleFormats, availableExtras, onClose
     });
   }
 
-  const activeEntries = isEdit
+  const activeEntries = category === 'automatic'
+    ? automaticPackages
+        .filter((pkg) => pkg.is_active)
+        .map((pkg) => ({
+          vehicle_format_id: `auto-${pkg.id}`,
+          vehicle_label: pkg.name,
+          price: pkg.price,
+          duration_min: parseInt(pkg.duration, 10) || 0,
+          staff_required: 0,
+          is_active: pkg.is_active,
+        }))
+    : category === 'self_service'
+    ? [
+        {
+          vehicle_format_id: 'self-service',
+          vehicle_label: t('cat_self_service'),
+          price: basePrice,
+          duration_min: parseInt(baseDuration, 10) || 0,
+          staff_required: 0,
+          is_active: true,
+        },
+      ]
+    : isEdit
     ? entries.filter((e) => selectedFormatIds.includes(e.vehicle_format_id))
     : vehicleFormats
         .filter((f) => selectedFormatIds.includes(f.id))
@@ -217,6 +299,27 @@ export function ServiceModal({ service, vehicleFormats, availableExtras, onClose
     setSelectedExtraIds((prev) =>
       prev.includes(extraId) ? prev.filter((id) => id !== extraId) : [...prev, extraId]
     );
+  }
+
+  function addAutomaticPackage() {
+    setAutomaticPackages((prev) => [
+      ...prev,
+      {
+        id: crypto.randomUUID(),
+        name: `Forfait ${prev.length + 1}`,
+        price: '',
+        duration: '30',
+        is_active: true,
+      },
+    ]);
+  }
+
+  function removeAutomaticPackage(id: string) {
+    setAutomaticPackages((prev) => prev.filter((pkg) => pkg.id !== id));
+  }
+
+  function updateAutomaticPackage(id: string, field: 'name' | 'price' | 'duration' | 'is_active', value: string | boolean) {
+    setAutomaticPackages((prev) => prev.map((pkg) => (pkg.id === id ? { ...pkg, [field]: value } : pkg)));
   }
 
   return (
@@ -350,7 +453,7 @@ export function ServiceModal({ service, vehicleFormats, availableExtras, onClose
                 />
               </div>
 
-              {!isEdit && (
+              {(category === 'hand_wash' || category === 'self_service') && (
                 <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
                   <div className="flex flex-col gap-1.5">
                     <label className="text-[13px] font-medium text-[#5A5A4A] dark:text-[#9A9A8A]">{t('format_field_price')}</label>
@@ -388,6 +491,77 @@ export function ServiceModal({ service, vehicleFormats, availableExtras, onClose
                       className={inputClass}
                     />
                   </div>
+                  )}
+                </div>
+              )}
+
+              {showAutomaticPackagesSection && (
+                <div className="flex flex-col gap-2 rounded-[10px] border border-[#F0EDE4] bg-[#FAFAF7] p-3 dark:border-[#243020] dark:bg-[#0F1A0C]">
+                  <div className="flex items-center justify-between gap-2">
+                    <span className="text-[11px] font-black tracking-[.08em] text-[#C49A1E] uppercase">{t('automatic_packages_label')}</span>
+                    <button
+                      type="button"
+                      onClick={addAutomaticPackage}
+                      className="rounded-[8px] border border-[#C49A1E]/50 px-2.5 py-1 text-[11px] font-bold text-[#C49A1E] transition-colors hover:bg-[#FDF3D8] dark:hover:bg-[#2A1E08]"
+                    >
+                      {t('automatic_add_package')}
+                    </button>
+                  </div>
+                  {automaticPackages.length === 0 ? (
+                    <p className="text-[12px] text-[#888] dark:text-[#9A9A8A]">{t('automatic_empty_packages')}</p>
+                  ) : (
+                    <div className="space-y-2">
+                      {automaticPackages.map((pkg) => (
+                        <div key={pkg.id} className="rounded-[8px] border border-[#D8D4C8] bg-white p-2.5 dark:border-[#243020] dark:bg-[#182214]">
+                          <div className="mb-2 grid grid-cols-1 gap-2 sm:grid-cols-3">
+                            <input
+                              type="text"
+                              value={pkg.name}
+                              onChange={(e) => updateAutomaticPackage(pkg.id, 'name', e.target.value)}
+                              placeholder={t('automatic_package_name')}
+                              className={inputClass}
+                            />
+                            <input
+                              type="number"
+                              min="0"
+                              step="0.01"
+                              value={pkg.price}
+                              onChange={(e) => updateAutomaticPackage(pkg.id, 'price', e.target.value)}
+                              placeholder={t('field_price_cad')}
+                              className={inputClass}
+                            />
+                            <input
+                              type="number"
+                              min="1"
+                              value={pkg.duration}
+                              onChange={(e) => updateAutomaticPackage(pkg.id, 'duration', e.target.value)}
+                              placeholder={t('vehicle_col_duration')}
+                              className={inputClass}
+                            />
+                          </div>
+                          <div className="flex items-center justify-between">
+                            <button
+                              type="button"
+                              onClick={() => removeAutomaticPackage(pkg.id)}
+                              className="rounded-[8px] border border-[#FF2525] px-2.5 py-1 text-[11px] font-bold text-[#FF2525]"
+                            >
+                              {t('btn_delete')}
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => updateAutomaticPackage(pkg.id, 'is_active', !pkg.is_active)}
+                              className={`rounded-full border px-3 py-1 text-[11px] font-bold transition-all ${
+                                pkg.is_active
+                                  ? 'border-[#2ecc71] bg-[rgba(46,204,113,.12)] text-[#2ecc71]'
+                                  : 'border-[#888] bg-[rgba(136,136,136,.12)] text-[#888]'
+                              }`}
+                            >
+                              {pkg.is_active ? t('badge_active') : t('badge_inactive')}
+                            </button>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
                   )}
                 </div>
               )}
@@ -540,6 +714,7 @@ export function ServiceModal({ service, vehicleFormats, availableExtras, onClose
                     </div>
                   </div>
                   )}
+                  {showExtrasSection && (
                   <div className="pt-1">
                     <span className="text-[#B7AE8A]">{t('preview_extras')}</span>
                     <div className="mt-1 text-[11px] font-semibold">
@@ -551,6 +726,7 @@ export function ServiceModal({ service, vehicleFormats, availableExtras, onClose
                         : '--'}
                     </div>
                   </div>
+                  )}
                 </div>
               </div>
 
