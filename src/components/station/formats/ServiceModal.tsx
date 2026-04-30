@@ -56,14 +56,17 @@ export function ServiceModal({ service, vehicleFormats, availableExtras, onClose
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const isCreateHandWash = !isEdit && category === 'hand_wash';
-  const isCreateAutomatic = !isEdit && category === 'automatic';
-  const isCreateSelfService = !isEdit && category === 'self_service';
-  const showTypeSelector = isEdit || isCreateHandWash;
-  const showExtrasSection = isEdit || isCreateHandWash;
-  const showStaffField = isEdit || isCreateHandWash;
-  const showDurationField = isEdit || !isCreateSelfService;
-  const showFormatSection = isEdit || !isCreateSelfService;
+  const isHandWash = category === 'hand_wash';
+  const isAutomatic = category === 'automatic';
+  const isSelfService = category === 'self_service';
+  const isCreateHandWash = !isEdit && isHandWash;
+  const isCreateAutomatic = !isEdit && isAutomatic;
+  const isCreateSelfService = !isEdit && isSelfService;
+  const showTypeSelector = isHandWash;
+  const showExtrasSection = isHandWash;
+  const showStaffField = isHandWash || isAutomatic;
+  const showDurationField = !isSelfService;
+  const showFormatSection = !isSelfService;
   const effectiveServiceType: ServiceType = !isEdit && category !== 'hand_wash' ? 'exterior' : serviceType;
   const computedCreateName = `${t(`cat_${category}`)} · ${t(`type_${effectiveServiceType}`)}`;
 
@@ -99,9 +102,6 @@ export function ServiceModal({ service, vehicleFormats, availableExtras, onClose
   }, [service, vehicleFormats]);
 
   useEffect(() => {
-    if (isEdit) {
-      return;
-    }
     if (category !== 'hand_wash') {
       setServiceType('exterior');
       setSelectedExtraIds([]);
@@ -110,7 +110,7 @@ export function ServiceModal({ service, vehicleFormats, availableExtras, onClose
         setSelectedFormatIds(vehicleFormats.map((f) => f.id));
       }
     }
-  }, [category, isEdit, vehicleFormats]);
+  }, [category, vehicleFormats]);
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -435,7 +435,7 @@ export function ServiceModal({ service, vehicleFormats, availableExtras, onClose
               </div>
               )}
 
-              {isEdit && (
+              {isEdit && showFormatSection && (
               <div className="flex flex-col gap-2">
                 <span className="text-[11px] font-black tracking-[.08em] text-[#C49A1E] uppercase">
                   {t('section_vehicle_pricing')}
