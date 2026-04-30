@@ -82,6 +82,14 @@ function buildPosts(rawConfig: RawConfig, rawEntries: RawEntry[]): Post[] {
         serviceLabel: 'En cours',
         clientName: `Client #${e.user_id.slice(0, 4)}`,
         price: e.amount_paid ? parseFloat(e.amount_paid) : undefined,
+        startMinutes: (() => {
+          const d = new Date(e.created_at);
+          return d.getHours() * 60 + d.getMinutes();
+        })(),
+        endMinutes: (() => {
+          const d = new Date(e.created_at);
+          return d.getHours() * 60 + d.getMinutes() + 45;
+        })(),
       }));
     return { id: post.id, position: post.position, isActive: post.is_active, entries: postEntries };
   });
