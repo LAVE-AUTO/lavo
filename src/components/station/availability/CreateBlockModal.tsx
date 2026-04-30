@@ -94,14 +94,16 @@ export function CreateBlockModal({
   }, [isOpen, editingBlock, preselectedDate]);
 
   function addDate(iso: string) {
+    if (iso < todayISO()) return; // no past dates
     if (!dates.includes(iso)) {
       setDates((prev) => [...prev, iso].sort());
     }
   }
 
   function addDates(isos: string[]) {
+    const today = todayISO();
     setDates((prev) => {
-      const merged = [...new Set([...prev, ...isos])].sort();
+      const merged = [...new Set([...prev, ...isos.filter((d) => d >= today)])].sort();
       return merged;
     });
   }
@@ -111,15 +113,32 @@ export function CreateBlockModal({
   }
 
   function toggleBay(bay: string) {
-    setAllBays(false);
-    setSelectedBays((prev) =>
-      prev.includes(bay) ? prev.filter((b) => b !== bay) : [...prev, bay],
-    );
+    if (allBays) {
+      // Uncheck allBays, keep all except this one selected
+      setAllBays(false);
+      setSelectedBays(Array.from({ length: numBays }, (_, i) => String(i + 1)).filter((b) => b !== bay));
+    } else {
+      const next = selectedBays.includes(bay)
+        ? selectedBays.filter((b) => b !== bay)
+        : [...selectedBays, bay];
+      // If all individual bays selected, upgrade to allBays
+      if (next.length === numBays) {
+        setAllBays(true);
+        setSelectedBays([]);
+      } else {
+        setSelectedBays(next);
+      }
+    }
   }
 
   function handleAllBays() {
-    setAllBays(true);
-    setSelectedBays([]);
+    if (allBays) {
+      setAllBays(false);
+      setSelectedBays([]);
+    } else {
+      setAllBays(true);
+      setSelectedBays([]);
+    }
   }
 
   function validate(): boolean {
@@ -312,20 +331,20 @@ export function CreateBlockModal({
                 <label
                   key={bay}
                   className={`flex cursor-pointer items-center gap-2 rounded-xl border-2 p-3 transition-colors ${
-                    !allBays && selectedBays.includes(bay)
+                    allBays || selectedBays.includes(bay)
                       ? 'border-[#C09A18] bg-[#C09A18]/10'
                       : 'border-[#C09A18]/20 bg-[#F0EDE0] dark:bg-[#1E2A1A]'
                   }`}
                 >
                   <input
                     type="checkbox"
-                    checked={!allBays && selectedBays.includes(bay)}
+                    checked={allBays || selectedBays.includes(bay)}
                     onChange={() => toggleBay(bay)}
                     className="accent-[#C09A18]"
                   />
                   <span
                     className={`text-[13px] font-semibold ${
-                      !allBays && selectedBays.includes(bay)
+                      allBays || selectedBays.includes(bay)
                         ? 'text-[#C09A18]'
                         : 'text-[#666] dark:text-[#A0A090]'
                     }`}
@@ -412,15 +431,17 @@ export function CreateBlockModal({
           </div>
           <div className="grid grid-cols-7 gap-[2px]">
             {miniCells.map(({ iso, dayNum, inMonth }) => {
+              const isPast = inMonth && iso < todayStr;
+              const isDisabled = !inMonth || isPast;
               const isSelected = dates.includes(iso);
               const isToday = iso === todayStr;
               return (
                 <button
                   key={iso}
                   type="button"
-                  disabled={!inMonth}
+                  disabled={isDisabled}
                   onClick={() => {
-                    if (!inMonth) return;
+                    if (isDisabled) return;
                     if (isSelected) {
                       setDates((prev) => prev.filter((d) => d !== iso));
                     } else {
@@ -429,10 +450,10 @@ export function CreateBlockModal({
                   }}
                   className={[
                     'rounded-[3px] py-[3px] text-center text-[9px] font-bold transition-colors',
-                    !inMonth ? 'text-[#444] cursor-default' : 'cursor-pointer',
-                    inMonth && isSelected ? 'bg-[#C09A18] text-[#1A1A0A]' :
-                    inMonth && isToday ? 'border border-[#C09A18] bg-[#EDE9CC] text-[#1A1A0A] dark:bg-[#1E2A1A] dark:text-[#F0EDD4]' :
-                    inMonth ? 'bg-[#F0EDE0] text-[#1A1A0A] hover:bg-[#C09A18]/20 dark:bg-[#1E2A1A] dark:text-[#F0EDD4]' : '',
+                    isDisabled ? 'cursor-default opacity-30' : 'cursor-pointer',
+                    !isDisabled && isSelected ? 'bg-[#C09A18] text-[#1A1A0A]' :
+                    !isDisabled && isToday ? 'border border-[#C09A18] bg-[#EDE9CC] text-[#1A1A0A] dark:bg-[#1E2A1A] dark:text-[#F0EDD4]' :
+                    !isDisabled ? 'bg-[#F0EDE0] text-[#1A1A0A] hover:bg-[#C09A18]/20 dark:bg-[#1E2A1A] dark:text-[#F0EDD4]' : '',
                   ].join(' ')}
                 >
                   {dayNum}
