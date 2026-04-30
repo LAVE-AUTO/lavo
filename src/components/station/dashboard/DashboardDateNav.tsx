@@ -54,9 +54,9 @@ export function DashboardDateNav({ selectedDate, onDateChange, view, onViewChang
   }
 
   return (
-    <div className="flex flex-shrink-0 flex-wrap items-center gap-3 border-b border-[#1A2A14] bg-[#111A0E] px-5 py-3">
+    <div className="flex flex-shrink-0 flex-wrap items-center gap-3 border-b border-[#E0DCD0] bg-white px-5 py-3 dark:border-[#1A2A14] dark:bg-[#111A0E]">
       {/* Month bubble */}
-      <div className="rounded-full bg-[#EDE9CC] px-4 py-1.5 text-[14px] font-bold text-[#1A1A0A]">
+      <div className="rounded-full bg-[#EDE9CC] px-4 py-1.5 text-[14px] font-bold text-[#1A1A0A] dark:bg-[#1E2A1A] dark:text-[#F0EDD4]">
         {MONTH_NAMES_FR[selectedDate.getMonth()]}
       </div>
 
@@ -64,7 +64,7 @@ export function DashboardDateNav({ selectedDate, onDateChange, view, onViewChang
       <button
         type="button"
         onClick={() => shiftWeek(-1)}
-        className="flex h-7 w-7 flex-shrink-0 items-center justify-center rounded-full bg-[#1A2A14] text-[14px] text-[#F0EDD4] transition-opacity hover:opacity-70"
+        className="flex h-7 w-7 flex-shrink-0 items-center justify-center rounded-full bg-[#E8E4D8] text-[14px] text-[#1A1A0A] transition-opacity hover:opacity-70 dark:bg-[#1A2A14] dark:text-[#F0EDD4]"
         aria-label="Semaine précédente"
       >
         &#8249;
@@ -78,10 +78,10 @@ export function DashboardDateNav({ selectedDate, onDateChange, view, onViewChang
             type="button"
             onClick={() => onDateChange(chip.date)}
             className={[
-              'relative min-w-[52px] rounded-[10px] px-3 py-2 text-center transition-all duration-150',
+              'relative min-w-[52px] rounded-lg px-3 py-2 text-center transition-all duration-150',
               chip.isActive
                 ? 'bg-[#C49A1E] text-[#0C1209]'
-                : 'bg-[#1A2A14] text-[#F0EDD4] hover:bg-[#243020]',
+                : 'bg-[#E8E4D8] text-[#1A1A0A] hover:bg-[#DDD8C4] dark:bg-[#1E2A18] dark:text-[#F0EDD4] dark:hover:bg-[#243020]',
             ].join(' ')}
           >
             <div className="text-[10px] font-bold tracking-[0.06em]">{chip.name}</div>
@@ -101,14 +101,14 @@ export function DashboardDateNav({ selectedDate, onDateChange, view, onViewChang
       <button
         type="button"
         onClick={() => shiftWeek(1)}
-        className="flex h-7 w-7 flex-shrink-0 items-center justify-center rounded-full bg-[#1A2A14] text-[14px] text-[#F0EDD4] transition-opacity hover:opacity-70"
+        className="flex h-7 w-7 flex-shrink-0 items-center justify-center rounded-full bg-[#E8E4D8] text-[14px] text-[#1A1A0A] transition-opacity hover:opacity-70 dark:bg-[#1A2A14] dark:text-[#F0EDD4]"
         aria-label="Semaine suivante"
       >
         &#8250;
       </button>
 
       {/* View toggle */}
-      <div className="ml-auto flex gap-[3px] rounded-[8px] bg-[#1A2A14] p-[3px]">
+      <div className="ml-auto flex gap-[3px] rounded-lg bg-[#E8E4D8] p-[3px] dark:bg-[#1A2A14]">
         {(['weekly', 'monthly'] as const).map((v) => (
           <button
             key={v}
@@ -116,8 +116,8 @@ export function DashboardDateNav({ selectedDate, onDateChange, view, onViewChang
             onClick={() => onViewChange(v)}
             className={
               view === v
-                ? 'rounded-md px-3.5 py-1.5 text-[12px] font-bold bg-[#C49A1E] text-[#0C1209] transition-all duration-150'
-                : 'rounded-md px-3.5 py-1.5 text-[12px] font-bold text-[#8A8A7A] transition-all duration-150 hover:text-[#F0EDD4]'
+                ? 'rounded-md px-3.5 py-1.5 text-[13px] font-bold bg-[#C49A1E] text-[#0C1209] transition-all duration-150'
+                : 'rounded-md px-3.5 py-1.5 text-[13px] font-bold text-[#666] transition-all duration-150 dark:text-[#A0A090]'
             }
           >
             {t(v === 'weekly' ? 'view_weekly' : 'view_monthly')}

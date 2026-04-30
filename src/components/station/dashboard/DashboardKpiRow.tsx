@@ -47,17 +47,17 @@ function KpiCard({ icon, value, label, trend, trendType, animationDelay }: KpiCa
 
   return (
     <div
-      className="animate-fade-in-up rounded-xl bg-[#EDE9CC] p-4 transition-all duration-200 hover:scale-[1.02] hover:shadow-md"
+      className="animate-fade-in-up rounded-xl bg-[#F0EDE0] p-4 transition-all duration-200 hover:scale-[1.02] hover:shadow-md dark:bg-[#1E2A1A]"
       style={{ animationDelay }}
     >
-      <div className="mb-2 leading-none">{icon}</div>
-      <div className="mb-0.5 text-[26px] font-black leading-none text-[#1A1A0A]">
+      <div className="mb-2 text-[22px] leading-none">{icon}</div>
+      <div className="mb-0.5 text-[26px] font-black leading-none text-[#1A1A0A] dark:text-[#F0EDD4]">
         {value}
       </div>
-      <div className="text-[11px] font-medium text-[#666]">
+      <div className="text-[12px] font-medium text-[#666] dark:text-[#A0A090]">
         {label}
       </div>
-      <div className="mt-1 flex items-center gap-1 text-[10px] font-bold" style={{ color: trendColor }}>
+      <div className="mt-1 flex items-center gap-1 text-[11px] font-bold" style={{ color: trendColor }}>
         <TrendArrow type={trendType} color={trendColor} />
         {trend}
       </div>
@@ -134,7 +134,7 @@ export function DashboardKpiRow({ data }: DashboardKpiRowProps) {
   ];
 
   return (
-    <div className="grid grid-cols-1 gap-3 border-b border-[#1A2A14] bg-[#111A0E] px-5 py-4 sm:grid-cols-2 xl:grid-cols-4">
+    <div className="grid grid-cols-1 gap-3 border-b border-[#DDD9CC] bg-[#E8E4D4] px-5 py-4 sm:grid-cols-2 xl:grid-cols-4 dark:border-[#1A2A14] dark:bg-[#111A0E]">
       {cards.map((card) => (
         <KpiCard key={card.label} {...card} />
       ))}

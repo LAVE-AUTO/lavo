@@ -24,12 +24,12 @@ export function DashboardQueuePanel({ entries, onCallEntry, onCompleteEntry, onC
   const canCallNext = Boolean(onCallNext) && waitingCount > 0;
 
   return (
-    <div className="flex w-full max-h-[40vh] flex-shrink-0 flex-col overflow-hidden border-b border-[#1A2A14] bg-[#182214] md:max-h-none md:w-[280px] md:border-b-0 md:border-r">
+    <div className="flex w-full max-h-[40vh] flex-shrink-0 flex-col overflow-hidden border-b border-[#E0DCD0] bg-[#F0EDE0] md:max-h-none md:w-[280px] md:border-b-0 md:border-r dark:border-[#1A2A14] dark:bg-[#182214]">
       {/* Header */}
-      <div className="border-b border-[#1A2A14] px-4 py-3.5">
+      <div className="border-b border-[#E0DCD0] px-4 py-3.5 dark:border-[#1A2A14]">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
-            <div className="text-[14px] font-black text-[#F0EDD4]">
+            <div className="text-[14px] font-black text-[#1A1A0A] dark:text-[#F0EDD4]">
               {t('queue_title')}
             </div>
             {totalCount > 0 && (
@@ -45,7 +45,7 @@ export function DashboardQueuePanel({ entries, onCallEntry, onCompleteEntry, onC
             {t('queue_see_all')} →
           </Link>
         </div>
-        <div className="mt-0.5 text-[12px] text-[#8A8A7A]">
+        <div className="mt-0.5 text-[12px] text-[#666] dark:text-[#A0A090]">
           {waitingCount > 0
             ? t('queue_waiting', { n: waitingCount })
             : t('queue_empty')}
@@ -68,7 +68,7 @@ export function DashboardQueuePanel({ entries, onCallEntry, onCompleteEntry, onC
       {/* Entries */}
       <div className="flex flex-1 flex-col gap-2 overflow-y-auto p-2.5">
         {entries.length === 0 ? (
-          <div className="flex flex-1 items-center justify-center text-[13px] text-[#8A8A7A]">
+          <div className="flex flex-1 items-center justify-center text-[13px] text-[#666] dark:text-[#A0A090]">
             {t('queue_empty')}
           </div>
         ) : (
@@ -76,7 +76,7 @@ export function DashboardQueuePanel({ entries, onCallEntry, onCompleteEntry, onC
             {inProgressEntries.map((entry, idx) => (
               <div
                 key={entry.id}
-                className="animate-fade-in-up transition-all duration-150 hover:opacity-90 rounded-[10px]"
+                className="animate-fade-in-up transition-all duration-150 hover:bg-[#E8E4D0] dark:hover:bg-[#1A2A14] rounded-2xl"
                 style={{ animationDelay: `${idx * 60}ms` }}
               >
                 <QueueCard
@@ -91,7 +91,7 @@ export function DashboardQueuePanel({ entries, onCallEntry, onCompleteEntry, onC
             {waitingEntries.map((entry, idx) => (
               <div
                 key={entry.id}
-                className="animate-fade-in-up transition-all duration-150 hover:opacity-90 rounded-[10px]"
+                className="animate-fade-in-up transition-all duration-150 hover:bg-[#E8E4D0] dark:hover:bg-[#1A2A14] rounded-2xl"
                 style={{ animationDelay: `${(inProgressEntries.length + idx) * 60}ms` }}
               >
                 <QueueCard entry={entry} onCall={onCallEntry} />

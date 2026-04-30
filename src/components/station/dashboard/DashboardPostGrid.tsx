@@ -40,20 +40,20 @@ const ChevronDoubleRight = () => (
 
 const styleMap = {
   done: {
-    bg: 'bg-[#E8E5CC]',
-    border: 'border-[#CCCCAA]',
+    bg: 'bg-[#E8E5CC] dark:bg-[#1A1A14]',
+    border: 'border-[#CCCCAA] dark:border-[#3A3A2A]',
     badgeBg: '#DDD',
     badgeColor: '#555',
   },
   active: {
-    bg: 'bg-[#E8F8EE]',
-    border: 'border-[#2ECC71]',
+    bg: 'bg-[#E8F8EE] dark:bg-[#0A2A14]',
+    border: 'border-[#2ECC71] dark:border-[#1E7A3E]',
     badgeBg: '#2ECC71',
     badgeColor: '#fff',
   },
   waiting: {
-    bg: 'bg-[#EDE9CC]',
-    border: 'border-[#3B82F6]',
+    bg: 'bg-[#EDE9CC] dark:bg-[#1A200A]',
+    border: 'border-[#3B82F6] dark:border-[#2A4A18]',
     badgeBg: '#F59E0B',
     badgeColor: '#fff',
   },
@@ -76,9 +76,9 @@ function EntryBlock({ entry, onComplete, onCancel, onStart }: {
       : t('status_waiting');
 
   return (
-      <div className={`rounded-[8px] border p-3 transition-all duration-200 hover:shadow-sm ${style.bg} ${style.border}`}>
+    <div className={`rounded-xl border p-3 transition-all duration-200 hover:shadow-sm ${style.bg} ${style.border}`}>
       <div className="mb-2 flex items-center gap-2">
-        <span className="font-mono text-[9px] font-bold text-[#555]">
+        <span className="font-mono text-[10px] font-bold text-[#555] dark:text-[#F0EDD4]/60">
           {entry.timeRange}
         </span>
         <span
@@ -106,14 +106,14 @@ function EntryBlock({ entry, onComplete, onCancel, onStart }: {
           </button>
         )}
       </div>
-      <div className="mb-0.5 text-[11px] font-black text-[#1A1A0A]">
-        {entry.serviceLabel}{entry.price ? ` • ${entry.price}$` : ''}
+      <div className="mb-0.5 text-[12px] font-black text-[#1A1A0A] dark:text-[#F0EDD4]">
+        {entry.serviceLabel}{entry.price ? ` \u2022 ${entry.price}$` : ''}
       </div>
       {entry.clientName && (
-        <div className="mb-1 text-[10px] text-[#666]">{entry.clientName}</div>
+        <div className="mb-1 text-[11px] text-[#666] dark:text-[#A0A090]">{entry.clientName}</div>
       )}
       {entry.marginText && (
-        <div className="text-[9px] text-[#2ECC71]">{entry.marginText}</div>
+        <div className="text-[10px] text-[#2ECC71]">{entry.marginText}</div>
       )}
       {entry.status === 'active' && (
         <button
@@ -158,12 +158,12 @@ export function DashboardPostGrid({ posts, onCompleteEntry, onCancelEntry, onSta
         {posts.map((post, colIdx) => (
           <div
             key={post.id}
-            className="animate-fade-in flex flex-1 flex-col border-l border-[#1A2A14]"
+            className="animate-fade-in flex flex-1 flex-col border-l border-[#E0DCD0] dark:border-[#1A2A14]"
             style={{ minWidth: 180, animationDelay: `${colIdx * 60}ms` }}
           >
             {/* Post header */}
-            <div className="border-b border-[#1A2A14] bg-[#0C1209] px-3 py-2.5 text-center">
-              <div className="text-[13px] font-black text-[#F0EDD4]">
+            <div className="border-b border-[#E0DCD0] bg-[#F0EDE0] px-3 py-2.5 text-center dark:border-[#1A2A14] dark:bg-[#0C1209]">
+              <div className="text-[13px] font-black text-[#1A1A0A] dark:text-[#F0EDD4]">
                 {t('filter_post', { n: post.position })}
               </div>
               <div className="mt-0.5 flex items-center justify-center gap-1 text-[11px] font-semibold">
@@ -180,7 +180,7 @@ export function DashboardPostGrid({ posts, onCompleteEntry, onCancelEntry, onSta
             {/* Entries */}
             <div className="flex flex-1 flex-col gap-2 overflow-y-auto p-2">
               {post.entries.length === 0 ? (
-                <div className="flex flex-1 items-center justify-center text-[18px] text-[#2A3A20]">
+                <div className="flex flex-1 items-center justify-center text-[18px] text-[#CCC] dark:text-[#2A3A20]">
                   {t('add_entry')}
                 </div>
               ) : (
