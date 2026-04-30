@@ -1620,7 +1620,9 @@
         "availability_error_missing_fields": "Veuillez remplir tous les champs",
         "nav_section_operations": "Opérations",
         "nav_section_configuration": "Configuration",
-        "nav_section_support": "Support & Historique"
+        "nav_section_support": "Support & Historique",
+        "nav_expand": "Déplier le menu",
+        "nav_collapse": "Replier le menu"
     },
     "station_reservations": {
         "page_title": "Réservations du jour",
