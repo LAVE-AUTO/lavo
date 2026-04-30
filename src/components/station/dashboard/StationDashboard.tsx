@@ -207,7 +207,7 @@ export function StationDashboard() {
   }
 
   return (
-    <div className="flex flex-1 flex-col overflow-hidden animate-fade-in">
+    <div className="flex flex-1 flex-col overflow-hidden animate-fade-in bg-[#0C1209]">
       <DashboardKpiRow data={MOCK_KPI} />
       <DashboardDateNav
         selectedDate={selectedDate}

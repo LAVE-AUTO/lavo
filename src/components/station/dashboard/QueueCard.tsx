@@ -42,7 +42,7 @@ export function QueueCard({ entry, onCall, onPick, onMoveUp, onMoveDown, callLab
 
   if (entry.isNext) {
     return (
-      <div className="overflow-hidden rounded-2xl border-2 border-[#C09A18] bg-[#C8C8B4] shadow-md dark:bg-[#1E2A1A]">
+      <div className="overflow-hidden rounded-[10px] border-[1.5px] border-[#C49A1E] bg-[#FFF8E0] shadow-md">
         {/* Gold top accent */}
         <div className="h-1 bg-[#C09A18]" />
 
@@ -62,34 +62,34 @@ export function QueueCard({ entry, onCall, onPick, onMoveUp, onMoveDown, callLab
           </div>
 
           {/* Client */}
-          <div className="mb-1 text-[16px] font-bold text-[#000C1F] dark:text-[#FFF8EC]">
+          <div className="mb-1 text-[16px] font-bold text-[#1A1A0A]">
             {entry.clientName}
           </div>
           {(entry.time || entry.serviceLabel) && (
-            <div className="mb-4 flex flex-wrap items-center gap-2 text-[13px] text-[#000717]/60 dark:text-[#FFFFF0]/60">
+            <div className="mb-4 flex flex-wrap items-center gap-2 text-[13px] text-[#555]">
               {entry.time && (
-                <span className="flex items-center gap-1 font-mono font-semibold text-[#000C1F] dark:text-[#FFF8EC]">
+                <span className="flex items-center gap-1 font-mono font-semibold text-[#1A1A0A]">
                   <ClockMini />
                   {entry.time}
                 </span>
               )}
               {entry.serviceLabel && <span>{entry.serviceLabel}</span>}
               {entry.price !== undefined && (
-                <span className="font-mono font-bold text-[#C09A18]">{entry.price}$</span>
+                <span className="font-mono font-bold text-[#C49A1E]">{entry.price}$</span>
               )}
             </div>
           )}
 
           {/* Margin progress bar */}
           {entry.marginMin !== undefined && entry.marginMax !== undefined && entry.marginMax > 0 && (
-            <div className="mb-4 flex items-center gap-2 text-[11px] text-[#000717]/60 dark:text-[#FFFFF0]/60">
-              <span className="h-2 w-2 shrink-0 rounded-full bg-[#00C851]" />
+            <div className="mb-4 flex items-center gap-2 text-[11px] text-[#555]">
+              <span className="h-2 w-2 shrink-0 rounded-full bg-[#2ECC71]" />
               <span>{t('queue_margin')}</span>
-              <span className="font-bold text-[#00C851]">
+              <span className="font-bold text-[#2ECC71]">
                 {t('queue_on_time')} ({entry.marginMin}/{entry.marginMax} min)
               </span>
-              <div className="flex-1 overflow-hidden rounded-full bg-[#B8B8A4] dark:bg-[#3A4A36]" style={{ height: 4 }}>
-                <div className="rounded-full bg-[#00C851]" style={{ height: 4, width: `${(entry.marginMin / entry.marginMax) * 100}%` }} />
+              <div className="flex-1 overflow-hidden rounded-full bg-[#DDD]" style={{ height: 4 }}>
+                <div className="rounded-full bg-[#2ECC71]" style={{ height: 4, width: `${(entry.marginMin / entry.marginMax) * 100}%` }} />
               </div>
             </div>
           )}
@@ -98,7 +98,7 @@ export function QueueCard({ entry, onCall, onPick, onMoveUp, onMoveDown, callLab
           <button
             type="button"
             onClick={() => onCall(entry.id)}
-            className="flex w-full items-center justify-center gap-2 rounded-[10px] bg-[#C09A18] py-3 text-[13px] font-bold text-[#1A2116] transition-all hover:bg-[#D4A820] active:scale-[0.98]"
+            className="flex w-full items-center justify-center gap-2 rounded-[8px] bg-[#C49A1E] py-2.5 text-[12px] font-black text-[#0C1209] transition-all hover:bg-[#D4A820] active:scale-[0.98]"
           >
             <PlayTriangle />
             {callLabel ?? t('queue_call_now')}
@@ -110,15 +110,15 @@ export function QueueCard({ entry, onCall, onPick, onMoveUp, onMoveDown, callLab
 
   /* Regular queue entry */
   return (
-    <div className="overflow-hidden rounded-2xl bg-[#C8C8B4] transition-shadow hover:shadow-sm dark:bg-[#1E2A1A]">
+    <div className="overflow-hidden rounded-[10px] bg-[#EDE9CC] transition-shadow hover:shadow-sm">
       <button
         type="button"
         onClick={() => setExpanded(!expanded)}
         className="flex w-full items-center gap-3 p-4 text-left"
       >
         {/* Position badge */}
-        <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-white/60 dark:bg-[#243020]">
-          <span className="font-mono text-[14px] font-bold text-[#000C1F] dark:text-[#FFF8EC]">
+        <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-[#1A1A0A]/10">
+          <span className="font-mono text-[14px] font-bold text-[#1A1A0A]">
             {entry.position}
           </span>
         </div>
@@ -126,18 +126,18 @@ export function QueueCard({ entry, onCall, onPick, onMoveUp, onMoveDown, callLab
         {/* Info */}
         <div className="min-w-0 flex-1">
           <div className="flex items-center gap-2">
-            <span className="truncate text-[13px] font-semibold text-[#000C1F] dark:text-[#FFF8EC]">
+            <span className="truncate text-[14px] font-black text-[#1A1A0A]">
               {entry.clientName}
             </span>
             <span className="shrink-0 rounded-md px-2 py-[2px] text-[10px] font-bold uppercase tracking-wide text-white" style={{ background: tagBg }}>
               {tagLabel}
             </span>
           </div>
-          <div className="mt-0.5 flex items-center gap-2 text-[12px] text-[#000717]/50 dark:text-[#FFFFF0]/50">
-            {entry.time && <span className="font-mono font-semibold text-[#000C1F] dark:text-[#FFF8EC]">{entry.time}</span>}
+          <div className="mt-0.5 flex items-center gap-2 text-[11px] text-[#555]">
+            {entry.time && <span className="font-mono font-semibold text-[#1A1A0A]">{entry.time}</span>}
             {entry.serviceLabel && <span>{entry.serviceLabel}</span>}
             {entry.price !== undefined && (
-              <span className="font-mono font-semibold text-[#C09A18]">{entry.price}$</span>
+              <span className="font-mono font-semibold text-[#C49A1E]">{entry.price}$</span>
             )}
           </div>
         </div>
@@ -150,7 +150,7 @@ export function QueueCard({ entry, onCall, onPick, onMoveUp, onMoveDown, callLab
         style={{ gridTemplateRows: expanded ? '1fr' : '0fr' }}
       >
         <div className="overflow-hidden">
-          <div className="border-t border-[#B8B8A4] px-4 pb-3.5 pt-3 dark:border-[#3A4A36]">
+          <div className="border-t border-[#CCCCAA] px-4 pb-3.5 pt-3">
             <div className="grid grid-cols-2 gap-x-4 gap-y-2 text-[12px]">
               {entry.time && <DetailRow label={t('queue_detail_time')} value={entry.time} />}
               {entry.serviceLabel && <DetailRow label={t('queue_detail_service')} value={entry.serviceLabel} />}
@@ -168,7 +168,7 @@ export function QueueCard({ entry, onCall, onPick, onMoveUp, onMoveDown, callLab
                       disabled={!onMoveUp}
                       onClick={onMoveUp}
                       title={t('queue_move_up')}
-                      className="flex h-7 w-7 items-center justify-center rounded-lg border border-[#B8B8A4] text-[#000717]/50 transition-colors hover:border-[#C09A18] hover:text-[#C09A18] disabled:opacity-30 disabled:cursor-not-allowed dark:border-[#3A4A36] dark:text-[#FFFFF0]/50"
+                      className="flex h-7 w-7 items-center justify-center rounded-lg border border-[#CCCCAA] text-[#555] transition-colors hover:border-[#C49A1E] hover:text-[#C49A1E] disabled:opacity-30 disabled:cursor-not-allowed"
                     >
                       <ArrowUpIcon />
                     </button>
@@ -177,7 +177,7 @@ export function QueueCard({ entry, onCall, onPick, onMoveUp, onMoveDown, callLab
                       disabled={!onMoveDown}
                       onClick={onMoveDown}
                       title={t('queue_move_down')}
-                      className="flex h-7 w-7 items-center justify-center rounded-lg border border-[#B8B8A4] text-[#000717]/50 transition-colors hover:border-[#C09A18] hover:text-[#C09A18] disabled:opacity-30 disabled:cursor-not-allowed dark:border-[#3A4A36] dark:text-[#FFFFF0]/50"
+                      className="flex h-7 w-7 items-center justify-center rounded-lg border border-[#CCCCAA] text-[#555] transition-colors hover:border-[#C49A1E] hover:text-[#C49A1E] disabled:opacity-30 disabled:cursor-not-allowed"
                     >
                       <ArrowDownIcon />
                     </button>
@@ -187,7 +187,7 @@ export function QueueCard({ entry, onCall, onPick, onMoveUp, onMoveDown, callLab
                   <button
                     type="button"
                     onClick={() => onPick(entry.id)}
-                    className="rounded-lg bg-[#C09A18] px-3 py-1.5 text-[12px] font-bold text-[#1A2116] transition-opacity hover:opacity-80"
+                    className="rounded-lg bg-[#C49A1E] px-3 py-1.5 text-[12px] font-bold text-[#0C1209] transition-opacity hover:opacity-80"
                   >
                     {t('queue_pick_now')}
                   </button>
@@ -204,8 +204,8 @@ export function QueueCard({ entry, onCall, onPick, onMoveUp, onMoveDown, callLab
 function DetailRow({ label, value, gold }: { label: string; value: string; gold?: boolean }) {
   return (
     <div className="flex items-baseline justify-between gap-2">
-      <span className="text-[#000717]/50 dark:text-[#FFFFF0]/50">{label}</span>
-      <span className={`text-right font-semibold ${gold ? 'text-[#C09A18]' : 'text-[#000C1F] dark:text-[#FFF8EC]'}`}>
+      <span className="text-[#777]">{label}</span>
+      <span className={`text-right font-semibold ${gold ? 'text-[#C49A1E]' : 'text-[#1A1A0A]'}`}>
         {value}
       </span>
     </div>
@@ -215,7 +215,7 @@ function DetailRow({ label, value, gold }: { label: string; value: string; gold?
 const ChevronIcon = ({ expanded }: { expanded: boolean }) => (
   <svg
     width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round"
-    className={`shrink-0 text-[#000C1F]/25 transition-transform duration-200 dark:text-[#FFF8EC]/25 ${expanded ? 'rotate-180' : ''}`}
+    className={`shrink-0 text-[#1A1A0A]/30 transition-transform duration-200 ${expanded ? 'rotate-180' : ''}`}
   >
     <polyline points="6 9 12 15 18 9" />
   </svg>
