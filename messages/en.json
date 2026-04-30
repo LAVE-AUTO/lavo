@@ -1983,6 +1983,8 @@
         "services_active_count": "{count} active",
         "tarifs_label": "PRICING BY VEHICLE FORMAT",
         "no_vehicle_entries": "No vehicle formats assigned to this service.",
+        "extras_label": "COMPATIBLE EXTRAS",
+        "extras_none": "No compatible extras",
         "badge_active": "Active",
         "badge_inactive": "Inactive",
         "btn_edit": "Edit",

@@ -174,8 +174,8 @@ export function StationServicesPage() {
           ) : (
             <>
               <div className="mb-4 flex items-center gap-2">
-                <span className="text-[12px] font-black tracking-[.08em] text-[#C49A1E] uppercase">{t('section_base')}</span>
-                <span className="text-[12px] text-[#888] dark:text-[#9A9A8A]">{t('services_active_count', { count: activeCount })}</span>
+                <span className="text-[11px] font-black tracking-[.1em] text-[#C09A18] uppercase">{t('section_base')}</span>
+                <span className="text-[11px] font-medium text-[#888] dark:text-[#9A9A8A]">{t('services_active_count', { count: activeCount })}</span>
               </div>
               <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
                 {services.map((service) => (

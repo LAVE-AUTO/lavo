@@ -1905,6 +1905,8 @@
         "services_active_count": "{count} actif(s)",
         "tarifs_label": "TARIFS PAR FORMAT DE VÉHICULE",
         "no_vehicle_entries": "Aucun format de véhicule associé à ce service.",
+        "extras_label": "EXTRAS COMPATIBLES",
+        "extras_none": "Aucun extra compatible",
         "badge_active": "Actif",
         "badge_inactive": "Inactif",
         "btn_edit": "Modifier",
