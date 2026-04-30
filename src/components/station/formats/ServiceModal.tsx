@@ -57,9 +57,12 @@ export function ServiceModal({ service, vehicleFormats, availableExtras, onClose
   const [error, setError] = useState<string | null>(null);
 
   const isCreateHandWash = !isEdit && category === 'hand_wash';
+  const isCreateAutomatic = !isEdit && category === 'automatic';
+  const isCreateSelfService = !isEdit && category === 'self_service';
   const showTypeSelector = isEdit || isCreateHandWash;
   const showExtrasSection = isEdit || isCreateHandWash;
   const showStaffField = isEdit || isCreateHandWash;
+  const showFormatSection = isEdit || !isCreateSelfService;
   const effectiveServiceType: ServiceType = !isEdit && category !== 'hand_wash' ? 'exterior' : serviceType;
 
   useEffect(() => {
@@ -101,8 +104,11 @@ export function ServiceModal({ service, vehicleFormats, availableExtras, onClose
       setServiceType('exterior');
       setSelectedExtraIds([]);
       setBaseStaff(category === 'automatic' ? '1' : '0');
+      if (category === 'self_service') {
+        setSelectedFormatIds(vehicleFormats.map((f) => f.id));
+      }
     }
-  }, [category, isEdit]);
+  }, [category, isEdit, vehicleFormats]);
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -311,6 +317,24 @@ export function ServiceModal({ service, vehicleFormats, availableExtras, onClose
               </div>
               )}
 
+              {isCreateAutomatic && (
+              <div className="rounded-[10px] border border-[#F0EDE4] bg-[#FAFAF7] p-3 dark:border-[#243020] dark:bg-[#0F1A0C]">
+                <div className="mb-1 text-[11px] font-black tracking-[.08em] text-[#C49A1E] uppercase">Mode automatique</div>
+                <p className="text-[12px] text-[#888] dark:text-[#9A9A8A]">
+                  Service extérieur standardisé. Configurez le prix, la durée et les formats acceptés.
+                </p>
+              </div>
+              )}
+
+              {isCreateSelfService && (
+              <div className="rounded-[10px] border border-[#F0EDE4] bg-[#FAFAF7] p-3 dark:border-[#243020] dark:bg-[#0F1A0C]">
+                <div className="mb-1 text-[11px] font-black tracking-[.08em] text-[#C49A1E] uppercase">Mode libre-service</div>
+                <p className="text-[12px] text-[#888] dark:text-[#9A9A8A]">
+                  Formule simplifiée. Le service est global à la station, sans sélection manuelle de formats.
+                </p>
+              </div>
+              )}
+
               <div className="flex flex-col gap-1.5">
                 <label className="text-[13px] font-medium text-[#5A5A4A] dark:text-[#9A9A8A]">{t('field_description')}</label>
                 <textarea
@@ -362,6 +386,7 @@ export function ServiceModal({ service, vehicleFormats, availableExtras, onClose
                 </div>
               )}
 
+              {showFormatSection && (
               <div className="flex flex-col gap-1.5">
                 <label className="text-[12px] font-black tracking-[.08em] text-[#C49A1E] uppercase">
                   {t('field_vehicle_formats')}
@@ -402,6 +427,7 @@ export function ServiceModal({ service, vehicleFormats, availableExtras, onClose
                   </div>
                 )}
               </div>
+              )}
 
               {isEdit && (
               <div className="flex flex-col gap-2">
