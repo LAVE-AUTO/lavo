@@ -375,7 +375,8 @@
         "history": "History",
         "support": "Support",
         "bottom_nav_aria": "Main navigation",
-        "appearance_aria": "Appearance"
+        "appearance_aria": "Appearance",
+        "bottom_how_it_works": "Guide"
     },
     "footer": {
         "tagline": "The booking and payment platform for car wash stations across Canada.",
@@ -518,7 +519,26 @@
         "filter_categories_placeholder": "All categories",
         "filter_vehicle_placeholder": "All vehicle types",
         "filter_service_placeholder": "All services",
-        "stat_distance": "Distance"
+        "stat_distance": "Distance",
+        "section_results": "Results",
+        "detail_choose_format": "Pick your format",
+        "filter_wash_type_label": "Wash type",
+        "filter_wash_type_placeholder": "All types",
+        "filter_scope_label": "Service scope",
+        "filter_scope_all": "All",
+        "filter_scope_exterior": "Exterior",
+        "filter_scope_interior": "Interior",
+        "filter_scope_both": "Exterior + Interior",
+        "hero_badge_active": "{count} active stations",
+        "hero_stat_partners": "Partner stations",
+        "hero_stat_rating": "Average rating",
+        "hero_stat_wait": "Typical wait",
+        "hero_stat_wait_value": "< 30min",
+        "hero_bottom_completed": "Washes completed",
+        "hero_bottom_reviews": "Customer reviews",
+        "hero_bottom_availability": "Availability",
+        "hero_bottom_availability_value": "7/7",
+        "hero_stat_empty": "—"
     },
     "merchant": {
         "meta_title": "Slowtime — Merchant portal",
@@ -760,9 +780,14 @@
     "not_found": {
         "meta_title": "Page not found",
         "title": "404",
-        "heading": "Page not found",
-        "description": "The page you are looking for does not exist or has been moved.",
-        "back_home": "Back to home"
+        "heading": "This page",
+        "description": "The page you are looking for does not exist, has been moved, or is no longer available. Head back home or explore our partner stations.",
+        "back_home": "Back to home",
+        "eyebrow": "Error 404",
+        "heading_accent": "vanished",
+        "browse_stations": "Browse stations",
+        "support_hint": "Need help?",
+        "support_link": "Contact support"
     },
     "booking": {
         "booking_title": "Booking",
@@ -919,7 +944,15 @@
         "dispute_btn_cancel": "Cancel",
         "dispute_success": "Your dispute has been submitted successfully.",
         "dispute_error": "Unable to submit the dispute. Please try again.",
-        "dispute_already_exists": "A dispute already exists for this reservation."
+        "dispute_already_exists": "A dispute already exists for this reservation.",
+        "empty_reservations_title": "No active reservation",
+        "empty_reservations_desc": "You don't have any scheduled wash. Find a partner station and book a slot in seconds.",
+        "empty_reservations_cta": "Book a wash",
+        "empty_reservations_history": "View history",
+        "empty_queue_title": "No active queue",
+        "empty_queue_desc": "You're not currently waiting in any station's queue. Find an open station and join one directly.",
+        "empty_queue_cta": "Find a station",
+        "empty_queue_history": "View history"
     },
     "queue_detail": {
         "title": "My queue",
@@ -951,7 +984,11 @@
         "upgrade_error_payment": "Payment failed. Please try again.",
         "upgrade_error_stripe": "Payment service is unavailable. Please try again later.",
         "error_load": "Unable to load queue information.",
-        "error_not_found": "This queue entry could not be found."
+        "error_not_found": "This queue entry could not be found.",
+        "upgrade_modal_close": "Close window",
+        "upgrade_pick_date": "Pick a date",
+        "upgrade_pick_time": "Pick a time slot",
+        "upgrade_no_slots_for_date": "No slot available on that day."
     },
     "favorites": {
         "title": "My favorites",
@@ -1032,7 +1069,16 @@
         "close": "Close",
         "toast_save_success": "Profile updated",
         "toast_password_success": "Password changed successfully",
-        "toast_delete_success": "Account deleted"
+        "toast_delete_success": "Account deleted",
+        "avatar_upload_title": "Upload a profile photo",
+        "avatar_upload_action": "Change",
+        "avatar_upload_success": "Profile photo uploaded",
+        "avatar_upload_error": "Unable to upload the profile photo",
+        "not_verified": "Email not verified",
+        "coming_soon": "Coming soon",
+        "stats_empty": "—",
+        "error_old_password": "Current password is incorrect",
+        "error_generic": "Something went wrong. Please try again."
     },
     "history": {
         "title": "History",
@@ -1070,7 +1116,13 @@
         "receipt_entry_type": "Entry type",
         "receipt_commission": "Commission",
         "receipt_tip": "Tip",
-        "detail_close": "Close"
+        "detail_close": "Close",
+        "empty_cta": "Browse stations",
+        "error_load": "We could not load your history right now.",
+        "btn_retry": "Retry",
+        "receipt_entry_type_reservation": "Reservation",
+        "receipt_entry_type_queue": "Queue",
+        "receipt_service_unknown": "Service not specified"
     },
     "faq_page": {
         "meta_title": "Frequently Asked Questions — Slowtime",
@@ -1392,7 +1444,9 @@
         "success_cta_home": "Back to home",
         "success_cta_login": "Sign in",
         "already_member": "Already have an account?",
-        "login_link": "Sign in"
+        "login_link": "Sign in",
+        "tab_login": "Sign in",
+        "tab_register": "Sign up"
     },
     "station_panel": {
         "headline": "Manage your station,",
@@ -1431,7 +1485,9 @@
         "welcome_title": "Merchant portal",
         "welcome_subtitle": "Sign in to access your station dashboard.",
         "no_account": "Not a partner yet?",
-        "register_link": "Join Slowtime"
+        "register_link": "Join Slowtime",
+        "tab_login": "Sign in",
+        "tab_register": "Sign up"
     },
     "admin_login": {
         "meta_title": "Administration — Slowtime",
@@ -1719,7 +1775,7 @@
         "service_scope_both": "Exterior and interior",
         "error_name_empty": "Station name cannot be empty.",
         "profile_save_success": "Profile updated",
-        "profile_save_error": "Feature not available — API connection coming soon",
+        "profile_save_error": "Unable to update profile.",
         "section_photos": "Station photos",
         "section_photos_hint": "Add up to 8 photos of your station. They are displayed on the station cards for clients.",
         "photos_add": "Add",
@@ -1744,7 +1800,7 @@
         "error_address_empty": "Address cannot be empty.",
         "error_city_empty": "City cannot be empty.",
         "location_save_success": "Location updated",
-        "location_save_error": "Feature not available — API connection coming soon",
+        "location_save_error": "Unable to update location.",
         "section_extras": "Extras by service type",
         "extras_tab_exterior": "Exterior",
         "extras_tab_interior": "Interior",
@@ -1759,7 +1815,7 @@
         "extras_inactive": "Inactive",
         "extras_save_success": "Extras saved",
         "extras_save_error": "Error saving extras",
-        "photos_save_unavailable": "Preview only — save will be available once the API endpoint is connected."
+        "photos_save_unavailable": "Photo save is currently unavailable."
     },
     "station_services": {
         "page_title": "My Services",
@@ -1983,7 +2039,9 @@
         "resubmit_error": "An error occurred. Please try again.",
         "resubmit_success_title": "Application resubmitted successfully",
         "resubmit_success_desc": "Your application is now under review again. You will receive an email as soon as a decision is made.",
-        "resubmit_redirect": "Redirecting in {n}s..."
+        "resubmit_redirect": "Redirecting in {n}s...",
+        "status_label": "Rejected",
+        "banner_notice": "Your station stays hidden from the public list while KYC is not approved. You can still fully configure your workspace."
     },
     "rating": {
         "page_title": "Leave a review",
@@ -2667,5 +2725,49 @@
         "section_title": "Station tickets",
         "page_title": "Support",
         "page_subtitle": "Create a ticket or track your ongoing requests"
+    },
+    "location_banner": {
+        "title": "Find stations near you",
+        "description": "Enable your location to compute the distance to every partner station. Nothing is stored — your browser stays in control.",
+        "cta_allow": "Enable location",
+        "cta_dismiss": "Later",
+        "aria_close": "Dismiss banner"
+    },
+    "client_dashboard": {
+        "kicker": "Client area",
+        "title": "Hello {name}",
+        "subtitle": "Track your washes, open tickets and favorite stations from a single dashboard.",
+        "stat_washes": "Washes",
+        "stat_washes_hint": "Completed reservations",
+        "stat_spent": "Spent",
+        "stat_spent_hint": "Total paid on the platform",
+        "stat_tickets": "Tickets",
+        "stat_tickets_hint": "Open support requests",
+        "stat_favorites": "Favorites",
+        "stat_favorites_hint": "Saved stations",
+        "shortcuts_title": "Shortcuts",
+        "shortcut_stations": "Stations",
+        "shortcut_stations_desc": "Browse available stations",
+        "shortcut_reservations": "Reservations",
+        "shortcut_reservations_desc": "See your reservations and queue",
+        "shortcut_history": "History",
+        "shortcut_history_desc": "Review your past washes",
+        "shortcut_support": "Support",
+        "shortcut_support_desc": "Track your tickets and messages",
+        "shortcut_favorites": "Favorites",
+        "shortcut_favorites_desc": "Open your saved stations",
+        "shortcut_profile": "Profile",
+        "shortcut_profile_desc": "Update your information",
+        "account_title": "Account",
+        "account_email": "Email",
+        "account_member_since": "Member since",
+        "account_verified": "Verified",
+        "yes": "Yes",
+        "no": "No",
+        "account_hint": "Your full client journey is now grouped here: stations, reservations, history, support and profile.",
+        "empty_value": "—",
+        "empty_title": "Your dashboard is empty",
+        "empty_desc": "Start by exploring stations and creating your first reservation.",
+        "empty_cta": "View stations"
     }
 }
