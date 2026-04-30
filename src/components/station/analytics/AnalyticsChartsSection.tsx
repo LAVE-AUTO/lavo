@@ -89,7 +89,7 @@ export function AnalyticsChartsSection({ data, period }: AnalyticsChartsSectionP
                 formatter={(value: number) => value.toFixed(0)}
               />
               <Legend />
-              <Bar dataKey="value" fill="#8b5cf6" radius={[8, 8, 0, 0]} name={t('chart_clients_label')} />
+              <Bar dataKey="value" fill="#4E2507" radius={[8, 8, 0, 0]} name={t('chart_clients_label')} />
             </BarChart>
           </ResponsiveContainer>
         ) : (
@@ -116,7 +116,7 @@ export function AnalyticsChartsSection({ data, period }: AnalyticsChartsSectionP
                 formatter={(value: number) => value.toFixed(0)}
               />
               <Legend />
-              <Bar dataKey="value" fill="#06b6d4" radius={[8, 8, 0, 0]} name={t('chart_completed_label')} />
+              <Bar dataKey="value" fill="#00C851" radius={[8, 8, 0, 0]} name={t('chart_completed_label')} />
             </BarChart>
           </ResponsiveContainer>
         ) : (
