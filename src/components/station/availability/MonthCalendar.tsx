@@ -141,6 +141,8 @@ export function MonthCalendar({
           const dayBlocks = isCurrentMonth ? getBlocksForDate(iso) : [];
           const hasBloc = dayBlocks.length > 0;
           const isToday = iso === todayISO;
+          const isPast = isCurrentMonth && iso < todayISO;
+          const isDisabled = !isCurrentMonth || isPast;
           const isSelected = selectedDateISO === iso;
           const blocTag = formatBlocTag(dayBlocks);
 
@@ -148,13 +150,15 @@ export function MonthCalendar({
             <button
               key={iso}
               type="button"
-              onClick={() => isCurrentMonth && onDayClick(iso)}
-              disabled={!isCurrentMonth}
+              onClick={() => !isDisabled && onDayClick(iso)}
+              disabled={isDisabled}
               className={[
                 'min-h-[70px] rounded-xl p-1.5 text-left transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#C09A18]',
-                isCurrentMonth ? 'cursor-pointer' : 'cursor-default opacity-40',
+                isDisabled ? 'cursor-default opacity-40' : 'cursor-pointer',
                 isSelected
                   ? 'border-2 border-[#4A3418] bg-[#4A3418]'
+                  : isPast
+                  ? 'border border-[#D7D2BF] bg-[#E9E4D2] dark:border-[#2A3424] dark:bg-[#141C10]'
                   : isToday
                   ? 'border-2 border-[#C09A18] bg-[#F0EDE0] dark:bg-[#1E2A1A]'
                   : hasBloc
@@ -169,6 +173,8 @@ export function MonthCalendar({
                 className={`block text-[13px] font-bold ${
                   isSelected
                     ? 'text-[#F0EDD4]'
+                    : isPast
+                    ? 'text-[#8E8A78] dark:text-[#55624C]'
                     : isToday
                     ? 'text-[#C09A18]'
                     : isCurrentMonth
@@ -178,7 +184,7 @@ export function MonthCalendar({
               >
                 {dayNum}
               </span>
-              {blocTag && (
+              {blocTag && !isPast && (
                 <span className="mt-1 block rounded px-1 py-0.5 text-[9px] font-bold text-[#C09A18]" style={{ background: '#4A3418' }}>
                   {blocTag}
                 </span>
