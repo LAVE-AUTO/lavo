@@ -18,9 +18,60 @@ interface StationMeData {
 interface FormatsData {
   data: VehicleFormat[];
 }
+interface ServicesData {
+  data: Service[];
+}
 
 // TODO: connect to API once endpoint is available
-const INITIAL_SERVICES: Service[] = [];
+const INITIAL_SERVICES: Service[] = [
+  {
+    id: 'mock-exterior',
+    name: 'Lavage Extérieur',
+    category: 'hand_wash',
+    service_type: 'exterior',
+    description: 'Lavage extérieur standard',
+    is_active: true,
+    vehicle_entries: [
+      { vehicle_format_id: 'mock-berline', vehicle_label: 'BERLINE', price: '15', duration_min: 20, staff_required: 1, is_active: true },
+      { vehicle_format_id: 'mock-suv', vehicle_label: 'SUV', price: '20', duration_min: 25, staff_required: 1, is_active: true },
+      { vehicle_format_id: 'mock-compact', vehicle_label: 'COMPACT', price: '15', duration_min: 15, staff_required: 1, is_active: true },
+    ],
+    compatible_extras: [],
+  },
+  {
+    id: 'mock-complete',
+    name: 'Lavage Complet',
+    category: 'hand_wash',
+    service_type: 'complete',
+    description: 'Lavage intérieur et extérieur',
+    is_active: true,
+    is_popular: true,
+    vehicle_entries: [
+      { vehicle_format_id: 'mock-berline', vehicle_label: 'BERLINE', price: '25', duration_min: 35, staff_required: 1, is_active: true },
+      { vehicle_format_id: 'mock-suv', vehicle_label: 'SUV', price: '35', duration_min: 45, staff_required: 2, is_active: true },
+      { vehicle_format_id: 'mock-compact', vehicle_label: 'COMPACT', price: '20', duration_min: 30, staff_required: 1, is_active: true },
+    ],
+    compatible_extras: [
+      { id: 'e1', name: 'Cire protectrice' },
+      { id: 'e2', name: 'Polish intérieur' },
+      { id: 'e3', name: 'Shampoing tapis' },
+    ],
+  },
+  {
+    id: 'mock-premium',
+    name: 'Lavage Premium',
+    category: 'hand_wash',
+    service_type: 'complete',
+    description: 'Service premium longue durée',
+    is_active: true,
+    vehicle_entries: [
+      { vehicle_format_id: 'mock-berline', vehicle_label: 'BERLINE', price: '45', duration_min: 60, staff_required: 2, is_active: true },
+      { vehicle_format_id: 'mock-suv', vehicle_label: 'SUV', price: '65', duration_min: 75, staff_required: 2, is_active: true },
+      { vehicle_format_id: 'mock-compact', vehicle_label: 'COMPACT', price: '40', duration_min: 55, staff_required: 2, is_active: true },
+    ],
+    compatible_extras: [],
+  },
+];
 const INITIAL_EXTRAS: StationExtras = { exterior: [], interior: [], both: [] };
 
 export function StationServicesPage() {
@@ -45,6 +96,14 @@ export function StationServicesPage() {
       return;
     }
     const stationId = (meData as StationMeData).data.id;
+    const [servicesOk, servicesData] = await getFromApi('/station/services');
+    if (servicesOk && Array.isArray((servicesData as ServicesData).data)) {
+      setServices((servicesData as ServicesData).data);
+    } else {
+      // TODO: remove fallback when GET /station/services is available in all environments
+      setServices(INITIAL_SERVICES);
+    }
+
     const [formatsOk, formatsData] = await getFromApi(`/stations/${stationId}/formats`);
     if (formatsOk) setFormats((formatsData as FormatsData).data);
     else setLoadError(true);
@@ -106,23 +165,35 @@ export function StationServicesPage() {
   return (
     <div className="flex flex-1 flex-col overflow-hidden">
       {/* Page header */}
-      <div className="border-b border-[#E0DCD0] bg-white px-6 pt-4 dark:border-[#1A2A14] dark:bg-[#111A0E]">
-        <div className="flex items-center justify-between pb-3">
+      <div className="border-b border-[#E0DCD0] bg-white px-6 pt-5 dark:border-[#1A2A14] dark:bg-[#111A0E]">
+        <div className="flex items-center justify-between pb-4">
           <div>
-            <div className="text-[16px] font-black text-[#1A1A0A] dark:text-[#F0EDD4]">{t('page_title')}</div>
+            <div className="text-[22px] font-black text-[#1A1A0A] dark:text-[#F0EDD4]">{t('page_title')}</div>
             <div className="text-[13px] text-[#888] dark:text-[#9A9A8A]">{t('page_subtitle')}</div>
           </div>
           {activeTab === 'services' && (
-            <button
-              type="button"
-              onClick={() => setServiceModal('new')}
-              className="flex items-center gap-2 rounded-[10px] bg-[#C49A1E] px-4 py-2 text-[13px] font-bold text-[#0C1209] transition-opacity hover:opacity-80"
-            >
-              <svg width="14" height="14" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
-                <path strokeLinecap="round" strokeLinejoin="round" d="M12 4v16m8-8H4" />
-              </svg>
-              {t('btn_new_service')}
-            </button>
+            <div className="flex items-center gap-2">
+              <button
+                type="button"
+                className="flex items-center gap-1.5 rounded-[8px] border border-[#2A3A20] bg-[#1E2A18] px-4 py-2 text-[12px] font-bold text-[#F0EDD4] transition-colors hover:bg-[#243220]"
+              >
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true">
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M3 3v18h18" />
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M7 14l3-3 3 2 4-5" />
+                </svg>
+                {t('btn_stats')}
+              </button>
+              <button
+                type="button"
+                onClick={() => setServiceModal('new')}
+                className="flex items-center gap-2 rounded-[8px] bg-[#C49A1E] px-4 py-2 text-[13px] font-black text-[#0C1209] transition-opacity hover:opacity-80"
+              >
+                <svg width="14" height="14" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5} aria-hidden="true">
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M12 4v16m8-8H4" />
+                </svg>
+                {t('btn_new_service')}
+              </button>
+            </div>
           )}
         </div>
 
@@ -178,14 +249,18 @@ export function StationServicesPage() {
                 <span className="text-[11px] font-medium text-[#888] dark:text-[#9A9A8A]">{t('services_active_count', { count: activeCount })}</span>
               </div>
               <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
-                {services.map((service) => (
-                  <ServiceCard
+                {services.map((service, index) => (
+                  <div
                     key={service.id}
-                    service={service}
-                    onEdit={setServiceModal}
-                    onDeleted={handleServiceDeleted}
-                    onToggled={handleServiceToggled}
-                  />
+                    className={services.length % 2 === 1 && index === services.length - 1 ? 'lg:col-span-2' : ''}
+                  >
+                    <ServiceCard
+                      service={service}
+                      onEdit={setServiceModal}
+                      onDeleted={handleServiceDeleted}
+                      onToggled={handleServiceToggled}
+                    />
+                  </div>
                 ))}
               </div>
             </>

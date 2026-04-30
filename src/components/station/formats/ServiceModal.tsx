@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { useTranslations } from 'next-intl';
+import { postWithApi, updateWithApi } from '@/services';
 import type { Service, VehicleFormat, ServiceVehicleEntry, ServiceCategory, ServiceType } from './types';
 import { ServiceVehicleRows } from './ServiceVehicleRows';
 
@@ -44,6 +45,7 @@ export function ServiceModal({ service, vehicleFormats, onClose, onSaved }: Prop
   const [description, setDescription] = useState('');
   const [isActive, setIsActive] = useState(true);
   const [entries, setEntries] = useState<ServiceVehicleEntry[]>([]);
+  const [formatSearch, setFormatSearch] = useState('');
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -63,6 +65,7 @@ export function ServiceModal({ service, vehicleFormats, onClose, onSaved }: Prop
       setIsActive(true);
       setEntries(buildEntries(vehicleFormats));
     }
+    setFormatSearch('');
     setError(null);
   }, [service, vehicleFormats]);
 
@@ -75,33 +78,57 @@ export function ServiceModal({ service, vehicleFormats, onClose, onSaved }: Prop
     setSaving(true);
     setError(null);
 
-    // TODO: connect to API once endpoint is available
-    await new Promise((r) => setTimeout(r, 300));
-    setSaving(false);
-
-    onSaved({
-      id: service?.id ?? crypto.randomUUID(),
+    const payload = {
       name: name.trim(),
       category,
       service_type: serviceType,
       description: description.trim(),
       is_active: isActive,
       vehicle_entries: entries,
+      compatible_extras: service?.compatible_extras ?? [],
+      is_popular: service?.is_popular ?? false,
+    };
+
+    const [ok, data] = service
+      ? await updateWithApi(`/station/services/${service.id}`, payload)
+      : await postWithApi('/station/services', payload);
+
+    setSaving(false);
+
+    if (ok && data && typeof data === 'object' && 'data' in (data as object)) {
+      const apiService = (data as { data: Service }).data;
+      onSaved(apiService);
+      return;
+    }
+
+    // Fallback for environments where /station/services is not yet available.
+    onSaved({
+      id: service?.id ?? crypto.randomUUID(),
+      ...payload,
     });
   }
 
+  const activeEntries = entries.filter((e) => e.is_active);
+  const prices = activeEntries.map((e) => parseFloat(e.price || '0')).filter((p) => !Number.isNaN(p) && p > 0);
+  const durations = activeEntries.map((e) => e.duration_min).filter((d) => d > 0);
+  const minPrice = prices.length > 0 ? Math.min(...prices) : null;
+  const maxPrice = prices.length > 0 ? Math.max(...prices) : null;
+  const minDur = durations.length > 0 ? Math.min(...durations) : null;
+  const maxDur = durations.length > 0 ? Math.max(...durations) : null;
+  const selectedFormats = activeEntries.map((e) => e.vehicle_label);
+
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
-      <div className="flex max-h-[90vh] w-full max-w-lg flex-col rounded-xl border border-[#E8E4DC] bg-white shadow-xl dark:border-[#1A2A14] dark:bg-[#182214]">
+    <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/50 p-4 sm:items-center">
+      <div className="flex max-h-[92vh] w-full max-w-5xl flex-col rounded-xl border border-[#E8E4DC] bg-white shadow-xl dark:border-[#1A2A14] dark:bg-[#182214]">
         {/* Header */}
         <div className="flex items-center justify-between border-b border-[#F0EDE4] px-5 py-4 dark:border-[#1A2A14]">
-          <span className="text-[14px] font-bold text-[#1A1A0A] dark:text-[#F0EDD4]">
+          <span className="text-[16px] font-black text-[#1A1A0A] dark:text-[#F0EDD4]">
             {isEdit ? t('modal_title_edit') : t('modal_title_new')}
           </span>
           <button
             type="button"
             onClick={onClose}
-            className="flex h-7 w-7 items-center justify-center rounded-full text-[#999] transition-colors hover:bg-[#F0EDE4] hover:text-[#333] dark:text-[#5A5A4A] dark:hover:bg-[#243020] dark:hover:text-[#F0EDD4]"
+            className="flex h-8 w-8 items-center justify-center rounded-full text-[#999] transition-colors hover:bg-[#F0EDE4] hover:text-[#333] dark:text-[#5A5A4A] dark:hover:bg-[#243020] dark:hover:text-[#F0EDD4]"
             aria-label={t('aria_close')}
           >
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.5}>
@@ -111,103 +138,151 @@ export function ServiceModal({ service, vehicleFormats, onClose, onSaved }: Prop
         </div>
 
         <form onSubmit={handleSubmit} className="flex flex-1 flex-col overflow-hidden">
-          <div className="flex flex-col gap-4 overflow-y-auto p-5">
-            {/* Name */}
-            <div className="flex flex-col gap-1.5">
-              <label className="text-[13px] font-medium text-[#5A5A4A] dark:text-[#9A9A8A]">{t('field_name')}</label>
-              <input
-                type="text"
-                value={name}
-                onChange={(e) => setName(e.target.value)}
-                placeholder={t('placeholder_name')}
-                maxLength={100}
-                required
-                className={inputClass}
-              />
-            </div>
-
-            {/* Category chips */}
-            <div className="flex flex-col gap-1.5">
-              <label className="text-[13px] font-medium text-[#5A5A4A] dark:text-[#9A9A8A]">{t('field_category')}</label>
-              <div className="flex flex-wrap gap-2">
-                {CATEGORIES.map((key) => (
-                  <button
-                    key={key}
-                    type="button"
-                    onClick={() => setCategory(key)}
-                    className={`rounded-[8px] px-3.5 py-2 text-[13px] font-semibold transition-all ${
-                      category === key
-                        ? 'bg-[#C49A1E] text-[#0C1209]'
-                        : 'border border-[#D8D4C8] text-[#5A5A4A] hover:border-[#C49A1E] dark:border-[#243020] dark:text-[#9A9A8A]'
-                    }`}
-                  >
-                    {t(`cat_${key}`)}
-                  </button>
-                ))}
+          <div className="grid flex-1 grid-cols-1 gap-4 overflow-y-auto p-5 lg:grid-cols-[1fr_320px]">
+            {/* Left form */}
+            <div className="space-y-4">
+              <div className="flex flex-col gap-1.5">
+                <label className="text-[13px] font-medium text-[#5A5A4A] dark:text-[#9A9A8A]">{t('field_name')}</label>
+                <input
+                  type="text"
+                  value={name}
+                  onChange={(e) => setName(e.target.value)}
+                  placeholder={t('placeholder_name')}
+                  maxLength={100}
+                  required
+                  className={inputClass}
+                />
               </div>
-            </div>
 
-            {/* Type chips */}
-            <div className="flex flex-col gap-1.5">
-              <label className="text-[13px] font-medium text-[#5A5A4A] dark:text-[#9A9A8A]">{t('field_type')}</label>
-              <div className="flex flex-wrap gap-2">
-                {TYPES.map((key) => (
-                  <button
-                    key={key}
-                    type="button"
-                    onClick={() => setServiceType(key)}
-                    className={`rounded-[8px] px-3.5 py-2 text-[13px] font-semibold transition-all ${
-                      serviceType === key
-                        ? 'bg-[#C49A1E] text-[#0C1209]'
-                        : 'border border-[#D8D4C8] text-[#5A5A4A] hover:border-[#C49A1E] dark:border-[#243020] dark:text-[#9A9A8A]'
-                    }`}
-                  >
-                    {t(`type_${key}`)}
-                  </button>
-                ))}
+              <div className="flex flex-col gap-1.5">
+                <label className="text-[13px] font-medium text-[#5A5A4A] dark:text-[#9A9A8A]">{t('field_category')}</label>
+                <div className="flex flex-wrap gap-2">
+                  {CATEGORIES.map((key) => (
+                    <button
+                      key={key}
+                      type="button"
+                      onClick={() => setCategory(key)}
+                      className={`rounded-[8px] px-3.5 py-2 text-[12px] font-bold transition-all ${
+                        category === key
+                          ? 'bg-[#C49A1E] text-[#0C1209]'
+                          : 'bg-[#1E2A18] text-[#9A9A8A] hover:text-[#F0EDD4] dark:bg-[#1E2A18] dark:text-[#9A9A8A]'
+                      }`}
+                    >
+                      {t(`cat_${key}`)}
+                    </button>
+                  ))}
+                </div>
               </div>
+
+              <div className="flex flex-col gap-1.5">
+                <label className="text-[13px] font-medium text-[#5A5A4A] dark:text-[#9A9A8A]">{t('field_type')}</label>
+                <div className="flex flex-wrap gap-2">
+                  {TYPES.map((key) => (
+                    <button
+                      key={key}
+                      type="button"
+                      onClick={() => setServiceType(key)}
+                      className={`rounded-[8px] px-3.5 py-2 text-[12px] font-bold transition-all ${
+                        serviceType === key
+                          ? 'bg-[#C49A1E] text-[#0C1209]'
+                          : 'bg-[#1E2A18] text-[#9A9A8A] hover:text-[#F0EDD4] dark:bg-[#1E2A18] dark:text-[#9A9A8A]'
+                      }`}
+                    >
+                      {t(`type_${key}`)}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              <div className="flex flex-col gap-1.5">
+                <label className="text-[13px] font-medium text-[#5A5A4A] dark:text-[#9A9A8A]">{t('field_description')}</label>
+                <textarea
+                  value={description}
+                  onChange={(e) => setDescription(e.target.value)}
+                  placeholder={t('placeholder_description')}
+                  rows={2}
+                  className={inputClass + ' resize-none'}
+                />
+              </div>
+
+              <div className="flex flex-col gap-1.5">
+                <label className="text-[12px] font-black tracking-[.08em] text-[#C49A1E] uppercase">
+                  {t('field_vehicle_formats')}
+                </label>
+                <input
+                  type="text"
+                  value={formatSearch}
+                  onChange={(e) => setFormatSearch(e.target.value)}
+                  placeholder={t('format_search_placeholder')}
+                  className={inputClass}
+                />
+              </div>
+
+              <div className="flex flex-col gap-2">
+                <span className="text-[11px] font-black tracking-[.08em] text-[#C49A1E] uppercase">
+                  {t('section_vehicle_pricing')}
+                </span>
+                <ServiceVehicleRows
+                  formats={vehicleFormats}
+                  entries={entries}
+                  onChange={setEntries}
+                  searchQuery={formatSearch}
+                  unavailableMessage={t('format_not_in_list')}
+                />
+              </div>
+
+              <div className="flex items-center justify-between rounded-[10px] border border-[#2A3A20] bg-[#1E2A18] px-4 py-3">
+                <span className="text-[13px] font-semibold text-[#F0EDD4]">{t('toggle_active')}</span>
+                <button
+                  type="button"
+                  onClick={() => setIsActive(!isActive)}
+                  className={`rounded-full border px-3 py-1 text-[11px] font-bold transition-all ${
+                    isActive
+                      ? 'border-[#2ecc71] bg-[rgba(46,204,113,.12)] text-[#2ecc71]'
+                      : 'border-[#888] bg-[rgba(136,136,136,.12)] text-[#888]'
+                  }`}
+                >
+                  {isActive ? t('badge_active') : t('badge_inactive')}
+                </button>
+              </div>
+
+              {error && <p className="text-[13px] font-semibold text-[#EF4444]">{error}</p>}
             </div>
 
-            {/* Description */}
-            <div className="flex flex-col gap-1.5">
-              <label className="text-[13px] font-medium text-[#5A5A4A] dark:text-[#9A9A8A]">{t('field_description')}</label>
-              <textarea
-                value={description}
-                onChange={(e) => setDescription(e.target.value)}
-                placeholder={t('placeholder_description')}
-                rows={2}
-                className={inputClass + ' resize-none'}
-              />
-            </div>
-
-            {/* Vehicle pricing */}
-            <div className="flex flex-col gap-2">
-              <span className="text-[12px] font-black tracking-[.08em] text-[#C49A1E] uppercase">
-                {t('section_vehicle_pricing')}
-              </span>
-              <ServiceVehicleRows formats={vehicleFormats} entries={entries} onChange={setEntries} />
-            </div>
-
-            {/* Active toggle */}
-            <div className="flex items-center justify-between rounded-[10px] border border-[#F0EDE4] px-4 py-3 dark:border-[#1A2A14]">
-              <span className="text-[13px] font-medium text-[#5A5A4A] dark:text-[#9A9A8A]">{t('toggle_active')}</span>
-              <button
-                type="button"
-                onClick={() => setIsActive(!isActive)}
-                className={`rounded-[8px] px-4 py-1.5 text-[13px] font-bold transition-all ${
-                  isActive
-                    ? 'bg-[#C49A1E] text-[#0C1209]'
-                    : 'border border-[#D8D4C8] text-[#888] dark:border-[#243020] dark:text-[#9A9A8A]'
-                }`}
-              >
-                {isActive ? t('badge_active') : t('badge_inactive')}
-              </button>
-            </div>
-
-            {error && <p className="text-[13px] font-semibold text-[#EF4444]">{error}</p>}
+            {/* Right preview */}
+            <aside className="rounded-[12px] bg-[#3A2A12] p-4 text-[#F0EDD4]">
+              <div className="mb-3 text-[13px] font-black">{t('preview_title')}</div>
+              <div className="rounded-[10px] bg-[#4A3418] p-3">
+                <div className="text-[15px] font-black">{name || t('placeholder_name')}</div>
+                <div className="mt-1 text-[11px] text-[#B7AE8A]">{t('preview_category')}: {t(`cat_${category}`)}</div>
+                <div className="mt-3 space-y-2 text-[12px]">
+                  <div className="flex items-center justify-between border-b border-[#5A4630] pb-1">
+                    <span className="text-[#B7AE8A]">{t('preview_price')}</span>
+                    <span className="font-bold text-[#C49A1E]">
+                      {minPrice !== null ? (minPrice === maxPrice ? `${minPrice}$` : `${minPrice}$ - ${maxPrice}$`) : '--'}
+                    </span>
+                  </div>
+                  <div className="flex items-center justify-between border-b border-[#5A4630] pb-1">
+                    <span className="text-[#B7AE8A]">{t('preview_duration')}</span>
+                    <span className="font-bold">
+                      {minDur !== null ? (minDur === maxDur ? `${minDur} min` : `${minDur}-${maxDur} min`) : '--'}
+                    </span>
+                  </div>
+                  <div className="flex items-center justify-between border-b border-[#5A4630] pb-1">
+                    <span className="text-[#B7AE8A]">{t('preview_staff')}</span>
+                    <span className="font-bold">{activeEntries.length > 0 ? Math.max(...activeEntries.map((e) => e.staff_required)) : '--'}</span>
+                  </div>
+                  <div className="pt-1">
+                    <span className="text-[#B7AE8A]">{t('preview_formats')}</span>
+                    <div className="mt-1 text-[11px] font-semibold">
+                      {selectedFormats.length > 0 ? selectedFormats.join('; ') : '--'}
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </aside>
           </div>
 
-          {/* Footer */}
           <div className="flex justify-end gap-2.5 border-t border-[#F0EDE4] px-5 py-4 dark:border-[#1A2A14]">
             <button
               type="button"

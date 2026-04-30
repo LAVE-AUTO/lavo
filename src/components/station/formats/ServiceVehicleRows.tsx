@@ -7,13 +7,26 @@ interface Props {
   formats: VehicleFormat[];
   entries: ServiceVehicleEntry[];
   onChange: (entries: ServiceVehicleEntry[]) => void;
+  searchQuery?: string;
+  unavailableMessage?: string;
 }
 
 const inputClass =
   'w-full rounded-[6px] border border-[#D8D4C8] bg-[#F7F6F2] px-2.5 py-2 text-[13px] text-[#1A1A0A] outline-none transition-colors focus:border-[#C49A1E] focus:bg-white dark:border-[#243020] dark:bg-[#0F1A0C] dark:text-[#F0EDD4] dark:focus:bg-[#182214]';
 
-export function ServiceVehicleRows({ formats, entries, onChange }: Props) {
+export function ServiceVehicleRows({
+  formats,
+  entries,
+  onChange,
+  searchQuery,
+  unavailableMessage,
+}: Props) {
   const t = useTranslations('station_services');
+
+  const normalizedQuery = (searchQuery || '').trim().toLowerCase();
+  const visibleEntries = normalizedQuery
+    ? entries.filter((e) => e.vehicle_label.toLowerCase().includes(normalizedQuery))
+    : entries;
 
   function update(formatId: string, field: keyof ServiceVehicleEntry, value: string | number | boolean) {
     onChange(entries.map((e) => (e.vehicle_format_id === formatId ? { ...e, [field]: value } : e)));
@@ -27,9 +40,17 @@ export function ServiceVehicleRows({ formats, entries, onChange }: Props) {
     );
   }
 
+  if (visibleEntries.length === 0) {
+    return (
+      <p className="rounded-[8px] border border-dashed border-[#D8D4C8] p-3 text-[13px] text-[#888] dark:border-[#243020] dark:text-[#5A5A4A]">
+        {unavailableMessage || t('format_not_in_list')}
+      </p>
+    );
+  }
+
   return (
     <div className="flex flex-col gap-2">
-      {entries.map((entry) => (
+      {visibleEntries.map((entry) => (
         <div
           key={entry.vehicle_format_id}
           className="flex items-center gap-2.5 rounded-[10px] bg-[#F7F6F0] px-3 py-2.5 dark:bg-[#0F1A0C]"

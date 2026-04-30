@@ -21,7 +21,6 @@ export function ServiceCard({ service, onEdit, onDeleted, onToggled }: Props) {
   // TODO: connect to API once endpoint is available (local-only for now)
   async function confirmDelete() {
     setDeleting(true);
-    await new Promise((r) => setTimeout(r, 200));
     setDeleting(false);
     setDeleteOpen(false);
     onDeleted(service.id);
@@ -67,6 +66,11 @@ export function ServiceCard({ service, onEdit, onDeleted, onToggled }: Props) {
               >
                 {service.is_active ? t('badge_active') : t('badge_inactive')}
               </button>
+              {service.is_popular && (
+                <span className="rounded-full border border-[#EF4444] bg-[rgba(239,68,68,.12)] px-2 py-0.5 text-[9px] font-black tracking-[.04em] text-[#EF4444]">
+                  {t('badge_popular')}
+                </span>
+              )}
             </div>
           </div>
 
