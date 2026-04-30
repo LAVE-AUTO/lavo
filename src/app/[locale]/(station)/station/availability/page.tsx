@@ -12,7 +12,7 @@ import { AvailabilitySkeleton } from '@/components/station/availability/Availabi
 
 export default function StationAvailabilityPage() {
   const t = useTranslations('station_dashboard');
-  const { isAuthenticated } = useAuth();
+  useAuth(); // ensure auth context is initialized
   const [viewType, setViewType] = useState<'month' | 'week'>('month');
   const [selectedDate, setSelectedDate] = useState<Date>(new Date());
   const [slots, setSlots] = useState<any[]>([]);
@@ -21,14 +21,13 @@ export default function StationAvailabilityPage() {
   const mountedRef = useRef(true);
 
   useEffect(() => {
+    mountedRef.current = true;
     return () => {
       mountedRef.current = false;
     };
   }, []);
 
   useEffect(() => {
-    if (!isAuthenticated) return;
-
     const fetchSlots = async () => {
       try {
         setIsLoading(true);
@@ -43,21 +42,19 @@ export default function StationAvailabilityPage() {
           } else {
             setError(data?.error || t('error_queue_empty'));
           }
+          setIsLoading(false);
         }
       } catch (err) {
         console.error('Fetch slots error:', err);
         if (mountedRef.current) {
           setError(t('error_queue_empty'));
-        }
-      } finally {
-        if (mountedRef.current) {
           setIsLoading(false);
         }
       }
     };
 
     fetchSlots();
-  }, [selectedDate, isAuthenticated, t]);
+  }, [selectedDate, t]);
 
   if (isLoading) {
     return <AvailabilitySkeleton />;
