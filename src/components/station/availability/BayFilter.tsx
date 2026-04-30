@@ -1,0 +1,48 @@
+// This file is intentionally left to be replaced — see BlocksPanel.tsx
+// Kept temporarily to avoid import errors during transition
+export {};
+
+import { useTranslations } from 'next-intl';
+
+interface BayFilterProps {
+  bays: string[];
+  selectedBay: string | null;
+  onBayChange: (bay: string | null) => void;
+}
+
+export function BayFilter({ bays, selectedBay, onBayChange }: BayFilterProps) {
+  const t = useTranslations('station_dashboard');
+
+  return (
+    <div>
+      <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-[#666] dark:text-[#A0A090]">{t('availability_bay_filter_label')}</p>
+      <div className="flex flex-wrap gap-2">
+        <button
+          type="button"
+          onClick={() => onBayChange(null)}
+          className={`cursor-pointer rounded-full px-3 py-1 text-xs font-semibold transition-colors ${
+            selectedBay === null
+              ? 'bg-[#C09A18] text-[#1A1A0A]'
+              : 'bg-[#C09A18]/10 text-[#1A1A0A] hover:bg-[#C09A18]/20 dark:text-[#F0EDD4]'
+          }`}
+        >
+          {t('availability_bay_all')}
+        </button>
+        {bays.map((bay) => (
+          <button
+            key={bay}
+            type="button"
+            onClick={() => onBayChange(bay)}
+            className={`cursor-pointer rounded-full px-3 py-1 text-xs font-semibold transition-colors ${
+              selectedBay === bay
+                ? 'bg-[#C09A18] text-[#1A1A0A]'
+                : 'bg-[#C09A18]/10 text-[#1A1A0A] hover:bg-[#C09A18]/20 dark:text-[#F0EDD4]'
+            }`}
+          >
+            {t('availability_bay_label')} {bay}
+          </button>
+        ))}
+      </div>
+    </div>
+  );
+}
