@@ -38,7 +38,7 @@ export default function StationAvailabilityPage() {
 
         if (mountedRef.current) {
           if (success) {
-            setSlots(data?.data || []);
+            setSlots(data?.data?.slots || []);
           } else {
             setError(data?.error || t('error_queue_empty'));
           }
