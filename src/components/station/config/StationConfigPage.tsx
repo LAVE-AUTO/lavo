@@ -22,6 +22,7 @@ const EMPTY_CONFIG: StationConfig = {
   break_start: null,
   break_end: null,
   wash_duration_minutes: null,
+  wash_post_count: null,
   late_tolerance_minutes: null,
   cancellation_delay_minutes: null,
   max_concurrent_posts: null,

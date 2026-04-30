@@ -5,6 +5,7 @@ export interface StationConfig {
   break_start: string | null;
   break_end: string | null;
   wash_duration_minutes: number | null;
+  wash_post_count: number | null;
   late_tolerance_minutes: number | null;
   cancellation_delay_minutes: number | null;
   max_concurrent_posts: number | null;

@@ -15,6 +15,9 @@ interface Props {
 const inputClass =
   'w-full rounded-[8px] border border-[#D8D4C8] bg-[#F7F6F2] px-3 py-2.5 text-[13px] text-[#1A1A0A] outline-none transition-colors duration-150 placeholder:text-[#BBBBAA] focus:border-[#C49A1E] focus:bg-white focus:shadow-[0_0_0_3px_rgba(196,154,30,0.12)] disabled:cursor-not-allowed disabled:opacity-60 dark:border-[#243020] dark:bg-[#0F1A0C] dark:text-[#F0EDD4] dark:placeholder:text-[#4A4A3A] dark:focus:border-[#C49A1E] dark:focus:bg-[#182214]';
 
+const MAX_BAYS = 20;
+const MIN_BAYS = 1;
+
 function Field({ label, hint, children }: { label: string; hint?: string; children: React.ReactNode }) {
   return (
     <div className="flex flex-col gap-1.5">
@@ -71,9 +74,10 @@ function Card({ title, children }: { title: string; children: React.ReactNode })
   );
 }
 
-function initForm(config: StationConfig) {
+function initForm(config: StationConfig, postCount: number) {
   return {
     wash_duration_minutes: config.wash_duration_minutes ?? '',
+    wash_post_count: config.wash_post_count ?? postCount,
     late_tolerance_minutes: config.late_tolerance_minutes ?? '',
     cancellation_delay_minutes: config.cancellation_delay_minutes ?? '',
     max_concurrent_posts: config.max_concurrent_posts ?? '',
@@ -87,12 +91,19 @@ function safeInt(v: string | number): number | undefined {
   return !isNaN(n) && v !== '' ? Math.max(0, Math.floor(n)) : undefined;
 }
 
+function clampBays(v: string): number {
+  const n = Number(v);
+  if (!Number.isFinite(n)) return MIN_BAYS;
+  return Math.max(MIN_BAYS, Math.min(MAX_BAYS, Math.floor(n)));
+}
+
 export function CapacityTab({ config, posts, locked, onSaved }: Props) {
   const t = useTranslations('station_config');
 
-  const [form, setForm] = useState(() => initForm(config));
-  const [postStates, setPostStates] = useState<Record<string, boolean>>(
-    Object.fromEntries(posts.map((p) => [p.id, p.is_active])),
+  const [form, setForm] = useState(() => initForm(config, posts.length));
+  // Per-position is_active map. Indexed by 1-based position so it survives bay-count changes.
+  const [postActive, setPostActive] = useState<Record<number, boolean>>(
+    Object.fromEntries(posts.map((p) => [p.position, p.is_active])),
   );
   const [saving, setSaving] = useState(false);
   const [feedback, setFeedback] = useState<{ ok: boolean; msg: string } | null>(null);
@@ -104,19 +115,28 @@ export function CapacityTab({ config, posts, locked, onSaved }: Props) {
     };
   }, []);
 
-  useEffect(() => setForm(initForm(config)), [config]);
+  useEffect(() => setForm(initForm(config, posts.length)), [config, posts.length]);
   useEffect(
-    () => setPostStates(Object.fromEntries(posts.map((p) => [p.id, p.is_active]))),
+    () => setPostActive(Object.fromEntries(posts.map((p) => [p.position, p.is_active]))),
     [posts],
   );
 
-  function set(key: keyof ReturnType<typeof initForm>, value: string) {
+  function set<K extends keyof ReturnType<typeof initForm>>(
+    key: K,
+    value: ReturnType<typeof initForm>[K],
+  ) {
     setForm((prev) => ({ ...prev, [key]: value }));
   }
 
-  function togglePost(id: string) {
-    setPostStates((prev) => ({ ...prev, [id]: !(prev[id] ?? true) }));
+  function togglePost(position: number) {
+    setPostActive((prev) => ({ ...prev, [position]: !(prev[position] ?? true) }));
   }
+
+  const totalBays = clampBays(String(form.wash_post_count));
+
+  // Virtual posts list driven by wash_post_count input. Existing positions keep their is_active;
+  // new positions default to active. Positions above the new total are dropped on save.
+  const visiblePositions = Array.from({ length: totalBays }, (_, i) => i + 1);
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -137,9 +157,13 @@ export function CapacityTab({ config, posts, locked, onSaved }: Props) {
     if (mb !== undefined) payload.margin_before_minutes = mb;
     const ma = safeInt(form.margin_after_minutes);
     if (ma !== undefined) payload.margin_after_minutes = ma;
-    payload.posts = posts.map((p) => ({
-      id: p.id,
-      is_active: postStates[p.id] ?? p.is_active,
+
+    payload.wash_post_count = totalBays;
+    // Send the full target list of positions. The backend's upsertPosts will
+    // create missing positions and delete any not present, keeping post_active in sync.
+    payload.posts = visiblePositions.map((position) => ({
+      position,
+      is_active: postActive[position] ?? true,
     }));
 
     const [ok, data] = await patchWithApi('/station/config', payload);
@@ -155,30 +179,32 @@ export function CapacityTab({ config, posts, locked, onSaved }: Props) {
     }
   }
 
-  const activeCount = Object.values(postStates).filter(Boolean).length;
-  const totalCount = posts.length;
+  const activeCount = visiblePositions.filter((p) => postActive[p] ?? true).length;
+
+  // Cap max_concurrent_posts at the total bay count to keep the UI consistent
+  const maxConcurrentMax = Math.max(MIN_BAYS, totalBays);
 
   return (
     <form onSubmit={handleSubmit} className="flex flex-col gap-5">
       <div className="grid gap-5 md:grid-cols-2">
         <Card title={t('capacity_card_bays')}>
           <div className="flex flex-col gap-4">
-            <Field label={t('capacity_total_bays')}>
-              <div className="flex items-baseline gap-2 rounded-[10px] bg-[#F7F6F2] px-4 py-3 dark:bg-[#0F1A0C]">
-                <span className="text-[28px] font-black tabular-nums leading-none text-[#1A1A0A] dark:text-[#F0EDD4]">
-                  {totalCount}
-                </span>
-                <span className="text-[12px] font-semibold text-[#888] dark:text-[#9A9A8A]">
-                  {t('unit_posts')}
-                </span>
-              </div>
+            <Field label={t('capacity_total_bays')} hint={t('capacity_total_bays_hint')}>
+              <NumberInput
+                value={form.wash_post_count}
+                onChange={(v) => set('wash_post_count', clampBays(v))}
+                min={MIN_BAYS}
+                max={MAX_BAYS}
+                unit={t('unit_posts')}
+                disabled={locked || saving}
+              />
             </Field>
             <Field label={t('field_max_concurrent')} hint={t('capacity_max_concurrent_hint')}>
               <NumberInput
                 value={form.max_concurrent_posts}
                 onChange={(v) => set('max_concurrent_posts', v)}
                 min={1}
-                max={20}
+                max={maxConcurrentMax}
                 unit={t('unit_posts')}
                 disabled={locked || saving}
               />
@@ -247,17 +273,18 @@ export function CapacityTab({ config, posts, locked, onSaved }: Props) {
         <div className="mb-3 flex items-baseline justify-between">
           <p className="text-[12px] text-[#888] dark:text-[#9A9A8A]">{t('capacity_bay_status_hint')}</p>
           <p className="text-[12px] font-semibold text-[#C49A1E]">
-            {t('capacity_bays_active', { active: activeCount, total: totalCount })}
+            {t('capacity_bays_active', { active: activeCount, total: totalBays })}
           </p>
         </div>
         <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-4">
-          {posts.map((post) => {
-            const active = postStates[post.id] ?? post.is_active;
+          {visiblePositions.map((position) => {
+            const active = postActive[position] ?? true;
+            const isNew = !posts.some((p) => p.position === position);
             return (
               <button
-                key={post.id}
+                key={position}
                 type="button"
-                onClick={() => togglePost(post.id)}
+                onClick={() => togglePost(position)}
                 disabled={locked || saving}
                 aria-pressed={active}
                 className={`group relative flex flex-col items-center gap-2 rounded-xl border p-4 text-center transition-all duration-150 disabled:cursor-not-allowed disabled:opacity-60 ${
@@ -266,6 +293,11 @@ export function CapacityTab({ config, posts, locked, onSaved }: Props) {
                     : 'border-[#E0DCD0] bg-[#F7F6F2] hover:border-[#C8C4B4] dark:border-[#243020] dark:bg-[#0F1A0C]'
                 }`}
               >
+                {isNew && (
+                  <span className="absolute right-1.5 top-1.5 rounded-full bg-[#C49A1E] px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wider text-[#0C1209]">
+                    {t('capacity_bay_new')}
+                  </span>
+                )}
                 <div
                   className={`flex h-9 w-9 items-center justify-center rounded-lg ${
                     active
@@ -288,7 +320,7 @@ export function CapacityTab({ config, posts, locked, onSaved }: Props) {
                   </svg>
                 </div>
                 <span className="text-[12px] font-bold text-[#1A1A0A] dark:text-[#F0EDD4]">
-                  {t('post_label', { n: post.position })}
+                  {t('post_label', { n: position })}
                 </span>
                 <span className={`text-[11px] font-semibold ${active ? 'text-[#00A040]' : 'text-[#EF4444]'}`}>
                   {active ? t('post_active') : t('post_inactive')}

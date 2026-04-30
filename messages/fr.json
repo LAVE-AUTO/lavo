@@ -1927,6 +1927,8 @@
         "hours_exceptions_empty": "Aucune exception enregistrée",
         "capacity_card_bays": "Postes de lavage",
         "capacity_total_bays": "Nombre total de postes",
+        "capacity_total_bays_hint": "Augmenter ce nombre crée les postes manquants ; le diminuer supprime les postes au-delà du nouveau total.",
+        "capacity_bay_new": "Nouveau",
         "capacity_max_concurrent_hint": "Limite le nombre de véhicules traités en même temps.",
         "capacity_card_delay_tolerance": "Tolérance de retard client",
         "capacity_late_tolerance_hint": "Délai accordé au client à partir de son heure de réservation avant le switch automatique.",
