@@ -64,50 +64,49 @@ export function AddSlotModal({ isOpen, onClose, date, bays, onSuccess }: AddSlot
   return (
     <Modal isOpen={isOpen} onClose={onClose} title={t('availability_add_slot_title')}>
       <div className="space-y-4 p-4">
-        <p className="text-sm text-slate-600 dark:text-slate-400">{date.toLocaleDateString('fr-FR', { weekday: 'long', month: 'long', day: 'numeric' })}</p>
+        <p className="capitalize text-sm text-[#666] dark:text-[#A0A090]">
+          {date.toLocaleDateString('fr-FR', { weekday: 'long', month: 'long', day: 'numeric' })}
+        </p>
 
         {/* Start Time */}
         <div>
-          <label className="block text-sm font-medium text-slate-900 dark:text-white">
-            {t('availability_start_time')}
-            <span className="text-red-500">*</span>
+          <label className="block text-sm font-semibold text-[#1A1A0A] dark:text-[#F0EDD4]">
+            {t('availability_start_time')}<span className="text-[#FF2525]">*</span>
           </label>
           <input
             type="time"
             value={startTime}
             onChange={(e) => setStartTime(e.target.value)}
-            className="mt-2 w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 transition-colors dark:border-slate-600 dark:bg-slate-800 dark:text-white"
+            className="mt-1.5 w-full rounded-xl border border-[#C09A18]/30 bg-[#F0EDE0] px-3 py-2 text-sm text-[#1A1A0A] outline-none transition-colors focus:border-[#C09A18] dark:bg-[#1E2A1A] dark:text-[#F0EDD4]"
           />
         </div>
 
         {/* End Time */}
         <div>
-          <label className="block text-sm font-medium text-slate-900 dark:text-white">
-            {t('availability_end_time')}
-            <span className="text-red-500">*</span>
+          <label className="block text-sm font-semibold text-[#1A1A0A] dark:text-[#F0EDD4]">
+            {t('availability_end_time')}<span className="text-[#FF2525]">*</span>
           </label>
           <input
             type="time"
             value={endTime}
             onChange={(e) => setEndTime(e.target.value)}
-            className="mt-2 w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 transition-colors dark:border-slate-600 dark:bg-slate-800 dark:text-white"
+            className="mt-1.5 w-full rounded-xl border border-[#C09A18]/30 bg-[#F0EDE0] px-3 py-2 text-sm text-[#1A1A0A] outline-none transition-colors focus:border-[#C09A18] dark:bg-[#1E2A1A] dark:text-[#F0EDD4]"
           />
         </div>
 
         {/* Bay */}
         <div>
-          <label className="block text-sm font-medium text-slate-900 dark:text-white">
-            {t('availability_bay')}
-            <span className="text-red-500">*</span>
+          <label className="block text-sm font-semibold text-[#1A1A0A] dark:text-[#F0EDD4]">
+            {t('availability_bay')}<span className="text-[#FF2525]">*</span>
           </label>
           <select
             value={bay}
             onChange={(e) => setBay(e.target.value)}
-            className="mt-2 w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 transition-colors dark:border-slate-600 dark:bg-slate-800 dark:text-white"
+            className="mt-1.5 w-full rounded-xl border border-[#C09A18]/30 bg-[#F0EDE0] px-3 py-2 text-sm text-[#1A1A0A] outline-none transition-colors focus:border-[#C09A18] dark:bg-[#1E2A1A] dark:text-[#F0EDD4]"
           >
             {bays.map((b) => (
               <option key={b} value={b}>
-                Bay {b}
+                Poste {b}
               </option>
             ))}
           </select>
@@ -115,9 +114,8 @@ export function AddSlotModal({ isOpen, onClose, date, bays, onSuccess }: AddSlot
 
         {/* Capacity */}
         <div>
-          <label className="block text-sm font-medium text-slate-900 dark:text-white">
-            {t('availability_capacity')}
-            <span className="text-red-500">*</span>
+          <label className="block text-sm font-semibold text-[#1A1A0A] dark:text-[#F0EDD4]">
+            {t('availability_capacity')}<span className="text-[#FF2525]">*</span>
           </label>
           <input
             type="number"
@@ -125,19 +123,21 @@ export function AddSlotModal({ isOpen, onClose, date, bays, onSuccess }: AddSlot
             max="50"
             value={capacity}
             onChange={(e) => setCapacity(e.target.value)}
-            className="mt-2 w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 transition-colors dark:border-slate-600 dark:bg-slate-800 dark:text-white"
+            className="mt-1.5 w-full rounded-xl border border-[#C09A18]/30 bg-[#F0EDE0] px-3 py-2 text-sm text-[#1A1A0A] outline-none transition-colors focus:border-[#C09A18] dark:bg-[#1E2A1A] dark:text-[#F0EDD4]"
           />
         </div>
 
         {/* Error */}
-        {error && <div className="rounded-lg bg-red-50 p-3 text-sm text-red-800 dark:bg-red-900/20 dark:text-red-300">{error}</div>}
+        {error && (
+          <div className="rounded-xl bg-[#FF2525]/10 p-3 text-sm font-medium text-[#FF2525]">{error}</div>
+        )}
 
         {/* Actions */}
-        <div className="flex gap-3 pt-4">
+        <div className="flex gap-3 pt-2">
           <button
             type="button"
             onClick={onClose}
-            className="flex-1 rounded-lg border border-slate-300 bg-white px-4 py-2 text-sm font-medium text-slate-700 transition-colors hover:bg-slate-50 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-300 dark:hover:bg-slate-700"
+            className="flex-1 cursor-pointer rounded-xl border border-[#C09A18]/30 bg-transparent px-4 py-2 text-sm font-semibold text-[#1A1A0A] transition-colors hover:bg-[#C09A18]/10 dark:text-[#F0EDD4]"
           >
             {t('confirm_btn_cancel')}
           </button>
@@ -145,7 +145,7 @@ export function AddSlotModal({ isOpen, onClose, date, bays, onSuccess }: AddSlot
             type="button"
             onClick={handleAddSlot}
             disabled={isLoading}
-            className="flex-1 rounded-lg bg-amber-600 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-amber-700 disabled:opacity-50"
+            className="flex-1 cursor-pointer rounded-xl bg-[#C09A18] px-4 py-2 text-sm font-bold text-[#1A1A0A] transition-colors hover:bg-[#a8861a] disabled:opacity-50"
           >
             {isLoading ? t('loading') : t('availability_add_slot_button')}
           </button>

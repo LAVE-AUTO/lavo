@@ -11,14 +11,14 @@ export function AvailabilityViewToggle({ value, onChange }: AvailabilityViewTogg
   const t = useTranslations('station_dashboard');
 
   return (
-    <div className="flex gap-2 border-b border-slate-200 dark:border-slate-700">
+    <div className="flex gap-2 border-b border-[#C09A18]/20">
       <button
         type="button"
         onClick={() => onChange('month')}
-        className={`px-4 py-3 text-sm font-medium transition-colors ${
+        className={`cursor-pointer px-4 py-3 text-sm font-semibold transition-colors ${
           value === 'month'
-            ? 'border-b-2 border-amber-600 text-amber-600'
-            : 'text-slate-600 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white'
+            ? 'border-b-2 border-[#C09A18] text-[#C09A18]'
+            : 'text-[#666] hover:text-[#1A1A0A] dark:text-[#A0A090] dark:hover:text-[#F0EDD4]'
         }`}
       >
         {t('availability_view_month')}
@@ -26,10 +26,10 @@ export function AvailabilityViewToggle({ value, onChange }: AvailabilityViewTogg
       <button
         type="button"
         onClick={() => onChange('week')}
-        className={`px-4 py-3 text-sm font-medium transition-colors ${
+        className={`cursor-pointer px-4 py-3 text-sm font-semibold transition-colors ${
           value === 'week'
-            ? 'border-b-2 border-amber-600 text-amber-600'
-            : 'text-slate-600 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white'
+            ? 'border-b-2 border-[#C09A18] text-[#C09A18]'
+            : 'text-[#666] hover:text-[#1A1A0A] dark:text-[#A0A090] dark:hover:text-[#F0EDD4]'
         }`}
       >
         {t('availability_view_week')}

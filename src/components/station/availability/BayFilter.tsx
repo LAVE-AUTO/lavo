@@ -13,19 +13,34 @@ export function BayFilter({ bays, selectedBay, onBayChange }: BayFilterProps) {
 
   return (
     <div>
-      <label className="block text-sm font-medium text-slate-900 dark:text-white">{t('availability_bay_filter_label')}</label>
-      <select
-        value={selectedBay || ''}
-        onChange={(e) => onBayChange(e.target.value || null)}
-        className="mt-2 w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 transition-colors dark:border-slate-600 dark:bg-slate-800 dark:text-white"
-      >
-        <option value="">{t('availability_bay_all')}</option>
+      <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-[#666] dark:text-[#A0A090]">{t('availability_bay_filter_label')}</p>
+      <div className="flex flex-wrap gap-2">
+        <button
+          type="button"
+          onClick={() => onBayChange(null)}
+          className={`cursor-pointer rounded-full px-3 py-1 text-xs font-semibold transition-colors ${
+            selectedBay === null
+              ? 'bg-[#C09A18] text-[#1A1A0A]'
+              : 'bg-[#C09A18]/10 text-[#1A1A0A] hover:bg-[#C09A18]/20 dark:text-[#F0EDD4]'
+          }`}
+        >
+          {t('availability_bay_all')}
+        </button>
         {bays.map((bay) => (
-          <option key={bay} value={bay}>
+          <button
+            key={bay}
+            type="button"
+            onClick={() => onBayChange(bay)}
+            className={`cursor-pointer rounded-full px-3 py-1 text-xs font-semibold transition-colors ${
+              selectedBay === bay
+                ? 'bg-[#C09A18] text-[#1A1A0A]'
+                : 'bg-[#C09A18]/10 text-[#1A1A0A] hover:bg-[#C09A18]/20 dark:text-[#F0EDD4]'
+            }`}
+          >
             {t('availability_bay_label')} {bay}
-          </option>
+          </button>
         ))}
-      </select>
+      </div>
     </div>
   );
 }

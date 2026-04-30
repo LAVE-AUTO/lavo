@@ -2,29 +2,35 @@
 
 export function AvailabilitySkeleton() {
   return (
-    <div className="space-y-6 animate-pulse">
+    <div className="animate-pulse space-y-6">
       {/* Header */}
-      <div className="h-8 w-48 rounded-lg bg-slate-200 dark:bg-slate-700" />
-      <div className="h-4 w-64 rounded-lg bg-slate-200 dark:bg-slate-700" />
+      <div>
+        <div className="h-7 w-52 rounded-xl bg-[#C8C8B4] dark:bg-[#2A3A26]" />
+        <div className="mt-2 h-4 w-72 rounded-xl bg-[#C8C8B4] dark:bg-[#2A3A26]" />
+      </div>
 
       {/* View Toggle */}
-      <div className="flex gap-2">
-        {[1, 2].map((i) => (
-          <div key={i} className="h-10 w-24 rounded-lg bg-slate-200 dark:bg-slate-700" />
+      <div className="flex gap-2 border-b border-[#C09A18]/20 pb-1">
+        {[80, 64].map((w, i) => (
+          <div key={i} className={`h-9 w-${w === 80 ? '20' : '16'} rounded-lg bg-[#C8C8B4] dark:bg-[#2A3A26]`} />
         ))}
       </div>
 
       {/* Grid */}
       <div className="grid gap-6 lg:grid-cols-3">
         {/* Calendar Skeleton */}
-        <div className="space-y-2">
-          <div className="h-48 rounded-lg bg-slate-200 dark:bg-slate-700" />
+        <div>
+          <div className="h-64 rounded-xl bg-[#C8C8B4] dark:bg-[#2A3A26]" />
         </div>
 
         {/* Slots Skeleton */}
-        <div className="lg:col-span-2 space-y-3">
-          {[1, 2, 3, 4, 5].map((i) => (
-            <div key={i} className="h-24 rounded-lg bg-slate-200 dark:bg-slate-700" />
+        <div className="space-y-3 lg:col-span-2">
+          <div className="flex items-center justify-between">
+            <div className="h-5 w-32 rounded-xl bg-[#C8C8B4] dark:bg-[#2A3A26]" />
+            <div className="h-8 w-28 rounded-xl bg-[#C8C8B4] dark:bg-[#2A3A26]" />
+          </div>
+          {[1, 2, 3, 4].map((i) => (
+            <div key={i} className="h-20 rounded-xl bg-[#C8C8B4] dark:bg-[#2A3A26]" />
           ))}
         </div>
       </div>

@@ -64,15 +64,15 @@ export default function StationAvailabilityPage() {
     <div className="space-y-6">
       {/* Header */}
       <div>
-        <h1 className="text-2xl font-bold text-slate-900 dark:text-white">{t('availability_title')}</h1>
-        <p className="text-sm text-slate-600 dark:text-slate-400">{t('availability_subtitle')}</p>
+        <h1 className="text-2xl font-black text-[#1A1A0A] dark:text-[#F0EDD4]">{t('availability_title')}</h1>
+        <p className="mt-1 text-sm text-[#666] dark:text-[#A0A090]">{t('availability_subtitle')}</p>
       </div>
 
       {/* View Toggle */}
       <AvailabilityViewToggle value={viewType} onChange={setViewType} />
 
       {/* Error Message */}
-      {error && <div className="rounded-lg bg-red-50 p-4 text-sm text-red-800 dark:bg-red-900/20 dark:text-red-300">{error}</div>}
+      {error && <div className="rounded-xl bg-[#FF2525]/10 p-4 text-sm font-medium text-[#FF2525]">{error}</div>}
 
       {/* Calendar / Week View */}
       <div className="grid gap-6 lg:grid-cols-3">
