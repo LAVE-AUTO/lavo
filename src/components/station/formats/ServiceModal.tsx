@@ -56,6 +56,12 @@ export function ServiceModal({ service, vehicleFormats, availableExtras, onClose
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
+  const isCreateHandWash = !isEdit && category === 'hand_wash';
+  const showTypeSelector = isEdit || isCreateHandWash;
+  const showExtrasSection = isEdit || isCreateHandWash;
+  const showStaffField = isEdit || isCreateHandWash;
+  const effectiveServiceType: ServiceType = !isEdit && category !== 'hand_wash' ? 'exterior' : serviceType;
+
   useEffect(() => {
     if (service) {
       setName(service.name);
@@ -87,6 +93,17 @@ export function ServiceModal({ service, vehicleFormats, availableExtras, onClose
     setError(null);
   }, [service, vehicleFormats]);
 
+  useEffect(() => {
+    if (isEdit) {
+      return;
+    }
+    if (category !== 'hand_wash') {
+      setServiceType('exterior');
+      setSelectedExtraIds([]);
+      setBaseStaff(category === 'automatic' ? '1' : '0');
+    }
+  }, [category, isEdit]);
+
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     if (!name.trim()) {
@@ -96,9 +113,9 @@ export function ServiceModal({ service, vehicleFormats, availableExtras, onClose
     setSaving(true);
     setError(null);
 
-    const extrasByType: StationExtra[] = serviceType === 'exterior'
+    const extrasByType: StationExtra[] = effectiveServiceType === 'exterior'
       ? [...availableExtras.exterior, ...availableExtras.both]
-      : serviceType === 'interior'
+      : effectiveServiceType === 'interior'
       ? [...availableExtras.interior, ...availableExtras.both]
       : [...availableExtras.exterior, ...availableExtras.interior, ...availableExtras.both];
 
@@ -120,7 +137,7 @@ export function ServiceModal({ service, vehicleFormats, availableExtras, onClose
     const payload = {
       name: name.trim(),
       category,
-      service_type: serviceType,
+      service_type: effectiveServiceType,
       description: description.trim(),
       is_active: isActive,
       vehicle_entries: isEdit
@@ -176,9 +193,9 @@ export function ServiceModal({ service, vehicleFormats, availableExtras, onClose
   );
   const showFormatUnavailable = formatSearch.trim().length > 0 && searchableFormats.length === 0;
 
-  const extrasByType: StationExtra[] = serviceType === 'exterior'
+  const extrasByType: StationExtra[] = effectiveServiceType === 'exterior'
     ? [...availableExtras.exterior, ...availableExtras.both]
-    : serviceType === 'interior'
+    : effectiveServiceType === 'interior'
     ? [...availableExtras.interior, ...availableExtras.both]
     : [...availableExtras.exterior, ...availableExtras.interior, ...availableExtras.both];
 
@@ -257,35 +274,37 @@ export function ServiceModal({ service, vehicleFormats, availableExtras, onClose
                 </div>
               </div>
 
-              <div className="flex flex-col gap-1.5">
-                <label className="text-[13px] font-medium text-[#5A5A4A] dark:text-[#9A9A8A]">{t('field_type')}</label>
-                <div className="flex flex-wrap gap-2">
-                  {TYPES.map((key) => (
-                    <button
-                      key={key}
-                      type="button"
-                      onClick={() => setServiceType(key)}
-                      className={`rounded-[8px] px-3.5 py-2 text-[12px] font-bold transition-all ${
-                        serviceType === key
-                          ? 'bg-[#C49A1E] text-[#0C1209]'
-                          : 'bg-[#1E2A18] text-[#9A9A8A] hover:text-[#F0EDD4] dark:bg-[#1E2A18] dark:text-[#9A9A8A]'
-                      }`}
-                    >
-                      {t(`type_${key}`)}
-                    </button>
-                  ))}
+              {showTypeSelector && (
+                <div className="flex flex-col gap-1.5">
+                  <label className="text-[13px] font-medium text-[#5A5A4A] dark:text-[#9A9A8A]">{t('field_type')}</label>
+                  <div className="flex flex-wrap gap-2">
+                    {TYPES.map((key) => (
+                      <button
+                        key={key}
+                        type="button"
+                        onClick={() => setServiceType(key)}
+                        className={`rounded-[8px] px-3.5 py-2 text-[12px] font-bold transition-all ${
+                          serviceType === key
+                            ? 'bg-[#C49A1E] text-[#0C1209]'
+                            : 'bg-[#1E2A18] text-[#9A9A8A] hover:text-[#F0EDD4] dark:bg-[#1E2A18] dark:text-[#9A9A8A]'
+                        }`}
+                      >
+                        {t(`type_${key}`)}
+                      </button>
+                    ))}
+                  </div>
                 </div>
-              </div>
+              )}
 
-              {!isEdit && (
+              {!isEdit && showTypeSelector && (
               <div className="rounded-[10px] border border-[#F0EDE4] bg-[#FAFAF7] p-3 dark:border-[#243020] dark:bg-[#0F1A0C]">
                 <div className="mb-1 text-[11px] font-black tracking-[.08em] text-[#C49A1E] uppercase">
                   {category === 'hand_wash' ? t('field_type_handwash') : t('field_type')}
                 </div>
                 <p className="text-[12px] text-[#888] dark:text-[#9A9A8A]">
-                  {serviceType === 'exterior'
+                  {effectiveServiceType === 'exterior'
                     ? t('type_hint_exterior')
-                    : serviceType === 'interior'
+                    : effectiveServiceType === 'interior'
                     ? t('type_hint_interior')
                     : t('type_hint_complete')}
                 </p>
@@ -327,6 +346,7 @@ export function ServiceModal({ service, vehicleFormats, availableExtras, onClose
                       className={inputClass}
                     />
                   </div>
+                  {showStaffField && (
                   <div className="flex flex-col gap-1.5 sm:col-span-2">
                     <label className="text-[13px] font-medium text-[#5A5A4A] dark:text-[#9A9A8A]">{t('vehicle_col_staff')}</label>
                     <input
@@ -338,6 +358,7 @@ export function ServiceModal({ service, vehicleFormats, availableExtras, onClose
                       className={inputClass}
                     />
                   </div>
+                  )}
                 </div>
               )}
 
@@ -402,6 +423,7 @@ export function ServiceModal({ service, vehicleFormats, availableExtras, onClose
               </div>
               )}
 
+              {showExtrasSection && (
               <div className="flex flex-col gap-2 rounded-[10px] border border-[#F0EDE4] bg-[#FAFAF7] p-3 dark:border-[#243020] dark:bg-[#0F1A0C]">
                 <span className="text-[11px] font-black tracking-[.08em] text-[#C49A1E] uppercase">
                   {t('extras_label')}
@@ -431,6 +453,7 @@ export function ServiceModal({ service, vehicleFormats, availableExtras, onClose
                   </div>
                 )}
               </div>
+              )}
 
               <div className="flex items-center justify-between rounded-[10px] border border-[#2A3A20] bg-[#1E2A18] px-4 py-3">
                 <span className="text-[13px] font-semibold text-[#F0EDD4]">{t('toggle_active')}</span>
