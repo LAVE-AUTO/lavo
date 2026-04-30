@@ -3,12 +3,14 @@
 import { useState, useEffect } from 'react';
 import { useTranslations } from 'next-intl';
 import { postWithApi, updateWithApi } from '@/services';
+import type { StationExtras, StationExtra } from '@/components/station/config/StationExtrasForm';
 import type { Service, VehicleFormat, ServiceVehicleEntry, ServiceCategory, ServiceType } from './types';
 import { ServiceVehicleRows } from './ServiceVehicleRows';
 
 interface Props {
   service: Service | null;
   vehicleFormats: VehicleFormat[];
+  availableExtras: StationExtras;
   onClose: () => void;
   onSaved: (service: Service) => void;
 }
@@ -35,7 +37,7 @@ function buildEntries(formats: VehicleFormat[], existing?: ServiceVehicleEntry[]
   });
 }
 
-export function ServiceModal({ service, vehicleFormats, onClose, onSaved }: Props) {
+export function ServiceModal({ service, vehicleFormats, availableExtras, onClose, onSaved }: Props) {
   const t = useTranslations('station_services');
   const isEdit = service !== null;
 
@@ -45,6 +47,8 @@ export function ServiceModal({ service, vehicleFormats, onClose, onSaved }: Prop
   const [description, setDescription] = useState('');
   const [isActive, setIsActive] = useState(true);
   const [entries, setEntries] = useState<ServiceVehicleEntry[]>([]);
+  const [selectedFormatIds, setSelectedFormatIds] = useState<string[]>([]);
+  const [selectedExtraIds, setSelectedExtraIds] = useState<string[]>([]);
   const [formatSearch, setFormatSearch] = useState('');
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -57,6 +61,8 @@ export function ServiceModal({ service, vehicleFormats, onClose, onSaved }: Prop
       setDescription(service.description);
       setIsActive(service.is_active);
       setEntries(buildEntries(vehicleFormats, service.vehicle_entries));
+      setSelectedFormatIds(service.vehicle_entries.filter((e) => e.is_active).map((e) => e.vehicle_format_id));
+      setSelectedExtraIds((service.compatible_extras || []).map((e) => e.id));
     } else {
       setName('');
       setCategory('hand_wash');
@@ -64,6 +70,8 @@ export function ServiceModal({ service, vehicleFormats, onClose, onSaved }: Prop
       setDescription('');
       setIsActive(true);
       setEntries(buildEntries(vehicleFormats));
+      setSelectedFormatIds(vehicleFormats.map((f) => f.id));
+      setSelectedExtraIds([]);
     }
     setFormatSearch('');
     setError(null);
@@ -78,14 +86,27 @@ export function ServiceModal({ service, vehicleFormats, onClose, onSaved }: Prop
     setSaving(true);
     setError(null);
 
+    const extrasByType: StationExtra[] = serviceType === 'exterior'
+      ? [...availableExtras.exterior, ...availableExtras.both]
+      : serviceType === 'interior'
+      ? [...availableExtras.interior, ...availableExtras.both]
+      : [...availableExtras.exterior, ...availableExtras.interior, ...availableExtras.both];
+
+    const selectedExtras = extrasByType
+      .filter((e) => selectedExtraIds.includes(e.id))
+      .map((e) => ({ id: e.id, name: e.label }));
+
     const payload = {
       name: name.trim(),
       category,
       service_type: serviceType,
       description: description.trim(),
       is_active: isActive,
-      vehicle_entries: entries,
-      compatible_extras: service?.compatible_extras ?? [],
+      vehicle_entries: entries.map((entry) => ({
+        ...entry,
+        is_active: selectedFormatIds.includes(entry.vehicle_format_id),
+      })),
+      compatible_extras: selectedExtras,
       is_popular: service?.is_popular ?? false,
     };
 
@@ -108,7 +129,7 @@ export function ServiceModal({ service, vehicleFormats, onClose, onSaved }: Prop
     });
   }
 
-  const activeEntries = entries.filter((e) => e.is_active);
+  const activeEntries = entries.filter((e) => selectedFormatIds.includes(e.vehicle_format_id));
   const prices = activeEntries.map((e) => parseFloat(e.price || '0')).filter((p) => !Number.isNaN(p) && p > 0);
   const durations = activeEntries.map((e) => e.duration_min).filter((d) => d > 0);
   const minPrice = prices.length > 0 ? Math.min(...prices) : null;
@@ -116,6 +137,28 @@ export function ServiceModal({ service, vehicleFormats, onClose, onSaved }: Prop
   const minDur = durations.length > 0 ? Math.min(...durations) : null;
   const maxDur = durations.length > 0 ? Math.max(...durations) : null;
   const selectedFormats = activeEntries.map((e) => e.vehicle_label);
+  const searchableFormats = vehicleFormats.filter((f) =>
+    f.label.toLowerCase().includes(formatSearch.trim().toLowerCase())
+  );
+  const showFormatUnavailable = formatSearch.trim().length > 0 && searchableFormats.length === 0;
+
+  const extrasByType: StationExtra[] = serviceType === 'exterior'
+    ? [...availableExtras.exterior, ...availableExtras.both]
+    : serviceType === 'interior'
+    ? [...availableExtras.interior, ...availableExtras.both]
+    : [...availableExtras.exterior, ...availableExtras.interior, ...availableExtras.both];
+
+  function toggleFormat(formatId: string) {
+    setSelectedFormatIds((prev) =>
+      prev.includes(formatId) ? prev.filter((id) => id !== formatId) : [...prev, formatId]
+    );
+  }
+
+  function toggleExtra(extraId: string) {
+    setSelectedExtraIds((prev) =>
+      prev.includes(extraId) ? prev.filter((id) => id !== extraId) : [...prev, extraId]
+    );
+  }
 
   return (
     <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/50 p-4 sm:items-center">
@@ -194,6 +237,19 @@ export function ServiceModal({ service, vehicleFormats, onClose, onSaved }: Prop
                 </div>
               </div>
 
+              <div className="rounded-[10px] border border-[#F0EDE4] bg-[#FAFAF7] p-3 dark:border-[#243020] dark:bg-[#0F1A0C]">
+                <div className="mb-1 text-[11px] font-black tracking-[.08em] text-[#C49A1E] uppercase">
+                  {category === 'hand_wash' ? t('field_type_handwash') : t('field_type')}
+                </div>
+                <p className="text-[12px] text-[#888] dark:text-[#9A9A8A]">
+                  {serviceType === 'exterior'
+                    ? t('type_hint_exterior')
+                    : serviceType === 'interior'
+                    ? t('type_hint_interior')
+                    : t('type_hint_complete')}
+                </p>
+              </div>
+
               <div className="flex flex-col gap-1.5">
                 <label className="text-[13px] font-medium text-[#5A5A4A] dark:text-[#9A9A8A]">{t('field_description')}</label>
                 <textarea
@@ -216,6 +272,34 @@ export function ServiceModal({ service, vehicleFormats, onClose, onSaved }: Prop
                   placeholder={t('format_search_placeholder')}
                   className={inputClass}
                 />
+                {showFormatUnavailable && (
+                  <p className="text-[12px] font-semibold text-[#EF4444]">{t('format_not_in_list')}</p>
+                )}
+                {!showFormatUnavailable && searchableFormats.length > 0 && (
+                  <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
+                    {searchableFormats.map((format) => {
+                      const selected = selectedFormatIds.includes(format.id);
+                      return (
+                        <button
+                          key={format.id}
+                          type="button"
+                          onClick={() => toggleFormat(format.id)}
+                          className={`flex items-center gap-2 rounded-[8px] border px-3 py-2 text-left text-[12px] font-semibold transition-all ${
+                            selected
+                              ? 'border-[#C49A1E] bg-[#FDF3D8] text-[#C49A1E] dark:bg-[#2A1E08]'
+                              : 'border-[#D8D4C8] bg-[#F7F6F2] text-[#5A5A4A] dark:border-[#243020] dark:bg-[#182214] dark:text-[#9A9A8A]'
+                          }`}
+                        >
+                          <span
+                            className={`h-3.5 w-3.5 rounded border ${selected ? 'border-[#C49A1E] bg-[#C49A1E]' : 'border-[#AAA] bg-transparent'}`}
+                            aria-hidden="true"
+                          />
+                          <span>{format.label}</span>
+                        </button>
+                      );
+                    })}
+                  </div>
+                )}
               </div>
 
               <div className="flex flex-col gap-2">
@@ -224,11 +308,46 @@ export function ServiceModal({ service, vehicleFormats, onClose, onSaved }: Prop
                 </span>
                 <ServiceVehicleRows
                   formats={vehicleFormats}
-                  entries={entries}
-                  onChange={setEntries}
+                  entries={entries.filter((e) => selectedFormatIds.includes(e.vehicle_format_id))}
+                  onChange={(updatedEntries) => {
+                    setEntries((prev) => prev.map((entry) => {
+                      const updated = updatedEntries.find((u) => u.vehicle_format_id === entry.vehicle_format_id);
+                      return updated || entry;
+                    }));
+                  }}
                   searchQuery={formatSearch}
                   unavailableMessage={t('format_not_in_list')}
                 />
+              </div>
+
+              <div className="flex flex-col gap-2 rounded-[10px] border border-[#F0EDE4] bg-[#FAFAF7] p-3 dark:border-[#243020] dark:bg-[#0F1A0C]">
+                <span className="text-[11px] font-black tracking-[.08em] text-[#C49A1E] uppercase">
+                  {t('extras_label')}
+                </span>
+                {extrasByType.length === 0 ? (
+                  <p className="text-[12px] text-[#888] dark:text-[#9A9A8A]">{t('extras_empty_modal')}</p>
+                ) : (
+                  <div className="flex flex-col gap-1.5">
+                    {extrasByType.map((extra) => {
+                      const selected = selectedExtraIds.includes(extra.id);
+                      return (
+                        <button
+                          key={extra.id}
+                          type="button"
+                          onClick={() => toggleExtra(extra.id)}
+                          className={`flex items-center justify-between rounded-[8px] border px-3 py-2 text-left text-[12px] transition-all ${
+                            selected
+                              ? 'border-[#C49A1E] bg-[#FDF3D8] dark:bg-[#2A1E08]'
+                              : 'border-[#D8D4C8] bg-[#F7F6F2] dark:border-[#243020] dark:bg-[#182214]'
+                          }`}
+                        >
+                          <span className="font-semibold text-[#1A1A0A] dark:text-[#F0EDD4]">{extra.label}</span>
+                          <span className="font-mono text-[11px] font-bold text-[#C49A1E]">+{extra.price}$</span>
+                        </button>
+                      );
+                    })}
+                  </div>
+                )}
               </div>
 
               <div className="flex items-center justify-between rounded-[10px] border border-[#2A3A20] bg-[#1E2A18] px-4 py-3">
@@ -276,6 +395,17 @@ export function ServiceModal({ service, vehicleFormats, onClose, onSaved }: Prop
                     <span className="text-[#B7AE8A]">{t('preview_formats')}</span>
                     <div className="mt-1 text-[11px] font-semibold">
                       {selectedFormats.length > 0 ? selectedFormats.join('; ') : '--'}
+                    </div>
+                  </div>
+                  <div className="pt-1">
+                    <span className="text-[#B7AE8A]">{t('preview_extras')}</span>
+                    <div className="mt-1 text-[11px] font-semibold">
+                      {selectedExtraIds.length > 0
+                        ? extrasByType
+                            .filter((e) => selectedExtraIds.includes(e.id))
+                            .map((e) => e.label)
+                            .join('; ')
+                        : '--'}
                     </div>
                   </div>
                 </div>

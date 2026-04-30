@@ -72,7 +72,17 @@ const INITIAL_SERVICES: Service[] = [
     compatible_extras: [],
   },
 ];
-const INITIAL_EXTRAS: StationExtras = { exterior: [], interior: [], both: [] };
+const INITIAL_EXTRAS: StationExtras = {
+  exterior: [
+    { id: 'extra-cire', label: 'Cire protectrice', description: '', price: '15', is_active: true },
+  ],
+  interior: [
+    { id: 'extra-polish', label: 'Polish intérieur', description: '', price: '12', is_active: true },
+  ],
+  both: [
+    { id: 'extra-shampoo', label: 'Shampoing tapis', description: '', price: '8', is_active: true },
+  ],
+};
 
 export function StationServicesPage() {
   const t = useTranslations('station_services');
@@ -288,6 +298,7 @@ export function StationServicesPage() {
         <ServiceModal
           service={serviceModal === 'new' ? null : serviceModal}
           vehicleFormats={formats}
+          availableExtras={extras}
           onClose={() => setServiceModal(null)}
           onSaved={handleServiceSaved}
         />
