@@ -3,7 +3,9 @@
 import { useState, useEffect, useRef } from 'react';
 import { useTranslations } from 'next-intl';
 import { patchWithApi } from '@/services';
+import { useToast } from '@/context/toast-context';
 import type { StationConfig, StationPost } from '../types';
+import { NumberStepper } from '../NumberStepper';
 
 interface Props {
   config: StationConfig;
@@ -11,9 +13,6 @@ interface Props {
   locked: boolean;
   onSaved: (config: StationConfig, posts: StationPost[]) => void;
 }
-
-const inputClass =
-  'w-full rounded-[8px] border border-[#D8D4C8] bg-[#F7F6F2] px-3 py-2.5 text-[13px] text-[#1A1A0A] outline-none transition-colors duration-150 placeholder:text-[#BBBBAA] focus:border-[#C49A1E] focus:bg-white focus:shadow-[0_0_0_3px_rgba(196,154,30,0.12)] disabled:cursor-not-allowed disabled:opacity-60 dark:border-[#243020] dark:bg-[#0F1A0C] dark:text-[#F0EDD4] dark:placeholder:text-[#4A4A3A] dark:focus:border-[#C49A1E] dark:focus:bg-[#182214]';
 
 const MAX_BAYS = 20;
 const MIN_BAYS = 1;
@@ -26,41 +25,6 @@ function Field({ label, hint, children }: { label: string; hint?: string; childr
       </label>
       {children}
       {hint && <p className="text-[12px] leading-snug text-[#AAAAAA] dark:text-[#5A5A4A]">{hint}</p>}
-    </div>
-  );
-}
-
-function NumberInput({
-  value,
-  onChange,
-  min,
-  max,
-  unit,
-  disabled,
-}: {
-  value: string | number;
-  onChange: (v: string) => void;
-  min?: number;
-  max?: number;
-  unit?: string;
-  disabled?: boolean;
-}) {
-  return (
-    <div className="relative">
-      <input
-        type="number"
-        min={min}
-        max={max}
-        value={value}
-        onChange={(e) => onChange(e.target.value)}
-        disabled={disabled}
-        className={inputClass + (unit ? ' pr-12' : '')}
-      />
-      {unit && (
-        <span className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 select-none text-[12px] font-semibold text-[#BBBBAA] dark:text-[#4A4A3A]">
-          {unit}
-        </span>
-      )}
     </div>
   );
 }
@@ -99,6 +63,7 @@ function clampBays(v: string): number {
 
 export function CapacityTab({ config, posts, locked, onSaved }: Props) {
   const t = useTranslations('station_config');
+  const { success, error: showError } = useToast();
 
   const [form, setForm] = useState(() => initForm(config, posts.length));
   // Per-position is_active map. Indexed by 1-based position so it survives bay-count changes.
@@ -106,7 +71,6 @@ export function CapacityTab({ config, posts, locked, onSaved }: Props) {
     Object.fromEntries(posts.map((p) => [p.position, p.is_active])),
   );
   const [saving, setSaving] = useState(false);
-  const [feedback, setFeedback] = useState<{ ok: boolean; msg: string } | null>(null);
   const mountedRef = useRef(true);
   useEffect(() => {
     mountedRef.current = true;
@@ -142,7 +106,6 @@ export function CapacityTab({ config, posts, locked, onSaved }: Props) {
     e.preventDefault();
     if (locked) return;
     setSaving(true);
-    setFeedback(null);
 
     const payload: Record<string, unknown> = {};
     const wd = safeInt(form.wash_duration_minutes);
@@ -173,9 +136,9 @@ export function CapacityTab({ config, posts, locked, onSaved }: Props) {
     if (ok) {
       const res = data as { data: { config: StationConfig; posts: StationPost[] } };
       onSaved(res.data.config, res.data.posts);
-      setFeedback({ ok: true, msg: t('save_success') });
+      success(t('save_success'));
     } else {
-      setFeedback({ ok: false, msg: t('save_error') });
+      showError(t('save_error'));
     }
   }
 
@@ -190,7 +153,7 @@ export function CapacityTab({ config, posts, locked, onSaved }: Props) {
         <Card title={t('capacity_card_bays')}>
           <div className="flex flex-col gap-4">
             <Field label={t('capacity_total_bays')} hint={t('capacity_total_bays_hint')}>
-              <NumberInput
+              <NumberStepper
                 value={form.wash_post_count}
                 onChange={(v) => set('wash_post_count', clampBays(v))}
                 min={MIN_BAYS}
@@ -200,7 +163,7 @@ export function CapacityTab({ config, posts, locked, onSaved }: Props) {
               />
             </Field>
             <Field label={t('field_max_concurrent')} hint={t('capacity_max_concurrent_hint')}>
-              <NumberInput
+              <NumberStepper
                 value={form.max_concurrent_posts}
                 onChange={(v) => set('max_concurrent_posts', v)}
                 min={1}
@@ -215,7 +178,7 @@ export function CapacityTab({ config, posts, locked, onSaved }: Props) {
         <Card title={t('capacity_card_delay_tolerance')}>
           <div className="flex flex-col gap-4">
             <Field label={t('field_late_tolerance')} hint={t('capacity_late_tolerance_hint')}>
-              <NumberInput
+              <NumberStepper
                 value={form.late_tolerance_minutes}
                 onChange={(v) => set('late_tolerance_minutes', v)}
                 min={0}
@@ -225,7 +188,7 @@ export function CapacityTab({ config, posts, locked, onSaved }: Props) {
               />
             </Field>
             <Field label={t('field_cancellation_delay')} hint={t('capacity_cancellation_hint')}>
-              <NumberInput
+              <NumberStepper
                 value={form.cancellation_delay_minutes}
                 onChange={(v) => set('cancellation_delay_minutes', v)}
                 min={0}
@@ -240,7 +203,7 @@ export function CapacityTab({ config, posts, locked, onSaved }: Props) {
       <Card title={t('capacity_card_wash_settings')}>
         <div className="grid gap-4 md:grid-cols-3">
           <Field label={t('field_wash_duration')}>
-            <NumberInput
+            <NumberStepper
               value={form.wash_duration_minutes}
               onChange={(v) => set('wash_duration_minutes', v)}
               min={1}
@@ -249,7 +212,7 @@ export function CapacityTab({ config, posts, locked, onSaved }: Props) {
             />
           </Field>
           <Field label={t('field_margin_before')}>
-            <NumberInput
+            <NumberStepper
               value={form.margin_before_minutes}
               onChange={(v) => set('margin_before_minutes', v)}
               min={0}
@@ -258,7 +221,7 @@ export function CapacityTab({ config, posts, locked, onSaved }: Props) {
             />
           </Field>
           <Field label={t('field_margin_after')}>
-            <NumberInput
+            <NumberStepper
               value={form.margin_after_minutes}
               onChange={(v) => set('margin_after_minutes', v)}
               min={0}
@@ -331,14 +294,7 @@ export function CapacityTab({ config, posts, locked, onSaved }: Props) {
         </div>
       </Card>
 
-      <div className="flex items-center justify-between gap-4">
-        {feedback ? (
-          <span className="text-[13px] font-semibold" style={{ color: feedback.ok ? '#00A040' : '#EF4444' }}>
-            {feedback.msg}
-          </span>
-        ) : (
-          <span />
-        )}
+      <div className="flex items-center justify-end gap-4">
         <button
           type="submit"
           disabled={locked || saving}
