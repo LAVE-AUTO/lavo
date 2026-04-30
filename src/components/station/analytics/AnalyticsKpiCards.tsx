@@ -76,18 +76,14 @@ export function AnalyticsKpiCards({ kpi }: AnalyticsKpiCardsProps) {
       {kpiCards.map((card) => (
         <div
           key={card.id}
-          className="rounded-lg bg-[#C8C8B4] p-4 shadow-sm transition-all hover:shadow-md"
+          className="animate-fade-in-up rounded-xl bg-[#F0EDE0] p-4 transition-all duration-200 hover:shadow-md dark:bg-[#1E2A1A]"
           style={{
             borderLeft: `4px solid ${card.borderColor}`,
           }}
         >
-          <div className="flex items-start justify-between">
-            <div>
-              <p className="text-xs font-black uppercase text-[#666] dark:text-[#A0A090]">{card.label}</p>
-              <p className="mt-2 text-2xl font-bold text-[#1A1A0A] dark:text-[#F0EDD4]">{card.value}</p>
-            </div>
-            <span className="text-2xl">{card.icon}</span>
-          </div>
+          <div className="mb-2 text-[22px] leading-none">{card.icon}</div>
+          <p className="mb-0.5 text-[26px] font-black leading-none text-[#1A1A0A] dark:text-[#F0EDD4]">{card.value}</p>
+          <p className="text-[12px] font-medium text-[#666] dark:text-[#A0A090]">{card.label}</p>
         </div>
       ))}
     </div>
