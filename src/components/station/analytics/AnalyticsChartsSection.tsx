@@ -25,7 +25,7 @@ export function AnalyticsChartsSection({ data, period }: AnalyticsChartsSectionP
   const transformChartData = (series: SeriesData[]) => {
     return series.map((item) => ({
       ...item,
-      dateShort: formatDateShort(item.date, period),
+      dateShort: formatDateShort(item.date),
     }));
   };
 
@@ -71,7 +71,7 @@ export function AnalyticsChartsSection({ data, period }: AnalyticsChartsSectionP
       </div>
 
       {/* Clients Chart */}
-      <div className="rounded-lg bg-[#C8C8B4] p-6 shadow-sm dark:bg-[#C8C8B4]">
+      <div className="rounded-lg bg-[#C8C8B4] p-6 shadow-sm">
         <h2 className="mb-4 text-lg font-bold text-[#1A1A0A] dark:text-[#F0EDD4]">{t('chart_clients_title')}</h2>
         {clientsData.length > 0 ? (
           <ResponsiveContainer width="100%" height={300}>
@@ -98,7 +98,7 @@ export function AnalyticsChartsSection({ data, period }: AnalyticsChartsSectionP
       </div>
 
       {/* Completed Services Chart */}
-      <div className="rounded-lg bg-[#C8C8B4] p-6 shadow-sm dark:bg-[#C8C8B4]">
+      <div className="rounded-lg bg-[#C8C8B4] p-6 shadow-sm">
         <h2 className="mb-4 text-lg font-bold text-[#1A1A0A] dark:text-[#F0EDD4]">{t('chart_completed_title')}</h2>
         {completedData.length > 0 ? (
           <ResponsiveContainer width="100%" height={300}>
@@ -127,10 +127,14 @@ export function AnalyticsChartsSection({ data, period }: AnalyticsChartsSectionP
   );
 }
 
-function formatDateShort(date: string, period: PeriodType): string {
-  const d = new Date(date);
-  if (period === 'year') {
+function formatDateShort(date: string): string {
+  try {
+    const d = new Date(date);
+    if (isNaN(d.getTime())) {
+      return date;
+    }
     return d.toLocaleDateString('fr-CA', { month: 'short', day: 'numeric' });
+  } catch {
+    return date;
   }
-  return d.toLocaleDateString('fr-CA', { month: 'short', day: 'numeric' });
 }

@@ -83,7 +83,8 @@ export function AnalyticsExportButton({ data, period }: AnalyticsExportButtonPro
       document.body.appendChild(link);
       link.click();
       document.body.removeChild(link);
-    } catch (err) {
+      URL.revokeObjectURL(url);
+    } catch (err: unknown) {
       console.error('Export error:', err);
       alert(t('export_error'));
     }

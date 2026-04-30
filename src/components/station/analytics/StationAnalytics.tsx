@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useRef } from 'react';
 import { useTranslations } from 'next-intl';
+import { useRouter } from 'next/navigation';
 import { getFromApi } from '@/services';
 import { useAuth } from '@/context/auth-context';
 import { AnalyticsPeriodToggle, type PeriodType } from './AnalyticsPeriodToggle';
@@ -26,6 +27,7 @@ interface AnalyticsData {
 
 export function StationAnalytics() {
   const { isLoading: authLoading } = useAuth();
+  const router = useRouter();
   const t = useTranslations('station_analytics');
   const [period, setPeriod] = useState<PeriodType>('30d');
   const [data, setData] = useState<AnalyticsData | null>(null);
@@ -107,7 +109,7 @@ export function StationAnalytics() {
         <div className="text-center">
           <p className="mb-4 text-sm text-[#666] dark:text-[#A0A090]">{error || t('no_data')}</p>
           <button
-            onClick={() => window.location.reload()}
+            onClick={() => router.refresh()}
             className="rounded-lg bg-[#C09A18] px-4 py-2 text-[#0C1209] font-black transition-opacity hover:opacity-90"
           >
             {t('retry')}
@@ -142,23 +144,25 @@ export function StationAnalytics() {
 
 function calculateDateRange(period: PeriodType): { from: string; to: string } {
   const today = new Date();
-  const from = new Date();
+  today.setHours(0, 0, 0, 0);
+  
+  const from = new Date(today);
 
   switch (period) {
     case '7d':
-      from.setDate(today.getDate() - 7);
+      from.setDate(from.getDate() - 7);
       break;
     case '30d':
-      from.setDate(today.getDate() - 30);
+      from.setDate(from.getDate() - 30);
       break;
     case '3m':
-      from.setMonth(today.getMonth() - 3);
+      from.setMonth(from.getMonth() - 3);
       break;
     case 'year':
-      from.setFullYear(today.getFullYear() - 1);
+      from.setFullYear(from.getFullYear() - 1);
       break;
     case 'custom':
-      from.setDate(today.getDate() - 30);
+      from.setDate(from.getDate() - 30);
       break;
   }
 

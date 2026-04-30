@@ -11,6 +11,14 @@ interface KpiData {
   avgFillRate: number;
 }
 
+interface KpiCard {
+  id: string;
+  label: string;
+  value: string;
+  icon: React.ReactNode;
+  borderColor: string;
+}
+
 interface AnalyticsKpiCardsProps {
   kpi: KpiData;
 }
@@ -18,38 +26,44 @@ interface AnalyticsKpiCardsProps {
 export function AnalyticsKpiCards({ kpi }: AnalyticsKpiCardsProps) {
   const t = useTranslations('station_analytics');
 
-  const kpiCards = [
+  const kpiCards: KpiCard[] = [
     {
+      id: 'total_revenue',
       label: t('kpi_total_revenue'),
       value: formatCurrency(kpi.totalRevenue),
       icon: <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" style={{ color: '#C09A18' }}><path d="M12 1v2"/><path d="M20 7v2"/><path d="M4 7v2"/><path d="M12 21v2"/><circle cx="12" cy="12" r="6"/><path d="M10 9h4v6h-4z"/></svg>,
       borderColor: '#C09A18',
     },
     {
+      id: 'avg_revenue',
       label: t('kpi_avg_revenue'),
       value: formatCurrency(kpi.avgRevenue),
       icon: <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" style={{ color: '#4E2507' }}><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M8 14h2v4H8zM12 10h2v8h-2zM16 6h2v12h-2z"/></svg>,
       borderColor: '#4E2507',
     },
     {
+      id: 'revenue_growth',
       label: t('kpi_revenue_growth'),
       value: `${formatPercent(kpi.revenueGrowth)}%`,
       icon: <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" style={{ color: kpi.revenueGrowth >= 0 ? '#00C851' : '#FF2525' }}><polyline points="3 17 9 11 13 15 21 7"/></svg>,
       borderColor: kpi.revenueGrowth >= 0 ? '#00C851' : '#FF2525',
     },
     {
+      id: 'unique_clients',
       label: t('kpi_unique_clients'),
       value: kpi.uniqueClients.toString(),
       icon: <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" style={{ color: '#FF8800' }}><path d="M16 11c1.657 0 3-1.343 3-3s-1.343-3-3-3-3 1.343-3 3 1.343 3 3 3zM8 11c1.657 0 3-1.343 3-3S9.657 5 8 5 5 6.343 5 8s1.343 3 3 3zM8 13c-2.33 0-7 1.17-7 3.5V19h14v-2.5C15 14.17 10.33 13 8 13zM16 13c-.29 0-.62.02-.98.05C15.44 13.03 16 13.5 16 13z"/></svg>,
       borderColor: '#FF8800',
     },
     {
+      id: 'completed_services',
       label: t('kpi_completed_services'),
       value: kpi.completedServices.toString(),
       icon: <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" style={{ color: '#00C851' }}><path d="M20 6L9 17l-5-5"/></svg>,
       borderColor: '#00C851',
     },
     {
+      id: 'avg_fill_rate',
       label: t('kpi_avg_fill_rate'),
       value: `${formatPercent(kpi.avgFillRate)}%`,
       icon: <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" style={{ color: '#0044FF' }}><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/></svg>,
@@ -59,9 +73,9 @@ export function AnalyticsKpiCards({ kpi }: AnalyticsKpiCardsProps) {
 
   return (
     <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
-      {kpiCards.map((card, idx) => (
+      {kpiCards.map((card) => (
         <div
-          key={idx}
+          key={card.id}
           className="rounded-lg bg-[#C8C8B4] p-4 shadow-sm transition-all hover:shadow-md"
           style={{
             borderLeft: `4px solid ${card.borderColor}`,
