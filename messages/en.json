@@ -1695,7 +1695,12 @@
         "availability_bay_all": "All bays",
         "availability_bay_label": "Bay",
         "availability_no_slots": "No slots for this date",
-        "availability_error_missing_fields": "Please fill in all fields"
+        "availability_error_missing_fields": "Please fill in all fields",
+        "nav_section_operations": "Operations",
+        "nav_section_configuration": "Configuration",
+        "nav_section_support": "Support & History",
+        "nav_expand": "Expand sidebar",
+        "nav_collapse": "Collapse sidebar"
     },
     "station_reservations": {
         "page_title": "Today's reservations",
