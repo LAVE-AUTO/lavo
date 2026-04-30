@@ -240,7 +240,7 @@ export function ServiceModal({ service, vehicleFormats, availableExtras, onClose
         </div>
 
         <form onSubmit={handleSubmit} className="flex flex-1 flex-col overflow-hidden">
-          <div className={`grid flex-1 grid-cols-1 gap-4 overflow-y-auto p-5 ${isEdit ? '' : 'lg:grid-cols-[1fr_320px]'}`}>
+          <div className="grid flex-1 grid-cols-1 gap-4 overflow-y-auto p-5 lg:grid-cols-[1fr_320px]">
             {/* Left form */}
             <div className="space-y-4">
               {isEdit && (
@@ -505,12 +505,11 @@ export function ServiceModal({ service, vehicleFormats, availableExtras, onClose
               {error && <p className="text-[13px] font-semibold text-[#EF4444]">{error}</p>}
             </div>
 
-            {/* Right preview (create mode only) */}
-            {!isEdit && (
+            {/* Right preview */}
             <aside className="rounded-[12px] bg-[#3A2A12] p-4 text-[#F0EDD4]">
               <div className="mb-3 text-[13px] font-black">{t('preview_title')}</div>
               <div className="rounded-[10px] bg-[#4A3418] p-3">
-                <div className="text-[15px] font-black">{computedCreateName}</div>
+                <div className="text-[15px] font-black">{isEdit ? (name || t('placeholder_name')) : computedCreateName}</div>
                 <div className="mt-1 text-[11px] text-[#B7AE8A]">{t('preview_category')}: {t(`cat_${category}`)}</div>
                 <div className="mt-3 space-y-2 text-[12px]">
                   <div className="flex items-center justify-between border-b border-[#5A4630] pb-1">
@@ -560,7 +559,7 @@ export function ServiceModal({ service, vehicleFormats, availableExtras, onClose
                 disabled={saving}
                 className="mt-3 w-full rounded-[8px] bg-[#C49A1E] px-4 py-2 text-[13px] font-black text-[#0C1209] transition-opacity hover:opacity-80 disabled:opacity-50"
               >
-                {saving ? t('btn_saving') : t('modal_title_new')}
+                {saving ? t('btn_saving') : (isEdit ? t('modal_title_edit') : t('modal_title_new'))}
               </button>
               <button
                 type="button"
@@ -570,7 +569,6 @@ export function ServiceModal({ service, vehicleFormats, availableExtras, onClose
                 {t('btn_cancel')}
               </button>
             </aside>
-            )}
           </div>
 
           <div className="flex justify-end gap-2.5 border-t border-[#F0EDE4] px-5 py-4 dark:border-[#1A2A14]">
@@ -583,7 +581,7 @@ export function ServiceModal({ service, vehicleFormats, availableExtras, onClose
             </button>
             <button
               type="submit"
-              disabled={saving || !name.trim()}
+              disabled={saving || (isEdit && !name.trim())}
               className="rounded-[10px] bg-[#C49A1E] px-5 py-2 text-[13px] font-bold text-[#0C1209] transition-opacity hover:opacity-80 disabled:opacity-50"
             >
               {saving ? t('btn_saving') : t('btn_save')}

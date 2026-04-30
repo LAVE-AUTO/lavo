@@ -49,6 +49,7 @@ export function ExtraModal({ extra, vehicleFormats, services, onClose, onSaved }
   const [staff, setStaff] = useState('0');
 
   // Edit mode fields
+  const [editName, setEditName] = useState('');
   const [vehicleEntries, setVehicleEntries] = useState<ExtraVehicleEntry[]>([]);
 
   // Shared
@@ -58,9 +59,11 @@ export function ExtraModal({ extra, vehicleFormats, services, onClose, onSaved }
 
   useEffect(() => {
     if (extra) {
+      setEditName(extra.label);
       setVehicleEntries(buildVehicleEntries(vehicleFormats, extra));
       setCompatServiceIds([]);
     } else {
+      setEditName('');
       setName('');
       setPrice('');
       setDuration('');
@@ -90,12 +93,16 @@ export function ExtraModal({ extra, vehicleFormats, services, onClose, onSaved }
       setError('Le nom est requis');
       return;
     }
+    if (isEdit && !editName.trim()) {
+      setError('Le nom est requis');
+      return;
+    }
     setSaving(true);
     setError(null);
 
     const payload: StationExtra = {
       id: extra?.id ?? crypto.randomUUID(),
-      label: isEdit ? (extra?.label ?? '') : name.trim(),
+      label: isEdit ? editName.trim() : name.trim(),
       description: '',
       price: isEdit
         ? (vehicleEntries[0]?.price ?? '')
@@ -140,7 +147,7 @@ export function ExtraModal({ extra, vehicleFormats, services, onClose, onSaved }
       onClick={(e) => { if (e.target === e.currentTarget) onClose(); }}
     >
       <div
-        className={`flex max-h-[92vh] w-full flex-col rounded-[10px] border border-[#2A3A20] bg-[#182214] shadow-xl ${isEdit ? 'max-w-[640px]' : 'max-w-[380px]'}`}
+        className={`flex max-h-[92vh] w-full flex-col rounded-[10px] border border-[#2A3A20] bg-[#182214] shadow-xl ${isEdit ? 'max-w-[640px]' : 'max-w-[520px]'}`}
         onClick={(e) => e.stopPropagation()}
       >
         {/* ── Header ── */}
@@ -264,7 +271,16 @@ export function ExtraModal({ extra, vehicleFormats, services, onClose, onSaved }
             {isEdit && (
               <div className="p-5">
                 {/* Name + divider */}
-                <div className="mb-1 text-[18px] font-black text-[#F0EDD4]">{extra.label}</div>
+                <div className="mb-3 flex flex-col gap-1.5">
+                  <label className="block text-[12px] font-bold text-[#9A9A8A]">Nom de l&apos;extra</label>
+                  <input
+                    type="text"
+                    value={editName}
+                    onChange={(e) => setEditName(e.target.value)}
+                    maxLength={80}
+                    className={inputClass}
+                  />
+                </div>
                 <div className="mb-4 h-px bg-[#2A3A20]" />
 
                 {/* Vehicle rows */}
