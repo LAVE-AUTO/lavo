@@ -142,7 +142,7 @@ export function ServiceModal({ service, vehicleFormats, availableExtras, onClose
         setAutomaticPackages(buildAutomaticPackages());
       }
     }
-  }, [category, vehicleFormats, automaticPackages.length];
+  }, [category, vehicleFormats, automaticPackages.length]);
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
