@@ -62,6 +62,7 @@ export function ServiceModal({ service, vehicleFormats, availableExtras, onClose
   const showTypeSelector = isEdit || isCreateHandWash;
   const showExtrasSection = isEdit || isCreateHandWash;
   const showStaffField = isEdit || isCreateHandWash;
+  const showDurationField = isEdit || !isCreateSelfService;
   const showFormatSection = isEdit || !isCreateSelfService;
   const effectiveServiceType: ServiceType = !isEdit && category !== 'hand_wash' ? 'exterior' : serviceType;
 
@@ -319,18 +320,18 @@ export function ServiceModal({ service, vehicleFormats, availableExtras, onClose
 
               {isCreateAutomatic && (
               <div className="rounded-[10px] border border-[#F0EDE4] bg-[#FAFAF7] p-3 dark:border-[#243020] dark:bg-[#0F1A0C]">
-                <div className="mb-1 text-[11px] font-black tracking-[.08em] text-[#C49A1E] uppercase">Mode automatique</div>
+                <div className="mb-1 text-[11px] font-black tracking-[.08em] text-[#C49A1E] uppercase">{t('cat_automatic')}</div>
                 <p className="text-[12px] text-[#888] dark:text-[#9A9A8A]">
-                  Service extérieur standardisé. Configurez le prix, la durée et les formats acceptés.
+                  {t('type_hint_exterior')}
                 </p>
               </div>
               )}
 
               {isCreateSelfService && (
               <div className="rounded-[10px] border border-[#F0EDE4] bg-[#FAFAF7] p-3 dark:border-[#243020] dark:bg-[#0F1A0C]">
-                <div className="mb-1 text-[11px] font-black tracking-[.08em] text-[#C49A1E] uppercase">Mode libre-service</div>
+                <div className="mb-1 text-[11px] font-black tracking-[.08em] text-[#C49A1E] uppercase">{t('cat_self_service')}</div>
                 <p className="text-[12px] text-[#888] dark:text-[#9A9A8A]">
-                  Formule simplifiée. Le service est global à la station, sans sélection manuelle de formats.
+                  {t('type_hint_exterior')}
                 </p>
               </div>
               )}
@@ -359,6 +360,7 @@ export function ServiceModal({ service, vehicleFormats, availableExtras, onClose
                       className={inputClass}
                     />
                   </div>
+                  {showDurationField && (
                   <div className="flex flex-col gap-1.5">
                     <label className="text-[13px] font-medium text-[#5A5A4A] dark:text-[#9A9A8A]">{t('vehicle_col_duration')}</label>
                     <input
@@ -370,6 +372,7 @@ export function ServiceModal({ service, vehicleFormats, availableExtras, onClose
                       className={inputClass}
                     />
                   </div>
+                  )}
                   {showStaffField && (
                   <div className="flex flex-col gap-1.5 sm:col-span-2">
                     <label className="text-[13px] font-medium text-[#5A5A4A] dark:text-[#9A9A8A]">{t('vehicle_col_staff')}</label>
@@ -516,19 +519,25 @@ export function ServiceModal({ service, vehicleFormats, availableExtras, onClose
                   <div className="flex items-center justify-between border-b border-[#5A4630] pb-1">
                     <span className="text-[#B7AE8A]">{t('preview_duration')}</span>
                     <span className="font-bold">
-                      {!isEdit ? `${baseDuration || '--'} min` : (minDur !== null ? (minDur === maxDur ? `${minDur} min` : `${minDur}-${maxDur} min`) : '--')}
+                      {showDurationField
+                        ? (!isEdit ? `${baseDuration || '--'} min` : (minDur !== null ? (minDur === maxDur ? `${minDur} min` : `${minDur}-${maxDur} min`) : '--'))
+                        : '--'}
                     </span>
                   </div>
+                  {showStaffField && (
                   <div className="flex items-center justify-between border-b border-[#5A4630] pb-1">
                     <span className="text-[#B7AE8A]">{t('preview_staff')}</span>
                     <span className="font-bold">{!isEdit ? (baseStaff || '--') : (activeEntries.length > 0 ? Math.max(...activeEntries.map((e) => e.staff_required)) : '--')}</span>
                   </div>
+                  )}
+                  {showFormatSection && (
                   <div className="pt-1">
                     <span className="text-[#B7AE8A]">{t('preview_formats')}</span>
                     <div className="mt-1 text-[11px] font-semibold">
                       {selectedFormats.length > 0 ? selectedFormats.join('; ') : '--'}
                     </div>
                   </div>
+                  )}
                   <div className="pt-1">
                     <span className="text-[#B7AE8A]">{t('preview_extras')}</span>
                     <div className="mt-1 text-[11px] font-semibold">
