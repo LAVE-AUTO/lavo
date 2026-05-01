@@ -39,8 +39,8 @@ export function ManualQueueAddModal({
       setIsLoading(true);
       setError(null);
 
-      // TODO: connect to API once POST /station/entries endpoint is available
-      // For now, use mock success
+      // POST /station/entries does not exist yet — see project_pending_backend_specs.md.
+      // We attempt the call so the modal upgrades automatically once the endpoint ships.
       const [success, data] = await postWithApi('/station/entries', {
         vehicle_format_id: formatId,
         time_slot_id: slotId || null,
@@ -49,14 +49,21 @@ export function ManualQueueAddModal({
       });
 
       if (!success) {
-        setError(data?.error || t('error_queue_empty'));
+        setError(t('manual_queue_error_unavailable'));
         return;
       }
 
-      onSuccess(data?.data?.id || 'mock-id-' + Date.now());
+      const newEntryId = data?.data?.id;
+      if (!newEntryId) {
+        // Backend acked but didn't return an id — treat as failure rather than fabricating one.
+        setError(t('manual_queue_error_unavailable'));
+        return;
+      }
+
+      onSuccess(newEntryId);
       onClose();
     } catch {
-      setError(t('error_queue_empty'));
+      setError(t('manual_queue_error_unavailable'));
     } finally {
       setIsLoading(false);
     }

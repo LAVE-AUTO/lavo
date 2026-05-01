@@ -1707,7 +1707,8 @@
         "availability_blocks_count_aria": "{count, plural, =0 {Aucun poste configuré} one {# poste configuré} other {# postes configurés}}",
         "availability_poste_short": "P",
         "kpi_coming_soon": "Bientôt disponible",
-        "post_unknown_service": "—"
+        "post_unknown_service": "—",
+        "manual_queue_error_unavailable": "Cette action n’est pas encore disponible. Réessaie plus tard."
     },
     "station_reservations": {
         "page_title": "Réservations du jour",

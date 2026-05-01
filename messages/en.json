@@ -1707,7 +1707,8 @@
         "availability_blocks_count_aria": "{count, plural, =0 {No bay configured} one {# bay configured} other {# bays configured}}",
         "availability_poste_short": "B",
         "kpi_coming_soon": "Coming soon",
-        "post_unknown_service": "—"
+        "post_unknown_service": "—",
+        "manual_queue_error_unavailable": "This action isn’t available yet. Please try again later."
     },
     "station_reservations": {
         "page_title": "Today's reservations",
