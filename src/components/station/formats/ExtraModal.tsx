@@ -149,7 +149,7 @@ export function ExtraModal({ extra, vehicleFormats, services, onClose, onSaved }
     >
       <div
         className={`flex max-h-[92vh] w-full flex-col rounded-2xl border border-[#E8E4DC] bg-white shadow-xl dark:border-[#1A2A14] dark:bg-[#182214] ${
-          isEdit ? 'max-w-[680px]' : 'max-w-[540px]'
+          isEdit ? 'max-w-[820px] xl:max-w-[980px]' : 'max-w-[640px] xl:max-w-[760px]'
         }`}
         onClick={(e) => e.stopPropagation()}
       >
