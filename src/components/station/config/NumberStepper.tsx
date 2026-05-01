@@ -115,7 +115,9 @@ export function NumberStepper({
         }}
         min={min}
         max={max}
-        step={step}
+        // Intentionally omit `step` from the HTML attribute: with `min={1}` and step=5,
+        // the browser would only accept 1, 6, 11, … 56, 61 (step grid anchored on min).
+        // Stepping is handled by the +/- buttons; free typing is allowed and clamped on blur.
         disabled={disabled}
         aria-label={ariaLabel}
         className="flex-1 bg-transparent text-center font-black tabular-nums text-[18px] text-[#1A1A0A] outline-none transition-colors placeholder:text-[#BBBBAA] disabled:cursor-not-allowed dark:text-[#F0EDD4] dark:placeholder:text-[#4A4A3A] [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"

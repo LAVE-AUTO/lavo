@@ -24,6 +24,12 @@ export function TextField({
   type = 'text',
   ...rest
 }: Props) {
+  // For type="number", drop `step` from the HTML attribute: with `min` set, the
+  // browser enforces a step grid anchored on `min` (e.g. min=1, step=5 → only
+  // 1, 6, 11… are valid → "60" is rejected). Free typing + visible bounds is the
+  // expected merchant UX. The same prop is still useful for stepper components
+  // that read it for their +/- buttons (NumberStepper).
+  const inputProps = type === 'number' ? { ...rest, step: undefined } : rest;
   const borderColor = invalid
     ? 'border-[#EF4444]/60 focus-within:border-[#EF4444] focus-within:shadow-[0_0_0_3px_rgba(239,68,68,0.15)]'
     : 'border-[#E0DCD0] hover:border-[#D0C8B0] focus-within:border-[#C49A1E] focus-within:shadow-[0_0_0_3px_rgba(196,154,30,0.12)] dark:border-[#243020] dark:hover:border-[#2E3C2A]';
@@ -55,7 +61,7 @@ export function TextField({
         onChange={(e) => onChange(e.target.value)}
         disabled={disabled}
         className={`flex-1 bg-transparent px-3 py-2.5 text-[13px] text-[#1A1A0A] outline-none placeholder:text-[#BBBBAA] disabled:cursor-not-allowed dark:text-[#F0EDD4] dark:placeholder:text-[#4A4A3A] ${inputClassName}`}
-        {...rest}
+        {...inputProps}
       />
       {suffix && (
         <span className="flex shrink-0 items-center pr-3" aria-hidden="true">
