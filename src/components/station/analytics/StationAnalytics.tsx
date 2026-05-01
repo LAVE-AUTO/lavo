@@ -8,8 +8,8 @@ import { useAuth } from '@/context/auth-context';
 import { AnalyticsPeriodToggle, type PeriodType } from './AnalyticsPeriodToggle';
 import { AnalyticsKpiCards } from './AnalyticsKpiCards';
 import { AnalyticsChartsSection } from './AnalyticsChartsSection';
-import { AnalyticsSkeleton } from './AnalyticsSkeleton';
 import { AnalyticsExportButton } from './AnalyticsExportButton';
+import { PageLoader } from '@/components/ui/PageLoader';
 
 interface AnalyticsData {
   revenue: Array<{ date: string; value: number }>;
@@ -52,11 +52,18 @@ export function StationAnalytics() {
 
         const { from, to } = calculateDateRange(period);
 
-        // Fetch all three metrics in parallel
-        const [revSuccess, revData] = await getFromApi(`/station/analytics/revenue?from=${from}&to=${to}`);
-        const [clientsSuccess, clientsData] = await getFromApi(`/station/analytics/clients?from=${from}&to=${to}`);
-        const [completedSuccess, completedData] = await getFromApi(`/station/analytics/completed?from=${from}&to=${to}`);
-        const [dashSuccess, dashData] = await getFromApi('/station/dashboard');
+        // Fetch all four metrics in real parallel via Promise.all
+        const [
+          [revSuccess, revData],
+          [clientsSuccess, clientsData],
+          [completedSuccess, completedData],
+          [dashSuccess, dashData],
+        ] = await Promise.all([
+          getFromApi(`/station/analytics/revenue?from=${from}&to=${to}`),
+          getFromApi(`/station/analytics/clients?from=${from}&to=${to}`),
+          getFromApi(`/station/analytics/completed?from=${from}&to=${to}`),
+          getFromApi('/station/dashboard'),
+        ]);
 
         if (!mountedRef.current) return;
 
@@ -99,7 +106,7 @@ export function StationAnalytics() {
   }, [period, authLoading, t]);
 
   if (authLoading || isLoading) {
-    return <AnalyticsSkeleton />;
+    return <PageLoader label={t('loading')} />;
   }
 
   if (error || !data) {

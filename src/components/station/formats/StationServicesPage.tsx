@@ -11,6 +11,7 @@ import { ServiceCard } from './ServiceCard';
 import { ExtraCard } from './ExtraCard';
 import { ServiceModal } from './ServiceModal';
 import { ExtraModal } from './ExtraModal';
+import { PageLoader } from '@/components/ui/PageLoader';
 
 interface StationMeData {
   data: { id: string };
@@ -58,20 +59,30 @@ export function StationServicesPage() {
   const loadData = useCallback(async () => {
     setLoading(true);
     setLoadError(false);
-    const [meOk, meData] = await getFromApi('/station/me');
+
+    // /station/me is the only blocking call (we need the station id to fetch its formats).
+    // /station/services has no dependency so it runs in parallel with /me.
+    // GET /station/services is not implemented yet — see project_pending_backend_specs.md.
+    // We still attempt the call so the page upgrades automatically once the endpoint ships.
+    const [meResult, servicesResult] = await Promise.all([
+      getFromApi('/station/me'),
+      getFromApi('/station/services'),
+    ]);
+
+    const [meOk, meData] = meResult;
+    const [servicesOk, servicesData] = servicesResult;
+
     if (!meOk) {
       setLoadError(true);
       setLoading(false);
       return;
     }
-    const stationId = (meData as StationMeData).data.id;
-    // GET /station/services is not implemented yet — see project_pending_backend_specs.md.
-    // We still attempt the call so the page upgrades automatically once the endpoint ships.
-    const [servicesOk, servicesData] = await getFromApi('/station/services');
+
     if (servicesOk && Array.isArray((servicesData as ServicesData).data)) {
       setServices((servicesData as ServicesData).data);
     }
 
+    const stationId = (meData as StationMeData).data.id;
     const [formatsOk, formatsData] = await getFromApi(`/stations/${stationId}/formats`);
     if (formatsOk) setFormats((formatsData as FormatsData).data);
     else setLoadError(true);
@@ -126,11 +137,7 @@ export function StationServicesPage() {
   const activeExtraCount = allExtras.filter((e) => e.is_active).length;
 
   if (loading) {
-    return (
-      <div className="flex flex-1 items-center justify-center text-[13px] text-[#666] dark:text-[#A0A090]">
-        {t('loading')}
-      </div>
-    );
+    return <PageLoader label={t('loading')} />;
   }
 
   if (loadError) {

@@ -2975,6 +2975,7 @@
         "export_button": "Exporter CSV",
         "export_csv_title": "Télécharger les données en format CSV",
         "export_error": "Erreur lors de l'export. Veuillez réessayer.",
-        "period_label": "Période d’analyse"
+        "period_label": "Période d’analyse",
+        "loading": "Chargement…"
     }
 }

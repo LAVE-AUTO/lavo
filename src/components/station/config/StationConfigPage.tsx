@@ -14,6 +14,7 @@ import { CapacityTab } from './tabs/CapacityTab';
 import { HoursTab } from './tabs/HoursTab';
 import { NotificationsTab } from './tabs/NotificationsTab';
 import { PaymentsTab } from './tabs/PaymentsTab';
+import { PageLoader } from '@/components/ui/PageLoader';
 
 const EMPTY_CONFIG: StationConfig = {
   id: '',
@@ -59,7 +60,11 @@ export function StationConfigPage() {
   const [activeTab, setActiveTab] = useState<ConfigTabId>('commerce');
 
   const loadData = useCallback(async () => {
-    const [configOk, configData] = await getFromApi('/station/config');
+    // /station/config and /station/me are independent — fetch in parallel
+    const [[configOk, configData], [meOk, meData]] = await Promise.all([
+      getFromApi('/station/config'),
+      getFromApi('/station/me'),
+    ]);
 
     // Station not yet approved — all station API calls return 403 BUSINESS_NOT_APPROVED
     if (!configOk && (configData as { code?: string }).code === 'BUSINESS_NOT_APPROVED') {
@@ -74,7 +79,6 @@ export function StationConfigPage() {
       setPosts(res.data.posts);
     }
 
-    const [meOk, meData] = await getFromApi('/station/me');
     if (meOk) {
       const res = meData as StationMeData;
       setProfile({
@@ -106,11 +110,7 @@ export function StationConfigPage() {
   ];
 
   if (loading) {
-    return (
-      <div className="flex flex-1 items-center justify-center text-[13px] text-[#666] dark:text-[#A0A090]">
-        {t('loading')}
-      </div>
-    );
+    return <PageLoader label={t('loading')} />;
   }
 
   return (
