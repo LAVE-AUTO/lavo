@@ -10,8 +10,8 @@ interface Props {
   disabled: boolean;
 }
 
-const inputClass =
-  'rounded-[6px] border border-[#D8D4C8] bg-[#F7F6F2] px-2.5 py-1.5 text-center font-mono text-[12px] tabular-nums text-[#1A1A0A] outline-none transition-colors placeholder:text-[#BBBBAA] focus:border-[#C49A1E] focus:bg-white disabled:cursor-not-allowed disabled:opacity-50 dark:border-[#243020] dark:bg-[#0F1A0C] dark:text-[#F0EDD4] dark:placeholder:text-[#4A4A3A]';
+const timeInputClass =
+  'w-full rounded-lg border border-[#E0DCD0] bg-white px-2.5 py-1.5 text-center font-mono text-[12px] tabular-nums text-[#1A1A0A] outline-none transition-all duration-150 placeholder:text-[#BBBBAA] hover:border-[#D0C8B0] focus:border-[#C49A1E] focus:shadow-[0_0_0_3px_rgba(196,154,30,0.12)] disabled:cursor-not-allowed disabled:opacity-50 dark:border-[#243020] dark:bg-[#0F1A0C] dark:text-[#F0EDD4] dark:placeholder:text-[#4A4A3A] dark:hover:border-[#2E3C2A]';
 
 function Toggle({ checked, disabled }: { checked: boolean; disabled: boolean }) {
   return (
@@ -33,6 +33,29 @@ function Toggle({ checked, disabled }: { checked: boolean; disabled: boolean }) 
   );
 }
 
+function TimeRange({
+  start,
+  end,
+  disabled,
+}: {
+  start: string;
+  end: string;
+  disabled: boolean;
+}) {
+  return (
+    <div className="flex items-center gap-2">
+      <input className={timeInputClass} type="time" value={start} disabled={disabled} readOnly aria-label="Start" />
+      <span
+        className="text-[12px] font-bold text-[#C49A1E] select-none"
+        aria-hidden="true"
+      >
+        →
+      </span>
+      <input className={timeInputClass} type="time" value={end} disabled={disabled} readOnly aria-label="End" />
+    </div>
+  );
+}
+
 export function HoursDayRow({
   dayLabel,
   enabled,
@@ -46,19 +69,9 @@ export function HoursDayRow({
     <div className="grid grid-cols-[100px_44px_1fr] items-center gap-3 border-b border-[#F0EDE4] py-3 last:border-b-0 dark:border-[#1A2A14]">
       <span className="text-[13px] font-bold text-[#1A1A0A] dark:text-[#F0EDD4]">{dayLabel}</span>
       <Toggle checked={enabled} disabled={disabled} />
-      <div
-        className={`grid grid-cols-1 gap-2 sm:grid-cols-2 ${enabled ? '' : 'opacity-40'}`}
-      >
-        <div className="flex items-center gap-2">
-          <input className={inputClass + ' w-20'} type="time" value={morningStart} disabled={disabled} readOnly />
-          <span className="text-[12px] text-[#AAAAAA] dark:text-[#5A5A4A]">→</span>
-          <input className={inputClass + ' w-20'} type="time" value={morningEnd} disabled={disabled} readOnly />
-        </div>
-        <div className="flex items-center gap-2">
-          <input className={inputClass + ' w-20'} type="time" value={afternoonStart} disabled={disabled} readOnly />
-          <span className="text-[12px] text-[#AAAAAA] dark:text-[#5A5A4A]">→</span>
-          <input className={inputClass + ' w-20'} type="time" value={afternoonEnd} disabled={disabled} readOnly />
-        </div>
+      <div className={`grid grid-cols-1 gap-2 sm:grid-cols-2 ${enabled ? '' : 'opacity-40'}`}>
+        <TimeRange start={morningStart} end={morningEnd} disabled={disabled} />
+        <TimeRange start={afternoonStart} end={afternoonEnd} disabled={disabled} />
       </div>
     </div>
   );
