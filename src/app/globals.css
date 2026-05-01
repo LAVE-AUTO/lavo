@@ -136,6 +136,24 @@ button,
     animation: gold-shimmer 2.5s ease-in-out infinite;
 }
 
+@keyframes emblem-pulse {
+    0%,
+    100% {
+        transform: scale(0.94);
+        opacity: 0.55;
+    }
+    50% {
+        transform: scale(1.08);
+        opacity: 0.18;
+    }
+}
+
+.animate-emblem-pulse {
+    transform-origin: center;
+    transform-box: fill-box;
+    animation: emblem-pulse 4.5s ease-in-out infinite;
+}
+
 @keyframes float-orb {
     0%,
     100% {
