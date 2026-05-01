@@ -14,7 +14,9 @@ import { DashboardPostGrid, type Post, type PostEntry } from './DashboardPostGri
 import { DashboardLegendBar } from './DashboardLegendBar';
 import type { QueueEntry } from './QueueCard';
 
-const EMPTY_KPI: KpiData = { revenue: 0, clients: 0, lateFees: 0, occupancy: 0 };
+// All KPIs start as null so the UI shows a placeholder rather than a misleading 0
+// before the first dashboard fetch resolves.
+const EMPTY_KPI: KpiData = { revenue: null, clients: null, lateFees: null, occupancy: null };
 
 interface RawEntry {
   id: string;
@@ -79,27 +81,36 @@ function buildQueueEntries(raw: RawEntry[]): QueueEntry[] {
   return [...inProgress, ...waiting];
 }
 
-function buildPosts(rawConfig: RawConfig, rawEntries: RawEntry[], activeServiceLabel: string, locale: string): Post[] {
+function buildPosts(
+  rawConfig: RawConfig,
+  rawEntries: RawEntry[],
+  serviceFallbackLabel: string,
+  locale: string,
+): Post[] {
+  // /station/entries does not denormalize the service / vehicle / user info today.
+  // Until the backend ships those fields (see project_pending_backend_specs.md),
+  // we surface a neutral placeholder rather than inventing a fake service name.
   const inProgress = rawEntries.filter((e) => e.status === 'in_progress');
   return rawConfig.posts.map((post): Post => {
     const postEntries: PostEntry[] = inProgress
       .filter((_, i) => i % rawConfig.posts.length === rawConfig.posts.indexOf(post))
-      .map((e): PostEntry => ({
-        id: e.id,
-        status: 'active',
-        timeRange: new Date(e.created_at).toLocaleTimeString(locale, { hour: '2-digit', minute: '2-digit' }),
-        serviceLabel: activeServiceLabel,
-        clientName: `Client #${e.user_id.slice(0, 4)}`,
-        price: e.amount_paid ? parseFloat(e.amount_paid) : undefined,
-        startMinutes: (() => {
-          const d = new Date(e.created_at);
-          return d.getHours() * 60 + d.getMinutes();
-        })(),
-        endMinutes: (() => {
-          const d = new Date(e.created_at);
-          return d.getHours() * 60 + d.getMinutes() + 45;
-        })(),
-      }));
+      .map((e): PostEntry => {
+        const start = new Date(e.created_at);
+        const startMin = start.getHours() * 60 + start.getMinutes();
+        return {
+          id: e.id,
+          status: 'active',
+          timeRange: start.toLocaleTimeString(locale, { hour: '2-digit', minute: '2-digit' }),
+          serviceLabel: serviceFallbackLabel,
+          clientName: `Client #${e.user_id.slice(0, 4)}`,
+          price: e.amount_paid ? parseFloat(e.amount_paid) : undefined,
+          startMinutes: startMin,
+          // No reliable end time without service.duration on the entry — assume
+          // 45 min as a visual placeholder. Replace with real duration once the
+          // backend denormalizes service/duration on /station/entries.
+          endMinutes: startMin + 45,
+        };
+      });
     return { id: post.id, position: post.position, isActive: post.is_active, entries: postEntries };
   });
 }
@@ -130,13 +141,16 @@ export function StationDashboard() {
   const [actionLoading, setActionLoading] = useState(false);
 
   function mapDashboardToKpi(raw: RawDashboard): KpiData {
-    const revenue = Number.parseFloat(raw.total_revenue ?? '0');
-    const rating = Number.parseFloat(raw.average_rating ?? '0');
+    // Only map fields the backend actually returns. Late fees and occupancy/fill
+    // rate are NOT exposed by /station/dashboard yet — leave them null so the UI
+    // shows the "Bientôt disponible" placeholder instead of a fake number.
+    // See project_pending_backend_specs.md → "Missing fields on /station/dashboard".
+    const revenue = Number.parseFloat(raw.total_revenue ?? '');
     return {
-      revenue: Number.isFinite(revenue) ? Math.round(revenue) : 0,
-      clients: raw.total_clients ?? 0,
-      lateFees: raw.pending_count ?? 0,
-      occupancy: Number.isFinite(rating) ? Math.max(0, Math.min(100, Math.round(rating * 20))) : 0,
+      revenue: Number.isFinite(revenue) ? Math.round(revenue) : null,
+      clients: typeof raw.total_clients === 'number' ? raw.total_clients : null,
+      lateFees: null,
+      occupancy: null,
     };
   }
 
@@ -157,7 +171,7 @@ export function StationDashboard() {
       const raw = (entriesData as { data: { entries: RawEntry[] } }).data.entries ?? [];
       const config = (configData as { data: RawConfig }).data;
       setQueueEntries(buildQueueEntries(raw));
-      setPosts(buildPosts(config, raw, t('status_active'), locale));
+      setPosts(buildPosts(config, raw, t('post_unknown_service'), locale));
     }
 
     if (dashboardOk) {

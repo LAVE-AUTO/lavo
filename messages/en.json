@@ -1705,7 +1705,9 @@
         "availability_next_month": "Next month",
         "availability_dates_count": "{count, plural, one {# date} other {# dates}}",
         "availability_blocks_count_aria": "{count, plural, =0 {No bay configured} one {# bay configured} other {# bays configured}}",
-        "availability_poste_short": "B"
+        "availability_poste_short": "B",
+        "kpi_coming_soon": "Coming soon",
+        "post_unknown_service": "—"
     },
     "station_reservations": {
         "page_title": "Today's reservations",
