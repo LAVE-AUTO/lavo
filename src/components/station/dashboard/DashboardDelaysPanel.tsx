@@ -32,7 +32,7 @@ export function DashboardDelaysPanel({ items, totalPending }: Props) {
   const locale = useLocale();
 
   return (
-    <div className="flex w-full max-h-[35vh] mt-9 shrink-0 flex-col overflow-hidden border-b border-[#E0DCD0] bg-[#F0EDE0] md:max-h-none md:w-[280px] md:border-b-0 md:border-r dark:border-[#1A2A14] dark:bg-[#182214]">
+    <div className="flex w-full max-h-[35vh] mt-2 shrink-0 flex-col overflow-hidden border-b border-[#E0DCD0] bg-[#F0EDE0] md:max-h-none md:w-[280px] md:border-b-0 md:border-r dark:border-[#1A2A14] dark:bg-[#182214]">
       {/* Header */}
       <div className="border-b border-[#E0DCD0] px-4 py-3.5 dark:border-[#1A2A14]">
         <div className="flex items-center justify-between">

@@ -1719,7 +1719,9 @@
         "availability_save_error": "Impossible d’enregistrer la disponibilité. Réessaie.",
         "availability_delete_success": "Disponibilité supprimée",
         "availability_delete_error": "Impossible de supprimer la disponibilité.",
-        "notif_coming_soon": "Notifications — bientôt disponibles"
+        "notif_coming_soon": "Notifications — bientôt disponibles",
+        "availability_link_hours": "Voir les horaires",
+        "availability_link_capacity": "Voir la capacité"
     },
     "station_reservations": {
         "page_title": "Réservations du jour",

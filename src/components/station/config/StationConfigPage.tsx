@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect, useCallback } from 'react';
+import { useSearchParams } from 'next/navigation';
 import { useTranslations } from 'next-intl';
 import { getFromApi } from '@/services';
 import { useAuth } from '@/context/auth-context';
@@ -47,9 +48,16 @@ interface StationMeData {
   };
 }
 
+const VALID_TABS: ConfigTabId[] = ['commerce', 'hours', 'capacity', 'notifications', 'payments'];
+
+function isValidTab(value: string | null): value is ConfigTabId {
+  return value !== null && (VALID_TABS as string[]).includes(value);
+}
+
 export function StationConfigPage() {
   const t = useTranslations('station_config');
   const { isLoading: authLoading } = useAuth();
+  const searchParams = useSearchParams();
 
   const [config, setConfig] = useState<StationConfig>(EMPTY_CONFIG);
   const [posts, setPosts] = useState<StationPost[]>([]);
@@ -57,7 +65,23 @@ export function StationConfigPage() {
   const [location, setLocation] = useState<StationLocation>(EMPTY_LOCATION);
   const [loading, setLoading] = useState(true);
   const [isPendingApproval, setIsPendingApproval] = useState(false);
-  const [activeTab, setActiveTab] = useState<ConfigTabId>('commerce');
+  const initialTab = (() => {
+    const param = searchParams.get('tab');
+    return isValidTab(param) ? param : 'commerce';
+  })();
+  const [activeTab, setActiveTab] = useState<ConfigTabId>(initialTab);
+
+  // Reflect URL changes (e.g. user switches tab via the deep-link buttons in
+  // /station/availability without a full page reload).
+  useEffect(() => {
+    const param = searchParams.get('tab');
+    if (isValidTab(param) && param !== activeTab) {
+      setActiveTab(param);
+    }
+    // We intentionally only watch searchParams: we don't want to overwrite the
+    // user's manual tab clicks back to the URL value mid-session.
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [searchParams]);
 
   const loadData = useCallback(async () => {
     // /station/config and /station/me are independent — fetch in parallel

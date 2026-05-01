@@ -7,7 +7,8 @@
  */
 
 import { useState, useEffect, useCallback, useRef } from 'react';
-import { useTranslations } from 'next-intl';
+import { useTranslations, useLocale } from 'next-intl';
+import Link from 'next/link';
 import { getFromApi, postWithApi, deleteWithApi } from '@/services';
 import { useToast } from '@/context/toast-context';
 import { useAuth } from '@/context/auth-context';
@@ -48,6 +49,21 @@ function extractTime(iso: string): string {
   return `${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`;
 }
 
+/**
+ * Build a strict ISO 8601 datetime (with timezone) from a date + HH:MM input.
+ * The backend's Zod `.datetime()` validator requires the offset, so a bare
+ * `"2026-05-15T12:00:00"` is rejected with a 400. We treat the input as local
+ * time at the merchant's browser and serialise it as UTC — the round-trip
+ * preserves the wall-clock value because `extractTime` reads back local hours.
+ */
+function localTimeToIsoUtc(date: string, time: string): string {
+  const local = new Date(`${date}T${time}:00`);
+  if (Number.isNaN(local.getTime())) {
+    throw new Error(`Invalid date/time combination: ${date} ${time}`);
+  }
+  return local.toISOString();
+}
+
 function enumerateMonth(month: Date): string[] {
   // Returns every day from the 1st to the last day of the given month, ISO format.
   const y = month.getFullYear();
@@ -75,6 +91,7 @@ function slotToBlock(slot: RawSlot, dateISO: string): AvailabilityBlock {
 
 export default function StationAvailabilityPage() {
   const t = useTranslations('station_dashboard');
+  const locale = useLocale();
   const { error: showError, success } = useToast();
   const { isLoading: authLoading } = useAuth();
   const mountedRef = useRef(true);
@@ -200,8 +217,8 @@ export default function StationAvailabilityPage() {
     const safeCapacity = Math.max(1, capacity);
 
     const newSlots = data.dates.map((date) => ({
-      start_time: `${date}T${data.startTime}:00`,
-      end_time: `${date}T${data.endTime}:00`,
+      start_time: localTimeToIsoUtc(date, data.startTime),
+      end_time: localTimeToIsoUtc(date, data.endTime),
       capacity: safeCapacity,
     }));
 
@@ -257,13 +274,38 @@ export default function StationAvailabilityPage() {
   return (
     <div className="flex h-full flex-col">
       {/* Page header */}
-      <div className="border-b border-[#C49A1E]/20 px-6 py-4 dark:border-[#C49A1E]/10">
-        <h1 className="text-2xl font-black text-[#1A1A0A] dark:text-[#F0EDD4]">
-          {t('availability_title')}
-        </h1>
-        <p className="mt-0.5 text-sm text-[#666] dark:text-[#A0A090]">
-          {t('availability_subtitle')}
-        </p>
+      <div className="flex flex-col gap-3 border-b border-[#C49A1E]/20 px-6 py-4 dark:border-[#C49A1E]/10 md:flex-row md:items-center md:justify-between">
+        <div className="min-w-0">
+          <h1 className="text-2xl font-black text-[#1A1A0A] dark:text-[#F0EDD4]">
+            {t('availability_title')}
+          </h1>
+          <p className="mt-0.5 text-sm text-[#666] dark:text-[#A0A090]">
+            {t('availability_subtitle')}
+          </p>
+        </div>
+
+        {/* Shortcuts to the related Config tabs (Hours + Capacity) */}
+        <div className="flex shrink-0 flex-wrap items-center gap-2">
+          <Link
+            href={`/${locale}/station/config?tab=hours`}
+            className="inline-flex items-center gap-1.5 rounded-xl border border-[#E0DCD0] bg-white px-3 py-2 text-[12px] font-bold text-[#5A5A4A] transition-colors hover:border-[#C49A1E]/40 hover:text-[#C49A1E] dark:border-[#243020] dark:bg-[#182214] dark:text-[#9A9A8A]"
+          >
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+              <circle cx="12" cy="12" r="9" />
+              <polyline points="12 7 12 12 15 14" />
+            </svg>
+            {t('availability_link_hours')}
+          </Link>
+          <Link
+            href={`/${locale}/station/config?tab=capacity`}
+            className="inline-flex items-center gap-1.5 rounded-xl border border-[#E0DCD0] bg-white px-3 py-2 text-[12px] font-bold text-[#5A5A4A] transition-colors hover:border-[#C49A1E]/40 hover:text-[#C49A1E] dark:border-[#243020] dark:bg-[#182214] dark:text-[#9A9A8A]"
+          >
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+              <path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z" />
+            </svg>
+            {t('availability_link_capacity')}
+          </Link>
+        </div>
       </div>
 
       {/* Main two-panel layout — stacked on mobile, side-by-side on desktop */}
