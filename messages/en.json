@@ -2974,6 +2974,7 @@
         "retry": "Retry",
         "export_button": "Export CSV",
         "export_csv_title": "Download data as CSV",
-        "export_error": "Error during export. Please try again."
+        "export_error": "Error during export. Please try again.",
+        "period_label": "Analysis period"
     }
 }

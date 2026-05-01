@@ -31,8 +31,8 @@ export function AnalyticsKpiCards({ kpi }: AnalyticsKpiCardsProps) {
       id: 'total_revenue',
       label: t('kpi_total_revenue'),
       value: formatCurrency(kpi.totalRevenue),
-      icon: <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true" style={{ color: '#C09A18' }}><path d="M12 1v2"/><path d="M20 7v2"/><path d="M4 7v2"/><path d="M12 21v2"/><circle cx="12" cy="12" r="6"/><path d="M10 9h4v6h-4z"/></svg>,
-      borderColor: '#C09A18',
+      icon: <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true" style={{ color: '#C49A1E' }}><path d="M12 1v2"/><path d="M20 7v2"/><path d="M4 7v2"/><path d="M12 21v2"/><circle cx="12" cy="12" r="6"/><path d="M10 9h4v6h-4z"/></svg>,
+      borderColor: '#C49A1E',
     },
     {
       id: 'avg_revenue',
@@ -76,14 +76,14 @@ export function AnalyticsKpiCards({ kpi }: AnalyticsKpiCardsProps) {
       {kpiCards.map((card) => (
         <div
           key={card.id}
-          className="animate-fade-in-up rounded-xl bg-[#F0EDE0] p-4 transition-all duration-200 hover:shadow-md dark:bg-[#1E2A1A]"
-          style={{
-            borderLeft: `4px solid ${card.borderColor}`,
-          }}
+          className="group animate-fade-in-up rounded-2xl border border-[#E8E4DC] bg-white p-5 shadow-sm transition-all duration-200 hover:-translate-y-0.5 hover:shadow-md dark:border-[#1A2A14] dark:bg-[#182214]"
+          style={{ borderLeft: `4px solid ${card.borderColor}` }}
         >
-          <div className="mb-2 text-[22px] leading-none">{card.icon}</div>
-          <p className="mb-0.5 text-[26px] font-black leading-none text-[#1A1A0A] dark:text-[#F0EDD4]">{card.value}</p>
-          <p className="text-[12px] font-medium text-[#666] dark:text-[#A0A090]">{card.label}</p>
+          <div className="mb-3 leading-none">{card.icon}</div>
+          <p className="mb-1 text-[28px] font-black leading-none tabular-nums text-[#1A1A0A] dark:text-[#F0EDD4]">
+            {card.value}
+          </p>
+          <p className="text-[12px] font-semibold text-[#888] dark:text-[#9A9A8A]">{card.label}</p>
         </div>
       ))}
     </div>

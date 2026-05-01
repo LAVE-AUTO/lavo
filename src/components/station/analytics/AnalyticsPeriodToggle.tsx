@@ -20,21 +20,30 @@ export function AnalyticsPeriodToggle({ value, onChange }: AnalyticsPeriodToggle
   const t = useTranslations('station_analytics');
 
   return (
-    <div className="flex gap-2">
-      {PERIODS.map((period) => (
-        <button
-          key={period.id}
-          onClick={() => onChange(period.id)}
-          aria-current={value === period.id ? 'page' : undefined}
-          className={`rounded-lg px-3 py-2 text-sm font-black transition-all ${
-            value === period.id
-              ? 'bg-[#C09A18] text-[#0C1209] shadow-md hover:opacity-90'
-              : 'bg-[#F0EDE0] text-[#666] hover:bg-[#E8E4D0] dark:bg-[#182214] dark:text-[#A0A090] dark:hover:bg-[#1F3217]'
-          }`}
-        >
-          {t(period.label as any)}
-        </button>
-      ))}
+    <div
+      role="tablist"
+      aria-label={t('period_label')}
+      className="inline-flex gap-1 rounded-xl border border-[#E0DCD0] bg-white p-1 dark:border-[#243020] dark:bg-[#0F1A0C]"
+    >
+      {PERIODS.map((period) => {
+        const active = value === period.id;
+        return (
+          <button
+            key={period.id}
+            type="button"
+            role="tab"
+            aria-selected={active}
+            onClick={() => onChange(period.id)}
+            className={`rounded-lg px-3 py-1.5 text-[12px] font-bold transition-all duration-150 ${
+              active
+                ? 'bg-[#C49A1E] text-[#0C1209] shadow-sm'
+                : 'text-[#888] hover:bg-[#F7F6F2] hover:text-[#1A1A0A] dark:text-[#9A9A8A] dark:hover:bg-[#182214] dark:hover:text-[#F0EDD4]'
+            }`}
+          >
+            {t(period.label as 'period_7d')}
+          </button>
+        );
+      })}
     </div>
   );
 }

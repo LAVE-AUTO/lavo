@@ -109,7 +109,7 @@ export function StationAnalytics() {
           <p className="mb-4 text-sm text-[#666] dark:text-[#A0A090]">{error || t('no_data')}</p>
           <button
             onClick={() => router.refresh()}
-            className="rounded-lg bg-[#C09A18] px-4 py-2 text-[#0C1209] font-black transition-opacity hover:opacity-90"
+            className="rounded-lg bg-[#C49A1E] px-4 py-2 text-[#0C1209] font-black transition-opacity hover:opacity-90"
           >
             {t('retry')}
           </button>
