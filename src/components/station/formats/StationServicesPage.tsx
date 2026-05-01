@@ -321,7 +321,7 @@ export function StationServicesPage() {
                 {t('section_extras_available')}
               </h2>
               <span className="text-[12px] font-semibold text-[#888] dark:text-[#9A9A8A]">
-                {t('extras_active_count', { count: activeExtraCount, total: allExtras.length })}
+                {t('extras_active_count', { active: activeExtraCount, total: allExtras.length })}
               </span>
             </div>
             <button
