@@ -1708,7 +1708,13 @@
         "availability_poste_short": "B",
         "kpi_coming_soon": "Coming soon",
         "post_unknown_service": "—",
-        "manual_queue_error_unavailable": "This action isn’t available yet. Please try again later."
+        "manual_queue_error_unavailable": "This action isn’t available yet. Please try again later.",
+        "delays_title": "Delay requests",
+        "delays_see_all": "See all",
+        "delays_pending": "{n, plural, one {# pending request} other {# pending requests}}",
+        "delays_empty": "No pending request",
+        "delays_no_message": "No message",
+        "delays_status_pending": "To handle"
     },
     "station_reservations": {
         "page_title": "Today's reservations",

@@ -12,7 +12,18 @@ import { DashboardDateNav } from './DashboardDateNav';
 import { DashboardQueuePanel } from './DashboardQueuePanel';
 import { DashboardPostGrid, type Post, type PostEntry } from './DashboardPostGrid';
 import { DashboardLegendBar } from './DashboardLegendBar';
+import { DashboardDelaysPanel, type DashboardDelayItem } from './DashboardDelaysPanel';
 import type { QueueEntry } from './QueueCard';
+
+const DELAYS_PREVIEW_SIZE = 5;
+
+interface RawDelayPreview {
+  id: string;
+  user_id: string;
+  message: string;
+  status: 'pending' | 'accepted' | 'refused';
+  created_at: string;
+}
 
 // All KPIs start as null so the UI shows a placeholder rather than a misleading 0
 // before the first dashboard fetch resolves.
@@ -135,6 +146,8 @@ export function StationDashboard() {
   const [kpi, setKpi] = useState<KpiData>(EMPTY_KPI);
   const [queueEntries, setQueueEntries] = useState<QueueEntry[]>([]);
   const [posts, setPosts] = useState<Post[]>([]);
+  const [delays, setDelays] = useState<DashboardDelayItem[]>([]);
+  const [delaysPendingTotal, setDelaysPendingTotal] = useState(0);
   const [loading, setLoading] = useState(true);
 
   const [pending, setPending] = useState<PendingAction | null>(null);
@@ -155,15 +168,17 @@ export function StationDashboard() {
   }
 
   const loadData = useCallback(async () => {
-    const [entriesResult, configResult, dashboardResult] = await Promise.all([
+    const [entriesResult, configResult, dashboardResult, delaysResult] = await Promise.all([
       getFromApi('/station/entries'),
       getFromApi('/station/config'),
       getFromApi('/station/dashboard'),
+      getFromApi(`/station/delays?status=pending&per_page=${DELAYS_PREVIEW_SIZE}`),
     ]);
 
     const [entriesOk, entriesData] = entriesResult;
     const [configOk, configData] = configResult;
     const [dashboardOk, dashboardData] = dashboardResult;
+    const [delaysOk, delaysData] = delaysResult;
 
     if (!mountedRef.current) return;
 
@@ -179,6 +194,24 @@ export function StationDashboard() {
       if (dashboard) {
         setKpi(mapDashboardToKpi(dashboard));
       }
+    }
+
+    if (delaysOk) {
+      const payload = (delaysData as { data?: { items?: RawDelayPreview[]; meta?: { total?: number } } })?.data;
+      const items = payload?.items ?? [];
+      // /station/delays does not denormalize the user — show anonymised id until the
+      // backend returns a name (see project_pending_backend_specs.md).
+      setDelays(
+        items
+          .filter((d) => d.status === 'pending')
+          .map((d): DashboardDelayItem => ({
+            id: d.id,
+            clientName: `Client #${d.user_id.slice(0, 4).toUpperCase()}`,
+            message: d.message,
+            requestedAt: d.created_at,
+          })),
+      );
+      setDelaysPendingTotal(payload?.meta?.total ?? items.filter((d) => d.status === 'pending').length);
     }
 
     setLoading(false);
@@ -272,12 +305,16 @@ export function StationDashboard() {
         onViewChange={setView}
       />
       <div className="flex flex-1 flex-col overflow-auto md:flex-row md:overflow-hidden">
-        <DashboardQueuePanel
-          entries={queueEntries}
-          onCallEntry={(id) => requestAction('call', id)}
-          onCompleteEntry={(id) => requestAction('complete', id)}
-          onCallNext={() => requestAction('call_next', '')}
-        />
+        {/* Left column: queue + delays shortcut, stacked */}
+        <div className="flex shrink-0 flex-col md:w-[280px] md:overflow-hidden">
+          <DashboardQueuePanel
+            entries={queueEntries}
+            onCallEntry={(id) => requestAction('call', id)}
+            onCompleteEntry={(id) => requestAction('complete', id)}
+            onCallNext={() => requestAction('call_next', '')}
+          />
+          <DashboardDelaysPanel items={delays} totalPending={delaysPendingTotal} />
+        </div>
         <DashboardPostGrid
           posts={posts}
           onCompleteEntry={(id) => requestAction('complete', id)}

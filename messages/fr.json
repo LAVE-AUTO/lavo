@@ -1708,7 +1708,13 @@
         "availability_poste_short": "P",
         "kpi_coming_soon": "Bientôt disponible",
         "post_unknown_service": "—",
-        "manual_queue_error_unavailable": "Cette action n’est pas encore disponible. Réessaie plus tard."
+        "manual_queue_error_unavailable": "Cette action n’est pas encore disponible. Réessaie plus tard.",
+        "delays_title": "Demandes de retard",
+        "delays_see_all": "Voir tout",
+        "delays_pending": "{n, plural, one {# demande en attente} other {# demandes en attente}}",
+        "delays_empty": "Aucune demande en attente",
+        "delays_no_message": "Pas de message",
+        "delays_status_pending": "À traiter"
     },
     "station_reservations": {
         "page_title": "Réservations du jour",
