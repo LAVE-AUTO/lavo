@@ -22,109 +22,11 @@ interface ServicesData {
   data: Service[];
 }
 
-// TODO: connect to API once endpoint is available — GET /station/services
-const INITIAL_SERVICES: Service[] = [
-  {
-    id: 'mock-exterior',
-    name: 'Lavage Extérieur',
-    category: 'hand_wash',
-    service_type: 'exterior',
-    description: 'Lavage extérieur standard',
-    is_active: true,
-    vehicle_entries: [
-      { vehicle_format_id: 'mock-berline', vehicle_label: 'BERLINE', price: '15', duration_min: 20, staff_required: 1, is_active: true },
-      { vehicle_format_id: 'mock-suv', vehicle_label: 'SUV', price: '20', duration_min: 25, staff_required: 1, is_active: true },
-      { vehicle_format_id: 'mock-compact', vehicle_label: 'COMPACT', price: '15', duration_min: 15, staff_required: 1, is_active: true },
-    ],
-    compatible_extras: [],
-  },
-  {
-    id: 'mock-complete',
-    name: 'Lavage Complet',
-    category: 'hand_wash',
-    service_type: 'complete',
-    description: 'Lavage intérieur et extérieur',
-    is_active: true,
-    is_popular: true,
-    vehicle_entries: [
-      { vehicle_format_id: 'mock-berline', vehicle_label: 'BERLINE', price: '25', duration_min: 35, staff_required: 1, is_active: true },
-      { vehicle_format_id: 'mock-suv', vehicle_label: 'SUV', price: '35', duration_min: 45, staff_required: 2, is_active: true },
-      { vehicle_format_id: 'mock-compact', vehicle_label: 'COMPACT', price: '20', duration_min: 30, staff_required: 1, is_active: true },
-    ],
-    compatible_extras: [
-      { id: 'extra-cire', name: 'Cire protectrice' },
-      { id: 'extra-polish', name: 'Polish intérieur' },
-      { id: 'extra-shampoo', name: 'Shampoing tapis' },
-    ],
-  },
-  {
-    id: 'mock-premium',
-    name: 'Lavage Premium',
-    category: 'hand_wash',
-    service_type: 'complete',
-    description: 'Service premium longue durée',
-    is_active: true,
-    vehicle_entries: [
-      { vehicle_format_id: 'mock-berline', vehicle_label: 'BERLINE', price: '45', duration_min: 60, staff_required: 2, is_active: true },
-      { vehicle_format_id: 'mock-suv', vehicle_label: 'SUV', price: '65', duration_min: 75, staff_required: 2, is_active: true },
-      { vehicle_format_id: 'mock-compact', vehicle_label: 'COMPACT', price: '40', duration_min: 55, staff_required: 2, is_active: true },
-    ],
-    compatible_extras: [],
-  },
-];
-
-// TODO: connect to API once endpoint is available — GET /station/extras
-const INITIAL_EXTRAS: StationExtras = {
-  exterior: [
-    {
-      id: 'extra-cire',
-      label: 'Cire protectrice',
-      description: '',
-      price: '25',
-      is_active: true,
-      vehicle_entries: [
-        { vehicle_format_id: 'mock-berline', vehicle_label: 'BERLINE', price: '25', duration_min: 35 },
-        { vehicle_format_id: 'mock-suv', vehicle_label: 'SUV', price: '35', duration_min: 45 },
-        { vehicle_format_id: 'mock-compact', vehicle_label: 'COMPACT', price: '20', duration_min: 30 },
-      ],
-    },
-  ],
-  interior: [
-    {
-      id: 'extra-polish',
-      label: 'Polish intérieur',
-      description: '',
-      price: '12',
-      is_active: true,
-      vehicle_entries: [
-        { vehicle_format_id: 'mock-berline', vehicle_label: 'BERLINE', price: '12', duration_min: 15 },
-        { vehicle_format_id: 'mock-suv', vehicle_label: 'SUV', price: '15', duration_min: 20 },
-        { vehicle_format_id: 'mock-compact', vehicle_label: 'COMPACT', price: '10', duration_min: 15 },
-      ],
-    },
-  ],
-  both: [
-    {
-      id: 'extra-shampoo',
-      label: 'Shampoing tapis',
-      description: '',
-      price: '18',
-      is_active: true,
-      vehicle_entries: [
-        { vehicle_format_id: 'mock-berline', vehicle_label: 'BERLINE', price: '18', duration_min: 20 },
-        { vehicle_format_id: 'mock-suv', vehicle_label: 'SUV', price: '25', duration_min: 30 },
-        { vehicle_format_id: 'mock-compact', vehicle_label: 'COMPACT', price: '15', duration_min: 20 },
-      ],
-    },
-    {
-      id: 'extra-deo',
-      label: 'Désodorisant',
-      description: '',
-      price: '8',
-      is_active: false,
-    },
-  ],
-};
+// Services and extras have no backend endpoint yet — see project_pending_backend_specs.md
+// (sections "Services / packages model" and "Extras / add-ons model").
+// Until those land we render an empty state; never seed mock data.
+const EMPTY_SERVICES: Service[] = [];
+const EMPTY_EXTRAS: StationExtras = { exterior: [], interior: [], both: [] };
 
 const StatsIcon = () => (
   <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
@@ -145,9 +47,9 @@ export function StationServicesPage() {
   const locale = useLocale();
   const { isLoading: authLoading } = useAuth();
 
-  const [services, setServices] = useState<Service[]>(INITIAL_SERVICES);
+  const [services, setServices] = useState<Service[]>(EMPTY_SERVICES);
   const [formats, setFormats] = useState<VehicleFormat[]>([]);
-  const [extras, setExtras] = useState<StationExtras>(INITIAL_EXTRAS);
+  const [extras, setExtras] = useState<StationExtras>(EMPTY_EXTRAS);
   const [loading, setLoading] = useState(true);
   const [loadError, setLoadError] = useState(false);
   const [serviceModal, setServiceModal] = useState<Service | null | 'new'>(null);
@@ -163,12 +65,11 @@ export function StationServicesPage() {
       return;
     }
     const stationId = (meData as StationMeData).data.id;
+    // GET /station/services is not implemented yet — see project_pending_backend_specs.md.
+    // We still attempt the call so the page upgrades automatically once the endpoint ships.
     const [servicesOk, servicesData] = await getFromApi('/station/services');
     if (servicesOk && Array.isArray((servicesData as ServicesData).data)) {
       setServices((servicesData as ServicesData).data);
-    } else {
-      // TODO: remove fallback when GET /station/services is available in all environments
-      setServices(INITIAL_SERVICES);
     }
 
     const [formatsOk, formatsData] = await getFromApi(`/stations/${stationId}/formats`);
