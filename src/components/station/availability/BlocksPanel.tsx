@@ -29,16 +29,16 @@ function formatDates(dates: string[]): string {
   return `${firstStr} – ${lastStr}`;
 }
 
-function formatBays(bayIds: string[]): string {
-  if (bayIds.length === 0 || bayIds.includes('all')) return 'Tous';
-  return bayIds.join(', ');
-}
-
 export function BlocksPanel({ blocks, onDelete, onEdit, onCreateClick }: Props) {
   const t = useTranslations('station_dashboard');
 
+  function formatBays(bayIds: string[]): string {
+    if (bayIds.length === 0 || bayIds.includes('all')) return t('availability_all_postes_short');
+    return bayIds.join(', ');
+  }
+
   return (
-    <div className="flex w-72 flex-shrink-0 flex-col border-r border-[#C09A18]/20 bg-[#F0EDE0] dark:border-[#C09A18]/10 dark:bg-[#1A2210]">
+    <div className="flex w-full max-h-72 shrink-0 flex-col border-b border-[#C49A1E]/20 bg-[#F0EDE0] dark:border-[#C49A1E]/10 dark:bg-[#1A2210] md:max-h-none md:w-72 md:border-b-0 md:border-r">
       {/* Title */}
       <div className="px-4 pt-5 pb-3">
         <p className="text-[10px] font-black uppercase tracking-widest text-[#666] dark:text-[#A0A090]">
@@ -82,7 +82,7 @@ export function BlocksPanel({ blocks, onDelete, onEdit, onCreateClick }: Props) 
                 <p className="mb-0.5 text-[12px] font-bold text-[#1A1A0A] dark:text-[#F0EDD4]">
                   {formatDates(block.dates)}
                 </p>
-                <p className="mb-2.5 text-[13px] font-black text-[#C09A18]">
+                <p className="mb-2.5 text-[13px] font-black text-[#C49A1E]">
                   {block.startTime} – {block.endTime}
                 </p>
                 <div className="flex gap-2">
@@ -97,7 +97,7 @@ export function BlocksPanel({ blocks, onDelete, onEdit, onCreateClick }: Props) 
                   <button
                     type="button"
                     onClick={() => onEdit(block)}
-                    className="cursor-pointer rounded-lg bg-[#C09A18] px-2.5 py-1 text-[10px] font-bold text-[#1A1A0A] transition-colors hover:bg-[#a8861a]"
+                    className="cursor-pointer rounded-lg bg-[#C49A1E] px-2.5 py-1 text-[10px] font-bold text-[#1A1A0A] transition-colors hover:bg-[#A07818]"
                     aria-label={`${t('availability_block_edit')} — ${formatDates(block.dates)}`}
                   >
                     {t('availability_block_edit')}
@@ -110,11 +110,11 @@ export function BlocksPanel({ blocks, onDelete, onEdit, onCreateClick }: Props) 
       </div>
 
       {/* Create button pinned to bottom */}
-      <div className="border-t border-[#C09A18]/20 p-3 dark:border-[#C09A18]/10">
+      <div className="border-t border-[#C49A1E]/20 p-3 dark:border-[#C49A1E]/10">
         <button
           type="button"
           onClick={onCreateClick}
-          className="flex w-full cursor-pointer items-center justify-center gap-2 rounded-xl bg-[#C09A18] px-4 py-3 text-sm font-black text-[#1A1A0A] transition-colors hover:bg-[#a8861a] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#C09A18] focus-visible:ring-offset-2"
+          className="flex w-full cursor-pointer items-center justify-center gap-2 rounded-xl bg-[#C49A1E] px-4 py-3 text-sm font-black text-[#1A1A0A] transition-colors hover:bg-[#A07818] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#C49A1E] focus-visible:ring-offset-2"
         >
           <svg
             width="14"

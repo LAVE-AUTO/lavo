@@ -10,7 +10,7 @@ export function AvailabilitySkeleton() {
       </div>
 
       {/* View Toggle */}
-      <div className="flex gap-2 border-b border-[#C09A18]/20 pb-1">
+      <div className="flex gap-2 border-b border-[#C49A1E]/20 pb-1">
         {[80, 64].map((w, i) => (
           <div key={i} className={`h-9 w-${w === 80 ? '20' : '16'} rounded-lg bg-[#C8C8B4] dark:bg-[#2A3A26]`} />
         ))}

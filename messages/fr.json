@@ -1696,7 +1696,16 @@
         "nav_section_configuration": "Configuration",
         "nav_section_support": "Support & Historique",
         "nav_expand": "Déplier le menu",
-        "nav_collapse": "Replier le menu"
+        "nav_collapse": "Replier le menu",
+        "availability_all_postes_short": "Tous",
+        "availability_all_postes_closed": "Tous les postes sont fermés ce jour",
+        "availability_tip_label": "Astuce :",
+        "availability_btn_close": "Fermer",
+        "availability_prev_month": "Mois précédent",
+        "availability_next_month": "Mois suivant",
+        "availability_dates_count": "{count, plural, one {# date} other {# dates}}",
+        "availability_blocks_count_aria": "{count, plural, =0 {Aucun poste configuré} one {# poste configuré} other {# postes configurés}}",
+        "availability_poste_short": "P"
     },
     "station_reservations": {
         "page_title": "Réservations du jour",

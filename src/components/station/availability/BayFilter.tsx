@@ -18,8 +18,8 @@ export function BayFilter({ bays, selectedBay, onBayChange }: BayFilterProps) {
           onClick={() => onBayChange(null)}
           className={`cursor-pointer rounded-full px-3 py-1 text-xs font-semibold transition-colors ${
             selectedBay === null
-              ? 'bg-[#C09A18] text-[#1A1A0A]'
-              : 'bg-[#C09A18]/10 text-[#1A1A0A] hover:bg-[#C09A18]/20 dark:text-[#F0EDD4]'
+              ? 'bg-[#C49A1E] text-[#1A1A0A]'
+              : 'bg-[#C49A1E]/10 text-[#1A1A0A] hover:bg-[#C49A1E]/20 dark:text-[#F0EDD4]'
           }`}
         >
           {t('filter_all_posts')}
@@ -31,8 +31,8 @@ export function BayFilter({ bays, selectedBay, onBayChange }: BayFilterProps) {
             onClick={() => onBayChange(bay)}
             className={`cursor-pointer rounded-full px-3 py-1 text-xs font-semibold transition-colors ${
               selectedBay === bay
-                ? 'bg-[#C09A18] text-[#1A1A0A]'
-                : 'bg-[#C09A18]/10 text-[#1A1A0A] hover:bg-[#C09A18]/20 dark:text-[#F0EDD4]'
+                ? 'bg-[#C49A1E] text-[#1A1A0A]'
+                : 'bg-[#C49A1E]/10 text-[#1A1A0A] hover:bg-[#C49A1E]/20 dark:text-[#F0EDD4]'
             }`}
           >
             {t('filter_post', { n: bay })}

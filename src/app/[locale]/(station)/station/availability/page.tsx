@@ -84,7 +84,7 @@ export default function StationAvailabilityPage() {
   return (
     <div className="flex h-full flex-col">
       {/* Page header */}
-      <div className="border-b border-[#C09A18]/20 px-6 py-4 dark:border-[#C09A18]/10">
+      <div className="border-b border-[#C49A1E]/20 px-6 py-4 dark:border-[#C49A1E]/10">
         <h1 className="text-2xl font-black text-[#1A1A0A] dark:text-[#F0EDD4]">
           {t('availability_title')}
         </h1>
@@ -93,8 +93,8 @@ export default function StationAvailabilityPage() {
         </p>
       </div>
 
-      {/* Main two-panel layout */}
-      <div className="flex flex-1 overflow-hidden">
+      {/* Main two-panel layout — stacked on mobile, side-by-side on desktop */}
+      <div className="flex flex-1 flex-col overflow-hidden md:flex-row">
         <BlocksPanel
           blocks={blocks}
           onDelete={handleDelete}
