@@ -101,7 +101,7 @@ function EntryBlock({ entry, onComplete, onCancel, onStart }: {
           <button
             type="button"
             onClick={onComplete}
-            className="ml-auto rounded-md bg-[#C49A1E] px-2 py-0.5 text-[10px] font-black text-[#0C1209] transition-opacity hover:opacity-80"
+            className="ml-auto rounded-lg bg-[#C49A1E] px-2 py-0.5 text-[10px] font-black text-[#0C1209] transition-opacity hover:opacity-80"
           >
             {t('btn_add_time')}
           </button>
@@ -110,7 +110,7 @@ function EntryBlock({ entry, onComplete, onCancel, onStart }: {
           <button
             type="button"
             onClick={onCancel}
-            className="ml-auto rounded-md border border-[#EF4444] bg-[rgba(239,68,68,0.1)] px-2 py-0.5 text-[10px] font-bold text-[#EF4444] transition-opacity hover:opacity-80"
+            className="ml-auto rounded-lg border border-[#EF4444] bg-[rgba(239,68,68,0.1)] px-2 py-0.5 text-[10px] font-bold text-[#EF4444] transition-opacity hover:opacity-80"
           >
             ! {t('btn_cancel')}
           </button>

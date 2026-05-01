@@ -4,7 +4,9 @@ import { useState, useEffect, useCallback, useRef } from 'react';
 import { useLocale, useTranslations } from 'next-intl';
 import { getFromApi, patchWithApi, postWithApi } from '@/services';
 import { useAuth } from '@/context/auth-context';
+import { useToast } from '@/context/toast-context';
 import { ConfirmDialog } from '@/components/ui/ConfirmDialog';
+import { PageLoader } from '@/components/ui/PageLoader';
 import { DashboardKpiRow, type KpiData } from './DashboardKpiRow';
 import { DashboardDateNav } from './DashboardDateNav';
 import { DashboardQueuePanel } from './DashboardQueuePanel';
@@ -111,6 +113,7 @@ const ACTION_STATUS_MAP: Partial<Record<DashboardAction, string>> = {
 
 export function StationDashboard() {
   const { isLoading: authLoading } = useAuth();
+  const { error: showError } = useToast();
   const t = useTranslations('station_dashboard');
   const locale = useLocale();
   const mountedRef = useRef(true);
@@ -125,7 +128,6 @@ export function StationDashboard() {
 
   const [pending, setPending] = useState<PendingAction | null>(null);
   const [actionLoading, setActionLoading] = useState(false);
-  const [actionError, setActionError] = useState<string | null>(null);
 
   function mapDashboardToKpi(raw: RawDashboard): KpiData {
     const revenue = Number.parseFloat(raw.total_revenue ?? '0');
@@ -173,14 +175,12 @@ export function StationDashboard() {
   }, [authLoading, loadData]);
 
   function requestAction(type: DashboardAction, entryId: string) {
-    setActionError(null);
     setPending({ type, entryId });
   }
 
   async function executeAction() {
     if (!pending) return;
     setActionLoading(true);
-    setActionError(null);
 
     // call_next hits a queue-scoped endpoint (promote the next waiting
     // entry); every other action targets a specific entry by id.
@@ -194,11 +194,11 @@ export function StationDashboard() {
         return;
       }
       const payload = data as { message?: string; code?: string } | null;
-      const raw = payload?.message ?? '';
       const errorMsg = payload?.code === 'NOT_FOUND'
         ? t('error_queue_empty')
-        : raw || t('action_error_generic');
-      setActionError(errorMsg);
+        : t('action_error_generic');
+      showError(errorMsg);
+      setPending(null);
       return;
     }
 
@@ -211,11 +211,12 @@ export function StationDashboard() {
       await loadData();
     } else {
       const raw = (data as { message?: string })?.message ?? '';
-      // Translate backend transition errors into a readable message
+      // Translate the backend transition error into a user-friendly toast
       const errorMsg = raw.includes('Cannot transition')
         ? t('error_invalid_transition')
-        : raw || t('action_error_generic');
-      setActionError(errorMsg);
+        : t('action_error_generic');
+      showError(errorMsg);
+      setPending(null);
     }
   }
 
@@ -244,11 +245,7 @@ export function StationDashboard() {
   }
 
   if (loading) {
-    return (
-      <div className="flex flex-1 items-center justify-center">
-        <div className="h-8 w-8 animate-spin rounded-full border-[3px] border-[#C09A18] border-t-transparent" />
-      </div>
-    );
+    return <PageLoader label={t('loading')} />;
   }
 
   return (
@@ -260,11 +257,6 @@ export function StationDashboard() {
         view={view}
         onViewChange={setView}
       />
-      {actionError && (
-        <div className="border-b border-[#E8472A]/20 bg-[#FEF2F2] px-5 py-2 text-[13px] font-medium text-[#E8472A] dark:border-[#E8472A]/20 dark:bg-[#2A0A0A] dark:text-[#F87171]">
-          {actionError}
-        </div>
-      )}
       <div className="flex flex-1 flex-col overflow-auto md:flex-row md:overflow-hidden">
         <DashboardQueuePanel
           entries={queueEntries}
