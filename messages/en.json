@@ -1714,7 +1714,11 @@
         "delays_pending": "{n, plural, one {# pending request} other {# pending requests}}",
         "delays_empty": "No pending request",
         "delays_no_message": "No message",
-        "delays_status_pending": "To handle"
+        "delays_status_pending": "To handle",
+        "availability_save_success": "Availability saved",
+        "availability_save_error": "Could not save the availability. Please retry.",
+        "availability_delete_success": "Availability removed",
+        "availability_delete_error": "Could not remove the availability."
     },
     "station_reservations": {
         "page_title": "Today's reservations",

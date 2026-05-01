@@ -1714,7 +1714,11 @@
         "delays_pending": "{n, plural, one {# demande en attente} other {# demandes en attente}}",
         "delays_empty": "Aucune demande en attente",
         "delays_no_message": "Pas de message",
-        "delays_status_pending": "À traiter"
+        "delays_status_pending": "À traiter",
+        "availability_save_success": "Disponibilité enregistrée",
+        "availability_save_error": "Impossible d’enregistrer la disponibilité. Réessaie.",
+        "availability_delete_success": "Disponibilité supprimée",
+        "availability_delete_error": "Impossible de supprimer la disponibilité."
     },
     "station_reservations": {
         "page_title": "Réservations du jour",
