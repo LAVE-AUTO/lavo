@@ -12,6 +12,26 @@ interface Props {
   onToggled: (service: Service) => void;
 }
 
+const CrossIcon = () => (
+  <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+    <line x1="18" y1="6" x2="6" y2="18" />
+    <line x1="6" y1="6" x2="18" y2="18" />
+  </svg>
+);
+
+const PencilIcon = () => (
+  <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+    <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" />
+    <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" />
+  </svg>
+);
+
+const FlameIcon = () => (
+  <svg width="10" height="10" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+    <path d="M13.5.67s.74 2.65.74 4.8c0 2.06-1.35 3.73-3.41 3.73-2.07 0-3.63-1.67-3.63-3.73l.03-.36C5.21 7.51 4 10.62 4 14a8 8 0 0 0 16 0C20 9.79 17.65 5.74 13.5.67zM11.71 19a3.07 3.07 0 0 1-3.05-3.36c.16-1.41 1.13-2.41 2.31-2.66.71-.16 1.46.04 1.97.5.85.78 1.06 2.13.4 3.21z" />
+  </svg>
+);
+
 export function ServiceCard({ service, onEdit, onDeleted, onToggled }: Props) {
   const t = useTranslations('station_services');
   const [deleteOpen, setDeleteOpen] = useState(false);
@@ -36,126 +56,134 @@ export function ServiceCard({ service, onEdit, onDeleted, onToggled }: Props) {
   const durations = activeEntries.map((e) => e.duration_min).filter((d) => d > 0);
   const minDur = durations.length ? Math.min(...durations) : null;
   const maxDur = durations.length ? Math.max(...durations) : null;
-  const durationLabel = minDur !== null
-    ? (minDur === maxDur ? `${minDur} min` : `${minDur}\u2013${maxDur} min`)
-    : null;
+  const durationLabel =
+    minDur !== null
+      ? minDur === maxDur
+        ? `${minDur} MIN`
+        : `${minDur}-${maxDur} MIN`
+      : null;
 
   const extras = service.compatible_extras ?? [];
+  const isPackages = service.category === 'automatic';
 
   return (
     <>
-      <div className="flex flex-col rounded-[14px] bg-[#EDE9CC] dark:bg-[#182214]">
+      <article
+        className="group flex flex-col rounded-2xl border border-[#E8E4DC] bg-white p-6 transition-all duration-200 hover:border-[#C49A1E]/30 hover:shadow-sm dark:border-[#1A2A14] dark:bg-[#182214] dark:hover:border-[#C49A1E]/30"
+      >
         {/* Header */}
-        <div className="flex items-start justify-between p-[18px] pb-0">
-          <div className="min-w-0 flex-1 pr-3">
-            <div className="text-[17px] font-black text-[#1A1A0A] dark:text-[#EDE9CC]">{service.name}</div>
-            <div className="mt-2 flex flex-wrap items-center gap-2">
-              {durationLabel && (
-                <span className="text-[13px] font-black text-[#C09A18]">{durationLabel}</span>
-              )}
-              {/* badge actif / inactif */}
-              <button
-                type="button"
-                onClick={() => setToggleOpen(true)}
-                className={[
-                  'rounded-full border px-2 py-0.5 text-[9px] font-black tracking-[.04em] transition-colors',
-                  service.is_active
-                    ? 'border-[#2ecc71] bg-[rgba(46,204,113,.12)] text-[#2ecc71]'
-                    : 'border-[#888] bg-[rgba(136,136,136,.12)] text-[#888]',
-                ].join(' ')}
-              >
-                {service.is_active ? t('badge_active') : t('badge_inactive')}
-              </button>
-              {service.is_popular && (
-                <span className="rounded-full border border-[#EF4444] bg-[rgba(239,68,68,.12)] px-2 py-0.5 text-[9px] font-black tracking-[.04em] text-[#EF4444]">
-                  {t('badge_popular')}
-                </span>
-              )}
-            </div>
+        <header className="mb-4 flex items-start justify-between gap-3">
+          <div className="min-w-0 flex-1">
+            <p className="text-[11px] font-bold uppercase tracking-[0.5px] text-[#888] dark:text-[#9A9A8A]">
+              {t(`cat_${service.category}`)}
+            </p>
+            <h3 className="mt-0.5 text-[20px] font-black leading-tight text-[#1A1A0A] dark:text-[#F0EDD4]">
+              {service.name}
+            </h3>
+            {durationLabel && (
+              <p className="mt-1.5 font-mono text-[13px] font-black tracking-[2px] text-[#C49A1E]">
+                {durationLabel}
+              </p>
+            )}
           </div>
-
-          {/* Actions */}
-          <div className="flex shrink-0 gap-1.5 pt-0.5">
+          <div className="flex shrink-0 gap-1.5">
             <button
               type="button"
               onClick={() => setDeleteOpen(true)}
               disabled={deleting}
-              className="rounded-[6px] border-[1.5px] border-[#FF2525] bg-transparent px-2.5 py-1 text-[10px] font-bold text-[#FF2525] transition-opacity hover:opacity-80 disabled:opacity-40"
+              className="inline-flex items-center gap-1.5 rounded-lg border border-[#E0DCD0] bg-white px-2.5 py-1.5 text-[11px] font-bold text-[#888] transition-all hover:border-[#FF2525] hover:bg-[#FF2525]/5 hover:text-[#FF2525] disabled:opacity-40 dark:border-[#243020] dark:bg-[#0F1A0C] dark:text-[#9A9A8A]"
             >
-              {t('btn_delete')}
+              <CrossIcon />
+              {t('btn_delete_short')}
             </button>
             <button
               type="button"
               onClick={() => onEdit(service)}
-              className="rounded-[6px] bg-[#C09A18] px-2.5 py-1 text-[10px] font-bold text-[#0C1209] transition-opacity hover:opacity-80"
+              className="inline-flex items-center gap-1.5 rounded-lg bg-[#C49A1E] px-2.5 py-1.5 text-[11px] font-bold text-[#0C1209] transition-opacity hover:opacity-85"
             >
+              <PencilIcon />
               {t('btn_edit')}
             </button>
           </div>
-        </div>
+        </header>
 
-        {/* Category + type tags */}
-        <div className="flex flex-wrap items-center gap-1.5 px-[18px] pt-2">
-          <span className="rounded-[5px] bg-[#D8D4B0] px-2 py-0.5 text-[10px] font-bold text-[#4A4A2A] dark:bg-[#1A2A14] dark:text-[#9A9A8A]">
-            {t(`cat_${service.category}`)}
-          </span>
-          <span className="rounded-[5px] bg-[#D8D4B0] px-2 py-0.5 text-[10px] font-bold text-[#4A4A2A] dark:bg-[#1A2A14] dark:text-[#9A9A8A]">
-            {t(`type_${service.service_type}`)}
-          </span>
-        </div>
-
-        {/* Tariffs — dark container inside cream card */}
-        <div className="mx-[18px] mt-3 rounded-[10px] bg-[#182214] p-3 dark:bg-[#0F120A]">
-          <div className="mb-2.5 text-[9px] font-black tracking-[.08em] text-[#5A6A5A] uppercase">
-            {t('tarifs_label')}
-          </div>
-          {activeEntries.length > 0 ? (
-            <div className="grid grid-cols-3 gap-1.5">
-              {activeEntries.map((entry) => (
-                <div
-                  key={entry.vehicle_format_id}
-                  className="rounded-[8px] bg-[#3A2A12] p-2.5 text-center"
-                >
-                  <div className="text-[8px] font-black tracking-[.06em] text-[#C09A18] uppercase">
-                    {entry.vehicle_label}
-                  </div>
-                  <div className="mt-1 font-mono text-[17px] font-black text-[#EDE9CC]">
-                    {parseFloat(entry.price || '0').toFixed(0)}$
-                  </div>
-                  <div className="mt-0.5 text-[9px] text-[#5A6A5A]">{entry.duration_min} min</div>
-                </div>
-              ))}
-            </div>
-          ) : (
-            <div className="rounded-[8px] border border-dashed border-[#2A3A20] py-3 text-center text-[11px] text-[#5A6A5A]">
-              {t('no_vehicle_entries')}
-            </div>
-          )}
-        </div>
-
-        {/* Extras */}
-        <div className="mx-[18px] mb-[18px] mt-2 rounded-[10px] bg-[#182214] p-3 dark:bg-[#0F120A]">
-          <div className="mb-2 text-[9px] font-black tracking-[.08em] text-[#5A6A5A] uppercase">
-            {t('extras_label')}
-          </div>
-          {extras.length > 0 ? (
-            <div className="flex flex-wrap gap-1.5">
-              {extras.map((extra) => (
-                <span
-                  key={extra.id}
-                  className="inline-flex items-center gap-1 rounded-full border border-[#2ecc71] bg-[rgba(46,204,113,.12)] px-2.5 py-1 text-[10px] font-bold text-[#2ecc71]"
-                >
-                  {extra.name}
-                </span>
-              ))}
-            </div>
-          ) : (
-            <span className="inline-flex items-center gap-1 rounded-full border border-[#EF4444] bg-[rgba(239,68,68,.12)] px-2.5 py-1 text-[10px] font-bold text-[#EF4444]">
-              {t('extras_none')}
+        {/* Badges */}
+        <div className="mb-4 flex flex-wrap gap-1.5">
+          <button
+            type="button"
+            onClick={() => setToggleOpen(true)}
+            className={`inline-flex items-center gap-1 rounded-full border px-2.5 py-0.5 text-[10px] font-bold tracking-wide transition-colors ${
+              service.is_active
+                ? 'border-[#22C47A]/40 bg-[#22C47A]/12 text-[#16A964] hover:bg-[#22C47A]/20'
+                : 'border-[#888]/30 bg-[#888]/10 text-[#888] hover:bg-[#888]/15 dark:text-[#9A9A8A]'
+            }`}
+            aria-label={service.is_active ? t('badge_active') : t('badge_inactive')}
+          >
+            <span className={`h-1.5 w-1.5 rounded-full ${service.is_active ? 'bg-[#22C47A]' : 'bg-[#888]'}`} aria-hidden="true" />
+            {service.is_active ? t('badge_active') : t('badge_inactive')}
+          </button>
+          {service.is_popular && (
+            <span className="inline-flex items-center gap-1 rounded-full border border-[#EF4444]/30 bg-[#EF4444]/10 px-2.5 py-0.5 text-[10px] font-bold text-[#EF4444]">
+              <FlameIcon />
+              {t('badge_popular')}
             </span>
           )}
         </div>
-      </div>
+
+        {/* Tarifs */}
+        <p className="mb-3 text-[10px] font-bold uppercase tracking-[1px] text-[#888] dark:text-[#9A9A8A]">
+          {isPackages ? t('automatic_packages_label') : t('tarifs_label')}
+        </p>
+        {activeEntries.length > 0 ? (
+          <div className="mb-4 grid grid-cols-3 gap-2">
+            {activeEntries.map((entry) => (
+              <div
+                key={entry.vehicle_format_id}
+                className="rounded-xl bg-[#F7F6F2] px-3 py-3 text-center dark:bg-[#0F1A0C]"
+              >
+                <p className={`text-[9px] font-bold uppercase tracking-[1px] ${isPackages ? 'text-[#C49A1E]' : 'text-[#888] dark:text-[#9A9A8A]'}`}>
+                  {entry.vehicle_label}
+                </p>
+                <p className="mt-1 font-mono text-[22px] font-black tabular-nums leading-none text-[#C49A1E]">
+                  {parseFloat(entry.price || '0').toFixed(0)} $
+                </p>
+                <p className="mt-1 text-[11px] text-[#888] dark:text-[#9A9A8A]">
+                  {entry.duration_min} min
+                </p>
+              </div>
+            ))}
+          </div>
+        ) : (
+          <div className="mb-4 rounded-xl border border-dashed border-[#E0DCD0] py-4 text-center text-[12px] text-[#BBBBAA] dark:border-[#243020] dark:text-[#5A5A4A]">
+            {t('no_vehicle_entries')}
+          </div>
+        )}
+
+        {/* Extras compatibles — auto/self-service services don't have extras */}
+        {!isPackages && service.category !== 'self_service' && (
+          <div className="mt-auto rounded-xl bg-[#F7F6F2] p-3 dark:bg-[#0F1A0C]">
+            <p className="mb-2 text-[10px] font-bold uppercase tracking-[1px] text-[#888] dark:text-[#9A9A8A]">
+              {t('extras_label')}
+            </p>
+            {extras.length > 0 ? (
+              <div className="flex flex-wrap gap-1.5">
+                {extras.map((extra) => (
+                  <span
+                    key={extra.id}
+                    className="inline-flex items-center rounded-full border border-[#22C47A]/30 bg-[#22C47A]/10 px-2.5 py-1 text-[11px] font-semibold text-[#16A964]"
+                  >
+                    {extra.name}
+                  </span>
+                ))}
+              </div>
+            ) : (
+              <span className="inline-flex items-center text-[12px] text-[#BBBBAA] dark:text-[#5A5A4A]">
+                {t('extras_none_short')}
+              </span>
+            )}
+          </div>
+        )}
+      </article>
 
       {/* Delete confirmation */}
       <ConfirmDialog
@@ -174,9 +202,11 @@ export function ServiceCard({ service, onEdit, onDeleted, onToggled }: Props) {
       <ConfirmDialog
         open={toggleOpen}
         title={service.is_active ? t('confirm_deactivate_title') : t('confirm_activate_title')}
-        message={service.is_active
-          ? t('confirm_deactivate_message', { name: service.name })
-          : t('confirm_activate_message', { name: service.name })}
+        message={
+          service.is_active
+            ? t('confirm_deactivate_message', { name: service.name })
+            : t('confirm_activate_message', { name: service.name })
+        }
         confirmLabel={service.is_active ? t('confirm_deactivate_label') : t('confirm_activate_label')}
         cancelLabel={t('btn_cancel')}
         variant={service.is_active ? 'warning' : 'default'}
