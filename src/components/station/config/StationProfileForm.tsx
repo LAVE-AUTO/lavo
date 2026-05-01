@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { useTranslations } from 'next-intl';
 import { useAuth } from '@/context/auth-context';
 import { useToast } from '@/context/toast-context';
+import { patchWithApi } from '@/services';
 import { TextField } from './TextField';
 import { Textarea } from './Textarea';
 
@@ -62,7 +63,7 @@ const TagIcon = () => (
 export function StationProfileForm({ profile, onSaved, locked = false }: Props) {
   const t = useTranslations('station_config');
   const { user } = useAuth();
-  const { error: showError } = useToast();
+  const { success, error: showError } = useToast();
 
   const [isEditing, setIsEditing] = useState(false);
   const [name, setName] = useState(profile.name);
@@ -96,8 +97,36 @@ export function StationProfileForm({ profile, onSaved, locked = false }: Props) 
     }
     setNameError(false);
     setSaving(true);
-    // TODO: connect to API once endpoint is available — PATCH /station/me does not exist yet
-    showError(t('profile_save_error'));
+
+    const payload = {
+      name: name.trim(),
+      description: description.trim() ? description.trim() : null,
+      service_scope: serviceScope || null,
+    };
+
+    const [ok, data] = await patchWithApi('/station/me', payload);
+
+    if (ok) {
+      const station = (data as {
+        data?: { name?: string; description?: string | null; service_scope?: string | null };
+      })?.data;
+
+      const nextProfile: StationProfile = {
+        name: station?.name ?? payload.name,
+        description: station?.description ?? payload.description,
+        service_scope: station?.service_scope ?? payload.service_scope,
+      };
+
+      onSaved(nextProfile);
+      setName(nextProfile.name);
+      setDescription(nextProfile.description ?? '');
+      setServiceScope((nextProfile.service_scope as ScopeValue) ?? '');
+      success(t('profile_save_success'));
+      setIsEditing(false);
+    } else {
+      showError(t('profile_save_error'));
+    }
+
     setSaving(false);
   }
 

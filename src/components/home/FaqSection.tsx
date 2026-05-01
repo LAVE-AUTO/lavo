@@ -47,10 +47,10 @@ export function FaqSection() {
   ];
 
   return (
-    <section className="landing-alt-bg px-6 py-28 lg:px-16" id="faq">
+    <section className="landing-alt-bg px-6 py-16 lg:px-16 lg:py-20" id="faq">
       <div className="mx-auto max-w-[1280px]">
         <RevealOnScroll className="text-center mb-2">
-          <div className="font-dm-mono mb-4 flex items-center justify-center gap-3 text-[11px] uppercase tracking-[3px] text-[#c8980a]">
+          <div className="font-dm-mono mb-3 flex items-center justify-center gap-3 text-[11px] uppercase tracking-[3px] text-[#c8980a]">
             {t('tag')}
             <span className="h-px w-9 bg-[#c8980a] opacity-50" />
           </div>
@@ -60,7 +60,7 @@ export function FaqSection() {
           </h2>
         </RevealOnScroll>
 
-        <div className="mt-12 grid grid-cols-1 gap-4 lg:grid-cols-2">
+        <div className="mt-10 grid grid-cols-1 gap-4 lg:grid-cols-2">
           {items.map((item) => (
             <FaqItem key={item.q} question={item.q} answer={item.a} />
           ))}

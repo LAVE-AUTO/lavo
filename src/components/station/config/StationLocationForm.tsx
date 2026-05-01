@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import { useTranslations } from 'next-intl';
 import { useToast } from '@/context/toast-context';
+import { patchWithApi } from '@/services';
 import { TextField } from './TextField';
 
 export interface StationLocation {
@@ -75,7 +76,7 @@ function validateCoord(val: string, min: number, max: number) {
 
 export function StationLocationForm({ location, onSaved, locked = false }: Props) {
   const t = useTranslations('station_config');
-  const { error: showError } = useToast();
+  const { success, error: showError } = useToast();
 
   const [isEditing, setIsEditing] = useState(false);
   const [address, setAddress] = useState(location.address);
@@ -154,8 +155,50 @@ export function StationLocationForm({ location, onSaved, locked = false }: Props
 
     setErrors({});
     setSaving(true);
-    // TODO: connect to API once endpoint is available — PATCH /station/me does not exist yet
-    showError(t('location_save_error'));
+
+    const payload = {
+      address: address.trim(),
+      city: city.trim(),
+      latitude: lat.trim() ? Number(lat) : null,
+      longitude: lng.trim() ? Number(lng) : null,
+    };
+
+    const [ok, data] = await patchWithApi('/station/me', payload);
+
+    if (ok) {
+      const station = (data as {
+        data?: {
+          address?: string;
+          city?: string;
+          latitude?: number | string | null;
+          longitude?: number | string | null;
+        };
+      })?.data;
+
+      const nextLocation: StationLocation = {
+        address: station?.address ?? payload.address,
+        city: station?.city ?? payload.city,
+        latitude:
+          station?.latitude !== undefined
+            ? (station.latitude == null ? null : String(station.latitude))
+            : (payload.latitude == null ? null : String(payload.latitude)),
+        longitude:
+          station?.longitude !== undefined
+            ? (station.longitude == null ? null : String(station.longitude))
+            : (payload.longitude == null ? null : String(payload.longitude)),
+      };
+
+      onSaved(nextLocation);
+      setAddress(nextLocation.address);
+      setCity(nextLocation.city);
+      setLat(nextLocation.latitude ?? '');
+      setLng(nextLocation.longitude ?? '');
+      success(t('location_save_success'));
+      setIsEditing(false);
+    } else {
+      showError(t('location_save_error'));
+    }
+
     setSaving(false);
   }
 

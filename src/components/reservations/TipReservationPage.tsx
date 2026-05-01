@@ -100,7 +100,7 @@ export default function TipReservationPage() {
     setSubmitting(true);
 
     // TODO: connect to API once endpoint is available
-    // POST /me/entries/:id/tip { amount }
+    // POST /reservations/:id/tip { amount }
     if (RESERVATIONS_MOCK_ENABLED) {
       await new Promise((r) => setTimeout(r, 800));
       if (!mountedRef.current) return;
@@ -109,7 +109,7 @@ export default function TipReservationPage() {
       return;
     }
 
-    const [ok] = await postWithApi(`/me/entries/${id}/tip`, { amount });
+    const [ok] = await postWithApi(`/reservations/${id}/tip`, { amount });
     if (!mountedRef.current) return;
     setSubmitting(false);
     if (ok) setPageState('success');

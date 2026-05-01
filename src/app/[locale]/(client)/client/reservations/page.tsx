@@ -408,7 +408,15 @@ export default function ClientReservationsPage() {
               </section>
             )}
 
-            {reservations.length === 0 && <EmptyState message={t('empty_reservations')} />}
+            {reservations.length === 0 && (
+              <EmptyState
+                title={t('empty_reservations_title')}
+                description={t('empty_reservations_desc')}
+                ctaLabel={t('empty_reservations_cta')}
+                ctaHref="/stations"
+                historyLabel={t('empty_reservations_history')}
+              />
+            )}
           </div>
         ) : (
           <div className="space-y-3">
@@ -417,7 +425,13 @@ export default function ClientReservationsPage() {
                 <QueueCard key={entry.id} entry={entry} t={t} />
               ))
             ) : (
-              <EmptyState message={t('empty_queue')} />
+              <EmptyState
+                title={t('empty_queue_title')}
+                description={t('empty_queue_desc')}
+                ctaLabel={t('empty_queue_cta')}
+                ctaHref="/stations"
+                historyLabel={t('empty_queue_history')}
+              />
             )}
           </div>
         )}
@@ -715,16 +729,53 @@ function QueueCard({ entry: q, t }: { entry: ClientQueueEntry; t: ReturnType<typ
 /* Empty state                                                          */
 /* ------------------------------------------------------------------ */
 
-function EmptyState({ message }: { message: string }) {
+function EmptyState({
+  title,
+  description,
+  ctaLabel,
+  ctaHref,
+  historyLabel,
+}: {
+  title: string;
+  description: string;
+  ctaLabel: string;
+  ctaHref: '/stations';
+  historyLabel: string;
+}) {
   return (
-    <div className="flex flex-col items-center justify-center py-16 gap-4 text-center">
-      <div className="w-16 h-16 rounded-full bg-[#E0E0D0] dark:bg-dark-card flex items-center justify-center">
-        <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#9A9A8A" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+    <div className="flex flex-col items-center justify-center py-12 sm:py-16 gap-5 text-center px-4">
+      <div className="w-20 h-20 rounded-full bg-gold/10 border border-gold/30 flex items-center justify-center">
+        <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#af8408" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
           <path d="M2 9a2 2 0 012-2h16a2 2 0 012 2v1a2 2 0 010 4v1a2 2 0 01-2 2H4a2 2 0 01-2-2v-1a2 2 0 010-4V9z" />
           <path d="M9 7v10" strokeDasharray="2 2" />
         </svg>
       </div>
-      <p className="text-[15px] text-[#555] dark:text-[#C0C0B0] max-w-xs">{message}</p>
+      <div className="max-w-sm">
+        <h2 className="text-[17px] sm:text-[19px] font-black text-[#0A0A14] dark:text-white">{title}</h2>
+        <p className="mt-2 text-[14px] text-[#666] dark:text-[#B0B0A0] leading-relaxed">{description}</p>
+      </div>
+      <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 w-full sm:w-auto pt-2">
+        <Link
+          href={ctaHref}
+          className="btn-shine inline-flex items-center justify-center gap-2 px-7 py-3 bg-gold hover:bg-gold-hover rounded-md text-[14px] font-bold text-dark-bg transition-all duration-300 hover:-translate-y-0.5 hover:shadow-[0_8px_24px_rgba(200,152,10,0.35)]"
+        >
+          {ctaLabel}
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+            <line x1="5" y1="12" x2="19" y2="12" />
+            <polyline points="12 5 19 12 12 19" />
+          </svg>
+        </Link>
+        <Link
+          href="/client/history"
+          className="inline-flex items-center justify-center gap-2 px-5 py-3 border border-[#D0D0C0] dark:border-tab-inactive hover:border-gold/50 rounded-md text-[14px] font-semibold text-[#555] dark:text-[#B0B0A0] hover:text-gold transition-colors"
+        >
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+            <path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z" />
+            <polyline points="14 2 14 8 20 8" />
+          </svg>
+          {historyLabel}
+        </Link>
+      </div>
     </div>
   );
 }

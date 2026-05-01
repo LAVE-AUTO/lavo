@@ -29,7 +29,8 @@ function serializeStation(station: Station, documents: StationDocument[]) {
 /**
  * GET /api/v1/station/me
  * Return the authenticated station's profile including KYC documents and photo URLs.
- * Requires an active station account (approved by admin).
+ * Requires an authenticated station account.
+ * Pending KYC stations are allowed; blocked statuses are handled by role guard.
  *
  * Responses:
  *   200 { data: { ...station, photos: string[], documents: StationDocument[] } }

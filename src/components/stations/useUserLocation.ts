@@ -7,22 +7,35 @@ interface UserLocation {
     longitude: number;
 }
 
-let cachedLocation: UserLocation | null = null;
-let locationPromise: Promise<UserLocation | null> | null = null;
+const DISMISS_KEY = 'lavo_geo_banner_dismissed';
 
-function requestLocation(): Promise<UserLocation | null> {
+let cachedLocation: UserLocation | null = null;
+const listeners = new Set<(loc: UserLocation | null) => void>();
+
+function broadcast(loc: UserLocation | null) {
+    cachedLocation = loc;
+    listeners.forEach((l) => l(loc));
+}
+
+/**
+ * Triggers the native browser geolocation prompt and broadcasts the result
+ * to every subscribed `useUserLocation` consumer. Resolves to `null` when
+ * the user denies permission, the navigator API is missing, or the request
+ * times out.
+ */
+export async function requestUserLocation(): Promise<UserLocation | null> {
     if (typeof navigator === 'undefined' || !navigator.geolocation) {
-        return Promise.resolve(null);
+        return null;
     }
     return new Promise((resolve) => {
         navigator.geolocation.getCurrentPosition(
             (pos) => {
                 const loc = { latitude: pos.coords.latitude, longitude: pos.coords.longitude };
-                cachedLocation = loc;
+                broadcast(loc);
                 resolve(loc);
             },
             () => resolve(null),
-            { enableHighAccuracy: false, timeout: 8000, maximumAge: 300000 }
+            { enableHighAccuracy: false, timeout: 8000, maximumAge: 300000 },
         );
     });
 }
@@ -41,18 +54,83 @@ export function haversineKm(lat1: number, lon1: number, lat2: number, lon2: numb
     return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
 }
 
+/**
+ * Subscribes to the cached browser geolocation. Does NOT trigger the native
+ * permission prompt — call `requestUserLocation()` (typically via the
+ * in-app banner) once the user opts in.
+ */
 export function useUserLocation(): UserLocation | null {
     const [location, setLocation] = useState<UserLocation | null>(cachedLocation);
 
     useEffect(() => {
-        if (cachedLocation) return;
-        if (!locationPromise) {
-            locationPromise = requestLocation();
-        }
-        locationPromise.then((loc) => {
-            if (loc) setLocation(loc);
-        });
+        listeners.add(setLocation);
+        return () => {
+            listeners.delete(setLocation);
+        };
     }, []);
 
     return location;
+}
+
+interface GeolocationBannerState {
+    visible: boolean;
+    request: () => Promise<void>;
+    dismiss: () => void;
+}
+
+/**
+ * Drives the in-app geolocation banner. Shows the banner only when the
+ * Permissions API reports `prompt` (or is unavailable, e.g. Safari iOS),
+ * the user has not dismissed it during this session, and no location is
+ * cached yet. When permission is already `granted` the location is
+ * fetched silently in the background and the banner stays hidden.
+ */
+export function useGeolocationBanner(): GeolocationBannerState {
+    const [visible, setVisible] = useState(false);
+
+    useEffect(() => {
+        if (typeof window === 'undefined' || !navigator.geolocation) return;
+        if (cachedLocation) return;
+
+        let dismissed = false;
+        try {
+            dismissed = sessionStorage.getItem(DISMISS_KEY) === '1';
+        } catch {
+            /* sessionStorage unavailable (incognito, sandbox) — fall through */
+        }
+        if (dismissed) return;
+
+        // Permissions API is optional. Treat missing API as "prompt".
+        const permissions = (navigator as Navigator & { permissions?: { query: (d: { name: PermissionName }) => Promise<PermissionStatus> } }).permissions;
+        if (!permissions?.query) {
+            setVisible(true);
+            return;
+        }
+        permissions
+            .query({ name: 'geolocation' as PermissionName })
+            .then((result) => {
+                if (result.state === 'granted') {
+                    void requestUserLocation();
+                } else if (result.state === 'prompt') {
+                    setVisible(true);
+                }
+            })
+            .catch(() => setVisible(true));
+    }, []);
+
+    const request = async () => {
+        setVisible(false);
+        const loc = await requestUserLocation();
+        if (!loc) {
+            // Browser denied or timed out — keep the banner gone for this session
+            try { sessionStorage.setItem(DISMISS_KEY, '1'); } catch {}
+        }
+    };
+
+    const dismiss = () => {
+        setVisible(false);
+        try { sessionStorage.setItem(DISMISS_KEY, '1'); } catch {}
+    };
+
+    return { visible, request, dismiss };
 }
