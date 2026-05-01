@@ -3,6 +3,9 @@
 import { useState, useEffect } from 'react';
 import { useTranslations } from 'next-intl';
 import { postWithApi, updateWithApi } from '@/services';
+import { TextField } from '@/components/station/config/TextField';
+import { Textarea } from '@/components/station/config/Textarea';
+import { NumberStepper } from '@/components/station/config/NumberStepper';
 import type { StationExtras, StationExtra } from '@/components/station/config/StationExtrasForm';
 import type { Service, VehicleFormat, ServiceVehicleEntry, ServiceCategory, ServiceType } from './types';
 import { ServiceVehicleRows } from './ServiceVehicleRows';
@@ -26,8 +29,19 @@ interface AutomaticPackage {
 const CATEGORIES: ServiceCategory[] = ['hand_wash', 'automatic', 'self_service'];
 const TYPES: ServiceType[] = ['exterior', 'interior', 'complete'];
 
-const inputClass =
-  'w-full rounded-[8px] border border-[#D8D4C8] bg-[#F7F6F2] px-3 py-2.5 text-[13px] text-[#1A1A0A] outline-none transition-colors duration-150 placeholder:text-[#BBBBAA] focus:border-[#C49A1E] focus:bg-white focus:shadow-[0_0_0_3px_rgba(196,154,30,0.12)] dark:border-[#243020] dark:bg-[#0F1A0C] dark:text-[#F0EDD4] dark:placeholder:text-[#4A4A3A] dark:focus:border-[#C49A1E] dark:focus:bg-[#182214]';
+const SearchIcon = () => (
+  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+    <circle cx="11" cy="11" r="8" />
+    <line x1="21" y1="21" x2="16.65" y2="16.65" />
+  </svg>
+);
+
+const TagIcon = () => (
+  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+    <path d="M20.59 13.41l-7.17 7.17a2 2 0 01-2.83 0L2 12V2h10l8.59 8.59a2 2 0 010 2.82z" />
+    <line x1="7" y1="7" x2="7.01" y2="7" />
+  </svg>
+);
 
 function buildEntries(formats: VehicleFormat[], existing?: ServiceVehicleEntry[]): ServiceVehicleEntry[] {
   return formats.map((f) => {
@@ -354,15 +368,14 @@ export function ServiceModal({ service, vehicleFormats, availableExtras, onClose
               )}
               {isEdit && (
               <div className="flex flex-col gap-1.5">
-                <label className="text-[13px] font-medium text-[#5A5A4A] dark:text-[#9A9A8A]">{t('field_name')}</label>
-                <input
-                  type="text"
+                <label className="text-[11px] font-bold uppercase tracking-[0.5px] text-[#888] dark:text-[#9A9A8A]">{t('field_name')}</label>
+                <TextField
                   value={name}
-                  onChange={(e) => setName(e.target.value)}
+                  onChange={setName}
+                  prefixIcon={<TagIcon />}
                   placeholder={t('placeholder_name')}
                   maxLength={100}
                   required
-                  className={inputClass}
                 />
               </div>
               )}
@@ -443,52 +456,49 @@ export function ServiceModal({ service, vehicleFormats, availableExtras, onClose
               )}
 
               <div className="flex flex-col gap-1.5">
-                <label className="text-[13px] font-medium text-[#5A5A4A] dark:text-[#9A9A8A]">{t('field_description')}</label>
-                <textarea
+                <label className="text-[11px] font-bold uppercase tracking-[0.5px] text-[#888] dark:text-[#9A9A8A]">{t('field_description')}</label>
+                <Textarea
                   value={description}
-                  onChange={(e) => setDescription(e.target.value)}
+                  onChange={setDescription}
                   placeholder={t('placeholder_description')}
-                  rows={2}
-                  className={inputClass + ' resize-none'}
+                  rows={3}
+                  maxLength={500}
+                  showCounter
                 />
               </div>
 
               {(category === 'hand_wash' || category === 'self_service') && (
                 <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
                   <div className="flex flex-col gap-1.5">
-                    <label className="text-[13px] font-medium text-[#5A5A4A] dark:text-[#9A9A8A]">{t('format_field_price')}</label>
-                    <input
-                      type="number"
-                      min="0"
-                      step="0.01"
+                    <label className="text-[11px] font-bold uppercase tracking-[0.5px] text-[#888] dark:text-[#9A9A8A]">{t('format_field_price')}</label>
+                    <NumberStepper
                       value={basePrice}
-                      onChange={(e) => setBasePrice(e.target.value)}
-                      className={inputClass}
+                      onChange={setBasePrice}
+                      min={0}
+                      step={0.5}
+                      unit="$"
                     />
                   </div>
                   {showDurationField && (
                   <div className="flex flex-col gap-1.5">
-                    <label className="text-[13px] font-medium text-[#5A5A4A] dark:text-[#9A9A8A]">{t('vehicle_col_duration')}</label>
-                    <input
-                      type="number"
-                      min="1"
-                      step="1"
+                    <label className="text-[11px] font-bold uppercase tracking-[0.5px] text-[#888] dark:text-[#9A9A8A]">{t('vehicle_col_duration')}</label>
+                    <NumberStepper
                       value={baseDuration}
-                      onChange={(e) => setBaseDuration(e.target.value)}
-                      className={inputClass}
+                      onChange={setBaseDuration}
+                      min={1}
+                      step={5}
+                      unit="min"
                     />
                   </div>
                   )}
                   {showStaffField && (
                   <div className="flex flex-col gap-1.5 sm:col-span-2">
-                    <label className="text-[13px] font-medium text-[#5A5A4A] dark:text-[#9A9A8A]">{t('vehicle_col_staff')}</label>
-                    <input
-                      type="number"
-                      min="0"
-                      step="1"
+                    <label className="text-[11px] font-bold uppercase tracking-[0.5px] text-[#888] dark:text-[#9A9A8A]">{t('vehicle_col_staff')}</label>
+                    <NumberStepper
                       value={baseStaff}
-                      onChange={(e) => setBaseStaff(e.target.value)}
-                      className={inputClass}
+                      onChange={setBaseStaff}
+                      min={0}
+                      step={1}
                     />
                   </div>
                   )}
@@ -512,50 +522,53 @@ export function ServiceModal({ service, vehicleFormats, availableExtras, onClose
                   ) : (
                     <div className="space-y-2">
                       {automaticPackages.map((pkg) => (
-                        <div key={pkg.id} className="rounded-[8px] border border-[#D8D4C8] bg-white p-2.5 dark:border-[#243020] dark:bg-[#182214]">
-                          <div className="mb-2 grid grid-cols-1 gap-2 sm:grid-cols-3">
-                            <input
-                              type="text"
+                        <div key={pkg.id} className="rounded-xl border border-[#E8E4DC] bg-white p-3 dark:border-[#243020] dark:bg-[#182214]">
+                          <div className="mb-3 grid grid-cols-1 gap-2 sm:grid-cols-3">
+                            <TextField
                               value={pkg.name}
-                              onChange={(e) => updateAutomaticPackage(pkg.id, 'name', e.target.value)}
+                              onChange={(v) => updateAutomaticPackage(pkg.id, 'name', v)}
                               placeholder={t('automatic_package_name')}
-                              className={inputClass}
                             />
-                            <input
-                              type="number"
-                              min="0"
-                              step="0.01"
+                            <TextField
                               value={pkg.price}
-                              onChange={(e) => updateAutomaticPackage(pkg.id, 'price', e.target.value)}
-                              placeholder={t('field_price_cad')}
-                              className={inputClass}
-                            />
-                            <input
+                              onChange={(v) => updateAutomaticPackage(pkg.id, 'price', v)}
                               type="number"
-                              min="1"
+                              inputMode="decimal"
+                              min={0}
+                              step={0.5}
+                              placeholder={t('field_price_cad')}
+                              suffix={<span className="text-[11px] font-bold text-[#BBBBAA] dark:text-[#5A5A4A]">$</span>}
+                            />
+                            <TextField
                               value={pkg.duration}
-                              onChange={(e) => updateAutomaticPackage(pkg.id, 'duration', e.target.value)}
+                              onChange={(v) => updateAutomaticPackage(pkg.id, 'duration', v)}
+                              type="number"
+                              inputMode="numeric"
+                              min={1}
+                              step={5}
                               placeholder={t('vehicle_col_duration')}
-                              className={inputClass}
+                              suffix={<span className="text-[11px] font-bold text-[#BBBBAA] dark:text-[#5A5A4A]">min</span>}
                             />
                           </div>
                           <div className="flex items-center justify-between">
                             <button
                               type="button"
                               onClick={() => removeAutomaticPackage(pkg.id)}
-                              className="rounded-[8px] border border-[#FF2525] px-2.5 py-1 text-[11px] font-bold text-[#FF2525]"
+                              className="rounded-lg border border-[#FF2525]/30 bg-[#FF2525]/5 px-2.5 py-1 text-[11px] font-bold text-[#FF2525] transition-colors hover:bg-[#FF2525]/10"
                             >
                               {t('btn_delete')}
                             </button>
                             <button
                               type="button"
                               onClick={() => updateAutomaticPackage(pkg.id, 'is_active', !pkg.is_active)}
-                              className={`rounded-full border px-3 py-1 text-[11px] font-bold transition-all ${
+                              aria-pressed={pkg.is_active}
+                              className={`inline-flex items-center gap-1 rounded-full border px-2.5 py-0.5 text-[10px] font-bold tracking-wide transition-colors ${
                                 pkg.is_active
-                                  ? 'border-[#2ecc71] bg-[rgba(46,204,113,.12)] text-[#2ecc71]'
-                                  : 'border-[#888] bg-[rgba(136,136,136,.12)] text-[#888]'
+                                  ? 'border-[#22C47A]/40 bg-[#22C47A]/12 text-[#16A964] hover:bg-[#22C47A]/20'
+                                  : 'border-[#888]/30 bg-[#888]/10 text-[#888] hover:bg-[#888]/15 dark:text-[#9A9A8A]'
                               }`}
                             >
+                              <span className={`h-1.5 w-1.5 rounded-full ${pkg.is_active ? 'bg-[#22C47A]' : 'bg-[#888]'}`} aria-hidden="true" />
                               {pkg.is_active ? t('badge_active') : t('badge_inactive')}
                             </button>
                           </div>
@@ -568,15 +581,14 @@ export function ServiceModal({ service, vehicleFormats, availableExtras, onClose
 
               {showFormatSection && (
               <div className="flex flex-col gap-1.5">
-                <label className="text-[12px] font-black tracking-[.08em] text-[#C49A1E] uppercase">
+                <label className="text-[11px] font-black uppercase tracking-[1.5px] text-[#C49A1E]">
                   {t('field_vehicle_formats')}
                 </label>
-                <input
-                  type="text"
+                <TextField
                   value={formatSearch}
-                  onChange={(e) => setFormatSearch(e.target.value)}
+                  onChange={setFormatSearch}
+                  prefixIcon={<SearchIcon />}
                   placeholder={t('format_search_placeholder')}
-                  className={inputClass}
                 />
                 {showFormatUnavailable && (
                   <p className="text-[12px] font-semibold text-[#EF4444]">{t('format_not_in_list')}</p>
