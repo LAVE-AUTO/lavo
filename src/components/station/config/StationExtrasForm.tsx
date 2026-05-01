@@ -3,12 +3,22 @@
 import { useState } from 'react';
 import { useTranslations } from 'next-intl';
 
+/** Per-vehicle pricing entry, mirrors ServiceVehicleEntry shape from formats/types.ts. */
+export interface ExtraVehicleEntry {
+  vehicle_format_id: string;
+  vehicle_label: string;
+  price: string;
+  duration_min: number;
+}
+
 export interface StationExtra {
   id: string;
   label: string;
   description: string;
   price: string;
   is_active: boolean;
+  /** Optional per-vehicle pricing. When absent, the flat `price` applies to all formats. */
+  vehicle_entries?: ExtraVehicleEntry[];
 }
 
 export interface StationExtras {
