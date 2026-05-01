@@ -2106,7 +2106,7 @@
     "field_staff_required": "Required staff",
     "field_vehicle_formats": "Accepted vehicle formats",
     "format_search_placeholder": "Search a format in the list...",
-    "format_not_in_list": "This format is not available in the backend list.",
+    "format_not_in_list": "No format matches your search.",
     "type_hint_exterior": "Exterior-focused service: compatible extras are filtered automatically.",
     "type_hint_interior": "Interior-focused service: compatible extras are filtered automatically.",
     "type_hint_complete": "Complete service: interior, exterior and mixed extras are available.",
