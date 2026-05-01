@@ -73,19 +73,19 @@ export function StationListView({ washTypes }: StationListViewProps) {
   const [serviceScope,       setServiceScope]       = useState<ServiceScope>('');
   const [panelOpen,          setPanelOpen]          = useState(false);
 
-  /* Commented-out filters — UI + state disabled until backend exposes the
-   * matching data (prices via formats in list payload, wash category tags,
-   * vehicle types, date/slot filter, per-station opening hours).
-   *
-   * const [price, setPrice]                         = useState({ min: '', max: '' });
-   * const [priceErrors, setPriceErrors]             = useState({ min: '', max: '' });
-   * const [selectedCategories, setSelectedCategories] = useState<string[]>([]);
-   * const [selectedVehicles, setSelectedVehicles]     = useState<string[]>([]);
-   * const [selectedServices, setSelectedServices]     = useState<string[]>([]);
-   * const [date, setDate]                             = useState('');
-   * const [timeFrom, setTimeFrom]                     = useState('');
-   * const [timeTo, setTimeTo]                         = useState('');
-   */
+  /* "Bientôt disponible" filter states — UI is rendered but disabled and never
+   * forwarded to fetchStations. Once the backend exposes the matching data
+   * (price floor, opening hours, tags, vehicle types, services, date/slot),
+   * we drop the disabled prop, wire the values into the params object and the
+   * filter becomes live. See project_pending_backend_specs.md →
+   * "Missing on `GET /api/v1/stations`" + "Missing fields in the list payload". */
+  const [price, setPrice] = useState({ min: '', max: '' });
+  const [date, setDate] = useState('');
+  const [timeFrom, setTimeFrom] = useState('');
+  const [timeTo, setTimeTo] = useState('');
+  const [selectedCategories, setSelectedCategories] = useState<string[]>([]);
+  const [selectedVehicles, setSelectedVehicles] = useState<string[]>([]);
+  const [selectedServices, setSelectedServices] = useState<string[]>([]);
 
   /* Debounced text inputs — avoid a fetch on every keystroke. */
   const [debouncedText, setDebouncedText] = useState({ city: '', q: '' });
@@ -189,6 +189,14 @@ export function StationListView({ washTypes }: StationListViewProps) {
     setNameSearch('');
     setSelectedWashTypes([]);
     setServiceScope('');
+    // Coming-soon filters: also clear them so the panel is fully neutral after Reset
+    setPrice({ min: '', max: '' });
+    setDate('');
+    setTimeFrom('');
+    setTimeTo('');
+    setSelectedCategories([]);
+    setSelectedVehicles([]);
+    setSelectedServices([]);
     setPanelOpen(false);
   };
 
@@ -338,18 +346,124 @@ export function StationListView({ washTypes }: StationListViewProps) {
               </div>
             </div>
 
-            {/* ----------------------------------------------------------
-             * Filtres désactivés — à réactiver quand le backend expose les
-             * données correspondantes dans GET /stations :
-             *   - Fourchette de prix (min/max) → requiert formats dans la liste
-             *   - Catégories (tags), Services, Types de véhicule → requièrent
-             *     des champs dédiés ou un dérivé wash_types-based
-             *   - Date → `date` param déjà supporté mais non branché ici
-             *   - Plage horaire → requiert openingHours dans la liste
-             * Les states, composants (TimeInput) et markup originaux ont été
-             * retirés pour ne pas alourdir le rendu ; le git history contient
-             * la version complète pour restauration.
+            {/* -- Coming-soon filters -------------------------------------
+             * Surfaced in the UI so the merchant/client sees what's planned;
+             * disabled until the backend returns the matching data. Mirrors
+             * the "Bientôt disponible" treatment used on /station/config.
              * -------------------------------------------------------- */}
+            <div className="space-y-3 border-t border-dashed border-[#E0E0D0] pt-4 dark:border-tab-inactive">
+              <div className="flex items-center gap-2">
+                <span className="text-[11px] sm:text-[13px] font-bold uppercase tracking-wider text-[#888] dark:text-[#7A7A6A]">
+                  {t('filter_coming_soon_title')}
+                </span>
+                <span className="inline-flex items-center gap-1 rounded-full bg-gold/15 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider text-gold">
+                  <span className="h-1.5 w-1.5 rounded-full bg-gold" aria-hidden="true" />
+                  {t('filter_coming_soon_pill')}
+                </span>
+              </div>
+              <p className="text-[12px] leading-snug text-[#888] dark:text-[#9A9A8A]">
+                {t('filter_coming_soon_hint')}
+              </p>
+
+              {/* Price range (min/max) */}
+              <div>
+                <p className="mb-1.5 text-[11px] sm:text-[13px] font-bold uppercase tracking-wider text-[#333] dark:text-[#C0C0B0]">
+                  {t('filter_price_label')}
+                </p>
+                <div className="grid grid-cols-2 gap-2">
+                  <div className="relative">
+                    <span className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-[13px] font-semibold text-[#888]">
+                      {t('filter_currency_unit')}
+                    </span>
+                    <input
+                      type="number"
+                      min={0}
+                      value={price.min}
+                      onChange={(e) => setPrice((p) => ({ ...p, min: e.target.value }))}
+                      placeholder={t('filter_price_min_placeholder')}
+                      disabled
+                      className="w-full cursor-not-allowed rounded-lg border border-[#E0E0D0] bg-[#F5F5EE] py-2 pl-7 pr-3 text-[13px] sm:text-[14px] text-[#1A1A1A] placeholder-[#9A9A8A] opacity-60 outline-none dark:border-tab-inactive dark:bg-tab-inactive dark:text-white"
+                    />
+                  </div>
+                  <div className="relative">
+                    <span className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-[13px] font-semibold text-[#888]">
+                      {t('filter_currency_unit')}
+                    </span>
+                    <input
+                      type="number"
+                      min={0}
+                      value={price.max}
+                      onChange={(e) => setPrice((p) => ({ ...p, max: e.target.value }))}
+                      placeholder={t('filter_price_max_placeholder')}
+                      disabled
+                      className="w-full cursor-not-allowed rounded-lg border border-[#E0E0D0] bg-[#F5F5EE] py-2 pl-7 pr-3 text-[13px] sm:text-[14px] text-[#1A1A1A] placeholder-[#9A9A8A] opacity-60 outline-none dark:border-tab-inactive dark:bg-tab-inactive dark:text-white"
+                    />
+                  </div>
+                </div>
+              </div>
+
+              {/* Date + time range */}
+              <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+                <div>
+                  <p className="mb-1.5 text-[11px] sm:text-[13px] font-bold uppercase tracking-wider text-[#333] dark:text-[#C0C0B0]">
+                    {t('filter_date_label')}
+                  </p>
+                  <input
+                    type="date"
+                    value={date}
+                    onChange={(e) => setDate(e.target.value)}
+                    disabled
+                    className="w-full cursor-not-allowed rounded-lg border border-[#E0E0D0] bg-[#F5F5EE] px-3 py-2 text-[13px] sm:text-[14px] text-[#1A1A1A] opacity-60 outline-none dark:border-tab-inactive dark:bg-tab-inactive dark:text-white"
+                  />
+                </div>
+                <div>
+                  <p className="mb-1.5 text-[11px] sm:text-[13px] font-bold uppercase tracking-wider text-[#333] dark:text-[#C0C0B0]">
+                    {t('filter_time_label')}
+                  </p>
+                  <div className="grid grid-cols-2 gap-2">
+                    <input
+                      type="time"
+                      value={timeFrom}
+                      onChange={(e) => setTimeFrom(e.target.value)}
+                      aria-label={t('filter_time_from')}
+                      disabled
+                      className="w-full cursor-not-allowed rounded-lg border border-[#E0E0D0] bg-[#F5F5EE] px-3 py-2 text-center font-mono text-[13px] text-[#1A1A1A] opacity-60 outline-none dark:border-tab-inactive dark:bg-tab-inactive dark:text-white"
+                    />
+                    <input
+                      type="time"
+                      value={timeTo}
+                      onChange={(e) => setTimeTo(e.target.value)}
+                      aria-label={t('filter_time_to')}
+                      disabled
+                      className="w-full cursor-not-allowed rounded-lg border border-[#E0E0D0] bg-[#F5F5EE] px-3 py-2 text-center font-mono text-[13px] text-[#1A1A1A] opacity-60 outline-none dark:border-tab-inactive dark:bg-tab-inactive dark:text-white"
+                    />
+                  </div>
+                </div>
+              </div>
+
+              {/* Categories + Vehicle types */}
+              <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+                <DisabledMultiSelectField
+                  label={t('filter_categories_label')}
+                  placeholder={t('filter_categories_placeholder')}
+                  selectedCount={selectedCategories.length}
+                />
+                <DisabledMultiSelectField
+                  label={t('filter_vehicle_label')}
+                  placeholder={t('filter_vehicle_placeholder')}
+                  selectedCount={selectedVehicles.length}
+                />
+              </div>
+
+              {/* Services / extras */}
+              <div>
+                <DisabledMultiSelectField
+                  label={t('filter_service_label')}
+                  placeholder={t('filter_service_placeholder')}
+                  selectedCount={selectedServices.length}
+                />
+              </div>
+            </div>
 
           </div>
         )}
@@ -490,6 +604,50 @@ function StationSection({ label, stations, expanded, onToggle, seeMoreLabel, acc
         </div>
       )}
     </section>
+  );
+}
+
+/* ------------------------------------------------------------------ */
+/* Disabled placeholder for upcoming multi-select filters               */
+/* (categories, vehicle types, services). Shown so the user sees what's */
+/* coming without exposing fake / mock data.                            */
+/* ------------------------------------------------------------------ */
+
+interface DisabledMultiSelectFieldProps {
+  label: string;
+  placeholder: string;
+  selectedCount: number;
+}
+
+function DisabledMultiSelectField({ label, placeholder, selectedCount }: DisabledMultiSelectFieldProps) {
+  return (
+    <div>
+      <p className="mb-1.5 text-[11px] sm:text-[13px] font-bold uppercase tracking-wider text-[#333] dark:text-[#C0C0B0]">
+        {label}
+      </p>
+      <div
+        aria-disabled="true"
+        className="flex w-full cursor-not-allowed items-center justify-between rounded-lg border border-[#E0E0D0] bg-[#F5F5EE] px-3 py-2 text-[13px] sm:text-[14px] text-[#9A9A8A] opacity-60 dark:border-tab-inactive dark:bg-tab-inactive dark:text-[#7A7A6A]"
+      >
+        <span className="truncate">
+          {selectedCount > 0 ? `${selectedCount}` : placeholder}
+        </span>
+        <svg
+          width="14"
+          height="14"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth="2.5"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          aria-hidden="true"
+          className="shrink-0"
+        >
+          <polyline points="6 9 12 15 18 9" />
+        </svg>
+      </div>
+    </div>
   );
 }
 

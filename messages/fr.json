@@ -538,7 +538,11 @@
         "hero_bottom_availability": "Disponibilité",
         "hero_bottom_availability_value": "7j/7",
         "hero_stat_empty": "—",
-        "stat_distance": "Distance"
+        "stat_distance": "Distance",
+        "filter_coming_soon_title": "Filtres avancés",
+        "filter_coming_soon_pill": "Bientôt disponible",
+        "filter_coming_soon_hint": "Ces filtres apparaissent ici pour vous donner un aperçu — ils seront actifs dès que les données seront disponibles côté plateforme.",
+        "filter_currency_unit": "$"
     },
     "merchant": {
         "meta_title": "Slowtime — Espace marchand",
@@ -1720,8 +1724,8 @@
         "availability_delete_success": "Disponibilité supprimée",
         "availability_delete_error": "Impossible de supprimer la disponibilité.",
         "notif_coming_soon": "Notifications — bientôt disponibles",
-        "availability_link_hours": "Voir les horaires",
-        "availability_link_capacity": "Voir la capacité"
+        "availability_link_hours": "Configurer les horaires",
+        "availability_link_capacity": "Configurer la capacité"
     },
     "station_reservations": {
         "page_title": "Réservations du jour",
