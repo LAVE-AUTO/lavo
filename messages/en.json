@@ -1718,7 +1718,8 @@
         "availability_save_success": "Availability saved",
         "availability_save_error": "Could not save the availability. Please retry.",
         "availability_delete_success": "Availability removed",
-        "availability_delete_error": "Could not remove the availability."
+        "availability_delete_error": "Could not remove the availability.",
+        "notif_coming_soon": "Notifications — coming soon"
     },
     "station_reservations": {
         "page_title": "Today's reservations",
