@@ -6,6 +6,7 @@ import { patchWithApi } from '@/services';
 import { useToast } from '@/context/toast-context';
 import type { StationConfig, StationPost } from '../types';
 import { NumberStepper } from '../NumberStepper';
+import { BookingMarkupCard } from './BookingMarkupCard';
 
 interface Props {
   config: StationConfig;
@@ -39,6 +40,8 @@ function Card({ title, children }: { title: string; children: React.ReactNode })
 }
 
 function initForm(config: StationConfig, postCount: number) {
+  const surchargeNumeric = config.reservation_surcharge != null ? Number(config.reservation_surcharge) : NaN;
+  const surchargeEnabled = Number.isFinite(surchargeNumeric) && surchargeNumeric > 0;
   return {
     wash_duration_minutes: config.wash_duration_minutes ?? '',
     wash_post_count: config.wash_post_count ?? postCount,
@@ -47,6 +50,8 @@ function initForm(config: StationConfig, postCount: number) {
     max_concurrent_posts: config.max_concurrent_posts ?? '',
     margin_before_minutes: config.margin_before_minutes ?? '',
     margin_after_minutes: config.margin_after_minutes ?? '',
+    surcharge_enabled: surchargeEnabled,
+    surcharge_amount: surchargeEnabled ? surchargeNumeric.toFixed(2) : '0',
   };
 }
 
@@ -122,6 +127,13 @@ export function CapacityTab({ config, posts, locked, onSaved }: Props) {
     if (ma !== undefined) payload.margin_after_minutes = ma;
 
     payload.wash_post_count = totalBays;
+
+    // Reservation surcharge: enabled with positive amount → number; otherwise null (no surcharge)
+    const surchargeAmount = Number(form.surcharge_amount);
+    payload.reservation_surcharge =
+      form.surcharge_enabled && Number.isFinite(surchargeAmount) && surchargeAmount > 0
+        ? Number(surchargeAmount.toFixed(2))
+        : null;
     // Send the full target list of positions. The backend's upsertPosts will
     // create missing positions and delete any not present, keeping post_active in sync.
     payload.posts = visiblePositions.map((position) => ({
@@ -149,6 +161,14 @@ export function CapacityTab({ config, posts, locked, onSaved }: Props) {
 
   return (
     <form onSubmit={handleSubmit} className="flex flex-col gap-5">
+      <BookingMarkupCard
+        enabled={form.surcharge_enabled}
+        amount={form.surcharge_amount}
+        onEnabledChange={(next) => set('surcharge_enabled', next)}
+        onAmountChange={(next) => set('surcharge_amount', next)}
+        disabled={locked || saving}
+      />
+
       <div className="grid gap-5 md:grid-cols-2">
         <Card title={t('capacity_card_bays')}>
           <div className="flex flex-col gap-4">
