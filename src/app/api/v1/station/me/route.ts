@@ -1,30 +1,38 @@
 import { requireRole } from '@/lib/require-role';
-import { getMyStation, updateMyStation } from '@/server/station/station-service';
-import { findDocumentsByStationId } from '@/server/station/document-repository';
+import { getMyStation, updateMyStation, type StationWithDocuments } from '@/server/station/station-service';
 import { successResponse, error400, error403, error404, error500, fromAppError } from '@/lib/responses';
 import { AppError, ForbiddenError, NotFoundError } from '@/lib/errors';
 import { applyNoStoreHeaders } from '@/lib/response-headers';
 import { updateStationProfileBodySchema, mapZodErrors } from '@/validators/station';
 import { ApiCode } from '@/types/api-codes';
-import type { Station } from '@/server/station/station-repository';
-import type { StationDocument } from '@/server/station/document-repository';
 import type { NextResponse } from 'next/server';
 
-function serializeStation(station: Station, documents: StationDocument[]) {
-  const photos = documents
-    .filter((d) => d.document_type === 'photo')
-    .map((d) => d.file_url);
-  const kyc_documents = documents.filter((d) => d.document_type !== 'photo');
-  // Omit internal/sensitive columns that must not be exposed to the station owner.
+
+// %%%%% Helpers %%%%%
+
+/**
+ * Strips internal/sensitive columns and returns public station shape.
+ * photos comes from the dedicated station_photos table (ordered by position).
+ * documents contains KYC documents only (photos are no longer in station_documents).
+ */
+function serializeStation(station: StationWithDocuments) {
   const {
     stripe_account_id: _stripe,
     rejection_reason: _rejection,
     approved_by: _approvedBy,
     approved_at: _approvedAt,
+    documents,
+    photos,
     ...publicStation
   } = station;
-  return { ...publicStation, photos, documents: kyc_documents };
+  return { ...publicStation, photos, documents };
 }
+
+
+// %%%%% END - Helpers %%%%%
+
+
+// %%%%% Route handlers %%%%%
 
 /**
  * GET /api/v1/station/me
@@ -44,8 +52,8 @@ export async function GET(): Promise<NextResponse> {
   if (auth instanceof Response) return applyNoStoreHeaders(auth as NextResponse);
 
   try {
-    const { documents, ...station } = await getMyStation(auth.sub);
-    return applyNoStoreHeaders(successResponse(serializeStation(station, documents)));
+    const station = await getMyStation(auth.sub);
+    return applyNoStoreHeaders(successResponse(serializeStation(station)));
   } catch (e) {
     if (e instanceof NotFoundError) return applyNoStoreHeaders(error404(e.message));
     if (e instanceof ForbiddenError) return applyNoStoreHeaders(error403(e.message));
@@ -54,13 +62,14 @@ export async function GET(): Promise<NextResponse> {
   }
 }
 
+
 /**
  * PATCH /api/v1/station/me
  * Partially update the authenticated station's profile (text fields only).
  * At least one field must be provided. Fields not included are left unchanged.
  *
  * Body (all optional, at least one required):
- *   name, description, address, city, latitude, longitude, service_scope, wash_post_count
+ *   name, description, address, city, postal_code, latitude, longitude, service_scope, wash_types
  *
  * Responses:
  *   200 { data: { ...station, photos: string[], documents: StationDocument[] } }
@@ -89,9 +98,9 @@ export async function PATCH(request: Request): Promise<NextResponse> {
   }
 
   try {
-    const updated = await updateMyStation(auth.sub, parsed.data);
-    const documents = await findDocumentsByStationId(updated.id);
-    return applyNoStoreHeaders(successResponse(serializeStation(updated, documents)));
+    await updateMyStation(auth.sub, parsed.data);
+    const station = await getMyStation(auth.sub);
+    return applyNoStoreHeaders(successResponse(serializeStation(station)));
   } catch (e) {
     if (e instanceof NotFoundError) return applyNoStoreHeaders(error404(e.message));
     if (e instanceof ForbiddenError) return applyNoStoreHeaders(error403(e.message));
@@ -99,3 +108,6 @@ export async function PATCH(request: Request): Promise<NextResponse> {
     return applyNoStoreHeaders(error500(e));
   }
 }
+
+
+// %%%%% END - Route handlers %%%%%
