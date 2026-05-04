@@ -1,15 +1,31 @@
 import { getTranslations } from 'next-intl/server';
 import { Link } from '@/i18n/navigation';
 import { HeroSearch } from './HeroSearch';
+import type { StationsHeroMetrics } from '@/helpers/stations-metrics';
+
+interface StationsHeroProps {
+  metrics: StationsHeroMetrics;
+}
 
 /**
  * Hero banner at the top of the public stations list page.
- * Server component — no client JS needed.
- * Two CSS animations: floating orb blobs + floating stat cards.
+ * Server component — receives precomputed metrics from the page so the
+ * KPI badges, floating stat cards and bottom strip render live values
+ * (station count, weighted average rating, total reviews, total washes).
  */
-export async function StationsHero() {
+export async function StationsHero({ metrics }: StationsHeroProps) {
   const t  = await getTranslations('stations');
   const tn = await getTranslations('nav');
+
+  const emptyLabel = t('hero_stat_empty');
+
+  const totalLabel       = metrics.totalStations.toLocaleString();
+  const ratingLabel      = metrics.avgRating != null
+    ? `${metrics.avgRating.toFixed(1)} ★`
+    : emptyLabel;
+  const completedLabel   = metrics.completedCount > 0 ? metrics.completedCount.toLocaleString() : emptyLabel;
+  const reviewsLabel     = metrics.totalReviews > 0   ? metrics.totalReviews.toLocaleString()   : emptyLabel;
+  const activeBadgeLabel = t('hero_badge_active', { count: metrics.totalStations });
 
   return (
     <div className="relative overflow-hidden stations-hero-bg min-h-[500px] sm:min-h-[560px]">
@@ -51,7 +67,7 @@ export async function StationsHero() {
               </span>
               <span className="text-[12px] font-bold text-white/70 uppercase tracking-[0.15em]">Slowtime Network</span>
               <span className="w-px h-3 bg-white/20 shrink-0" />
-              <span className="text-[12px] font-bold text-gold tracking-wide">150+ stations actives</span>
+              <span className="text-[12px] font-bold text-gold tracking-wide">{activeBadgeLabel}</span>
             </div>
 
             {/* Title */}
@@ -93,17 +109,17 @@ export async function StationsHero() {
 
           {/* ── Right: floating stat cards (lg+) ── */}
           <div className="hidden lg:flex flex-col gap-4 shrink-0">
-            <StatCard value="150+" label="Stations partenaires" delay="200" />
-            <StatCard value="4.8 ★" label="Note moyenne" delay="400" />
-            <StatCard value="< 30min" label="Attente typique" delay="600" />
+            <StatCard value={totalLabel}                  label={t('hero_stat_partners')} delay="200" />
+            <StatCard value={ratingLabel}                 label={t('hero_stat_rating')}   delay="400" />
+            <StatCard value={t('hero_stat_wait_value')}   label={t('hero_stat_wait')}     delay="600" />
           </div>
         </div>
 
         {/* ── Bottom stats strip ── */}
         <div className="mt-14 pt-7 border-t border-white/10 grid grid-cols-3 gap-6 animate-fade-in-up animation-delay-500">
-          <BottomStat value="2 500+" label="Lavages réservés" />
-          <BottomStat value="98%" label="Satisfaction client" />
-          <BottomStat value="7j/7" label="Disponibilité" />
+          <BottomStat value={completedLabel}                     label={t('hero_bottom_completed')} />
+          <BottomStat value={reviewsLabel}                       label={t('hero_bottom_reviews')} />
+          <BottomStat value={t('hero_bottom_availability_value')} label={t('hero_bottom_availability')} />
         </div>
       </div>
     </div>

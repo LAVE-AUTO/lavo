@@ -11,7 +11,9 @@ import type { NextResponse } from 'next/server';
  * Role-based guard for protected route handlers.
  * Verifies authentication then checks that the caller has one of the allowed roles.
  *
- * For station role: also verifies that the associated station has status = 'active'.
+ * For station role: verifies the station account exists and is not blocked.
+ * Pending and rejected KYC statuses are allowed so station owners can configure
+ * their workspace before/after validation decisions.
  * For any role: if force_password_change is true, returns 403 PASSWORD_CHANGE_REQUIRED.
  *
  * Usage:
@@ -40,18 +42,20 @@ export async function requireRole(
     return error403('Forbidden');
   }
 
-  // For station accounts, the station itself must be active (approved by admin)
+  // For station accounts, ensure the station exists and is not blocked.
+  // Pending KYC is intentionally allowed for station-side configuration.
   if (auth.role === 'station') {
     const station = await db.query.stations.findFirst({
       where: eq(stations.user_id, auth.sub),
       columns: { id: true, status: true },
     });
 
-    if (!station || station.status !== 'active') {
-      if (station?.status === 'rejected') {
-        return error403('Station account has been rejected', ApiCode.BUSINESS_REJECTED);
-      }
-      return error403('Station account is pending approval', ApiCode.BUSINESS_NOT_APPROVED);
+    if (!station) {
+      return error403('Station account not found', ApiCode.BUSINESS_NOT_APPROVED);
+    }
+
+    if (station.status === 'suspended') {
+      return error403('Station account has been suspended', ApiCode.FORBIDDEN);
     }
   }
 

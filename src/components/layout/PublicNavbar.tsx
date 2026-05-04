@@ -273,11 +273,12 @@ export function PublicNavbar({
               )}
             </div>
 
-            {/* Hamburger — tablet only (mobile uses BottomNav) */}
+            {/* Hamburger — mobile + tablet. Mobile BottomNav covers primary nav but lacks
+               the merchant/login/register actions, so the drawer provides them here. */}
             <button
               type="button"
               onClick={() => setMenuOpen((v) => !v)}
-              className="hidden sm:flex lg:hidden w-9 h-9 items-center justify-center text-[#4a6a4d] dark:text-[#7a9a7d] hover:text-[#c8980a] dark:hover:text-[#c8980a] transition-colors"
+              className="flex lg:hidden w-9 h-9 items-center justify-center text-[#4a6a4d] dark:text-[#7a9a7d] hover:text-[#c8980a] dark:hover:text-[#c8980a] transition-colors"
               aria-label={menuOpen ? 'Fermer le menu' : 'Ouvrir le menu'}
               aria-expanded={menuOpen}
             >

@@ -17,15 +17,15 @@ export function HeroSection() {
 
       <div className="mx-auto grid max-w-[1280px] min-h-screen grid-cols-1 lg:grid-cols-[52%_48%] px-6 lg:px-16">
         {/* Left column */}
-        <div className="relative z-10 flex flex-col justify-center pb-20 pt-[120px] lg:pr-14">
+        <div className="relative z-10 flex flex-col justify-center pb-12 pt-24 lg:pb-20 lg:pt-[120px] lg:pr-14">
           {/* Eyebrow */}
-          <div className="font-dm-mono mb-7 flex animate-fade-in-up items-center gap-2.5 text-[11px] uppercase tracking-[3px] text-[#c8980a]">
+          <div className="font-dm-mono mb-5 flex animate-fade-in-up items-center gap-2.5 text-[11px] uppercase tracking-[3px] text-[#c8980a]">
             <span className="h-px w-7 bg-[#c8980a]" />
             {t('eyebrow')}
           </div>
 
           {/* Hero title */}
-          <h1 className="font-playfair animate-fade-in-up animation-delay-200 mb-5 text-[clamp(42px,5vw,70px)] font-black leading-[1.06] text-[#1a1a1a] dark:text-[#fef9e7]">
+          <h1 className="font-playfair animate-fade-in-up animation-delay-200 mb-4 text-[clamp(42px,5vw,70px)] font-black leading-[1.06] text-[#1a1a1a] dark:text-[#fef9e7]">
             {t('title_line1')}
             <br />
             {t('title_line2')}
@@ -35,12 +35,12 @@ export function HeroSection() {
           </h1>
 
           {/* Description */}
-          <p className="animate-fade-in-up animation-delay-300 mb-10 max-w-[440px] text-[17px] font-light leading-[1.75] text-[#4a6a4d] dark:text-[#7a9a7d]">
+          <p className="animate-fade-in-up animation-delay-300 mb-7 max-w-[440px] text-[17px] font-light leading-[1.75] text-[#4a6a4d] dark:text-[#7a9a7d]">
             {t('desc')}
           </p>
 
           {/* CTA buttons */}
-          <div className="animate-fade-in-up animation-delay-400 mb-14 flex flex-wrap gap-3.5">
+          <div className="animate-fade-in-up animation-delay-400 mb-10 flex flex-wrap gap-3.5">
             <Link
               href={`/${locale}/register`}
               className="btn-shine inline-block rounded-md bg-[#c8980a] px-9 py-[15px] text-[13px] font-bold uppercase tracking-[1.5px] text-[#0d1f0f] transition-all duration-300 hover:-translate-y-0.5 hover:shadow-[0_10px_32px_rgba(200,152,10,0.45)]"
@@ -56,7 +56,7 @@ export function HeroSection() {
           </div>
 
           {/* KPIs */}
-          <div className="animate-fade-in-up animation-delay-500 flex gap-10 border-t border-[rgba(200,152,10,0.13)] pt-8">
+          <div className="animate-fade-in-up animation-delay-500 flex gap-10 border-t border-[rgba(200,152,10,0.13)] pt-6">
             {[
               { val: t('kpi_1_val'), label: t('kpi_1_label') },
               { val: t('kpi_2_val'), label: t('kpi_2_label') },
@@ -75,7 +75,7 @@ export function HeroSection() {
         </div>
 
         {/* Right column — phone mockup */}
-        <div className="animate-fade-in animation-delay-500 relative z-10 hidden lg:flex items-center justify-center px-8 pb-16 pt-28">
+        <div className="animate-fade-in animation-delay-500 relative z-10 hidden lg:flex items-center justify-center px-8 pb-12 pt-20">
           <HeroPhoneMockup />
         </div>
       </div>

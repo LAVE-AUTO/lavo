@@ -3,7 +3,17 @@
 import { useState, useEffect, useRef } from 'react';
 import { useTranslations } from 'next-intl';
 import { getFromApi, getAxiosInstance } from '@/services/axios-service';
-import type { MockReservation } from '@/data/reservations-mock';
+
+interface HistoryReservation {
+  id: string;
+  stationName: string;
+  stationAddress: string;
+  vehicleFormatLabel: string | null;
+  entryType: 'reservation' | 'queue';
+  amountPaid: number;
+  status: 'completed' | 'cancelled';
+  createdAt: string;
+}
 
 /**
  * Escapes HTML special characters to prevent XSS when interpolating
@@ -18,7 +28,7 @@ function escapeHtml(s: string): string {
 }
 
 interface ReceiptModalProps {
-  entry: MockReservation;
+  entry: HistoryReservation;
   locale: string;
   onClose: () => void;
 }
@@ -48,10 +58,13 @@ export function ReceiptModal({ entry: e, locale, onClose }: ReceiptModalProps) {
     })();
   }, [e.id, e.status]);
 
-  const dateLabel = new Date(e.date).toLocaleDateString(
+  const dateLabel = new Date(e.createdAt).toLocaleDateString(
     locale === 'en' ? 'en-CA' : 'fr-CA',
     { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' },
   );
+
+  const typeLabel = e.entryType === 'queue' ? t('receipt_entry_type_queue') : t('receipt_entry_type_reservation');
+  const serviceLabel = e.vehicleFormatLabel ?? t('receipt_service_unknown');
 
   const isCompleted = e.status === 'completed';
 
@@ -87,15 +100,6 @@ export function ReceiptModal({ entry: e, locale, onClose }: ReceiptModalProps) {
   };
 
   const handlePrintFallback = () => {
-    const extrasLines = e.extras.length > 0
-      ? e.extras.map((ex) => `<li>${escapeHtml(ex)}</li>`).join('')
-      : '';
-
-    const extrasBlock = e.extras.length > 0 ? `
-      <div class="section-title">${t('receipt_extras')}</div>
-      <ul class="extras-list">${extrasLines}</ul>
-    ` : '';
-
     const win = window.open('', '_blank', 'width=680,height=960');
     if (!win) return;
 
@@ -382,8 +386,8 @@ export function ReceiptModal({ entry: e, locale, onClose }: ReceiptModalProps) {
         <div class="meta-value">${safeDateLabel}</div>
       </div>
       <div class="meta-item">
-        <div class="meta-label">${t('receipt_time')}</div>
-        <div class="meta-value">${escapeHtml(e.timeSlot)}</div>
+        <div class="meta-label">${t('receipt_entry_type')}</div>
+        <div class="meta-value">${escapeHtml(typeLabel)}</div>
       </div>
     </div>
 
@@ -404,16 +408,16 @@ export function ReceiptModal({ entry: e, locale, onClose }: ReceiptModalProps) {
       <div class="section-title">${t('receipt_forfait')}</div>
       <div class="info-grid">
         <div class="info-cell">
-          <div class="cell-label">${t('receipt_forfait')}</div>
-          <div class="cell-value">${escapeHtml(e.forfaitName)}</div>
+          <div class="cell-label">${t('receipt_service')}</div>
+          <div class="cell-value">${escapeHtml(serviceLabel)}</div>
         </div>
         <div class="info-cell">
-          <div class="cell-label">${t('receipt_category')}</div>
-          <div class="cell-value">${escapeHtml(e.categoryLabel)}</div>
+          <div class="cell-label">${t('receipt_entry_type')}</div>
+          <div class="cell-value">${escapeHtml(typeLabel)}</div>
         </div>
         <div class="info-cell">
-          <div class="cell-label">${t('receipt_duration')}</div>
-          <div class="cell-value">${e.duration} min</div>
+          <div class="cell-label">${t('receipt_address')}</div>
+          <div class="cell-value">${escapeHtml(e.stationAddress)}</div>
         </div>
         <div class="info-cell">
           <div class="cell-label">${t('receipt_status')}</div>
@@ -423,11 +427,9 @@ export function ReceiptModal({ entry: e, locale, onClose }: ReceiptModalProps) {
         </div>
       </div>
 
-      ${extrasBlock}
-
       <div class="total-block">
         <span class="total-label">${t('receipt_total')}</span>
-        <span class="total-amount">${e.totalPrice}$</span>
+        <span class="total-amount">${e.amountPaid.toFixed(2)}$</span>
       </div>
 
     </div>
@@ -498,8 +500,8 @@ export function ReceiptModal({ entry: e, locale, onClose }: ReceiptModalProps) {
           <div className="grid grid-cols-3 border-b border-[#E0E0D0] dark:border-tab-inactive bg-[#FAFAF6] dark:bg-dark-bg/40">
             {[
               { label: t('receipt_ref'),  value: `#${e.id.toUpperCase()}` },
-              { label: t('receipt_date'), value: new Date(e.date).toLocaleDateString(locale === 'en' ? 'en-CA' : 'fr-CA', { day: 'numeric', month: 'short', year: 'numeric' }) },
-              { label: t('receipt_time'), value: e.timeSlot },
+              { label: t('receipt_date'), value: new Date(e.createdAt).toLocaleDateString(locale === 'en' ? 'en-CA' : 'fr-CA', { day: 'numeric', month: 'short', year: 'numeric' }) },
+              { label: t('receipt_entry_type'), value: typeLabel },
             ].map(({ label, value }) => (
               <div key={label} className="px-4 py-3 border-r border-[#E0E0D0] dark:border-tab-inactive last:border-r-0">
                 <div className="text-[10px] font-bold text-[#999] uppercase tracking-wider mb-1">{label}</div>
@@ -523,33 +525,18 @@ export function ReceiptModal({ entry: e, locale, onClose }: ReceiptModalProps) {
               <p className="text-[10px] font-black text-gold uppercase tracking-widest mb-2">{t('receipt_forfait')}</p>
               <div className="rounded-lg border border-[#E0E0D0] dark:border-tab-inactive overflow-hidden">
                 <div className="grid grid-cols-2">
-                  <ReceiptRowGrid label={t('receipt_forfait')}  value={e.forfaitName}      borderRight />
-                  <ReceiptRowGrid label={t('receipt_category')} value={e.categoryLabel}                />
-                  <ReceiptRowGrid label={t('receipt_duration')} value={`${e.duration} min`} borderRight borderTop />
+                  <ReceiptRowGrid label={t('receipt_service')}  value={serviceLabel}      borderRight />
+                  <ReceiptRowGrid label={t('receipt_entry_type')} value={typeLabel}                />
+                  <ReceiptRowGrid label={t('receipt_address')} value={e.stationAddress} borderRight borderTop />
                   <ReceiptRowGrid label={t('receipt_status')}   value={t(`status_${e.status}`)} borderTop chip={e.status} />
                 </div>
               </div>
             </div>
 
-            {/* Extras */}
-            {e.extras.length > 0 && (
-              <div>
-                <p className="text-[10px] font-black text-gold uppercase tracking-widest mb-2">{t('receipt_extras')}</p>
-                <div className="rounded-lg border border-[#E0E0D0] dark:border-tab-inactive overflow-hidden">
-                  {e.extras.map((ex, i) => (
-                    <div key={ex} className={`flex items-center gap-2.5 px-3.5 py-2.5 ${i < e.extras.length - 1 ? 'border-b border-[#E0E0D0] dark:border-tab-inactive' : ''}`}>
-                      <span className="w-1.5 h-1.5 rounded-full bg-gold shrink-0" />
-                      <span className="text-[13px] font-semibold text-[#0A0A14] dark:text-white">{ex}</span>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            )}
-
             {/* Total */}
             <div className="flex items-center justify-between bg-[#0f1a0e] rounded-xl px-4 py-4">
               <span className="text-[12px] font-bold text-[#7a9a7d] uppercase tracking-widest">{t('receipt_total')}</span>
-              <span className="text-[26px] font-black text-gold leading-none">{e.totalPrice}$</span>
+              <span className="text-[26px] font-black text-gold leading-none">{e.amountPaid.toFixed(2)}$</span>
             </div>
 
             <p className="text-[11px] text-[#AAA] text-center pb-1">{t('receipt_footer')}</p>

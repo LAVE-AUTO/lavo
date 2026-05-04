@@ -1,5 +1,9 @@
 import { getLocale } from 'next-intl/server';
-import { listStationsPublic } from '@/server/station/station-service';
+import type { StationsHeroMetrics } from '@/helpers/stations-metrics';
+
+interface StationsStatsProps {
+  metrics: StationsHeroMetrics;
+}
 
 function StatItem({
   value,
@@ -24,48 +28,32 @@ function StatItem({
 
 /**
  * Stats bar between the hero and the station list.
- * Dark design matching the HTML mockup's filter-bar / results-header aesthetic.
- * Server component.
+ * Server component; metrics are precomputed by the page so hero + stats share
+ * a single DB round-trip via `computeStationsHeroMetrics`.
  */
-export async function StationsStats() {
+export async function StationsStats({ metrics }: StationsStatsProps) {
   const locale = await getLocale();
   const isFr   = locale === 'fr';
-
-  let total = 0;
-  let available = 0;
-  let cities = 0;
-  let reviews = 0;
-
-  try {
-    const result = await listStationsPublic({ per_page: 200 });
-    const stations = result.data.all;
-    total = result.meta.total;
-    available = stations.filter((s) => s.available).length;
-    cities = new Set(stations.map((s) => s.city)).size;
-    reviews = stations.reduce((acc, s) => acc + (s.total_ratings || 0), 0);
-  } catch {
-    // fallback to zeros on error
-  }
 
   return (
     <div className="bg-[#C8C8B4] dark:bg-dark-card border-b border-[#CCCCCC] dark:border-tab-inactive transition-colors" id="stations-list">
       <div className="max-w-6xl mx-auto px-4 sm:px-6">
         <div className="grid grid-cols-2 sm:grid-cols-4 divide-x divide-[#CCCCCC] dark:divide-[#2C3828]">
           <StatItem
-            value={`${total}`}
+            value={metrics.totalStations.toLocaleString()}
             label={isFr ? 'Stations' : 'Stations'}
           />
           <StatItem
-            value={`${available}`}
+            value={metrics.availableStations.toLocaleString()}
             label={isFr ? 'Disponibles' : 'Available'}
             accent
           />
           <StatItem
-            value={`${cities}`}
+            value={metrics.cities.toLocaleString()}
             label={isFr ? 'Villes' : 'Cities'}
           />
           <StatItem
-            value={`${reviews}+`}
+            value={`${metrics.totalReviews.toLocaleString()}${metrics.totalReviews > 0 ? '+' : ''}`}
             label={isFr ? 'Avis clients' : 'Reviews'}
           />
         </div>

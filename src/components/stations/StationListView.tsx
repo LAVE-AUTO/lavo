@@ -6,66 +6,98 @@ import { useTranslations } from 'next-intl';
 import { fetchStations, type FetchStationsResult } from '@/services/station-api';
 import { SearchBar } from './SearchBar';
 import { StationCard } from './StationCard';
+import { LocationPermissionBanner } from './LocationPermissionBanner';
 import { PageSpinner } from '@/components/ui/PageSpinner';
 import { Toggle } from '@/components/ui/Toggle';
 import { EmptyState } from '@/components/ui/EmptyState';
 import { SectionHeader } from '@/components/ui/SectionHeader';
 import type { StationDetailData } from '@/types/station';
 
-type SortKey = 'default' | 'price_asc' | 'best_rated';
+type SortKey = 'default' | 'best_rated';
+// TODO: re-enable 'price_asc' once GET /stations exposes a station-level
+// price floor (current list payload has no formats, so priceFrom is always 0).
 
-interface PriceRange {
-  min: string;
-  max: string;
+type ServiceScope = '' | 'exterior' | 'interior' | 'both';
+
+export interface WashTypeOption {
+  id: string;
+  code: string;
+  label: string;
 }
 
-/** Parse "HH:MM" → hour integer. */
-function parseTimeHour(value: string): number | null {
-  if (!value) return null;
-  const h = parseInt(value.split(':')[0], 10);
-  return isNaN(h) ? null : h;
+interface StationListViewProps {
+  washTypes: WashTypeOption[];
 }
 
-/** Parse "07h00 – 20h00" or "07:00 - 20:00" → { open: 7, close: 20 } */
-function parseOpeningHours(oh: string): { open: number; close: number } | null {
-  const timeRegex = /(\d{1,2})[:h]/;
-  const parts = oh.split(/[–\-]/).map((s) => s.trim());
-  if (parts.length !== 2) return null;
-  const openMatch  = parts[0].match(timeRegex);
-  const closeMatch = parts[1].match(timeRegex);
-  if (!openMatch || !closeMatch) return null;
-  const open  = parseInt(openMatch[1],  10);
-  const close = parseInt(closeMatch[1], 10);
-  return isNaN(open) || isNaN(close) ? null : { open, close };
-}
+/* ------------------------------------------------------------------ */
+/*  Commented-out helpers — kept for when the backend list payload     */
+/*  carries openingHours / formats again.                              */
+/* ------------------------------------------------------------------ */
+/* function parseTimeHour(value: string): number | null {
+ *   if (!value) return null;
+ *   const h = parseInt(value.split(':')[0], 10);
+ *   return isNaN(h) ? null : h;
+ * }
+ * function parseOpeningHours(oh: string): { open: number; close: number } | null {
+ *   const timeRegex = /(\d{1,2})[:h]/;
+ *   const parts = oh.split(/[–\-]/).map((s) => s.trim());
+ *   if (parts.length !== 2) return null;
+ *   const openMatch  = parts[0].match(timeRegex);
+ *   const closeMatch = parts[1].match(timeRegex);
+ *   if (!openMatch || !closeMatch) return null;
+ *   const open  = parseInt(openMatch[1],  10);
+ *   const close = parseInt(closeMatch[1], 10);
+ *   return isNaN(open) || isNaN(close) ? null : { open, close };
+ * }
+ */
 
 /**
- * Client-side station list view.
- * Main search bar filters by city. Filter panel allows filtering by merchant name.
- * Time range uses native <input type="time"> for keyboard + clock-picker support.
+ * Public station list with backend-driven filtering.
+ * The main search bar drives the `city` query param; the filter panel
+ * drives `q` (merchant name), `sort`, `wash_type_ids` and `service_scope`.
+ * Only the "available only" toggle runs client-side because the API has
+ * no dedicated param for it.
  */
-export function StationListView() {
+export function StationListView({ washTypes }: StationListViewProps) {
   const t            = useTranslations('stations');
   const searchParams = useSearchParams();
 
-  /* Main search: city */
+  /* Main search bar — city */
   const [cityQuery, setCityQuery] = useState('');
 
-  /* Filter panel fields */
+  /* Filter panel fields — backend-driven */
   const [nameSearch,         setNameSearch]         = useState('');
   const [onlyAvail,          setOnlyAvail]          = useState(false);
   const [sort,               setSort]               = useState<SortKey>('default');
-  const [price,              setPrice]              = useState<PriceRange>({ min: '', max: '' });
-  const [priceErrors,        setPriceErrors]        = useState({ min: '', max: '' });
+  const [selectedWashTypes,  setSelectedWashTypes]  = useState<string[]>([]);
+  const [serviceScope,       setServiceScope]       = useState<ServiceScope>('');
   const [panelOpen,          setPanelOpen]          = useState(false);
-  const [selectedCategories, setSelectedCategories] = useState<string[]>([]);
-  const [selectedVehicles,   setSelectedVehicles]   = useState<string[]>([]);
-  const [selectedServices,   setSelectedServices]   = useState<string[]>([]);
-  const [date,               setDate]               = useState('');
-  const [timeFrom,           setTimeFrom]           = useState('');
-  const [timeTo,             setTimeTo]             = useState('');
 
-  /* API-fetched stations */
+  /* "Bientôt disponible" filter states — UI is rendered but disabled and never
+   * forwarded to fetchStations. Once the backend exposes the matching data
+   * (price floor, opening hours, tags, vehicle types, services, date/slot),
+   * we drop the disabled prop, wire the values into the params object and the
+   * filter becomes live. See project_pending_backend_specs.md →
+   * "Missing on `GET /api/v1/stations`" + "Missing fields in the list payload". */
+  const [price, setPrice] = useState({ min: '', max: '' });
+  const [date, setDate] = useState('');
+  const [timeFrom, setTimeFrom] = useState('');
+  const [timeTo, setTimeTo] = useState('');
+  const [selectedCategories, setSelectedCategories] = useState<string[]>([]);
+  const [selectedVehicles, setSelectedVehicles] = useState<string[]>([]);
+  const [selectedServices, setSelectedServices] = useState<string[]>([]);
+
+  /* Debounced text inputs — avoid a fetch on every keystroke. */
+  const [debouncedText, setDebouncedText] = useState({ city: '', q: '' });
+  useEffect(() => {
+    const id = setTimeout(
+      () => setDebouncedText({ city: cityQuery.trim(), q: nameSearch.trim() }),
+      350,
+    );
+    return () => clearTimeout(id);
+  }, [cityQuery, nameSearch]);
+
+  /* API-fetched list + groups */
   const [allStations, setAllStations] = useState<StationDetailData[]>([]);
   const [apiGroups, setApiGroups] = useState<FetchStationsResult['groups']>({
     available_now:    [],
@@ -74,9 +106,19 @@ export function StationListView() {
   });
   const [loading, setLoading] = useState(true);
 
+  /* Fetch stations whenever a filter changes. */
   useEffect(() => {
     let cancelled = false;
-    fetchStations().then((result) => {
+    setLoading(true);
+
+    const params: Record<string, string> = {};
+    if (debouncedText.q)                   params.q = debouncedText.q;
+    if (debouncedText.city)                params.city = debouncedText.city;
+    if (sort === 'best_rated')             params.sort = 'rating_desc';
+    if (selectedWashTypes.length > 0)      params.wash_type_ids = selectedWashTypes.join(',');
+    if (serviceScope)                      params.service_scope = serviceScope;
+
+    fetchStations(params).then((result) => {
       if (cancelled) return;
       setAllStations(result.stations);
       setApiGroups(result.groups);
@@ -84,10 +126,11 @@ export function StationListView() {
     }).catch(() => {
       if (!cancelled) setLoading(false);
     });
-    return () => { cancelled = true; };
-  }, []);
 
-  /* Sync city query from URL param (?q=) */
+    return () => { cancelled = true; };
+  }, [debouncedText, sort, selectedWashTypes, serviceScope]);
+
+  /* Sync city query from URL param (?q=) — `q` here is a synonym coming from the landing search. */
   useEffect(() => {
     const q = searchParams.get('q');
     if (q == null) return;
@@ -95,109 +138,41 @@ export function StationListView() {
     return () => clearTimeout(id);
   }, [searchParams]);
 
-  /* Price validation */
-  const validateAndSetMin = (val: string) => {
-    setPrice((p) => ({ ...p, min: val }));
-    const num = parseFloat(val);
-    if (val !== '' && num < 0) {
-      setPriceErrors((e) => ({ ...e, min: t('filter_price_error_min') }));
-    } else {
-      setPriceErrors((e) => ({ ...e, min: '' }));
-    }
-  };
+  /* Toggle helper for wash_type multi-select */
+  const toggleWashType = (id: string) =>
+    setSelectedWashTypes((prev) => prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id]);
 
-  const validateAndSetMax = (val: string) => {
-    setPrice((p) => ({ ...p, max: val }));
-    const maxNum = parseFloat(val);
-    const minNum = parseFloat(price.min);
-    if (val !== '' && !isNaN(minNum) && maxNum < minNum) {
-      setPriceErrors((e) => ({ ...e, max: t('filter_price_error_max') }));
-    } else {
-      setPriceErrors((e) => ({ ...e, max: '' }));
-    }
-  };
+  /* Layered client-side rules on top of the backend response:
+     - Section qualification (backend sorts but does not exclude empties):
+       * available_now    → availableSlots > 0 (redundant w/ backend, defensive)
+       * most_appreciated → reviewCount > 0 (hide unrated stations)
+       * most_visited     → completedCount > 0 (hide never-visited stations)
+     - User-driven "available only" toggle applies to every visible list.
 
-  /* Derived filter options */
-  const allCategories = useMemo(
-    () => [...new Set(allStations.flatMap((s) => s.tags))].sort(),
-    [allStations],
-  );
-  const allServices = useMemo(
-    () => [...new Set(allStations.flatMap((s) => s.services))].sort(),
-    [allStations],
-  );
-  const allVehicleTypes = useMemo(
-    () => [
-      t('vehicle_type_sedan'),
-      t('vehicle_type_suv'),
-      t('vehicle_type_motorcycle'),
-      t('vehicle_type_van'),
-    ],
-    [t],
-  );
+     Discovery mode (no active search/sort) shows the three category sections;
+     as soon as the user searches, picks a filter or selects a sort chip the UI
+     collapses into a single "Résultats" list so the effect of the chosen sort
+     is immediately visible — `allStations` is already ordered by the backend. */
+  const filterAvail = (list: StationDetailData[]) =>
+    onlyAvail ? list.filter((s) => s.availableSlots > 0) : list;
 
-  /* Toggle helpers */
-  const toggleCategory = (c: string) =>
-    setSelectedCategories((prev) => prev.includes(c) ? prev.filter((x) => x !== c) : [...prev, c]);
-  const toggleVehicle = (v: string) =>
-    setSelectedVehicles((prev) => prev.includes(v) ? prev.filter((x) => x !== v) : [...prev, v]);
-  const toggleService = (s: string) =>
-    setSelectedServices((prev) => prev.includes(s) ? prev.filter((x) => x !== s) : [...prev, s]);
+  const hasActiveSearch =
+    debouncedText.q !== '' ||
+    debouncedText.city !== '' ||
+    selectedWashTypes.length > 0 ||
+    serviceScope !== '' ||
+    sort !== 'default';
 
-  /* Filtered + sorted results */
-  const filtered = useMemo(() => {
-    const cityQ  = cityQuery.trim().toLowerCase();
-    const nameQ  = nameSearch.trim().toLowerCase();
-    const minNum = parseFloat(price.min);
-    const maxNum = parseFloat(price.max);
-    const fromH  = parseTimeHour(timeFrom);
-    const toH    = parseTimeHour(timeTo);
-
-    let results = allStations.filter((s) => {
-      const matchesCity = !cityQ || s.city.toLowerCase().includes(cityQ) || s.address.toLowerCase().includes(cityQ);
-      const matchesName = !nameQ || s.name.toLowerCase().includes(nameQ) || s.tags.some((tag) => tag.toLowerCase().includes(nameQ));
-      const matchesAvail      = !onlyAvail || s.availableSlots > 0;
-      const matchesMin        = isNaN(minNum) || price.min === '' || s.priceFrom >= minNum;
-      const matchesMax        = isNaN(maxNum) || price.max === '' || s.priceFrom <= maxNum;
-      const matchesCategories = !selectedCategories.length || selectedCategories.some((c) => s.tags.includes(c));
-      const matchesVehicles   = !selectedVehicles.length  || selectedVehicles.some((v) => s.vehicleTypes?.includes(v));
-      const matchesServices   = !selectedServices.length  || selectedServices.some((sv) => s.services.includes(sv));
-      const matchesTime       = (() => {
-        if (fromH === null && toH === null) return true;
-        if (!s.openingHours) return true;
-        const parsed = parseOpeningHours(s.openingHours);
-        if (!parsed) return true;
-        const effectiveFrom = fromH ?? 0;
-        const effectiveTo   = toH   ?? 23;
-        return parsed.open <= effectiveTo && parsed.close >= effectiveFrom;
-      })();
-
-      return matchesCity && matchesName && matchesAvail && matchesMin && matchesMax
-        && matchesCategories && matchesVehicles && matchesServices && matchesTime;
-    });
-
-    if (sort === 'price_asc')  results = [...results].sort((a, b) => a.priceFrom - b.priceFrom);
-    if (sort === 'best_rated') results = [...results].sort((a, b) => b.rating - a.rating);
-
-    return results;
-  }, [cityQuery, nameSearch, onlyAvail, sort, price, selectedCategories, selectedVehicles, selectedServices, timeFrom, timeTo, allStations]);
-
-  /* Derived section lists */
-  const hasFilters = cityQuery.trim() || nameSearch.trim() || onlyAvail || price.min !== '' || price.max !== ''
-    || selectedCategories.length > 0 || selectedVehicles.length > 0 || selectedServices.length > 0
-    || timeFrom !== '' || timeTo !== '';
-  const availableNow  = useMemo(
-    () => (hasFilters ? filtered : apiGroups.available_now).filter((s) => s.availableSlots > 0),
-    [filtered, hasFilters, apiGroups],
-  );
-  const topRated      = useMemo(() => hasFilters ? [...filtered].sort((a, b) => b.rating - a.rating)          : apiGroups.most_appreciated, [filtered, hasFilters, apiGroups]);
-  const mostRevisited = useMemo(() => hasFilters ? [...filtered].sort((a, b) => b.reviewCount - a.reviewCount) : apiGroups.most_visited,     [filtered, hasFilters, apiGroups]);
+  const flatResults   = useMemo(() => filterAvail(allStations),                                          [allStations,          onlyAvail]);
+  const availableNow  = useMemo(() => filterAvail(apiGroups.available_now.filter((s) => s.availableSlots > 0)),    [apiGroups, onlyAvail]);
+  const topRated      = useMemo(() => filterAvail(apiGroups.most_appreciated.filter((s) => s.reviewCount > 0)),     [apiGroups, onlyAvail]);
+  const mostRevisited = useMemo(() => filterAvail(apiGroups.most_visited.filter((s) => s.completedCount > 0)),      [apiGroups, onlyAvail]);
 
   const [expandedSections, setExpandedSections] = useState<Record<string, boolean>>({});
 
   const sortChips: { key: SortKey; label: string }[] = [
     { key: 'default',    label: t('filter_all') },
-    { key: 'price_asc',  label: t('filter_price_asc') },
+    /* { key: 'price_asc',  label: t('filter_price_asc') }, // TODO re-enable when backend exposes priceFrom */
     { key: 'best_rated', label: t('filter_best_rated') },
   ];
 
@@ -205,30 +180,31 @@ export function StationListView() {
     (onlyAvail ? 1 : 0) +
     (nameSearch.trim() ? 1 : 0) +
     (sort !== 'default' ? 1 : 0) +
-    (price.min !== '' || price.max !== '' ? 1 : 0) +
-    (selectedCategories.length ? 1 : 0) +
-    (selectedVehicles.length ? 1 : 0) +
-    (selectedServices.length ? 1 : 0) +
-    (date ? 1 : 0) +
-    (timeFrom !== '' || timeTo !== '' ? 1 : 0);
+    (selectedWashTypes.length ? 1 : 0) +
+    (serviceScope ? 1 : 0);
 
   const handleReset = () => {
     setOnlyAvail(false);
     setSort('default');
     setNameSearch('');
+    setSelectedWashTypes([]);
+    setServiceScope('');
+    // Coming-soon filters: also clear them so the panel is fully neutral after Reset
     setPrice({ min: '', max: '' });
-    setPriceErrors({ min: '', max: '' });
-    setSelectedCategories([]);
-    setSelectedVehicles([]);
-    setSelectedServices([]);
     setDate('');
     setTimeFrom('');
     setTimeTo('');
+    setSelectedCategories([]);
+    setSelectedVehicles([]);
+    setSelectedServices([]);
     setPanelOpen(false);
   };
 
   return (
     <div className="animate-fade-in">
+      {/* -- Pre-prompt banner before triggering the native geolocation dialog -- */}
+      <LocationPermissionBanner />
+
       {/* -- Search + filter toggle (sticky below navbar) -- */}
       <div className="sticky top-16 z-30 bg-[#EDEDED] dark:bg-dark-bg pb-3 -mx-4 px-4 sm:-mx-6 sm:px-6 pt-3 space-y-3">
         <div className="flex gap-2">
@@ -339,128 +315,153 @@ export function StationListView() {
               </div>
             </div>
 
-            {/* Row 2: Price range */}
-            <div>
-              <label className="block text-[11px] sm:text-[13px] font-bold text-[#333333] dark:text-[#C0C0B0] uppercase tracking-wider mb-1.5">
-                {t('filter_price_label')}
-              </label>
-              <div className="flex gap-2 items-start">
-                <div className="flex-1">
-                  <input
-                    type="number"
-                    min={0}
-                    value={price.min}
-                    onChange={(e) => validateAndSetMin(e.target.value)}
-                    placeholder={t('filter_price_min_placeholder')}
-                    className={[
-                      'w-full px-2.5 sm:px-3 py-2 rounded-lg bg-[#F5F5EE] dark:bg-tab-inactive border text-[13px] sm:text-[14px] text-[#1A1A1A] dark:text-white placeholder-[#9A9A8A] outline-none transition-colors',
-                      priceErrors.min
-                        ? 'border-lavo-error focus:border-lavo-error'
-                        : 'border-[#E0E0D0] dark:border-tab-inactive focus:border-gold',
-                    ].join(' ')}
-                  />
-                  {priceErrors.min && (
-                    <p className="text-[11px] text-lavo-error mt-1">{priceErrors.min}</p>
-                  )}
-                </div>
-                <div className="pt-2 text-[#555] dark:text-[#B0B0A0] text-[13px] font-bold">&mdash;</div>
-                <div className="flex-1">
-                  <input
-                    type="number"
-                    min={0}
-                    value={price.max}
-                    onChange={(e) => validateAndSetMax(e.target.value)}
-                    placeholder={t('filter_price_max_placeholder')}
-                    className={[
-                      'w-full px-2.5 sm:px-3 py-2 rounded-lg bg-[#F5F5EE] dark:bg-tab-inactive border text-[13px] sm:text-[14px] text-[#1A1A1A] dark:text-white placeholder-[#9A9A8A] outline-none transition-colors',
-                      priceErrors.max
-                        ? 'border-lavo-error focus:border-lavo-error'
-                        : 'border-[#E0E0D0] dark:border-tab-inactive focus:border-gold',
-                    ].join(' ')}
-                  />
-                  {priceErrors.max && (
-                    <p className="text-[11px] text-lavo-error mt-1">{priceErrors.max}</p>
-                  )}
-                </div>
-              </div>
-            </div>
-
-            {/* Row 3: Categories + Vehicles */}
-            <div className="grid grid-cols-2 gap-3">
+            {/* Row 2: Wash types + Service scope */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <div>
                 <p className="text-[11px] sm:text-[13px] font-bold text-[#333333] dark:text-[#C0C0B0] uppercase tracking-wider mb-1.5">
-                  {t('filter_categories_label')}
+                  {t('filter_wash_type_label')}
                 </p>
                 <CustomMultiSelect
-                  options={allCategories}
-                  selected={selectedCategories}
-                  onToggle={toggleCategory}
-                  placeholder={t('filter_categories_placeholder')}
+                  options={washTypes.map((w) => ({ value: w.id, label: w.label }))}
+                  selected={selectedWashTypes}
+                  onToggle={toggleWashType}
+                  placeholder={t('filter_wash_type_placeholder')}
                 />
               </div>
               <div>
-                <p className="text-[11px] sm:text-[13px] font-bold text-[#333333] dark:text-[#C0C0B0] uppercase tracking-wider mb-1.5">
-                  {t('filter_vehicle_label')}
+                <p className="block text-[11px] sm:text-[13px] font-bold text-[#333333] dark:text-[#C0C0B0] uppercase tracking-wider mb-1.5">
+                  {t('filter_scope_label')}
                 </p>
-                <CustomMultiSelect
-                  options={allVehicleTypes}
-                  selected={selectedVehicles}
-                  onToggle={toggleVehicle}
-                  placeholder={t('filter_vehicle_placeholder')}
+                <CustomSelect
+                  value={serviceScope}
+                  onChange={(v) => setServiceScope(v as ServiceScope)}
+                  placeholder={t('filter_scope_all')}
+                  options={[
+                    { value: '',         label: t('filter_scope_all') },
+                    { value: 'exterior', label: t('filter_scope_exterior') },
+                    { value: 'interior', label: t('filter_scope_interior') },
+                    { value: 'both',     label: t('filter_scope_both') },
+                  ]}
                 />
               </div>
             </div>
 
-            {/* Row 4: Services + Date */}
-            <div className="grid grid-cols-2 gap-3">
-              <div>
-                <p className="text-[11px] sm:text-[13px] font-bold text-[#333333] dark:text-[#C0C0B0] uppercase tracking-wider mb-1.5">
-                  {t('filter_service_label')}
-                </p>
-                <CustomMultiSelect
-                  options={allServices}
-                  selected={selectedServices}
-                  onToggle={toggleService}
-                  placeholder={t('filter_service_placeholder')}
-                />
-              </div>
-              <div>
-                <label className="block text-[11px] sm:text-[13px] font-bold text-[#333333] dark:text-[#C0C0B0] uppercase tracking-wider mb-1.5">
-                  {t('filter_date_label')}
-                </label>
-                <input
-                  type="date"
-                  value={date}
-                  onChange={(e) => setDate(e.target.value)}
-                  className={[
-                    'w-full px-2.5 sm:px-3 py-2 rounded-lg border text-[13px] sm:text-[14px] outline-none transition-all duration-150 cursor-pointer',
-                    date
-                      ? 'border-gold bg-gold/5 dark:bg-gold/10 text-[#1A1A1A] dark:text-white'
-                      : 'border-[#E0E0D0] dark:border-tab-inactive bg-[#F5F5EE] dark:bg-tab-inactive text-[#1A1A1A] dark:text-white',
-                  ].join(' ')}
-                />
-              </div>
-            </div>
-
-            {/* Row 5: Time range — native time inputs */}
-            <div>
-              <p className="text-[11px] sm:text-[13px] font-bold text-[#333333] dark:text-[#C0C0B0] uppercase tracking-wider mb-1.5">
-                {t('filter_time_label')}
-              </p>
+            {/* -- Coming-soon filters -------------------------------------
+             * Surfaced in the UI so the merchant/client sees what's planned;
+             * disabled until the backend returns the matching data. Mirrors
+             * the "Bientôt disponible" treatment used on /station/config.
+             * -------------------------------------------------------- */}
+            <div className="space-y-3 border-t border-dashed border-[#E0E0D0] pt-4 dark:border-tab-inactive">
               <div className="flex items-center gap-2">
-                <span className="text-[12px] sm:text-[13px] font-semibold text-[#555] dark:text-[#B0B0A0] shrink-0">
-                  {t('filter_time_from')}
+                <span className="text-[11px] sm:text-[13px] font-bold uppercase tracking-wider text-[#888] dark:text-[#7A7A6A]">
+                  {t('filter_coming_soon_title')}
                 </span>
-                <div className="flex-1">
-                  <TimeInput value={timeFrom} onChange={setTimeFrom} />
-                </div>
-                <span className="text-[#AAA] dark:text-[#555] text-[13px] font-bold shrink-0">—</span>
-                <span className="text-[12px] sm:text-[13px] font-semibold text-[#555] dark:text-[#B0B0A0] shrink-0">
-                  {t('filter_time_to')}
+                <span className="inline-flex items-center gap-1 rounded-full bg-gold/15 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider text-gold">
+                  <span className="h-1.5 w-1.5 rounded-full bg-gold" aria-hidden="true" />
+                  {t('filter_coming_soon_pill')}
                 </span>
-                <div className="flex-1">
-                  <TimeInput value={timeTo} onChange={setTimeTo} />
+              </div>
+              <p className="text-[12px] leading-snug text-[#888] dark:text-[#9A9A8A]">
+                {t('filter_coming_soon_hint')}
+              </p>
+
+              {/* Price range (min/max) */}
+              <div>
+                <p className="mb-1.5 text-[11px] sm:text-[13px] font-bold uppercase tracking-wider text-[#333] dark:text-[#C0C0B0]">
+                  {t('filter_price_label')}
+                </p>
+                <div className="grid grid-cols-2 gap-2">
+                  <div className="relative">
+                    <span className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-[13px] font-semibold text-[#888]">
+                      {t('filter_currency_unit')}
+                    </span>
+                    <input
+                      type="number"
+                      min={0}
+                      value={price.min}
+                      onChange={(e) => setPrice((p) => ({ ...p, min: e.target.value }))}
+                      placeholder={t('filter_price_min_placeholder')}
+                      disabled
+                      className="w-full cursor-not-allowed rounded-lg border border-[#E0E0D0] bg-[#F5F5EE] py-2 pl-7 pr-3 text-[13px] sm:text-[14px] text-[#1A1A1A] placeholder-[#9A9A8A] opacity-60 outline-none dark:border-tab-inactive dark:bg-tab-inactive dark:text-white"
+                    />
+                  </div>
+                  <div className="relative">
+                    <span className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-[13px] font-semibold text-[#888]">
+                      {t('filter_currency_unit')}
+                    </span>
+                    <input
+                      type="number"
+                      min={0}
+                      value={price.max}
+                      onChange={(e) => setPrice((p) => ({ ...p, max: e.target.value }))}
+                      placeholder={t('filter_price_max_placeholder')}
+                      disabled
+                      className="w-full cursor-not-allowed rounded-lg border border-[#E0E0D0] bg-[#F5F5EE] py-2 pl-7 pr-3 text-[13px] sm:text-[14px] text-[#1A1A1A] placeholder-[#9A9A8A] opacity-60 outline-none dark:border-tab-inactive dark:bg-tab-inactive dark:text-white"
+                    />
+                  </div>
                 </div>
+              </div>
+
+              {/* Date + time range */}
+              <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+                <div>
+                  <p className="mb-1.5 text-[11px] sm:text-[13px] font-bold uppercase tracking-wider text-[#333] dark:text-[#C0C0B0]">
+                    {t('filter_date_label')}
+                  </p>
+                  <input
+                    type="date"
+                    value={date}
+                    onChange={(e) => setDate(e.target.value)}
+                    disabled
+                    className="w-full cursor-not-allowed rounded-lg border border-[#E0E0D0] bg-[#F5F5EE] px-3 py-2 text-[13px] sm:text-[14px] text-[#1A1A1A] opacity-60 outline-none dark:border-tab-inactive dark:bg-tab-inactive dark:text-white"
+                  />
+                </div>
+                <div>
+                  <p className="mb-1.5 text-[11px] sm:text-[13px] font-bold uppercase tracking-wider text-[#333] dark:text-[#C0C0B0]">
+                    {t('filter_time_label')}
+                  </p>
+                  <div className="grid grid-cols-2 gap-2">
+                    <input
+                      type="time"
+                      value={timeFrom}
+                      onChange={(e) => setTimeFrom(e.target.value)}
+                      aria-label={t('filter_time_from')}
+                      disabled
+                      className="w-full cursor-not-allowed rounded-lg border border-[#E0E0D0] bg-[#F5F5EE] px-3 py-2 text-center font-mono text-[13px] text-[#1A1A1A] opacity-60 outline-none dark:border-tab-inactive dark:bg-tab-inactive dark:text-white"
+                    />
+                    <input
+                      type="time"
+                      value={timeTo}
+                      onChange={(e) => setTimeTo(e.target.value)}
+                      aria-label={t('filter_time_to')}
+                      disabled
+                      className="w-full cursor-not-allowed rounded-lg border border-[#E0E0D0] bg-[#F5F5EE] px-3 py-2 text-center font-mono text-[13px] text-[#1A1A1A] opacity-60 outline-none dark:border-tab-inactive dark:bg-tab-inactive dark:text-white"
+                    />
+                  </div>
+                </div>
+              </div>
+
+              {/* Categories + Vehicle types */}
+              <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+                <DisabledMultiSelectField
+                  label={t('filter_categories_label')}
+                  placeholder={t('filter_categories_placeholder')}
+                  selectedCount={selectedCategories.length}
+                />
+                <DisabledMultiSelectField
+                  label={t('filter_vehicle_label')}
+                  placeholder={t('filter_vehicle_placeholder')}
+                  selectedCount={selectedVehicles.length}
+                />
+              </div>
+
+              {/* Services / extras */}
+              <div>
+                <DisabledMultiSelectField
+                  label={t('filter_service_label')}
+                  placeholder={t('filter_service_placeholder')}
+                  selectedCount={selectedServices.length}
+                />
               </div>
             </div>
 
@@ -471,6 +472,29 @@ export function StationListView() {
       {/* Results */}
       {loading ? (
         <PageSpinner py="py-20" />
+      ) : hasActiveSearch ? (
+        flatResults.length === 0 ? (
+          <EmptyState
+            title={t('empty_title')}
+            description={t('empty_desc')}
+            icon={
+              <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                <circle cx="11" cy="11" r="8" />
+                <line x1="21" y1="21" x2="16.65" y2="16.65" />
+              </svg>
+            }
+          />
+        ) : (
+          <StationSection
+            id="results"
+            label={t('section_results')}
+            stations={flatResults}
+            expanded={!!expandedSections['results']}
+            onToggle={() => setExpandedSections((s) => ({ ...s, results: !s['results'] }))}
+            seeMoreLabel={t('see_more')}
+            accent
+          />
+        )
       ) : availableNow.length === 0 && topRated.length === 0 && mostRevisited.length === 0 ? (
         <EmptyState
           title={t('empty_title')}
@@ -584,27 +608,46 @@ function StationSection({ label, stations, expanded, onToggle, seeMoreLabel, acc
 }
 
 /* ------------------------------------------------------------------ */
-/* Time input — native HTML5 time picker                               */
+/* Disabled placeholder for upcoming multi-select filters               */
+/* (categories, vehicle types, services). Shown so the user sees what's */
+/* coming without exposing fake / mock data.                            */
 /* ------------------------------------------------------------------ */
 
-interface TimeInputProps {
-  value: string;
-  onChange: (val: string) => void;
+interface DisabledMultiSelectFieldProps {
+  label: string;
+  placeholder: string;
+  selectedCount: number;
 }
 
-function TimeInput({ value, onChange }: TimeInputProps) {
+function DisabledMultiSelectField({ label, placeholder, selectedCount }: DisabledMultiSelectFieldProps) {
   return (
-    <input
-      type="time"
-      value={value}
-      onChange={(e) => onChange(e.target.value)}
-      className={[
-        'w-full px-2 py-2 rounded-lg border text-[13px] sm:text-[14px] font-semibold outline-none transition-all duration-150 cursor-pointer',
-        value
-          ? 'border-gold bg-gold/5 dark:bg-gold/10 text-[#1A1A1A] dark:text-white'
-          : 'border-[#E0E0D0] dark:border-tab-inactive bg-[#F5F5EE] dark:bg-tab-inactive text-[#555] dark:text-[#C0C0B0]',
-      ].join(' ')}
-    />
+    <div>
+      <p className="mb-1.5 text-[11px] sm:text-[13px] font-bold uppercase tracking-wider text-[#333] dark:text-[#C0C0B0]">
+        {label}
+      </p>
+      <div
+        aria-disabled="true"
+        className="flex w-full cursor-not-allowed items-center justify-between rounded-lg border border-[#E0E0D0] bg-[#F5F5EE] px-3 py-2 text-[13px] sm:text-[14px] text-[#9A9A8A] opacity-60 dark:border-tab-inactive dark:bg-tab-inactive dark:text-[#7A7A6A]"
+      >
+        <span className="truncate">
+          {selectedCount > 0 ? `${selectedCount}` : placeholder}
+        </span>
+        <svg
+          width="14"
+          height="14"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth="2.5"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          aria-hidden="true"
+          className="shrink-0"
+        >
+          <polyline points="6 9 12 15 18 9" />
+        </svg>
+      </div>
+    </div>
   );
 }
 
@@ -612,10 +655,15 @@ function TimeInput({ value, onChange }: TimeInputProps) {
 /* Custom multi-select                                                  */
 /* ------------------------------------------------------------------ */
 
+interface MultiSelectOption {
+  value: string;
+  label: string;
+}
+
 interface CustomMultiSelectProps {
-  options: string[];
+  options: MultiSelectOption[];
   selected: string[];
-  onToggle: (opt: string) => void;
+  onToggle: (value: string) => void;
   placeholder: string;
 }
 
@@ -640,10 +688,11 @@ function CustomMultiSelect({ options, selected, onToggle, placeholder }: CustomM
     };
   }, [open]);
 
+  const selectedLabels = options.filter((o) => selected.includes(o.value)).map((o) => o.label);
   const triggerLabel =
-    selected.length === 0 ? placeholder
-    : selected.length === 1 ? selected[0]
-    : `${selected[0]} +${selected.length - 1}`;
+    selectedLabels.length === 0 ? placeholder
+    : selectedLabels.length === 1 ? selectedLabels[0]
+    : `${selectedLabels[0]} +${selectedLabels.length - 1}`;
 
   const isActive = open || selected.length > 0;
 
@@ -673,7 +722,16 @@ function CustomMultiSelect({ options, selected, onToggle, placeholder }: CustomM
         </svg>
       </button>
 
-      {open && (
+      {open && options.length === 0 && (
+        <div
+          id={listboxId}
+          className="absolute top-[calc(100%+6px)] left-0 right-0 bg-white dark:bg-dark-surface border border-[#E0E0D0] dark:border-tab-inactive rounded-xl shadow-[0_8px_32px_rgba(0,0,0,0.12)] dark:shadow-[0_8px_32px_rgba(0,0,0,0.4)] z-50 px-3.5 py-3 text-[13px] text-[#555] dark:text-[#B0B0A0] animate-fade-in"
+        >
+          —
+        </div>
+      )}
+
+      {open && options.length > 0 && (
         <div
           id={listboxId}
           role="listbox"
@@ -681,12 +739,12 @@ function CustomMultiSelect({ options, selected, onToggle, placeholder }: CustomM
           className="absolute top-[calc(100%+6px)] left-0 right-0 bg-white dark:bg-dark-surface border border-[#E0E0D0] dark:border-tab-inactive rounded-xl shadow-[0_8px_32px_rgba(0,0,0,0.12)] dark:shadow-[0_8px_32px_rgba(0,0,0,0.4)] z-50 max-h-52 overflow-y-auto animate-fade-in"
         >
           {options.map((opt) => {
-            const isSel = selected.includes(opt);
+            const isSel = selected.includes(opt.value);
             return (
               <button
-                key={opt}
+                key={opt.value}
                 type="button"
-                onClick={() => onToggle(opt)}
+                onClick={() => onToggle(opt.value)}
                 role="option"
                 aria-selected={isSel}
                 className={[
@@ -696,7 +754,111 @@ function CustomMultiSelect({ options, selected, onToggle, placeholder }: CustomM
                     : 'text-[#1A1A1A] dark:text-white hover:bg-[#F5F5EE] dark:hover:bg-tab-inactive',
                 ].join(' ')}
               >
-                <span>{opt}</span>
+                <span>{opt.label}</span>
+                {isSel && (
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true" className="shrink-0 text-gold">
+                    <polyline points="20 6 9 17 4 12" />
+                  </svg>
+                )}
+              </button>
+            );
+          })}
+        </div>
+      )}
+    </div>
+  );
+}
+
+/* ------------------------------------------------------------------ */
+/* Custom select — single value, same visual language as MultiSelect   */
+/* ------------------------------------------------------------------ */
+
+interface SelectOption {
+  value: string;
+  label: string;
+}
+
+interface CustomSelectProps {
+  options: SelectOption[];
+  value: string;
+  onChange: (value: string) => void;
+  placeholder: string;
+}
+
+function CustomSelect({ options, value, onChange, placeholder }: CustomSelectProps) {
+  const [open, setOpen] = useState(false);
+  const ref       = useRef<HTMLDivElement>(null);
+  const listboxId = useId();
+
+  useEffect(() => {
+    if (!open) return;
+    const handleMouseDown = (e: MouseEvent) => {
+      if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false);
+    };
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') { e.preventDefault(); setOpen(false); }
+    };
+    document.addEventListener('mousedown', handleMouseDown);
+    document.addEventListener('keydown', handleKeyDown);
+    return () => {
+      document.removeEventListener('mousedown', handleMouseDown);
+      document.removeEventListener('keydown', handleKeyDown);
+    };
+  }, [open]);
+
+  const selectedOption = options.find((o) => o.value === value);
+  const triggerLabel   = selectedOption && value ? selectedOption.label : placeholder;
+  const isActive       = open || value !== '';
+
+  return (
+    <div ref={ref} className="relative">
+      <button
+        type="button"
+        onClick={() => setOpen((v) => !v)}
+        aria-haspopup="listbox"
+        aria-expanded={open}
+        aria-controls={listboxId}
+        className={[
+          'w-full flex items-center justify-between px-2.5 sm:px-3.5 py-2 sm:py-2.5 rounded-lg border text-[13px] sm:text-[14px] font-semibold transition-all duration-150 select-none',
+          isActive
+            ? 'border-gold bg-gold/5 dark:bg-gold/10 text-[#1A1A1A] dark:text-white'
+            : 'border-[#E0E0D0] dark:border-tab-inactive bg-[#F5F5EE] dark:bg-tab-inactive text-[#555] dark:text-[#C0C0B0]',
+        ].join(' ')}
+      >
+        <span className={`truncate ${value ? 'text-[#1A1A1A] dark:text-white' : ''}`}>{triggerLabel}</span>
+        <svg
+          width="14" height="14" viewBox="0 0 24 24" fill="none"
+          stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"
+          aria-hidden="true"
+          className={`shrink-0 ml-1 transition-transform duration-200 ${open ? 'rotate-180 text-gold' : ''}`}
+        >
+          <polyline points="6 9 12 15 18 9" />
+        </svg>
+      </button>
+
+      {open && (
+        <div
+          id={listboxId}
+          role="listbox"
+          className="absolute top-[calc(100%+6px)] left-0 right-0 bg-white dark:bg-dark-surface border border-[#E0E0D0] dark:border-tab-inactive rounded-xl shadow-[0_8px_32px_rgba(0,0,0,0.12)] dark:shadow-[0_8px_32px_rgba(0,0,0,0.4)] z-50 max-h-60 overflow-y-auto animate-fade-in"
+        >
+          {options.map((opt) => {
+            const isSel = opt.value === value;
+            return (
+              <button
+                key={opt.value || 'all'}
+                type="button"
+                onClick={() => { onChange(opt.value); setOpen(false); }}
+                role="option"
+                aria-selected={isSel}
+                className={[
+                  'w-full flex items-center justify-between px-3.5 py-2.5 text-[14px] font-semibold text-left transition-colors duration-100',
+                  isSel
+                    ? 'text-gold bg-gold/5 dark:bg-gold/10'
+                    : 'text-[#1A1A1A] dark:text-white hover:bg-[#F5F5EE] dark:hover:bg-tab-inactive',
+                ].join(' ')}
+              >
+                <span>{opt.label}</span>
                 {isSel && (
                   <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true" className="shrink-0 text-gold">
                     <polyline points="20 6 9 17 4 12" />

@@ -24,5 +24,7 @@ export interface Service {
   service_type: ServiceType;
   description: string;
   is_active: boolean;
+  is_popular?: boolean;
   vehicle_entries: ServiceVehicleEntry[];
+  compatible_extras?: { id: string; name: string }[];
 }

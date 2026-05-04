@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useRef, useEffect } from 'react';
-import { useTranslations } from 'next-intl';
+import { useLocale, useTranslations } from 'next-intl';
 import { getFromApi, postWithApi } from '@/services/axios-service';
 import { useToast } from '@/context/toast-context';
 import type { SupportTicketSummary, SupportTicketDetail, SupportMessage, TicketStatus } from '../support-types';
@@ -16,15 +16,28 @@ const STATUS: Record<TicketStatus, {
   closed:      { bar: 'bg-[#94A3B8]', badge: 'bg-[#F8FAFC] text-[#64748B] ring-1 ring-[#CBD5E1]/60',  dot: 'bg-[#94A3B8]', label: 'status_closed',      iconColor: '#94A3B8', iconBg: 'bg-[#F8FAFC] dark:bg-[#94A3B8]/10' },
 };
 
-function formatDateTime(d: string) {
+function getDateLocale(locale: string): string {
+  return locale.startsWith('en') ? 'en-CA' : 'fr-CA';
+}
+
+function formatDateTime(d: string, locale: string) {
   try {
-    return new Date(d).toLocaleString('fr-CA', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' });
+    return new Date(d).toLocaleString(getDateLocale(locale), {
+      day: 'numeric',
+      month: 'short',
+      hour: '2-digit',
+      minute: '2-digit',
+    });
   } catch { return d; }
 }
 
-function formatDate(d: string) {
+function formatDate(d: string, locale: string) {
   try {
-    return new Date(d).toLocaleDateString('fr-CA', { day: 'numeric', month: 'short', year: 'numeric' });
+    return new Date(d).toLocaleDateString(getDateLocale(locale), {
+      day: 'numeric',
+      month: 'short',
+      year: 'numeric',
+    });
   } catch { return d; }
 }
 
@@ -35,6 +48,7 @@ interface Props {
 
 export function SupportTicketCard({ ticket, onMessageSent }: Props) {
   const t = useTranslations('client_support');
+  const locale = useLocale();
   const { success: toastSuccess, error: toastError } = useToast();
   const [open, setOpen] = useState(false);
   const [messages, setMessages] = useState<SupportMessage[]>([]);
@@ -123,7 +137,7 @@ export function SupportTicketCard({ ticket, onMessageSent }: Props) {
               <p className="mt-0.5 line-clamp-1 text-[12px] text-[#888] dark:text-[#6A6A5A]">{ticket.lastMessage.content}</p>
             )}
             <div className="mt-1 flex items-center gap-2 text-[11px] text-[#BBBBAA] dark:text-[#4A4A3A]">
-              <span>{formatDate(ticket.created_at)}</span>
+              <span>{formatDate(ticket.created_at, locale)}</span>
               {ticket.ticket_number && (
                 <>
                   <span aria-hidden="true">·</span>
@@ -176,7 +190,7 @@ export function SupportTicketCard({ ticket, onMessageSent }: Props) {
                         <p className="mb-1 text-[10px] font-black tracking-wide text-[#C49A1E]/90">{t('thread_admin_label')}</p>
                       )}
                       <p className="text-[13px] leading-relaxed text-[#1A1A0A] dark:text-[#F0EDD4]">{msg.content}</p>
-                      <p className="mt-1.5 text-[10px] text-[#BBBBAA] dark:text-[#4A4A3A]">{formatDateTime(msg.created_at)}</p>
+                      <p className="mt-1.5 text-[10px] text-[#BBBBAA] dark:text-[#4A4A3A]">{formatDateTime(msg.created_at, locale)}</p>
                     </div>
                   </div>
                 );

@@ -88,7 +88,7 @@ export function DashboardDateNav({ selectedDate, onDateChange, view, onViewChang
             <div className="text-[16px] font-black">{chip.num}</div>
             {/* Gold dot for today */}
             {chip.isToday && !chip.isActive && (
-              <span className="absolute bottom-1 left-1/2 h-1 w-1 -translate-x-1/2 rounded-full bg-[#C09A18]" />
+              <span className="absolute bottom-1 left-1/2 h-1 w-1 -translate-x-1/2 rounded-full bg-[#C49A1E]" />
             )}
             {chip.isToday && chip.isActive && (
               <span className="absolute bottom-1 left-1/2 h-1 w-1 -translate-x-1/2 rounded-full bg-[#0C1209]/50" />
@@ -116,8 +116,8 @@ export function DashboardDateNav({ selectedDate, onDateChange, view, onViewChang
             onClick={() => onViewChange(v)}
             className={
               view === v
-                ? 'rounded-md px-3.5 py-1.5 text-[13px] font-bold bg-[#C49A1E] text-[#0C1209] transition-all duration-150'
-                : 'rounded-md px-3.5 py-1.5 text-[13px] font-bold text-[#666] transition-all duration-150 dark:text-[#A0A090]'
+                ? 'rounded-lg px-3.5 py-1.5 text-[13px] font-bold bg-[#C49A1E] text-[#0C1209] transition-all duration-150'
+                : 'rounded-lg px-3.5 py-1.5 text-[13px] font-bold text-[#666] transition-all duration-150 dark:text-[#A0A090]'
             }
           >
             {t(v === 'weekly' ? 'view_weekly' : 'view_monthly')}

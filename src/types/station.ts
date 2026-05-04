@@ -8,9 +8,12 @@ export interface Station {
   city: string;
   rating: number;
   reviewCount: number;
+  /** Total reservations completed at this station (Services terminés). Used to decide "most visited" section membership. */
+  completedCount: number;
   availableSlots: number;
   totalSlots: number;
-  priceFrom: number;
+  /** Lowest active format price. Null when the API does not expose it on the list payload. */
+  priceFrom: number | null;
   tags: string[];
   vehicleTypes?: string[];
   imageUrl?: string;

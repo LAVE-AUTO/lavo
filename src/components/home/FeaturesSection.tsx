@@ -55,10 +55,10 @@ export function FeaturesSection() {
   ];
 
   return (
-    <section className="px-6 py-28 lg:px-16" id="features">
+    <section className="px-6 py-16 lg:px-16 lg:py-20" id="features">
       <div className="mx-auto max-w-[1280px]">
         <RevealOnScroll className="mb-2 text-center">
-          <div className="font-dm-mono mb-4 flex items-center justify-center gap-3 text-[11px] uppercase tracking-[3px] text-[#c8980a]">
+          <div className="font-dm-mono mb-3 flex items-center justify-center gap-3 text-[11px] uppercase tracking-[3px] text-[#c8980a]">
             {t('tag')}
             <span className="h-px w-9 bg-[#c8980a] opacity-50" />
           </div>
@@ -68,7 +68,7 @@ export function FeaturesSection() {
           </h2>
         </RevealOnScroll>
 
-        <div className="mt-14 grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
+        <div className="mt-10 grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3">
           {features.map((feat, i) => (
             <RevealOnScroll key={feat.title}>
               <div className="group rounded-[12px] p-7 transition-all duration-300 cursor-default hover:-translate-y-1.5 hover:shadow-[0_24px_48px_rgba(0,0,0,0.18)] dark:hover:shadow-[0_24px_48px_rgba(0,0,0,0.35)] bg-[#e8e2d4] dark:bg-[#f5edd6]">

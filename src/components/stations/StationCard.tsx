@@ -92,14 +92,16 @@ export function StationCard({ station, unavailable = false }: StationCardProps) 
 
       {/* Card body */}
       <div className="p-4 flex flex-col flex-1">
-        {/* Name + price */}
+        {/* Name + price (hidden until backend exposes price_from on the list payload) */}
         <div className="flex items-start justify-between gap-2 mb-2">
           <h3 className="text-[17px] font-bold text-[#0A0A14] dark:text-white leading-tight line-clamp-1">
             {station.name}
           </h3>
-          <span className="text-[18px] font-bold text-gold shrink-0">
-            {station.priceFrom.toLocaleString()} <span className="text-[13px] font-semibold">{t('price_unit')}</span>
-          </span>
+          {station.priceFrom != null && (
+            <span className="text-[18px] font-bold text-gold shrink-0">
+              {station.priceFrom.toLocaleString()} <span className="text-[13px] font-semibold">{t('price_unit')}</span>
+            </span>
+          )}
         </div>
 
         {/* Rating */}

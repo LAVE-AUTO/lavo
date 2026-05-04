@@ -146,12 +146,12 @@ export function BottomNav() {
     ? (user.first_name ? `${user.first_name} ${user.last_name || ''}`.trim() : user.email.split('@')[0])
     : '';
 
-  /* Guest items */
+  /* Guest items — labels kept short so they stay on a single line in the bottom bar */
   const guestItems = [
     { href: homeHref, label: t('home'), icon: (a: boolean) => <HomeIcon active={a} /> },
     { href: '/stations', label: t('stations'), icon: (a: boolean) => <SearchIcon active={a} /> },
     { href: '/login', label: t('login'), icon: () => <UserIcon /> },
-    { href: '/#how-it-works', label: t('how_it_works'), icon: (a: boolean) => <HowItWorksIcon active={a} /> },
+    { href: '/#how-it-works', label: t('bottom_how_it_works'), icon: (a: boolean) => <HowItWorksIcon active={a} /> },
   ];
 
   /* Authenticated items — client only.
@@ -188,7 +188,7 @@ export function BottomNav() {
               aria-current={active ? 'page' : undefined}
             >
               {icon(active)}
-              <span className={`text-[11px] font-bold tracking-wide ${active ? 'text-gold' : 'text-[#9A9A8A]'}`}>
+              <span className={`text-[11px] font-bold tracking-wide whitespace-nowrap ${active ? 'text-gold' : 'text-[#9A9A8A]'}`}>
                 {label}
               </span>
             </Link>

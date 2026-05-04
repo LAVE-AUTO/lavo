@@ -4,6 +4,7 @@ import { useState, useRef, useEffect, type ChangeEvent } from 'react';
 import { useTranslations } from 'next-intl';
 import { useToast } from '@/context/toast-context';
 import { useAuth } from '@/context/auth-context';
+import { getFromApi, patchWithApi } from '@/services';
 
 const MAX_PHOTOS       = 8;
 const UPLOAD_TIMEOUT   = 30_000;
@@ -22,11 +23,25 @@ export function StationPhotosForm({ locked = false }: Props) {
   const fileInputRef  = useRef<HTMLInputElement>(null);
   const targetSlot    = useRef(0);
 
-  // TODO: connect to API once endpoint is available (GET /station/me or /station/photos)
-  // Load existing photo URLs on mount and populate the photos state.
   const [photos,       setPhotos]       = useState<string[]>(Array(MAX_PHOTOS).fill(''));
   const [uploadingIdx, setUploadingIdx] = useState<number | null>(null);
   const [isDirty,      setIsDirty]      = useState(false);
+
+  useEffect(() => {
+    let active = true;
+
+    getFromApi('/station/me').then(([ok, data]) => {
+      if (!mountedRef.current || !active || !ok) return;
+      const fromApi = (data as { data?: { photos?: string[] } })?.data?.photos ?? [];
+      const next = Array(MAX_PHOTOS).fill('').map((_, i) => fromApi[i] ?? '');
+      setPhotos(next);
+      setIsDirty(false);
+    });
+
+    return () => {
+      active = false;
+    };
+  }, []);
 
   function triggerUpload(slot: number) {
     if (locked || uploadingIdx !== null) return;
@@ -76,12 +91,22 @@ export function StationPhotosForm({ locked = false }: Props) {
   }
 
   async function handleSave() {
-    // TODO: connect to API once endpoint is available (PATCH /station/photos)
-    // Payload: { photo_urls: photos.filter(Boolean) }
-    // Backend must: store URLs linked to the station record.
-    //   Return them in GET /stations/:id so client-facing cards can display them.
-    // Save is a no-op until the endpoint exists — do not show a success toast for a mocked call.
-    showError(t('photos_save_unavailable'));
+    const [ok, data] = await patchWithApi('/station/photos', {
+      photos: photos.filter(Boolean),
+    });
+
+    if (!mountedRef.current) return;
+
+    if (ok) {
+      const saved = (data as { data?: { photos?: string[] } })?.data?.photos ?? photos.filter(Boolean);
+      const next = Array(MAX_PHOTOS).fill('').map((_, i) => saved[i] ?? '');
+      setPhotos(next);
+      setIsDirty(false);
+      success(t('photos_save_success'));
+      return;
+    }
+
+    showError(t('photos_save_error'));
   }
 
   return (
@@ -150,10 +175,8 @@ export function StationPhotosForm({ locked = false }: Props) {
             </div>
             <div className="flex items-center justify-between">
               <p className="text-[12px] text-[#FF8800]">{t('photos_unsaved')}</p>
-              {/* Save button disabled — TODO: enable once PATCH /station/photos endpoint is available */}
-              <button type="button" onClick={handleSave} disabled
-                title={t('photos_save_unavailable')}
-                className="flex items-center gap-2 rounded-xl bg-[#C49A1E] px-5 py-2.5 text-[13px] font-bold text-[#0C1209] opacity-40 cursor-not-allowed">
+              <button type="button" onClick={handleSave} disabled={locked || uploadingIdx !== null}
+                className="flex items-center gap-2 rounded-xl bg-[#C49A1E] px-5 py-2.5 text-[13px] font-bold text-[#0C1209] transition-opacity hover:opacity-80 disabled:opacity-40 disabled:cursor-not-allowed">
                 {t('btn_save')}
               </button>
             </div>
