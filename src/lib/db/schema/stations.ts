@@ -9,6 +9,7 @@ import {
   decimal,
   index,
   integer,
+  jsonb,
   numeric,
   pgMaterializedView,
   pgTable,
@@ -108,6 +109,7 @@ export const stations = pgTable(
     })
       .notNull()
       .defaultNow(),
+    notification_prefs: jsonb("notification_prefs"),
   },
   (table) => [
     index("stations_status_idx").on(table.status),
