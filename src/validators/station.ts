@@ -519,16 +519,24 @@ export const stationPhotosBodySchema = z
                 // reject every URL rather than silently accepting arbitrary origins.
                 if (!cloudName) return false;
                 try {
-                  const host = new URL(val).hostname;
-                  return (
-                    host === 'res.cloudinary.com' ||
-                    host === `${cloudName}.cloudinary.com`
-                  );
+                  const { hostname } = new URL(val);
+                  if (
+                    hostname === 'res.cloudinary.com' ||
+                    hostname === `${cloudName}.cloudinary.com`
+                  ) {
+                    return true;
+                  }
+                  // Also allow URLs served from the app host (local/fallback storage).
+                  const appUrl = process.env.NEXT_PUBLIC_APP_URL;
+                  if (appUrl) {
+                    return hostname === new URL(appUrl).hostname;
+                  }
+                  return false;
                 } catch {
                   return false;
                 }
               },
-              { message: 'URL must be a valid Cloudinary URL' }
+              { message: 'URL must be a valid Cloudinary or application-hosted URL' }
             ),
           position: z.number().int().min(0),
         })
