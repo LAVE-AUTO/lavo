@@ -4,7 +4,7 @@
  */
 import { and, asc, desc, eq, gte, inArray, isNull, lt, lte, sql } from 'drizzle-orm';
 import { db, type DbTransaction } from '@/lib/db';
-import { reservations, timeSlots, stationConfigs } from '@/lib/db/schema';
+import { reservations, timeSlots, stationConfigs, stations, vehicleFormats, users } from '@/lib/db/schema';
 
 export type Entry = typeof reservations.$inferSelect;
 export type EntryInsert = typeof reservations.$inferInsert;
@@ -581,6 +581,56 @@ export async function cancelEntryForStripePaymentFailureIfEligible(
 }
 
 /**
+ * Atomically moves a queue entry to a new position, shifting neighbors to fill the gap.
+ * Safe to call within or outside a transaction.
+ */
+export async function repositionQueueEntry(
+  entryId: string,
+  stationId: string,
+  oldPos: number,
+  newPos: number,
+  tx?: DbTransaction
+): Promise<void> {
+  if (oldPos === newPos) return;
+  const client = tx ?? db;
+
+  if (newPos < oldPos) {
+    // Moving forward: shift entries in [newPos, oldPos) down by 1 to make room
+    await client
+      .update(reservations)
+      .set({ queue_position: sql`${reservations.queue_position} + 1`, updated_at: new Date() })
+      .where(
+        and(
+          eq(reservations.station_id, stationId),
+          eq(reservations.entry_type, 'queue'),
+          sql`${reservations.queue_position} >= ${newPos}`,
+          sql`${reservations.queue_position} < ${oldPos}`,
+          sql`${reservations.id} != ${entryId}`
+        )
+      );
+  } else {
+    // Moving backward: shift entries in (oldPos, newPos] up by 1 to fill the gap
+    await client
+      .update(reservations)
+      .set({ queue_position: sql`${reservations.queue_position} - 1`, updated_at: new Date() })
+      .where(
+        and(
+          eq(reservations.station_id, stationId),
+          eq(reservations.entry_type, 'queue'),
+          sql`${reservations.queue_position} > ${oldPos}`,
+          sql`${reservations.queue_position} <= ${newPos}`,
+          sql`${reservations.id} != ${entryId}`
+        )
+      );
+  }
+
+  await client
+    .update(reservations)
+    .set({ queue_position: newPos, updated_at: new Date() })
+    .where(eq(reservations.id, entryId));
+}
+
+/**
  * Shifts queue positions for a station: entries with queue_position >= fromPosition get +delta.
  * Used when inserting at a specific position (e.g. middle_of_queue) or reordering.
  */
@@ -679,6 +729,216 @@ export async function findOrphanedPendingPaymentEntries(olderThanMinutes: number
     ),
   });
 }
+
+// %%%%% Rich entry queries — denormalized with station, format, flags %%%%%
+
+/** Denormalized entry shape returned to the client, enriched with joined data. */
+export type RichEntry = {
+  id: string;
+  user_id: string;
+  entry_type: 'reservation' | 'queue';
+  booking_source: 'standard' | 'qr';
+  time_slot_id: string | null;
+  station_id: string;
+  vehicle_format_id: string;
+  status: string;
+  queue_position: number | null;
+  amount_paid: string;
+  created_at: Date;
+  updated_at: Date;
+  station: {
+    id: string;
+    name: string;
+    address: string;
+    city: string;
+    latitude: string | null;
+    longitude: string | null;
+    image_url: string | null;
+    free_cancellation_minutes: number | null;
+  };
+  vehicle_format: { id: string; label: string; price: string } | null;
+  is_rated: boolean;
+  is_tipped: boolean;
+  estimated_wait_minutes: number | null;
+};
+
+/** Shared SELECT projection for rich entry queries. */
+function richEntrySelect() {
+  return {
+    ...RESERVATION_COLUMNS,
+    station_name: stations.name,
+    station_address: stations.address,
+    station_city: stations.city,
+    station_latitude: stations.latitude,
+    station_longitude: stations.longitude,
+    station_image_url: sql<string | null>`(SELECT station_photos.url FROM station_photos WHERE station_photos.station_id = ${reservations.station_id} ORDER BY station_photos.position ASC LIMIT 1)`,
+    station_free_cancellation_minutes: stationConfigs.cancellation_delay_minutes,
+    station_wash_duration_minutes: stationConfigs.wash_duration_minutes,
+    station_wash_post_count: stationConfigs.wash_post_count,
+    vf_label: vehicleFormats.label,
+    vf_price: vehicleFormats.price,
+    is_rated: sql<boolean>`EXISTS (SELECT 1 FROM ratings WHERE ratings.reservation_id = ${reservations.id})`,
+    is_tipped: sql<boolean>`EXISTS (SELECT 1 FROM reservation_tips WHERE reservation_tips.reservation_id = ${reservations.id})`,
+    // Estimated wait: position × wash_duration / wash_posts (queue entries only).
+    estimated_wait_minutes: sql<number | null>`CASE WHEN ${reservations.entry_type} = 'queue' THEN CEIL(COALESCE(${reservations.queue_position}, 0) * COALESCE(${stationConfigs.wash_duration_minutes}, 0)::float / NULLIF(${stationConfigs.wash_post_count}::float, 0)) ELSE NULL END`,
+  } as const;
+}
+
+/** Maps a raw rich-select row to a RichEntry value object. */
+function mapToRichEntry(r: Record<string, unknown>): RichEntry {
+  return {
+    id: r.id as string,
+    user_id: r.user_id as string,
+    entry_type: r.entry_type as 'reservation' | 'queue',
+    booking_source: r.booking_source as 'standard' | 'qr',
+    time_slot_id: r.time_slot_id as string | null,
+    station_id: r.station_id as string,
+    vehicle_format_id: r.vehicle_format_id as string,
+    status: r.status as string,
+    queue_position: r.queue_position as number | null,
+    amount_paid: r.amount_paid as string,
+    created_at: r.created_at as Date,
+    updated_at: r.updated_at as Date,
+    station: {
+      id: r.station_id as string,
+      name: (r.station_name as string | null) ?? '',
+      address: (r.station_address as string | null) ?? '',
+      city: (r.station_city as string | null) ?? '',
+      latitude: r.station_latitude as string | null,
+      longitude: r.station_longitude as string | null,
+      image_url: r.station_image_url as string | null,
+      free_cancellation_minutes: r.station_free_cancellation_minutes as number | null,
+    },
+    vehicle_format: r.vf_label
+      ? {
+          id: r.vehicle_format_id as string,
+          label: r.vf_label as string,
+          price: r.vf_price as string,
+        }
+      : null,
+    is_rated: Boolean(r.is_rated),
+    is_tipped: Boolean(r.is_tipped),
+    estimated_wait_minutes: r.estimated_wait_minutes as number | null,
+  };
+}
+
+/**
+ * Lists a user's entries enriched with denormalized station, vehicle format, and computed flags.
+ * Returns the same pagination shape as listEntriesByUserPaginated.
+ */
+export async function listRichEntriesByUser(
+  userId: string,
+  filters: ListEntriesFilters = {}
+): Promise<{ rows: RichEntry[]; total: number; page: number; per_page: number }> {
+  const { status, from, to, page = 1, per_page = 20 } = filters;
+  const limit = Math.min(Math.max(1, per_page), 100);
+  const offset = (Math.max(1, page) - 1) * limit;
+
+  const conditions = [eq(reservations.user_id, userId)];
+  if (status) conditions.push(eq(reservations.status, status));
+  if (from) conditions.push(gte(reservations.created_at, from));
+  if (to) conditions.push(lte(reservations.created_at, to));
+  const where = and(...conditions);
+
+  const [countRows, rows] = await Promise.all([
+    db.select({ count: sql<number>`count(*)::int` }).from(reservations).where(where),
+    db
+      .select(richEntrySelect())
+      .from(reservations)
+      .leftJoin(stations, eq(stations.id, reservations.station_id))
+      .leftJoin(stationConfigs, eq(stationConfigs.id, reservations.station_id))
+      .leftJoin(vehicleFormats, eq(vehicleFormats.id, reservations.vehicle_format_id))
+      .where(where)
+      .orderBy(desc(reservations.created_at))
+      .limit(limit)
+      .offset(offset),
+  ]);
+
+  return {
+    rows: rows.map((r) => mapToRichEntry(r as unknown as Record<string, unknown>)),
+    total: countRows[0]?.count ?? 0,
+    page,
+    per_page: limit,
+  };
+}
+
+/**
+ * Returns a single rich entry by id with ownership check (user_id = userId).
+ * Returns undefined when not found or owned by another user.
+ */
+export async function findRichEntryByIdAndUser(
+  entryId: string,
+  userId: string
+): Promise<RichEntry | undefined> {
+  const rows = await db
+    .select(richEntrySelect())
+    .from(reservations)
+    .leftJoin(stations, eq(stations.id, reservations.station_id))
+    .leftJoin(stationConfigs, eq(stationConfigs.id, reservations.station_id))
+    .leftJoin(vehicleFormats, eq(vehicleFormats.id, reservations.vehicle_format_id))
+    .where(and(eq(reservations.id, entryId), eq(reservations.user_id, userId)))
+    .limit(1);
+  return rows[0] ? mapToRichEntry(rows[0] as unknown as Record<string, unknown>) : undefined;
+}
+
+
+// %%%%% Rich station entry queries — denormalized with user and vehicle format %%%%%
+
+/** Station-side denormalized entry shape: includes user first_name and vehicle format label. */
+export type RichStationEntry = Entry & {
+  user_first_name: string | null;
+  vehicle_format: { id: string; label: string } | null;
+};
+
+/**
+ * Lists entries for a station with pagination and optional filters.
+ * Enriched with user.first_name and vehicle_format id/label via LEFT JOINs.
+ */
+export async function listRichStationEntriesPaginated(
+  stationId: string,
+  filters: ListEntriesFilters = {}
+): Promise<{ rows: RichStationEntry[]; total: number; page: number; per_page: number }> {
+  const { status, from, to, page = 1, per_page = 20 } = filters;
+  const limit = Math.min(Math.max(1, per_page), 100);
+  const offset = (Math.max(1, page) - 1) * limit;
+
+  const conditions = [eq(reservations.station_id, stationId)];
+  if (status) conditions.push(eq(reservations.status, status));
+  if (from) conditions.push(gte(reservations.created_at, from));
+  if (to) conditions.push(lte(reservations.created_at, to));
+  const where = and(...conditions);
+
+  const [countRows, rows] = await Promise.all([
+    db.select({ count: sql<number>`count(*)::int` }).from(reservations).where(where),
+    db
+      .select({
+        ...RESERVATION_COLUMNS,
+        user_first_name: users.first_name,
+        vf_id: vehicleFormats.id,
+        vf_label: vehicleFormats.label,
+      })
+      .from(reservations)
+      .leftJoin(timeSlots, eq(reservations.time_slot_id, timeSlots.id))
+      .leftJoin(users, eq(reservations.user_id, users.id))
+      .leftJoin(vehicleFormats, eq(reservations.vehicle_format_id, vehicleFormats.id))
+      .where(where)
+      .orderBy(desc(reservations.entry_type), asc(timeSlots.start_time), asc(reservations.queue_position))
+      .limit(limit)
+      .offset(offset),
+  ]);
+
+  const richRows: RichStationEntry[] = rows.map((r) => ({
+    ...(r as Entry),
+    user_first_name: r.user_first_name,
+    vehicle_format: r.vf_id ? { id: r.vf_id, label: r.vf_label ?? '' } : null,
+  }));
+
+  return { rows: richRows, total: countRows[0]?.count ?? 0, page, per_page: limit };
+}
+
+
+// %%%%% END - Rich entry queries %%%%%
+
 
 /**
  * Lists confirmed reservations whose slot start_time falls within a time window

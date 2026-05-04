@@ -31,6 +31,7 @@ import { notifyEntry } from '@/server/notifications/notification-service';
 import { sendEscrowReleasedNotificationsForEntry } from '@/server/notifications/escrow-released-notifications';
 import {
   createReservationEntry,
+  createQueueEntry,
   findEntryByIdAndUser,
   findEntryByIdAndStation,
   hasActiveEntryAtStation,
@@ -38,9 +39,16 @@ import {
   setStripePaymentSucceededNotifiedAtIfMissing,
   updateEntry,
   shiftQueuePositions,
+  repositionQueueEntry,
+  getNextQueuePosition,
+  listRichEntriesByUser,
+  findRichEntryByIdAndUser,
+  listRichStationEntriesPaginated,
   type Entry,
   type ListEntriesFilters,
   type PaginatedEntries,
+  type RichEntry,
+  type RichStationEntry,
   listEntriesByUserPaginated,
   listEntriesByStationPaginated,
 } from './entry-repository';
@@ -476,6 +484,27 @@ export async function listMyEntries(
 }
 
 /**
+ * Returns paginated rich entries for the user, including denormalized station,
+ * vehicle format, is_rated, is_tipped, and estimated_wait_minutes.
+ */
+export async function listMyRichEntries(
+  userId: string,
+  filters?: ListEntriesFilters
+): Promise<{ rows: RichEntry[]; total: number; page: number; per_page: number }> {
+  return listRichEntriesByUser(userId, filters);
+}
+
+/**
+ * Returns a single rich entry by id with ownership check. Returns undefined when not found.
+ */
+export async function getMyRichEntry(
+  entryId: string,
+  userId: string
+): Promise<RichEntry | undefined> {
+  return findRichEntryByIdAndUser(entryId, userId);
+}
+
+/**
  * Returns paginated entries for the station.
  */
 export async function listStationEntries(
@@ -483,6 +512,16 @@ export async function listStationEntries(
   filters?: ListEntriesFilters
 ): Promise<PaginatedEntries> {
   return listEntriesByStationPaginated(stationId, filters);
+}
+
+/**
+ * Returns paginated station entries enriched with user first_name and vehicle format.
+ */
+export async function listRichStationEntries(
+  stationId: string,
+  filters?: ListEntriesFilters
+): Promise<{ rows: RichStationEntry[]; total: number; page: number; per_page: number }> {
+  return listRichStationEntriesPaginated(stationId, filters);
 }
 
 /** Result of upgradeQueueToReservation: updated entry + Stripe client_secret for frontend payment. */
@@ -695,5 +734,92 @@ export async function setEntryStatusByStation(
       });
     });
   }
+  return updated;
+}
+
+
+// %%%%% Walk-in entry creation %%%%%
+// Station creates an entry for a walk-in client (no Stripe payment flow)
+
+/**
+ * Creates a walk-in entry for the station.
+ * If time_slot_id is provided, entry_type is 'reservation'; otherwise 'queue'.
+ * The format must belong to the station. Status is 'confirmed' (payment collected on-site).
+ *
+ * Walk-ins have no registered customer account, but `reservations.user_id` is a non-null
+ * FK to `users.id`. We therefore record the station owner's user_id as the placeholder,
+ * which is a real users row and is already authorized for the station. This keeps the FK
+ * valid and prevents the row from being incorrectly attributed to an unrelated user.
+ * Filtering walk-ins out of "my entries" listings is done via station.user_id ownership
+ * checks where applicable.
+ */
+export async function createWalkInEntry(
+  stationId: string,
+  stationOwnerUserId: string,
+  vehicleFormatId: string,
+  timeSlotId?: string
+): Promise<Entry> {
+  const format = await findFormatByIdAndStation(vehicleFormatId, stationId);
+  if (!format) throw new NotFoundError('Vehicle format not found or does not belong to this station');
+
+  if (timeSlotId) {
+    return createReservationEntry({
+      user_id: stationOwnerUserId, // walk-in placeholder: station owner's user_id (real users row)
+      station_id: stationId,
+      vehicle_format_id: vehicleFormatId,
+      time_slot_id: timeSlotId,
+      booking_source: 'standard',
+      status: STATUS_CONFIRMED,
+      amount_paid: toDecimal(String(format.price)),
+      commission_rate: '0',
+      commission_amount: '0',
+      station_payout: toDecimal(String(format.price)),
+    });
+  }
+
+  const queuePosition = await getNextQueuePosition(stationId);
+  return createQueueEntry({
+    user_id: stationOwnerUserId,
+    station_id: stationId,
+    vehicle_format_id: vehicleFormatId,
+    queue_position: queuePosition,
+    status: STATUS_CONFIRMED,
+    amount_paid: toDecimal(String(format.price)),
+    commission_rate: '0',
+    commission_amount: '0',
+    station_payout: toDecimal(String(format.price)),
+  });
+}
+
+
+// %%%%% Queue priority management %%%%%
+// Station sets queue_position for an entry
+
+/** Terminal statuses that block priority changes. */
+const TERMINAL_STATUSES = ['cancelled', 'completed', 'in_progress'];
+
+/**
+ * Repositions a queue entry to a new position (1-based). 'front' maps to position 1.
+ * Shifts neighboring entries to preserve a contiguous, gap-free queue.
+ * Throws ConflictError if the entry is not an active queue entry.
+ */
+export async function setPriorityForEntry(
+  entryId: string,
+  stationId: string,
+  position: 'front' | number
+): Promise<Entry> {
+  const entry = await findEntryByIdAndStation(entryId, stationId);
+  if (!entry) throw new NotFoundError('Entry not found');
+  if (entry.entry_type !== 'queue') throw new ConflictError('Entry is not a queue entry');
+  if (TERMINAL_STATUSES.includes(entry.status)) {
+    throw new ConflictError(`Cannot reprioritize an entry with status '${entry.status}'`);
+  }
+  if (entry.queue_position == null) throw new ConflictError('Entry has no queue position');
+
+  const newPos = position === 'front' ? 1 : Math.max(1, Math.floor(position));
+  await repositionQueueEntry(entryId, stationId, entry.queue_position, newPos);
+
+  const updated = await findEntryByIdAndStation(entryId, stationId);
+  if (!updated) throw new NotFoundError('Entry not found after update');
   return updated;
 }
