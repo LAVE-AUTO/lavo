@@ -131,7 +131,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   }, [loginPath]);
 
-  const handleUnauthorized = useCallback(async () => {
+  // Deduplicated refresh — multiple concurrent callers share the same in-flight promise.
+  const tryRefreshToken = useCallback(async (): Promise<string | null> => {
     if (!isRefreshingRef.current) {
       isRefreshingRef.current = true;
       refreshPromiseRef.current = refreshAccessToken().finally(() => {
@@ -139,34 +140,25 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         refreshPromiseRef.current = null;
       });
     }
+    return refreshPromiseRef.current;
+  }, [refreshAccessToken]);
 
-    const newToken = await refreshPromiseRef.current;
-    if (newToken) {
-      refreshAxiosService({
-        baseURL: process.env.NEXT_PUBLIC_API_URL || '/api/v1',
-        tokenGetter: () => tokenRef.current,
-        onUnauthorized: () => { clearAuth(); },
-      });
-    } else {
-      clearAuth();
-    }
-  }, [refreshAccessToken, clearAuth]);
+  // Used by refetchUser (raw fetch, not axios) — clears session when refresh fails.
+  const handleUnauthorized = useCallback(async () => {
+    const newToken = await tryRefreshToken();
+    if (!newToken) clearAuth();
+  }, [tryRefreshToken, clearAuth]);
 
   // On mount: restore session from the httpOnly refresh token cookie.
   // The user object is fetched from the server — nothing is read from localStorage.
   useEffect(() => {
-    refreshAccessToken().then((newToken) => {
-      if (newToken) {
-        refreshAxiosService({
-          baseURL: process.env.NEXT_PUBLIC_API_URL || '/api/v1',
-          tokenGetter: () => tokenRef.current,
-          onUnauthorized: handleUnauthorized,
-        });
-      } else {
-        initAxiosService({
-          baseURL: process.env.NEXT_PUBLIC_API_URL || '/api/v1',
-        });
-      }
+    refreshAccessToken().then(() => {
+      refreshAxiosService({
+        baseURL: process.env.NEXT_PUBLIC_API_URL || '/api/v1',
+        tokenGetter: () => tokenRef.current,
+        tokenRefresher: tryRefreshToken,
+        onUnauthorized: clearAuth,
+      });
       setIsLoading(false);
     });
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -188,11 +180,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     refreshAxiosService({
       baseURL: process.env.NEXT_PUBLIC_API_URL || '/api/v1',
       tokenGetter: () => tokenRef.current,
-      onUnauthorized: () => {
-        clearAuth();
-      },
+      tokenRefresher: tryRefreshToken,
+      onUnauthorized: clearAuth,
     });
-  }, [clearAuth]);
+  }, [tryRefreshToken, clearAuth]);
 
   const logout = useCallback(async () => {
     try {
