@@ -18,6 +18,21 @@ const availableSlotsExpr = sql<number>`COALESCE(${stationStats.available_slots},
  */
 const completedCountExpr = sql<number>`COALESCE(${stationStats.completed_count}, 0)`;
 
+/** Lowest active vehicle format price for the station, as text (nullable when no formats). */
+const priceFromExpr = sql<string | null>`(SELECT MIN(vehicle_formats.price)::text FROM vehicle_formats WHERE vehicle_formats.station_id = ${stations.id} AND vehicle_formats.is_active = true)`;
+
+/** URL of the first station photo ordered by position (nullable when no photos). */
+const imageUrlExpr = sql<string | null>`(SELECT station_photos.url FROM station_photos WHERE station_photos.station_id = ${stations.id} ORDER BY station_photos.position ASC LIMIT 1)`;
+
+/** Count of live queue entries (pending_payment, pending, confirmed, late) for the station. */
+const liveQueueCountExpr = sql<number>`(SELECT COUNT(*)::int FROM reservations WHERE reservations.station_id = ${stations.id} AND reservations.entry_type = 'queue' AND reservations.status IN ('pending_payment', 'pending', 'confirmed', 'late'))`;
+
+/** Station opening time from station_configs (nullable when config absent). */
+const openingTimeExpr = sql<string | null>`(SELECT station_configs.opening_time::text FROM station_configs WHERE station_configs.id = ${stations.id})`;
+
+/** Station closing time from station_configs (nullable when config absent). */
+const closingTimeExpr = sql<string | null>`(SELECT station_configs.closing_time::text FROM station_configs WHERE station_configs.id = ${stations.id})`;
+
 export type ListActiveStationsFilters = {
   search?: string;
   city?: string;
@@ -39,12 +54,28 @@ export type ListActiveStationsResult = {
   total: number;
 };
 
-/** Row returned by listActiveStations: station columns plus available_slots and completed_count (bigint from DB). */
-export type StationWithAvailableSlots = Station & { available_slots: string; completed_count: string };
+/** Row returned by listActiveStations: station columns plus computed metrics and enriched fields. */
+export type StationWithAvailableSlots = Station & {
+  available_slots: string;
+  completed_count: string;
+  price_from: string | null;
+  image_url: string | null;
+  live_queue_count: number;
+  opening_time: string | null;
+  closing_time: string | null;
+};
 
-function rowToStationWithSlots(
-  row: Station & { available_slots: unknown; completed_count: unknown }
-): StationWithAvailableSlots {
+type StationEnrichedRow = Station & {
+  available_slots: unknown;
+  completed_count: unknown;
+  price_from: string | null;
+  image_url: string | null;
+  live_queue_count: number;
+  opening_time: string | null;
+  closing_time: string | null;
+};
+
+function rowToStationWithSlots(row: StationEnrichedRow): StationWithAvailableSlots {
   return {
     ...row,
     available_slots: String(row.available_slots),
@@ -163,6 +194,11 @@ export async function listActiveStations(
       ...getTableColumns(stations),
       available_slots: availableSlotsExpr.as('available_slots'),
       completed_count: completedCountExpr.as('completed_count'),
+      price_from: priceFromExpr.as('price_from'),
+      image_url: imageUrlExpr.as('image_url'),
+      live_queue_count: liveQueueCountExpr.as('live_queue_count'),
+      opening_time: openingTimeExpr.as('opening_time'),
+      closing_time: closingTimeExpr.as('closing_time'),
     })
     .from(stations)
     .leftJoin(stationStats, eq(stationStats.station_id, stations.id))
@@ -207,6 +243,11 @@ export async function listActiveStationsGroup(
         ...getTableColumns(stations),
         available_slots: availableSlotsExpr.as('available_slots'),
         completed_count: completedCountExpr.as('completed_count'),
+        price_from: priceFromExpr.as('price_from'),
+        image_url: imageUrlExpr.as('image_url'),
+        live_queue_count: liveQueueCountExpr.as('live_queue_count'),
+        opening_time: openingTimeExpr.as('opening_time'),
+        closing_time: closingTimeExpr.as('closing_time'),
       })
       .from(stations)
       .leftJoin(stationStats, eq(stationStats.station_id, stations.id))
@@ -219,7 +260,7 @@ export async function listActiveStationsGroup(
 }
 
 /**
- * Finds an active station by id with stationConfig, vehicleFormats, and timeSlots.
+ * Finds an active station by id with config, vehicle formats, time slots, photos, and wash types.
  * Returns undefined if not found or station is not active.
  */
 export async function findActiveStationWithDetail(id: string) {
@@ -229,6 +270,12 @@ export async function findActiveStationWithDetail(id: string) {
       stationConfig: true,
       vehicleFormats: true,
       timeSlots: true,
+      photos: {
+        orderBy: (photo, { asc }) => [asc(photo.position)],
+      },
+      stationWashTypes: {
+        with: { washType: true },
+      },
     },
   });
 }
@@ -319,5 +366,48 @@ export async function updateStationInfo(
     .set({ ...data, updated_at: new Date() })
     .where(eq(stations.id, id))
     .returning();
+  if (!updated) throw new Error(`Station ${id} not found during info update`);
   return updated;
+}
+
+export async function getNotificationPrefs(stationId: string): Promise<Record<string, unknown> | null> {
+  const row = await db.query.stations.findFirst({
+    where: eq(stations.id, stationId),
+    columns: { notification_prefs: true },
+  });
+  return (row?.notification_prefs as Record<string, unknown> | null) ?? null;
+}
+
+/**
+ * Hard cap on the merged document size: prevents unbounded JSONB growth from many
+ * PATCH calls each contributing distinct keys. Mirrors the per-request cap (50)
+ * used by the route validator.
+ */
+const NOTIFICATION_PREFS_MAX_TOTAL_KEYS = 50;
+
+export async function patchNotificationPrefs(
+  stationId: string,
+  prefs: Record<string, unknown>
+): Promise<Record<string, unknown>> {
+  const current = await getNotificationPrefs(stationId);
+  const merged: Record<string, unknown> = { ...(current ?? {}), ...prefs };
+
+  // If the merged document exceeds the cap, drop the oldest keys (those not present
+  // in the new patch). This keeps the JSONB bounded across many PATCH calls.
+  const keys = Object.keys(merged);
+  if (keys.length > NOTIFICATION_PREFS_MAX_TOTAL_KEYS) {
+    const newKeys = new Set(Object.keys(prefs));
+    const overflow = keys.length - NOTIFICATION_PREFS_MAX_TOTAL_KEYS;
+    let dropped = 0;
+    for (const k of keys) {
+      if (dropped >= overflow) break;
+      if (!newKeys.has(k)) {
+        delete merged[k];
+        dropped++;
+      }
+    }
+  }
+
+  await db.update(stations).set({ notification_prefs: merged, updated_at: new Date() }).where(eq(stations.id, stationId));
+  return merged;
 }
