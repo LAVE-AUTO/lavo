@@ -14,6 +14,7 @@
 import { listReservationsForReminder } from '@/server/reservations/entry-repository';
 import { notifyEntry } from '@/server/notifications/notification-service';
 import { getPlatformSettingWithFallback } from '@/server/admin/platform-settings-service';
+import { runWithConcurrencyLimit } from '@/helpers/concurrency';
 
 
 // %%%%% Constants %%%%%
@@ -52,18 +53,21 @@ async function sendRemindersForWindow(
   let succeeded = 0;
   let failed = 0;
 
-  for (const entry of entries) {
-    try {
-      await notifyEntry({
-        entryId: entry.id,
-        userId: entry.user_id,
-        stationId: entry.station_id,
-        type,
-      });
+  const results = await runWithConcurrencyLimit(entries, 8, async (entry) => {
+    await notifyEntry({
+      entryId: entry.id,
+      userId: entry.user_id,
+      stationId: entry.station_id,
+      type,
+    });
+  });
+
+  for (const result of results) {
+    if (result.status === 'fulfilled') {
       succeeded += 1;
-    } catch (e) {
+    } else {
       failed += 1;
-      console.error(`[send-reminders] Failed to notify entry ${entry.id}:`, e);
+      console.error(`[send-reminders] Failed to notify entry:`, result.reason);
     }
   }
 

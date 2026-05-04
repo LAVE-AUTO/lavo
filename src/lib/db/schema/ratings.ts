@@ -6,6 +6,7 @@ import { sql } from "drizzle-orm";
 import {
   boolean,
   check,
+  index,
   pgTable,
   smallint,
   text,
@@ -22,9 +23,9 @@ export const ratings = pgTable(
   {
     id: uuid("id").primaryKey().defaultRandom(),
     reservation_id: uuid("reservation_id")
-    .notNull()
-    .references(() => reservations.id, { onDelete: "cascade" })
-    .unique(),
+      .notNull()
+      .references(() => reservations.id, { onDelete: "cascade" })
+      .unique(),
     user_id: uuid("user_id")
       .notNull()
       .references(() => users.id, { onDelete: "cascade" }),
@@ -44,7 +45,12 @@ export const ratings = pgTable(
   (table) => [
     check(
       "ratings_score_range",
-      sql`${table.score} >= 1 AND ${table.score} <= 5`
+      sql`${table.score} >= 1 AND ${table.score} <= 5`,
     ),
-  ]
+    index("ratings_station_id_is_visible_idx").on(
+      table.station_id,
+      table.is_visible,
+    ),
+    index("ratings_created_at_idx").on(table.created_at),
+  ],
 );

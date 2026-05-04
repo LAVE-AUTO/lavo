@@ -1,9 +1,9 @@
 import { getTranslations, setRequestLocale } from 'next-intl/server';
-import { Link } from '@/i18n/navigation';
 import { StationBrandPanel } from '@/components/stations/apply/StationBrandPanel';
 import { LoginForm } from '@/components/auth/LoginForm';
 import { AuthRedirectGuard } from '@/components/auth/AuthRedirectGuard';
 import { AuthModeSwitcher } from '@/components/auth/AuthModeSwitcher';
+import { TabSwitcher } from '@/components/auth/TabSwitcher';
 import { ThemeToggle } from '@/components/auth/ThemeToggle';
 import { LangToggle } from '@/components/auth/LangToggle';
 
@@ -66,18 +66,17 @@ export default async function StationLoginPage({ params }: Props) {
             <AuthModeSwitcher mode="merchant" />
 
             <div className="bg-white dark:bg-dark-card rounded-2xl shadow-[0_4px_24px_rgba(0,0,0,0.08),_0_1px_2px_rgba(0,0,0,0.04)] dark:shadow-[0_8px_40px_rgba(0,0,0,0.5)] dark:ring-1 dark:ring-gold/10 overflow-hidden animate-fade-in-up">
+              <div className="px-8 pt-6 pb-2">
+                <TabSwitcher
+                  activeTab="login"
+                  loginLabel={t('tab_login')}
+                  registerLabel={t('tab_register')}
+                  loginHref="/station/login"
+                  registerHref="/station/apply"
+                />
+              </div>
               <LoginForm forgotPasswordHref="/station/forgot-password" allowedRole="station" />
             </div>
-
-            <p className="text-center mt-6 text-[14px] text-[#666] dark:text-lavo-muted">
-              {t('no_account')}{' '}
-              <Link
-                href="/station/apply"
-                className="text-gold font-semibold hover:underline"
-              >
-                {t('register_link')}
-              </Link>
-            </p>
           </div>
         </main>
       </div>

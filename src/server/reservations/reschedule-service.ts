@@ -181,8 +181,10 @@ export async function rescheduleReservation(
     // and proceed directly to creating the new PI.
     if (reservation.stripe_payment_id) {
       let captured = false;
+      let chargeId: string | null = null;
+      let transferId: string | null = null;
       try {
-        await capturePaymentIntent(reservation.stripe_payment_id);
+        ({ chargeId, transferId } = await capturePaymentIntent(reservation.stripe_payment_id));
         captured = true;
       } catch (e) {
         console.error('[RESCHEDULE_CAPTURE_FAILED]', {
@@ -198,6 +200,18 @@ export async function rescheduleReservation(
         throw new Error(
           `[RESCHEDULE_CAPTURE_FAILED] Could not capture original PaymentIntent ${reservation.stripe_payment_id} — reschedule aborted to prevent double charge. Manual resolution required for reservation ${reservationId}.`
         );
+      }
+
+      if (captured && chargeId) {
+        try {
+          await updateEntry(reservationId, { stripe_charge_id: chargeId });
+        } catch (e) {
+          console.error('[RESCHEDULE_STRIPE_CHARGE_ID_UPDATE_FAILED]', {
+            reservationId,
+            chargeId,
+            error: e instanceof Error ? e.message : String(e),
+          });
+        }
       }
 
       if (captured && refundedAmount > 0) {
@@ -221,7 +235,10 @@ export async function rescheduleReservation(
           await distributePenalty(
             reservation.stripe_payment_id,
             Math.round(penaltyAmount * 100),
-            policy.stationPenaltyShare
+            policy.stationPenaltyShare,
+            undefined,
+            chargeId ?? undefined,
+            transferId ?? undefined,
           );
         } catch (e) {
           console.error('[RESCHEDULE_PENALTY_DISTRIBUTION_FAILED]', {

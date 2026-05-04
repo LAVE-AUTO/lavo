@@ -1,8 +1,9 @@
-import { desc, lte } from 'drizzle-orm';
-import { db } from '@/lib/db';
-import { commissionSettings, adminLogs } from '@/lib/db/schema';
-import { DEFAULT_COMMISSION_RATE } from '@/helpers/server-constants';
-import * as repo from './commission-repository';
+import { desc, lte } from "drizzle-orm";
+import { db } from "@/lib/db";
+import { commissionSettings, adminLogs } from "@/lib/db/schema";
+import { DEFAULT_COMMISSION_RATE } from "@/helpers/server-constants";
+import { invalidateCommissionRateCache } from "./platform-settings-service";
+import * as repo from "./commission-repository";
 
 /**
  * Returns the currently active commission rate with its full context.
@@ -28,7 +29,7 @@ export async function getCurrentCommission() {
  * @param newRate  New rate already validated and rounded by Zod (e.g. 0.1 = 10%).
  */
 export async function updateCommission(adminId: string, newRate: number) {
-  return db.transaction(async (tx) => {
+  const entry = await db.transaction(async (tx) => {
     const current = await tx.query.commissionSettings.findFirst({
       where: lte(commissionSettings.effective_at, new Date()),
       orderBy: [desc(commissionSettings.effective_at)],
@@ -39,7 +40,7 @@ export async function updateCommission(adminId: string, newRate: number) {
       return current;
     }
 
-    const [entry] = await tx
+    const [inserted] = await tx
       .insert(commissionSettings)
       .values({
         rate: newRate.toFixed(4),
@@ -51,14 +52,19 @@ export async function updateCommission(adminId: string, newRate: number) {
 
     await tx.insert(adminLogs).values({
       admin_id: adminId,
-      action: 'commission_rate_updated',
-      target_type: 'commission_settings',
-      target_id: entry.id,
-      details: { previous_rate: previousRate, new_rate: entry.rate },
+      action: "commission_rate_updated",
+      target_type: "commission_settings",
+      target_id: inserted.id,
+      details: { previous_rate: previousRate, new_rate: inserted.rate },
     });
 
-    return entry;
+    return inserted;
   });
+
+  // Invalidate the in-process and Redis caches so the next call to
+  // getActiveCommissionRate reads the newly inserted rate.
+  await invalidateCommissionRateCache();
+  return entry;
 }
 
 /**

@@ -4,6 +4,7 @@
  * The station's stripe_account_id is used as the connected account (destination).
  */
 import { stripe } from '@/lib/stripe';
+import type Stripe from 'stripe';
 import { APP_URL } from '@/helpers/constants';
 import { NotImplementedError, ValidationError } from '@/lib/errors';
 
@@ -116,9 +117,25 @@ export async function createPaymentIntent(
  * Triggers fund distribution: station receives (amount - application_fee), platform retains the commission.
  * Called when a reservation is marked as completed by the station, or when a client is detected as late
  * (no refund — distribution proceeds as if the service was rendered).
+ * Returns the charge ID and transfer ID so callers can persist them without extra Stripe API calls.
  */
-export async function capturePaymentIntent(paymentIntentId: string): Promise<void> {
-  await stripe.paymentIntents.capture(paymentIntentId);
+export async function capturePaymentIntent(
+  paymentIntentId: string
+): Promise<{ chargeId: string | null; transferId: string | null }> {
+  const captured = await stripe.paymentIntents.capture(paymentIntentId, {
+    expand: ['latest_charge'],
+  });
+
+  const charge = typeof captured.latest_charge === 'string'
+    ? null
+    : captured.latest_charge ?? null;
+  const chargeId = charge?.id ?? null;
+  const rawTransfer = charge?.transfer as string | Stripe.Transfer | undefined;
+  const transferId = typeof rawTransfer === 'string'
+    ? rawTransfer
+    : rawTransfer?.id ?? null;
+
+  return { chargeId, transferId };
 }
 
 /**
@@ -172,30 +189,47 @@ export async function updatePaymentIntentMetadata(
  *   - This function reverses (penalty - station_share) from the station's transfer.
  *   - Result: platform nets its penalty share, station nets its penalty share.
  *
+ * When preloadedChargeId and/or preloadedTransferId are provided (from capturePaymentIntent),
+ * the Stripe retrieve calls are skipped — saving 2 API round-trips per late cancellation.
+ *
  * Returns the Stripe transfer reversal ID, or null if no transfer exists or nothing to claw back.
  */
 export async function distributePenalty(
   paymentIntentId: string,
   penaltyCents: number,
-  stationPenaltyShare: number // fraction [0, 1]
+  stationPenaltyShare: number, // fraction [0, 1]
+  idempotencyKey?: string,
+  preloadedChargeId?: string,
+  preloadedTransferId?: string,
 ): Promise<string | null> {
   if (penaltyCents <= 0) return null;
 
-  const pi = await stripe.paymentIntents.retrieve(paymentIntentId);
-  const chargeId = typeof pi.latest_charge === 'string' ? pi.latest_charge : pi.latest_charge?.id;
-  if (!chargeId) return null;
+  let chargeId = preloadedChargeId ?? null;
+  let transferId = preloadedTransferId ?? null;
 
-  const charge = await stripe.charges.retrieve(chargeId);
-  const transferId = typeof charge.transfer === 'string' ? charge.transfer : charge.transfer?.id;
+  // Only fetch from Stripe if not preloaded — avoids 2 extra API calls per late cancel.
+  if (!transferId) {
+    if (!chargeId) {
+      const pi = await stripe.paymentIntents.retrieve(paymentIntentId);
+      chargeId = typeof pi.latest_charge === 'string' ? pi.latest_charge : pi.latest_charge?.id ?? null;
+    }
+    if (chargeId) {
+      const charge = await stripe.charges.retrieve(chargeId);
+      const rawChargeTransfer = charge.transfer as string | Stripe.Transfer | undefined;
+      transferId = typeof rawChargeTransfer === 'string' ? rawChargeTransfer : rawChargeTransfer?.id ?? null;
+    }
+  }
   if (!transferId) return null;
 
   const stationKeepsCents = Math.round(penaltyCents * stationPenaltyShare);
   const clawbackCents = penaltyCents - stationKeepsCents;
   if (clawbackCents <= 0) return null;
 
-  const reversal = await stripe.transfers.createReversal(transferId, {
-    amount: clawbackCents,
-  });
+  const reversal = await stripe.transfers.createReversal(
+    transferId,
+    { amount: clawbackCents },
+    idempotencyKey ? { idempotencyKey } : undefined
+  );
   return reversal.id;
 }
 

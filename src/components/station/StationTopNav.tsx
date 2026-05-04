@@ -10,10 +10,9 @@ import { LangToggle } from '@/components/auth/LangToggle';
 
 interface StationTopNavProps {
   stationName?: string;
-  notifCount?: number;
 }
 
-export function StationTopNav({ stationName, notifCount = 0 }: StationTopNavProps) {
+export function StationTopNav({ stationName }: StationTopNavProps) {
   const t = useTranslations('station_dashboard');
   const { user } = useAuth();
   const { resolvedTheme } = useTheme();
@@ -59,21 +58,23 @@ export function StationTopNav({ stationName, notifCount = 0 }: StationTopNavProp
         <ThemeToggle />
         <LangToggle />
 
-        {/* Notification bell */}
+        {/* Notification bell — disabled until /me/notifications endpoints ship.
+            See project_pending_backend_specs.md for the spec. */}
         <button
           type="button"
-          aria-label={t('notif_tooltip')}
-          className="relative flex h-9 w-9 items-center justify-center rounded-full bg-[#EEE9D8] transition-opacity hover:opacity-80 dark:bg-[#182214]"
+          disabled
+          aria-label={t('notif_coming_soon')}
+          title={t('notif_coming_soon')}
+          className="relative flex h-9 w-9 cursor-not-allowed items-center justify-center rounded-full bg-[#F0EDE0] opacity-60 dark:bg-[#182214]"
         >
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#C49A1E" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#888" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
             <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9" />
             <path d="M13.73 21a2 2 0 0 1-3.46 0" />
           </svg>
-          {notifCount > 0 && (
-            <span className="absolute -right-0.5 -top-0.5 flex h-4 w-4 items-center justify-center rounded-full bg-[#EF4444] text-[9px] font-black text-white">
-              {notifCount > 9 ? '9+' : notifCount}
-            </span>
-          )}
+          <span
+            className="absolute -right-0.5 -bottom-0.5 h-2.5 w-2.5 rounded-full border-2 border-white bg-[#C49A1E] dark:border-[#111A0E]"
+            aria-hidden="true"
+          />
         </button>
       </div>
     </header>

@@ -48,10 +48,10 @@ export function MerchantNavbar() {
     'text-[13px] font-medium tracking-[0.4px] text-[#4a6a4d] dark:text-[#7a9a7d] hover:text-[#c8980a] dark:hover:text-[#c8980a] transition-colors duration-300';
 
   const pillClass =
-    'inline-block border border-[rgba(200,152,10,0.45)] text-[#c8980a] px-[22px] py-[9px] rounded-[2px] text-[13px] font-semibold tracking-[0.8px] uppercase transition-all duration-300 hover:bg-[#c8980a] hover:text-[#0d1f0f]';
+    'inline-block border border-[rgba(200,152,10,0.45)] text-[#c8980a] px-[22px] py-[9px] rounded-md text-[13px] font-semibold tracking-[0.8px] uppercase transition-all duration-300 hover:bg-[#c8980a] hover:text-[#0d1f0f]';
 
   const ctaClass =
-    'btn-shine inline-block bg-[#c8980a] text-[#0d1f0f] px-[26px] py-[10px] rounded-[2px] text-[13px] font-bold tracking-[1px] uppercase transition-all duration-300 hover:bg-[#e8b520] hover:-translate-y-px hover:shadow-[0_6px_24px_rgba(200,152,10,0.4)]';
+    'btn-shine inline-block bg-[#c8980a] text-[#0d1f0f] px-[26px] py-[10px] rounded-md text-[13px] font-bold tracking-[1px] uppercase transition-all duration-300 hover:bg-[#e8b520] hover:-translate-y-px hover:shadow-[0_6px_24px_rgba(200,152,10,0.4)]';
 
   const drawerLinkClass =
     'flex items-center px-4 py-3 text-[15px] font-medium text-[#4a6a4d] dark:text-[#7a9a7d] hover:text-[#c8980a] dark:hover:text-[#c8980a] transition-colors';
@@ -93,7 +93,13 @@ export function MerchantNavbar() {
                 </div>
               ) : (
                 <>
-                  <Link href="/station/login" className={pillClass}>
+                  <Link href="/" className={pillClass}>
+                    {t('client_pill')}
+                  </Link>
+                  <Link
+                    href="/station/login"
+                    className="text-[13px] font-medium tracking-[0.4px] text-[#4a6a4d] dark:text-[#7a9a7d] hover:text-[#c8980a] dark:hover:text-[#c8980a] transition-colors px-2"
+                  >
                     {t('login_pill')}
                   </Link>
                   <Link href="/station/apply" className={ctaClass}>
@@ -103,10 +109,12 @@ export function MerchantNavbar() {
               )}
             </div>
 
+            {/* Hamburger — mobile + tablet. Drawer holds the client-landing link plus
+               the login / partner CTAs so the full merchant navbar collapses gracefully. */}
             <button
               type="button"
               onClick={() => setMenuOpen((v) => !v)}
-              className="hidden sm:flex lg:hidden w-9 h-9 items-center justify-center text-[#4a6a4d] dark:text-[#7a9a7d] hover:text-[#c8980a] dark:hover:text-[#c8980a] transition-colors"
+              className="flex lg:hidden w-9 h-9 items-center justify-center text-[#4a6a4d] dark:text-[#7a9a7d] hover:text-[#c8980a] dark:hover:text-[#c8980a] transition-colors"
               aria-label={menuOpen ? 'Fermer le menu' : 'Ouvrir le menu'}
               aria-expanded={menuOpen}
             >
@@ -136,14 +144,20 @@ export function MerchantNavbar() {
               ) : (
                 <>
                   <Link
+                    href="/"
+                    className="flex items-center justify-center py-3 border border-[rgba(200,152,10,0.45)] text-[14px] font-semibold tracking-[0.8px] uppercase text-[#c8980a] hover:bg-[#c8980a] hover:text-[#0d1f0f] transition-all rounded-md"
+                  >
+                    {t('client_pill')}
+                  </Link>
+                  <Link
                     href="/station/login"
-                    className="flex items-center justify-center py-3 border border-[rgba(200,152,10,0.45)] text-[14px] font-semibold tracking-[0.8px] uppercase text-[#c8980a] hover:bg-[#c8980a] hover:text-[#0d1f0f] transition-all rounded-[2px]"
+                    className="flex items-center justify-center py-3 text-[14px] font-medium text-[#4a6a4d] dark:text-[#7a9a7d] hover:text-[#c8980a] dark:hover:text-[#c8980a] transition-colors"
                   >
                     {t('login_pill')}
                   </Link>
                   <Link
                     href="/station/apply"
-                    className="btn-shine flex items-center justify-center py-3 bg-[#c8980a] text-[#0d1f0f] text-[14px] font-bold tracking-[1px] uppercase rounded-[2px] transition-all hover:bg-[#e8b520]"
+                    className="btn-shine flex items-center justify-center py-3 bg-[#c8980a] text-[#0d1f0f] text-[14px] font-bold tracking-[1px] uppercase rounded-md transition-all hover:bg-[#e8b520]"
                   >
                     {t('partner_cta')}
                   </Link>

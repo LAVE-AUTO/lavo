@@ -2,6 +2,7 @@
 
 import { useState, useRef, useEffect } from 'react';
 import { useTranslations } from 'next-intl';
+import { useRouter } from 'next/navigation';
 import { useAuth } from '@/context';
 import { postWithApi } from '@/services';
 import { FileUploadZone, type UploadedFile } from '@/components/stations/apply/FileUploadZone';
@@ -25,6 +26,7 @@ function Field({ label, children }: { label: string; children: React.ReactNode }
 
 export function StationRejectedView({ stationName, rejectionReason }: Props) {
   const t = useTranslations('station_rejected');
+  const router = useRouter();
   const { logout } = useAuth();
 
   const [showForm, setShowForm]       = useState(false);
@@ -50,14 +52,14 @@ export function StationRejectedView({ stationName, rejectionReason }: Props) {
       setCountdown((prev) => {
         if (prev <= 1) {
           clearInterval(interval);
-          window.location.reload();
+          router.refresh();
           return 0;
         }
         return prev - 1;
       });
     }, 1000);
     return () => clearInterval(interval);
-  }, [submitted]);
+  }, [submitted, router]);
 
   function validateDocs(): boolean {
     const errors = { certificate: '', addressProof: '' };

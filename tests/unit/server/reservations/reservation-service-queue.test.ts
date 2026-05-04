@@ -133,7 +133,7 @@ describe('cancelEntry — queue cancellation path', () => {
       const entry = makeQueueEntry();
       mockFindEntryByIdAndUser.mockResolvedValue(entry);
       mockUpdateEntry.mockResolvedValue(entry);
-      mockCapturePaymentIntent.mockResolvedValue(undefined);
+      mockCapturePaymentIntent.mockResolvedValue({ chargeId: null, transferId: null });
       mockRefundPaymentIntent.mockResolvedValue('re_test');
       mockDistributePenalty.mockResolvedValue(undefined);
 
@@ -148,7 +148,10 @@ describe('cancelEntry — queue cancellation path', () => {
       expect(mockDistributePenalty).toHaveBeenCalledWith(
         'pi_test',
         expect.any(Number),
-        DEFAULT_POLICY.stationPenaltyShare
+        DEFAULT_POLICY.stationPenaltyShare,
+        expect.stringContaining('queue-cancel-penalty:'),
+        undefined,
+        undefined
       );
       expect(result.isLateCancellation).toBe(true);
       expect(result.penaltyAmount).toBeCloseTo(20, 5);

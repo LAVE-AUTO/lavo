@@ -3,18 +3,18 @@
  * Callers claim `stripe_payment_succeeded_notified_at` first; most per-channel errors are swallowed here.
  * If the caller needs Stripe webhook retries on total failure, it must rethrow after handling — see webhook route.
  */
-import { eq } from 'drizzle-orm';
-import { sendPaymentSuccessEmail } from '@/lib/email';
-import { db } from '@/lib/db';
-import { stations, users } from '@/lib/db/schema';
+import { eq } from "drizzle-orm";
+import { sendPaymentSuccessEmail } from "@/lib/email";
+import { db } from "@/lib/db";
+import { stations, users } from "@/lib/db/schema";
 import {
-  getPlatformSetting,
+  getPlatformSettingWithFallback,
   isAdminEscrowPushEnabled,
-} from '@/server/admin/platform-settings-service';
-import { isTruePlatformSetting } from '@/helpers/platform-setting-boolean';
-import { sendPushNotification } from './fcm-service';
-import { notifyEntry } from './notification-service';
-import type { Entry } from '@/server/reservations/entry-repository';
+} from "@/server/admin/platform-settings-service";
+import { isTruePlatformSetting } from "@/helpers/platform-setting-boolean";
+import { sendPushNotification } from "./fcm-service";
+import { notifyEntry } from "./notification-service";
+import type { Entry } from "@/server/reservations/entry-repository";
 
 /**
  * Sends invitation_to_rate, client success email, and optional station/admin pushes.
@@ -23,31 +23,47 @@ import type { Entry } from '@/server/reservations/entry-repository';
  */
 export async function sendEscrowReleasedNotificationsForEntry(
   entry: Entry,
-  _succeededAt: Date
+  _succeededAt: Date,
 ): Promise<void> {
   try {
     await notifyEntry({
       entryId: entry.id,
       userId: entry.user_id,
       stationId: entry.station_id,
-      type: 'invitation_to_rate',
+      type: "invitation_to_rate",
     });
   } catch (err) {
     const error = err instanceof Error ? err.message : String(err);
-    console.error('[escrow-released] Client notification failed', { entryId: entry.id, error });
+    console.error("[escrow-released] Client notification failed", {
+      entryId: entry.id,
+      error,
+    });
   }
 
+  // Fetch user email, station info, and push-enable flags concurrently — none depend on each other.
+  const [userRow, stationRow, stationPushRaw, adminPushEnabled] =
+    await Promise.all([
+      db.query.users.findFirst({
+        where: eq(users.id, entry.user_id),
+        columns: { email: true },
+      }),
+      db.query.stations.findFirst({
+        where: eq(stations.id, entry.station_id),
+        columns: { name: true, user_id: true },
+      }),
+      getPlatformSettingWithFallback(
+        "enable_station_push_on_escrow_released",
+        "PLATFORM_ENABLE_STATION_PUSH_ON_ESCROW_RELEASED",
+        "false",
+      ),
+      isAdminEscrowPushEnabled(),
+    ]);
+
+  const stationPushEnabled = isTruePlatformSetting(stationPushRaw);
+
   try {
-    const userRow = await db.query.users.findFirst({
-      where: eq(users.id, entry.user_id),
-      columns: { email: true },
-    });
     const emailTo = userRow?.email?.trim();
     if (emailTo) {
-      const stationRow = await db.query.stations.findFirst({
-        where: eq(stations.id, entry.station_id),
-        columns: { name: true },
-      });
       await sendPaymentSuccessEmail({
         to: emailTo,
         stationName: stationRow?.name,
@@ -56,55 +72,73 @@ export async function sendEscrowReleasedNotificationsForEntry(
     }
   } catch (err) {
     const error = err instanceof Error ? err.message : String(err);
-    console.error('[escrow-released] Client success email failed', { entryId: entry.id, error });
+    console.error("[escrow-released] Client success email failed", {
+      entryId: entry.id,
+      error,
+    });
   }
-
-  const stationPushEnabled = isTruePlatformSetting(
-    await getPlatformSetting('enable_station_push_on_escrow_released')
-  );
-  const adminPushEnabled = await isAdminEscrowPushEnabled();
 
   if (stationPushEnabled) {
     try {
-      const station = await db.query.stations.findFirst({
-        where: eq(stations.id, entry.station_id),
-        columns: { user_id: true },
-      });
-      if (station?.user_id) {
-        await sendPushNotification(station.user_id, {
-          title: 'Service completed',
-          body: 'Payment captured and escrow released successfully.',
-          data: { entry_id: entry.id, station_id: entry.station_id, type: 'escrow_released' },
+      if (stationRow?.user_id) {
+        await sendPushNotification(stationRow.user_id, {
+          title: "Service completed",
+          body: "Payment captured and escrow released successfully.",
+          data: {
+            entry_id: entry.id,
+            station_id: entry.station_id,
+            type: "escrow_released",
+          },
         });
       }
     } catch (err) {
       const error = err instanceof Error ? err.message : String(err);
-      console.error('[escrow-released] Station push failed', { entryId: entry.id, error });
+      console.error("[escrow-released] Station push failed", {
+        entryId: entry.id,
+        error,
+      });
     }
   }
 
   if (adminPushEnabled) {
     try {
       const adminUsers = await db.query.users.findMany({
-        where: eq(users.role, 'admin'),
+        where: eq(users.role, "admin"),
         columns: { id: true },
       });
-      await Promise.all(
+      // Use allSettled so a single FCM failure does not abort pushes to other admins.
+      const results = await Promise.allSettled(
         (adminUsers ?? []).map((adminUser) =>
           sendPushNotification(adminUser.id, {
-            title: 'Escrow released',
-            body: 'A reservation escrow has been released successfully.',
+            title: "Escrow released",
+            body: "A reservation escrow has been released successfully.",
             data: {
               entry_id: entry.id,
               station_id: entry.station_id,
-              type: 'escrow_released_admin',
+              type: "escrow_released_admin",
             },
-          })
-        )
+          }),
+        ),
       );
+      results.forEach((result, i) => {
+        if (result.status === "rejected") {
+          const error =
+            result.reason instanceof Error
+              ? result.reason.message
+              : String(result.reason);
+          console.error("[escrow-released] Admin push failed", {
+            entryId: entry.id,
+            adminId: adminUsers[i]?.id,
+            error,
+          });
+        }
+      });
     } catch (err) {
       const error = err instanceof Error ? err.message : String(err);
-      console.error('[escrow-released] Admin push failed', { entryId: entry.id, error });
+      console.error("[escrow-released] Admin push failed", {
+        entryId: entry.id,
+        error,
+      });
     }
   }
 }

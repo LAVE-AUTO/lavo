@@ -13,8 +13,10 @@ jest.mock('@/lib/db', () => {
   const orderByMock = jest.fn().mockResolvedValue([]);
   const fromWhereMock = jest.fn();
   const innerWhereMock = jest.fn().mockResolvedValue([]);
+  const limitOffsetMock = jest.fn().mockResolvedValue([]);
+  const limitMock = jest.fn().mockReturnValue({ offset: limitOffsetMock });
   const leftJoinReturn = {
-    where: jest.fn().mockReturnValue({ orderBy: orderByMock }),
+    where: jest.fn().mockReturnValue({ orderBy: jest.fn().mockReturnValue({ limit: limitMock }), limit: limitMock }),
   };
   const innerJoinReturn = {
     innerJoin: jest.fn().mockReturnValue({ where: innerWhereMock }),
@@ -43,6 +45,7 @@ jest.mock('@/lib/db', () => {
     orderByMock,
     fromWhereMock,
     innerWhereMock,
+    limitOffsetMock,
   };
   return {
     db: {
@@ -92,6 +95,7 @@ const mockFindMany = __dbMocks.mockFindMany;
 const orderByMock = __dbMocks.orderByMock;
 const fromWhereMock = __dbMocks.fromWhereMock;
 const innerWhereMock = __dbMocks.innerWhereMock;
+const limitOffsetMock = __dbMocks.limitOffsetMock;
 
 const validUuid = 'a1b2c3d4-e5f6-7890-abcd-ef1234567890';
 const mockReservationRow = {
@@ -108,6 +112,7 @@ const mockReservationRow = {
   commission_amount: '1.20',
   station_payout: '10.80',
   stripe_payment_id: null,
+  stripe_charge_id: null,
   stripe_transfer_id: null,
   stripe_payment_succeeded_at: null,
   stripe_payment_succeeded_notified_at: null,
@@ -226,7 +231,7 @@ describe('entry-repository', () => {
   describe('listEntriesByStation', () => {
     it('returns list from select chain', async () => {
       const rows = [mockReservationRow];
-      orderByMock.mockResolvedValueOnce(rows);
+      limitOffsetMock.mockResolvedValueOnce(rows);
       const result = await listEntriesByStation('station-1');
       expect(result).toEqual(rows);
     });

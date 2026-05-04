@@ -23,6 +23,10 @@ export interface AuthUser {
   role: UserRole;
   station_id?: string | null;
   force_password_change?: boolean;
+  /** ISO timestamp set when the user clicks the verification email link. Null until then. */
+  email_verified_at?: string | null;
+  /** ISO timestamp of account creation — used as "member since" on the profile page. */
+  created_at?: string;
 }
 
 interface AuthContextValue {

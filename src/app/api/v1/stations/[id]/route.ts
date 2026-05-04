@@ -25,7 +25,9 @@ export async function GET(
   }
   try {
     const station = await getStationDetailPublic(parsed.data.id);
-    return successResponse(station);
+    const response = successResponse(station);
+    response.headers.set('Cache-Control', 'public, s-maxage=60, stale-while-revalidate=120');
+    return response;
   } catch (e) {
     if (e instanceof NotFoundError) return error404(e.message);
     if (e instanceof AppError) return fromAppError(e);

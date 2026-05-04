@@ -1,13 +1,22 @@
 import { and, asc, desc, eq, getTableColumns, ilike, inArray, isNotNull, or, sql } from 'drizzle-orm';
 import { db } from '@/lib/db';
-import { reservations, stationWashTypes, stations, timeSlots } from '@/lib/db/schema';
+import { reservations, stationStats, stationWashTypes, stations, timeSlots } from '@/lib/db/schema';
 import type { StationSortCriterion } from '@/helpers/sort-stations';
-
-
-// %%%%% Types %%%%%
 
 export type Station = typeof stations.$inferSelect;
 export type NewStation = typeof stations.$inferInsert;
+
+/**
+ * Precomputed available_slots from station_stats LEFT JOIN.
+ * COALESCE handles stations that have no row in the view yet (e.g. first run before refresh).
+ */
+const availableSlotsExpr = sql<number>`COALESCE(${stationStats.available_slots}, 0)`;
+
+/**
+ * Precomputed completed_count from station_stats LEFT JOIN.
+ * This is the "Services terminés" metric per plan Section 4.
+ */
+const completedCountExpr = sql<number>`COALESCE(${stationStats.completed_count}, 0)`;
 
 export type ListActiveStationsFilters = {
   search?: string;
@@ -33,29 +42,6 @@ export type ListActiveStationsResult = {
 /** Row returned by listActiveStations: station columns plus available_slots and completed_count (bigint from DB). */
 export type StationWithAvailableSlots = Station & { available_slots: string; completed_count: string };
 
-type StationStatus = 'pending_admin_validation' | 'active' | 'rejected' | 'suspended';
-
-
-// %%%%% END - Types %%%%%
-
-
-// %%%%% SQL expressions %%%%%
-
-/** Sum of (capacity - booked_count) for future slots. */
-const availableSlotsExpr = sql`(SELECT COALESCE(SUM(${timeSlots.capacity} - ${timeSlots.booked_count}), 0)::bigint FROM time_slots WHERE time_slots.station_id = ${stations.id} AND time_slots.start_time > NOW())`;
-
-/**
- * Count of reservations with completed_at IS NOT NULL per station (for most_visited and sort).
- * This is the "Services terminés" metric per plan Section 4.
- */
-const completedCountExpr = sql`(SELECT COUNT(*)::bigint FROM reservations WHERE reservations.station_id = ${stations.id} AND reservations.completed_at IS NOT NULL)`;
-
-
-// %%%%% END - SQL expressions %%%%%
-
-
-// %%%%% Internal helpers %%%%%
-
 function rowToStationWithSlots(
   row: Station & { available_slots: unknown; completed_count: unknown }
 ): StationWithAvailableSlots {
@@ -64,6 +50,15 @@ function rowToStationWithSlots(
     available_slots: String(row.available_slots),
     completed_count: String(row.completed_count),
   };
+}
+
+export async function createStation(data: NewStation): Promise<Station> {
+  const [station] = await db.insert(stations).values(data).returning();
+  return station;
+}
+
+export async function findStationById(id: string): Promise<Station | undefined> {
+  return db.query.stations.findFirst({ where: eq(stations.id, id) });
 }
 
 /**
@@ -80,9 +75,7 @@ function listActiveStationsWhere(
   serviceScope: string | undefined
 ) {
   const conditions = [eq(stations.status, 'active')];
-
   if (city) conditions.push(eq(stations.city, city));
-
   if (search && search.trim()) {
     const term = `%${search.trim()}%`;
     conditions.push(
@@ -94,23 +87,19 @@ function listActiveStationsWhere(
       )!
     );
   }
-
   if (formatId) {
     conditions.push(
       sql`EXISTS (SELECT 1 FROM vehicle_formats WHERE vehicle_formats.station_id = ${stations.id} AND vehicle_formats.id = ${formatId})`
     );
   }
-
   if (washTypeIds?.length) {
     conditions.push(
       sql`EXISTS (SELECT 1 FROM ${stationWashTypes} WHERE ${stationWashTypes.station_id} = ${stations.id} AND ${inArray(stationWashTypes.wash_type_id, washTypeIds)})`
     );
   }
-
   if (serviceScope) {
     conditions.push(eq(stations.service_scope, serviceScope));
   }
-
   return conditions.length === 1 ? conditions[0] : and(...conditions);
 }
 
@@ -132,11 +121,9 @@ function searchPriorityOrder(term: string) {
  */
 function buildOrderBy(sort: StationSortCriterion[] | undefined, searchTerm: string | undefined) {
   const orderByList: ReturnType<typeof asc>[] = [];
-
-  if (searchTerm && !sort?.length) {
+  if (searchTerm && sort?.length === 0) {
     orderByList.push(asc(searchPriorityOrder(`%${searchTerm}%`)));
   }
-
   if (sort?.length) {
     for (const c of sort) {
       if (c === 'slots_asc') orderByList.push(asc(availableSlotsExpr));
@@ -151,70 +138,8 @@ function buildOrderBy(sort: StationSortCriterion[] | undefined, searchTerm: stri
       else if (c === 'completed_count_desc') orderByList.push(desc(completedCountExpr));
     }
   }
-
   return orderByList;
 }
-
-
-// %%%%% END - Internal helpers %%%%%
-
-
-// %%%%% Single-record queries %%%%%
-
-/**
- * Inserts a new station row and returns it.
- */
-export async function createStation(data: NewStation): Promise<Station> {
-  const [station] = await db.insert(stations).values(data).returning();
-  return station;
-}
-
-/**
- * Finds a station by primary key. Returns undefined if not found.
- */
-export async function findStationById(id: string): Promise<Station | undefined> {
-  return db.query.stations.findFirst({ where: eq(stations.id, id) });
-}
-
-/**
- * Finds the station associated with a user account. Returns undefined if not found.
- */
-export async function findStationByUserId(userId: string): Promise<Station | undefined> {
-  return db.query.stations.findFirst({ where: eq(stations.user_id, userId) });
-}
-
-/**
- * Finds an active station by id with stationConfig, vehicleFormats, and timeSlots.
- * Returns undefined if not found or station is not active.
- */
-export async function findActiveStationWithDetail(id: string) {
-  return db.query.stations.findFirst({
-    where: and(eq(stations.id, id), eq(stations.status, 'active')),
-    with: {
-      stationConfig: true,
-      vehicleFormats: true,
-      timeSlots: true,
-    },
-  });
-}
-
-/**
- * Returns the number of reservations with completed_at IS NOT NULL for a station.
- * Same predicate as completedCountExpr (Services terminés). Used for station detail.
- */
-export async function getCompletedCountForStation(stationId: string): Promise<number> {
-  const rows = await db
-    .select({ count: sql<number>`count(*)::int` })
-    .from(reservations)
-    .where(and(eq(reservations.station_id, stationId), isNotNull(reservations.completed_at)));
-  return rows[0]?.count ?? 0;
-}
-
-
-// %%%%% END - Single-record queries %%%%%
-
-
-// %%%%% List queries %%%%%
 
 /**
  * Lists stations with status 'active', optional search (name/address/city/description with prioritization),
@@ -230,6 +155,7 @@ export async function listActiveStations(
 
   const limit = Math.min(Math.max(1, per_page ?? 20), 100);
   const offset = (Math.max(1, page ?? 1) - 1) * limit;
+
   const orderByList = buildOrderBy(sort, searchTerm);
 
   const baseSelect = db
@@ -239,6 +165,7 @@ export async function listActiveStations(
       completed_count: completedCountExpr.as('completed_count'),
     })
     .from(stations)
+    .leftJoin(stationStats, eq(stationStats.station_id, stations.id))
     .where(whereClause);
 
   const [countRows, rows] = await Promise.all([
@@ -282,7 +209,8 @@ export async function listActiveStationsGroup(
         completed_count: completedCountExpr.as('completed_count'),
       })
       .from(stations)
-      .where(group === 'available_now' ? and(whereClause, sql`(${availableSlotsExpr}) > 0`) : whereClause);
+      .leftJoin(stationStats, eq(stationStats.station_id, stations.id))
+      .where(group === 'available_now' ? and(whereClause, sql`COALESCE(${stationStats.available_slots}, 0) > 0`) : whereClause);
 
   const query = baseSelect();
   const ordered = orderByList.length > 0 ? query.orderBy(...orderByList) : query;
@@ -291,8 +219,38 @@ export async function listActiveStationsGroup(
 }
 
 /**
- * Returns a paginated list of stations filtered by status.
+ * Finds an active station by id with stationConfig, vehicleFormats, and timeSlots.
+ * Returns undefined if not found or station is not active.
  */
+export async function findActiveStationWithDetail(id: string) {
+  return db.query.stations.findFirst({
+    where: and(eq(stations.id, id), eq(stations.status, 'active')),
+    with: {
+      stationConfig: true,
+      vehicleFormats: true,
+      timeSlots: true,
+    },
+  });
+}
+
+/**
+ * Returns the number of reservations with completed_at IS NOT NULL for a station.
+ * Same predicate as completedCountExpr (Services terminés). Used for station detail.
+ */
+export async function getCompletedCountForStation(stationId: string): Promise<number> {
+  const rows = await db
+    .select({ count: sql<number>`count(*)::int` })
+    .from(reservations)
+    .where(and(eq(reservations.station_id, stationId), isNotNull(reservations.completed_at)));
+  return rows[0]?.count ?? 0;
+}
+
+export async function findStationByUserId(userId: string): Promise<Station | undefined> {
+  return db.query.stations.findFirst({ where: eq(stations.user_id, userId) });
+}
+
+type StationStatus = 'pending_admin_validation' | 'active' | 'rejected' | 'suspended';
+
 export async function listStationsByStatus(
   status: StationStatus,
   page = 1,
@@ -318,25 +276,26 @@ export async function listStationsByStatus(
 /**
  * List all stations for admin KYC history, optionally filtered by status.
  * Ordered by updated_at DESC so most recent activity appears first.
+ *
+ * Accepts optional pagination params; defaults to page=1, perPage=500.
+ * Hard cap: perPage is clamped to 500 regardless of what is passed.
+ * Existing callers that pass no params continue to work unchanged.
  */
-export async function listAllStationsForAdmin(status?: string): Promise<Station[]> {
+export async function listAllStationsForAdmin(
+  status?: string,
+  page = 1,
+  perPage = 500
+): Promise<Station[]> {
+  const limit = Math.min(Math.floor(perPage), 500);
+  const offset = (Math.max(1, Math.floor(page)) - 1) * limit;
   return db.query.stations.findMany({
     where: status ? eq(stations.status, status) : undefined,
     orderBy: (t, { desc }) => [desc(t.updated_at)],
+    limit,
+    offset,
   });
 }
 
-
-// %%%%% END - List queries %%%%%
-
-
-// %%%%% Mutation queries %%%%%
-
-/**
- * Conditionally updates a station's status. Extra fields (approved_by, approved_at, etc.)
- * can be provided via the optional `extra` argument.
- * Throws if the station row is not found after the update.
- */
 export async function updateStationStatus(
   id: string,
   status: StationStatus,
@@ -351,13 +310,10 @@ export async function updateStationStatus(
   return updated;
 }
 
-/**
- * Partially updates station profile fields. Returns undefined if the station is not found.
- */
 export async function updateStationInfo(
   id: string,
   data: Partial<NewStation>
-): Promise<Station | undefined> {
+): Promise<Station> {
   const [updated] = await db
     .update(stations)
     .set({ ...data, updated_at: new Date() })
@@ -365,6 +321,3 @@ export async function updateStationInfo(
     .returning();
   return updated;
 }
-
-
-// %%%%% END - Mutation queries %%%%%

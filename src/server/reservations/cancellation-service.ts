@@ -157,8 +157,10 @@ export async function cancelReservation(
       // then issue a partial refund for the refundable portion,
       // then claw back the platform's penalty share from the station's transfer.
       let captured = false;
+      let chargeId: string | null = null;
+      let transferId: string | null = null;
       try {
-        await capturePaymentIntent(reservation.stripe_payment_id);
+        ({ chargeId, transferId } = await capturePaymentIntent(reservation.stripe_payment_id));
         captured = true;
       } catch (e) {
         console.error('[CAPTURE_FAILED_FOR_LATE_CANCELLATION]', {
@@ -166,6 +168,18 @@ export async function cancelReservation(
           stripe_payment_id: reservation.stripe_payment_id,
           error: e instanceof Error ? e.message : String(e),
         });
+      }
+
+      if (captured && chargeId) {
+        try {
+          await updateEntry(reservationId, { stripe_charge_id: chargeId });
+        } catch (e) {
+          console.error('[STRIPE_CHARGE_ID_UPDATE_FAILED]', {
+            reservationId,
+            chargeId,
+            error: e instanceof Error ? e.message : String(e),
+          });
+        }
       }
 
       if (captured && refundedAmount > 0) {
@@ -191,7 +205,10 @@ export async function cancelReservation(
           await distributePenalty(
             reservation.stripe_payment_id,
             Math.round(penaltyAmount * 100),
-            policy.stationPenaltyShare
+            policy.stationPenaltyShare,
+            undefined,
+            chargeId ?? undefined,
+            transferId ?? undefined,
           );
         } catch (e) {
           console.error('[PENALTY_DISTRIBUTION_FAILED]', {

@@ -33,14 +33,14 @@ export function DashboardQueuePanel({ entries, onCallEntry, onCompleteEntry, onC
               {t('queue_title')}
             </div>
             {totalCount > 0 && (
-              <span className="rounded-full bg-[#C09A18] px-2 py-0.5 text-[10px] font-black text-[#0C1209] leading-tight">
+              <span className="rounded-full bg-[#C49A1E] px-2 py-0.5 text-[10px] font-black text-[#0C1209] leading-tight">
                 {totalCount}
               </span>
             )}
           </div>
           <Link
             href={`/${locale}/station/queue`}
-            className="text-[11px] font-bold text-[#C09A18] hover:text-[#D4A820] transition-colors"
+            className="text-[11px] font-bold text-[#C49A1E] hover:text-[#D4A820] transition-colors"
           >
             {t('queue_see_all')} →
           </Link>
@@ -55,7 +55,7 @@ export function DashboardQueuePanel({ entries, onCallEntry, onCompleteEntry, onC
             type="button"
             onClick={onCallNext}
             disabled={!canCallNext}
-            className="mt-3 flex w-full items-center justify-center gap-2 rounded-lg bg-[#C09A18] px-3 py-2 text-[12px] font-black text-[#0C1209] transition-opacity hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-40"
+            className="mt-3 flex w-full items-center justify-center gap-2 rounded-lg bg-[#C49A1E] px-3 py-2 text-[12px] font-black text-[#0C1209] transition-opacity hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-40"
           >
             <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
               <polygon points="5 3 19 12 5 21 5 3" />

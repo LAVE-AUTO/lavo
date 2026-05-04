@@ -25,6 +25,7 @@ import {
 } from '@/server/station/document-repository';
 import { sendPushNotification } from '@/server/notifications/fcm-service';
 import { sendKycExpiryReminderEmail } from '@/lib/email';
+import { runWithConcurrencyLimit } from '@/helpers/concurrency';
 
 
 // %%%%% Types %%%%%
@@ -291,33 +292,37 @@ async function sendRemindersForThreshold(
   let succeeded = 0;
   let failed = 0;
 
-  for (const { document, stationUserId, stationOwnerEmail, stationName } of documents) {
-    try {
-      // Guard: repository filters for non-null expiry_date, but enforce the invariant explicitly.
-      if (!document.expiry_date) {
-        throw new Error(`Document ${document.id} has null expiry_date`);
-      }
+  const results = await runWithConcurrencyLimit(documents, 5, async ({ document, stationUserId, stationOwnerEmail, stationName }) => {
+    // Guard: repository filters for non-null expiry_date, but enforce the invariant explicitly.
+    if (!document.expiry_date) {
+      throw new Error(`Document ${document.id} has null expiry_date`);
+    }
 
-      const { id: documentId, document_type: documentType, expiry_date: expiryDate } = document;
+    const { id: documentId, document_type: documentType, expiry_date: expiryDate } = document;
 
-      // Run all four fan-outs concurrently. Each helper absorbs its own errors internally,
-      // so allSettled is used defensively in case that contract ever changes.
-      await Promise.allSettled([
-        notifyStationOwner(stationUserId, documentId, documentType, thresholdDays),
-        notifyAdminsPush(admins, documentId, documentType, stationName, thresholdDays),
-        emailStationOwner(stationOwnerEmail, documentId, documentType, expiryDate, stationName, thresholdDays),
-        emailAdmins(admins, documentId, documentType, expiryDate, stationName, thresholdDays),
-      ]);
+    // Run all four fan-outs concurrently. Each helper absorbs its own errors internally,
+    // so allSettled is used defensively in case that contract ever changes.
+    await Promise.allSettled([
+      notifyStationOwner(stationUserId, documentId, documentType, thresholdDays),
+      notifyAdminsPush(admins, documentId, documentType, stationName, thresholdDays),
+      emailStationOwner(stationOwnerEmail, documentId, documentType, expiryDate, stationName, thresholdDays),
+      emailAdmins(admins, documentId, documentType, expiryDate, stationName, thresholdDays),
+    ]);
 
-      // Stamp the anti-duplicate flag only after all notifications have been dispatched.
-      await setReminderSent(documentId, reminderField);
+    // Stamp the anti-duplicate flag only after all notifications have been dispatched.
+    await setReminderSent(documentId, reminderField);
+  });
 
+  for (let i = 0; i < results.length; i++) {
+    const result = results[i];
+    if (result.status === 'fulfilled') {
       succeeded += 1;
-    } catch (e) {
+    } else {
       failed += 1;
+      const { reason } = result as PromiseRejectedResult;
       console.error(
-        `${LOG_PREFIX} Failed to process document ${document.id}:`,
-        e instanceof Error ? e.message : String(e)
+        `${LOG_PREFIX} Failed to process document ${documents[i].document.id}:`,
+        reason instanceof Error ? reason.message : String(reason)
       );
     }
   }

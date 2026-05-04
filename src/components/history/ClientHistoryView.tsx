@@ -1,16 +1,44 @@
 'use client';
 
-import { useState, useMemo, useEffect } from 'react';
+import Link from 'next/link';
+import { useCallback, useState, useMemo, useEffect } from 'react';
 import { useTranslations, useLocale } from 'next-intl';
 import { getFromApi } from '@/services/axios-service';
-import { MOCK_RESERVATIONS, type MockReservation } from '@/data/reservations-mock';
 import { ReceiptModal } from './ReceiptModal';
 import { PageSpinner } from '@/components/ui/PageSpinner';
 
 type PeriodKey = 'all' | 'week' | 'month' | '3months' | 'year';
-type StatusKey  = 'all' | 'completed' | 'cancelled';
+type StatusKey = 'all' | 'completed' | 'cancelled';
 
-const HISTORY_STATUSES: MockReservation['status'][] = ['completed', 'cancelled'];
+type HistoryReservation = {
+  id: string;
+  stationName: string;
+  stationAddress: string;
+  vehicleFormatLabel: string | null;
+  entryType: 'reservation' | 'queue';
+  amountPaid: number;
+  status: 'completed' | 'cancelled';
+  createdAt: string;
+};
+
+type HistoryApiEntry = {
+  id: string;
+  title: string;
+  status: string;
+  entry_type: 'reservation' | 'queue';
+  created_at: string;
+  station: { name: string | null; address: string | null; city: string | null };
+  vehicle_format_label: string | null;
+  amount_paid: string;
+};
+
+type HistoryApiResponse = {
+  data: {
+    items: HistoryApiEntry[];
+  };
+};
+
+const HISTORY_STATUSES: HistoryReservation['status'][] = ['completed', 'cancelled'];
 
 function getPeriodStart(period: PeriodKey): Date | null {
   if (period === 'all') return null;
@@ -22,52 +50,73 @@ function getPeriodStart(period: PeriodKey): Date | null {
   return d;
 }
 
-/**
- * Client history view.
- * Calls GET /history/client; falls back to mock data if the endpoint is not yet implemented.
- */
+function formatAmount(amount: number): string {
+  return `${amount.toFixed(2)}$`;
+}
+
 export function ClientHistoryView() {
   const t      = useTranslations('history');
   const locale = useLocale();
 
-  const [entries,  setEntries]  = useState<MockReservation[]>([]);
-  const [loading,  setLoading]  = useState(true);
-  const [period,   setPeriod]   = useState<PeriodKey>('all');
-  const [status,   setStatus]   = useState<StatusKey>('all');
-  const [selected, setSelected] = useState<MockReservation | null>(null);
+  const [entries, setEntries] = useState<HistoryReservation[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState(false);
+  const [period, setPeriod] = useState<PeriodKey>('all');
+  const [status, setStatus] = useState<StatusKey>('all');
+  const [selected, setSelected] = useState<HistoryReservation | null>(null);
+
+  const loadEntries = useCallback(async () => {
+    setLoading(true);
+    setLoadError(false);
+    const [ok, data] = await getFromApi<HistoryApiResponse>('/history/client?limit=200');
+
+    const raw = ok && data && typeof data === 'object' && 'data' in data
+      ? (data as HistoryApiResponse).data?.items
+      : null;
+
+    if (Array.isArray(raw)) {
+      setEntries(
+        raw
+          .filter((entry) => entry.status === 'completed' || entry.status === 'cancelled')
+          .map((entry) => ({
+            id: entry.id,
+            stationName: entry.station.name ?? entry.title,
+            stationAddress: [entry.station.address, entry.station.city].filter(Boolean).join(', '),
+            vehicleFormatLabel: entry.vehicle_format_label,
+            entryType: entry.entry_type,
+            amountPaid: Number.parseFloat(entry.amount_paid) || 0,
+            status: entry.status as HistoryReservation['status'],
+            createdAt: entry.created_at,
+          })),
+      );
+    } else {
+      setEntries([]);
+      setLoadError(true);
+    }
+    setLoading(false);
+  }, []);
 
   useEffect(() => {
     let aborted = false;
     (async () => {
-      const [ok, data] = await getFromApi<{ data: { entries: MockReservation[] } }>('/history/client');
+      await loadEntries();
       if (aborted) return;
-
-      const raw = ok && data && typeof data === 'object' && 'data' in data
-        ? (data as { data: { entries?: MockReservation[] } }).data?.entries
-        : null;
-
-      setEntries(
-        Array.isArray(raw)
-          ? raw.filter((e) => HISTORY_STATUSES.includes(e.status))
-          : MOCK_RESERVATIONS.filter((r) => HISTORY_STATUSES.includes(r.status)),
-      );
-      setLoading(false);
     })();
     return () => { aborted = true; };
-  }, []);
+  }, [loadEntries]);
 
   const filtered = useMemo(() => {
     const start = getPeriodStart(period);
     return entries
       .filter((e) => status === 'all' || e.status === status)
-      .filter((e) => !start || new Date(e.date) >= start)
-      .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+      .filter((e) => !start || new Date(e.createdAt) >= start)
+      .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
   }, [entries, period, status]);
 
   const totalSpent = useMemo(
     () => filtered
       .filter((e) => e.status === 'completed')
-      .reduce((sum, e) => sum + e.totalPrice, 0),
+      .reduce((sum, e) => sum + e.amountPaid, 0),
     [filtered],
   );
 
@@ -90,6 +139,23 @@ export function ClientHistoryView() {
   return (
     <div className="animate-fade-in">
 
+      {loadError && (
+        <div
+          role="alert"
+          aria-live="assertive"
+          className="mb-6 rounded-2xl border border-[#E8472A]/20 bg-[#E8472A]/6 px-4 py-5 text-center dark:border-[#E8472A]/30 dark:bg-[#E8472A]/10"
+        >
+          <p className="text-[14px] font-semibold text-[#B2351F] dark:text-[#F0A090]">{t('error_load')}</p>
+          <button
+            type="button"
+            onClick={loadEntries}
+            className="mt-3 rounded-full border border-[#C49A1E]/40 px-4 py-2 text-[13px] font-semibold text-[#C49A1E] transition-colors hover:bg-[#C49A1E]/10"
+          >
+            {t('btn_retry')}
+          </button>
+        </div>
+      )}
+
       {/* Stats */}
       {entries.length > 0 && (
         <div className="grid grid-cols-2 gap-3 mb-6">
@@ -100,7 +166,7 @@ export function ClientHistoryView() {
             </div>
           </div>
           <div className="bg-[#E8E8D8] dark:bg-dark-card rounded-xl p-4 border border-[#D0D0C0] dark:border-tab-inactive text-center">
-            <div className="text-[24px] font-black text-gold leading-none">{totalSpent}$</div>
+            <div className="text-[24px] font-black text-gold leading-none">{formatAmount(totalSpent)}</div>
             <div className="text-[11px] text-[#666] dark:text-[#B0B0A0] mt-1.5 uppercase tracking-wider font-bold">
               {t('total_spent')}
             </div>
@@ -188,17 +254,19 @@ export function ClientHistoryView() {
 /* ------------------------------------------------------------------ */
 
 interface HistoryCardProps {
-  entry: MockReservation;
+  entry: HistoryReservation;
   locale: string;
   t: ReturnType<typeof useTranslations>;
   onSelect: () => void;
 }
 
 function HistoryCard({ entry: e, locale, t, onSelect }: HistoryCardProps) {
-  const dateLabel = new Date(e.date).toLocaleDateString(
+  const dateLabel = new Date(e.createdAt).toLocaleDateString(
     locale === 'en' ? 'en-CA' : 'fr-CA',
     { day: 'numeric', month: 'short', year: 'numeric' },
   );
+
+  const typeLabel = e.entryType === 'queue' ? t('receipt_entry_type_queue') : t('receipt_entry_type_reservation');
 
   const isCompleted = e.status === 'completed';
 
@@ -209,11 +277,8 @@ function HistoryCard({ entry: e, locale, t, onSelect }: HistoryCardProps) {
       className="w-full text-left bg-[#E8E8D8] dark:bg-dark-card rounded-xl border border-[#D0D0C0] dark:border-tab-inactive p-4 hover:border-gold/30 transition-colors"
     >
       <div className="flex gap-3 items-center">
-        {/* Thumbnail */}
         <div className="w-14 h-14 rounded-lg overflow-hidden shrink-0 bg-[#D0D0C0] dark:bg-tab-inactive">
-          {e.stationImageUrl && (
-            <img src={e.stationImageUrl} alt={e.stationName} className="w-full h-full object-cover" />
-          )}
+          <div className="flex h-full w-full items-center justify-center text-[11px] font-black uppercase tracking-wide text-[#777] dark:text-[#B0B0A0]">SW</div>
         </div>
 
         {/* Info */}
@@ -233,13 +298,12 @@ function HistoryCard({ entry: e, locale, t, onSelect }: HistoryCardProps) {
           </div>
 
           <p className="text-[13px] text-[#666] dark:text-[#B0B0A0] mt-0.5 truncate">
-            {e.forfaitName} · {e.categoryLabel}
+            {[e.vehicleFormatLabel, typeLabel].filter(Boolean).join(' · ')}
           </p>
 
           <div className="flex items-center gap-3 mt-1.5 text-[13px]">
             <span className="text-[#777] dark:text-[#C0C0B0]">{dateLabel}</span>
-            <span className="text-[#777] dark:text-[#C0C0B0]">{e.timeSlot}</span>
-            <span className="ml-auto font-black text-gold">{e.totalPrice}$</span>
+            <span className="ml-auto font-black text-gold">{formatAmount(e.amountPaid)}</span>
           </div>
         </div>
 
@@ -273,6 +337,12 @@ function HistoryEmpty({ t }: { t: ReturnType<typeof useTranslations> }) {
         <p className="text-[16px] font-bold text-[#0A0A14] dark:text-white">{t('empty_title')}</p>
         <p className="text-[14px] text-[#666] dark:text-[#B0B0A0] mt-1 max-w-xs">{t('empty_desc')}</p>
       </div>
+      <Link
+        href="/stations"
+        className="rounded-full bg-gold px-5 py-2.5 text-[13px] font-bold text-dark-bg transition-colors hover:bg-gold-hover"
+      >
+        {t('empty_cta')}
+      </Link>
     </div>
   );
 }

@@ -83,7 +83,7 @@ export async function updateUser(
   const after = await repo.updateUserById(userId, data);
   if (!after) throw new NotFoundError('User not found');
 
-  await insertAdminLog({
+  insertAdminLog({
     admin_id: adminId,
     action: 'UPDATE_USER',
     target_type: 'user',
@@ -92,7 +92,7 @@ export async function updateUser(
       stripSensitiveUserFields(before),
       stripSensitiveUserFields(after)
     ),
-  });
+  }).catch((err) => console.error('[admin-log] Failed to write audit log', err));
 
   return stripSensitiveUserFields(after);
 }
@@ -124,7 +124,7 @@ export async function unblockUser(
   // Best-effort: do not fail the unblock if this errors.
   await repo.clearRateLimitByEmail(user.email).catch(() => {});
 
-  await insertAdminLog({
+  insertAdminLog({
     admin_id: adminId,
     action: 'UNBLOCK_ACCOUNT',
     target_type: 'user',
@@ -132,7 +132,7 @@ export async function unblockUser(
     // Narrow diff: only the status field changed; no full snapshot needed here,
     // so sensitive fields are not in scope. Kept explicit for consistency.
     details: buildDiff({ status: statusBefore }, { status: after.status }),
-  });
+  }).catch((err) => console.error('[admin-log] Failed to write audit log', err));
 
   return stripSensitiveUserFields(after);
 }
@@ -167,7 +167,7 @@ export async function updateStation(
   const after = await repo.updateStationById(stationId, data);
   if (!after) throw new NotFoundError('Station not found');
 
-  await insertAdminLog({
+  insertAdminLog({
     admin_id: adminId,
     action: 'UPDATE_STATION',
     target_type: 'station',
@@ -176,7 +176,7 @@ export async function updateStation(
       stripSensitiveStationFields(before),
       stripSensitiveStationFields(after)
     ),
-  });
+  }).catch((err) => console.error('[admin-log] Failed to write audit log', err));
 
   return stripSensitiveStationFields(after);
 }

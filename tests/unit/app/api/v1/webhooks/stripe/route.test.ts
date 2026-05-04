@@ -64,6 +64,7 @@ jest.mock('@/server/admin/platform-settings-service', () => {
   const truthy = (v: string | null) => v?.trim().toLowerCase() === 'true';
   return {
     getPlatformSetting: mockGetPlatformSetting,
+    getPlatformSettingWithFallback: (key: string) => mockGetPlatformSetting(key),
     isAdminEscrowPushEnabled: async () => {
       const canonical = await mockGetPlatformSetting('stripe_admin_notifications_enabled');
       if (canonical !== null) return truthy(canonical);

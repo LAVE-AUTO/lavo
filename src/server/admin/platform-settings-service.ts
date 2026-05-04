@@ -20,21 +20,21 @@
  *   2. Reverse the station transfer for (penalty - station_share) to claw back platform's portion
  *   Result: platform nets its penalty share, station nets its penalty share
  */
-import { eq, and, isNull, lte, desc } from 'drizzle-orm';
-import { db } from '@/lib/db';
-import { settings, commissionSettings } from '@/lib/db/schema';
-import { DEFAULT_COMMISSION_RATE } from '@/helpers/server-constants';
-import { isTruePlatformSetting } from '@/helpers/platform-setting-boolean';
-import { ValidationError } from '@/lib/errors';
+import { eq, and, isNull, lte, desc } from "drizzle-orm";
+import { db } from "@/lib/db";
+import { settings, commissionSettings } from "@/lib/db/schema";
+import { DEFAULT_COMMISSION_RATE } from "@/helpers/server-constants";
+import { isTruePlatformSetting } from "@/helpers/platform-setting-boolean";
+import { ValidationError } from "@/lib/errors";
 import {
   getAllPlatformSettings as repoGetAll,
   upsertPlatformSettings,
   type PlatformSettingRow,
-} from './platform-settings-repository';
-import type { UpdatePlatformSettingsInput } from '@/validators/platform-settings';
+} from "./platform-settings-repository";
+import type { UpdatePlatformSettingsInput } from "@/validators/platform-settings";
+import { getCachedOrFetch, invalidateCache } from "@/lib/redis-cache";
 
 export type { PlatformSettingRow };
-
 
 // %%%%% Types %%%%%
 // Cancellation policy configuration
@@ -57,6 +57,14 @@ const DEFAULTS: CancellationPolicy = {
   stationPenaltyShare: 0.3,
 };
 
+/**
+ * Upper bound for the free cancellation window.
+ * 10_080 minutes = 7 days, matching the Stripe authorization expiry window (and the
+ * max_advance_booking_days ceiling). Any DB value above this is clamped to prevent a
+ * compromised setting row from forcing every cancellation into the "late" branch
+ * (which would unjustly apply penalties to on-time cancellations).
+ */
+const CANCELLATION_FREE_WINDOW_MAX_MINUTES = 7 * 24 * 60;
 
 // %%%%% Constants %%%%%
 // Commission rate constraints
@@ -64,36 +72,73 @@ const DEFAULTS: CancellationPolicy = {
 const COMMISSION_RATE_MIN = 0;
 const COMMISSION_RATE_MAX = 1;
 
-
 // %%%%% Commission rate %%%%%
 // Active commission rate with fallback to defaults
+
+/** In-process TTL cache for the active commission rate (5-minute TTL). */
+const COMMISSION_RATE_CACHE_TTL_MS = 5 * 60_000; // 5 minutes
+let commissionRateCache: { value: string; expiresAt: number } | null = null;
+
+/** Invalidates the in-process commission rate cache and the Redis cache. */
+export async function invalidateCommissionRateCache(): Promise<void> {
+  commissionRateCache = null;
+  await invalidateCache("platform:commission_rate");
+}
 
 /**
  * Returns the active platform commission rate as a decimal string (e.g. '0.1000').
  *
  * Logic:
- *   1. Query commissionSettings for the most recent row with effective_at <= now()
- *   2. Fall back to DEFAULT_COMMISSION_RATE if not found
- *   3. Clamp to [0, 1] to prevent injection of invalid values from DB
- *   4. Format as 4-decimal string
+ *   1. Return in-process cached value if still within 5-minute TTL (fastest path)
+ *   2. Try Redis cache (300-second TTL) via getCachedOrFetch
+ *   3. On Redis miss or unavailability, query commissionSettings for the most recent
+ *      row with effective_at <= now(), falling back to DEFAULT_COMMISSION_RATE
+ *   4. Clamp to [0, 1] to prevent injection of invalid values from DB
+ *   5. Format as 4-decimal string; populate both in-process and Redis caches
  *
  * @returns Commission rate as a string with 4 decimal places (e.g., '0.1000')
  */
 export async function getActiveCommissionRate(): Promise<string> {
-  const row = await db
-    .select({ rate: commissionSettings.rate })
-    .from(commissionSettings)
-    .where(lte(commissionSettings.effective_at, new Date()))
-    .orderBy(desc(commissionSettings.effective_at))
-    .limit(1);
+  // In-process cache: fastest path, avoids any network hop.
+  if (commissionRateCache && Date.now() < commissionRateCache.expiresAt) {
+    return commissionRateCache.value;
+  }
 
-  const raw = row[0]?.rate ?? DEFAULT_COMMISSION_RATE;
+  const fetchFromDb = async (): Promise<string> => {
+    const row = await db
+      .select({ rate: commissionSettings.rate })
+      .from(commissionSettings)
+      .where(lte(commissionSettings.effective_at, new Date()))
+      .orderBy(desc(commissionSettings.effective_at))
+      .limit(1);
+
+    const raw = row[0]?.rate ?? DEFAULT_COMMISSION_RATE;
+    const parsed = parseFloat(String(raw));
+    return !Number.isFinite(parsed)
+      ? DEFAULT_COMMISSION_RATE
+      : Math.min(
+          COMMISSION_RATE_MAX,
+          Math.max(COMMISSION_RATE_MIN, parsed),
+        ).toFixed(4);
+  };
+
+  // Redis cache: 300-second TTL. Falls back to fetchFromDb when Redis is down.
+  const raw = await getCachedOrFetch("platform:commission_rate", 300, fetchFromDb);
+
+  // Re-clamp after reading from Redis: a directly-written or corrupt Redis value
+  // would bypass fetchFromDb's clamping logic and propagate into the in-process cache.
   const parsed = parseFloat(String(raw));
-  if (!Number.isFinite(parsed)) return DEFAULT_COMMISSION_RATE;
-  const clamped = Math.min(COMMISSION_RATE_MAX, Math.max(COMMISSION_RATE_MIN, parsed));
-  return clamped.toFixed(4);
-}
+  const result = !Number.isFinite(parsed)
+    ? DEFAULT_COMMISSION_RATE
+    : Math.min(COMMISSION_RATE_MAX, Math.max(COMMISSION_RATE_MIN, parsed)).toFixed(4);
 
+  // Populate in-process cache so subsequent calls in the same process skip Redis.
+  commissionRateCache = {
+    value: result,
+    expiresAt: Date.now() + COMMISSION_RATE_CACHE_TTL_MS,
+  };
+  return result;
+}
 
 // %%%%% Single setting reads %%%%%
 // Get individual platform settings by key
@@ -107,7 +152,11 @@ export async function getActiveCommissionRate(): Promise<string> {
  */
 export async function getPlatformSetting(key: string): Promise<string | null> {
   const row = await db.query.settings.findFirst({
-    where: and(eq(settings.type, 'admin'), eq(settings.key, key), isNull(settings.entity_id)),
+    where: and(
+      eq(settings.type, "admin"),
+      eq(settings.key, key),
+      isNull(settings.entity_id),
+    ),
   });
   return row?.value ?? null;
 }
@@ -122,16 +171,32 @@ export async function getPlatformSetting(key: string): Promise<string | null> {
  * @returns true if enabled, false otherwise
  */
 export async function isAdminEscrowPushEnabled(): Promise<boolean> {
-  const canonical = await getPlatformSetting('stripe_admin_notifications_enabled');
+  const canonical = await getPlatformSetting(
+    "stripe_admin_notifications_enabled",
+  );
   if (canonical !== null) return isTruePlatformSetting(canonical);
 
-  const legacy = await getPlatformSetting('enable_admin_push_on_escrow_released');
+  const legacy = await getPlatformSetting(
+    "enable_admin_push_on_escrow_released",
+  );
   return isTruePlatformSetting(legacy);
 }
 
-
 // %%%%% Cancellation policy %%%%%
 // Composite business rule from multiple settings with fallbacks and normalization
+
+/** In-process TTL cache for the cancellation policy (60-second TTL). */
+const CANCELLATION_POLICY_CACHE_TTL_MS = 60_000; // 1 minute
+let cancellationPolicyCache: {
+  value: CancellationPolicy | null;
+  expiresAt: number;
+} | null = null;
+
+/** Invalidates the in-process cancellation policy cache and the Redis cache. */
+export async function invalidateCancellationPolicyCache(): Promise<void> {
+  cancellationPolicyCache = null;
+  await invalidateCache("platform:cancellation_policy");
+}
 
 /**
  * Returns the active cancellation policy from platform settings.
@@ -148,49 +213,121 @@ export async function isAdminEscrowPushEnabled(): Promise<boolean> {
  *   - If shares don't sum to 1, normalize proportionally
  *   - Validate finite values; fall back to hardcoded defaults on error
  *
+ * Caching (three tiers, fastest first):
+ *   1. In-process cache (60-second TTL) — avoids any network hop
+ *   2. Redis cache (60-second TTL) via getCachedOrFetch — shared across instances
+ *   3. DB read — when both caches miss or Redis is unavailable
+ *
+ * Invalidated when platform settings are updated.
+ *
  * @returns Cancellation policy with all fields clamped and normalized
  */
 export async function getCancellationPolicy(): Promise<CancellationPolicy> {
-  const [windowRaw, percentRaw, platformRaw, stationRaw] = await Promise.all([
-    getPlatformSetting('cancellation_free_window_minutes').then(
-      (v) => v ?? process.env.PLATFORM_CANCELLATION_FREE_WINDOW_MINUTES ?? null
-    ),
-    getPlatformSetting('cancellation_penalty_percent').then(
-      (v) => v ?? process.env.PLATFORM_CANCELLATION_PENALTY_PERCENT ?? null
-    ),
-    getPlatformSetting('cancellation_penalty_platform_rate').then(
-      (v) => v ?? process.env.PLATFORM_CANCELLATION_PENALTY_PLATFORM_RATE ?? null
-    ),
-    getPlatformSetting('cancellation_penalty_station_rate').then(
-      (v) => v ?? process.env.PLATFORM_CANCELLATION_PENALTY_STATION_RATE ?? null
-    ),
-  ]);
+  // In-process cache: fastest path, avoids any network hop.
+  if (
+    cancellationPolicyCache &&
+    Date.now() < cancellationPolicyCache.expiresAt
+  ) {
+    return cancellationPolicyCache.value ?? DEFAULTS;
+  }
 
-  const freeWindowMinutes = windowRaw ? parseInt(windowRaw, 10) : DEFAULTS.freeWindowMinutes;
-  // DB stores penalty as percentage (e.g. "20"), convert to rate (0.20)
-  const rawRate = percentRaw ? parseFloat(percentRaw) / 100 : DEFAULTS.penaltyRate;
+  const fetchFromDb = async (): Promise<CancellationPolicy> => {
+    const [windowRaw, percentRaw, platformRaw, stationRaw] = await Promise.all([
+      getPlatformSetting("cancellation_free_window_minutes").then(
+        (v) => v ?? process.env.PLATFORM_CANCELLATION_FREE_WINDOW_MINUTES ?? null,
+      ),
+      getPlatformSetting("cancellation_penalty_percent").then(
+        (v) => v ?? process.env.PLATFORM_CANCELLATION_PENALTY_PERCENT ?? null,
+      ),
+      getPlatformSetting("cancellation_penalty_platform_rate").then(
+        (v) =>
+          v ?? process.env.PLATFORM_CANCELLATION_PENALTY_PLATFORM_RATE ?? null,
+      ),
+      getPlatformSetting("cancellation_penalty_station_rate").then(
+        (v) =>
+          v ?? process.env.PLATFORM_CANCELLATION_PENALTY_STATION_RATE ?? null,
+      ),
+    ]);
 
-  // DB stores rates as fractions (e.g. "0.70" → 0.70, "0.30" → 0.30)
-  const rawPlatformShare = platformRaw ? parseFloat(platformRaw) : DEFAULTS.platformPenaltyShare;
-  const rawStationShare = stationRaw ? parseFloat(stationRaw) : DEFAULTS.stationPenaltyShare;
+    const freeWindowMinutes = windowRaw
+      ? parseInt(windowRaw, 10)
+      : DEFAULTS.freeWindowMinutes;
+    // DB stores penalty as percentage (e.g. "20"), convert to rate (0.20)
+    const rawRate = percentRaw
+      ? parseFloat(percentRaw) / 100
+      : DEFAULTS.penaltyRate;
 
-  // Clamp each share to [0, 1]
-  const pShare = Number.isFinite(rawPlatformShare) ? Math.min(1, Math.max(0, rawPlatformShare)) : DEFAULTS.platformPenaltyShare;
-  const sShare = Number.isFinite(rawStationShare) ? Math.min(1, Math.max(0, rawStationShare)) : DEFAULTS.stationPenaltyShare;
+    // DB stores rates as fractions (e.g. "0.70" → 0.70, "0.30" → 0.30)
+    const rawPlatformShare = platformRaw
+      ? parseFloat(platformRaw)
+      : DEFAULTS.platformPenaltyShare;
+    const rawStationShare = stationRaw
+      ? parseFloat(stationRaw)
+      : DEFAULTS.stationPenaltyShare;
 
-  // Normalize shares if they don't sum to 1
-  const total = pShare + sShare;
-  const platformPenaltyShare = total > 0 ? pShare / total : DEFAULTS.platformPenaltyShare;
-  const stationPenaltyShare = total > 0 ? sShare / total : DEFAULTS.stationPenaltyShare;
+    // Clamp each share to [0, 1]
+    const pShare = Number.isFinite(rawPlatformShare)
+      ? Math.min(1, Math.max(0, rawPlatformShare))
+      : DEFAULTS.platformPenaltyShare;
+    const sShare = Number.isFinite(rawStationShare)
+      ? Math.min(1, Math.max(0, rawStationShare))
+      : DEFAULTS.stationPenaltyShare;
 
-  return {
-    freeWindowMinutes: Number.isFinite(freeWindowMinutes) && freeWindowMinutes >= 0 ? freeWindowMinutes : DEFAULTS.freeWindowMinutes,
-    penaltyRate: Number.isFinite(rawRate) ? Math.min(1, Math.max(0, rawRate)) : DEFAULTS.penaltyRate,
-    platformPenaltyShare,
-    stationPenaltyShare,
+    // Normalize shares if they don't sum to 1
+    const total = pShare + sShare;
+    const platformPenaltyShare =
+      total > 0 ? pShare / total : DEFAULTS.platformPenaltyShare;
+    const stationPenaltyShare =
+      total > 0 ? sShare / total : DEFAULTS.stationPenaltyShare;
+
+    return {
+      freeWindowMinutes:
+        Number.isFinite(freeWindowMinutes) && freeWindowMinutes >= 0
+          ? Math.min(freeWindowMinutes, CANCELLATION_FREE_WINDOW_MAX_MINUTES)
+          : DEFAULTS.freeWindowMinutes,
+      penaltyRate: Number.isFinite(rawRate)
+        ? Math.min(1, Math.max(0, rawRate))
+        : DEFAULTS.penaltyRate,
+      platformPenaltyShare,
+      stationPenaltyShare,
+    };
   };
-}
 
+  // Redis cache: 60-second TTL. Falls back to fetchFromDb when Redis is down.
+  const rawPolicy = await getCachedOrFetch(
+    "platform:cancellation_policy",
+    60,
+    fetchFromDb,
+  );
+
+  // Re-clamp after reading from Redis: a directly-written or corrupt Redis value
+  // would bypass fetchFromDb's clamping logic and propagate into the in-process cache.
+  const pShare = Number.isFinite(rawPolicy.platformPenaltyShare)
+    ? Math.min(1, Math.max(0, rawPolicy.platformPenaltyShare))
+    : DEFAULTS.platformPenaltyShare;
+  const sShare = Number.isFinite(rawPolicy.stationPenaltyShare)
+    ? Math.min(1, Math.max(0, rawPolicy.stationPenaltyShare))
+    : DEFAULTS.stationPenaltyShare;
+  const shareTotal = pShare + sShare;
+  const policy: CancellationPolicy = {
+    freeWindowMinutes:
+      Number.isFinite(rawPolicy.freeWindowMinutes) && rawPolicy.freeWindowMinutes >= 0
+        ? Math.min(rawPolicy.freeWindowMinutes, CANCELLATION_FREE_WINDOW_MAX_MINUTES)
+        : DEFAULTS.freeWindowMinutes,
+    penaltyRate: Number.isFinite(rawPolicy.penaltyRate)
+      ? Math.min(1, Math.max(0, rawPolicy.penaltyRate))
+      : DEFAULTS.penaltyRate,
+    platformPenaltyShare: shareTotal > 0 ? pShare / shareTotal : DEFAULTS.platformPenaltyShare,
+    stationPenaltyShare: shareTotal > 0 ? sShare / shareTotal : DEFAULTS.stationPenaltyShare,
+  };
+
+  // Populate in-process cache so subsequent calls in the same process skip Redis.
+  cancellationPolicyCache = {
+    value: policy,
+    expiresAt: Date.now() + CANCELLATION_POLICY_CACHE_TTL_MS,
+  };
+  return policy;
+}
 
 // %%%%% Settings reads with fallback %%%%%
 // 3-tier fallback: DB → environment → default
@@ -226,7 +363,7 @@ function invalidateSettingCache(key: string): void {
 export async function getPlatformSettingWithFallback(
   key: string,
   envVar: string,
-  defaultValue: string
+  defaultValue: string,
 ): Promise<string> {
   const cached = settingCache.get(key);
   if (cached && Date.now() < cached.expiresAt) {
@@ -234,10 +371,12 @@ export async function getPlatformSettingWithFallback(
   }
 
   const dbValue = await getPlatformSetting(key);
-  settingCache.set(key, { value: dbValue, expiresAt: Date.now() + SETTING_CACHE_TTL_MS });
+  settingCache.set(key, {
+    value: dbValue,
+    expiresAt: Date.now() + SETTING_CACHE_TTL_MS,
+  });
   return dbValue ?? process.env[envVar] ?? defaultValue;
 }
-
 
 // %%%%% Bulk operations %%%%%
 // Read all settings, or update multiple settings
@@ -271,10 +410,10 @@ export async function getAllPlatformSettings(): Promise<PlatformSettingRow[]> {
  */
 export async function updatePlatformSettings(
   data: UpdatePlatformSettingsInput,
-  adminId: string
+  adminId: string,
 ): Promise<void> {
-  const PLATFORM_KEY = 'cancellation_penalty_platform_rate';
-  const STATION_KEY = 'cancellation_penalty_station_rate';
+  const PLATFORM_KEY = "cancellation_penalty_platform_rate";
+  const STATION_KEY = "cancellation_penalty_station_rate";
 
   const hasPlatform = PLATFORM_KEY in data;
   const hasStation = STATION_KEY in data;
@@ -290,7 +429,7 @@ export async function updatePlatformSettings(
       const sum = Math.round((platformVal + stationVal) * 100) / 100;
       if (sum !== 1.0) {
         throw new ValidationError(
-          `${PLATFORM_KEY} and ${STATION_KEY} must sum to 1.00`
+          `${PLATFORM_KEY} and ${STATION_KEY} must sum to 1.00`,
         );
       }
     }
@@ -299,7 +438,7 @@ export async function updatePlatformSettings(
     const platformVal = parseFloat(data[PLATFORM_KEY]!);
     if (!Number.isFinite(platformVal) || platformVal < 0 || platformVal > 1) {
       throw new ValidationError(
-        `${PLATFORM_KEY} must be a decimal between 0.00 and 1.00`
+        `${PLATFORM_KEY} must be a decimal between 0.00 and 1.00`,
       );
     }
     const complementary = Math.round((1.0 - platformVal) * 100) / 100;
@@ -309,7 +448,7 @@ export async function updatePlatformSettings(
     const stationVal = parseFloat(data[STATION_KEY]!);
     if (!Number.isFinite(stationVal) || stationVal < 0 || stationVal > 1) {
       throw new ValidationError(
-        `${STATION_KEY} must be a decimal between 0.00 and 1.00`
+        `${STATION_KEY} must be a decimal between 0.00 and 1.00`,
       );
     }
     const complementary = Math.round((1.0 - stationVal) * 100) / 100;
@@ -327,4 +466,7 @@ export async function updatePlatformSettings(
   for (const key of Object.keys(payload)) {
     invalidateSettingCache(key);
   }
+  // Invalidate the composite cancellation policy cache so the next read re-derives
+  // the policy from the freshly written settings keys.
+  await invalidateCancellationPolicyCache();
 }

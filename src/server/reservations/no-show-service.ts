@@ -107,8 +107,10 @@ export async function markQueueNoShows(): Promise<MarkNoShowsResult> {
     // required there.
     if (entry.stripe_payment_id) {
       let captured = false;
+      let chargeId: string | null = null;
+      let transferId: string | null = null;
       try {
-        await capturePaymentIntent(entry.stripe_payment_id);
+        ({ chargeId, transferId } = await capturePaymentIntent(entry.stripe_payment_id));
         captured = true;
       } catch (e) {
         console.error('[NO_SHOW_CAPTURE_FAILED]', {
@@ -116,6 +118,17 @@ export async function markQueueNoShows(): Promise<MarkNoShowsResult> {
           stripe_payment_id: entry.stripe_payment_id,
           error: e instanceof Error ? e.message : String(e),
         });
+      }
+      if (captured && chargeId) {
+        try {
+          await updateEntry(entry.id, { stripe_charge_id: chargeId });
+        } catch (e) {
+          console.error('[NO_SHOW_STRIPE_CHARGE_ID_UPDATE_FAILED]', {
+            entryId: entry.id,
+            chargeId,
+            error: e instanceof Error ? e.message : String(e),
+          });
+        }
       }
       if (captured && refundedAmount > 0) {
         try {
@@ -137,7 +150,10 @@ export async function markQueueNoShows(): Promise<MarkNoShowsResult> {
           await distributePenalty(
             entry.stripe_payment_id,
             Math.round(penaltyAmount * 100),
-            policy.stationPenaltyShare
+            policy.stationPenaltyShare,
+            undefined,
+            chargeId ?? undefined,
+            transferId ?? undefined,
           );
         } catch (e) {
           console.error('[NO_SHOW_PENALTY_DIST_FAILED]', {
