@@ -23,6 +23,13 @@ export interface CreateAxiosInstanceOptions {
   headers?: Record<string, string>;
   tokenGetter?: TokenGetter;
   onUnauthorized?: () => void;
+  /**
+   * Called on 401 responses for authenticated requests.
+   * Should attempt a token refresh and return the new access token, or null on failure.
+   * When provided, the original request is retried once with the new token.
+   * Falls back to onUnauthorized() when the refresh returns null.
+   */
+  tokenRefresher?: () => Promise<string | null>;
 }
 
 let defaultInstance: AxiosInstance;
@@ -57,6 +64,7 @@ export function createAxiosInstance(
     headers = {},
     tokenGetter,
     onUnauthorized,
+    tokenRefresher,
   } = opts;
 
   const instance = axios.create({
@@ -83,13 +91,35 @@ export function createAxiosInstance(
     (error) => Promise.reject(error)
   );
 
-  if (onUnauthorized) {
+  if (tokenRefresher || onUnauthorized) {
     instance.interceptors.response.use(
       (response) => response,
-      (error) => {
-        if (error.response?.status === 401) {
-          onUnauthorized();
+      async (error) => {
+        const originalConfig = error.config as (typeof error.config) & { _retried?: boolean };
+        const is401 = error.response?.status === HTTP_STATUS.UNAUTHORIZED;
+
+        if (is401) {
+          const hadAuthHeader = !!originalConfig?.headers?.Authorization;
+
+          // Authenticated request expired — try to refresh and retry once.
+          if (hadAuthHeader && tokenRefresher && !originalConfig._retried) {
+            originalConfig._retried = true;
+            const newToken = await tokenRefresher();
+            if (newToken) {
+              originalConfig.headers.Authorization = `Bearer ${newToken}`;
+              return instance(originalConfig);
+            }
+            // Refresh failed — fall through to logout handler.
+            if (onUnauthorized) onUnauthorized();
+            return Promise.reject(error);
+          }
+
+          // No tokenRefresher configured — legacy direct handler.
+          if (!tokenRefresher && onUnauthorized) {
+            onUnauthorized();
+          }
         }
+
         return Promise.reject(error);
       }
     );
