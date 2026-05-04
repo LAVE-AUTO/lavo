@@ -12,6 +12,8 @@ import {
   findSlotByIdAndStation,
   countReservationsBySlotId,
   deleteSlotById,
+  updateSlotStatus,
+  type TimeSlot,
 } from './slot-repository';
 
 const DEFAULT_SLOT_INTERVAL_MINUTES = 30;
@@ -118,4 +120,19 @@ export async function deleteSlot(stationId: string, slotId: string): Promise<voi
   const count = await countReservationsBySlotId(slotId);
   if (count > 0) throw new ConflictError('Cannot delete slot that has reservations');
   await deleteSlotById(slotId);
+}
+
+/**
+ * Blocks a slot by setting its status to 'blocked'.
+ * Throws ConflictError if the slot has active (confirmed) reservations.
+ */
+export async function blockSlot(
+  stationId: string,
+  slotId: string
+): Promise<TimeSlot> {
+  const slot = await findSlotByIdAndStation(slotId, stationId);
+  if (!slot) throw new NotFoundError('Slot not found or does not belong to this station');
+  const count = await countReservationsBySlotId(slotId);
+  if (count > 0) throw new ConflictError('Cannot block slot that has active reservations');
+  return updateSlotStatus(slotId, 'blocked');
 }
