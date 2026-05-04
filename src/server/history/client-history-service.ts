@@ -47,10 +47,12 @@ export type ClientHistoryItem = {
   status: string;
   entry_type: 'reservation' | 'queue';
   created_at: string;
+  slot_start_time: string | null;
   station: {
     name: string | null;
     address: string | null;
     city: string | null;
+    image_url: string | null;
   };
   vehicle_format_label: string | null;
   amount_paid: string;
@@ -145,10 +147,12 @@ function mapHistoryItem(row: ClientHistoryRepositoryItem): ClientHistoryItem {
     status: row.status,
     entry_type: row.entry_type,
     created_at: row.created_at.toISOString(),
+    slot_start_time: toIsoDate(row.slot_start_time),
     station: {
       name: row.station_name,
       address: row.station_address,
       city: row.station_city,
+      image_url: row.station_image_url,
     },
     vehicle_format_label: row.vehicle_format_label,
     amount_paid: row.amount_paid,
