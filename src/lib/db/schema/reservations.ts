@@ -52,6 +52,7 @@ export const reservations = pgTable(
     station_payout: decimal("station_payout", { precision: 10, scale: 2 }).notNull().default("0.00"),
     tip_amount: decimal("tip_amount", { precision: 10, scale: 2 }),
     stripe_payment_id: varchar("stripe_payment_id", { length: 200 }),
+    stripe_charge_id: varchar("stripe_charge_id", { length: 200 }),
     stripe_transfer_id: varchar("stripe_transfer_id", { length: 200 }),
     stripe_refund_id: varchar("stripe_refund_id", { length: 200 }),
     stripe_payment_succeeded_at: timestamp("stripe_payment_succeeded_at", {

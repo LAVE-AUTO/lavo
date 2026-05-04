@@ -29,6 +29,7 @@ const RESERVATION_COLUMNS = {
   station_payout: reservations.station_payout,
   tip_amount: reservations.tip_amount,
   stripe_payment_id: reservations.stripe_payment_id,
+  stripe_charge_id: reservations.stripe_charge_id,
   stripe_transfer_id: reservations.stripe_transfer_id,
   stripe_refund_id: reservations.stripe_refund_id,
   stripe_payment_succeeded_at: reservations.stripe_payment_succeeded_at,
@@ -184,9 +185,16 @@ export async function findEntryByIdAndStation(
 }
 
 /**
- * Lists all entries for a station: reservations (by time_slot start_time) then queue (by queue_position).
+ * Lists entries for a station: reservations (by time_slot start_time) then queue (by queue_position).
+ * Backward-compatible pagination — defaults to perPage=500 when not provided.
  */
-export async function listEntriesByStation(stationId: string): Promise<Entry[]> {
+export async function listEntriesByStation(
+  stationId: string,
+  page = 1,
+  perPage = 500
+): Promise<Entry[]> {
+  const limit = Math.min(Math.max(1, Math.floor(perPage)), 500);
+  const offset = (Math.max(1, Math.floor(page)) - 1) * limit;
   return db
     .select(RESERVATION_COLUMNS)
     .from(reservations)
@@ -196,7 +204,9 @@ export async function listEntriesByStation(stationId: string): Promise<Entry[]> 
       desc(reservations.entry_type),
       asc(timeSlots.start_time),
       asc(reservations.queue_position)
-    );
+    )
+    .limit(limit)
+    .offset(offset);
 }
 
 /**
@@ -444,6 +454,7 @@ export async function updateEntry(
     cancellation_reason: string | null;
     penalty_amount: string | null;
     stripe_payment_id: string | null;
+    stripe_charge_id: string | null;
     stripe_refund_id: string | null;
     updated_at: Date;
   }>,

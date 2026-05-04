@@ -13,11 +13,7 @@ import {
   varchar,
 } from "drizzle-orm/pg-core";
 
-export const userRoleEnum = pgEnum("user_role", [
-  "admin",
-  "client",
-  "station",
-]);
+export const userRoleEnum = pgEnum("user_role", ["admin", "client", "station"]);
 
 /**
  * All user accounts regardless of role.
@@ -37,7 +33,9 @@ export const users = pgTable(
     role: userRoleEnum("role").notNull().default("client"),
     status: varchar("status", { length: 30 }).notNull(),
     // When true the user must change their password before accessing any endpoint
-    force_password_change: boolean("force_password_change").notNull().default(false),
+    force_password_change: boolean("force_password_change")
+      .notNull()
+      .default(false),
     email_verified_at: timestamp("email_verified_at", {
       mode: "date",
       withTimezone: true,
@@ -59,32 +57,36 @@ export const users = pgTable(
   (table) => [
     index("users_status_idx").on(table.status),
     index("users_role_idx").on(table.role),
-  ]
+  ],
 );
 
 /**
  * Tokens for email verification and password reset.
  * One token per row; used_at set when consumed.
  */
-export const emailVerificationTokens = pgTable("email_verification_tokens", {
-  id: uuid("id").primaryKey().defaultRandom(),
-  user_id: uuid("user_id")
-    .notNull()
-    .references(() => users.id, { onDelete: "cascade" }),
-  token: text("token").notNull(),
-  type: varchar("type", { length: 30 }).notNull(),
-  expires_at: timestamp("expires_at", {
-    mode: "date",
-    withTimezone: true,
-  }).notNull(),
-  used_at: timestamp("used_at", {
-    mode: "date",
-    withTimezone: true,
-  }),
-  created_at: timestamp("created_at", {
-    mode: "date",
-    withTimezone: true,
-  })
-    .notNull()
-    .defaultNow(),
-});
+export const emailVerificationTokens = pgTable(
+  "email_verification_tokens",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    user_id: uuid("user_id")
+      .notNull()
+      .references(() => users.id, { onDelete: "cascade" }),
+    token: text("token").notNull(),
+    type: varchar("type", { length: 30 }).notNull(),
+    expires_at: timestamp("expires_at", {
+      mode: "date",
+      withTimezone: true,
+    }).notNull(),
+    used_at: timestamp("used_at", {
+      mode: "date",
+      withTimezone: true,
+    }),
+    created_at: timestamp("created_at", {
+      mode: "date",
+      withTimezone: true,
+    })
+      .notNull()
+      .defaultNow(),
+  },
+  (table) => [index("email_verification_tokens_token_idx").on(table.token)],
+);

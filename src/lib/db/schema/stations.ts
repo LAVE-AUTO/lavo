@@ -3,11 +3,14 @@
  * Station identity, approval lifecycle, and per-station pricing by vehicle format.
  */
 import {
+  bigint,
   boolean,
   date,
   decimal,
   index,
   integer,
+  numeric,
+  pgMaterializedView,
   pgTable,
   text,
   time,
@@ -17,7 +20,6 @@ import {
   varchar,
 } from "drizzle-orm/pg-core";
 import { users } from "./users";
-
 
 // %%%%% Wash types %%%%%
 
@@ -50,14 +52,12 @@ export const stationWashTypes = pgTable(
   (table) => [
     uniqueIndex("station_wash_types_station_id_wash_type_id_unique").on(
       table.station_id,
-      table.wash_type_id
+      table.wash_type_id,
     ),
-  ]
+  ],
 );
 
-
 // %%%%% END - Wash types %%%%%
-
 
 // %%%%% Stations %%%%%
 
@@ -115,12 +115,12 @@ export const stations = pgTable(
     index("stations_is_open_idx").on(table.is_open),
     index("stations_user_id_idx").on(table.user_id),
     index("stations_service_scope_idx").on(table.service_scope),
-  ]
+    index("stations_approved_at_idx").on(table.approved_at),
+    index("stations_updated_at_idx").on(table.updated_at),
+  ],
 );
 
-
 // %%%%% END - Stations %%%%%
-
 
 // %%%%% Station config & posts %%%%%
 
@@ -185,44 +185,47 @@ export const stationPosts = pgTable(
       .defaultNow(),
   },
   (table) => [
-    uniqueIndex("station_posts_station_id_position_unique").on(table.station_id, table.position),
-  ]
+    uniqueIndex("station_posts_station_id_position_unique").on(
+      table.station_id,
+      table.position,
+    ),
+  ],
 );
 
-
 // %%%%% END - Station config & posts %%%%%
-
 
 // %%%%% Vehicle formats %%%%%
 
 /**
  * Per-station vehicle format and price (e.g. Petit, Moyen, SUV).
  */
-export const vehicleFormats = pgTable("vehicle_formats", {
-  id: uuid("id").primaryKey().defaultRandom(),
-  station_id: uuid("station_id")
-    .notNull()
-    .references(() => stations.id, { onDelete: "cascade" }),
-  label: varchar("label", { length: 100 }).notNull(),
-  price: decimal("price", { precision: 10, scale: 2 }).notNull(),
-  is_active: boolean("is_active").notNull(),
-  created_at: timestamp("created_at", {
-    mode: "date",
-    withTimezone: true,
-  })
-    .notNull()
-    .defaultNow(),
-  updated_at: timestamp("updated_at", {
-    mode: "date",
-    withTimezone: true,
-  })
-    .notNull()
-    .defaultNow(),
-});
-
+export const vehicleFormats = pgTable(
+  "vehicle_formats",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    station_id: uuid("station_id")
+      .notNull()
+      .references(() => stations.id, { onDelete: "cascade" }),
+    label: varchar("label", { length: 100 }).notNull(),
+    price: decimal("price", { precision: 10, scale: 2 }).notNull(),
+    is_active: boolean("is_active").notNull(),
+    created_at: timestamp("created_at", {
+      mode: "date",
+      withTimezone: true,
+    })
+      .notNull()
+      .defaultNow(),
+    updated_at: timestamp("updated_at", {
+      mode: "date",
+      withTimezone: true,
+    })
+      .notNull()
+      .defaultNow(),
+  },
+  (table) => [index("vehicle_formats_station_id_idx").on(table.station_id)],
+);
 
 // %%%%% END - Vehicle formats %%%%%
-
 
 // %%%%% Station documents %%%%%
 
@@ -263,12 +266,11 @@ export const stationDocuments = pgTable(
   },
   (table) => [
     index("station_documents_expiry_date_idx").on(table.expiry_date),
-  ]
+    index("station_documents_station_id_idx").on(table.station_id),
+  ],
 );
 
-
 // %%%%% END - Station documents %%%%%
-
 
 // %%%%% Pending uploads %%%%%
 
@@ -290,12 +292,10 @@ export const pendingUploads = pgTable(
       .notNull()
       .defaultNow(),
   },
-  (table) => [index("pending_uploads_created_at_idx").on(table.created_at)]
+  (table) => [index("pending_uploads_created_at_idx").on(table.created_at)],
 );
 
-
 // %%%%% END - Pending uploads %%%%%
-
 
 // %%%%% Station photos %%%%%
 
@@ -317,8 +317,24 @@ export const stationPhotos = pgTable(
       .notNull()
       .defaultNow(),
   },
-  (table) => [index("station_photos_station_id_idx").on(table.station_id)]
+  (table) => [index("station_photos_station_id_idx").on(table.station_id)],
 );
 
-
 // %%%%% END - Station photos %%%%%
+
+// %%%%% Materialized views %%%%%
+
+/**
+ * Precomputed station statistics: available_slots, completed_count, average_rating, total_ratings.
+ * Populated by migration 0035. Refreshed concurrently after reservation completions and rating changes.
+ * Use .existing() because Drizzle does not manage this view; the SQL migration owns it.
+ */
+export const stationStats = pgMaterializedView("station_stats", {
+  station_id: uuid("station_id").notNull(),
+  available_slots: bigint("available_slots", { mode: "number" }).notNull(),
+  completed_count: bigint("completed_count", { mode: "number" }).notNull(),
+  average_rating: numeric("average_rating").notNull(),
+  total_ratings: bigint("total_ratings", { mode: "number" }).notNull(),
+}).existing();
+
+// %%%%% END - Materialized views %%%%%

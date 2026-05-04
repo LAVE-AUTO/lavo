@@ -25,7 +25,12 @@ export const deviceTokens = pgTable(
       .defaultNow(),
   },
   (table) => [
-    index("device_tokens_user_id_idx").on(table.user_id),
-    index("device_tokens_token_idx").on(table.token),
-  ]
+    // user_id_created_at_idx has user_id as its leftmost prefix, so it also serves
+    // user_id-only lookups (e.g. DELETE cascade, listing tokens per user). The former
+    // single-column user_id_idx is therefore redundant and removed.
+    index("device_tokens_user_id_created_at_idx").on(
+      table.user_id,
+      table.created_at,
+    ),
+  ],
 );

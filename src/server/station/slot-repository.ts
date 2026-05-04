@@ -1,15 +1,15 @@
 /**
  * Data access for time_slots. Create, delete, and count reservations per slot.
  */
-import { eq, and, ne, gt, sql, inArray } from 'drizzle-orm';
-import { db, type DbTransaction } from '@/lib/db';
-import { timeSlots } from '@/lib/db/schema';
-import { reservations } from '@/lib/db/schema';
+import { eq, and, ne, gt, gte, lt, sql, inArray } from "drizzle-orm";
+import { db, type DbTransaction } from "@/lib/db";
+import { timeSlots } from "@/lib/db/schema";
+import { reservations } from "@/lib/db/schema";
 
 export type TimeSlot = typeof timeSlots.$inferSelect;
 export type TimeSlotInsert = typeof timeSlots.$inferInsert;
 
-const SLOT_STATUS_AVAILABLE = 'available';
+const SLOT_STATUS_AVAILABLE = "available";
 
 /**
  * Inserts a single time slot. Caller must set station_id, start_time, end_time, capacity.
@@ -18,7 +18,7 @@ export async function createSlot(
   stationId: string,
   startTime: Date,
   endTime: Date,
-  capacity: number
+  capacity: number,
 ): Promise<TimeSlot> {
   const [row] = await db
     .insert(timeSlots)
@@ -39,7 +39,7 @@ export async function createSlot(
  */
 export async function createSlots(
   stationId: string,
-  slots: Array<{ start_time: Date; end_time: Date; capacity: number }>
+  slots: Array<{ start_time: Date; end_time: Date; capacity: number }>,
 ): Promise<TimeSlot[]> {
   if (slots.length === 0) return [];
   const rows = await db
@@ -52,7 +52,7 @@ export async function createSlots(
         capacity: s.capacity,
         booked_count: 0,
         status: SLOT_STATUS_AVAILABLE,
-      }))
+      })),
     )
     .returning();
   return rows;
@@ -61,7 +61,9 @@ export async function createSlots(
 /**
  * Returns the time slot by id, or undefined.
  */
-export async function findSlotById(slotId: string): Promise<TimeSlot | undefined> {
+export async function findSlotById(
+  slotId: string,
+): Promise<TimeSlot | undefined> {
   return db.query.timeSlots.findFirst({
     where: eq(timeSlots.id, slotId),
   });
@@ -72,7 +74,7 @@ export async function findSlotById(slotId: string): Promise<TimeSlot | undefined
  */
 export async function findSlotByIdAndStation(
   slotId: string,
-  stationId: string
+  stationId: string,
 ): Promise<TimeSlot | undefined> {
   return db.query.timeSlots.findFirst({
     where: and(eq(timeSlots.id, slotId), eq(timeSlots.station_id, stationId)),
@@ -82,12 +84,20 @@ export async function findSlotByIdAndStation(
 /**
  * Counts active (non-cancelled) reservations that reference this time_slot_id.
  */
-export async function countReservationsBySlotId(slotId: string, tx?: DbTransaction): Promise<number> {
+export async function countReservationsBySlotId(
+  slotId: string,
+  tx?: DbTransaction,
+): Promise<number> {
   const client = tx ?? db;
   const result = await client
     .select({ count: sql<number>`count(*)::int` })
     .from(reservations)
-    .where(and(eq(reservations.time_slot_id, slotId), ne(reservations.status, 'cancelled')));
+    .where(
+      and(
+        eq(reservations.time_slot_id, slotId),
+        ne(reservations.status, "cancelled"),
+      ),
+    );
   return result[0]?.count ?? 0;
 }
 
@@ -98,13 +108,13 @@ export async function countReservationsBySlotId(slotId: string, tx?: DbTransacti
 export async function lockSlotForUpdate(
   slotId: string,
   stationId: string,
-  tx: DbTransaction
+  tx: DbTransaction,
 ): Promise<TimeSlot | undefined> {
   const rows = await tx
     .select()
     .from(timeSlots)
     .where(and(eq(timeSlots.id, slotId), eq(timeSlots.station_id, stationId)))
-    .for('update');
+    .for("update");
   return rows[0];
 }
 
@@ -118,7 +128,10 @@ export async function deleteSlotById(slotId: string): Promise<void> {
 /**
  * Increments booked_count for the slot by 1. Used when creating a reservation for the slot.
  */
-export async function incrementSlotBookedCount(slotId: string, tx?: DbTransaction): Promise<void> {
+export async function incrementSlotBookedCount(
+  slotId: string,
+  tx?: DbTransaction,
+): Promise<void> {
   const client = tx ?? db;
   await client
     .update(timeSlots)
@@ -131,7 +144,10 @@ export async function incrementSlotBookedCount(slotId: string, tx?: DbTransactio
 /**
  * Decrements booked_count for the slot by 1. Used when cancelling or moving a reservation to queue.
  */
-export async function decrementSlotBookedCount(slotId: string, tx?: DbTransaction): Promise<void> {
+export async function decrementSlotBookedCount(
+  slotId: string,
+  tx?: DbTransaction,
+): Promise<void> {
   const client = tx ?? db;
   await client
     .update(timeSlots)
@@ -143,20 +159,26 @@ export async function decrementSlotBookedCount(slotId: string, tx?: DbTransactio
 
 /**
  * Lists all slots for a station on a specific date (YYYY-MM-DD), ordered by start_time ascending.
- * Matches on the date part of start_time (UTC).
+ * Uses an explicit UTC midnight range so the composite index (station_id, start_time) is used
+ * as a sargable range scan instead of a function-based filter.
  */
 export async function listSlotsByStationAndDate(
   stationId: string,
-  dateStr: string
+  dateStr: string,
 ): Promise<TimeSlot[]> {
+  const startOfDay = new Date(`${dateStr}T00:00:00.000Z`);
+  const startOfNextDay = new Date(startOfDay);
+  startOfNextDay.setUTCDate(startOfNextDay.getUTCDate() + 1);
+
   return db
     .select()
     .from(timeSlots)
     .where(
       and(
         eq(timeSlots.station_id, stationId),
-        sql`${timeSlots.start_time}::date = ${dateStr}::date`
-      )
+        gte(timeSlots.start_time, startOfDay),
+        lt(timeSlots.start_time, startOfNextDay),
+      ),
     )
     .orderBy(timeSlots.start_time);
 }
@@ -168,7 +190,7 @@ export async function listSlotsByStationAndDate(
 export async function extendSlotEndTime(
   slotId: string,
   extraMinutes: number,
-  tx?: DbTransaction
+  tx?: DbTransaction,
 ): Promise<TimeSlot> {
   const client = tx ?? db;
   const [row] = await client
@@ -190,10 +212,15 @@ export async function shiftSubsequentSlots(
   stationId: string,
   afterStartTime: Date,
   extraMinutes: number,
-  tx?: DbTransaction
+  tx?: DbTransaction,
 ): Promise<TimeSlot[]> {
   const client = tx ?? db;
+  // Derive the UTC day boundaries from afterStartTime so the composite index
+  // (station_id, start_time) is used as a sargable range scan.
   const dateStr = afterStartTime.toISOString().slice(0, 10);
+  const startOfNextDay = new Date(`${dateStr}T00:00:00.000Z`);
+  startOfNextDay.setUTCDate(startOfNextDay.getUTCDate() + 1);
+
   return client
     .update(timeSlots)
     .set({
@@ -204,8 +231,8 @@ export async function shiftSubsequentSlots(
       and(
         eq(timeSlots.station_id, stationId),
         gt(timeSlots.start_time, afterStartTime),
-        sql`${timeSlots.start_time}::date = ${dateStr}::date`
-      )
+        lt(timeSlots.start_time, startOfNextDay),
+      ),
     )
     .returning();
 }
