@@ -54,3 +54,30 @@ export async function updateEmailVerified(userId: string): Promise<void> {
     .set({ email_verified_at: new Date(), status: 'active', updated_at: new Date() })
     .where(eq(users.id, userId));
 }
+
+export async function updateProfile(
+  userId: string,
+  data: { first_name?: string; last_name?: string; phone?: string | null }
+): Promise<SafeUser> {
+  const [row] = await db
+    .update(users)
+    .set({ ...data, updated_at: new Date() })
+    .where(eq(users.id, userId))
+    .returning();
+  if (!row) throw new Error('Update profile failed');
+  return stripPasswordHash(row);
+}
+
+export async function softDeleteUser(userId: string, emailHash: string): Promise<void> {
+  await db
+    .update(users)
+    .set({
+      status: 'deleted',
+      email: `${emailHash}@deleted`,
+      first_name: '[deleted]',
+      last_name: '[deleted]',
+      phone: null,
+      updated_at: new Date(),
+    })
+    .where(eq(users.id, userId));
+}

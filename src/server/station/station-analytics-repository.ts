@@ -1,7 +1,7 @@
 import { and, eq, sql, type SQL } from 'drizzle-orm';
 
 import { db } from '@/lib/db';
-import { reservations, ratings } from '@/lib/db/schema';
+import { reservations, ratings, noShowFees, timeSlots } from '@/lib/db/schema';
 import type { StationMetricSlug } from '@/validators/station-analytics';
 
 
@@ -15,6 +15,10 @@ export type DashboardKpis = {
   average_rating: string | null;
   pending_count: number;
   month: string;
+  late_fees_total: string;
+  fill_rate_pct: number;
+  revenue_previous_period: string;
+  clients_previous_period: number;
 };
 
 export type TimeSeriesPoint = {
@@ -52,7 +56,15 @@ export async function getDashboardKpis(stationId: string): Promise<DashboardKpis
   const monthStart = new Date(Date.UTC(year, month - 1, 1, 0, 0, 0, 0));
   const monthEnd = new Date(Date.UTC(year, month, 1, 0, 0, 0, 0)); // exclusive upper bound
 
-  const [completedRows, ratingsRows, pendingRows] = await Promise.all([
+  // Previous month bounds
+  const prevMonthStart = new Date(Date.UTC(year, month - 2, 1, 0, 0, 0, 0));
+  const prevMonthEnd = monthStart; // exclusive upper bound
+
+  // Today bounds for fill_rate_pct
+  const todayStart = new Date(Date.UTC(year, month - 1, now.getUTCDate(), 0, 0, 0, 0));
+  const tomorrowStart = new Date(Date.UTC(year, month - 1, now.getUTCDate() + 1, 0, 0, 0, 0));
+
+  const [completedRows, ratingsRows, pendingRows, prevRows, lateFeesRows, fillRateRows] = await Promise.all([
     // KPIs from completed reservations this month
     db
       .select({
@@ -96,11 +108,61 @@ export async function getDashboardKpis(stationId: string): Promise<DashboardKpis
           eq(reservations.status, 'confirmed')
         )
       ),
+
+    // Previous period: revenue and client count (last calendar month)
+    db
+      .select({
+        revenue_previous_period: sql<string>`COALESCE(SUM(${reservations.amount_paid}), 0)::text`,
+        clients_previous_period: sql<number>`COUNT(DISTINCT ${reservations.user_id})::int`,
+      })
+      .from(reservations)
+      .where(
+        and(
+          eq(reservations.station_id, stationId),
+          sql`${reservations.completed_at} IS NOT NULL`,
+          sql`${reservations.completed_at} >= ${prevMonthStart}`,
+          sql`${reservations.completed_at} < ${prevMonthEnd}`
+        )
+      ),
+
+    // Late fees total: SUM of no_show_fees captured this month
+    db
+      .select({
+        late_fees_total: sql<string>`COALESCE(SUM(${noShowFees.amount}), 0)::text`,
+      })
+      .from(noShowFees)
+      .where(
+        and(
+          eq(noShowFees.station_id, stationId),
+          sql`${noShowFees.created_at} >= ${monthStart}`,
+          sql`${noShowFees.created_at} < ${monthEnd}`
+        )
+      ),
+
+    // Fill rate: SUM(booked_count) / SUM(capacity) for today's slots
+    db
+      .select({
+        booked: sql<number>`COALESCE(SUM(${timeSlots.booked_count}), 0)::int`,
+        capacity: sql<number>`COALESCE(SUM(${timeSlots.capacity}), 0)::int`,
+      })
+      .from(timeSlots)
+      .where(
+        and(
+          eq(timeSlots.station_id, stationId),
+          sql`${timeSlots.start_time} >= ${todayStart}`,
+          sql`${timeSlots.start_time} < ${tomorrowStart}`
+        )
+      ),
   ]);
 
   const completed = completedRows[0];
   const rating = ratingsRows[0];
   const pending = pendingRows[0];
+  const prev = prevRows[0];
+  const lateFees = lateFeesRows[0];
+  const fill = fillRateRows[0];
+  const fillRatePct =
+    fill && fill.capacity > 0 ? Math.round((fill.booked / fill.capacity) * 100) : 0;
 
   return {
     total_revenue: completed?.total_revenue ?? '0',
@@ -109,6 +171,10 @@ export async function getDashboardKpis(stationId: string): Promise<DashboardKpis
     average_rating: rating?.average_rating ?? null,
     pending_count: pending?.pending_count ?? 0,
     month: monthStr,
+    late_fees_total: lateFees?.late_fees_total ?? '0',
+    fill_rate_pct: fillRatePct,
+    revenue_previous_period: prev?.revenue_previous_period ?? '0',
+    clients_previous_period: prev?.clients_previous_period ?? 0,
   };
 }
 

@@ -378,12 +378,18 @@ export async function getMyStation(userId: string): Promise<StationWithDocuments
 // ─── Public API (Card 1) ────────────────────────────────────────────────────
 
 /**
- * List item for GET /api/v1/stations. Station row plus available (derived from slots),
- * available_slots, and optional completed_count for display.
+ * List item for GET /api/v1/stations. Station row plus derived availability fields,
+ * enriched with price_from, image_url, verified, queue_count, and opening_hours.
  */
-export type StationListPublicItem = Omit<StationWithAvailableSlots, 'available_slots' | 'completed_count'> & {
+export type StationListPublicItem = Omit<
+  StationWithAvailableSlots,
+  'available_slots' | 'completed_count' | 'live_queue_count' | 'opening_time' | 'closing_time'
+> & {
   available_slots: number;
   available: boolean;
+  verified: boolean;
+  queue_count: number;
+  opening_hours: { open: string; close: string } | null;
   completed_count?: number;
 };
 
@@ -407,14 +413,35 @@ export type ListStationsPublicResult = {
 };
 
 /**
- * Maps repository row to public list item (available_slots and completed_count as numbers).
+ * Maps repository row to public list item.
+ * Converts numeric strings, computes verified and opening_hours, renames live_queue_count to queue_count.
  */
 function toListPublicItem(row: StationWithAvailableSlots): StationListPublicItem {
   const available_slots = Math.max(0, Number(row.available_slots ?? 0));
   const available = available_slots > 0;
   const completed_count = row.completed_count != null ? Number(row.completed_count) : undefined;
-  const { available_slots: _s, completed_count: _c, ...rest } = row;
-  return { ...rest, available_slots, available, ...(completed_count !== undefined && { completed_count }) };
+  const verified = row.approved_at !== null && row.status === 'active';
+  const opening_hours =
+    row.opening_time && row.closing_time
+      ? { open: row.opening_time, close: row.closing_time }
+      : null;
+  const {
+    available_slots: _s,
+    completed_count: _c,
+    live_queue_count: _q,
+    opening_time: _ot,
+    closing_time: _ct,
+    ...rest
+  } = row;
+  return {
+    ...rest,
+    available_slots,
+    available,
+    verified,
+    queue_count: row.live_queue_count,
+    opening_hours,
+    ...(completed_count !== undefined && { completed_count }),
+  };
 }
 
 // %%%%% Station owner — profile update %%%%%
@@ -551,14 +578,14 @@ export async function listStationsPublic(
 }
 
 /**
- * Returns a single active station with config, vehicle formats, and time slots.
- * Includes available and available_slots computed from timeSlots (start_time > NOW()).
- * Includes completed_count (Services terminés) from reservations with completed_at IS NOT NULL.
+ * Returns a single active station with config, vehicle formats, time slots, photos, and wash types.
+ * Includes available, available_slots, completed_count, verified, photos[], and wash_types[].
  * Throws NotFoundError if station does not exist or is not active.
  */
 export async function getStationDetailPublic(id: string) {
   const station = await findActiveStationWithDetail(id);
   if (!station) throw new NotFoundError('Station not found');
+
   const now = new Date();
   const available_slots = (station.timeSlots ?? [])
     .filter((s: { start_time: Date }) => s.start_time > now)
@@ -567,10 +594,21 @@ export async function getStationDetailPublic(id: string) {
         sum + Math.max(0, (s.capacity ?? 0) - (s.booked_count ?? 0)),
       0
     );
-  // Unavailability derived only from slot availability; no API toggle for is_open (Figma gap).
   const available = available_slots > 0;
+  const verified = station.approved_at !== null && station.status === 'active';
   const completed_count = await getCompletedCountForStation(id);
-  return { ...station, available_slots, available, completed_count };
+
+  const photos = (station.photos ?? []).map((p) => p.url);
+  const wash_types = (station.stationWashTypes ?? [])
+    .filter((swt) => swt.washType !== null)
+    .map((swt) => ({
+      id: swt.washType!.id,
+      code: swt.washType!.code,
+      label: swt.washType!.label,
+    }));
+
+  const { photos: _p, stationWashTypes: _w, ...rest } = station;
+  return { ...rest, available_slots, available, completed_count, verified, photos, wash_types };
 }
 
 /**

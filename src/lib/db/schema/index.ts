@@ -33,6 +33,9 @@ import {
 import { supportMessages, supportSettings, supportTickets } from "./support";
 import { reservationTips } from "./tips";
 import { timeSlots } from "./slots";
+import { favorites } from "./favorites";
+import { stationHours, stationHourExceptions } from "./station-hours";
+import { userNotifications } from "./user-notifications";
 
 
 // %%%%% END - Imports %%%%%
@@ -57,6 +60,9 @@ export * from "./reschedule-requests";
 export * from "./tips";
 export * from "./disputes";
 export * from "./device-tokens";
+export * from "./favorites";
+export * from "./station-hours";
+export * from "./user-notifications";
 
 
 // %%%%% END - Re-exports %%%%%
@@ -408,3 +414,26 @@ export const disputesRelations = relations(disputes, ({ one }) => ({
 
 
 // %%%%% END - Relations — reschedule, delay, tips & disputes %%%%%
+
+
+// %%%%% Relations — favorites, station hours & user notifications %%%%%
+
+export const favoritesRelations = relations(favorites, ({ one }) => ({
+  user: one(users, { fields: [favorites.user_id], references: [users.id] }),
+  station: one(stations, { fields: [favorites.station_id], references: [stations.id] }),
+}));
+
+export const stationHoursRelations = relations(stationHours, ({ one }) => ({
+  station: one(stations, { fields: [stationHours.station_id], references: [stations.id] }),
+}));
+
+export const stationHourExceptionsRelations = relations(stationHourExceptions, ({ one }) => ({
+  station: one(stations, { fields: [stationHourExceptions.station_id], references: [stations.id] }),
+}));
+
+export const userNotificationsRelations = relations(userNotifications, ({ one }) => ({
+  user: one(users, { fields: [userNotifications.user_id], references: [users.id] }),
+}));
+
+
+// %%%%% END - Relations — favorites, station hours & user notifications %%%%%

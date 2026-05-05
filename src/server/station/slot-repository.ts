@@ -126,6 +126,22 @@ export async function deleteSlotById(slotId: string): Promise<void> {
 }
 
 /**
+ * Updates the status of a slot. Returns the updated row.
+ */
+export async function updateSlotStatus(
+  slotId: string,
+  status: string
+): Promise<TimeSlot> {
+  const [row] = await db
+    .update(timeSlots)
+    .set({ status })
+    .where(eq(timeSlots.id, slotId))
+    .returning();
+  if (!row) throw new Error('Update slot status failed');
+  return row;
+}
+
+/**
  * Increments booked_count for the slot by 1. Used when creating a reservation for the slot.
  */
 export async function incrementSlotBookedCount(
@@ -200,6 +216,7 @@ export async function extendSlotEndTime(
     })
     .where(eq(timeSlots.id, slotId))
     .returning();
+  if (!row) throw new Error(`Slot ${slotId} not found during end_time extension`);
   return row;
 }
 

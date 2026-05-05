@@ -239,6 +239,20 @@
       "when": 1745539200000,
       "tag": "0036_stripe_charge_id",
       "breakpoints": true
+    },
+    {
+      "idx": 37,
+      "version": "7",
+      "when": 1777927539235,
+      "tag": "0037_new_tables_and_columns",
+      "breakpoints": true
+    },
+    {
+      "idx": 38,
+      "version": "7",
+      "when": 1746407000000,
+      "tag": "0038_station_hours_pk",
+      "breakpoints": true
     }
   ]
 }

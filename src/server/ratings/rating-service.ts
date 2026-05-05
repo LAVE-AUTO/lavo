@@ -33,11 +33,14 @@ import {
   insertRating,
   listAdminRatings,
   listPublicRatingsByStation,
+  listRatingsByUser,
   recalcStationRating,
   updateRatingVisibility,
   type AdminRatingItem,
   type AdminRatingsFilters,
+  type PublicRatingItem,
   type Rating,
+  type UserRatingItem,
 } from './ratings-repository';
 import { getPlatformSettingWithFallback } from '@/server/admin/platform-settings-service';
 import { refreshStationStats } from '@/server/station/station-stats-service';
@@ -165,13 +168,29 @@ export async function getPublicRatings(
   page: number,
   limit: number
 ): Promise<{
-  items: Pick<Rating, 'id' | 'score' | 'comment' | 'created_at'>[];
+  items: PublicRatingItem[];
   meta: PaginationMeta;
 }> {
   const station = await findStationById(stationId);
   if (!station) throw new NotFoundError('Station not found');
 
   const { items, total } = await listPublicRatingsByStation(stationId, page, limit);
+  return { items, meta: buildMeta(total, page, limit) };
+}
+
+
+// %%%%% Client rating listing %%%%%
+// Get ratings submitted by the current client
+
+/**
+ * Lists ratings submitted by a client, paginated by recency.
+ */
+export async function getMyRatings(
+  userId: string,
+  page: number,
+  limit: number
+): Promise<{ items: UserRatingItem[]; meta: PaginationMeta }> {
+  const { items, total } = await listRatingsByUser(userId, page, limit);
   return { items, meta: buildMeta(total, page, limit) };
 }
 

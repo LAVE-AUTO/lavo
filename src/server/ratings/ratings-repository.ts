@@ -112,14 +112,19 @@ export async function recalcStationRating(
 // %%%%% Public ratings listing %%%%%
 // Visible ratings for public display
 
+export type PublicRatingItem = Pick<Rating, 'id' | 'score' | 'comment' | 'created_at'> & {
+  author_first_name: string | null;
+};
+
 /**
  * Lists public (visible) ratings for a station, paginated and ordered by recency.
+ * Includes author_first_name from a LEFT JOIN on users.
  */
 export async function listPublicRatingsByStation(
   stationId: string,
   page: number,
   limit: number
-): Promise<{ items: Pick<Rating, 'id' | 'score' | 'comment' | 'created_at'>[]; total: number }> {
+): Promise<{ items: PublicRatingItem[]; total: number }> {
   const offset = (page - 1) * limit;
   const where = and(eq(ratings.station_id, stationId), eq(ratings.is_visible, true));
 
@@ -131,8 +136,10 @@ export async function listPublicRatingsByStation(
         score: ratings.score,
         comment: ratings.comment,
         created_at: ratings.created_at,
+        author_first_name: users.first_name,
       })
       .from(ratings)
+      .leftJoin(users, eq(ratings.user_id, users.id))
       .where(where)
       .orderBy(desc(ratings.created_at))
       .limit(limit)
@@ -140,6 +147,56 @@ export async function listPublicRatingsByStation(
   ]);
 
   return { items: rows, total: countRows[0]?.count ?? 0 };
+}
+
+
+// %%%%% User ratings listing %%%%%
+// Ratings submitted by a specific user
+
+export type UserRatingItem = Pick<Rating, 'id' | 'score' | 'comment' | 'created_at'> & {
+  station: { id: string; name: string };
+};
+
+/**
+ * Lists ratings submitted by a user, paginated and ordered by recency.
+ * Includes station id and name from a LEFT JOIN on stations.
+ */
+export async function listRatingsByUser(
+  userId: string,
+  page: number,
+  limit: number
+): Promise<{ items: UserRatingItem[]; total: number }> {
+  const offset = (page - 1) * limit;
+  const where = eq(ratings.user_id, userId);
+
+  const [countRows, rows] = await Promise.all([
+    db.select({ count: sql<number>`count(*)::int` }).from(ratings).where(where),
+    db
+      .select({
+        id: ratings.id,
+        score: ratings.score,
+        comment: ratings.comment,
+        created_at: ratings.created_at,
+        station_id: ratings.station_id,
+        station_name: stations.name,
+      })
+      .from(ratings)
+      .leftJoin(stations, eq(ratings.station_id, stations.id))
+      .where(where)
+      .orderBy(desc(ratings.created_at))
+      .limit(limit)
+      .offset(offset),
+  ]);
+
+  const items: UserRatingItem[] = rows.map((r) => ({
+    id: r.id,
+    score: r.score,
+    comment: r.comment,
+    created_at: r.created_at,
+    station: { id: r.station_id, name: r.station_name ?? '' },
+  }));
+
+  return { items, total: countRows[0]?.count ?? 0 };
 }
 
 
