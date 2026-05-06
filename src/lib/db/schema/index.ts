@@ -205,12 +205,7 @@ export const stationPostsRelations = relations(stationPosts, ({ one }) => ({
   }),
 }));
 
-export const vehicleFormatsRelations = relations(vehicleFormats, ({ one }) => ({
-  station: one(stations, {
-    fields: [vehicleFormats.station_id],
-    references: [stations.id],
-  }),
-}));
+export const vehicleFormatsRelations = relations(vehicleFormats, () => ({}));
 
 
 // %%%%% END - Relations - stations %%%%%

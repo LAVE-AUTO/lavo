@@ -9,7 +9,7 @@ import { ApiCode } from '@/types/api-codes';
 import { createReservationBodySchema, mapZodErrors } from '@/validators/entry';
 import { stationIdParamSchema, mapZodErrors as mapStationZodErrors } from '@/validators/station';
 import { findStationById } from '@/server/station/station-repository';
-import { findFormatByIdAndStation } from '@/server/station/format-repository';
+import { findFormatById } from '@/server/station/format-repository';
 import { lockSlotForUpdate, countReservationsBySlotId, incrementSlotBookedCount } from '@/server/station/slot-repository';
 import { getConfigByStationId } from '@/server/station/config-repository';
 import { getActiveCommissionRate } from '@/server/admin/platform-settings-service';
@@ -51,7 +51,7 @@ export async function POST(request: Request): Promise<NextResponse> {
     const station = await findStationById(stationId);
     if (!station || station.status !== 'active') return error404('Station not found or not active');
 
-    const format = await findFormatByIdAndStation(vehicle_format_id, stationId);
+    const format = await findFormatById(vehicle_format_id);
     if (!format) return error404('Vehicle format not found');
 
     const config = await getConfigByStationId(stationId);

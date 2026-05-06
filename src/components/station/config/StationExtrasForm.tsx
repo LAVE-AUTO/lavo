@@ -17,6 +17,9 @@ export interface StationExtra {
   description: string;
   price: string;
   is_active: boolean;
+  scope?: 'exterior' | 'interior' | 'both';
+  duration_min?: number;
+  staff_required?: number;
   /** Optional per-vehicle pricing. When absent, the flat `price` applies to all formats. */
   vehicle_entries?: ExtraVehicleEntry[];
 }

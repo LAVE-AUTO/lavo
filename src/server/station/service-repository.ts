@@ -1,20 +1,19 @@
 /**
  * Data access for station services and their pricing configurations.
  */
-import { and, eq, inArray } from 'drizzle-orm';
+import { and, eq, isNull } from 'drizzle-orm';
 import { db } from '@/lib/db';
 import {
   stationServices,
   serviceVehicleEntries,
   stationExtras,
-  extraVehicleEntries,
   serviceExtraCompatibility,
   type StationService,
   type ServiceVehicleEntry,
   type StationExtra,
 } from '@/lib/db/schema';
 
-// ===== SERVICE CRUD =====
+// ===== TYPES =====
 
 export type CreateServiceData = {
   name: string;
@@ -34,31 +33,62 @@ export type UpdateServiceData = Partial<{
   is_popular: boolean;
 }>;
 
-/**
- * Get all services for a station
- */
+export type CreateServiceVehicleEntryData = {
+  service_id: string;
+  vehicle_format_id?: string | null;
+  vehicle_label: string;
+  price: string | number;
+  duration_min?: number;
+  staff_required?: number;
+  is_active?: boolean;
+};
+
+export type CreateExtraData = {
+  label: string;
+  scope: string;
+  price: string | number;
+  duration_min?: number;
+  staff_required?: number;
+  is_active?: boolean;
+};
+
+export type UpdateExtraData = Partial<{
+  label: string;
+  scope: string;
+  price: string | number;
+  duration_min: number;
+  staff_required: number;
+  is_active: boolean;
+}>;
+
+// Enriched service as returned to the frontend
+export type EnrichedService = StationService & {
+  vehicle_entries: (ServiceVehicleEntry & { vehicle_label: string })[];
+  compatible_extras: { id: string; label: string }[];
+};
+
+// ===== SERVICES =====
+
 export async function findServicesByStationId(stationId: string): Promise<StationService[]> {
   return db.query.stationServices.findMany({
-    where: eq(stationServices.station_id, stationId),
+    where: and(eq(stationServices.station_id, stationId), isNull(stationServices.deleted_at)),
     orderBy: (s, { asc }) => [asc(s.created_at)],
   });
 }
 
-/**
- * Get one service by id and verify it belongs to the station
- */
 export async function findServiceByIdAndStation(
   serviceId: string,
   stationId: string
 ): Promise<StationService | undefined> {
   return db.query.stationServices.findFirst({
-    where: and(eq(stationServices.id, serviceId), eq(stationServices.station_id, stationId)),
+    where: and(
+      eq(stationServices.id, serviceId),
+      eq(stationServices.station_id, stationId),
+      isNull(stationServices.deleted_at)
+    ),
   });
 }
 
-/**
- * Create a new service
- */
 export async function createService(
   stationId: string,
   data: CreateServiceData
@@ -79,53 +109,32 @@ export async function createService(
   return row;
 }
 
-/**
- * Update a service
- */
 export async function updateService(id: string, data: UpdateServiceData): Promise<StationService> {
-  const payload = { ...data, updated_at: new Date() };
   const [row] = await db
     .update(stationServices)
-    .set(payload)
+    .set({ ...data, updated_at: new Date() })
     .where(eq(stationServices.id, id))
     .returning();
   if (!row) throw new Error('Update service failed');
   return row;
 }
 
-/**
- * Delete a service (cascades to vehicle entries and compatibility)
- */
-export async function deleteServiceById(id: string): Promise<void> {
-  await db.delete(stationServices).where(eq(stationServices.id, id));
+export async function softDeleteServiceById(id: string): Promise<void> {
+  await db
+    .update(stationServices)
+    .set({ deleted_at: new Date() })
+    .where(eq(stationServices.id, id));
 }
 
 // ===== SERVICE VEHICLE ENTRIES =====
 
-export type CreateServiceVehicleEntryData = {
-  service_id: string;
-  vehicle_format_id: string;
-  price: string | number;
-  duration_min?: number;
-  staff_required?: number;
-  is_active?: boolean;
-};
-
-/**
- * Get all vehicle entries for a service
- */
-export async function findServiceVehicleEntries(
-  serviceId: string
-): Promise<ServiceVehicleEntry[]> {
+export async function findServiceVehicleEntries(serviceId: string): Promise<ServiceVehicleEntry[]> {
   return db.query.serviceVehicleEntries.findMany({
     where: eq(serviceVehicleEntries.service_id, serviceId),
-    orderBy: (sve, { asc }) => [asc(sve.created_at)],
+    orderBy: (e, { asc }) => [asc(e.created_at)],
   });
 }
 
-/**
- * Create a service-vehicle price entry
- */
 export async function createServiceVehicleEntry(
   data: CreateServiceVehicleEntryData
 ): Promise<ServiceVehicleEntry> {
@@ -133,7 +142,8 @@ export async function createServiceVehicleEntry(
     .insert(serviceVehicleEntries)
     .values({
       service_id: data.service_id,
-      vehicle_format_id: data.vehicle_format_id,
+      vehicle_format_id: data.vehicle_format_id ?? null,
+      vehicle_label: data.vehicle_label,
       price: String(data.price),
       duration_min: data.duration_min ?? 45,
       staff_required: data.staff_required ?? 1,
@@ -144,36 +154,16 @@ export async function createServiceVehicleEntry(
   return row;
 }
 
-/**
- * Delete a service-vehicle entry
- */
 export async function deleteServiceVehicleEntry(entryId: string): Promise<void> {
   await db.delete(serviceVehicleEntries).where(eq(serviceVehicleEntries.id, entryId));
 }
 
-// ===== EXTRAS CRUD =====
+export async function deleteServiceVehicleEntriesByServiceId(serviceId: string): Promise<void> {
+  await db.delete(serviceVehicleEntries).where(eq(serviceVehicleEntries.service_id, serviceId));
+}
 
-export type CreateExtraData = {
-  label: string;
-  scope: string; // 'exterior', 'interior', 'both'
-  price: string | number;
-  duration_min?: number;
-  staff_required?: number;
-  is_active?: boolean;
-};
+// ===== EXTRAS =====
 
-export type UpdateExtraData = Partial<{
-  label: string;
-  scope: string;
-  price: string | number;
-  duration_min: number;
-  staff_required: number;
-  is_active: boolean;
-}>;
-
-/**
- * Get all extras for a station
- */
 export async function findExtrasByStationId(stationId: string): Promise<StationExtra[]> {
   return db.query.stationExtras.findMany({
     where: eq(stationExtras.station_id, stationId),
@@ -181,9 +171,6 @@ export async function findExtrasByStationId(stationId: string): Promise<StationE
   });
 }
 
-/**
- * Get one extra by id and verify it belongs to the station
- */
 export async function findExtraByIdAndStation(
   extraId: string,
   stationId: string
@@ -193,13 +180,7 @@ export async function findExtraByIdAndStation(
   });
 }
 
-/**
- * Create a new extra
- */
-export async function createExtra(
-  stationId: string,
-  data: CreateExtraData
-): Promise<StationExtra> {
+export async function createExtra(stationId: string, data: CreateExtraData): Promise<StationExtra> {
   const [row] = await db
     .insert(stationExtras)
     .values({
@@ -216,14 +197,9 @@ export async function createExtra(
   return row;
 }
 
-/**
- * Update an extra
- */
 export async function updateExtra(id: string, data: UpdateExtraData): Promise<StationExtra> {
-  const payload = { ...data, updated_at: new Date() };
-  if (payload.price !== undefined) {
-    payload.price = String(payload.price);
-  }
+  const payload: Record<string, unknown> = { ...data, updated_at: new Date() };
+  if (payload.price !== undefined) payload.price = String(payload.price);
   const [row] = await db
     .update(stationExtras)
     .set(payload)
@@ -233,32 +209,20 @@ export async function updateExtra(id: string, data: UpdateExtraData): Promise<St
   return row;
 }
 
-/**
- * Delete an extra (cascades to vehicle entries and compatibility)
- */
 export async function deleteExtraById(id: string): Promise<void> {
   await db.delete(stationExtras).where(eq(stationExtras.id, id));
 }
 
 // ===== SERVICE-EXTRA COMPATIBILITY =====
 
-/**
- * Add compatibility between a service and an extra
- */
-export async function addServiceExtraCompatibility(
-  serviceId: string,
-  extraId: string
-): Promise<void> {
-  await db.insert(serviceExtraCompatibility).values({ service_id: serviceId, extra_id: extraId });
+export async function addServiceExtraCompatibility(serviceId: string, extraId: string): Promise<void> {
+  await db
+    .insert(serviceExtraCompatibility)
+    .values({ service_id: serviceId, extra_id: extraId })
+    .onConflictDoNothing();
 }
 
-/**
- * Remove compatibility between a service and an extra
- */
-export async function removeServiceExtraCompatibility(
-  serviceId: string,
-  extraId: string
-): Promise<void> {
+export async function removeServiceExtraCompatibility(serviceId: string, extraId: string): Promise<void> {
   await db
     .delete(serviceExtraCompatibility)
     .where(
@@ -269,13 +233,66 @@ export async function removeServiceExtraCompatibility(
     );
 }
 
-/**
- * Get all compatible extras for a service
- */
 export async function findCompatibleExtrasForService(serviceId: string): Promise<string[]> {
   const rows = await db.query.serviceExtraCompatibility.findMany({
     where: eq(serviceExtraCompatibility.service_id, serviceId),
     columns: { extra_id: true },
   });
   return rows.map((r) => r.extra_id);
+}
+
+// ===== ENRICHED FETCH =====
+
+/**
+ * Fetch a single service with its vehicle entries and compatible extras labels.
+ * Used after create/update to return a complete object to the client.
+ */
+export async function findEnrichedService(serviceId: string): Promise<EnrichedService | null> {
+  const service = await db.query.stationServices.findFirst({
+    where: and(eq(stationServices.id, serviceId), isNull(stationServices.deleted_at)),
+  });
+  if (!service) return null;
+
+  const entries = await db.query.serviceVehicleEntries.findMany({
+    where: eq(serviceVehicleEntries.service_id, serviceId),
+    orderBy: (e, { asc }) => [asc(e.created_at)],
+  });
+
+  const extraRows = await db.query.serviceExtraCompatibility.findMany({
+    where: eq(serviceExtraCompatibility.service_id, serviceId),
+    columns: { extra_id: true },
+  });
+
+  const compatibleExtras: { id: string; label: string }[] = [];
+  for (const row of extraRows) {
+    const extra = await db.query.stationExtras.findFirst({
+      where: eq(stationExtras.id, row.extra_id),
+      columns: { id: true, label: true },
+    });
+    if (extra) compatibleExtras.push({ id: extra.id, label: extra.label });
+  }
+
+  return {
+    ...service,
+    vehicle_entries: entries.map((e) => ({ ...e, vehicle_label: e.vehicle_label ?? '' })),
+    compatible_extras: compatibleExtras,
+  };
+}
+
+/**
+ * Fetch all services for a station, each enriched with vehicle entries and
+ * compatible extras labels.
+ */
+export async function findEnrichedServicesByStationId(stationId: string): Promise<EnrichedService[]> {
+  const services = await db.query.stationServices.findMany({
+    where: eq(stationServices.station_id, stationId),
+    orderBy: (s, { asc }) => [asc(s.created_at)],
+  });
+
+  const enriched: EnrichedService[] = [];
+  for (const service of services) {
+    const result = await findEnrichedService(service.id);
+    if (result) enriched.push(result);
+  }
+  return enriched;
 }

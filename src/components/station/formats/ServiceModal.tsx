@@ -29,13 +29,6 @@ interface AutomaticPackage {
 const CATEGORIES: ServiceCategory[] = ['hand_wash', 'automatic', 'self_service'];
 const TYPES: ServiceType[] = ['exterior', 'interior', 'complete'];
 
-const SearchIcon = () => (
-  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-    <circle cx="11" cy="11" r="8" />
-    <line x1="21" y1="21" x2="16.65" y2="16.65" />
-  </svg>
-);
-
 const TagIcon = () => (
   <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
     <path d="M20.59 13.41l-7.17 7.17a2 2 0 01-2.83 0L2 12V2h10l8.59 8.59a2 2 0 010 2.82z" />
@@ -90,9 +83,7 @@ export function ServiceModal({ service, vehicleFormats, availableExtras, onClose
   const [selectedExtraIds, setSelectedExtraIds] = useState<string[]>([]);
   const [basePrice, setBasePrice] = useState('45');
   const [baseDuration, setBaseDuration] = useState('60');
-  const [baseStaff, setBaseStaff] = useState('2');
   const [automaticPackages, setAutomaticPackages] = useState<AutomaticPackage[]>(buildAutomaticPackages());
-  const [formatSearch, setFormatSearch] = useState('');
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -104,7 +95,6 @@ export function ServiceModal({ service, vehicleFormats, availableExtras, onClose
   const isCreateSelfService = !isEdit && isSelfService;
   const showTypeSelector = isHandWash;
   const showExtrasSection = isHandWash;
-  const showStaffField = isHandWash;
   const showDurationField = true;
   const showFormatSection = isHandWash;
   const showAutomaticPackagesSection = isAutomatic;
@@ -125,7 +115,6 @@ export function ServiceModal({ service, vehicleFormats, availableExtras, onClose
       const firstActive = service.vehicle_entries.find((e) => e.is_active);
       setBasePrice(firstActive?.price || '45');
       setBaseDuration(String(firstActive?.duration_min || 60));
-      setBaseStaff(String(firstActive?.staff_required || 2));
     } else {
       setName('');
       setCategory('hand_wash');
@@ -138,9 +127,7 @@ export function ServiceModal({ service, vehicleFormats, availableExtras, onClose
       setSelectedExtraIds([]);
       setBasePrice('45');
       setBaseDuration('60');
-      setBaseStaff('2');
     }
-    setFormatSearch('');
     setError(null);
   }, [service, vehicleFormats]);
 
@@ -148,7 +135,6 @@ export function ServiceModal({ service, vehicleFormats, availableExtras, onClose
     if (category !== 'hand_wash') {
       setServiceType('exterior');
       setSelectedExtraIds([]);
-      setBaseStaff('0');
       if (category === 'self_service') {
         setSelectedFormatIds(vehicleFormats.map((f) => f.id));
       }
@@ -184,14 +170,14 @@ export function ServiceModal({ service, vehicleFormats, availableExtras, onClose
         vehicle_label: f.label,
         price: basePrice,
         duration_min: parseInt(baseDuration, 10) || 0,
-        staff_required: parseInt(baseStaff, 10) || 0,
+        staff_required: 0,
         is_active: true,
       }));
 
     const automaticModeEntries = automaticPackages
       .filter((pkg) => pkg.name.trim())
       .map((pkg) => ({
-        vehicle_format_id: `auto-${pkg.id}`,
+        vehicle_format_id: null,
         vehicle_label: pkg.name.trim(),
         price: pkg.price,
         duration_min: parseInt(pkg.duration, 10) || 0,
@@ -201,7 +187,7 @@ export function ServiceModal({ service, vehicleFormats, availableExtras, onClose
 
     const selfServiceEntries = [
       {
-        vehicle_format_id: 'self-service',
+        vehicle_format_id: null,
         vehicle_label: t('cat_self_service'),
         price: basePrice,
         duration_min: parseInt(baseDuration, 10) || 0,
@@ -216,7 +202,11 @@ export function ServiceModal({ service, vehicleFormats, availableExtras, onClose
       ? selfServiceEntries
       : isEdit
       ? entries.map((entry) => ({
-          ...entry,
+          vehicle_format_id: entry.vehicle_format_id,
+          vehicle_label: entry.vehicle_label,
+          price: entry.price,
+          duration_min: entry.duration_min,
+          staff_required: 0,
           is_active: selectedFormatIds.includes(entry.vehicle_format_id),
         }))
       : createModeEntries;
@@ -228,7 +218,7 @@ export function ServiceModal({ service, vehicleFormats, availableExtras, onClose
       description: description.trim(),
       is_active: isActive,
       vehicle_entries: payloadEntries,
-      compatible_extras: selectedExtras,
+      compatible_extra_ids: selectedExtraIds,
       is_popular: service?.is_popular ?? false,
     };
 
@@ -238,17 +228,14 @@ export function ServiceModal({ service, vehicleFormats, availableExtras, onClose
 
     setSaving(false);
 
-    if (ok && data && typeof data === 'object' && 'data' in (data as object)) {
-      const apiService = (data as { data: Service }).data;
-      onSaved(apiService);
+    if (!ok) {
+      const msg = (data as { message?: string })?.message;
+      setError(msg || t('error_save_failed'));
       return;
     }
 
-    // Fallback for environments where /station/services is not yet available.
-    onSaved({
-      id: service?.id ?? crypto.randomUUID(),
-      ...payload,
-    });
+    const apiService = (data as { data: Service }).data;
+    onSaved(apiService);
   }
 
   const activeEntries = category === 'automatic'
@@ -282,7 +269,7 @@ export function ServiceModal({ service, vehicleFormats, availableExtras, onClose
           vehicle_label: f.label,
           price: basePrice,
           duration_min: parseInt(baseDuration, 10) || 0,
-          staff_required: parseInt(baseStaff, 10) || 0,
+          staff_required: 0,
           is_active: true,
         }));
   const prices = activeEntries.map((e) => parseFloat(e.price || '0')).filter((p) => !Number.isNaN(p) && p > 0);
@@ -292,11 +279,6 @@ export function ServiceModal({ service, vehicleFormats, availableExtras, onClose
   const minDur = durations.length > 0 ? Math.min(...durations) : null;
   const maxDur = durations.length > 0 ? Math.max(...durations) : null;
   const selectedFormats = activeEntries.map((e) => e.vehicle_label);
-  const searchableFormats = vehicleFormats.filter((f) =>
-    f.label.toLowerCase().includes(formatSearch.trim().toLowerCase())
-  );
-  const showFormatUnavailable = formatSearch.trim().length > 0 && searchableFormats.length === 0;
-
   const extrasByType: StationExtra[] = effectiveServiceType === 'exterior'
     ? [...availableExtras.exterior, ...availableExtras.both]
     : effectiveServiceType === 'interior'
@@ -499,17 +481,6 @@ export function ServiceModal({ service, vehicleFormats, availableExtras, onClose
                     />
                   </div>
                   )}
-                  {showStaffField && (
-                  <div className="flex flex-col gap-1.5 sm:col-span-2">
-                    <label className="text-[11px] font-bold uppercase tracking-[0.5px] text-[#888] dark:text-[#9A9A8A]">{t('vehicle_col_staff')}</label>
-                    <NumberStepper
-                      value={baseStaff}
-                      onChange={setBaseStaff}
-                      min={0}
-                      step={1}
-                    />
-                  </div>
-                  )}
                 </div>
               )}
 
@@ -592,32 +563,27 @@ export function ServiceModal({ service, vehicleFormats, availableExtras, onClose
                 <label className="text-[11px] font-black uppercase tracking-[1.5px] text-[#C49A1E]">
                   {t('field_vehicle_formats')}
                 </label>
-                <TextField
-                  value={formatSearch}
-                  onChange={setFormatSearch}
-                  prefixIcon={<SearchIcon />}
-                  placeholder={t('format_search_placeholder')}
-                />
-                {showFormatUnavailable && (
-                  <p className="text-[12px] font-semibold text-[#EF4444]">{t('format_not_in_list')}</p>
-                )}
-                {!showFormatUnavailable && searchableFormats.length > 0 && (
-                  <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
-                    {searchableFormats.map((format) => {
+                {vehicleFormats.length === 0 ? (
+                  <p className="text-[12px] text-[#AAAAAA] dark:text-[#5A5A4A]">
+                    {t('no_formats')}
+                  </p>
+                ) : (
+                  <div className="grid grid-cols-2 gap-2">
+                    {vehicleFormats.map((format) => {
                       const selected = selectedFormatIds.includes(format.id);
                       return (
                         <button
                           key={format.id}
                           type="button"
                           onClick={() => toggleFormat(format.id)}
-                          className={`flex items-center gap-2 rounded-[8px] border px-3 py-2 text-left text-[12px] font-semibold transition-all ${
+                          className={`flex items-center gap-2 rounded-[8px] border px-3 py-2.5 text-left text-[12px] font-semibold transition-all ${
                             selected
                               ? 'border-[#C49A1E] bg-[#FDF3D8] text-[#C49A1E] dark:bg-[#2A1E08]'
                               : 'border-[#D8D4C8] bg-[#F7F6F2] text-[#5A5A4A] dark:border-[#243020] dark:bg-[#182214] dark:text-[#9A9A8A]'
                           }`}
                         >
                           <span
-                            className={`h-3.5 w-3.5 rounded border ${selected ? 'border-[#C49A1E] bg-[#C49A1E]' : 'border-[#AAA] bg-transparent'}`}
+                            className={`h-3.5 w-3.5 shrink-0 rounded border ${selected ? 'border-[#C49A1E] bg-[#C49A1E]' : 'border-[#AAA] bg-transparent'}`}
                             aria-hidden="true"
                           />
                           <span>{format.label}</span>
@@ -643,7 +609,6 @@ export function ServiceModal({ service, vehicleFormats, availableExtras, onClose
                       return updated || entry;
                     }));
                   }}
-                  searchQuery={formatSearch}
                   unavailableMessage={t('format_not_in_list')}
                 />
               </div>
@@ -720,12 +685,6 @@ export function ServiceModal({ service, vehicleFormats, availableExtras, onClose
                         : '--'}
                     </span>
                   </div>
-                  {showStaffField && (
-                  <div className="flex items-center justify-between border-b border-[#5A4630] pb-1">
-                    <span className="text-[#B7AE8A]">{t('preview_staff')}</span>
-                    <span className="font-bold">{!isEdit ? (baseStaff || '--') : (activeEntries.length > 0 ? Math.max(...activeEntries.map((e) => e.staff_required)) : '--')}</span>
-                  </div>
-                  )}
                   {showFormatSection && (
                   <div className="pt-1">
                     <span className="text-[#B7AE8A]">{t('preview_formats')}</span>
@@ -750,20 +709,6 @@ export function ServiceModal({ service, vehicleFormats, availableExtras, onClose
                 </div>
               </div>
 
-              <button
-                type="submit"
-                disabled={saving}
-                className="mt-3 w-full rounded-[8px] bg-[#C49A1E] px-4 py-2 text-[13px] font-black text-[#0C1209] transition-opacity hover:opacity-80 disabled:opacity-50"
-              >
-                {saving ? t('btn_saving') : (isEdit ? t('modal_title_edit') : t('modal_title_new'))}
-              </button>
-              <button
-                type="button"
-                onClick={onClose}
-                className="mt-2 w-full rounded-[8px] border border-[#5A4630] px-4 py-2 text-[13px] font-semibold text-[#B7AE8A] transition-colors hover:bg-[#4A3418]"
-              >
-                {t('btn_cancel')}
-              </button>
             </aside>
           </div>
 

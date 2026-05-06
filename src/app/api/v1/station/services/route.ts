@@ -12,8 +12,9 @@ import { handleError } from '@/lib/responses';
 
 export async function GET() {
   try {
-    const user = await requireRole('station');
-    const services = await getServicesByStationUser(user.id);
+    const auth = await requireRole(undefined, 'station');
+    if (auth instanceof Response) return auth;
+    const services = await getServicesByStationUser(auth.sub);
     return Response.json({ data: services });
   } catch (error) {
     return handleError(error);
@@ -22,11 +23,12 @@ export async function GET() {
 
 export async function POST(request: Request) {
   try {
-    const user = await requireRole('station');
+    const auth = await requireRole(request, 'station');
+    if (auth instanceof Response) return auth;
     const body = await request.json();
     const validated = createServiceBodySchema.parse(body);
 
-    const service = await createServiceWithEntries(user.id, validated);
+    const service = await createServiceWithEntries(auth.sub, validated);
 
     return Response.json({ data: service }, { status: 201 });
   } catch (error) {

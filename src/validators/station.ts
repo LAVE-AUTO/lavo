@@ -561,10 +561,17 @@ export type StationPhotosBody = z.infer<typeof stationPhotosBodySchema>;
 // %%%%% Services and Extras %%%%%
 
 const serviceVehicleEntrySchema = z.object({
-  vehicle_format_id: z.string().uuid('Invalid vehicle format ID'),
-  price: z.union([z.number().min(0), z.string().regex(/^\d+(\.\d{1,2})?$/)]),
-  duration_min: z.number().int().min(1).optional().default(45),
-  staff_required: z.number().int().min(0).optional().default(1),
+  // For hand_wash entries this is the real vehicle format UUID.
+  // For automatic/self_service entries it is omitted (null).
+  vehicle_format_id: z.string().uuid('Invalid vehicle format ID').nullable().optional(),
+  // Human-readable label stored with the entry (package name or format label).
+  vehicle_label: z.string().min(1).max(255),
+  price: z.union([
+    z.number().positive('Price must be greater than 0'),
+    z.string().regex(/^\d+(\.\d{1,2})?$/).refine((v) => parseFloat(v) > 0, 'Price must be greater than 0'),
+  ]),
+  duration_min: z.number().int().min(1, 'Duration must be at least 1 minute').optional().default(45),
+  staff_required: z.number().int().min(0).optional().default(0),
   is_active: z.boolean().optional().default(true),
 });
 
@@ -577,18 +584,17 @@ export const createServiceBodySchema = z.object({
   is_popular: z.boolean().optional().default(false),
   vehicle_entries: z.array(serviceVehicleEntrySchema).min(1, 'At least one vehicle entry is required'),
   compatible_extra_ids: z.array(z.string().uuid()).optional().default([]),
-}).strict();
+});
 
 export const patchServiceBodySchema = createServiceBodySchema.partial();
 
 export const createExtraBodySchema = z.object({
-  label: z.string().min(1).max(255, 'Extra label must not exceed 255 characters'),
-  scope: z.enum(['exterior', 'interior', 'both']),
+  name: z.string().min(1).max(255, 'Extra name must not exceed 255 characters'),
+  applicable_on: z.enum(['exterior', 'interior', 'both']),
   price: z.union([z.number().min(0), z.string().regex(/^\d+(\.\d{1,2})?$/)]),
-  duration_min: z.number().int().min(0).optional().default(10),
-  staff_required: z.number().int().min(0).optional().default(0),
+  duration: z.number().int().min(0).optional().default(10),
   is_active: z.boolean().optional().default(true),
-}).strict();
+});
 
 export const patchExtraBodySchema = createExtraBodySchema.partial();
 

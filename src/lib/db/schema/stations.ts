@@ -199,15 +199,13 @@ export const stationPosts = pgTable(
 // %%%%% Vehicle formats %%%%%
 
 /**
- * Per-station vehicle format and price (e.g. Petit, Moyen, SUV).
+ * Global vehicle formats shared by all stations (e.g. Berline, SUV, Utilitaire).
+ * Not station-scoped — managed by admin.
  */
 export const vehicleFormats = pgTable(
   "vehicle_formats",
   {
     id: uuid("id").primaryKey().defaultRandom(),
-    station_id: uuid("station_id")
-      .notNull()
-      .references(() => stations.id, { onDelete: "cascade" }),
     label: varchar("label", { length: 100 }).notNull(),
     price: decimal("price", { precision: 10, scale: 2 }).notNull(),
     is_active: boolean("is_active").notNull(),
@@ -224,7 +222,7 @@ export const vehicleFormats = pgTable(
       .notNull()
       .defaultNow(),
   },
-  (table) => [index("vehicle_formats_station_id_idx").on(table.station_id)],
+  () => [],
 );
 
 // %%%%% END - Vehicle formats %%%%%

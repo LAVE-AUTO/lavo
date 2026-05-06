@@ -22,12 +22,36 @@ interface FormatsData {
 interface ServicesData {
   data: Service[];
 }
+interface RawExtra {
+  id: string;
+  label: string;
+  price: string;
+  scope: 'exterior' | 'interior' | 'both';
+  duration_min: number;
+  staff_required: number;
+  is_active: boolean;
+}
+interface ExtrasData {
+  data: RawExtra[];
+}
 
-// Services and extras have no backend endpoint yet - see project_pending_backend_specs.md
-// (sections "Services / packages model" and "Extras / add-ons model").
-// Until those land we render an empty state; never seed mock data.
-const EMPTY_SERVICES: Service[] = [];
-const EMPTY_EXTRAS: StationExtras = { exterior: [], interior: [], both: [] };
+function groupExtras(raw: RawExtra[]): StationExtras {
+  const result: StationExtras = { exterior: [], interior: [], both: [] };
+  for (const e of raw) {
+    const extra: StationExtra = {
+      id: e.id,
+      label: e.label,
+      description: '',
+      price: e.price,
+      is_active: e.is_active,
+      scope: e.scope,
+      duration_min: e.duration_min,
+      staff_required: e.staff_required,
+    };
+    result[e.scope ?? 'both'].push(extra);
+  }
+  return result;
+}
 
 const StatsIcon = () => (
   <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
@@ -48,9 +72,9 @@ export function StationServicesPage() {
   const locale = useLocale();
   const { isLoading: authLoading } = useAuth();
 
-  const [services, setServices] = useState<Service[]>(EMPTY_SERVICES);
+  const [services, setServices] = useState<Service[]>([]);
   const [formats, setFormats] = useState<VehicleFormat[]>([]);
-  const [extras, setExtras] = useState<StationExtras>(EMPTY_EXTRAS);
+  const [extras, setExtras] = useState<StationExtras>({ exterior: [], interior: [], both: [] });
   const [loading, setLoading] = useState(true);
   const [loadError, setLoadError] = useState(false);
   const [serviceModal, setServiceModal] = useState<Service | null | 'new'>(null);
@@ -60,17 +84,17 @@ export function StationServicesPage() {
     setLoading(true);
     setLoadError(false);
 
-    // /station/me is the only blocking call (we need the station id to fetch its formats).
-    // /station/services has no dependency so it runs in parallel with /me.
-    // GET /station/services is not implemented yet - see project_pending_backend_specs.md.
-    // We still attempt the call so the page upgrades automatically once the endpoint ships.
-    const [meResult, servicesResult] = await Promise.all([
+    const [meResult, servicesResult, extrasResult, formatsResult] = await Promise.all([
       getFromApi('/station/me'),
       getFromApi('/station/services'),
+      getFromApi('/station/extras'),
+      getFromApi('/formats'),
     ]);
 
-    const [meOk, meData] = meResult;
+    const [meOk] = meResult;
     const [servicesOk, servicesData] = servicesResult;
+    const [extrasOk, extrasData] = extrasResult;
+    const [formatsOk, formatsData] = formatsResult;
 
     if (!meOk) {
       setLoadError(true);
@@ -82,10 +106,11 @@ export function StationServicesPage() {
       setServices((servicesData as ServicesData).data);
     }
 
-    const stationId = (meData as StationMeData).data.id;
-    const [formatsOk, formatsData] = await getFromApi(`/stations/${stationId}/formats`);
+    if (extrasOk && Array.isArray((extrasData as ExtrasData).data)) {
+      setExtras(groupExtras((extrasData as ExtrasData).data));
+    }
+
     if (formatsOk) setFormats((formatsData as FormatsData).data);
-    else setLoadError(true);
     setLoading(false);
   }, []);
 
@@ -277,11 +302,25 @@ export function StationServicesPage() {
       {extraModal !== null && (
         <ExtraModal
           extra={extraModal === 'new' ? null : extraModal}
-          vehicleFormats={formats}
-          services={services}
           onClose={() => setExtraModal(null)}
-          onSaved={() => {
-            // TODO: connect to API once endpoint is available - POST/PATCH /station/extras
+          onSaved={(saved) => {
+            const scope = saved.scope ?? 'both';
+            setExtras((prev) => {
+              const isEdit = extraModal !== 'new';
+              if (isEdit) {
+                // Replace the updated extra in whichever bucket it was in
+                const removeFrom = (list: StationExtra[]) => list.filter((e) => e.id !== saved.id);
+                const updated = {
+                  exterior: removeFrom(prev.exterior),
+                  interior: removeFrom(prev.interior),
+                  both: removeFrom(prev.both),
+                };
+                updated[scope] = [...updated[scope], saved];
+                return updated;
+              }
+              // New extra: add to the right scope bucket
+              return { ...prev, [scope]: [...prev[scope], saved] };
+            });
             setExtraModal(null);
           }}
         />

@@ -18,7 +18,7 @@ import { NotFoundError, ConflictError, ActiveReservationExistsError, SlotFullErr
 import { getPlatformSettingWithFallback, getCancellationPolicy } from '@/server/admin/platform-settings-service';
 import { db } from '@/lib/db';
 import { getConfigByStationId } from '@/server/station/config-repository';
-import { findFormatByIdAndStation } from '@/server/station/format-repository';
+import { findFormatById } from '@/server/station/format-repository';
 import {
   lockSlotForUpdate,
   countReservationsBySlotId,
@@ -98,8 +98,8 @@ async function getMaxAdvanceBookingMs(): Promise<{ maxDays: number; maxAdvanceMs
 async function resolveReservationAmount(
   vehicleFormatId: string,
   stationId: string
-): Promise<{ format: Awaited<ReturnType<typeof findFormatByIdAndStation>>; amountTotal: number }> {
-  const format = await findFormatByIdAndStation(vehicleFormatId, stationId);
+): Promise<{ format: Awaited<ReturnType<typeof findFormatById>>; amountTotal: number }> {
+  const format = await findFormatById(vehicleFormatId);
   if (!format) throw new NotFoundError('Vehicle format not found');
 
   const config = await getConfigByStationId(stationId);
@@ -759,8 +759,8 @@ export async function createWalkInEntry(
   vehicleFormatId: string,
   timeSlotId?: string
 ): Promise<Entry> {
-  const format = await findFormatByIdAndStation(vehicleFormatId, stationId);
-  if (!format) throw new NotFoundError('Vehicle format not found or does not belong to this station');
+  const format = await findFormatById(vehicleFormatId);
+  if (!format) throw new NotFoundError('Vehicle format not found');
 
   if (timeSlotId) {
     return createReservationEntry({

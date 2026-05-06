@@ -15,12 +15,13 @@ export async function PATCH(
   { params }: { params: { id: string } }
 ) {
   try {
-    const user = await requireRole('station');
+    const auth = await requireRole(request, 'station');
+    if (auth instanceof Response) return auth;
     const { id } = serviceIdParamSchema.parse(params);
     const body = await request.json();
     const validated = patchServiceBodySchema.parse(body);
 
-    const service = await updateServiceWithEntries(user.id, id, validated);
+    const service = await updateServiceWithEntries(auth.sub, id, validated);
 
     return Response.json({ data: service });
   } catch (error) {
@@ -29,14 +30,15 @@ export async function PATCH(
 }
 
 export async function DELETE(
-  _request: Request,
+  request: Request,
   { params }: { params: { id: string } }
 ) {
   try {
-    const user = await requireRole('station');
+    const auth = await requireRole(request, 'station');
+    if (auth instanceof Response) return auth;
     const { id } = serviceIdParamSchema.parse(params);
 
-    await deleteServiceWithAuth(user.id, id);
+    await deleteServiceWithAuth(auth.sub, id);
 
     return Response.json({ message: 'Service deleted' });
   } catch (error) {

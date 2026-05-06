@@ -5,7 +5,6 @@ import type { VehicleFormat } from './format-repository';
 
 export type SerializedFormat = {
   id: string;
-  station_id: string;
   label: string;
   price: string;
   is_active: boolean;
@@ -19,7 +18,6 @@ export function serializeFormat(
 ): SerializedFormat {
   return {
     id: format.id,
-    station_id: format.station_id,
     label: format.label,
     price: format.price,
     is_active: format.is_active,

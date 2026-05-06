@@ -3,14 +3,15 @@
  */
 import { findStationByUserId } from './station-repository';
 import {
-  findServicesByStationId,
+  findEnrichedServicesByStationId,
+  findEnrichedService,
   findServiceByIdAndStation,
   createService as repoCreateService,
   updateService as repoUpdateService,
-  deleteServiceById,
+  softDeleteServiceById,
   findServiceVehicleEntries,
+  deleteServiceVehicleEntriesByServiceId,
   createServiceVehicleEntry as repoCreateServiceVehicleEntry,
-  deleteServiceVehicleEntry,
   findExtrasByStationId,
   findExtraByIdAndStation,
   createExtra as repoCreateExtra,
@@ -19,30 +20,58 @@ import {
   addServiceExtraCompatibility,
   removeServiceExtraCompatibility,
   findCompatibleExtrasForService,
-  type CreateServiceData,
-  type UpdateServiceData,
-  type CreateServiceVehicleEntryData,
   type CreateExtraData,
   type UpdateExtraData,
-  type StationService,
-  type StationExtra,
+  type EnrichedService,
 } from './service-repository';
-import { NotFoundError, ConflictError } from '@/lib/errors';
+import { NotFoundError } from '@/lib/errors';
 
-// ===== SERVICES (Packages) =====
+// ===== CATEGORY RULES (extensible per-category strategy) =====
 
 /**
- * Get all services for the authenticated station
+ * Filter extra IDs to keep only those compatible with the given service
+ * category and service type. Unrecognised categories pass all extras through.
+ *
+ * Add a new branch here when implementing a new category.
  */
-export async function getServicesByStationUser(userId: string) {
-  const station = await findStationByUserId(userId);
-  if (!station) throw new NotFoundError('No station associated with this account');
-  return findServicesByStationId(station.id);
+async function filterCompatibleExtras(
+  stationId: string,
+  category: string,
+  serviceType: string,
+  proposedExtraIds: string[]
+): Promise<string[]> {
+  if (proposedExtraIds.length === 0) return [];
+
+  // Load all extras for the station so we can validate ownership and scope
+  const stationExtras = await findExtrasByStationId(stationId);
+  const stationExtraMap = new Map(stationExtras.map((e) => [e.id, e]));
+
+  return proposedExtraIds.filter((id) => {
+    const extra = stationExtraMap.get(id);
+    if (!extra) return false; // extra doesn't belong to this station
+
+    if (category === 'hand_wash') {
+      // Scope rule: exterior service → exterior+both extras
+      //             interior service → interior+both extras
+      //             complete service → all extras
+      if (serviceType === 'exterior') return extra.scope === 'exterior' || extra.scope === 'both';
+      if (serviceType === 'interior') return extra.scope === 'interior' || extra.scope === 'both';
+      if (serviceType === 'complete') return true;
+    }
+
+    // Other categories: no extras (automatic, self_service)
+    return false;
+  });
 }
 
-/**
- * Create a new service with vehicle entries and compatible extras
- */
+// ===== SERVICES =====
+
+export async function getServicesByStationUser(userId: string): Promise<EnrichedService[]> {
+  const station = await findStationByUserId(userId);
+  if (!station) throw new NotFoundError('No station associated with this account');
+  return findEnrichedServicesByStationId(station.id);
+}
+
 export async function createServiceWithEntries(
   userId: string,
   dto: {
@@ -53,18 +82,19 @@ export async function createServiceWithEntries(
     is_active?: boolean;
     is_popular?: boolean;
     vehicle_entries?: Array<{
-      vehicle_format_id: string;
+      vehicle_format_id?: string | null;
+      vehicle_label: string;
       price: number | string;
       duration_min?: number;
       staff_required?: number;
+      is_active?: boolean;
     }>;
     compatible_extra_ids?: string[];
   }
-) {
+): Promise<EnrichedService> {
   const station = await findStationByUserId(userId);
   if (!station) throw new NotFoundError('No station associated with this account');
 
-  // Create service
   const service = await repoCreateService(station.id, {
     name: dto.name,
     category: dto.category,
@@ -74,32 +104,35 @@ export async function createServiceWithEntries(
     is_popular: dto.is_popular ?? false,
   });
 
-  // Add vehicle entries
   if (dto.vehicle_entries && dto.vehicle_entries.length > 0) {
     for (const entry of dto.vehicle_entries) {
       await repoCreateServiceVehicleEntry({
         service_id: service.id,
-        vehicle_format_id: entry.vehicle_format_id,
+        vehicle_format_id: entry.vehicle_format_id ?? null,
+        vehicle_label: entry.vehicle_label,
         price: entry.price,
         duration_min: entry.duration_min,
         staff_required: entry.staff_required,
+        is_active: entry.is_active,
       });
     }
   }
 
-  // Add compatible extras
-  if (dto.compatible_extra_ids && dto.compatible_extra_ids.length > 0) {
-    for (const extraId of dto.compatible_extra_ids) {
-      await addServiceExtraCompatibility(service.id, extraId);
-    }
+  const validatedExtraIds = await filterCompatibleExtras(
+    station.id,
+    dto.category,
+    dto.service_type ?? 'exterior',
+    dto.compatible_extra_ids ?? []
+  );
+  for (const extraId of validatedExtraIds) {
+    await addServiceExtraCompatibility(service.id, extraId);
   }
 
-  return service;
+  const enriched = await findEnrichedService(service.id);
+  if (!enriched) throw new Error('Failed to fetch created service');
+  return enriched;
 }
 
-/**
- * Update a service with full capability (name, category, entries, extras)
- */
 export async function updateServiceWithEntries(
   userId: string,
   serviceId: string,
@@ -111,22 +144,24 @@ export async function updateServiceWithEntries(
     is_active?: boolean;
     is_popular?: boolean;
     vehicle_entries?: Array<{
-      vehicle_format_id: string;
+      vehicle_format_id?: string | null;
+      vehicle_label: string;
       price: number | string;
       duration_min?: number;
       staff_required?: number;
+      is_active?: boolean;
     }>;
     compatible_extra_ids?: string[];
   }
-) {
+): Promise<EnrichedService> {
   const station = await findStationByUserId(userId);
   if (!station) throw new NotFoundError('No station associated with this account');
 
   const service = await findServiceByIdAndStation(serviceId, station.id);
   if (!service) throw new NotFoundError('Service not found');
 
-  // Update basic fields
-  const updateData: UpdateServiceData = {};
+  // Update base fields
+  const updateData: Parameters<typeof repoUpdateService>[1] = {};
   if (dto.name !== undefined) updateData.name = dto.name;
   if (dto.category !== undefined) updateData.category = dto.category;
   if (dto.service_type !== undefined) updateData.service_type = dto.service_type;
@@ -134,91 +169,79 @@ export async function updateServiceWithEntries(
   if (dto.is_active !== undefined) updateData.is_active = dto.is_active;
   if (dto.is_popular !== undefined) updateData.is_popular = dto.is_popular;
 
-  const updated = await repoUpdateService(serviceId, updateData);
+  await repoUpdateService(serviceId, updateData);
 
-  // Update vehicle entries if provided
-  if (dto.vehicle_entries) {
-    // Remove existing entries
-    const existing = await findServiceVehicleEntries(serviceId);
-    for (const entry of existing) {
-      await deleteServiceVehicleEntry(entry.id);
-    }
-    // Add new entries
+  // Replace vehicle entries when provided
+  if (dto.vehicle_entries !== undefined) {
+    await deleteServiceVehicleEntriesByServiceId(serviceId);
     for (const entry of dto.vehicle_entries) {
       await repoCreateServiceVehicleEntry({
         service_id: serviceId,
-        vehicle_format_id: entry.vehicle_format_id,
+        vehicle_format_id: entry.vehicle_format_id ?? null,
+        vehicle_label: entry.vehicle_label,
         price: entry.price,
         duration_min: entry.duration_min,
         staff_required: entry.staff_required,
+        is_active: entry.is_active,
       });
     }
   }
 
-  // Update compatible extras if provided
-  if (dto.compatible_extra_ids) {
+  // Sync compatible extras when provided
+  if (dto.compatible_extra_ids !== undefined) {
+    const effectiveCategory = dto.category ?? service.category;
+    const effectiveType = dto.service_type ?? service.service_type;
+
+    const validatedExtraIds = await filterCompatibleExtras(
+      station.id,
+      effectiveCategory,
+      effectiveType,
+      dto.compatible_extra_ids
+    );
+
     const current = await findCompatibleExtrasForService(serviceId);
-    // Remove extras not in new list
     for (const extraId of current) {
-      if (!dto.compatible_extra_ids.includes(extraId)) {
+      if (!validatedExtraIds.includes(extraId)) {
         await removeServiceExtraCompatibility(serviceId, extraId);
       }
     }
-    // Add extras not in current list
-    for (const extraId of dto.compatible_extra_ids) {
+    for (const extraId of validatedExtraIds) {
       if (!current.includes(extraId)) {
         await addServiceExtraCompatibility(serviceId, extraId);
       }
     }
   }
 
-  return updated;
+  const enriched = await findEnrichedService(serviceId);
+  if (!enriched) throw new Error('Failed to fetch updated service');
+  return enriched;
 }
 
-/**
- * Delete a service
- */
-export async function deleteServiceWithAuth(userId: string, serviceId: string) {
+export async function deleteServiceWithAuth(userId: string, serviceId: string): Promise<void> {
   const station = await findStationByUserId(userId);
   if (!station) throw new NotFoundError('No station associated with this account');
 
   const service = await findServiceByIdAndStation(serviceId, station.id);
   if (!service) throw new NotFoundError('Service not found');
 
-  await deleteServiceById(serviceId);
+  await softDeleteServiceById(serviceId);
 }
 
-// ===== EXTRAS (Add-ons) =====
+// ===== EXTRAS =====
 
-/**
- * Get all extras for the authenticated station
- */
 export async function getExtrasByStationUser(userId: string) {
   const station = await findStationByUserId(userId);
   if (!station) throw new NotFoundError('No station associated with this account');
   return findExtrasByStationId(station.id);
 }
 
-/**
- * Create a new extra
- */
-export async function createExtraWithAuth(
-  userId: string,
-  dto: CreateExtraData
-) {
+export async function createExtraWithAuth(userId: string, dto: CreateExtraData) {
   const station = await findStationByUserId(userId);
   if (!station) throw new NotFoundError('No station associated with this account');
   return repoCreateExtra(station.id, dto);
 }
 
-/**
- * Update an extra
- */
-export async function updateExtraWithAuth(
-  userId: string,
-  extraId: string,
-  dto: UpdateExtraData
-) {
+export async function updateExtraWithAuth(userId: string, extraId: string, dto: UpdateExtraData) {
   const station = await findStationByUserId(userId);
   if (!station) throw new NotFoundError('No station associated with this account');
 
@@ -228,10 +251,7 @@ export async function updateExtraWithAuth(
   return repoUpdateExtra(extraId, dto);
 }
 
-/**
- * Delete an extra
- */
-export async function deleteExtraWithAuth(userId: string, extraId: string) {
+export async function deleteExtraWithAuth(userId: string, extraId: string): Promise<void> {
   const station = await findStationByUserId(userId);
   if (!station) throw new NotFoundError('No station associated with this account');
 

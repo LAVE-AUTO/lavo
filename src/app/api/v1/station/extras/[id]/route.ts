@@ -7,6 +7,7 @@ import {
   updateExtraWithAuth,
   deleteExtraWithAuth,
 } from '@/server/station/services-service';
+import type { UpdateExtraData } from '@/server/station/service-repository';
 import { patchExtraBodySchema, extraIdParamSchema } from '@/validators/station';
 import { handleError } from '@/lib/responses';
 
@@ -15,12 +16,20 @@ export async function PATCH(
   { params }: { params: { id: string } }
 ) {
   try {
-    const user = await requireRole('station');
+    const auth = await requireRole(request, 'station');
+    if (auth instanceof Response) return auth;
     const { id } = extraIdParamSchema.parse(params);
     const body = await request.json();
     const validated = patchExtraBodySchema.parse(body);
 
-    const extra = await updateExtraWithAuth(user.id, id, validated);
+    const dto: UpdateExtraData = {};
+    if (validated.name !== undefined) dto.label = validated.name;
+    if (validated.applicable_on !== undefined) dto.scope = validated.applicable_on;
+    if (validated.price !== undefined) dto.price = validated.price;
+    if (validated.duration !== undefined) dto.duration_min = validated.duration;
+    if (validated.is_active !== undefined) dto.is_active = validated.is_active;
+
+    const extra = await updateExtraWithAuth(auth.sub, id, dto);
 
     return Response.json({ data: extra });
   } catch (error) {
@@ -29,14 +38,15 @@ export async function PATCH(
 }
 
 export async function DELETE(
-  _request: Request,
+  request: Request,
   { params }: { params: { id: string } }
 ) {
   try {
-    const user = await requireRole('station');
+    const auth = await requireRole(request, 'station');
+    if (auth instanceof Response) return auth;
     const { id } = extraIdParamSchema.parse(params);
 
-    await deleteExtraWithAuth(user.id, id);
+    await deleteExtraWithAuth(auth.sub, id);
 
     return Response.json({ message: 'Extra deleted' });
   } catch (error) {

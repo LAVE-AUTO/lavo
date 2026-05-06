@@ -13,8 +13,7 @@ import {
   uniqueIndex,
   index,
 } from "drizzle-orm/pg-core";
-import { stations } from "./stations";
-import { vehicleFormats } from "./stations";
+import { stations, vehicleFormats } from "./stations";
 
 // ===== SERVICES (Packages) =====
 
@@ -37,6 +36,8 @@ export const stationServices = pgTable(
     updated_at: timestamp("updated_at", { mode: "date", withTimezone: true })
       .notNull()
       .defaultNow(),
+    // Soft delete — null means not deleted
+    deleted_at: timestamp("deleted_at", { mode: "date", withTimezone: true }),
   },
   (table) => [
     index("station_services_station_id_idx").on(table.station_id),
@@ -52,9 +53,12 @@ export const serviceVehicleEntries = pgTable(
     service_id: uuid("service_id")
       .notNull()
       .references(() => stationServices.id, { onDelete: "cascade" }),
-    vehicle_format_id: uuid("vehicle_format_id")
-      .notNull()
-      .references(() => vehicleFormats.id, { onDelete: "cascade" }),
+    // Nullable — NULL for automatic/self_service entries that have no linked
+    // vehicle format. For hand_wash entries this holds the real format UUID.
+    vehicle_format_id: uuid("vehicle_format_id"),
+    // Human-readable label: vehicle format name (hand_wash) or package name
+    // (automatic) or fixed label (self_service).
+    vehicle_label: varchar("vehicle_label", { length: 255 }).notNull().default(""),
     price: decimal("price", { precision: 10, scale: 2 }).notNull(),
     duration_min: integer("duration_min").notNull().default(45),
     staff_required: integer("staff_required").notNull().default(1),
@@ -65,13 +69,6 @@ export const serviceVehicleEntries = pgTable(
   },
   (table) => [
     index("service_vehicle_entries_service_id_idx").on(table.service_id),
-    index("service_vehicle_entries_vehicle_format_id_idx").on(
-      table.vehicle_format_id
-    ),
-    uniqueIndex("service_vehicle_entries_service_format_unique").on(
-      table.service_id,
-      table.vehicle_format_id
-    ),
   ]
 );
 

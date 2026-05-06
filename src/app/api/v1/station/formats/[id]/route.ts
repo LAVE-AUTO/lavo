@@ -1,7 +1,7 @@
 /**
- * PUT /api/v1/station/formats/:id - full update. Auth STATION.
- * PATCH /api/v1/station/formats/:id - partial update. Auth STATION.
- * DELETE /api/v1/station/formats/:id - delete if no reservations; 409 if has reservations. Auth STATION.
+ * PUT  /api/v1/station/formats/:id — full update (admin-managed in production).
+ * PATCH /api/v1/station/formats/:id — partial update.
+ * DELETE /api/v1/station/formats/:id — delete if no reservations.
  */
 import { requireRole } from '@/lib/require-role';
 import { successResponse, error400, error404, error409, error500, fromAppError } from '@/lib/responses';
@@ -25,9 +25,7 @@ export async function PUT(request: Request, { params }: Params): Promise<NextRes
   }
 
   let body: unknown;
-  try {
-    body = await request.json();
-  } catch {
+  try { body = await request.json(); } catch {
     return error400('Invalid JSON body', ApiCode.VALIDATION_FAILED);
   }
 
@@ -37,7 +35,7 @@ export async function PUT(request: Request, { params }: Params): Promise<NextRes
   }
 
   try {
-    const format = await updateFormat(auth.sub, paramParsed.data.id, bodyParsed.data, false);
+    const format = await updateFormat(paramParsed.data.id, bodyParsed.data, false);
     return successResponse(serializeFormat(format));
   } catch (e) {
     if (e instanceof NotFoundError) return error404(e.message);
@@ -57,9 +55,7 @@ export async function PATCH(request: Request, { params }: Params): Promise<NextR
   }
 
   let body: unknown;
-  try {
-    body = await request.json();
-  } catch {
+  try { body = await request.json(); } catch {
     return error400('Invalid JSON body', ApiCode.VALIDATION_FAILED);
   }
 
@@ -69,7 +65,7 @@ export async function PATCH(request: Request, { params }: Params): Promise<NextR
   }
 
   try {
-    const format = await updateFormat(auth.sub, paramParsed.data.id, bodyParsed.data, true);
+    const format = await updateFormat(paramParsed.data.id, bodyParsed.data, true);
     return successResponse(serializeFormat(format));
   } catch (e) {
     if (e instanceof NotFoundError) return error404(e.message);
@@ -78,8 +74,8 @@ export async function PATCH(request: Request, { params }: Params): Promise<NextR
   }
 }
 
-export async function DELETE(_request: Request, { params }: Params): Promise<NextResponse> {
-  const auth = await requireRole(_request, 'station');
+export async function DELETE(request: Request, { params }: Params): Promise<NextResponse> {
+  const auth = await requireRole(request, 'station');
   if (auth instanceof Response) return auth as NextResponse;
 
   const { id } = await params;
@@ -89,7 +85,7 @@ export async function DELETE(_request: Request, { params }: Params): Promise<Nex
   }
 
   try {
-    await deleteFormat(auth.sub, paramParsed.data.id);
+    await deleteFormat(paramParsed.data.id);
     return successResponse({ deleted: true });
   } catch (e) {
     if (e instanceof NotFoundError) return error404(e.message);

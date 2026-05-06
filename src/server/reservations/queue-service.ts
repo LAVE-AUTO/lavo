@@ -5,7 +5,7 @@
  */
 import { NotFoundError, ConflictError } from '@/lib/errors';
 import { db } from '@/lib/db';
-import { findFormatByIdAndStation } from '@/server/station/format-repository';
+import { findFormatById } from '@/server/station/format-repository';
 import { decrementSlotBookedCount } from '@/server/station/slot-repository';
 import { createPaymentIntent, updatePaymentIntentMetadata } from '@/server/payments/payment-service';
 import { notifyEntry } from '@/server/notifications/notification-service';
@@ -44,7 +44,7 @@ export async function joinQueue(
   vehicleFormatId: string,
   stationStripeAccountId: string
 ): Promise<JoinQueueResult> {
-  const format = await findFormatByIdAndStation(vehicleFormatId, stationId);
+  const format = await findFormatById(vehicleFormatId);
   if (!format) throw new NotFoundError('Vehicle format not found');
   if (!format.is_active) throw new ConflictError('Format is not active');
 
