@@ -64,7 +64,7 @@ function utcDateStr(offsetDays: number): string {
 
 /**
  * Generates time slots from station config (opening/closing hours + wash duration).
- * Mirrors slot-service.ts::generateSlotsFromConfig — inlined here to avoid
+ * Mirrors slot-service.ts::generateSlotsFromConfig - inlined here to avoid
  * @/ path alias issues with ts-node's moduleResolution:node.
  */
 function generateSlotsFromConfig(

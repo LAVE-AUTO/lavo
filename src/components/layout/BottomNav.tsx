@@ -146,7 +146,7 @@ export function BottomNav() {
     ? (user.first_name ? `${user.first_name} ${user.last_name || ''}`.trim() : user.email.split('@')[0])
     : '';
 
-  /* Guest items — labels kept short so they stay on a single line in the bottom bar */
+  /* Guest items - labels kept short so they stay on a single line in the bottom bar */
   const guestItems = [
     { href: homeHref, label: t('home'), icon: (a: boolean) => <HomeIcon active={a} /> },
     { href: '/stations', label: t('stations'), icon: (a: boolean) => <SearchIcon active={a} /> },
@@ -154,7 +154,7 @@ export function BottomNav() {
     { href: '/#how-it-works', label: t('bottom_how_it_works'), icon: (a: boolean) => <HowItWorksIcon active={a} /> },
   ];
 
-  /* Authenticated items — client only.
+  /* Authenticated items - client only.
      Station and admin users see guestItems since /client/reservations and /favorites are client-specific routes. */
   const authItems = isClient
     ? [
@@ -238,7 +238,7 @@ export function BottomNav() {
                   {t('profile')}
                 </Link>
 
-                {/* History link — client only */}
+                {/* History link - client only */}
                 {isClient && (
                   <Link
                     href="/client/history"
@@ -255,7 +255,7 @@ export function BottomNav() {
                   </Link>
                 )}
 
-                {/* Support link — client only */}
+                {/* Support link - client only */}
                 {isClient && (
                   <Link
                     href="/client/support"

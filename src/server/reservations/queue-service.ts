@@ -36,7 +36,7 @@ const STATUS_LATE = 'late';
  *
  * Stripe-first pattern: PI is created before the DB entry so there is no crash window where an
  * entry exists with stripe_payment_id = null. If the DB transaction fails (duplicate, race), the PI
- * is never returned to the client and auto-expires on Stripe after 24h — no charge, no orphan.
+ * is never returned to the client and auto-expires on Stripe after 24h - no charge, no orphan.
  */
 export async function joinQueue(
   userId: string,
@@ -94,7 +94,7 @@ export async function joinQueue(
   try {
     await updatePaymentIntentMetadata(paymentIntentId, { reservation_id: entry.id });
   } catch (e) {
-    console.error('[JOIN_QUEUE] PI metadata update failed — non-fatal', {
+    console.error('[JOIN_QUEUE] PI metadata update failed - non-fatal', {
       entryId: entry.id,
       paymentIntentId,
       error: e instanceof Error ? e.message : String(e),
@@ -121,7 +121,7 @@ export async function listQueue(stationId: string): Promise<Entry[]> {
  * Moves a reservation to the queue (downgrade). Used by cron for late unconfirmed reservations.
  * Uses queue-position helper for new position; shifts existing queue entries; decrements slot booked_count.
  *
- * Payment policy for late clients: no refund — the Stripe PaymentIntent is captured immediately so
+ * Payment policy for late clients: no refund - the Stripe PaymentIntent is captured immediately so
  * funds are distributed between the station and the platform as if the service had been rendered.
  * The client is moved to the walk-in queue and handled later by the station.
  */
@@ -133,7 +133,7 @@ export async function moveReservationToQueue(entryId: string): Promise<Entry> {
 
   const stationId = entry.station_id;
 
-  // Atomic: compute new position, shift queue, convert entry, decrement slot — all or nothing.
+  // Atomic: compute new position, shift queue, convert entry, decrement slot - all or nothing.
   const updated = await db.transaction(async (tx) => {
     const existingCount = await countQueueByStation(stationId, tx);
     const newPosition = getQueuePositionWhenMovingFromReservation(stationId, {

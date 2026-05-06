@@ -48,7 +48,7 @@ const sharedExtras: ServiceExtra[] = [
 ];
 /**
  * Static station data used until the backend API is connected.
- * Canadian data — Montreal / Laval / Longueuil / Brossard area.
+ * Canadian data - Montreal / Laval / Longueuil / Brossard area.
  */
 export const MOCK_STATIONS: StationDetailData[] = [
   {

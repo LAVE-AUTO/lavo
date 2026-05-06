@@ -1,6 +1,6 @@
 /**
- * GET   /api/v1/station/notification-prefs — get notification preferences. Auth: station.
- * PATCH /api/v1/station/notification-prefs — merge-update notification preferences. Auth: station.
+ * GET   /api/v1/station/notification-prefs - get notification preferences. Auth: station.
+ * PATCH /api/v1/station/notification-prefs - merge-update notification preferences. Auth: station.
  *
  * PATCH body: arbitrary JSON object (key/value pairs are shallow-merged into stored prefs).
  */

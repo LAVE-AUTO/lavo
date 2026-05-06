@@ -1,6 +1,6 @@
 /**
- * GET  /api/v1/me/favorites — list favorited stations (paginated). Auth: client.
- * POST /api/v1/me/favorites — add a station to favorites. Auth: client.
+ * GET  /api/v1/me/favorites - list favorited stations (paginated). Auth: client.
+ * POST /api/v1/me/favorites - add a station to favorites. Auth: client.
  *
  * POST body: { station_id: UUID }
  */

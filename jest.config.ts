@@ -18,7 +18,7 @@ const config: Config = {
   testPathIgnorePatterns: [
     '<rootDir>/node_modules/',
     '<rootDir>/.next/',
-    // Playwright E2E specs use @playwright/test — they cannot run under Jest.
+    // Playwright E2E specs use @playwright/test - they cannot run under Jest.
     // Playwright has its own config (playwright.config.ts) and runner (npm run test:e2e).
     '<rootDir>/tests/e2e/',
   ],

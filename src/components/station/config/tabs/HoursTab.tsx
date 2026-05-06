@@ -135,7 +135,7 @@ export function HoursTab({ config, locked }: Props) {
                 {t('field_opening_time')}
               </span>
               <span className="text-[20px] font-black tabular-nums leading-none text-[#1A1A0A] dark:text-[#F0EDD4]">
-                {config.opening_time || '—'}
+                {config.opening_time || '-'}
               </span>
             </div>
             <span className="text-[18px] font-light text-[#C49A1E]">→</span>
@@ -144,7 +144,7 @@ export function HoursTab({ config, locked }: Props) {
                 {t('field_closing_time')}
               </span>
               <span className="text-[20px] font-black tabular-nums leading-none text-[#1A1A0A] dark:text-[#F0EDD4]">
-                {config.closing_time || '—'}
+                {config.closing_time || '-'}
               </span>
             </div>
             {(config.break_start || config.break_end) && (
@@ -155,7 +155,7 @@ export function HoursTab({ config, locked }: Props) {
                     {t('hours_break')}
                   </span>
                   <span className="text-[14px] font-bold tabular-nums text-[#888] dark:text-[#9A9A8A]">
-                    {config.break_start || '—'} – {config.break_end || '—'}
+                    {config.break_start || '-'} – {config.break_end || '-'}
                   </span>
                 </div>
               </>

@@ -25,7 +25,7 @@ export function AdminCommissionView() {
     if (user?.id && setBy === user.id) {
       return [user.first_name, user.last_name].filter(Boolean).join(' ') || user.email;
     }
-    // UUID from backend — no endpoint to resolve other admin names
+    // UUID from backend - no endpoint to resolve other admin names
     if (/^[0-9a-f]{8}-/.test(setBy)) return setBy.slice(0, 8) + '...';
     return setBy;
   }, [user]);

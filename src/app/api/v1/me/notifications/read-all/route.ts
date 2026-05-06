@@ -1,5 +1,5 @@
 /**
- * PATCH /api/v1/me/notifications/read-all — mark all unread notifications as read. Auth: client.
+ * PATCH /api/v1/me/notifications/read-all - mark all unread notifications as read. Auth: client.
  */
 import { requireRole } from '@/lib/require-role';
 import { successResponse, error500, fromAppError } from '@/lib/responses';

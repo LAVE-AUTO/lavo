@@ -26,9 +26,9 @@ const deleteBodySchema = z.object({
 });
 
 /**
- * GET /api/v1/auth/me — returns the authenticated user's profile.
- * PATCH /api/v1/auth/me — updates first_name, last_name, phone.
- * DELETE /api/v1/auth/me — RGPD soft-delete: anonymizes account, revokes tokens, clears cookies.
+ * GET /api/v1/auth/me - returns the authenticated user's profile.
+ * PATCH /api/v1/auth/me - updates first_name, last_name, phone.
+ * DELETE /api/v1/auth/me - RGPD soft-delete: anonymizes account, revokes tokens, clears cookies.
  *
  * Mutating methods go through `requireAuth(request)` so cookie-auth requests are protected
  * by the same-origin / X-Requested-With CSRF defense (see `assertSafeCookieAuthForMutation`).

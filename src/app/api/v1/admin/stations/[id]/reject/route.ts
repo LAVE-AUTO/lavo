@@ -18,7 +18,7 @@ import type { NextResponse } from 'next/server';
 
 /**
  * POST /api/v1/admin/stations/:id/reject
- * Reject a station — sets status = rejected + rejection_reason.
+ * Reject a station - sets status = rejected + rejection_reason.
  * Requires admin role.
  *
  * Body: { rejection_reason }
@@ -29,8 +29,8 @@ import type { NextResponse } from 'next/server';
  *   401 UNAUTHORIZED
  *   403 FORBIDDEN
  *   404 NOT_FOUND
- *   409 CONFLICT — station not in pending_admin_validation state
- *   429 TOO_MANY_REQUESTS — rate limit exceeded
+ *   409 CONFLICT - station not in pending_admin_validation state
+ *   429 TOO_MANY_REQUESTS - rate limit exceeded
  *   500 INTERNAL_ERROR
  */
 export async function POST(
@@ -49,7 +49,7 @@ export async function POST(
     );
   }
 
-  // H-4: Rate limit — max 20 approve/reject actions per admin per minute.
+  // H-4: Rate limit - max 20 approve/reject actions per admin per minute.
   if (await isAdminActionRateLimited(auth.sub, ['station_approved', 'station_rejected'])) {
     return applyNoStoreHeaders(error429());
   }

@@ -59,7 +59,7 @@
  *             schema:
  *               $ref: '#/components/schemas/ErrorEnvelope'
  *       403:
- *         description: Forbidden — admin role required
+ *         description: Forbidden - admin role required
  *         content:
  *           application/json:
  *             schema:
@@ -117,16 +117,16 @@ const closeLimiter = createEndpointRateLimiter({ maxRequests: 20, windowMs: 60_0
  * Role: admin only.
  *
  * Body:
- *   status  — "resolved" | "rejected"
- *   reason  — closing reason (required)
+ *   status  - "resolved" | "rejected"
+ *   reason  - closing reason (required)
  *
  * Responses:
  *   200 { data: Dispute }
- *   400 VALIDATION_FAILED     — invalid param or body
+ *   400 VALIDATION_FAILED     - invalid param or body
  *   401 UNAUTHORIZED
  *   403 FORBIDDEN
- *   404 NOT_FOUND             — dispute not found
- *   409 DISPUTE_ALREADY_CLOSED — dispute is not open
+ *   404 NOT_FOUND             - dispute not found
+ *   409 DISPUTE_ALREADY_CLOSED - dispute is not open
  *   500 INTERNAL_ERROR
  */
 export async function POST(

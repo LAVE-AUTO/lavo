@@ -1,8 +1,8 @@
 /**
  * Admin platform settings API.
  *
- * GET  /api/v1/admin/settings  — retrieve all configured settings with audit metadata
- * PATCH /api/v1/admin/settings — bulk-update one or more settings (admin only)
+ * GET  /api/v1/admin/settings  - retrieve all configured settings with audit metadata
+ * PATCH /api/v1/admin/settings - bulk-update one or more settings (admin only)
  *
  * Authentication: requireRole(request, 'admin')
  * GET response: array of 14 whitelisted setting keys with value, updated_at, and updated_by metadata
@@ -65,7 +65,7 @@ const settingsPatchLimiter = createEndpointRateLimiter({ maxRequests: 20, window
  *                       items:
  *                         $ref: '#/components/schemas/PlatformSettingRow'
  *       401:
- *         description: Unauthorized — admin auth required
+ *         description: Unauthorized - admin auth required
  *         content:
  *           application/json:
  *             schema:
@@ -108,13 +108,13 @@ const settingsPatchLimiter = createEndpointRateLimiter({ maxRequests: 20, window
  *             schema:
  *               $ref: '#/components/schemas/SuccessEnvelope'
  *       400:
- *         description: Validation failed — invalid keys, ranges, or cross-key constraints
+ *         description: Validation failed - invalid keys, ranges, or cross-key constraints
  *         content:
  *           application/json:
  *             schema:
  *               $ref: '#/components/schemas/ErrorEnvelope'
  *       401:
- *         description: Unauthorized — admin auth required
+ *         description: Unauthorized - admin auth required
  *         content:
  *           application/json:
  *             schema:
@@ -141,7 +141,7 @@ export async function GET(request: Request): Promise<NextResponse> {
     return applyNoStoreHeaders(successResponse(rows));
   } catch (e) {
     if (e instanceof AppError) return applyNoStoreHeaders(fromAppError(e));
-    // SECURITY: never pass the raw error to error500 — it leaks internal details via _dev in development mode
+    // SECURITY: never pass the raw error to error500 - it leaks internal details via _dev in development mode
     console.error('[GET /api/v1/admin/settings] Unhandled error:', e);
     return applyNoStoreHeaders(error500());
   }
@@ -198,7 +198,7 @@ export async function PATCH(request: Request): Promise<NextResponse> {
     return applyNoStoreHeaders(successResponse({}, 'Platform settings updated'));
   } catch (e) {
     if (e instanceof AppError) return applyNoStoreHeaders(fromAppError(e));
-    // SECURITY: never pass the raw error to error500 — it leaks internal details via _dev in development mode
+    // SECURITY: never pass the raw error to error500 - it leaks internal details via _dev in development mode
     console.error('[PATCH /api/v1/admin/settings] Unhandled error:', e);
     return applyNoStoreHeaders(error500());
   }

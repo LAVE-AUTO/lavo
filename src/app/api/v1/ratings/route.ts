@@ -1,7 +1,7 @@
 /**
  * Ratings API endpoint.
  *
- * POST /api/v1/ratings — Submit a rating for a completed reservation.
+ * POST /api/v1/ratings - Submit a rating for a completed reservation.
  *   - Auth: client (authenticated user)
  *   - Body: { reservation_id: UUID, score: 1-5, comment?: string }
  *   - Max comment length: configurable via platform settings (default 500)
@@ -17,12 +17,12 @@
  *   { data: { id, reservation_id, station_id, score, comment, is_visible, created_at } }
  *
  * Error responses:
- *   - 400 VALIDATION_FAILED — malformed request or invalid values
- *   - 401 UNAUTHORIZED — client auth required
- *   - 404 NOT_FOUND — reservation not found or doesn't belong to user
- *   - 409 CONFLICT — RESERVATION_NOT_COMPLETED | RATING_WINDOW_EXPIRED | ALREADY_RATED
- *   - 429 TOO_MANY_REQUESTS — rate limited (10 req/min per user)
- *   - 500 INTERNAL_ERROR — database or service error
+ *   - 400 VALIDATION_FAILED - malformed request or invalid values
+ *   - 401 UNAUTHORIZED - client auth required
+ *   - 404 NOT_FOUND - reservation not found or doesn't belong to user
+ *   - 409 CONFLICT - RESERVATION_NOT_COMPLETED | RATING_WINDOW_EXPIRED | ALREADY_RATED
+ *   - 429 TOO_MANY_REQUESTS - rate limited (10 req/min per user)
+ *   - 500 INTERNAL_ERROR - database or service error
  */
 import { requireRole } from '@/lib/require-role';
 import {

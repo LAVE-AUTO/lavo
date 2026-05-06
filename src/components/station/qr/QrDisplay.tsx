@@ -26,7 +26,7 @@ export function QrDisplay({ url }: Props) {
     })
       .then(() => setReady(true))
       .catch(() => {
-        // QR generation failed silently — canvas stays blank, pulse animation stops
+        // QR generation failed silently - canvas stays blank, pulse animation stops
         setReady(true);
       });
   }, [url]);

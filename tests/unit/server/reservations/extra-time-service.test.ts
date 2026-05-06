@@ -102,7 +102,7 @@ describe('extra-time-service', () => {
       await expect(addExtraTime(reservationId, stationId, extraMinutes)).rejects.toThrow(ConflictError);
     });
 
-    it('rejects confirmed status — only in_progress is valid', async () => {
+    it('rejects confirmed status - only in_progress is valid', async () => {
       mockFindEntryByIdAndStation.mockResolvedValue({ ...baseEntry, status: 'confirmed' });
       await expect(addExtraTime(reservationId, stationId, extraMinutes)).rejects.toThrow(ConflictError);
     });

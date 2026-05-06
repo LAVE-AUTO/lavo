@@ -2,7 +2,7 @@
  * Device tokens table.
  * Stores FCM push notification tokens for user devices.
  * One user may have multiple tokens (multiple devices/platforms).
- * Tokens are unique across all users — a device re-registering on a new account
+ * Tokens are unique across all users - a device re-registering on a new account
  * will cause a conflict which the upsert in the route handler resolves.
  */
 import { index, pgTable, timestamp, uuid, varchar } from "drizzle-orm/pg-core";

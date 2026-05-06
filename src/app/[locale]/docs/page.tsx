@@ -1,7 +1,7 @@
 'use client';
 
 /**
- * /docs — Swagger UI viewer for the Lavo OpenAPI specification.
+ * /docs - Swagger UI viewer for the Lavo OpenAPI specification.
  *
  * Displays the full API documentation by loading the spec from GET /api/docs.
  *
@@ -19,7 +19,7 @@
 import dynamic from 'next/dynamic';
 import 'swagger-ui-react/swagger-ui.css';
 
-// Dynamically import SwaggerUI to prevent SSR — swagger-ui-react uses browser globals.
+// Dynamically import SwaggerUI to prevent SSR - swagger-ui-react uses browser globals.
 const SwaggerUI = dynamic(() => import('swagger-ui-react'), {
   ssr: false,
   loading: () => (
@@ -50,7 +50,7 @@ export default function ApiDocsPage() {
             padding: '0.75rem 1.5rem',
           }}
         >
-          <strong>Dev / Staging only</strong> — This API documentation page is visible because{' '}
+          <strong>Dev / Staging only</strong> - This API documentation page is visible because{' '}
           <code>NODE_ENV</code> is not set to <code>production</code>. Do not expose this page to
           end users in production without additional access controls.
         </div>

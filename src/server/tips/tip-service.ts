@@ -95,7 +95,7 @@ export async function createTip(
     throw new AppError('Reservation not found', HTTP_STATUS.NOT_FOUND);
   }
 
-  // 2. Ownership check — only the client who made the reservation can tip.
+  // 2. Ownership check - only the client who made the reservation can tip.
   if (reservation.user_id !== userId) {
     throw new AppError('Forbidden', HTTP_STATUS.FORBIDDEN);
   }
@@ -174,7 +174,7 @@ export async function createTip(
   // 10. Denormalize tip_amount onto the reservation row.
   await repo.setReservationTipAmount(reservationId, data.amount.toFixed(2));
 
-  // 11. Notify station — fire-and-forget (notification failure must not abort the tip).
+  // 11. Notify station - fire-and-forget (notification failure must not abort the tip).
   if (station.user_id) {
     notifyEntry({
       userId: station.user_id,
@@ -184,7 +184,7 @@ export async function createTip(
     }).catch(() => undefined);
   }
 
-  // 12. Notify client (confirmation) — fire-and-forget.
+  // 12. Notify client (confirmation) - fire-and-forget.
   notifyEntry({
     userId,
     entryId: reservationId,

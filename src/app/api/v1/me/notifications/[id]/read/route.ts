@@ -1,5 +1,5 @@
 /**
- * PATCH /api/v1/me/notifications/:id/read — mark a single notification as read. Auth: client.
+ * PATCH /api/v1/me/notifications/:id/read - mark a single notification as read. Auth: client.
  */
 import { requireRole } from '@/lib/require-role';
 import { successResponse, error400, error404, error500, fromAppError } from '@/lib/responses';

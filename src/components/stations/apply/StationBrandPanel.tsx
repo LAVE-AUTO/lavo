@@ -483,7 +483,7 @@ export function StationBrandPanel({ step }: StationBrandPanelProps) {
           )}
         </div>
 
-        {/* Mockup + headline — keyed on step to trigger fade-in on change */}
+        {/* Mockup + headline - keyed on step to trigger fade-in on change */}
         <div
           key={isControlled ? step : 'static'}
           className="flex flex-col items-center text-center gap-6 animate-fade-in"

@@ -22,7 +22,7 @@ import type { NextResponse } from 'next/server';
  * Responses:
  *   200 { data: { changed: true } }
  *   400 VALIDATION_FAILED
- *   401 UNAUTHORIZED — not authenticated or current password incorrect
+ *   401 UNAUTHORIZED - not authenticated or current password incorrect
  *   500 INTERNAL_ERROR
  */
 export async function POST(request: Request) {

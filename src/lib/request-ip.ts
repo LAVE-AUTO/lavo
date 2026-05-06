@@ -19,7 +19,7 @@ export function getClientRateLimitKey(headersList: Headers): string {
     return normalizeRateLimitKey(`ip:${xRealIp}`);
   }
 
-  // Fallback to x-forwarded-for — take the first value only and validate its shape.
+  // Fallback to x-forwarded-for - take the first value only and validate its shape.
   const xff = headersList.get('x-forwarded-for');
   if (xff) {
     const first = xff.split(',')[0]?.trim() ?? '';

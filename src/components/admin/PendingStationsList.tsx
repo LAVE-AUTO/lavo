@@ -28,7 +28,7 @@ function initials(name: string): string {
 }
 
 function formatDate(iso: string | null | undefined, locale: string): string {
-  if (!iso) return '—';
+  if (!iso) return '-';
   return new Date(iso).toLocaleDateString(locale === 'en' ? 'en-CA' : 'fr-CA', {
     day: 'numeric', month: 'short', year: 'numeric',
   });
@@ -114,7 +114,7 @@ function StationCard({
   return (
     <div className="group relative flex items-stretch overflow-hidden rounded-2xl bg-white shadow-sm ring-1 ring-black/[0.05] transition-all duration-200 hover:-translate-y-px hover:shadow-md hover:ring-black/[0.08] dark:bg-[#161F13] dark:ring-white/[0.06] dark:hover:ring-white/[0.10]">
 
-      {/* Colored left bar — always visible */}
+      {/* Colored left bar - always visible */}
       <div className="w-[4px] shrink-0 rounded-l-2xl transition-all duration-200 group-hover:w-[5px]"
         style={{ background: style.barColor }} />
 
@@ -252,7 +252,7 @@ export function PendingStationsList() {
     : 'empty_title';
 
   return (
-    /* Outer: no scroll — header stays fixed, only body scrolls */
+    /* Outer: no scroll - header stays fixed, only body scrolls */
     <div className="flex h-full flex-col overflow-hidden bg-[#F5F5EE] dark:bg-[#0C1209]">
 
       {/* ── Sticky header ── */}

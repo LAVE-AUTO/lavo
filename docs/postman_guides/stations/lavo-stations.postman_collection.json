@@ -1,7 +1,7 @@
 {
   "info": {
-    "name": "LAVO — Stations API",
-    "description": "Collection pour les endpoints liés aux stations de lavage.\n\nVariable requise : `base_url` (ex: http://localhost:3000)\nVariable auto-remplie : `access_token` (depuis la collection Auth)\n\n## Groupes\n- **Stations Publiques** : liste et detail des stations (sans auth) — point de depart pour creer une reservation\n- **Station Onboarding** : inscription station en 3 étapes (validate/step1, validate/step2, submit)\n- **Station — Profil** : lecture du profil station authentifiée",
+    "name": "LAVO - Stations API",
+    "description": "Collection pour les endpoints liés aux stations de lavage.\n\nVariable requise : `base_url` (ex: http://localhost:3000)\nVariable auto-remplie : `access_token` (depuis la collection Auth)\n\n## Groupes\n- **Stations Publiques** : liste et detail des stations (sans auth) - point de depart pour creer une reservation\n- **Station Onboarding** : inscription station en 3 étapes (validate/step1, validate/step2, submit)\n- **Station - Profil** : lecture du profil station authentifiée",
     "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
   },
   "variable": [
@@ -78,7 +78,7 @@
           }
         },
         {
-          "name": "Liste des stations — avec filtres (200)",
+          "name": "Liste des stations - avec filtres (200)",
           "event": [
             {
               "listen": "test",
@@ -180,7 +180,7 @@
           }
         },
         {
-          "name": "Detail d'une station — ID inexistant (404)",
+          "name": "Detail d'une station - ID inexistant (404)",
           "event": [
             {
               "listen": "test",
@@ -212,17 +212,17 @@
                 "00000000-0000-0000-0000-000000000000"
               ]
             },
-            "description": "404 NOT_FOUND — aucune station active avec cet ID."
+            "description": "404 NOT_FOUND - aucune station active avec cet ID."
           }
         }
       ]
     },
     {
       "name": "Station Onboarding",
-      "description": "Flux en 3 etapes. Les endpoints validate/* ne font aucune ecriture en base — ils permettent au frontend de valider chaque etape avant de passer a la suivante. Toutes les operations DB sont declenchees uniquement par /submit.",
+      "description": "Flux en 3 etapes. Les endpoints validate/* ne font aucune ecriture en base - ils permettent au frontend de valider chaque etape avant de passer a la suivante. Toutes les operations DB sont declenchees uniquement par /submit.",
       "item": [
         {
-          "name": "validate/step1 — succes (200)",
+          "name": "validate/step1 - succes (200)",
           "event": [
             {
               "listen": "test",
@@ -270,7 +270,7 @@
           }
         },
         {
-          "name": "validate/step1 — confirm_password invalide (400)",
+          "name": "validate/step1 - confirm_password invalide (400)",
           "event": [
             {
               "listen": "test",
@@ -319,11 +319,11 @@
                 }
               }
             },
-            "description": "400 VALIDATION_FAILED — confirm_password ne correspond pas."
+            "description": "400 VALIDATION_FAILED - confirm_password ne correspond pas."
           }
         },
         {
-          "name": "validate/step2 — succes (200)",
+          "name": "validate/step2 - succes (200)",
           "event": [
             {
               "listen": "test",
@@ -371,7 +371,7 @@
           }
         },
         {
-          "name": "validate/step2 — wash_type invalide (400)",
+          "name": "validate/step2 - wash_type invalide (400)",
           "event": [
             {
               "listen": "test",
@@ -420,11 +420,11 @@
                 }
               }
             },
-            "description": "400 VALIDATION_FAILED — wash_type n'est pas une valeur autorisee."
+            "description": "400 VALIDATION_FAILED - wash_type n'est pas une valeur autorisee."
           }
         },
         {
-          "name": "submit — succes (201)",
+          "name": "submit - succes (201)",
           "event": [
             {
               "listen": "test",
@@ -479,7 +479,7 @@
           }
         },
         {
-          "name": "submit — email deja utilise (409)",
+          "name": "submit - email deja utilise (409)",
           "event": [
             {
               "listen": "test",
@@ -526,11 +526,11 @@
                 }
               }
             },
-            "description": "409 EMAIL_ALREADY_EXISTS — l'email est deja associe a un compte."
+            "description": "409 EMAIL_ALREADY_EXISTS - l'email est deja associe a un compte."
           }
         },
         {
-          "name": "submit — confirm_password invalide (400)",
+          "name": "submit - confirm_password invalide (400)",
           "event": [
             {
               "listen": "test",
@@ -578,11 +578,11 @@
                 }
               }
             },
-            "description": "400 VALIDATION_FAILED — confirm_password ne correspond pas."
+            "description": "400 VALIDATION_FAILED - confirm_password ne correspond pas."
           }
         },
         {
-          "name": "submit — CGU non acceptees (400)",
+          "name": "submit - CGU non acceptees (400)",
           "event": [
             {
               "listen": "test",
@@ -630,17 +630,17 @@
                 }
               }
             },
-            "description": "400 VALIDATION_FAILED — terms_accepted doit etre true."
+            "description": "400 VALIDATION_FAILED - terms_accepted doit etre true."
           }
         }
       ]
     },
     {
-      "name": "Station — Historique",
-      "description": "GET /api/v1/history/station — historique d'activite pagine de la station authentifiee. Combine reservations et donnees financieres (commission, pourboire, payout). Auth: role station + station active.",
+      "name": "Station - Historique",
+      "description": "GET /api/v1/history/station - historique d'activite pagine de la station authentifiee. Combine reservations et donnees financieres (commission, pourboire, payout). Auth: role station + station active.",
       "item": [
         {
-          "name": "Historique station — succes sans filtres (200)",
+          "name": "Historique station - succes sans filtres (200)",
           "event": [
             {
               "listen": "test",
@@ -692,7 +692,7 @@
           }
         },
         {
-          "name": "Historique station — avec pagination (200)",
+          "name": "Historique station - avec pagination (200)",
           "event": [
             {
               "listen": "test",
@@ -739,7 +739,7 @@
           }
         },
         {
-          "name": "Historique station — filtres date + statut (200)",
+          "name": "Historique station - filtres date + statut (200)",
           "event": [
             {
               "listen": "test",
@@ -789,7 +789,7 @@
           }
         },
         {
-          "name": "Historique station — filtres montant (200)",
+          "name": "Historique station - filtres montant (200)",
           "event": [
             {
               "listen": "test",
@@ -831,11 +831,11 @@
                 }
               ]
             },
-            "description": "Filtre par montant min (10) et max (50) — inclusif. Cast SQL ::numeric applique cote serveur."
+            "description": "Filtre par montant min (10) et max (50) - inclusif. Cast SQL ::numeric applique cote serveur."
           }
         },
         {
-          "name": "Historique station — page invalide (400)",
+          "name": "Historique station - page invalide (400)",
           "event": [
             {
               "listen": "test",
@@ -874,11 +874,11 @@
                 }
               ]
             },
-            "description": "400 VALIDATION_FAILED — page=0 invalide (min: 1)."
+            "description": "400 VALIDATION_FAILED - page=0 invalide (min: 1)."
           }
         },
         {
-          "name": "Historique station — from > to (400)",
+          "name": "Historique station - from > to (400)",
           "event": [
             {
               "listen": "test",
@@ -921,11 +921,11 @@
                 }
               ]
             },
-            "description": "400 VALIDATION_FAILED — from posterieur a to."
+            "description": "400 VALIDATION_FAILED - from posterieur a to."
           }
         },
         {
-          "name": "Historique station — amount_min > amount_max (400)",
+          "name": "Historique station - amount_min > amount_max (400)",
           "event": [
             {
               "listen": "test",
@@ -968,11 +968,11 @@
                 }
               ]
             },
-            "description": "400 VALIDATION_FAILED — amount_min superieur a amount_max."
+            "description": "400 VALIDATION_FAILED - amount_min superieur a amount_max."
           }
         },
         {
-          "name": "Historique station — non authentifiee (401)",
+          "name": "Historique station - non authentifiee (401)",
           "event": [
             {
               "listen": "test",
@@ -1003,11 +1003,11 @@
                 "station"
               ]
             },
-            "description": "401 UNAUTHORIZED — aucun cookie JWT. Requete sans session."
+            "description": "401 UNAUTHORIZED - aucun cookie JWT. Requete sans session."
           }
         },
         {
-          "name": "Historique station — mauvais role (403)",
+          "name": "Historique station - mauvais role (403)",
           "event": [
             {
               "listen": "test",
@@ -1039,16 +1039,16 @@
                 "station"
               ]
             },
-            "description": "403 FORBIDDEN — session client (role != station) ou station non approuvee (BUSINESS_NOT_APPROVED)."
+            "description": "403 FORBIDDEN - session client (role != station) ou station non approuvee (BUSINESS_NOT_APPROVED)."
           }
         }
       ]
     },
     {
-      "name": "Station — Profil",
+      "name": "Station - Profil",
       "item": [
         {
-          "name": "Station Me — approuvee (200)",
+          "name": "Station Me - approuvee (200)",
           "response": [],
           "request": {
             "method": "GET",
@@ -1069,7 +1069,7 @@
           }
         },
         {
-          "name": "Station Me — non approuvee (403 BUSINESS_NOT_APPROVED)",
+          "name": "Station Me - non approuvee (403 BUSINESS_NOT_APPROVED)",
           "response": [],
           "request": {
             "method": "GET",
@@ -1086,11 +1086,11 @@
                 "me"
               ]
             },
-            "description": "403 BUSINESS_NOT_APPROVED — station non encore approuvee."
+            "description": "403 BUSINESS_NOT_APPROVED - station non encore approuvee."
           }
         },
         {
-          "name": "Station Me — non authentifiee (401)",
+          "name": "Station Me - non authentifiee (401)",
           "response": [],
           "request": {
             "method": "GET",
@@ -1111,7 +1111,7 @@
           }
         },
         {
-          "name": "PATCH Station Me — mise a jour profil (200)",
+          "name": "PATCH Station Me - mise a jour profil (200)",
           "event": [
             {
               "listen": "test",
@@ -1168,7 +1168,7 @@
           }
         },
         {
-          "name": "PATCH Station Me — champs invalides (400 VALIDATION_FAILED)",
+          "name": "PATCH Station Me - champs invalides (400 VALIDATION_FAILED)",
           "event": [
             {
               "listen": "test",
@@ -1222,7 +1222,7 @@
           }
         },
         {
-          "name": "PATCH Station Photos — remplacement complet (200)",
+          "name": "PATCH Station Photos - remplacement complet (200)",
           "event": [
             {
               "listen": "test",
@@ -1278,7 +1278,7 @@
           }
         },
         {
-          "name": "PATCH Station Photos — URLs invalides (400 VALIDATION_FAILED)",
+          "name": "PATCH Station Photos - URLs invalides (400 VALIDATION_FAILED)",
           "event": [
             {
               "listen": "test",
@@ -1332,7 +1332,7 @@
           }
         },
         {
-          "name": "PATCH Station Photos — tableau vide (400 VALIDATION_FAILED)",
+          "name": "PATCH Station Photos - tableau vide (400 VALIDATION_FAILED)",
           "event": [
             {
               "listen": "test",
@@ -1389,11 +1389,11 @@
       "description": "Endpoints pour la station authentifiee : lecture du profil, mise a jour du profil et persistance des photos.\n\n- GET /station/me : profil complet avec documents KYC et photos\n- PATCH /station/me : mise a jour partielle du profil (champs textuels)\n- PATCH /station/photos : remplacement complet des photos (URLs Cloudinary)"
     },
     {
-      "name": "Station — Créneaux",
-      "description": "GET /api/v1/station/slots — Liste les créneaux de la station pour une date donnée avec disponibilité dynamique.\n\nAuth STATION requise. Chaque slot expose : available_spots, is_available, is_past, exceeds_closing_time.\nParamètre optionnel : date (YYYY-MM-DD). Défaut : aujourd'hui.",
+      "name": "Station - Créneaux",
+      "description": "GET /api/v1/station/slots - Liste les créneaux de la station pour une date donnée avec disponibilité dynamique.\n\nAuth STATION requise. Chaque slot expose : available_spots, is_available, is_past, exceeds_closing_time.\nParamètre optionnel : date (YYYY-MM-DD). Défaut : aujourd'hui.",
       "item": [
         {
-          "name": "Slots aujourd'hui — sans date (200)",
+          "name": "Slots aujourd'hui - sans date (200)",
           "event": [
             {
               "listen": "test",
@@ -1439,7 +1439,7 @@
           }
         },
         {
-          "name": "Slots avec date specifique — succes (200)",
+          "name": "Slots avec date specifique - succes (200)",
           "event": [
             {
               "listen": "test",
@@ -1481,7 +1481,7 @@
           }
         },
         {
-          "name": "Slots — date invalide (400)",
+          "name": "Slots - date invalide (400)",
           "event": [
             {
               "listen": "test",
@@ -1518,11 +1518,11 @@
                 }
               ]
             },
-            "description": "400 VALIDATION_FAILED — date doit être au format YYYY-MM-DD."
+            "description": "400 VALIDATION_FAILED - date doit être au format YYYY-MM-DD."
           }
         },
         {
-          "name": "Slots — non authentifie (401)",
+          "name": "Slots - non authentifie (401)",
           "event": [
             {
               "listen": "test",
@@ -1555,7 +1555,7 @@
                 "slots"
               ]
             },
-            "description": "401 UNAUTHORIZED — token absent ou invalide."
+            "description": "401 UNAUTHORIZED - token absent ou invalide."
           }
         }
       ]

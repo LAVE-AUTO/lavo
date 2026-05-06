@@ -9,7 +9,7 @@
         "back": "Back"
     },
     "home": {
-        "meta_title": "Slowtime — Book your car wash online",
+        "meta_title": "Slowtime - Book your car wash online",
         "meta_desc": "Slowtime connects drivers with the best car wash stations in Canada. Pick your slot, pay online, arrive on time.",
         "nav": {
             "how_it_works": "How it works",
@@ -25,7 +25,7 @@
             "title_line2": "Book your",
             "title_line3": "car wash",
             "title_accent": "online.",
-            "desc": "Slowtime connects drivers with the best car wash stations near them. Pick your slot, pay online, arrive on time — your bay is waiting.",
+            "desc": "Slowtime connects drivers with the best car wash stations near them. Pick your slot, pay online, arrive on time - your bay is waiting.",
             "btn_primary": "Join for free",
             "btn_secondary": "How it works",
             "kpi_1_val": "$0",
@@ -87,14 +87,14 @@
             "step_2_title": "Book and pay",
             "step_2_desc": "Choose your slot, select your vehicle format and pay online. Your spot is guaranteed instantly after Stripe confirmation.",
             "step_3_title": "Arrive, it is ready",
-            "step_3_desc": "You receive your reminders, confirm your presence in one click. Arrive on time — your bay is waiting. Service done, rate your experience."
+            "step_3_desc": "You receive your reminders, confirm your presence in one click. Arrive on time - your bay is waiting. Service done, rate your experience."
         },
         "stations_preview": {
             "tag": "Our partner stations",
             "title": "The best stations in Montreal,",
             "title_accent": "in one place",
             "desc": "Clear pricing, real-time hours, verified reviews. Choose by budget, vehicle format and neighborhood.",
-            "pricing_label": "Pricing by format — AutoSpa Premium",
+            "pricing_label": "Pricing by format - AutoSpa Premium",
             "format_1_type": "Sedan",
             "format_1_price": "",
             "format_1_dur": "35 min",
@@ -136,7 +136,7 @@
             "feat_3_desc": "Notify the station in one tap from the push notification",
             "feat_4_title": "Post-service rating invite",
             "feat_4_desc": "Share your experience to help other customers",
-            "notif_1_title": "Reminder — Tomorrow at 10:30 AM",
+            "notif_1_title": "Reminder - Tomorrow at 10:30 AM",
             "notif_1_body": "Your wash at AutoSpa Premium is scheduled for tomorrow morning.",
             "notif_1_time": "2 min ago",
             "notif_2_title": "In 45 minutes!",
@@ -146,7 +146,7 @@
             "notif_3_body": "Rate your experience at AutoSpa Premium.",
             "notif_3_time": "1h ago",
             "notif_4_title": "Payment confirmed",
-            "notif_4_body": "$25.00 charged — Receipt sent by email.",
+            "notif_4_body": "$25.00 charged - Receipt sent by email.",
             "notif_4_time": "Yesterday",
             "btn_confirm": "I confirm",
             "btn_delay": "Delay"
@@ -393,7 +393,7 @@
         "legal_tos": "Client terms",
         "legal_tos_stations": "Station terms",
         "legal_privacy": "Privacy policy",
-        "legal_law25": "Law 25 — Your rights",
+        "legal_law25": "Law 25 - Your rights",
         "legal_cookies": "Cookies",
         "legal_mentions": "Legal notice",
         "quick_links": "Quick links",
@@ -537,15 +537,15 @@
         "hero_bottom_reviews": "Customer reviews",
         "hero_bottom_availability": "Availability",
         "hero_bottom_availability_value": "7/7",
-        "hero_stat_empty": "—",
+        "hero_stat_empty": "-",
         "stat_distance": "Distance",
         "filter_coming_soon_title": "Advanced filters",
         "filter_coming_soon_pill": "Coming soon",
-        "filter_coming_soon_hint": "These filters are previewed here — they will become active as soon as the data is available on the platform.",
+        "filter_coming_soon_hint": "These filters are previewed here - they will become active as soon as the data is available on the platform.",
         "filter_currency_unit": "$"
     },
     "merchant": {
-        "meta_title": "Slowtime — Merchant portal",
+        "meta_title": "Slowtime - Merchant portal",
         "meta_desc": "Slowtime digitizes your station. Online bookings, automated payments, daily transfers.",
         "nav": {
             "how_it_works": "How it works",
@@ -562,7 +562,7 @@
             "title_accent1": "predictable.",
             "title_line2": "Your station,",
             "title_accent2": "always full.",
-            "desc": "Slowtime digitizes your station. Online bookings, automated payments, daily transfers — while you focus on service.",
+            "desc": "Slowtime digitizes your station. Online bookings, automated payments, daily transfers - while you focus on service.",
             "btn_primary": "Join Slowtime for free",
             "btn_secondary": "See how it works",
             "kpi_1_val": "5%",
@@ -640,7 +640,7 @@
             "use_1_title": "In-store display",
             "use_1_desc": "At the entrance, waiting room, on windows",
             "use_2_title": "Social media",
-            "use_2_desc": "Instagram, Facebook, TikTok — square format included",
+            "use_2_desc": "Instagram, Facebook, TikTok - square format included",
             "use_3_title": "Exclusive partner benefit",
             "use_3_desc": "Booking via your QR code = commission waived",
             "poster_tagline": "Book your car wash"
@@ -683,8 +683,8 @@
             "legal_tos": "Merchant terms",
             "legal_privacy": "Privacy policy",
             "legal_cancel": "Cancellation policy",
-            "legal_law25": "Law 25 — Your rights",
-            "copyright": "© {year} Slowtime — All rights reserved · Montreal, Quebec"
+            "legal_law25": "Law 25 - Your rights",
+            "copyright": "© {year} Slowtime - All rights reserved · Montreal, Quebec"
         },
         "badge": "Coming soon",
         "title": "The merchant portal is coming soon",
@@ -719,7 +719,7 @@
         "password_rule_chars": "Allowed characters only"
     },
     "landing": {
-        "meta_title": "Slowtime — Your time matters",
+        "meta_title": "Slowtime - Your time matters",
         "meta_description": "Book in seconds with your favorite merchants. No more waiting in line.",
         "hero_badge": "New",
         "hero_title_1": "Your time",
@@ -795,7 +795,7 @@
     },
     "location_banner": {
         "title": "Find stations near you",
-        "description": "Enable your location to compute the distance to every partner station. Nothing is stored — your browser stays in control.",
+        "description": "Enable your location to compute the distance to every partner station. Nothing is stored - your browser stays in control.",
         "cta_allow": "Enable location",
         "cta_dismiss": "Later",
         "aria_close": "Dismiss banner"
@@ -831,9 +831,9 @@
         "summary_subtitle": "Review your order details.",
         "summary_service": "Service",
         "summary_arrival": "Arrival",
-        "summary_queue_now": "Queue — Now",
-        "summary_queue_later": "Queue — {time}",
-        "summary_booked_slot": "Booked slot — {date} at {time}",
+        "summary_queue_now": "Queue - Now",
+        "summary_queue_later": "Queue - {time}",
+        "summary_booked_slot": "Booked slot - {date} at {time}",
         "proceed_to_payment": "Proceed to payment",
         "payment_subtitle": "Enter your payment information.",
         "payment_secured": "Secured by Stripe",
@@ -1044,7 +1044,7 @@
         "yes": "Yes",
         "no": "No",
         "account_hint": "Your full client journey is now grouped here: stations, reservations, history, support and profile.",
-        "empty_value": "—",
+        "empty_value": "-",
         "empty_title": "Your dashboard is empty",
         "empty_desc": "Start by exploring stations and creating your first reservation.",
         "empty_cta": "View stations"
@@ -1062,7 +1062,7 @@
         "stats_washes": "Washes",
         "stats_spent": "Spent",
         "stats_since": "Member since",
-        "stats_empty": "—",
+        "stats_empty": "-",
         "personal_info": "Personal information",
         "first_name": "First name",
         "last_name": "Last name",
@@ -1162,7 +1162,7 @@
         "receipt_duration": "Duration",
         "receipt_total": "Total",
         "receipt_status": "Status",
-        "receipt_footer": "Thank you for your trust. LAVO — Car wash simplified.",
+        "receipt_footer": "Thank you for your trust. LAVO - Car wash simplified.",
         "receipt_service": "Service",
         "receipt_entry_type": "Entry type",
         "receipt_entry_type_reservation": "Reservation",
@@ -1173,7 +1173,7 @@
         "detail_close": "Close"
     },
     "faq_page": {
-        "meta_title": "Frequently Asked Questions — Slowtime",
+        "meta_title": "Frequently Asked Questions - Slowtime",
         "meta_desc": "Find answers to your questions about Slowtime: bookings, cancellations, payments and more.",
         "eyebrow": "FAQ",
         "title": "Frequently Asked",
@@ -1204,7 +1204,7 @@
         "cta_btn": "Contact us"
     },
     "cancel_policy": {
-        "meta_title": "Cancellation Policy — Slowtime",
+        "meta_title": "Cancellation Policy - Slowtime",
         "meta_desc": "Review our cancellation and refund policy for car wash bookings.",
         "eyebrow": "Policy",
         "title": "Cancellation Policy",
@@ -1232,7 +1232,7 @@
         "contact_btn": "Contact us"
     },
     "cgu_page": {
-        "meta_title": "Terms of Use — Slowtime",
+        "meta_title": "Terms of Use - Slowtime",
         "meta_desc": "Read the terms and conditions governing the use of the Slowtime platform.",
         "eyebrow": "Legal",
         "title": "Terms of Use",
@@ -1262,7 +1262,7 @@
         "contact_btn": "Contact us"
     },
     "contact_page": {
-        "meta_title": "Contact Us — Slowtime",
+        "meta_title": "Contact Us - Slowtime",
         "meta_desc": "Get in touch with the Slowtime team for any question, request or complaint.",
         "eyebrow": "Contact",
         "title": "Let's Talk",
@@ -1271,7 +1271,7 @@
         "hours_label": "Hours",
         "hours_value": "Mon–Fri, 9 AM–6 PM (ET)",
         "location_label": "Headquarters",
-        "faq_hint": "Before sending a message, check our FAQ — you might find an immediate answer there.",
+        "faq_hint": "Before sending a message, check our FAQ - you might find an immediate answer there.",
         "faq_link": "Browse the FAQ",
         "form_title": "Send a message",
         "field_name": "Name",
@@ -1289,7 +1289,7 @@
         "error_generic": "An error occurred. Please try again."
     },
     "privacy_page": {
-        "meta_title": "Privacy Policy — Slowtime",
+        "meta_title": "Privacy Policy - Slowtime",
         "meta_desc": "Learn how Slowtime collects, uses and protects your personal data.",
         "eyebrow": "Legal",
         "title": "Privacy Policy",
@@ -1319,7 +1319,7 @@
         "contact_btn": "Contact us"
     },
     "cgu_stations_page": {
-        "meta_title": "Station Terms — Slowtime",
+        "meta_title": "Station Terms - Slowtime",
         "meta_desc": "Terms and conditions applicable to partner stations on the Slowtime platform.",
         "eyebrow": "Legal",
         "title": "Partner Station Terms",
@@ -1349,7 +1349,7 @@
         "contact_btn": "Contact us"
     },
     "legal_mentions_page": {
-        "meta_title": "Legal Notice — Slowtime",
+        "meta_title": "Legal Notice - Slowtime",
         "meta_desc": "Legal notice, publisher information and hosting details for the Slowtime platform.",
         "eyebrow": "Legal",
         "title": "Legal Notice",
@@ -1370,7 +1370,7 @@
         "contact_btn": "Contact us"
     },
     "support_page": {
-        "meta_title": "Support — Slowtime",
+        "meta_title": "Support - Slowtime",
         "meta_desc": "Get help from the Slowtime team through our support centre.",
         "eyebrow": "Support",
         "title": "How can we help you?",
@@ -1399,7 +1399,7 @@
         "all_faq": "View all questions"
     },
     "station_apply": {
-        "meta_title": "Become a partner — Slowtime",
+        "meta_title": "Become a partner - Slowtime",
         "meta_desc": "Join the Slowtime network as a partner car wash station.",
         "heading": "Membership Application",
         "subheading": "Join the Slowtime network in 3 simple steps",
@@ -1452,11 +1452,11 @@
         "description": "Description (optional)",
         "description_placeholder": "Describe your station (equipment, services, specialties...)",
         "doc_certificate": "Registration certificate",
-        "doc_certificate_hint": "PDF, JPG or PNG — max 10 MB",
+        "doc_certificate_hint": "PDF, JPG or PNG - max 10 MB",
         "doc_address_proof": "Proof of address",
-        "doc_address_proof_hint": "PDF, JPG or PNG — max 10 MB",
+        "doc_address_proof_hint": "PDF, JPG or PNG - max 10 MB",
         "doc_license": "License (optional)",
-        "doc_license_hint": "PDF, JPG or PNG — max 10 MB",
+        "doc_license_hint": "PDF, JPG or PNG - max 10 MB",
         "terms_label": "I certify that the information provided is accurate and I accept Slowtime's terms of use.",
         "drop_or_click": "Drag a file here or click to browse",
         "file_selected": "File selected",
@@ -1499,7 +1499,7 @@
     "station_panel": {
         "headline": "Manage your station,",
         "headline_accent": "effortlessly.",
-        "subtitle": "Automated bookings, instant payments and daily payouts — all from one platform.",
+        "subtitle": "Automated bookings, instant payments and daily payouts - all from one platform.",
         "feature_booking_label": "Smart agenda",
         "feature_booking_sub": "Your slots fill up automatically. No more disorganized queues.",
         "feature_payment_label": "Automated payments",
@@ -1507,13 +1507,13 @@
         "feature_qr_label": "Instant QR scan",
         "feature_qr_sub": "Generate a unique QR code. Clients scan and pay in seconds.",
         "feature_stats_label": "Real-time dashboard",
-        "feature_stats_sub": "Revenue, fill rate, reviews — everything at a glance.",
+        "feature_stats_sub": "Revenue, fill rate, reviews - everything at a glance.",
         "step1_headline": "Create your",
         "step1_headline_accent": "merchant space.",
         "step1_subtitle": "Join hundreds of partner stations. Quick sign-up, no paperwork.",
         "step2_headline": "Manage your station,",
         "step2_headline_accent": "effortlessly.",
-        "step2_subtitle": "Automated bookings, instant payments and daily payouts — all from one platform.",
+        "step2_subtitle": "Automated bookings, instant payments and daily payouts - all from one platform.",
         "step3_headline": "Validated in",
         "step3_headline_accent": "48 hours.",
         "step3_subtitle": "Our team reviews your documents quickly. Once validated, your page goes live.",
@@ -1538,7 +1538,7 @@
         "tab_register": "Sign up"
     },
     "admin_login": {
-        "meta_title": "Administration — Slowtime",
+        "meta_title": "Administration - Slowtime",
         "welcome_title": "Administrator access",
         "welcome_subtitle": "Restricted area for the platform administration team."
     },
@@ -1623,7 +1623,7 @@
         "manual_queue_format_label": "Vehicle format",
         "manual_queue_format_placeholder": "Select a format",
         "manual_queue_slot_label": "Slot (optional)",
-        "manual_queue_slot_placeholder": "No slot — add directly to the queue",
+        "manual_queue_slot_placeholder": "No slot - add directly to the queue",
         "manual_queue_phone_label": "Client phone (optional)",
         "manual_queue_notes_label": "Notes (optional)",
         "manual_queue_notes_placeholder": "Ex: Walk-in client, arriving on foot, etc.",
@@ -1711,7 +1711,7 @@
         "availability_blocks_count_aria": "{count, plural, =0 {No bay configured} one {# bay configured} other {# bays configured}}",
         "availability_poste_short": "B",
         "kpi_coming_soon": "Coming soon",
-        "post_unknown_service": "—",
+        "post_unknown_service": "-",
         "manual_queue_error_unavailable": "This action isn’t available yet. Please try again later.",
         "delays_title": "Delay requests",
         "delays_see_all": "See all",
@@ -1723,7 +1723,7 @@
         "availability_save_error": "Could not save the availability. Please retry.",
         "availability_delete_success": "Availability removed",
         "availability_delete_error": "Could not remove the availability.",
-        "notif_coming_soon": "Notifications — coming soon",
+        "notif_coming_soon": "Notifications - coming soon",
         "availability_link_hours": "Configure hours",
         "availability_link_capacity": "Configure capacity"
     },
@@ -1765,7 +1765,7 @@
         "btn_retry": "Retry",
         "loading": "Loading...",
         "today": "Today",
-        "no_amount": "—",
+        "no_amount": "-",
         "detail_entry_type": "Type",
         "detail_created_at": "Created at",
         "detail_updated_at": "Updated at",
@@ -1824,7 +1824,7 @@
         "pagination_prev": "Previous",
         "pagination_next": "Next",
         "pagination_page": "Page {page} of {total}",
-        "no_amount": "—",
+        "no_amount": "-",
         "calendar_from": "From",
         "calendar_select_start": "Select start date",
         "calendar_select_end": "Select end date",
@@ -1952,7 +1952,7 @@
         "tab_payments": "Payments",
         "backend_missing_title": "Feature unavailable",
         "backend_missing_desc": "This section is waiting on the following endpoints from the backend team:",
-        "backend_missing_save_disabled": "Save unavailable — endpoint missing",
+        "backend_missing_save_disabled": "Save unavailable - endpoint missing",
         "hours_current_title": "Hours currently saved",
         "hours_current_hint": "Global window from configuration. Manage detailed per-day hours in the grid below.",
         "hours_break": "Break",
@@ -2044,7 +2044,25 @@
         "payments_receipts_title": "Automatic receipts",
         "payments_receipts_email": "Email receipt",
         "payments_receipts_sms": "SMS receipt",
-        "payments_btn_save": "Save configuration"
+        "payments_btn_save": "Save configuration",
+        "payments_stripe_title": "Stripe Connection",
+        "payments_stripe_active_badge": "Active",
+        "payments_stripe_pending_badge": "Pending",
+        "payments_stripe_not_connected_desc": "Connect your Stripe account to automatically receive payments after each completed service.",
+        "payments_stripe_connect_btn": "Connect with Stripe",
+        "payments_stripe_connecting": "Redirecting…",
+        "payments_stripe_pending_desc": "Your Stripe onboarding is not yet complete. Finish it to start receiving payments.",
+        "payments_stripe_complete_btn": "Complete registration",
+        "payments_stripe_charges": "Payments enabled",
+        "payments_stripe_payouts": "Payouts enabled",
+        "payments_stripe_dashboard_link": "Manage my account on Stripe",
+        "stripe_return_title": "Stripe setup complete",
+        "stripe_return_desc": "Your Stripe account has been configured. You will be redirected to your settings.",
+        "stripe_return_redirect": "Redirecting in 3 seconds…",
+        "stripe_refresh_loading": "Generating a new Stripe link…",
+        "stripe_refresh_error_title": "Connection error",
+        "stripe_refresh_error_desc": "Unable to generate a new Stripe link. Check your connection and try again.",
+        "stripe_refresh_back_btn": "Back to settings"
     },
     "station_services": {
         "page_title": "My Services",
@@ -2182,7 +2200,7 @@
         "copy_error": "Copy failed",
         "link_copied": "Link copied!",
         "share": "Share",
-        "share_title": "QR Code — {name}",
+        "share_title": "QR Code - {name}",
         "share_text": "Scan this QR code to access {name} station on Slowtime.",
         "loading": "Loading...",
         "error_load": "Unable to load station information.",
@@ -2240,7 +2258,7 @@
         "expiry_badge_valid": "Valid",
         "expiry_badge_warning": "Expiring soon",
         "expiry_badge_expired": "Expired",
-        "expiry_unsaved_notice": "Expiry dates are not yet persisted server-side — they will be lost on page reload.",
+        "expiry_unsaved_notice": "Expiry dates are not yet persisted server-side - they will be lost on page reload.",
         "label_submitted_on": "Submitted on",
         "confirm_approve_label": "Confirm",
         "detail_history": "History",
@@ -2283,11 +2301,11 @@
         "form_title": "Update and resubmit",
         "docs_section_title": "Supporting documents",
         "doc_certificate": "Registration certificate",
-        "doc_certificate_hint": "PDF, JPG or PNG — max 10 MB",
+        "doc_certificate_hint": "PDF, JPG or PNG - max 10 MB",
         "doc_address_proof": "Proof of address",
-        "doc_address_proof_hint": "PDF, JPG or PNG — max 10 MB",
+        "doc_address_proof_hint": "PDF, JPG or PNG - max 10 MB",
         "doc_license": "License (optional)",
-        "doc_license_hint": "PDF, JPG or PNG — max 10 MB",
+        "doc_license_hint": "PDF, JPG or PNG - max 10 MB",
         "doc_required": "This document is required.",
         "field_name": "Station name",
         "field_name_placeholder": "Your station name",
@@ -2374,7 +2392,7 @@
         "page_title": "Queue",
         "waiting_n": "{n} client(s) waiting",
         "queue_empty_short": "No clients waiting",
-        "queue_empty": "Queue is empty — no clients waiting.",
+        "queue_empty": "Queue is empty - no clients waiting.",
         "error_load": "Failed to load the queue.",
         "btn_retry": "Retry",
         "btn_refresh": "Refresh",
@@ -2421,7 +2439,7 @@
         "refuse_message": "You may provide an optional refusal reason that will be sent to the client.",
         "refuse_reason_label": "Refusal reason",
         "refuse_reason_placeholder": "e.g. The slot was assigned to another client...",
-        "refuse_reason_hint": "Optional — leave empty to refuse without a reason.",
+        "refuse_reason_hint": "Optional - leave empty to refuse without a reason.",
         "optional": "optional",
         "error_action": "Action failed. Please try again.",
         "error_load": "Unable to load delay requests.",
@@ -2843,7 +2861,7 @@
         "success_email_sent_title": "Email sent",
         "success_email_sent_body": "Login credentials have been sent to {email}.",
         "success_force_change_notice": "The user will be required to change their password on first login.",
-        "form_api_unavailable_notice": "Preview only — feature unavailable until the API endpoint is connected."
+        "form_api_unavailable_notice": "Preview only - feature unavailable until the API endpoint is connected."
     },
     "admin_add_station": {
         "modal_title": "Create a station",
@@ -2896,11 +2914,11 @@
         "docs_toggle_later_sub": "Station will receive a notification",
         "docs_later_notice": "An email will be sent to the station inviting them to upload documents. Account activation is subject to document validation by an admin.",
         "doc_certificate": "Registration certificate",
-        "doc_certificate_hint": "PDF or image — max 10 MB",
+        "doc_certificate_hint": "PDF or image - max 10 MB",
         "doc_address_proof": "Proof of address",
-        "doc_address_proof_hint": "PDF or image — max 10 MB",
+        "doc_address_proof_hint": "PDF or image - max 10 MB",
         "doc_license": "Professional licence (optional)",
-        "doc_license_hint": "PDF or image — max 10 MB",
+        "doc_license_hint": "PDF or image - max 10 MB",
         "doc_uploading": "Uploading...",
         "doc_drop_or_click": "Drop a file or click",
         "doc_file_remove": "Remove",
@@ -2938,7 +2956,7 @@
         "success_docs_uploaded_notice": "Uploaded documents will be submitted to the KYC validation process.",
         "success_force_change_notice": "The station will be required to change their password on first login.",
         "role_station": "Station",
-        "form_api_unavailable_notice": "Preview only — feature unavailable until the API endpoint is connected."
+        "form_api_unavailable_notice": "Preview only - feature unavailable until the API endpoint is connected."
     },
     "admin_promo_qr": {
         "section_title": "Promotional QR Code",
@@ -2957,7 +2975,7 @@
         "referral_url_label": "Referral link",
         "error_commission_required": "Commission rate is required.",
         "error_commission_invalid": "Rate must be between 0 and 50.",
-        "preview_only_notice": "Preview only — this QR code will not be functional until the API is connected.",
+        "preview_only_notice": "Preview only - this QR code will not be functional until the API is connected.",
         "error_commission_step": "Commission must be a multiple of 0.5 (e.g. 5, 5.5, 10)."
     },
     "admin_legal": {

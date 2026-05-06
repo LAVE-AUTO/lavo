@@ -38,7 +38,7 @@ function ReadField({ label, value }: { label: string; value: string }) {
   return (
     <div>
       <p className="mb-0.5 text-[11px] font-bold uppercase tracking-wider text-[#C8C4B4] dark:text-[#2E3C2A]">{label}</p>
-      <p className="text-[13px] font-semibold text-[#1A1A0A] dark:text-[#F0EDD4]">{value || '—'}</p>
+      <p className="text-[13px] font-semibold text-[#1A1A0A] dark:text-[#F0EDD4]">{value || '-'}</p>
     </div>
   );
 }
@@ -156,10 +156,10 @@ export function StationProfileForm({ profile, onSaved, locked = false }: Props) 
           <div className="flex flex-col gap-4">
             <div className="flex items-center gap-4">
               <div className="flex h-[52px] w-[52px] shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-[#C49A1E]/20 to-[#C49A1E]/8 text-[15px] font-black text-[#C49A1E] ring-1 ring-[#C49A1E]/15 dark:from-[#C49A1E]/15 dark:to-[#C49A1E]/5">
-                {profile.name ? profile.name.substring(0, 2).toUpperCase() : '—'}
+                {profile.name ? profile.name.substring(0, 2).toUpperCase() : '-'}
               </div>
               <div className="flex flex-col gap-0.5">
-                <p className="text-[16px] font-black text-[#1A1A0A] dark:text-[#F0EDD4]">{profile.name || '—'}</p>
+                <p className="text-[16px] font-black text-[#1A1A0A] dark:text-[#F0EDD4]">{profile.name || '-'}</p>
                 {profile.service_scope && (
                   <span className="w-fit rounded-full bg-[#FDF3D8] px-2.5 py-0.5 text-[12px] font-semibold text-[#C49A1E] dark:bg-[#2A1E08]">
                     {scopeLabels[profile.service_scope as ScopeValue] ?? profile.service_scope}
@@ -235,7 +235,7 @@ export function StationProfileForm({ profile, onSaved, locked = false }: Props) 
                           : 'text-[#BBBBAA] hover:text-[#888] dark:text-[#3A3A2A] dark:hover:text-[#9A9A8A]'
                       }`}
                     >
-                      —
+                      -
                     </button>
                     {SCOPE_VALUES.map((v) => (
                       <button

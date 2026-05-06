@@ -5,7 +5,7 @@ import { ThemeToggle } from './ThemeToggle';
 interface AuthHeaderProps {
   title: string;
   subtitle: string;
-  /** Current locale — drives the light-mode logo choice (FR vs EN wordmark). */
+  /** Current locale - drives the light-mode logo choice (FR vs EN wordmark). */
   locale: string;
 }
 
@@ -15,7 +15,7 @@ interface AuthHeaderProps {
  * Mobile: top bar with logo + controls, then title + subtitle below.
  * Desktop: only controls top-right (brand panel handles the logo).
  *
- * Logo strategy (CSS dark-mode classes — no client JS needed):
+ * Logo strategy (CSS dark-mode classes - no client JS needed):
  *   Light + FR  → logo2_2.png       (gold S + "Slowtime / ANTICIPONS MIEUX")
  *   Light + EN  → logo_anglais_1.png (gold S + "Slowtime / LET'S ANTICIPATE BETTER")
  *   Dark + any  → frame2.png badge  + "Slowtime" text

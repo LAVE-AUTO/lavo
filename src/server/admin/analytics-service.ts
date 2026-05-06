@@ -170,7 +170,7 @@ function advanceCursor(cursor: Date, groupBy: 'day' | 'week' | 'month'): void {
   } else if (groupBy === 'week') {
     cursor.setUTCDate(cursor.getUTCDate() + 7);
   } else {
-    // month — advance to the first day of the next month
+    // month - advance to the first day of the next month
     cursor.setUTCMonth(cursor.getUTCMonth() + 1);
   }
 }

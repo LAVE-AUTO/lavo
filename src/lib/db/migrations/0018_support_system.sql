@@ -3,10 +3,20 @@
 -- plus support_tickets, support_messages, and support_settings tables.
 
 --> statement-breakpoint
-CREATE TYPE "support_priority" AS ENUM ('bas', 'normal', 'urgent');
+DO $$
+BEGIN
+  CREATE TYPE "support_priority" AS ENUM ('bas', 'normal', 'urgent');
+EXCEPTION
+  WHEN duplicate_object THEN NULL;
+END $$;
 
 --> statement-breakpoint
-CREATE TYPE "support_category" AS ENUM ('technique', 'facturation', 'bug', 'autre');
+DO $$
+BEGIN
+  CREATE TYPE "support_category" AS ENUM ('technique', 'facturation', 'bug', 'autre');
+EXCEPTION
+  WHEN duplicate_object THEN NULL;
+END $$;
 
 --> statement-breakpoint
 CREATE TABLE IF NOT EXISTS "support_tickets" (

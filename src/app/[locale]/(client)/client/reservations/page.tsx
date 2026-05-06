@@ -116,7 +116,7 @@ function enrichEntry(entry: ApiEntry, stationsMap: Map<string, ApiStation>): Cli
   const stationAddress = station ? `${station.address}, ${station.city}` : '';
   const stationLatitude = parseFloat(station?.latitude ?? '0');
   const stationLongitude = parseFloat(station?.longitude ?? '0');
-  const forfaitName = format?.label ?? '—';
+  const forfaitName = format?.label ?? '-';
   const totalPrice = parseFloat(entry.amount_paid ?? '0');
   const duration = station?.stationConfig?.wash_duration_minutes ?? 30;
 
@@ -245,12 +245,12 @@ export default function ClientReservationsPage() {
     () => reservations.filter((r) => r.status === 'completed' || r.status === 'cancelled'),
     [reservations],
   );
-  /* First completed reservation without a rating — used to show the rating prompt */
+  /* First completed reservation without a rating - used to show the rating prompt */
   const pendingRating = useMemo(
     () => reservations.find((r) => r.status === 'completed'),
     [reservations],
   );
-  /* Second completed reservation (or same if only one) — used to show the tip prompt */
+  /* Second completed reservation (or same if only one) - used to show the tip prompt */
   const pendingTip = useMemo(() => {
     const completed = reservations.filter((r) => r.status === 'completed');
     return completed.length > 1 ? completed[1] : completed[0] ?? null;
@@ -302,7 +302,7 @@ export default function ClientReservationsPage() {
         <h1 className="text-[22px] font-black text-[#0A0A14] dark:text-white">{t('title')}</h1>
       </div>
 
-      {/* Rating prompt — shown when a completed reservation has not yet been rated */}
+      {/* Rating prompt - shown when a completed reservation has not yet been rated */}
       {pendingRating && (
         <div className="px-4 max-w-2xl mx-auto mb-4">
           <div className="flex items-center gap-3 bg-gold/10 border border-gold/30 rounded-xl p-4">
@@ -325,7 +325,7 @@ export default function ClientReservationsPage() {
         </div>
       )}
 
-      {/* Tip prompt — shown when a completed reservation has not yet received a tip */}
+      {/* Tip prompt - shown when a completed reservation has not yet received a tip */}
       {pendingTip && (
         <div className="px-4 max-w-2xl mx-auto mb-4">
           <div className="flex items-center gap-3 bg-[#E8E8D8] dark:bg-dark-card border border-[#D0D0C0] dark:border-tab-inactive rounded-xl p-4">
@@ -578,7 +578,7 @@ function CancelModal({
     const previouslyFocused = document.activeElement as HTMLElement | null;
     dialogRef.current?.querySelector<HTMLElement>('button')?.focus();
 
-    /* Focus trap — keep Tab cycling within the modal */
+    /* Focus trap - keep Tab cycling within the modal */
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.key !== 'Tab' || !dialogRef.current) return;
       const focusable = dialogRef.current.querySelectorAll<HTMLElement>(

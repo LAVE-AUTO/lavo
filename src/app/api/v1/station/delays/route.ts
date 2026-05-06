@@ -62,7 +62,7 @@
  *             schema:
  *               $ref: '#/components/schemas/ErrorEnvelope'
  *       403:
- *         description: Forbidden — station role required
+ *         description: Forbidden - station role required
  *         content:
  *           application/json:
  *             schema:

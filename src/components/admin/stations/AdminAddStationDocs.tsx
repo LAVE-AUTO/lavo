@@ -91,7 +91,7 @@ export function AdminAddStationDocs({ data, errors, busy, onChange, onErrors, on
         )}
       </div>
 
-      {/* Preview notice — endpoint not yet available */}
+      {/* Preview notice - endpoint not yet available */}
       <div className="mx-6 mb-3 flex items-start gap-2 rounded-lg border border-orange-200 bg-orange-50 px-3 py-2.5 dark:border-orange-900/40 dark:bg-orange-950/20">
         <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#F97316" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="mt-0.5 shrink-0" aria-hidden="true">
           <path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z" /><line x1="12" y1="9" x2="12" y2="13" /><line x1="12" y1="17" x2="12.01" y2="17" />
@@ -104,7 +104,7 @@ export function AdminAddStationDocs({ data, errors, busy, onChange, onErrors, on
           className="rounded-lg border border-[#D8D4C8] px-4 py-2 text-[13px] font-semibold text-[#666] transition-colors hover:bg-[#F5F3EE] disabled:opacity-50 dark:border-[#243020] dark:text-[#9A9A8A]">
           {t('btn_prev')}
         </button>
-        {/* Submit disabled — TODO: enable once POST /admin/stations endpoint is available */}
+        {/* Submit disabled - TODO: enable once POST /admin/stations endpoint is available */}
         <button type="button" onClick={onSubmit} disabled
           title={t('form_api_unavailable_notice')}
           className="rounded-lg bg-[#C49A1E] px-4 py-2 text-[13px] font-bold text-[#0C1209] opacity-40 cursor-not-allowed">

@@ -147,3 +147,28 @@ export const error429 = () =>
 export function notImplementedResponse(message: string): NextResponse {
   return errorResponse(message, 501, { code: ApiCode.NOT_IMPLEMENTED });
 }
+
+export function handleError(error: unknown): NextResponse {
+  if (error instanceof AppError) return fromAppError(error);
+
+  if (isZodError(error)) {
+    return error400(
+      'Validation failed',
+      ApiCode.VALIDATION_FAILED,
+      error.errors.map((e) => ({ field: e.path.join('.'), message: e.message }))
+    );
+  }
+
+  return error500(error);
+}
+
+function isZodError(
+  error: unknown
+): error is { errors: Array<{ path: (string | number)[]; message: string }> } {
+  return (
+    error !== null &&
+    typeof error === 'object' &&
+    'name' in error &&
+    (error as { name: unknown }).name === 'ZodError'
+  );
+}

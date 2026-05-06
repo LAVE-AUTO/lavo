@@ -123,7 +123,7 @@ export function StationReservationsPage() {
       setPending(null);
       await loadData();
     } else {
-      // Keep dialog open and show error — do not update local state on failure
+      // Keep dialog open and show error - do not update local state on failure
       setActionError(t('error_action'));
     }
   }

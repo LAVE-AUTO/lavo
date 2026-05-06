@@ -67,7 +67,7 @@ export default function SignalDelayPage() {
     }
 
     // TODO: connect to API once GET /me/entries/:id is available
-    // GET /me/entries/:id — verify status === 'confirmed' or 'in_progress'
+    // GET /me/entries/:id - verify status === 'confirmed' or 'in_progress'
     setPageState('error');
   }, [id, locale]);
 

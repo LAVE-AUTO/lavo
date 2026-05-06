@@ -14,7 +14,7 @@ export interface LastMessagePreview {
   created_at: string;
 }
 
-/** Ticket as returned by GET /support (list view — lastMessage preview, no full thread). */
+/** Ticket as returned by GET /support (list view - lastMessage preview, no full thread). */
 export interface SupportTicketSummary {
   id: string;
   ticket_number: string;
@@ -29,7 +29,7 @@ export interface SupportTicketSummary {
   updated_at: string;
 }
 
-/** Ticket as returned by GET /support/[id] (detail view — full message thread). */
+/** Ticket as returned by GET /support/[id] (detail view - full message thread). */
 export interface SupportTicketDetail {
   id: string;
   ticket_number: string;

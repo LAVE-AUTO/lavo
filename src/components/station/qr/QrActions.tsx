@@ -9,7 +9,7 @@ interface Props {
   stationName: string;
 }
 
-// Sanitize a station name for use in a filename — removes path-traversal chars and limits length
+// Sanitize a station name for use in a filename - removes path-traversal chars and limits length
 function sanitizeFilename(name: string): string {
   return name
     .toLowerCase()
@@ -139,7 +139,7 @@ export function QrActions({ url, stationName }: Props) {
   );
 }
 
-/* Inline SVG icons — outline style, 16x16 */
+/* Inline SVG icons - outline style, 16x16 */
 
 const DownloadIcon = () => (
   <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">

@@ -133,7 +133,7 @@ export const swaggerDefinition: OAS3Definition = {
       /* ------------------------------------------------------------------ */
       Entry: {
         type: 'object',
-        description: 'A client entry — either a confirmed reservation or a walk-in queue entry.',
+        description: 'A client entry - either a confirmed reservation or a walk-in queue entry.',
         properties: {
           id: { type: 'string', format: 'uuid' },
           station_id: { type: 'string', format: 'uuid' },

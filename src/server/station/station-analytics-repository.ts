@@ -96,7 +96,7 @@ export async function getDashboardKpis(stationId: string): Promise<DashboardKpis
         )
       ),
 
-    // Pending (confirmed) entries — no time filter
+    // Pending (confirmed) entries - no time filter
     db
       .select({
         pending_count: sql<number>`COUNT(*)::int`,

@@ -6,7 +6,7 @@ export type CommissionRow = typeof commissionSettings.$inferSelect;
 export type NewCommissionRow = typeof commissionSettings.$inferInsert;
 
 /**
- * Returns the active commission row — the most recent entry with effective_at <= now().
+ * Returns the active commission row - the most recent entry with effective_at <= now().
  * Returns undefined if no entry has been set yet.
  */
 export async function getActiveCommissionRow(): Promise<CommissionRow | undefined> {

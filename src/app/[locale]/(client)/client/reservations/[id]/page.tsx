@@ -169,7 +169,7 @@ export default function ReservationDetailPage() {
       stationImageUrl: '',
       stationLatitude: parseFloat(station?.latitude ?? '0'),
       stationLongitude: parseFloat(station?.longitude ?? '0'),
-      forfaitName: format?.label ?? '—',
+      forfaitName: format?.label ?? '-',
       date,
       timeSlot,
       duration: station?.stationConfig?.wash_duration_minutes ?? 30,

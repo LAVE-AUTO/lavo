@@ -11,11 +11,11 @@ type Props = {
 export async function generateMetadata({ params }: Props) {
   const { locale } = await params;
   const t = await getTranslations({ locale, namespace: 'forgot_password' });
-  return { title: `Slowtime — ${t('title')}` };
+  return { title: `Slowtime - ${t('title')}` };
 }
 
 /**
- * Forgot password page — email submission, always shows success card.
+ * Forgot password page - email submission, always shows success card.
  */
 export default async function ForgotPasswordPage({ params }: Props) {
   const { locale } = await params;

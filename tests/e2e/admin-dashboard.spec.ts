@@ -1,5 +1,5 @@
 /**
- * E2E — Admin dashboard page.
+ * E2E - Admin dashboard page.
  *
  * Authentication required: tests in this file log in as an admin before
  * navigating to the protected /fr/admin/dashboard route.

@@ -142,7 +142,7 @@ function mapApiStationToStation(s: ApiStationListItem): Station {
         completedCount: s.completed_count ?? 0,
         availableSlots: process.env.NODE_ENV === 'production' ? (s.available_slots || 0) : mockAvailableSlots(s.id, s.available_slots || 0),
         totalSlots: s.wash_post_count || 0,
-        /* priceFrom is absent from the list payload — leave it null so the UI
+        /* priceFrom is absent from the list payload - leave it null so the UI
          * can hide the price block instead of faking a "0 $" value. Populated
          * on the detail page once vehicle_formats are available. */
         priceFrom: null,
@@ -151,7 +151,7 @@ function mapApiStationToStation(s: ApiStationListItem): Station {
         longitude: s.longitude != null ? parseFloat(s.longitude) : undefined,
         isOpen: s.is_open,
         description: s.description || undefined,
-        /* imageUrl comes from the backend — `GET /stations` does not expose it yet,
+        /* imageUrl comes from the backend - `GET /stations` does not expose it yet,
          * so stay undefined and let the placeholder render in the card. */
         imageUrl: undefined,
     };
@@ -162,7 +162,7 @@ function mapApiStationToDetail(s: ApiStationListItem): StationDetailData {
         ...mapApiStationToStation(s),
         reviews: [],
         services: [],
-        /* List payload exposes neither service categories (Essentiel/Premium/VIP/…) nor extras —
+        /* List payload exposes neither service categories (Essentiel/Premium/VIP/…) nor extras -
          * leave both empty so the card hides forfait tags until the backend exposes them. */
         serviceCategories: [],
         extras: [],
@@ -238,7 +238,7 @@ function mapApiDetailToStationDetail(
         reviews,
         services: [],
         serviceCategories,
-        /* Extras (Polish, Soin cuir, Renovation phares…) have no backend model yet —
+        /* Extras (Polish, Soin cuir, Renovation phares…) have no backend model yet -
          * empty list until a `services`/`station_services` schema lands. */
         extras: [],
         timeSlots,

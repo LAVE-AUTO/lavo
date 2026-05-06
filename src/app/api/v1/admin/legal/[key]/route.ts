@@ -1,12 +1,12 @@
 /**
- * Legal content API — per-key read and update.
+ * Legal content API - per-key read and update.
  *
- * GET  /api/v1/admin/legal/:key  — retrieve the stored content for a legal document
- * PATCH /api/v1/admin/legal/:key — upsert (create or overwrite) a legal document
+ * GET  /api/v1/admin/legal/:key  - retrieve the stored content for a legal document
+ * PATCH /api/v1/admin/legal/:key - upsert (create or overwrite) a legal document
  *
  * Supported keys: cgu, politique_confidentialite, mentions_legales
  *
- * Authentication: requireRole(request, 'admin') — admin JWT required for both methods
+ * Authentication: requireRole(request, 'admin') - admin JWT required for both methods
  * Rate limiting: PATCH is limited to 20 requests per minute per admin
  * Sanitization: content is sanitized with DOMPurify before persistence (XSS prevention)
  */
@@ -78,7 +78,7 @@ const legalPatchLimiter = createEndpointRateLimiter({ maxRequests: 20, windowMs:
  *             schema:
  *               $ref: '#/components/schemas/ErrorEnvelope'
  *       401:
- *         description: Unauthorized — admin auth required
+ *         description: Unauthorized - admin auth required
  *         content:
  *           application/json:
  *             schema:
@@ -133,13 +133,13 @@ const legalPatchLimiter = createEndpointRateLimiter({ maxRequests: 20, windowMs:
  *                     data:
  *                       $ref: '#/components/schemas/LegalContent'
  *       400:
- *         description: Validation failed — invalid key or body
+ *         description: Validation failed - invalid key or body
  *         content:
  *           application/json:
  *             schema:
  *               $ref: '#/components/schemas/ErrorEnvelope'
  *       401:
- *         description: Unauthorized — admin auth required
+ *         description: Unauthorized - admin auth required
  *         content:
  *           application/json:
  *             schema:
@@ -179,7 +179,7 @@ export async function GET(
     return applyNoStoreHeaders(successResponse({ key, content }));
   } catch (e) {
     if (e instanceof AppError) return applyNoStoreHeaders(fromAppError(e));
-    // SECURITY: never expose raw error — it leaks internal details via _dev in development mode
+    // SECURITY: never expose raw error - it leaks internal details via _dev in development mode
     console.error(`[GET /api/v1/admin/legal/${key}] Unhandled error:`, e);
     return applyNoStoreHeaders(error500());
   }
@@ -199,7 +199,7 @@ export async function GET(
  *   key: cgu | politique_confidentialite | mentions_legales
  *
  * Request body:
- *   { content: string }  — 1 to 100 000 characters, required
+ *   { content: string }  - 1 to 100 000 characters, required
  *
  * Responses:
  *   200 { data: { key: string, content: string } } - success with sanitized content
@@ -253,7 +253,7 @@ export async function PATCH(
     return applyNoStoreHeaders(successResponse({ key, content: sanitized }));
   } catch (e) {
     if (e instanceof AppError) return applyNoStoreHeaders(fromAppError(e));
-    // SECURITY: never expose raw error — it leaks internal details via _dev in development mode
+    // SECURITY: never expose raw error - it leaks internal details via _dev in development mode
     console.error(`[PATCH /api/v1/admin/legal/${key}] Unhandled error:`, e);
     return applyNoStoreHeaders(error500());
   }

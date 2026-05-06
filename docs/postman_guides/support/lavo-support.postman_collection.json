@@ -1,7 +1,7 @@
 {
   "info": {
-    "name": "LAVO — Support API",
-    "description": "Collection pour les endpoints du module support LAVO.\n\nVariable requise : `base_url` (ex: http://localhost:3000)\nVariable requise : `access_token` (JWT client ou admin selon le groupe testé)\nVariable requise : `ticket_id` (UUID auto-rempli par le script de test de création)\n\n## Groupes\n- **Support — Client** : créer un ticket, lister ses tickets, consulter le détail, ajouter un message\n- **Support — Admin** : lister tous les tickets, changer le statut, assigner un ticket",
+    "name": "LAVO - Support API",
+    "description": "Collection pour les endpoints du module support LAVO.\n\nVariable requise : `base_url` (ex: http://localhost:3000)\nVariable requise : `access_token` (JWT client ou admin selon le groupe testé)\nVariable requise : `ticket_id` (UUID auto-rempli par le script de test de création)\n\n## Groupes\n- **Support - Client** : créer un ticket, lister ses tickets, consulter le détail, ajouter un message\n- **Support - Admin** : lister tous les tickets, changer le statut, assigner un ticket",
     "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
   },
   "variable": [
@@ -23,10 +23,10 @@
   ],
   "item": [
     {
-      "name": "Support — Client",
+      "name": "Support - Client",
       "item": [
         {
-          "name": "Créer ticket — succès (201)",
+          "name": "Créer ticket - succès (201)",
           "event": [
             {
               "listen": "test",
@@ -77,7 +77,7 @@
           }
         },
         {
-          "name": "Créer ticket — body invalide (400)",
+          "name": "Créer ticket - body invalide (400)",
           "event": [
             {
               "listen": "test",
@@ -120,11 +120,11 @@
                 }
               }
             },
-            "description": "400 VALIDATION_FAILED — plusieurs erreurs simultanées :\n- `subject` trop court (moins de 5 caractères)\n- `message` trop court (moins de 10 caractères)\n- `category` n'appartient pas à l'enum autorisé (technique | facturation | bug | autre)\n- `priority` n'appartient pas à l'enum autorisé (bas | normal | urgent)"
+            "description": "400 VALIDATION_FAILED - plusieurs erreurs simultanées :\n- `subject` trop court (moins de 5 caractères)\n- `message` trop court (moins de 10 caractères)\n- `category` n'appartient pas à l'enum autorisé (technique | facturation | bug | autre)\n- `priority` n'appartient pas à l'enum autorisé (bas | normal | urgent)"
           }
         },
         {
-          "name": "Créer ticket — rate limit (429)",
+          "name": "Créer ticket - rate limit (429)",
           "response": [],
           "request": {
             "method": "POST",
@@ -152,7 +152,7 @@
                 }
               }
             },
-            "description": "429 TOO_MANY_REQUESTS — fenêtre glissante de 5 tickets par heure dépassée.\n\nCe cas ne peut pas être déclenché par une seule requête. Pour le reproduire : envoyer cette même requête 6 fois de suite en moins d'une heure avec le même token. La 6e retournera 429. Le quota se réinitialise automatiquement au fil de la fenêtre glissante de 3600 secondes."
+            "description": "429 TOO_MANY_REQUESTS - fenêtre glissante de 5 tickets par heure dépassée.\n\nCe cas ne peut pas être déclenché par une seule requête. Pour le reproduire : envoyer cette même requête 6 fois de suite en moins d'une heure avec le même token. La 6e retournera 429. Le quota se réinitialise automatiquement au fil de la fenêtre glissante de 3600 secondes."
           }
         },
         {
@@ -190,7 +190,7 @@
           }
         },
         {
-          "name": "Mes tickets — filtre statut ouvert (200)",
+          "name": "Mes tickets - filtre statut ouvert (200)",
           "event": [
             {
               "listen": "test",
@@ -267,11 +267,11 @@
               "host": ["{{base_url}}"],
               "path": ["api", "v1", "support", "{{ticket_id}}"]
             },
-            "description": "Retourne le détail complet du ticket identifié par `ticket_id`, y compris le fil de messages.\n\nPrérequis : exécuter d'abord «Créer ticket — succès (201)» pour que `ticket_id` soit défini.\nUn client ne peut consulter que ses propres tickets. Un admin peut consulter n'importe quel ticket."
+            "description": "Retourne le détail complet du ticket identifié par `ticket_id`, y compris le fil de messages.\n\nPrérequis : exécuter d'abord «Créer ticket - succès (201)» pour que `ticket_id` soit défini.\nUn client ne peut consulter que ses propres tickets. Un admin peut consulter n'importe quel ticket."
           }
         },
         {
-          "name": "Détail ticket — introuvable (404)",
+          "name": "Détail ticket - introuvable (404)",
           "event": [
             {
               "listen": "test",
@@ -297,7 +297,7 @@
               "host": ["{{base_url}}"],
               "path": ["api", "v1", "support", "00000000-0000-0000-0000-000000000000"]
             },
-            "description": "404 NOT_FOUND — UUID valide mais aucun ticket correspondant, ou ticket appartenant à un autre utilisateur."
+            "description": "404 NOT_FOUND - UUID valide mais aucun ticket correspondant, ou ticket appartenant à un autre utilisateur."
           }
         },
         {
@@ -346,11 +346,11 @@
                 }
               }
             },
-            "description": "Ajoute un message au fil du ticket.\n\nChamp requis : `content` (1–5000 caractères). Attention : le champ s'appelle `content`, pas `message`.\n\nPrérequis : `ticket_id` défini (exécuter «Créer ticket — succès» au préalable).\nLimite : 30 messages par heure par utilisateur (fenêtre glissante, tous tickets confondus)."
+            "description": "Ajoute un message au fil du ticket.\n\nChamp requis : `content` (1–5000 caractères). Attention : le champ s'appelle `content`, pas `message`.\n\nPrérequis : `ticket_id` défini (exécuter «Créer ticket - succès» au préalable).\nLimite : 30 messages par heure par utilisateur (fenêtre glissante, tous tickets confondus)."
           }
         },
         {
-          "name": "Ajouter message — body invalide (400)",
+          "name": "Ajouter message - body invalide (400)",
           "event": [
             {
               "listen": "test",
@@ -393,11 +393,11 @@
                 }
               }
             },
-            "description": "400 VALIDATION_FAILED — le champ `content` est absent ou vide."
+            "description": "400 VALIDATION_FAILED - le champ `content` est absent ou vide."
           }
         },
         {
-          "name": "Créer ticket — non authentifié (401)",
+          "name": "Créer ticket - non authentifié (401)",
           "event": [
             {
               "listen": "test",
@@ -432,13 +432,13 @@
                 }
               }
             },
-            "description": "401 UNAUTHORIZED — aucun header Authorization fourni. Valable pour tous les endpoints du module support."
+            "description": "401 UNAUTHORIZED - aucun header Authorization fourni. Valable pour tous les endpoints du module support."
           }
         }
       ]
     },
     {
-      "name": "Support — Admin",
+      "name": "Support - Admin",
       "item": [
         {
           "name": "Liste tous les tickets (200)",
@@ -475,7 +475,7 @@
           }
         },
         {
-          "name": "Liste — filtre statut (200)",
+          "name": "Liste - filtre statut (200)",
           "event": [
             {
               "listen": "test",
@@ -555,7 +555,7 @@
           }
         },
         {
-          "name": "Changer statut — en_cours (200)",
+          "name": "Changer statut - en_cours (200)",
           "event": [
             {
               "listen": "test",
@@ -604,7 +604,7 @@
           }
         },
         {
-          "name": "Changer statut — ferme (200)",
+          "name": "Changer statut - ferme (200)",
           "event": [
             {
               "listen": "test",
@@ -653,7 +653,7 @@
           }
         },
         {
-          "name": "Changer statut — statut invalide (400)",
+          "name": "Changer statut - statut invalide (400)",
           "event": [
             {
               "listen": "test",
@@ -696,7 +696,7 @@
                 }
               }
             },
-            "description": "400 VALIDATION_FAILED — `fermé` (avec accent) n'est pas une valeur valide. L'API attend `ferme` (sans accent). Valeurs autorisées : ouvert | en_cours | resolu | ferme."
+            "description": "400 VALIDATION_FAILED - `fermé` (avec accent) n'est pas une valeur valide. L'API attend `ferme` (sans accent). Valeurs autorisées : ouvert | en_cours | resolu | ferme."
           }
         },
         {
@@ -796,7 +796,7 @@
           }
         },
         {
-          "name": "Admin — non authentifié (401)",
+          "name": "Admin - non authentifié (401)",
           "event": [
             {
               "listen": "test",
@@ -831,11 +831,11 @@
                 }
               }
             },
-            "description": "401 UNAUTHORIZED — aucun header Authorization fourni sur un endpoint admin."
+            "description": "401 UNAUTHORIZED - aucun header Authorization fourni sur un endpoint admin."
           }
         },
         {
-          "name": "Admin — mauvais rôle (403)",
+          "name": "Admin - mauvais rôle (403)",
           "event": [
             {
               "listen": "test",
@@ -874,7 +874,7 @@
                 }
               }
             },
-            "description": "403 FORBIDDEN — token valide mais utilisateur de rôle `client` ou `station`.\n\nPour reproduire : remplacer `access_token` par un JWT appartenant à un utilisateur non-admin, puis envoyer la requête."
+            "description": "403 FORBIDDEN - token valide mais utilisateur de rôle `client` ou `station`.\n\nPour reproduire : remplacer `access_token` par un JWT appartenant à un utilisateur non-admin, puis envoyer la requête."
           }
         }
       ]

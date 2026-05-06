@@ -111,7 +111,7 @@ describe('GET /api/v1/support', () => {
     expect(mockGetSupportTickets).not.toHaveBeenCalled();
   });
 
-  it('admin sees all tickets — passes admin role to service', async () => {
+  it('admin sees all tickets - passes admin role to service', async () => {
     mockRequireRole.mockResolvedValue(adminAuth);
     mockGetSupportTickets.mockResolvedValue([ticketFixture]);
 

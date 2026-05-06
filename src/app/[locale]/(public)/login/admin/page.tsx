@@ -16,7 +16,7 @@ export async function generateMetadata({ params }: Props) {
 }
 
 /**
- * Admin login page — accessible only by typing the URL directly (/login/admin).
+ * Admin login page - accessible only by typing the URL directly (/login/admin).
  * Not linked from any public navigation.
  * Split-screen: left admin brand panel (desktop) + right login form (no tabs, no mode switcher).
  */
@@ -30,7 +30,7 @@ export default async function AdminLoginPage({ params }: Props) {
     <AuthRedirectGuard locale={locale}>
       <div className="min-h-screen flex">
 
-        {/* Left brand panel — desktop only */}
+        {/* Left brand panel - desktop only */}
         <aside className="hidden lg:block lg:w-[42%] xl:w-[45%] shrink-0 sticky top-0 h-screen">
           <AdminBrandPanel />
         </aside>
@@ -77,7 +77,7 @@ export default async function AdminLoginPage({ params }: Props) {
               </p>
             </div>
 
-            {/* Login form — no TabSwitcher, no AuthModeSwitcher */}
+            {/* Login form - no TabSwitcher, no AuthModeSwitcher */}
             <div className="bg-white dark:bg-dark-card rounded-2xl shadow-[0_4px_24px_rgba(0,0,0,0.08),_0_1px_2px_rgba(0,0,0,0.04)] dark:shadow-[0_8px_40px_rgba(0,0,0,0.5)] dark:ring-1 dark:ring-gold/10 overflow-hidden animate-fade-in-up">
               <LoginForm forgotPasswordHref="/forgot-password" hideSocialButtons allowedRole="admin" />
             </div>

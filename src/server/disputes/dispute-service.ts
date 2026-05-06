@@ -22,11 +22,11 @@ import type { CreateDisputeInput, RefundDisputeInput, CloseDisputeInput, ListDis
  * The dispute filing window is configurable via the `dispute_window_days` platform setting
  * (DB → PLATFORM_DISPUTE_WINDOW_DAYS env var → 30-day default).
  *
- * @throws NotFoundError — reservation not found
- * @throws ForbiddenError — reservation does not belong to the client
- * @throws ValidationError — reservation not completed or not paid
- * @throws ConflictError — dispute window has expired
- * @throws DisputeAlreadyExistsError — a dispute already exists for this reservation
+ * @throws NotFoundError - reservation not found
+ * @throws ForbiddenError - reservation does not belong to the client
+ * @throws ValidationError - reservation not completed or not paid
+ * @throws ConflictError - dispute window has expired
+ * @throws DisputeAlreadyExistsError - a dispute already exists for this reservation
  */
 export async function createDispute(
   clientId: string,
@@ -135,11 +135,11 @@ export async function listDisputesAdmin(query: ListDisputesQuery): Promise<Dispu
  * Issues a Stripe refund for a dispute and updates the dispute record.
  * Runs the DB update + admin log in a single transaction to ensure consistency.
  *
- * @throws NotFoundError — dispute not found
- * @throws DisputeAlreadyClosedError — dispute is not open
- * @throws NotFoundError — reservation not found
- * @throws RefundNotEligibleError — stripe_transfer_id exists (transfer already made)
- * @throws ValidationError — refund amount exceeds amount paid
+ * @throws NotFoundError - dispute not found
+ * @throws DisputeAlreadyClosedError - dispute is not open
+ * @throws NotFoundError - reservation not found
+ * @throws RefundNotEligibleError - stripe_transfer_id exists (transfer already made)
+ * @throws ValidationError - refund amount exceeds amount paid
  */
 export async function refundDispute(
   adminId: string,
@@ -172,7 +172,7 @@ export async function refundDispute(
     }
   }
 
-  // Call Stripe — outside the transaction to avoid holding a DB lock during network I/O.
+  // Call Stripe - outside the transaction to avoid holding a DB lock during network I/O.
   // The idempotency key is scoped to this dispute so retries on network timeout do not
   // issue a second refund.
   const stripeRefundId = await refundPaymentIntent(
@@ -221,8 +221,8 @@ export async function refundDispute(
  * Closes a dispute as resolved or rejected without issuing a refund.
  * Runs the DB update + admin log in a single transaction.
  *
- * @throws NotFoundError — dispute not found
- * @throws DisputeAlreadyClosedError — dispute is not open
+ * @throws NotFoundError - dispute not found
+ * @throws DisputeAlreadyClosedError - dispute is not open
  */
 export async function closeDispute(
   adminId: string,

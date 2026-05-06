@@ -1,5 +1,5 @@
 /**
- * E2E — Station dashboard page.
+ * E2E - Station dashboard page.
  *
  * Authentication required: tests in this file log in as a station account
  * before navigating to the protected /fr/station/dashboard route.
@@ -23,7 +23,7 @@ test.describe('station dashboard page', () => {
 
     /*
      * StationDashboard renders inside the station layout.  We assert that the
-     * DOM contains substantive content — a heading is always rendered because
+     * DOM contains substantive content - a heading is always rendered because
      * the dashboard shows the station name or a default title.
      */
     const heading = page.locator('h1, h2').first();

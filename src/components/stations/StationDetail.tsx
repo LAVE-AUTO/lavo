@@ -143,7 +143,7 @@ export function StationDetail({ id }: StationDetailProps) {
         </Badge>
       </div>
 
-      {/* Category tabs — only render when the backend returns more than one category.
+      {/* Category tabs - only render when the backend returns more than one category.
          Today the mapper synthesises a single fake category from vehicleFormats[],
          so the tabs would be a one-tab UI that adds noise. The block stays in place
          for the day backend exposes wash_types[] (hand_wash / automatic / self_service). */}
@@ -171,7 +171,7 @@ export function StationDetail({ id }: StationDetailProps) {
         </div>
       )}
 
-      {/* Forfait cards — flat list. Header reuses the category label when present
+      {/* Forfait cards - flat list. Header reuses the category label when present
          (e.g. "Format de véhicule"), otherwise falls back to a generic "Choose your format". */}
       {(hasSlots || isOpen) && currentCategory && (
         <div className="space-y-3">
@@ -221,7 +221,7 @@ export function StationDetail({ id }: StationDetailProps) {
         </div>
       )}
 
-      {/* Unavailable notice — shown when station is closed and has no available slots */}
+      {/* Unavailable notice - shown when station is closed and has no available slots */}
       {!hasSlots && !isOpen && (
         <div className="rounded-xl border border-[#D0D0C0] dark:border-tab-inactive bg-[#F0F0E2] dark:bg-dark-bg/50 px-4 py-4 text-[14px] text-[#555] dark:text-[#B0B0A0] text-center leading-relaxed">
           {t('detail_unavailable_notice')}
@@ -242,7 +242,7 @@ export function StationDetail({ id }: StationDetailProps) {
             </div>
             <div>
               <div className={`text-[20px] font-black leading-none ${station.estimatedWaitMinutes > 20 ? 'text-lavo-error' : 'text-[#000C1F] dark:text-[#FFF8EC]'}`}>
-                {station.estimatedWaitMinutes > 0 ? station.estimatedWaitMinutes : '—'}
+                {station.estimatedWaitMinutes > 0 ? station.estimatedWaitMinutes : '-'}
               </div>
               <div className="text-[11px] text-[#555] dark:text-[#C0C0B0] mt-1">{t('min_attente')}</div>
             </div>
@@ -285,7 +285,7 @@ export function StationDetail({ id }: StationDetailProps) {
     <>
       <div className="min-h-screen bg-[#F5F5E6] dark:bg-dark-bg transition-colors animate-fade-in">
 
-        {/* ── Hero — full width ── */}
+        {/* ── Hero - full width ── */}
         <div className="relative h-[240px] sm:h-[320px] lg:h-[440px] bg-linear-to-br from-[#D5D5C5] to-[#EDEDED] dark:from-tab-inactive dark:to-dark-bg overflow-hidden">
           {station.imageUrl ? (
             <img src={station.imageUrl} alt={station.name} className="w-full h-full object-cover" />
@@ -350,7 +350,7 @@ export function StationDetail({ id }: StationDetailProps) {
             {/* ── Left column ── */}
             <div className="space-y-7">
 
-              {/* Booking widget — mobile/tablet only, below title */}
+              {/* Booking widget - mobile/tablet only, below title */}
               <div className="lg:hidden">
                 <div className="bg-[#E8E8D8] dark:bg-dark-card rounded-2xl p-5 border border-[#D0D0C0] dark:border-tab-inactive">
                   {BookingWidget}
@@ -396,7 +396,7 @@ export function StationDetail({ id }: StationDetailProps) {
               </div>
             </div>
 
-            {/* ── Right column — sticky booking sidebar (desktop only) ── */}
+            {/* ── Right column - sticky booking sidebar (desktop only) ── */}
             <aside className="hidden lg:block lg:sticky lg:top-[84px] self-start">
               <div className="bg-[#E8E8D8] dark:bg-dark-card rounded-2xl p-6 border border-[#D0D0C0] dark:border-tab-inactive shadow-sm">
                 {BookingWidget}
@@ -410,7 +410,7 @@ export function StationDetail({ id }: StationDetailProps) {
           <div className="max-w-[1440px] mx-auto px-4 sm:px-6 flex items-center gap-3">
             <div>
               <div className="text-[20px] font-black text-[#000C1F] dark:text-[#FFF8EC] leading-none">
-                {currentForfait ? currentForfait.price : (station.priceFrom ?? '—')}
+                {currentForfait ? currentForfait.price : (station.priceFrom ?? '-')}
                 <span className="text-[14px] font-semibold ml-1 text-[#555] dark:text-[#C0C0B0]">{t('price_unit')}</span>
               </div>
               <div className="text-[12px] text-[#555] dark:text-[#C0C0B0]">

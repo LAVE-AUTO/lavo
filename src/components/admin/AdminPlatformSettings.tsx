@@ -156,7 +156,7 @@ export function AdminPlatformSettings() {
   return (
     <form onSubmit={handleSave} className="flex min-h-full flex-col">
 
-      {/* Sticky header bar — title left, save right */}
+      {/* Sticky header bar - title left, save right */}
       <div className="sticky top-0 z-10 flex shrink-0 items-center justify-between border-b border-[#E0DCD0] bg-[#F5F5EE]/95 px-6 py-4 backdrop-blur-sm dark:border-[#1A2A14] dark:bg-[#0C1209]/95">
         <div>
           <h1 className="text-[18px] font-black text-[#1A1A0A] dark:text-[#F0EDD4]">{t('page_title')}</h1>
@@ -178,10 +178,10 @@ export function AdminPlatformSettings() {
         </div>
       </div>
 
-      {/* Sections grid — fills available space */}
+      {/* Sections grid - fills available space */}
       <div className="grid flex-1 auto-rows-min gap-5 p-6 md:grid-cols-2 xl:grid-cols-3">
 
-        {/* Commission — spans 2 cols on xl to give split bar room */}
+        {/* Commission - spans 2 cols on xl to give split bar room */}
         <div className="md:col-span-2 xl:col-span-2">
           <SectionCard title={t('section_commission')} icon={
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="12" y1="1" x2="12" y2="23" /><path d="M17 5H9.5a3.5 3.5 0 000 7h5a3.5 3.5 0 010 7H6" /></svg>

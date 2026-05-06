@@ -8,8 +8,8 @@
  * deployment).
  *
  * Response:
- *   200 application/json — full OpenAPI 3.1 spec object
- *   404 — when the docs endpoint is disabled
+ *   200 application/json - full OpenAPI 3.1 spec object
+ *   404 - when the docs endpoint is disabled
  */
 import { NextResponse } from 'next/server';
 import { buildOpenApiSpec } from '@/lib/openapi/build-spec';

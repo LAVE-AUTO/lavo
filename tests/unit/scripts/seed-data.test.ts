@@ -37,24 +37,24 @@ describe("seed-data", () => {
   describe("PLATFORM_SETTINGS", () => {
     // All 14 platform-configurable keys + 2 backend token-expiry keys = 16 entries.
     const expectedKeys = [
-      // Group A — Cancellation policy
+      // Group A - Cancellation policy
       "cancellation_penalty_percent",
       "cancellation_free_window_minutes",
       "cancellation_penalty_platform_rate",
       "cancellation_penalty_station_rate",
-      // Group B — Reservations & booking
+      // Group B - Reservations & booking
       "max_advance_booking_days",
       "rating_window_days",
       "default_late_tolerance_minutes",
-      // Group C — Tips
+      // Group C - Tips
       "max_tip_amount_xaf",
-      // Group D — Reminders
+      // Group D - Reminders
       "reminder_first_window_hours",
       "reminder_second_window_minutes",
-      // Group E — Notification emails
+      // Group E - Notification emails
       "admin_notification_email",
       "weekly_report_email",
-      // Group F — Content limits
+      // Group F - Content limits
       "max_rating_comment_length",
       "max_support_message_length",
       // Backend configuration (not admin-configurable via API)

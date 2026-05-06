@@ -39,7 +39,7 @@ export function ContactContent() {
     <div className="max-w-[1440px] mx-auto px-6 lg:px-16 pt-12 pb-20">
       <div className="lg:grid lg:grid-cols-[1fr_480px] lg:gap-16 lg:items-start">
 
-        {/* Left — info */}
+        {/* Left - info */}
         <div className="mb-10 lg:mb-0">
           <p className="text-[12px] font-bold tracking-[3px] uppercase text-[#c8980a] mb-3">{t('eyebrow')}</p>
           <h1 className="font-playfair text-[36px] sm:text-[48px] font-black text-[#1a1a1a] dark:text-white leading-tight mb-4">
@@ -106,7 +106,7 @@ export function ContactContent() {
           </div>
         </div>
 
-        {/* Right — form */}
+        {/* Right - form */}
         <div className="bg-[#E8E8D8] dark:bg-dark-card rounded-2xl p-6 sm:p-8 border border-[rgba(200,152,10,0.12)] shadow-sm">
           {status === 'sent' ? (
             <div className="flex flex-col items-center justify-center text-center py-10 gap-4">

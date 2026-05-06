@@ -1,11 +1,11 @@
 /**
  * Tip (pourboire) paid by a client after a completed reservation.
- * One tip per reservation — enforced by unique constraint on reservation_id.
+ * One tip per reservation - enforced by unique constraint on reservation_id.
  * The Stripe transfer to the station is handled via destination charge (transfer_data.destination)
  * with no application_fee_amount, so 100% of the tip flows to the station.
  */
 import { decimal, index, pgTable, timestamp, uuid, varchar } from "drizzle-orm/pg-core";
-// Note: no currency column — currency is a Stripe concern, not stored on our side.
+// Note: no currency column - currency is a Stripe concern, not stored on our side.
 import { reservations } from "./reservations";
 import { stations } from "./stations";
 import { users } from "./users";
@@ -31,7 +31,7 @@ export const reservationTips = pgTable(
       .notNull()
       .unique(),
     /**
-     * Stripe Transfer ID — populated after the destination charge is confirmed
+     * Stripe Transfer ID - populated after the destination charge is confirmed
      * and the automatic transfer to the station's connected account completes.
      * Set via the payment_intent.succeeded Stripe webhook.
      */

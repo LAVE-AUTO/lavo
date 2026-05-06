@@ -1,7 +1,7 @@
 /**
  * Support ticket messaging API.
  *
- * POST /api/v1/support/:id/messages — Add a message to a support ticket thread.
+ * POST /api/v1/support/:id/messages - Add a message to a support ticket thread.
  *   - Auth: client, station, or admin
  *   - Param: ticket ID (UUID)
  *   - Body: { content: string }
@@ -9,13 +9,13 @@
  *   - Rate limit: 30 messages per hour per authenticated user (sliding window)
  *
  * Responses:
- *   - 201 { data: message } — success
+ *   - 201 { data: message } - success
  *   - 400 Invalid ticket ID or JSON
- *   - 400 VALIDATION_FAILED — content exceeds max length or is empty
- *   - 401 UNAUTHORIZED — auth required
- *   - 404 NOT_FOUND — ticket not found
- *   - 429 TOO_MANY_REQUESTS — rate limited (30 msg/hour)
- *   - 500 INTERNAL_ERROR — database or service error
+ *   - 400 VALIDATION_FAILED - content exceeds max length or is empty
+ *   - 401 UNAUTHORIZED - auth required
+ *   - 404 NOT_FOUND - ticket not found
+ *   - 429 TOO_MANY_REQUESTS - rate limited (30 msg/hour)
+ *   - 500 INTERNAL_ERROR - database or service error
  */
 import { requireRole } from '@/lib/require-role';
 import { successResponse, error400, error429, error500, fromAppError } from '@/lib/responses';

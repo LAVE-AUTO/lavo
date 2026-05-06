@@ -2,7 +2,7 @@
  * POST /api/v1/reservations/:id/refuse-delay
  * Station refuses a pending delay request from a client. Auth: station.
  * Updates delay request status to 'refused' and notifies the client.
- * The reservation status is NOT modified — the cron remains sole arbiter of late detection.
+ * The reservation status is NOT modified - the cron remains sole arbiter of late detection.
  *
  * Response 200: { data: { delay_request } }
  * Errors: 400 VALIDATION_FAILED, 401 UNAUTHORIZED, 403 FORBIDDEN, 404 NOT_FOUND, 500 INTERNAL_ERROR

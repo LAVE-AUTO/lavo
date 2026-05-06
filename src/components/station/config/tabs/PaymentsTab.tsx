@@ -1,167 +1,201 @@
 'use client';
 
+import { useState, useEffect, useCallback } from 'react';
 import { useTranslations } from 'next-intl';
-import { BackendMissingBanner } from '../BackendMissingBanner';
+import { getFromApi, postWithApi } from '@/services';
+
+interface StripeStatus {
+  connected: false;
+}
+
+interface StripeStatusConnected {
+  connected: true;
+  charges_enabled: boolean;
+  payouts_enabled: boolean;
+  details_submitted: boolean;
+}
+
+type Status = StripeStatus | StripeStatusConnected;
+
+function CheckIcon() {
+  return (
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      <polyline points="20 6 9 17 4 12" />
+    </svg>
+  );
+}
+
+function WarningIcon() {
+  return (
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z" />
+      <line x1="12" y1="9" x2="12" y2="13" />
+      <line x1="12" y1="17" x2="12.01" y2="17" />
+    </svg>
+  );
+}
+
+function StripeIcon() {
+  return (
+    <svg width="18" height="18" viewBox="0 0 28 28" fill="none" aria-hidden="true">
+      <rect width="28" height="28" rx="6" fill="#635BFF" />
+      <path d="M13.2 10.4c0-.96.8-1.33 2.13-1.33 1.87 0 3.74.53 5.07 1.6V6.27A14.13 14.13 0 0 0 15.33 5.6C11.47 5.6 9 7.6 9 10.67c0 4.8 6.8 4 6.8 6.13 0 1.07-.93 1.47-2.27 1.47-2 0-4-.8-5.53-2v4.53c1.6.8 3.2 1.07 4.93 1.07C16.8 21.87 19.4 20 19.4 16.8 19.4 11.73 13.2 12.8 13.2 10.4z" fill="white" />
+    </svg>
+  );
+}
+
+function ExternalLinkIcon() {
+  return (
+    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6" />
+      <polyline points="15 3 21 3 21 9" />
+      <line x1="10" y1="14" x2="21" y2="3" />
+    </svg>
+  );
+}
+
+function StatusRow({ label, enabled }: { label: string; enabled: boolean }) {
+  return (
+    <div className="flex items-center justify-between py-2.5 border-b border-[#F0EDE4] last:border-0 dark:border-[#1A2A14]">
+      <span className="text-[13px] text-[#444] dark:text-[#C0C0B0]">{label}</span>
+      <span
+        className={`flex items-center gap-1 text-[12px] font-bold ${
+          enabled ? 'text-[#2ECC71]' : 'text-[#AAAAAA] dark:text-[#4A4A3A]'
+        }`}
+      >
+        {enabled ? <CheckIcon /> : <WarningIcon />}
+        {enabled ? '✓' : '-'}
+      </span>
+    </div>
+  );
+}
+
+function Skeleton() {
+  return (
+    <div className="animate-pulse rounded-2xl border border-[#E8E4DC] bg-white p-6 dark:border-[#1A2A14] dark:bg-[#182214]">
+      <div className="h-4 w-32 rounded bg-[#E8E4DC] dark:bg-[#243020] mb-4" />
+      <div className="h-10 w-full rounded-xl bg-[#F0EDE4] dark:bg-[#0F1A0C]" />
+    </div>
+  );
+}
 
 interface Props {
   locked: boolean;
 }
 
-const inputClass =
-  'w-full rounded-[8px] border border-[#D8D4C8] bg-[#F7F6F2] px-3 py-2.5 text-[13px] text-[#1A1A0A] outline-none transition-colors duration-150 placeholder:text-[#BBBBAA] disabled:cursor-not-allowed disabled:opacity-60 dark:border-[#243020] dark:bg-[#0F1A0C] dark:text-[#F0EDD4] dark:placeholder:text-[#4A4A3A]';
-
-function Field({ label, children }: { label: string; children: React.ReactNode }) {
-  return (
-    <div className="flex flex-col gap-1.5">
-      <label className="text-[11px] font-bold uppercase tracking-[0.5px] text-[#888] dark:text-[#9A9A8A]">
-        {label}
-      </label>
-      {children}
-    </div>
-  );
-}
-
-function Card({
-  title,
-  badge,
-  children,
-}: {
-  title: string;
-  badge?: string;
-  children: React.ReactNode;
-}) {
-  return (
-    <section className="relative rounded-2xl border border-[#E8E4DC] bg-white p-6 shadow-sm dark:border-[#1A2A14] dark:bg-[#182214]">
-      <div className="mb-4 flex items-center justify-between gap-3">
-        <h3 className="text-[11px] font-bold uppercase tracking-[1.5px] text-[#C49A1E]">{title}</h3>
-        {badge && (
-          <span className="rounded-full border border-[#E0DCD0] bg-[#F7F6F2] px-2.5 py-0.5 text-[10px] font-bold uppercase tracking-wider text-[#888] dark:border-[#243020] dark:bg-[#0F1A0C] dark:text-[#9A9A8A]">
-            {badge}
-          </span>
-        )}
-      </div>
-      {children}
-    </section>
-  );
-}
-
-function Toggle({ checked, disabled }: { checked: boolean; disabled: boolean }) {
-  return (
-    <label className="relative inline-flex h-6 w-11 shrink-0">
-      <input type="checkbox" checked={checked} disabled={disabled} readOnly className="peer sr-only" />
-      <span
-        className={`absolute inset-0 rounded-full transition-colors ${
-          disabled ? 'cursor-not-allowed opacity-60' : 'cursor-pointer'
-        } ${checked ? 'bg-[#C49A1E]' : 'bg-[#D8D4C8] dark:bg-[#243020]'}`}
-        aria-hidden="true"
-      >
-        <span
-          className={`absolute top-0.5 h-5 w-5 rounded-full bg-white shadow transition-transform ${
-            checked ? 'translate-x-[22px]' : 'translate-x-0.5'
-          }`}
-        />
-      </span>
-    </label>
-  );
-}
-
 export function PaymentsTab({ locked }: Props) {
   const t = useTranslations('station_config');
 
+  const [status, setStatus] = useState<Status | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [actionLoading, setActionLoading] = useState(false);
+
+  const loadStatus = useCallback(async () => {
+    const [ok, data] = await getFromApi('/station/stripe/status');
+    if (ok) {
+      setStatus((data as { data: Status }).data);
+    }
+    setLoading(false);
+  }, []);
+
+  useEffect(() => {
+    loadStatus();
+  }, [loadStatus]);
+
+  async function handleConnect() {
+    setActionLoading(true);
+    const [ok, data] = await postWithApi('/station/stripe/onboarding', {});
+    setActionLoading(false);
+    if (ok) {
+      const url = (data as { data: { url: string } }).data.url;
+      window.location.href = url;
+    }
+  }
+
+  if (loading) return <Skeleton />;
+
+  const isConnected = status?.connected === true;
+  const isActive = isConnected && (status as StripeStatusConnected).charges_enabled;
+  const isPending = isConnected && !(status as StripeStatusConnected).charges_enabled;
+
   return (
     <div className="flex flex-col gap-5">
-      <BackendMissingBanner
-        endpoints={[
-          'GET /station/payout-account',
-          'PATCH /station/payout-account { institution, transit, account_number, payout_frequency }',
-          'GET /station/tax-info',
-          'PATCH /station/tax-info { gst_number, qst_number, province }',
-          'GET /station/receipt-prefs',
-          'PATCH /station/receipt-prefs { email_receipt, sms_receipt }',
-        ]}
-      />
+      <section className="rounded-2xl border border-[#E8E4DC] bg-white p-6 shadow-sm dark:border-[#1A2A14] dark:bg-[#182214]">
+        <div className="mb-4 flex items-center justify-between gap-3">
+          <h3 className="text-[11px] font-bold uppercase tracking-[1.5px] text-[#C49A1E]">
+            {t('payments_stripe_title')}
+          </h3>
+          {isActive && (
+            <span className="flex items-center gap-1 rounded-full bg-[#E6F9EF] px-2.5 py-0.5 text-[10px] font-bold uppercase tracking-wider text-[#2ECC71] dark:bg-[#0A2010] dark:text-[#2ECC71]">
+              <CheckIcon />
+              {t('payments_stripe_active_badge')}
+            </span>
+          )}
+          {isPending && (
+            <span className="flex items-center gap-1 rounded-full bg-[#FFF8E6] px-2.5 py-0.5 text-[10px] font-bold uppercase tracking-wider text-[#C49A1E] dark:bg-[#1A1200] dark:text-[#C49A1E]">
+              <WarningIcon />
+              {t('payments_stripe_pending_badge')}
+            </span>
+          )}
+        </div>
 
-      <Card title={t('payments_bank_title')} badge={t('payments_pending_label')}>
-        <div className="flex flex-col gap-4">
-          <Field label={t('payments_bank_institution')}>
-            <input
-              className={inputClass}
-              type="text"
-              placeholder={t('payments_bank_institution_placeholder')}
-              disabled
+        {!isConnected && (
+          <div className="flex flex-col gap-4">
+            <p className="text-[13px] leading-relaxed text-[#666] dark:text-[#9A9A8A]">
+              {t('payments_stripe_not_connected_desc')}
+            </p>
+            <button
+              type="button"
+              disabled={actionLoading || locked}
+              onClick={handleConnect}
+              className="flex w-full items-center justify-center gap-2 rounded-xl bg-[#635BFF] px-5 py-3 text-[13px] font-bold text-white transition-opacity hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-50 sm:w-auto"
+            >
+              <StripeIcon />
+              {actionLoading ? t('payments_stripe_connecting') : t('payments_stripe_connect_btn')}
+            </button>
+          </div>
+        )}
+
+        {isPending && (
+          <div className="flex flex-col gap-4">
+            <p className="text-[13px] leading-relaxed text-[#666] dark:text-[#9A9A8A]">
+              {t('payments_stripe_pending_desc')}
+            </p>
+            <button
+              type="button"
+              disabled={actionLoading || locked}
+              onClick={handleConnect}
+              className="flex w-full items-center justify-center gap-2 rounded-xl bg-[#C49A1E] px-5 py-3 text-[13px] font-bold text-[#0C1209] transition-opacity hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-50 sm:w-auto"
+            >
+              {actionLoading ? t('payments_stripe_connecting') : t('payments_stripe_complete_btn')}
+            </button>
+          </div>
+        )}
+
+        {isActive && (
+          <div className="flex flex-col gap-3">
+            <StatusRow
+              label={t('payments_stripe_charges')}
+              enabled={(status as StripeStatusConnected).charges_enabled}
             />
-          </Field>
-          <div className="grid grid-cols-2 gap-3">
-            <Field label={t('payments_bank_transit')}>
-              <input className={inputClass + ' font-mono'} type="text" placeholder="00000" disabled />
-            </Field>
-            <Field label={t('payments_bank_account')}>
-              <input className={inputClass + ' font-mono'} type="text" placeholder="0000000" disabled />
-            </Field>
+            <StatusRow
+              label={t('payments_stripe_payouts')}
+              enabled={(status as StripeStatusConnected).payouts_enabled}
+            />
+            <div className="pt-1">
+              <a
+                href="https://dashboard.stripe.com"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center gap-1.5 text-[12px] font-semibold text-[#635BFF] hover:underline"
+              >
+                {t('payments_stripe_dashboard_link')}
+                <ExternalLinkIcon />
+              </a>
+            </div>
           </div>
-          <Field label={t('payments_payout_frequency')}>
-            <select className={inputClass + ' appearance-none'} disabled>
-              <option>{t('payments_payout_daily')}</option>
-              <option>{t('payments_payout_weekly')}</option>
-              <option>{t('payments_payout_monthly')}</option>
-            </select>
-          </Field>
-        </div>
-      </Card>
-
-      <Card title={t('payments_tax_title')}>
-        <div className="grid gap-4 md:grid-cols-2">
-          <Field label={t('payments_tax_gst')}>
-            <input className={inputClass + ' font-mono'} type="text" placeholder="000000000RT0001" disabled />
-          </Field>
-          <Field label={t('payments_tax_qst')}>
-            <input className={inputClass + ' font-mono'} type="text" placeholder="0000000000TQ0001" disabled />
-          </Field>
-          <Field label={t('payments_tax_province')}>
-            <select className={inputClass + ' appearance-none'} disabled>
-              <option>{t('payments_tax_province_qc')}</option>
-              <option>{t('payments_tax_province_on')}</option>
-            </select>
-          </Field>
-          <div className="flex flex-col items-center justify-center rounded-xl bg-[#F7F6F2] px-4 py-3 dark:bg-[#0F1A0C]">
-            <span className="text-[11px] font-semibold uppercase tracking-wider text-[#AAAAAA] dark:text-[#4A4A3A]">
-              {t('payments_tax_total_rate')}
-            </span>
-            <span className="font-mono text-[22px] font-black text-[#C49A1E]">—</span>
-            <span className="text-[11px] text-[#888] dark:text-[#9A9A8A]">{t('payments_tax_breakdown')}</span>
-          </div>
-        </div>
-      </Card>
-
-      <Card title={t('payments_receipts_title')}>
-        <div className="flex flex-col">
-          <div className="flex items-center justify-between border-b border-[#F0EDE4] py-3 dark:border-[#1A2A14]">
-            <span className="text-[13px] font-semibold text-[#1A1A0A] dark:text-[#F0EDD4]">
-              {t('payments_receipts_email')}
-            </span>
-            <Toggle checked={false} disabled={true} />
-          </div>
-          <div className="flex items-center justify-between py-3">
-            <span className="text-[13px] font-semibold text-[#1A1A0A] dark:text-[#F0EDD4]">
-              {t('payments_receipts_sms')}
-            </span>
-            <Toggle checked={false} disabled={true} />
-          </div>
-        </div>
-      </Card>
-
-      <div className="flex justify-end">
-        <button
-          type="button"
-          disabled
-          title={t('backend_missing_save_disabled')}
-          className="flex items-center gap-2 rounded-xl bg-[#C49A1E] px-6 py-2.5 text-[13px] font-bold text-[#0C1209] opacity-40 cursor-not-allowed"
-        >
-          {t('payments_btn_save')}
-        </button>
-      </div>
-
-      {locked && <span className="sr-only" aria-hidden="true" />}
+        )}
+      </section>
     </div>
   );
 }

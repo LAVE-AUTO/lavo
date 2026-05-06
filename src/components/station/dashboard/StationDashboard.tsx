@@ -121,7 +121,7 @@ function buildPosts(
           clientName: `Client #${e.user_id.slice(0, 4)}`,
           price: e.amount_paid ? parseFloat(e.amount_paid) : undefined,
           startMinutes: startMin,
-          // No reliable end time without service.duration on the entry — assume
+          // No reliable end time without service.duration on the entry - assume
           // 45 min as a visual placeholder. Replace with real duration once the
           // backend denormalizes service/duration on /station/entries.
           endMinutes: startMin + 45,
@@ -162,10 +162,10 @@ export function StationDashboard() {
     const revenue = Number.parseFloat(raw.total_revenue ?? '');
     const lateFees = Number.parseFloat(raw.late_fees_total ?? '');
     return {
-      revenue: Number.isFinite(revenue) ? Math.round(revenue) : null,
-      clients: typeof raw.total_clients === 'number' ? raw.total_clients : null,
-      lateFees: Number.isFinite(lateFees) ? Math.round(lateFees) : null,
-      occupancy: typeof raw.fill_rate_pct === 'number' ? raw.fill_rate_pct : null,
+      revenue: Number.isFinite(revenue) ? Math.round(revenue) : 0,
+      clients: typeof raw.total_clients === 'number' ? raw.total_clients : 0,
+      lateFees: Number.isFinite(lateFees) ? Math.round(lateFees) : 0,
+      occupancy: typeof raw.fill_rate_pct === 'number' ? raw.fill_rate_pct : 0,
     };
   }
 
@@ -193,15 +193,15 @@ export function StationDashboard() {
 
     if (dashboardOk) {
       const dashboard = (dashboardData as { data?: RawDashboard })?.data;
-      if (dashboard) {
-        setKpi(mapDashboardToKpi(dashboard));
-      }
+      setKpi(dashboard ? mapDashboardToKpi(dashboard) : { revenue: 0, clients: 0, lateFees: 0, occupancy: 0 });
+    } else {
+      setKpi({ revenue: 0, clients: 0, lateFees: 0, occupancy: 0 });
     }
 
     if (delaysOk) {
       const payload = (delaysData as { data?: { items?: RawDelayPreview[]; meta?: { total?: number } } })?.data;
       const items = payload?.items ?? [];
-      // /station/delays does not denormalize the user — show anonymised id until the
+      // /station/delays does not denormalize the user - show anonymised id until the
       // backend returns a name (see project_pending_backend_specs.md).
       setDelays(
         items

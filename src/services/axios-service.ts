@@ -101,7 +101,7 @@ export function createAxiosInstance(
         if (is401) {
           const hadAuthHeader = !!originalConfig?.headers?.Authorization;
 
-          // Authenticated request expired — try to refresh and retry once.
+          // Authenticated request expired - try to refresh and retry once.
           if (hadAuthHeader && tokenRefresher && !originalConfig._retried) {
             originalConfig._retried = true;
             const newToken = await tokenRefresher();
@@ -109,12 +109,12 @@ export function createAxiosInstance(
               originalConfig.headers.Authorization = `Bearer ${newToken}`;
               return instance(originalConfig);
             }
-            // Refresh failed — fall through to logout handler.
+            // Refresh failed - fall through to logout handler.
             if (onUnauthorized) onUnauthorized();
             return Promise.reject(error);
           }
 
-          // No tokenRefresher configured — legacy direct handler.
+          // No tokenRefresher configured - legacy direct handler.
           if (!tokenRefresher && onUnauthorized) {
             onUnauthorized();
           }

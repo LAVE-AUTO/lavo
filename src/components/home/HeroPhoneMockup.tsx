@@ -7,7 +7,7 @@ export function HeroPhoneMockup() {
 
   return (
     <div className="relative">
-      {/* Bubble 1 — top left */}
+      {/* Bubble 1 - top left */}
       <div
         className="absolute top-[-20px] left-[-64px] z-10 min-w-[160px] rounded-[10px] border border-[rgba(200,152,10,0.25)] bg-[#e8e2d4] dark:bg-[#111f0f] px-4 py-3 shadow-[0_16px_40px_rgba(0,0,0,0.25)] dark:shadow-[0_16px_40px_rgba(0,0,0,0.5)] animate-float hidden lg:block"
         style={{ animationDelay: '0s' }}
@@ -21,7 +21,7 @@ export function HeroPhoneMockup() {
         <div className="mt-1 text-[9px] text-[#4a6a4d] dark:text-[#7a9a7d]">{t('bubble_1_sub')}</div>
       </div>
 
-      {/* Bubble 2 — bottom right */}
+      {/* Bubble 2 - bottom right */}
       <div
         className="absolute bottom-[120px] right-[-56px] z-10 min-w-[160px] rounded-[10px] border border-[rgba(200,152,10,0.25)] bg-[#e8e2d4] dark:bg-[#111f0f] px-4 py-3 shadow-[0_16px_40px_rgba(0,0,0,0.25)] dark:shadow-[0_16px_40px_rgba(0,0,0,0.5)] animate-float hidden lg:block"
         style={{ animationDelay: '0.8s' }}

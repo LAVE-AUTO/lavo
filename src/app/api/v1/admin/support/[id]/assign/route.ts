@@ -18,12 +18,12 @@ import type { NextResponse } from 'next/server';
  *   - When not null, the target user must have role `admin`.
  *
  * Responses:
- *   200 { data: ticket }                   — assignment updated
- *   400 VALIDATION_FAILED                  — invalid UUID param or body
- *   401 UNAUTHORIZED                       — not authenticated
- *   403 FORBIDDEN                          — insufficient role
- *   404 NOT_FOUND                          — ticket does not exist
- *   422 UNPROCESSABLE_ENTITY               — target user is not an admin
+ *   200 { data: ticket }                   - assignment updated
+ *   400 VALIDATION_FAILED                  - invalid UUID param or body
+ *   401 UNAUTHORIZED                       - not authenticated
+ *   403 FORBIDDEN                          - insufficient role
+ *   404 NOT_FOUND                          - ticket does not exist
+ *   422 UNPROCESSABLE_ENTITY               - target user is not an admin
  *   500 INTERNAL_ERROR
  */
 export async function PATCH(

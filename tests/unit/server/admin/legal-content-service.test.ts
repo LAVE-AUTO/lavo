@@ -8,7 +8,7 @@
  *   - updateLegalContent: strips XSS script tags before storing
  *
  * Note on empty-string behaviour:
- *   The service does not throw on empty string — that invariant is enforced at the
+ *   The service does not throw on empty string - that invariant is enforced at the
  *   validator layer (updateLegalContentBodySchema.content has min(1)). The service
  *   trusts that its callers pass validated input.
  *

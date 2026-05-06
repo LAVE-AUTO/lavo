@@ -111,7 +111,7 @@ The UI is implemented as locale-prefixed routes (`/fr`, `/en`) using `next-intl`
 
 API endpoints are implemented using Next.js App Router route handlers. Routes are grouped by domain (auth, stations, reservations, payments/webhooks, ratings, history, admin, support). Input validation is planned to be enforced at every boundary using Zod. Response and error handling are standardized via shared helpers to keep contract consistency.
 
-**Admin role naming:** The database and JWT store the platform operator role as the string `'admin'`. The UI may show “Super Admin” or `SUPER_ADMIN` as a label only — API and authorization checks must use `'admin'`, not a separate `super_admin` enum value unless the schema is explicitly migrated.
+**Admin role naming:** The database and JWT store the platform operator role as the string `'admin'`. The UI may show “Super Admin” or `SUPER_ADMIN` as a label only - API and authorization checks must use `'admin'`, not a separate `super_admin` enum value unless the schema is explicitly migrated.
 
 ### Domain Services (`src/server/*`)
 

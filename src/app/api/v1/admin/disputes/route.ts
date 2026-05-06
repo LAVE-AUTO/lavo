@@ -81,7 +81,7 @@
  *             schema:
  *               $ref: '#/components/schemas/ErrorEnvelope'
  *       403:
- *         description: Forbidden — admin role required
+ *         description: Forbidden - admin role required
  *         content:
  *           application/json:
  *             schema:
@@ -109,17 +109,17 @@ import type { NextRequest, NextResponse } from 'next/server';
  * Role: admin only.
  *
  * Query params:
- *   status       — open | refunded | resolved | rejected
- *   station_id   — filter by station UUID
- *   client_id    — filter by client UUID
- *   date_from    — ISO 8601 datetime (inclusive lower bound)
- *   date_to      — ISO 8601 datetime (inclusive upper bound)
- *   page         — page number (default 1)
- *   per_page     — items per page (default 20, max 100)
+ *   status       - open | refunded | resolved | rejected
+ *   station_id   - filter by station UUID
+ *   client_id    - filter by client UUID
+ *   date_from    - ISO 8601 datetime (inclusive lower bound)
+ *   date_to      - ISO 8601 datetime (inclusive upper bound)
+ *   page         - page number (default 1)
+ *   per_page     - items per page (default 20, max 100)
  *
  * Responses:
  *   200 { data: { items, meta } }
- *   400 VALIDATION_FAILED   — invalid query params
+ *   400 VALIDATION_FAILED   - invalid query params
  *   401 UNAUTHORIZED
  *   403 FORBIDDEN
  *   500 INTERNAL_ERROR
@@ -143,7 +143,7 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
     return applyNoStoreHeaders(successResponse(result));
   } catch (e) {
     if (e instanceof AppError) return applyNoStoreHeaders(fromAppError(e));
-    // SECURITY: never pass raw error to error500 — leaks internal details via _dev
+    // SECURITY: never pass raw error to error500 - leaks internal details via _dev
     console.error('[GET /api/v1/admin/disputes] Unhandled error:', e);
     return applyNoStoreHeaders(error500());
   }

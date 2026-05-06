@@ -59,7 +59,7 @@ interface LoginFormProps {
 }
 
 /**
- * Login form — email + password + remember me + forgot-password link + social buttons.
+ * Login form - email + password + remember me + forgot-password link + social buttons.
  * On success: persists session via AuthContext and redirects by role.
  * When allowedRole is set, blocks cross-space logins and shows a redirect banner.
  */
@@ -130,7 +130,7 @@ export function LoginForm({
         const userRole = String(data.user.role || 'client') as UserRole;
 
         /* Cross-space login guard: block if role does not match this login page.
-           The backend already set a refresh_token cookie — call logout to clear it
+           The backend already set a refresh_token cookie - call logout to clear it
            before showing the error, otherwise AuthProvider will log the user in anyway. */
         if (allowedRole && userRole !== allowedRole) {
           await postWithApi('/auth/logout', {});
@@ -258,7 +258,7 @@ export function LoginForm({
         {isLoading ? t('loading') : t('submit')}
       </Button>
 
-      {/* Wrong space banner — shown when user logs in with the wrong account type */}
+      {/* Wrong space banner - shown when user logs in with the wrong account type */}
       {wrongSpaceHref && (
         <div className="mt-4 flex items-center justify-between gap-3 px-4 py-3 rounded-xl border border-gold/30 bg-gold/5 animate-fade-in">
           <p className="text-[13px] text-[#555] dark:text-lavo-muted leading-snug">

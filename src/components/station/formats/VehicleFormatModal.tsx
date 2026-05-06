@@ -4,8 +4,21 @@ import { useState, useEffect, useRef } from 'react';
 import { useTranslations, useLocale } from 'next-intl';
 import { postWithApi, updateWithApi } from '@/services';
 import { ConfirmDialog } from '@/components/ui/ConfirmDialog';
-import { VehicleLabelAutocomplete } from './VehicleLabelAutocomplete';
 import type { VehicleFormat } from './types';
+
+// Predefined vehicle format suggestions
+const SUGGESTIONS_FR = [
+  'Micro / Mini', 'Compact', 'Berline', 'Coupé', 'Décapotable',
+  'Hatchback', 'Break', 'SUV', 'VUS', 'Crossover',
+  'Minivan', 'Fourgonnette', 'Pickup', 'Camion léger',
+  'Véhicule électrique', 'Véhicule hybride',
+];
+
+const SUGGESTIONS_EN = [
+  'Micro / Mini', 'Compact', 'Sedan', 'Coupe', 'Convertible',
+  'Hatchback', 'Wagon', 'SUV', 'Crossover', 'Minivan',
+  'Van', 'Pickup Truck', 'Light Truck', 'Electric Vehicle', 'Hybrid',
+];
 
 interface Props {
   format: VehicleFormat | null;
@@ -85,7 +98,7 @@ export function VehicleFormatModal({ format, existingFormats, onClose, onSaved }
     if (ok) {
       onSaved((data as { data: VehicleFormat }).data);
     } else {
-      // Never expose raw server messages — map known codes to i18n strings only
+      // Never expose raw server messages - map known codes to i18n strings only
       const err = data as { code?: string };
       setApiError(err?.code === 'CONFLICT' ? t('format_label_conflict') : t('format_save_error'));
     }
@@ -124,19 +137,47 @@ export function VehicleFormatModal({ format, existingFormats, onClose, onSaved }
           </div>
 
           <form onSubmit={handleSaveClick} className="flex flex-col gap-4 p-5">
-            {/* Label field */}
+            {/* Label field - Dropdown select */}
             <div className="flex flex-col gap-1.5">
               <label className="text-[13px] font-semibold text-[#5A5A4A] dark:text-[#9A9A8A]">
                 {t('format_field_label')} <span className="text-[#EF4444]">*</span>
               </label>
-              <VehicleLabelAutocomplete
+              
+              {/* Dropdown with predefined suggestions */}
+              <select
                 value={label}
-                onChange={(v) => { setLabel(v); setApiError(null); }}
-                onEnter={focusPrice}
-                existingLabels={existingLabels}
-                locale={locale}
-                placeholder={t('format_placeholder_label')}
-              />
+                onChange={(e) => {
+                  setLabel(e.target.value);
+                  setApiError(null);
+                }}
+                onKeyDown={(e) => e.key === 'Enter' && focusPrice()}
+                className="rounded-[8px] border border-[#D8D4C8] bg-[#F7F6F2] px-3 py-2.5 text-[13px] text-[#1A1A0A] outline-none transition-colors focus:border-[#C49A1E] focus:bg-white focus:shadow-[0_0_0_3px_rgba(196,154,30,0.12)] dark:border-[#243020] dark:bg-[#0F1A0C] dark:text-[#F0EDD4] dark:focus:border-[#C49A1E] dark:focus:bg-[#182214]"
+              >
+                <option value="">{t('format_placeholder_label')}</option>
+                <optgroup label="Suggestions">
+                  {(locale === 'en' ? SUGGESTIONS_EN : SUGGESTIONS_FR).map((fmt) => (
+                    <option key={fmt} value={fmt} disabled={existingLabels.includes(fmt)}>
+                      {fmt}
+                    </option>
+                  ))}
+                </optgroup>
+              </select>
+
+              {/* Custom input fallback (hidden if using preset) */}
+              {label && !((locale === 'en' ? SUGGESTIONS_EN : SUGGESTIONS_FR).includes(label)) && (
+                <input
+                  type="text"
+                  value={label}
+                  onChange={(e) => {
+                    setLabel(e.target.value);
+                    setApiError(null);
+                  }}
+                  placeholder="Custom format name"
+                  maxLength={100}
+                  className="rounded-[8px] border border-[#D8D4C8] bg-[#F7F6F2] px-3 py-2.5 text-[13px] text-[#1A1A0A] outline-none transition-colors focus:border-[#C49A1E] focus:bg-white focus:shadow-[0_0_0_3px_rgba(196,154,30,0.12)] dark:border-[#243020] dark:bg-[#0F1A0C] dark:text-[#F0EDD4] dark:focus:border-[#C49A1E] dark:focus:bg-[#182214]"
+                />
+              )}
+
               {isDuplicate && (
                 <p className="flex items-center gap-1 text-[12px] font-semibold text-[#FF8800]">
                   <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.5}>
@@ -183,7 +224,7 @@ export function VehicleFormatModal({ format, existingFormats, onClose, onSaved }
               )}
             </div>
 
-            {/* API error — i18n-mapped message only, never raw server output */}
+            {/* API error - i18n-mapped message only, never raw server output */}
             {apiError && (
               <div className="flex items-start gap-2 rounded-[8px] border border-[#FECACA] bg-[#FFF2F0] px-3 py-2.5 dark:border-[#4A0A0A] dark:bg-[#2A0A0A]">
                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} className="mt-0.5 shrink-0 text-[#EF4444]">

@@ -62,7 +62,7 @@ export async function loginAs(page: Page, role: Role): Promise<void> {
 
   await page.goto(config.loginUrl);
 
-  /* Fill email — the field carries type="email" and an autoComplete="email" attribute */
+  /* Fill email - the field carries type="email" and an autoComplete="email" attribute */
   await page.locator('input[type="email"]').fill(config.email);
 
   /* Fill password */
@@ -71,7 +71,7 @@ export async function loginAs(page: Page, role: Role): Promise<void> {
   /* Submit the form */
   await page.locator('button[type="submit"]').click();
 
-  /* Wait for redirect — the app navigates via next/navigation after login */
+  /* Wait for redirect - the app navigates via next/navigation after login */
   await expect(page).toHaveURL(
     new RegExp(config.expectedPathFragment.replace(/[/]/g, '\\/')),
     { timeout: 15_000 },

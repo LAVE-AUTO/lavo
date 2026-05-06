@@ -101,12 +101,12 @@ export default function RateReservationPage() {
     setRes({
       stationId:   station.id,
       stationName: station.name,
-      forfaitName: format?.label ?? '—',
+      forfaitName: format?.label ?? '-',
       dateLabel:   slotDate
         ? slotDate.toLocaleDateString(locale === 'en' ? 'en-CA' : 'fr-CA', {
             weekday: 'short', day: 'numeric', month: 'long', year: 'numeric',
           })
-        : '—',
+        : '-',
     });
     setPageState('form');
   }, [id, locale]);

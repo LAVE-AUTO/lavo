@@ -15,7 +15,7 @@ const USER_STATUS_VALUES = ['active', 'suspended', 'blocked', 'pending_verificat
 
 /**
  * PUT /admin/users/:id body.
- * Whitelisted fields only — role, email, password_hash, and Stripe fields
+ * Whitelisted fields only - role, email, password_hash, and Stripe fields
  * are excluded from admin direct edits.
  */
 export const updateUserSchema = z
@@ -43,7 +43,7 @@ const SERVICE_SCOPE_VALUES = ['exterior', 'interior', 'both'] as const;
 
 /**
  * PUT /admin/stations/:id body.
- * Whitelisted fields only — stripe_account_id, approved_by, approved_at,
+ * Whitelisted fields only - stripe_account_id, approved_by, approved_at,
  * average_score, and total_ratings are excluded from admin direct edits
  * (those are managed by dedicated endpoints or computed fields).
  */

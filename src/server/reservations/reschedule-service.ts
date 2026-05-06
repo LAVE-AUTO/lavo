@@ -3,14 +3,14 @@
  *
  * Two cases depending on the cancellation policy window:
  *
- * Case 1 — Free reschedule (before penalty window):
+ * Case 1 - Free reschedule (before penalty window):
  *   - Old entry cancelled (reason='rescheduled'), old slot decremented.
  *   - New entry created in 'confirmed' state, reusing the existing PaymentIntent.
  *   - Stripe PI metadata updated to point to the new reservation (non-fatal if it fails).
  *   - stripe_payment_succeeded_at copied to new entry so escrow notifications fire on completion.
  *   - No new charge; clientSecret is null.
  *
- * Case 2 — Late reschedule (within penalty window):
+ * Case 2 - Late reschedule (within penalty window):
  *   - Old entry cancelled with penalty applied (capture + partial refund + penalty distribution).
  *   - New entry created in 'pending_payment' state with a brand-new PaymentIntent.
  *   - Client must complete payment using the returned clientSecret.
@@ -198,7 +198,7 @@ export async function rescheduleReservation(
         // The original payment authorization could not be settled. Creating a new PI now would
         // leave two active authorizations on the client's card. Abort and surface the error.
         throw new Error(
-          `[RESCHEDULE_CAPTURE_FAILED] Could not capture original PaymentIntent ${reservation.stripe_payment_id} — reschedule aborted to prevent double charge. Manual resolution required for reservation ${reservationId}.`
+          `[RESCHEDULE_CAPTURE_FAILED] Could not capture original PaymentIntent ${reservation.stripe_payment_id} - reschedule aborted to prevent double charge. Manual resolution required for reservation ${reservationId}.`
         );
       }
 
@@ -273,8 +273,8 @@ export async function rescheduleReservation(
       clientSecret = cs;
     } catch (e) {
       // New PI failed: new reservation is stuck in pending_payment with no stripe_payment_id.
-      // Log for manual resolution — do not silently swallow.
-      console.error('[RESCHEDULE_NEW_PI_FAILED] New PaymentIntent creation failed — manual resolution required', {
+      // Log for manual resolution - do not silently swallow.
+      console.error('[RESCHEDULE_NEW_PI_FAILED] New PaymentIntent creation failed - manual resolution required', {
         newReservationId: newEntry.id,
         error: e instanceof Error ? e.message : String(e),
       });

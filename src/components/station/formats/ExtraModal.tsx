@@ -117,7 +117,7 @@ export function ExtraModal({ extra, vehicleFormats, services, onClose, onSaved }
     setSaving(false);
 
     if (!ok) {
-      // TODO: connect to API once endpoint is available — fallback save for now
+      // TODO: connect to API once endpoint is available - fallback save for now
     }
     onSaved(payload);
   }

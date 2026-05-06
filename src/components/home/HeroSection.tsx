@@ -74,7 +74,7 @@ export function HeroSection() {
           </div>
         </div>
 
-        {/* Right column — phone mockup */}
+        {/* Right column - phone mockup */}
         <div className="animate-fade-in animation-delay-500 relative z-10 hidden lg:flex items-center justify-center px-8 pb-12 pt-20">
           <HeroPhoneMockup />
         </div>

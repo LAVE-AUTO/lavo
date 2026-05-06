@@ -225,7 +225,7 @@ describe('PATCH /api/v1/admin/support/settings', () => {
     expect(mockUpdateSupportSettings).not.toHaveBeenCalled();
   });
 
-  it('accepts max_open_tickets_per_user = "0" (hard block — no open tickets allowed)', async () => {
+  it('accepts max_open_tickets_per_user = "0" (hard block - no open tickets allowed)', async () => {
     const res = await PATCH(makePatchRequest({ max_open_tickets_per_user: '0' }));
 
     expect(res.status).toBe(200);

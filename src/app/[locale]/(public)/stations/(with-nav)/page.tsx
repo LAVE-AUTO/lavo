@@ -18,7 +18,7 @@ export async function generateMetadata({ params }: Props) {
   const { locale } = await params;
   const t = await getTranslations({ locale, namespace: 'stations' });
   return {
-    title: `LAVO — ${t('page_title')}`,
+    title: `LAVO - ${t('page_title')}`,
     description: t('page_subtitle'),
   };
 }

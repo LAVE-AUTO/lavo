@@ -159,7 +159,7 @@ export function ServiceCard({ service, onEdit, onDeleted, onToggled }: Props) {
           </div>
         )}
 
-        {/* Extras compatibles — auto/self-service services don't have extras */}
+        {/* Extras compatibles - auto/self-service services don't have extras */}
         {!isPackages && service.category !== 'self_service' && (
           <div className="mt-auto rounded-xl bg-[#F7F6F2] p-3 dark:bg-[#0F1A0C]">
             <p className="mb-2 text-[10px] font-bold uppercase tracking-[1px] text-[#888] dark:text-[#9A9A8A]">

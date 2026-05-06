@@ -1,6 +1,6 @@
 /**
  * Delay requests: client signals they will be late for a confirmed reservation.
- * Station can accept or refuse. Does not alter reservation status — the cron remains
+ * Station can accept or refuse. Does not alter reservation status - the cron remains
  * the sole arbiter of actual late detection and queue downgrade.
  */
 import { index, pgTable, text, timestamp, uuid, varchar } from 'drizzle-orm/pg-core';

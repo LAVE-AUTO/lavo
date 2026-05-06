@@ -36,7 +36,7 @@ export async function getCachedOrFetch<T>(
       await redis.set(key, { v: value } satisfies CacheEnvelope<T>, { ex: ttlSeconds });
       return value;
     } catch {
-      // Redis unavailable — fall through to direct fetch
+      // Redis unavailable - fall through to direct fetch
     }
   }
   return fetch();
@@ -54,6 +54,6 @@ export async function invalidateCache(key: string): Promise<void> {
   try {
     await redis.del(key);
   } catch {
-    // Redis unavailable — in-process caches will expire naturally
+    // Redis unavailable - in-process caches will expire naturally
   }
 }

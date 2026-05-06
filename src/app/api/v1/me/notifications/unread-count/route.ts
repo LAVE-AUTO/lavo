@@ -1,5 +1,5 @@
 /**
- * GET /api/v1/me/notifications/unread-count — count of unread notifications. Auth: client.
+ * GET /api/v1/me/notifications/unread-count - count of unread notifications. Auth: client.
  */
 import { requireRole } from '@/lib/require-role';
 import { successResponse, error500, fromAppError } from '@/lib/responses';

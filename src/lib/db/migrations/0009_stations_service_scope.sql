@@ -1,4 +1,4 @@
--- Migration 0009: add service_scope to stations (Unit 5 — type de prestation).
+-- Migration 0009: add service_scope to stations (Unit 5 - type de prestation).
 -- Values: 'exterior' | 'interior' | 'both'. Nullable for existing stations.
 
 --> statement-breakpoint

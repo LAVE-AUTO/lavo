@@ -304,7 +304,7 @@ export default function UpgradeToReservationModal({ entryId, stationId, onClose,
           </p>
         </div>
 
-        {/* Body — scrollable */}
+        {/* Body - scrollable */}
         <div className="flex-1 overflow-y-auto px-6">
           {step === 'slot' && (
             loadingSlots ? (
@@ -345,7 +345,7 @@ export default function UpgradeToReservationModal({ entryId, stationId, onClose,
           )}
         </div>
 
-        {/* Footer actions — only on slot step (payment step has its own buttons) */}
+        {/* Footer actions - only on slot step (payment step has its own buttons) */}
         {step === 'slot' && (
           <div className="px-6 pt-3 pb-5 border-t border-[#D0D0C0] dark:border-tab-inactive flex gap-3 shrink-0 bg-[#F5F5E6] dark:bg-[#1A1A18]">
             <button

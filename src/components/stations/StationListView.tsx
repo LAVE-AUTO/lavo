@@ -30,7 +30,7 @@ interface StationListViewProps {
 }
 
 /* ------------------------------------------------------------------ */
-/*  Commented-out helpers — kept for when the backend list payload     */
+/*  Commented-out helpers - kept for when the backend list payload     */
 /*  carries openingHours / formats again.                              */
 /* ------------------------------------------------------------------ */
 /* function parseTimeHour(value: string): number | null {
@@ -62,10 +62,10 @@ export function StationListView({ washTypes }: StationListViewProps) {
   const t            = useTranslations('stations');
   const searchParams = useSearchParams();
 
-  /* Main search bar — city */
+  /* Main search bar - city */
   const [cityQuery, setCityQuery] = useState('');
 
-  /* Filter panel fields — backend-driven */
+  /* Filter panel fields - backend-driven */
   const [nameSearch,         setNameSearch]         = useState('');
   const [onlyAvail,          setOnlyAvail]          = useState(false);
   const [sort,               setSort]               = useState<SortKey>('default');
@@ -73,7 +73,7 @@ export function StationListView({ washTypes }: StationListViewProps) {
   const [serviceScope,       setServiceScope]       = useState<ServiceScope>('');
   const [panelOpen,          setPanelOpen]          = useState(false);
 
-  /* "Bientôt disponible" filter states — UI is rendered but disabled and never
+  /* "Bientôt disponible" filter states - UI is rendered but disabled and never
    * forwarded to fetchStations. Once the backend exposes the matching data
    * (price floor, opening hours, tags, vehicle types, services, date/slot),
    * we drop the disabled prop, wire the values into the params object and the
@@ -87,7 +87,7 @@ export function StationListView({ washTypes }: StationListViewProps) {
   const [selectedVehicles, setSelectedVehicles] = useState<string[]>([]);
   const [selectedServices, setSelectedServices] = useState<string[]>([]);
 
-  /* Debounced text inputs — avoid a fetch on every keystroke. */
+  /* Debounced text inputs - avoid a fetch on every keystroke. */
   const [debouncedText, setDebouncedText] = useState({ city: '', q: '' });
   useEffect(() => {
     const id = setTimeout(
@@ -130,7 +130,7 @@ export function StationListView({ washTypes }: StationListViewProps) {
     return () => { cancelled = true; };
   }, [debouncedText, sort, selectedWashTypes, serviceScope]);
 
-  /* Sync city query from URL param (?q=) — `q` here is a synonym coming from the landing search. */
+  /* Sync city query from URL param (?q=) - `q` here is a synonym coming from the landing search. */
   useEffect(() => {
     const q = searchParams.get('q');
     if (q == null) return;
@@ -152,7 +152,7 @@ export function StationListView({ washTypes }: StationListViewProps) {
      Discovery mode (no active search/sort) shows the three category sections;
      as soon as the user searches, picks a filter or selects a sort chip the UI
      collapses into a single "Résultats" list so the effect of the chosen sort
-     is immediately visible — `allStations` is already ordered by the backend. */
+     is immediately visible - `allStations` is already ordered by the backend. */
   const filterAvail = (list: StationDetailData[]) =>
     onlyAvail ? list.filter((s) => s.availableSlots > 0) : list;
 
@@ -727,7 +727,7 @@ function CustomMultiSelect({ options, selected, onToggle, placeholder }: CustomM
           id={listboxId}
           className="absolute top-[calc(100%+6px)] left-0 right-0 bg-white dark:bg-dark-surface border border-[#E0E0D0] dark:border-tab-inactive rounded-xl shadow-[0_8px_32px_rgba(0,0,0,0.12)] dark:shadow-[0_8px_32px_rgba(0,0,0,0.4)] z-50 px-3.5 py-3 text-[13px] text-[#555] dark:text-[#B0B0A0] animate-fade-in"
         >
-          —
+          -
         </div>
       )}
 
@@ -770,7 +770,7 @@ function CustomMultiSelect({ options, selected, onToggle, placeholder }: CustomM
 }
 
 /* ------------------------------------------------------------------ */
-/* Custom select — single value, same visual language as MultiSelect   */
+/* Custom select - single value, same visual language as MultiSelect   */
 /* ------------------------------------------------------------------ */
 
 interface SelectOption {

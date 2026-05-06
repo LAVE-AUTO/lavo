@@ -104,7 +104,7 @@ export function MerchantQrSection() {
               </div>
             </div>
 
-            {/* Right — QR poster mockup */}
+            {/* Right - QR poster mockup */}
             <div className="flex items-center justify-center">
               <div className="animate-float max-w-[260px] w-full rounded-2xl bg-[#f5edd6] p-7 text-center shadow-[0_30px_80px_rgba(0,0,0,0.3)]">
                 <div className="font-playfair mb-1 text-[26px] font-black text-[#c8980a] tracking-[3px]">Slowtime</div>

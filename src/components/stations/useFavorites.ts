@@ -21,7 +21,7 @@ function writeIds(ids: string[]): void {
 
 /**
  * Manages a persisted set of favourite station IDs in localStorage.
- * Safe for SSR — reads only in effects/callbacks.
+ * Safe for SSR - reads only in effects/callbacks.
  */
 export function useFavorites() {
   const [ids, setIds] = useState<string[]>([]);

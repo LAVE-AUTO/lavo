@@ -251,11 +251,11 @@ export async function findOrCreateOAuthUser(data: {
  * prevent timing-based email enumeration attacks.
  *
  * @param dto Login payload including credentials, remember-me, and expected role.
- * @throws {UnauthorizedError} INVALID_CREDENTIALS — email not found or password mismatch.
- * @throws {ForbiddenError}    BUSINESS_NOT_APPROVED — account is pending validation.
- * @throws {ForbiddenError}    BUSINESS_REJECTED — account has been rejected.
- * @throws {ForbiddenError}    FORBIDDEN — account is suspended or in an unknown non-active state.
- * @throws {ForbiddenError}    FORBIDDEN — role does not match the expected login space.
+ * @throws {UnauthorizedError} INVALID_CREDENTIALS - email not found or password mismatch.
+ * @throws {ForbiddenError}    BUSINESS_NOT_APPROVED - account is pending validation.
+ * @throws {ForbiddenError}    BUSINESS_REJECTED - account has been rejected.
+ * @throws {ForbiddenError}    FORBIDDEN - account is suspended or in an unknown non-active state.
+ * @throws {ForbiddenError}    FORBIDDEN - role does not match the expected login space.
  */
 export async function login(dto: LoginDto): Promise<AuthResult> {
   const user = await findByEmail(dto.email);
@@ -334,8 +334,8 @@ export async function changePassword(
 /**
  * Initiate the forgot-password flow by sending a reset email.
  *
- * Always returns silently — even when the email is unknown or the account is
- * inactive — to prevent email enumeration.
+ * Always returns silently - even when the email is unknown or the account is
+ * inactive - to prevent email enumeration.
  *
  * @param email  Account email address.
  * @param locale Email locale for the reset message.

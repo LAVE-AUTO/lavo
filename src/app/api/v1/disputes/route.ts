@@ -111,11 +111,11 @@ const disputeCreateLimiter = createEndpointRateLimiter({ maxRequests: 5, windowM
  *
  * Responses:
  *   201 { data: Dispute }
- *   400 VALIDATION_FAILED   — invalid body
+ *   400 VALIDATION_FAILED   - invalid body
  *   401 UNAUTHORIZED
- *   403 FORBIDDEN           — reservation does not belong to the client or password change required
- *   404 NOT_FOUND           — reservation not found
- *   409 DISPUTE_ALREADY_EXISTS — a dispute already exists for this reservation
+ *   403 FORBIDDEN           - reservation does not belong to the client or password change required
+ *   404 NOT_FOUND           - reservation not found
+ *   409 DISPUTE_ALREADY_EXISTS - a dispute already exists for this reservation
  *   500 INTERNAL_ERROR
  */
 export async function POST(request: Request): Promise<NextResponse> {
@@ -148,7 +148,7 @@ export async function POST(request: Request): Promise<NextResponse> {
       return applyNoStoreHeaders(error409(e.message, ApiCode.DISPUTE_ALREADY_EXISTS));
     }
     if (e instanceof AppError) return applyNoStoreHeaders(fromAppError(e));
-    // SECURITY: never pass raw error to error500 — leaks internal details via _dev
+    // SECURITY: never pass raw error to error500 - leaks internal details via _dev
     console.error('[POST /api/v1/disputes] Unhandled error:', e);
     return applyNoStoreHeaders(error500());
   }

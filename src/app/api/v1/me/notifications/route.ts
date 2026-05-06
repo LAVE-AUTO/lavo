@@ -1,5 +1,5 @@
 /**
- * GET /api/v1/me/notifications — list notifications (cursor-paginated). Auth: client.
+ * GET /api/v1/me/notifications - list notifications (cursor-paginated). Auth: client.
  *
  * Query: limit (1-100, default 20), cursor (opaque string), unread_only (boolean)
  */

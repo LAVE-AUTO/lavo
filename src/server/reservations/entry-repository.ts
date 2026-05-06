@@ -186,7 +186,7 @@ export async function findEntryByIdAndStation(
 
 /**
  * Lists entries for a station: reservations (by time_slot start_time) then queue (by queue_position).
- * Backward-compatible pagination — defaults to perPage=500 when not provided.
+ * Backward-compatible pagination - defaults to perPage=500 when not provided.
  */
 export async function listEntriesByStation(
   stationId: string,
@@ -526,7 +526,7 @@ const NO_SHOW_ELIGIBLE_STATUSES = ['pending', 'confirmed', 'late'] as const;
  * Conditionally cancels a queue entry as a no-show only if it is still in an active status.
  * Returns the updated row when the guard matched; otherwise undefined. Using a conditional
  * update here prevents overlapping cron runs from each issuing the Stripe capture/refund/penalty
- * cascade on the same entry — the second run sees the row already at status='cancelled' and skips.
+ * cascade on the same entry - the second run sees the row already at status='cancelled' and skips.
  */
 export async function cancelQueueEntryForNoShowIfEligible(
   id: string,
@@ -730,7 +730,7 @@ export async function findOrphanedPendingPaymentEntries(olderThanMinutes: number
   });
 }
 
-// %%%%% Rich entry queries — denormalized with station, format, flags %%%%%
+// %%%%% Rich entry queries - denormalized with station, format, flags %%%%%
 
 /** Denormalized entry shape returned to the client, enriched with joined data. */
 export type RichEntry = {
@@ -882,7 +882,7 @@ export async function findRichEntryByIdAndUser(
 }
 
 
-// %%%%% Rich station entry queries — denormalized with user and vehicle format %%%%%
+// %%%%% Rich station entry queries - denormalized with user and vehicle format %%%%%
 
 /** Station-side denormalized entry shape: includes user first_name and vehicle format label. */
 export type RichStationEntry = Entry & {

@@ -1,7 +1,7 @@
 'use client';
 
 /**
- * useFcmToken — silent FCM device-token registration hook.
+ * useFcmToken - silent FCM device-token registration hook.
  *
  * Behaviour:
  *   - Runs only when the user is authenticated as a client.
@@ -40,7 +40,7 @@ export function useFcmToken(): void {
 
     void (async () => {
       try {
-        // FCM requires a service worker — bail out if unavailable
+        // FCM requires a service worker - bail out if unavailable
         if (!('serviceWorker' in navigator)) return;
 
         const messaging = getFirebaseMessaging();

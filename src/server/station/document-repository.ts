@@ -252,7 +252,7 @@ export async function findDocumentsNeedingReminder(
 
   // Both joins are INNER, so every row is guaranteed to carry non-null user data.
   // The non-null assertions below narrow the Drizzle-inferred `string | null` to
-  // `string` to match DocumentReminderRow — safe because the INNER JOINs on
+  // `string` to match DocumentReminderRow - safe because the INNER JOINs on
   // stations.user_id and users.id structurally exclude NULL values.
   return rows.map((r) => ({
     document:          r.document,

@@ -61,7 +61,7 @@ export function HowItWorks() {
           {STEPS.map((step, i) => (
             <ScrollReveal key={step.key} delay={i * 0.12}>
               <div className="relative text-center group">
-                {/* Horizontal connector line — desktop (not on last) */}
+                {/* Horizontal connector line - desktop (not on last) */}
                 {i < STEPS.length - 1 && (
                   <div className="hidden md:block absolute top-10 left-[60%] w-[80%] h-px bg-gradient-to-r from-[#E0E0D0] to-transparent dark:from-tab-inactive dark:to-transparent" />
                 )}
@@ -81,7 +81,7 @@ export function HowItWorks() {
                   {t(`${step.key}_desc`)}
                 </p>
 
-                {/* Vertical connector — mobile only (not on last) */}
+                {/* Vertical connector - mobile only (not on last) */}
                 {i < STEPS.length - 1 && (
                   <div className="flex md:hidden justify-center py-5">
                     <div className="w-px h-8 bg-gradient-to-b from-[#D0D0C0] to-transparent dark:from-tab-inactive dark:to-transparent" />

@@ -71,7 +71,7 @@ export default function TipReservationPage() {
     }
 
     // TODO: connect to API once endpoints are available
-    // GET /me/entries/:id — verify status === 'completed'; check tip_amount for already_tipped
+    // GET /me/entries/:id - verify status === 'completed'; check tip_amount for already_tipped
     setPageState('error');
   }, [id, locale]);
 

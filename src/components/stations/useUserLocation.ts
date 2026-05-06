@@ -56,7 +56,7 @@ export function haversineKm(lat1: number, lon1: number, lat2: number, lon2: numb
 
 /**
  * Subscribes to the cached browser geolocation. Does NOT trigger the native
- * permission prompt — call `requestUserLocation()` (typically via the
+ * permission prompt - call `requestUserLocation()` (typically via the
  * in-app banner) once the user opts in.
  */
 export function useUserLocation(): UserLocation | null {
@@ -96,7 +96,7 @@ export function useGeolocationBanner(): GeolocationBannerState {
         try {
             dismissed = sessionStorage.getItem(DISMISS_KEY) === '1';
         } catch {
-            /* sessionStorage unavailable (incognito, sandbox) — fall through */
+            /* sessionStorage unavailable (incognito, sandbox) - fall through */
         }
         if (dismissed) return;
 
@@ -122,7 +122,7 @@ export function useGeolocationBanner(): GeolocationBannerState {
         setVisible(false);
         const loc = await requestUserLocation();
         if (!loc) {
-            // Browser denied or timed out — keep the banner gone for this session
+            // Browser denied or timed out - keep the banner gone for this session
             try { sessionStorage.setItem(DISMISS_KEY, '1'); } catch {}
         }
     };

@@ -1,7 +1,7 @@
 {
   "info": {
-    "name": "LAVO — Admin Dashboard & Analytics API",
-    "description": "Collection pour les endpoints admin de tableau de bord et d'analytiques LAVO.\n\nVariable requise : `base_url` (ex: http://localhost:3000)\nVariable requise : `access_token` (JWT admin, obtenu apres login admin)\n\n## Groupes\n- **Admin — Dashboard** : KPI snapshot (totaux, metriques de periode, alertes)\n- **Admin — Analytics** : series temporelles par metrique (transactions, revenue, commissions, etc.)\n\n## Cache\nLes deux endpoints repondent avec `Cache-Control: max-age=60, s-maxage=60`.\nUne reponse servie depuis le cache reste un 200 valide.",
+    "name": "LAVO - Admin Dashboard & Analytics API",
+    "description": "Collection pour les endpoints admin de tableau de bord et d'analytiques LAVO.\n\nVariable requise : `base_url` (ex: http://localhost:3000)\nVariable requise : `access_token` (JWT admin, obtenu apres login admin)\n\n## Groupes\n- **Admin - Dashboard** : KPI snapshot (totaux, metriques de periode, alertes)\n- **Admin - Analytics** : series temporelles par metrique (transactions, revenue, commissions, etc.)\n\n## Cache\nLes deux endpoints repondent avec `Cache-Control: max-age=60, s-maxage=60`.\nUne reponse servie depuis le cache reste un 200 valide.",
     "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
   },
   "variable": [
@@ -28,11 +28,11 @@
   },
   "item": [
     {
-      "name": "Admin — Dashboard",
-      "description": "GET /api/v1/admin/dashboard — Retourne un snapshot KPI admin : totaux stock, metriques de periode, et alertes actionnables.\n\nLes query params sont tous optionnels. Combinaisons acceptees :\n- Aucun param → fenetre 30 jours par defaut\n- ?period=N → fenetre de N jours se terminant maintenant (1 ≤ N ≤ 365)\n- ?from=YYYY-MM-DD&to=YYYY-MM-DD → plage exacte\n\nReponse 200 : { data: { period: { from, to, days }, totals: { active_stations, total_clients, pending_kyc, open_support_tickets }, metrics: { total_transactions, total_revenue, total_commissions }, alerts: { pending_kyc, open_support_tickets } } }",
+      "name": "Admin - Dashboard",
+      "description": "GET /api/v1/admin/dashboard - Retourne un snapshot KPI admin : totaux stock, metriques de periode, et alertes actionnables.\n\nLes query params sont tous optionnels. Combinaisons acceptees :\n- Aucun param → fenetre 30 jours par defaut\n- ?period=N → fenetre de N jours se terminant maintenant (1 ≤ N ≤ 365)\n- ?from=YYYY-MM-DD&to=YYYY-MM-DD → plage exacte\n\nReponse 200 : { data: { period: { from, to, days }, totals: { active_stations, total_clients, pending_kyc, open_support_tickets }, metrics: { total_transactions, total_revenue, total_commissions }, alerts: { pending_kyc, open_support_tickets } } }",
       "item": [
         {
-          "name": "Dashboard — periode 30j (200)",
+          "name": "Dashboard - periode 30j (200)",
           "event": [
             {
               "listen": "test",
@@ -98,11 +98,11 @@
                 }
               ]
             },
-            "description": "Fenetre glissante de 30 jours se terminant maintenant.\n\nReponse : { data: { period: { from, to, days: 30 }, totals, metrics, alerts } }\n\nCache-Control: max-age=60, s-maxage=60 — la reponse peut etre servie depuis le cache pendant 60 secondes."
+            "description": "Fenetre glissante de 30 jours se terminant maintenant.\n\nReponse : { data: { period: { from, to, days: 30 }, totals, metrics, alerts } }\n\nCache-Control: max-age=60, s-maxage=60 - la reponse peut etre servie depuis le cache pendant 60 secondes."
           }
         },
         {
-          "name": "Dashboard — intervalle custom (200)",
+          "name": "Dashboard - intervalle custom (200)",
           "event": [
             {
               "listen": "test",
@@ -156,7 +156,7 @@
           }
         },
         {
-          "name": "Dashboard — defaut sans params (200)",
+          "name": "Dashboard - defaut sans params (200)",
           "event": [
             {
               "listen": "test",
@@ -195,11 +195,11 @@
                 "dashboard"
               ]
             },
-            "description": "Aucun query param — la fenetre par defaut de 30 jours est appliquee.\n\ndata.period.days doit valoir 30."
+            "description": "Aucun query param - la fenetre par defaut de 30 jours est appliquee.\n\ndata.period.days doit valoir 30."
           }
         },
         {
-          "name": "Dashboard — from sans to (400)",
+          "name": "Dashboard - from sans to (400)",
           "event": [
             {
               "listen": "test",
@@ -237,11 +237,11 @@
                 }
               ]
             },
-            "description": "400 VALIDATION_FAILED — `from` fourni sans `to`.\n\nLa regle cross-field exige que les deux soient presents ou absents."
+            "description": "400 VALIDATION_FAILED - `from` fourni sans `to`.\n\nLa regle cross-field exige que les deux soient presents ou absents."
           }
         },
         {
-          "name": "Dashboard — to sans from (400)",
+          "name": "Dashboard - to sans from (400)",
           "event": [
             {
               "listen": "test",
@@ -279,11 +279,11 @@
                 }
               ]
             },
-            "description": "400 VALIDATION_FAILED — `to` fourni sans `from`.\n\nLa regle cross-field exige que les deux soient presents ou absents."
+            "description": "400 VALIDATION_FAILED - `to` fourni sans `from`.\n\nLa regle cross-field exige que les deux soient presents ou absents."
           }
         },
         {
-          "name": "Dashboard — from > to (400)",
+          "name": "Dashboard - from > to (400)",
           "event": [
             {
               "listen": "test",
@@ -325,11 +325,11 @@
                 }
               ]
             },
-            "description": "400 VALIDATION_FAILED — `from` posterieur a `to`.\n\nLa regle cross-field interdit from > to."
+            "description": "400 VALIDATION_FAILED - `from` posterieur a `to`.\n\nLa regle cross-field interdit from > to."
           }
         },
         {
-          "name": "Dashboard — period invalide (400)",
+          "name": "Dashboard - period invalide (400)",
           "event": [
             {
               "listen": "test",
@@ -367,11 +367,11 @@
                 }
               ]
             },
-            "description": "400 VALIDATION_FAILED — `period=0` est invalide, le minimum est 1."
+            "description": "400 VALIDATION_FAILED - `period=0` est invalide, le minimum est 1."
           }
         },
         {
-          "name": "Dashboard — period trop grand (400)",
+          "name": "Dashboard - period trop grand (400)",
           "event": [
             {
               "listen": "test",
@@ -409,11 +409,11 @@
                 }
               ]
             },
-            "description": "400 VALIDATION_FAILED — `period=366` depasse le maximum de 365."
+            "description": "400 VALIDATION_FAILED - `period=366` depasse le maximum de 365."
           }
         },
         {
-          "name": "Dashboard — non admin (403)",
+          "name": "Dashboard - non admin (403)",
           "event": [
             {
               "listen": "test",
@@ -448,17 +448,17 @@
                 "dashboard"
               ]
             },
-            "description": "403 FORBIDDEN — token absent ou role != admin.\n\nCe cas utilise `noauth` pour bypasser le Bearer token configure sur la collection.\nRemplacer par un token valide non-admin pour simuler le cas role interdit."
+            "description": "403 FORBIDDEN - token absent ou role != admin.\n\nCe cas utilise `noauth` pour bypasser le Bearer token configure sur la collection.\nRemplacer par un token valide non-admin pour simuler le cas role interdit."
           }
         }
       ]
     },
     {
-      "name": "Admin — Analytics",
-      "description": "GET /api/v1/admin/analytics/[metric] — Retourne une serie temporelle pour la metrique demandee.\n\nMetriques valides : transactions, revenue, commissions, registrations, stations, reservations, cancellations, support-tickets, avg-rating\n\nQuery params :\n- ?from=YYYY-MM-DD&to=YYYY-MM-DD (les deux requis si l'un est fourni)\n- ?group_by=day|week|month (defaut: day)\n- Aucun param → fenetre 30 jours par defaut\n\nReponse 200 : { data: { metric, group_by, period: { from, to }, series: [{ date, value }] } }\n\nCache-Control: max-age=60, s-maxage=60",
+      "name": "Admin - Analytics",
+      "description": "GET /api/v1/admin/analytics/[metric] - Retourne une serie temporelle pour la metrique demandee.\n\nMetriques valides : transactions, revenue, commissions, registrations, stations, reservations, cancellations, support-tickets, avg-rating\n\nQuery params :\n- ?from=YYYY-MM-DD&to=YYYY-MM-DD (les deux requis si l'un est fourni)\n- ?group_by=day|week|month (defaut: day)\n- Aucun param → fenetre 30 jours par defaut\n\nReponse 200 : { data: { metric, group_by, period: { from, to }, series: [{ date, value }] } }\n\nCache-Control: max-age=60, s-maxage=60",
       "item": [
         {
-          "name": "Analytics — transactions/day (200)",
+          "name": "Analytics - transactions/day (200)",
           "event": [
             {
               "listen": "test",
@@ -515,7 +515,7 @@
           }
         },
         {
-          "name": "Analytics — revenue/month (200)",
+          "name": "Analytics - revenue/month (200)",
           "event": [
             {
               "listen": "test",
@@ -569,7 +569,7 @@
           }
         },
         {
-          "name": "Analytics — commissions/week (200)",
+          "name": "Analytics - commissions/week (200)",
           "event": [
             {
               "listen": "test",
@@ -623,7 +623,7 @@
           }
         },
         {
-          "name": "Analytics — registrations/day (200)",
+          "name": "Analytics - registrations/day (200)",
           "event": [
             {
               "listen": "test",
@@ -677,7 +677,7 @@
           }
         },
         {
-          "name": "Analytics — stations/month (200)",
+          "name": "Analytics - stations/month (200)",
           "event": [
             {
               "listen": "test",
@@ -731,7 +731,7 @@
           }
         },
         {
-          "name": "Analytics — reservations/day (200)",
+          "name": "Analytics - reservations/day (200)",
           "event": [
             {
               "listen": "test",
@@ -785,7 +785,7 @@
           }
         },
         {
-          "name": "Analytics — cancellations/day (200)",
+          "name": "Analytics - cancellations/day (200)",
           "event": [
             {
               "listen": "test",
@@ -839,7 +839,7 @@
           }
         },
         {
-          "name": "Analytics — support-tickets/week (200)",
+          "name": "Analytics - support-tickets/week (200)",
           "event": [
             {
               "listen": "test",
@@ -893,7 +893,7 @@
           }
         },
         {
-          "name": "Analytics — avg-rating/month (200)",
+          "name": "Analytics - avg-rating/month (200)",
           "event": [
             {
               "listen": "test",
@@ -947,7 +947,7 @@
           }
         },
         {
-          "name": "Analytics — metrique inconnue (400)",
+          "name": "Analytics - metrique inconnue (400)",
           "event": [
             {
               "listen": "test",
@@ -990,11 +990,11 @@
                 }
               ]
             },
-            "description": "400 VALIDATION_FAILED — le slug de metrique n'existe pas.\n\nMetriques valides : transactions, revenue, commissions, registrations, stations, reservations, cancellations, support-tickets, avg-rating."
+            "description": "400 VALIDATION_FAILED - le slug de metrique n'existe pas.\n\nMetriques valides : transactions, revenue, commissions, registrations, stations, reservations, cancellations, support-tickets, avg-rating."
           }
         },
         {
-          "name": "Analytics — from sans to (400)",
+          "name": "Analytics - from sans to (400)",
           "event": [
             {
               "listen": "test",
@@ -1033,11 +1033,11 @@
                 }
               ]
             },
-            "description": "400 VALIDATION_FAILED — `from` fourni sans `to`.\n\nLa regle cross-field exige que les deux soient presents ou absents."
+            "description": "400 VALIDATION_FAILED - `from` fourni sans `to`.\n\nLa regle cross-field exige que les deux soient presents ou absents."
           }
         },
         {
-          "name": "Analytics — group_by invalide (400)",
+          "name": "Analytics - group_by invalide (400)",
           "event": [
             {
               "listen": "test",
@@ -1084,11 +1084,11 @@
                 }
               ]
             },
-            "description": "400 VALIDATION_FAILED — `group_by=year` n'est pas une valeur acceptee.\n\nValeurs valides : day, week, month."
+            "description": "400 VALIDATION_FAILED - `group_by=year` n'est pas une valeur acceptee.\n\nValeurs valides : day, week, month."
           }
         },
         {
-          "name": "Analytics — non admin (403)",
+          "name": "Analytics - non admin (403)",
           "event": [
             {
               "listen": "test",
@@ -1134,7 +1134,7 @@
                 }
               ]
             },
-            "description": "403 FORBIDDEN — token absent ou role != admin.\n\nCe cas utilise `noauth` pour bypasser le Bearer token configure sur la collection.\nRemplacer par un token valide non-admin pour simuler le cas role interdit."
+            "description": "403 FORBIDDEN - token absent ou role != admin.\n\nCe cas utilise `noauth` pour bypasser le Bearer token configure sur la collection.\nRemplacer par un token valide non-admin pour simuler le cas role interdit."
           }
         }
       ]

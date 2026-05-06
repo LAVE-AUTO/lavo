@@ -125,7 +125,7 @@ export function ServiceVehicleRows({
                 : 'border border-[#E0DCD0] bg-white text-[#AAA] hover:border-[#C49A1E]/40 dark:border-[#243020] dark:bg-[#182214] dark:text-[#5A5A4A]'
             }`}
           >
-            {entry.is_active ? t('vehicle_active') : '—'}
+            {entry.is_active ? t('vehicle_active') : '-'}
           </button>
         </div>
       ))}

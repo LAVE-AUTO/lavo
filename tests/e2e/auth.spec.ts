@@ -1,5 +1,5 @@
 /**
- * E2E — Authentication flows.
+ * E2E - Authentication flows.
  *
  * Covers:
  *   - Client login with valid credentials redirects to /fr/stations.

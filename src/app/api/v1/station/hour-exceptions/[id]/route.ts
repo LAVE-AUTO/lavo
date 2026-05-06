@@ -1,5 +1,5 @@
 /**
- * DELETE /api/v1/station/hour-exceptions/:id — remove an exception date. Auth: station.
+ * DELETE /api/v1/station/hour-exceptions/:id - remove an exception date. Auth: station.
  */
 import { requireRole } from '@/lib/require-role';
 import { successResponse, error400, error404, error500, fromAppError } from '@/lib/responses';

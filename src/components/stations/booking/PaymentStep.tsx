@@ -23,7 +23,7 @@ function getStripePromise() {
 }
 
 /* ------------------------------------------------------------------
- *  Stripe card form — only rendered when clientSecret is provided
+ *  Stripe card form - only rendered when clientSecret is provided
  * ------------------------------------------------------------------ */
 
 interface StripeCardFormProps {
@@ -58,7 +58,7 @@ function StripeCardForm({ grandTotal, clientSecret, onConfirm, onBack }: StripeC
     } catch {
       setStripeError(t('error_stripe_payment'));
     } finally {
-      // React 18: setState on unmounted component is silently ignored — no mountedRef needed.
+      // React 18: setState on unmounted component is silently ignored - no mountedRef needed.
       setProcessing(false);
     }
   };
@@ -129,7 +129,7 @@ function StripeCardForm({ grandTotal, clientSecret, onConfirm, onBack }: StripeC
 }
 
 /* ------------------------------------------------------------------
- *  Queue confirm form — no card needed
+ *  Queue confirm form - no card needed
  *  Used only in dev skip-payment mode (devSkipPayment=true).
  *  In production, queue entries always go through StripeCardForm.
  * ------------------------------------------------------------------ */
@@ -143,7 +143,7 @@ function QueueConfirmForm({ grandTotal, onConfirm, onBack }: { grandTotal: numbe
     try {
       await onConfirm();
     } finally {
-      // React 18: setState on unmounted component is silently ignored — no mountedRef needed.
+      // React 18: setState on unmounted component is silently ignored - no mountedRef needed.
       setProcessing(false);
     }
   };

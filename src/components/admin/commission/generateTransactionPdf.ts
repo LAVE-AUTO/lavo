@@ -198,7 +198,7 @@ export async function generateTransactionPdf(tx: TxRow, labels: PdfLabels): Prom
   doc.setTextColor(150, 148, 136);
   doc.setFont('helvetica', 'normal');
   doc.setFontSize(7.5);
-  doc.text('Slowtime Inc. — Document confidentiel / Confidential document', mx, y);
+  doc.text('Slowtime Inc. - Document confidentiel / Confidential document', mx, y);
 
   const today = new Date().toLocaleDateString('fr-CA', { day: 'numeric', month: 'long', year: 'numeric' });
   doc.text(`${labels.generatedOn} ${today}`, W - mx, y, { align: 'right' });

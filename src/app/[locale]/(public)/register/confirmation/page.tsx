@@ -10,7 +10,7 @@ type Props = {
 export async function generateMetadata({ params }: Props) {
   const { locale } = await params;
   const t = await getTranslations({ locale, namespace: 'register' });
-  return { title: `Slowtime — ${t('confirmation_title')}` };
+  return { title: `Slowtime - ${t('confirmation_title')}` };
 }
 
 /**
@@ -36,7 +36,7 @@ function EnvelopeIcon() {
 }
 
 /**
- * Registration confirmation page — displayed after a successful sign-up.
+ * Registration confirmation page - displayed after a successful sign-up.
  */
 export default async function RegisterConfirmationPage({ params }: Props) {
   const { locale } = await params;

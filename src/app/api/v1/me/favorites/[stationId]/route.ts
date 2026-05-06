@@ -1,5 +1,5 @@
 /**
- * DELETE /api/v1/me/favorites/:stationId — remove a station from favorites. Auth: client.
+ * DELETE /api/v1/me/favorites/:stationId - remove a station from favorites. Auth: client.
  */
 import { requireRole } from '@/lib/require-role';
 import { successResponse, error400, error404, error500, fromAppError } from '@/lib/responses';

@@ -91,7 +91,7 @@ export async function markQueueNoShows(): Promise<MarkNoShowsResult> {
     // Guarded cancel: only proceed if the row is still in an active status. If a previous
     // cron run (or a concurrent overlap) has already cancelled this entry, the conditional
     // update returns undefined and we skip the Stripe side entirely. Prevents double-capture,
-    // double-refund, and double-penalty-reversal — all of which are real financial risks.
+    // double-refund, and double-penalty-reversal - all of which are real financial risks.
     const cancelled = await cancelQueueEntryForNoShowIfEligible(
       entry.id,
       penaltyAmount > 0 ? penaltyAmount.toFixed(2) : null

@@ -84,7 +84,7 @@ export function StationExtrasForm({ extras, onSaved }: Props) {
     setSaving(true);
     setFeedback(null);
 
-    // TODO: connect to API once endpoint is available — PATCH /station/extras does not exist yet
+    // TODO: connect to API once endpoint is available - PATCH /station/extras does not exist yet
     await new Promise((r) => setTimeout(r, 400));
     setSaving(false);
 

@@ -11,7 +11,7 @@ export interface PostEntry {
   clientName?: string;
   marginText?: string;
   price?: number;
-  /** minutes from midnight — enables time-axis positioning, e.g. 540 = 09:00 */
+  /** minutes from midnight - enables time-axis positioning, e.g. 540 = 09:00 */
   startMinutes?: number;
   endMinutes?: number;
 }

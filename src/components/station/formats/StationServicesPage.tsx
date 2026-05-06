@@ -23,7 +23,7 @@ interface ServicesData {
   data: Service[];
 }
 
-// Services and extras have no backend endpoint yet — see project_pending_backend_specs.md
+// Services and extras have no backend endpoint yet - see project_pending_backend_specs.md
 // (sections "Services / packages model" and "Extras / add-ons model").
 // Until those land we render an empty state; never seed mock data.
 const EMPTY_SERVICES: Service[] = [];
@@ -62,7 +62,7 @@ export function StationServicesPage() {
 
     // /station/me is the only blocking call (we need the station id to fetch its formats).
     // /station/services has no dependency so it runs in parallel with /me.
-    // GET /station/services is not implemented yet — see project_pending_backend_specs.md.
+    // GET /station/services is not implemented yet - see project_pending_backend_specs.md.
     // We still attempt the call so the page upgrades automatically once the endpoint ships.
     const [meResult, servicesResult] = await Promise.all([
       getFromApi('/station/me'),
@@ -281,7 +281,7 @@ export function StationServicesPage() {
           services={services}
           onClose={() => setExtraModal(null)}
           onSaved={() => {
-            // TODO: connect to API once endpoint is available — POST/PATCH /station/extras
+            // TODO: connect to API once endpoint is available - POST/PATCH /station/extras
             setExtraModal(null);
           }}
         />

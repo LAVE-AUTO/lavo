@@ -65,7 +65,7 @@ export function AdminAddUserModal({ open, onClose }: Props) {
     // TODO: connect to API once endpoint is available (POST /admin/users)
     // Payload: { role, first_name, last_name, email, password: generatePassword() }
     // The backend must hash the password, set force_password_change: true, and send credentials by email.
-    // Submission is disabled until the endpoint exists — do not show a success screen for a stubbed call.
+    // Submission is disabled until the endpoint exists - do not show a success screen for a stubbed call.
     setBusy(false);
   }
 

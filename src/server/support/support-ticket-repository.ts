@@ -11,13 +11,13 @@ import { HTTP_STATUS } from "@/helpers/constants";
 import type { z } from "zod";
 import type { supportStatusSchema } from "@/validators/support";
 
-/** Preview of the most recent message on a ticket — content truncated to 200 chars. */
+/** Preview of the most recent message on a ticket - content truncated to 200 chars. */
 export type LastMessagePreview = {
   content: string;
   created_at: Date;
 } | null;
 
-/** Status type derived from the canonical Zod schema — single source of truth. */
+/** Status type derived from the canonical Zod schema - single source of truth. */
 type TicketStatus = z.infer<typeof supportStatusSchema>;
 
 export type Ticket = typeof supportTickets.$inferSelect;
@@ -157,7 +157,7 @@ const SAFE_USER_SELECT = {
  * message per ticket in one round-trip, eliminating the N+1 pattern that
  * `findMany({ with: { messages: { limit: 1 } } })` produces.
  *
- * Defaults: page=1, perPage=500 — backward-compatible with callers that pass no
+ * Defaults: page=1, perPage=500 - backward-compatible with callers that pass no
  * pagination params. A COUNT query runs in parallel for the total row count.
  */
 export async function listTickets(
@@ -236,7 +236,7 @@ export async function listTickets(
 /**
  * Updates a ticket status and sets resolved_at if status is 'resolu'.
  * When transitioning away from 'resolu' (e.g. back to 'en_cours'), resolved_at
- * is cleared to null — this is intentional, not a default.
+ * is cleared to null - this is intentional, not a default.
  */
 export async function updateTicketStatus(
   id: string,

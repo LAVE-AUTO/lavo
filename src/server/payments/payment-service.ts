@@ -58,8 +58,8 @@ export type CreatePaymentIntentResult = {
 /**
  * Creates a Stripe Connect PaymentIntent with manual capture.
  * The client's card is authorized (funds blocked) at booking time.
- * The actual capture — which transfers (amount - application_fee) to the station and retains
- * the commission for the platform — is triggered only when the service is marked as completed
+ * The actual capture - which transfers (amount - application_fee) to the station and retains
+ * the commission for the platform - is triggered only when the service is marked as completed
  * or when the client is detected as late (no refund in the late case).
  */
 export async function createPaymentIntent(
@@ -116,7 +116,7 @@ export async function createPaymentIntent(
  * Captures a previously authorized PaymentIntent.
  * Triggers fund distribution: station receives (amount - application_fee), platform retains the commission.
  * Called when a reservation is marked as completed by the station, or when a client is detected as late
- * (no refund — distribution proceeds as if the service was rendered).
+ * (no refund - distribution proceeds as if the service was rendered).
  * Returns the charge ID and transfer ID so callers can persist them without extra Stripe API calls.
  */
 export async function capturePaymentIntent(
@@ -190,7 +190,7 @@ export async function updatePaymentIntentMetadata(
  *   - Result: platform nets its penalty share, station nets its penalty share.
  *
  * When preloadedChargeId and/or preloadedTransferId are provided (from capturePaymentIntent),
- * the Stripe retrieve calls are skipped — saving 2 API round-trips per late cancellation.
+ * the Stripe retrieve calls are skipped - saving 2 API round-trips per late cancellation.
  *
  * Returns the Stripe transfer reversal ID, or null if no transfer exists or nothing to claw back.
  */
@@ -207,7 +207,7 @@ export async function distributePenalty(
   let chargeId = preloadedChargeId ?? null;
   let transferId = preloadedTransferId ?? null;
 
-  // Only fetch from Stripe if not preloaded — avoids 2 extra API calls per late cancel.
+  // Only fetch from Stripe if not preloaded - avoids 2 extra API calls per late cancel.
   if (!transferId) {
     if (!chargeId) {
       const pi = await stripe.paymentIntents.retrieve(paymentIntentId);
@@ -249,7 +249,7 @@ export type CreateTipPaymentIntentParams = {
  * Creates a Stripe PaymentIntent for a client tip.
  * Uses a destination charge (transfer_data.destination) with no application_fee_amount,
  * so 100% of the tip flows directly to the station's connected account.
- * capture_method is 'automatic' — funds are captured immediately on confirmation.
+ * capture_method is 'automatic' - funds are captured immediately on confirmation.
  */
 export async function createTipPaymentIntent(
   params: CreateTipPaymentIntentParams
@@ -318,15 +318,16 @@ export async function createStripeConnectAccount(
 /**
  * Generates a Stripe Connect onboarding link for a connected account.
  * The station owner uses this URL to complete their Stripe profile and add bank details.
+ * locale defaults to 'fr' (always-prefixed i18n routing).
  */
-export async function createStripeOnboardingLink(accountId: string): Promise<string> {
+export async function createStripeOnboardingLink(accountId: string, locale = 'fr'): Promise<string> {
   if (!accountId.trim().startsWith('acct_')) {
     throw new ValidationError('Invalid connected account id for onboarding link');
   }
   const link = await stripe.accountLinks.create({
     account: accountId,
-    refresh_url: `${APP_URL}/station/stripe-refresh`,
-    return_url: `${APP_URL}/station/stripe-return`,
+    refresh_url: `${APP_URL}/${locale}/station/stripe-refresh`,
+    return_url: `${APP_URL}/${locale}/station/stripe-return`,
     type: 'account_onboarding',
   });
   return link.url;

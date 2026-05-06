@@ -1,7 +1,7 @@
 /**
  * Post-escrow-release side effects: client push, success email, optional station/admin FCM.
  * Callers claim `stripe_payment_succeeded_notified_at` first; most per-channel errors are swallowed here.
- * If the caller needs Stripe webhook retries on total failure, it must rethrow after handling — see webhook route.
+ * If the caller needs Stripe webhook retries on total failure, it must rethrow after handling - see webhook route.
  */
 import { eq } from "drizzle-orm";
 import { sendPaymentSuccessEmail } from "@/lib/email";
@@ -40,7 +40,7 @@ export async function sendEscrowReleasedNotificationsForEntry(
     });
   }
 
-  // Fetch user email, station info, and push-enable flags concurrently — none depend on each other.
+  // Fetch user email, station info, and push-enable flags concurrently - none depend on each other.
   const [userRow, stationRow, stationPushRaw, adminPushEnabled] =
     await Promise.all([
       db.query.users.findFirst({

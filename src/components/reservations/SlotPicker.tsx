@@ -1,7 +1,7 @@
 'use client';
 
 /* ------------------------------------------------------------------ */
-/* SlotPicker — grille de sélection de créneau horaire                 */
+/* SlotPicker - grille de sélection de créneau horaire                 */
 /* ------------------------------------------------------------------ */
 
 export interface AvailableSlot {

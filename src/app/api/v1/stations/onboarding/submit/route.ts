@@ -18,7 +18,7 @@ import { HTTP_STATUS } from '@/helpers/constants';
 
 /**
  * POST /api/v1/stations/onboarding/submit
- * Final step — receives all onboarding data (steps 1, 2, 3) and performs all
+ * Final step - receives all onboarding data (steps 1, 2, 3) and performs all
  * DB operations atomically: creates the user account, the station record, and
  * the uploaded documents in a single transaction.
  *
@@ -62,7 +62,7 @@ export async function POST(request: Request) {
     return error400('Validation failed', ApiCode.VALIDATION_FAILED, mapZodErrors(parsed.error));
   }
 
-  // confirm_password is for validation only — strip it before passing to the service
+  // confirm_password is for validation only - strip it before passing to the service
   // eslint-disable-next-line @typescript-eslint/no-unused-vars -- strip for service
   const { confirm_password: _, ...dto } = parsed.data;
 

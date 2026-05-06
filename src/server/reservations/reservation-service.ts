@@ -146,18 +146,18 @@ export type CancelEntryResult = {
  *
  * Stripe-first pattern: PI is created before the DB transaction so there is no crash window
  * where an entry exists with stripe_payment_id = null. If the DB transaction fails (slot full,
- * duplicate, etc.), the PI is never returned to the client and auto-expires on Stripe after 24h —
+ * duplicate, etc.), the PI is never returned to the client and auto-expires on Stripe after 24h -
  * no charge, no orphan, no rollback needed.
  *
  * Full flow:
  * 1. Validate vehicle format and station config (surcharge)
  * 2. QR token validation
- * 3. Create Stripe PaymentIntent (before DB — Stripe-first)
+ * 3. Create Stripe PaymentIntent (before DB - Stripe-first)
  * 4. Atomic transaction:
  *    - Duplicate check (SELECT FOR UPDATE on slot prevents TOCTOU)
  *    - Lock slot, verify capacity, enforce max advance booking window
  *    - Insert entry with stripe_payment_id already set, increment slot booked_count
- * 5. Update PI metadata with reservation_id (non-fatal — informational only)
+ * 5. Update PI metadata with reservation_id (non-fatal - informational only)
  * 6. Send notification to client
  *
  * @param userId - Client UUID
@@ -215,7 +215,7 @@ export async function createReservation(
   });
 
   // Atomic: duplicate check, slot lock (SELECT FOR UPDATE), capacity check, entry insert, slot increment.
-  // Entry is created with stripe_payment_id already set — no orphan window.
+  // Entry is created with stripe_payment_id already set - no orphan window.
   const entry = await db.transaction(async (tx) => {
     const hasActive = await hasActiveEntryAtStation(userId, stationId, tx);
     if (hasActive) throw new ActiveReservationExistsError();
@@ -223,7 +223,7 @@ export async function createReservation(
     const slot = await lockSlotForUpdate(timeSlotId, stationId, tx);
     if (!slot) throw new NotFoundError('Time slot not found or does not belong to this station');
 
-    // Stripe card authorizations expire after 7 days — reject bookings beyond this window.
+    // Stripe card authorizations expire after 7 days - reject bookings beyond this window.
     const { maxDays, maxAdvanceMs } = await getMaxAdvanceBookingMs();
     if (slot.start_time.getTime() - Date.now() > maxAdvanceMs) {
       throw new ConflictError(`Reservations cannot be made more than ${maxDays} days in advance`);
@@ -257,7 +257,7 @@ export async function createReservation(
   try {
     await updatePaymentIntentMetadata(paymentIntentId, { reservation_id: entry.id });
   } catch (e) {
-    console.error('[CREATE_RESERVATION] PI metadata update failed — non-fatal', {
+    console.error('[CREATE_RESERVATION] PI metadata update failed - non-fatal', {
       entryId: entry.id,
       paymentIntentId,
       error: e instanceof Error ? e.message : String(e),
@@ -536,15 +536,15 @@ export type UpgradeToReservationResult = {
  * Stripe-first pattern: PI is created before the DB transaction so there is no crash window
  * where an entry exists with stripe_payment_id = null. If the DB transaction fails (slot full,
  * advance booking limit, etc.), the PI is never returned to the client and auto-expires on
- * Stripe after 24h — no charge, no orphan, no rollback needed.
+ * Stripe after 24h - no charge, no orphan, no rollback needed.
  *
  * Flow:
  * 1. Validate entry is a queue entry belonging to the user at the given station.
  * 2. Resolve price: vehicle format price + optional reservation surcharge.
- * 3. Create Stripe PaymentIntent (before DB — Stripe-first).
+ * 3. Create Stripe PaymentIntent (before DB - Stripe-first).
  * 4. Atomic transaction: lock slot, verify capacity, shift queue positions, convert entry to
  *    reservation (pending_payment) with stripe_payment_id already set, increment slot booked_count.
- * 5. Update PI metadata with reservation_id (non-fatal — informational only).
+ * 5. Update PI metadata with reservation_id (non-fatal - informational only).
  * 6. Return entry + client_secret for frontend payment confirmation.
  */
 export async function upgradeQueueToReservation(
@@ -622,7 +622,7 @@ export async function upgradeQueueToReservation(
   try {
     await updatePaymentIntentMetadata(paymentIntentId, { reservation_id: entryId });
   } catch (e) {
-    console.error('[UPGRADE_TO_RESERVATION] PI metadata update failed — non-fatal', {
+    console.error('[UPGRADE_TO_RESERVATION] PI metadata update failed - non-fatal', {
       entryId,
       paymentIntentId,
       error: e instanceof Error ? e.message : String(e),
@@ -689,14 +689,14 @@ export async function setEntryStatusByStation(
         }
       } catch (e) {
         const error = e instanceof Error ? e.message : String(e);
-        console.error('[CAPTURE_FAILED] Service completed but Stripe capture failed — manual resolution required', {
+        console.error('[CAPTURE_FAILED] Service completed but Stripe capture failed - manual resolution required', {
           entryId,
           error,
         });
       }
     }
 
-    // %%%%% ESCROW FALLBACK — webhook before "completed" %%%%%
+    // %%%%% ESCROW FALLBACK - webhook before "completed" %%%%%
     // Late capture: `updated` reflects RETURNING row (not stale `entry`) for succeeded_at / notify flag.
     if (updated.entry_type === 'reservation' && updated.stripe_payment_succeeded_at) {
       try {
@@ -722,7 +722,7 @@ export async function setEntryStatusByStation(
         console.error('[ESCROW_FALLBACK] Failed to send completed escrow notifications', { error: msg });
       }
 
-      // %%%%% END - ESCROW FALLBACK — webhook before "completed" %%%%%
+      // %%%%% END - ESCROW FALLBACK - webhook before "completed" %%%%%
     }
 
     // Refresh station_stats so completed_count stays current for the "most visited" sort group.

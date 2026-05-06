@@ -191,7 +191,7 @@ async function notifyAdminsPush(
   await fanOut('Push to admin', admins, documentId, (admin) =>
     sendPushNotification(admin.id, {
       title: 'KYC document expiring soon',
-      body: `Station "${stationName}" — document ${documentType} expires in ${thresholdDays} days.`,
+      body: `Station "${stationName}" - document ${documentType} expires in ${thresholdDays} days.`,
       data: { type: 'kyc_expiry_reminder_admin', document_id: documentId },
     })
   );

@@ -168,7 +168,7 @@ export async function getRegistrationsSeries(
 
 /**
  * Returns newly activated stations (status = 'active') grouped by granularity.
- * Filtered and grouped by approved_at — the date the station was approved/activated.
+ * Filtered and grouped by approved_at - the date the station was approved/activated.
  *
  * @param from    - Start of the period (inclusive).
  * @param to      - End of the period (inclusive).

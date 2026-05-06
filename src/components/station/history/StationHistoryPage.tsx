@@ -49,7 +49,7 @@ export function StationHistoryPage() {
     const params = new URLSearchParams();
     params.set('page', String(fetchPage));
     params.set('limit', String(PAGE_LIMIT));
-    // Use local date string (YYYY-MM-DD) — backend expects this format, and toISOString() shifts UTC
+    // Use local date string (YYYY-MM-DD) - backend expects this format, and toISOString() shifts UTC
     if (dateRange.from) params.set('from', toLocalDateStr(dateRange.from));
     if (dateRange.to) params.set('to', toLocalDateStr(dateRange.to));
     if (status !== 'all') params.set('status', status);
@@ -69,7 +69,7 @@ export function StationHistoryPage() {
         setLoading(false);
         return;
       }
-      // API succeeded but returned empty — show empty state (not error)
+      // API succeeded but returned empty - show empty state (not error)
       if (Array.isArray(inner?.items)) {
         setEntries([]);
         setMeta(inner.meta ?? null);
@@ -78,14 +78,14 @@ export function StationHistoryPage() {
       }
     }
 
-    // API failed — show error screen instead of silently falling back to mock
+    // API failed - show error screen instead of silently falling back to mock
     if (!ok) {
       setLoadError(true);
       setLoading(false);
       return;
     }
 
-    // API returned ok but unexpected shape — show empty state
+    // API returned ok but unexpected shape - show empty state
     setEntries([]);
     setMeta(null);
     setLoading(false);
@@ -154,7 +154,7 @@ export function StationHistoryPage() {
               {t('page_subtitle')}
             </p>
           </div>
-          {/* KPI chips — desktop */}
+          {/* KPI chips - desktop */}
           <div className="hidden shrink-0 items-center gap-2 sm:flex">
             <KpiChip value={String(stats.count)} color="#0044FF" label={t('stat_total_entries')} />
             <KpiChip value={`${stats.revenue.toFixed(0)}$`} color="#C09A18" label={t('stat_total_revenue')} />
@@ -162,7 +162,7 @@ export function StationHistoryPage() {
           </div>
         </div>
 
-        {/* KPI cards — mobile only */}
+        {/* KPI cards - mobile only */}
         <div className="mt-4 grid grid-cols-2 gap-2 sm:hidden">
           <StatCard label={t('stat_total_entries')} value={String(stats.count)} />
           <StatCard label={t('stat_total_revenue')} value={`${stats.revenue.toFixed(2)}$`} gold />
@@ -172,7 +172,7 @@ export function StationHistoryPage() {
 
         {/* Filters */}
         <div className="mt-4 flex flex-col gap-3 sm:flex-row sm:items-end sm:gap-6">
-          {/* Period — calendar */}
+          {/* Period - calendar */}
           <div>
             <p className="mb-1.5 text-[11px] font-bold uppercase tracking-wider text-[#000717]/40 dark:text-[#FFFFF0]/35">
               {t('filter_period')}

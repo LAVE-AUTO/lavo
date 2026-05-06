@@ -43,7 +43,7 @@ export function HowItWorksSection() {
         <div className="mt-10 grid grid-cols-1 gap-10 lg:grid-cols-3 lg:gap-12">
           {steps.map((step, i) => (
             <RevealOnScroll key={step.n} className="relative">
-              {/* Arrow connector — desktop only, not on last item */}
+              {/* Arrow connector - desktop only, not on last item */}
               {i < 2 && (
                 <div className="absolute top-[26px] right-[-30px] hidden text-[22px] text-[rgba(200,152,10,0.3)] lg:block">
                   →

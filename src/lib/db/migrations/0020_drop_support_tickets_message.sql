@@ -2,4 +2,4 @@
 -- The initial message content lives in support_messages (first row per ticket).
 
 --> statement-breakpoint
-ALTER TABLE "support_tickets" DROP COLUMN "message";
+ALTER TABLE "support_tickets" DROP COLUMN IF EXISTS "message";

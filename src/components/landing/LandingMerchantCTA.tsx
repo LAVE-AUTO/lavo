@@ -92,7 +92,7 @@ export function LandingMerchantCTA() {
                 </div>
               </div>
 
-              {/* Dashboard preview — desktop full */}
+              {/* Dashboard preview - desktop full */}
               <div className="hidden lg:block">
                 <div className="rounded-2xl bg-white/5 border border-white/10 p-6 backdrop-blur-sm">
                   {/* Header bar */}
@@ -147,7 +147,7 @@ export function LandingMerchantCTA() {
                 </div>
               </div>
 
-              {/* Dashboard preview — mobile compact */}
+              {/* Dashboard preview - mobile compact */}
               <div className="lg:hidden mt-8">
                 <div className="rounded-xl bg-white/5 border border-white/10 p-4 backdrop-blur-sm">
                   <div className="flex items-center gap-2 mb-4">

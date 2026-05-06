@@ -32,7 +32,7 @@ export function ExtraCard({ extra, onEdit, onDeleted, onToggled }: Props) {
   const [deleting, setDeleting] = useState(false);
   const [toggleOpen, setToggleOpen] = useState(false);
 
-  // TODO: connect to API once endpoint is available — DELETE /station/extras/:id
+  // TODO: connect to API once endpoint is available - DELETE /station/extras/:id
   async function confirmDelete() {
     setDeleting(true);
     setDeleting(false);
@@ -40,7 +40,7 @@ export function ExtraCard({ extra, onEdit, onDeleted, onToggled }: Props) {
     onDeleted(extra.id);
   }
 
-  // TODO: connect to API once endpoint is available — PATCH /station/extras/:id { is_active }
+  // TODO: connect to API once endpoint is available - PATCH /station/extras/:id { is_active }
   function confirmToggle() {
     setToggleOpen(false);
     onToggled({ ...extra, is_active: !extra.is_active });

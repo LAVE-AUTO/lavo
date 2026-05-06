@@ -1,4 +1,4 @@
-// MonthCalendar — displays a monthly grid with availability block indicators
+// MonthCalendar - displays a monthly grid with availability block indicators
 // Each day that has blocks shows a "bloc-tag" chip; clicking a day opens details
 'use client';
 import { useTranslations } from 'next-intl';
@@ -167,7 +167,7 @@ export function MonthCalendar({
                   ? 'bg-[#F0EDE0] hover:bg-[#E8E4D2] dark:bg-[#1E2A1A] dark:hover:bg-[#243220]'
                   : 'bg-[#E8E4D2] dark:bg-[#161E10]',
               ].join(' ')}
-              aria-label={`${dayNum} — ${t('availability_blocks_count_aria', { count: dayBlocks.length })}`}
+              aria-label={`${dayNum} - ${t('availability_blocks_count_aria', { count: dayBlocks.length })}`}
             >
               <span
                 className={`block text-[13px] font-bold ${

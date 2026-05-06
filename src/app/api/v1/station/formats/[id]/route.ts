@@ -1,7 +1,7 @@
 /**
- * PUT /api/v1/station/formats/:id — full update. Auth STATION.
- * PATCH /api/v1/station/formats/:id — partial update. Auth STATION.
- * DELETE /api/v1/station/formats/:id — delete if no reservations; 409 if has reservations. Auth STATION.
+ * PUT /api/v1/station/formats/:id - full update. Auth STATION.
+ * PATCH /api/v1/station/formats/:id - partial update. Auth STATION.
+ * DELETE /api/v1/station/formats/:id - delete if no reservations; 409 if has reservations. Auth STATION.
  */
 import { requireRole } from '@/lib/require-role';
 import { successResponse, error400, error404, error409, error500, fromAppError } from '@/lib/responses';

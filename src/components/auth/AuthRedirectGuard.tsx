@@ -23,7 +23,7 @@ type AuthRedirectGuardProps = {
  * to `/{locale}/`.
  *
  * Note: the access token is in React memory only, so the server cannot verify the
- * exact role. Redirecting to `/{locale}/` is safe — AuthProvider will redirect
+ * exact role. Redirecting to `/{locale}/` is safe - AuthProvider will redirect
  * further by role once it hydrates the session.
  */
 export async function AuthRedirectGuard({ locale, children }: AuthRedirectGuardProps) {

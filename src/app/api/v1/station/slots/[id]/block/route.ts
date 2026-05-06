@@ -6,7 +6,7 @@
  *   200 { data: TimeSlot }
  *   400 VALIDATION_FAILED
  *   404 NOT_FOUND
- *   409 CONFLICT — slot has active reservations
+ *   409 CONFLICT - slot has active reservations
  *   500 INTERNAL_ERROR
  */
 import { requireRole } from '@/lib/require-role';

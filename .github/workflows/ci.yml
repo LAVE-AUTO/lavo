@@ -15,7 +15,7 @@ jobs:
     env:
       NODE_ENV: test
       # Dummy values satisfy module-level guards in db.ts and stripe-client.ts.
-      # Tests mock all actual DB/Stripe calls — no real connections are made.
+      # Tests mock all actual DB/Stripe calls - no real connections are made.
       DATABASE_URL: postgresql://ci:ci@localhost:5432/ci_test
       STRIPE_SECRET_KEY: sk_test_00000000000000000000000000000000
       CRON_SECRET: ci-cron-secret-placeholder
@@ -60,7 +60,7 @@ jobs:
       #       (src/lib/openapi/spec.ts) whose name accidentally matches Jest's *.spec.ts pattern.
       #       CLI --testPathIgnorePatterns replaces jest.config.ts patterns, so both must be listed here.
       #   (b) Test suites that were already broken on `dev` before this CI gate was introduced.
-      #       Tracked in: https://github.com/LAVE-AUTO/lavo/issues — search label "ci-test-skip"
+      #       Tracked in: https://github.com/LAVE-AUTO/lavo/issues - search label "ci-test-skip"
       #       Until fixed, these suites are excluded to keep CI green on new work.
       #         - disputes/route + admin/disputes/refund: rate limiter not mocked in test setup
       #         - admin/stations approve/reject: DB uuid mock incompatibility
@@ -91,7 +91,7 @@ jobs:
       # or an offline DB fixture is available in CI.
 
 # ---------------------------------------------------------------------------
-# E2E job — disabled until a stable staging server is available.
+# E2E job - disabled until a stable staging server is available.
 #
 # Activation checklist:
 #   1. Provision a persistent staging environment reachable from GitHub Actions.
@@ -104,7 +104,7 @@ jobs:
   e2e:
     name: E2E tests
     runs-on: ubuntu-latest
-    # Disabled — no staging server is available yet.  See activation checklist above.
+    # Disabled - no staging server is available yet.  See activation checklist above.
     if: false
     needs: [ci]
     steps:
@@ -123,10 +123,10 @@ jobs:
       - name: Run E2E tests
         run: npm run test:e2e
         env:
-          # Replace with the staging URL — must be set as a GitHub secret (PLAYWRIGHT_BASE_URL).
+          # Replace with the staging URL - must be set as a GitHub secret (PLAYWRIGHT_BASE_URL).
           # See activation checklist above. localhost:3000 will NOT work in CI without a webServer.
           PLAYWRIGHT_BASE_URL: ${{ secrets.PLAYWRIGHT_BASE_URL }}
-          # Credentials — define the following in GitHub Secrets:
+          # Credentials - define the following in GitHub Secrets:
           # E2E_CLIENT_EMAIL, E2E_CLIENT_PASSWORD
           # E2E_STATION_EMAIL, E2E_STATION_PASSWORD
           # E2E_ADMIN_EMAIL, E2E_ADMIN_PASSWORD

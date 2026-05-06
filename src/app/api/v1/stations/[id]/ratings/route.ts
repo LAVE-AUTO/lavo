@@ -8,7 +8,7 @@
  * Responses:
  *   200 { data: { items: [{ id, score, comment, created_at }], meta: PaginationMeta } }
  *   400 VALIDATION_FAILED
- *   404 NOT_FOUND — station not found
+ *   404 NOT_FOUND - station not found
  *   500 INTERNAL_ERROR
  */
 import { successResponse, error400, error404, error500, fromAppError } from '@/lib/responses';

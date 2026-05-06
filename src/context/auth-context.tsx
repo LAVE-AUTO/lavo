@@ -25,7 +25,7 @@ export interface AuthUser {
   force_password_change?: boolean;
   /** ISO timestamp set when the user clicks the verification email link. Null until then. */
   email_verified_at?: string | null;
-  /** ISO timestamp of account creation — used as "member since" on the profile page. */
+  /** ISO timestamp of account creation - used as "member since" on the profile page. */
   created_at?: string;
 }
 
@@ -131,7 +131,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   }, [loginPath]);
 
-  // Deduplicated refresh — multiple concurrent callers share the same in-flight promise.
+  // Deduplicated refresh - multiple concurrent callers share the same in-flight promise.
   const tryRefreshToken = useCallback(async (): Promise<string | null> => {
     if (!isRefreshingRef.current) {
       isRefreshingRef.current = true;
@@ -143,14 +143,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     return refreshPromiseRef.current;
   }, [refreshAccessToken]);
 
-  // Used by refetchUser (raw fetch, not axios) — clears session when refresh fails.
+  // Used by refetchUser (raw fetch, not axios) - clears session when refresh fails.
   const handleUnauthorized = useCallback(async () => {
     const newToken = await tryRefreshToken();
     if (!newToken) clearAuth();
   }, [tryRefreshToken, clearAuth]);
 
   // On mount: restore session from the httpOnly refresh token cookie.
-  // The user object is fetched from the server — nothing is read from localStorage.
+  // The user object is fetched from the server - nothing is read from localStorage.
   useEffect(() => {
     refreshAccessToken().then(() => {
       refreshAxiosService({

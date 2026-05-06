@@ -61,7 +61,7 @@ export function MerchantProblemSection() {
               </Link>
             </div>
 
-            {/* Right — problem cards */}
+            {/* Right - problem cards */}
             <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
               {cards.map((card, i) => (
                 <div

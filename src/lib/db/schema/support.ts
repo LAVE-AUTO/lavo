@@ -30,7 +30,7 @@ export const supportCategoryEnum = pgEnum("support_category", [
 /**
  * DB-level enum for ticket status.
  * Requires a migration: ALTER TYPE or CREATE TYPE + ALTER COLUMN.
- * The migration (0018) used varchar — a follow-up migration must add this enum
+ * The migration (0018) used varchar - a follow-up migration must add this enum
  * and convert the column before this schema change is deployed to production.
  */
 export const supportStatusEnum = pgEnum("support_status", [

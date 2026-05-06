@@ -16,11 +16,11 @@ import type { NextResponse } from 'next/server';
  *
  * Responses:
  *   200 { data: AdminSafeUser }
- *   400 VALIDATION_FAILED  — invalid UUID param
+ *   400 VALIDATION_FAILED  - invalid UUID param
  *   401 UNAUTHORIZED
  *   403 FORBIDDEN
- *   404 NOT_FOUND          — user not found
- *   409 CONFLICT           — account is already active
+ *   404 NOT_FOUND          - user not found
+ *   409 CONFLICT           - account is already active
  *   500 INTERNAL_ERROR
  */
 export async function POST(

@@ -187,7 +187,7 @@ describe('stationAnalyticsQuerySchema validation', () => {
     expect(result.success).toBe(false);
   });
 
-  it('rejects unknown metric via STATION_METRICS check (not in schema — validated at route level)', () => {
+  it('rejects unknown metric via STATION_METRICS check (not in schema - validated at route level)', () => {
     // The metric validation is done at the route handler level using STATION_METRICS array.
     // The validator schema only covers query params (from, to).
     // This test documents the design decision.

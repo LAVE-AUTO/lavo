@@ -1,7 +1,7 @@
 /**
  * Singleton Upstash Redis client.
  * Requires UPSTASH_REDIS_REST_URL and UPSTASH_REDIS_REST_TOKEN environment variables.
- * Falls back gracefully when unavailable — callers must handle null returns.
+ * Falls back gracefully when unavailable - callers must handle null returns.
  */
 import { Redis } from '@upstash/redis';
 

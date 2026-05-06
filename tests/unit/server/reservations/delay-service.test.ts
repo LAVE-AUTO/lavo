@@ -86,7 +86,7 @@ describe('listDelaysByStation', () => {
     expect(result.perPage).toBe(20);
   });
 
-  it('filters by status=pending — only pending rows returned', async () => {
+  it('filters by status=pending - only pending rows returned', async () => {
     const pending = [makeDelay({ status: 'pending' })];
     mockListDelayRequestsByStation.mockResolvedValue({
       rows: pending,
@@ -118,7 +118,7 @@ describe('listDelaysByStation', () => {
     expect(result.rows[0].id).toBe('delay-21');
   });
 
-  it('passes stationId to repository — station sees only its own delays', async () => {
+  it('passes stationId to repository - station sees only its own delays', async () => {
     mockListDelayRequestsByStation.mockResolvedValue({ rows: [], total: 0, page: 1, perPage: 20 });
 
     await listDelaysByStation('other-station');

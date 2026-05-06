@@ -1,5 +1,5 @@
 /**
- * E2E — Client history page.
+ * E2E - Client history page.
  *
  * Authentication required: tests in this file log in as a client before
  * navigating to the protected /fr/client/history route.
@@ -41,7 +41,7 @@ test.describe('client history page', () => {
      * Whether the API returns entries or falls back to mock data, the container
      * must be present.
      *
-     * We assert that the main content area contains text — either reservation
+     * We assert that the main content area contains text - either reservation
      * entries or an empty-state message.  A minimum character count of 1 rules
      * out a blank render without being brittle to exact copy.
      */

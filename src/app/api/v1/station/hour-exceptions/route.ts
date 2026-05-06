@@ -1,6 +1,6 @@
 /**
- * GET  /api/v1/station/hour-exceptions — list exception dates. Auth: station.
- * POST /api/v1/station/hour-exceptions — add an exception date. Auth: station.
+ * GET  /api/v1/station/hour-exceptions - list exception dates. Auth: station.
+ * POST /api/v1/station/hour-exceptions - add an exception date. Auth: station.
  *
  * POST body: { exception_date: "YYYY-MM-DD", reason: string }
  */

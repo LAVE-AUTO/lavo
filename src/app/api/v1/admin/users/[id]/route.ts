@@ -20,10 +20,10 @@ import type { NextResponse } from 'next/server';
  *
  * Responses:
  *   200 { data: AdminSafeUser }
- *   400 VALIDATION_FAILED  — invalid UUID param or body
+ *   400 VALIDATION_FAILED  - invalid UUID param or body
  *   401 UNAUTHORIZED
  *   403 FORBIDDEN
- *   404 NOT_FOUND          — user not found
+ *   404 NOT_FOUND          - user not found
  *   500 INTERNAL_ERROR
  */
 export async function PUT(

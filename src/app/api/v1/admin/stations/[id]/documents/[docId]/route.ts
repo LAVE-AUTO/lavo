@@ -19,14 +19,14 @@ import type { NextResponse } from 'next/server';
  * Update the expiry_date of a station document.
  * Requires admin role.
  *
- * Body: { expiry_date: string | null }  — YYYY-MM-DD string or null to clear.
+ * Body: { expiry_date: string | null }  - YYYY-MM-DD string or null to clear.
  *
  * Responses:
  *   200 { data: StationDocument }
- *   400 VALIDATION_FAILED — :id or :docId is not a valid UUID, or body is malformed
+ *   400 VALIDATION_FAILED - :id or :docId is not a valid UUID, or body is malformed
  *   401 UNAUTHORIZED
  *   403 FORBIDDEN
- *   404 NOT_FOUND — document not found or does not belong to the station
+ *   404 NOT_FOUND - document not found or does not belong to the station
  *   500 INTERNAL_ERROR
  */
 export async function PATCH(
@@ -71,7 +71,7 @@ export async function PATCH(
 
   // Update expiry_date. The repository query scopes the update to the station,
   // so a missing result means either the document does not exist or it belongs
-  // to a different station — both cases are a 404.
+  // to a different station - both cases are a 404.
   try {
     const document = await updateDocumentExpiry(
       docParamParsed.data.docId,

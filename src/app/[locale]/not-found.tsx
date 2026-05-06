@@ -4,7 +4,7 @@ import { useTranslations } from 'next-intl';
 import { Link } from '@/i18n/navigation';
 
 /**
- * Branded 404 page — Slowtime hero language (gold orbs, dot pattern,
+ * Branded 404 page - Slowtime hero language (gold orbs, dot pattern,
  * shimmer line, gradient 404 numerals) with two CTAs and a support hint.
  */
 export default function NotFoundPage() {
@@ -45,7 +45,7 @@ export default function NotFoundPage() {
           <span className="h-px w-7 bg-[#c8980a]" />
         </div>
 
-        {/* 404 numerals — gradient + soft glow */}
+        {/* 404 numerals - gradient + soft glow */}
         <div className="relative">
           <p
             className="font-playfair text-[140px] sm:text-[200px] font-black leading-none select-none bg-clip-text text-transparent"

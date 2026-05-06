@@ -48,7 +48,7 @@ function handleServiceError(e: unknown): NextResponse {
 /**
  * GET /api/v1/admin/stations/:id
  * Returns full station details including submitted documents.
- * Stripe account id is stripped — not needed by the admin UI.
+ * Stripe account id is stripped - not needed by the admin UI.
  *
  * Responses:
  *   200 { data: StationWithDocuments }
@@ -69,7 +69,7 @@ export async function GET(
 
   try {
     const raw = await getStationById(stationId);
-    // Strip Stripe account id — reduces blast radius if this endpoint is ever misconfigured.
+    // Strip Stripe account id - reduces blast radius if this endpoint is ever misconfigured.
     // Rejection reason and approval metadata are intentionally retained for admin review.
     const { stripe_account_id: _stripe, ...station } = raw;
     return applyNoStoreHeaders(successResponse(station));
@@ -88,10 +88,10 @@ export async function GET(
  *
  * Responses:
  *   200 { data: AdminStation }
- *   400 VALIDATION_FAILED  — invalid UUID param or body
+ *   400 VALIDATION_FAILED  - invalid UUID param or body
  *   401 UNAUTHORIZED
  *   403 FORBIDDEN
- *   404 NOT_FOUND          — station not found
+ *   404 NOT_FOUND          - station not found
  *   500 INTERNAL_ERROR
  */
 export async function PUT(

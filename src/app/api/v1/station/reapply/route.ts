@@ -27,7 +27,7 @@ interface DocumentInput {
  * Resets status to pending_admin_validation and clears the rejection reason.
  * Replaces existing station documents with the newly uploaded ones.
  * Optionally updates name, address, city, and description.
- * Intentionally bypasses requireRole active-status check — rejected stations need access.
+ * Intentionally bypasses requireRole active-status check - rejected stations need access.
  * Rate-limited: one reapplication per REAPPLY_COOLDOWN_HOURS hours, but only after
  * REJECTION_COUNT_FOR_COOLDOWN or more rejections.
  *
@@ -35,10 +35,10 @@ interface DocumentInput {
  *
  * Responses:
  *   200 { data: { reapplied: true } }
- *   400 VALIDATION_FAILED — station is not rejected or required docs missing
- *   403 FORBIDDEN — user is not a station
+ *   400 VALIDATION_FAILED - station is not rejected or required docs missing
+ *   403 FORBIDDEN - user is not a station
  *   404 NOT_FOUND
- *   429 TOO_MANY_REQUESTS — reapplied too recently (after 3+ rejections)
+ *   429 TOO_MANY_REQUESTS - reapplied too recently (after 3+ rejections)
  *   500 INTERNAL_ERROR
  */
 export async function POST(request: Request) {
@@ -90,7 +90,7 @@ export async function POST(request: Request) {
       documents?: DocumentInput[];
     };
 
-    // Validate documents — required types must be present; deduplicate by type (keep last)
+    // Validate documents - required types must be present; deduplicate by type (keep last)
     const rawDocs: DocumentInput[] = Array.isArray(documents) ? documents : [];
     const docsByType = new Map<string, DocumentInput>();
     for (const d of rawDocs) {

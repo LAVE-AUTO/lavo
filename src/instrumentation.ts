@@ -1,5 +1,5 @@
 /**
- * Next.js instrumentation hook — runs once when the server starts.
+ * Next.js instrumentation hook - runs once when the server starts.
  * Forces IPv4-first DNS resolution so that outbound Node.js fetch requests
  * (e.g. NextAuth token endpoint calls to oauth2.googleapis.com) do not
  * time out on environments where IPv6 is advertised by DNS but blocked at

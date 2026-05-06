@@ -24,7 +24,7 @@ export async function generateMetadata({ params }: Props) {
     // fallback to defaults
   }
   return {
-    title: `LAVO — ${name}`,
+    title: `LAVO - ${name}`,
     description,
     alternates: {
       canonical: `${APP_URL}/${locale}/stations/${id}`,
@@ -32,7 +32,7 @@ export async function generateMetadata({ params }: Props) {
     openGraph: {
       type: 'website' as const,
       url: `${APP_URL}/${locale}/stations/${id}`,
-      title: `LAVO — ${name}`,
+      title: `LAVO - ${name}`,
       description,
     },
   };

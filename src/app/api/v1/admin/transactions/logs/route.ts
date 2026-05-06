@@ -15,12 +15,12 @@ import type { NextResponse } from 'next/server';
  * Role: admin only.
  *
  * Query params:
- *   page         — page number (default: 1)
- *   per_page     — items per page (default: 20, max: 100)
- *   type         — filter by business type: reservation | tip | penalty
- *   station_id   — filter by station UUID
- *   date_from    — ISO date-time lower bound on created_at
- *   date_to      — ISO date-time upper bound on created_at
+ *   page         - page number (default: 1)
+ *   per_page     - items per page (default: 20, max: 100)
+ *   type         - filter by business type: reservation | tip | penalty
+ *   station_id   - filter by station UUID
+ *   date_from    - ISO date-time lower bound on created_at
+ *   date_to      - ISO date-time upper bound on created_at
  *
  * Responses:
  *   200 { data: { logs: TransactionLog[], meta: { total, page, per_page, total_pages } } }

@@ -30,7 +30,7 @@ function SearchIcon() {
 
 /**
  * Controlled search bar for the station list.
- * Calls onChange on every keystroke — filtering is handled by the parent.
+ * Calls onChange on every keystroke - filtering is handled by the parent.
  */
 export function SearchBar({ value, onChange, placeholder }: SearchBarProps) {
   const handleChange = (e: ChangeEvent<HTMLInputElement>) => {

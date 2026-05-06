@@ -35,8 +35,8 @@ import { getClientRateLimitKey } from '@/lib/request-ip';
  * Body:      { email: string }
  * Responses:
  *   200  { data: { sent: true } }
- *   400  VALIDATION_FAILED — invalid email format
- *   429  TOO_MANY_REQUESTS — rate limit exceeded
+ *   400  VALIDATION_FAILED - invalid email format
+ *   429  TOO_MANY_REQUESTS - rate limit exceeded
  *   500  INTERNAL_ERROR
  */
 export async function POST(request: Request) {
@@ -47,7 +47,7 @@ export async function POST(request: Request) {
   const { blocked } = await checkRateLimit(ip);
   if (blocked) return error429();
 
-  // Parse body — return 400 on malformed JSON before schema validation.
+  // Parse body - return 400 on malformed JSON before schema validation.
   let body: unknown;
   try {
     body = await request.json();
@@ -64,7 +64,7 @@ export async function POST(request: Request) {
   await recordFailedAttempt(ip);
 
   // Fire-and-forget: silently absorbs NotFoundError (no account) and ConflictError
-  // (already verified) so the response is always 200 — callers cannot enumerate
+  // (already verified) so the response is always 200 - callers cannot enumerate
   // whether an address is registered or has already been verified.
   try {
     const locale = extractLocale(headersList.get('accept-language'));
