@@ -39,13 +39,9 @@ export function ManualQueueAddModal({
       setIsLoading(true);
       setError(null);
 
-      // POST /station/entries does not exist yet — see project_pending_backend_specs.md.
-      // We attempt the call so the modal upgrades automatically once the endpoint ships.
       const [success, data] = await postWithApi('/station/entries', {
         vehicle_format_id: formatId,
-        time_slot_id: slotId || null,
-        client_phone: clientPhone || null,
-        notes: notes || null,
+        time_slot_id: slotId || undefined,
       });
 
       if (!success) {
@@ -53,9 +49,8 @@ export function ManualQueueAddModal({
         return;
       }
 
-      const newEntryId = data?.data?.id;
+      const newEntryId = (data as { data?: { id?: string } })?.data?.id;
       if (!newEntryId) {
-        // Backend acked but didn't return an id — treat as failure rather than fabricating one.
         setError(t('manual_queue_error_unavailable'));
         return;
       }
@@ -72,7 +67,7 @@ export function ManualQueueAddModal({
   const isValid = formatId.length > 0;
 
   return (
-    <Modal isOpen={isOpen} onClose={onClose} title={t('manual_queue_title')} blocking>
+    <Modal open={isOpen} onClose={onClose} title={t('manual_queue_title')}>
       <div className="space-y-4 p-4">
         {/* Vehicle Format Select */}
         <div>

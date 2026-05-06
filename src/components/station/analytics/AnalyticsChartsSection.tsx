@@ -51,7 +51,7 @@ export function AnalyticsChartsSection({ data, period }: AnalyticsChartsSectionP
                   borderRadius: '8px',
                   color: '#fff',
                 }}
-                formatter={(value: number) => `$${value.toFixed(0)}`}
+                formatter={(value) => `$${(+(value ?? 0)).toFixed(0)}`}
               />
               <Legend />
               <Line
@@ -86,7 +86,7 @@ export function AnalyticsChartsSection({ data, period }: AnalyticsChartsSectionP
                   borderRadius: '8px',
                   color: '#fff',
                 }}
-                formatter={(value: number) => value.toFixed(0)}
+                formatter={(value) => (+(value ?? 0)).toFixed(0)}
               />
               <Legend />
               <Bar dataKey="value" fill="#4E2507" radius={[8, 8, 0, 0]} name={t('chart_clients_label')} />
@@ -113,7 +113,7 @@ export function AnalyticsChartsSection({ data, period }: AnalyticsChartsSectionP
                   borderRadius: '8px',
                   color: '#fff',
                 }}
-                formatter={(value: number) => value.toFixed(0)}
+                formatter={(value) => (+(value ?? 0)).toFixed(0)}
               />
               <Legend />
               <Bar dataKey="value" fill="#00C851" radius={[8, 8, 0, 0]} name={t('chart_completed_label')} />
