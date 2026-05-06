@@ -55,6 +55,11 @@ interface RawDashboard {
   total_completed: number;
   average_rating: string | null;
   pending_count: number;
+  month: string;
+  late_fees_total: string;
+  fill_rate_pct: number;
+  revenue_previous_period: string;
+  clients_previous_period: number;
 }
 
 type DashboardAction = 'call' | 'complete' | 'cancel' | 'start' | 'call_next';
@@ -154,16 +159,13 @@ export function StationDashboard() {
   const [actionLoading, setActionLoading] = useState(false);
 
   function mapDashboardToKpi(raw: RawDashboard): KpiData {
-    // Only map fields the backend actually returns. Late fees and occupancy/fill
-    // rate are NOT exposed by /station/dashboard yet — leave them null so the UI
-    // shows the "Bientôt disponible" placeholder instead of a fake number.
-    // See project_pending_backend_specs.md → "Missing fields on /station/dashboard".
     const revenue = Number.parseFloat(raw.total_revenue ?? '');
+    const lateFees = Number.parseFloat(raw.late_fees_total ?? '');
     return {
       revenue: Number.isFinite(revenue) ? Math.round(revenue) : null,
       clients: typeof raw.total_clients === 'number' ? raw.total_clients : null,
-      lateFees: null,
-      occupancy: null,
+      lateFees: Number.isFinite(lateFees) ? Math.round(lateFees) : null,
+      occupancy: typeof raw.fill_rate_pct === 'number' ? raw.fill_rate_pct : null,
     };
   }
 
