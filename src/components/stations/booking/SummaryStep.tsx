@@ -22,6 +22,7 @@ interface SummaryStepProps {
   laterTime: string | null;
   grandTotal: number;
   totalDuration: number;
+  reservationSurcharge: number | null;
   loading?: boolean;
   error?: string | null;
   onContinue: () => void;
@@ -39,6 +40,7 @@ export function SummaryStep({
   laterTime,
   grandTotal,
   totalDuration,
+  reservationSurcharge,
   loading,
   error,
   onContinue,
@@ -109,6 +111,14 @@ export function SummaryStep({
               <span className="text-[#555] dark:text-[#B0B0A0]">{extra.price.toLocaleString()}$</span>
             </div>
           ))}
+
+          {/* Reservation surcharge — only for book_slot mode */}
+          {arrivalMode === 'book_slot' && reservationSurcharge != null && reservationSurcharge > 0 && (
+            <div className="flex justify-between text-[13px] border-t border-[#D0D0C0] dark:border-tab-inactive pt-2 mt-1">
+              <span className="text-[#555] dark:text-[#B0B0A0]">{t('summary_reservation_surcharge')}</span>
+              <span className="text-gold font-bold">+{reservationSurcharge.toLocaleString()}$</span>
+            </div>
+          )}
         </div>
 
         {/* Arrival */}

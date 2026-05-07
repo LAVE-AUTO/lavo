@@ -70,6 +70,7 @@ export function StationDetail({ id }: StationDetailProps) {
   }, [station?.photos?.length]);
 
   const [bookingOpen, setBookingOpen] = useState(false);
+  const [bookingRefreshing, setBookingRefreshing] = useState(false);
   const [navigating, setNavigating] = useState(false);
   const [navConfirmOpen, setNavConfirmOpen] = useState(false);
 
@@ -99,13 +100,23 @@ export function StationDetail({ id }: StationDetailProps) {
       })()
     : null;
 
-  const handleOpenBooking = () => {
+  const handleOpenBooking = async () => {
     if (!isAuthenticated) {
       const callbackUrl = encodeURIComponent(`/stations/${id}`);
       router.push(`/${locale ?? 'fr'}/login?callbackUrl=${callbackUrl}`);
       return;
     }
-    setBookingOpen(true);
+    // Re-fetch fresh station data so surcharge and time slots are always current
+    setBookingRefreshing(true);
+    try {
+      const fresh = await fetchStationById(id);
+      if (fresh && mountedRef.current) setStation(fresh);
+    } catch {
+      // Keep existing data on network error
+    } finally {
+      if (mountedRef.current) setBookingRefreshing(false);
+    }
+    if (mountedRef.current) setBookingOpen(true);
   };
 
   const fallbackMapsUrl =
@@ -190,9 +201,18 @@ export function StationDetail({ id }: StationDetailProps) {
         <button
           type="button"
           onClick={handleOpenBooking}
-          className="w-full py-3.5 bg-gold hover:bg-gold-hover rounded-xl text-[15px] font-black text-dark-bg text-center transition-colors cursor-pointer btn-shine"
+          disabled={bookingRefreshing}
+          className="w-full py-3.5 bg-gold hover:bg-gold-hover rounded-xl text-[15px] font-black text-dark-bg text-center transition-colors cursor-pointer btn-shine disabled:opacity-70 disabled:cursor-not-allowed"
         >
-          {t('detail_book_service')}
+          {bookingRefreshing ? (
+            <span className="flex items-center justify-center gap-2">
+              <svg className="animate-spin h-4 w-4" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
+              </svg>
+              {t('detail_book_service')}
+            </span>
+          ) : t('detail_book_service')}
         </button>
       ) : (
         <div className="w-full py-3.5 bg-[#E0E0D0] dark:bg-tab-inactive rounded-xl text-[15px] font-bold text-[#444] dark:text-[#C0C0B0] text-center">
@@ -363,9 +383,18 @@ export function StationDetail({ id }: StationDetailProps) {
               <button
                 type="button"
                 onClick={handleOpenBooking}
-                className="flex-1 py-3 bg-gold hover:bg-gold-hover rounded-xl text-[15px] font-black text-dark-bg text-center transition-colors cursor-pointer btn-shine"
+                disabled={bookingRefreshing}
+                className="flex-1 py-3 bg-gold hover:bg-gold-hover rounded-xl text-[15px] font-black text-dark-bg text-center transition-colors cursor-pointer btn-shine disabled:opacity-70 disabled:cursor-not-allowed"
               >
-                {t('detail_book_service')}
+                {bookingRefreshing ? (
+                  <span className="flex items-center justify-center gap-2">
+                    <svg className="animate-spin h-4 w-4" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
+                    </svg>
+                    {t('detail_book_service')}
+                  </span>
+                ) : t('detail_book_service')}
               </button>
             ) : (
               <div className="flex-1 py-3 bg-[#E0E0D0] dark:bg-tab-inactive rounded-xl text-[15px] font-bold text-[#444] dark:text-[#C0C0B0] text-center">

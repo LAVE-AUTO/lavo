@@ -7,7 +7,7 @@ import { NotFoundError, ConflictError } from '@/lib/errors';
 import { db } from '@/lib/db';
 import { findServiceVehicleEntryForBooking, findServiceByIdAndStation } from '@/server/station/service-repository';
 import { decrementSlotBookedCount } from '@/server/station/slot-repository';
-import { createPaymentIntent, updatePaymentIntentMetadata } from '@/server/payments/payment-service';
+import { createPaymentIntent, cancelPaymentIntent, updatePaymentIntentMetadata } from '@/server/payments/payment-service';
 import { notifyEntry } from '@/server/notifications/notification-service';
 import { getQueuePositionWhenMovingFromReservation } from './queue-position-helper';
 import {
@@ -17,6 +17,7 @@ import {
   countQueueByStation,
   getNextQueuePosition,
   hasActiveQueueEntryAtStation,
+  findPendingPaymentQueueEntryAtStation,
   updateEntry,
   shiftQueuePositions,
   findFirstActiveQueueEntry,
@@ -57,6 +58,24 @@ export async function joinQueue(
 
   const amountCents = Math.round(entryPrice * 100);
   const commissionCents = Math.round(split.commissionAmount * 100);
+
+  // Cancel any stale pending_payment queue entry before creating a new PI.
+  // Allows users to retry after abandoning the Stripe form.
+  const stalePending = await findPendingPaymentQueueEntryAtStation(userId, stationId);
+  if (stalePending) {
+    if (stalePending.stripe_payment_id) {
+      try {
+        await cancelPaymentIntent(stalePending.stripe_payment_id);
+      } catch {
+        // Non-fatal: PI may already be expired
+      }
+    }
+    // Shift queue positions to fill the gap left by the cancelled entry
+    if (stalePending.queue_position != null) {
+      await shiftQueuePositions(stationId, stalePending.queue_position + 1, -1);
+    }
+    await updateEntry(stalePending.id, { status: 'cancelled', queue_position: null });
+  }
 
   const { paymentIntentId, clientSecret } = await createPaymentIntent({
     amountCents,

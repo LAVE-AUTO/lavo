@@ -621,6 +621,9 @@ export async function getStationDetailPublic(id: string) {
         closing_time: station.stationConfig.closing_time,
         wash_duration_minutes: station.stationConfig.wash_duration_minutes,
         wash_post_count: station.stationConfig.wash_post_count,
+        reservation_surcharge: station.stationConfig.reservation_surcharge
+          ? parseFloat(String(station.stationConfig.reservation_surcharge))
+          : null,
       }
     : null;
 

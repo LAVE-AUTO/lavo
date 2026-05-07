@@ -65,8 +65,11 @@ export function BookingFlow({ station, qrToken, qrVersion, onClose }: BookingFlo
   const selectedExtras = extras.filter((e) => selectedExtraIds.includes(e.id));
   const extrasTotal = selectedExtras.reduce((sum, e) => sum + e.price, 0);
   const extrasDuration = selectedExtras.reduce((sum, e) => sum + e.duration, 0);
-  const grandTotal = servicePrice + extrasTotal;
   const totalDuration = serviceDuration + extrasDuration;
+
+  const reservationSurcharge = station.stationConfig?.reservationSurcharge ?? null;
+  const surchargeAmount = arrivalMode === 'book_slot' ? (reservationSurcharge ?? 0) : 0;
+  const grandTotal = servicePrice + extrasTotal + surchargeAmount;
 
   useEffect(() => {
     document.body.style.overflow = 'hidden';
@@ -290,6 +293,8 @@ export function BookingFlow({ station, qrToken, qrVersion, onClose }: BookingFlo
             station={station}
             stationConfig={station.stationConfig}
             serviceDuration={totalDuration}
+            serviceBasePrice={servicePrice + extrasTotal}
+            reservationSurcharge={reservationSurcharge}
             arrivalMode={arrivalMode}
             selectedDate={selectedDate}
             selectedSlot={selectedSlot}
@@ -315,6 +320,7 @@ export function BookingFlow({ station, qrToken, qrVersion, onClose }: BookingFlo
             laterTime={laterTime}
             grandTotal={grandTotal}
             totalDuration={totalDuration}
+            reservationSurcharge={reservationSurcharge}
             loading={summaryLoading}
             error={summaryError}
             onContinue={handleSummaryContinue}

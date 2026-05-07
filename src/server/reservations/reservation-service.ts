@@ -36,6 +36,7 @@ import {
   findEntryByIdAndUser,
   findEntryByIdAndStation,
   hasActiveReservationForSlot,
+  findPendingPaymentReservationForSlot,
   clearStripePaymentSucceededNotifiedAt,
   setStripePaymentSucceededNotifiedAtIfMissing,
   updateEntry,
@@ -204,6 +205,20 @@ export async function createReservation(
 
   const amountCents = Math.round(amountTotal * 100);
   const commissionCents = Math.round(split.commissionAmount * 100);
+
+  // Cancel any stale pending_payment entry for this user+slot before creating a new PI.
+  // This lets users retry after abandoning the Stripe form without hitting a duplicate error.
+  const stalePending = await findPendingPaymentReservationForSlot(userId, timeSlotId);
+  if (stalePending) {
+    if (stalePending.stripe_payment_id) {
+      try {
+        await cancelPaymentIntent(stalePending.stripe_payment_id);
+      } catch {
+        // Non-fatal: PI may already be expired or cancelled by Stripe
+      }
+    }
+    await updateEntry(stalePending.id, { status: 'cancelled' });
+  }
 
   // Create Stripe PaymentIntent before the DB transaction (Stripe-first pattern).
   // reservation_id is set via a non-fatal metadata update after DB commit.

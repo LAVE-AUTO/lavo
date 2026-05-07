@@ -828,6 +828,8 @@
         "arrival_no_later_slots": "No slots available later today.",
         "arrival_no_slots_for_date": "No slots available for this date.",
         "summary_base_price": "Base price",
+        "summary_reservation_surcharge": "Booking surcharge",
+        "arrival_surcharge_label": "surcharge",
         "close": "Close",
         "back": "Back",
         "continue": "Continue",

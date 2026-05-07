@@ -88,6 +88,7 @@ interface ApiStationDetailConfig {
     closing_time: string;
     wash_duration_minutes: number;
     wash_post_count: number;
+    reservation_surcharge: number | null;
 }
 
 interface ApiStationDetail extends ApiStationListItem {
@@ -311,6 +312,7 @@ function mapApiDetailToStationDetail(
               closingTime: s.station_config.closing_time,
               washDurationMinutes: s.station_config.wash_duration_minutes,
               washPostCount: s.station_config.wash_post_count,
+              reservationSurcharge: s.station_config.reservation_surcharge ?? null,
           }
         : null;
 

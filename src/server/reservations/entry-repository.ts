@@ -328,8 +328,8 @@ export async function hasActiveQueueEntryAtStation(
 }
 
 /**
- * Returns true if the user already has an active reservation for this specific time slot.
- * Prevents double-booking the same slot; different slots at the same station are allowed.
+ * Returns true if the user already has a confirmed/in-progress/pending reservation for this slot.
+ * Excludes `pending_payment` — those are handled by the upsert logic in createReservation.
  */
 export async function hasActiveReservationForSlot(
   userId: string,
@@ -345,11 +345,61 @@ export async function hasActiveReservationForSlot(
         eq(reservations.user_id, userId),
         eq(reservations.time_slot_id, timeSlotId),
         eq(reservations.entry_type, 'reservation'),
-        inArray(reservations.status, ACTIVE_STATUSES)
+        inArray(reservations.status, ['pending', 'confirmed', 'in_progress'])
       )
     )
     .limit(1);
   return row.length > 0;
+}
+
+/**
+ * Finds an existing pending_payment reservation entry for a specific user and time slot.
+ * Used in createReservation to cancel stale payment attempts before issuing a new PI.
+ */
+export async function findPendingPaymentReservationForSlot(
+  userId: string,
+  timeSlotId: string
+): Promise<{ id: string; stripe_payment_id: string | null } | undefined> {
+  const row = await db
+    .select({ id: reservations.id, stripe_payment_id: reservations.stripe_payment_id })
+    .from(reservations)
+    .where(
+      and(
+        eq(reservations.user_id, userId),
+        eq(reservations.time_slot_id, timeSlotId),
+        eq(reservations.entry_type, 'reservation'),
+        eq(reservations.status, 'pending_payment')
+      )
+    )
+    .limit(1);
+  return row[0];
+}
+
+/**
+ * Finds an existing pending_payment queue entry for a specific user at a station.
+ * Used in joinQueue to cancel stale payment attempts before issuing a new PI.
+ */
+export async function findPendingPaymentQueueEntryAtStation(
+  userId: string,
+  stationId: string
+): Promise<{ id: string; stripe_payment_id: string | null; queue_position: number | null } | undefined> {
+  const row = await db
+    .select({
+      id: reservations.id,
+      stripe_payment_id: reservations.stripe_payment_id,
+      queue_position: reservations.queue_position,
+    })
+    .from(reservations)
+    .where(
+      and(
+        eq(reservations.user_id, userId),
+        eq(reservations.station_id, stationId),
+        eq(reservations.entry_type, 'queue'),
+        eq(reservations.status, 'pending_payment')
+      )
+    )
+    .limit(1);
+  return row[0];
 }
 
 /**

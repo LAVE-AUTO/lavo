@@ -828,6 +828,8 @@
         "arrival_no_later_slots": "Aucun créneau disponible plus tard aujourd'hui.",
         "arrival_no_slots_for_date": "Aucun créneau disponible pour cette date.",
         "summary_base_price": "Prix de base",
+        "summary_reservation_surcharge": "Supplément réservation",
+        "arrival_surcharge_label": "supplément",
         "close": "Fermer",
         "back": "Retour",
         "continue": "Continuer",
