@@ -158,8 +158,19 @@ export async function computeAvailability(args: ComputeAvailabilityArgs): Promis
   }
 
   /* Build the day's open windows. Prefer per-day station_hours; fall back to
-   * station_configs (single window with optional break) when station_hours
-   * has no row for this day. */
+   * station_configs when station_hours has no row for this day.
+   *
+   * The merchant UI (HoursTab) saves up to 4 columns per day:
+   *   morning_start, morning_end, afternoon_start, afternoon_end
+   *
+   * Real-world data shapes we must support:
+   *   - continuous day, no break:  morning_start + afternoon_end (the break
+   *     pair is null because the template has no break configured) → one
+   *     single window from open to close
+   *   - half-day morning only:     morning_start + morning_end
+   *   - half-day afternoon only:   afternoon_start + afternoon_end
+   *   - morning + afternoon split: all four set, break in between
+   */
   const windows: OpenWindow[] = [];
   if (hourRow) {
     if (!hourRow.is_open) {
@@ -167,10 +178,18 @@ export async function computeAvailability(args: ComputeAvailabilityArgs): Promis
     }
     const ms = timeStringToMinutes(hourRow.morning_start);
     const me = timeStringToMinutes(hourRow.morning_end);
-    if (ms != null && me != null && me > ms) windows.push({ startMin: ms, endMin: me });
     const as_ = timeStringToMinutes(hourRow.afternoon_start);
     const ae = timeStringToMinutes(hourRow.afternoon_end);
+
+    if (ms != null && me != null && me > ms) windows.push({ startMin: ms, endMin: me });
     if (as_ != null && ae != null && ae > as_) windows.push({ startMin: as_, endMin: ae });
+
+    /* No regular morning/afternoon pair matched, but we still have a global
+     * open/close envelope (morning_start + afternoon_end). Treat the day as
+     * a single continuous window. */
+    if (windows.length === 0 && ms != null && ae != null && ae > ms) {
+      windows.push({ startMin: ms, endMin: ae });
+    }
   } else if (configRow) {
     const open = timeStringToMinutes(String(configRow.opening_time));
     const close = timeStringToMinutes(String(configRow.closing_time));
