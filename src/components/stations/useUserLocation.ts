@@ -109,9 +109,13 @@ export function useGeolocationBanner(): GeolocationBannerState {
                  * always populate after a fresh page load. */
                 if (result.state === 'granted') {
                     void requestUserLocation();
-                } else if (result.state === 'prompt' && !isDismissed()) {
-                    setVisible(true);
+                    return;
                 }
+                /* For both `prompt` and `denied`, surface the banner unless the
+                 * user dismissed it this session. `denied` means the user can
+                 * still re-enable from the site settings - we want to keep the
+                 * affordance visible so distances stop showing as `--`. */
+                if (!isDismissed()) setVisible(true);
             })
             .catch(() => { if (!isDismissed()) setVisible(true); });
     }, []);

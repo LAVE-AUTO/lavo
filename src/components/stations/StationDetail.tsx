@@ -211,31 +211,31 @@ export function StationDetail({ id }: StationDetailProps) {
           {(station.photos?.length ?? 0) > 0 ? (
             station.photos!.map((url, i) => (
               <img
-                key={url}
+                key={`${i}-${url}`}
                 src={url}
                 alt={station.name}
                 onError={() => setHeroImgFailed(true)}
-                className={`absolute inset-0 w-full h-full object-cover transition-opacity duration-700 ${i === photoIndex ? 'opacity-100' : 'opacity-0'}`}
+                className={`absolute inset-0 w-full h-full object-cover object-center transition-opacity duration-700 ${i === photoIndex ? 'opacity-100' : 'opacity-0'}`}
               />
             ))
           ) : station.imageUrl && !heroImgFailed ? (
-            <img src={station.imageUrl} alt={station.name} onError={() => setHeroImgFailed(true)} className="w-full h-full object-cover" />
+            <img src={station.imageUrl} alt={station.name} onError={() => setHeroImgFailed(true)} className="w-full h-full object-cover object-center" />
           ) : (
             <div className="w-full h-full flex items-center justify-center text-[#999] dark:text-[#3A4A36] text-[14px] font-semibold">
               Photo
             </div>
           )}
-          <div className="absolute inset-0 bg-linear-to-t from-black/70 via-black/20 to-transparent" />
+          <div className="absolute inset-0 bg-linear-to-t from-black/75 via-black/15 to-transparent pointer-events-none" />
 
           {(station.photos?.length ?? 0) > 1 && (
-            <div className="absolute bottom-24 sm:bottom-28 lg:bottom-32 left-1/2 -translate-x-1/2 flex items-center gap-1.5 z-10">
+            <div className="absolute top-4 left-1/2 -translate-x-1/2 flex items-center gap-1.5 z-10 px-3 py-1.5 rounded-full bg-black/40 backdrop-blur-sm">
               {station.photos!.map((_, i) => (
                 <button
                   key={i}
                   type="button"
                   onClick={() => setPhotoIndex(i)}
                   aria-label={t('detail_photo_dot', { index: i + 1 })}
-                  className={`h-1.5 rounded-full transition-all ${i === photoIndex ? 'bg-white w-6' : 'bg-white/60 hover:bg-white/80 w-1.5'}`}
+                  className={`h-1.5 rounded-full transition-all ${i === photoIndex ? 'bg-white w-5' : 'bg-white/60 hover:bg-white/80 w-1.5'}`}
                 />
               ))}
             </div>

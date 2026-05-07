@@ -177,6 +177,8 @@ function calcEstimatedWait(queueCount: number, washDuration: number, washPostCou
 
 function mapApiStationToStation(s: ApiStationListItem): Station {
     const priceFromRaw = s.price_from != null ? parseFloat(s.price_from) : null;
+    const lat = s.latitude != null ? parseFloat(s.latitude) : NaN;
+    const lng = s.longitude != null ? parseFloat(s.longitude) : NaN;
     const openingHours = s.opening_hours
         ? `${formatTime(s.opening_hours.open)} - ${formatTime(s.opening_hours.close)}`
         : undefined;
@@ -192,8 +194,8 @@ function mapApiStationToStation(s: ApiStationListItem): Station {
         totalSlots: s.wash_post_count || 0,
         priceFrom: Number.isFinite(priceFromRaw) ? priceFromRaw : null,
         tags: [],
-        latitude: s.latitude != null ? parseFloat(s.latitude) : undefined,
-        longitude: s.longitude != null ? parseFloat(s.longitude) : undefined,
+        latitude: Number.isFinite(lat) ? lat : undefined,
+        longitude: Number.isFinite(lng) ? lng : undefined,
         isOpen: s.is_open,
         description: s.description || undefined,
         imageUrl: s.image_url ?? undefined,
@@ -316,7 +318,9 @@ function mapApiDetailToStationDetail(
     const allEntryPrices = stationServices.flatMap((svc) => svc.vehicleEntries.map((e) => e.price));
     const derivedPriceFrom = allEntryPrices.length > 0 ? Math.min(...allEntryPrices) : priceFrom;
 
-    const photos = s.photos ?? [];
+    /* Dedupe photos: backend may return the same URL multiple times when the
+     * photo is registered twice in station_photos. */
+    const photos = Array.from(new Set(s.photos ?? []));
     return {
         ...base,
         reviewCount: reviewCountOverride ?? base.reviewCount,
