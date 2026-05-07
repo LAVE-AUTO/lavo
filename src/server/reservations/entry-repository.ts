@@ -47,7 +47,7 @@ const RESERVATION_COLUMNS = {
 export type CreateReservationEntryData = {
   user_id: string;
   station_id: string;
-  vehicle_format_id: string;
+  vehicle_format_id?: string | null;
   time_slot_id: string;
   booking_source?: 'standard' | 'qr';
   status: string;
@@ -62,7 +62,7 @@ export type CreateReservationEntryData = {
 export type CreateQueueEntryData = {
   user_id: string;
   station_id: string;
-  vehicle_format_id: string;
+  vehicle_format_id?: string | null;
   queue_position: number;
   status: string;
   amount_paid: string;
@@ -298,13 +298,15 @@ export async function listEntriesByUser(userId: string): Promise<Entry[]> {
   });
 }
 
-/** Non-terminal statuses considered "active" for duplicate reservation checks. */
+/** Non-terminal statuses considered "active" for duplicate checks. */
 const ACTIVE_STATUSES = ['pending_payment', 'pending', 'confirmed', 'in_progress'];
 
 /**
- * Returns true if the user already has an active reservation or queue entry at this station.
+ * Returns true if the user already has an active queue entry (entry_type='queue') at this station.
+ * Does NOT check slot reservations — users may hold multiple reservations at the same station
+ * for different time slots.
  */
-export async function hasActiveEntryAtStation(
+export async function hasActiveQueueEntryAtStation(
   userId: string,
   stationId: string,
   tx?: DbTransaction
@@ -317,6 +319,32 @@ export async function hasActiveEntryAtStation(
       and(
         eq(reservations.user_id, userId),
         eq(reservations.station_id, stationId),
+        eq(reservations.entry_type, 'queue'),
+        inArray(reservations.status, ACTIVE_STATUSES)
+      )
+    )
+    .limit(1);
+  return row.length > 0;
+}
+
+/**
+ * Returns true if the user already has an active reservation for this specific time slot.
+ * Prevents double-booking the same slot; different slots at the same station are allowed.
+ */
+export async function hasActiveReservationForSlot(
+  userId: string,
+  timeSlotId: string,
+  tx?: DbTransaction
+): Promise<boolean> {
+  const client = tx ?? db;
+  const row = await client
+    .select({ id: reservations.id })
+    .from(reservations)
+    .where(
+      and(
+        eq(reservations.user_id, userId),
+        eq(reservations.time_slot_id, timeSlotId),
+        eq(reservations.entry_type, 'reservation'),
         inArray(reservations.status, ACTIVE_STATUSES)
       )
     )

@@ -35,8 +35,9 @@ export const cancelReservationBodySchema = z
 /** POST /stations/:id/reservations - create reservation. */
 export const createReservationBodySchema = z
   .object({
+    service_id: uuidSchema,
     time_slot_id: uuidSchema,
-    vehicle_format_id: uuidSchema,
+    vehicle_format_id: uuidSchema.optional(),
     qr_token: qrTokenSchema.optional(),
     v: qrVersionSchema.optional(),
   })
@@ -56,7 +57,8 @@ export const createReservationBodySchema = z
 /** POST /stations/:id/queue/join - join queue. */
 export const joinQueueBodySchema = z
   .object({
-    vehicle_format_id: uuidSchema,
+    service_id: uuidSchema,
+    vehicle_format_id: uuidSchema.optional(),
   })
   .strict();
 

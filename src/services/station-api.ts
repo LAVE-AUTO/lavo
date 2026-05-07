@@ -1,5 +1,5 @@
 import { getFromApi } from './axios-service';
-import type { Station, StationDetailData, ServiceCategory, TimeSlot, Review } from '@/types/station';
+import type { Station, StationDetailData, ServiceCategory, TimeSlot, Review, StationServicePublic, StationServiceEntry, StationServiceExtra } from '@/types/station';
 
 /* ------------------------------------------------------------------ */
 /*  API response shapes (snake_case, matching backend output)          */
@@ -20,6 +20,7 @@ interface ApiStationListItem {
     available_slots: number;
     available: boolean;
     completed_count?: number;
+    min_duration?: number | null;
     [key: string]: unknown;
 }
 
@@ -50,10 +51,46 @@ interface ApiTimeSlot {
     status: string;
 }
 
+interface ApiPublicServiceEntry {
+    id: string;
+    vehicle_format_id: string | null;
+    vehicle_label: string;
+    price: string;
+    duration_min: number;
+}
+
+interface ApiPublicServiceExtra {
+    id: string;
+    label: string;
+    scope: string;
+    price: string;
+    duration_min: number;
+}
+
+interface ApiPublicStationService {
+    id: string;
+    name: string;
+    category: string;
+    service_type: string;
+    description: string | null;
+    is_popular: boolean;
+    vehicle_entries: ApiPublicServiceEntry[];
+    extras: ApiPublicServiceExtra[];
+}
+
+interface ApiStationDetailConfig {
+    opening_time: string;
+    closing_time: string;
+    wash_duration_minutes: number;
+    wash_post_count: number;
+}
+
 interface ApiStationDetail extends ApiStationListItem {
     stationConfig: ApiStationConfig | null;
     vehicleFormats: ApiVehicleFormat[];
     timeSlots: ApiTimeSlot[];
+    station_services?: ApiPublicStationService[];
+    station_config?: ApiStationDetailConfig | null;
 }
 
 interface ApiStationListResponse {
@@ -162,13 +199,13 @@ function mapApiStationToDetail(s: ApiStationListItem): StationDetailData {
         ...mapApiStationToStation(s),
         reviews: [],
         services: [],
-        /* List payload exposes neither service categories (Essentiel/Premium/VIP/…) nor extras -
-         * leave both empty so the card hides forfait tags until the backend exposes them. */
         serviceCategories: [],
         extras: [],
         timeSlots: [],
         queueCount: 0,
-        estimatedWaitMinutes: 0,
+        estimatedWaitMinutes: s.min_duration ?? 0,
+        stationServices: [],
+        stationConfig: null,
     };
 }
 
@@ -230,20 +267,59 @@ function mapApiDetailToStationDetail(
             };
         });
 
+    // Map station_services (new booking flow)
+    const stationServices: StationServicePublic[] = (s.station_services ?? []).map(
+        (svc: ApiPublicStationService): StationServicePublic => ({
+            id: svc.id,
+            name: svc.name,
+            category: svc.category,
+            serviceType: svc.service_type,
+            description: svc.description,
+            isPopular: svc.is_popular,
+            vehicleEntries: svc.vehicle_entries.map((e: ApiPublicServiceEntry): StationServiceEntry => ({
+                id: e.id,
+                vehicleFormatId: e.vehicle_format_id,
+                formatLabel: e.vehicle_label,
+                price: parseFloat(e.price),
+                duration: e.duration_min,
+            })),
+            extras: svc.extras.map((ex: ApiPublicServiceExtra): StationServiceExtra => ({
+                id: ex.id,
+                name: ex.label,
+                scope: ex.scope,
+                price: parseFloat(ex.price),
+                duration: ex.duration_min,
+            })),
+        })
+    );
+
+    const stationConfig = s.station_config
+        ? {
+              openingTime: s.station_config.opening_time,
+              closingTime: s.station_config.closing_time,
+              washDurationMinutes: s.station_config.wash_duration_minutes,
+              washPostCount: s.station_config.wash_post_count,
+          }
+        : null;
+
+    // Derive priceFrom from station_services when available
+    const allEntryPrices = stationServices.flatMap((svc) => svc.vehicleEntries.map((e) => e.price));
+    const derivedPriceFrom = allEntryPrices.length > 0 ? Math.min(...allEntryPrices) : priceFrom;
+
     return {
         ...base,
-        priceFrom,
+        priceFrom: derivedPriceFrom,
         vehicleTypes,
         openingHours,
         reviews,
         services: [],
         serviceCategories,
-        /* Extras (Polish, Soin cuir, Renovation phares…) have no backend model yet -
-         * empty list until a `services`/`station_services` schema lands. */
         extras: [],
         timeSlots,
         queueCount,
         estimatedWaitMinutes,
+        stationServices,
+        stationConfig,
     };
 }
 

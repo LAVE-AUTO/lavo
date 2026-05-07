@@ -3,6 +3,8 @@
 import { useState, useCallback, useEffect, useRef } from 'react';
 import { useTranslations } from 'next-intl';
 import { Link } from '@/i18n/navigation';
+import { ServiceSelectionStep } from './ServiceSelectionStep';
+import { FormatSelectionStep } from './FormatSelectionStep';
 import { ExtrasStep } from './ExtrasStep';
 import { ArrivalStep } from './ArrivalStep';
 import { SummaryStep } from './SummaryStep';
@@ -10,38 +12,36 @@ import { PaymentStep } from './PaymentStep';
 import { useUserLocation } from '../useUserLocation';
 import { postWithApi } from '@/services/axios-service';
 import { RESERVATIONS_MOCK_ENABLED } from '@/data/reservations-mock';
-import type { StationDetailData, ServiceCategory, ServiceForfait, TimeSlot } from '@/types/station';
+import type {
+  StationDetailData,
+  StationServicePublic,
+  StationServiceEntry,
+  TimeSlot,
+} from '@/types/station';
 
 type ArrivalMode = 'queue_now' | 'queue_later' | 'book_slot';
+type Step = 'service' | 'format' | 'extras' | 'arrival' | 'summary' | 'payment';
+
+const ALL_STEPS: Step[] = ['service', 'format', 'extras', 'arrival', 'summary', 'payment'];
 
 interface BookingFlowProps {
   station: StationDetailData;
-  category: ServiceCategory;
-  forfait: ServiceForfait;
   qrToken?: string | null;
   qrVersion?: '1' | null;
   onClose: () => void;
 }
 
-const STEPS = ['extras', 'arrival', 'summary', 'payment'] as const;
-type Step = (typeof STEPS)[number];
-
-export function BookingFlow({ station, forfait, qrToken, qrVersion, onClose }: BookingFlowProps) {
+export function BookingFlow({ station, qrToken, qrVersion, onClose }: BookingFlowProps) {
   const t = useTranslations('booking');
   const userLocation = useUserLocation();
-  const [step, setStep] = useState<Step>('extras');
-  const stepIndex = STEPS.indexOf(step);
   const dialogRootRef = useRef<HTMLDivElement | null>(null);
 
-  // Payment result
+  const [step, setStep] = useState<Step>('service');
   const [paymentResult, setPaymentResult] = useState<'success' | 'error' | null>(null);
 
-  // Reservation creation (book_slot only)
-  const [clientSecret, setClientSecret] = useState<string | null>(null);
-  const [summaryLoading, setSummaryLoading] = useState(false);
-  const [summaryError, setSummaryError] = useState<string | null>(null);
-
-  // Extras state
+  // Booking selections
+  const [selectedService, setSelectedService] = useState<StationServicePublic | null>(null);
+  const [selectedEntry, setSelectedEntry] = useState<StationServiceEntry | null>(null);
   const [selectedExtraIds, setSelectedExtraIds] = useState<string[]>([]);
 
   // Arrival state
@@ -50,16 +50,26 @@ export function BookingFlow({ station, forfait, qrToken, qrVersion, onClose }: B
   const [selectedSlot, setSelectedSlot] = useState<TimeSlot | null>(null);
   const [laterTime, setLaterTime] = useState<string | null>(null);
 
-  const selectedExtras = station.extras.filter((e) => selectedExtraIds.includes(e.id));
+  // Summary/payment
+  const [clientSecret, setClientSecret] = useState<string | null>(null);
+  const [summaryLoading, setSummaryLoading] = useState(false);
+  const [summaryError, setSummaryError] = useState<string | null>(null);
+
+  const needsFormat = selectedService?.category === 'hand_wash';
+  const activeSteps = ALL_STEPS.filter((s) => s !== 'format' || needsFormat);
+  const stepIndex = activeSteps.indexOf(step);
+
+  const servicePrice = selectedEntry?.price ?? 0;
+  const serviceDuration = selectedEntry?.duration ?? 0;
+  const extras = selectedService?.extras ?? [];
+  const selectedExtras = extras.filter((e) => selectedExtraIds.includes(e.id));
   const extrasTotal = selectedExtras.reduce((sum, e) => sum + e.price, 0);
   const extrasDuration = selectedExtras.reduce((sum, e) => sum + e.duration, 0);
-  const grandTotal = forfait.price + extrasTotal;
-  const totalDuration = forfait.duration + extrasDuration;
+  const grandTotal = servicePrice + extrasTotal;
+  const totalDuration = serviceDuration + extrasDuration;
 
-  // Lock body scroll and basic keyboard handling (Escape + initial focus)
   useEffect(() => {
     document.body.style.overflow = 'hidden';
-
     const dialogEl = dialogRootRef.current;
     if (dialogEl) {
       const focusable = dialogEl.querySelector<HTMLElement>(
@@ -67,37 +77,50 @@ export function BookingFlow({ station, forfait, qrToken, qrVersion, onClose }: B
       );
       focusable?.focus();
     }
-
     const handleKeyDown = (event: KeyboardEvent) => {
-      if (event.key === 'Escape') {
-        event.preventDefault();
-        onClose();
-      }
+      if (event.key === 'Escape') { event.preventDefault(); onClose(); }
     };
-
     document.addEventListener('keydown', handleKeyDown);
-
     return () => {
       document.body.style.overflow = '';
       document.removeEventListener('keydown', handleKeyDown);
     };
   }, [onClose]);
 
-  const toggleExtra = useCallback((id: string) => {
-    setSelectedExtraIds((prev) =>
-      prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id]
-    );
-  }, []);
-
   const goNext = useCallback(() => {
     const next = stepIndex + 1;
-    if (next < STEPS.length) setStep(STEPS[next]);
-  }, [stepIndex]);
+    if (next < activeSteps.length) setStep(activeSteps[next]);
+  }, [stepIndex, activeSteps]);
 
   const goBack = useCallback(() => {
     const prev = stepIndex - 1;
-    if (prev >= 0) setStep(STEPS[prev]);
-  }, [stepIndex]);
+    if (prev >= 0) setStep(activeSteps[prev]);
+  }, [stepIndex, activeSteps]);
+
+  const handleSelectService = useCallback((svc: StationServicePublic) => {
+    setSelectedService(svc);
+    setSelectedEntry(null);
+    setSelectedExtraIds([]);
+  }, []);
+
+  const handleServiceContinue = useCallback(() => {
+    if (selectedService && selectedService.category !== 'hand_wash') {
+      // Auto-select first active entry for non-hand_wash services
+      const firstEntry = selectedService.vehicleEntries[0] ?? null;
+      setSelectedEntry(firstEntry);
+    }
+    goNext();
+  }, [selectedService, goNext]);
+
+  const handleSelectEntry = useCallback((entry: StationServiceEntry) => {
+    setSelectedEntry(entry);
+  }, []);
+
+  const toggleExtra = useCallback((id: string) => {
+    setSelectedExtraIds((prev) =>
+      prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id],
+    );
+  }, []);
 
   const handleSkipExtras = useCallback(() => {
     setSelectedExtraIds([]);
@@ -107,10 +130,7 @@ export function BookingFlow({ station, forfait, qrToken, qrVersion, onClose }: B
   const handleArrivalSetMode = useCallback((mode: ArrivalMode) => {
     setArrivalMode(mode);
     if (mode !== 'queue_later') setLaterTime(null);
-    if (mode !== 'book_slot') {
-      setSelectedDate(null);
-      setSelectedSlot(null);
-    }
+    if (mode !== 'book_slot') { setSelectedDate(null); setSelectedSlot(null); }
   }, []);
 
   const handleArrivalSetDate = useCallback((date: string) => {
@@ -122,44 +142,30 @@ export function BookingFlow({ station, forfait, qrToken, qrVersion, onClose }: B
     process.env.NODE_ENV !== 'production' &&
     process.env.NEXT_PUBLIC_DEV_SKIP_PAYMENT === 'true';
 
-  // React 18: async setState calls below (setSummaryLoading, setSummaryError, setClientSecret, setPaymentResult)
-  // are safe without a mountedRef guard - React 18 silently ignores setState on unmounted components.
-
-  // Called at SummaryStep "Passer au paiement":
-  // - book_slot (real): creates reservation → gets client_secret → navigates to payment
-  // - book_slot (devSkipPayment): skip API call, navigate directly
-  // - queue modes (real): joins queue → gets client_secret → navigates to Stripe card form
-  // - queue modes (devSkipPayment): navigate directly (API called later in handlePaymentConfirm)
   const handleSummaryContinue = useCallback(async () => {
-    // Reset stale client secret so PaymentStep always renders the correct form.
     setClientSecret(null);
     setSummaryError(null);
 
-    if (RESERVATIONS_MOCK_ENABLED) {
-      goNext();
-      return;
-    }
+    if (RESERVATIONS_MOCK_ENABLED) { goNext(); return; }
 
     const isQueueMode = arrivalMode === 'queue_now' || arrivalMode === 'queue_later';
 
     if (isQueueMode) {
-      if (devSkipPayment) {
-        goNext();
-        return;
-      }
+      if (devSkipPayment) { goNext(); return; }
       setSummaryLoading(true);
       const [ok, data] = await postWithApi<{ data: { client_secret: string } }>(
         `/stations/${station.id}/queue/join`,
-        { vehicle_format_id: forfait.id },
+        {
+          service_id: selectedService!.id,
+          ...(selectedEntry?.vehicleFormatId ? { vehicle_format_id: selectedEntry.vehicleFormatId } : {}),
+        },
       );
       setSummaryLoading(false);
       if (!ok) {
         const errData = data as { code?: string } | null;
-        if (errData?.code === 'CONFLICT') {
-          setSummaryError(t('error_active_queue_entry'));
-        } else {
-          setSummaryError(t('error_queue_join_failed'));
-        }
+        setSummaryError(
+          errData?.code === 'CONFLICT' ? t('error_active_queue_entry') : t('error_queue_join_failed'),
+        );
         return;
       }
       const queueData = data as { data: { client_secret: string } };
@@ -169,20 +175,19 @@ export function BookingFlow({ station, forfait, qrToken, qrVersion, onClose }: B
     }
 
     // book_slot
-    if (devSkipPayment) {
-      goNext();
-      return;
-    }
+    if (devSkipPayment) { goNext(); return; }
     if (!selectedSlot) return;
     setSummaryLoading(true);
     const reservationPayload: Record<string, string> = {
       time_slot_id: selectedSlot.id,
-      vehicle_format_id: forfait.id,
+      service_id: selectedService!.id,
     };
-    const hasValidQrContext = Boolean(qrToken && qrVersion === '1');
-    if (hasValidQrContext) {
-      reservationPayload.qr_token = qrToken!;
-      reservationPayload.v = qrVersion!;
+    if (selectedEntry?.vehicleFormatId) {
+      reservationPayload.vehicle_format_id = selectedEntry.vehicleFormatId;
+    }
+    if (qrToken && qrVersion === '1') {
+      reservationPayload.qr_token = qrToken;
+      reservationPayload.v = qrVersion;
     }
     const [ok, data] = await postWithApi<{ data: { reservation_id: string; stripe_client_secret: string } }>(
       `/stations/${station.id}/reservations`,
@@ -191,90 +196,100 @@ export function BookingFlow({ station, forfait, qrToken, qrVersion, onClose }: B
     setSummaryLoading(false);
     if (!ok) {
       const errData = data as { code?: string } | null;
-      if (errData?.code === 'SLOT_FULL') {
-        setSummaryError(t('error_slot_full'));
-      } else if (errData?.code === 'ACTIVE_RESERVATION_EXISTS') {
-        setSummaryError(t('error_active_reservation'));
-      } else {
-        setSummaryError(t('error_reservation_failed'));
-      }
+      if (errData?.code === 'SLOT_FULL') setSummaryError(t('error_slot_full'));
+      else if (errData?.code === 'ACTIVE_RESERVATION_EXISTS') setSummaryError(t('error_active_reservation'));
+      else setSummaryError(t('error_reservation_failed'));
       return;
     }
     const resData = data as { data: { stripe_client_secret: string } };
     setClientSecret(resData.data?.stripe_client_secret ?? null);
     goNext();
-  }, [arrivalMode, station.id, forfait.id, selectedSlot, qrToken, qrVersion, devSkipPayment, goNext, t]);
+  }, [arrivalMode, station.id, selectedService, selectedEntry, selectedSlot, qrToken, qrVersion, devSkipPayment, goNext, t]);
 
   const handlePaymentConfirm = useCallback(async (): Promise<void> => {
-    // TODO: remove mock block once Stripe is fully live in production
-    if (RESERVATIONS_MOCK_ENABLED) {
-      setPaymentResult('success');
-      return;
-    }
+    if (RESERVATIONS_MOCK_ENABLED) { setPaymentResult('success'); return; }
 
     const isQueueMode = arrivalMode === 'queue_now' || arrivalMode === 'queue_later';
 
     if (isQueueMode) {
       if (devSkipPayment) {
-        // Dev bypass: call queue join directly (no Stripe payment)
         const [ok] = await postWithApi(`/stations/${station.id}/queue/join`, {
-          vehicle_format_id: forfait.id,
+          service_id: selectedService!.id,
+          ...(selectedEntry?.vehicleFormatId ? { vehicle_format_id: selectedEntry.vehicleFormatId } : {}),
         });
         setPaymentResult(ok ? 'success' : 'error');
       } else {
-        // Stripe payment was confirmed in StripeCardForm via confirmCardPayment;
-        // the PaymentIntent webhook updates the entry server-side.
         setPaymentResult('success');
       }
     } else if (arrivalMode === 'book_slot') {
       if (devSkipPayment && selectedSlot) {
-        // Dev bypass: create confirmed reservation directly (skips Stripe)
-        const hasValidQrContext = Boolean(qrToken && qrVersion === '1');
-        const payload = {
+        const payload: Record<string, string> = {
           station_id: station.id,
           time_slot_id: selectedSlot.id,
-          vehicle_format_id: forfait.id,
-          ...(hasValidQrContext ? { qr_token: qrToken!, v: qrVersion! } : {}),
+          service_id: selectedService!.id,
         };
+        if (selectedEntry?.vehicleFormatId) payload.vehicle_format_id = selectedEntry.vehicleFormatId;
+        if (qrToken && qrVersion === '1') { payload.qr_token = qrToken; payload.v = qrVersion; }
         const [ok] = await postWithApi('/dev/reservations', payload);
         setPaymentResult(ok ? 'success' : 'error');
       } else {
-        // Stripe payment was confirmed in StripeCardForm via confirmCardPayment;
-        // the PaymentIntent webhook updates the reservation server-side.
         setPaymentResult('success');
       }
     }
-  }, [arrivalMode, station.id, forfait.id, selectedSlot, qrToken, qrVersion, devSkipPayment]);
+  }, [arrivalMode, station.id, selectedService, selectedEntry, selectedSlot, qrToken, qrVersion, devSkipPayment]);
 
-  const handleRetryPayment = useCallback(() => {
-    setPaymentResult(null);
-  }, []);
+  const handleRetryPayment = useCallback(() => { setPaymentResult(null); }, []);
 
-  // Step labels for progress indicator
-  const stepLabels = [
-    t('step_extras'),
-    t('step_arrival'),
-    t('step_summary'),
-    t('step_payment'),
-  ];
+  const stepLabels: Record<Step, string> = {
+    service: t('step_service'),
+    format: t('step_format'),
+    extras: t('step_extras'),
+    arrival: t('step_arrival'),
+    summary: t('step_summary'),
+    payment: t('step_payment'),
+  };
 
   const renderStep = () => {
     switch (step) {
+      case 'service':
+        return (
+          <ServiceSelectionStep
+            station={station}
+            selectedService={selectedService}
+            onSelectService={handleSelectService}
+            onContinue={handleServiceContinue}
+          />
+        );
+      case 'format':
+        return (
+          <FormatSelectionStep
+            service={selectedService!}
+            selectedEntry={selectedEntry}
+            onSelectEntry={handleSelectEntry}
+            onContinue={goNext}
+            onBack={goBack}
+          />
+        );
       case 'extras':
         return (
           <ExtrasStep
-            forfait={forfait}
-            extras={station.extras}
+            serviceName={selectedService?.name ?? ''}
+            servicePrice={servicePrice}
+            serviceDuration={serviceDuration}
+            extras={extras}
             selectedExtras={selectedExtraIds}
             onToggleExtra={toggleExtra}
             onContinue={goNext}
             onSkip={handleSkipExtras}
+            onBack={goBack}
           />
         );
       case 'arrival':
         return (
           <ArrivalStep
             station={station}
+            stationConfig={station.stationConfig}
+            serviceDuration={totalDuration}
             arrivalMode={arrivalMode}
             selectedDate={selectedDate}
             selectedSlot={selectedSlot}
@@ -291,7 +306,8 @@ export function BookingFlow({ station, forfait, qrToken, qrVersion, onClose }: B
         return (
           <SummaryStep
             station={station}
-            forfait={forfait}
+            selectedService={selectedService!}
+            selectedEntry={selectedEntry}
             selectedExtras={selectedExtras}
             arrivalMode={arrivalMode!}
             selectedDate={selectedDate}
@@ -317,27 +333,23 @@ export function BookingFlow({ station, forfait, qrToken, qrVersion, onClose }: B
     }
   };
 
-  // Google Maps itinerary URL
   const mapsUrl = (() => {
     const dest =
       station.latitude != null && station.longitude != null
         ? `${station.latitude},${station.longitude}`
         : encodeURIComponent(`${station.name}, ${station.address}, ${station.city}`);
-    const origin =
-      userLocation
-        ? `&origin=${userLocation.latitude},${userLocation.longitude}`
-        : '';
+    const origin = userLocation
+      ? `&origin=${userLocation.latitude},${userLocation.longitude}`
+      : '';
     return `https://www.google.com/maps/dir/?api=1&destination=${dest}${origin}`;
   })();
 
-  // Payment result screen (context-aware on success)
   const renderResultScreen = () => {
     const isSuccess = paymentResult === 'success';
     const isQueueNow = arrivalMode === 'queue_now';
 
     return (
       <div className="flex flex-col items-center justify-center text-center px-6 py-12 gap-5">
-        {/* Icon */}
         <div className={`w-20 h-20 rounded-full flex items-center justify-center ${isSuccess ? 'bg-lavo-success/15' : 'bg-lavo-error/15'}`}>
           {isSuccess ? (
             <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="#00C851" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12" /></svg>
@@ -346,10 +358,7 @@ export function BookingFlow({ station, forfait, qrToken, qrVersion, onClose }: B
           )}
         </div>
 
-        <h3
-          id="booking-result-title"
-          className="text-[22px] font-black text-[#000C1F] dark:text-[#FFF8EC]"
-        >
+        <h3 id="booking-result-title" className="text-[22px] font-black text-[#000C1F] dark:text-[#FFF8EC]">
           {isSuccess ? t('result_success_title') : t('result_error_title')}
         </h3>
         <p className="text-[15px] text-[#555] dark:text-[#B0B0A0] max-w-sm leading-relaxed">
@@ -358,21 +367,21 @@ export function BookingFlow({ station, forfait, qrToken, qrVersion, onClose }: B
             : t('result_error_desc')}
         </p>
 
-        {/* Amount badge */}
         {isSuccess && (
           <div className="bg-gold/10 dark:bg-gold/5 border-2 border-gold rounded-xl px-5 py-3">
             <span className="text-[18px] font-black text-gold">{grandTotal}$</span>
           </div>
         )}
 
-        {/* Queue position info for non-now queue */}
-        {isSuccess && !isQueueNow && arrivalMode === 'queue_later' && (
+        {isSuccess && arrivalMode === 'queue_later' && (
           <div className="bg-[#E8E8D8] dark:bg-dark-surface rounded-xl px-5 py-4 w-full max-w-xs text-left border border-[#D0D0C0] dark:border-tab-inactive">
             <div className="text-[13px] font-bold text-[#555] dark:text-[#A0A090] uppercase tracking-wider mb-2">
               {t('result_queue_position_label')}
             </div>
             <div className="text-[26px] font-black text-gold leading-none">#{station.queueCount + 1}</div>
-            <div className="text-[13px] text-[#555] dark:text-[#B0B0A0] mt-1">{t('result_queue_arrival_time', { time: laterTime ?? '' })}</div>
+            <div className="text-[13px] text-[#555] dark:text-[#B0B0A0] mt-1">
+              {t('result_queue_arrival_time', { time: laterTime ?? '' })}
+            </div>
           </div>
         )}
 
@@ -440,12 +449,10 @@ export function BookingFlow({ station, forfait, qrToken, qrVersion, onClose }: B
     );
   };
 
-  // If payment result is shown, render the result screen
   if (paymentResult) {
     return (
       <>
-        {/* Desktop */}
-        <div className="hidden md:flex fixed inset-0 z-[60] items-center justify-center bg-black/50 backdrop-blur-sm">
+        <div className="hidden md:flex fixed inset-0 z-60 items-center justify-center bg-black/50 backdrop-blur-sm">
           <div
             className="relative w-full max-w-md bg-[#F5F5E6] dark:bg-dark-card rounded-2xl shadow-2xl"
             role="dialog"
@@ -455,8 +462,7 @@ export function BookingFlow({ station, forfait, qrToken, qrVersion, onClose }: B
             {renderResultScreen()}
           </div>
         </div>
-        {/* Mobile */}
-        <div className="md:hidden fixed inset-0 z-[60] bg-[#F5F5E6] dark:bg-dark-card flex items-center justify-center">
+        <div className="md:hidden fixed inset-0 z-60 bg-[#F5F5E6] dark:bg-dark-card flex items-center justify-center">
           {renderResultScreen()}
         </div>
       </>
@@ -466,18 +472,18 @@ export function BookingFlow({ station, forfait, qrToken, qrVersion, onClose }: B
   return (
     <>
       {/* Desktop: Modal overlay */}
+      <div
+        className="hidden md:flex fixed inset-0 z-60 items-center justify-center bg-black/50 backdrop-blur-sm"
+        onClick={onClose}
+      >
         <div
-          className="hidden md:flex fixed inset-0 z-[60] items-center justify-center bg-black/50 backdrop-blur-sm"
-          onClick={onClose}
+          ref={dialogRootRef}
+          className="relative w-full max-w-2xl bg-[#F5F5E6] dark:bg-dark-card rounded-2xl shadow-2xl flex flex-col max-h-[90vh]"
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="booking-dialog-title-desktop"
+          onClick={(e) => e.stopPropagation()}
         >
-          <div
-            ref={dialogRootRef}
-            className="relative w-full max-w-2xl bg-[#F5F5E6] dark:bg-dark-card rounded-2xl shadow-2xl flex flex-col max-h-[90vh]"
-            role="dialog"
-            aria-modal="true"
-            aria-labelledby="booking-dialog-title-desktop"
-            onClick={(e) => e.stopPropagation()}
-          >
           {/* Header */}
           <div className="p-5 pb-4 border-b border-[#D0D0C0] dark:border-tab-inactive">
             <div className="flex items-center justify-between mb-4">
@@ -499,15 +505,13 @@ export function BookingFlow({ station, forfait, qrToken, qrVersion, onClose }: B
 
             {/* Progress steps */}
             <div className="flex items-center gap-1">
-              {STEPS.map((s, i) => (
+              {activeSteps.map((s, i) => (
                 <div key={s} className="flex-1 flex flex-col items-center gap-1">
                   <div className={`h-1 w-full rounded-full transition-colors ${
                     i <= stepIndex ? 'bg-gold' : 'bg-[#D0D0C0] dark:bg-tab-inactive'
                   }`} />
-                  <span className={`text-[11px] font-bold ${
-                    i === stepIndex ? 'text-gold' : 'text-[#888]'
-                  }`}>
-                    {stepLabels[i]}
+                  <span className={`text-[11px] font-bold ${i === stepIndex ? 'text-gold' : 'text-[#888]'}`}>
+                    {stepLabels[s]}
                   </span>
                 </div>
               ))}
@@ -523,7 +527,7 @@ export function BookingFlow({ station, forfait, qrToken, qrVersion, onClose }: B
 
       {/* Mobile: Full screen */}
       <div
-        className="md:hidden fixed inset-0 z-[60] bg-[#F5F5E6] dark:bg-dark-card flex flex-col"
+        className="md:hidden fixed inset-0 z-60 bg-[#F5F5E6] dark:bg-dark-card flex flex-col"
         role="dialog"
         aria-modal="true"
         aria-labelledby="booking-dialog-title-mobile"
@@ -540,13 +544,13 @@ export function BookingFlow({ station, forfait, qrToken, qrVersion, onClose }: B
               {stepIndex === 0 ? t('close') : t('back')}
             </button>
             <span className="text-[13px] font-bold text-[#555] dark:text-[#A0A090]">
-              {stepIndex + 1}/{STEPS.length}
+              {stepIndex + 1}/{activeSteps.length}
             </span>
           </div>
 
           {/* Progress bar */}
           <div className="flex gap-1">
-            {STEPS.map((s, i) => (
+            {activeSteps.map((s, i) => (
               <div
                 key={s}
                 className={`flex-1 h-1 rounded-full transition-colors ${
@@ -560,7 +564,7 @@ export function BookingFlow({ station, forfait, qrToken, qrVersion, onClose }: B
             id="booking-dialog-title-mobile"
             className="text-[17px] font-black text-[#000C1F] dark:text-[#FFF8EC] mt-3"
           >
-            {stepLabels[stepIndex]}
+            {stepLabels[step]}
           </h2>
         </div>
 

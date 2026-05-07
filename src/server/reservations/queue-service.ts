@@ -5,7 +5,7 @@
  */
 import { NotFoundError, ConflictError } from '@/lib/errors';
 import { db } from '@/lib/db';
-import { findFormatById } from '@/server/station/format-repository';
+import { findServiceVehicleEntryForBooking, findServiceByIdAndStation } from '@/server/station/service-repository';
 import { decrementSlotBookedCount } from '@/server/station/slot-repository';
 import { createPaymentIntent, updatePaymentIntentMetadata } from '@/server/payments/payment-service';
 import { notifyEntry } from '@/server/notifications/notification-service';
@@ -16,7 +16,7 @@ import {
   listQueueByStation,
   countQueueByStation,
   getNextQueuePosition,
-  hasActiveEntryAtStation,
+  hasActiveQueueEntryAtStation,
   updateEntry,
   shiftQueuePositions,
   findFirstActiveQueueEntry,
@@ -41,21 +41,23 @@ const STATUS_LATE = 'late';
 export async function joinQueue(
   userId: string,
   stationId: string,
-  vehicleFormatId: string,
+  serviceId: string,
+  vehicleFormatId: string | null | undefined,
   stationStripeAccountId: string
 ): Promise<JoinQueueResult> {
-  const format = await findFormatById(vehicleFormatId);
-  if (!format) throw new NotFoundError('Vehicle format not found');
-  if (!format.is_active) throw new ConflictError('Format is not active');
+  const service = await findServiceByIdAndStation(serviceId, stationId);
+  if (!service) throw new NotFoundError('Service not found');
 
-  const formatPrice = parseFloat(String(format.price));
-  const split = await computeReservationSplit({ amountTotal: formatPrice, isQrBooking: false });
+  const vehicleEntry = await findServiceVehicleEntryForBooking(serviceId, vehicleFormatId ?? null);
+  if (!vehicleEntry) throw new NotFoundError('Service pricing entry not found for this format');
+  if (!vehicleEntry.is_active) throw new ConflictError('Service entry is not active');
 
-  const amountCents = Math.round(formatPrice * 100);
+  const entryPrice = parseFloat(String(vehicleEntry.price));
+  const split = await computeReservationSplit({ amountTotal: entryPrice, isQrBooking: false });
+
+  const amountCents = Math.round(entryPrice * 100);
   const commissionCents = Math.round(split.commissionAmount * 100);
 
-  // Create Stripe PaymentIntent before the DB entry (Stripe-first pattern).
-  // reservation_id is omitted here; it will be set via a non-fatal metadata update after DB commit.
   const { paymentIntentId, clientSecret } = await createPaymentIntent({
     amountCents,
     userId,
@@ -63,25 +65,25 @@ export async function joinQueue(
     stationStripeAccountId,
     commissionCents,
     metadata: {
-      vehicle_format_id: vehicleFormatId,
+      service_id: serviceId,
+      vehicle_format_id: vehicleFormatId ?? '',
       entry_type: 'queue',
     },
   });
 
-  // Atomic: check duplicate and allocate position. Entry is created with stripe_payment_id already set.
   const entry = await db.transaction(async (tx) => {
-    const hasActive = await hasActiveEntryAtStation(userId, stationId, tx);
-    if (hasActive) throw new ConflictError('You already have an active entry at this station');
+    const hasActive = await hasActiveQueueEntryAtStation(userId, stationId, tx);
+    if (hasActive) throw new ConflictError('You already have an active queue entry at this station');
 
     const nextPos = await getNextQueuePosition(stationId, tx);
 
     return createQueueEntry({
       user_id: userId,
       station_id: stationId,
-      vehicle_format_id: vehicleFormatId,
+      vehicle_format_id: vehicleFormatId ?? null,
       queue_position: nextPos,
       status: STATUS_PENDING_PAYMENT,
-      amount_paid: String(formatPrice.toFixed(2)),
+      amount_paid: String(entryPrice.toFixed(2)),
       commission_rate: split.commissionRate,
       commission_amount: String(split.commissionAmount.toFixed(2)),
       station_payout: String(split.stationPayout.toFixed(2)),

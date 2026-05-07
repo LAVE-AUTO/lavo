@@ -18,6 +18,7 @@ import { NotFoundError, ConflictError, ActiveReservationExistsError, SlotFullErr
 import { getPlatformSettingWithFallback, getCancellationPolicy } from '@/server/admin/platform-settings-service';
 import { db } from '@/lib/db';
 import { getConfigByStationId } from '@/server/station/config-repository';
+import { findServiceVehicleEntryForBooking, findServiceByIdAndStation } from '@/server/station/service-repository';
 import { findFormatById } from '@/server/station/format-repository';
 import {
   lockSlotForUpdate,
@@ -34,7 +35,7 @@ import {
   createQueueEntry,
   findEntryByIdAndUser,
   findEntryByIdAndStation,
-  hasActiveEntryAtStation,
+  hasActiveReservationForSlot,
   clearStripePaymentSucceededNotifiedAt,
   setStripePaymentSucceededNotifiedAtIfMissing,
   updateEntry,
@@ -92,24 +93,24 @@ async function getMaxAdvanceBookingMs(): Promise<{ maxDays: number; maxAdvanceMs
 }
 
 /**
- * Resolves the total amount for a reservation: vehicle format price + optional station surcharge.
- * Returns the parsed surcharge and total. Throws ConflictError if amount is non-positive.
+ * Resolves the total amount for a reservation using the service vehicle entry price + optional station surcharge.
  */
 async function resolveReservationAmount(
-  vehicleFormatId: string,
+  serviceId: string,
+  vehicleFormatId: string | null | undefined,
   stationId: string
-): Promise<{ format: Awaited<ReturnType<typeof findFormatById>>; amountTotal: number }> {
-  const format = await findFormatById(vehicleFormatId);
-  if (!format) throw new NotFoundError('Vehicle format not found');
+): Promise<{ vehicleEntry: Awaited<ReturnType<typeof findServiceVehicleEntryForBooking>>; amountTotal: number }> {
+  const vehicleEntry = await findServiceVehicleEntryForBooking(serviceId, vehicleFormatId ?? null);
+  if (!vehicleEntry) throw new NotFoundError('Service pricing entry not found for this format');
 
   const config = await getConfigByStationId(stationId);
   const surcharge = config?.reservation_surcharge
     ? parseDecimal(String(config.reservation_surcharge))
     : 0;
-  const amountTotal = parseDecimal(String(format.price)) + surcharge;
+  const amountTotal = parseDecimal(String(vehicleEntry.price)) + surcharge;
   if (amountTotal <= 0) throw new ConflictError('Invalid amount');
 
-  return { format, amountTotal };
+  return { vehicleEntry, amountTotal };
 }
 
 
@@ -177,10 +178,14 @@ export async function createReservation(
   stationId: string,
   stationStripeAccountId: string,
   timeSlotId: string,
-  vehicleFormatId: string,
+  serviceId: string,
+  vehicleFormatId: string | null | undefined,
   options?: { qrToken?: string; qrVersion?: string }
 ): Promise<CreateReservationResult> {
-  const { amountTotal } = await resolveReservationAmount(vehicleFormatId, stationId);
+  const service = await findServiceByIdAndStation(serviceId, stationId);
+  if (!service) throw new NotFoundError('Service not found');
+
+  const { amountTotal, vehicleEntry } = await resolveReservationAmount(serviceId, vehicleFormatId, stationId);
 
   const hasQrPayload = Boolean(options?.qrToken || options?.qrVersion);
   const qrValidation = options?.qrToken
@@ -210,14 +215,15 @@ export async function createReservation(
     commissionCents,
     metadata: {
       time_slot_id: timeSlotId,
-      vehicle_format_id: vehicleFormatId,
+      service_id: serviceId,
+      vehicle_format_id: vehicleFormatId ?? '',
     },
   });
 
   // Atomic: duplicate check, slot lock (SELECT FOR UPDATE), capacity check, entry insert, slot increment.
   // Entry is created with stripe_payment_id already set - no orphan window.
   const entry = await db.transaction(async (tx) => {
-    const hasActive = await hasActiveEntryAtStation(userId, stationId, tx);
+    const hasActive = await hasActiveReservationForSlot(userId, timeSlotId, tx);
     if (hasActive) throw new ActiveReservationExistsError();
 
     const slot = await lockSlotForUpdate(timeSlotId, stationId, tx);
@@ -236,7 +242,7 @@ export async function createReservation(
       {
         user_id: userId,
         station_id: stationId,
-        vehicle_format_id: vehicleFormatId,
+        vehicle_format_id: vehicleFormatId ?? null,
         time_slot_id: timeSlotId,
         status: STATUS_PENDING_PAYMENT,
         amount_paid: toDecimal(amountTotal),
@@ -559,7 +565,11 @@ export async function upgradeQueueToReservation(
   if (entry.entry_type !== 'queue') throw new ConflictError('Entry is not a queue entry');
   if (entry.station_id !== stationId) throw new NotFoundError('Entry does not belong to this station');
 
-  const { amountTotal } = await resolveReservationAmount(entry.vehicle_format_id, stationId);
+  // Price = original queue amount + optional reservation surcharge.
+  // service_id is not stored on the entry; use amount_paid as the already-validated base price.
+  const config = await getConfigByStationId(stationId);
+  const surcharge = config?.reservation_surcharge ? parseDecimal(String(config.reservation_surcharge)) : 0;
+  const amountTotal = parseDecimal(String(entry.amount_paid)) + surcharge;
 
   const split = await computeReservationSplit({ amountTotal, isQrBooking: false });
 
@@ -576,7 +586,7 @@ export async function upgradeQueueToReservation(
     commissionCents,
     metadata: {
       time_slot_id: timeSlotId,
-      vehicle_format_id: entry.vehicle_format_id,
+      vehicle_format_id: entry.vehicle_format_id ?? '',
       upgraded_from_queue: 'true',
     },
   });

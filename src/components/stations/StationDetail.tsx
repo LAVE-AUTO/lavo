@@ -10,10 +10,9 @@ import { fetchStationById } from '@/services/station-api';
 import { useFavorites } from './useFavorites';
 import { PageSpinner } from '@/components/ui/PageSpinner';
 import { Badge } from '@/components/ui/Badge';
-import { useToast } from '@/context/toast-context';
 import { useAuth } from '@/context/auth-context';
 import { postWithApi } from '@/services/axios-service';
-import type { StationDetailData, ServiceCategory, ServiceForfait } from '@/types/station';
+import type { StationDetailData } from '@/types/station';
 
 interface StationDetailProps {
   id: string;
@@ -27,9 +26,7 @@ function normalizeQrContext(searchParams: ReturnType<typeof useSearchParams>): {
   const rawVersion = searchParams.get('v');
   const qrToken = typeof rawToken === 'string' && /^[a-f0-9]{64}$/i.test(rawToken) ? rawToken : null;
   const qrVersion = rawVersion === '1' ? '1' : null;
-  if (!qrToken || !qrVersion) {
-    return { qrToken: null, qrVersion: null };
-  }
+  if (!qrToken || !qrVersion) return { qrToken: null, qrVersion: null };
   return { qrToken, qrVersion };
 }
 
@@ -39,7 +36,6 @@ export function StationDetail({ id }: StationDetailProps) {
   const searchParams = useSearchParams();
   const router = useRouter();
   const { qrToken, qrVersion } = normalizeQrContext(searchParams);
-  const { success: toastSuccess, error: toastError } = useToast();
   const { isAuthenticated } = useAuth();
   const locale = useLocale();
   const mountedRef = useRef(true);
@@ -57,10 +53,7 @@ export function StationDetail({ id }: StationDetailProps) {
     return () => { cancelled = true; };
   }, [id]);
 
-  const [selectedCategoryIdx, setSelectedCategoryIdx] = useState(0);
-  const [selectedForfaitIdx, setSelectedForfaitIdx] = useState(0);
   const [bookingOpen, setBookingOpen] = useState(false);
-  const [joiningQueue, setJoiningQueue] = useState(false);
   const [navigating, setNavigating] = useState(false);
 
   if (station === undefined) return <PageSpinner />;
@@ -76,34 +69,16 @@ export function StationDetail({ id }: StationDetailProps) {
     );
   }
 
-  const hasSlots = station.availableSlots > 0;
-  const isOpen   = station.isOpen !== false;
-  const categories = station.serviceCategories || [];
-  const currentCategory: ServiceCategory | undefined = categories[selectedCategoryIdx];
-  const forfaits = currentCategory ? currentCategory.forfaits : [];
-  const currentForfait: ServiceForfait | undefined = forfaits[selectedForfaitIdx];
+  const isOpen = station.isOpen !== false;
+  const hasServices = station.stationServices.length > 0;
 
-  const handleCategoryChange = (idx: number) => {
-    setSelectedCategoryIdx(idx);
-    setSelectedForfaitIdx(0);
-  };
-
-  const handleJoinQueue = async () => {
+  const handleOpenBooking = () => {
     if (!isAuthenticated) {
       const callbackUrl = encodeURIComponent(`/stations/${id}`);
       router.push(`/${locale ?? 'fr'}/login?callbackUrl=${callbackUrl}`);
       return;
     }
-    if (!currentForfait) return;
-    setJoiningQueue(true);
-    const [ok] = await postWithApi(`/stations/${id}/queue/join`, { vehicle_format_id: currentForfait.id });
-    if (!mountedRef.current) return;
-    setJoiningQueue(false);
-    if (ok) {
-      toastSuccess(t('detail_queue_joined'));
-    } else {
-      toastError(t('detail_queue_join_error'));
-    }
+    setBookingOpen(true);
   };
 
   const fallbackMapsUrl =
@@ -111,8 +86,6 @@ export function StationDetail({ id }: StationDetailProps) {
       ? `https://www.google.com/maps/dir/?api=1&destination=${station.latitude},${station.longitude}`
       : `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(`${station.name}, ${station.address}, ${station.city}`)}`;
 
-  // POST /stations/:id/join signals "client en route" to the station (notification/metric).
-  // This is separate from POST /stations/:id/queue/join which adds the client to the queue.
   const handleEnRoute = async () => {
     setNavigating(true);
     const [ok, data] = await postWithApi<{ data: { mapsUrl: string } }>(`/stations/${id}/join`, {});
@@ -123,19 +96,23 @@ export function StationDetail({ id }: StationDetailProps) {
     window.open(url, '_blank', 'noopener,noreferrer');
   };
 
-  /* ── Reusable booking widget (rendered in sidebar on lg, inline on mobile) ── */
+  /* ── Booking widget ── */
   const BookingWidget = (
     <div className="space-y-5">
       {/* Price + status row */}
       <div className="flex items-center justify-between">
         <div>
           <div className="text-[24px] font-black text-[#000C1F] dark:text-[#FFF8EC] leading-none">
-            {currentForfait ? currentForfait.price : station.priceFrom}
-            <span className="text-[14px] font-semibold ml-1 text-[#555] dark:text-[#C0C0B0]">{t('price_unit')}</span>
+            {station.priceFrom != null ? (
+              <>
+                {station.priceFrom.toLocaleString()}
+                <span className="text-[14px] font-semibold ml-1 text-[#555] dark:text-[#C0C0B0]">{t('price_unit')}</span>
+              </>
+            ) : (
+              <span className="text-[18px] font-bold text-[#555] dark:text-[#C0C0B0]">--</span>
+            )}
           </div>
-          <div className="text-[13px] text-[#555] dark:text-[#C0C0B0] mt-0.5">
-            {currentForfait ? currentForfait.name : t('detail_price_from')}
-          </div>
+          <div className="text-[13px] text-[#555] dark:text-[#C0C0B0] mt-0.5">{t('detail_price_from')}</div>
         </div>
         <Badge variant={isOpen ? 'status-open' : 'status-closed'} className="px-3 py-1 text-[13px]">
           <span className={`w-2 h-2 rounded-full mr-1.5 ${isOpen ? 'bg-lavo-success animate-pulse' : 'bg-lavo-error'}`} />
@@ -143,135 +120,45 @@ export function StationDetail({ id }: StationDetailProps) {
         </Badge>
       </div>
 
-      {/* Category tabs - only render when the backend returns more than one category.
-         Today the mapper synthesises a single fake category from vehicleFormats[],
-         so the tabs would be a one-tab UI that adds noise. The block stays in place
-         for the day backend exposes wash_types[] (hand_wash / automatic / self_service). */}
-      {(hasSlots || isOpen) && categories.length > 1 && (
-        <div>
-          <label className="block text-[11px] font-bold text-[#555] dark:text-[#A0A090] uppercase tracking-wider mb-2">
-            {t('service_type')}
-          </label>
-          <div className="flex gap-2 overflow-x-auto pb-1 scrollbar-hide">
-            {categories.map((cat, idx) => (
-              <button
-                key={cat.type}
-                type="button"
-                onClick={() => handleCategoryChange(idx)}
-                className={`shrink-0 px-3 py-2 rounded-xl text-[13px] font-bold transition-all cursor-pointer ${
-                  idx === selectedCategoryIdx
-                    ? 'bg-gold text-dark-bg shadow-md'
-                    : 'bg-[#F0F0E2] dark:bg-tab-inactive text-[#333] dark:text-[#C0C0B0] border border-[#D0D0C0] dark:border-tab-inactive hover:border-gold/40'
-                }`}
-              >
-                {cat.label}
-              </button>
-            ))}
+      {/* Queue stats */}
+      <div className="bg-[#F0F0E2] dark:bg-dark-bg/50 rounded-xl p-3.5 border border-[#D8D8C8] dark:border-tab-inactive">
+        <div className="flex items-center gap-1.5 text-[11px] font-black text-[#555] dark:text-[#A0A090] tracking-wider uppercase mb-2.5">
+          <span className="w-1.5 h-1.5 rounded-full bg-lavo-success animate-pulse shrink-0" />
+          {t('detail_queue')}
+        </div>
+        <div className="grid grid-cols-3 gap-2 text-center">
+          <div>
+            <div className="text-[20px] font-black text-[#000C1F] dark:text-[#FFF8EC] leading-none">{station.queueCount}</div>
+            <div className="text-[11px] text-[#555] dark:text-[#C0C0B0] mt-1">{t('queue_waiting')}</div>
+          </div>
+          <div>
+            <div className={`text-[20px] font-black leading-none ${station.estimatedWaitMinutes > 20 ? 'text-lavo-error' : 'text-[#000C1F] dark:text-[#FFF8EC]'}`}>
+              {station.estimatedWaitMinutes > 0 ? station.estimatedWaitMinutes : '-'}
+            </div>
+            <div className="text-[11px] text-[#555] dark:text-[#C0C0B0] mt-1">{t('min_attente')}</div>
+          </div>
+          <div>
+            <div className="text-[20px] font-black text-[#000C1F] dark:text-[#FFF8EC] leading-none">{station.availableSlots}</div>
+            <div className="text-[11px] text-[#555] dark:text-[#C0C0B0] mt-1">{t('queue_available')}</div>
           </div>
         </div>
-      )}
+      </div>
 
-      {/* Forfait cards - flat list. Header reuses the category label when present
-         (e.g. "Format de véhicule"), otherwise falls back to a generic "Choose your format". */}
-      {(hasSlots || isOpen) && currentCategory && (
-        <div className="space-y-3">
-          <label className="block text-[11px] font-bold text-[#555] dark:text-[#A0A090] uppercase tracking-wider">
-            {currentCategory.label || t('detail_choose_format')}
-          </label>
-          {currentCategory.description && (
-            <p className="text-[13px] text-[#555] dark:text-[#B0B0A0] leading-relaxed">
-              {currentCategory.description}
-            </p>
-          )}
-          <div className="space-y-2.5 max-h-[280px] overflow-y-auto scrollbar-hide pr-0.5">
-            {forfaits.map((forfait, idx) => (
-              <button
-                key={forfait.id}
-                type="button"
-                onClick={() => setSelectedForfaitIdx(idx)}
-                className={`w-full text-left p-3.5 rounded-xl border-2 transition-all cursor-pointer ${
-                  idx === selectedForfaitIdx
-                    ? 'border-gold bg-gold/10 dark:bg-gold/5'
-                    : 'border-[#D0D0C0] dark:border-tab-inactive bg-white/40 dark:bg-dark-bg/40 hover:border-gold/30'
-                }`}
-              >
-                <div className="flex items-start justify-between gap-3">
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-center gap-2 mb-1">
-                      {idx === selectedForfaitIdx && (
-                        <span className="w-4 h-4 rounded-full bg-gold flex items-center justify-center shrink-0">
-                          <svg width="8" height="8" viewBox="0 0 24 24" fill="none" stroke="#1a1a1a" strokeWidth="3.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12" /></svg>
-                        </span>
-                      )}
-                      <span className="text-[14px] font-bold text-[#000C1F] dark:text-[#FFF8EC]">{forfait.name}</span>
-                    </div>
-                    {forfait.description && forfait.description !== forfait.name && (
-                      <p className="text-[12px] text-[#555] dark:text-[#B0B0A0] line-clamp-2">{forfait.description}</p>
-                    )}
-                    <span className="inline-flex items-center gap-1 mt-1.5 text-[11px] text-[#888] dark:text-[#999]">
-                      <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10" /><polyline points="12 6 12 12 16 14" /></svg>
-                      {forfait.duration} min
-                    </span>
-                  </div>
-                  <span className="text-[17px] font-black text-gold shrink-0">{forfait.price}$</span>
-                </div>
-              </button>
-            ))}
-          </div>
-        </div>
-      )}
-
-      {/* Unavailable notice - shown when station is closed and has no available slots */}
-      {!hasSlots && !isOpen && (
+      {/* Unavailable notice */}
+      {!isOpen && !hasServices && (
         <div className="rounded-xl border border-[#D0D0C0] dark:border-tab-inactive bg-[#F0F0E2] dark:bg-dark-bg/50 px-4 py-4 text-[14px] text-[#555] dark:text-[#B0B0A0] text-center leading-relaxed">
           {t('detail_unavailable_notice')}
         </div>
       )}
 
-      {/* Queue stats */}
-      {hasSlots && (
-        <div className="bg-[#F0F0E2] dark:bg-dark-bg/50 rounded-xl p-3.5 border border-[#D8D8C8] dark:border-tab-inactive">
-          <div className="flex items-center gap-1.5 text-[11px] font-black text-[#555] dark:text-[#A0A090] tracking-wider uppercase mb-2.5">
-            <span className="w-1.5 h-1.5 rounded-full bg-lavo-success animate-pulse shrink-0" />
-            {t('detail_queue')}
-          </div>
-          <div className="grid grid-cols-3 gap-2 text-center">
-            <div>
-              <div className="text-[20px] font-black text-[#000C1F] dark:text-[#FFF8EC] leading-none">{station.queueCount}</div>
-              <div className="text-[11px] text-[#555] dark:text-[#C0C0B0] mt-1">{t('queue_waiting')}</div>
-            </div>
-            <div>
-              <div className={`text-[20px] font-black leading-none ${station.estimatedWaitMinutes > 20 ? 'text-lavo-error' : 'text-[#000C1F] dark:text-[#FFF8EC]'}`}>
-                {station.estimatedWaitMinutes > 0 ? station.estimatedWaitMinutes : '-'}
-              </div>
-              <div className="text-[11px] text-[#555] dark:text-[#C0C0B0] mt-1">{t('min_attente')}</div>
-            </div>
-            <div>
-              <div className="text-[20px] font-black text-[#000C1F] dark:text-[#FFF8EC] leading-none">{station.availableSlots}</div>
-              <div className="text-[11px] text-[#555] dark:text-[#C0C0B0] mt-1">{t('queue_available')}</div>
-            </div>
-          </div>
-        </div>
-      )}
-
       {/* CTA */}
-      {hasSlots ? (
+      {(isOpen || hasServices) ? (
         <button
           type="button"
-          onClick={() => setBookingOpen(true)}
+          onClick={handleOpenBooking}
           className="w-full py-3.5 bg-gold hover:bg-gold-hover rounded-xl text-[15px] font-black text-dark-bg text-center transition-colors cursor-pointer btn-shine"
         >
-          {t('continue')}
-        </button>
-      ) : isOpen && currentForfait ? (
-        <button
-          type="button"
-          onClick={handleJoinQueue}
-          disabled={joiningQueue}
-          aria-busy={joiningQueue}
-          className="w-full py-3.5 bg-gold hover:bg-gold-hover rounded-xl text-[15px] font-black text-dark-bg text-center transition-colors cursor-pointer btn-shine disabled:opacity-60 disabled:cursor-not-allowed"
-        >
-          {joiningQueue ? '...' : t('detail_join_queue')}
+          {t('detail_book_service')}
         </button>
       ) : (
         <div className="w-full py-3.5 bg-[#E0E0D0] dark:bg-tab-inactive rounded-xl text-[15px] font-bold text-[#444] dark:text-[#C0C0B0] text-center">
@@ -285,7 +172,7 @@ export function StationDetail({ id }: StationDetailProps) {
     <>
       <div className="min-h-screen bg-[#F5F5E6] dark:bg-dark-bg transition-colors animate-fade-in">
 
-        {/* ── Hero - full width ── */}
+        {/* ── Hero ── */}
         <div className="relative h-[240px] sm:h-[320px] lg:h-[440px] bg-linear-to-br from-[#D5D5C5] to-[#EDEDED] dark:from-tab-inactive dark:to-dark-bg overflow-hidden">
           {station.imageUrl ? (
             <img src={station.imageUrl} alt={station.name} className="w-full h-full object-cover" />
@@ -296,7 +183,6 @@ export function StationDetail({ id }: StationDetailProps) {
           )}
           <div className="absolute inset-0 bg-linear-to-t from-black/70 via-black/20 to-transparent" />
 
-          {/* Back button */}
           <Link
             href="/stations"
             className="absolute top-4 left-4 w-10 h-10 rounded-full bg-black/50 backdrop-blur-sm flex items-center justify-center hover:bg-black/70 transition-colors"
@@ -305,7 +191,6 @@ export function StationDetail({ id }: StationDetailProps) {
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="15 18 9 12 15 6" /></svg>
           </Link>
 
-          {/* Favorite button */}
           <button
             type="button"
             onClick={() => toggle(id)}
@@ -317,7 +202,6 @@ export function StationDetail({ id }: StationDetailProps) {
             </svg>
           </button>
 
-          {/* Bottom info overlay */}
           <div className="absolute bottom-0 left-0 right-0 px-4 sm:px-6 lg:px-8 pb-5 pt-12">
             <div className="max-w-[1440px] mx-auto">
               <h1 className="text-[26px] sm:text-[32px] lg:text-[38px] font-black text-white leading-tight drop-shadow mb-2">
@@ -350,7 +234,7 @@ export function StationDetail({ id }: StationDetailProps) {
             {/* ── Left column ── */}
             <div className="space-y-7">
 
-              {/* Booking widget - mobile/tablet only, below title */}
+              {/* Booking widget - mobile/tablet only */}
               <div className="lg:hidden">
                 <div className="bg-[#E8E8D8] dark:bg-dark-card rounded-2xl p-5 border border-[#D0D0C0] dark:border-tab-inactive">
                   {BookingWidget}
@@ -396,7 +280,7 @@ export function StationDetail({ id }: StationDetailProps) {
               </div>
             </div>
 
-            {/* ── Right column - sticky booking sidebar (desktop only) ── */}
+            {/* ── Right column - sticky booking sidebar (desktop) ── */}
             <aside className="hidden lg:block lg:sticky lg:top-[84px] self-start">
               <div className="bg-[#E8E8D8] dark:bg-dark-card rounded-2xl p-6 border border-[#D0D0C0] dark:border-tab-inactive shadow-sm">
                 {BookingWidget}
@@ -410,29 +294,19 @@ export function StationDetail({ id }: StationDetailProps) {
           <div className="max-w-[1440px] mx-auto px-4 sm:px-6 flex items-center gap-3">
             <div>
               <div className="text-[20px] font-black text-[#000C1F] dark:text-[#FFF8EC] leading-none">
-                {currentForfait ? currentForfait.price : (station.priceFrom ?? '-')}
-                <span className="text-[14px] font-semibold ml-1 text-[#555] dark:text-[#C0C0B0]">{t('price_unit')}</span>
+                {station.priceFrom != null ? (
+                  <>{station.priceFrom.toLocaleString()} <span className="text-[14px] font-semibold text-[#555] dark:text-[#C0C0B0]">{t('price_unit')}</span></>
+                ) : '--'}
               </div>
-              <div className="text-[12px] text-[#555] dark:text-[#C0C0B0]">
-                {currentForfait ? currentForfait.name : t('detail_price_from')}
-              </div>
+              <div className="text-[12px] text-[#555] dark:text-[#C0C0B0]">{t('detail_price_from')}</div>
             </div>
-            {hasSlots ? (
+            {(isOpen || hasServices) ? (
               <button
                 type="button"
-                onClick={() => setBookingOpen(true)}
+                onClick={handleOpenBooking}
                 className="flex-1 py-3 bg-gold hover:bg-gold-hover rounded-xl text-[15px] font-black text-dark-bg text-center transition-colors cursor-pointer btn-shine"
               >
-                {t('continue')}
-              </button>
-            ) : isOpen && currentForfait ? (
-              <button
-                type="button"
-                onClick={handleJoinQueue}
-                disabled={joiningQueue}
-                className="flex-1 py-3 bg-gold hover:bg-gold-hover rounded-xl text-[15px] font-black text-dark-bg text-center transition-colors cursor-pointer btn-shine disabled:opacity-60 disabled:cursor-not-allowed"
-              >
-                {joiningQueue ? '...' : t('detail_join_queue')}
+                {t('detail_book_service')}
               </button>
             ) : (
               <div className="flex-1 py-3 bg-[#E0E0D0] dark:bg-tab-inactive rounded-xl text-[15px] font-bold text-[#444] dark:text-[#C0C0B0] text-center">
@@ -444,11 +318,9 @@ export function StationDetail({ id }: StationDetailProps) {
       </div>
 
       {/* Booking flow modal */}
-      {bookingOpen && currentForfait && (
+      {bookingOpen && (
         <BookingFlow
           station={station}
-          category={currentCategory!}
-          forfait={currentForfait}
           qrToken={qrToken}
           qrVersion={qrVersion}
           onClose={() => setBookingOpen(false)}

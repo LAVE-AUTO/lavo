@@ -265,7 +265,7 @@ export async function rescheduleReservation(
         metadata: {
           reservation_id: newEntry.id,
           time_slot_id: newTimeSlotId,
-          vehicle_format_id: reservation.vehicle_format_id,
+          vehicle_format_id: reservation.vehicle_format_id ?? '',
           rescheduled_from: reservationId,
         },
       });

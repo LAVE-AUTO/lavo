@@ -51,6 +51,8 @@ import {
   replaceStationPhotos,
   type StationPhoto,
 } from './document-repository';
+import { findAllFormats } from './format-repository';
+import { findPublicServicesForStation } from './service-repository';
 
 export type StationOnboardingDto = {
   // Step 1 - account credentials
@@ -391,6 +393,7 @@ export type StationListPublicItem = Omit<
   queue_count: number;
   opening_hours: { open: string; close: string } | null;
   completed_count?: number;
+  min_duration: number | null;
 };
 
 export type ListStationsPublicMeta = {
@@ -440,6 +443,7 @@ function toListPublicItem(row: StationWithAvailableSlots): StationListPublicItem
     verified,
     queue_count: row.live_queue_count,
     opening_hours,
+    min_duration: row.min_duration,
     ...(completed_count !== undefined && { completed_count }),
   };
 }
@@ -583,7 +587,12 @@ export async function listStationsPublic(
  * Throws NotFoundError if station does not exist or is not active.
  */
 export async function getStationDetailPublic(id: string) {
-  const station = await findActiveStationWithDetail(id);
+  const [station, vehicleFormats, completed_count, stationServices] = await Promise.all([
+    findActiveStationWithDetail(id),
+    findAllFormats(),
+    getCompletedCountForStation(id),
+    findPublicServicesForStation(id),
+  ]);
   if (!station) throw new NotFoundError('Station not found');
 
   const now = new Date();
@@ -596,7 +605,6 @@ export async function getStationDetailPublic(id: string) {
     );
   const available = available_slots > 0;
   const verified = station.approved_at !== null && station.status === 'active';
-  const completed_count = await getCompletedCountForStation(id);
 
   const photos = (station.photos ?? []).map((p) => p.url);
   const wash_types = (station.stationWashTypes ?? [])
@@ -607,8 +615,28 @@ export async function getStationDetailPublic(id: string) {
       label: swt.washType!.label,
     }));
 
+  const station_config = station.stationConfig
+    ? {
+        opening_time: station.stationConfig.opening_time,
+        closing_time: station.stationConfig.closing_time,
+        wash_duration_minutes: station.stationConfig.wash_duration_minutes,
+        wash_post_count: station.stationConfig.wash_post_count,
+      }
+    : null;
+
   const { photos: _p, stationWashTypes: _w, ...rest } = station;
-  return { ...rest, available_slots, available, completed_count, verified, photos, wash_types };
+  return {
+    ...rest,
+    available_slots,
+    available,
+    completed_count,
+    verified,
+    photos,
+    wash_types,
+    vehicleFormats,
+    station_services: stationServices,
+    station_config,
+  };
 }
 
 /**

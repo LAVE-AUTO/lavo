@@ -121,10 +121,10 @@ export function StationCard({ station, unavailable = false }: StationCardProps) 
             <div className="text-[13px] text-[#555] dark:text-[#D8D8C8] mt-1">{t('stat_distance')}</div>
           </div>
 
-          {/* Wait time */}
+          {/* Min service duration */}
           <div className="pl-2">
             <div className="text-[17px] font-black text-[#0A0A14] dark:text-white leading-none">
-              {station.estimatedWaitMinutes > 0 ? `${station.estimatedWaitMinutes}` : '\u2014'}
+              {station.estimatedWaitMinutes > 0 ? `${station.estimatedWaitMinutes} min` : '0 min'}
             </div>
             <div className="text-[13px] text-[#555] dark:text-[#D8D8C8] mt-1">{t('min_attente')}</div>
           </div>

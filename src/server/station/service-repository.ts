@@ -243,6 +243,131 @@ export async function findCompatibleExtrasForService(serviceId: string): Promise
 
 // ===== ENRICHED FETCH =====
 
+// ===== PUBLIC BOOKING HELPERS =====
+
+export type PublicServiceEntry = {
+  id: string;
+  vehicle_format_id: string | null;
+  vehicle_label: string;
+  price: string;
+  duration_min: number;
+};
+
+export type PublicServiceExtra = {
+  id: string;
+  label: string;
+  scope: string;
+  price: string;
+  duration_min: number;
+};
+
+export type PublicStationService = {
+  id: string;
+  name: string;
+  category: string;
+  service_type: string;
+  description: string | null;
+  is_popular: boolean;
+  vehicle_entries: PublicServiceEntry[];
+  extras: PublicServiceExtra[];
+};
+
+/**
+ * Find the service_vehicle_entry for a booking.
+ * For hand_wash: vehicleFormatId provided → match by service + format.
+ * For other categories: vehicleFormatId null → match first active entry for service (vehicle_format_id IS NULL).
+ */
+export async function findServiceVehicleEntryForBooking(
+  serviceId: string,
+  vehicleFormatId?: string | null,
+): Promise<ServiceVehicleEntry | undefined> {
+  if (vehicleFormatId) {
+    return db.query.serviceVehicleEntries.findFirst({
+      where: and(
+        eq(serviceVehicleEntries.service_id, serviceId),
+        eq(serviceVehicleEntries.vehicle_format_id, vehicleFormatId),
+        eq(serviceVehicleEntries.is_active, true),
+      ),
+    });
+  }
+  return db.query.serviceVehicleEntries.findFirst({
+    where: and(
+      eq(serviceVehicleEntries.service_id, serviceId),
+      isNull(serviceVehicleEntries.vehicle_format_id),
+      eq(serviceVehicleEntries.is_active, true),
+    ),
+  });
+}
+
+/**
+ * Returns all active services for a station with their vehicle entries and compatible extras.
+ * Used for the public station detail endpoint (client booking flow).
+ */
+export async function findPublicServicesForStation(stationId: string): Promise<PublicStationService[]> {
+  const services = await db.query.stationServices.findMany({
+    where: and(
+      eq(stationServices.station_id, stationId),
+      eq(stationServices.is_active, true),
+      isNull(stationServices.deleted_at),
+    ),
+    orderBy: (s, { asc }) => [asc(s.created_at)],
+  });
+
+  const result: PublicStationService[] = [];
+
+  for (const service of services) {
+    const entries = await db.query.serviceVehicleEntries.findMany({
+      where: and(
+        eq(serviceVehicleEntries.service_id, service.id),
+        eq(serviceVehicleEntries.is_active, true),
+      ),
+      orderBy: (e, { asc }) => [asc(e.created_at)],
+    });
+
+    const compatRows = await db.query.serviceExtraCompatibility.findMany({
+      where: eq(serviceExtraCompatibility.service_id, service.id),
+    });
+
+    const extras: PublicServiceExtra[] = [];
+    for (const compat of compatRows) {
+      const extra = await db.query.stationExtras.findFirst({
+        where: and(
+          eq(stationExtras.id, compat.extra_id),
+          eq(stationExtras.is_active, true),
+        ),
+      });
+      if (extra) {
+        extras.push({
+          id: extra.id,
+          label: extra.label,
+          scope: extra.scope,
+          price: extra.price,
+          duration_min: extra.duration_min,
+        });
+      }
+    }
+
+    result.push({
+      id: service.id,
+      name: service.name,
+      category: service.category,
+      service_type: service.service_type,
+      description: service.description,
+      is_popular: service.is_popular,
+      vehicle_entries: entries.map((e) => ({
+        id: e.id,
+        vehicle_format_id: e.vehicle_format_id,
+        vehicle_label: e.vehicle_label,
+        price: e.price,
+        duration_min: e.duration_min,
+      })),
+      extras,
+    });
+  }
+
+  return result;
+}
+
 /**
  * Fetch a single service with its vehicle entries and compatible extras labels.
  * Used after create/update to return a complete object to the client.

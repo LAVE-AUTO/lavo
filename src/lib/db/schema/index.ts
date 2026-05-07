@@ -147,7 +147,6 @@ export const stationsRelations = relations(stations, ({ one, many }) => ({
   stationWashTypes: many(stationWashTypes),
   documents: many(stationDocuments),
   photos: many(stationPhotos),
-  vehicleFormats: many(vehicleFormats),
   timeSlots: many(timeSlots),
   reservations: many(reservations, { relationName: "stationReservations" }),
   ratings: many(ratings, { relationName: "stationRatings" }),

@@ -142,7 +142,8 @@ export async function POST(request: Request, { params }: Params): Promise<NextRe
       paramParsed.data.id,
       station.stripe_account_id,
       bodyParsed.data.time_slot_id,
-      bodyParsed.data.vehicle_format_id,
+      bodyParsed.data.service_id,
+      bodyParsed.data.vehicle_format_id ?? null,
       {
         qrToken: bodyParsed.data.qr_token,
         qrVersion: bodyParsed.data.v,

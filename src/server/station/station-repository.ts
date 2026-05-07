@@ -18,8 +18,8 @@ const availableSlotsExpr = sql<number>`COALESCE(${stationStats.available_slots},
  */
 const completedCountExpr = sql<number>`COALESCE(${stationStats.completed_count}, 0)`;
 
-/** Lowest active vehicle format price for the station, as text (nullable when no formats). */
-const priceFromExpr = sql<string | null>`(SELECT MIN(vehicle_formats.price)::text FROM vehicle_formats WHERE vehicle_formats.station_id = ${stations.id} AND vehicle_formats.is_active = true)`;
+/** Lowest active service entry price for the station, as text (nullable when no entries). */
+const priceFromExpr = sql<string | null>`(SELECT MIN(sve.price)::text FROM service_vehicle_entries sve JOIN station_services ss ON ss.id = sve.service_id WHERE ss.station_id = ${stations.id} AND ss.deleted_at IS NULL AND sve.is_active = true)`;
 
 /** URL of the first station photo ordered by position (nullable when no photos). */
 const imageUrlExpr = sql<string | null>`(SELECT station_photos.url FROM station_photos WHERE station_photos.station_id = ${stations.id} ORDER BY station_photos.position ASC LIMIT 1)`;
@@ -32,6 +32,9 @@ const openingTimeExpr = sql<string | null>`(SELECT station_configs.opening_time:
 
 /** Station closing time from station_configs (nullable when config absent). */
 const closingTimeExpr = sql<string | null>`(SELECT station_configs.closing_time::text FROM station_configs WHERE station_configs.id = ${stations.id})`;
+
+/** Minimum service duration (min) across all active service entries for the station. Null when no services configured. */
+const minDurationExpr = sql<number | null>`(SELECT MIN(sve.duration_min) FROM service_vehicle_entries sve JOIN station_services ss ON ss.id = sve.service_id WHERE ss.station_id = ${stations.id} AND ss.deleted_at IS NULL AND sve.is_active = true)`;
 
 export type ListActiveStationsFilters = {
   search?: string;
@@ -63,6 +66,7 @@ export type StationWithAvailableSlots = Station & {
   live_queue_count: number;
   opening_time: string | null;
   closing_time: string | null;
+  min_duration: number | null;
 };
 
 type StationEnrichedRow = Station & {
@@ -73,6 +77,7 @@ type StationEnrichedRow = Station & {
   live_queue_count: number;
   opening_time: string | null;
   closing_time: string | null;
+  min_duration: number | null;
 };
 
 function rowToStationWithSlots(row: StationEnrichedRow): StationWithAvailableSlots {
@@ -120,7 +125,7 @@ function listActiveStationsWhere(
   }
   if (formatId) {
     conditions.push(
-      sql`EXISTS (SELECT 1 FROM vehicle_formats WHERE vehicle_formats.station_id = ${stations.id} AND vehicle_formats.id = ${formatId})`
+      sql`EXISTS (SELECT 1 FROM service_vehicle_entries sve JOIN station_services ss ON ss.id = sve.service_id WHERE ss.station_id = ${stations.id} AND ss.deleted_at IS NULL AND sve.vehicle_format_id = ${formatId})`
     );
   }
   if (washTypeIds?.length) {
@@ -199,6 +204,7 @@ export async function listActiveStations(
       live_queue_count: liveQueueCountExpr.as('live_queue_count'),
       opening_time: openingTimeExpr.as('opening_time'),
       closing_time: closingTimeExpr.as('closing_time'),
+      min_duration: minDurationExpr.as('min_duration'),
     })
     .from(stations)
     .leftJoin(stationStats, eq(stationStats.station_id, stations.id))
@@ -248,6 +254,7 @@ export async function listActiveStationsGroup(
         live_queue_count: liveQueueCountExpr.as('live_queue_count'),
         opening_time: openingTimeExpr.as('opening_time'),
         closing_time: closingTimeExpr.as('closing_time'),
+        min_duration: minDurationExpr.as('min_duration'),
       })
       .from(stations)
       .leftJoin(stationStats, eq(stationStats.station_id, stations.id))
@@ -268,7 +275,6 @@ export async function findActiveStationWithDetail(id: string) {
     where: and(eq(stations.id, id), eq(stations.status, 'active')),
     with: {
       stationConfig: true,
-      vehicleFormats: true,
       timeSlots: true,
       photos: {
         orderBy: (photo, { asc }) => [asc(photo.position)],
