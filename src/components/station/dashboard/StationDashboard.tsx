@@ -255,35 +255,43 @@ export function StationDashboard() {
   }
 
   async function executeAction() {
-    if (!pending) return;
+    /* Re-entry guard: a double-click on Confirm (or React Strict Mode firing
+     * the effect twice in dev) used to send two PATCH requests for the same
+     * entry. The second one would 409 because the entry was already
+     * transitioned. We hold `actionLoading=true` until everything completes
+     * (network round-trip + dashboard refresh) and bail out early when a
+     * call is already in flight. */
+    if (!pending || actionLoading) return;
     setActionLoading(true);
 
-    if (pending.type === 'call_next') {
-      const [ok, data] = await postWithApi('/station/queue/next', {});
+    try {
+      if (pending.type === 'call_next') {
+        const [ok, data] = await postWithApi('/station/queue/next', {});
+        if (!mountedRef.current) return;
+        if (ok) {
+          setPending(null);
+          await loadData();
+          return;
+        }
+        const payload = data as { message?: string; code?: string } | null;
+        showError(payload?.code === 'NOT_FOUND' ? t('error_queue_empty') : t('action_error_generic'));
+        setPending(null);
+        return;
+      }
+
+      const newStatus = ACTION_STATUS_MAP[pending.type];
+      const [ok, data] = await patchWithApi(`/station/entries/${pending.entryId}`, { status: newStatus });
       if (!mountedRef.current) return;
-      setActionLoading(false);
       if (ok) {
         setPending(null);
         await loadData();
         return;
       }
-      const payload = data as { message?: string; code?: string } | null;
-      showError(payload?.code === 'NOT_FOUND' ? t('error_queue_empty') : t('action_error_generic'));
-      setPending(null);
-      return;
-    }
-
-    const newStatus = ACTION_STATUS_MAP[pending.type];
-    const [ok, data] = await patchWithApi(`/station/entries/${pending.entryId}`, { status: newStatus });
-    if (!mountedRef.current) return;
-    setActionLoading(false);
-    if (ok) {
-      setPending(null);
-      await loadData();
-    } else {
       const raw = (data as { message?: string })?.message ?? '';
       showError(raw.includes('Cannot transition') ? t('error_invalid_transition') : t('action_error_generic'));
       setPending(null);
+    } finally {
+      if (mountedRef.current) setActionLoading(false);
     }
   }
 
