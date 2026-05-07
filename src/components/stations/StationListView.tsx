@@ -13,9 +13,7 @@ import { EmptyState } from '@/components/ui/EmptyState';
 import { SectionHeader } from '@/components/ui/SectionHeader';
 import type { StationDetailData } from '@/types/station';
 
-type SortKey = 'default' | 'best_rated';
-// TODO: re-enable 'price_asc' once GET /stations exposes a station-level
-// price floor (current list payload has no formats, so priceFrom is always 0).
+type SortKey = 'default' | 'best_rated' | 'price_asc';
 
 type ServiceScope = '' | 'exterior' | 'interior' | 'both';
 
@@ -25,40 +23,60 @@ export interface WashTypeOption {
   label: string;
 }
 
-interface StationListViewProps {
-  washTypes: WashTypeOption[];
+export interface VehicleFormatOption {
+  id: string;
+  label: string;
 }
 
-/* ------------------------------------------------------------------ */
-/*  Commented-out helpers - kept for when the backend list payload     */
-/*  carries openingHours / formats again.                              */
-/* ------------------------------------------------------------------ */
-/* function parseTimeHour(value: string): number | null {
- *   if (!value) return null;
- *   const h = parseInt(value.split(':')[0], 10);
- *   return isNaN(h) ? null : h;
- * }
- * function parseOpeningHours(oh: string): { open: number; close: number } | null {
- *   const timeRegex = /(\d{1,2})[:h]/;
- *   const parts = oh.split(/[–\-]/).map((s) => s.trim());
- *   if (parts.length !== 2) return null;
- *   const openMatch  = parts[0].match(timeRegex);
- *   const closeMatch = parts[1].match(timeRegex);
- *   if (!openMatch || !closeMatch) return null;
- *   const open  = parseInt(openMatch[1],  10);
- *   const close = parseInt(closeMatch[1], 10);
- *   return isNaN(open) || isNaN(close) ? null : { open, close };
- * }
- */
+interface StationListViewProps {
+  washTypes: WashTypeOption[];
+  vehicleFormats: VehicleFormatOption[];
+}
+
+/** Convert "HHhMM - HHhMM" or "HH:MM - HH:MM" into [openMinutes, closeMinutes]. */
+function parseOpeningHoursToMinutes(oh: string | undefined): { open: number; close: number } | null {
+  if (!oh) return null;
+  const parts = oh.split(/[–\-]/).map((s) => s.trim());
+  if (parts.length !== 2) return null;
+  const toMin = (s: string): number | null => {
+    const m = s.match(/(\d{1,2})[:h](\d{2})?/);
+    if (!m) return null;
+    const h = parseInt(m[1], 10);
+    const mm = m[2] ? parseInt(m[2], 10) : 0;
+    if (Number.isNaN(h) || Number.isNaN(mm)) return null;
+    return h * 60 + mm;
+  };
+  const open = toMin(parts[0]);
+  const close = toMin(parts[1]);
+  return open != null && close != null ? { open, close } : null;
+}
+
+/** Convert "HH:MM" form input into total minutes. Returns null on invalid. */
+function timeStringToMinutes(s: string): number | null {
+  if (!s) return null;
+  const m = s.match(/^(\d{1,2}):(\d{2})$/);
+  if (!m) return null;
+  const h = parseInt(m[1], 10);
+  const mm = parseInt(m[2], 10);
+  if (Number.isNaN(h) || Number.isNaN(mm)) return null;
+  return h * 60 + mm;
+}
 
 /**
- * Public station list with backend-driven filtering.
- * The main search bar drives the `city` query param; the filter panel
- * drives `q` (merchant name), `sort`, `wash_type_ids` and `service_scope`.
- * Only the "available only" toggle runs client-side because the API has
- * no dedicated param for it.
+ * Public station list with mixed backend + client-side filtering.
+ *
+ * Backend-driven (forwarded as query params to GET /stations):
+ *   - q (merchant name), city, sort
+ *   - wash_type_ids, service_scope, format_id
+ *
+ * Client-driven (applied on the fetched list because the backend has no param yet):
+ *   - "available only" toggle
+ *   - price min/max (uses station.priceFrom)
+ *   - time range (uses station.openingHours)
+ *
+ * Disabled until backend lands them: date, categories, services/extras.
  */
-export function StationListView({ washTypes }: StationListViewProps) {
+export function StationListView({ washTypes, vehicleFormats }: StationListViewProps) {
   const t            = useTranslations('stations');
   const searchParams = useSearchParams();
 
@@ -71,20 +89,20 @@ export function StationListView({ washTypes }: StationListViewProps) {
   const [sort,               setSort]               = useState<SortKey>('default');
   const [selectedWashTypes,  setSelectedWashTypes]  = useState<string[]>([]);
   const [serviceScope,       setServiceScope]       = useState<ServiceScope>('');
+  const [formatId,           setFormatId]           = useState<string>('');
   const [panelOpen,          setPanelOpen]          = useState(false);
 
-  /* "Bientôt disponible" filter states - UI is rendered but disabled and never
-   * forwarded to fetchStations. Once the backend exposes the matching data
-   * (price floor, opening hours, tags, vehicle types, services, date/slot),
-   * we drop the disabled prop, wire the values into the params object and the
-   * filter becomes live. See project_pending_backend_specs.md →
-   * "Missing on `GET /api/v1/stations`" + "Missing fields in the list payload". */
+  /* Client-side filters (data is on each row, but no backend param yet). */
   const [price, setPrice] = useState({ min: '', max: '' });
-  const [date, setDate] = useState('');
   const [timeFrom, setTimeFrom] = useState('');
   const [timeTo, setTimeTo] = useState('');
+
+  /* Filters still disabled - no backend support today (no categories model,
+   * no service-level filtering, `date` is accepted but a no-op in the repo).
+   * UI is rendered with the "Bientôt disponible" pill so users see what's
+   * planned. Track the gap in project_pending_backend_specs.md. */
+  const [date, setDate] = useState('');
   const [selectedCategories, setSelectedCategories] = useState<string[]>([]);
-  const [selectedVehicles, setSelectedVehicles] = useState<string[]>([]);
   const [selectedServices, setSelectedServices] = useState<string[]>([]);
 
   /* Debounced text inputs - avoid a fetch on every keystroke. */
@@ -106,7 +124,7 @@ export function StationListView({ washTypes }: StationListViewProps) {
   });
   const [loading, setLoading] = useState(true);
 
-  /* Fetch stations whenever a filter changes. */
+  /* Fetch stations whenever a backend-driven filter changes. */
   useEffect(() => {
     let cancelled = false;
     setLoading(true);
@@ -117,6 +135,7 @@ export function StationListView({ washTypes }: StationListViewProps) {
     if (sort === 'best_rated')             params.sort = 'rating_desc';
     if (selectedWashTypes.length > 0)      params.wash_type_ids = selectedWashTypes.join(',');
     if (serviceScope)                      params.service_scope = serviceScope;
+    if (formatId)                          params.format_id = formatId;
 
     fetchStations(params).then((result) => {
       if (cancelled) return;
@@ -128,7 +147,7 @@ export function StationListView({ washTypes }: StationListViewProps) {
     });
 
     return () => { cancelled = true; };
-  }, [debouncedText, sort, selectedWashTypes, serviceScope]);
+  }, [debouncedText, sort, selectedWashTypes, serviceScope, formatId]);
 
   /* Sync city query from URL param (?q=) - `q` here is a synonym coming from the landing search. */
   useEffect(() => {
@@ -142,38 +161,66 @@ export function StationListView({ washTypes }: StationListViewProps) {
   const toggleWashType = (id: string) =>
     setSelectedWashTypes((prev) => prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id]);
 
-  /* Layered client-side rules on top of the backend response:
-     - Section qualification (backend sorts but does not exclude empties):
-       * available_now    → availableSlots > 0 (redundant w/ backend, defensive)
-       * most_appreciated → reviewCount > 0 (hide unrated stations)
-       * most_visited     → completedCount > 0 (hide never-visited stations)
-     - User-driven "available only" toggle applies to every visible list.
+  /* Build the client-side filter pipeline. Applied on top of the API-filtered
+   * payload to honour: "available only" toggle, price range, and time window.
+   * Sort `price_asc` is also client-side because the backend does not order
+   * by price_from. */
+  const priceMinNum = price.min !== '' ? parseFloat(price.min) : null;
+  const priceMaxNum = price.max !== '' ? parseFloat(price.max) : null;
+  const timeFromMin = timeStringToMinutes(timeFrom);
+  const timeToMin   = timeStringToMinutes(timeTo);
 
-     Discovery mode (no active search/sort) shows the three category sections;
-     as soon as the user searches, picks a filter or selects a sort chip the UI
-     collapses into a single "Résultats" list so the effect of the chosen sort
-     is immediately visible - `allStations` is already ordered by the backend. */
-  const filterAvail = (list: StationDetailData[]) =>
-    onlyAvail ? list.filter((s) => s.availableSlots > 0) : list;
+  const applyClientFilters = (list: StationDetailData[]) => {
+    let out = list;
+    if (onlyAvail) out = out.filter((s) => s.availableSlots > 0);
+    if (priceMinNum != null && Number.isFinite(priceMinNum)) {
+      out = out.filter((s) => s.priceFrom != null && s.priceFrom >= priceMinNum);
+    }
+    if (priceMaxNum != null && Number.isFinite(priceMaxNum)) {
+      out = out.filter((s) => s.priceFrom != null && s.priceFrom <= priceMaxNum);
+    }
+    if (timeFromMin != null || timeToMin != null) {
+      out = out.filter((s) => {
+        const range = parseOpeningHoursToMinutes(s.openingHours);
+        if (!range) return false;
+        if (timeFromMin != null && range.close <= timeFromMin) return false;
+        if (timeToMin   != null && range.open  >= timeToMin)   return false;
+        return true;
+      });
+    }
+    if (sort === 'price_asc') {
+      out = [...out].sort((a, b) => {
+        const ap = a.priceFrom ?? Number.POSITIVE_INFINITY;
+        const bp = b.priceFrom ?? Number.POSITIVE_INFINITY;
+        return ap - bp;
+      });
+    }
+    return out;
+  };
 
   const hasActiveSearch =
     debouncedText.q !== '' ||
     debouncedText.city !== '' ||
     selectedWashTypes.length > 0 ||
     serviceScope !== '' ||
+    formatId !== '' ||
+    priceMinNum != null ||
+    priceMaxNum != null ||
+    timeFromMin != null ||
+    timeToMin != null ||
     sort !== 'default';
 
-  const flatResults   = useMemo(() => filterAvail(allStations),                                          [allStations,          onlyAvail]);
-  const availableNow  = useMemo(() => filterAvail(apiGroups.available_now.filter((s) => s.availableSlots > 0)),    [apiGroups, onlyAvail]);
-  const topRated      = useMemo(() => filterAvail(apiGroups.most_appreciated.filter((s) => s.reviewCount > 0)),     [apiGroups, onlyAvail]);
-  const mostRevisited = useMemo(() => filterAvail(apiGroups.most_visited.filter((s) => s.completedCount > 0)),      [apiGroups, onlyAvail]);
+  const flatResults   = useMemo(() => applyClientFilters(allStations),                                                                  [allStations, onlyAvail, price, timeFrom, timeTo, sort]);
+  const availableNow  = useMemo(() => applyClientFilters(apiGroups.available_now.filter((s) => s.availableSlots > 0)),                  [apiGroups, onlyAvail, price, timeFrom, timeTo, sort]);
+  const topRated      = useMemo(() => applyClientFilters(apiGroups.most_appreciated.filter((s) => s.reviewCount > 0)),                  [apiGroups, onlyAvail, price, timeFrom, timeTo, sort]);
+  const mostRevisited = useMemo(() => applyClientFilters(apiGroups.most_visited.filter((s) => s.completedCount > 0)),                   [apiGroups, onlyAvail, price, timeFrom, timeTo, sort]);
 
   const [expandedSections, setExpandedSections] = useState<Record<string, boolean>>({});
 
   const sortChips: { key: SortKey; label: string }[] = [
     { key: 'default',    label: t('filter_all') },
-    /* { key: 'price_asc',  label: t('filter_price_asc') }, // TODO re-enable when backend exposes priceFrom */
     { key: 'best_rated', label: t('filter_best_rated') },
+    { key: 'price_asc',  label: t('filter_price_asc') },
   ];
 
   const activeCount =
@@ -181,7 +228,10 @@ export function StationListView({ washTypes }: StationListViewProps) {
     (nameSearch.trim() ? 1 : 0) +
     (sort !== 'default' ? 1 : 0) +
     (selectedWashTypes.length ? 1 : 0) +
-    (serviceScope ? 1 : 0);
+    (serviceScope ? 1 : 0) +
+    (formatId ? 1 : 0) +
+    (priceMinNum != null || priceMaxNum != null ? 1 : 0) +
+    (timeFromMin != null || timeToMin != null ? 1 : 0);
 
   const handleReset = () => {
     setOnlyAvail(false);
@@ -189,13 +239,13 @@ export function StationListView({ washTypes }: StationListViewProps) {
     setNameSearch('');
     setSelectedWashTypes([]);
     setServiceScope('');
-    // Coming-soon filters: also clear them so the panel is fully neutral after Reset
+    setFormatId('');
     setPrice({ min: '', max: '' });
-    setDate('');
     setTimeFrom('');
     setTimeTo('');
+    // Still-disabled filters
+    setDate('');
     setSelectedCategories([]);
-    setSelectedVehicles([]);
     setSelectedServices([]);
     setPanelOpen(false);
   };
@@ -346,10 +396,86 @@ export function StationListView({ washTypes }: StationListViewProps) {
               </div>
             </div>
 
-            {/* -- Coming-soon filters -------------------------------------
-             * Surfaced in the UI so the merchant/client sees what's planned;
-             * disabled until the backend returns the matching data. Mirrors
-             * the "Bientôt disponible" treatment used on /station/config.
+            {/* Row 3: Vehicle format + Price range */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <div>
+                <p className="text-[11px] sm:text-[13px] font-bold text-[#333333] dark:text-[#C0C0B0] uppercase tracking-wider mb-1.5">
+                  {t('filter_vehicle_label')}
+                </p>
+                <CustomSelect
+                  value={formatId}
+                  onChange={setFormatId}
+                  placeholder={t('filter_vehicle_placeholder')}
+                  options={[
+                    { value: '', label: t('filter_vehicle_placeholder') },
+                    ...vehicleFormats.map((f) => ({ value: f.id, label: f.label })),
+                  ]}
+                />
+              </div>
+              <div>
+                <p className="text-[11px] sm:text-[13px] font-bold text-[#333333] dark:text-[#C0C0B0] uppercase tracking-wider mb-1.5">
+                  {t('filter_price_label')}
+                </p>
+                <div className="grid grid-cols-2 gap-2">
+                  <div className="relative">
+                    <span className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-[13px] font-semibold text-[#888]">
+                      {t('filter_currency_unit')}
+                    </span>
+                    <input
+                      type="number"
+                      min={0}
+                      inputMode="numeric"
+                      value={price.min}
+                      onChange={(e) => setPrice((p) => ({ ...p, min: e.target.value }))}
+                      placeholder={t('filter_price_min_placeholder')}
+                      className="w-full rounded-lg border border-[#E0E0D0] bg-[#F5F5EE] py-2 pl-7 pr-3 text-[13px] sm:text-[14px] text-[#1A1A1A] placeholder-[#9A9A8A] outline-none focus:border-gold dark:border-tab-inactive dark:bg-tab-inactive dark:text-white transition-colors"
+                    />
+                  </div>
+                  <div className="relative">
+                    <span className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-[13px] font-semibold text-[#888]">
+                      {t('filter_currency_unit')}
+                    </span>
+                    <input
+                      type="number"
+                      min={0}
+                      inputMode="numeric"
+                      value={price.max}
+                      onChange={(e) => setPrice((p) => ({ ...p, max: e.target.value }))}
+                      placeholder={t('filter_price_max_placeholder')}
+                      className="w-full rounded-lg border border-[#E0E0D0] bg-[#F5F5EE] py-2 pl-7 pr-3 text-[13px] sm:text-[14px] text-[#1A1A1A] placeholder-[#9A9A8A] outline-none focus:border-gold dark:border-tab-inactive dark:bg-tab-inactive dark:text-white transition-colors"
+                    />
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Row 4: Time range */}
+            <div>
+              <p className="text-[11px] sm:text-[13px] font-bold text-[#333333] dark:text-[#C0C0B0] uppercase tracking-wider mb-1.5">
+                {t('filter_time_label')}
+              </p>
+              <div className="grid grid-cols-2 gap-2 max-w-md">
+                <input
+                  type="time"
+                  value={timeFrom}
+                  onChange={(e) => setTimeFrom(e.target.value)}
+                  aria-label={t('filter_time_from')}
+                  className="w-full rounded-lg border border-[#E0E0D0] bg-[#F5F5EE] px-3 py-2 text-center font-mono text-[13px] text-[#1A1A1A] outline-none focus:border-gold dark:border-tab-inactive dark:bg-tab-inactive dark:text-white transition-colors"
+                />
+                <input
+                  type="time"
+                  value={timeTo}
+                  onChange={(e) => setTimeTo(e.target.value)}
+                  aria-label={t('filter_time_to')}
+                  className="w-full rounded-lg border border-[#E0E0D0] bg-[#F5F5EE] px-3 py-2 text-center font-mono text-[13px] text-[#1A1A1A] outline-none focus:border-gold dark:border-tab-inactive dark:bg-tab-inactive dark:text-white transition-colors"
+                />
+              </div>
+            </div>
+
+            {/* -- Coming-soon filters --------------------------------------
+             * Date / Categories / Services - no backend support today, kept
+             * disabled with the "Bientôt disponible" pill. Tracked in
+             * project_pending_backend_specs.md.
              * -------------------------------------------------------- */}
             <div className="space-y-3 border-t border-dashed border-[#E0E0D0] pt-4 dark:border-tab-inactive">
               <div className="flex items-center gap-2">
@@ -365,98 +491,27 @@ export function StationListView({ washTypes }: StationListViewProps) {
                 {t('filter_coming_soon_hint')}
               </p>
 
-              {/* Price range (min/max) */}
+              {/* Date */}
               <div>
                 <p className="mb-1.5 text-[11px] sm:text-[13px] font-bold uppercase tracking-wider text-[#333] dark:text-[#C0C0B0]">
-                  {t('filter_price_label')}
+                  {t('filter_date_label')}
                 </p>
-                <div className="grid grid-cols-2 gap-2">
-                  <div className="relative">
-                    <span className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-[13px] font-semibold text-[#888]">
-                      {t('filter_currency_unit')}
-                    </span>
-                    <input
-                      type="number"
-                      min={0}
-                      value={price.min}
-                      onChange={(e) => setPrice((p) => ({ ...p, min: e.target.value }))}
-                      placeholder={t('filter_price_min_placeholder')}
-                      disabled
-                      className="w-full cursor-not-allowed rounded-lg border border-[#E0E0D0] bg-[#F5F5EE] py-2 pl-7 pr-3 text-[13px] sm:text-[14px] text-[#1A1A1A] placeholder-[#9A9A8A] opacity-60 outline-none dark:border-tab-inactive dark:bg-tab-inactive dark:text-white"
-                    />
-                  </div>
-                  <div className="relative">
-                    <span className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-[13px] font-semibold text-[#888]">
-                      {t('filter_currency_unit')}
-                    </span>
-                    <input
-                      type="number"
-                      min={0}
-                      value={price.max}
-                      onChange={(e) => setPrice((p) => ({ ...p, max: e.target.value }))}
-                      placeholder={t('filter_price_max_placeholder')}
-                      disabled
-                      className="w-full cursor-not-allowed rounded-lg border border-[#E0E0D0] bg-[#F5F5EE] py-2 pl-7 pr-3 text-[13px] sm:text-[14px] text-[#1A1A1A] placeholder-[#9A9A8A] opacity-60 outline-none dark:border-tab-inactive dark:bg-tab-inactive dark:text-white"
-                    />
-                  </div>
-                </div>
+                <input
+                  type="date"
+                  value={date}
+                  onChange={(e) => setDate(e.target.value)}
+                  disabled
+                  className="w-full cursor-not-allowed rounded-lg border border-[#E0E0D0] bg-[#F5F5EE] px-3 py-2 text-[13px] sm:text-[14px] text-[#1A1A1A] opacity-60 outline-none dark:border-tab-inactive dark:bg-tab-inactive dark:text-white"
+                />
               </div>
 
-              {/* Date + time range */}
-              <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-                <div>
-                  <p className="mb-1.5 text-[11px] sm:text-[13px] font-bold uppercase tracking-wider text-[#333] dark:text-[#C0C0B0]">
-                    {t('filter_date_label')}
-                  </p>
-                  <input
-                    type="date"
-                    value={date}
-                    onChange={(e) => setDate(e.target.value)}
-                    disabled
-                    className="w-full cursor-not-allowed rounded-lg border border-[#E0E0D0] bg-[#F5F5EE] px-3 py-2 text-[13px] sm:text-[14px] text-[#1A1A1A] opacity-60 outline-none dark:border-tab-inactive dark:bg-tab-inactive dark:text-white"
-                  />
-                </div>
-                <div>
-                  <p className="mb-1.5 text-[11px] sm:text-[13px] font-bold uppercase tracking-wider text-[#333] dark:text-[#C0C0B0]">
-                    {t('filter_time_label')}
-                  </p>
-                  <div className="grid grid-cols-2 gap-2">
-                    <input
-                      type="time"
-                      value={timeFrom}
-                      onChange={(e) => setTimeFrom(e.target.value)}
-                      aria-label={t('filter_time_from')}
-                      disabled
-                      className="w-full cursor-not-allowed rounded-lg border border-[#E0E0D0] bg-[#F5F5EE] px-3 py-2 text-center font-mono text-[13px] text-[#1A1A1A] opacity-60 outline-none dark:border-tab-inactive dark:bg-tab-inactive dark:text-white"
-                    />
-                    <input
-                      type="time"
-                      value={timeTo}
-                      onChange={(e) => setTimeTo(e.target.value)}
-                      aria-label={t('filter_time_to')}
-                      disabled
-                      className="w-full cursor-not-allowed rounded-lg border border-[#E0E0D0] bg-[#F5F5EE] px-3 py-2 text-center font-mono text-[13px] text-[#1A1A1A] opacity-60 outline-none dark:border-tab-inactive dark:bg-tab-inactive dark:text-white"
-                    />
-                  </div>
-                </div>
-              </div>
-
-              {/* Categories + Vehicle types */}
+              {/* Categories + Services */}
               <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
                 <DisabledMultiSelectField
                   label={t('filter_categories_label')}
                   placeholder={t('filter_categories_placeholder')}
                   selectedCount={selectedCategories.length}
                 />
-                <DisabledMultiSelectField
-                  label={t('filter_vehicle_label')}
-                  placeholder={t('filter_vehicle_placeholder')}
-                  selectedCount={selectedVehicles.length}
-                />
-              </div>
-
-              {/* Services / extras */}
-              <div>
                 <DisabledMultiSelectField
                   label={t('filter_service_label')}
                   placeholder={t('filter_service_placeholder')}
