@@ -158,7 +158,7 @@ export function BookingFlow({ station, qrToken, qrVersion, onClose }: BookingFlo
     if (isQueueMode) {
       if (devSkipPayment) { goNext(); return; }
       setSummaryLoading(true);
-      const [ok, data] = await postWithApi<{ data: { client_secret: string } }>(
+      const [ok, data] = await postWithApi<{ data: { client_secret: string; ticket_code?: string | null } }>(
         `/stations/${station.id}/queue/join`,
         {
           service_id: selectedService!.id,
@@ -173,8 +173,9 @@ export function BookingFlow({ station, qrToken, qrVersion, onClose }: BookingFlo
         );
         return;
       }
-      const queueData = data as { data: { client_secret: string } };
+      const queueData = data as { data: { client_secret: string; ticket_code?: string | null } };
       setClientSecret(queueData.data?.client_secret ?? null);
+      setTicketCode(queueData.data?.ticket_code ?? null);
       goNext();
       return;
     }
@@ -194,7 +195,7 @@ export function BookingFlow({ station, qrToken, qrVersion, onClose }: BookingFlo
       reservationPayload.qr_token = qrToken;
       reservationPayload.v = qrVersion;
     }
-    const [ok, data] = await postWithApi<{ data: { reservation_id: string; stripe_client_secret: string } }>(
+    const [ok, data] = await postWithApi<{ data: { reservation_id: string; stripe_client_secret: string; ticket_code?: string | null } }>(
       `/stations/${station.id}/reservations`,
       reservationPayload,
     );
@@ -206,8 +207,9 @@ export function BookingFlow({ station, qrToken, qrVersion, onClose }: BookingFlo
       else setSummaryError(t('error_reservation_failed'));
       return;
     }
-    const resData = data as { data: { stripe_client_secret: string } };
+    const resData = data as { data: { stripe_client_secret: string; ticket_code?: string | null } };
     setClientSecret(resData.data?.stripe_client_secret ?? null);
+    setTicketCode(resData.data?.ticket_code ?? null);
     goNext();
   }, [arrivalMode, station.id, selectedService, selectedEntry, selectedSlot, qrToken, qrVersion, devSkipPayment, goNext, t]);
 
@@ -243,18 +245,18 @@ export function BookingFlow({ station, qrToken, qrVersion, onClose }: BookingFlo
     }
   }, [arrivalMode, station.id, selectedService, selectedEntry, selectedSlot, qrToken, qrVersion, devSkipPayment]);
 
-  /* Generate the 6-char ticket code once payment succeeds. The code is
-   * frontend-only for now; backend should persist a `ticket_code` on the
-   * entry and surface it through the next refresh of /me/entries.
-   * TODO: replace this local code with the backend-issued one when ready. */
+  /* The backend issues a ticket_code on entry creation and returns it in the
+   * /queue/join and /reservations responses (see handleSummaryContinue).
+   * Fallback to a locally-generated code only if the backend response did not
+   * include one (legacy entries pre-migration, dev skip-payment path). */
   useEffect(() => {
     if (paymentResult === 'success' && !ticketCode) {
       setTicketCode(generateTicketCode());
     }
-    if (paymentResult !== 'success' && ticketCode) {
+    if (paymentResult !== 'success' && ticketCode && !clientSecret) {
       setTicketCode(null);
     }
-  }, [paymentResult, ticketCode]);
+  }, [paymentResult, ticketCode, clientSecret]);
 
   const handleRetryPayment = useCallback(() => { setPaymentResult(null); }, []);
 
