@@ -339,6 +339,20 @@ export const listStationsQuerySchema = z.object({
     .regex(/^\d{4}-\d{2}-\d{2}$/, 'date must be YYYY-MM-DD')
     .refine(isValidCalendarDate, { message: 'date must be a valid calendar date' })
     .optional(),
+  near_lat: z
+    .string()
+    .optional()
+    .transform((s) => (s === '' || s === undefined ? undefined : Number(s)))
+    .refine((n) => n === undefined || (Number.isFinite(n) && n >= -90 && n <= 90), {
+      message: 'near_lat must be a number between -90 and 90',
+    }),
+  near_lng: z
+    .string()
+    .optional()
+    .transform((s) => (s === '' || s === undefined ? undefined : Number(s)))
+    .refine((n) => n === undefined || (Number.isFinite(n) && n >= -180 && n <= 180), {
+      message: 'near_lng must be a number between -180 and 180',
+    }),
 });
 
 
