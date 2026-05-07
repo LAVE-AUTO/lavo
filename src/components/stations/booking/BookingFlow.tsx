@@ -9,6 +9,7 @@ import { ExtrasStep } from './ExtrasStep';
 import { ArrivalStep } from './ArrivalStep';
 import { SummaryStep } from './SummaryStep';
 import { PaymentStep } from './PaymentStep';
+import { BookingReceipt, generateTicketCode } from './BookingReceipt';
 import { useUserLocation } from '../useUserLocation';
 import { postWithApi } from '@/services/axios-service';
 import { RESERVATIONS_MOCK_ENABLED } from '@/data/reservations-mock';
@@ -38,6 +39,7 @@ export function BookingFlow({ station, qrToken, qrVersion, onClose }: BookingFlo
 
   const [step, setStep] = useState<Step>('service');
   const [paymentResult, setPaymentResult] = useState<'success' | 'error' | null>(null);
+  const [ticketCode, setTicketCode] = useState<string | null>(null);
 
   // Booking selections
   const [selectedService, setSelectedService] = useState<StationServicePublic | null>(null);
@@ -241,6 +243,19 @@ export function BookingFlow({ station, qrToken, qrVersion, onClose }: BookingFlo
     }
   }, [arrivalMode, station.id, selectedService, selectedEntry, selectedSlot, qrToken, qrVersion, devSkipPayment]);
 
+  /* Generate the 6-char ticket code once payment succeeds. The code is
+   * frontend-only for now; backend should persist a `ticket_code` on the
+   * entry and surface it through the next refresh of /me/entries.
+   * TODO: replace this local code with the backend-issued one when ready. */
+  useEffect(() => {
+    if (paymentResult === 'success' && !ticketCode) {
+      setTicketCode(generateTicketCode());
+    }
+    if (paymentResult !== 'success' && ticketCode) {
+      setTicketCode(null);
+    }
+  }, [paymentResult, ticketCode]);
+
   const handleRetryPayment = useCallback(() => { setPaymentResult(null); }, []);
 
   const stepLabels: Record<Step, string> = {
@@ -354,52 +369,49 @@ export function BookingFlow({ station, qrToken, qrVersion, onClose }: BookingFlo
     const isSuccess = paymentResult === 'success';
     const isQueueNow = arrivalMode === 'queue_now';
 
-    return (
-      <div className="flex flex-col items-center justify-center text-center px-6 py-12 gap-5">
-        <div className={`w-20 h-20 rounded-full flex items-center justify-center ${isSuccess ? 'bg-lavo-success/15' : 'bg-lavo-error/15'}`}>
-          {isSuccess ? (
-            <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="#00C851" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12" /></svg>
-          ) : (
-            <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="#E8472A" strokeWidth="2.5" strokeLinecap="round"><line x1="18" y1="6" x2="6" y2="18" /><line x1="6" y1="6" x2="18" y2="18" /></svg>
+    if (isSuccess) {
+      return (
+        <div className="flex flex-col items-center px-4 sm:px-6 py-6 gap-4">
+          <div className="w-16 h-16 rounded-full bg-lavo-success/15 flex items-center justify-center">
+            <svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="#00C851" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12" /></svg>
+          </div>
+
+          <div className="text-center">
+            <h3 id="booking-result-title" className="text-[20px] font-black text-[#000C1F] dark:text-[#FFF8EC]">
+              {t('result_success_title')}
+            </h3>
+            <p className="text-[14px] text-[#555] dark:text-[#B0B0A0] max-w-sm leading-relaxed mt-1">
+              {isQueueNow ? t('result_queue_now_desc') : t('result_success_desc')}
+            </p>
+          </div>
+
+          {ticketCode && (
+            <BookingReceipt
+              station={station}
+              service={selectedService}
+              entry={selectedEntry}
+              extras={selectedExtras}
+              arrivalMode={arrivalMode!}
+              selectedDate={selectedDate}
+              laterTime={laterTime}
+              selectedSlotTime={selectedSlot?.time ?? null}
+              servicePrice={servicePrice}
+              extrasTotal={extrasTotal}
+              surchargeAmount={surchargeAmount}
+              grandTotal={grandTotal}
+              ticketCode={ticketCode}
+              queuePosition={arrivalMode === 'queue_later' ? station.queueCount + 1 : null}
+            />
           )}
-        </div>
 
-        <h3 id="booking-result-title" className="text-[22px] font-black text-[#000C1F] dark:text-[#FFF8EC]">
-          {isSuccess ? t('result_success_title') : t('result_error_title')}
-        </h3>
-        <p className="text-[15px] text-[#555] dark:text-[#B0B0A0] max-w-sm leading-relaxed">
-          {isSuccess
-            ? isQueueNow ? t('result_queue_now_desc') : t('result_success_desc')
-            : t('result_error_desc')}
-        </p>
-
-        {isSuccess && (
-          <div className="bg-gold/10 dark:bg-gold/5 border-2 border-gold rounded-xl px-5 py-3">
-            <span className="text-[18px] font-black text-gold">{grandTotal}$</span>
-          </div>
-        )}
-
-        {isSuccess && arrivalMode === 'queue_later' && (
-          <div className="bg-[#E8E8D8] dark:bg-dark-surface rounded-xl px-5 py-4 w-full max-w-xs text-left border border-[#D0D0C0] dark:border-tab-inactive">
-            <div className="text-[13px] font-bold text-[#555] dark:text-[#A0A090] uppercase tracking-wider mb-2">
-              {t('result_queue_position_label')}
-            </div>
-            <div className="text-[26px] font-black text-gold leading-none">#{station.queueCount + 1}</div>
-            <div className="text-[13px] text-[#555] dark:text-[#B0B0A0] mt-1">
-              {t('result_queue_arrival_time', { time: laterTime ?? '' })}
-            </div>
-          </div>
-        )}
-
-        <div className="flex flex-col gap-3 w-full max-w-xs mt-2">
-          {isSuccess ? (
-            isQueueNow ? (
+          <div className="flex flex-col sm:flex-row gap-2 w-full max-w-md mt-2 lavo-receipt-actions">
+            {isQueueNow ? (
               <>
                 <a
                   href={mapsUrl}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="flex items-center justify-center gap-2 w-full py-3 bg-gold hover:bg-gold-hover rounded-xl text-[15px] font-black text-dark-bg text-center transition-colors"
+                  className="flex-1 inline-flex items-center justify-center gap-2 py-3 bg-dark-bg hover:bg-[#243020] rounded-xl text-[14px] font-bold text-white text-center transition-colors"
                 >
                   <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
                     <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z" />
@@ -410,7 +422,7 @@ export function BookingFlow({ station, qrToken, qrVersion, onClose }: BookingFlo
                 <button
                   type="button"
                   onClick={onClose}
-                  className="w-full py-3 border-2 border-gold rounded-xl text-[15px] font-bold text-gold hover:bg-gold/10 transition-colors cursor-pointer"
+                  className="flex-1 py-3 border-2 border-[#D0D0C0] dark:border-tab-inactive rounded-xl text-[14px] font-bold text-[#555] dark:text-[#C0C0B0] hover:bg-[#F0F0E2] dark:hover:bg-tab-inactive transition-colors cursor-pointer"
                 >
                   {t('result_done')}
                 </button>
@@ -419,37 +431,52 @@ export function BookingFlow({ station, qrToken, qrVersion, onClose }: BookingFlo
               <>
                 <Link
                   href="/client/reservations"
-                  className="block w-full py-3 bg-gold hover:bg-gold-hover rounded-xl text-[15px] font-black text-dark-bg text-center transition-colors"
+                  className="flex-1 inline-flex items-center justify-center py-3 bg-dark-bg hover:bg-[#243020] rounded-xl text-[14px] font-bold text-white text-center transition-colors"
                 >
                   {t('result_view_reservations')}
                 </Link>
                 <button
                   type="button"
                   onClick={onClose}
-                  className="w-full py-3 border-2 border-gold rounded-xl text-[15px] font-bold text-gold hover:bg-gold/10 transition-colors cursor-pointer"
+                  className="flex-1 py-3 border-2 border-[#D0D0C0] dark:border-tab-inactive rounded-xl text-[14px] font-bold text-[#555] dark:text-[#C0C0B0] hover:bg-[#F0F0E2] dark:hover:bg-tab-inactive transition-colors cursor-pointer"
                 >
                   {t('result_done')}
                 </button>
               </>
-            )
-          ) : (
-            <>
-              <button
-                type="button"
-                onClick={handleRetryPayment}
-                className="flex-1 py-3 bg-gold hover:bg-gold-hover rounded-xl text-[15px] font-black text-dark-bg transition-colors cursor-pointer"
-              >
-                {t('result_retry')}
-              </button>
-              <button
-                type="button"
-                onClick={onClose}
-                className="flex-1 py-3 border-2 border-gold rounded-xl text-[15px] font-bold text-gold hover:bg-gold/10 transition-colors cursor-pointer"
-              >
-                {t('close')}
-              </button>
-            </>
-          )}
+            )}
+          </div>
+        </div>
+      );
+    }
+
+    return (
+      <div className="flex flex-col items-center justify-center text-center px-6 py-12 gap-5">
+        <div className="w-20 h-20 rounded-full bg-lavo-error/15 flex items-center justify-center">
+          <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="#E8472A" strokeWidth="2.5" strokeLinecap="round"><line x1="18" y1="6" x2="6" y2="18" /><line x1="6" y1="6" x2="18" y2="18" /></svg>
+        </div>
+
+        <h3 id="booking-result-title" className="text-[22px] font-black text-[#000C1F] dark:text-[#FFF8EC]">
+          {t('result_error_title')}
+        </h3>
+        <p className="text-[15px] text-[#555] dark:text-[#B0B0A0] max-w-sm leading-relaxed">
+          {t('result_error_desc')}
+        </p>
+
+        <div className="flex gap-2 w-full max-w-xs mt-2">
+          <button
+            type="button"
+            onClick={handleRetryPayment}
+            className="flex-1 py-3 bg-gold hover:bg-gold-hover rounded-xl text-[15px] font-black text-dark-bg transition-colors cursor-pointer"
+          >
+            {t('result_retry')}
+          </button>
+          <button
+            type="button"
+            onClick={onClose}
+            className="flex-1 py-3 border-2 border-gold rounded-xl text-[15px] font-bold text-gold hover:bg-gold/10 transition-colors cursor-pointer"
+          >
+            {t('close')}
+          </button>
         </div>
       </div>
     );
@@ -458,9 +485,9 @@ export function BookingFlow({ station, qrToken, qrVersion, onClose }: BookingFlo
   if (paymentResult) {
     return (
       <>
-        <div className="hidden md:flex fixed inset-0 z-60 items-center justify-center bg-black/50 backdrop-blur-sm">
+        <div className="hidden md:flex fixed inset-0 z-60 items-center justify-center bg-black/50 backdrop-blur-sm p-4">
           <div
-            className="relative w-full max-w-md bg-[#F5F5E6] dark:bg-dark-card rounded-2xl shadow-2xl"
+            className="relative w-full max-w-lg max-h-[92vh] overflow-y-auto bg-[#F5F5E6] dark:bg-dark-card rounded-2xl shadow-2xl"
             role="dialog"
             aria-modal="true"
             aria-labelledby="booking-result-title"
@@ -468,8 +495,10 @@ export function BookingFlow({ station, qrToken, qrVersion, onClose }: BookingFlo
             {renderResultScreen()}
           </div>
         </div>
-        <div className="md:hidden fixed inset-0 z-60 bg-[#F5F5E6] dark:bg-dark-card flex items-center justify-center">
-          {renderResultScreen()}
+        <div className="md:hidden fixed inset-0 z-60 bg-[#F5F5E6] dark:bg-dark-card overflow-y-auto">
+          <div className="min-h-full flex items-start justify-center py-4">
+            {renderResultScreen()}
+          </div>
         </div>
       </>
     );

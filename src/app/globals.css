@@ -515,3 +515,24 @@ button,
     .app-shell .text-\[12px\] { font-size: 14px; }
     .app-shell .text-\[13px\] { font-size: 15px; }
 }
+
+/* Booking receipt print rules: when the user clicks "Download" we trigger
+   window.print() and rely on this stylesheet to isolate just the receipt
+   block (.lavo-receipt-print). Action buttons and the rest of the page are
+   hidden so the resulting PDF only contains the printable card. */
+
+@media print {
+    body * { visibility: hidden !important; }
+    .lavo-receipt-print, .lavo-receipt-print * { visibility: visible !important; }
+    .lavo-receipt-print {
+        position: absolute !important;
+        left: 0; top: 0;
+        width: 100%;
+        max-width: 100%;
+        margin: 0;
+        box-shadow: none !important;
+        border: none !important;
+    }
+    .lavo-receipt-actions { display: none !important; }
+}
+
