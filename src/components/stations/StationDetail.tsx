@@ -14,6 +14,18 @@ import { useAuth } from '@/context/auth-context';
 import { postWithApi } from '@/services/axios-service';
 import type { StationDetailData } from '@/types/station';
 
+// Haversine formula to calculate distance between two points
+function calculateDistance(lat1: number, lng1: number, lat2: number, lng2: number): number {
+  const R = 6371; // Earth's radius in kilometers
+  const dLat = (lat2 - lat1) * Math.PI / 180;
+  const dLng = (lng2 - lng1) * Math.PI / 180;
+  const a = Math.sin(dLat/2) * Math.sin(dLat/2) +
+    Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) *
+    Math.sin(dLng/2) * Math.sin(dLng/2);
+  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+  return R * c;
+}
+
 interface StationDetailProps {
   id: string;
 }
@@ -71,6 +83,18 @@ export function StationDetail({ id }: StationDetailProps) {
 
   const isOpen = station.isOpen !== false;
   const hasServices = station.stationServices.length > 0;
+
+  // Calculate minimum service duration
+  const minServiceDuration = station.stationServices.length > 0
+    ? Math.min(...station.stationServices.flatMap(svc => svc.vehicleEntries.map(entry => entry.duration)))
+    : 30; // fallback
+
+  // Calculate distance from user location (mock for now - would use geolocation API)
+  const userLat = 45.5017; // Montreal coordinates as example
+  const userLng = -73.5673;
+  const stationLat = station.latitude || 0;
+  const stationLng = station.longitude || 0;
+  const distance = calculateDistance(userLat, userLng, stationLat, stationLng);
 
   const handleOpenBooking = () => {
     if (!isAuthenticated) {
@@ -132,14 +156,14 @@ export function StationDetail({ id }: StationDetailProps) {
             <div className="text-[11px] text-[#555] dark:text-[#C0C0B0] mt-1">{t('queue_waiting')}</div>
           </div>
           <div>
-            <div className={`text-[20px] font-black leading-none ${station.estimatedWaitMinutes > 20 ? 'text-lavo-error' : 'text-[#000C1F] dark:text-[#FFF8EC]'}`}>
-              {station.estimatedWaitMinutes > 0 ? station.estimatedWaitMinutes : '-'}
+            <div className={`text-[20px] font-black leading-none ${minServiceDuration > 60 ? 'text-lavo-error' : 'text-[#000C1F] dark:text-[#FFF8EC]'}`}>
+              {minServiceDuration}
             </div>
             <div className="text-[11px] text-[#555] dark:text-[#C0C0B0] mt-1">{t('min_attente')}</div>
           </div>
           <div>
-            <div className="text-[20px] font-black text-[#000C1F] dark:text-[#FFF8EC] leading-none">{station.availableSlots}</div>
-            <div className="text-[11px] text-[#555] dark:text-[#C0C0B0] mt-1">{t('queue_available')}</div>
+            <div className="text-[20px] font-black text-[#000C1F] dark:text-[#FFF8EC] leading-none">{distance.toFixed(1)} km</div>
+            <div className="text-[11px] text-[#555] dark:text-[#C0C0B0] mt-1">{t('detail_distance')}</div>
           </div>
         </div>
       </div>
@@ -207,20 +231,20 @@ export function StationDetail({ id }: StationDetailProps) {
               <h1 className="text-[26px] sm:text-[32px] lg:text-[38px] font-black text-white leading-tight drop-shadow mb-2">
                 {station.name}
               </h1>
-              <div className="flex flex-wrap items-center gap-x-3 gap-y-1.5">
-                <span className="flex items-center gap-1.5 text-white/90 text-[14px]">
-                  <span className="text-gold text-[16px]">&#9733;</span>
+              <div className="flex flex-wrap items-center gap-x-4 gap-y-2">
+                <span className="flex items-center gap-2 text-white text-[16px]">
+                  <span className="text-gold text-[18px]">&#9733;</span>
                   <span className="font-bold">{station.rating.toFixed(1)}</span>
-                  <span className="opacity-80">{t('reviews_count', { count: station.reviewCount })}</span>
+                  <span className="opacity-90">{t('reviews_count', { count: station.reviewCount })}</span>
                 </span>
                 {station.verified && (
-                  <Badge variant="verified" className="backdrop-blur-sm border border-gold/40 px-2.5 py-0.5 text-[12px]">
-                    <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" className="mr-1"><polyline points="20 6 9 17 4 12" /></svg>
+                  <Badge variant="verified" className="backdrop-blur-sm border border-gold/40 px-3 py-1 text-[13px]">
+                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" className="mr-1.5"><polyline points="20 6 9 17 4 12" /></svg>
                     {t('detail_verified')}
                   </Badge>
                 )}
                 {station.openingHours && (
-                  <span className="text-white/80 text-[13px]">&#183; {station.openingHours}</span>
+                  <span className="text-white/90 text-[15px] font-medium">&#183; {station.openingHours}</span>
                 )}
               </div>
             </div>
@@ -276,7 +300,7 @@ export function StationDetail({ id }: StationDetailProps) {
                 <h2 className="text-[17px] font-black text-[#000C1F] dark:text-[#FFF8EC] mb-4">
                   {t('detail_reviews')} <span className="text-[#888] font-semibold text-[15px]">({station.reviewCount})</span>
                 </h2>
-                <StationReviews reviews={station.reviews} />
+                <StationReviews reviews={station.reviews} reviewCount={station.reviewCount} />
               </div>
             </div>
 

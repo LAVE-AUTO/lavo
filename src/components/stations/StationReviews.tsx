@@ -3,16 +3,24 @@ import type { Review } from '@/types/station';
 
 interface StationReviewsProps {
   reviews: Review[];
+  reviewCount: number;
 }
 
 /**
  * List of public reviews for a station.
  * Uses Tailwind dark: variants for theme support.
  */
-export function StationReviews({ reviews }: StationReviewsProps) {
+export function StationReviews({ reviews, reviewCount }: StationReviewsProps) {
   const t = useTranslations('stations');
 
   if (reviews.length === 0) {
+    if (reviewCount > 0) {
+      return (
+        <p className="text-[15px] text-[#333333] dark:text-[#C0C0B0] py-4">
+          {reviewCount} avis disponible{reviewCount > 1 ? 's' : ''} - Chargement en cours...
+        </p>
+      );
+    }
     return (
       <p className="text-[15px] text-[#333333] dark:text-[#C0C0B0] py-4">{t('detail_no_reviews')}</p>
     );
