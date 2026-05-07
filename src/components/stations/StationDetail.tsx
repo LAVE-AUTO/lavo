@@ -282,17 +282,9 @@ export function StationDetail({ id }: StationDetailProps) {
             </svg>
           </button>
 
-          <div className="absolute bottom-0 left-0 right-0 px-4 sm:px-6 lg:px-8 pb-5 pt-12">
-            <div className="max-w-[1440px] mx-auto">
-              <h1 className="text-[26px] sm:text-[32px] lg:text-[38px] font-black text-white leading-tight drop-shadow mb-2">
-                {station.name}
-              </h1>
-            </div>
-          </div>
-
           {/* Overlay with key information - station name on top, stats below */}
           <div className="absolute top-4 right-16 max-w-[calc(100%-5rem)] bg-black/60 backdrop-blur-sm rounded-xl px-4 py-3 border border-white/20 text-white">
-            <h1 className="text-[16px] sm:text-[18px] font-black leading-tight truncate text-right sm:text-left">
+            <h1 className="text-[26px] sm:text-[32px] lg:text-[38px] font-black leading-tight truncate text-right sm:text-left">
               {station.name}
             </h1>
             <div className="mt-2 flex flex-wrap items-center justify-end sm:justify-start gap-x-3 gap-y-1">
