@@ -23,6 +23,7 @@ const RESERVATION_COLUMNS = {
   vehicle_format_id: reservations.vehicle_format_id,
   status: reservations.status,
   queue_position: reservations.queue_position,
+  ticket_code: reservations.ticket_code,
   amount_paid: reservations.amount_paid,
   commission_rate: reservations.commission_rate,
   commission_amount: reservations.commission_amount,
@@ -56,6 +57,7 @@ export type CreateReservationEntryData = {
   commission_amount?: string;
   station_payout?: string;
   stripe_payment_id?: string | null;
+  ticket_code?: string | null;
 };
 
 /** Payload for creating a queue entry: queue_position required. */
@@ -70,6 +72,7 @@ export type CreateQueueEntryData = {
   commission_amount?: string;
   station_payout?: string;
   stripe_payment_id?: string | null;
+  ticket_code?: string | null;
 };
 
 /**
@@ -96,6 +99,7 @@ export async function createReservationEntry(
       commission_amount: data.commission_amount ?? '0.00',
       station_payout: data.station_payout ?? '0.00',
       stripe_payment_id: data.stripe_payment_id ?? null,
+      ticket_code: data.ticket_code ?? null,
     })
     .returning();
   if (!row) throw new Error('Insert reservation entry failed');
@@ -123,6 +127,7 @@ export async function createQueueEntry(data: CreateQueueEntryData, tx?: DbTransa
       commission_amount: data.commission_amount ?? '0.00',
       station_payout: data.station_payout ?? '0.00',
       stripe_payment_id: data.stripe_payment_id ?? null,
+      ticket_code: data.ticket_code ?? null,
     })
     .returning();
   if (!row) throw new Error('Insert queue entry failed');
@@ -821,6 +826,7 @@ export type RichEntry = {
   vehicle_format_id: string;
   status: string;
   queue_position: number | null;
+  ticket_code: string | null;
   amount_paid: string;
   created_at: Date;
   updated_at: Date;
@@ -874,6 +880,7 @@ function mapToRichEntry(r: Record<string, unknown>): RichEntry {
     vehicle_format_id: r.vehicle_format_id as string,
     status: r.status as string,
     queue_position: r.queue_position as number | null,
+    ticket_code: r.ticket_code as string | null,
     amount_paid: r.amount_paid as string,
     created_at: r.created_at as Date,
     updated_at: r.updated_at as Date,

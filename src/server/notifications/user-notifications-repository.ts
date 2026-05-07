@@ -7,6 +7,36 @@ import { db } from '@/lib/db';
 import { userNotifications } from '@/lib/db/schema';
 
 export type UserNotification = typeof userNotifications.$inferSelect;
+export type CreateUserNotificationData = {
+  user_id: string;
+  kind: string;
+  title: string;
+  body: string;
+  action_url?: string | null;
+  payload?: Record<string, unknown> | null;
+};
+
+/**
+ * Inserts an in-app notification. Used by entry creation flows to push a
+ * "new booking" alert to the station owner's feed.
+ */
+export async function insertUserNotification(
+  data: CreateUserNotificationData
+): Promise<UserNotification> {
+  const [row] = await db
+    .insert(userNotifications)
+    .values({
+      user_id: data.user_id,
+      kind: data.kind,
+      title: data.title,
+      body: data.body,
+      action_url: data.action_url ?? null,
+      payload: data.payload ?? null,
+    })
+    .returning();
+  if (!row) throw new Error('Insert user notification failed');
+  return row;
+}
 
 
 /**

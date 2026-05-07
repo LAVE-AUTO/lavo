@@ -45,6 +45,12 @@ export const reservations = pgTable(
       .references(() => vehicleFormats.id),
     status: varchar("status", { length: 30 }).notNull(),
     queue_position: integer("queue_position"),
+    /**
+     * 6-character service code shown to the client and required by the station
+     * to start the service. Generated server-side on entry creation. Made of
+     * digits + uppercase letters (no ambiguous chars).
+     */
+    ticket_code: varchar("ticket_code", { length: 6 }),
     amount_paid: decimal("amount_paid", { precision: 10, scale: 2 }).notNull(),
     commission_rate: decimal("commission_rate", { precision: 5, scale: 4 }).notNull(),
     commission_amount: decimal("commission_amount", { precision: 10, scale: 2 }).notNull().default("0.00"),

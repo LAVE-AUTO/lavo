@@ -14,7 +14,7 @@
  *   - Stripe PaymentIntent (Connect charges)
  *   - Notifications (fire-and-forget entry updates)
  */
-import { NotFoundError, ConflictError, ActiveReservationExistsError, SlotFullError, ValidationError } from '@/lib/errors';
+import { NotFoundError, ConflictError, ActiveReservationExistsError, SlotFullError, ValidationError, InvalidTicketCodeError } from '@/lib/errors';
 import { getPlatformSettingWithFallback, getCancellationPolicy } from '@/server/admin/platform-settings-service';
 import { db } from '@/lib/db';
 import { getConfigByStationId } from '@/server/station/config-repository';
@@ -29,7 +29,9 @@ import {
 import { createPaymentIntent, cancelPaymentIntent, capturePaymentIntent, refundPaymentIntent, distributePenalty, updatePaymentIntentMetadata } from '@/server/payments/payment-service';
 import { cancelReservation } from '@/server/reservations/cancellation-service';
 import { notifyEntry } from '@/server/notifications/notification-service';
+import { notifyStationFeed } from '@/server/notifications/station-feed-notifications';
 import { sendEscrowReleasedNotificationsForEntry } from '@/server/notifications/escrow-released-notifications';
+import { generateTicketCode } from './ticket-code';
 import {
   createReservationEntry,
   createQueueEntry,
@@ -266,6 +268,7 @@ export async function createReservation(
         commission_amount: toDecimal(split.commissionAmount),
         station_payout: toDecimal(split.stationPayout),
         stripe_payment_id: paymentIntentId,
+        ticket_code: generateTicketCode(),
       },
       tx
     );
@@ -290,6 +293,13 @@ export async function createReservation(
     userId,
     stationId,
     type: 'reservation_created',
+  });
+
+  await notifyStationFeed({
+    stationId,
+    entryId: entry.id,
+    kind: 'reservation_new',
+    body: `${toDecimal(amountTotal)} $${entry.ticket_code ? ` · Code ${entry.ticket_code}` : ''}`,
   });
 
   return { entry, clientSecret };
@@ -763,6 +773,39 @@ export async function setEntryStatusByStation(
 }
 
 
+// %%%%% Start entry with ticket code %%%%%
+// Station verifies the 6-character code given by the client before starting the service.
+
+/**
+ * Starts a service for an entry only if the code matches the one issued at booking.
+ * Wraps the same transition logic as setEntryStatusByStation('in_progress') but
+ * adds a code-equality check (uppercased + whitespace-trimmed on both sides).
+ *
+ * Throws:
+ *  - NotFoundError if the entry is not found or does not belong to the station
+ *  - InvalidTicketCodeError (400) if the code is missing or does not match
+ *  - ConflictError if the entry status cannot transition to in_progress
+ */
+export async function startEntryByStation(
+  entryId: string,
+  stationId: string,
+  rawCode: string
+): Promise<Entry> {
+  const entry = await findEntryByIdAndStation(entryId, stationId);
+  if (!entry) throw new NotFoundError('Entry not found');
+
+  // Compare with constant-time-ish equality on uppercased trimmed strings.
+  // ticket_code is null on legacy entries (pre-migration) - reject those too.
+  const normalizedInput = (rawCode ?? '').replace(/\s+/g, '').toUpperCase();
+  const stored = (entry.ticket_code ?? '').toUpperCase();
+  if (!stored || normalizedInput.length !== stored.length || normalizedInput !== stored) {
+    throw new InvalidTicketCodeError();
+  }
+
+  return setEntryStatusByStation(entryId, stationId, 'in_progress');
+}
+
+
 // %%%%% Walk-in entry creation %%%%%
 // Station creates an entry for a walk-in client (no Stripe payment flow)
 
@@ -799,6 +842,7 @@ export async function createWalkInEntry(
       commission_rate: '0',
       commission_amount: '0',
       station_payout: toDecimal(String(format.price)),
+      ticket_code: generateTicketCode(),
     });
   }
 
@@ -813,6 +857,7 @@ export async function createWalkInEntry(
     commission_rate: '0',
     commission_amount: '0',
     station_payout: toDecimal(String(format.price)),
+    ticket_code: generateTicketCode(),
   });
 }
 

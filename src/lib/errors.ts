@@ -143,3 +143,10 @@ export class RefundNotEligibleError extends AppError {
     super(message, HTTP_STATUS.BAD_REQUEST);
   }
 }
+
+/** The service code provided by the client does not match the entry (400). */
+export class InvalidTicketCodeError extends AppError {
+  constructor(message = 'The service code does not match this booking') {
+    super(message, HTTP_STATUS.BAD_REQUEST);
+  }
+}

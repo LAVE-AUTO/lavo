@@ -86,6 +86,17 @@ export const stationPatchEntryBodySchema = z
   })
   .strict();
 
+/** POST /station/entries/:entryId/start - 6-character ticket code from the client. */
+export const stationStartEntryBodySchema = z
+  .object({
+    code: z
+      .string()
+      .min(1, 'code is required')
+      .max(20, 'code must be at most 20 characters')
+      .transform((s) => s.replace(/\s+/g, '').toUpperCase()),
+  })
+  .strict();
+
 /** POST /reservations/:id/reschedule - new time slot id. */
 export const rescheduleBodySchema = z
   .object({

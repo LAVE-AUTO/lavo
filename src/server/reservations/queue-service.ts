@@ -9,7 +9,9 @@ import { findServiceVehicleEntryForBooking, findServiceByIdAndStation } from '@/
 import { decrementSlotBookedCount } from '@/server/station/slot-repository';
 import { createPaymentIntent, cancelPaymentIntent, updatePaymentIntentMetadata } from '@/server/payments/payment-service';
 import { notifyEntry } from '@/server/notifications/notification-service';
+import { notifyStationFeed } from '@/server/notifications/station-feed-notifications';
 import { getQueuePositionWhenMovingFromReservation } from './queue-position-helper';
+import { generateTicketCode } from './ticket-code';
 import {
   createQueueEntry,
   findEntryById,
@@ -107,6 +109,7 @@ export async function joinQueue(
       commission_amount: String(split.commissionAmount.toFixed(2)),
       station_payout: String(split.stationPayout.toFixed(2)),
       stripe_payment_id: paymentIntentId,
+      ticket_code: generateTicketCode(),
     }, tx);
   });
 
@@ -128,6 +131,15 @@ export async function joinQueue(
     stationId,
     type: 'queue_joined',
   });
+
+  /* Push to the station owner's in-app feed (best-effort, never blocks). */
+  await notifyStationFeed({
+    stationId,
+    entryId: entry.id,
+    kind: 'queue_new',
+    body: `${vehicleEntry.vehicle_label ?? 'Service'} · ${entryPrice.toFixed(2)} $${entry.ticket_code ? ` · Code ${entry.ticket_code}` : ''}`,
+  });
+
   return { entry, clientSecret };
 }
 
