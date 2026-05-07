@@ -37,13 +37,16 @@ export async function GET(request: Request): Promise<NextResponse> {
     );
   }
 
-  const { status, from, to, page, per_page } = queryParsed.data;
+  const { status, from, to, slot_from, slot_to, entry_type, page, per_page } = queryParsed.data;
 
   try {
     const result = await listRichStationEntries(station.id, {
       status,
       from: from ? new Date(from) : undefined,
       to: to ? new Date(to) : undefined,
+      slot_from: slot_from ? new Date(slot_from) : undefined,
+      slot_to: slot_to ? new Date(slot_to) : undefined,
+      entry_type,
       page,
       per_page,
     });

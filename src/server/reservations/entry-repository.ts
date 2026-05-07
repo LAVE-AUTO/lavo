@@ -433,6 +433,11 @@ export type ListEntriesFilters = {
   status?: string;
   from?: Date;
   to?: Date;
+  /** Filter by time_slot.start_time >= slot_from (reservation entries). */
+  slot_from?: Date;
+  /** Filter by time_slot.start_time < slot_to (reservation entries). */
+  slot_to?: Date;
+  entry_type?: 'reservation' | 'queue';
   page?: number;
   per_page?: number;
 };
@@ -976,6 +981,8 @@ export async function findRichEntryByIdAndUser(
 export type RichStationEntry = Entry & {
   user_first_name: string | null;
   vehicle_format: { id: string; label: string } | null;
+  slot_start_time: Date | null;
+  slot_end_time: Date | null;
 };
 
 /**
@@ -986,24 +993,33 @@ export async function listRichStationEntriesPaginated(
   stationId: string,
   filters: ListEntriesFilters = {}
 ): Promise<{ rows: RichStationEntry[]; total: number; page: number; per_page: number }> {
-  const { status, from, to, page = 1, per_page = 20 } = filters;
-  const limit = Math.min(Math.max(1, per_page), 100);
+  const { status, from, to, slot_from, slot_to, entry_type, page = 1, per_page = 20 } = filters;
+  const limit = Math.min(Math.max(1, per_page), 500);
   const offset = (Math.max(1, page) - 1) * limit;
 
   const conditions = [eq(reservations.station_id, stationId)];
   if (status) conditions.push(eq(reservations.status, status));
+  if (entry_type) conditions.push(eq(reservations.entry_type, entry_type));
   if (from) conditions.push(gte(reservations.created_at, from));
   if (to) conditions.push(lte(reservations.created_at, to));
+  if (slot_from) conditions.push(gte(timeSlots.start_time, slot_from));
+  if (slot_to) conditions.push(lt(timeSlots.start_time, slot_to));
   const where = and(...conditions);
 
   const [countRows, rows] = await Promise.all([
-    db.select({ count: sql<number>`count(*)::int` }).from(reservations).where(where),
+    db
+      .select({ count: sql<number>`count(*)::int` })
+      .from(reservations)
+      .leftJoin(timeSlots, eq(reservations.time_slot_id, timeSlots.id))
+      .where(where),
     db
       .select({
         ...RESERVATION_COLUMNS,
         user_first_name: users.first_name,
         vf_id: vehicleFormats.id,
         vf_label: vehicleFormats.label,
+        slot_start_time: timeSlots.start_time,
+        slot_end_time: timeSlots.end_time,
       })
       .from(reservations)
       .leftJoin(timeSlots, eq(reservations.time_slot_id, timeSlots.id))
@@ -1019,6 +1035,8 @@ export async function listRichStationEntriesPaginated(
     ...(r as Entry),
     user_first_name: r.user_first_name,
     vehicle_format: r.vf_id ? { id: r.vf_id, label: r.vf_label ?? '' } : null,
+    slot_start_time: r.slot_start_time ?? null,
+    slot_end_time: r.slot_end_time ?? null,
   }));
 
   return { rows: richRows, total: countRows[0]?.count ?? 0, page, per_page: limit };

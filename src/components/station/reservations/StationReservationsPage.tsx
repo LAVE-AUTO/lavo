@@ -2,13 +2,14 @@
 
 import { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import { useTranslations } from 'next-intl';
-import { getFromApi, patchWithApi } from '@/services';
+import { getFromApi, patchWithApi, postWithApi } from '@/services';
 import { ConfirmDialog } from '@/components/ui/ConfirmDialog';
 import { StatusTabs } from './StatusTabs';
 import { ReservationCard } from './ReservationCard';
-import type { ReservationEntry, StatusTab, EntryStatus } from './types';
+import type { ReservationEntry, StatusTab } from './types';
 
 type ActionType = 'validate' | 'start' | 'cancel';
+type EntryTypeFilter = 'all' | 'reservation' | 'queue';
 
 interface PendingAction {
   type: ActionType;
@@ -25,19 +26,43 @@ function sortEntries(a: ReservationEntry, b: ReservationEntry): number {
   const pa = STATUS_PRIORITY[a.status] ?? 9;
   const pb = STATUS_PRIORITY[b.status] ?? 9;
   if (pa !== pb) return pa - pb;
-  return new Date(a.created_at).getTime() - new Date(b.created_at).getTime();
+  // Sort reservations by slot time, queue entries by created_at
+  const ta = (a as ReservationEntry & { slot_start_time?: string }).slot_start_time ?? a.created_at;
+  const tb = (b as ReservationEntry & { slot_start_time?: string }).slot_start_time ?? b.created_at;
+  return new Date(ta).getTime() - new Date(tb).getTime();
 }
 
-function todayRange(): { from: string; to: string } {
+function toISO(d: Date): string {
+  return d.toISOString();
+}
+
+function dayStart(d: Date): Date {
+  const s = new Date(d);
+  s.setHours(0, 0, 0, 0);
+  return s;
+}
+
+function dayEnd(d: Date): Date {
+  const s = dayStart(d);
+  s.setDate(s.getDate() + 1);
+  return s;
+}
+
+function formatDateLabel(d: Date, locale: string): string {
+  const label = d.toLocaleDateString(locale, { weekday: 'long', day: 'numeric', month: 'long' });
+  return label.charAt(0).toUpperCase() + label.slice(1);
+}
+
+function isToday(d: Date): boolean {
   const now = new Date();
-  const start = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-  const end = new Date(start.getTime() + 24 * 60 * 60 * 1000 - 1);
-  return { from: start.toISOString(), to: end.toISOString() };
+  return d.getFullYear() === now.getFullYear() && d.getMonth() === now.getMonth() && d.getDate() === now.getDate();
 }
 
 export function StationReservationsPage() {
   const t = useTranslations('station_reservations');
 
+  const [selectedDate, setSelectedDate] = useState(() => new Date());
+  const [entryTypeFilter, setEntryTypeFilter] = useState<EntryTypeFilter>('all');
   const [entries, setEntries] = useState<ReservationEntry[]>([]);
   const [loading, setLoading] = useState(true);
   const [loadError, setLoadError] = useState(false);
@@ -52,19 +77,50 @@ export function StationReservationsPage() {
   const loadData = useCallback(async () => {
     setLoading(true);
     setLoadError(false);
-    const { from, to } = todayRange();
-    const params = new URLSearchParams({ from, to, per_page: '100' });
+
+    const from = dayStart(selectedDate);
+    const to = dayEnd(selectedDate);
+
+    // For reservations filter by slot time; for queue and all filter by created_at
+    let params: URLSearchParams;
+    if (entryTypeFilter === 'reservation') {
+      params = new URLSearchParams({
+        entry_type: 'reservation',
+        slot_from: toISO(from),
+        slot_to: toISO(to),
+        per_page: '200',
+      });
+    } else if (entryTypeFilter === 'queue') {
+      params = new URLSearchParams({
+        entry_type: 'queue',
+        from: toISO(from),
+        to: toISO(to),
+        per_page: '200',
+      });
+    } else {
+      // All: combine both fetches
+      const [resResult, queueResult] = await Promise.all([
+        getFromApi(`/station/entries?entry_type=reservation&slot_from=${encodeURIComponent(toISO(from))}&slot_to=${encodeURIComponent(toISO(to))}&per_page=200`),
+        getFromApi(`/station/entries?entry_type=queue&from=${encodeURIComponent(toISO(from))}&to=${encodeURIComponent(toISO(to))}&per_page=200`),
+      ]);
+      if (!mountedRef.current) return;
+      const resEntries = resResult[0] ? ((resResult[1] as { data: { entries: ReservationEntry[] } })?.data?.entries ?? []) : [];
+      const queueEntries = queueResult[0] ? ((queueResult[1] as { data: { entries: ReservationEntry[] } })?.data?.entries ?? []) : [];
+      if (!resResult[0] && !queueResult[0]) { setLoadError(true); }
+      setEntries([...resEntries, ...queueEntries]);
+      setLoading(false);
+      return;
+    }
+
     const [ok, data] = await getFromApi(`/station/entries?${params.toString()}`);
     if (!mountedRef.current) return;
     if (ok) {
-      const res = data as { data: { entries: ReservationEntry[] } };
-      const fetched = res?.data?.entries ?? [];
-      setEntries(fetched);
+      setEntries((data as { data: { entries: ReservationEntry[] } })?.data?.entries ?? []);
     } else {
       setLoadError(true);
     }
     setLoading(false);
-  }, []);
+  }, [selectedDate, entryTypeFilter]);
 
   useEffect(() => { loadData(); }, [loadData]);
 
@@ -88,9 +144,7 @@ export function StationReservationsPage() {
   }, [entries]);
 
   const kpis = useMemo(() => {
-    let revenue = 0;
-    let active = 0;
-    let done = 0;
+    let revenue = 0; let active = 0; let done = 0;
     for (const e of entries) {
       if (e.amount_paid && e.status !== 'cancelled') { const n = parseFloat(e.amount_paid); if (!isNaN(n)) revenue += n; }
       if (e.status === 'in_progress') active++;
@@ -110,22 +164,28 @@ export function StationReservationsPage() {
     if (!pending) return;
     setActionLoading(true);
     setActionError(null);
-
     const statusMap: Record<ActionType, string> = {
       validate: 'completed', start: 'in_progress', cancel: 'cancelled',
     };
-    const newStatus = statusMap[pending.type];
-    const [ok] = await patchWithApi(`/station/entries/${pending.entryId}`, { status: newStatus });
+    const [ok] = await patchWithApi(`/station/entries/${pending.entryId}`, { status: statusMap[pending.type] });
     if (!mountedRef.current) return;
-
     setActionLoading(false);
-    if (ok) {
-      setPending(null);
-      await loadData();
-    } else {
-      // Keep dialog open and show error - do not update local state on failure
-      setActionError(t('error_action'));
-    }
+    if (ok) { setPending(null); await loadData(); }
+    else { setActionError(t('error_action')); }
+  }
+
+  async function handleStartEntry(entryId: string) {
+    const [ok] = await patchWithApi(`/station/entries/${entryId}`, { status: 'in_progress' });
+    if (!mountedRef.current) return;
+    if (ok) { await loadData(); }
+    else { setActionError(t('error_action')); }
+  }
+
+  async function handleExtraTime(entryId: string, minutes: number) {
+    const [ok] = await postWithApi('/station/extra-time', { reservation_id: entryId, extra_minutes: minutes });
+    if (!mountedRef.current) return;
+    if (ok) { await loadData(); }
+    else { setActionError(t('extra_time_error')); }
   }
 
   function getConfirmProps() {
@@ -139,32 +199,18 @@ export function StationReservationsPage() {
     return { title: t(cfg.titleKey), message: t(cfg.msgKey, { client: pending.clientLabel }), variant: cfg.variant };
   }
 
-  if (loading) {
-    return (
-      <div className="flex flex-1 items-center justify-center">
-        <div className="h-8 w-8 animate-spin rounded-full border-[3px] border-[#C09A18] border-t-transparent" />
-      </div>
-    );
-  }
-
-  if (loadError) {
-    return (
-      <div className="flex flex-1 flex-col items-center justify-center gap-3 text-center">
-        <span className="text-[14px] font-semibold text-[#000C1F]/50 dark:text-[#FFF8EC]/40">{t('error_load')}</span>
-        <button type="button" onClick={loadData} className="rounded-[10px] border-[1.5px] border-[#C09A18]/50 px-4 py-2 text-[13px] font-semibold text-[#C09A18] transition-colors hover:bg-[#C09A18]/10">
-          {t('btn_retry')}
-        </button>
-      </div>
-    );
-  }
+  const today = isToday(selectedDate);
+  // Use browser locale for date label
+  const locale = typeof navigator !== 'undefined' ? navigator.language : 'fr-FR';
+  const dateLabel = formatDateLabel(selectedDate, locale);
 
   const confirm = getConfirmProps();
 
   return (
-    <div className="flex flex-1 flex-col overflow-hidden bg-[#EDEDED] dark:bg-[#1A2116]">
+    <div className="flex flex-1 flex-col overflow-hidden bg-[#EDEDED] dark:bg-dark-bg">
       {/* Header */}
-      <div className="border-b border-[#CCCCCC] bg-[#E0E0D0] px-6 pb-4 pt-5 dark:border-[#3A4A36] dark:bg-[#243020]">
-        <div className="flex items-center justify-between gap-4">
+      <div className="border-b border-[#CCCCCC] bg-[#E0E0D0] px-6 pb-4 pt-5 dark:border-[#3A4A36] dark:bg-dark-surface">
+        <div className="flex flex-wrap items-start justify-between gap-4">
           <div className="min-w-0">
             <h1 className="text-[20px] font-bold text-[#000C1F] dark:text-[#FFF8EC]">
               {t('page_title')}
@@ -173,21 +219,89 @@ export function StationReservationsPage() {
               {t('page_subtitle', { count: entries.length })}
             </p>
           </div>
-          {/* Mini KPI row */}
           <div className="hidden shrink-0 items-center gap-2 sm:flex">
             <KpiChip value={kpis.active} color="#00C851" label={t('tab_in_progress')} />
             <KpiChip value={kpis.done} color="#0044FF" label={t('tab_completed')} />
             <KpiChip value={`${kpis.revenue.toFixed(0)}$`} color="#C09A18" label={t('amount_label')} />
           </div>
         </div>
-        <div className="mt-4">
+
+        {/* Date navigator */}
+        <div className="mt-4 flex items-center gap-2">
+          <button
+            type="button"
+            onClick={() => setSelectedDate((d) => { const p = new Date(d); p.setDate(p.getDate() - 1); return p; })}
+            className="flex h-8 w-8 items-center justify-center rounded-lg border border-[#CCCCCC] bg-white text-[#555] transition-colors hover:border-[#C09A18] hover:text-[#C09A18] dark:border-[#3A4A36] dark:bg-dark-bg dark:text-[#9A9A8A]"
+            aria-label={t('date_prev')}
+          >
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+              <polyline points="15 18 9 12 15 6" />
+            </svg>
+          </button>
+          <div className="flex min-w-50 flex-col items-center rounded-xl border border-[#CCCCCC] bg-white px-4 py-1.5 dark:border-[#3A4A36] dark:bg-dark-bg">
+            <span className="text-[13px] font-bold text-[#000C1F] dark:text-[#FFF8EC]">{dateLabel}</span>
+            {today && (
+              <span className="text-[10px] font-bold uppercase tracking-wider text-[#C09A18]">{t('date_today')}</span>
+            )}
+          </div>
+          <button
+            type="button"
+            onClick={() => setSelectedDate((d) => { const n = new Date(d); n.setDate(n.getDate() + 1); return n; })}
+            className="flex h-8 w-8 items-center justify-center rounded-lg border border-[#CCCCCC] bg-white text-[#555] transition-colors hover:border-[#C09A18] hover:text-[#C09A18] dark:border-[#3A4A36] dark:bg-dark-bg dark:text-[#9A9A8A]"
+            aria-label={t('date_next')}
+          >
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+              <polyline points="9 18 15 12 9 6" />
+            </svg>
+          </button>
+          {!today && (
+            <button
+              type="button"
+              onClick={() => setSelectedDate(new Date())}
+              className="rounded-lg border border-[#C09A18]/40 px-3 py-1.5 text-[11px] font-bold text-[#C09A18] transition-colors hover:bg-[#C09A18]/10"
+            >
+              {t('date_go_today')}
+            </button>
+          )}
+        </div>
+
+        {/* Entry type filter */}
+        <div className="mt-3 flex items-center gap-2">
+          {(['all', 'reservation', 'queue'] as EntryTypeFilter[]).map((f) => (
+            <button
+              key={f}
+              type="button"
+              onClick={() => setEntryTypeFilter(f)}
+              className={`rounded-lg px-3 py-1.5 text-[11px] font-bold transition-colors ${
+                entryTypeFilter === f
+                  ? 'bg-[#C09A18] text-[#0C1209]'
+                  : 'border border-[#CCCCCC] bg-white text-[#555] hover:border-[#C09A18] hover:text-[#C09A18] dark:border-[#3A4A36] dark:bg-dark-bg dark:text-[#9A9A8A]'
+              }`}
+            >
+              {t(`filter_type_${f}`)}
+            </button>
+          ))}
+        </div>
+
+        <div className="mt-3">
           <StatusTabs active={activeTab} counts={counts} onChange={setActiveTab} />
         </div>
       </div>
 
-      {/* Entry list */}
+      {/* Content */}
       <div className="flex-1 overflow-y-auto p-4">
-        {filtered.length === 0 ? (
+        {loading ? (
+          <div className="flex flex-1 items-center justify-center py-16">
+            <div className="h-8 w-8 animate-spin rounded-full border-[3px] border-[#C09A18] border-t-transparent" />
+          </div>
+        ) : loadError ? (
+          <div className="flex flex-col items-center justify-center gap-3 py-16 text-center">
+            <span className="text-[14px] font-semibold text-[#000C1F]/50 dark:text-[#FFF8EC]/40">{t('error_load')}</span>
+            <button type="button" onClick={loadData} className="rounded-[10px] border-[1.5px] border-[#C09A18]/50 px-4 py-2 text-[13px] font-semibold text-[#C09A18] transition-colors hover:bg-[#C09A18]/10">
+              {t('btn_retry')}
+            </button>
+          </div>
+        ) : filtered.length === 0 ? (
           <div className="flex flex-col items-center justify-center gap-3 py-16 text-center">
             <EmptyIcon />
             <span className="text-[13px] font-semibold text-[#000C1F]/40 dark:text-[#FFF8EC]/30">
@@ -201,8 +315,9 @@ export function StationReservationsPage() {
                 key={entry.id}
                 entry={entry}
                 onValidate={(id) => requestAction('validate', id)}
-                onStart={(id) => requestAction('start', id)}
+                onStart={handleStartEntry}
                 onCancel={(id) => requestAction('cancel', id)}
+                onExtraTime={handleExtraTime}
               />
             ))}
           </div>
@@ -227,7 +342,7 @@ export function StationReservationsPage() {
 
 function KpiChip({ value, color, label }: { value: string | number; color: string; label: string }) {
   return (
-    <div className="flex items-center gap-1.5 rounded-[8px] bg-[#C8C8B4] px-3 py-1.5 dark:bg-[#1E2A1A]">
+    <div className="flex items-center gap-1.5 rounded-lg bg-[#C8C8B4] px-3 py-1.5 dark:bg-dark-card">
       <span className="inline-block h-2 w-2 rounded-full" style={{ background: color }} />
       <span className="font-mono text-[14px] font-bold text-[#000C1F] dark:text-[#FFF8EC]">{value}</span>
       <span className="text-[11px] font-semibold text-[#000717]/50 dark:text-[#FFFFF0]/50">{label}</span>

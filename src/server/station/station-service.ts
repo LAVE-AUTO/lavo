@@ -550,7 +550,9 @@ export async function listStationsPublic(
   const result = await getCachedOrFetch(cacheKey, STATIONS_LIST_TTL, async () => {
     const page = Math.max(1, filters.page ?? 1);
     const per_page = Math.min(100, Math.max(1, filters.per_page ?? 20));
-    const { rows, total } = await listActiveStations({ ...filters, page, per_page });
+    const hasActiveFilter = !!(filters.search?.trim() || filters.city || filters.format_id || filters.wash_type_ids?.length || filters.service_scope);
+    const open_today = !hasActiveFilter;
+    const { rows, total } = await listActiveStations({ ...filters, page, per_page, open_today });
     const total_pages = Math.max(1, Math.ceil(total / per_page));
 
     const data: ListStationsPublicData = {
@@ -561,7 +563,7 @@ export async function listStationsPublic(
     const limitPerGroup = filters.limit_per_group ?? 50;
     if (groups?.length) {
       const groupPromises = groups.map((group) =>
-        listActiveStationsGroup(group, filters, limitPerGroup).then((r) => r.map(toListPublicItem))
+        listActiveStationsGroup(group, { ...filters, open_today }, limitPerGroup).then((r) => r.map(toListPublicItem))
       );
       const results = await Promise.all(groupPromises);
       groups.forEach((g, i) => {
