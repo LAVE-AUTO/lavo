@@ -549,7 +549,8 @@
         "filter_coming_soon_title": "Filtres avancés",
         "filter_coming_soon_pill": "Bientôt disponible",
         "filter_coming_soon_hint": "Ces filtres apparaissent ici pour vous donner un aperçu - ils seront actifs dès que les données seront disponibles côté plateforme.",
-        "filter_currency_unit": "$"
+        "filter_currency_unit": "$",
+        "rating": "Note"
     },
     "merchant": {
         "meta_title": "Slowtime - Espace marchand",

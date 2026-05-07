@@ -549,7 +549,8 @@
         "filter_coming_soon_title": "Advanced filters",
         "filter_coming_soon_pill": "Coming soon",
         "filter_coming_soon_hint": "These filters are previewed here - they will become active as soon as the data is available on the platform.",
-        "filter_currency_unit": "$"
+        "filter_currency_unit": "$",
+        "rating": "Rating"
     },
     "merchant": {
         "meta_title": "Slowtime - Merchant portal",

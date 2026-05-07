@@ -303,6 +303,28 @@ export function StationDetail({ id }: StationDetailProps) {
               </div>
             </div>
           </div>
+
+          {/* Overlay with key information */}
+          <div className="absolute top-4 right-16 bg-black/60 backdrop-blur-sm rounded-xl px-4 py-3 border border-white/20">
+            <div className="flex items-center gap-3 text-white">
+              <div className="text-center">
+                <div className="text-[18px] font-black leading-none">{station.rating.toFixed(1)}</div>
+                <div className="text-[11px] opacity-80">{t('rating')}</div>
+              </div>
+              <div className="w-px h-8 bg-white/30" />
+              <div className="text-center">
+                <div className="text-[18px] font-black leading-none">{station.queueCount}</div>
+                <div className="text-[11px] opacity-80">{t('queue_waiting')}</div>
+              </div>
+              <div className="w-px h-8 bg-white/30" />
+              <div className="text-center">
+                <div className="text-[18px] font-black leading-none">
+                  {distanceLabel ?? '--'}
+                </div>
+                <div className="text-[11px] opacity-80">{t('stat_distance')}</div>
+              </div>
+            </div>
+          </div>
         </div>
 
         {/* ── Main content ── */}
