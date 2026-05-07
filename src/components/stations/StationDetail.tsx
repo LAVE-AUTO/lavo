@@ -85,9 +85,8 @@ export function StationDetail({ id }: StationDetailProps) {
   const hasServices = station.stationServices.length > 0;
 
   // Calculate minimum service duration
-  const minServiceDuration = station.stationServices.length > 0
-    ? Math.min(...station.stationServices.flatMap(svc => svc.vehicleEntries.map(entry => entry.duration)))
-    : 30; // fallback
+  const allDurations = station.stationServices.flatMap(svc => svc.vehicleEntries.map(entry => entry.duration));
+  const minServiceDuration = allDurations.length > 0 ? Math.min(...allDurations) : 30; // fallback
 
   // Calculate distance from user location (mock for now - would use geolocation API)
   const userLat = 45.5017; // Montreal coordinates as example
