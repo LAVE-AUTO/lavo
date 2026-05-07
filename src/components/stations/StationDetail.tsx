@@ -14,16 +14,14 @@ import { useAuth } from '@/context/auth-context';
 import { postWithApi } from '@/services/axios-service';
 import type { StationDetailData } from '@/types/station';
 
-// Haversine formula to calculate distance between two points
-function calculateDistance(lat1: number, lng1: number, lat2: number, lng2: number): number {
-  const R = 6371; // Earth's radius in kilometers
+function calculateDistanceKm(lat1: number, lng1: number, lat2: number, lng2: number): number {
+  const R = 6371;
   const dLat = (lat2 - lat1) * Math.PI / 180;
   const dLng = (lng2 - lng1) * Math.PI / 180;
-  const a = Math.sin(dLat/2) * Math.sin(dLat/2) +
+  const a = Math.sin(dLat / 2) * Math.sin(dLat / 2) +
     Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) *
-    Math.sin(dLng/2) * Math.sin(dLng/2);
-  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
-  return R * c;
+    Math.sin(dLng / 2) * Math.sin(dLng / 2);
+  return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
 }
 
 interface StationDetailProps {
@@ -54,6 +52,7 @@ export function StationDetail({ id }: StationDetailProps) {
   useEffect(() => { mountedRef.current = true; return () => { mountedRef.current = false; }; }, []);
 
   const [station, setStation] = useState<StationDetailData | null | undefined>(undefined);
+  const [userPosition, setUserPosition] = useState<{ lat: number; lng: number } | null>(null);
 
   useEffect(() => {
     let cancelled = false;
@@ -64,6 +63,22 @@ export function StationDetail({ id }: StationDetailProps) {
     });
     return () => { cancelled = true; };
   }, [id]);
+
+  useEffect(() => {
+    if (typeof navigator === 'undefined' || !navigator.geolocation) return;
+    let cancelled = false;
+    navigator.geolocation.getCurrentPosition(
+      (pos) => {
+        if (cancelled) return;
+        setUserPosition({ lat: pos.coords.latitude, lng: pos.coords.longitude });
+      },
+      () => {
+        // Permission refused or unavailable - distance simply hides
+      },
+      { enableHighAccuracy: false, timeout: 8000, maximumAge: 60_000 },
+    );
+    return () => { cancelled = true; };
+  }, []);
 
   const [bookingOpen, setBookingOpen] = useState(false);
   const [navigating, setNavigating] = useState(false);
@@ -84,16 +99,12 @@ export function StationDetail({ id }: StationDetailProps) {
   const isOpen = station.isOpen !== false;
   const hasServices = station.stationServices.length > 0;
 
-  // Calculate minimum service duration
   const allDurations = station.stationServices.flatMap(svc => svc.vehicleEntries.map(entry => entry.duration));
-  const minServiceDuration = allDurations.length > 0 ? Math.min(...allDurations) : 30; // fallback
+  const minServiceDuration = allDurations.length > 0 ? Math.min(...allDurations) : null;
 
-  // Calculate distance from user location (mock for now - would use geolocation API)
-  const userLat = 45.5017; // Montreal coordinates as example
-  const userLng = -73.5673;
-  const stationLat = station.latitude || 0;
-  const stationLng = station.longitude || 0;
-  const distance = calculateDistance(userLat, userLng, stationLat, stationLng);
+  const distanceKm = userPosition && station.latitude != null && station.longitude != null
+    ? calculateDistanceKm(userPosition.lat, userPosition.lng, station.latitude, station.longitude)
+    : null;
 
   const handleOpenBooking = () => {
     if (!isAuthenticated) {
@@ -155,13 +166,15 @@ export function StationDetail({ id }: StationDetailProps) {
             <div className="text-[11px] text-[#555] dark:text-[#C0C0B0] mt-1">{t('queue_waiting')}</div>
           </div>
           <div>
-            <div className={`text-[20px] font-black leading-none ${minServiceDuration > 60 ? 'text-lavo-error' : 'text-[#000C1F] dark:text-[#FFF8EC]'}`}>
-              {minServiceDuration}
+            <div className={`text-[20px] font-black leading-none ${minServiceDuration != null && minServiceDuration > 60 ? 'text-lavo-error' : 'text-[#000C1F] dark:text-[#FFF8EC]'}`}>
+              {minServiceDuration != null ? minServiceDuration : '--'}
             </div>
             <div className="text-[11px] text-[#555] dark:text-[#C0C0B0] mt-1">{t('min_attente')}</div>
           </div>
           <div>
-            <div className="text-[20px] font-black text-[#000C1F] dark:text-[#FFF8EC] leading-none">{distance.toFixed(1)} km</div>
+            <div className="text-[20px] font-black text-[#000C1F] dark:text-[#FFF8EC] leading-none">
+              {distanceKm != null ? `${distanceKm.toFixed(1)} km` : '--'}
+            </div>
             <div className="text-[11px] text-[#555] dark:text-[#C0C0B0] mt-1">{t('detail_distance')}</div>
           </div>
         </div>
@@ -299,7 +312,7 @@ export function StationDetail({ id }: StationDetailProps) {
                 <h2 className="text-[17px] font-black text-[#000C1F] dark:text-[#FFF8EC] mb-4">
                   {t('detail_reviews')} <span className="text-[#888] font-semibold text-[15px]">({station.reviewCount})</span>
                 </h2>
-                <StationReviews reviews={station.reviews} reviewCount={station.reviewCount} />
+                <StationReviews reviews={station.reviews} />
               </div>
             </div>
 

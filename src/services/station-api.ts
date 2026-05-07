@@ -113,6 +113,7 @@ interface ApiRatingItem {
     score: number;
     comment: string | null;
     created_at: string;
+    author_first_name?: string | null;
 }
 
 interface ApiRatingsResponse {
@@ -156,7 +157,7 @@ function mapRatingToReview(r: ApiRatingItem): Review {
     const date = d.toLocaleDateString('fr-CA', { day: '2-digit', month: '2-digit', year: 'numeric' });
     return {
         id: r.id,
-        authorName: 'Anonyme',
+        authorName: r.author_first_name?.trim() || 'Anonyme',
         rating: r.score,
         comment: r.comment || '',
         date,
@@ -214,6 +215,7 @@ function mapApiDetailToStationDetail(
     reviews: Review[] = [],
     queueCount: number = 0,
     estimatedWaitMinutes: number = 0,
+    reviewCountOverride?: number,
 ): StationDetailData {
     const base = mapApiStationToStation(s);
 
@@ -308,6 +310,7 @@ function mapApiDetailToStationDetail(
 
     return {
         ...base,
+        reviewCount: reviewCountOverride ?? base.reviewCount,
         priceFrom: derivedPriceFrom,
         vehicleTypes,
         openingHours,
@@ -385,9 +388,11 @@ export async function fetchStationById(id: string): Promise<StationDetailData | 
     const station = (data as { data: ApiStationDetail }).data;
 
     const [ratingsOk, ratingsData] = ratingsResult;
-    const reviews: Review[] = (ratingsOk && ratingsData && 'data' in (ratingsData as object))
-        ? ((ratingsData as ApiRatingsResponse).data?.items || []).map(mapRatingToReview)
-        : [];
+    const ratingsPayload = (ratingsOk && ratingsData && 'data' in (ratingsData as object))
+        ? (ratingsData as ApiRatingsResponse).data
+        : null;
+    const reviews: Review[] = ratingsPayload?.items?.map(mapRatingToReview) ?? [];
+    const reviewCountFromApi = ratingsPayload?.meta?.total;
 
     const [queueOk, queueData] = queueResult;
     const queueEntries: ApiQueueEntry[] = (queueOk && queueData && 'data' in (queueData as object))
@@ -399,5 +404,5 @@ export async function fetchStationById(id: string): Promise<StationDetailData | 
     const washPostCount = station.wash_post_count ?? 1;
     const estimatedWaitMinutes = calcEstimatedWait(queueCount, washDuration, washPostCount);
 
-    return mapApiDetailToStationDetail(station, reviews, queueCount, estimatedWaitMinutes);
+    return mapApiDetailToStationDetail(station, reviews, queueCount, estimatedWaitMinutes, reviewCountFromApi);
 }
