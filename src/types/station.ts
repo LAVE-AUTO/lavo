@@ -128,4 +128,6 @@ export interface StationDetailData extends Station {
   /** Real services configured by the station (new booking flow). */
   stationServices: StationServicePublic[];
   stationConfig: StationConfigPublic | null;
+  /** Public photos for the station detail hero carousel. */
+  photos?: string[];
 }

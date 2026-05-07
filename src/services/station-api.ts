@@ -96,6 +96,7 @@ interface ApiStationDetail extends ApiStationListItem {
     timeSlots: ApiTimeSlot[];
     station_services?: ApiPublicStationService[];
     station_config?: ApiStationDetailConfig | null;
+    photos?: string[];
 }
 
 interface ApiStationListResponse {
@@ -213,6 +214,7 @@ function mapApiStationToDetail(s: ApiStationListItem): StationDetailData {
         estimatedWaitMinutes: s.min_duration ?? 0,
         stationServices: [],
         stationConfig: null,
+        photos: [],
     };
 }
 
@@ -314,12 +316,14 @@ function mapApiDetailToStationDetail(
     const allEntryPrices = stationServices.flatMap((svc) => svc.vehicleEntries.map((e) => e.price));
     const derivedPriceFrom = allEntryPrices.length > 0 ? Math.min(...allEntryPrices) : priceFrom;
 
+    const photos = s.photos ?? [];
     return {
         ...base,
         reviewCount: reviewCountOverride ?? base.reviewCount,
         priceFrom: derivedPriceFrom,
         vehicleTypes,
         openingHours,
+        imageUrl: base.imageUrl ?? photos[0],
         reviews,
         services: [],
         serviceCategories,
@@ -329,6 +333,7 @@ function mapApiDetailToStationDetail(
         estimatedWaitMinutes,
         stationServices,
         stationConfig,
+        photos,
     };
 }
 

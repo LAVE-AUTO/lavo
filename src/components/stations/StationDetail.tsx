@@ -12,6 +12,7 @@ import { useUserLocation, haversineKm } from './useUserLocation';
 import { LocationPermissionBanner } from './LocationPermissionBanner';
 import { PageSpinner } from '@/components/ui/PageSpinner';
 import { Badge } from '@/components/ui/Badge';
+import { ConfirmDialog } from '@/components/ui/ConfirmDialog';
 import { useAuth } from '@/context/auth-context';
 import { postWithApi } from '@/services/axios-service';
 import type { StationDetailData } from '@/types/station';
@@ -45,6 +46,7 @@ export function StationDetail({ id }: StationDetailProps) {
 
   const [station, setStation] = useState<StationDetailData | null | undefined>(undefined);
   const [heroImgFailed, setHeroImgFailed] = useState(false);
+  const [photoIndex, setPhotoIndex] = useState(0);
   const userLocation = useUserLocation();
 
   useEffect(() => {
@@ -57,8 +59,19 @@ export function StationDetail({ id }: StationDetailProps) {
     return () => { cancelled = true; };
   }, [id]);
 
+  /* Photo carousel auto-rotation - 5 seconds when multiple photos exist. */
+  useEffect(() => {
+    const photoCount = station?.photos?.length ?? 0;
+    if (photoCount < 2) return;
+    const id = setInterval(() => {
+      setPhotoIndex((i) => (i + 1) % photoCount);
+    }, 5000);
+    return () => clearInterval(id);
+  }, [station?.photos?.length]);
+
   const [bookingOpen, setBookingOpen] = useState(false);
   const [navigating, setNavigating] = useState(false);
+  const [navConfirmOpen, setNavConfirmOpen] = useState(false);
 
   if (station === undefined) return <PageSpinner />;
 
@@ -100,11 +113,16 @@ export function StationDetail({ id }: StationDetailProps) {
       ? `https://www.google.com/maps/dir/?api=1&destination=${station.latitude},${station.longitude}`
       : `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(`${station.name}, ${station.address}, ${station.city}`)}`;
 
-  const handleEnRoute = async () => {
+  const handleEnRoute = () => {
+    setNavConfirmOpen(true);
+  };
+
+  const handleConfirmEnRoute = async () => {
     setNavigating(true);
     const [ok, data] = await postWithApi<{ data: { mapsUrl: string } }>(`/stations/${id}/join`, {});
     if (!mountedRef.current) return;
     setNavigating(false);
+    setNavConfirmOpen(false);
     const result = ok ? (data as { data: { mapsUrl: string } }).data : null;
     const url = result?.mapsUrl ?? fallbackMapsUrl;
     window.open(url, '_blank', 'noopener,noreferrer');
@@ -190,7 +208,17 @@ export function StationDetail({ id }: StationDetailProps) {
 
         {/* ── Hero ── */}
         <div className="relative h-[240px] sm:h-[320px] lg:h-[440px] bg-linear-to-br from-[#D5D5C5] to-[#EDEDED] dark:from-tab-inactive dark:to-dark-bg overflow-hidden">
-          {station.imageUrl && !heroImgFailed ? (
+          {(station.photos?.length ?? 0) > 0 ? (
+            station.photos!.map((url, i) => (
+              <img
+                key={url}
+                src={url}
+                alt={station.name}
+                onError={() => setHeroImgFailed(true)}
+                className={`absolute inset-0 w-full h-full object-cover transition-opacity duration-700 ${i === photoIndex ? 'opacity-100' : 'opacity-0'}`}
+              />
+            ))
+          ) : station.imageUrl && !heroImgFailed ? (
             <img src={station.imageUrl} alt={station.name} onError={() => setHeroImgFailed(true)} className="w-full h-full object-cover" />
           ) : (
             <div className="w-full h-full flex items-center justify-center text-[#999] dark:text-[#3A4A36] text-[14px] font-semibold">
@@ -198,6 +226,20 @@ export function StationDetail({ id }: StationDetailProps) {
             </div>
           )}
           <div className="absolute inset-0 bg-linear-to-t from-black/70 via-black/20 to-transparent" />
+
+          {(station.photos?.length ?? 0) > 1 && (
+            <div className="absolute bottom-24 sm:bottom-28 lg:bottom-32 left-1/2 -translate-x-1/2 flex items-center gap-1.5 z-10">
+              {station.photos!.map((_, i) => (
+                <button
+                  key={i}
+                  type="button"
+                  onClick={() => setPhotoIndex(i)}
+                  aria-label={t('detail_photo_dot', { index: i + 1 })}
+                  className={`h-1.5 rounded-full transition-all ${i === photoIndex ? 'bg-white w-6' : 'bg-white/60 hover:bg-white/80 w-1.5'}`}
+                />
+              ))}
+            </div>
+          )}
 
           <Link
             href="/stations"
@@ -343,6 +385,18 @@ export function StationDetail({ id }: StationDetailProps) {
           onClose={() => setBookingOpen(false)}
         />
       )}
+
+      {/* Confirmation modal before opening Google Maps */}
+      <ConfirmDialog
+        open={navConfirmOpen}
+        title={t('detail_navigate_title')}
+        message={t('detail_navigate_message')}
+        confirmLabel={t('detail_navigate_confirm')}
+        cancelLabel={t('detail_navigate_cancel')}
+        loading={navigating}
+        onConfirm={handleConfirmEnRoute}
+        onCancel={() => setNavConfirmOpen(false)}
+      />
     </>
   );
 }

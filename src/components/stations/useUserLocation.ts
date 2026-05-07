@@ -92,30 +92,28 @@ export function useGeolocationBanner(): GeolocationBannerState {
         if (typeof window === 'undefined' || !navigator.geolocation) return;
         if (cachedLocation) return;
 
-        let dismissed = false;
-        try {
-            dismissed = sessionStorage.getItem(DISMISS_KEY) === '1';
-        } catch {
-            /* sessionStorage unavailable (incognito, sandbox) - fall through */
-        }
-        if (dismissed) return;
+        const isDismissed = () => {
+            try { return sessionStorage.getItem(DISMISS_KEY) === '1'; } catch { return false; }
+        };
 
-        // Permissions API is optional. Treat missing API as "prompt".
         const permissions = (navigator as Navigator & { permissions?: { query: (d: { name: PermissionName }) => Promise<PermissionStatus> } }).permissions;
         if (!permissions?.query) {
-            setVisible(true);
+            if (!isDismissed()) setVisible(true);
             return;
         }
         permissions
             .query({ name: 'geolocation' as PermissionName })
             .then((result) => {
+                /* When permission is already granted, refetch silently regardless
+                 * of the dismiss flag - the user opted in, so distance should
+                 * always populate after a fresh page load. */
                 if (result.state === 'granted') {
                     void requestUserLocation();
-                } else if (result.state === 'prompt') {
+                } else if (result.state === 'prompt' && !isDismissed()) {
                     setVisible(true);
                 }
             })
-            .catch(() => setVisible(true));
+            .catch(() => { if (!isDismissed()) setVisible(true); });
     }, []);
 
     const request = async () => {
