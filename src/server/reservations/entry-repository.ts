@@ -852,6 +852,10 @@ export type RichEntry = {
   is_rated: boolean;
   is_tipped: boolean;
   estimated_wait_minutes: number | null;
+  /** Reservation slot start (denormalized from time_slots). Null for queue entries. */
+  slot_start_time: Date | null;
+  /** Reservation slot end (denormalized from time_slots). Null for queue entries. */
+  slot_end_time: Date | null;
 };
 
 /** Shared SELECT projection for rich entry queries. */
@@ -867,6 +871,8 @@ function richEntrySelect() {
     station_free_cancellation_minutes: stationConfigs.cancellation_delay_minutes,
     station_wash_duration_minutes: stationConfigs.wash_duration_minutes,
     station_wash_post_count: stationConfigs.wash_post_count,
+    slot_start_time: timeSlots.start_time,
+    slot_end_time: timeSlots.end_time,
     vf_label: vehicleFormats.label,
     vf_price: vehicleFormats.price,
     is_rated: sql<boolean>`EXISTS (SELECT 1 FROM ratings WHERE ratings.reservation_id = ${reservations.id})`,
@@ -912,6 +918,8 @@ function mapToRichEntry(r: Record<string, unknown>): RichEntry {
     is_rated: Boolean(r.is_rated),
     is_tipped: Boolean(r.is_tipped),
     estimated_wait_minutes: r.estimated_wait_minutes as number | null,
+    slot_start_time: (r.slot_start_time as Date | null) ?? null,
+    slot_end_time: (r.slot_end_time as Date | null) ?? null,
   };
 }
 
@@ -941,6 +949,7 @@ export async function listRichEntriesByUser(
       .leftJoin(stations, eq(stations.id, reservations.station_id))
       .leftJoin(stationConfigs, eq(stationConfigs.id, reservations.station_id))
       .leftJoin(vehicleFormats, eq(vehicleFormats.id, reservations.vehicle_format_id))
+      .leftJoin(timeSlots, eq(timeSlots.id, reservations.time_slot_id))
       .where(where)
       .orderBy(desc(reservations.created_at))
       .limit(limit)
@@ -969,6 +978,7 @@ export async function findRichEntryByIdAndUser(
     .leftJoin(stations, eq(stations.id, reservations.station_id))
     .leftJoin(stationConfigs, eq(stationConfigs.id, reservations.station_id))
     .leftJoin(vehicleFormats, eq(vehicleFormats.id, reservations.vehicle_format_id))
+    .leftJoin(timeSlots, eq(timeSlots.id, reservations.time_slot_id))
     .where(and(eq(reservations.id, entryId), eq(reservations.user_id, userId)))
     .limit(1);
   return rows[0] ? mapToRichEntry(rows[0] as unknown as Record<string, unknown>) : undefined;

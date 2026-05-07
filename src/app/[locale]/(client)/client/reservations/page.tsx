@@ -13,10 +13,21 @@ type ReservationStatus = 'confirmed' | 'in_progress' | 'completed' | 'cancelled'
 type QueueStatus = 'waiting' | 'in_progress';
 
 /* ------------------------------------------------------------------ */
-/* API shapes (match backend response)                                  */
+/* API shapes (rich entry returned by GET /me/entries)                  */
 /* ------------------------------------------------------------------ */
 
-interface ApiEntry {
+interface ApiRichStation {
+  id: string;
+  name: string;
+  address: string;
+  city: string;
+  latitude: string | null;
+  longitude: string | null;
+  image_url: string | null;
+  free_cancellation_minutes: number | null;
+}
+
+interface ApiRichEntry {
   id: string;
   entry_type: 'reservation' | 'queue';
   time_slot_id: string | null;
@@ -24,27 +35,18 @@ interface ApiEntry {
   vehicle_format_id: string | null;
   status: string;
   queue_position: number | null;
+  ticket_code: string | null;
   amount_paid: string | null;
   created_at: string;
-}
-
-interface ApiVehicleFormat { id: string; label: string; price: string; is_active: boolean }
-interface ApiTimeSlot { id: string; start_time: string }
-interface ApiStation {
-  id: string;
-  name: string;
-  address: string;
-  city: string;
-  latitude: string | null;
-  longitude: string | null;
-  vehicleFormats: ApiVehicleFormat[];
-  timeSlots: ApiTimeSlot[];
-  stationConfig?: { wash_duration_minutes: number } | null;
-  free_cancellation_minutes?: number;
+  station: ApiRichStation;
+  vehicle_format: { id: string; label: string; price: string } | null;
+  estimated_wait_minutes: number | null;
+  slot_start_time: string | null;
+  slot_end_time: string | null;
 }
 
 /* ------------------------------------------------------------------ */
-/* Enriched client-side shapes                                          */
+/* Client-side mapped shapes                                            */
 /* ------------------------------------------------------------------ */
 
 interface ClientReservation {
@@ -60,9 +62,12 @@ interface ClientReservation {
   extras: string[];
   date: string;
   timeSlot: string;
+  /** ISO start_time (used for past/upcoming sectioning + cancellation window). */
+  slotStart: string | null;
   duration: number;
   totalPrice: number;
   status: ReservationStatus;
+  ticketCode: string | null;
   createdAt: string;
   freeCancellationMinutes: number;
 }
@@ -82,6 +87,7 @@ interface ClientQueueEntry {
   estimatedWaitMinutes: number;
   totalPrice: number;
   status: QueueStatus;
+  ticketCode: string | null;
   joinedAt: string;
 }
 
@@ -89,10 +95,17 @@ interface ClientQueueEntry {
 /* Helpers                                                              */
 /* ------------------------------------------------------------------ */
 
-function isWithinFreeWindow(date: string, timeSlot: string, freeWindowMinutes: number): boolean {
-  const slotTime = new Date(`${date}T${timeSlot}`);
+function isWithinFreeWindow(slotStart: string | null, freeWindowMinutes: number): boolean {
+  if (!slotStart) return false;
+  const slotTime = new Date(slotStart);
   const diff = slotTime.getTime() - Date.now();
   return diff > 0 && diff < freeWindowMinutes * 60 * 1000;
+}
+
+function isPastReservation(r: ClientReservation): boolean {
+  if (r.status === 'completed' || r.status === 'cancelled') return true;
+  if (!r.slotStart) return false;
+  return new Date(r.slotStart).getTime() <= Date.now();
 }
 
 function slotToDateParts(startTime: string): { date: string; timeSlot: string } {
@@ -105,47 +118,49 @@ function slotToDateParts(startTime: string): { date: string; timeSlot: string } 
   return { date: `${yyyy}-${mm}-${dd}`, timeSlot: `${h}:${m}` };
 }
 
-function enrichEntry(entry: ApiEntry, stationsMap: Map<string, ApiStation>): ClientReservation | ClientQueueEntry {
-  const station = stationsMap.get(entry.station_id);
-  const format = station?.vehicleFormats.find((f) => f.id === entry.vehicle_format_id);
-  const slot = entry.time_slot_id
-    ? station?.timeSlots.find((s) => s.id === entry.time_slot_id)
-    : undefined;
-
-  const stationName = station?.name ?? `#${entry.station_id.slice(0, 8)}`;
-  const stationAddress = station ? `${station.address}, ${station.city}` : '';
-  const stationLatitude = parseFloat(station?.latitude ?? '0');
-  const stationLongitude = parseFloat(station?.longitude ?? '0');
-  const forfaitName = format?.label ?? '-';
+function enrichEntry(entry: ApiRichEntry): ClientReservation | ClientQueueEntry {
+  const stationName = entry.station?.name ?? `#${entry.station_id.slice(0, 8)}`;
+  const stationAddress = entry.station ? `${entry.station.address}, ${entry.station.city}` : '';
+  const stationLatitude = entry.station?.latitude ? parseFloat(entry.station.latitude) : 0;
+  const stationLongitude = entry.station?.longitude ? parseFloat(entry.station.longitude) : 0;
+  const stationImageUrl = entry.station?.image_url ?? '';
+  const forfaitName = entry.vehicle_format?.label ?? '-';
   const totalPrice = parseFloat(entry.amount_paid ?? '0');
-  const duration = station?.stationConfig?.wash_duration_minutes ?? 30;
 
   const base = {
     stationId: entry.station_id,
     stationName,
     stationAddress,
-    stationImageUrl: '',
+    stationImageUrl,
     stationLatitude,
     stationLongitude,
     forfaitName,
     categoryLabel: '',
     extras: [] as string[],
+    ticketCode: entry.ticket_code,
   };
 
   if (entry.entry_type === 'reservation') {
-    const { date, timeSlot } = slot
-      ? slotToDateParts(slot.start_time)
+    const { date, timeSlot } = entry.slot_start_time
+      ? slotToDateParts(entry.slot_start_time)
       : { date: entry.created_at.split('T')[0], timeSlot: '00:00' };
+    /* duration: derive from slot when both timestamps are present, fall back to 30 min. */
+    const duration = (() => {
+      if (!entry.slot_start_time || !entry.slot_end_time) return 30;
+      const ms = new Date(entry.slot_end_time).getTime() - new Date(entry.slot_start_time).getTime();
+      return Math.max(1, Math.round(ms / 60_000));
+    })();
     return {
       id: entry.id,
       ...base,
       date,
       timeSlot,
+      slotStart: entry.slot_start_time,
       duration,
       totalPrice,
       status: entry.status as ReservationStatus,
       createdAt: entry.created_at,
-      freeCancellationMinutes: station?.free_cancellation_minutes ?? 60,
+      freeCancellationMinutes: entry.station?.free_cancellation_minutes ?? 60,
     };
   }
 
@@ -153,7 +168,7 @@ function enrichEntry(entry: ApiEntry, stationsMap: Map<string, ApiStation>): Cli
     id: entry.id,
     ...base,
     position: entry.queue_position ?? 1,
-    estimatedWaitMinutes: 0,
+    estimatedWaitMinutes: entry.estimated_wait_minutes ?? 0,
     totalPrice,
     status: (entry.status === 'in_progress' ? 'in_progress' : 'waiting') as QueueStatus,
     joinedAt: entry.created_at,
@@ -193,7 +208,9 @@ export default function ClientReservationsPage() {
       return;
     }
 
-    const [ok, data] = await getFromApi('/me/entries?per_page=50');
+    /* /me/entries returns rich entries with denormalised station, vehicle format
+     * and slot times - no N+1 fetch needed. */
+    const [ok, data] = await getFromApi('/me/entries?per_page=100');
     if (!mountedRef.current) return;
 
     if (!ok) {
@@ -203,46 +220,49 @@ export default function ClientReservationsPage() {
       return;
     }
 
-    const res = data as { data: { entries: ApiEntry[] } };
-    const entries: ApiEntry[] = res?.data?.entries ?? [];
-
-    /* Batch-fetch unique stations to enrich entries with name/address/formats/slots */
-    const stationIds = [...new Set(entries.map((e) => e.station_id))];
-    const stationResults = await Promise.all(
-      stationIds.map((id) => getFromApi(`/stations/${id}`)),
-    );
-    if (!mountedRef.current) return;
-
-    const stationsMap = new Map<string, ApiStation>();
-    stationIds.forEach((id, i) => {
-      const [stationOk, stationData] = stationResults[i];
-      if (stationOk && stationData) {
-        stationsMap.set(id, (stationData as { data: ApiStation }).data);
-      }
-    });
+    const res = data as { data: { entries: ApiRichEntry[] } };
+    const entries: ApiRichEntry[] = res?.data?.entries ?? [];
 
     const resArr: ClientReservation[] = [];
     const queueArr: ClientQueueEntry[] = [];
     for (const entry of entries) {
-      const enriched = enrichEntry(entry, stationsMap);
+      const enriched = enrichEntry(entry);
       if (entry.entry_type === 'reservation') resArr.push(enriched as ClientReservation);
       else queueArr.push(enriched as ClientQueueEntry);
     }
     setReservations(resArr);
     setQueueEntries(queueArr);
     setLoading(false);
-  }, []);
+  }, [error, t]);
 
   useEffect(() => {
     if (!authLoading) loadEntries();
   }, [authLoading, loadEntries]);
 
+  /* Sectioning by time, not by status:
+   *  - upcoming: slot is in the future AND status is not terminal (cancelled / completed)
+   *  - past:     status is cancelled / completed OR slot has passed
+   * Sort upcoming by slot ASC (next first) and past by slot DESC (most recent first). */
   const upcoming = useMemo(
-    () => reservations.filter((r) => r.status === 'confirmed' || r.status === 'in_progress' || r.status === 'pending'),
+    () =>
+      [...reservations]
+        .filter((r) => !isPastReservation(r))
+        .sort((a, b) => {
+          const ta = a.slotStart ? new Date(a.slotStart).getTime() : Infinity;
+          const tb = b.slotStart ? new Date(b.slotStart).getTime() : Infinity;
+          return ta - tb;
+        }),
     [reservations],
   );
   const past = useMemo(
-    () => reservations.filter((r) => r.status === 'completed' || r.status === 'cancelled'),
+    () =>
+      [...reservations]
+        .filter(isPastReservation)
+        .sort((a, b) => {
+          const ta = a.slotStart ? new Date(a.slotStart).getTime() : new Date(a.createdAt).getTime();
+          const tb = b.slotStart ? new Date(b.slotStart).getTime() : new Date(b.createdAt).getTime();
+          return tb - ta;
+        }),
     [reservations],
   );
   /* First completed reservation without a rating - used to show the rating prompt */
@@ -365,7 +385,7 @@ export default function ClientReservationsPage() {
             >
               {t(`tab_${key}`)}
               <span className="ml-1.5 text-[12px] font-semibold opacity-70">
-                ({key === 'reservations' ? upcoming.length : queueEntries.length})
+                ({key === 'reservations' ? reservations.length : queueEntries.length})
               </span>
             </button>
           ))}
@@ -380,6 +400,7 @@ export default function ClientReservationsPage() {
               <section>
                 <h2 className="text-[15px] font-black text-[#555] dark:text-[#B0B0A0] uppercase tracking-widest mb-3">
                   {t('upcoming')}
+                  <span className="ml-2 text-[12px] font-semibold opacity-70">({upcoming.length})</span>
                 </h2>
                 <div className="space-y-3">
                   {upcoming.map((res) => (
@@ -388,7 +409,12 @@ export default function ClientReservationsPage() {
                       reservation={res}
                       t={t}
                       locale={locale}
-                      onCancel={res.status === 'confirmed' ? () => setCancelTarget(res) : undefined}
+                      variant="upcoming"
+                      onCancel={
+                        res.status === 'confirmed' || res.status === 'pending'
+                          ? () => setCancelTarget(res)
+                          : undefined
+                      }
                     />
                   ))}
                 </div>
@@ -399,10 +425,17 @@ export default function ClientReservationsPage() {
               <section>
                 <h2 className="text-[15px] font-black text-[#555] dark:text-[#B0B0A0] uppercase tracking-widest mb-3">
                   {t('past')}
+                  <span className="ml-2 text-[12px] font-semibold opacity-70">({past.length})</span>
                 </h2>
                 <div className="space-y-3">
                   {past.map((res) => (
-                    <ReservationCard key={res.id} reservation={res} t={t} locale={locale} />
+                    <ReservationCard
+                      key={res.id}
+                      reservation={res}
+                      t={t}
+                      locale={locale}
+                      variant="past"
+                    />
                   ))}
                 </div>
               </section>
@@ -460,11 +493,13 @@ function ReservationCard({
   reservation: r,
   t,
   locale,
+  variant,
   onCancel,
 }: {
   reservation: ClientReservation;
   t: ReturnType<typeof useTranslations>;
   locale: string;
+  variant: 'upcoming' | 'past';
   onCancel?: () => void;
 }) {
   const dateObj   = new Date(`${r.date}T${r.timeSlot}`);
@@ -481,13 +516,28 @@ function ReservationCard({
     pending_payment: 'bg-[#999]/15 text-[#888]',
   };
 
+  /* Upcoming actions are hidden once the entry is in_progress (only the
+   * station can act on it from that point). Cancellation surfaces only when
+   * `onCancel` is provided (status confirmed/pending and not yet started). */
+  const canReschedule = variant === 'upcoming' && (r.status === 'confirmed' || r.status === 'pending');
+  const canSignalDelay = variant === 'upcoming' && r.status === 'confirmed';
+
+  const showActions =
+    variant === 'upcoming'
+      ? onCancel || canReschedule || canSignalDelay
+      : r.status === 'completed';
+
   return (
     <div className="bg-[#E8E8D8] dark:bg-dark-card rounded-xl border border-[#D0D0C0] dark:border-tab-inactive overflow-hidden hover:border-gold/30 transition-colors">
       <Link href={`/client/reservations/${r.id}`} className="block p-4">
         <div className="flex gap-3">
-          <div className="w-16 h-16 rounded-lg overflow-hidden shrink-0 bg-[#D0D0C0] dark:bg-tab-inactive">
-            {r.stationImageUrl && (
+          <div className="w-16 h-16 rounded-lg overflow-hidden shrink-0 bg-[#D0D0C0] dark:bg-tab-inactive flex items-center justify-center">
+            {r.stationImageUrl ? (
               <img src={r.stationImageUrl} alt={r.stationName} className="w-full h-full object-cover" />
+            ) : (
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#9A9A8A" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                <path d="M3 17l2-7h14l2 7" /><path d="M5 17v2h2v-2M17 17v2h2v-2" /><circle cx="7.5" cy="17" r="1.5" fill="#9A9A8A" /><circle cx="16.5" cy="17" r="1.5" fill="#9A9A8A" />
+              </svg>
             )}
           </div>
 
@@ -501,7 +551,7 @@ function ReservationCard({
               </span>
             </div>
 
-            <p className="text-[13px] text-[#666] dark:text-[#B0B0A0] mt-0.5">
+            <p className="text-[13px] text-[#666] dark:text-[#B0B0A0] mt-0.5 truncate">
               {r.forfaitName}
             </p>
 
@@ -516,12 +566,38 @@ function ReservationCard({
               </span>
               <span className="ml-auto font-bold text-gold">{r.totalPrice.toFixed(2)}$</span>
             </div>
+
+            {/* Service code reminder for upcoming entries */}
+            {variant === 'upcoming' && r.ticketCode && (
+              <div className="mt-2 inline-flex items-center gap-1.5 px-2 py-0.5 rounded-md bg-gold/10 border border-gold/30 text-[11px] font-bold text-gold">
+                <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                  <rect x="3" y="11" width="18" height="11" rx="2" /><path d="M7 11V7a5 5 0 0110 0v4" />
+                </svg>
+                <span className="font-mono tracking-[2px]">{r.ticketCode}</span>
+              </div>
+            )}
           </div>
         </div>
       </Link>
 
-      {(onCancel || r.status === 'completed') && (
-        <div className="px-4 pb-3 pt-2 border-t border-[#D0D0C0] dark:border-tab-inactive flex items-center gap-4">
+      {showActions && (
+        <div className="px-4 pb-3 pt-2 border-t border-[#D0D0C0] dark:border-tab-inactive flex flex-wrap items-center gap-x-4 gap-y-1.5">
+          {canReschedule && (
+            <Link
+              href={`/client/reservations/${r.id}/reschedule`}
+              className="text-[13px] font-semibold text-gold hover:opacity-75 transition-opacity"
+            >
+              {t('reschedule_btn')}
+            </Link>
+          )}
+          {canSignalDelay && (
+            <Link
+              href={`/client/reservations/${r.id}/signal-delay`}
+              className="text-[13px] font-semibold text-[#666] dark:text-[#B0B0A0] hover:text-gold transition-colors"
+            >
+              {t('signal_delay_btn')}
+            </Link>
+          )}
           {onCancel && (
             <button
               type="button"
@@ -531,7 +607,7 @@ function ReservationCard({
               {t('cancel_reservation')}
             </button>
           )}
-          {r.status === 'completed' && (
+          {variant === 'past' && r.status === 'completed' && (
             <>
               <Link
                 href={`/client/reservations/${r.id}/rate`}
@@ -541,7 +617,7 @@ function ReservationCard({
               </Link>
               <Link
                 href={`/client/reservations/${r.id}/tip`}
-                className="text-[13px] font-semibold text-[#666] dark:text-[#B0B0A0] hover:text-gold hover:opacity-75 transition-colors"
+                className="text-[13px] font-semibold text-[#666] dark:text-[#B0B0A0] hover:text-gold transition-colors"
               >
                 {t('tip_btn')}
               </Link>
@@ -603,7 +679,7 @@ function CancelModal({
     };
   }, []);
 
-  const showFeesWarning = isWithinFreeWindow(r.date, r.timeSlot, r.freeCancellationMinutes);
+  const showFeesWarning = isWithinFreeWindow(r.slotStart, r.freeCancellationMinutes);
   const dateLabel = new Date(`${r.date}T${r.timeSlot}`).toLocaleDateString(
     locale === 'en' ? 'en-CA' : 'fr-CA',
     { weekday: 'short', day: 'numeric', month: 'short' },

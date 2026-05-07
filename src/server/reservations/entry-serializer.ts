@@ -22,7 +22,7 @@ export function serializeEntry(entry: Entry) {
   };
 }
 
-/** Client-facing rich entry shape: denormalized station, vehicle format, and computed flags. */
+/** Client-facing rich entry shape: denormalized station, vehicle format, slot times, and computed flags. */
 export function serializeRichEntry(entry: RichEntry) {
   return {
     id: entry.id,
@@ -42,6 +42,8 @@ export function serializeRichEntry(entry: RichEntry) {
     is_rated: entry.is_rated,
     is_tipped: entry.is_tipped,
     estimated_wait_minutes: entry.estimated_wait_minutes,
+    slot_start_time: entry.slot_start_time?.toISOString() ?? null,
+    slot_end_time: entry.slot_end_time?.toISOString() ?? null,
   };
 }
 
