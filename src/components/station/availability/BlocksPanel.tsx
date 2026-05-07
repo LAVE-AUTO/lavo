@@ -90,7 +90,7 @@ export function BlocksPanel({ blocks, onDelete, onEdit, onCreateClick }: Props) 
                     type="button"
                     onClick={() => onDelete(block.id)}
                     className="cursor-pointer rounded-lg border border-[#FF2525] bg-transparent px-2.5 py-1 text-[10px] font-bold text-[#FF2525] transition-colors hover:bg-[#FF2525]/10"
-                    aria-label={`${t('availability_block_delete')} — ${formatDates(block.dates)}`}
+                    aria-label={`${t('availability_block_delete')} - ${formatDates(block.dates)}`}
                   >
                     {t('availability_block_delete')}
                   </button>
@@ -98,7 +98,7 @@ export function BlocksPanel({ blocks, onDelete, onEdit, onCreateClick }: Props) 
                     type="button"
                     onClick={() => onEdit(block)}
                     className="cursor-pointer rounded-lg bg-[#C49A1E] px-2.5 py-1 text-[10px] font-bold text-[#1A1A0A] transition-colors hover:bg-[#A07818]"
-                    aria-label={`${t('availability_block_edit')} — ${formatDates(block.dates)}`}
+                    aria-label={`${t('availability_block_edit')} - ${formatDates(block.dates)}`}
                   >
                     {t('availability_block_edit')}
                   </button>

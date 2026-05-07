@@ -84,13 +84,13 @@ export function StationConfigPage() {
   }, [searchParams]);
 
   const loadData = useCallback(async () => {
-    // /station/config and /station/me are independent — fetch in parallel
+    // /station/config and /station/me are independent - fetch in parallel
     const [[configOk, configData], [meOk, meData]] = await Promise.all([
       getFromApi('/station/config'),
       getFromApi('/station/me'),
     ]);
 
-    // Station not yet approved — all station API calls return 403 BUSINESS_NOT_APPROVED
+    // Station not yet approved - all station API calls return 403 BUSINESS_NOT_APPROVED
     if (!configOk && (configData as { code?: string }).code === 'BUSINESS_NOT_APPROVED') {
       setIsPendingApproval(true);
       setLoading(false);

@@ -1,4 +1,4 @@
-## LAVO — Reservations API (Postman Test Guide)
+## LAVO - Reservations API (Postman Test Guide)
 
 This guide complements the importable Postman collection:
 - `lavo/docs/postman_guides/reservations/lavo-reservations.postman_collection.json`
@@ -41,8 +41,8 @@ Auto-saved by the collection's test scripts (do not set manually):
 
 | Variable | Set by |
 |---|---|
-| `reservation_id` | "Creer reservation — succes (201)" and "Replanifier reservation — succes (201)" |
-| `stripe_client_secret` | "Creer reservation — succes (201)" |
+| `reservation_id` | "Creer reservation - succes (201)" and "Replanifier reservation - succes (201)" |
+| `stripe_client_secret` | "Creer reservation - succes (201)" |
 
 The `entry_id` variable (already present in the shared environment) must be set manually from a `GET /api/v1/me/entries` response when testing the queue-cancellation and station-management groups.
 
@@ -53,7 +53,7 @@ The `entry_id` variable (already present in the shared environment) must be set 
 1. Open Postman and select **Import** from the top-left menu.
 2. Drop `lavo-reservations.postman_collection.json` into the import dialog and confirm.
 3. Select **Environments** in the left sidebar, then import `lavo.local.postman_environment.json`.
-4. Select the **LAVO — Local** environment from the environment dropdown (top-right of Postman).
+4. Select the **LAVO - Local** environment from the environment dropdown (top-right of Postman).
 5. Fill in `access_token`, `station_id`, `time_slot_id`, and `vehicle_format_id` before running the first group.
 
 ---
@@ -78,9 +78,9 @@ Run the groups in the order listed below. Several groups depend on `reservation_
 }
 ```
 
-**What to run first — the happy path:**
+**What to run first - the happy path:**
 
-- **Creer reservation — succes (201):** creates the reservation. The test script automatically saves `reservation_id` and `stripe_client_secret` to the environment. The returned status is `pending_payment`; the reservation becomes `confirmed` only after the Stripe webhook fires (see section 10).
+- **Creer reservation - succes (201):** creates the reservation. The test script automatically saves `reservation_id` and `stripe_client_secret` to the environment. The returned status is `pending_payment`; the reservation becomes `confirmed` only after the Stripe webhook fires (see section 10).
 
 Run the error cases after the happy path (they reuse the same variables but do not modify `reservation_id`):
 
@@ -88,9 +88,9 @@ Run the error cases after the happy path (they reuse the same variables but do n
 |---|---|---|
 | Creneau plein (409 SLOT_FULL) | `409` `SLOT_FULL` | Use a `time_slot_id` that is already at full capacity |
 | Doublon actif (409 ACTIVE_RESERVATION_EXISTS) | `409` `ACTIVE_RESERVATION_EXISTS` | Re-run with the same user while a reservation is already active at this station |
-| Station inexistante (404) | `404` | Hard-coded nil UUID in the URL — no setup needed |
+| Station inexistante (404) | `404` | Hard-coded nil UUID in the URL - no setup needed |
 | Body invalide (400) | `400` `VALIDATION_FAILED` | Body sends `"not-a-uuid"` for `time_slot_id` |
-| Non authentifie (401) | `401` | Request uses `noauth` — no token sent |
+| Non authentifie (401) | `401` | Request uses `noauth` - no token sent |
 
 > **Stripe note:** the reservation remains in `pending_payment` until the client confirms the payment on the frontend (or until you forward the webhook event with the Stripe CLI). To progress through later groups, trigger the `payment_intent.amount_capturable_updated` webhook first so the reservation moves to `confirmed`.
 
@@ -110,14 +110,14 @@ Lists all entries (reservations and queue) for the authenticated client, ordered
 | Filtre par statut (200) | `?status=confirmed` | Every entry in the response has `status: "confirmed"` |
 | Pagination (200) | `?page=2&per_page=5` | Response has `page: 2` and `per_page: 5` |
 | Filtre par periode (200) | `?from=2026-03-01T00:00:00Z&to=2026-03-31T23:59:59Z` | Entries fall within the given range |
-| Non authentifie (401) | — | `401` returned, request uses `noauth` |
+| Non authentifie (401) | - | `401` returned, request uses `noauth` |
 
 **Available filter params:**
 
-- `status` — one of: `pending_payment`, `confirmed`, `in_progress`, `completed`, `cancelled`
-- `from` / `to` — ISO 8601 datetime strings
-- `page` — default `1`
-- `per_page` — default `20`, max `100`
+- `status` - one of: `pending_payment`, `confirmed`, `in_progress`, `completed`, `cancelled`
+- `from` / `to` - ISO 8601 datetime strings
+- `page` - default `1`
+- `per_page` - default `20`, max `100`
 
 > **Tip:** copy an `entry_id` from this list response and paste it into the `entry_id` environment variable before running the "Annulation entree" or "Gestion station" groups.
 
@@ -136,8 +136,8 @@ Lists all entries for the authenticated station, ordered: reservations by slot t
 | Sans filtre (200) | none | Response has `entries`, `total`, `page`, `per_page` fields |
 | Filtre par statut (200) | `?status=confirmed` | Every entry has `status: "confirmed"` |
 | Pagination (200) | `?page=1&per_page=10` | Response reflects the requested page and page size |
-| Non authentifie (401) | — | `401` returned |
-| Pas de station associee (404) | — | Token is valid but the user has no station linked — `404` with a message matching `/no station associated/i` |
+| Non authentifie (401) | - | `401` returned |
+| Pas de station associee (404) | - | Token is valid but the user has no station linked - `404` with a message matching `/no station associated/i` |
 
 The same filter params as section 2 apply here (`status`, `from`, `to`, `page`, `per_page`).
 
@@ -151,7 +151,7 @@ The same filter params as section 2 apply here (`status`, `from`, `to`, `page`, 
 
 **Prerequisite:** `reservation_id` must reference a `confirmed` reservation. Run the creation group first and trigger the Stripe webhook to confirm the reservation.
 
-**Cancellation policy (configurable in DB — `settings` table, type `admin`):**
+**Cancellation policy (configurable in DB - `settings` table, type `admin`):**
 
 | Setting key | Default |
 |---|---|
@@ -172,7 +172,7 @@ The same filter params as section 2 apply here (`status`, `from`, `to`, `page`, 
 |---|---|---|---|
 | Sans penalite (200) | `{ "reason": "Plans changed" }` | Slot is more than 60 min away | `penalty_amount: 0`, `is_late_cancellation: false`, `refunded_amount > 0`, `entry.status: "cancelled"` |
 | Avec penalite 20% (200) | `{ "reason": "Emergency" }` | Slot is less than 60 min away | `is_late_cancellation: true`, `penalty_amount > 0`, `refunded_amount < entry.amount_paid` |
-| Sans raison (200) | `{}` | Any cancellable reservation | `entry.status: "cancelled"` — `reason` field is optional |
+| Sans raison (200) | `{}` | Any cancellable reservation | `entry.status: "cancelled"` - `reason` field is optional |
 | Deja annulee (409) | `{}` | Run cancel a second time on the same reservation | `409` `CONFLICT` |
 | Inexistante (404) | `{}` | Hard-coded nil UUID in the URL | `404` |
 | Non authentifie (401) | `{}` | `noauth` | `401` |
@@ -217,7 +217,7 @@ confirmed → cancelled
 | Request | Body | What to verify |
 |---|---|---|
 | Marquer in_progress (200) | `{ "status": "in_progress" }` | `data.status: "in_progress"` |
-| Marquer completed (200) | `{ "status": "completed" }` | `data.status: "completed"` — triggers `invitation_to_rate` notification to the client and Stripe capture |
+| Marquer completed (200) | `{ "status": "completed" }` | `data.status: "completed"` - triggers `invitation_to_rate` notification to the client and Stripe capture |
 
 > Run "Marquer in_progress" before "Marquer completed". The `entry_id` must reference an entry belonging to the authenticated station. Set it from `GET /api/v1/station/entries` (section 3) or from the client flow.
 
@@ -237,7 +237,7 @@ The client calls this endpoint to signal arrival before the service window expir
 |---|---|---|
 | Succes (200) | `data.entry.client_confirmed: true` | Reservation is `confirmed` and window has not expired |
 | Deja confirme (409) | `409` | Call the same endpoint a second time |
-| Non autorise (403 ou 404) | `403` or `404` | Hard-coded nil UUID — reservation not found or does not belong to the client |
+| Non autorise (403 ou 404) | `403` or `404` | Hard-coded nil UUID - reservation not found or does not belong to the client |
 
 ---
 
@@ -257,7 +257,7 @@ The delay flow involves two roles: the client signals first, the station then ac
 |---|---|---|---|
 | Succes (201) | `{ "message": "Je serai en retard d'environ 15 minutes." }` | `delay_request.status: "pending"` | Creates the delay request and notifies the station |
 | Sans message (201) | `{}` | `delay_request.status: "pending"` | `message` field is optional |
-| Demande deja active (409) | `{ "message": "..." }` | `409` `CONFLICT` | A pending request already exists — only one pending request per reservation |
+| Demande deja active (409) | `{ "message": "..." }` | `409` `CONFLICT` | A pending request already exists - only one pending request per reservation |
 | Body invalide (400) | `{ "message": 12345 }` | `400` `VALIDATION_FAILED` | `message` must be a string |
 | Reservation introuvable (404) | `{}` | `404` | Hard-coded nil UUID |
 | Non authentifie (401) | `{}` | `401` | `noauth` |
@@ -268,7 +268,7 @@ The delay flow involves two roles: the client signals first, the station then ac
 
 **Prerequisite:** a pending delay request must exist on the reservation (run section 8.1 first).
 
-**Accept — `POST /api/v1/reservations/{{reservation_id}}/accept-delay`:**
+**Accept - `POST /api/v1/reservations/{{reservation_id}}/accept-delay`:**
 
 | Request | Expected | Notes |
 |---|---|---|
@@ -277,15 +277,15 @@ The delay flow involves two roles: the client signals first, the station then ac
 | Reservation introuvable (404) | `404` | Hard-coded nil UUID |
 | Non authentifie (401) | `401` | `noauth` |
 
-**Refuse — `POST /api/v1/reservations/{{reservation_id}}/refuse-delay`:**
+**Refuse - `POST /api/v1/reservations/{{reservation_id}}/refuse-delay`:**
 
 | Request | Body | Expected | Notes |
 |---|---|---|---|
 | Succes (200) | `{ "refusal_reason": "Nous ne pouvons pas accommoder ce retard." }` | `delay_request.status: "refused"`, `refusal_reason` present | Station refuses and optionally gives a reason |
 | Sans raison (200) | `{}` | `delay_request.status: "refused"` | `refusal_reason` is optional, max 500 chars |
-| Aucune demande en attente (409) | — | `409` `CONFLICT` | No pending request exists |
-| Reservation introuvable (404) | — | `404` | Hard-coded nil UUID |
-| Non authentifie (401) | — | `401` | `noauth` |
+| Aucune demande en attente (409) | - | `409` `CONFLICT` | No pending request exists |
+| Reservation introuvable (404) | - | `404` | Hard-coded nil UUID |
+| Non authentifie (401) | - | `401` | `noauth` |
 
 > You can only accept or refuse once per pending request. Run accept first; then to test the 409 case for accept, simply call accept again on the same (now resolved) request.
 
@@ -336,8 +336,8 @@ The collection includes two event types and one negative test:
 | Request | Event type | Expected | Effect |
 |---|---|---|---|
 | payment_intent.amount_capturable_updated | `payment_intent.amount_capturable_updated` | `200` if signature valid, `400` if not | Reservation moves from `pending_payment` to `confirmed` |
-| payment_intent.succeeded (no-op) | `payment_intent.succeeded` | `200` if signature valid, `400` if not | Informational only — funds distributed by Stripe, no action on our side |
-| Signature manquante (400) | any | `400` — error message matches `/signature/i` | `stripe-signature` header absent |
+| payment_intent.succeeded (no-op) | `payment_intent.succeeded` | `200` if signature valid, `400` if not | Informational only - funds distributed by Stripe, no action on our side |
+| Signature manquante (400) | any | `400` - error message matches `/signature/i` | `stripe-signature` header absent |
 
 **Payment flow with `capture_method: manual`:**
 
@@ -373,14 +373,14 @@ The table below summarises which groups depend on a previous step.
 
 | Group | Depends on |
 |---|---|
-| Consultation Utilisateur | None — works independently |
-| Consultation Station | None — requires station JWT |
+| Consultation Utilisateur | None - works independently |
+| Consultation Station | None - requires station JWT |
 | Annulation reservation | Reservation must be `confirmed` (creation + Stripe webhook) |
 | Annulation entree | An existing queue entry or `pending_payment` reservation; `entry_id` set manually |
 | Gestion station | Entry must exist for the station; `entry_id` set from station entries list |
 | Confirmation de presence | Reservation must be `confirmed` |
-| Signalisation de retard — client | Reservation must be `confirmed` |
-| Gestion retard — station | Client must have signalled first (pending delay request exists) |
+| Signalisation de retard - client | Reservation must be `confirmed` |
+| Gestion retard - station | Client must have signalled first (pending delay request exists) |
 | Replanification | Reservation must be `confirmed`; `new_time_slot_id` set manually |
 | Webhook Stripe | Stripe CLI must be running with a valid `STRIPE_WEBHOOK_SECRET` |
 

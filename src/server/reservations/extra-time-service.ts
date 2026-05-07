@@ -37,7 +37,7 @@ type AffectedEntry = { id: string; user_id: string; station_id: string };
 /**
  * Upper bound on extra time per request. A single overrun should not exceed a full working day;
  * larger values almost certainly indicate a bug or malicious payload. 480 minutes (8 hours) is
- * a conservative ceiling — higher than any legitimate wash service, lower than the 24h day that
+ * a conservative ceiling - higher than any legitimate wash service, lower than the 24h day that
  * would otherwise allow SQL interval math to flip dates or cascade-shift slots off the schedule.
  */
 const MAX_EXTRA_MINUTES = 480;
@@ -90,7 +90,7 @@ export type ExtraTimeResult = {
  * the delay to all subsequent slots on the same station day.
  *
  * Only reservations with status 'in_progress' are accepted. A reservation in
- * 'confirmed' status has not started yet — overtime cannot be declared on it.
+ * 'confirmed' status has not started yet - overtime cannot be declared on it.
  *
  * Clients on slots that remain within station hours receive a standard delay notification.
  * Clients on slots that now start at or after closing time receive a station-fault alert

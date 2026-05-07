@@ -1,5 +1,5 @@
 /**
- * Unit tests for reservation-service: cancelEntry — queue cancellation path (mocked deps).
+ * Unit tests for reservation-service: cancelEntry - queue cancellation path (mocked deps).
  * Covers the queue cancellation branch added in refactor/gestion-retard.
  */
 const mockFindEntryByIdAndUser = jest.fn();
@@ -127,7 +127,7 @@ beforeEach(() => {
   mockShiftQueuePositions.mockResolvedValue(undefined);
 });
 
-describe('cancelEntry — queue cancellation path', () => {
+describe('cancelEntry - queue cancellation path', () => {
   describe('confirmed queue entry with stripe_payment_id', () => {
     it('applies cancellation fees: captures PI, issues partial refund, distributes penalty', async () => {
       const entry = makeQueueEntry();
@@ -190,7 +190,7 @@ describe('cancelEntry — queue cancellation path', () => {
   });
 
   describe('in_progress queue entry', () => {
-    it('falls through to simple cancellation path — does not apply fees', async () => {
+    it('falls through to simple cancellation path - does not apply fees', async () => {
       // A queue entry in in_progress is already being served. Clients cannot
       // trigger the fee-bearing capture/refund path for an entry already at the
       // station; it should fall through to the simple (no-Stripe) cancel branch.

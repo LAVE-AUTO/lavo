@@ -78,7 +78,7 @@ export function AdminPromoQr({ stationId, stationName }: Props) {
       a.href = dataUrl;
       a.download = `qr-promo-${sanitizeFilename(stationName)}.png`;
       a.click();
-    } catch { /* silently ignore — user stays on the page */ }
+    } catch { /* silently ignore - user stays on the page */ }
   }
 
   async function printPdf() {
@@ -92,7 +92,7 @@ export function AdminPromoQr({ stationId, stationName }: Props) {
       const doc = new jsPDF({ orientation: 'portrait', unit: 'mm', format: [100, 100] });
       doc.addImage(dataUrl, 'PNG', 10, 10, 80, 80);
       doc.save(`qr-promo-${sanitizeFilename(stationName)}.pdf`);
-    } catch { /* silently ignore — user stays on the page */ }
+    } catch { /* silently ignore - user stays on the page */ }
   }
 
   const inputBase = 'w-full rounded-lg border bg-transparent px-3 py-2 text-[13px] text-[#1A1A0A] outline-none transition-all dark:text-[#F0EDD4] border-[#D8D4C8] focus:border-[#C49A1E] focus:shadow-[0_0_0_3px_rgba(196,154,30,0.10)] dark:border-[#243020] dark:focus:border-[#C49A1E]';
@@ -100,7 +100,7 @@ export function AdminPromoQr({ stationId, stationName }: Props) {
   return (
     <div className="rounded-2xl bg-white p-6 shadow-sm ring-1 ring-black/[0.04] dark:bg-[#1A2416] dark:ring-white/[0.06]">
 
-      {/* Preview-only warning — QR is not functional until the API endpoint is connected */}
+      {/* Preview-only warning - QR is not functional until the API endpoint is connected */}
       <div className="mb-5 flex items-start gap-2 rounded-xl border border-orange-200 bg-orange-50 px-4 py-3 dark:border-orange-900/40 dark:bg-orange-950/20">
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#F97316" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="mt-0.5 shrink-0" aria-hidden="true">
           <path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z" /><line x1="12" y1="9" x2="12" y2="13" /><line x1="12" y1="17" x2="12.01" y2="17" />

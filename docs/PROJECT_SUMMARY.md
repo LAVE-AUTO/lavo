@@ -1,4 +1,4 @@
-# LAVO — Project Summary (Phase 1)
+# LAVO - Project Summary (Phase 1)
 
 ## Project purpose
 

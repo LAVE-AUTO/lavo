@@ -108,7 +108,7 @@ export function AdminStationsManagement({ stations, loading, error, query, onAct
               <p className="truncate text-[12px] text-[#BBBBAA] dark:text-[#A0A090]">{formatDate(station.created_at)}</p>
             </div>
 
-            <p className="truncate text-[13px] text-[#777] dark:text-[#9A9A8A]">{station.city ?? '—'}</p>
+            <p className="truncate text-[13px] text-[#777] dark:text-[#9A9A8A]">{station.city ?? '-'}</p>
 
             {s ? (
               <span className={`inline-flex w-fit items-center gap-1.5 rounded-full px-2.5 py-1 text-[12px] font-semibold ${s.badge}`}>

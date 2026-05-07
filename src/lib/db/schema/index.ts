@@ -36,6 +36,13 @@ import { timeSlots } from "./slots";
 import { favorites } from "./favorites";
 import { stationHours, stationHourExceptions } from "./station-hours";
 import { userNotifications } from "./user-notifications";
+import {
+  stationServices,
+  serviceVehicleEntries,
+  stationExtras,
+  extraVehicleEntries,
+  serviceExtraCompatibility,
+} from "./services";
 
 
 // %%%%% END - Imports %%%%%
@@ -63,12 +70,13 @@ export * from "./device-tokens";
 export * from "./favorites";
 export * from "./station-hours";
 export * from "./user-notifications";
+export * from "./services";
 
 
 // %%%%% END - Re-exports %%%%%
 
 
-// %%%%% Relations — users & auth %%%%%
+// %%%%% Relations - users & auth %%%%%
 
 export const usersRelations = relations(users, ({ one, many }) => ({
   station: one(stations, {
@@ -118,10 +126,10 @@ export const deviceTokensRelations = relations(deviceTokens, ({ one }) => ({
 }));
 
 
-// %%%%% END - Relations — users & auth %%%%%
+// %%%%% END - Relations - users & auth %%%%%
 
 
-// %%%%% Relations — stations %%%%%
+// %%%%% Relations - stations %%%%%
 
 export const stationsRelations = relations(stations, ({ one, many }) => ({
   manager: one(users, {
@@ -139,7 +147,6 @@ export const stationsRelations = relations(stations, ({ one, many }) => ({
   stationWashTypes: many(stationWashTypes),
   documents: many(stationDocuments),
   photos: many(stationPhotos),
-  vehicleFormats: many(vehicleFormats),
   timeSlots: many(timeSlots),
   reservations: many(reservations, { relationName: "stationReservations" }),
   ratings: many(ratings, { relationName: "stationRatings" }),
@@ -197,18 +204,13 @@ export const stationPostsRelations = relations(stationPosts, ({ one }) => ({
   }),
 }));
 
-export const vehicleFormatsRelations = relations(vehicleFormats, ({ one }) => ({
-  station: one(stations, {
-    fields: [vehicleFormats.station_id],
-    references: [stations.id],
-  }),
-}));
+export const vehicleFormatsRelations = relations(vehicleFormats, () => ({}));
 
 
-// %%%%% END - Relations — stations %%%%%
+// %%%%% END - Relations - stations %%%%%
 
 
-// %%%%% Relations — reservations & slots %%%%%
+// %%%%% Relations - reservations & slots %%%%%
 
 export const timeSlotsRelations = relations(timeSlots, ({ one, many }) => ({
   station: one(stations, {
@@ -271,10 +273,10 @@ export const ratingsRelations = relations(ratings, ({ one }) => ({
 }));
 
 
-// %%%%% END - Relations — reservations & slots %%%%%
+// %%%%% END - Relations - reservations & slots %%%%%
 
 
-// %%%%% Relations — notifications & commission %%%%%
+// %%%%% Relations - notifications & commission %%%%%
 
 export const notificationsRelations = relations(notifications, ({ one }) => ({
   user: one(users, {
@@ -302,10 +304,10 @@ export const commissionSettingsRelations = relations(
 );
 
 
-// %%%%% END - Relations — notifications & commission %%%%%
+// %%%%% END - Relations - notifications & commission %%%%%
 
 
-// %%%%% Relations — support %%%%%
+// %%%%% Relations - support %%%%%
 
 export const supportTicketsRelations = relations(supportTickets, ({ one, many }) => ({
   createdByUser: one(users, {
@@ -335,10 +337,10 @@ export const supportMessagesRelations = relations(supportMessages, ({ one }) => 
 }));
 
 
-// %%%%% END - Relations — support %%%%%
+// %%%%% END - Relations - support %%%%%
 
 
-// %%%%% Relations — reschedule, delay, tips & disputes %%%%%
+// %%%%% Relations - reschedule, delay, tips & disputes %%%%%
 
 export const rescheduleRequestsRelations = relations(rescheduleRequests, ({ one }) => ({
   originalReservation: one(reservations, {
@@ -413,10 +415,10 @@ export const disputesRelations = relations(disputes, ({ one }) => ({
 }));
 
 
-// %%%%% END - Relations — reschedule, delay, tips & disputes %%%%%
+// %%%%% END - Relations - reschedule, delay, tips & disputes %%%%%
 
 
-// %%%%% Relations — favorites, station hours & user notifications %%%%%
+// %%%%% Relations - favorites, station hours & user notifications %%%%%
 
 export const favoritesRelations = relations(favorites, ({ one }) => ({
   user: one(users, { fields: [favorites.user_id], references: [users.id] }),
@@ -436,4 +438,4 @@ export const userNotificationsRelations = relations(userNotifications, ({ one })
 }));
 
 
-// %%%%% END - Relations — favorites, station hours & user notifications %%%%%
+// %%%%% END - Relations - favorites, station hours & user notifications %%%%%

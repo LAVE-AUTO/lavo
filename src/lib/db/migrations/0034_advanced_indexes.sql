@@ -13,7 +13,7 @@
 --     migrations 0000 and 0033 respectively; BRIN duplicates on those columns are omitted because
 --     the planner will always prefer the existing B-tree and the BRIN would just waste storage.
 --
--- T10: Composite index for queue listing — supports the filtered, ordered scan used by
+-- T10: Composite index for queue listing - supports the filtered, ordered scan used by
 --      listQueueByStation (WHERE station_id, entry_type, status IN (...) ORDER BY queue_position).
 --      An INCLUDE clause cannot produce index-only scans for SELECT * queries, so it is
 --      omitted to avoid wasting index storage.

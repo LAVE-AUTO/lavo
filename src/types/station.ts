@@ -68,10 +68,52 @@ export interface ServiceExtra {
 
 /** Available time slot for booking */
 export interface TimeSlot {
-  id: string;         // UUID — sent as time_slot_id to POST /stations/:id/reservations
-  date: string;       // YYYY-MM-DD (local time) — used to filter slots by selected date
-  time: string;       // HH:MM (local time) — displayed in the grid
+  id: string;         // UUID - sent as time_slot_id to POST /stations/:id/reservations
+  date: string;       // YYYY-MM-DD (local time) - used to filter slots by selected date
+  time: string;       // HH:MM (local time) - displayed in the grid
   available: boolean;
+}
+
+// ─── Station services (new booking flow) ────────────────────────────────────
+
+/** A vehicle entry within a station service (one row per format for hand_wash, one row for others) */
+export interface StationServiceEntry {
+  id: string;                    // service_vehicle_entries.id
+  vehicleFormatId: string | null; // null for non-hand_wash services
+  formatLabel: string;            // display label (format name or package name)
+  price: number;
+  duration: number;               // minutes
+}
+
+/** An extra available for a specific service */
+export interface StationServiceExtra {
+  id: string;
+  name: string;     // from station_extras.label
+  scope: string;    // exterior | interior | both
+  price: number;
+  duration: number; // minutes
+}
+
+/** A station service as returned by GET /stations/:id */
+export interface StationServicePublic {
+  id: string;
+  name: string;
+  category: string;   // hand_wash | automatic_wash | self_service | …
+  serviceType: string;
+  description: string | null;
+  isPopular: boolean;
+  vehicleEntries: StationServiceEntry[];
+  extras: StationServiceExtra[];
+}
+
+/** Raw station config exposed for time validation in the booking flow */
+export interface StationConfigPublic {
+  openingTime: string;        // "HH:MM:SS"
+  closingTime: string;        // "HH:MM:SS"
+  washDurationMinutes: number;
+  washPostCount: number;
+  /** Extra amount charged on top of service price for slot reservations (queue = no surcharge). */
+  reservationSurcharge: number | null;
 }
 
 /**
@@ -85,4 +127,9 @@ export interface StationDetailData extends Station {
   timeSlots: TimeSlot[];
   queueCount: number;
   estimatedWaitMinutes: number;
+  /** Real services configured by the station (new booking flow). */
+  stationServices: StationServicePublic[];
+  stationConfig: StationConfigPublic | null;
+  /** Public photos for the station detail hero carousel. */
+  photos?: string[];
 }

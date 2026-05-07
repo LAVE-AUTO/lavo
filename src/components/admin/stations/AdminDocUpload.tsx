@@ -72,7 +72,7 @@ export function AdminDocUpload({ label, hint, required, value, onChange, error }
       <p className="mb-1.5 text-[13px] font-bold text-[#555] dark:text-[#9A9A8A]">
         {label}
         {required && <span className="ml-0.5 text-[#C49A1E]">*</span>}
-        {hint && <span className="ml-1 font-normal text-[#888] dark:text-[#9A9A8A]">— {hint}</span>}
+        {hint && <span className="ml-1 font-normal text-[#888] dark:text-[#9A9A8A]">- {hint}</span>}
       </p>
 
       {value ? (

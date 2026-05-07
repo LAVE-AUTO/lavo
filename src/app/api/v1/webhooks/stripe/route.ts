@@ -1,5 +1,5 @@
 /**
- * POST `/api/v1/webhooks/stripe` — signature verification, then idempotent handlers.
+ * POST `/api/v1/webhooks/stripe` - signature verification, then idempotent handlers.
  * Manual capture: authorize → confirm entry → capture on completion → `succeeded` (push + success email).
  * Events: `amount_capturable_updated`, `payment_failed` / `canceled`, `succeeded`, `transfer.created`.
  */
@@ -30,7 +30,7 @@ const STRIPE_ID_PATTERN = /^[a-zA-Z0-9_]+$/;
 const OPAQUE_ID_PATTERN = /^[a-zA-Z0-9_-]+$/;
 
 
-// %%%%% ROUTE — POST handler %%%%%
+// %%%%% ROUTE - POST handler %%%%%
 // Verifies Stripe signature; dispatches by event type; 500 only on infra errors (Stripe retries).
 
 export async function POST(request: Request): Promise<NextResponse> {
@@ -57,7 +57,7 @@ export async function POST(request: Request): Promise<NextResponse> {
 
   // On infrastructure errors (DB failures), return 500 so Stripe retries automatically.
   // Handlers are idempotent: they check entry status before acting, so retries are safe.
-  // Expected non-error cases (entry not found, wrong status) are handled with early returns — no throw.
+  // Expected non-error cases (entry not found, wrong status) are handled with early returns - no throw.
   try {
     switch (event.type) {
       case 'transfer.created':
@@ -120,10 +120,10 @@ export async function POST(request: Request): Promise<NextResponse> {
 }
 
 
-// %%%%% END - ROUTE — POST handler %%%%%
+// %%%%% END - ROUTE - POST handler %%%%%
 
 
-// %%%%% MODULE — ID sanitizers %%%%%
+// %%%%% MODULE - ID sanitizers %%%%%
 // Stripe and opaque IDs for logs and DB lookups.
 
 function sanitizeStripeId(value: unknown, expectedPrefix?: string): string | null {
@@ -143,10 +143,10 @@ function sanitizeOpaqueId(value: unknown): string | null {
 }
 
 
-// %%%%% END - MODULE — ID sanitizers %%%%%
+// %%%%% END - MODULE - ID sanitizers %%%%%
 
 
-// %%%%% HANDLER — transfer.created %%%%%
+// %%%%% HANDLER - transfer.created %%%%%
 // Maps transfer to reservation: metadata.reservation_id, else charge → payment_intent → entry.
 
 /** Persists `stripe_transfer_id` idempotently; logs and returns on missing mapping. */
@@ -210,10 +210,10 @@ async function handleTransferCreated(transfer: Stripe.Transfer | Record<string, 
 }
 
 
-// %%%%% END - HANDLER — transfer.created %%%%%
+// %%%%% END - HANDLER - transfer.created %%%%%
 
 
-// %%%%% HANDLER — payment_intent.succeeded %%%%%
+// %%%%% HANDLER - payment_intent.succeeded %%%%%
 // Idempotent: succeeded_at + notified_at; client push, success email, optional station/admin push.
 
 /** When entry is `completed`, notifies once and sends transactional success email. */
@@ -250,10 +250,10 @@ async function handlePaymentSucceeded(paymentIntentId: string, created: number |
 }
 
 
-// %%%%% END - HANDLER — payment_intent.succeeded %%%%%
+// %%%%% END - HANDLER - payment_intent.succeeded %%%%%
 
 
-// %%%%% HANDLER — payment_intent.amount_capturable_updated %%%%%
+// %%%%% HANDLER - payment_intent.amount_capturable_updated %%%%%
 // Confirms pending_payment entry after card authorization (funds held, not captured).
 
 /** Confirms reservation; push `reservation_confirmed`. */
@@ -281,10 +281,10 @@ async function handlePaymentAuthorized(paymentIntentId: string): Promise<void> {
 }
 
 
-// %%%%% END - HANDLER — payment_intent.amount_capturable_updated %%%%%
+// %%%%% END - HANDLER - payment_intent.amount_capturable_updated %%%%%
 
 
-// %%%%% HANDLER — payment_intent failed / canceled %%%%%
+// %%%%% HANDLER - payment_intent failed / canceled %%%%%
 // Cancels entry, decrements slot, push + failure email.
 
 /** Cancels eligible entry and notifies client (push + email). */
@@ -336,4 +336,4 @@ async function handlePaymentCancelled(paymentIntentId: string, reason: string): 
 }
 
 
-// %%%%% END - HANDLER — payment_intent failed / canceled %%%%%
+// %%%%% END - HANDLER - payment_intent failed / canceled %%%%%

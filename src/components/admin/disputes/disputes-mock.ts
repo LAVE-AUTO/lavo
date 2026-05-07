@@ -1,4 +1,4 @@
-// MOCK DATA — replace with API call before shipping (GET /admin/disputes)
+// MOCK DATA - replace with API call before shipping (GET /admin/disputes)
 
 export type DisputeStatus = 'open' | 'refunded_full' | 'refunded_partial' | 'closed';
 export type TimelineActor = 'client' | 'station' | 'admin';
@@ -33,7 +33,7 @@ export const MOCK_DISPUTES: DisputeRow[] = process.env.NODE_ENV === 'development
     client:  { name: 'Sophie Martin',   email: 'sophie.martin@gmail.com'   },
     station: { name: 'Wash Express MTL', city: 'Montréal' },
     reservation: { id: 'r1', date: '2026-03-10T14:00:00Z', amount_paid: 29.99, vehicle_format: 'Berline', status: 'cancelled' },
-    reason: 'Service non rendu — station fermée à l\'arrivée malgré la réservation confirmée.',
+    reason: 'Service non rendu - station fermée à l\'arrivée malgré la réservation confirmée.',
     status: 'open',
     created_at: '2026-03-11T09:12:00Z',
     events: [
@@ -47,7 +47,7 @@ export const MOCK_DISPUTES: DisputeRow[] = process.env.NODE_ENV === 'development
     client:  { name: 'Jean Tremblay',   email: 'jean.tremblay@outlook.com' },
     station: { name: 'AutoBrille Laval', city: 'Laval' },
     reservation: { id: 'r2', date: '2026-02-28T10:00:00Z', amount_paid: 44.50, vehicle_format: 'VUS', status: 'completed' },
-    reason: 'Lavage incomplet — intérieur non nettoyé contrairement au forfait choisi.',
+    reason: 'Lavage incomplet - intérieur non nettoyé contrairement au forfait choisi.',
     status: 'refunded_partial',
     created_at: '2026-03-01T11:00:00Z',
     events: [

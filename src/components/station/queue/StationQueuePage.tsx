@@ -1,7 +1,7 @@
 'use client';
 
 /**
- * StationQueuePage — STA-1
+ * StationQueuePage - STA-1
  * Queue interface for the station: shows in_progress entries + waiting entries
  * ordered by queue_position. Auto-polls every 30 s. Call / complete actions.
  */
@@ -223,7 +223,7 @@ export function StationQueuePage() {
               <section>
                 <SectionLabel label={t('section_waiting')} />
                 <div className="mt-2 flex flex-col gap-4 lg:flex-row">
-                  {/* First in line — big card */}
+                  {/* First in line - big card */}
                   <div className="lg:w-2/5 lg:shrink-0">
                     <QueueCard
                       entry={toQueueEntry(waitingEntries[0], 0, true)}

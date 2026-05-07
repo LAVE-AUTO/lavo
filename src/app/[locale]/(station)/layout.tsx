@@ -91,7 +91,7 @@ export default function StationLayout({ children }: { children: ReactNode }) {
         return;
       }
 
-      // Other non-fatal error — show shell
+      // Other non-fatal error - show shell
       setState({ kind: 'ok', name: '' });
     });
 

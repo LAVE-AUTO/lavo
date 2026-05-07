@@ -17,6 +17,9 @@ export interface StationExtra {
   description: string;
   price: string;
   is_active: boolean;
+  scope?: 'exterior' | 'interior' | 'both';
+  duration_min?: number;
+  staff_required?: number;
   /** Optional per-vehicle pricing. When absent, the flat `price` applies to all formats. */
   vehicle_entries?: ExtraVehicleEntry[];
 }
@@ -84,7 +87,7 @@ export function StationExtrasForm({ extras, onSaved }: Props) {
     setSaving(true);
     setFeedback(null);
 
-    // TODO: connect to API once endpoint is available — PATCH /station/extras does not exist yet
+    // TODO: connect to API once endpoint is available - PATCH /station/extras does not exist yet
     await new Promise((r) => setTimeout(r, 400));
     setSaving(false);
 

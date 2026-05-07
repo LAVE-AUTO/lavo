@@ -62,7 +62,7 @@ const FEATURE_KEYS = [
 ] as const;
 
 /* ------------------------------------------------------------------ */
-/* Brand emblem — premium animated mark replacing the legacy car       */
+/* Brand emblem - premium animated mark replacing the legacy car       */
 /* ------------------------------------------------------------------ */
 
 /**
@@ -108,7 +108,7 @@ function BrandEmblem({ isDark }: { isDark: boolean }) {
           </filter>
         </defs>
 
-        {/* Concentric pulse rings — 3 staggered for a calm rhythm */}
+        {/* Concentric pulse rings - 3 staggered for a calm rhythm */}
         <g stroke={ringStroke} fill="none">
           <circle
             cx="120"
@@ -136,7 +136,7 @@ function BrandEmblem({ isDark }: { isDark: boolean }) {
           />
         </g>
 
-        {/* Central disc — gold ring with subtle inner bevel */}
+        {/* Central disc - gold ring with subtle inner bevel */}
         <circle cx="120" cy="120" r="48" fill={isDark ? 'rgba(15,26,12,0.6)' : 'rgba(255,253,245,0.7)'} stroke={gold} strokeWidth="1.5" />
         <circle cx="120" cy="120" r="44" fill="none" stroke={gold} strokeWidth="0.6" strokeDasharray="2 4" opacity="0.5" />
 

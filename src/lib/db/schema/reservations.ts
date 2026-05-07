@@ -42,7 +42,6 @@ export const reservations = pgTable(
       .notNull()
       .references(() => stations.id, { onDelete: "cascade" }),
     vehicle_format_id: uuid("vehicle_format_id")
-      .notNull()
       .references(() => vehicleFormats.id),
     status: varchar("status", { length: 30 }).notNull(),
     queue_position: integer("queue_position"),

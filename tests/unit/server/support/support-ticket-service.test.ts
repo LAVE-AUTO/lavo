@@ -169,7 +169,7 @@ describe('createSupportTicket', () => {
   });
 
   it('enforces the limit when max_open_tickets_per_user is 0 (zero tickets allowed)', async () => {
-    // A value of "0" means the limit is zero — the repo throws inside the transaction.
+    // A value of "0" means the limit is zero - the repo throws inside the transaction.
     mockGetSettings.mockResolvedValue({ max_open_tickets_per_user: '0' });
     mockCreateTicket.mockRejectedValue(new AppError('Ticket limit reached', 422));
 
@@ -290,7 +290,7 @@ describe('addSupportMessage', () => {
   });
 
   it('admin can add a message to any ticket regardless of ownership', async () => {
-    // Ticket belongs to userId, not adminId — admin must still be allowed.
+    // Ticket belongs to userId, not adminId - admin must still be allowed.
     const result = await addSupportMessage(adminId, ticketId, 'We are looking into it.', true);
 
     expect(mockAddMessage).toHaveBeenCalledWith(

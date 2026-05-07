@@ -56,7 +56,7 @@ export function FileUploadZone({ label, hint, required, value, onChange, error }
       const formData = new FormData();
       formData.append('file', file);
 
-      // Use fetch directly — axios default Content-Type: application/json
+      // Use fetch directly - axios default Content-Type: application/json
       // would override the multipart boundary for FormData.
       const response = await fetch('/api/v1/stations/onboarding/upload', {
         method: 'POST',

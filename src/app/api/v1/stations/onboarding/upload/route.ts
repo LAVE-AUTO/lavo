@@ -23,13 +23,13 @@ import { HTTP_STATUS } from '@/helpers/constants';
  * Accepts one file per request; client sends a series of requests then submits
  * documents with the returned URLs and storage in the final onboarding submit.
  *
- * Body: multipart/form-data — field: "file"
+ * Body: multipart/form-data - field: "file"
  * Uses same validation and upload pipeline as POST /api/v1/upload (Cloudinary with local fallback).
  *
  * Responses:
  *   201 { data: { url, storage } }
- *   400 VALIDATION_FAILED — missing file or unsupported type
- *   413 VALIDATION_FAILED — file too large
+ *   400 VALIDATION_FAILED - missing file or unsupported type
+ *   413 VALIDATION_FAILED - file too large
  *   429 TOO_MANY_REQUESTS
  *   500 INTERNAL_ERROR
  */

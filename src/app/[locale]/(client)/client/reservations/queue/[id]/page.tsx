@@ -107,7 +107,7 @@ export default function QueueDetailPage({ params }: PageProps) {
         stationAddress: station ? `${station.address}, ${station.city}` : '',
         stationLatitude: parseFloat(station?.latitude ?? '0'),
         stationLongitude: parseFloat(station?.longitude ?? '0'),
-        forfaitName: format?.label ?? '—',
+        forfaitName: format?.label ?? '-',
         position: found.queue_position ?? 1,
         totalPrice: parseFloat(found.amount_paid ?? '0'),
         washDurationMinutes: station?.stationConfig?.wash_duration_minutes ?? 15,

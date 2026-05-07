@@ -25,18 +25,19 @@ export const reservationIdParamSchema = z.object({
   id: z.string().uuid('Invalid reservation id'),
 });
 
-/** POST /reservations/:id/cancel — optional cancellation reason. */
+/** POST /reservations/:id/cancel - optional cancellation reason. */
 export const cancelReservationBodySchema = z
   .object({
     reason: z.string().max(500).optional(),
   })
   .strict();
 
-/** POST /stations/:id/reservations — create reservation. */
+/** POST /stations/:id/reservations - create reservation. */
 export const createReservationBodySchema = z
   .object({
+    service_id: uuidSchema,
     time_slot_id: uuidSchema,
-    vehicle_format_id: uuidSchema,
+    vehicle_format_id: uuidSchema.optional(),
     qr_token: qrTokenSchema.optional(),
     v: qrVersionSchema.optional(),
   })
@@ -53,14 +54,15 @@ export const createReservationBodySchema = z
     }
   });
 
-/** POST /stations/:id/queue/join — join queue. */
+/** POST /stations/:id/queue/join - join queue. */
 export const joinQueueBodySchema = z
   .object({
-    vehicle_format_id: uuidSchema,
+    service_id: uuidSchema,
+    vehicle_format_id: uuidSchema.optional(),
   })
   .strict();
 
-/** PATCH /me/entries/:entryId/cancel — optional cancellation reason (used for confirmed reservations). */
+/** PATCH /me/entries/:entryId/cancel - optional cancellation reason (used for confirmed reservations). */
 export const cancelEntryBodySchema = z
   .object({
     reason: z.string().max(500).optional(),
@@ -68,14 +70,14 @@ export const cancelEntryBodySchema = z
   .strict()
   .optional();
 
-/** POST /me/entries/:entryId/upgrade-to-reservation — upgrade queue to reservation. */
+/** POST /me/entries/:entryId/upgrade-to-reservation - upgrade queue to reservation. */
 export const upgradeToReservationBodySchema = z
   .object({
     time_slot_id: uuidSchema,
   })
   .strict();
 
-/** PATCH /station/entries/:entryId — set status (in_progress, completed, cancelled). */
+/** PATCH /station/entries/:entryId - set status (in_progress, completed, cancelled). */
 export const stationPatchEntryBodySchema = z
   .object({
     status: z.enum(['in_progress', 'completed', 'cancelled'], {
@@ -84,14 +86,14 @@ export const stationPatchEntryBodySchema = z
   })
   .strict();
 
-/** POST /reservations/:id/reschedule — new time slot id. */
+/** POST /reservations/:id/reschedule - new time slot id. */
 export const rescheduleBodySchema = z
   .object({
     new_time_slot_id: z.string().uuid('new_time_slot_id must be a valid UUID'),
   })
   .strict();
 
-/** POST /reservations/:id/signal-delay — optional client message. */
+/** POST /reservations/:id/signal-delay - optional client message. */
 export const signalDelayBodySchema = z
   .object({
     message: z.string().max(500).optional(),
@@ -99,7 +101,7 @@ export const signalDelayBodySchema = z
   .strict()
   .optional();
 
-/** POST /reservations/:id/refuse-delay — optional refusal reason. */
+/** POST /reservations/:id/refuse-delay - optional refusal reason. */
 export const refuseDelayBodySchema = z
   .object({
     refusal_reason: z.string().max(500).optional(),
@@ -107,14 +109,14 @@ export const refuseDelayBodySchema = z
   .strict()
   .optional();
 
-/** PATCH /station/entries/:entryId/position — reorder queue. */
+/** PATCH /station/entries/:entryId/position - reorder queue. */
 export const stationPatchPositionBodySchema = z
   .object({
     queue_position: z.number().int().min(1, 'queue_position must be at least 1'),
   })
   .strict();
 
-/** POST /station/extra-time — add overrun time to a reservation and cascade-shift subsequent slots. */
+/** POST /station/extra-time - add overrun time to a reservation and cascade-shift subsequent slots. */
 export const extraTimeBodySchema = z
   .object({
     reservation_id: uuidSchema,

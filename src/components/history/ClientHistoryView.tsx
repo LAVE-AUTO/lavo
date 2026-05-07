@@ -307,7 +307,7 @@ function HistoryCard({ entry: e, locale, t, onSelect }: HistoryCardProps) {
           </div>
         </div>
 
-        {/* Chevron — only for completed (receipt available) */}
+        {/* Chevron - only for completed (receipt available) */}
         {isCompleted && (
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#af8408" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true" className="shrink-0">
             <polyline points="9 18 15 12 9 6" />

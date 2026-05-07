@@ -17,7 +17,7 @@ import type { NextResponse } from 'next/server';
  * An empty array clears all photos.
  *
  * Body:
- *   { "photos": [{ "url": "https://res.cloudinary.com/...", "position": 0 }, ...] }  — 0 to 20 items
+ *   { "photos": [{ "url": "https://res.cloudinary.com/...", "position": 0 }, ...] }  - 0 to 20 items
  *
  * Responses:
  *   200 { data: { photos: StationPhoto[] } }

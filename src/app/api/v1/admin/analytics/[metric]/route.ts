@@ -18,7 +18,7 @@ import type { NextResponse } from 'next/server';
  * Returns a timeseries for the requested metric over the given date range.
  *
  * Path param:
- *   [metric] — one of: transactions, revenue, commissions, registrations,
+ *   [metric] - one of: transactions, revenue, commissions, registrations,
  *              stations, reservations, cancellations, support-tickets, avg-rating
  *
  * Query params (all optional):
@@ -31,7 +31,7 @@ import type { NextResponse } from 'next/server';
  *
  * Responses:
  *   200 { data: { metric, group_by, period, series } }
- *   400 VALIDATION_FAILED  — unknown metric or invalid / inconsistent query params
+ *   400 VALIDATION_FAILED  - unknown metric or invalid / inconsistent query params
  *   401 UNAUTHORIZED
  *   403 FORBIDDEN
  *   500 INTERNAL_ERROR

@@ -4,7 +4,7 @@ import { useLocale, useTranslations } from 'next-intl';
 import { Link } from '@/i18n/navigation';
 
 interface AuthModeSwitcherProps {
-  /** 'client' means we are on a client auth page — show the merchant switch */
+  /** 'client' means we are on a client auth page - show the merchant switch */
   mode: 'client' | 'merchant';
 }
 

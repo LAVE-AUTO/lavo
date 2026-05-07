@@ -60,7 +60,7 @@ export function MerchantNavbar() {
     <>
       <header className="fixed top-0 left-0 right-0 z-40 bg-[rgba(247,243,236,0.95)] dark:bg-[rgba(13,31,15,0.92)] backdrop-blur-[16px] border-b border-[rgba(200,152,10,0.18)]">
         <div className="max-w-[1440px] mx-auto px-6 lg:px-16 flex items-center justify-between gap-6 py-3">
-          <Link href="/" className="shrink-0" aria-label="Slowtime — Accueil">
+          <Link href="/" className="shrink-0" aria-label="Slowtime - Accueil">
             {isDark ? (
               <div className="flex items-center gap-2">
                 <div className="rounded-lg bg-white/95 p-0.5 border border-[rgba(200,152,10,0.25)] shadow-sm shrink-0">
@@ -109,7 +109,7 @@ export function MerchantNavbar() {
               )}
             </div>
 
-            {/* Hamburger — mobile + tablet. Drawer holds the client-landing link plus
+            {/* Hamburger - mobile + tablet. Drawer holds the client-landing link plus
                the login / partner CTAs so the full merchant navbar collapses gracefully. */}
             <button
               type="button"

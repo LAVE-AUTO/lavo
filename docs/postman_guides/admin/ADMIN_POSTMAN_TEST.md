@@ -1,4 +1,4 @@
-## LAVO — Admin API (Postman Test Guide)
+## LAVO - Admin API (Postman Test Guide)
 
 This guide complements the importable Postman collection:
 - `lavo/docs/postman_guides/admin/lavo-admin.postman_collection.json`

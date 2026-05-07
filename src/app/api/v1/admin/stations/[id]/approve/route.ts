@@ -14,17 +14,17 @@ import type { NextResponse } from 'next/server';
 
 /**
  * POST /api/v1/admin/stations/:id/approve
- * Approve a station — sets status = active.
+ * Approve a station - sets status = active.
  * Requires admin role.
  *
  * Responses:
  *   200 { data: { approved: true } }
- *   400 VALIDATION_FAILED — :id is not a valid UUID
+ *   400 VALIDATION_FAILED - :id is not a valid UUID
  *   401 UNAUTHORIZED
  *   403 FORBIDDEN
- *   404 NOT_FOUND — station or owner not found
- *   409 CONFLICT — station not in pending_admin_validation state
- *   429 TOO_MANY_REQUESTS — rate limit exceeded
+ *   404 NOT_FOUND - station or owner not found
+ *   409 CONFLICT - station not in pending_admin_validation state
+ *   429 TOO_MANY_REQUESTS - rate limit exceeded
  *   500 INTERNAL_ERROR
  */
 export async function POST(
@@ -43,7 +43,7 @@ export async function POST(
     );
   }
 
-  // H-4: Rate limit — max 20 approve/reject actions per admin per minute.
+  // H-4: Rate limit - max 20 approve/reject actions per admin per minute.
   if (await isAdminActionRateLimited(auth.sub, ['station_approved', 'station_rejected'])) {
     return applyNoStoreHeaders(error429());
   }
@@ -51,7 +51,7 @@ export async function POST(
   const locale = extractLocale(request.headers.get('accept-language'));
 
   // Parse optional JSON body for document expiry dates.
-  // Body is entirely optional — a missing or empty body is not an error.
+  // Body is entirely optional - a missing or empty body is not an error.
   let documentExpiryDates: Array<{ document_id: string; expiry_date: Date }> | undefined;
 
   const contentType = request.headers.get('content-type') ?? '';

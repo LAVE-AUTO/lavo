@@ -94,12 +94,12 @@ export function AdminSidebar({ open = false, onClose }: AdminSidebarProps) {
 
   return (
     <>
-      {/* Desktop sidebar — always visible at lg+ */}
+      {/* Desktop sidebar - always visible at lg+ */}
       <aside className="hidden lg:flex w-[190px] shrink-0 flex-col border-r border-[#E0DCD0] bg-[#F0EDE0] p-3 dark:border-[#1A2A14] dark:bg-[#111A0E]">
         {sidebarContent}
       </aside>
 
-      {/* Mobile/tablet overlay sidebar — below lg */}
+      {/* Mobile/tablet overlay sidebar - below lg */}
       {open && (
         <div
           className="fixed inset-0 z-50 flex lg:hidden"

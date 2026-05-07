@@ -67,7 +67,7 @@ async function parseBody(
  * POST /api/v1/auth/forgot-password
  *
  * Sends a password reset email when the account exists and is active.
- * Always returns 200 to prevent email enumeration — the caller cannot determine
+ * Always returns 200 to prevent email enumeration - the caller cannot determine
  * whether an account with the given email exists.
  *
  * @swagger
@@ -76,7 +76,7 @@ async function parseBody(
  *     summary: Request a password reset email
  *     description: >
  *       Sends a password reset email when the account exists and is active.
- *       Always returns 200 to prevent email enumeration — the caller cannot determine
+ *       Always returns 200 to prevent email enumeration - the caller cannot determine
  *       whether an account with the given email exists.
  *     tags:
  *       - Auth

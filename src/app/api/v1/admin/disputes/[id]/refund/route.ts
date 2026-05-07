@@ -57,7 +57,7 @@
  *             schema:
  *               $ref: '#/components/schemas/ErrorEnvelope'
  *       403:
- *         description: Forbidden — admin role required
+ *         description: Forbidden - admin role required
  *         content:
  *           application/json:
  *             schema:
@@ -116,16 +116,16 @@ const refundLimiter = createEndpointRateLimiter({ maxRequests: 10, windowMs: 60_
  * Role: admin only.
  *
  * Body:
- *   amount? (number) — partial refund amount in EUR; omit for full refund
+ *   amount? (number) - partial refund amount in EUR; omit for full refund
  *
  * Responses:
  *   200 { data: Dispute }
- *   400 VALIDATION_FAILED   — invalid param or body
- *   400 REFUND_NOT_ELIGIBLE — stripe_transfer_id exists on the reservation
+ *   400 VALIDATION_FAILED   - invalid param or body
+ *   400 REFUND_NOT_ELIGIBLE - stripe_transfer_id exists on the reservation
  *   401 UNAUTHORIZED
  *   403 FORBIDDEN
- *   404 NOT_FOUND           — dispute or reservation not found
- *   409 DISPUTE_ALREADY_CLOSED — dispute is not open
+ *   404 NOT_FOUND           - dispute or reservation not found
+ *   409 DISPUTE_ALREADY_CLOSED - dispute is not open
  *   500 INTERNAL_ERROR
  */
 export async function POST(

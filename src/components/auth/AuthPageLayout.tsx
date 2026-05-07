@@ -14,7 +14,7 @@ interface AuthPageLayoutProps {
 export function AuthPageLayout({ children }: AuthPageLayoutProps) {
   return (
     <div className="min-h-screen flex">
-      {/* Left brand panel — visible on desktop only */}
+      {/* Left brand panel - visible on desktop only */}
       <aside className="hidden lg:block lg:w-[42%] xl:w-[45%] shrink-0 sticky top-0 h-screen">
         <BrandPanel />
       </aside>

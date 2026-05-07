@@ -56,7 +56,7 @@ const stationId = 'station-uuid-0001-000000000001';
 const ratingId = 'rating-uuid-0001-000000000001';
 
 const now = new Date();
-const completedAt = new Date(Date.now() - 1 * 24 * 60 * 60 * 1000); // 1 day ago — within window
+const completedAt = new Date(Date.now() - 1 * 24 * 60 * 60 * 1000); // 1 day ago - within window
 
 const completedEntry = {
   id: reservationId,
@@ -231,7 +231,7 @@ describe('toggleRatingVisibility', () => {
     // Pre-check (no tx arg) finds the rating; in-tx re-read (with tx arg) finds nothing.
     mockFindRatingById
       .mockResolvedValueOnce(existingRating) // pre-check outside tx
-      .mockResolvedValueOnce(undefined);     // re-read inside tx — concurrent delete
+      .mockResolvedValueOnce(undefined);     // re-read inside tx - concurrent delete
     await expect(toggleRatingVisibility(ratingId, false, 'admin-1')).rejects.toThrow(NotFoundError);
     expect(mockUpdateRatingVisibility).not.toHaveBeenCalled();
     expect(mockRecalcStationRating).not.toHaveBeenCalled();

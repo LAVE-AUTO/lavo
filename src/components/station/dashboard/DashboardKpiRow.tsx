@@ -3,12 +3,9 @@
 import { useTranslations } from 'next-intl';
 
 export interface KpiData {
-  /** Real value or null when the backend does not provide it yet. */
   revenue: number | null;
   clients: number | null;
-  /** Late fees: not exposed by the dashboard endpoint yet — see project_pending_backend_specs.md. */
   lateFees: number | null;
-  /** Occupancy / fill rate: not exposed by the dashboard endpoint yet — see project_pending_backend_specs.md. */
   occupancy: number | null;
 }
 
@@ -111,17 +108,17 @@ interface DashboardKpiRowProps {
 }
 
 function formatMoney(n: number | null): string {
-  if (n === null) return '—';
+  if (n === null) return '-';
   return `${n} $`;
 }
 
 function formatCount(n: number | null): string {
-  if (n === null) return '—';
+  if (n === null) return '-';
   return String(n);
 }
 
 function formatPercent(n: number | null): string {
-  if (n === null) return '—';
+  if (n === null) return '-';
   return `${n} %`;
 }
 
@@ -147,14 +144,12 @@ export function DashboardKpiRow({ data }: DashboardKpiRowProps) {
       icon: <ClockIcon />,
       value: formatMoney(data.lateFees),
       label: t('kpi_late_fees'),
-      pending: data.lateFees === null,
       animationDelay: '160ms',
     },
     {
       icon: <ChartIcon />,
       value: formatPercent(data.occupancy),
       label: t('kpi_occupancy'),
-      pending: data.occupancy === null,
       animationDelay: '240ms',
     },
   ];

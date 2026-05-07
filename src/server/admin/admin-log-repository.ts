@@ -6,7 +6,7 @@ type InsertAdminLogParams = {
   admin_id: string;
   action: string;
   target_type?: string;
-  // target_id must be a valid UUID string — matches the uuid column type in DB.
+  // target_id must be a valid UUID string - matches the uuid column type in DB.
   target_id?: string;
   details?: Record<string, unknown>;
 };

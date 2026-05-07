@@ -1,4 +1,4 @@
-## LAVO — Stations (Public + Onboarding + Cron) — Postman Test Guide
+## LAVO - Stations (Public + Onboarding + Cron) - Postman Test Guide
 
 This guide complements the importable Postman collection:
 - `lavo/docs/postman_guides/stations/lavo-stations-public-onboarding-cron.postman_collection.json`
@@ -27,11 +27,11 @@ Required for cron:
 - **`cron_secret`** (must match `CRON_SECRET` in `.env`)
 
 Optional:
-- **`station_id`** (for detail/join/formats/queue/reservations — set manually or from onboarding submit response)
-- **`format_id`** (for PUT/PATCH/DELETE format and for queue/join / create reservation — set from GET formats or POST format response)
+- **`station_id`** (for detail/join/formats/queue/reservations - set manually or from onboarding submit response)
+- **`format_id`** (for PUT/PATCH/DELETE format and for queue/join / create reservation - set from GET formats or POST format response)
 - **`access_token`** (client JWT for me/entries, queue/join, reservations; or station JWT for station/entries, station formats)
-- **`entry_id`** (for cancel, upgrade-to-reservation, station PATCH entry/position — set from GET me/entries or GET station/entries)
-- **`time_slot_id`** (for upgrade-to-reservation and create reservation — set from station detail slots)
+- **`entry_id`** (for cancel, upgrade-to-reservation, station PATCH entry/position - set from GET me/entries or GET station/entries)
+- **`time_slot_id`** (for upgrade-to-reservation and create reservation - set from station detail slots)
 
 ---
 
@@ -42,16 +42,16 @@ Optional:
 - **Request:** `GET /api/v1/stations`
 - **Response shape:** `200` with `{ data: { all, available_now?, most_appreciated?, most_visited? }, meta: { total, page, per_page, total_pages } }`. The list is always in `data.all`; optional groups (`data.available_now`, `data.most_appreciated`, `data.most_visited`) are present only when requested via `groups`.
 - **Query params:**
-  - `groups` — optional, comma-separated: `available_now`, `most_appreciated`, `most_visited` (adds the corresponding keys to `data`)
-  - `q` — search (name, address, city, description)
-  - `city` — filter by city
-  - `sort` — one or more (comma-separated): `name_asc`, `name_desc`, `slots_asc`, `slots_desc`, `rating_asc`, `rating_desc`, `total_ratings_asc`, `total_ratings_desc`, `completed_count_asc`, `completed_count_desc`
-  - `page` — default 1 (max 10000)
-  - `per_page` — default 20, max 100
-  - `limit_per_group` — optional, max 100 (limits each group size when `groups` is used)
-  - `wash_type_ids` — optional, comma-separated UUIDs (stations with at least one of these wash types)
-  - `service_scope` — optional: `exterior`, `interior`, or `both`
-  - `format_id` — optional UUID (stations offering this vehicle format)
+  - `groups` - optional, comma-separated: `available_now`, `most_appreciated`, `most_visited` (adds the corresponding keys to `data`)
+  - `q` - search (name, address, city, description)
+  - `city` - filter by city
+  - `sort` - one or more (comma-separated): `name_asc`, `name_desc`, `slots_asc`, `slots_desc`, `rating_asc`, `rating_desc`, `total_ratings_asc`, `total_ratings_desc`, `completed_count_asc`, `completed_count_desc`
+  - `page` - default 1 (max 10000)
+  - `per_page` - default 20, max 100
+  - `limit_per_group` - optional, max 100 (limits each group size when `groups` is used)
+  - `wash_type_ids` - optional, comma-separated UUIDs (stations with at least one of these wash types)
+  - `service_scope` - optional: `exterior`, `interior`, or `both`
+  - `format_id` - optional UUID (stations offering this vehicle format)
 - Each station in `data.all` (and in groups) includes `available`, `available_slots`, and when applicable `average_score`, `total_ratings`, `completed_count`.
 - **Negative tests:** invalid `sort` or `page`/`per_page`/`limit_per_group` out of bounds → `400 VALIDATION_FAILED`
 
@@ -81,7 +81,7 @@ Optional:
 ### 2.2 Submit onboarding
 
 - **Request:** `POST /api/v1/stations/onboarding/submit`
-- **Body:** JSON with step 1 (email, phone, password, confirm_password), step 2 (station_name, address, city, wash_post_count, **wash_type_ids** — array of UUIDs from `wash_types`, min 1, max 50; **service_scope** — optional: `exterior` | `interior` | `both`; ...), step 3 (documents: [{ document_type, file_url, storage? }], terms_accepted: true)
+- **Body:** JSON with step 1 (email, phone, password, confirm_password), step 2 (station_name, address, city, wash_post_count, **wash_type_ids** - array of UUIDs from `wash_types`, min 1, max 50; **service_scope** - optional: `exterior` | `interior` | `both`; ...), step 3 (documents: [{ document_type, file_url, storage? }], terms_accepted: true)
 - **Expected:** `201` with `{ data: { user, station } }`
 - **Negative tests:** validation → `400`; invalid or inactive wash_type_ids → `400`; email already exists → `409`; rate limit → `429`
 
@@ -104,7 +104,7 @@ Optional:
 - **Expected:** `201` with created format
 - **Negative tests:** validation → `400`; unauthorized → `401`; no station for user → `404`
 
-### 3.3 Update format — PUT (full) and PATCH (partial)
+### 3.3 Update format - PUT (full) and PATCH (partial)
 
 - **Request:** `PUT /api/v1/station/formats/{{format_id}}` or `PATCH /api/v1/station/formats/{{format_id}}`
 - **Auth:** Bearer (station)
@@ -121,37 +121,37 @@ Optional:
 
 ---
 
-## 4) Client — Queue and entries (auth USER)
+## 4) Client - Queue and entries (auth USER)
 
-- **`POST /api/v1/stations/{{station_id}}/queue/join`** — Join the queue. Body: `{ "vehicle_format_id": "<uuid>" }`. Auth: Bearer (client). Creates an entry with `entry_type: "queue"`. Returns created entry. 400 if validation fails; 404 if station/format not found; 409 if slot/queue rules conflict.
-- **`GET /api/v1/stations/{{station_id}}/queue`** — List queue entries for a station (public or auth). Returns `{ data: Array<Entry> }` ordered by `queue_position`.
-- **`GET /api/v1/me/entries`** — My reservations and queue entries (client auth). Returns list with `entry_type` (`reservation` | `queue`), ordered: reservations first (by slot), then queue (by position).
-- **`PATCH /api/v1/me/entries/{{entry_id}}/cancel`** — Cancel a reservation or leave the queue. Auth: Bearer (client). Body optional. 404 if not own entry or not found; 400 if already completed/cancelled.
-- **`POST /api/v1/me/entries/{{entry_id}}/upgrade-to-reservation`** — Upgrade queue entry to reservation. Body: `{ "time_slot_id": "<uuid>" }`. Auth: Bearer (client). Pays reservation surcharge if configured. 404 if not own entry; 400/409 if slot invalid or full.
+- **`POST /api/v1/stations/{{station_id}}/queue/join`** - Join the queue. Body: `{ "vehicle_format_id": "<uuid>" }`. Auth: Bearer (client). Creates an entry with `entry_type: "queue"`. Returns created entry. 400 if validation fails; 404 if station/format not found; 409 if slot/queue rules conflict.
+- **`GET /api/v1/stations/{{station_id}}/queue`** - List queue entries for a station (public or auth). Returns `{ data: Array<Entry> }` ordered by `queue_position`.
+- **`GET /api/v1/me/entries`** - My reservations and queue entries (client auth). Returns list with `entry_type` (`reservation` | `queue`), ordered: reservations first (by slot), then queue (by position).
+- **`PATCH /api/v1/me/entries/{{entry_id}}/cancel`** - Cancel a reservation or leave the queue. Auth: Bearer (client). Body optional. 404 if not own entry or not found; 400 if already completed/cancelled.
+- **`POST /api/v1/me/entries/{{entry_id}}/upgrade-to-reservation`** - Upgrade queue entry to reservation. Body: `{ "time_slot_id": "<uuid>" }`. Auth: Bearer (client). Pays reservation surcharge if configured. 404 if not own entry; 400/409 if slot invalid or full.
 
 **Environment:** Set `entry_id` from a previous response (e.g. from GET me/entries or POST queue/join) for cancel/upgrade.
 
 ---
 
-## 5) Client — Create reservation (auth USER)
+## 5) Client - Create reservation (auth USER)
 
-- **`POST /api/v1/stations/{{station_id}}/reservations`** — Create a reservation (entry_type = reservation). Body: `{ "time_slot_id": "<uuid>", "vehicle_format_id": "<uuid>" }`. Auth: Bearer (client). Payment/Stripe flow applies. 201 with created entry; 400 validation; 404 station/slot/format; 409 slot full or conflict.
+- **`POST /api/v1/stations/{{station_id}}/reservations`** - Create a reservation (entry_type = reservation). Body: `{ "time_slot_id": "<uuid>", "vehicle_format_id": "<uuid>" }`. Auth: Bearer (client). Payment/Stripe flow applies. 201 with created entry; 400 validation; 404 station/slot/format; 409 slot full or conflict.
 
 ---
 
-## 6) Station — Entries (auth STATION)
+## 6) Station - Entries (auth STATION)
 
-- **`GET /api/v1/station/entries`** — List all entries (reservations + queue) for the connected station, ordered for UI: reservations by slot, then queue by position. Auth: Bearer (station). Returns `{ data: Array<Entry> }`.
-- **`PATCH /api/v1/station/entries/{{entry_id}}`** — Update entry status. Body: `{ "status": "in_progress" | "completed" | "cancelled" }`. Auth: Bearer (station). Marks in progress, completed (triggers payout, commission, rating notification), or cancelled. 404 if entry not for this station.
-- **`PATCH /api/v1/station/entries/{{entry_id}}/position`** — Reorder queue. Body: `{ "queue_position": 1 }` (min 1). Auth: Bearer (station). Only applies to queue entries. 404 if not queue or not this station.
+- **`GET /api/v1/station/entries`** - List all entries (reservations + queue) for the connected station, ordered for UI: reservations by slot, then queue by position. Auth: Bearer (station). Returns `{ data: Array<Entry> }`.
+- **`PATCH /api/v1/station/entries/{{entry_id}}`** - Update entry status. Body: `{ "status": "in_progress" | "completed" | "cancelled" }`. Auth: Bearer (station). Marks in progress, completed (triggers payout, commission, rating notification), or cancelled. 404 if entry not for this station.
+- **`PATCH /api/v1/station/entries/{{entry_id}}/position`** - Reorder queue. Body: `{ "queue_position": 1 }` (min 1). Auth: Bearer (station). Only applies to queue entries. 404 if not queue or not this station.
 
 **Environment:** Set `entry_id` for PATCH requests (from GET station/entries or client flow).
 
 ---
 
-## 7) Station — Reservations list by station (auth STATION)
+## 7) Station - Reservations list by station (auth STATION)
 
-- **`GET /api/v1/stations/{{station_id}}/reservations`** — List reservations (and optionally queue entries) for a given station. Auth: Bearer (station); station must be the connected one. Returns entries for that station. Use for station dashboard.
+- **`GET /api/v1/stations/{{station_id}}/reservations`** - List reservations (and optionally queue entries) for a given station. Auth: Bearer (station); station must be the connected one. Returns entries for that station. Use for station dashboard.
 
 ---
 

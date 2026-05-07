@@ -304,7 +304,7 @@ export function AdminSupportDetail({ id }: Props) {
               )}
             </div>
 
-            {/* Reply form — only shown for open/in_progress tickets.
+            {/* Reply form - only shown for open/in_progress tickets.
                 Resolved and closed tickets no longer accept new replies:
                 resolved = admin confirmed the issue is fixed; closed = ticket archived. */}
             {!isClosed && !isResolved && (

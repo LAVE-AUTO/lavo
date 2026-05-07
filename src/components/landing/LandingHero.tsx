@@ -146,7 +146,7 @@ export function LandingHero() {
             </div>
           </div>
 
-          {/* Right: Phone mockup — desktop */}
+          {/* Right: Phone mockup - desktop */}
           <div
             className="hidden lg:flex items-center justify-center animate-fade-in"
             style={{ animationDelay: '0.35s' }}
@@ -154,7 +154,7 @@ export function LandingHero() {
             <PhoneMockup />
           </div>
 
-          {/* Phone mockup — mobile (scaled down, centered below text) */}
+          {/* Phone mockup - mobile (scaled down, centered below text) */}
           <div
             className="flex lg:hidden items-center justify-center animate-fade-in mt-4"
             style={{ animationDelay: '0.3s' }}

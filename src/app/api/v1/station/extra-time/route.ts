@@ -7,18 +7,18 @@
  * Auth: STATION
  *
  * Body:
- *   reservation_id: UUID   — the reservation that is overrunning
- *   extra_minutes: integer  — positive number of extra minutes to add
+ *   reservation_id: UUID   - the reservation that is overrunning
+ *   extra_minutes: integer  - positive number of extra minutes to add
  *
  * Success 200:
  *   { data: { reservation_id, extra_minutes, shifted_slots, notified_clients } }
  *
  * Errors:
- *   400 VALIDATION_FAILED   — invalid body
- *   403 FORBIDDEN           — no station linked to this account
- *   404 NOT_FOUND           — reservation or slot not found
- *   409 CONFLICT            — reservation not in an overrunnable state
- *   500 INTERNAL_ERROR      — unexpected failure
+ *   400 VALIDATION_FAILED   - invalid body
+ *   403 FORBIDDEN           - no station linked to this account
+ *   404 NOT_FOUND           - reservation or slot not found
+ *   409 CONFLICT            - reservation not in an overrunnable state
+ *   500 INTERNAL_ERROR      - unexpected failure
  */
 import { requireRole } from '@/lib/require-role';
 import { successResponse, error400, error403, error404, error409, error500, fromAppError } from '@/lib/responses';

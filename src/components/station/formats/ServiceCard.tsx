@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import { useTranslations } from 'next-intl';
+import { deleteWithApi, patchWithApi } from '@/services';
 import { ConfirmDialog } from '@/components/ui/ConfirmDialog';
 import type { Service } from './types';
 
@@ -36,18 +37,34 @@ export function ServiceCard({ service, onEdit, onDeleted, onToggled }: Props) {
   const t = useTranslations('station_services');
   const [deleteOpen, setDeleteOpen] = useState(false);
   const [deleting, setDeleting] = useState(false);
+  const [deleteError, setDeleteError] = useState<string | null>(null);
   const [toggleOpen, setToggleOpen] = useState(false);
+  const [toggling, setToggling] = useState(false);
 
-  // TODO: connect to API once endpoint is available (local-only for now)
   async function confirmDelete() {
     setDeleting(true);
+    setDeleteError(null);
+    const [ok, data] = await deleteWithApi(`/station/services/${service.id}`);
     setDeleting(false);
+    if (!ok) {
+      setDeleteError((data as { message?: string })?.message ?? 'Erreur lors de la suppression');
+      return;
+    }
     setDeleteOpen(false);
     onDeleted(service.id);
   }
 
-  // TODO: connect to API once endpoint is available (local-only for now)
-  function confirmToggle() {
+  async function confirmToggle() {
+    setToggling(true);
+    const [ok, data] = await patchWithApi(`/station/services/${service.id}`, {
+      is_active: !service.is_active,
+    });
+    setToggling(false);
+    if (!ok) {
+      console.error('Toggle failed', data);
+      setToggleOpen(false);
+      return;
+    }
     setToggleOpen(false);
     onToggled({ ...service, is_active: !service.is_active });
   }
@@ -159,7 +176,7 @@ export function ServiceCard({ service, onEdit, onDeleted, onToggled }: Props) {
           </div>
         )}
 
-        {/* Extras compatibles — auto/self-service services don't have extras */}
+        {/* Extras compatibles - auto/self-service services don't have extras */}
         {!isPackages && service.category !== 'self_service' && (
           <div className="mt-auto rounded-xl bg-[#F7F6F2] p-3 dark:bg-[#0F1A0C]">
             <p className="mb-2 text-[10px] font-bold uppercase tracking-[1px] text-[#888] dark:text-[#9A9A8A]">
@@ -189,13 +206,13 @@ export function ServiceCard({ service, onEdit, onDeleted, onToggled }: Props) {
       <ConfirmDialog
         open={deleteOpen}
         title={t('confirm_delete_title')}
-        message={t('confirm_delete_message', { name: service.name })}
+        message={deleteError ?? t('confirm_delete_message', { name: service.name })}
         confirmLabel={t('confirm_delete_label')}
         cancelLabel={t('btn_cancel')}
         variant="danger"
         loading={deleting}
         onConfirm={confirmDelete}
-        onCancel={() => setDeleteOpen(false)}
+        onCancel={() => { setDeleteOpen(false); setDeleteError(null); }}
       />
 
       {/* Toggle confirmation */}
@@ -210,6 +227,7 @@ export function ServiceCard({ service, onEdit, onDeleted, onToggled }: Props) {
         confirmLabel={service.is_active ? t('confirm_deactivate_label') : t('confirm_activate_label')}
         cancelLabel={t('btn_cancel')}
         variant={service.is_active ? 'warning' : 'default'}
+        loading={toggling}
         onConfirm={confirmToggle}
         onCancel={() => setToggleOpen(false)}
       />

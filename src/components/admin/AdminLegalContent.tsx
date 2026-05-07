@@ -20,8 +20,8 @@ const PAGES: { key: PageKey; labelKey: string }[] = [
 // Fetch each page's HTML content on mount; replace these defaults.
 const INITIAL: Record<PageKey, string> = {
   privacy:        '<h2>Politique de confidentialité</h2><p>Veuillez rédiger votre politique de confidentialité ici.</p>',
-  terms_clients:  '<h2>Conditions générales d\'utilisation — Clients</h2><p>Veuillez rédiger les CGU clients ici.</p>',
-  terms_stations: '<h2>Conditions générales d\'utilisation — Stations</h2><p>Veuillez rédiger les CGU stations ici.</p>',
+  terms_clients:  '<h2>Conditions générales d\'utilisation - Clients</h2><p>Veuillez rédiger les CGU clients ici.</p>',
+  terms_stations: '<h2>Conditions générales d\'utilisation - Stations</h2><p>Veuillez rédiger les CGU stations ici.</p>',
   legal_mentions: '<h2>Mentions légales</h2><p>Veuillez rédiger les mentions légales ici.</p>',
   contact:        '<h2>Contact</h2><p>Veuillez rédiger les informations de contact ici.</p>',
   how_it_works:   '<h2>Comment ça marche</h2><p>Veuillez décrire le fonctionnement de la plateforme ici.</p>',
@@ -53,7 +53,7 @@ export function AdminLegalContent() {
       //   terms_stations → /terms/stations, legal_mentions → /legal, contact → /contact,
       //   how_it_works → landing page "Comment ça marche" section.
       // TODO: sanitize HTML server-side (DOMPurify or equivalent) before persisting and before
-      //   rendering on public pages — raw WYSIWYG output is an XSS risk if admin credentials are compromised.
+      //   rendering on public pages - raw WYSIWYG output is an XSS risk if admin credentials are compromised.
       await new Promise<void>(r => setTimeout(r, 600));
       if (!mountedRef.current) return;
       setDirty(prev => { const s = new Set(prev); s.delete(activePage); return s; });

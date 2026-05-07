@@ -1,6 +1,6 @@
 /**
- * GET  /api/v1/station/hours — get 7-day opening hours for the station. Auth: station.
- * PATCH /api/v1/station/hours — upsert opening hours. Auth: station.
+ * GET  /api/v1/station/hours - get 7-day opening hours for the station. Auth: station.
+ * PATCH /api/v1/station/hours - upsert opening hours. Auth: station.
  *
  * PATCH body: { days: Array<{ day_of_week: 0-6, is_open: bool, morning_start?, morning_end?, afternoon_start?, afternoon_end? }> }
  */

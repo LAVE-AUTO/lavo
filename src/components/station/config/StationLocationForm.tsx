@@ -34,7 +34,7 @@ function ReadField({ label, value }: { label: string; value: string }) {
   return (
     <div>
       <p className="mb-0.5 text-[11px] font-bold uppercase tracking-wider text-[#C8C4B4] dark:text-[#2E3C2A]">{label}</p>
-      <p className="text-[13px] font-semibold text-[#1A1A0A] dark:text-[#F0EDD4]">{value || '—'}</p>
+      <p className="text-[13px] font-semibold text-[#1A1A0A] dark:text-[#F0EDD4]">{value || '-'}</p>
     </div>
   );
 }
@@ -103,7 +103,7 @@ export function StationLocationForm({ location, onSaved, locked = false }: Props
         if (cityName) setCity(cityName);
       }
     } catch {
-      // Reverse geocoding failed — coordinates remain set
+      // Reverse geocoding failed - coordinates remain set
     }
   }
 
@@ -231,8 +231,8 @@ export function StationLocationForm({ location, onSaved, locked = false }: Props
               </div>
               <div className="flex flex-col gap-0.5">
                 <p className="text-[11px] font-semibold uppercase tracking-wider text-[#AAAAAA] dark:text-[#4A4A3A]">{t('field_address')}</p>
-                <p className="text-[14px] font-bold text-[#1A1A0A] dark:text-[#F0EDD4]">{location.address || '—'}</p>
-                <p className="text-[13px] font-semibold text-[#888] dark:text-[#9A9A8A]">{location.city || '—'}</p>
+                <p className="text-[14px] font-bold text-[#1A1A0A] dark:text-[#F0EDD4]">{location.address || '-'}</p>
+                <p className="text-[13px] font-semibold text-[#888] dark:text-[#9A9A8A]">{location.city || '-'}</p>
               </div>
             </div>
             {(location.latitude || location.longitude) && (

@@ -206,7 +206,7 @@ describe('GET /api/v1/support/[id]', () => {
 });
 
 // ---------------------------------------------------------------------------
-// PATCH /api/v1/support/[id] — Admin only, status update
+// PATCH /api/v1/support/[id] - Admin only, status update
 // ---------------------------------------------------------------------------
 
 describe('PATCH /api/v1/support/[id]', () => {

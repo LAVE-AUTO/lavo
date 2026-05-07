@@ -18,7 +18,8 @@ import { NotFoundError, ConflictError, ActiveReservationExistsError, SlotFullErr
 import { getPlatformSettingWithFallback, getCancellationPolicy } from '@/server/admin/platform-settings-service';
 import { db } from '@/lib/db';
 import { getConfigByStationId } from '@/server/station/config-repository';
-import { findFormatByIdAndStation } from '@/server/station/format-repository';
+import { findServiceVehicleEntryForBooking, findServiceByIdAndStation } from '@/server/station/service-repository';
+import { findFormatById } from '@/server/station/format-repository';
 import {
   lockSlotForUpdate,
   countReservationsBySlotId,
@@ -34,7 +35,8 @@ import {
   createQueueEntry,
   findEntryByIdAndUser,
   findEntryByIdAndStation,
-  hasActiveEntryAtStation,
+  hasActiveReservationForSlot,
+  findPendingPaymentReservationForSlot,
   clearStripePaymentSucceededNotifiedAt,
   setStripePaymentSucceededNotifiedAtIfMissing,
   updateEntry,
@@ -92,24 +94,24 @@ async function getMaxAdvanceBookingMs(): Promise<{ maxDays: number; maxAdvanceMs
 }
 
 /**
- * Resolves the total amount for a reservation: vehicle format price + optional station surcharge.
- * Returns the parsed surcharge and total. Throws ConflictError if amount is non-positive.
+ * Resolves the total amount for a reservation using the service vehicle entry price + optional station surcharge.
  */
 async function resolveReservationAmount(
-  vehicleFormatId: string,
+  serviceId: string,
+  vehicleFormatId: string | null | undefined,
   stationId: string
-): Promise<{ format: Awaited<ReturnType<typeof findFormatByIdAndStation>>; amountTotal: number }> {
-  const format = await findFormatByIdAndStation(vehicleFormatId, stationId);
-  if (!format) throw new NotFoundError('Vehicle format not found');
+): Promise<{ vehicleEntry: Awaited<ReturnType<typeof findServiceVehicleEntryForBooking>>; amountTotal: number }> {
+  const vehicleEntry = await findServiceVehicleEntryForBooking(serviceId, vehicleFormatId ?? null);
+  if (!vehicleEntry) throw new NotFoundError('Service pricing entry not found for this format');
 
   const config = await getConfigByStationId(stationId);
   const surcharge = config?.reservation_surcharge
     ? parseDecimal(String(config.reservation_surcharge))
     : 0;
-  const amountTotal = parseDecimal(String(format.price)) + surcharge;
+  const amountTotal = parseDecimal(String(vehicleEntry.price)) + surcharge;
   if (amountTotal <= 0) throw new ConflictError('Invalid amount');
 
-  return { format, amountTotal };
+  return { vehicleEntry, amountTotal };
 }
 
 
@@ -146,18 +148,18 @@ export type CancelEntryResult = {
  *
  * Stripe-first pattern: PI is created before the DB transaction so there is no crash window
  * where an entry exists with stripe_payment_id = null. If the DB transaction fails (slot full,
- * duplicate, etc.), the PI is never returned to the client and auto-expires on Stripe after 24h —
+ * duplicate, etc.), the PI is never returned to the client and auto-expires on Stripe after 24h -
  * no charge, no orphan, no rollback needed.
  *
  * Full flow:
  * 1. Validate vehicle format and station config (surcharge)
  * 2. QR token validation
- * 3. Create Stripe PaymentIntent (before DB — Stripe-first)
+ * 3. Create Stripe PaymentIntent (before DB - Stripe-first)
  * 4. Atomic transaction:
  *    - Duplicate check (SELECT FOR UPDATE on slot prevents TOCTOU)
  *    - Lock slot, verify capacity, enforce max advance booking window
  *    - Insert entry with stripe_payment_id already set, increment slot booked_count
- * 5. Update PI metadata with reservation_id (non-fatal — informational only)
+ * 5. Update PI metadata with reservation_id (non-fatal - informational only)
  * 6. Send notification to client
  *
  * @param userId - Client UUID
@@ -177,10 +179,14 @@ export async function createReservation(
   stationId: string,
   stationStripeAccountId: string,
   timeSlotId: string,
-  vehicleFormatId: string,
+  serviceId: string,
+  vehicleFormatId: string | null | undefined,
   options?: { qrToken?: string; qrVersion?: string }
 ): Promise<CreateReservationResult> {
-  const { amountTotal } = await resolveReservationAmount(vehicleFormatId, stationId);
+  const service = await findServiceByIdAndStation(serviceId, stationId);
+  if (!service) throw new NotFoundError('Service not found');
+
+  const { amountTotal, vehicleEntry } = await resolveReservationAmount(serviceId, vehicleFormatId, stationId);
 
   const hasQrPayload = Boolean(options?.qrToken || options?.qrVersion);
   const qrValidation = options?.qrToken
@@ -200,6 +206,20 @@ export async function createReservation(
   const amountCents = Math.round(amountTotal * 100);
   const commissionCents = Math.round(split.commissionAmount * 100);
 
+  // Cancel any stale pending_payment entry for this user+slot before creating a new PI.
+  // This lets users retry after abandoning the Stripe form without hitting a duplicate error.
+  const stalePending = await findPendingPaymentReservationForSlot(userId, timeSlotId);
+  if (stalePending) {
+    if (stalePending.stripe_payment_id) {
+      try {
+        await cancelPaymentIntent(stalePending.stripe_payment_id);
+      } catch {
+        // Non-fatal: PI may already be expired or cancelled by Stripe
+      }
+    }
+    await updateEntry(stalePending.id, { status: 'cancelled' });
+  }
+
   // Create Stripe PaymentIntent before the DB transaction (Stripe-first pattern).
   // reservation_id is set via a non-fatal metadata update after DB commit.
   const { paymentIntentId, clientSecret } = await createPaymentIntent({
@@ -210,20 +230,21 @@ export async function createReservation(
     commissionCents,
     metadata: {
       time_slot_id: timeSlotId,
-      vehicle_format_id: vehicleFormatId,
+      service_id: serviceId,
+      vehicle_format_id: vehicleFormatId ?? '',
     },
   });
 
   // Atomic: duplicate check, slot lock (SELECT FOR UPDATE), capacity check, entry insert, slot increment.
-  // Entry is created with stripe_payment_id already set — no orphan window.
+  // Entry is created with stripe_payment_id already set - no orphan window.
   const entry = await db.transaction(async (tx) => {
-    const hasActive = await hasActiveEntryAtStation(userId, stationId, tx);
+    const hasActive = await hasActiveReservationForSlot(userId, timeSlotId, tx);
     if (hasActive) throw new ActiveReservationExistsError();
 
     const slot = await lockSlotForUpdate(timeSlotId, stationId, tx);
     if (!slot) throw new NotFoundError('Time slot not found or does not belong to this station');
 
-    // Stripe card authorizations expire after 7 days — reject bookings beyond this window.
+    // Stripe card authorizations expire after 7 days - reject bookings beyond this window.
     const { maxDays, maxAdvanceMs } = await getMaxAdvanceBookingMs();
     if (slot.start_time.getTime() - Date.now() > maxAdvanceMs) {
       throw new ConflictError(`Reservations cannot be made more than ${maxDays} days in advance`);
@@ -236,7 +257,7 @@ export async function createReservation(
       {
         user_id: userId,
         station_id: stationId,
-        vehicle_format_id: vehicleFormatId,
+        vehicle_format_id: vehicleFormatId ?? null,
         time_slot_id: timeSlotId,
         status: STATUS_PENDING_PAYMENT,
         amount_paid: toDecimal(amountTotal),
@@ -257,7 +278,7 @@ export async function createReservation(
   try {
     await updatePaymentIntentMetadata(paymentIntentId, { reservation_id: entry.id });
   } catch (e) {
-    console.error('[CREATE_RESERVATION] PI metadata update failed — non-fatal', {
+    console.error('[CREATE_RESERVATION] PI metadata update failed - non-fatal', {
       entryId: entry.id,
       paymentIntentId,
       error: e instanceof Error ? e.message : String(e),
@@ -536,15 +557,15 @@ export type UpgradeToReservationResult = {
  * Stripe-first pattern: PI is created before the DB transaction so there is no crash window
  * where an entry exists with stripe_payment_id = null. If the DB transaction fails (slot full,
  * advance booking limit, etc.), the PI is never returned to the client and auto-expires on
- * Stripe after 24h — no charge, no orphan, no rollback needed.
+ * Stripe after 24h - no charge, no orphan, no rollback needed.
  *
  * Flow:
  * 1. Validate entry is a queue entry belonging to the user at the given station.
  * 2. Resolve price: vehicle format price + optional reservation surcharge.
- * 3. Create Stripe PaymentIntent (before DB — Stripe-first).
+ * 3. Create Stripe PaymentIntent (before DB - Stripe-first).
  * 4. Atomic transaction: lock slot, verify capacity, shift queue positions, convert entry to
  *    reservation (pending_payment) with stripe_payment_id already set, increment slot booked_count.
- * 5. Update PI metadata with reservation_id (non-fatal — informational only).
+ * 5. Update PI metadata with reservation_id (non-fatal - informational only).
  * 6. Return entry + client_secret for frontend payment confirmation.
  */
 export async function upgradeQueueToReservation(
@@ -559,7 +580,11 @@ export async function upgradeQueueToReservation(
   if (entry.entry_type !== 'queue') throw new ConflictError('Entry is not a queue entry');
   if (entry.station_id !== stationId) throw new NotFoundError('Entry does not belong to this station');
 
-  const { amountTotal } = await resolveReservationAmount(entry.vehicle_format_id, stationId);
+  // Price = original queue amount + optional reservation surcharge.
+  // service_id is not stored on the entry; use amount_paid as the already-validated base price.
+  const config = await getConfigByStationId(stationId);
+  const surcharge = config?.reservation_surcharge ? parseDecimal(String(config.reservation_surcharge)) : 0;
+  const amountTotal = parseDecimal(String(entry.amount_paid)) + surcharge;
 
   const split = await computeReservationSplit({ amountTotal, isQrBooking: false });
 
@@ -576,7 +601,7 @@ export async function upgradeQueueToReservation(
     commissionCents,
     metadata: {
       time_slot_id: timeSlotId,
-      vehicle_format_id: entry.vehicle_format_id,
+      vehicle_format_id: entry.vehicle_format_id ?? '',
       upgraded_from_queue: 'true',
     },
   });
@@ -622,7 +647,7 @@ export async function upgradeQueueToReservation(
   try {
     await updatePaymentIntentMetadata(paymentIntentId, { reservation_id: entryId });
   } catch (e) {
-    console.error('[UPGRADE_TO_RESERVATION] PI metadata update failed — non-fatal', {
+    console.error('[UPGRADE_TO_RESERVATION] PI metadata update failed - non-fatal', {
       entryId,
       paymentIntentId,
       error: e instanceof Error ? e.message : String(e),
@@ -689,14 +714,14 @@ export async function setEntryStatusByStation(
         }
       } catch (e) {
         const error = e instanceof Error ? e.message : String(e);
-        console.error('[CAPTURE_FAILED] Service completed but Stripe capture failed — manual resolution required', {
+        console.error('[CAPTURE_FAILED] Service completed but Stripe capture failed - manual resolution required', {
           entryId,
           error,
         });
       }
     }
 
-    // %%%%% ESCROW FALLBACK — webhook before "completed" %%%%%
+    // %%%%% ESCROW FALLBACK - webhook before "completed" %%%%%
     // Late capture: `updated` reflects RETURNING row (not stale `entry`) for succeeded_at / notify flag.
     if (updated.entry_type === 'reservation' && updated.stripe_payment_succeeded_at) {
       try {
@@ -722,7 +747,7 @@ export async function setEntryStatusByStation(
         console.error('[ESCROW_FALLBACK] Failed to send completed escrow notifications', { error: msg });
       }
 
-      // %%%%% END - ESCROW FALLBACK — webhook before "completed" %%%%%
+      // %%%%% END - ESCROW FALLBACK - webhook before "completed" %%%%%
     }
 
     // Refresh station_stats so completed_count stays current for the "most visited" sort group.
@@ -759,8 +784,8 @@ export async function createWalkInEntry(
   vehicleFormatId: string,
   timeSlotId?: string
 ): Promise<Entry> {
-  const format = await findFormatByIdAndStation(vehicleFormatId, stationId);
-  if (!format) throw new NotFoundError('Vehicle format not found or does not belong to this station');
+  const format = await findFormatById(vehicleFormatId);
+  if (!format) throw new NotFoundError('Vehicle format not found');
 
   if (timeSlotId) {
     return createReservationEntry({

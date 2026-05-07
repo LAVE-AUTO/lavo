@@ -1,4 +1,4 @@
-# E2E Tests — Playwright
+# E2E Tests - Playwright
 
 End-to-end tests for the Lavo application. Tests run against a live Next.js
 server and cover the critical user flows from browser interaction to visible

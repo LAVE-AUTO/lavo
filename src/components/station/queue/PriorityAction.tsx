@@ -21,13 +21,12 @@ export function PriorityAction({ entryId, currentPosition, disabled = false, onS
       setIsLoading(true);
       setError(null);
 
-      // TODO: connect to API once PATCH /station/entries/:id/priority endpoint is available
-      const [success, data] = await patchWithApi(`/station/entries/${entryId}/priority`, {
-        new_queue_position: 1,
+      const [success] = await patchWithApi(`/station/entries/${entryId}/priority`, {
+        position: 'front',
       });
 
       if (!success) {
-        setError(data?.error || t('error_queue_empty'));
+        setError(t('error_queue_empty'));
         return;
       }
 

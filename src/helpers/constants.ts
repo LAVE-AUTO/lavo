@@ -68,7 +68,7 @@ export const HTTP_STATUS = {
 
 /**
  * Maximum number of days in advance a reservation can be booked.
- * Stripe card authorizations expire after 7 days — bookings beyond this window
+ * Stripe card authorizations expire after 7 days - bookings beyond this window
  * would result in an expired authorization before service completion.
  */
 export const MAX_ADVANCE_BOOKING_DAYS = 7;

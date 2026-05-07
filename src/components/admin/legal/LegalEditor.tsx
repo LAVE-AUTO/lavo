@@ -19,7 +19,7 @@ export function LegalEditor({ pageKey, html, onChange, disabled = false }: Props
   useLayoutEffect(() => {
     if (editorRef.current) editorRef.current.innerHTML = DOMPurify.sanitize(html);
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [pageKey]); // intentionally only on page change — not on every html update
+  }, [pageKey]); // intentionally only on page change - not on every html update
 
   function exec(cmd: string, value?: string) {
     editorRef.current?.focus();
@@ -58,12 +58,12 @@ export function LegalEditor({ pageKey, html, onChange, disabled = false }: Props
         <div className="mx-1.5 h-4 w-px bg-[#D8D4C8] dark:bg-[#2A3826]" aria-hidden="true" />
 
         <button type="button" disabled={disabled} onClick={() => exec('insertUnorderedList')}
-          className={btn} aria-label={t('toolbar_ul')}>• —</button>
+          className={btn} aria-label={t('toolbar_ul')}>• -</button>
         <button type="button" disabled={disabled} onClick={() => exec('insertOrderedList')}
           className={btn} aria-label={t('toolbar_ol')}>1.</button>
       </div>
 
-      {/* Editable area — key forces remount on page change so cursor/state is reset */}
+      {/* Editable area - key forces remount on page change so cursor/state is reset */}
       <div
         key={pageKey}
         ref={editorRef}

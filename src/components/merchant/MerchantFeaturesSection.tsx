@@ -66,7 +66,7 @@ export function MerchantFeaturesSection() {
                   {t('rev_label')}
                 </div>
                 <div className="grid grid-cols-2 gap-3">
-                  {/* Commission box — highlighted */}
+                  {/* Commission box - highlighted */}
                   <div className="rounded-lg border border-[#c8980a] bg-[rgba(200,152,10,0.1)] p-4">
                     <div className="font-dm-mono mb-1 text-[10px] uppercase tracking-[1px] text-[#c8980a]">{t('rev_commission_name')}</div>
                     <div className="font-rajdhani text-[30px] font-bold leading-none text-[#c8980a]">{t('rev_commission_price')}</div>
@@ -82,7 +82,7 @@ export function MerchantFeaturesSection() {
               </div>
             </div>
 
-            {/* Right — 2x3 feature cards */}
+            {/* Right - 2x3 feature cards */}
             <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
               {features.map((feat, i) => (
                 <div

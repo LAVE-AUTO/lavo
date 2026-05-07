@@ -1,6 +1,6 @@
 /**
- * GET  /api/v1/station/entries — list all entries for the station (paginated). Auth: station.
- * POST /api/v1/station/entries — create a walk-in entry (no Stripe payment). Auth: station.
+ * GET  /api/v1/station/entries - list all entries for the station (paginated). Auth: station.
+ * POST /api/v1/station/entries - create a walk-in entry (no Stripe payment). Auth: station.
  *
  * GET query params: status, from (ISO date), to (ISO date), page, per_page
  * POST body: { vehicle_format_id: UUID, time_slot_id?: UUID }
@@ -80,7 +80,7 @@ export async function POST(request: Request): Promise<NextResponse> {
   try {
     const entry = await createWalkInEntry(
       station.id,
-      auth.sub, // station owner's user_id — used as walk-in placeholder for the FK-constrained user_id column
+      auth.sub, // station owner's user_id - used as walk-in placeholder for the FK-constrained user_id column
       parsed.data.vehicle_format_id,
       parsed.data.time_slot_id
     );

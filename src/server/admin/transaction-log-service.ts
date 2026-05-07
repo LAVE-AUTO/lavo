@@ -5,7 +5,7 @@ export type { TransactionLog } from './transaction-log-repository';
 
 /**
  * Returns paginated transaction logs with pagination metadata.
- * Aggregates reservations, tips, and penalties from local DB — no Stripe API call needed.
+ * Aggregates reservations, tips, and penalties from local DB - no Stripe API call needed.
  */
 export async function getTransactionLogs(
   filters: TransactionLogFilters,

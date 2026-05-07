@@ -16,7 +16,7 @@
  *   - cancellation_penalty_station_rate: 0.30   (fraction of penalty kept by station)
  *
  * Stripe mechanics for late cancellation:
- *   1. Refund the client (refundable amount) — from platform balance, reverse_transfer: false
+ *   1. Refund the client (refundable amount) - from platform balance, reverse_transfer: false
  *   2. Reverse the station transfer for (penalty - station_share) to claw back platform's portion
  *   Result: platform nets its penalty share, station nets its penalty share
  */
@@ -214,9 +214,9 @@ export async function invalidateCancellationPolicyCache(): Promise<void> {
  *   - Validate finite values; fall back to hardcoded defaults on error
  *
  * Caching (three tiers, fastest first):
- *   1. In-process cache (60-second TTL) — avoids any network hop
- *   2. Redis cache (60-second TTL) via getCachedOrFetch — shared across instances
- *   3. DB read — when both caches miss or Redis is unavailable
+ *   1. In-process cache (60-second TTL) - avoids any network hop
+ *   2. Redis cache (60-second TTL) via getCachedOrFetch - shared across instances
+ *   3. DB read - when both caches miss or Redis is unavailable
  *
  * Invalidated when platform settings are updated.
  *
@@ -406,7 +406,7 @@ export async function getAllPlatformSettings(): Promise<PlatformSettingRow[]> {
  *
  * @param data - Validated map of setting keys to new string values
  * @param adminId - UUID of the admin performing the update (from JWT subject claim)
- * @throws ValidationError — provided rate is out of [0, 1] or both rates do not sum to 1.00
+ * @throws ValidationError - provided rate is out of [0, 1] or both rates do not sum to 1.00
  */
 export async function updatePlatformSettings(
   data: UpdatePlatformSettingsInput,

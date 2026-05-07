@@ -8,7 +8,7 @@ type Props = {
 export async function generateMetadata({ params }: Props) {
   const { locale } = await params;
   const t = await getTranslations({ locale, namespace: 'history' });
-  return { title: `LAVO — ${t('title')}` };
+  return { title: `LAVO - ${t('title')}` };
 }
 
 export default async function ClientHistoryPage({ params }: Props) {

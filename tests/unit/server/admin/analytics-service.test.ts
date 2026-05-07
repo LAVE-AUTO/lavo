@@ -50,7 +50,7 @@ function utcEndOfDay(dateStr: string): Date {
 // Metric dispatch: each metric routes to the correct repository function
 // ---------------------------------------------------------------------------
 
-describe('getAnalyticsSeries — metric dispatch', () => {
+describe('getAnalyticsSeries - metric dispatch', () => {
   const from = utcDate('2026-01-01');
   const to = utcEndOfDay('2026-01-03');
 
@@ -127,7 +127,7 @@ describe('getAnalyticsSeries — metric dispatch', () => {
 // Gap-filling: day granularity
 // ---------------------------------------------------------------------------
 
-describe('getAnalyticsSeries — gap-filling with group_by=day', () => {
+describe('getAnalyticsSeries - gap-filling with group_by=day', () => {
   // Range: 2026-03-01 to 2026-03-03 (3 days).
   const from = utcDate('2026-03-01');
   const to = utcEndOfDay('2026-03-03');
@@ -226,13 +226,13 @@ describe('getAnalyticsSeries — gap-filling with group_by=day', () => {
 // Gap-filling: week granularity
 // ---------------------------------------------------------------------------
 
-describe('getAnalyticsSeries — gap-filling with group_by=week', () => {
+describe('getAnalyticsSeries - gap-filling with group_by=week', () => {
   beforeEach(() => {
     jest.clearAllMocks();
   });
 
   it('generates one point per ISO week (Monday) within the range', async () => {
-    // Range: 2026-03-02 (Mon) to 2026-03-15 (Sun) — 2 full ISO weeks.
+    // Range: 2026-03-02 (Mon) to 2026-03-15 (Sun) - 2 full ISO weeks.
     const from = utcDate('2026-03-02');
     const to = utcEndOfDay('2026-03-15');
 
@@ -284,13 +284,13 @@ describe('getAnalyticsSeries — gap-filling with group_by=week', () => {
 // Gap-filling: month granularity
 // ---------------------------------------------------------------------------
 
-describe('getAnalyticsSeries — gap-filling with group_by=month', () => {
+describe('getAnalyticsSeries - gap-filling with group_by=month', () => {
   beforeEach(() => {
     jest.clearAllMocks();
   });
 
   it('generates one point per calendar month within the range', async () => {
-    // Range: Jan to Mar 2026 — 3 months.
+    // Range: Jan to Mar 2026 - 3 months.
     const from = utcDate('2026-01-01');
     const to = utcEndOfDay('2026-03-31');
 
@@ -355,7 +355,7 @@ describe('getAnalyticsSeries — gap-filling with group_by=month', () => {
 // Output shape: period formatting
 // ---------------------------------------------------------------------------
 
-describe('getAnalyticsSeries — period output', () => {
+describe('getAnalyticsSeries - period output', () => {
   beforeEach(() => {
     jest.clearAllMocks();
     mockGetTransactionsSeries.mockResolvedValue([]);
@@ -419,7 +419,7 @@ describe('getAnalyticsSeries — period output', () => {
 // Zero-value type invariants across all string-value metrics
 // ---------------------------------------------------------------------------
 
-describe('getAnalyticsSeries — zero-value type invariants', () => {
+describe('getAnalyticsSeries - zero-value type invariants', () => {
   const from = utcDate('2026-03-01');
   const to = utcEndOfDay('2026-03-01');
 

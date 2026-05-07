@@ -19,7 +19,7 @@ const APP_URL = process.env.NEXT_PUBLIC_APP_URL ?? 'https://lavo.cm';
 
 export const metadata: Metadata = {
   title: {
-    default: 'LAVO — Réservation de lavage auto',
+    default: 'LAVO - Réservation de lavage auto',
     template: '%s | LAVO',
   },
   description:
@@ -28,7 +28,7 @@ export const metadata: Metadata = {
   openGraph: {
     type: 'website',
     siteName: 'LAVO',
-    title: 'LAVO — Réservation de lavage auto',
+    title: 'LAVO - Réservation de lavage auto',
     description:
       'Réservez facilement un créneau dans une station de lavage auto près de chez vous.',
     url: APP_URL,
@@ -37,13 +37,13 @@ export const metadata: Metadata = {
         url: '/og-image.png',
         width: 1200,
         height: 630,
-        alt: 'LAVO — Plateforme de lavage auto',
+        alt: 'LAVO - Plateforme de lavage auto',
       },
     ],
   },
   twitter: {
     card: 'summary_large_image',
-    title: 'LAVO — Réservation de lavage auto',
+    title: 'LAVO - Réservation de lavage auto',
     description:
       'Réservez facilement un créneau dans une station de lavage auto près de chez vous.',
     images: ['/og-image.png'],

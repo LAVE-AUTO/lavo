@@ -1,5 +1,5 @@
 /**
- * E2E — Public station list and detail pages.
+ * E2E - Public station list and detail pages.
  *
  * Covers:
  *   - /fr/stations loads and renders at least one station card.
@@ -21,7 +21,7 @@ test.describe('public station list page', () => {
 
     /*
      * Station cards are rendered as <article> elements by StationCard.
-     * We wait for at least one to appear — this implicitly tests that the
+     * We wait for at least one to appear - this implicitly tests that the
      * API call resolves and the Suspense boundary clears.
      */
     const cards = page.locator('article');
@@ -55,7 +55,7 @@ test.describe('public station list page', () => {
     await expect(page).toHaveURL(/\/stations\/|\/login/, { timeout: 10_000 });
 
     // The toHaveURL assertion above already guarantees the URL matches /stations/ or /login.
-    // No additional assertion is needed — the dead code block has been removed.
+    // No additional assertion is needed - the dead code block has been removed.
     void href;
   });
 });
@@ -100,7 +100,7 @@ test.describe('public station detail page', () => {
 
     /*
      * Address: StationDetail renders city/address information in the detail
-     * section.  We look for any element that could contain address text —
+     * section.  We look for any element that could contain address text -
      * the exact selector is flexible because the layout may change.
      *
      * A broad but correct check: the page must have visible text content

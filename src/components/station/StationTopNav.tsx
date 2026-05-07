@@ -25,9 +25,9 @@ export function StationTopNav({ stationName }: StationTopNavProps) {
   return (
     <header className="flex h-14 flex-shrink-0 items-center justify-between border-b border-[#E0DCD0] bg-white px-6 dark:border-[#1A2A14] dark:bg-[#111A0E]">
 
-      {/* Logo — always links to landing page */}
+      {/* Logo - always links to landing page */}
       <div className="flex flex-col justify-center">
-        <Link href="/" aria-label="Slowtime — Accueil">
+        <Link href="/" aria-label="Slowtime - Accueil">
           {isDark ? (
             <div className="flex items-center gap-2">
               <div className="shrink-0 rounded-lg border border-[rgba(200,152,10,0.25)] bg-white/95 p-0.5 shadow-sm">
@@ -58,7 +58,7 @@ export function StationTopNav({ stationName }: StationTopNavProps) {
         <ThemeToggle />
         <LangToggle />
 
-        {/* Notification bell — disabled until /me/notifications endpoints ship.
+        {/* Notification bell - disabled until /me/notifications endpoints ship.
             See project_pending_backend_specs.md for the spec. */}
         <button
           type="button"

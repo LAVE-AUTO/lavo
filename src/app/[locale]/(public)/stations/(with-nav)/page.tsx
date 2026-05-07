@@ -4,6 +4,7 @@ import { eq } from 'drizzle-orm';
 import { db } from '@/lib/db';
 import { washTypes } from '@/lib/db/schema';
 import { listStationsPublic } from '@/server/station/station-service';
+import { getAllFormats } from '@/server/station/format-service';
 import { computeStationsHeroMetrics, type StationsHeroMetrics } from '@/helpers/stations-metrics';
 import { StationListView } from '@/components/stations/StationListView';
 import { StationsHero } from '@/components/stations/StationsHero';
@@ -18,7 +19,7 @@ export async function generateMetadata({ params }: Props) {
   const { locale } = await params;
   const t = await getTranslations({ locale, namespace: 'stations' });
   return {
-    title: `LAVO — ${t('page_title')}`,
+    title: `LAVO - ${t('page_title')}`,
     description: t('page_subtitle'),
   };
 }
@@ -43,11 +44,15 @@ export default async function PublicStationsPage({ params }: Props) {
   const { locale } = await params;
   setRequestLocale(locale);
 
-  const activeWashTypes = await db
-    .select({ id: washTypes.id, code: washTypes.code, label: washTypes.label })
-    .from(washTypes)
-    .where(eq(washTypes.is_active, true))
-    .orderBy(washTypes.sort_order);
+  const [activeWashTypes, formats] = await Promise.all([
+    db
+      .select({ id: washTypes.id, code: washTypes.code, label: washTypes.label })
+      .from(washTypes)
+      .where(eq(washTypes.is_active, true))
+      .orderBy(washTypes.sort_order),
+    getAllFormats(),
+  ]);
+  const vehicleFormats = formats.map((f) => ({ id: f.id, label: f.label }));
 
   let heroMetrics: StationsHeroMetrics = EMPTY_METRICS;
   try {
@@ -66,7 +71,7 @@ export default async function PublicStationsPage({ params }: Props) {
 
       <section id="stations-list" className="max-w-6xl mx-auto px-4 sm:px-6 py-10">
         <Suspense fallback={<div className="py-20 text-center text-[#333333] dark:text-[#C0C0B0]">Chargement…</div>}>
-          <StationListView washTypes={activeWashTypes} />
+          <StationListView washTypes={activeWashTypes} vehicleFormats={vehicleFormats} />
         </Suspense>
       </section>
     </main>

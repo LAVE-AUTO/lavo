@@ -126,7 +126,7 @@ export function StationSidebar() {
       const saved = window.localStorage.getItem(COLLAPSE_STORAGE_KEY);
       if (saved === '1') setCollapsed(true);
     } catch {
-      // localStorage unavailable — stay expanded
+      // localStorage unavailable - stay expanded
     }
   }, []);
 
@@ -214,7 +214,7 @@ export function StationSidebar() {
         </button>
       </div>
 
-      {/* Home — always at the top */}
+      {/* Home - always at the top */}
       <NavLink item={{ href: '/station/dashboard', labelKey: 'nav_home', icon: <HomeIcon /> }} />
 
       {/* Sections */}

@@ -174,7 +174,7 @@ export default function RescheduleReservationPage() {
     }
 
     const format = station.vehicleFormats.find((f) => f.id === entry.vehicle_format_id);
-    setForfaitLabel(format?.label ?? '—');
+    setForfaitLabel(format?.label ?? '-');
     setStationName(station.name);
     setAmount(safeFloat(entry.amount_paid));
 
@@ -192,7 +192,7 @@ export default function RescheduleReservationPage() {
 
   useEffect(() => { loadData(); }, [loadData]);
 
-  /* Dates disponibles — une entrée par jour ayant au moins un créneau */
+  /* Dates disponibles - une entrée par jour ayant au moins un créneau */
   const availableDates = useMemo(() => {
     const seen = new Set<string>();
     const result: { key: string; dayShort: string; dateNum: number }[] = [];
@@ -236,7 +236,7 @@ export default function RescheduleReservationPage() {
     });
     const h = String(d.getHours()).padStart(2, '0');
     const m = String(d.getMinutes()).padStart(2, '0');
-    return `${datePart} — ${h}:${m}`;
+    return `${datePart} - ${h}:${m}`;
   }, [selectedSlotId, availableSlots, locale]);
 
   /* Focus trap pour la modale de confirmation */
@@ -355,7 +355,7 @@ export default function RescheduleReservationPage() {
             <p className="text-[14px] text-[#666] dark:text-[#B0B0A0]">{t('no_slots')}</p>
           ) : (
             <>
-              {/* Sélecteur de date — défilement horizontal */}
+              {/* Sélecteur de date - défilement horizontal */}
               <div className="flex gap-2 overflow-x-auto pb-1 scrollbar-hide">
                 {availableDates.map((d) => (
                   <button

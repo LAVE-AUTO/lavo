@@ -198,7 +198,7 @@ const ALLOWED_TRANSITIONS: Record<SupportStatus, SupportStatus[]> = {
 
 /**
  * Updates a ticket status (Admin only).
- * Enforces allowed transitions — a closed (ferme) ticket cannot be re-opened.
+ * Enforces allowed transitions - a closed (ferme) ticket cannot be re-opened.
  */
 export async function updateSupportTicketStatus(
   ticketId: string,
@@ -223,7 +223,7 @@ export async function updateSupportTicketStatus(
 /**
  * Retrieves global support settings with .env fallback for support email.
  * `...dbSettings` is spread first so that the explicit `support_email` key
- * always wins — it applies the fallback chain even when the DB value is an
+ * always wins - it applies the fallback chain even when the DB value is an
  * empty string (which would otherwise be returned as-is via the spread).
  */
 export async function getSupportSettings(): Promise<Record<string, string>> {

@@ -94,7 +94,7 @@ export default function ClientReservationConfirmPage() {
       stationAddress: station ? `${station.address}, ${station.city}` : '',
       stationLatitude: parseFloat(station?.latitude ?? '0'),
       stationLongitude: parseFloat(station?.longitude ?? '0'),
-      forfaitName: format?.label ?? '—',
+      forfaitName: format?.label ?? '-',
       amountPaid: parseFloat(apiEntry.amount_paid ?? '0'),
       status: apiEntry.status,
     };

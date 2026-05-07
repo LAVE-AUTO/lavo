@@ -1,7 +1,7 @@
 'use client';
 
 /**
- * Disponibilité — manages station time slots through the new calendar UX.
+ * Disponibilité - manages station time slots through the new calendar UX.
  * Backed by /station/slots (GET, POST, POST /bulk, DELETE) and /station/config
  * (to know how many active bays the station has, used as default capacity).
  */
@@ -53,7 +53,7 @@ function extractTime(iso: string): string {
  * Build a strict ISO 8601 datetime (with timezone) from a date + HH:MM input.
  * The backend's Zod `.datetime()` validator requires the offset, so a bare
  * `"2026-05-15T12:00:00"` is rejected with a 400. We treat the input as local
- * time at the merchant's browser and serialise it as UTC — the round-trip
+ * time at the merchant's browser and serialise it as UTC - the round-trip
  * preserves the wall-clock value because `extractTime` reads back local hours.
  */
 function localTimeToIsoUtc(date: string, time: string): string {
@@ -77,7 +77,7 @@ function enumerateMonth(month: Date): string[] {
 }
 
 function slotToBlock(slot: RawSlot, dateISO: string): AvailabilityBlock {
-  // /time_slots have no per-bay info — we surface capacity through the existing
+  // /time_slots have no per-bay info - we surface capacity through the existing
   // bayIds shape using a synthetic ['all'] marker. Capacity is conveyed via the
   // count of slot-derived blocks per date and the modal's numBays prop.
   return {
@@ -175,7 +175,7 @@ export default function StationAvailabilityPage() {
     return (slotsByDate[dateISO] ?? []).map((s) => slotToBlock(s, dateISO));
   }
 
-  // All currently visible blocks across the month, flattened — feeds the side panel
+  // All currently visible blocks across the month, flattened - feeds the side panel
   const allBlocks: AvailabilityBlock[] = Object.entries(slotsByDate)
     .flatMap(([date, slots]) => slots.map((s) => slotToBlock(s, date)))
     .sort((a, b) => `${a.dates[0]} ${a.startTime}`.localeCompare(`${b.dates[0]} ${b.startTime}`));
@@ -308,7 +308,7 @@ export default function StationAvailabilityPage() {
         </div>
       </div>
 
-      {/* Main two-panel layout — stacked on mobile, side-by-side on desktop */}
+      {/* Main two-panel layout - stacked on mobile, side-by-side on desktop */}
       <div className="flex flex-1 flex-col overflow-hidden md:flex-row">
         <BlocksPanel
           blocks={allBlocks}

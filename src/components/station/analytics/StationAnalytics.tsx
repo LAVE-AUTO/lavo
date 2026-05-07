@@ -76,17 +76,25 @@ export function StationAnalytics() {
         const transformSeries = (series: Array<{ date: string; value: string }>) =>
           series.map((item) => ({ date: item.date, value: parseFloat(item.value) || 0 }));
 
+        type SeriesResponse = { data?: { series?: Array<{ date: string; value: string }> } };
+        type DashResponse = { data?: { total_revenue?: string; average_revenue?: string; revenue_growth?: number; total_clients?: number; total_completed?: number; avg_fill_rate?: number } };
+
+        const rev = (revData as SeriesResponse)?.data?.series ?? [];
+        const clients = (clientsData as SeriesResponse)?.data?.series ?? [];
+        const completed = (completedData as SeriesResponse)?.data?.series ?? [];
+        const dash = (dashData as DashResponse)?.data;
+
         const analyticsData: AnalyticsData = {
-          revenue: transformSeries(revData?.data?.series || []),
-          clients: transformSeries(clientsData?.data?.series || []),
-          completed: transformSeries(completedData?.data?.series || []),
+          revenue: transformSeries(rev),
+          clients: transformSeries(clients),
+          completed: transformSeries(completed),
           kpi: {
-            totalRevenue: parseFloat(dashData?.data?.total_revenue || '0') || 0,
-            avgRevenue: parseFloat(dashData?.data?.average_revenue || '0') || 0,
-            revenueGrowth: dashData?.data?.revenue_growth || 0,
-            uniqueClients: dashData?.data?.total_clients || 0,
-            completedServices: dashData?.data?.total_completed || 0,
-            avgFillRate: dashData?.data?.avg_fill_rate || 0,
+            totalRevenue: parseFloat(dash?.total_revenue ?? '0') || 0,
+            avgRevenue: parseFloat(dash?.average_revenue ?? '0') || 0,
+            revenueGrowth: dash?.revenue_growth ?? 0,
+            uniqueClients: dash?.total_clients ?? 0,
+            completedServices: dash?.total_completed ?? 0,
+            avgFillRate: dash?.avg_fill_rate ?? 0,
           },
         };
 

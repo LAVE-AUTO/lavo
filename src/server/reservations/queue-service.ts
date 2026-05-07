@@ -5,9 +5,9 @@
  */
 import { NotFoundError, ConflictError } from '@/lib/errors';
 import { db } from '@/lib/db';
-import { findFormatByIdAndStation } from '@/server/station/format-repository';
+import { findServiceVehicleEntryForBooking, findServiceByIdAndStation } from '@/server/station/service-repository';
 import { decrementSlotBookedCount } from '@/server/station/slot-repository';
-import { createPaymentIntent, updatePaymentIntentMetadata } from '@/server/payments/payment-service';
+import { createPaymentIntent, cancelPaymentIntent, updatePaymentIntentMetadata } from '@/server/payments/payment-service';
 import { notifyEntry } from '@/server/notifications/notification-service';
 import { getQueuePositionWhenMovingFromReservation } from './queue-position-helper';
 import {
@@ -16,7 +16,8 @@ import {
   listQueueByStation,
   countQueueByStation,
   getNextQueuePosition,
-  hasActiveEntryAtStation,
+  hasActiveQueueEntryAtStation,
+  findPendingPaymentQueueEntryAtStation,
   updateEntry,
   shiftQueuePositions,
   findFirstActiveQueueEntry,
@@ -36,26 +37,46 @@ const STATUS_LATE = 'late';
  *
  * Stripe-first pattern: PI is created before the DB entry so there is no crash window where an
  * entry exists with stripe_payment_id = null. If the DB transaction fails (duplicate, race), the PI
- * is never returned to the client and auto-expires on Stripe after 24h — no charge, no orphan.
+ * is never returned to the client and auto-expires on Stripe after 24h - no charge, no orphan.
  */
 export async function joinQueue(
   userId: string,
   stationId: string,
-  vehicleFormatId: string,
+  serviceId: string,
+  vehicleFormatId: string | null | undefined,
   stationStripeAccountId: string
 ): Promise<JoinQueueResult> {
-  const format = await findFormatByIdAndStation(vehicleFormatId, stationId);
-  if (!format) throw new NotFoundError('Vehicle format not found');
-  if (!format.is_active) throw new ConflictError('Format is not active');
+  const service = await findServiceByIdAndStation(serviceId, stationId);
+  if (!service) throw new NotFoundError('Service not found');
 
-  const formatPrice = parseFloat(String(format.price));
-  const split = await computeReservationSplit({ amountTotal: formatPrice, isQrBooking: false });
+  const vehicleEntry = await findServiceVehicleEntryForBooking(serviceId, vehicleFormatId ?? null);
+  if (!vehicleEntry) throw new NotFoundError('Service pricing entry not found for this format');
+  if (!vehicleEntry.is_active) throw new ConflictError('Service entry is not active');
 
-  const amountCents = Math.round(formatPrice * 100);
+  const entryPrice = parseFloat(String(vehicleEntry.price));
+  const split = await computeReservationSplit({ amountTotal: entryPrice, isQrBooking: false });
+
+  const amountCents = Math.round(entryPrice * 100);
   const commissionCents = Math.round(split.commissionAmount * 100);
 
-  // Create Stripe PaymentIntent before the DB entry (Stripe-first pattern).
-  // reservation_id is omitted here; it will be set via a non-fatal metadata update after DB commit.
+  // Cancel any stale pending_payment queue entry before creating a new PI.
+  // Allows users to retry after abandoning the Stripe form.
+  const stalePending = await findPendingPaymentQueueEntryAtStation(userId, stationId);
+  if (stalePending) {
+    if (stalePending.stripe_payment_id) {
+      try {
+        await cancelPaymentIntent(stalePending.stripe_payment_id);
+      } catch {
+        // Non-fatal: PI may already be expired
+      }
+    }
+    // Shift queue positions to fill the gap left by the cancelled entry
+    if (stalePending.queue_position != null) {
+      await shiftQueuePositions(stationId, stalePending.queue_position + 1, -1);
+    }
+    await updateEntry(stalePending.id, { status: 'cancelled', queue_position: null });
+  }
+
   const { paymentIntentId, clientSecret } = await createPaymentIntent({
     amountCents,
     userId,
@@ -63,25 +84,25 @@ export async function joinQueue(
     stationStripeAccountId,
     commissionCents,
     metadata: {
-      vehicle_format_id: vehicleFormatId,
+      service_id: serviceId,
+      vehicle_format_id: vehicleFormatId ?? '',
       entry_type: 'queue',
     },
   });
 
-  // Atomic: check duplicate and allocate position. Entry is created with stripe_payment_id already set.
   const entry = await db.transaction(async (tx) => {
-    const hasActive = await hasActiveEntryAtStation(userId, stationId, tx);
-    if (hasActive) throw new ConflictError('You already have an active entry at this station');
+    const hasActive = await hasActiveQueueEntryAtStation(userId, stationId, tx);
+    if (hasActive) throw new ConflictError('You already have an active queue entry at this station');
 
     const nextPos = await getNextQueuePosition(stationId, tx);
 
     return createQueueEntry({
       user_id: userId,
       station_id: stationId,
-      vehicle_format_id: vehicleFormatId,
+      vehicle_format_id: vehicleFormatId ?? null,
       queue_position: nextPos,
       status: STATUS_PENDING_PAYMENT,
-      amount_paid: String(formatPrice.toFixed(2)),
+      amount_paid: String(entryPrice.toFixed(2)),
       commission_rate: split.commissionRate,
       commission_amount: String(split.commissionAmount.toFixed(2)),
       station_payout: String(split.stationPayout.toFixed(2)),
@@ -94,7 +115,7 @@ export async function joinQueue(
   try {
     await updatePaymentIntentMetadata(paymentIntentId, { reservation_id: entry.id });
   } catch (e) {
-    console.error('[JOIN_QUEUE] PI metadata update failed — non-fatal', {
+    console.error('[JOIN_QUEUE] PI metadata update failed - non-fatal', {
       entryId: entry.id,
       paymentIntentId,
       error: e instanceof Error ? e.message : String(e),
@@ -121,7 +142,7 @@ export async function listQueue(stationId: string): Promise<Entry[]> {
  * Moves a reservation to the queue (downgrade). Used by cron for late unconfirmed reservations.
  * Uses queue-position helper for new position; shifts existing queue entries; decrements slot booked_count.
  *
- * Payment policy for late clients: no refund — the Stripe PaymentIntent is captured immediately so
+ * Payment policy for late clients: no refund - the Stripe PaymentIntent is captured immediately so
  * funds are distributed between the station and the platform as if the service had been rendered.
  * The client is moved to the walk-in queue and handled later by the station.
  */
@@ -133,7 +154,7 @@ export async function moveReservationToQueue(entryId: string): Promise<Entry> {
 
   const stationId = entry.station_id;
 
-  // Atomic: compute new position, shift queue, convert entry, decrement slot — all or nothing.
+  // Atomic: compute new position, shift queue, convert entry, decrement slot - all or nothing.
   const updated = await db.transaction(async (tx) => {
     const existingCount = await countQueueByStation(stationId, tx);
     const newPosition = getQueuePositionWhenMovingFromReservation(stationId, {

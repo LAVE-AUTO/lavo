@@ -56,7 +56,7 @@ export function haversineKm(lat1: number, lon1: number, lat2: number, lon2: numb
 
 /**
  * Subscribes to the cached browser geolocation. Does NOT trigger the native
- * permission prompt — call `requestUserLocation()` (typically via the
+ * permission prompt - call `requestUserLocation()` (typically via the
  * in-app banner) once the user opts in.
  */
 export function useUserLocation(): UserLocation | null {
@@ -92,37 +92,39 @@ export function useGeolocationBanner(): GeolocationBannerState {
         if (typeof window === 'undefined' || !navigator.geolocation) return;
         if (cachedLocation) return;
 
-        let dismissed = false;
-        try {
-            dismissed = sessionStorage.getItem(DISMISS_KEY) === '1';
-        } catch {
-            /* sessionStorage unavailable (incognito, sandbox) — fall through */
-        }
-        if (dismissed) return;
+        const isDismissed = () => {
+            try { return sessionStorage.getItem(DISMISS_KEY) === '1'; } catch { return false; }
+        };
 
-        // Permissions API is optional. Treat missing API as "prompt".
         const permissions = (navigator as Navigator & { permissions?: { query: (d: { name: PermissionName }) => Promise<PermissionStatus> } }).permissions;
         if (!permissions?.query) {
-            setVisible(true);
+            if (!isDismissed()) setVisible(true);
             return;
         }
         permissions
             .query({ name: 'geolocation' as PermissionName })
             .then((result) => {
+                /* When permission is already granted, refetch silently regardless
+                 * of the dismiss flag - the user opted in, so distance should
+                 * always populate after a fresh page load. */
                 if (result.state === 'granted') {
                     void requestUserLocation();
-                } else if (result.state === 'prompt') {
-                    setVisible(true);
+                    return;
                 }
+                /* For both `prompt` and `denied`, surface the banner unless the
+                 * user dismissed it this session. `denied` means the user can
+                 * still re-enable from the site settings - we want to keep the
+                 * affordance visible so distances stop showing as `--`. */
+                if (!isDismissed()) setVisible(true);
             })
-            .catch(() => setVisible(true));
+            .catch(() => { if (!isDismissed()) setVisible(true); });
     }, []);
 
     const request = async () => {
         setVisible(false);
         const loc = await requestUserLocation();
         if (!loc) {
-            // Browser denied or timed out — keep the banner gone for this session
+            // Browser denied or timed out - keep the banner gone for this session
             try { sessionStorage.setItem(DISMISS_KEY, '1'); } catch {}
         }
     };

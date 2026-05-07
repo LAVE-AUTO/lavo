@@ -13,7 +13,7 @@
  *   4. Calculate penalty and refund amount.
  *   5. Atomic transaction: update status + penalty_amount + cancellation_reason + decrement slot.
  *   6. Stripe (after transaction to avoid holding locks during API calls):
- *      - Free cancellation: cancelPaymentIntent — releases the authorization, no charge.
+ *      - Free cancellation: cancelPaymentIntent - releases the authorization, no charge.
  *      - Late cancellation: capturePaymentIntent (materialise charge), then partial refund,
  *        then distributePenalty to claw back platform's share from the station's transfer.
  *   7. Send notifications to client and station.
@@ -106,7 +106,7 @@ export async function cancelReservation(
     : policy.freeWindowMinutes; // no slot => treat as free cancellation
 
   // Station-fault: slot was pushed past closing time by an overrun cascade.
-  // The penalty is waived unconditionally — the client bears no responsibility.
+  // The penalty is waived unconditionally - the client bears no responsibility.
   const isLateCancellation = !stationFault && minutesUntilService < policy.freeWindowMinutes;
 
   const penaltyAmount = isLateCancellation
@@ -142,7 +142,7 @@ export async function cancelReservation(
   if (reservation.stripe_payment_id) {
     if (!isLateCancellation) {
       // Free cancellation: the PaymentIntent was authorized but never captured.
-      // Cancelling it releases the hold on the client's card — no charge at all.
+      // Cancelling it releases the hold on the client's card - no charge at all.
       try {
         await cancelPaymentIntent(reservation.stripe_payment_id);
       } catch (e) {
@@ -224,7 +224,7 @@ export async function cancelReservation(
 
   // Single notification to the client. A previous iteration duplicated the push with a
   // `notifyStation: true` payload flag, but `notifyEntry` always targets `userId` (the client)
-  // and the flag was never consumed downstream — it only caused a duplicate push to the client
+  // and the flag was never consumed downstream - it only caused a duplicate push to the client
   // and leaked the internal flag to the device `data` bag.
   await notifyEntry({
     entryId: reservationId,

@@ -12,11 +12,11 @@ type Props = {
 export async function generateMetadata({ params }: Props) {
   const { locale } = await params;
   const t = await getTranslations({ locale, namespace: 'reset_password' });
-  return { title: `Slowtime — ${t('title')}` };
+  return { title: `Slowtime - ${t('title')}` };
 }
 
 /**
- * Reset password page — reads token from searchParams server-side,
+ * Reset password page - reads token from searchParams server-side,
  * passes it down to the client form component.
  */
 export default async function ResetPasswordPage({ params, searchParams }: Props) {

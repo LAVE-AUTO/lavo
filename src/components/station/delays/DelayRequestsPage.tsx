@@ -1,7 +1,7 @@
 'use client';
 
 /**
- * DelayRequestsPage — STA-5
+ * DelayRequestsPage - STA-5
  * Station interface: pending delay requests (accept/refuse) + history.
  * Wired to GET /station/delays (paginated, status-filtered).
  */

@@ -218,7 +218,7 @@ export function RegisterForm() {
 
   return (
     <form onSubmit={handleSubmit} noValidate className="px-8 pb-8">
-      {/* Name row — side by side on larger screens */}
+      {/* Name row - side by side on larger screens */}
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-4">
         <FormField
           label={t('first_name')}
@@ -256,7 +256,7 @@ export function RegisterForm() {
         autoComplete="email"
       />
 
-      {/* Phone — optional for client sign-up */}
+      {/* Phone - optional for client sign-up */}
       <PhoneInput
         label={t('phone')}
         placeholder={t('phone_placeholder')}

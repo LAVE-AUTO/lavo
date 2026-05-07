@@ -30,7 +30,12 @@ export async function GET(request: Request) {
 
   try {
     const tickets = await getSupportTickets(auth.sub, auth.role, statusResult.data);
-    return successResponse(tickets);
+    // `getSupportTickets` returns a paginated result { data, total } from the
+    // repository. The client-side `ClientSupportContainer` expects the `data`
+    // array directly in the success envelope, so unwrap here to avoid a
+    // double-wrapped `data.data` response which caused runtime errors like
+    // "tickets is not iterable" on the client.
+    return successResponse(tickets.data);
   } catch (e) {
     if (e instanceof AppError) return fromAppError(e);
     return error500(e);

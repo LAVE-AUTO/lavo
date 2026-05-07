@@ -24,7 +24,7 @@ export function StationApplyShell({ washTypes }: StationApplyShellProps) {
 
   return (
     <div className="min-h-screen flex">
-      {/* Left brand panel — desktop only */}
+      {/* Left brand panel - desktop only */}
       <aside className="hidden lg:block lg:w-[42%] xl:w-[45%] shrink-0 sticky top-0 h-screen">
         <StationBrandPanel step={currentStep} />
       </aside>

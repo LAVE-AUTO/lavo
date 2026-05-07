@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import { useTranslations } from 'next-intl';
 
-// MOCK DATA — replace with API call before shipping (GET /admin/clients)
+// MOCK DATA - replace with API call before shipping (GET /admin/clients)
 const MOCK_CLIENTS = process.env.NODE_ENV === 'development' ? [
   { id: 'c1', first_name: 'Client',  last_name: 'A', email: 'client.a@example.com', phone: '+1 555 000 0001', status: 'active',    created_at: '2025-11-15T10:00:00Z' },
   { id: 'c2', first_name: 'Client',  last_name: 'B', email: 'client.b@example.com', phone: '+1 555 000 0002', status: 'suspended', created_at: '2025-12-03T14:30:00Z' },

@@ -2,7 +2,7 @@ import { getTranslations, getLocale } from 'next-intl/server';
 import { Link } from '@/i18n/navigation';
 
 /**
- * Public footer — server component.
+ * Public footer - server component.
  * Dark bg, Playfair Display logo, 4-column grid matching HTML reference.
  */
 export async function PublicFooter() {

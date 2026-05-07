@@ -63,7 +63,7 @@ export function MerchantHeroSection() {
           </div>
         </div>
 
-        {/* Right column — agenda mockup */}
+        {/* Right column - agenda mockup */}
         <div className="animate-fade-in animation-delay-500 relative z-10 hidden lg:flex items-center justify-center px-8 pb-12 pt-20">
           <MerchantAgendaMockup />
         </div>

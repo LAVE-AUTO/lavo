@@ -1,7 +1,7 @@
 {
   "info": {
-    "name": "LAVO — Admin API",
-    "description": "Collection pour les endpoints d'administration LAVO.\n\nVariable requise : `base_url` (ex: http://localhost:3000)\nVariable requise : `access_token` (JWT admin, obtenu après login admin)\nVariable requise : `station_id` (UUID de la station ciblée)\nVariable requise : `user_id` (UUID de l'utilisateur ciblé)\nVariable requise : `dispute_id` (UUID du litige ciblé)\n\n## Groupes\n- **Admin — Stations** : lister (paginé), détailler, approuver, rejeter, modifier les stations\n- **Admin — Users** : modifier les informations, débloquer un compte utilisateur\n- **Admin — Litiges** : lister (paginé + filtres), rembourser, clôturer (résoudre/rejeter)",
+    "name": "LAVO - Admin API",
+    "description": "Collection pour les endpoints d'administration LAVO.\n\nVariable requise : `base_url` (ex: http://localhost:3000)\nVariable requise : `access_token` (JWT admin, obtenu après login admin)\nVariable requise : `station_id` (UUID de la station ciblée)\nVariable requise : `user_id` (UUID de l'utilisateur ciblé)\nVariable requise : `dispute_id` (UUID du litige ciblé)\n\n## Groupes\n- **Admin - Stations** : lister (paginé), détailler, approuver, rejeter, modifier les stations\n- **Admin - Users** : modifier les informations, débloquer un compte utilisateur\n- **Admin - Litiges** : lister (paginé + filtres), rembourser, clôturer (résoudre/rejeter)",
     "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
   },
   "variable": [
@@ -33,7 +33,7 @@
   ],
   "item": [
     {
-      "name": "Admin — Stations",
+      "name": "Admin - Stations",
       "item": [
         {
           "name": "Lister stations en attente (200)",
@@ -88,14 +88,14 @@
           }
         },
         {
-          "name": "Lister stations — page 2 (200)",
+          "name": "Lister stations - page 2 (200)",
           "event": [
             {
               "listen": "test",
               "script": {
                 "exec": [
                   "pm.test('Status 200', () => pm.response.to.have.status(200));",
-                  "pm.test('Pagination correcte — page 2', () => {",
+                  "pm.test('Pagination correcte - page 2', () => {",
                   "  const json = pm.response.json();",
                   "  pm.expect(json.data.meta.page).to.eql(2);",
                   "  pm.expect(json.data.meta.per_page).to.eql(10);",
@@ -210,7 +210,7 @@
           }
         },
         {
-          "name": "Modifier station — plusieurs champs (200)",
+          "name": "Modifier station - plusieurs champs (200)",
           "event": [
             {
               "listen": "test",
@@ -262,7 +262,7 @@
           }
         },
         {
-          "name": "Modifier station — body vide (400)",
+          "name": "Modifier station - body vide (400)",
           "event": [
             {
               "listen": "test",
@@ -309,11 +309,11 @@
                 }
               }
             },
-            "description": "400 VALIDATION_FAILED — body vide, au moins un champ requis."
+            "description": "400 VALIDATION_FAILED - body vide, au moins un champ requis."
           }
         },
         {
-          "name": "Modifier station — statut invalide (400)",
+          "name": "Modifier station - statut invalide (400)",
           "event": [
             {
               "listen": "test",
@@ -360,11 +360,11 @@
                 }
               }
             },
-            "description": "400 VALIDATION_FAILED — statut 'rejected' non autorisé via PUT (utiliser /reject à la place). Valeurs acceptées : active, suspended, disabled."
+            "description": "400 VALIDATION_FAILED - statut 'rejected' non autorisé via PUT (utiliser /reject à la place). Valeurs acceptées : active, suspended, disabled."
           }
         },
         {
-          "name": "Modifier station — introuvable (404)",
+          "name": "Modifier station - introuvable (404)",
           "event": [
             {
               "listen": "test",
@@ -411,7 +411,7 @@
                 }
               }
             },
-            "description": "404 NOT_FOUND — UUID valide mais station inexistante."
+            "description": "404 NOT_FOUND - UUID valide mais station inexistante."
           }
         },
         {
@@ -445,7 +445,7 @@
                 "approve"
               ]
             },
-            "description": "Approuve la station — status=active.\n\nRetourne 409 CONFLICT si la station est deja approuvee ou dans un statut terminal (active, rejected)."
+            "description": "Approuve la station - status=active.\n\nRetourne 409 CONFLICT si la station est deja approuvee ou dans un statut terminal (active, rejected)."
           }
         },
         {
@@ -483,7 +483,7 @@
                 "approve"
               ]
             },
-            "description": "409 CONFLICT — la station est deja approuvee (status=active) ou dans un statut terminal. Executer apres avoir deja approuve la meme station."
+            "description": "409 CONFLICT - la station est deja approuvee (status=active) ou dans un statut terminal. Executer apres avoir deja approuve la meme station."
           }
         },
         {
@@ -531,7 +531,7 @@
                 }
               }
             },
-            "description": "Rejette la station — status=rejected avec raison.\n\nRetourne 409 CONFLICT si la station est deja rejetee ou dans un statut terminal (active, rejected)."
+            "description": "Rejette la station - status=rejected avec raison.\n\nRetourne 409 CONFLICT si la station est deja rejetee ou dans un statut terminal (active, rejected)."
           }
         },
         {
@@ -583,11 +583,11 @@
                 }
               }
             },
-            "description": "409 CONFLICT — la station est deja rejetee ou dans un statut terminal. Executer apres avoir deja rejete la meme station."
+            "description": "409 CONFLICT - la station est deja rejetee ou dans un statut terminal. Executer apres avoir deja rejete la meme station."
           }
         },
         {
-          "name": "Rejeter — raison trop courte (400)",
+          "name": "Rejeter - raison trop courte (400)",
           "response": [],
           "request": {
             "method": "POST",
@@ -620,11 +620,11 @@
                 }
               }
             },
-            "description": "400 VALIDATION_FAILED — rejection_reason trop courte."
+            "description": "400 VALIDATION_FAILED - rejection_reason trop courte."
           }
         },
         {
-          "name": "Admin — non autorise (403)",
+          "name": "Admin - non autorise (403)",
           "response": [],
           "request": {
             "method": "GET",
@@ -641,13 +641,13 @@
                 "stations"
               ]
             },
-            "description": "403 FORBIDDEN — role != admin."
+            "description": "403 FORBIDDEN - role != admin."
           }
         }
       ]
     },
     {
-      "name": "Admin — Users",
+      "name": "Admin - Users",
       "item": [
         {
           "name": "Modifier utilisateur (200)",
@@ -700,11 +700,11 @@
                 }
               }
             },
-            "description": "Modifie les champs whitelistés d'un utilisateur et enregistre un log admin.\n\nChamps autorisés : `first_name`, `last_name`, `phone` (format E.164), `status` (active|suspended|blocked|pending_verification).\n\nAu moins un champ requis. Log `UPDATE_USER` avec before/after créé dans admin_logs.\n\nReponse : `{ message, data: user }` — `password_hash` exclu de la réponse."
+            "description": "Modifie les champs whitelistés d'un utilisateur et enregistre un log admin.\n\nChamps autorisés : `first_name`, `last_name`, `phone` (format E.164), `status` (active|suspended|blocked|pending_verification).\n\nAu moins un champ requis. Log `UPDATE_USER` avec before/after créé dans admin_logs.\n\nReponse : `{ message, data: user }` - `password_hash` exclu de la réponse."
           }
         },
         {
-          "name": "Modifier utilisateur — plusieurs champs (200)",
+          "name": "Modifier utilisateur - plusieurs champs (200)",
           "event": [
             {
               "listen": "test",
@@ -756,7 +756,7 @@
           }
         },
         {
-          "name": "Modifier utilisateur — body vide (400)",
+          "name": "Modifier utilisateur - body vide (400)",
           "event": [
             {
               "listen": "test",
@@ -803,11 +803,11 @@
                 }
               }
             },
-            "description": "400 VALIDATION_FAILED — body vide, au moins un champ requis."
+            "description": "400 VALIDATION_FAILED - body vide, au moins un champ requis."
           }
         },
         {
-          "name": "Modifier utilisateur — champ non autorise (400)",
+          "name": "Modifier utilisateur - champ non autorise (400)",
           "event": [
             {
               "listen": "test",
@@ -854,11 +854,11 @@
                 }
               }
             },
-            "description": "400 VALIDATION_FAILED — champ `role` non autorisé (strict whitelist). Idem pour `email`, `password_hash`, `stripe_customer_id`."
+            "description": "400 VALIDATION_FAILED - champ `role` non autorisé (strict whitelist). Idem pour `email`, `password_hash`, `stripe_customer_id`."
           }
         },
         {
-          "name": "Modifier utilisateur — UUID invalide (400)",
+          "name": "Modifier utilisateur - UUID invalide (400)",
           "event": [
             {
               "listen": "test",
@@ -905,11 +905,11 @@
                 }
               }
             },
-            "description": "400 VALIDATION_FAILED — paramètre :id non UUID."
+            "description": "400 VALIDATION_FAILED - paramètre :id non UUID."
           }
         },
         {
-          "name": "Modifier utilisateur — introuvable (404)",
+          "name": "Modifier utilisateur - introuvable (404)",
           "event": [
             {
               "listen": "test",
@@ -956,7 +956,7 @@
                 }
               }
             },
-            "description": "404 NOT_FOUND — UUID valide mais utilisateur inexistant."
+            "description": "404 NOT_FOUND - UUID valide mais utilisateur inexistant."
           }
         },
         {
@@ -967,7 +967,7 @@
               "script": {
                 "exec": [
                   "pm.test('Status 200', () => pm.response.to.have.status(200));",
-                  "pm.test('Compte debloque — status active', () => {",
+                  "pm.test('Compte debloque - status active', () => {",
                   "  const json = pm.response.json();",
                   "  pm.expect(json.data).to.have.property('id');",
                   "  pm.expect(json.data.status).to.eql('active');",
@@ -1035,11 +1035,11 @@
                 "unblock"
               ]
             },
-            "description": "409 CONFLICT — compte déjà actif. Exécuter après un unblock réussi sur le même utilisateur."
+            "description": "409 CONFLICT - compte déjà actif. Exécuter après un unblock réussi sur le même utilisateur."
           }
         },
         {
-          "name": "Débloquer utilisateur — introuvable (404)",
+          "name": "Débloquer utilisateur - introuvable (404)",
           "event": [
             {
               "listen": "test",
@@ -1073,11 +1073,11 @@
                 "unblock"
               ]
             },
-            "description": "404 NOT_FOUND — UUID valide mais utilisateur inexistant."
+            "description": "404 NOT_FOUND - UUID valide mais utilisateur inexistant."
           }
         },
         {
-          "name": "Débloquer utilisateur — UUID invalide (400)",
+          "name": "Débloquer utilisateur - UUID invalide (400)",
           "event": [
             {
               "listen": "test",
@@ -1111,11 +1111,11 @@
                 "unblock"
               ]
             },
-            "description": "400 VALIDATION_FAILED — paramètre :id non UUID."
+            "description": "400 VALIDATION_FAILED - paramètre :id non UUID."
           }
         },
         {
-          "name": "Admin — non autorise (403)",
+          "name": "Admin - non autorise (403)",
           "event": [
             {
               "listen": "test",
@@ -1162,13 +1162,13 @@
                 }
               }
             },
-            "description": "403 FORBIDDEN — appel effectué avec un token client ou station (role != admin)."
+            "description": "403 FORBIDDEN - appel effectué avec un token client ou station (role != admin)."
           }
         }
       ]
     },
     {
-      "name": "Admin — Litiges",
+      "name": "Admin - Litiges",
       "description": "Gestion des litiges : liste paginée avec filtres, remboursement Stripe, clôture (résolution ou rejet).\n\nPrerequis : token admin valide dans `access_token`, UUID du litige dans `dispute_id`.\n\nChaque action admin (REFUND_DISPUTE, CLOSE_DISPUTE) est tracée dans admin_logs.",
       "item": [
         {
@@ -1224,7 +1224,7 @@
           }
         },
         {
-          "name": "Lister litiges — filtre status=open (200)",
+          "name": "Lister litiges - filtre status=open (200)",
           "event": [
             {
               "listen": "test",
@@ -1260,7 +1260,7 @@
           }
         },
         {
-          "name": "Lister litiges — filtre date_from (200)",
+          "name": "Lister litiges - filtre date_from (200)",
           "event": [
             {
               "listen": "test",
@@ -1289,7 +1289,7 @@
           }
         },
         {
-          "name": "Lister litiges — status invalide (400)",
+          "name": "Lister litiges - status invalide (400)",
           "event": [
             {
               "listen": "test",
@@ -1317,11 +1317,11 @@
                 { "key": "status", "value": "invalid_status" }
               ]
             },
-            "description": "400 VALIDATION_FAILED — status non reconnu (valeurs acceptées : open, refunded, resolved, rejected)."
+            "description": "400 VALIDATION_FAILED - status non reconnu (valeurs acceptées : open, refunded, resolved, rejected)."
           }
         },
         {
-          "name": "Lister litiges — non authentifié (401)",
+          "name": "Lister litiges - non authentifié (401)",
           "event": [
             {
               "listen": "test",
@@ -1344,11 +1344,11 @@
               "host": ["{{base_url}}"],
               "path": ["api", "v1", "admin", "disputes"]
             },
-            "description": "401 UNAUTHORIZED — token absent ou invalide."
+            "description": "401 UNAUTHORIZED - token absent ou invalide."
           }
         },
         {
-          "name": "Rembourser litige — total (200)",
+          "name": "Rembourser litige - total (200)",
           "event": [
             {
               "listen": "test",
@@ -1385,7 +1385,7 @@
           }
         },
         {
-          "name": "Rembourser litige — partiel (200)",
+          "name": "Rembourser litige - partiel (200)",
           "event": [
             {
               "listen": "test",
@@ -1422,7 +1422,7 @@
           }
         },
         {
-          "name": "Rembourser litige — montant supérieur au payé (400)",
+          "name": "Rembourser litige - montant supérieur au payé (400)",
           "event": [
             {
               "listen": "test",
@@ -1454,11 +1454,11 @@
               "raw": "{\n  \"amount\": 99999.00\n}",
               "options": { "raw": { "language": "json" } }
             },
-            "description": "400 VALIDATION_FAILED — amount dépasse le montant payé de la réservation."
+            "description": "400 VALIDATION_FAILED - amount dépasse le montant payé de la réservation."
           }
         },
         {
-          "name": "Rembourser litige — transfert existant (400)",
+          "name": "Rembourser litige - transfert existant (400)",
           "event": [
             {
               "listen": "test",
@@ -1488,11 +1488,11 @@
               "raw": "{}",
               "options": { "raw": { "language": "json" } }
             },
-            "description": "400 REFUND_NOT_ELIGIBLE — la réservation a déjà un stripe_transfer_id (transfert vers la station effectué). Remboursement bloqué."
+            "description": "400 REFUND_NOT_ELIGIBLE - la réservation a déjà un stripe_transfer_id (transfert vers la station effectué). Remboursement bloqué."
           }
         },
         {
-          "name": "Rembourser litige — déjà clôturé (409)",
+          "name": "Rembourser litige - déjà clôturé (409)",
           "event": [
             {
               "listen": "test",
@@ -1522,11 +1522,11 @@
               "raw": "{}",
               "options": { "raw": { "language": "json" } }
             },
-            "description": "409 DISPUTE_ALREADY_CLOSED — litige déjà remboursé, résolu ou rejeté."
+            "description": "409 DISPUTE_ALREADY_CLOSED - litige déjà remboursé, résolu ou rejeté."
           }
         },
         {
-          "name": "Rembourser litige — introuvable (404)",
+          "name": "Rembourser litige - introuvable (404)",
           "event": [
             {
               "listen": "test",
@@ -1556,11 +1556,11 @@
               "raw": "{}",
               "options": { "raw": { "language": "json" } }
             },
-            "description": "404 NOT_FOUND — UUID valide mais litige inexistant."
+            "description": "404 NOT_FOUND - UUID valide mais litige inexistant."
           }
         },
         {
-          "name": "Clôturer litige — résoudre (200)",
+          "name": "Clôturer litige - résoudre (200)",
           "event": [
             {
               "listen": "test",
@@ -1595,11 +1595,11 @@
               "raw": "{\n  \"status\": \"resolved\",\n  \"reason\": \"Le client a été remboursé manuellement hors plateforme.\"\n}",
               "options": { "raw": { "language": "json" } }
             },
-            "description": "Clôture le litige avec status=resolved. Aucun remboursement Stripe — décision purement administrative.\n\nLog admin créé : action=CLOSE_DISPUTE avec previous_status, new_status, reason.\n\nReponse : `{ message, data: dispute }`"
+            "description": "Clôture le litige avec status=resolved. Aucun remboursement Stripe - décision purement administrative.\n\nLog admin créé : action=CLOSE_DISPUTE avec previous_status, new_status, reason.\n\nReponse : `{ message, data: dispute }`"
           }
         },
         {
-          "name": "Clôturer litige — rejeter (200)",
+          "name": "Clôturer litige - rejeter (200)",
           "event": [
             {
               "listen": "test",
@@ -1628,14 +1628,14 @@
             },
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"status\": \"rejected\",\n  \"reason\": \"Litige non fondé — preuve insuffisante.\"\n}",
+              "raw": "{\n  \"status\": \"rejected\",\n  \"reason\": \"Litige non fondé - preuve insuffisante.\"\n}",
               "options": { "raw": { "language": "json" } }
             },
             "description": "Clôture le litige avec status=rejected."
           }
         },
         {
-          "name": "Clôturer litige — status manquant (400)",
+          "name": "Clôturer litige - status manquant (400)",
           "event": [
             {
               "listen": "test",
@@ -1667,11 +1667,11 @@
               "raw": "{\n  \"reason\": \"Raison fournie mais status absent.\"\n}",
               "options": { "raw": { "language": "json" } }
             },
-            "description": "400 VALIDATION_FAILED — champ `status` obligatoire (resolved|rejected)."
+            "description": "400 VALIDATION_FAILED - champ `status` obligatoire (resolved|rejected)."
           }
         },
         {
-          "name": "Clôturer litige — déjà clôturé (409)",
+          "name": "Clôturer litige - déjà clôturé (409)",
           "event": [
             {
               "listen": "test",
@@ -1703,11 +1703,11 @@
               "raw": "{\n  \"status\": \"resolved\",\n  \"reason\": \"Tentative de double cloture.\"\n}",
               "options": { "raw": { "language": "json" } }
             },
-            "description": "409 DISPUTE_ALREADY_CLOSED — litige déjà clôturé (status != open)."
+            "description": "409 DISPUTE_ALREADY_CLOSED - litige déjà clôturé (status != open)."
           }
         },
         {
-          "name": "Clôturer litige — introuvable (404)",
+          "name": "Clôturer litige - introuvable (404)",
           "event": [
             {
               "listen": "test",
@@ -1739,7 +1739,7 @@
               "raw": "{\n  \"status\": \"resolved\",\n  \"reason\": \"Litige introuvable.\"\n}",
               "options": { "raw": { "language": "json" } }
             },
-            "description": "404 NOT_FOUND — UUID valide mais litige inexistant."
+            "description": "404 NOT_FOUND - UUID valide mais litige inexistant."
           }
         }
       ]

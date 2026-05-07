@@ -8,7 +8,7 @@
  * - Pending payment reservation: cancels the Stripe PaymentIntent, no charge to the client.
  * - Queue entry: removes from queue, shifts positions, no Stripe interaction.
  *
- * Body (optional): { reason?: string } — forwarded as cancellation_reason for reservations.
+ * Body (optional): { reason?: string } - forwarded as cancellation_reason for reservations.
  */
 import { requireRole } from '@/lib/require-role';
 import { successResponse, error400, error404, error409, error500, fromAppError } from '@/lib/responses';

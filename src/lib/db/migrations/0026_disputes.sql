@@ -4,7 +4,12 @@
 -- One dispute per reservation (unique on reservation_id).
 
 --> statement-breakpoint
-CREATE TYPE "public"."dispute_status" AS ENUM('open', 'refunded', 'resolved', 'rejected');
+DO $$
+BEGIN
+  CREATE TYPE "public"."dispute_status" AS ENUM('open', 'refunded', 'resolved', 'rejected');
+EXCEPTION
+  WHEN duplicate_object THEN NULL;
+END $$;
 
 --> statement-breakpoint
 CREATE TABLE IF NOT EXISTS "disputes" (

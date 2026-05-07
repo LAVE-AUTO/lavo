@@ -1,4 +1,4 @@
-# LAVO — Guide de test Postman : module Support
+# LAVO - Guide de test Postman : module Support
 
 Ce guide explique comment importer et utiliser la collection
 `lavo-support.postman_collection.json` pour tester les endpoints du module
@@ -21,8 +21,8 @@ avant de commencer :
 
 | Token | Rôle | Utilisation |
 |---|---|---|
-| **JWT client** | `client` ou `station` | Groupe "Support — Client" |
-| **JWT admin** | `admin` | Groupe "Support — Admin" |
+| **JWT client** | `client` ou `station` | Groupe "Support - Client" |
+| **JWT admin** | `admin` | Groupe "Support - Admin" |
 
 Pour obtenir ces tokens, exécutez d'abord le login correspondant via la
 collection `docs/postman_guides/auth/`. Copiez la valeur du champ
@@ -38,39 +38,39 @@ sur un endpoint admin retournera 403.
 
 Suivez cet ordre pour tester l'ensemble du cycle de vie d'un ticket.
 
-### Etape 1 — Créer le ticket (client)
+### Etape 1 - Créer le ticket (client)
 
 1. Définir `access_token` avec le JWT client.
-2. Exécuter **"Créer ticket — succès (201)"**.
+2. Exécuter **"Créer ticket - succès (201)"**.
 3. Le script de test capture automatiquement `json.data.id` dans la variable
    `ticket_id`. Toutes les requêtes suivantes utilisant `{{ticket_id}}` seront
    prêtes sans manipulation manuelle.
 
-### Etape 2 — Ajouter un message (client)
+### Etape 2 - Ajouter un message (client)
 
 4. Exécuter **"Ajouter message (201)"** pour enrichir le fil de discussion.
    Le champ du body s'appelle `content` (et non `message`).
 
-### Etape 3 — Vérifier le détail (client)
+### Etape 3 - Vérifier le détail (client)
 
 5. Exécuter **"Détail ticket (200)"** pour confirmer que le message est bien
    rattaché au ticket.
 
-### Etape 4 — Passer en traitement (admin)
+### Etape 4 - Passer en traitement (admin)
 
 6. Remplacer `access_token` par le JWT admin.
-7. Exécuter **"Changer statut — en_cours (200)"** pour passer le ticket en
+7. Exécuter **"Changer statut - en_cours (200)"** pour passer le ticket en
    `en_cours`.
 
-### Etape 5 — Assigner le ticket (admin)
+### Etape 5 - Assigner le ticket (admin)
 
 8. Exécuter **"Assigner ticket (200)"** en remplacant l'UUID placeholder par
    l'UUID réel d'un admin de votre base de données.
 9. Pour retirer l'assignation, exécuter **"Désassigner ticket (200)"**.
 
-### Etape 6 — Fermer le ticket (admin)
+### Etape 6 - Fermer le ticket (admin)
 
-10. Exécuter **"Changer statut — ferme (200)"** pour clôturer le ticket.
+10. Exécuter **"Changer statut - ferme (200)"** pour clôturer le ticket.
 
 ---
 
@@ -85,9 +85,9 @@ sont indépendantes l'une de l'autre.
 - **Fenêtre** : 3600 secondes glissantes.
 - **Réponse dépassée** : `429 Too Many Requests`.
 
-Pour tester ce cas manuellement, envoyez la requête **"Créer ticket — succès
+Pour tester ce cas manuellement, envoyez la requête **"Créer ticket - succès
 (201)"** six fois de suite avec le même token. La sixième retournera 429. La
-requête **"Créer ticket — rate limit (429)"** est fournie à titre documentaire
+requête **"Créer ticket - rate limit (429)"** est fournie à titre documentaire
 et inclut une description de la procédure.
 
 ### Ajout de messages
@@ -102,9 +102,9 @@ la limite.
 
 ---
 
-## Variable `ticket_id` — auto-remplissage
+## Variable `ticket_id` - auto-remplissage
 
-La requête **"Créer ticket — succès (201)"** contient un script de test
+La requête **"Créer ticket - succès (201)"** contient un script de test
 Postman qui s'exécute automatiquement après réception d'une réponse 201 :
 
 ```javascript
@@ -122,25 +122,25 @@ définissez manuellement `ticket_id` via l'onglet "Variables" de la collection.
 
 ## Description des groupes
 
-### Support — Client
+### Support - Client
 
 Ce groupe couvre les actions disponibles à tout utilisateur authentifié (rôle
 `client`, `station` ou `admin`).
 
 | Requête | Méthode | Endpoint | Cas testé |
 |---|---|---|---|
-| Créer ticket — succès (201) | POST | /api/v1/support | Création valide, capture `ticket_id` |
-| Créer ticket — body invalide (400) | POST | /api/v1/support | subject court, message court, category et priority invalides |
-| Créer ticket — rate limit (429) | POST | /api/v1/support | Procédure documentaire, 6e requête en moins d'une heure |
+| Créer ticket - succès (201) | POST | /api/v1/support | Création valide, capture `ticket_id` |
+| Créer ticket - body invalide (400) | POST | /api/v1/support | subject court, message court, category et priority invalides |
+| Créer ticket - rate limit (429) | POST | /api/v1/support | Procédure documentaire, 6e requête en moins d'une heure |
 | Mes tickets (200) | GET | /api/v1/support | Liste des tickets de l'utilisateur courant |
-| Mes tickets — filtre statut ouvert (200) | GET | /api/v1/support?status=ouvert | Filtre par statut |
+| Mes tickets - filtre statut ouvert (200) | GET | /api/v1/support?status=ouvert | Filtre par statut |
 | Détail ticket (200) | GET | /api/v1/support/{{ticket_id}} | Détail + fil de messages |
-| Détail ticket — introuvable (404) | GET | /api/v1/support/00000000-... | UUID valide mais ticket absent ou appartenant à un autre |
+| Détail ticket - introuvable (404) | GET | /api/v1/support/00000000-... | UUID valide mais ticket absent ou appartenant à un autre |
 | Ajouter message (201) | POST | /api/v1/support/{{ticket_id}}/messages | Ajout d'un message valide |
-| Ajouter message — body invalide (400) | POST | /api/v1/support/{{ticket_id}}/messages | Champ `content` absent |
-| Créer ticket — non authentifié (401) | POST | /api/v1/support | Absence de header Authorization |
+| Ajouter message - body invalide (400) | POST | /api/v1/support/{{ticket_id}}/messages | Champ `content` absent |
+| Créer ticket - non authentifié (401) | POST | /api/v1/support | Absence de header Authorization |
 
-### Support — Admin
+### Support - Admin
 
 Ce groupe couvre les actions réservées au rôle `admin`. Remplacez `access_token`
 par un JWT admin avant d'exécuter ces requêtes.
@@ -157,15 +157,15 @@ L'assignation est sur un endpoint dédié `/api/v1/admin/support/{{ticket_id}}/a
 | Requête | Méthode | Endpoint | Cas testé |
 |---|---|---|---|
 | Liste tous les tickets (200) | GET | /api/v1/support | Admin voit tous les tickets |
-| Liste — filtre statut (200) | GET | /api/v1/support?status=ouvert | Filtre par statut côté admin |
+| Liste - filtre statut (200) | GET | /api/v1/support?status=ouvert | Filtre par statut côté admin |
 | Détail ticket admin (200) | GET | /api/v1/support/{{ticket_id}} | Admin accède à n'importe quel ticket |
-| Changer statut — en_cours (200) | PATCH | /api/v1/support/{{ticket_id}} | Passage en traitement |
-| Changer statut — ferme (200) | PATCH | /api/v1/support/{{ticket_id}} | Fermeture du ticket |
-| Changer statut — statut invalide (400) | PATCH | /api/v1/support/{{ticket_id}} | Valeur avec accent rejetée |
+| Changer statut - en_cours (200) | PATCH | /api/v1/support/{{ticket_id}} | Passage en traitement |
+| Changer statut - ferme (200) | PATCH | /api/v1/support/{{ticket_id}} | Fermeture du ticket |
+| Changer statut - statut invalide (400) | PATCH | /api/v1/support/{{ticket_id}} | Valeur avec accent rejetée |
 | Assigner ticket (200) | PATCH | /api/v1/admin/support/{{ticket_id}}/assign | Assignation à un admin |
 | Désassigner ticket (200) | PATCH | /api/v1/admin/support/{{ticket_id}}/assign | `assigned_to: null` |
-| Admin — non authentifié (401) | PATCH | /api/v1/admin/support/{{ticket_id}}/assign | Absence de token |
-| Admin — mauvais rôle (403) | PATCH | /api/v1/admin/support/{{ticket_id}}/assign | Token client sur endpoint admin |
+| Admin - non authentifié (401) | PATCH | /api/v1/admin/support/{{ticket_id}}/assign | Absence de token |
+| Admin - mauvais rôle (403) | PATCH | /api/v1/admin/support/{{ticket_id}}/assign | Token client sur endpoint admin |
 
 ---
 

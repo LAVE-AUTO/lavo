@@ -21,7 +21,7 @@ import type { NextResponse } from 'next/server';
  *
  * Responses:
  *   200 { data: { period, totals, metrics, alerts } }
- *   400 VALIDATION_FAILED  — invalid or inconsistent query params
+ *   400 VALIDATION_FAILED  - invalid or inconsistent query params
  *   401 UNAUTHORIZED
  *   403 FORBIDDEN
  *   500 INTERNAL_ERROR

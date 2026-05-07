@@ -36,9 +36,9 @@ export const transactionLogsQuerySchema = z
     type: z.enum(['reservation', 'tip', 'penalty']).optional(),
     /** Filter by station UUID. */
     station_id: z.string().uuid('Invalid station ID').optional(),
-    /** ISO date-time string — lower bound on created_at. */
+    /** ISO date-time string - lower bound on created_at. */
     date_from: validDate.optional(),
-    /** ISO date-time string — upper bound on created_at. */
+    /** ISO date-time string - upper bound on created_at. */
     date_to: validDate.optional(),
   })
   .superRefine((val, ctx) => {

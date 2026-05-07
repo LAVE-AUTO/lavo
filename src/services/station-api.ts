@@ -1,5 +1,5 @@
 import { getFromApi } from './axios-service';
-import type { Station, StationDetailData, ServiceCategory, TimeSlot, Review } from '@/types/station';
+import type { Station, StationDetailData, ServiceCategory, TimeSlot, Review, StationServicePublic, StationServiceEntry, StationServiceExtra } from '@/types/station';
 
 /* ------------------------------------------------------------------ */
 /*  API response shapes (snake_case, matching backend output)          */
@@ -20,6 +20,12 @@ interface ApiStationListItem {
     available_slots: number;
     available: boolean;
     completed_count?: number;
+    min_duration?: number | null;
+    price_from?: string | null;
+    image_url?: string | null;
+    verified?: boolean;
+    queue_count?: number;
+    opening_hours?: { open: string; close: string } | null;
     [key: string]: unknown;
 }
 
@@ -50,10 +56,48 @@ interface ApiTimeSlot {
     status: string;
 }
 
+interface ApiPublicServiceEntry {
+    id: string;
+    vehicle_format_id: string | null;
+    vehicle_label: string;
+    price: string;
+    duration_min: number;
+}
+
+interface ApiPublicServiceExtra {
+    id: string;
+    label: string;
+    scope: string;
+    price: string;
+    duration_min: number;
+}
+
+interface ApiPublicStationService {
+    id: string;
+    name: string;
+    category: string;
+    service_type: string;
+    description: string | null;
+    is_popular: boolean;
+    vehicle_entries: ApiPublicServiceEntry[];
+    extras: ApiPublicServiceExtra[];
+}
+
+interface ApiStationDetailConfig {
+    opening_time: string;
+    closing_time: string;
+    wash_duration_minutes: number;
+    wash_post_count: number;
+    reservation_surcharge: number | null;
+}
+
 interface ApiStationDetail extends ApiStationListItem {
     stationConfig: ApiStationConfig | null;
     vehicleFormats: ApiVehicleFormat[];
     timeSlots: ApiTimeSlot[];
+    station_services?: ApiPublicStationService[];
+    station_config?: ApiStationDetailConfig | null;
+    photos?: string[];
 }
 
 interface ApiStationListResponse {
@@ -76,6 +120,7 @@ interface ApiRatingItem {
     score: number;
     comment: string | null;
     created_at: string;
+    author_first_name?: string | null;
 }
 
 interface ApiRatingsResponse {
@@ -119,7 +164,7 @@ function mapRatingToReview(r: ApiRatingItem): Review {
     const date = d.toLocaleDateString('fr-CA', { day: '2-digit', month: '2-digit', year: 'numeric' });
     return {
         id: r.id,
-        authorName: 'Anonyme',
+        authorName: r.author_first_name?.trim() || 'Anonyme',
         rating: r.score,
         comment: r.comment || '',
         date,
@@ -132,6 +177,12 @@ function calcEstimatedWait(queueCount: number, washDuration: number, washPostCou
 }
 
 function mapApiStationToStation(s: ApiStationListItem): Station {
+    const priceFromRaw = s.price_from != null ? parseFloat(s.price_from) : null;
+    const lat = s.latitude != null ? parseFloat(s.latitude) : NaN;
+    const lng = s.longitude != null ? parseFloat(s.longitude) : NaN;
+    const openingHours = s.opening_hours
+        ? `${formatTime(s.opening_hours.open)} - ${formatTime(s.opening_hours.close)}`
+        : undefined;
     return {
         id: s.id,
         name: s.name,
@@ -142,18 +193,15 @@ function mapApiStationToStation(s: ApiStationListItem): Station {
         completedCount: s.completed_count ?? 0,
         availableSlots: process.env.NODE_ENV === 'production' ? (s.available_slots || 0) : mockAvailableSlots(s.id, s.available_slots || 0),
         totalSlots: s.wash_post_count || 0,
-        /* priceFrom is absent from the list payload — leave it null so the UI
-         * can hide the price block instead of faking a "0 $" value. Populated
-         * on the detail page once vehicle_formats are available. */
-        priceFrom: null,
+        priceFrom: Number.isFinite(priceFromRaw) ? priceFromRaw : null,
         tags: [],
-        latitude: s.latitude != null ? parseFloat(s.latitude) : undefined,
-        longitude: s.longitude != null ? parseFloat(s.longitude) : undefined,
+        latitude: Number.isFinite(lat) ? lat : undefined,
+        longitude: Number.isFinite(lng) ? lng : undefined,
         isOpen: s.is_open,
         description: s.description || undefined,
-        /* imageUrl comes from the backend — `GET /stations` does not expose it yet,
-         * so stay undefined and let the placeholder render in the card. */
-        imageUrl: undefined,
+        imageUrl: s.image_url ?? undefined,
+        verified: s.verified ?? false,
+        openingHours,
     };
 }
 
@@ -162,13 +210,14 @@ function mapApiStationToDetail(s: ApiStationListItem): StationDetailData {
         ...mapApiStationToStation(s),
         reviews: [],
         services: [],
-        /* List payload exposes neither service categories (Essentiel/Premium/VIP/…) nor extras —
-         * leave both empty so the card hides forfait tags until the backend exposes them. */
         serviceCategories: [],
         extras: [],
         timeSlots: [],
-        queueCount: 0,
-        estimatedWaitMinutes: 0,
+        queueCount: s.queue_count ?? 0,
+        estimatedWaitMinutes: s.min_duration ?? 0,
+        stationServices: [],
+        stationConfig: null,
+        photos: [],
     };
 }
 
@@ -177,6 +226,7 @@ function mapApiDetailToStationDetail(
     reviews: Review[] = [],
     queueCount: number = 0,
     estimatedWaitMinutes: number = 0,
+    reviewCountOverride?: number,
 ): StationDetailData {
     const base = mapApiStationToStation(s);
 
@@ -230,20 +280,66 @@ function mapApiDetailToStationDetail(
             };
         });
 
+    // Map station_services (new booking flow)
+    const stationServices: StationServicePublic[] = (s.station_services ?? []).map(
+        (svc: ApiPublicStationService): StationServicePublic => ({
+            id: svc.id,
+            name: svc.name,
+            category: svc.category,
+            serviceType: svc.service_type,
+            description: svc.description,
+            isPopular: svc.is_popular,
+            vehicleEntries: svc.vehicle_entries.map((e: ApiPublicServiceEntry): StationServiceEntry => ({
+                id: e.id,
+                vehicleFormatId: e.vehicle_format_id,
+                formatLabel: e.vehicle_label,
+                price: parseFloat(e.price),
+                duration: e.duration_min,
+            })),
+            extras: svc.extras.map((ex: ApiPublicServiceExtra): StationServiceExtra => ({
+                id: ex.id,
+                name: ex.label,
+                scope: ex.scope,
+                price: parseFloat(ex.price),
+                duration: ex.duration_min,
+            })),
+        })
+    );
+
+    const stationConfig = s.station_config
+        ? {
+              openingTime: s.station_config.opening_time,
+              closingTime: s.station_config.closing_time,
+              washDurationMinutes: s.station_config.wash_duration_minutes,
+              washPostCount: s.station_config.wash_post_count,
+              reservationSurcharge: s.station_config.reservation_surcharge ?? null,
+          }
+        : null;
+
+    // Derive priceFrom from station_services when available
+    const allEntryPrices = stationServices.flatMap((svc) => svc.vehicleEntries.map((e) => e.price));
+    const derivedPriceFrom = allEntryPrices.length > 0 ? Math.min(...allEntryPrices) : priceFrom;
+
+    /* Dedupe photos: backend may return the same URL multiple times when the
+     * photo is registered twice in station_photos. */
+    const photos = Array.from(new Set(s.photos ?? []));
     return {
         ...base,
-        priceFrom,
+        reviewCount: reviewCountOverride ?? base.reviewCount,
+        priceFrom: derivedPriceFrom,
         vehicleTypes,
         openingHours,
+        imageUrl: base.imageUrl ?? photos[0],
         reviews,
         services: [],
         serviceCategories,
-        /* Extras (Polish, Soin cuir, Renovation phares…) have no backend model yet —
-         * empty list until a `services`/`station_services` schema lands. */
         extras: [],
         timeSlots,
         queueCount,
         estimatedWaitMinutes,
+        stationServices,
+        stationConfig,
+        photos,
     };
 }
 
@@ -309,9 +405,11 @@ export async function fetchStationById(id: string): Promise<StationDetailData | 
     const station = (data as { data: ApiStationDetail }).data;
 
     const [ratingsOk, ratingsData] = ratingsResult;
-    const reviews: Review[] = (ratingsOk && ratingsData && 'data' in (ratingsData as object))
-        ? ((ratingsData as ApiRatingsResponse).data?.items || []).map(mapRatingToReview)
-        : [];
+    const ratingsPayload = (ratingsOk && ratingsData && 'data' in (ratingsData as object))
+        ? (ratingsData as ApiRatingsResponse).data
+        : null;
+    const reviews: Review[] = ratingsPayload?.items?.map(mapRatingToReview) ?? [];
+    const reviewCountFromApi = ratingsPayload?.meta?.total;
 
     const [queueOk, queueData] = queueResult;
     const queueEntries: ApiQueueEntry[] = (queueOk && queueData && 'data' in (queueData as object))
@@ -323,5 +421,5 @@ export async function fetchStationById(id: string): Promise<StationDetailData | 
     const washPostCount = station.wash_post_count ?? 1;
     const estimatedWaitMinutes = calcEstimatedWait(queueCount, washDuration, washPostCount);
 
-    return mapApiDetailToStationDetail(station, reviews, queueCount, estimatedWaitMinutes);
+    return mapApiDetailToStationDetail(station, reviews, queueCount, estimatedWaitMinutes, reviewCountFromApi);
 }

@@ -46,7 +46,7 @@ export async function listNotificationsByUser(
           )!
         );
       }
-    } catch { /* invalid cursor — ignore, return from start */ }
+    } catch { /* invalid cursor - ignore, return from start */ }
   }
 
   const where = and(...conditions);
@@ -109,7 +109,7 @@ export async function markNotificationRead(
     .returning();
   if (updated) return updated;
 
-  // No row was updated — either it does not exist, is not owned by this user,
+  // No row was updated - either it does not exist, is not owned by this user,
   // or it was already read. Fetch the row to distinguish the two cases.
   return db.query.userNotifications.findFirst({
     where: and(

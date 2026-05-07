@@ -1,5 +1,6 @@
 'use client';
 
+import { useState } from 'react';
 import { useTranslations } from 'next-intl';
 import { Link } from '@/i18n/navigation';
 import { useAuth } from '@/context';
@@ -19,6 +20,7 @@ export function StationCard({ station, unavailable = false }: StationCardProps) 
   const t               = useTranslations('stations');
   const userLocation    = useUserLocation();
   const { isAuthenticated } = useAuth();
+  const [imgFailed, setImgFailed] = useState(false);
 
   const distanceLabel = (() => {
     if (!userLocation || station.latitude == null || station.longitude == null) return null;
@@ -43,10 +45,11 @@ export function StationCard({ station, unavailable = false }: StationCardProps) 
     >
       {/* Photo */}
       <div className="relative h-[140px] sm:h-[160px] bg-[#D0D0C0] dark:bg-tab-inactive flex items-center justify-center overflow-hidden">
-        {station.imageUrl ? (
+        {station.imageUrl && !imgFailed ? (
           <img
             src={station.imageUrl}
             alt={station.name}
+            onError={() => setImgFailed(true)}
             className="w-full h-full object-cover group-hover:scale-[1.01] transition-transform duration-300"
           />
         ) : (
@@ -81,13 +84,6 @@ export function StationCard({ station, unavailable = false }: StationCardProps) 
           </span>
         )}
 
-        {station.verified && (
-          <span className="absolute top-2 right-2 w-5 h-5 bg-lavo-success rounded-full flex items-center justify-center" title={t('detail_verified_label')}>
-            <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-              <polyline points="20 6 9 17 4 12" />
-            </svg>
-          </span>
-        )}
       </div>
 
       {/* Card body */}
@@ -121,10 +117,10 @@ export function StationCard({ station, unavailable = false }: StationCardProps) 
             <div className="text-[13px] text-[#555] dark:text-[#D8D8C8] mt-1">{t('stat_distance')}</div>
           </div>
 
-          {/* Wait time */}
+          {/* Min service duration */}
           <div className="pl-2">
             <div className="text-[17px] font-black text-[#0A0A14] dark:text-white leading-none">
-              {station.estimatedWaitMinutes > 0 ? `${station.estimatedWaitMinutes}` : '\u2014'}
+              {station.estimatedWaitMinutes > 0 ? `${station.estimatedWaitMinutes} min` : '0 min'}
             </div>
             <div className="text-[13px] text-[#555] dark:text-[#D8D8C8] mt-1">{t('min_attente')}</div>
           </div>

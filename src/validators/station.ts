@@ -94,7 +94,7 @@ const _step3Base = z.object({
 
 
 // %%%%% Per-step validation schemas %%%%%
-// No DB operations — used by validate endpoints only
+// No DB operations - used by validate endpoints only
 
 // Step 1: account credentials
 export const registerStationSchema = _step1Base.refine(
@@ -113,7 +113,7 @@ export const stationDocumentsSchema = _step3Base;
 
 
 // %%%%% Full submit schema %%%%%
-// All steps merged — triggers DB operations
+// All steps merged - triggers DB operations
 
 export const stationOnboardingSubmitSchema = _step1Base
   .merge(_step2Base)
@@ -479,7 +479,7 @@ export const patchFormatBodySchema = z
 // %%%%% Station profile update %%%%%
 
 /**
- * PATCH /api/v1/station/me — partial update of station profile fields.
+ * PATCH /api/v1/station/me - partial update of station profile fields.
  * wash_post_count is intentionally excluded: it is managed via station config
  * to avoid desync with station_configs.wash_post_count.
  */
@@ -503,7 +503,7 @@ export const updateStationProfileBodySchema = z
 
 export type UpdateStationProfileBody = z.infer<typeof updateStationProfileBodySchema>;
 
-/** PATCH /api/v1/station/photos — full replacement of station photos (url + position pairs). */
+/** PATCH /api/v1/station/photos - full replacement of station photos (url + position pairs). */
 export const stationPhotosBodySchema = z
   .object({
     photos: z
@@ -515,7 +515,7 @@ export const stationPhotosBodySchema = z
             .refine(
               (val) => {
                 const cloudName = process.env.CLOUDINARY_CLOUD_NAME;
-                // Fail closed: if the env var is absent the server is misconfigured —
+                // Fail closed: if the env var is absent the server is misconfigured -
                 // reject every URL rather than silently accepting arbitrary origins.
                 if (!cloudName) return false;
                 try {
@@ -558,6 +558,57 @@ export type StationPhotosBody = z.infer<typeof stationPhotosBodySchema>;
 // %%%%% END - Station profile update %%%%%
 
 
+// %%%%% Services and Extras %%%%%
+
+const serviceVehicleEntrySchema = z.object({
+  // For hand_wash entries this is the real vehicle format UUID.
+  // For automatic/self_service entries it is omitted (null).
+  vehicle_format_id: z.string().uuid('Invalid vehicle format ID').nullable().optional(),
+  // Human-readable label stored with the entry (package name or format label).
+  vehicle_label: z.string().min(1).max(255),
+  price: z.union([
+    z.number().positive('Price must be greater than 0'),
+    z.string().regex(/^\d+(\.\d{1,2})?$/).refine((v) => parseFloat(v) > 0, 'Price must be greater than 0'),
+  ]),
+  duration_min: z.number().int().min(1, 'Duration must be at least 1 minute').optional().default(45),
+  staff_required: z.number().int().min(0).optional().default(0),
+  is_active: z.boolean().optional().default(true),
+});
+
+export const createServiceBodySchema = z.object({
+  name: z.string().min(1).max(255, 'Service name must not exceed 255 characters'),
+  category: z.enum(['hand_wash', 'automatic', 'self_service']),
+  service_type: z.enum(['exterior', 'interior', 'complete']),
+  description: z.string().max(2000).optional(),
+  is_active: z.boolean().optional().default(true),
+  is_popular: z.boolean().optional().default(false),
+  vehicle_entries: z.array(serviceVehicleEntrySchema).min(1, 'At least one vehicle entry is required'),
+  compatible_extra_ids: z.array(z.string().uuid()).optional().default([]),
+});
+
+export const patchServiceBodySchema = createServiceBodySchema.partial();
+
+export const createExtraBodySchema = z.object({
+  name: z.string().min(1).max(255, 'Extra name must not exceed 255 characters'),
+  applicable_on: z.enum(['exterior', 'interior', 'both']),
+  price: z.union([z.number().min(0), z.string().regex(/^\d+(\.\d{1,2})?$/)]),
+  duration: z.number().int().min(0).optional().default(10),
+  is_active: z.boolean().optional().default(true),
+});
+
+export const patchExtraBodySchema = createExtraBodySchema.partial();
+
+export const serviceIdParamSchema = z.object({
+  id: z.string().uuid('Invalid service ID'),
+});
+
+export const extraIdParamSchema = z.object({
+  id: z.string().uuid('Invalid extra ID'),
+});
+
+// %%%%% END - Services and Extras %%%%%
+
+
 // %%%%% Exported types %%%%%
 
 export type CreateSlotBody = z.infer<typeof createSlotBodySchema>;
@@ -568,6 +619,13 @@ export type CreateFormatBody = z.infer<typeof createFormatBodySchema>;
 export type UpdateFormatBody = z.infer<typeof updateFormatBodySchema>;
 export type PatchFormatBody = z.infer<typeof patchFormatBodySchema>;
 export type FormatIdParam = z.infer<typeof formatIdParamSchema>;
+
+export type CreateServiceBody = z.infer<typeof createServiceBodySchema>;
+export type PatchServiceBody = z.infer<typeof patchServiceBodySchema>;
+export type CreateExtraBody = z.infer<typeof createExtraBodySchema>;
+export type PatchExtraBody = z.infer<typeof patchExtraBodySchema>;
+export type ServiceIdParam = z.infer<typeof serviceIdParamSchema>;
+export type ExtraIdParam = z.infer<typeof extraIdParamSchema>;
 
 export type StationIdParam = z.infer<typeof stationIdParamSchema>;
 export type ListStationsQuery = z.infer<typeof listStationsQuerySchema>;

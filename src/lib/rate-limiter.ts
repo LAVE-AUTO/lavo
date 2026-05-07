@@ -62,11 +62,11 @@ export async function checkRateLimit(key: string): Promise<RateLimitResult> {
         if (retryAfter > 0) {
           return { blocked: true, retryAfter };
         }
-        // Block expired but key not yet evicted — treat as unblocked.
+        // Block expired but key not yet evicted - treat as unblocked.
       }
       return { blocked: false };
     } catch {
-      // Redis unavailable — fall through to DB
+      // Redis unavailable - fall through to DB
     }
   }
 
@@ -90,7 +90,7 @@ export async function checkRateLimit(key: string): Promise<RateLimitResult> {
 /**
  * Records one failed auth attempt in a single atomic statement (insert or increment).
  * When the post-increment count reaches the threshold, resets attempts and sets `blocked_until`
- * in the same row update — avoids read-then-write TOCTOU races under concurrency.
+ * in the same row update - avoids read-then-write TOCTOU races under concurrency.
  * `RATE_LIMIT_MAX_ATTEMPTS` from `@/helpers/server-constants` must be at least 2 (asserted at module load).
  *
  * Redis-first: increments the attempt counter in Redis and sets the block sentinel
@@ -120,7 +120,7 @@ export async function recordFailedAttempt(key: string): Promise<void> {
       }
       return;
     } catch {
-      // Redis unavailable — fall through to DB
+      // Redis unavailable - fall through to DB
     }
   }
 
@@ -158,7 +158,7 @@ export async function resetOnSuccess(key: string): Promise<void> {
       await redis.del(blockKey(key), countKey(key));
       return;
     } catch {
-      // Redis unavailable — fall through to DB
+      // Redis unavailable - fall through to DB
     }
   }
 
@@ -169,7 +169,7 @@ export async function resetOnSuccess(key: string): Promise<void> {
 /**
  * Sliding-window quota rate limiter for authenticated actions (e.g. ticket creation,
  * message sending). Unlike the failed-attempt limiter above, this counts every
- * successful action — not just failures — within a rolling time window.
+ * successful action - not just failures - within a rolling time window.
  *
  * Implemented on top of the same `authRateLimits` table, reusing the `key`,
  * `attempts` (used here as the rolling count), and `blocked_until` (used here
@@ -192,7 +192,7 @@ export async function checkSlidingWindowRateLimit(
 
   // Upsert: insert a fresh row (count=1, window starts now) or increment the
   // existing count. When the existing window has expired, reset to 1 and open
-  // a fresh window — this is the "sliding" reset behaviour.
+  // a fresh window - this is the "sliding" reset behaviour.
   const [row] = await db
     .insert(authRateLimits)
     .values({

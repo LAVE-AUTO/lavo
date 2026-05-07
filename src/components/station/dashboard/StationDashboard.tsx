@@ -42,6 +42,24 @@ interface RawEntry {
   created_at: string;
   updated_at: string;
   completed_at: string | null;
+  user?: { first_name: string | null } | null;
+  vehicle_format?: { id: string; label: string } | null;
+}
+
+/** Pretty-print the entry's client name, falling back to an anonymised handle. */
+function clientNameOf(entry: RawEntry): string {
+  const first = entry.user?.first_name?.trim();
+  if (first) return first;
+  return `Client #${entry.user_id.slice(0, 4).toUpperCase()}`;
+}
+
+/** Day window [start, end) for the given date in the user's local timezone. */
+function dayRange(date: Date): { from: string; to: string } {
+  const start = new Date(date);
+  start.setHours(0, 0, 0, 0);
+  const end = new Date(start);
+  end.setDate(end.getDate() + 1);
+  return { from: start.toISOString(), to: end.toISOString() };
 }
 
 interface RawConfig {
@@ -55,6 +73,11 @@ interface RawDashboard {
   total_completed: number;
   average_rating: string | null;
   pending_count: number;
+  month: string;
+  late_fees_total: string;
+  fill_rate_pct: number;
+  revenue_previous_period: string;
+  clients_previous_period: number;
 }
 
 type DashboardAction = 'call' | 'complete' | 'cancel' | 'start' | 'call_next';
@@ -71,7 +94,7 @@ function buildQueueEntries(raw: RawEntry[]): QueueEntry[] {
     .map((e, idx): QueueEntry => ({
       id: e.id,
       position: 0,
-      clientName: `Client #${e.user_id.slice(0, 4)}`,
+      clientName: clientNameOf(e),
       entryType: e.entry_type,
       price: e.amount_paid ? parseFloat(e.amount_paid) : undefined,
       isNext: idx === 0 && raw.filter((x) => x.status === 'pending').length === 0,
@@ -83,7 +106,7 @@ function buildQueueEntries(raw: RawEntry[]): QueueEntry[] {
     .map((e, idx): QueueEntry => ({
       id: e.id,
       position: e.queue_position ?? idx + 1,
-      clientName: `Client #${e.user_id.slice(0, 4)}`,
+      clientName: clientNameOf(e),
       entryType: e.entry_type,
       price: e.amount_paid ? parseFloat(e.amount_paid) : undefined,
       isNext: inProgress.length === 0 && idx === 0,
@@ -98,9 +121,10 @@ function buildPosts(
   serviceFallbackLabel: string,
   locale: string,
 ): Post[] {
-  // /station/entries does not denormalize the service / vehicle / user info today.
-  // Until the backend ships those fields (see project_pending_backend_specs.md),
-  // we surface a neutral placeholder rather than inventing a fake service name.
+  // The serializer denormalises user.first_name and vehicle_format.label;
+  // service name/duration are still missing on /station/entries (tracked in
+  // project_pending_backend_specs.md) so we use the format label as a useful
+  // placeholder for now.
   const inProgress = rawEntries.filter((e) => e.status === 'in_progress');
   return rawConfig.posts.map((post): Post => {
     const postEntries: PostEntry[] = inProgress
@@ -112,11 +136,11 @@ function buildPosts(
           id: e.id,
           status: 'active',
           timeRange: start.toLocaleTimeString(locale, { hour: '2-digit', minute: '2-digit' }),
-          serviceLabel: serviceFallbackLabel,
-          clientName: `Client #${e.user_id.slice(0, 4)}`,
+          serviceLabel: e.vehicle_format?.label ?? serviceFallbackLabel,
+          clientName: clientNameOf(e),
           price: e.amount_paid ? parseFloat(e.amount_paid) : undefined,
           startMinutes: startMin,
-          // No reliable end time without service.duration on the entry — assume
+          // No reliable end time without service.duration on the entry - assume
           // 45 min as a visual placeholder. Replace with real duration once the
           // backend denormalizes service/duration on /station/entries.
           endMinutes: startMin + 45,
@@ -154,22 +178,25 @@ export function StationDashboard() {
   const [actionLoading, setActionLoading] = useState(false);
 
   function mapDashboardToKpi(raw: RawDashboard): KpiData {
-    // Only map fields the backend actually returns. Late fees and occupancy/fill
-    // rate are NOT exposed by /station/dashboard yet — leave them null so the UI
-    // shows the "Bientôt disponible" placeholder instead of a fake number.
-    // See project_pending_backend_specs.md → "Missing fields on /station/dashboard".
     const revenue = Number.parseFloat(raw.total_revenue ?? '');
+    const lateFees = Number.parseFloat(raw.late_fees_total ?? '');
     return {
-      revenue: Number.isFinite(revenue) ? Math.round(revenue) : null,
-      clients: typeof raw.total_clients === 'number' ? raw.total_clients : null,
-      lateFees: null,
-      occupancy: null,
+      revenue: Number.isFinite(revenue) ? Math.round(revenue) : 0,
+      clients: typeof raw.total_clients === 'number' ? raw.total_clients : 0,
+      lateFees: Number.isFinite(lateFees) ? Math.round(lateFees) : 0,
+      occupancy: typeof raw.fill_rate_pct === 'number' ? raw.fill_rate_pct : 0,
     };
   }
 
   const loadData = useCallback(async () => {
+    /* Scope entries to the day picked in the calendar. The dashboard KPIs
+     * and pending delays remain global since they aggregate over the whole
+     * billing period. */
+    const { from, to } = dayRange(selectedDate);
+    const entriesQuery = `?from=${encodeURIComponent(from)}&to=${encodeURIComponent(to)}&per_page=200`;
+
     const [entriesResult, configResult, dashboardResult, delaysResult] = await Promise.all([
-      getFromApi('/station/entries'),
+      getFromApi(`/station/entries${entriesQuery}`),
       getFromApi('/station/config'),
       getFromApi('/station/dashboard'),
       getFromApi(`/station/delays?status=pending&per_page=${DELAYS_PREVIEW_SIZE}`),
@@ -191,15 +218,15 @@ export function StationDashboard() {
 
     if (dashboardOk) {
       const dashboard = (dashboardData as { data?: RawDashboard })?.data;
-      if (dashboard) {
-        setKpi(mapDashboardToKpi(dashboard));
-      }
+      setKpi(dashboard ? mapDashboardToKpi(dashboard) : { revenue: 0, clients: 0, lateFees: 0, occupancy: 0 });
+    } else {
+      setKpi({ revenue: 0, clients: 0, lateFees: 0, occupancy: 0 });
     }
 
     if (delaysOk) {
       const payload = (delaysData as { data?: { items?: RawDelayPreview[]; meta?: { total?: number } } })?.data;
       const items = payload?.items ?? [];
-      // /station/delays does not denormalize the user — show anonymised id until the
+      // /station/delays does not denormalize the user - show anonymised id until the
       // backend returns a name (see project_pending_backend_specs.md).
       setDelays(
         items
@@ -215,7 +242,7 @@ export function StationDashboard() {
     }
 
     setLoading(false);
-  }, [t, locale]);
+  }, [t, locale, selectedDate]);
 
   useEffect(() => {
     if (!authLoading) loadData();

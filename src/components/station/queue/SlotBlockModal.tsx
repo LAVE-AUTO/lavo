@@ -19,40 +19,23 @@ const BLOCK_REASONS = [
   'staff_break',
   'emergency',
   'other',
-];
+] as const;
 
 export function SlotBlockModal({ isOpen, onClose, slotId, slotTime, onSuccess }: SlotBlockModalProps) {
   const t = useTranslations('station_dashboard');
-  const [reason, setReason] = useState('maintenance');
-  const [durationMinutes, setDurationMinutes] = useState('30');
+  const [reason, setReason] = useState<string>('maintenance');
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   const handleBlockSlot = useCallback(async () => {
-    if (!reason) {
-      setError(t('slot_block_error_reason'));
-      return;
-    }
-    const duration = parseInt(durationMinutes, 10);
-    if (isNaN(duration) || duration <= 0) {
-      setError(t('slot_block_error_reason'));
-      return;
-    }
-
     try {
       setIsLoading(true);
       setError(null);
 
-      const blockedUntil = new Date(Date.now() + duration * 60 * 1000).toISOString();
-
-      // TODO: connect to API once POST /station/slots/:id/block endpoint is available
-      const [success, data] = await postWithApi(`/station/slots/${slotId}/block`, {
-        reason,
-        blocked_until: blockedUntil,
-      });
+      const [success] = await postWithApi(`/station/slots/${slotId}/block`, {});
 
       if (!success) {
-        setError(data?.error || t('error_queue_empty'));
+        setError(t('error_queue_empty'));
         return;
       }
 
@@ -63,20 +46,18 @@ export function SlotBlockModal({ isOpen, onClose, slotId, slotTime, onSuccess }:
     } finally {
       setIsLoading(false);
     }
-  }, [reason, durationMinutes, slotId, onClose, onSuccess, t]);
+  }, [slotId, onClose, onSuccess, t]);
 
   return (
-    <Modal isOpen={isOpen} onClose={onClose} title={t('slot_block_title')} blocking>
+    <Modal open={isOpen} onClose={onClose} title={t('slot_block_title')}>
       <div className="space-y-4 p-4">
         <p className="text-sm text-slate-600 dark:text-slate-400">
           {t('slot_block_subtitle')} <span className="font-semibold">{slotTime}</span>
         </p>
 
-        {/* Reason Select */}
         <div>
           <label htmlFor="slot-block-reason" className="block text-sm font-medium text-slate-900 dark:text-white">
             {t('slot_block_reason_label')}
-            <span className="text-red-500">*</span>
           </label>
           <select
             id="slot-block-reason"
@@ -92,32 +73,12 @@ export function SlotBlockModal({ isOpen, onClose, slotId, slotTime, onSuccess }:
           </select>
         </div>
 
-        {/* Duration Select */}
-        <div>
-          <label htmlFor="slot-block-duration" className="block text-sm font-medium text-slate-900 dark:text-white">
-            {t('slot_block_duration_label')}
-            <span className="text-red-500">*</span>
-          </label>
-          <div className="mt-2 flex gap-2">
-            <select
-              id="slot-block-duration"
-              value={durationMinutes}
-              onChange={(e) => setDurationMinutes(e.target.value)}
-              className="flex-1 rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 transition-colors dark:border-slate-600 dark:bg-slate-800 dark:text-white"
-            >
-              <option value="15">{t('slot_block_duration_15')}</option>
-              <option value="30">{t('slot_block_duration_30')}</option>
-              <option value="60">{t('slot_block_duration_60')}</option>
-              <option value="120">{t('slot_block_duration_120')}</option>
-              <option value="240">{t('slot_block_duration_240')}</option>
-            </select>
+        {error && (
+          <div className="rounded-lg bg-red-50 p-3 text-sm text-red-800 dark:bg-red-900/20 dark:text-red-300">
+            {error}
           </div>
-        </div>
+        )}
 
-        {/* Error */}
-        {error && <div className="rounded-lg bg-red-50 p-3 text-sm text-red-800 dark:bg-red-900/20 dark:text-red-300">{error}</div>}
-
-        {/* Actions */}
         <div className="flex gap-3 pt-4">
           <button
             type="button"
@@ -129,7 +90,7 @@ export function SlotBlockModal({ isOpen, onClose, slotId, slotTime, onSuccess }:
           <button
             type="button"
             onClick={handleBlockSlot}
-            disabled={isLoading || !reason}
+            disabled={isLoading}
             className="flex-1 rounded-lg bg-red-600 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-red-700 disabled:opacity-50"
           >
             {isLoading ? t('loading') : t('slot_block_button')}

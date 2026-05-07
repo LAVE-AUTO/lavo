@@ -8,7 +8,7 @@ import { useToast } from '@/context';
 import { AdminPromoQr } from './stations/AdminPromoQr';
 
 const MAX_REASON = 500;
-/** Expiry warning threshold (days) — show orange badge when expiry is within this window. */
+/** Expiry warning threshold (days) - show orange badge when expiry is within this window. */
 const EXPIRY_WARNING_DAYS = 30;
 
 type ExpiryStatus = 'none' | 'valid' | 'warning' | 'expired';
@@ -16,7 +16,7 @@ type ExpiryStatus = 'none' | 'valid' | 'warning' | 'expired';
 // Comparison is intentionally performed in UTC (YYYY-MM-DDT00:00:00Z) so
 // two admins in different timezones see the same status for a given date.
 // Trade-off: a date marked "today" turns expired at 00:00 UTC, which may
-// feel early for admins west of UTC — acceptable for internal tooling.
+// feel early for admins west of UTC - acceptable for internal tooling.
 function computeExpiryStatus(iso: string | null): ExpiryStatus {
   if (!iso) return 'none';
   const expiry = new Date(`${iso}T00:00:00Z`).getTime();

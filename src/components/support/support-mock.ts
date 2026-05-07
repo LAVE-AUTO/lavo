@@ -1,4 +1,4 @@
-// MOCK DATA — replace with API calls before shipping
+// MOCK DATA - replace with API calls before shipping
 export type TicketStatus = 'open' | 'in_progress' | 'resolved' | 'closed';
 export type TicketRole   = 'client' | 'station';
 
@@ -88,7 +88,7 @@ export const MOCK_TICKETS: SupportTicket[] = process.env.NODE_ENV === 'developme
         created_by:  'Station Beta',
         assigned_to: 'Admin Support',
         messages: [
-          { id: 'm7', author: 'Station Beta',  role: 'user',  body: "Le QR code affiché dans mon tableau de bord ne fonctionne pas — les clients ne peuvent pas le scanner.", created_at: '2026-03-10T10:00:00Z' },
+          { id: 'm7', author: 'Station Beta',  role: 'user',  body: "Le QR code affiché dans mon tableau de bord ne fonctionne pas - les clients ne peuvent pas le scanner.", created_at: '2026-03-10T10:00:00Z' },
           { id: 'm8', author: 'Admin Support', role: 'admin', body: "Le problème a été identifié et corrigé. Veuillez actualiser votre page pour obtenir le nouveau QR code.", created_at: '2026-03-10T11:45:00Z' },
           { id: 'm9', author: 'Station Beta',  role: 'user',  body: "Parfait, tout fonctionne maintenant. Merci !", created_at: '2026-03-10T12:00:00Z' },
         ],
@@ -98,7 +98,7 @@ export const MOCK_TICKETS: SupportTicket[] = process.env.NODE_ENV === 'developme
     ]
   : [];
 
-/** Tickets belonging to the current user (client or station) — filtered server-side in real API. */
+/** Tickets belonging to the current user (client or station) - filtered server-side in real API. */
 export const MOCK_MY_TICKETS: SupportTicket[] = process.env.NODE_ENV === 'development'
   ? MOCK_TICKETS.filter((t) => t.role === 'client')
   : [];

@@ -46,8 +46,8 @@ export async function getLegalContent(key: string): Promise<string | null> {
  * Sanitizes and upserts legal content for the given key.
  *
  * Sanitization strips any XSS vectors from the HTML content using DOMPurify
- * before the value reaches the database. The sanitized value — not the raw
- * input — is what gets stored and later served.
+ * before the value reaches the database. The sanitized value - not the raw
+ * input - is what gets stored and later served.
  *
  * Uses INSERT ... ON CONFLICT DO UPDATE to ensure idempotency.
  * The unique index settings_type_key_global_idx (type, key) WHERE entity_id IS NULL

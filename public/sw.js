@@ -1,5 +1,5 @@
 /* ------------------------------------------------------------------
- *  Slowtime — Service Worker
+ *  Slowtime - Service Worker
  *  Scope: /
  *  Strategy: network-first for API/navigation, cache-first for static assets.
  * ------------------------------------------------------------------ */
@@ -14,7 +14,7 @@ const PRECACHE_URLS = [
 ];
 
 /* ------------------------------------------------------------------ */
-/*  Install — pre-cache static shell                                   */
+/*  Install - pre-cache static shell                                   */
 /* ------------------------------------------------------------------ */
 
 self.addEventListener('install', (event) => {
@@ -25,7 +25,7 @@ self.addEventListener('install', (event) => {
 });
 
 /* ------------------------------------------------------------------ */
-/*  Activate — purge old caches                                        */
+/*  Activate - purge old caches                                        */
 /* ------------------------------------------------------------------ */
 
 self.addEventListener('activate', (event) => {
@@ -42,7 +42,7 @@ self.addEventListener('activate', (event) => {
 });
 
 /* ------------------------------------------------------------------ */
-/*  Fetch — network-first for navigation + API, cache-first for assets */
+/*  Fetch - network-first for navigation + API, cache-first for assets */
 /* ------------------------------------------------------------------ */
 
 self.addEventListener('fetch', (event) => {
@@ -52,7 +52,7 @@ self.addEventListener('fetch', (event) => {
   /* Only handle same-origin requests */
   if (url.origin !== self.location.origin) return;
 
-  /* Skip API routes — never cache them */
+  /* Skip API routes - never cache them */
   if (url.pathname.startsWith('/api/')) return;
 
   /* Static assets: cache-first */
@@ -83,7 +83,7 @@ self.addEventListener('fetch', (event) => {
 });
 
 /* ------------------------------------------------------------------ */
-/*  Firebase Cloud Messaging — background message handler              */
+/*  Firebase Cloud Messaging - background message handler              */
 /*  Handles push notifications when the app tab is in the background.  */
 /*  Uses the compat build so it can be loaded via importScripts.       */
 /* ------------------------------------------------------------------ */
@@ -91,7 +91,7 @@ self.addEventListener('fetch', (event) => {
 importScripts('https://www.gstatic.com/firebasejs/12.12.0/firebase-app-compat.js');
 importScripts('https://www.gstatic.com/firebasejs/12.12.0/firebase-messaging-compat.js');
 
-// These are the NEXT_PUBLIC_FIREBASE_* values — all non-secret client identifiers.
+// These are the NEXT_PUBLIC_FIREBASE_* values - all non-secret client identifiers.
 // Service workers cannot access process.env, so the values are inlined here.
 firebase.initializeApp({
   apiKey: 'AIzaSyCBFjrozYd9QQpZejqWG6ogqjv4HHWqajE',
@@ -106,7 +106,7 @@ const messaging = firebase.messaging();
 /**
  * onBackgroundMessage fires when a push message arrives while the app
  * is either in the background or the tab is closed.
- * FCM will NOT automatically show a notification in this case — we must
+ * FCM will NOT automatically show a notification in this case - we must
  * call showNotification ourselves.
  */
 messaging.onBackgroundMessage((payload) => {

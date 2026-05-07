@@ -51,13 +51,15 @@ import {
   replaceStationPhotos,
   type StationPhoto,
 } from './document-repository';
+import { findAllFormats } from './format-repository';
+import { findPublicServicesForStation } from './service-repository';
 
 export type StationOnboardingDto = {
-  // Step 1 — account credentials
+  // Step 1 - account credentials
   email: string;
   phone: string;
   password: string;
-  // Step 2 — station details
+  // Step 2 - station details
   station_name: string;
   legal_name?: string;
   registration_number?: string;
@@ -71,7 +73,7 @@ export type StationOnboardingDto = {
   description?: string;
   /** Type de prestation: optional; persisted as nullable on stations. */
   service_scope?: 'exterior' | 'interior' | 'both';
-  // Step 3 — documents + legal (storage from onboarding upload; default cloudinary)
+  // Step 3 - documents + legal (storage from onboarding upload; default cloudinary)
   documents: { document_type: string; file_url: string; storage?: 'cloudinary' | 'local' }[];
   terms_accepted: true;
 };
@@ -246,10 +248,10 @@ export async function approveStation(
   const station = await findStationById(stationId);
   if (!station) throw new NotFoundError('Station not found');
 
-  // H-2: Fail hard — a station without an owner cannot be activated or receive payments.
+  // H-2: Fail hard - a station without an owner cannot be activated or receive payments.
   const stationUser = station.user_id ? await findById(station.user_id) : null;
   if (!stationUser) {
-    throw new NotFoundError('Station owner not found — cannot approve an orphaned station');
+    throw new NotFoundError('Station owner not found - cannot approve an orphaned station');
   }
 
   // M-1: Create Stripe account BEFORE activating so the station stays pending if Stripe fails.
@@ -257,7 +259,7 @@ export async function approveStation(
   const stripeOnboardingUrl = await createStripeOnboardingLink(accountId);
 
   // C-2 + H-1: Atomic conditional UPDATE + audit log in one transaction.
-  // The WHERE on status ensures only one concurrent approve wins — the other gets 0 rows → 409.
+  // The WHERE on status ensures only one concurrent approve wins - the other gets 0 rows → 409.
   await db.transaction(async (tx) => {
     const [updated] = await tx
       .update(stations)
@@ -284,7 +286,7 @@ export async function approveStation(
       details: { stripe_account_id: accountId, stripe_connected: true },
     });
 
-    // Persist document expiry dates if provided — rows are independent, run in parallel.
+    // Persist document expiry dates if provided - rows are independent, run in parallel.
     if (documentExpiryDates?.length) {
       const ownedIds = await tx
         .select({ id: stationDocuments.id })
@@ -311,7 +313,7 @@ export async function approveStation(
     console.error('[STATION_APPROVAL_QR_URL_GENERATION_FAILED]', { stationId, error: e instanceof Error ? e.message : String(e) });
   }
 
-  // M-4: stationUser already fetched (H-2) — no need for fire-and-forget user lookup.
+  // M-4: stationUser already fetched (H-2) - no need for fire-and-forget user lookup.
   sendStationApprovalEmail(stationUser.email, station.name, locale, { qrPublicUrl })
     .catch((e) => console.error('[APPROVE_EMAIL_FAILED]', { stationId, error: e instanceof Error ? e.message : String(e) }));
 
@@ -327,10 +329,10 @@ export async function rejectStation(
   const station = await findStationById(stationId);
   if (!station) throw new NotFoundError('Station not found');
 
-  // H-2: Fail hard — an orphaned station should not be silently rejected without notifying anyone.
+  // H-2: Fail hard - an orphaned station should not be silently rejected without notifying anyone.
   const stationUser = station.user_id ? await findById(station.user_id) : null;
   if (!stationUser) {
-    throw new NotFoundError('Station owner not found — cannot reject an orphaned station');
+    throw new NotFoundError('Station owner not found - cannot reject an orphaned station');
   }
 
   // C-2 + H-1: Atomic conditional UPDATE + audit log in one transaction.
@@ -359,7 +361,7 @@ export async function rejectStation(
     });
   });
 
-  // M-4: Fire-and-forget email — log failures instead of silently swallowing them.
+  // M-4: Fire-and-forget email - log failures instead of silently swallowing them.
   sendStationRejectionEmail(stationUser.email, station.name, reason)
     .catch((e) => console.error('[REJECT_EMAIL_FAILED]', { stationId, error: e instanceof Error ? e.message : String(e) }));
 }
@@ -391,6 +393,7 @@ export type StationListPublicItem = Omit<
   queue_count: number;
   opening_hours: { open: string; close: string } | null;
   completed_count?: number;
+  min_duration: number | null;
 };
 
 export type ListStationsPublicMeta = {
@@ -440,11 +443,12 @@ function toListPublicItem(row: StationWithAvailableSlots): StationListPublicItem
     verified,
     queue_count: row.live_queue_count,
     opening_hours,
+    min_duration: row.min_duration,
     ...(completed_count !== undefined && { completed_count }),
   };
 }
 
-// %%%%% Station owner — profile update %%%%%
+// %%%%% Station owner - profile update %%%%%
 
 export async function updateMyStation(
   userId: string,
@@ -520,12 +524,12 @@ export async function updateMyStationPhotos(
   return replaceStationPhotos(station.id, photos);
 }
 
-// %%%%% END - Station owner — profile update %%%%%
+// %%%%% END - Station owner - profile update %%%%%
 
 /** Cache TTL in seconds for public station listing (Redis layer). */
 const STATIONS_LIST_TTL = 30;
 
-/** In-process TTL for the station listing — avoids a Redis GET on every request. */
+/** In-process TTL for the station listing - avoids a Redis GET on every request. */
 const STATIONS_LIST_INPROCESS_TTL_MS = 10_000;
 const _stationsListCache = new Map<string, { value: ListStationsPublicResult; expiresAt: number }>();
 
@@ -583,7 +587,12 @@ export async function listStationsPublic(
  * Throws NotFoundError if station does not exist or is not active.
  */
 export async function getStationDetailPublic(id: string) {
-  const station = await findActiveStationWithDetail(id);
+  const [station, vehicleFormats, completed_count, stationServices] = await Promise.all([
+    findActiveStationWithDetail(id),
+    findAllFormats(),
+    getCompletedCountForStation(id),
+    findPublicServicesForStation(id),
+  ]);
   if (!station) throw new NotFoundError('Station not found');
 
   const now = new Date();
@@ -596,7 +605,6 @@ export async function getStationDetailPublic(id: string) {
     );
   const available = available_slots > 0;
   const verified = station.approved_at !== null && station.status === 'active';
-  const completed_count = await getCompletedCountForStation(id);
 
   const photos = (station.photos ?? []).map((p) => p.url);
   const wash_types = (station.stationWashTypes ?? [])
@@ -607,8 +615,31 @@ export async function getStationDetailPublic(id: string) {
       label: swt.washType!.label,
     }));
 
+  const station_config = station.stationConfig
+    ? {
+        opening_time: station.stationConfig.opening_time,
+        closing_time: station.stationConfig.closing_time,
+        wash_duration_minutes: station.stationConfig.wash_duration_minutes,
+        wash_post_count: station.stationConfig.wash_post_count,
+        reservation_surcharge: station.stationConfig.reservation_surcharge
+          ? parseFloat(String(station.stationConfig.reservation_surcharge))
+          : null,
+      }
+    : null;
+
   const { photos: _p, stationWashTypes: _w, ...rest } = station;
-  return { ...rest, available_slots, available, completed_count, verified, photos, wash_types };
+  return {
+    ...rest,
+    available_slots,
+    available,
+    completed_count,
+    verified,
+    photos,
+    wash_types,
+    vehicleFormats,
+    station_services: stationServices,
+    station_config,
+  };
 }
 
 /**

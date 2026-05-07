@@ -23,7 +23,7 @@ export function AdminTopNav({ onToggleSidebar }: AdminTopNavProps) {
     <header className="flex h-14 flex-shrink-0 items-center justify-between border-b border-[#E0DCD0] bg-white px-6 dark:border-[#1A2A14] dark:bg-[#111A0E]">
 
       <div className="flex items-center gap-3">
-        {/* Sidebar toggle — visible below lg */}
+        {/* Sidebar toggle - visible below lg */}
         {onToggleSidebar && (
           <button
             type="button"
@@ -37,9 +37,9 @@ export function AdminTopNav({ onToggleSidebar }: AdminTopNavProps) {
           </button>
         )}
 
-        {/* Logo — always links to landing page */}
+        {/* Logo - always links to landing page */}
         <div className="flex flex-col justify-center">
-        <Link href="/" aria-label="Slowtime — Accueil">
+        <Link href="/" aria-label="Slowtime - Accueil">
           {isDark ? (
             <div className="flex items-center gap-2">
               <div className="shrink-0 rounded-lg border border-[rgba(200,152,10,0.25)] bg-white/95 p-0.5 shadow-sm">

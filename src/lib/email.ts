@@ -33,7 +33,7 @@ type Locale = 'fr' | 'en';
 
 
 // %%%%% Resend client %%%%%
-// Lazy singleton — never passes undefined to the SDK
+// Lazy singleton - never passes undefined to the SDK
 
 let warnedResendApiKeyMissing = false;
 let resendClient: Resend | null | undefined;
@@ -216,7 +216,7 @@ const TEXTS = {
   },
   paymentSuccess: {
     fr: {
-      subject: 'Paiement confirmé — Slowtime',
+      subject: 'Paiement confirmé - Slowtime',
       greeting: 'Bonjour,',
       lead: 'Votre paiement a bien été prélevé et votre prestation est terminée.',
       stationPrefix: 'Station :',
@@ -225,7 +225,7 @@ const TEXTS = {
       cta: 'Ouvrir Slowtime',
     },
     en: {
-      subject: 'Payment confirmed — Slowtime',
+      subject: 'Payment confirmed - Slowtime',
       greeting: 'Hello,',
       lead: 'Your payment has been captured and your service is complete.',
       stationPrefix: 'Station:',
@@ -236,14 +236,14 @@ const TEXTS = {
   },
   paymentFailed: {
     fr: {
-      subject: 'Paiement non abouti — Slowtime',
+      subject: 'Paiement non abouti - Slowtime',
       greeting: 'Bonjour,',
       body: "Nous n'avons pas pu finaliser votre paiement. Votre réservation a été annulée. Vous pouvez réessayer depuis l'application lorsque vous le souhaitez.",
       reasonLabel: 'Motif indiqué :',
       cta: 'Réessayer sur Slowtime',
     },
     en: {
-      subject: 'Payment could not be completed — Slowtime',
+      subject: 'Payment could not be completed - Slowtime',
       greeting: 'Hello,',
       body: 'We could not complete your payment. Your reservation has been cancelled. You can try again from the app whenever you are ready.',
       reasonLabel: 'Details:',
@@ -758,7 +758,7 @@ export async function sendKycExpiryReminderEmail(params: {
   const formattedExpiry = expiryDate.toLocaleDateString('fr-FR');
 
   const subject = isAdmin
-    ? `[Slowtime Admin] Document KYC expirant dans ${thresholdDays} jours — ${safePlainTextSnippet(stationName, 100)}`
+    ? `[Slowtime Admin] Document KYC expirant dans ${thresholdDays} jours - ${safePlainTextSnippet(stationName, 100)}`
     : `[Slowtime] Votre document KYC expire dans ${thresholdDays} jours`;
 
   const greeting = isAdmin ? 'Notification administrateur KYC' : 'Bonjour,';
@@ -851,7 +851,7 @@ export async function sendWeeklyEscrowTransactionsReportEmail(
 
   const { locale, weekStart, weekEnd, rows } = params;
 
-  const subjectFr = `Rapport hebdomadaire — Transactions escrow (${weekStart.toLocaleDateString('fr-FR')} → ${weekEnd.toLocaleDateString('fr-FR')})`;
+  const subjectFr = `Rapport hebdomadaire - Transactions escrow (${weekStart.toLocaleDateString('fr-FR')} → ${weekEnd.toLocaleDateString('fr-FR')})`;
   const subjectEn = `Weekly escrow transactions report (${weekStart.toLocaleDateString('en-GB')} → ${weekEnd.toLocaleDateString('en-GB')})`;
   const subject = locale === 'en' ? subjectEn : subjectFr;
 

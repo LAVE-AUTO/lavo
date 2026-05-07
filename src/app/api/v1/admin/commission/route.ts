@@ -39,12 +39,12 @@ export async function GET(request: Request) {
 
 /**
  * PUT /api/v1/admin/commission
- * Sets a new commission rate. Creates an immutable history entry — past rates are never altered.
+ * Sets a new commission rate. Creates an immutable history entry - past rates are never altered.
  * The new rate applies immediately to all subsequent transactions.
  *
  * Role: admin only.
  *
- * Body: { rate: number }  — decimal fraction, e.g. 0.1 for 10%
+ * Body: { rate: number }  - decimal fraction, e.g. 0.1 for 10%
  *
  * Responses:
  *   200 { data: CommissionRow }

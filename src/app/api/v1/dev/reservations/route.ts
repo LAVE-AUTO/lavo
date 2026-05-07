@@ -9,11 +9,11 @@ import { ApiCode } from '@/types/api-codes';
 import { createReservationBodySchema, mapZodErrors } from '@/validators/entry';
 import { stationIdParamSchema, mapZodErrors as mapStationZodErrors } from '@/validators/station';
 import { findStationById } from '@/server/station/station-repository';
-import { findFormatByIdAndStation } from '@/server/station/format-repository';
+import { findServiceVehicleEntryForBooking } from '@/server/station/service-repository';
 import { lockSlotForUpdate, countReservationsBySlotId, incrementSlotBookedCount } from '@/server/station/slot-repository';
 import { getConfigByStationId } from '@/server/station/config-repository';
 import { getActiveCommissionRate } from '@/server/admin/platform-settings-service';
-import { hasActiveEntryAtStation, createReservationEntry } from '@/server/reservations/entry-repository';
+import { hasActiveReservationForSlot, createReservationEntry } from '@/server/reservations/entry-repository';
 import { serializeEntry } from '@/server/reservations/entry-serializer';
 import { ActiveReservationExistsError, SlotFullError, NotFoundError } from '@/lib/errors';
 import { db } from '@/lib/db';
@@ -45,25 +45,25 @@ export async function POST(request: Request): Promise<NextResponse> {
   }
 
   const stationId = stationParsed.data.id;
-  const { time_slot_id, vehicle_format_id } = bodyParsed.data;
+  const { time_slot_id, service_id, vehicle_format_id } = bodyParsed.data;
 
   try {
     const station = await findStationById(stationId);
     if (!station || station.status !== 'active') return error404('Station not found or not active');
 
-    const format = await findFormatByIdAndStation(vehicle_format_id, stationId);
-    if (!format) return error404('Vehicle format not found');
+    const vehicleEntry = await findServiceVehicleEntryForBooking(service_id, vehicle_format_id);
+    if (!vehicleEntry) return error404('Service or vehicle entry not found');
 
     const config = await getConfigByStationId(stationId);
     const surcharge = config?.reservation_surcharge ? parseFloat(String(config.reservation_surcharge)) : 0;
-    const amountTotal = parseFloat(String(format.price)) + surcharge;
+    const amountTotal = parseFloat(String(vehicleEntry.price)) + surcharge;
 
     const commissionRate = await getActiveCommissionRate();
     const commissionAmount = amountTotal * parseFloat(commissionRate);
     const stationPayout = amountTotal - commissionAmount;
 
     const entry = await db.transaction(async (tx) => {
-      const hasActive = await hasActiveEntryAtStation(auth.sub, stationId, tx);
+      const hasActive = await hasActiveReservationForSlot(auth.sub, time_slot_id, tx);
       if (hasActive) throw new ActiveReservationExistsError();
 
       const slot = await lockSlotForUpdate(time_slot_id, stationId, tx);

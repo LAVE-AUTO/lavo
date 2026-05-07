@@ -12,11 +12,11 @@ type Props = {
 export async function generateMetadata({ params }: Props) {
   const { locale } = await params;
   const t = await getTranslations({ locale, namespace: 'forgot_password' });
-  return { title: `Slowtime — ${t('title')}` };
+  return { title: `Slowtime - ${t('title')}` };
 }
 
 /**
- * Station forgot-password page — split-screen layout.
+ * Station forgot-password page - split-screen layout.
  * Left: station brand panel (desktop only).
  * Right: ForgotPasswordForm with back-link to station login.
  */
@@ -29,7 +29,7 @@ export default async function StationForgotPasswordPage({ params }: Props) {
   return (
     <AuthRedirectGuard locale={locale}>
       <div className="min-h-screen flex">
-        {/* Left brand panel — desktop only */}
+        {/* Left brand panel - desktop only */}
         <aside className="hidden lg:block lg:w-[42%] xl:w-[45%] shrink-0 sticky top-0 h-screen">
           <StationBrandPanel />
         </aside>

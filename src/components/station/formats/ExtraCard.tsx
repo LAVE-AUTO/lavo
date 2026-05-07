@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import { useTranslations } from 'next-intl';
+import { deleteWithApi, patchWithApi } from '@/services';
 import { ConfirmDialog } from '@/components/ui/ConfirmDialog';
 import type { StationExtra } from '@/components/station/config/StationExtrasForm';
 
@@ -30,18 +31,34 @@ export function ExtraCard({ extra, onEdit, onDeleted, onToggled }: Props) {
   const t = useTranslations('station_services');
   const [deleteOpen, setDeleteOpen] = useState(false);
   const [deleting, setDeleting] = useState(false);
+  const [deleteError, setDeleteError] = useState<string | null>(null);
   const [toggleOpen, setToggleOpen] = useState(false);
+  const [toggling, setToggling] = useState(false);
 
-  // TODO: connect to API once endpoint is available — DELETE /station/extras/:id
   async function confirmDelete() {
     setDeleting(true);
+    setDeleteError(null);
+    const [ok, data] = await deleteWithApi(`/station/extras/${extra.id}`);
     setDeleting(false);
+    if (!ok) {
+      setDeleteError((data as { message?: string })?.message ?? 'Erreur lors de la suppression');
+      return;
+    }
     setDeleteOpen(false);
     onDeleted(extra.id);
   }
 
-  // TODO: connect to API once endpoint is available — PATCH /station/extras/:id { is_active }
-  function confirmToggle() {
+  async function confirmToggle() {
+    setToggling(true);
+    const [ok, data] = await patchWithApi(`/station/extras/${extra.id}`, {
+      is_active: !extra.is_active,
+    });
+    setToggling(false);
+    if (!ok) {
+      console.error('Toggle extra failed', data);
+      setToggleOpen(false);
+      return;
+    }
     setToggleOpen(false);
     onToggled({ ...extra, is_active: !extra.is_active });
   }
@@ -147,13 +164,13 @@ export function ExtraCard({ extra, onEdit, onDeleted, onToggled }: Props) {
       <ConfirmDialog
         open={deleteOpen}
         title={t('confirm_delete_title')}
-        message={t('confirm_delete_message', { name: extra.label })}
+        message={deleteError ?? t('confirm_delete_message', { name: extra.label })}
         confirmLabel={t('confirm_delete_label')}
         cancelLabel={t('btn_cancel')}
         variant="danger"
         loading={deleting}
         onConfirm={confirmDelete}
-        onCancel={() => setDeleteOpen(false)}
+        onCancel={() => { setDeleteOpen(false); setDeleteError(null); }}
       />
 
       <ConfirmDialog
@@ -167,6 +184,7 @@ export function ExtraCard({ extra, onEdit, onDeleted, onToggled }: Props) {
         confirmLabel={extra.is_active ? t('confirm_deactivate_label') : t('confirm_activate_label')}
         cancelLabel={t('btn_cancel')}
         variant={extra.is_active ? 'warning' : 'default'}
+        loading={toggling}
         onConfirm={confirmToggle}
         onCancel={() => setToggleOpen(false)}
       />

@@ -113,7 +113,7 @@ export function SupportTicketCard({ ticket, onMessageSent }: Props) {
         onClick={handleToggle}
         className="w-full flex overflow-hidden text-left group focus-visible:outline-none"
         aria-expanded={open}
-        aria-label={`${open ? t('btn_collapse') : t('btn_expand')} — ${ticket.subject}`}
+        aria-label={`${open ? t('btn_collapse') : t('btn_expand')} - ${ticket.subject}`}
         aria-controls={`ticket-thread-${ticket.id}`}
       >
         <div className={`w-1 shrink-0 ${s.bar}`} />
@@ -198,7 +198,7 @@ export function SupportTicketCard({ ticket, onMessageSent }: Props) {
             </div>
           )}
 
-          {/* Reply form — hidden for closed/resolved tickets */}
+          {/* Reply form - hidden for closed/resolved tickets */}
           {!isClosed && !loadingMessages && (
             <form onSubmit={handleSendMessage} className="border-t border-[#F0EDE4] px-5 py-3 dark:border-[#1A2A14]">
               <div className="flex gap-2">

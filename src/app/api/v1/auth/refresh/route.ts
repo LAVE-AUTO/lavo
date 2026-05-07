@@ -16,7 +16,7 @@ import { REFRESH_COOKIE_NAME } from '@/helpers/server-constants';
  *
  * Responses:
  *   200 { data: { user, access_token, token_type, expires_in } }
- *   401 UNAUTHORIZED — missing, invalid, or expired refresh token
+ *   401 UNAUTHORIZED - missing, invalid, or expired refresh token
  *   500 INTERNAL_ERROR
  */
 export async function POST() {

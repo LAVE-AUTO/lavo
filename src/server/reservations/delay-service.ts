@@ -1,7 +1,7 @@
 /**
  * Delay request business logic: client signals a late arrival, station accepts or refuses.
  * Delay requests are a communication layer on top of the existing reservation workflow.
- * They do NOT alter the reservation status — the cron remains the sole arbiter of actual
+ * They do NOT alter the reservation status - the cron remains the sole arbiter of actual
  * late detection and queue downgrade.
  */
 import { and, eq, inArray } from 'drizzle-orm';
@@ -119,7 +119,7 @@ export async function signalDelay(
 /**
  * Station accepts a pending delay request.
  * Updates status to 'accepted' and notifies the client.
- * The reservation status is unchanged — normal cron processing continues.
+ * The reservation status is unchanged - normal cron processing continues.
  */
 export async function acceptDelay(
   reservationId: string,
@@ -164,7 +164,7 @@ export async function acceptDelay(
 /**
  * Station refuses a pending delay request.
  * Updates status to 'refused' and notifies the client.
- * The reservation status is unchanged — normal cron processing continues.
+ * The reservation status is unchanged - normal cron processing continues.
  */
 export async function refuseDelay(
   reservationId: string,

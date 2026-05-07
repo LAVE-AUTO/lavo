@@ -9,7 +9,7 @@ interface StationsHeroProps {
 
 /**
  * Hero banner at the top of the public stations list page.
- * Server component — receives precomputed metrics from the page so the
+ * Server component - receives precomputed metrics from the page so the
  * KPI badges, floating stat cards and bottom strip render live values
  * (station count, weighted average rating, total reviews, total washes).
  */
@@ -81,7 +81,7 @@ export async function StationsHero({ metrics }: StationsHeroProps) {
               {t('page_subtitle')}
             </p>
 
-            {/* Search bar — dynamic client component */}
+            {/* Search bar - dynamic client component */}
             <HeroSearch />
 
             {/* CTAs */}

@@ -48,7 +48,7 @@ const sharedExtras: ServiceExtra[] = [
 ];
 /**
  * Static station data used until the backend API is connected.
- * Canadian data — Montreal / Laval / Longueuil / Brossard area.
+ * Canadian data - Montreal / Laval / Longueuil / Brossard area.
  */
 export const MOCK_STATIONS: StationDetailData[] = [
   {
@@ -77,6 +77,8 @@ export const MOCK_STATIONS: StationDetailData[] = [
     queueCount: 2,
     timeSlots: [],
     estimatedWaitMinutes: 15,
+    stationServices: [],
+    stationConfig: null,
     reviews: [
       { id: 'r1', authorName: 'Jean-Pierre M.', rating: 5, comment: 'Service impeccable, voiture comme neuve. Personnel très professionnel.', date: '12 fév. 2026' },
       { id: 'r2', authorName: 'Sophie T.', rating: 4, comment: 'Bonne qualité, un peu d\'attente mais ça vaut le coup.', date: '08 fév. 2026' },
@@ -109,6 +111,8 @@ export const MOCK_STATIONS: StationDetailData[] = [
     queueCount: 1,
     timeSlots: [],
     estimatedWaitMinutes: 10,
+    stationServices: [],
+    stationConfig: null,
     reviews: [
       { id: 'r4', authorName: 'Nadège K.', rating: 5, comment: 'Rapide et efficace ! Parfait avant une réunion.', date: '20 janv. 2026' },
       { id: 'r5', authorName: 'Eric N.', rating: 4, comment: 'Prix raisonnable pour la qualité offerte.', date: '15 janv. 2026' },
@@ -140,6 +144,8 @@ export const MOCK_STATIONS: StationDetailData[] = [
     queueCount: 3,
     timeSlots: [],
     estimatedWaitMinutes: 20,
+    stationServices: [],
+    stationConfig: null,
     reviews: [
       { id: 'r6', authorName: 'Hermine B.', rating: 5, comment: 'Mon SUV brille comme un miroir. Personnel aux petits soins.', date: '25 fév. 2026' },
       { id: 'r7', authorName: 'Patrick F.', rating: 5, comment: 'Le polissage est exceptionnel, je suis bluffé.', date: '18 fév. 2026' },
@@ -172,6 +178,8 @@ export const MOCK_STATIONS: StationDetailData[] = [
     queueCount: 0,
     timeSlots: [],
     estimatedWaitMinutes: 5,
+    stationServices: [],
+    stationConfig: null,
     reviews: [
       { id: 'r9', authorName: 'Bruno E.', rating: 4, comment: 'Service rapide, je reviens régulièrement.', date: '14 fév. 2026' },
       { id: 'r10', authorName: 'Carine L.', rating: 4, comment: 'Bon rapport qualité-prix pour la région.', date: '05 fév. 2026' },
@@ -203,6 +211,8 @@ export const MOCK_STATIONS: StationDetailData[] = [
     queueCount: 1,
     timeSlots: [],
     estimatedWaitMinutes: 12,
+    stationServices: [],
+    stationConfig: null,
     reviews: [
       { id: 'r11', authorName: 'Diane P.', rating: 5, comment: 'Enfin une station qui respecte l\'environnement ! Résultat parfait.', date: '22 fév. 2026' },
       { id: 'r12', authorName: 'Thomas N.', rating: 4, comment: 'La vapeur, c\'est vraiment efficace pour l\'intérieur.', date: '16 fév. 2026' },
@@ -235,6 +245,8 @@ export const MOCK_STATIONS: StationDetailData[] = [
     queueCount: 0,
     timeSlots: [],
     estimatedWaitMinutes: 0,
+    stationServices: [],
+    stationConfig: null,
     reviews: [
       { id: 'r13', authorName: 'Romuald D.', rating: 4, comment: 'Pratique pour la rive-sud, dommage que ce soit souvent complet.', date: '10 janv. 2026' },
     ],
@@ -265,6 +277,8 @@ export const MOCK_STATIONS: StationDetailData[] = [
     queueCount: 0,
     timeSlots: [],
     estimatedWaitMinutes: 0,
+    stationServices: [],
+    stationConfig: null,
     reviews: [
       { id: 'r14', authorName: 'Brice O.', rating: 5, comment: 'Qualité irréprochable, mon véhicule comme au premier jour.', date: '28 janv. 2026' },
       { id: 'r15', authorName: 'Laure M.', rating: 4, comment: 'Très bon travail mais toujours complet le weekend.', date: '20 janv. 2026' },
@@ -296,6 +310,8 @@ export const MOCK_STATIONS: StationDetailData[] = [
     queueCount: 0,
     timeSlots: [],
     estimatedWaitMinutes: 0,
+    stationServices: [],
+    stationConfig: null,
     reviews: [
       { id: 'r16', authorName: 'Serge K.', rating: 4, comment: 'Bon service dans l\'ensemble, j\'y reviens souvent.', date: '02 fév. 2026' },
     ],

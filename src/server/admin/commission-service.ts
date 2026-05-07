@@ -20,7 +20,7 @@ export async function getCurrentCommission() {
 }
 
 /**
- * Creates a new commission entry atomically (immutable history — never modifies past rows).
+ * Creates a new commission entry atomically (immutable history - never modifies past rows).
  * The read, insert, and audit log are wrapped in a single DB transaction:
  * - prevents TOCTOU: two concurrent PUTs cannot both record the same previous_rate
  * - guarantees consistency: if the admin log insert fails, the commission update rolls back

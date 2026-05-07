@@ -91,8 +91,12 @@ export function StationPhotosForm({ locked = false }: Props) {
   }
 
   async function handleSave() {
+    const photoPayload = photos
+      .map((url, i) => ({ url, position: i }))
+      .filter((p) => Boolean(p.url));
+
     const [ok, data] = await patchWithApi('/station/photos', {
-      photos: photos.filter(Boolean),
+      photos: photoPayload,
     });
 
     if (!mountedRef.current) return;
@@ -165,21 +169,12 @@ export function StationPhotosForm({ locked = false }: Props) {
         </div>
 
         {isDirty && (
-          <div className="mt-4 flex flex-col gap-3">
-            {/* Preview notice — save not available until PATCH /station/photos endpoint is connected */}
-            <div className="flex items-start gap-2 rounded-lg border border-orange-200 bg-orange-50 px-3 py-2.5 dark:border-orange-900/40 dark:bg-orange-950/20">
-              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#F97316" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="mt-0.5 shrink-0" aria-hidden="true">
-                <path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z" /><line x1="12" y1="9" x2="12" y2="13" /><line x1="12" y1="17" x2="12.01" y2="17" />
-              </svg>
-              <p className="text-[12px] leading-snug text-orange-700 dark:text-orange-400">{t('photos_save_unavailable')}</p>
-            </div>
-            <div className="flex items-center justify-between">
-              <p className="text-[12px] text-[#FF8800]">{t('photos_unsaved')}</p>
-              <button type="button" onClick={handleSave} disabled={locked || uploadingIdx !== null}
-                className="flex items-center gap-2 rounded-xl bg-[#C49A1E] px-5 py-2.5 text-[13px] font-bold text-[#0C1209] transition-opacity hover:opacity-80 disabled:opacity-40 disabled:cursor-not-allowed">
-                {t('btn_save')}
-              </button>
-            </div>
+          <div className="mt-4 flex items-center justify-between">
+            <p className="text-[12px] text-[#FF8800]">{t('photos_unsaved')}</p>
+            <button type="button" onClick={handleSave} disabled={locked || uploadingIdx !== null}
+              className="flex items-center gap-2 rounded-xl bg-[#C49A1E] px-5 py-2.5 text-[13px] font-bold text-[#0C1209] transition-opacity hover:opacity-80 disabled:opacity-40 disabled:cursor-not-allowed">
+              {t('btn_save')}
+            </button>
           </div>
         )}
       </div>

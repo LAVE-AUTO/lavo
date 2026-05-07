@@ -110,7 +110,7 @@ export function ReceiptModal({ entry: e, locale, onClose }: ReceiptModalProps) {
 <html lang="${escapeHtml(locale)}">
 <head>
   <meta charset="utf-8">
-  <title>Slowtime — ${t('receipt_title')} ${escapeHtml(e.id.toUpperCase())}</title>
+  <title>Slowtime - ${t('receipt_title')} ${escapeHtml(e.id.toUpperCase())}</title>
   <style>
 
     * { box-sizing: border-box; margin: 0; padding: 0; }
@@ -371,7 +371,7 @@ export function ReceiptModal({ entry: e, locale, onClose }: ReceiptModalProps) {
     <div class="header">
       <div>
         <div class="brand-name">Slowtime</div>
-        <div class="brand-sub">slowtime.app — Lavage auto simplifié</div>
+        <div class="brand-sub">slowtime.app - Lavage auto simplifié</div>
       </div>
       <div class="receipt-badge">${t('receipt_title')}</div>
     </div>
@@ -482,7 +482,7 @@ export function ReceiptModal({ entry: e, locale, onClose }: ReceiptModalProps) {
           </button>
         </div>
 
-        {/* Receipt preview — scrollable */}
+        {/* Receipt preview - scrollable */}
         <div className="overflow-y-auto max-h-[55vh] sm:max-h-[60vh]">
 
           {/* Brand strip */}

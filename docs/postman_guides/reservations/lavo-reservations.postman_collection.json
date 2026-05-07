@@ -1,6 +1,6 @@
 {
   "info": {
-    "name": "LAVO — Reservations API",
+    "name": "LAVO - Reservations API",
     "description": "Collection pour le systeme de reservation incluant la creation, la consultation (user/station), l'annulation, la confirmation de presence, la signalisation de retard, la replanification, et le webhook Stripe.\n\nVariables requises : `base_url`, `access_token`, `station_id`, `time_slot_id`, `vehicle_format_id`, `new_time_slot_id`\nVariables auto-remplies : `reservation_id`, `stripe_client_secret`",
     "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
   },
@@ -34,10 +34,10 @@
   "item": [
     {
       "name": "Creation de reservation",
-      "description": "POST /api/v1/stations/:station_id/reservations — Cree une reservation avec paiement Stripe Connect.\n\nPrerequis : utilisateur authentifie (role client), station active avec stripe_account_id, creneau disponible.",
+      "description": "POST /api/v1/stations/:station_id/reservations - Cree une reservation avec paiement Stripe Connect.\n\nPrerequis : utilisateur authentifie (role client), station active avec stripe_account_id, creneau disponible.",
       "item": [
         {
-          "name": "Creer reservation — succes (201)",
+          "name": "Creer reservation - succes (201)",
           "event": [
             {
               "listen": "test",
@@ -92,7 +92,7 @@
           }
         },
         {
-          "name": "Creer reservation — creneau plein (409 SLOT_FULL)",
+          "name": "Creer reservation - creneau plein (409 SLOT_FULL)",
           "event": [
             {
               "listen": "test",
@@ -139,11 +139,11 @@
                 }
               }
             },
-            "description": "409 SLOT_FULL — le creneau a atteint sa capacite maximale."
+            "description": "409 SLOT_FULL - le creneau a atteint sa capacite maximale."
           }
         },
         {
-          "name": "Creer reservation — doublon actif (409 ACTIVE_RESERVATION_EXISTS)",
+          "name": "Creer reservation - doublon actif (409 ACTIVE_RESERVATION_EXISTS)",
           "event": [
             {
               "listen": "test",
@@ -190,11 +190,11 @@
                 }
               }
             },
-            "description": "409 ACTIVE_RESERVATION_EXISTS — l'utilisateur a deja une reservation active dans cette station."
+            "description": "409 ACTIVE_RESERVATION_EXISTS - l'utilisateur a deja une reservation active dans cette station."
           }
         },
         {
-          "name": "Creer reservation — station inexistante (404)",
+          "name": "Creer reservation - station inexistante (404)",
           "event": [
             {
               "listen": "test",
@@ -237,11 +237,11 @@
                 }
               }
             },
-            "description": "404 NOT_FOUND — station inexistante."
+            "description": "404 NOT_FOUND - station inexistante."
           }
         },
         {
-          "name": "Creer reservation — body invalide (400)",
+          "name": "Creer reservation - body invalide (400)",
           "event": [
             {
               "listen": "test",
@@ -289,11 +289,11 @@
                 }
               }
             },
-            "description": "400 VALIDATION_FAILED — body invalide (UUID manquant ou incorrect)."
+            "description": "400 VALIDATION_FAILED - body invalide (UUID manquant ou incorrect)."
           }
         },
         {
-          "name": "Creer reservation — non authentifie (401)",
+          "name": "Creer reservation - non authentifie (401)",
           "event": [
             {
               "listen": "test",
@@ -339,17 +339,17 @@
                 }
               }
             },
-            "description": "401 UNAUTHORIZED — aucun token fourni."
+            "description": "401 UNAUTHORIZED - aucun token fourni."
           }
         }
       ]
     },
     {
-      "name": "Consultation — Utilisateur",
-      "description": "GET /api/v1/me/entries — Liste les reservations et entrees de file de l'utilisateur connecte.\n\nSupporte la pagination (page, per_page) et les filtres (status, from, to).",
+      "name": "Consultation - Utilisateur",
+      "description": "GET /api/v1/me/entries - Liste les reservations et entrees de file de l'utilisateur connecte.\n\nSupporte la pagination (page, per_page) et les filtres (status, from, to).",
       "item": [
         {
-          "name": "Mes entrees — sans filtre (200)",
+          "name": "Mes entrees - sans filtre (200)",
           "event": [
             {
               "listen": "test",
@@ -389,7 +389,7 @@
           }
         },
         {
-          "name": "Mes entrees — filtre par statut (200)",
+          "name": "Mes entrees - filtre par statut (200)",
           "event": [
             {
               "listen": "test",
@@ -433,7 +433,7 @@
           }
         },
         {
-          "name": "Mes entrees — pagination (200)",
+          "name": "Mes entrees - pagination (200)",
           "event": [
             {
               "listen": "test",
@@ -480,7 +480,7 @@
           }
         },
         {
-          "name": "Mes entrees — filtre par periode (200)",
+          "name": "Mes entrees - filtre par periode (200)",
           "event": [
             {
               "listen": "test",
@@ -522,7 +522,7 @@
           }
         },
         {
-          "name": "Mes entrees — non authentifie (401)",
+          "name": "Mes entrees - non authentifie (401)",
           "event": [
             {
               "listen": "test",
@@ -553,17 +553,17 @@
                 "entries"
               ]
             },
-            "description": "401 UNAUTHORIZED — aucun token fourni."
+            "description": "401 UNAUTHORIZED - aucun token fourni."
           }
         }
       ]
     },
     {
-      "name": "Consultation — Station",
-      "description": "GET /api/v1/station/entries — Liste les reservations et entrees de file de la station authentifiee.\n\nSupporte la pagination (page, per_page) et les filtres (status, from, to).",
+      "name": "Consultation - Station",
+      "description": "GET /api/v1/station/entries - Liste les reservations et entrees de file de la station authentifiee.\n\nSupporte la pagination (page, per_page) et les filtres (status, from, to).",
       "item": [
         {
-          "name": "Entrees station — sans filtre (200)",
+          "name": "Entrees station - sans filtre (200)",
           "event": [
             {
               "listen": "test",
@@ -603,7 +603,7 @@
           }
         },
         {
-          "name": "Entrees station — filtre par statut (200)",
+          "name": "Entrees station - filtre par statut (200)",
           "event": [
             {
               "listen": "test",
@@ -647,7 +647,7 @@
           }
         },
         {
-          "name": "Entrees station — pagination (200)",
+          "name": "Entrees station - pagination (200)",
           "event": [
             {
               "listen": "test",
@@ -694,7 +694,7 @@
           }
         },
         {
-          "name": "Entrees station — non authentifie (401)",
+          "name": "Entrees station - non authentifie (401)",
           "event": [
             {
               "listen": "test",
@@ -725,11 +725,11 @@
                 "entries"
               ]
             },
-            "description": "401 UNAUTHORIZED — aucun token fourni."
+            "description": "401 UNAUTHORIZED - aucun token fourni."
           }
         },
         {
-          "name": "Entrees station — pas de station associee (404)",
+          "name": "Entrees station - pas de station associee (404)",
           "event": [
             {
               "listen": "test",
@@ -761,17 +761,17 @@
                 "entries"
               ]
             },
-            "description": "404 NOT_FOUND — l'utilisateur authentifie n'a pas de station associee."
+            "description": "404 NOT_FOUND - l'utilisateur authentifie n'a pas de station associee."
           }
         }
       ]
     },
     {
       "name": "Annulation reservation (remboursement Stripe)",
-      "description": "POST /api/v1/reservations/:id/cancel — Annule une reservation confirmed ou pending avec remboursement Stripe et distribution automatique de la penalite.\n\nPolitique :\n- Remboursement integral si >= 60 min avant le service (pas de penalite).\n- Penalite 20% si < 60 min avant le service, distribuee entre plateforme (70%) et station (30%) via Stripe transfer reversal.\n\nDistribution de la penalite (ex. reservation €10) :\n- Client remboursé : €8\n- Plateforme garde : €1 (commission) + €1.40 (70% penalite) = €2.40\n- Station garde : €0.60 (30% penalite)\n\nConfig modifiable en DB (settings, type=admin) :\n- cancellation_free_window_minutes (defaut: 60)\n- cancellation_penalty_percent (defaut: 20)\n- cancellation_penalty_platform_rate (defaut: 70)\n- cancellation_penalty_station_rate (defaut: 30)\n\nPrerequis : reservation au statut confirmed ou pending, auth client.",
+      "description": "POST /api/v1/reservations/:id/cancel - Annule une reservation confirmed ou pending avec remboursement Stripe et distribution automatique de la penalite.\n\nPolitique :\n- Remboursement integral si >= 60 min avant le service (pas de penalite).\n- Penalite 20% si < 60 min avant le service, distribuee entre plateforme (70%) et station (30%) via Stripe transfer reversal.\n\nDistribution de la penalite (ex. reservation €10) :\n- Client remboursé : €8\n- Plateforme garde : €1 (commission) + €1.40 (70% penalite) = €2.40\n- Station garde : €0.60 (30% penalite)\n\nConfig modifiable en DB (settings, type=admin) :\n- cancellation_free_window_minutes (defaut: 60)\n- cancellation_penalty_percent (defaut: 20)\n- cancellation_penalty_platform_rate (defaut: 70)\n- cancellation_penalty_station_rate (defaut: 30)\n\nPrerequis : reservation au statut confirmed ou pending, auth client.",
       "item": [
         {
-          "name": "Annuler reservation — sans penalite (200)",
+          "name": "Annuler reservation - sans penalite (200)",
           "event": [
             {
               "listen": "test",
@@ -825,7 +825,7 @@
           }
         },
         {
-          "name": "Annuler reservation — avec penalite 20% (200)",
+          "name": "Annuler reservation - avec penalite 20% (200)",
           "event": [
             {
               "listen": "test",
@@ -880,7 +880,7 @@
           }
         },
         {
-          "name": "Annuler reservation — sans raison (200)",
+          "name": "Annuler reservation - sans raison (200)",
           "event": [
             {
               "listen": "test",
@@ -922,11 +922,11 @@
                 }
               }
             },
-            "description": "Annulation sans raison — le champ reason est optionnel."
+            "description": "Annulation sans raison - le champ reason est optionnel."
           }
         },
         {
-          "name": "Annuler reservation — deja annulee (409)",
+          "name": "Annuler reservation - deja annulee (409)",
           "event": [
             {
               "listen": "test",
@@ -968,11 +968,11 @@
                 }
               }
             },
-            "description": "409 CONFLICT — la reservation est deja annulee ou dans un statut non annulable (completed, in_progress, pending_payment)."
+            "description": "409 CONFLICT - la reservation est deja annulee ou dans un statut non annulable (completed, in_progress, pending_payment)."
           }
         },
         {
-          "name": "Annuler reservation — inexistante (404)",
+          "name": "Annuler reservation - inexistante (404)",
           "event": [
             {
               "listen": "test",
@@ -1010,11 +1010,11 @@
                 }
               }
             },
-            "description": "404 NOT_FOUND — reservation inexistante ou appartenant a un autre utilisateur."
+            "description": "404 NOT_FOUND - reservation inexistante ou appartenant a un autre utilisateur."
           }
         },
         {
-          "name": "Annuler reservation — non authentifie (401)",
+          "name": "Annuler reservation - non authentifie (401)",
           "event": [
             {
               "listen": "test",
@@ -1055,17 +1055,17 @@
                 }
               }
             },
-            "description": "401 UNAUTHORIZED — aucun token fourni."
+            "description": "401 UNAUTHORIZED - aucun token fourni."
           }
         }
       ]
     },
     {
       "name": "Annulation entree (file / pending_payment)",
-      "description": "PATCH /api/v1/me/entries/:entryId/cancel — Annule une entrée de file d'attente ou une réservation en attente de paiement.\n\nComportement selon le statut :\n• pending_payment : PaymentIntent annulé, aucun débit.\n• confirmed / late / pending (file d'attente) : frais d'annulation appliqués — capture du PaymentIntent, remboursement partiel (amountPaid - penalty), distribution de la pénalité. Le champ penalty_amount est renseigné dans la réponse.\n\nPour les réservations confirmed, utiliser POST /reservations/:id/cancel.",
+      "description": "PATCH /api/v1/me/entries/:entryId/cancel - Annule une entrée de file d'attente ou une réservation en attente de paiement.\n\nComportement selon le statut :\n• pending_payment : PaymentIntent annulé, aucun débit.\n• confirmed / late / pending (file d'attente) : frais d'annulation appliqués - capture du PaymentIntent, remboursement partiel (amountPaid - penalty), distribution de la pénalité. Le champ penalty_amount est renseigné dans la réponse.\n\nPour les réservations confirmed, utiliser POST /reservations/:id/cancel.",
       "item": [
         {
-          "name": "Annuler entree — succes (200)",
+          "name": "Annuler entree - succes (200)",
           "event": [
             {
               "listen": "test",
@@ -1103,7 +1103,7 @@
           }
         },
         {
-          "name": "Annuler entree — deja annulee (409)",
+          "name": "Annuler entree - deja annulee (409)",
           "event": [
             {
               "listen": "test",
@@ -1137,11 +1137,11 @@
                 "cancel"
               ]
             },
-            "description": "409 CONFLICT — l'entree est deja annulee."
+            "description": "409 CONFLICT - l'entree est deja annulee."
           }
         },
         {
-          "name": "Annuler entree — inexistante (404)",
+          "name": "Annuler entree - inexistante (404)",
           "event": [
             {
               "listen": "test",
@@ -1171,11 +1171,11 @@
                 "cancel"
               ]
             },
-            "description": "404 NOT_FOUND — entree inexistante."
+            "description": "404 NOT_FOUND - entree inexistante."
           }
         },
         {
-          "name": "Annuler depuis la file (confirmed — frais d'annulation) — 200",
+          "name": "Annuler depuis la file (confirmed - frais d'annulation) - 200",
           "event": [
             {
               "listen": "test",
@@ -1224,7 +1224,7 @@
           }
         },
         {
-          "name": "Annuler depuis la file (late — frais d'annulation) — 200",
+          "name": "Annuler depuis la file (late - frais d'annulation) - 200",
           "event": [
             {
               "listen": "test",
@@ -1263,7 +1263,7 @@
           }
         },
         {
-          "name": "Annuler depuis la file (pending_payment — sans frais) — 200",
+          "name": "Annuler depuis la file (pending_payment - sans frais) - 200",
           "event": [
             {
               "listen": "test",
@@ -1298,14 +1298,14 @@
                 "cancel"
               ]
             },
-            "description": "Annule une entrée de file avant confirmation Stripe (pending_payment). Le PaymentIntent est annulé sans capture — aucun débit."
+            "description": "Annule une entrée de file avant confirmation Stripe (pending_payment). Le PaymentIntent est annulé sans capture - aucun débit."
           }
         }
       ]
     },
     {
       "name": "Gestion station",
-      "description": "PATCH /api/v1/station/entries/:entryId — Met a jour le statut d'une entree (in_progress, completed, cancelled). Auth: station.",
+      "description": "PATCH /api/v1/station/entries/:entryId - Met a jour le statut d'une entree (in_progress, completed, cancelled). Auth: station.",
       "item": [
         {
           "name": "Marquer in_progress (200)",
@@ -1413,10 +1413,10 @@
     },
     {
       "name": "Confirmation de presence",
-      "description": "POST /api/v1/reservations/:id/confirm-presence — Le client confirme sa presence avant le debut du service.\nDoit etre appele avant l'expiration de la tolerance (heure du creneau + late_tolerance_minutes).\nAuth : client.",
+      "description": "POST /api/v1/reservations/:id/confirm-presence - Le client confirme sa presence avant le debut du service.\nDoit etre appele avant l'expiration de la tolerance (heure du creneau + late_tolerance_minutes).\nAuth : client.",
       "item": [
         {
-          "name": "Confirmer presence — succes (200)",
+          "name": "Confirmer presence - succes (200)",
           "event": [
             {
               "listen": "test",
@@ -1453,7 +1453,7 @@
           "response": []
         },
         {
-          "name": "Confirmer presence — deja confirme (409)",
+          "name": "Confirmer presence - deja confirme (409)",
           "event": [
             {
               "listen": "test",
@@ -1481,12 +1481,12 @@
                 "confirm-presence"
               ]
             },
-            "description": "409 — La presence est deja confirmee (client_confirmed = true)."
+            "description": "409 - La presence est deja confirmee (client_confirmed = true)."
           },
           "response": []
         },
         {
-          "name": "Confirmer presence — non autorise (403)",
+          "name": "Confirmer presence - non autorise (403)",
           "event": [
             {
               "listen": "test",
@@ -1516,7 +1516,7 @@
                 "confirm-presence"
               ]
             },
-            "description": "404 — Reservation introuvable ou n'appartient pas au client authentifie."
+            "description": "404 - Reservation introuvable ou n'appartient pas au client authentifie."
           },
           "response": []
         }
@@ -1524,10 +1524,10 @@
     },
     {
       "name": "Signalisation de retard",
-      "description": "POST /api/v1/reservations/:id/signal-delay — Le client signale qu'il sera en retard.\nUne demande de retard est creee avec le statut 'pending' et notifie la station.\nAuth : client.\n\nPrerequis : reservation au statut confirmed.",
+      "description": "POST /api/v1/reservations/:id/signal-delay - Le client signale qu'il sera en retard.\nUne demande de retard est creee avec le statut 'pending' et notifie la station.\nAuth : client.\n\nPrerequis : reservation au statut confirmed.",
       "item": [
         {
-          "name": "Signaler retard — succes (201)",
+          "name": "Signaler retard - succes (201)",
           "event": [
             {
               "listen": "test",
@@ -1581,7 +1581,7 @@
           }
         },
         {
-          "name": "Signaler retard — sans message (201)",
+          "name": "Signaler retard - sans message (201)",
           "event": [
             {
               "listen": "test",
@@ -1628,11 +1628,11 @@
                 }
               }
             },
-            "description": "Le message est optionnel — body vide accepte."
+            "description": "Le message est optionnel - body vide accepte."
           }
         },
         {
-          "name": "Signaler retard — demande deja active (409)",
+          "name": "Signaler retard - demande deja active (409)",
           "event": [
             {
               "listen": "test",
@@ -1679,11 +1679,11 @@
                 }
               }
             },
-            "description": "409 CONFLICT — une demande de retard est deja active (pending) pour cette reservation, ou la reservation n'est pas au statut confirmed."
+            "description": "409 CONFLICT - une demande de retard est deja active (pending) pour cette reservation, ou la reservation n'est pas au statut confirmed."
           }
         },
         {
-          "name": "Signaler retard — body invalide (400)",
+          "name": "Signaler retard - body invalide (400)",
           "event": [
             {
               "listen": "test",
@@ -1731,11 +1731,11 @@
                 }
               }
             },
-            "description": "400 VALIDATION_FAILED — le champ message doit etre une chaine de caracteres."
+            "description": "400 VALIDATION_FAILED - le champ message doit etre une chaine de caracteres."
           }
         },
         {
-          "name": "Signaler retard — reservation introuvable (404)",
+          "name": "Signaler retard - reservation introuvable (404)",
           "event": [
             {
               "listen": "test",
@@ -1773,11 +1773,11 @@
                 }
               }
             },
-            "description": "404 NOT_FOUND — reservation inexistante."
+            "description": "404 NOT_FOUND - reservation inexistante."
           }
         },
         {
-          "name": "Signaler retard — non authentifie (401)",
+          "name": "Signaler retard - non authentifie (401)",
           "event": [
             {
               "listen": "test",
@@ -1818,17 +1818,17 @@
                 }
               }
             },
-            "description": "401 UNAUTHORIZED — aucun token fourni."
+            "description": "401 UNAUTHORIZED - aucun token fourni."
           }
         }
       ]
     },
     {
       "name": "Gestion retard (station)",
-      "description": "Endpoints pour accepter ou refuser une demande de retard signales par un client.\nAuth : station.\n\n- POST /api/v1/reservations/:id/accept-delay — accepte la demande de retard (statut: accepted)\n- POST /api/v1/reservations/:id/refuse-delay — refuse la demande de retard (statut: refused)",
+      "description": "Endpoints pour accepter ou refuser une demande de retard signales par un client.\nAuth : station.\n\n- POST /api/v1/reservations/:id/accept-delay - accepte la demande de retard (statut: accepted)\n- POST /api/v1/reservations/:id/refuse-delay - refuse la demande de retard (statut: refused)",
       "item": [
         {
-          "name": "Accepter retard — succes (200)",
+          "name": "Accepter retard - succes (200)",
           "event": [
             {
               "listen": "test",
@@ -1867,7 +1867,7 @@
           }
         },
         {
-          "name": "Accepter retard — aucune demande en attente (409)",
+          "name": "Accepter retard - aucune demande en attente (409)",
           "event": [
             {
               "listen": "test",
@@ -1900,11 +1900,11 @@
                 "accept-delay"
               ]
             },
-            "description": "409 CONFLICT — aucune demande de retard en attente (pending) pour cette reservation."
+            "description": "409 CONFLICT - aucune demande de retard en attente (pending) pour cette reservation."
           }
         },
         {
-          "name": "Accepter retard — reservation introuvable (404)",
+          "name": "Accepter retard - reservation introuvable (404)",
           "event": [
             {
               "listen": "test",
@@ -1933,11 +1933,11 @@
                 "accept-delay"
               ]
             },
-            "description": "404 NOT_FOUND — reservation inexistante."
+            "description": "404 NOT_FOUND - reservation inexistante."
           }
         },
         {
-          "name": "Accepter retard — non authentifie (401)",
+          "name": "Accepter retard - non authentifie (401)",
           "event": [
             {
               "listen": "test",
@@ -1969,11 +1969,11 @@
                 "accept-delay"
               ]
             },
-            "description": "401 UNAUTHORIZED — aucun token fourni."
+            "description": "401 UNAUTHORIZED - aucun token fourni."
           }
         },
         {
-          "name": "Refuser retard — succes (200)",
+          "name": "Refuser retard - succes (200)",
           "event": [
             {
               "listen": "test",
@@ -2026,7 +2026,7 @@
           }
         },
         {
-          "name": "Refuser retard — sans raison (200)",
+          "name": "Refuser retard - sans raison (200)",
           "event": [
             {
               "listen": "test",
@@ -2073,11 +2073,11 @@
                 }
               }
             },
-            "description": "Le champ refusal_reason est optionnel — body vide accepte."
+            "description": "Le champ refusal_reason est optionnel - body vide accepte."
           }
         },
         {
-          "name": "Refuser retard — aucune demande en attente (409)",
+          "name": "Refuser retard - aucune demande en attente (409)",
           "event": [
             {
               "listen": "test",
@@ -2110,11 +2110,11 @@
                 "refuse-delay"
               ]
             },
-            "description": "409 CONFLICT — aucune demande de retard en attente (pending) pour cette reservation."
+            "description": "409 CONFLICT - aucune demande de retard en attente (pending) pour cette reservation."
           }
         },
         {
-          "name": "Refuser retard — reservation introuvable (404)",
+          "name": "Refuser retard - reservation introuvable (404)",
           "event": [
             {
               "listen": "test",
@@ -2143,11 +2143,11 @@
                 "refuse-delay"
               ]
             },
-            "description": "404 NOT_FOUND — reservation inexistante."
+            "description": "404 NOT_FOUND - reservation inexistante."
           }
         },
         {
-          "name": "Refuser retard — non authentifie (401)",
+          "name": "Refuser retard - non authentifie (401)",
           "event": [
             {
               "listen": "test",
@@ -2179,17 +2179,17 @@
                 "refuse-delay"
               ]
             },
-            "description": "401 UNAUTHORIZED — aucun token fourni."
+            "description": "401 UNAUTHORIZED - aucun token fourni."
           }
         }
       ]
     },
     {
       "name": "Replanification de reservation",
-      "description": "POST /api/v1/reservations/:id/reschedule — Le client replanifie sa reservation sur un nouveau creneau.\nAuth : client.\n\nComportement :\n- Si replanification tardive (< fenetre libre) : penalite appliquee, stripe_client_secret retourne pour paiement supplementaire eventuel.\n- Retourne is_late_cancellation, penalty_amount, refunded_amount et optionnellement stripe_client_secret.\n\nVariable requise : `new_time_slot_id`",
+      "description": "POST /api/v1/reservations/:id/reschedule - Le client replanifie sa reservation sur un nouveau creneau.\nAuth : client.\n\nComportement :\n- Si replanification tardive (< fenetre libre) : penalite appliquee, stripe_client_secret retourne pour paiement supplementaire eventuel.\n- Retourne is_late_cancellation, penalty_amount, refunded_amount et optionnellement stripe_client_secret.\n\nVariable requise : `new_time_slot_id`",
       "item": [
         {
-          "name": "Replanifier reservation — succes (201)",
+          "name": "Replanifier reservation - succes (201)",
           "event": [
             {
               "listen": "test",
@@ -2245,7 +2245,7 @@
           }
         },
         {
-          "name": "Replanifier reservation — avec penalite tardive (201)",
+          "name": "Replanifier reservation - avec penalite tardive (201)",
           "event": [
             {
               "listen": "test",
@@ -2298,7 +2298,7 @@
           }
         },
         {
-          "name": "Replanifier reservation — meme creneau (409)",
+          "name": "Replanifier reservation - meme creneau (409)",
           "event": [
             {
               "listen": "test",
@@ -2345,11 +2345,11 @@
                 }
               }
             },
-            "description": "409 CONFLICT — le nouveau creneau est identique au creneau actuel, ou la reservation n'est pas dans un statut replanifiable."
+            "description": "409 CONFLICT - le nouveau creneau est identique au creneau actuel, ou la reservation n'est pas dans un statut replanifiable."
           }
         },
         {
-          "name": "Replanifier reservation — creneau plein (409 SLOT_FULL)",
+          "name": "Replanifier reservation - creneau plein (409 SLOT_FULL)",
           "event": [
             {
               "listen": "test",
@@ -2396,11 +2396,11 @@
                 }
               }
             },
-            "description": "409 SLOT_FULL — le nouveau creneau cible a atteint sa capacite maximale."
+            "description": "409 SLOT_FULL - le nouveau creneau cible a atteint sa capacite maximale."
           }
         },
         {
-          "name": "Replanifier reservation — body invalide (400)",
+          "name": "Replanifier reservation - body invalide (400)",
           "event": [
             {
               "listen": "test",
@@ -2448,11 +2448,11 @@
                 }
               }
             },
-            "description": "400 VALIDATION_FAILED — new_time_slot_id manquant ou format UUID invalide."
+            "description": "400 VALIDATION_FAILED - new_time_slot_id manquant ou format UUID invalide."
           }
         },
         {
-          "name": "Replanifier reservation — reservation introuvable (404)",
+          "name": "Replanifier reservation - reservation introuvable (404)",
           "event": [
             {
               "listen": "test",
@@ -2495,11 +2495,11 @@
                 }
               }
             },
-            "description": "404 NOT_FOUND — reservation inexistante ou appartenant a un autre utilisateur."
+            "description": "404 NOT_FOUND - reservation inexistante ou appartenant a un autre utilisateur."
           }
         },
         {
-          "name": "Replanifier reservation — non authentifie (401)",
+          "name": "Replanifier reservation - non authentifie (401)",
           "event": [
             {
               "listen": "test",
@@ -2545,11 +2545,11 @@
                 }
               }
             },
-            "description": "401 UNAUTHORIZED — aucun token fourni."
+            "description": "401 UNAUTHORIZED - aucun token fourni."
           }
         },
         {
-          "name": "Replanifier reservation — erreur serveur (500)",
+          "name": "Replanifier reservation - erreur serveur (500)",
           "event": [
             {
               "listen": "test",
@@ -2596,17 +2596,17 @@
                 }
               }
             },
-            "description": "500 INTERNAL_ERROR — erreur inattendue lors de la replanification (ex. echec Stripe)."
+            "description": "500 INTERNAL_ERROR - erreur inattendue lors de la replanification (ex. echec Stripe)."
           }
         }
       ]
     },
     {
       "name": "Pourboire (tip)",
-      "description": "POST /api/v1/reservations/:reservation_id/tip — Envoie un pourboire apres une reservation terminee.\n\nLe montant est vire integralement a la station via Stripe (aucune commission plateforme).\nRetourne un client_secret Stripe que le frontend utilise pour confirmer le paiement avec la carte du client.\n\nPrerequis : reservation au statut completed, role client, station avec stripe_account_id configure.\nVariables auto-remplies : tip_id, tip_client_secret",
+      "description": "POST /api/v1/reservations/:reservation_id/tip - Envoie un pourboire apres une reservation terminee.\n\nLe montant est vire integralement a la station via Stripe (aucune commission plateforme).\nRetourne un client_secret Stripe que le frontend utilise pour confirmer le paiement avec la carte du client.\n\nPrerequis : reservation au statut completed, role client, station avec stripe_account_id configure.\nVariables auto-remplies : tip_id, tip_client_secret",
       "item": [
         {
-          "name": "Envoyer un pourboire — succes (201)",
+          "name": "Envoyer un pourboire - succes (201)",
           "event": [
             {
               "listen": "test",
@@ -2662,7 +2662,7 @@
           }
         },
         {
-          "name": "Tip — 400 montant invalide (amount = 0)",
+          "name": "Tip - 400 montant invalide (amount = 0)",
           "event": [
             {
               "listen": "test",
@@ -2712,7 +2712,7 @@
           }
         },
         {
-          "name": "Tip — 400 montant depasse le plafond (amount > 500)",
+          "name": "Tip - 400 montant depasse le plafond (amount > 500)",
           "event": [
             {
               "listen": "test",
@@ -2762,7 +2762,7 @@
           }
         },
         {
-          "name": "Tip — 400 UUID reservation invalide",
+          "name": "Tip - 400 UUID reservation invalide",
           "event": [
             {
               "listen": "test",
@@ -2812,7 +2812,7 @@
           }
         },
         {
-          "name": "Tip — 401 non authentifie",
+          "name": "Tip - 401 non authentifie",
           "event": [
             {
               "listen": "test",
@@ -2865,7 +2865,7 @@
           }
         },
         {
-          "name": "Tip — 409 pourboire deja envoye",
+          "name": "Tip - 409 pourboire deja envoye",
           "event": [
             {
               "listen": "test",
@@ -2915,7 +2915,7 @@
           }
         },
         {
-          "name": "Tip — 422 reservation non completee",
+          "name": "Tip - 422 reservation non completee",
           "event": [
             {
               "listen": "test",
@@ -2965,10 +2965,10 @@
     },
     {
       "name": "Webhook Stripe",
-      "description": "POST /api/v1/webhooks/stripe — Webhook Stripe pour les evenements de paiement.\n\nFlux avec capture_method: 'manual' :\n  1. Client confirme le paiement cote frontend → autorisation carte (fonds bloques).\n  2. payment_intent.amount_capturable_updated → reservation confirmee (status: confirmed).\n  3. Station marque le service comme complete (ou cron late) → notre code appelle capture().\n  4. payment_intent.succeeded → fonds distribues par Stripe. Aucune action de notre cote.\n\nNecessite STRIPE_WEBHOOK_SECRET dans .env.\nUtiliser `stripe listen --forward-to localhost:3000/api/v1/webhooks/stripe` en dev.",
+      "description": "POST /api/v1/webhooks/stripe - Webhook Stripe pour les evenements de paiement.\n\nFlux avec capture_method: 'manual' :\n  1. Client confirme le paiement cote frontend → autorisation carte (fonds bloques).\n  2. payment_intent.amount_capturable_updated → reservation confirmee (status: confirmed).\n  3. Station marque le service comme complete (ou cron late) → notre code appelle capture().\n  4. payment_intent.succeeded → fonds distribues par Stripe. Aucune action de notre cote.\n\nNecessite STRIPE_WEBHOOK_SECRET dans .env.\nUtiliser `stripe listen --forward-to localhost:3000/api/v1/webhooks/stripe` en dev.",
       "item": [
         {
-          "name": "Webhook — payment_intent.amount_capturable_updated (confirmation)",
+          "name": "Webhook - payment_intent.amount_capturable_updated (confirmation)",
           "event": [
             {
               "listen": "test",
@@ -2999,7 +2999,7 @@
               {
                 "key": "stripe-signature",
                 "value": "t=1234567890,v1=fake_signature",
-                "description": "Signature Stripe (invalide en l'etat — utiliser stripe CLI pour tester)"
+                "description": "Signature Stripe (invalide en l'etat - utiliser stripe CLI pour tester)"
               }
             ],
             "url": {
@@ -3027,7 +3027,7 @@
           }
         },
         {
-          "name": "Webhook — payment_intent.succeeded (capture effectuee — no-op)",
+          "name": "Webhook - payment_intent.succeeded (capture effectuee - no-op)",
           "event": [
             {
               "listen": "test",
@@ -3055,7 +3055,7 @@
               {
                 "key": "stripe-signature",
                 "value": "t=1234567890,v1=fake_signature",
-                "description": "Signature Stripe (invalide en l'etat — utiliser stripe CLI pour tester)"
+                "description": "Signature Stripe (invalide en l'etat - utiliser stripe CLI pour tester)"
               }
             ],
             "url": {
@@ -3079,11 +3079,11 @@
                 }
               }
             },
-            "description": "Declenche apres la capture manuelle effectuee par notre code (service complete ou client late). Les fonds sont distribues par Stripe automatiquement (station reçoit le payout, plateforme conserve la commission).\n\nAucune action de notre cote — cet evenement est reçu a titre informatif uniquement."
+            "description": "Declenche apres la capture manuelle effectuee par notre code (service complete ou client late). Les fonds sont distribues par Stripe automatiquement (station reçoit le payout, plateforme conserve la commission).\n\nAucune action de notre cote - cet evenement est reçu a titre informatif uniquement."
           }
         },
         {
-          "name": "Webhook — signature manquante (400)",
+          "name": "Webhook - signature manquante (400)",
           "event": [
             {
               "listen": "test",
@@ -3132,7 +3132,7 @@
                 }
               }
             },
-            "description": "400 — header stripe-signature absent."
+            "description": "400 - header stripe-signature absent."
           }
         }
       ]
@@ -3141,7 +3141,7 @@
       "name": "Commission plateforme (admin)",
       "item": [
         {
-          "name": "GET commission courante — succes (200)",
+          "name": "GET commission courante - succes (200)",
           "response": [],
           "request": {
             "method": "GET",
@@ -3183,7 +3183,7 @@
           ]
         },
         {
-          "name": "PUT modifier commission — succes (200)",
+          "name": "PUT modifier commission - succes (200)",
           "response": [],
           "request": {
             "method": "PUT",
@@ -3235,7 +3235,7 @@
           ]
         },
         {
-          "name": "PUT commission — 400 rate invalide (0)",
+          "name": "PUT commission - 400 rate invalide (0)",
           "response": [],
           "request": {
             "method": "PUT",
@@ -3281,7 +3281,7 @@
           ]
         },
         {
-          "name": "PUT commission — 400 rate depasse 1",
+          "name": "PUT commission - 400 rate depasse 1",
           "response": [],
           "request": {
             "method": "PUT",
@@ -3327,7 +3327,7 @@
           ]
         },
         {
-          "name": "PUT commission — 401 non authentifie",
+          "name": "PUT commission - 401 non authentifie",
           "response": [],
           "request": {
             "method": "PUT",
@@ -3373,7 +3373,7 @@
           ]
         },
         {
-          "name": "GET historique commission — succes (200)",
+          "name": "GET historique commission - succes (200)",
           "response": [],
           "request": {
             "method": "GET",
@@ -3432,7 +3432,7 @@
       "name": "Logs de transactions (admin)",
       "item": [
         {
-          "name": "GET logs — tous types (200)",
+          "name": "GET logs - tous types (200)",
           "response": [],
           "request": {
             "method": "GET",
@@ -3485,7 +3485,7 @@
           ]
         },
         {
-          "name": "GET logs — filtre type reservation (200)",
+          "name": "GET logs - filtre type reservation (200)",
           "response": [],
           "request": {
             "method": "GET",
@@ -3533,7 +3533,7 @@
           ]
         },
         {
-          "name": "GET logs — filtre type tip (200)",
+          "name": "GET logs - filtre type tip (200)",
           "response": [],
           "request": {
             "method": "GET",
@@ -3581,7 +3581,7 @@
           ]
         },
         {
-          "name": "GET logs — filtre type penalty (200)",
+          "name": "GET logs - filtre type penalty (200)",
           "response": [],
           "request": {
             "method": "GET",
@@ -3629,7 +3629,7 @@
           ]
         },
         {
-          "name": "GET logs — filtre station + plage de dates (200)",
+          "name": "GET logs - filtre station + plage de dates (200)",
           "response": [],
           "request": {
             "method": "GET",
@@ -3681,7 +3681,7 @@
           ]
         },
         {
-          "name": "GET logs — 400 type invalide",
+          "name": "GET logs - 400 type invalide",
           "response": [],
           "request": {
             "method": "GET",
@@ -3725,7 +3725,7 @@
           ]
         },
         {
-          "name": "GET logs — 400 date invalide",
+          "name": "GET logs - 400 date invalide",
           "response": [],
           "request": {
             "method": "GET",
@@ -3769,7 +3769,7 @@
           ]
         },
         {
-          "name": "GET logs — 401 non authentifie",
+          "name": "GET logs - 401 non authentifie",
           "response": [],
           "request": {
             "method": "GET",
@@ -3810,10 +3810,10 @@
     },
     {
       "name": "Litiges",
-      "description": "POST /api/v1/disputes — Ouverture d'un litige par un client pour une réservation terminée et payée.\n\nPrerequis : utilisateur authentifié (role client), réservation avec status=completed et stripe_payment_succeeded_at renseigné.\nUn seul litige par réservation.",
+      "description": "POST /api/v1/disputes - Ouverture d'un litige par un client pour une réservation terminée et payée.\n\nPrerequis : utilisateur authentifié (role client), réservation avec status=completed et stripe_payment_succeeded_at renseigné.\nUn seul litige par réservation.",
       "item": [
         {
-          "name": "Créer litige — succès (201)",
+          "name": "Créer litige - succès (201)",
           "event": [
             {
               "listen": "test",
@@ -3867,7 +3867,7 @@
           }
         },
         {
-          "name": "Créer litige — sans description ni montant (201)",
+          "name": "Créer litige - sans description ni montant (201)",
           "event": [
             {
               "listen": "test",
@@ -3914,11 +3914,11 @@
                 }
               }
             },
-            "description": "Litige minimal — seuls reservation_id et reason sont fournis."
+            "description": "Litige minimal - seuls reservation_id et reason sont fournis."
           }
         },
         {
-          "name": "Créer litige — réservation non terminée (400)",
+          "name": "Créer litige - réservation non terminée (400)",
           "event": [
             {
               "listen": "test",
@@ -3963,11 +3963,11 @@
                 }
               }
             },
-            "description": "400 VALIDATION_FAILED — réservation avec status != completed. Seules les réservations terminées peuvent faire l'objet d'un litige."
+            "description": "400 VALIDATION_FAILED - réservation avec status != completed. Seules les réservations terminées peuvent faire l'objet d'un litige."
           }
         },
         {
-          "name": "Créer litige — litige déjà existant (409)",
+          "name": "Créer litige - litige déjà existant (409)",
           "event": [
             {
               "listen": "test",
@@ -4012,11 +4012,11 @@
                 }
               }
             },
-            "description": "409 DISPUTE_ALREADY_EXISTS — un litige existe déjà pour cette réservation. Un seul litige par réservation."
+            "description": "409 DISPUTE_ALREADY_EXISTS - un litige existe déjà pour cette réservation. Un seul litige par réservation."
           }
         },
         {
-          "name": "Créer litige — réservation d'un autre client (403)",
+          "name": "Créer litige - réservation d'un autre client (403)",
           "event": [
             {
               "listen": "test",
@@ -4061,11 +4061,11 @@
                 }
               }
             },
-            "description": "403 FORBIDDEN — la réservation appartient à un autre client que celui authentifié."
+            "description": "403 FORBIDDEN - la réservation appartient à un autre client que celui authentifié."
           }
         },
         {
-          "name": "Créer litige — réservation introuvable (404)",
+          "name": "Créer litige - réservation introuvable (404)",
           "event": [
             {
               "listen": "test",
@@ -4110,11 +4110,11 @@
                 }
               }
             },
-            "description": "404 NOT_FOUND — UUID valide mais réservation inexistante."
+            "description": "404 NOT_FOUND - UUID valide mais réservation inexistante."
           }
         },
         {
-          "name": "Créer litige — reservation_id manquant (400)",
+          "name": "Créer litige - reservation_id manquant (400)",
           "event": [
             {
               "listen": "test",
@@ -4160,11 +4160,11 @@
                 }
               }
             },
-            "description": "400 VALIDATION_FAILED — `reservation_id` est obligatoire."
+            "description": "400 VALIDATION_FAILED - `reservation_id` est obligatoire."
           }
         },
         {
-          "name": "Créer litige — non authentifié (401)",
+          "name": "Créer litige - non authentifié (401)",
           "event": [
             {
               "listen": "test",
@@ -4209,17 +4209,17 @@
                 }
               }
             },
-            "description": "401 UNAUTHORIZED — token absent ou invalide."
+            "description": "401 UNAUTHORIZED - token absent ou invalide."
           }
         }
       ]
     },
     {
       "name": "Dépassement de temps",
-      "description": "POST /api/v1/station/extra-time — Déclare un dépassement sur une réservation en cours et décale en cascade tous les créneaux suivants du même jour.\n\nAuth STATION requise. Les clients dont le créneau reste dans les horaires reçoivent extra_time_delay. Ceux dont le créneau dépasse closing_time reçoivent slot_beyond_closing et peuvent annuler sans pénalité.",
+      "description": "POST /api/v1/station/extra-time - Déclare un dépassement sur une réservation en cours et décale en cascade tous les créneaux suivants du même jour.\n\nAuth STATION requise. Les clients dont le créneau reste dans les horaires reçoivent extra_time_delay. Ceux dont le créneau dépasse closing_time reçoivent slot_beyond_closing et peuvent annuler sans pénalité.",
       "item": [
         {
-          "name": "Extra time — succes (200)",
+          "name": "Extra time - succes (200)",
           "event": [
             {
               "listen": "test",
@@ -4273,7 +4273,7 @@
           }
         },
         {
-          "name": "Extra time — reservation introuvable (404)",
+          "name": "Extra time - reservation introuvable (404)",
           "event": [
             {
               "listen": "test",
@@ -4318,11 +4318,11 @@
                 }
               }
             },
-            "description": "404 NOT_FOUND — reservation_id inexistant ou n'appartenant pas à cette station."
+            "description": "404 NOT_FOUND - reservation_id inexistant ou n'appartenant pas à cette station."
           }
         },
         {
-          "name": "Extra time — statut invalide (409)",
+          "name": "Extra time - statut invalide (409)",
           "event": [
             {
               "listen": "test",
@@ -4367,11 +4367,11 @@
                 }
               }
             },
-            "description": "409 CONFLICT — la réservation n'est pas in_progress ou confirmed (ex: déjà completed ou cancelled)."
+            "description": "409 CONFLICT - la réservation n'est pas in_progress ou confirmed (ex: déjà completed ou cancelled)."
           }
         },
         {
-          "name": "Extra time — body invalide (400)",
+          "name": "Extra time - body invalide (400)",
           "event": [
             {
               "listen": "test",
@@ -4416,11 +4416,11 @@
                 }
               }
             },
-            "description": "400 VALIDATION_FAILED — extra_minutes doit être un entier strictement positif."
+            "description": "400 VALIDATION_FAILED - extra_minutes doit être un entier strictement positif."
           }
         },
         {
-          "name": "Extra time — pas de station associee (403)",
+          "name": "Extra time - pas de station associee (403)",
           "event": [
             {
               "listen": "test",
@@ -4466,11 +4466,11 @@
                 }
               }
             },
-            "description": "403 FORBIDDEN — token client utilisé à la place du token station."
+            "description": "403 FORBIDDEN - token client utilisé à la place du token station."
           }
         },
         {
-          "name": "Extra time — non authentifie (401)",
+          "name": "Extra time - non authentifie (401)",
           "event": [
             {
               "listen": "test",
@@ -4516,17 +4516,17 @@
                 }
               }
             },
-            "description": "401 UNAUTHORIZED — token absent ou invalide."
+            "description": "401 UNAUTHORIZED - token absent ou invalide."
           }
         }
       ]
     },
     {
-      "name": "File d'attente — Appeler le suivant",
-      "description": "POST /api/v1/station/queue/next — Appelle automatiquement le premier client actif en file d'attente (queue_position la plus basse parmi pending / confirmed / late).\n\nAuth STATION requise. Passe l'entrée en in_progress, décale les positions des clients restants, envoie la notification queue_pick au client appelé.",
+      "name": "File d'attente - Appeler le suivant",
+      "description": "POST /api/v1/station/queue/next - Appelle automatiquement le premier client actif en file d'attente (queue_position la plus basse parmi pending / confirmed / late).\n\nAuth STATION requise. Passe l'entrée en in_progress, décale les positions des clients restants, envoie la notification queue_pick au client appelé.",
       "item": [
         {
-          "name": "Queue next — succes (200)",
+          "name": "Queue next - succes (200)",
           "event": [
             {
               "listen": "test",
@@ -4565,7 +4565,7 @@
           }
         },
         {
-          "name": "Queue next — file vide (404)",
+          "name": "Queue next - file vide (404)",
           "event": [
             {
               "listen": "test",
@@ -4597,11 +4597,11 @@
                 "next"
               ]
             },
-            "description": "404 NOT_FOUND — aucun client actif en file (file vide ou tous en statuts terminaux)."
+            "description": "404 NOT_FOUND - aucun client actif en file (file vide ou tous en statuts terminaux)."
           }
         },
         {
-          "name": "Queue next — pas de station associee (403)",
+          "name": "Queue next - pas de station associee (403)",
           "event": [
             {
               "listen": "test",
@@ -4635,11 +4635,11 @@
                 "next"
               ]
             },
-            "description": "403 FORBIDDEN — token client utilisé à la place du token station."
+            "description": "403 FORBIDDEN - token client utilisé à la place du token station."
           }
         },
         {
-          "name": "Queue next — non authentifie (401)",
+          "name": "Queue next - non authentifie (401)",
           "event": [
             {
               "listen": "test",
@@ -4673,7 +4673,7 @@
                 "next"
               ]
             },
-            "description": "401 UNAUTHORIZED — token absent ou invalide."
+            "description": "401 UNAUTHORIZED - token absent ou invalide."
           }
         }
       ]

@@ -1,6 +1,6 @@
 {
   "info": {
-    "name": "LAVO — Auth API",
+    "name": "LAVO - Auth API",
     "description": "Collection de tests pour le module d'authentification LAVO.\n\nVariable requise : `base_url` (ex: http://localhost:3000)\nVariable auto-remplie : `access_token` (sauvegardé après login/register)\n\n## Architecture JWT hybride\n- `access_token` : dans le body (stockage mémoire JS côté client, 15 min)\n- `refresh_token` : httpOnly cookie (path /api/v1/auth, 1–30 jours, jamais exposé au JS)\n\n## Flux de test recommandé\n1. Register → data.user + data.access_token (sauvegardé automatiquement) + cookie refresh_token\n2. Verify Email → status passe à active\n3. Login → idem\n4. Me → header Authorization: Bearer {{access_token}}\n5. Refresh → POST sans body (cookie envoyé automatiquement) → nouveau access_token + nouveau cookie\n6. Forgot Password → email de réinitialisation\n7. Reset Password → nouveau mot de passe\n8. Logout → header Authorization: Bearer {{access_token}} + cookie effacé",
     "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
   },
@@ -21,7 +21,7 @@
       "name": "Register",
       "item": [
         {
-          "name": "Register — succès",
+          "name": "Register - succès",
           "event": [
             {
               "listen": "test",
@@ -73,7 +73,7 @@
           }
         },
         {
-          "name": "Register — remember_me 30 jours",
+          "name": "Register - remember_me 30 jours",
           "event": [
             {
               "listen": "test",
@@ -120,7 +120,7 @@
           }
         },
         {
-          "name": "Register — email déjà utilisé (409)",
+          "name": "Register - email déjà utilisé (409)",
           "event": [
             {
               "listen": "test",
@@ -164,7 +164,7 @@
           }
         },
         {
-          "name": "Register — validation échouée (400)",
+          "name": "Register - validation échouée (400)",
           "event": [
             {
               "listen": "test",
@@ -209,7 +209,7 @@
           }
         },
         {
-          "name": "Register — mot de passe sans majuscule (400)",
+          "name": "Register - mot de passe sans majuscule (400)",
           "event": [
             {
               "listen": "test",
@@ -252,7 +252,7 @@
           }
         },
         {
-          "name": "Register — confirm_password ne correspond pas (400)",
+          "name": "Register - confirm_password ne correspond pas (400)",
           "event": [
             {
               "listen": "test",
@@ -298,12 +298,12 @@
                 "register"
               ]
             },
-            "description": "400 VALIDATION_FAILED — confirm_password ne correspond pas à password."
+            "description": "400 VALIDATION_FAILED - confirm_password ne correspond pas à password."
           },
           "response": []
         },
         {
-          "name": "Register — body JSON invalide (400)",
+          "name": "Register - body JSON invalide (400)",
           "event": [
             {
               "listen": "test",
@@ -347,7 +347,7 @@
       "name": "Login",
       "item": [
         {
-          "name": "Login — succès (200)",
+          "name": "Login - succès (200)",
           "event": [
             {
               "listen": "test",
@@ -400,7 +400,7 @@
           }
         },
         {
-          "name": "Login — remember_me 30 jours",
+          "name": "Login - remember_me 30 jours",
           "event": [
             {
               "listen": "test",
@@ -447,7 +447,7 @@
           }
         },
         {
-          "name": "Login — mauvais mot de passe (401)",
+          "name": "Login - mauvais mot de passe (401)",
           "event": [
             {
               "listen": "test",
@@ -491,7 +491,7 @@
           }
         },
         {
-          "name": "Login — email inexistant (401)",
+          "name": "Login - email inexistant (401)",
           "event": [
             {
               "listen": "test",
@@ -534,7 +534,7 @@
           }
         },
         {
-          "name": "Login — compte non actif (403)",
+          "name": "Login - compte non actif (403)",
           "event": [
             {
               "listen": "test",
@@ -578,7 +578,7 @@
           }
         },
         {
-          "name": "Login — validation échouée (400)",
+          "name": "Login - validation échouée (400)",
           "event": [
             {
               "listen": "test",
@@ -627,7 +627,7 @@
       "name": "Session",
       "item": [
         {
-          "name": "Me — authentifié (200)",
+          "name": "Me - authentifié (200)",
           "event": [
             {
               "listen": "test",
@@ -670,7 +670,7 @@
           }
         },
         {
-          "name": "Me — non authentifié (401)",
+          "name": "Me - non authentifié (401)",
           "event": [
             {
               "listen": "test",
@@ -701,7 +701,7 @@
                 "me"
               ]
             },
-            "description": "Aucun header Authorization — simule une requête non authentifiée."
+            "description": "Aucun header Authorization - simule une requête non authentifiée."
           }
         }
       ]
@@ -710,7 +710,7 @@
       "name": "Refresh Token",
       "item": [
         {
-          "name": "Refresh — rotation réussie (200)",
+          "name": "Refresh - rotation réussie (200)",
           "event": [
             {
               "listen": "test",
@@ -746,11 +746,11 @@
                 "refresh"
               ]
             },
-            "description": "Aucun body requis — le cookie httpOnly refresh_token est envoyé automatiquement par le navigateur/Postman. L'ancien token est révoqué en DB et un nouveau access_token est retourné dans le body + nouveau cookie."
+            "description": "Aucun body requis - le cookie httpOnly refresh_token est envoyé automatiquement par le navigateur/Postman. L'ancien token est révoqué en DB et un nouveau access_token est retourné dans le body + nouveau cookie."
           }
         },
         {
-          "name": "Refresh — cookie absent (401)",
+          "name": "Refresh - cookie absent (401)",
           "event": [
             {
               "listen": "test",
@@ -781,11 +781,11 @@
                 "refresh"
               ]
             },
-            "description": "400 VALIDATION_FAILED — refresh_token absent du body."
+            "description": "400 VALIDATION_FAILED - refresh_token absent du body."
           }
         },
         {
-          "name": "Refresh — token révoqué (401)",
+          "name": "Refresh - token révoqué (401)",
           "event": [
             {
               "listen": "test",
@@ -830,7 +830,7 @@
                 "refresh"
               ]
             },
-            "description": "401 UNAUTHORIZED — replay attack avec un token déjà révoqué."
+            "description": "401 UNAUTHORIZED - replay attack avec un token déjà révoqué."
           }
         }
       ]
@@ -839,7 +839,7 @@
       "name": "Verify Email",
       "item": [
         {
-          "name": "Verify Email — succès (200)",
+          "name": "Verify Email - succès (200)",
           "event": [
             {
               "listen": "test",
@@ -883,7 +883,7 @@
           }
         },
         {
-          "name": "Verify Email — token inexistant (404)",
+          "name": "Verify Email - token inexistant (404)",
           "event": [
             {
               "listen": "test",
@@ -926,7 +926,7 @@
           }
         },
         {
-          "name": "Verify Email — token expiré (400 TOKEN_EXPIRED)",
+          "name": "Verify Email - token expiré (400 TOKEN_EXPIRED)",
           "event": [
             {
               "listen": "test",
@@ -970,7 +970,7 @@
           }
         },
         {
-          "name": "Verify Email — token manquant (400)",
+          "name": "Verify Email - token manquant (400)",
           "event": [
             {
               "listen": "test",
@@ -1018,7 +1018,7 @@
       "name": "Resend Verification Email",
       "item": [
         {
-          "name": "Resend — succès (200)",
+          "name": "Resend - succès (200)",
           "event": [
             {
               "listen": "test",
@@ -1062,7 +1062,7 @@
           }
         },
         {
-          "name": "Resend — email inconnu (404)",
+          "name": "Resend - email inconnu (404)",
           "event": [
             {
               "listen": "test",
@@ -1105,7 +1105,7 @@
           }
         },
         {
-          "name": "Resend — email déjà vérifié (409)",
+          "name": "Resend - email déjà vérifié (409)",
           "event": [
             {
               "listen": "test",
@@ -1149,7 +1149,7 @@
           }
         },
         {
-          "name": "Resend — email invalide (400)",
+          "name": "Resend - email invalide (400)",
           "event": [
             {
               "listen": "test",
@@ -1197,7 +1197,7 @@
       "name": "Forgot Password",
       "item": [
         {
-          "name": "Forgot Password — succès (200, toujours)",
+          "name": "Forgot Password - succès (200, toujours)",
           "request": {
             "method": "POST",
             "header": [
@@ -1232,7 +1232,7 @@
           "response": []
         },
         {
-          "name": "Forgot Password — email inconnu (200, silencieux)",
+          "name": "Forgot Password - email inconnu (200, silencieux)",
           "request": {
             "method": "POST",
             "header": [
@@ -1262,12 +1262,12 @@
                 }
               }
             },
-            "description": "Même réponse 200 même si l'email n'existe pas — anti-énumération."
+            "description": "Même réponse 200 même si l'email n'existe pas - anti-énumération."
           },
           "response": []
         },
         {
-          "name": "Forgot Password — email invalide (400)",
+          "name": "Forgot Password - email invalide (400)",
           "request": {
             "method": "POST",
             "header": [
@@ -1297,7 +1297,7 @@
                 }
               }
             },
-            "description": "400 VALIDATION_FAILED — format email invalide."
+            "description": "400 VALIDATION_FAILED - format email invalide."
           },
           "response": []
         }
@@ -1307,7 +1307,7 @@
       "name": "Reset Password",
       "item": [
         {
-          "name": "Reset Password — succès (200)",
+          "name": "Reset Password - succès (200)",
           "request": {
             "method": "POST",
             "header": [
@@ -1342,7 +1342,7 @@
           "response": []
         },
         {
-          "name": "Reset Password — token inexistant (404)",
+          "name": "Reset Password - token inexistant (404)",
           "request": {
             "method": "POST",
             "header": [
@@ -1372,12 +1372,12 @@
                 }
               }
             },
-            "description": "404 NOT_FOUND — le token n'a jamais existé en base."
+            "description": "404 NOT_FOUND - le token n'a jamais existé en base."
           },
           "response": []
         },
         {
-          "name": "Reset Password — token expiré (400 TOKEN_EXPIRED)",
+          "name": "Reset Password - token expiré (400 TOKEN_EXPIRED)",
           "request": {
             "method": "POST",
             "header": [
@@ -1407,12 +1407,12 @@
                 }
               }
             },
-            "description": "400 TOKEN_EXPIRED — le token existe mais a expiré ou déjà été utilisé."
+            "description": "400 TOKEN_EXPIRED - le token existe mais a expiré ou déjà été utilisé."
           },
           "response": []
         },
         {
-          "name": "Reset Password — mot de passe faible (400)",
+          "name": "Reset Password - mot de passe faible (400)",
           "request": {
             "method": "POST",
             "header": [
@@ -1442,12 +1442,12 @@
                 }
               }
             },
-            "description": "400 VALIDATION_FAILED — le nouveau mot de passe ne respecte pas les règles (8+ chars, maj, min, chiffre, spécial)."
+            "description": "400 VALIDATION_FAILED - le nouveau mot de passe ne respecte pas les règles (8+ chars, maj, min, chiffre, spécial)."
           },
           "response": []
         },
         {
-          "name": "Reset Password — token manquant (400)",
+          "name": "Reset Password - token manquant (400)",
           "request": {
             "method": "POST",
             "header": [
@@ -1477,12 +1477,12 @@
                 }
               }
             },
-            "description": "400 VALIDATION_FAILED — champ token absent du body."
+            "description": "400 VALIDATION_FAILED - champ token absent du body."
           },
           "response": []
         },
         {
-          "name": "Reset Password — confirm_new_password ne correspond pas (400)",
+          "name": "Reset Password - confirm_new_password ne correspond pas (400)",
           "event": [
             {
               "listen": "test",
@@ -1528,7 +1528,7 @@
                 }
               }
             },
-            "description": "400 VALIDATION_FAILED — confirm_new_password ne correspond pas à new_password."
+            "description": "400 VALIDATION_FAILED - confirm_new_password ne correspond pas à new_password."
           },
           "response": []
         }
@@ -1585,7 +1585,7 @@
       "name": "Change Password",
       "item": [
         {
-          "name": "Change Password — succes (200)",
+          "name": "Change Password - succes (200)",
           "response": [],
           "request": {
             "method": "POST",
@@ -1620,7 +1620,7 @@
           }
         },
         {
-          "name": "Change Password — mauvais mot de passe actuel (401)",
+          "name": "Change Password - mauvais mot de passe actuel (401)",
           "response": [],
           "request": {
             "method": "POST",
@@ -1651,11 +1651,11 @@
                 }
               }
             },
-            "description": "401 UNAUTHORIZED — current_password incorrect."
+            "description": "401 UNAUTHORIZED - current_password incorrect."
           }
         },
         {
-          "name": "Change Password — confirmation invalide (400)",
+          "name": "Change Password - confirmation invalide (400)",
           "response": [],
           "request": {
             "method": "POST",
@@ -1686,11 +1686,11 @@
                 }
               }
             },
-            "description": "400 VALIDATION_FAILED — confirm_new_password ne correspond pas."
+            "description": "400 VALIDATION_FAILED - confirm_new_password ne correspond pas."
           }
         },
         {
-          "name": "Change Password — non authentifie (401)",
+          "name": "Change Password - non authentifie (401)",
           "response": [],
           "request": {
             "method": "POST",
@@ -1721,7 +1721,7 @@
                 }
               }
             },
-            "description": "401 UNAUTHORIZED — pas de cookie access_token."
+            "description": "401 UNAUTHORIZED - pas de cookie access_token."
           }
         }
       ]
@@ -1730,7 +1730,7 @@
       "name": "Upload",
       "item": [
         {
-          "name": "Upload document — succes (201)",
+          "name": "Upload document - succes (201)",
           "response": [],
           "request": {
             "method": "POST",
@@ -1761,7 +1761,7 @@
           }
         },
         {
-          "name": "Upload — fichier manquant (400)",
+          "name": "Upload - fichier manquant (400)",
           "response": [],
           "request": {
             "method": "POST",
@@ -1781,11 +1781,11 @@
               "mode": "formdata",
               "formdata": []
             },
-            "description": "400 VALIDATION_FAILED — champ file absent du form-data."
+            "description": "400 VALIDATION_FAILED - champ file absent du form-data."
           }
         },
         {
-          "name": "Upload — type non supporte (400)",
+          "name": "Upload - type non supporte (400)",
           "response": [],
           "request": {
             "method": "POST",
@@ -1812,11 +1812,11 @@
                 }
               ]
             },
-            "description": "400 VALIDATION_FAILED — type MIME non autorise (acceptes: jpeg, png, webp, pdf)."
+            "description": "400 VALIDATION_FAILED - type MIME non autorise (acceptes: jpeg, png, webp, pdf)."
           }
         },
         {
-          "name": "Upload — fichier trop grand (413)",
+          "name": "Upload - fichier trop grand (413)",
           "response": [],
           "request": {
             "method": "POST",
@@ -1843,11 +1843,11 @@
                 }
               ]
             },
-            "description": "413 VALIDATION_FAILED — fichier depasse la limite de 10 MB."
+            "description": "413 VALIDATION_FAILED - fichier depasse la limite de 10 MB."
           }
         },
         {
-          "name": "Upload — non authentifie (401)",
+          "name": "Upload - non authentifie (401)",
           "response": [],
           "request": {
             "method": "POST",
@@ -1873,7 +1873,7 @@
                 }
               ]
             },
-            "description": "401 UNAUTHORIZED — pas de cookie access_token."
+            "description": "401 UNAUTHORIZED - pas de cookie access_token."
           }
         }
       ]
@@ -1882,7 +1882,7 @@
       "name": "Station Onboarding",
       "item": [
         {
-          "name": "Step 1 — Creer compte station (201)",
+          "name": "Step 1 - Creer compte station (201)",
           "response": [],
           "request": {
             "method": "POST",
@@ -1917,7 +1917,7 @@
           }
         },
         {
-          "name": "Step 1 — email deja utilise (409)",
+          "name": "Step 1 - email deja utilise (409)",
           "response": [],
           "request": {
             "method": "POST",
@@ -1952,7 +1952,7 @@
           }
         },
         {
-          "name": "Step 1 — confirmation invalide (400)",
+          "name": "Step 1 - confirmation invalide (400)",
           "response": [],
           "request": {
             "method": "POST",
@@ -1987,7 +1987,7 @@
           }
         },
         {
-          "name": "Step 2 — Informations station (201)",
+          "name": "Step 2 - Informations station (201)",
           "response": [],
           "request": {
             "method": "POST",
@@ -2023,7 +2023,7 @@
           }
         },
         {
-          "name": "Step 2 — non authentifie (401)",
+          "name": "Step 2 - non authentifie (401)",
           "response": [],
           "request": {
             "method": "POST",
@@ -2059,7 +2059,7 @@
           }
         },
         {
-          "name": "Step 2 — wash_type invalide (400)",
+          "name": "Step 2 - wash_type invalide (400)",
           "response": [],
           "request": {
             "method": "POST",
@@ -2095,7 +2095,7 @@
           }
         },
         {
-          "name": "Step 3 — Documents et CGU (200)",
+          "name": "Step 3 - Documents et CGU (200)",
           "response": [],
           "request": {
             "method": "POST",
@@ -2131,7 +2131,7 @@
           }
         },
         {
-          "name": "Step 3 — step 2 non complete (404)",
+          "name": "Step 3 - step 2 non complete (404)",
           "response": [],
           "request": {
             "method": "POST",
@@ -2163,11 +2163,11 @@
                 }
               }
             },
-            "description": "404 NOT_FOUND — step 2 non complete."
+            "description": "404 NOT_FOUND - step 2 non complete."
           }
         },
         {
-          "name": "Step 3 — CGU non acceptees (400)",
+          "name": "Step 3 - CGU non acceptees (400)",
           "response": [],
           "request": {
             "method": "POST",
@@ -2199,13 +2199,13 @@
                 }
               }
             },
-            "description": "400 VALIDATION_FAILED — terms_accepted doit etre true."
+            "description": "400 VALIDATION_FAILED - terms_accepted doit etre true."
           }
         }
       ]
     },
     {
-      "name": "Admin — Stations",
+      "name": "Admin - Stations",
       "item": [
         {
           "name": "Lister stations en attente (200)",
@@ -2311,7 +2311,7 @@
           }
         },
         {
-          "name": "Rejeter — raison trop courte (400)",
+          "name": "Rejeter - raison trop courte (400)",
           "response": [],
           "request": {
             "method": "POST",
@@ -2348,7 +2348,7 @@
           }
         },
         {
-          "name": "Admin — non autorise (403)",
+          "name": "Admin - non autorise (403)",
           "response": [],
           "request": {
             "method": "GET",
@@ -2365,16 +2365,16 @@
                 "stations"
               ]
             },
-            "description": "403 FORBIDDEN — role != admin."
+            "description": "403 FORBIDDEN - role != admin."
           }
         }
       ]
     },
     {
-      "name": "Station — Profil",
+      "name": "Station - Profil",
       "item": [
         {
-          "name": "Station Me — approuvee (200)",
+          "name": "Station Me - approuvee (200)",
           "response": [],
           "request": {
             "method": "GET",
@@ -2395,7 +2395,7 @@
           }
         },
         {
-          "name": "Station Me — non approuvee (403 BUSINESS_NOT_APPROVED)",
+          "name": "Station Me - non approuvee (403 BUSINESS_NOT_APPROVED)",
           "response": [],
           "request": {
             "method": "GET",
@@ -2416,7 +2416,7 @@
           }
         },
         {
-          "name": "Station Me — non authentifiee (401)",
+          "name": "Station Me - non authentifiee (401)",
           "response": [],
           "request": {
             "method": "GET",

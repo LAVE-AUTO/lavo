@@ -47,7 +47,7 @@ const RESERVATION_COLUMNS = {
 export type CreateReservationEntryData = {
   user_id: string;
   station_id: string;
-  vehicle_format_id: string;
+  vehicle_format_id?: string | null;
   time_slot_id: string;
   booking_source?: 'standard' | 'qr';
   status: string;
@@ -62,7 +62,7 @@ export type CreateReservationEntryData = {
 export type CreateQueueEntryData = {
   user_id: string;
   station_id: string;
-  vehicle_format_id: string;
+  vehicle_format_id?: string | null;
   queue_position: number;
   status: string;
   amount_paid: string;
@@ -186,7 +186,7 @@ export async function findEntryByIdAndStation(
 
 /**
  * Lists entries for a station: reservations (by time_slot start_time) then queue (by queue_position).
- * Backward-compatible pagination — defaults to perPage=500 when not provided.
+ * Backward-compatible pagination - defaults to perPage=500 when not provided.
  */
 export async function listEntriesByStation(
   stationId: string,
@@ -298,13 +298,15 @@ export async function listEntriesByUser(userId: string): Promise<Entry[]> {
   });
 }
 
-/** Non-terminal statuses considered "active" for duplicate reservation checks. */
+/** Non-terminal statuses considered "active" for duplicate checks. */
 const ACTIVE_STATUSES = ['pending_payment', 'pending', 'confirmed', 'in_progress'];
 
 /**
- * Returns true if the user already has an active reservation or queue entry at this station.
+ * Returns true if the user already has an active queue entry (entry_type='queue') at this station.
+ * Does NOT check slot reservations — users may hold multiple reservations at the same station
+ * for different time slots.
  */
-export async function hasActiveEntryAtStation(
+export async function hasActiveQueueEntryAtStation(
   userId: string,
   stationId: string,
   tx?: DbTransaction
@@ -317,11 +319,87 @@ export async function hasActiveEntryAtStation(
       and(
         eq(reservations.user_id, userId),
         eq(reservations.station_id, stationId),
+        eq(reservations.entry_type, 'queue'),
         inArray(reservations.status, ACTIVE_STATUSES)
       )
     )
     .limit(1);
   return row.length > 0;
+}
+
+/**
+ * Returns true if the user already has a confirmed/in-progress/pending reservation for this slot.
+ * Excludes `pending_payment` — those are handled by the upsert logic in createReservation.
+ */
+export async function hasActiveReservationForSlot(
+  userId: string,
+  timeSlotId: string,
+  tx?: DbTransaction
+): Promise<boolean> {
+  const client = tx ?? db;
+  const row = await client
+    .select({ id: reservations.id })
+    .from(reservations)
+    .where(
+      and(
+        eq(reservations.user_id, userId),
+        eq(reservations.time_slot_id, timeSlotId),
+        eq(reservations.entry_type, 'reservation'),
+        inArray(reservations.status, ['pending', 'confirmed', 'in_progress'])
+      )
+    )
+    .limit(1);
+  return row.length > 0;
+}
+
+/**
+ * Finds an existing pending_payment reservation entry for a specific user and time slot.
+ * Used in createReservation to cancel stale payment attempts before issuing a new PI.
+ */
+export async function findPendingPaymentReservationForSlot(
+  userId: string,
+  timeSlotId: string
+): Promise<{ id: string; stripe_payment_id: string | null } | undefined> {
+  const row = await db
+    .select({ id: reservations.id, stripe_payment_id: reservations.stripe_payment_id })
+    .from(reservations)
+    .where(
+      and(
+        eq(reservations.user_id, userId),
+        eq(reservations.time_slot_id, timeSlotId),
+        eq(reservations.entry_type, 'reservation'),
+        eq(reservations.status, 'pending_payment')
+      )
+    )
+    .limit(1);
+  return row[0];
+}
+
+/**
+ * Finds an existing pending_payment queue entry for a specific user at a station.
+ * Used in joinQueue to cancel stale payment attempts before issuing a new PI.
+ */
+export async function findPendingPaymentQueueEntryAtStation(
+  userId: string,
+  stationId: string
+): Promise<{ id: string; stripe_payment_id: string | null; queue_position: number | null } | undefined> {
+  const row = await db
+    .select({
+      id: reservations.id,
+      stripe_payment_id: reservations.stripe_payment_id,
+      queue_position: reservations.queue_position,
+    })
+    .from(reservations)
+    .where(
+      and(
+        eq(reservations.user_id, userId),
+        eq(reservations.station_id, stationId),
+        eq(reservations.entry_type, 'queue'),
+        eq(reservations.status, 'pending_payment')
+      )
+    )
+    .limit(1);
+  return row[0];
 }
 
 /**
@@ -526,7 +604,7 @@ const NO_SHOW_ELIGIBLE_STATUSES = ['pending', 'confirmed', 'late'] as const;
  * Conditionally cancels a queue entry as a no-show only if it is still in an active status.
  * Returns the updated row when the guard matched; otherwise undefined. Using a conditional
  * update here prevents overlapping cron runs from each issuing the Stripe capture/refund/penalty
- * cascade on the same entry — the second run sees the row already at status='cancelled' and skips.
+ * cascade on the same entry - the second run sees the row already at status='cancelled' and skips.
  */
 export async function cancelQueueEntryForNoShowIfEligible(
   id: string,
@@ -730,7 +808,7 @@ export async function findOrphanedPendingPaymentEntries(olderThanMinutes: number
   });
 }
 
-// %%%%% Rich entry queries — denormalized with station, format, flags %%%%%
+// %%%%% Rich entry queries - denormalized with station, format, flags %%%%%
 
 /** Denormalized entry shape returned to the client, enriched with joined data. */
 export type RichEntry = {
@@ -882,7 +960,7 @@ export async function findRichEntryByIdAndUser(
 }
 
 
-// %%%%% Rich station entry queries — denormalized with user and vehicle format %%%%%
+// %%%%% Rich station entry queries - denormalized with user and vehicle format %%%%%
 
 /** Station-side denormalized entry shape: includes user first_name and vehicle format label. */
 export type RichStationEntry = Entry & {

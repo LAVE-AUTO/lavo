@@ -2,7 +2,12 @@
 -- This enforces valid status values at the DB level, matching the Drizzle schema.
 
 --> statement-breakpoint
-CREATE TYPE "support_status" AS ENUM ('ouvert', 'en_cours', 'resolu', 'ferme');
+DO $$
+BEGIN
+  CREATE TYPE "support_status" AS ENUM ('ouvert', 'en_cours', 'resolu', 'ferme');
+EXCEPTION
+  WHEN duplicate_object THEN NULL;
+END $$;
 
 --> statement-breakpoint
 ALTER TABLE "support_tickets"

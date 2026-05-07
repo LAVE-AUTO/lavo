@@ -1,10 +1,9 @@
 /**
- * Business logic for vehicle formats and pricing. Public list by station; station-scoped create/update/delete.
+ * Business logic for vehicle formats. Global catalog — no station scoping.
  */
-import { findActiveStationWithDetail, findStationByUserId } from './station-repository';
 import {
-  findFormatsByStationId,
-  findFormatByIdAndStation,
+  findAllFormats,
+  findFormatById,
   createFormat as repoCreateFormat,
   updateFormat as repoUpdateFormat,
   countReservationsByFormatId,
@@ -15,13 +14,8 @@ import {
 } from './format-repository';
 import { ConflictError, NotFoundError } from '@/lib/errors';
 
-/**
- * Returns formats for an active station. Throws NotFoundError if station does not exist or is not active.
- */
-export async function getFormatsByStationIdPublic(stationId: string): Promise<VehicleFormat[]> {
-  const station = await findActiveStationWithDetail(stationId);
-  if (!station) throw new NotFoundError('Station not found');
-  return findFormatsByStationId(stationId);
+export async function getAllFormats(): Promise<VehicleFormat[]> {
+  return findAllFormats();
 }
 
 export type CreateFormatDto = {
@@ -30,21 +24,13 @@ export type CreateFormatDto = {
   is_active?: boolean;
 };
 
-/**
- * Creates a vehicle format for the station associated with the given user. Throws NotFoundError if no station.
- */
-export async function createFormat(
-  userId: string,
-  dto: CreateFormatDto
-): Promise<VehicleFormat> {
-  const station = await findStationByUserId(userId);
-  if (!station) throw new NotFoundError('No station associated with this account');
+export async function createFormat(dto: CreateFormatDto): Promise<VehicleFormat> {
   const data: CreateFormatData = {
     label: dto.label,
     price: String(dto.price),
     is_active: dto.is_active ?? true,
   };
-  return repoCreateFormat(station.id, data);
+  return repoCreateFormat(data);
 }
 
 export type UpdateFormatDto = {
@@ -53,19 +39,12 @@ export type UpdateFormatDto = {
   is_active?: boolean;
 };
 
-/**
- * Updates a format (full or partial). Verifies format belongs to station owned by user.
- * Throws NotFoundError if station or format not found or not owned.
- */
 export async function updateFormat(
-  userId: string,
   formatId: string,
   dto: UpdateFormatDto,
   partial: boolean
 ): Promise<VehicleFormat> {
-  const station = await findStationByUserId(userId);
-  if (!station) throw new NotFoundError('No station associated with this account');
-  const format = await findFormatByIdAndStation(formatId, station.id);
+  const format = await findFormatById(formatId);
   if (!format) throw new NotFoundError('Format not found');
   const data: UpdateFormatData = {};
   if (dto.label !== undefined) data.label = dto.label;
@@ -77,14 +56,8 @@ export async function updateFormat(
   return repoUpdateFormat(format.id, payload);
 }
 
-/**
- * Deletes a format if it has no reservations. Verifies format belongs to station owned by user.
- * Throws NotFoundError if station or format not found. Throws ConflictError if format has reservations.
- */
-export async function deleteFormat(userId: string, formatId: string): Promise<void> {
-  const station = await findStationByUserId(userId);
-  if (!station) throw new NotFoundError('No station associated with this account');
-  const format = await findFormatByIdAndStation(formatId, station.id);
+export async function deleteFormat(formatId: string): Promise<void> {
+  const format = await findFormatById(formatId);
   if (!format) throw new NotFoundError('Format not found');
   const count = await countReservationsByFormatId(format.id);
   if (count > 0) {

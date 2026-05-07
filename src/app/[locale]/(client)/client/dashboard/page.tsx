@@ -131,7 +131,7 @@ export default function ClientDashboardPage() {
           <div className="rounded-3xl border border-[rgba(200,152,10,0.12)] bg-white p-5 dark:bg-dark-card sm:p-6">
             <h2 className="text-[16px] font-black text-[#1a1a1a] dark:text-white">{t('account_title')}</h2>
             <div className="mt-4 space-y-3 text-[14px]">
-              <InfoRow label={t('account_email')} value={user?.email ?? '—'} />
+              <InfoRow label={t('account_email')} value={user?.email ?? '-'} />
               <InfoRow label={t('account_member_since')} value={memberSinceLabel} />
               <InfoRow label={t('account_verified')} value={user?.email_verified_at ? t('yes') : t('no')} />
             </div>

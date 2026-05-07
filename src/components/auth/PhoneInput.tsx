@@ -212,7 +212,7 @@ function CountrySelect({
 }
 
 /* ------------------------------------------------------------------ */
-/*  PhoneInput — country select + local number input, side by side     */
+/*  PhoneInput - country select + local number input, side by side     */
 /* ------------------------------------------------------------------ */
 
 export interface PhoneInputValue {

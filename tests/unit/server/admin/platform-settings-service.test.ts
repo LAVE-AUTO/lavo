@@ -64,7 +64,7 @@ beforeEach(() => {
 
 // %%%%% Tests %%%%%
 
-describe('updatePlatformSettings — penalty rate auto-sync', () => {
+describe('updatePlatformSettings - penalty rate auto-sync', () => {
   // = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = =
   // Single key: platform_rate provided
   // = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = =
@@ -196,7 +196,7 @@ describe('updatePlatformSettings — penalty rate auto-sync', () => {
       const entries: Array<{ key: string; value: string }> =
         mockUpsertPlatformSettings.mock.calls[0][0];
 
-      // Exactly the two supplied keys — no extra entry injected
+      // Exactly the two supplied keys - no extra entry injected
       expect(entries.length).toBe(2);
       expect(entries.find((e) => e.key === PLATFORM_KEY)?.value).toBe('0.70');
       expect(entries.find((e) => e.key === STATION_KEY)?.value).toBe('0.30');
@@ -244,7 +244,7 @@ describe('updatePlatformSettings — penalty rate auto-sync', () => {
       const entries: Array<{ key: string; value: string }> =
         mockUpsertPlatformSettings.mock.calls[0][0];
 
-      // Only the supplied key — no rate keys injected
+      // Only the supplied key - no rate keys injected
       expect(entries.length).toBe(1);
       expect(entries[0].key).toBe('cancellation_free_window_minutes');
       expect(entries[0].value).toBe('45');
@@ -271,7 +271,7 @@ describe('updatePlatformSettings — penalty rate auto-sync', () => {
 
   describe('cache invalidation', () => {
     it('invalidates both rate keys when only platform_rate is provided', async () => {
-      // The service uses an internal in-process Map — we verify behaviour indirectly
+      // The service uses an internal in-process Map - we verify behaviour indirectly
       // by confirming the upsert receives both keys (meaning both will be invalidated).
       await updatePlatformSettings(
         { [PLATFORM_KEY]: '0.55' } as Record<typeof PLATFORM_KEY, string>,

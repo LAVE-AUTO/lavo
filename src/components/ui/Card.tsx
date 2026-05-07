@@ -6,9 +6,9 @@ export interface CardProps extends HTMLAttributes<HTMLDivElement> {
   /**
    * Visual style preset.
    * - default:  white/dark-card bg, subtle shadow, rounded-[10px]
-   * - elevated: used for auth forms — larger shadow, same bg
+   * - elevated: used for auth forms - larger shadow, same bg
    * - flat:     no shadow, border only
-   * - station:  card used for station list items — slightly tinted bg
+   * - station:  card used for station list items - slightly tinted bg
    */
   variant?: CardVariant;
   children?: ReactNode;

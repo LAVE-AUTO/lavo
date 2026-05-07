@@ -60,7 +60,7 @@ export function DayDetailsModal({
             <p className="mb-4 text-[11px] text-[#666] dark:text-[#A0A090]">
               {t('availability_all_postes_closed')}
             </p>
-            {/* Tip card — matches prototype gold-border callout */}
+            {/* Tip card - matches prototype gold-border callout */}
             <div className="mb-5 w-full rounded-xl border-l-4 border-[#C49A1E] bg-[#C49A1E]/10 p-3 text-left dark:bg-[#C49A1E]/8">
               <p className="text-[11px] text-[#666] dark:text-[#A0A090]">
                 <strong className="text-[#C49A1E]">{t('availability_tip_label')}</strong>{' '}

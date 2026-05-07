@@ -136,7 +136,7 @@ export function PublicNavbar({
         <div className="max-w-[1440px] mx-auto px-6 lg:px-16 flex items-center justify-between gap-6 py-3">
 
           {/* Logo */}
-          <Link href={logoHref} className="shrink-0" aria-label="Slowtime — Accueil">
+          <Link href={logoHref} className="shrink-0" aria-label="Slowtime - Accueil">
             {isDark ? (
               <div className="flex items-center gap-2">
                 <div className="rounded-lg bg-white/95 p-0.5 border border-[rgba(200,152,10,0.25)] shadow-sm shrink-0">
@@ -185,7 +185,7 @@ export function PublicNavbar({
             {/* Desktop actions */}
             <div className="hidden lg:flex items-center gap-2.5 ml-1">
               {((isAuthenticated && user) || (isLoading && user)) ? (
-                /* Authenticated — avatar + name trigger + dropdown */
+                /* Authenticated - avatar + name trigger + dropdown */
                 <div ref={dropdownRef} className="relative">
                   <button
                     type="button"
@@ -273,7 +273,7 @@ export function PublicNavbar({
               )}
             </div>
 
-            {/* Hamburger — mobile + tablet. Mobile BottomNav covers primary nav but lacks
+            {/* Hamburger - mobile + tablet. Mobile BottomNav covers primary nav but lacks
                the merchant/login/register actions, so the drawer provides them here. */}
             <button
               type="button"
@@ -353,7 +353,7 @@ export function PublicNavbar({
         )}
       </header>
 
-      {/* Spacer — push page content below fixed header (can be disabled per-layout) */}
+      {/* Spacer - push page content below fixed header (can be disabled per-layout) */}
       {withTopSpacer && <div className="h-[62px]" aria-hidden="true" />}
       {/* Extra spacer for mobile bottom nav (can be disabled per-layout) */}
       {withMobileScrollSpacer && <div className="sm:hidden h-16" aria-hidden="true" />}

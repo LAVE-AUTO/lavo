@@ -3,7 +3,7 @@
 export function MerchantAgendaMockup() {
   return (
     <div className="relative w-full max-w-[440px] mx-auto">
-      {/* Floating card — top left */}
+      {/* Floating card - top left */}
       <div className="animate-float absolute -top-5 -left-6 z-20 bg-[#0d1f0f] border border-[rgba(200,152,10,0.25)] rounded-xl p-3 shadow-[0_16px_40px_rgba(0,0,0,0.4)] min-w-[148px]">
         <div className="font-dm-mono text-[10px] uppercase tracking-[1.5px] text-[#7a9a7d] mb-1">Prochain client</div>
         <div className="font-rajdhani text-[16px] font-bold text-[#fef9e7]">Pierre Martin</div>
@@ -71,7 +71,7 @@ export function MerchantAgendaMockup() {
         </div>
       </div>
 
-      {/* Floating card — bottom right */}
+      {/* Floating card - bottom right */}
       <div className="animate-float absolute -bottom-5 -right-4 z-20 bg-[#0d1f0f] border border-[rgba(200,152,10,0.25)] rounded-xl p-3 shadow-[0_16px_40px_rgba(0,0,0,0.4)] min-w-[148px]" style={{ animationDelay: '1.2s' }}>
         <div className="font-dm-mono text-[10px] uppercase tracking-[1.5px] text-[#7a9a7d] mb-1">Virement reçu</div>
         <div className="font-rajdhani text-[22px] font-bold text-[#c8980a] leading-none">+180$</div>

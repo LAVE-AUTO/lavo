@@ -248,7 +248,7 @@ describe('createDispute', () => {
   it('uses default 30-day window when dispute_window_days setting returns the default string', async () => {
     // Simulate the fallback path: DB not set, env not set, default '30' returned.
     mockGetPlatformSettingWithFallback.mockResolvedValue('30');
-    // Reservation completed 31 days ago — should be rejected.
+    // Reservation completed 31 days ago - should be rejected.
     const oldDate = new Date(Date.now() - 31 * 24 * 60 * 60 * 1000);
     mockReservationsFindFirst.mockResolvedValue({
       ...completedReservation,

@@ -150,7 +150,7 @@ describe('PATCH /api/v1/admin/settings', () => {
 
     // The schema validates the single rate value is in [0,1] and the service
     // auto-calculates the complementary station rate. We assert on the handler
-    // response only — the service mock call receives whatever the handler sends.
+    // response only - the service mock call receives whatever the handler sends.
     expect(res.status).toBe(200);
     expect(body.message).toBe('Platform settings updated');
     expect(mockUpdatePlatformSettings).toHaveBeenCalledWith(

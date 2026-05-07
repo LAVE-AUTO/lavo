@@ -43,7 +43,7 @@ function SectionHeader({ title, action }: { title: string; action?: React.ReactN
   );
 }
 
-/* ─── "Coming soon" pill — paints disabled actions so users know the wiring is in flight. */
+/* ─── "Coming soon" pill - paints disabled actions so users know the wiring is in flight. */
 function ComingSoonBadge({ label }: { label: string }) {
   return (
     <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-[#E0E0D0] dark:bg-[#2C2C28] text-[10px] font-bold uppercase tracking-wider text-[#888] dark:text-[#666] whitespace-nowrap">
@@ -76,7 +76,7 @@ export default function ProfilePage() {
   const [photoUrl, setPhotoUrl] = useState<string | null>(null);
   const avatarInputRef = useRef<HTMLInputElement | null>(null);
 
-  /* Notification toggles — local-only state until PATCH /me/notifications ships;
+  /* Notification toggles - local-only state until PATCH /me/notifications ships;
      the toggles are visually disabled so the user knows the change won't persist. */
   const [notifWash]     = useState(true);
   const [notifReminder] = useState(true);
@@ -86,7 +86,7 @@ export default function ProfilePage() {
   /* Modals (only password is wired to a real endpoint today) */
   const [showPasswordModal, setShowPasswordModal] = useState(false);
 
-  /* Mock saved cards — kept until GET /me/payment-methods exists */
+  /* Mock saved cards - kept until GET /me/payment-methods exists */
   const cards = [
     { id: '1', brand: 'Visa',       last4: '4242', expiry: '12/27' },
     { id: '2', brand: 'Mastercard', last4: '1234', expiry: '09/26' },
@@ -99,7 +99,7 @@ export default function ProfilePage() {
 
   const fullName = [user?.first_name, user?.last_name].filter(Boolean).join(' ') || user?.email || '';
 
-  /* Live stats — derived from GET /me/entries (server is the source of truth, the
+  /* Live stats - derived from GET /me/entries (server is the source of truth, the
      user can only see their own entries which are already authorized).
      `member_since` falls back to user.created_at when no completed entry exists yet. */
   const [stats, setStats]               = useState<ProfileStats | null>(null);
@@ -238,7 +238,7 @@ export default function ProfilePage() {
         <div className="bg-[#E8E8D8] dark:bg-dark-card rounded-2xl border border-[rgba(200,152,10,0.12)] p-6">
           <div className="flex items-center gap-5">
 
-            {/* Avatar — disabled until POST /me/avatar (or PATCH /me { avatar_url }) ships */}
+            {/* Avatar - disabled until POST /me/avatar (or PATCH /me { avatar_url }) ships */}
             <button
               type="button"
               onClick={() => avatarInputRef.current?.click()}
@@ -284,7 +284,7 @@ export default function ProfilePage() {
             </div>
           </div>
 
-          {/* Stats row — live from /me/entries (completed count, total spent, member since) */}
+          {/* Stats row - live from /me/entries (completed count, total spent, member since) */}
           <div className="grid grid-cols-3 gap-3 mt-5 pt-5 border-t border-[rgba(200,152,10,0.1)]">
             {statsRow.map(({ label, value, icon }) => (
               <div key={label} className="flex flex-col items-center gap-1.5 text-center">
@@ -308,10 +308,10 @@ export default function ProfilePage() {
           />
           <div className="divide-y divide-[rgba(200,152,10,0.08)]">
             {[
-              { label: t('first_name'), value: user?.first_name || '—' },
-              { label: t('last_name'),  value: user?.last_name  || '—' },
-              { label: t('phone'),      value: user?.phone      || '—' },
-              { label: t('email'),      value: user?.email      || '—' },
+              { label: t('first_name'), value: user?.first_name || '-' },
+              { label: t('last_name'),  value: user?.last_name  || '-' },
+              { label: t('phone'),      value: user?.phone      || '-' },
+              { label: t('email'),      value: user?.email      || '-' },
             ].map(({ label, value }) => (
               <div key={label} className="flex items-center justify-between px-5 py-3.5">
                 <span className="text-[12px] font-bold uppercase tracking-wider text-[#888] dark:text-[#666] w-28 shrink-0">{label}</span>
@@ -453,7 +453,7 @@ export default function ProfilePage() {
 
       </div>
 
-      {/* ── Modals — only password is wired to a real endpoint today ── */}
+      {/* ── Modals - only password is wired to a real endpoint today ── */}
       {showPasswordModal && (
         <PasswordModal
           onClose={() => setShowPasswordModal(false)}
@@ -465,7 +465,7 @@ export default function ProfilePage() {
 }
 
 /* ═══════════════════════════════════════
-   PASSWORD MODAL — only modal wired to a real endpoint
+   PASSWORD MODAL - only modal wired to a real endpoint
    (POST /auth/change-password)
 ═══════════════════════════════════════ */
 function PasswordModal({ onClose, onSuccess }: { onClose: () => void; onSuccess: () => void }) {

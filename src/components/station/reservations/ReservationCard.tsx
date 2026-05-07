@@ -92,7 +92,7 @@ export function ReservationCard({ entry, onValidate, onStart, onCancel }: Props)
         <ChevronIcon expanded={expanded} />
       </button>
 
-      {/* Animated detail panel — always in DOM, height animated via grid-rows */}
+      {/* Animated detail panel - always in DOM, height animated via grid-rows */}
       <div
         className="grid transition-[grid-template-rows] duration-200 ease-out"
         style={{ gridTemplateRows: expanded ? '1fr' : '0fr' }}

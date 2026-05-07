@@ -8,7 +8,7 @@
  *   200 { data: Entry }
  *   400 VALIDATION_FAILED
  *   404 NOT_FOUND
- *   409 CONFLICT — entry is not an active queue entry
+ *   409 CONFLICT - entry is not an active queue entry
  *   500 INTERNAL_ERROR
  */
 import { requireRole } from '@/lib/require-role';

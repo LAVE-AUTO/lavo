@@ -142,7 +142,8 @@ export async function POST(request: Request, { params }: Params): Promise<NextRe
       paramParsed.data.id,
       station.stripe_account_id,
       bodyParsed.data.time_slot_id,
-      bodyParsed.data.vehicle_format_id,
+      bodyParsed.data.service_id,
+      bodyParsed.data.vehicle_format_id ?? null,
       {
         qrToken: bodyParsed.data.qr_token,
         qrVersion: bodyParsed.data.v,
@@ -164,6 +165,11 @@ export async function POST(request: Request, { params }: Params): Promise<NextRe
     if (e instanceof SlotFullError) return error409(e.message, ApiCode.SLOT_FULL);
     if (e instanceof ConflictError) return error409(e.message, ApiCode.CONFLICT);
     if (e instanceof AppError) return fromAppError(e);
+    console.error('[CREATE_RESERVATION] Unexpected error', {
+      stationId: paramParsed.data.id,
+      userId: auth.sub,
+      error: e instanceof Error ? { message: e.message, stack: e.stack } : String(e),
+    });
     return error500(e);
   }
 }

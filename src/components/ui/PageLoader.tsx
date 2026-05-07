@@ -6,7 +6,7 @@ interface Props {
 
 /**
  * Shared in-page loader: centered container, small gold spinner, optional label.
- * Use this everywhere instead of bespoke skeletons or bare text — keeps the
+ * Use this everywhere instead of bespoke skeletons or bare text - keeps the
  * loading affordance consistent across the merchant + admin workspace.
  */
 export function PageLoader({ label }: Props) {
