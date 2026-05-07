@@ -180,12 +180,14 @@ export function BookingFlow({ station, qrToken, qrVersion, onClose }: BookingFlo
       return;
     }
 
-    // book_slot
+    // book_slot - per-post availability flow: send start_time, server picks
+    // the bay and creates the time_slot row atomically. selectedSlot.id holds
+    // the ISO start_time returned by /stations/:id/availability.
     if (devSkipPayment) { goNext(); return; }
     if (!selectedSlot) return;
     setSummaryLoading(true);
     const reservationPayload: Record<string, string> = {
-      time_slot_id: selectedSlot.id,
+      start_time: selectedSlot.id,
       service_id: selectedService!.id,
     };
     if (selectedEntry?.vehicleFormatId) {
@@ -316,6 +318,8 @@ export function BookingFlow({ station, qrToken, qrVersion, onClose }: BookingFlo
             selectedDate={selectedDate}
             selectedSlot={selectedSlot}
             laterTime={laterTime}
+            serviceId={selectedService?.id ?? null}
+            vehicleFormatId={selectedEntry?.vehicleFormatId ?? null}
             onSetMode={handleArrivalSetMode}
             onSetDate={handleArrivalSetDate}
             onSetSlot={setSelectedSlot}

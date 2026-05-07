@@ -32,17 +32,34 @@ export const cancelReservationBodySchema = z
   })
   .strict();
 
-/** POST /stations/:id/reservations - create reservation. */
+/** POST /stations/:id/reservations - create reservation.
+ *  Accepts either:
+ *    - `time_slot_id` (legacy: pre-generated slot), or
+ *    - `start_time`   (new: per-post availability flow; server creates the slot).
+ *  When neither or both are supplied the request is rejected. */
 export const createReservationBodySchema = z
   .object({
     service_id: uuidSchema,
-    time_slot_id: uuidSchema,
+    time_slot_id: uuidSchema.optional(),
+    start_time: z
+      .string()
+      .datetime({ message: 'start_time must be a valid ISO 8601 datetime' })
+      .optional(),
     vehicle_format_id: uuidSchema.optional(),
     qr_token: qrTokenSchema.optional(),
     v: qrVersionSchema.optional(),
   })
   .strict()
   .superRefine((data, ctx) => {
+    const hasSlot = typeof data.time_slot_id === 'string';
+    const hasStart = typeof data.start_time === 'string';
+    if (hasSlot === hasStart) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: 'Provide either time_slot_id or start_time, not both',
+        path: ['time_slot_id'],
+      });
+    }
     const hasToken = typeof data.qr_token === 'string';
     const hasVersion = typeof data.v === 'string' && data.v.length > 0;
     if (hasToken !== hasVersion) {

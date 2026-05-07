@@ -21,6 +21,7 @@ const RESERVATION_COLUMNS = {
   time_slot_id: reservations.time_slot_id,
   station_id: reservations.station_id,
   vehicle_format_id: reservations.vehicle_format_id,
+  post_id: reservations.post_id,
   status: reservations.status,
   queue_position: reservations.queue_position,
   ticket_code: reservations.ticket_code,
@@ -49,6 +50,7 @@ export type CreateReservationEntryData = {
   user_id: string;
   station_id: string;
   vehicle_format_id?: string | null;
+  post_id?: string | null;
   time_slot_id: string;
   booking_source?: 'standard' | 'qr';
   status: string;
@@ -89,6 +91,7 @@ export async function createReservationEntry(
       user_id: data.user_id,
       station_id: data.station_id,
       vehicle_format_id: data.vehicle_format_id,
+      post_id: data.post_id ?? null,
       entry_type: 'reservation',
       booking_source: data.booking_source ?? 'standard',
       time_slot_id: data.time_slot_id,

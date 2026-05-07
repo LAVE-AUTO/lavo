@@ -1,10 +1,25 @@
 'use client';
 
-import { useMemo, useState } from 'react';
+import { useMemo, useState, useEffect } from 'react';
 import { useTranslations, useLocale } from 'next-intl';
+import { getFromApi } from '@/services/axios-service';
 import type { StationDetailData, StationConfigPublic, TimeSlot } from '@/types/station';
 
 type ArrivalMode = 'queue_now' | 'queue_later' | 'book_slot';
+
+interface AvailabilitySlot {
+  start_time: string;
+  end_time: string;
+}
+
+interface AvailabilityResponse {
+  data: {
+    date: string;
+    duration_min: number;
+    slots: AvailabilitySlot[];
+    closed_reason?: 'day_closed' | 'exception' | 'no_active_post';
+  };
+}
 
 interface ArrivalStepProps {
   station: StationDetailData;
@@ -18,6 +33,10 @@ interface ArrivalStepProps {
   selectedDate: string | null;
   selectedSlot: TimeSlot | null;
   laterTime: string | null;
+  /** Service id used to query the per-post availability endpoint. */
+  serviceId: string | null;
+  /** Vehicle format id (only for hand_wash services). */
+  vehicleFormatId: string | null;
   onSetMode: (mode: ArrivalMode) => void;
   onSetDate: (date: string) => void;
   onSetSlot: (slot: TimeSlot) => void;
@@ -150,6 +169,8 @@ export function ArrivalStep({
   selectedDate,
   selectedSlot,
   laterTime,
+  serviceId,
+  vehicleFormatId,
   onSetMode,
   onSetDate,
   onSetSlot,
@@ -160,6 +181,47 @@ export function ArrivalStep({
   const t = useTranslations('booking');
   const locale = useLocale();
   const dates = useMemo(() => generateDates(MAX_BOOKING_DAYS, locale), [locale]);
+
+  /* Per-post availability fetched when the user picks a date in book_slot mode.
+   * Replaces the legacy `station.timeSlots` (pre-generated slots). The server
+   * computes free chunks across all active wash bays for the requested date
+   * and service duration; post selection happens server-side at booking. */
+  const [availability, setAvailability] = useState<AvailabilitySlot[]>([]);
+  const [availabilityLoading, setAvailabilityLoading] = useState(false);
+  const [availabilityClosedReason, setAvailabilityClosedReason] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (arrivalMode !== 'book_slot' || !selectedDate || !serviceId) {
+      setAvailability([]);
+      setAvailabilityClosedReason(null);
+      return;
+    }
+    let cancelled = false;
+    setAvailabilityLoading(true);
+    setAvailabilityClosedReason(null);
+    const params = new URLSearchParams({
+      date: selectedDate,
+      service_id: serviceId,
+    });
+    if (vehicleFormatId) params.set('vehicle_format_id', vehicleFormatId);
+
+    getFromApi<AvailabilityResponse>(`/stations/${station.id}/availability?${params.toString()}`)
+      .then(([ok, data]) => {
+        if (cancelled) return;
+        if (!ok || !data || !('data' in (data as object))) {
+          setAvailability([]);
+          setAvailabilityClosedReason(null);
+          return;
+        }
+        const payload = (data as AvailabilityResponse).data;
+        setAvailability(payload.slots ?? []);
+        setAvailabilityClosedReason(payload.closed_reason ?? null);
+      })
+      .finally(() => {
+        if (!cancelled) setAvailabilityLoading(false);
+      });
+    return () => { cancelled = true; };
+  }, [arrivalMode, selectedDate, serviceId, vehicleFormatId, station.id]);
 
   const [monthViewOpen, setMonthViewOpen] = useState(false);
   const [monthCursor, setMonthCursor] = useState(() => {
@@ -225,10 +287,18 @@ export function ArrivalStep({
   const nowPossible = useMemo(() => canJoinNow(stationConfig, serviceDuration), [stationConfig, serviceDuration]);
   const laterSlots = useMemo(() => generateLaterSlots(stationConfig, serviceDuration), [stationConfig, serviceDuration]);
 
-  const timeSlots = useMemo(() => {
-    if (!selectedDate || arrivalMode !== 'book_slot') return station.timeSlots;
-    return station.timeSlots.filter((s) => s.date === selectedDate);
-  }, [station.timeSlots, selectedDate, arrivalMode]);
+  /* Map availability slots returned by the API to the legacy TimeSlot shape so
+   * downstream code can keep a single representation. We synthesise a stable
+   * per-row id from the start_time; the back-end picks the actual post and
+   * creates the underlying time_slots row at booking time. */
+  const timeSlotsFromAvailability = useMemo<TimeSlot[]>(() => {
+    if (!selectedDate || arrivalMode !== 'book_slot') return [];
+    return availability.map((s) => {
+      const start = new Date(s.start_time);
+      const time = `${String(start.getHours()).padStart(2, '0')}:${String(start.getMinutes()).padStart(2, '0')}`;
+      return { id: s.start_time, date: selectedDate, time, available: true };
+    });
+  }, [availability, selectedDate, arrivalMode]);
 
   const [openSection, setOpenSection] = useState<'queue' | 'book' | null>(() => {
     if (arrivalMode === 'book_slot') return 'book';
@@ -570,25 +640,28 @@ export function ArrivalStep({
                 ))}
               </div>
 
-              {/* Time slots grid */}
+              {/* Time slots grid (from per-post availability endpoint) */}
               {selectedDate && arrivalMode === 'book_slot' && (
                 <>
-                  {timeSlots.length === 0 ? (
+                  {availabilityLoading ? (
+                    <p className="text-[13px] text-[#888] dark:text-[#888] text-center py-3">{t('arrival_loading_slots')}</p>
+                  ) : availabilityClosedReason === 'day_closed' || availabilityClosedReason === 'exception' ? (
+                    <p className="text-[13px] text-[#888] dark:text-[#888] text-center py-3">{t('arrival_day_closed')}</p>
+                  ) : availabilityClosedReason === 'no_active_post' ? (
+                    <p className="text-[13px] text-[#888] dark:text-[#888] text-center py-3">{t('arrival_no_active_post')}</p>
+                  ) : timeSlotsFromAvailability.length === 0 ? (
                     <p className="text-[13px] text-[#888] dark:text-[#888] text-center py-3">{t('arrival_no_slots_for_date')}</p>
                   ) : (
                     <div className="grid grid-cols-3 gap-2">
-                      {timeSlots.map((slot) => (
+                      {timeSlotsFromAvailability.map((slot) => (
                         <button
-                          key={slot.time}
+                          key={slot.id}
                           type="button"
-                          disabled={!slot.available}
                           onClick={() => onSetSlot(slot)}
-                          className={`py-2.5 rounded-lg text-[14px] font-bold border-2 transition-colors ${
-                            !slot.available
-                              ? 'border-transparent bg-[#E0E0D0] dark:bg-dark-bg/30 text-[#AAA] dark:text-[#555] cursor-not-allowed opacity-50'
-                              : selectedSlot && selectedSlot.time === slot.time
-                                ? 'bg-gold border-gold text-dark-bg cursor-pointer'
-                                : 'border-[#D0D0C0] dark:border-tab-inactive text-[#000C1F] dark:text-[#FFF8EC] hover:border-gold/40 cursor-pointer'
+                          className={`py-2.5 rounded-lg text-[14px] font-bold border-2 transition-colors cursor-pointer ${
+                            selectedSlot && selectedSlot.id === slot.id
+                              ? 'bg-gold border-gold text-dark-bg'
+                              : 'border-[#D0D0C0] dark:border-tab-inactive text-[#000C1F] dark:text-[#FFF8EC] hover:border-gold/40'
                           }`}
                         >
                           {slot.time}
