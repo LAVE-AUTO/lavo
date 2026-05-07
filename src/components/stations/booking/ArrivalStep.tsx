@@ -10,6 +10,10 @@ interface ArrivalStepProps {
   station: StationDetailData;
   stationConfig: StationConfigPublic | null;
   serviceDuration: number;
+  /** Base service + extras price (without reservation surcharge). */
+  serviceBasePrice: number;
+  /** Surcharge added only for slot reservations. Null = not configured. */
+  reservationSurcharge: number | null;
   arrivalMode: ArrivalMode | null;
   selectedDate: string | null;
   selectedSlot: TimeSlot | null;
@@ -104,6 +108,8 @@ export function ArrivalStep({
   station,
   stationConfig,
   serviceDuration,
+  serviceBasePrice,
+  reservationSurcharge,
   arrivalMode,
   selectedDate,
   selectedSlot,
@@ -169,9 +175,16 @@ export function ArrivalStep({
                   <span className="w-2.5 h-2.5 rounded-full bg-[#1a1a1a]" />
                 )}
               </div>
-              <span className="text-[15px] font-bold text-[#000C1F] dark:text-[#FFF8EC]">
-                {t('arrival_queue_title')}
-              </span>
+              <div>
+                <span className="text-[15px] font-bold text-[#000C1F] dark:text-[#FFF8EC]">
+                  {t('arrival_queue_title')}
+                </span>
+                {serviceBasePrice > 0 && (
+                  <span className="ml-2 text-[13px] font-black text-gold">
+                    {serviceBasePrice.toLocaleString()}$
+                  </span>
+                )}
+              </div>
             </div>
             <span className={isQueueOpen ? 'text-gold' : 'text-[#888]'}>
               <ChevronIcon open={isQueueOpen} />
@@ -294,17 +307,29 @@ export function ArrivalStep({
               isBookOpen ? 'bg-gold/10 dark:bg-gold/5' : 'bg-white/40 dark:bg-dark-bg/40 hover:bg-gold/5'
             }`}
           >
-            <div className="flex items-center gap-2.5">
+            <div className="flex items-center gap-2.5 flex-1 min-w-0">
               <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center shrink-0 transition-colors ${
                 arrivalMode === 'book_slot' ? 'border-gold bg-gold' : 'border-[#BBB] dark:border-[#555]'
               }`}>
                 {arrivalMode === 'book_slot' && <span className="w-2.5 h-2.5 rounded-full bg-[#1a1a1a]" />}
               </div>
-              <span className="text-[15px] font-bold text-[#000C1F] dark:text-[#FFF8EC]">
-                {t('arrival_book_title')}
-              </span>
+              <div className="flex items-center gap-2 flex-wrap">
+                <span className="text-[15px] font-bold text-[#000C1F] dark:text-[#FFF8EC]">
+                  {t('arrival_book_title')}
+                </span>
+                {serviceBasePrice > 0 && (
+                  <span className="text-[13px] font-black text-gold">
+                    {(serviceBasePrice + (reservationSurcharge ?? 0)).toLocaleString()}$
+                  </span>
+                )}
+                {reservationSurcharge != null && reservationSurcharge > 0 && (
+                  <span className="text-[11px] font-bold px-1.5 py-0.5 rounded-full bg-gold/15 text-gold border border-gold/30">
+                    +{reservationSurcharge.toLocaleString()}$ {t('arrival_surcharge_label')}
+                  </span>
+                )}
+              </div>
             </div>
-            <span className={isBookOpen ? 'text-gold' : 'text-[#888]'}>
+            <span className={`${isBookOpen ? 'text-gold' : 'text-[#888]'} shrink-0`}>
               <ChevronIcon open={isBookOpen} />
             </span>
           </button>

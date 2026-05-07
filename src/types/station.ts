@@ -112,6 +112,8 @@ export interface StationConfigPublic {
   closingTime: string;        // "HH:MM:SS"
   washDurationMinutes: number;
   washPostCount: number;
+  /** Extra amount charged on top of service price for slot reservations (queue = no surcharge). */
+  reservationSurcharge: number | null;
 }
 
 /**
