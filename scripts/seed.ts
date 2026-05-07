@@ -258,7 +258,6 @@ async function seed(): Promise<void> {
         await tx.delete(reservations).where(inArray(reservations.station_id, stationIdsToDelete));
         await tx.delete(timeSlots).where(inArray(timeSlots.station_id, stationIdsToDelete));
         await tx.delete(stationWashTypes).where(inArray(stationWashTypes.station_id, stationIdsToDelete));
-        await tx.delete(vehicleFormats).where(inArray(vehicleFormats.station_id, stationIdsToDelete));
         await tx.delete(stationPosts).where(inArray(stationPosts.station_id, stationIdsToDelete));
         await tx.delete(stationConfigs).where(inArray(stationConfigs.id, stationIdsToDelete));
         await tx.delete(stations).where(inArray(stations.id, stationIdsToDelete));
@@ -378,7 +377,6 @@ async function seed(): Promise<void> {
           const [row] = await tx
             .insert(vehicleFormats)
             .values({
-              station_id: sid,
               label: f.label,
               price: f.price,
               is_active: true,

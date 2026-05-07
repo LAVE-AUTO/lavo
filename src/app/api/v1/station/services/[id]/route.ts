@@ -12,12 +12,12 @@ import { handleError } from '@/lib/responses';
 
 export async function PATCH(
   request: Request,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const auth = await requireRole(request, 'station');
     if (auth instanceof Response) return auth;
-    const { id } = serviceIdParamSchema.parse(params);
+    const { id } = serviceIdParamSchema.parse(await params);
     const body = await request.json();
     const validated = patchServiceBodySchema.parse(body);
 
@@ -31,12 +31,12 @@ export async function PATCH(
 
 export async function DELETE(
   request: Request,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const auth = await requireRole(request, 'station');
     if (auth instanceof Response) return auth;
-    const { id } = serviceIdParamSchema.parse(params);
+    const { id } = serviceIdParamSchema.parse(await params);
 
     await deleteServiceWithAuth(auth.sub, id);
 
