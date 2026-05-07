@@ -1,5 +1,6 @@
 'use client';
 
+import { useState } from 'react';
 import { useTranslations } from 'next-intl';
 import { Link } from '@/i18n/navigation';
 import { useAuth } from '@/context';
@@ -19,6 +20,7 @@ export function StationCard({ station, unavailable = false }: StationCardProps) 
   const t               = useTranslations('stations');
   const userLocation    = useUserLocation();
   const { isAuthenticated } = useAuth();
+  const [imgFailed, setImgFailed] = useState(false);
 
   const distanceLabel = (() => {
     if (!userLocation || station.latitude == null || station.longitude == null) return null;
@@ -43,10 +45,11 @@ export function StationCard({ station, unavailable = false }: StationCardProps) 
     >
       {/* Photo */}
       <div className="relative h-[140px] sm:h-[160px] bg-[#D0D0C0] dark:bg-tab-inactive flex items-center justify-center overflow-hidden">
-        {station.imageUrl ? (
+        {station.imageUrl && !imgFailed ? (
           <img
             src={station.imageUrl}
             alt={station.name}
+            onError={() => setImgFailed(true)}
             className="w-full h-full object-cover group-hover:scale-[1.01] transition-transform duration-300"
           />
         ) : (
@@ -111,29 +114,22 @@ export function StationCard({ station, unavailable = false }: StationCardProps) 
           <span className="text-gold">{t('reviews_count', { count: station.reviewCount })}</span>
         </div>
 
-        {/* Stats grid: distance | wait | queue */}
-        <div className={`grid ${distanceLabel ? 'grid-cols-3' : 'grid-cols-2'} mb-3 text-center`}>
-          {distanceLabel && (
-            <div className="border-r border-[#C8C8B4] dark:border-tab-inactive pr-2">
-              <div className="text-[17px] font-black text-[#0A0A14] dark:text-white leading-none truncate">
-                {distanceLabel}
-              </div>
-              <div className="text-[13px] text-[#555] dark:text-[#D8D8C8] mt-1">{t('stat_distance')}</div>
+        {/* Stats grid: distance | wait */}
+        <div className="grid grid-cols-2 mb-3 text-center">
+          {/* Distance */}
+          <div className="border-r border-[#C8C8B4] dark:border-tab-inactive pr-2">
+            <div className="text-[17px] font-black text-[#0A0A14] dark:text-white leading-none truncate">
+              {distanceLabel ?? '--'}
             </div>
-          )}
-
-          <div className={`${distanceLabel ? 'border-r border-[#C8C8B4] dark:border-tab-inactive px-2' : 'border-r border-[#C8C8B4] dark:border-tab-inactive pr-2'}`}>
-            <div className="text-[17px] font-black text-[#0A0A14] dark:text-white leading-none">
-              {station.estimatedWaitMinutes > 0 ? `${station.estimatedWaitMinutes} min` : '--'}
-            </div>
-            <div className="text-[13px] text-[#555] dark:text-[#D8D8C8] mt-1">{t('min_attente')}</div>
+            <div className="text-[13px] text-[#555] dark:text-[#D8D8C8] mt-1">{t('stat_distance')}</div>
           </div>
 
-          <div className={distanceLabel ? 'pl-2' : 'pl-2'}>
+          {/* Min service duration */}
+          <div className="pl-2">
             <div className="text-[17px] font-black text-[#0A0A14] dark:text-white leading-none">
-              {station.queueCount}
+              {station.estimatedWaitMinutes > 0 ? `${station.estimatedWaitMinutes} min` : '0 min'}
             </div>
-            <div className="text-[13px] text-[#555] dark:text-[#D8D8C8] mt-1">{t('queue_waiting')}</div>
+            <div className="text-[13px] text-[#555] dark:text-[#D8D8C8] mt-1">{t('min_attente')}</div>
           </div>
         </div>
 

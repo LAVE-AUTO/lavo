@@ -44,6 +44,7 @@ export function StationDetail({ id }: StationDetailProps) {
   useEffect(() => { mountedRef.current = true; return () => { mountedRef.current = false; }; }, []);
 
   const [station, setStation] = useState<StationDetailData | null | undefined>(undefined);
+  const [heroImgFailed, setHeroImgFailed] = useState(false);
   const userLocation = useUserLocation();
 
   useEffect(() => {
@@ -139,7 +140,7 @@ export function StationDetail({ id }: StationDetailProps) {
           <span className="w-1.5 h-1.5 rounded-full bg-lavo-success animate-pulse shrink-0" />
           {t('detail_queue')}
         </div>
-        <div className={`grid ${distanceLabel ? 'grid-cols-3' : 'grid-cols-2'} gap-2 text-center`}>
+        <div className="grid grid-cols-3 gap-2 text-center">
           <div>
             <div className="text-[20px] font-black text-[#000C1F] dark:text-[#FFF8EC] leading-none">{station.queueCount}</div>
             <div className="text-[11px] text-[#555] dark:text-[#C0C0B0] mt-1">{t('queue_waiting')}</div>
@@ -150,14 +151,12 @@ export function StationDetail({ id }: StationDetailProps) {
             </div>
             <div className="text-[11px] text-[#555] dark:text-[#C0C0B0] mt-1">{t('min_attente')}</div>
           </div>
-          {distanceLabel && (
-            <div>
-              <div className="text-[20px] font-black text-[#000C1F] dark:text-[#FFF8EC] leading-none">
-                {distanceLabel}
-              </div>
-              <div className="text-[11px] text-[#555] dark:text-[#C0C0B0] mt-1">{t('detail_distance')}</div>
+          <div>
+            <div className="text-[20px] font-black text-[#000C1F] dark:text-[#FFF8EC] leading-none">
+              {distanceLabel ?? '--'}
             </div>
-          )}
+            <div className="text-[11px] text-[#555] dark:text-[#C0C0B0] mt-1">{t('detail_distance')}</div>
+          </div>
         </div>
       </div>
 
@@ -191,8 +190,8 @@ export function StationDetail({ id }: StationDetailProps) {
 
         {/* ── Hero ── */}
         <div className="relative h-[240px] sm:h-[320px] lg:h-[440px] bg-linear-to-br from-[#D5D5C5] to-[#EDEDED] dark:from-tab-inactive dark:to-dark-bg overflow-hidden">
-          {station.imageUrl ? (
-            <img src={station.imageUrl} alt={station.name} className="w-full h-full object-cover" />
+          {station.imageUrl && !heroImgFailed ? (
+            <img src={station.imageUrl} alt={station.name} onError={() => setHeroImgFailed(true)} className="w-full h-full object-cover" />
           ) : (
             <div className="w-full h-full flex items-center justify-center text-[#999] dark:text-[#3A4A36] text-[14px] font-semibold">
               Photo
