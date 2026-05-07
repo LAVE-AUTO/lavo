@@ -21,6 +21,11 @@ interface ApiStationListItem {
     available: boolean;
     completed_count?: number;
     min_duration?: number | null;
+    price_from?: string | null;
+    image_url?: string | null;
+    verified?: boolean;
+    queue_count?: number;
+    opening_hours?: { open: string; close: string } | null;
     [key: string]: unknown;
 }
 
@@ -170,6 +175,10 @@ function calcEstimatedWait(queueCount: number, washDuration: number, washPostCou
 }
 
 function mapApiStationToStation(s: ApiStationListItem): Station {
+    const priceFromRaw = s.price_from != null ? parseFloat(s.price_from) : null;
+    const openingHours = s.opening_hours
+        ? `${formatTime(s.opening_hours.open)} - ${formatTime(s.opening_hours.close)}`
+        : undefined;
     return {
         id: s.id,
         name: s.name,
@@ -180,18 +189,15 @@ function mapApiStationToStation(s: ApiStationListItem): Station {
         completedCount: s.completed_count ?? 0,
         availableSlots: process.env.NODE_ENV === 'production' ? (s.available_slots || 0) : mockAvailableSlots(s.id, s.available_slots || 0),
         totalSlots: s.wash_post_count || 0,
-        /* priceFrom is absent from the list payload - leave it null so the UI
-         * can hide the price block instead of faking a "0 $" value. Populated
-         * on the detail page once vehicle_formats are available. */
-        priceFrom: null,
+        priceFrom: Number.isFinite(priceFromRaw) ? priceFromRaw : null,
         tags: [],
         latitude: s.latitude != null ? parseFloat(s.latitude) : undefined,
         longitude: s.longitude != null ? parseFloat(s.longitude) : undefined,
         isOpen: s.is_open,
         description: s.description || undefined,
-        /* imageUrl comes from the backend - `GET /stations` does not expose it yet,
-         * so stay undefined and let the placeholder render in the card. */
-        imageUrl: undefined,
+        imageUrl: s.image_url ?? undefined,
+        verified: s.verified ?? false,
+        openingHours,
     };
 }
 
@@ -203,7 +209,7 @@ function mapApiStationToDetail(s: ApiStationListItem): StationDetailData {
         serviceCategories: [],
         extras: [],
         timeSlots: [],
-        queueCount: 0,
+        queueCount: s.queue_count ?? 0,
         estimatedWaitMinutes: s.min_duration ?? 0,
         stationServices: [],
         stationConfig: null,

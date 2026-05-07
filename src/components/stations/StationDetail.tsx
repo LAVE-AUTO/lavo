@@ -8,21 +8,13 @@ import { StationReviews } from './StationReviews';
 import { BookingFlow } from './booking/BookingFlow';
 import { fetchStationById } from '@/services/station-api';
 import { useFavorites } from './useFavorites';
+import { useUserLocation, haversineKm } from './useUserLocation';
+import { LocationPermissionBanner } from './LocationPermissionBanner';
 import { PageSpinner } from '@/components/ui/PageSpinner';
 import { Badge } from '@/components/ui/Badge';
 import { useAuth } from '@/context/auth-context';
 import { postWithApi } from '@/services/axios-service';
 import type { StationDetailData } from '@/types/station';
-
-function calculateDistanceKm(lat1: number, lng1: number, lat2: number, lng2: number): number {
-  const R = 6371;
-  const dLat = (lat2 - lat1) * Math.PI / 180;
-  const dLng = (lng2 - lng1) * Math.PI / 180;
-  const a = Math.sin(dLat / 2) * Math.sin(dLat / 2) +
-    Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) *
-    Math.sin(dLng / 2) * Math.sin(dLng / 2);
-  return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
-}
 
 interface StationDetailProps {
   id: string;
@@ -52,7 +44,7 @@ export function StationDetail({ id }: StationDetailProps) {
   useEffect(() => { mountedRef.current = true; return () => { mountedRef.current = false; }; }, []);
 
   const [station, setStation] = useState<StationDetailData | null | undefined>(undefined);
-  const [userPosition, setUserPosition] = useState<{ lat: number; lng: number } | null>(null);
+  const userLocation = useUserLocation();
 
   useEffect(() => {
     let cancelled = false;
@@ -63,22 +55,6 @@ export function StationDetail({ id }: StationDetailProps) {
     });
     return () => { cancelled = true; };
   }, [id]);
-
-  useEffect(() => {
-    if (typeof navigator === 'undefined' || !navigator.geolocation) return;
-    let cancelled = false;
-    navigator.geolocation.getCurrentPosition(
-      (pos) => {
-        if (cancelled) return;
-        setUserPosition({ lat: pos.coords.latitude, lng: pos.coords.longitude });
-      },
-      () => {
-        // Permission refused or unavailable - distance simply hides
-      },
-      { enableHighAccuracy: false, timeout: 8000, maximumAge: 60_000 },
-    );
-    return () => { cancelled = true; };
-  }, []);
 
   const [bookingOpen, setBookingOpen] = useState(false);
   const [navigating, setNavigating] = useState(false);
@@ -102,8 +78,11 @@ export function StationDetail({ id }: StationDetailProps) {
   const allDurations = station.stationServices.flatMap(svc => svc.vehicleEntries.map(entry => entry.duration));
   const minServiceDuration = allDurations.length > 0 ? Math.min(...allDurations) : null;
 
-  const distanceKm = userPosition && station.latitude != null && station.longitude != null
-    ? calculateDistanceKm(userPosition.lat, userPosition.lng, station.latitude, station.longitude)
+  const distanceLabel = userLocation && station.latitude != null && station.longitude != null
+    ? (() => {
+        const km = haversineKm(userLocation.latitude, userLocation.longitude, station.latitude, station.longitude);
+        return km < 1 ? t('distance_m', { distance: Math.round(km * 1000) }) : t('distance_km', { distance: km.toFixed(1) });
+      })()
     : null;
 
   const handleOpenBooking = () => {
@@ -160,7 +139,7 @@ export function StationDetail({ id }: StationDetailProps) {
           <span className="w-1.5 h-1.5 rounded-full bg-lavo-success animate-pulse shrink-0" />
           {t('detail_queue')}
         </div>
-        <div className="grid grid-cols-3 gap-2 text-center">
+        <div className={`grid ${distanceLabel ? 'grid-cols-3' : 'grid-cols-2'} gap-2 text-center`}>
           <div>
             <div className="text-[20px] font-black text-[#000C1F] dark:text-[#FFF8EC] leading-none">{station.queueCount}</div>
             <div className="text-[11px] text-[#555] dark:text-[#C0C0B0] mt-1">{t('queue_waiting')}</div>
@@ -171,12 +150,14 @@ export function StationDetail({ id }: StationDetailProps) {
             </div>
             <div className="text-[11px] text-[#555] dark:text-[#C0C0B0] mt-1">{t('min_attente')}</div>
           </div>
-          <div>
-            <div className="text-[20px] font-black text-[#000C1F] dark:text-[#FFF8EC] leading-none">
-              {distanceKm != null ? `${distanceKm.toFixed(1)} km` : '--'}
+          {distanceLabel && (
+            <div>
+              <div className="text-[20px] font-black text-[#000C1F] dark:text-[#FFF8EC] leading-none">
+                {distanceLabel}
+              </div>
+              <div className="text-[11px] text-[#555] dark:text-[#C0C0B0] mt-1">{t('detail_distance')}</div>
             </div>
-            <div className="text-[11px] text-[#555] dark:text-[#C0C0B0] mt-1">{t('detail_distance')}</div>
-          </div>
+          )}
         </div>
       </div>
 
@@ -265,6 +246,7 @@ export function StationDetail({ id }: StationDetailProps) {
 
         {/* ── Main content ── */}
         <div className="max-w-[1440px] mx-auto px-4 sm:px-6 lg:px-16 py-8 pb-36 sm:pb-28 lg:pb-14">
+          <LocationPermissionBanner />
           <div className="lg:grid lg:grid-cols-[1fr_400px] lg:gap-12 lg:items-start">
 
             {/* ── Left column ── */}
