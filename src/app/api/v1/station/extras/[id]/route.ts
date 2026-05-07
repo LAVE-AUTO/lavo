@@ -13,12 +13,12 @@ import { handleError } from '@/lib/responses';
 
 export async function PATCH(
   request: Request,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const auth = await requireRole(request, 'station');
     if (auth instanceof Response) return auth;
-    const { id } = extraIdParamSchema.parse(params);
+    const { id } = extraIdParamSchema.parse(await params);
     const body = await request.json();
     const validated = patchExtraBodySchema.parse(body);
 
@@ -39,12 +39,12 @@ export async function PATCH(
 
 export async function DELETE(
   request: Request,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const auth = await requireRole(request, 'station');
     if (auth instanceof Response) return auth;
-    const { id } = extraIdParamSchema.parse(params);
+    const { id } = extraIdParamSchema.parse(await params);
 
     await deleteExtraWithAuth(auth.sub, id);
 

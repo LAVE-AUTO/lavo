@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { useTranslations } from 'next-intl';
+import { useTranslations, useLocale } from 'next-intl';
 import { Link } from '@/i18n/navigation';
 import { useAuth } from '@/context';
 import { useUserLocation, haversineKm } from './useUserLocation';
@@ -18,6 +18,7 @@ interface StationCardProps {
  */
 export function StationCard({ station, unavailable = false }: StationCardProps) {
   const t               = useTranslations('stations');
+  const locale          = useLocale();
   const userLocation    = useUserLocation();
   const { isAuthenticated } = useAuth();
   const [imgFailed, setImgFailed] = useState(false);
@@ -146,7 +147,7 @@ export function StationCard({ station, unavailable = false }: StationCardProps) 
             href={
               isAuthenticated
                 ? `/stations/${station.id}`
-                : `/login?callbackUrl=${encodeURIComponent(`/stations/${station.id}`)}`
+                : `/login?callbackUrl=${encodeURIComponent(`/${locale ?? 'fr'}/stations/${station.id}`)}`
             }
             className="block w-full py-2.5 bg-gold hover:bg-gold-hover rounded-lg text-[15px] font-bold text-dark-bg text-center transition-colors"
           >

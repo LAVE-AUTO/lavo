@@ -1,10 +1,25 @@
 'use client';
 
-import { useMemo, useState } from 'react';
+import { useMemo, useState, useEffect } from 'react';
 import { useTranslations, useLocale } from 'next-intl';
+import { getFromApi } from '@/services/axios-service';
 import type { StationDetailData, StationConfigPublic, TimeSlot } from '@/types/station';
 
 type ArrivalMode = 'queue_now' | 'queue_later' | 'book_slot';
+
+interface AvailabilitySlot {
+  start_time: string;
+  end_time: string;
+}
+
+interface AvailabilityResponse {
+  data: {
+    date: string;
+    duration_min: number;
+    slots: AvailabilitySlot[];
+    closed_reason?: 'day_closed' | 'exception' | 'no_active_post';
+  };
+}
 
 interface ArrivalStepProps {
   station: StationDetailData;
@@ -18,6 +33,10 @@ interface ArrivalStepProps {
   selectedDate: string | null;
   selectedSlot: TimeSlot | null;
   laterTime: string | null;
+  /** Service id used to query the per-post availability endpoint. */
+  serviceId: string | null;
+  /** Vehicle format id (only for hand_wash services). */
+  vehicleFormatId: string | null;
   onSetMode: (mode: ArrivalMode) => void;
   onSetDate: (date: string) => void;
   onSetSlot: (slot: TimeSlot) => void;
@@ -77,8 +96,8 @@ function generateLaterSlots(config: StationConfigPublic | null, serviceDuration:
   return slots;
 }
 
-function generateDates(count: number, appLocale: string): { key: string; dayShort: string; dateNum: number }[] {
-  const days: { key: string; dayShort: string; dateNum: number }[] = [];
+function generateDates(count: number, appLocale: string): { key: string; dayShort: string; dateNum: number; monthShort: string }[] {
+  const days: { key: string; dayShort: string; dateNum: number; monthShort: string }[] = [];
   const now = new Date();
   const dateFmtLocale = appLocale === 'en' ? 'en-CA' : 'fr-FR';
   for (let i = 0; i < count; i++) {
@@ -86,9 +105,45 @@ function generateDates(count: number, appLocale: string): { key: string; dayShor
     d.setDate(now.getDate() + i);
     const key = toLocalDateKey(d);
     const dayShort = d.toLocaleDateString(dateFmtLocale, { weekday: 'short' }).slice(0, 3);
-    days.push({ key, dayShort, dateNum: d.getDate() });
+    const monthShort = d.toLocaleDateString(dateFmtLocale, { month: 'short' }).slice(0, 4);
+    days.push({ key, dayShort, dateNum: d.getDate(), monthShort });
   }
   return days;
+}
+
+/** Booking window length, kept under Stripe's 7-day card authorization limit
+ * is enforced server-side; here we cap visible dates at 5 weeks because that
+ * is what the product asked for. The backend rejects bookings beyond its own
+ * advance-booking ceiling regardless. */
+const MAX_BOOKING_DAYS = 35;
+
+interface MonthGridDay {
+  key: string;
+  dateNum: number;
+  inMonth: boolean;
+  bookable: boolean;
+  isToday: boolean;
+}
+
+/** Build a 6×7 calendar grid for a given (year, month). Days outside the
+ * requested booking window are rendered greyed out (`bookable=false`). */
+function buildMonthGrid(year: number, month: number, todayKey: string, maxDate: Date): MonthGridDay[] {
+  const firstOfMonth = new Date(year, month, 1);
+  const startWeekday = (firstOfMonth.getDay() + 6) % 7; // 0 = Monday
+  const startDate = new Date(year, month, 1 - startWeekday);
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+
+  const cells: MonthGridDay[] = [];
+  for (let i = 0; i < 42; i++) {
+    const d = new Date(startDate);
+    d.setDate(startDate.getDate() + i);
+    const key = toLocalDateKey(d);
+    const inMonth = d.getMonth() === month;
+    const bookable = d >= today && d <= maxDate;
+    cells.push({ key, dateNum: d.getDate(), inMonth, bookable, isToday: key === todayKey });
+  }
+  return cells;
 }
 
 function ChevronIcon({ open }: { open: boolean }) {
@@ -114,6 +169,8 @@ export function ArrivalStep({
   selectedDate,
   selectedSlot,
   laterTime,
+  serviceId,
+  vehicleFormatId,
   onSetMode,
   onSetDate,
   onSetSlot,
@@ -123,15 +180,125 @@ export function ArrivalStep({
 }: ArrivalStepProps) {
   const t = useTranslations('booking');
   const locale = useLocale();
-  const dates = useMemo(() => generateDates(7, locale), [locale]);
+  const dates = useMemo(() => generateDates(MAX_BOOKING_DAYS, locale), [locale]);
+
+  /* Per-post availability fetched when the user picks a date in book_slot mode.
+   * Replaces the legacy `station.timeSlots` (pre-generated slots). The server
+   * computes free chunks across all active wash bays for the requested date
+   * and service duration; post selection happens server-side at booking. */
+  const [availability, setAvailability] = useState<AvailabilitySlot[]>([]);
+  const [availabilityLoading, setAvailabilityLoading] = useState(false);
+  const [availabilityClosedReason, setAvailabilityClosedReason] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (arrivalMode !== 'book_slot' || !selectedDate || !serviceId) {
+      setAvailability([]);
+      setAvailabilityClosedReason(null);
+      return;
+    }
+    let cancelled = false;
+    setAvailabilityLoading(true);
+    setAvailabilityClosedReason(null);
+    const params = new URLSearchParams({
+      date: selectedDate,
+      service_id: serviceId,
+    });
+    if (vehicleFormatId) params.set('vehicle_format_id', vehicleFormatId);
+
+    getFromApi<AvailabilityResponse>(`/stations/${station.id}/availability?${params.toString()}`)
+      .then(([ok, data]) => {
+        if (cancelled) return;
+        if (!ok || !data || !('data' in (data as object))) {
+          setAvailability([]);
+          setAvailabilityClosedReason(null);
+          return;
+        }
+        const payload = (data as AvailabilityResponse).data;
+        setAvailability(payload.slots ?? []);
+        setAvailabilityClosedReason(payload.closed_reason ?? null);
+      })
+      .finally(() => {
+        if (!cancelled) setAvailabilityLoading(false);
+      });
+    return () => { cancelled = true; };
+  }, [arrivalMode, selectedDate, serviceId, vehicleFormatId, station.id]);
+
+  const [monthViewOpen, setMonthViewOpen] = useState(false);
+  const [monthCursor, setMonthCursor] = useState(() => {
+    const d = new Date();
+    return { year: d.getFullYear(), month: d.getMonth() };
+  });
+  const monthGrid = useMemo(() => {
+    const today = new Date();
+    const maxDate = new Date();
+    maxDate.setDate(today.getDate() + MAX_BOOKING_DAYS - 1);
+    return buildMonthGrid(monthCursor.year, monthCursor.month, toLocalDateKey(today), maxDate);
+  }, [monthCursor]);
+  const monthLabel = useMemo(() => {
+    const dateFmtLocale = locale === 'en' ? 'en-CA' : 'fr-FR';
+    return new Date(monthCursor.year, monthCursor.month, 1).toLocaleDateString(dateFmtLocale, {
+      month: 'long', year: 'numeric',
+    });
+  }, [locale, monthCursor]);
+  const weekdayHeaders = useMemo(() => {
+    const dateFmtLocale = locale === 'en' ? 'en-CA' : 'fr-FR';
+    /* Iterate from a known Monday (2024-01-01) to derive 1-letter weekday labels. */
+    return Array.from({ length: 7 }, (_, i) => {
+      const d = new Date(2024, 0, 1 + i);
+      return d.toLocaleDateString(dateFmtLocale, { weekday: 'short' }).slice(0, 1).toUpperCase();
+    });
+  }, [locale]);
+
+  const shiftMonth = (dir: -1 | 1) => {
+    setMonthCursor((c) => {
+      let m = c.month + dir;
+      let y = c.year;
+      if (m < 0) { m = 11; y -= 1; }
+      else if (m > 11) { m = 0; y += 1; }
+      return { year: y, month: m };
+    });
+  };
+
+  /* Custom time entered manually in the queue_later flow. Validated against
+   * the station's operating window before being applied. */
+  const [customTime, setCustomTime] = useState('');
+  const [customTimeError, setCustomTimeError] = useState<string | null>(null);
+
+  const applyCustomTime = () => {
+    if (!customTime) return;
+    const minutes = parseTimeToMinutes(customTime);
+    const config = stationConfig;
+    const now = new Date();
+    const currentMinutes = now.getHours() * 60 + now.getMinutes();
+    const opening = config ? parseTimeToMinutes(config.openingTime) : 0;
+    const closing = config ? parseTimeToMinutes(config.closingTime) : 24 * 60;
+    if (minutes <= currentMinutes) {
+      setCustomTimeError(t('arrival_custom_time_past'));
+      return;
+    }
+    if (minutes < opening || minutes + serviceDuration > closing) {
+      setCustomTimeError(t('arrival_custom_time_out_of_range'));
+      return;
+    }
+    setCustomTimeError(null);
+    onSetLaterTime(customTime);
+  };
 
   const nowPossible = useMemo(() => canJoinNow(stationConfig, serviceDuration), [stationConfig, serviceDuration]);
   const laterSlots = useMemo(() => generateLaterSlots(stationConfig, serviceDuration), [stationConfig, serviceDuration]);
 
-  const timeSlots = useMemo(() => {
-    if (!selectedDate || arrivalMode !== 'book_slot') return station.timeSlots;
-    return station.timeSlots.filter((s) => s.date === selectedDate);
-  }, [station.timeSlots, selectedDate, arrivalMode]);
+  /* Map availability slots returned by the API to the legacy TimeSlot shape so
+   * downstream code can keep a single representation. We synthesise a stable
+   * per-row id from the start_time; the back-end picks the actual post and
+   * creates the underlying time_slots row at booking time. */
+  const timeSlotsFromAvailability = useMemo<TimeSlot[]>(() => {
+    if (!selectedDate || arrivalMode !== 'book_slot') return [];
+    return availability.map((s) => {
+      const start = new Date(s.start_time);
+      const time = `${String(start.getHours()).padStart(2, '0')}:${String(start.getMinutes()).padStart(2, '0')}`;
+      return { id: s.start_time, date: selectedDate, time, available: true };
+    });
+  }, [availability, selectedDate, arrivalMode]);
 
   const [openSection, setOpenSection] = useState<'queue' | 'book' | null>(() => {
     if (arrivalMode === 'book_slot') return 'book';
@@ -277,21 +444,58 @@ export function ArrivalStep({
 
               {/* Time chips for later */}
               {arrivalMode === 'queue_later' && laterSlots.length > 0 && (
-                <div className="flex gap-2 flex-wrap ml-1">
-                  {laterSlots.map((time) => (
-                    <button
-                      key={time}
-                      type="button"
-                      onClick={() => onSetLaterTime(time)}
-                      className={`px-4 py-2 rounded-lg text-[14px] font-bold border-2 transition-colors cursor-pointer ${
-                        laterTime === time
-                          ? 'bg-gold border-gold text-dark-bg'
-                          : 'border-[#D0D0C0] dark:border-tab-inactive text-[#000C1F] dark:text-[#FFF8EC] hover:border-gold/40'
-                      }`}
-                    >
-                      {time}
-                    </button>
-                  ))}
+                <div className="space-y-2.5 ml-1">
+                  <div className="flex gap-2 flex-wrap">
+                    {laterSlots.map((time) => (
+                      <button
+                        key={time}
+                        type="button"
+                        onClick={() => { setCustomTime(''); setCustomTimeError(null); onSetLaterTime(time); }}
+                        className={`px-4 py-2 rounded-lg text-[14px] font-bold border-2 transition-colors cursor-pointer ${
+                          laterTime === time
+                            ? 'bg-gold border-gold text-dark-bg'
+                            : 'border-[#D0D0C0] dark:border-tab-inactive text-[#000C1F] dark:text-[#FFF8EC] hover:border-gold/40'
+                        }`}
+                      >
+                        {time}
+                      </button>
+                    ))}
+                  </div>
+
+                  {/* Custom time entry */}
+                  <div className="rounded-xl border border-dashed border-[#D0D0C0] dark:border-tab-inactive bg-white/40 dark:bg-dark-bg/30 px-3 py-2.5">
+                    <label className="block text-[11px] font-black uppercase tracking-wider text-[#555] dark:text-[#A0A090] mb-1.5">
+                      {t('arrival_custom_time_label')}
+                    </label>
+                    <div className="flex items-center gap-2">
+                      <input
+                        type="time"
+                        value={customTime}
+                        onChange={(e) => { setCustomTime(e.target.value); setCustomTimeError(null); }}
+                        className="flex-1 px-3 py-2 rounded-lg border-2 border-[#D0D0C0] dark:border-tab-inactive bg-white dark:bg-dark-bg/40 text-[14px] font-mono text-[#000C1F] dark:text-[#FFF8EC] focus:border-gold outline-none transition-colors"
+                      />
+                      <button
+                        type="button"
+                        onClick={applyCustomTime}
+                        disabled={!customTime}
+                        className={`px-4 py-2 rounded-lg text-[13px] font-bold transition-colors ${
+                          customTime
+                            ? 'bg-gold text-dark-bg hover:bg-gold-hover cursor-pointer'
+                            : 'bg-[#E0E0D0] dark:bg-tab-inactive text-[#888] cursor-not-allowed'
+                        }`}
+                      >
+                        {t('arrival_custom_time_apply')}
+                      </button>
+                    </div>
+                    {customTimeError && (
+                      <p className="text-[12px] text-lavo-error mt-1.5">{customTimeError}</p>
+                    )}
+                    {laterTime && customTime === laterTime && !customTimeError && (
+                      <p className="text-[12px] text-lavo-success mt-1.5">
+                        {t('arrival_custom_time_confirmed', { time: laterTime })}
+                      </p>
+                    )}
+                  </div>
                 </div>
               )}
             </div>
@@ -336,9 +540,83 @@ export function ArrivalStep({
 
           {isBookOpen && (
             <div className="px-4 pb-4 pt-3 space-y-3 bg-white/20 dark:bg-dark-bg/20">
-              <p className="text-[13px] text-[#555] dark:text-[#B0B0A0]">{t('arrival_book_desc')}</p>
+              <div className="flex items-center justify-between gap-3">
+                <p className="text-[13px] text-[#555] dark:text-[#B0B0A0]">{t('arrival_book_desc')}</p>
+                <button
+                  type="button"
+                  onClick={() => setMonthViewOpen((v) => !v)}
+                  className={`shrink-0 inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[12px] font-bold transition-colors cursor-pointer ${
+                    monthViewOpen ? 'bg-gold text-dark-bg' : 'bg-[#E8E8D8] dark:bg-dark-card text-[#000C1F] dark:text-[#FFF8EC] hover:bg-gold/15'
+                  }`}
+                  aria-expanded={monthViewOpen}
+                >
+                  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                    <rect x="3" y="4" width="18" height="18" rx="2" />
+                    <line x1="16" y1="2" x2="16" y2="6" />
+                    <line x1="8" y1="2" x2="8" y2="6" />
+                    <line x1="3" y1="10" x2="21" y2="10" />
+                  </svg>
+                  {monthViewOpen ? t('arrival_month_close') : t('arrival_month_open')}
+                </button>
+              </div>
 
-              {/* Date scroller */}
+              {/* Month grid (toggleable, up to 5 weeks ahead) */}
+              {monthViewOpen && (
+                <div className="rounded-xl bg-white dark:bg-dark-card border border-[#D0D0C0] dark:border-tab-inactive p-3 space-y-2">
+                  <div className="flex items-center justify-between">
+                    <button
+                      type="button"
+                      onClick={() => shiftMonth(-1)}
+                      className="w-7 h-7 rounded-full bg-[#F0F0E2] dark:bg-tab-inactive flex items-center justify-center text-[#000C1F] dark:text-[#FFF8EC] hover:bg-gold/15 cursor-pointer"
+                      aria-label={t('arrival_month_prev')}
+                    >
+                      &#8249;
+                    </button>
+                    <span className="text-[14px] font-black text-[#000C1F] dark:text-[#FFF8EC] capitalize">
+                      {monthLabel}
+                    </span>
+                    <button
+                      type="button"
+                      onClick={() => shiftMonth(1)}
+                      className="w-7 h-7 rounded-full bg-[#F0F0E2] dark:bg-tab-inactive flex items-center justify-center text-[#000C1F] dark:text-[#FFF8EC] hover:bg-gold/15 cursor-pointer"
+                      aria-label={t('arrival_month_next')}
+                    >
+                      &#8250;
+                    </button>
+                  </div>
+                  <div className="grid grid-cols-7 gap-1 text-[10px] font-bold uppercase tracking-wider text-[#888]">
+                    {weekdayHeaders.map((w, i) => (
+                      <div key={i} className="text-center py-1">{w}</div>
+                    ))}
+                  </div>
+                  <div className="grid grid-cols-7 gap-1">
+                    {monthGrid.map((cell) => {
+                      const isSelected = selectedDate === cell.key && arrivalMode === 'book_slot';
+                      return (
+                        <button
+                          key={cell.key}
+                          type="button"
+                          disabled={!cell.bookable}
+                          onClick={() => { onSetDate(cell.key); onSetMode('book_slot'); setMonthViewOpen(false); }}
+                          className={`aspect-square rounded-lg text-[13px] font-bold transition-colors ${
+                            !cell.bookable
+                              ? 'text-[#CCC] dark:text-[#444] cursor-not-allowed'
+                              : isSelected
+                                ? 'bg-gold text-dark-bg cursor-pointer'
+                                : cell.isToday
+                                  ? 'bg-gold/15 text-gold border border-gold/40 cursor-pointer hover:bg-gold/25'
+                                  : `${cell.inMonth ? 'text-[#000C1F] dark:text-[#FFF8EC]' : 'text-[#999] dark:text-[#666]'} hover:bg-gold/15 cursor-pointer`
+                          }`}
+                        >
+                          {cell.dateNum}
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+              )}
+
+              {/* Date scroller (5-week horizontal strip) */}
               <div className="flex gap-2 overflow-x-auto pb-2 scrollbar-hide">
                 {dates.map((d) => (
                   <button
@@ -355,29 +633,35 @@ export function ArrivalStep({
                       {d.dayShort}
                     </span>
                     <span className="text-[18px] font-black">{d.dateNum}</span>
+                    <span className={`text-[10px] font-semibold uppercase ${selectedDate === d.key && arrivalMode === 'book_slot' ? 'text-dark-bg/80' : 'text-[#999]'}`}>
+                      {d.monthShort}
+                    </span>
                   </button>
                 ))}
               </div>
 
-              {/* Time slots grid */}
+              {/* Time slots grid (from per-post availability endpoint) */}
               {selectedDate && arrivalMode === 'book_slot' && (
                 <>
-                  {timeSlots.length === 0 ? (
+                  {availabilityLoading ? (
+                    <p className="text-[13px] text-[#888] dark:text-[#888] text-center py-3">{t('arrival_loading_slots')}</p>
+                  ) : availabilityClosedReason === 'day_closed' || availabilityClosedReason === 'exception' ? (
+                    <p className="text-[13px] text-[#888] dark:text-[#888] text-center py-3">{t('arrival_day_closed')}</p>
+                  ) : availabilityClosedReason === 'no_active_post' ? (
+                    <p className="text-[13px] text-[#888] dark:text-[#888] text-center py-3">{t('arrival_no_active_post')}</p>
+                  ) : timeSlotsFromAvailability.length === 0 ? (
                     <p className="text-[13px] text-[#888] dark:text-[#888] text-center py-3">{t('arrival_no_slots_for_date')}</p>
                   ) : (
                     <div className="grid grid-cols-3 gap-2">
-                      {timeSlots.map((slot) => (
+                      {timeSlotsFromAvailability.map((slot) => (
                         <button
-                          key={slot.time}
+                          key={slot.id}
                           type="button"
-                          disabled={!slot.available}
                           onClick={() => onSetSlot(slot)}
-                          className={`py-2.5 rounded-lg text-[14px] font-bold border-2 transition-colors ${
-                            !slot.available
-                              ? 'border-transparent bg-[#E0E0D0] dark:bg-dark-bg/30 text-[#AAA] dark:text-[#555] cursor-not-allowed opacity-50'
-                              : selectedSlot && selectedSlot.time === slot.time
-                                ? 'bg-gold border-gold text-dark-bg cursor-pointer'
-                                : 'border-[#D0D0C0] dark:border-tab-inactive text-[#000C1F] dark:text-[#FFF8EC] hover:border-gold/40 cursor-pointer'
+                          className={`py-2.5 rounded-lg text-[14px] font-bold border-2 transition-colors cursor-pointer ${
+                            selectedSlot && selectedSlot.id === slot.id
+                              ? 'bg-gold border-gold text-dark-bg'
+                              : 'border-[#D0D0C0] dark:border-tab-inactive text-[#000C1F] dark:text-[#FFF8EC] hover:border-gold/40'
                           }`}
                         >
                           {slot.time}

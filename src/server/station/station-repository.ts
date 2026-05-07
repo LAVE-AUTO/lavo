@@ -1,6 +1,6 @@
 import { and, asc, desc, eq, getTableColumns, ilike, inArray, isNotNull, or, sql } from 'drizzle-orm';
 import { db } from '@/lib/db';
-import { reservations, stationStats, stationWashTypes, stations, timeSlots } from '@/lib/db/schema';
+import { reservations, stationHours, stationStats, stationWashTypes, stations, timeSlots } from '@/lib/db/schema';
 import type { StationSortCriterion } from '@/helpers/sort-stations';
 
 export type Station = typeof stations.$inferSelect;
@@ -50,7 +50,32 @@ export type ListActiveStationsFilters = {
   wash_type_ids?: string[];
   /** Filter to stations where service_scope equals this value (exterior | interior | both). */
   service_scope?: string;
+  /** User latitude in degrees; required (with near_lng) to support `distance_asc`/`distance_desc` sort. */
+  near_lat?: number;
+  /** User longitude in degrees; required (with near_lat) to support `distance_asc`/`distance_desc` sort. */
+  near_lng?: number;
+  /** When true, restricts to stations with is_open=true for today's day_of_week in station_hours. */
+  open_today?: boolean;
 };
+
+/**
+ * Squared great-circle distance approximation (no sqrt) suitable for ordering.
+ * Returns infinity when the station has no lat/lng so it sorts to the end.
+ * `near_lat` and `near_lng` are passed as plain numbers and parameterised via Drizzle.
+ *
+ * Implementation: equirectangular projection. Accurate enough at the city
+ * scale we care about and avoids requiring the PostGIS extension.
+ */
+function distanceOrderExpr(nearLat: number, nearLng: number) {
+  return sql<number>`(
+    CASE
+      WHEN ${stations.latitude} IS NULL OR ${stations.longitude} IS NULL THEN 1e18
+      ELSE
+        POWER(((${stations.latitude})::float - ${nearLat}::float) * 111.0, 2)
+        + POWER(((${stations.longitude})::float - ${nearLng}::float) * 111.0 * COS(RADIANS(${nearLat}::float)), 2)
+    END
+  )`;
+}
 
 export type ListActiveStationsResult = {
   rows: StationWithAvailableSlots[];
@@ -108,7 +133,8 @@ function listActiveStationsWhere(
   city: string | undefined,
   formatId: string | undefined,
   washTypeIds: string[] | undefined,
-  serviceScope: string | undefined
+  serviceScope: string | undefined,
+  openToday?: boolean
 ) {
   const conditions = [eq(stations.status, 'active')];
   if (city) conditions.push(eq(stations.city, city));
@@ -136,6 +162,12 @@ function listActiveStationsWhere(
   if (serviceScope) {
     conditions.push(eq(stations.service_scope, serviceScope));
   }
+  if (openToday) {
+    const todayDow = new Date().getDay();
+    conditions.push(
+      sql`EXISTS (SELECT 1 FROM ${stationHours} WHERE ${stationHours.station_id} = ${stations.id} AND ${stationHours.day_of_week} = ${todayDow} AND ${stationHours.is_open} = true)`
+    );
+  }
   return conditions.length === 1 ? conditions[0] : and(...conditions);
 }
 
@@ -154,8 +186,17 @@ function searchPriorityOrder(term: string) {
 
 /**
  * Builds ORDER BY list from sort criteria (priority order).
+ *
+ * `nearLat` / `nearLng` are required to honour the `distance_asc` /
+ * `distance_desc` criteria; when missing those tokens are silently skipped so
+ * the rest of the sort still applies.
  */
-function buildOrderBy(sort: StationSortCriterion[] | undefined, searchTerm: string | undefined) {
+function buildOrderBy(
+  sort: StationSortCriterion[] | undefined,
+  searchTerm: string | undefined,
+  nearLat?: number,
+  nearLng?: number,
+) {
   const orderByList: ReturnType<typeof asc>[] = [];
   if (searchTerm && sort?.length === 0) {
     orderByList.push(asc(searchPriorityOrder(`%${searchTerm}%`)));
@@ -172,6 +213,12 @@ function buildOrderBy(sort: StationSortCriterion[] | undefined, searchTerm: stri
       else if (c === 'total_ratings_desc') orderByList.push(desc(stations.total_ratings));
       else if (c === 'completed_count_asc') orderByList.push(asc(completedCountExpr));
       else if (c === 'completed_count_desc') orderByList.push(desc(completedCountExpr));
+      else if (c === 'distance_asc' && nearLat != null && nearLng != null) {
+        orderByList.push(asc(distanceOrderExpr(nearLat, nearLng)));
+      }
+      else if (c === 'distance_desc' && nearLat != null && nearLng != null) {
+        orderByList.push(desc(distanceOrderExpr(nearLat, nearLng)));
+      }
     }
   }
   return orderByList;
@@ -185,14 +232,14 @@ function buildOrderBy(sort: StationSortCriterion[] | undefined, searchTerm: stri
 export async function listActiveStations(
   filters: ListActiveStationsFilters = {}
 ): Promise<ListActiveStationsResult> {
-  const { search, city, sort, page = 1, per_page = 20, format_id, wash_type_ids, service_scope } = filters;
+  const { search, city, sort, page = 1, per_page = 20, format_id, wash_type_ids, service_scope, near_lat, near_lng, open_today } = filters;
   const searchTerm = search?.trim();
-  const whereClause = listActiveStationsWhere(search, city, format_id, wash_type_ids, service_scope);
+  const whereClause = listActiveStationsWhere(search, city, format_id, wash_type_ids, service_scope, open_today);
 
   const limit = Math.min(Math.max(1, per_page ?? 20), 100);
   const offset = (Math.max(1, page ?? 1) - 1) * limit;
 
-  const orderByList = buildOrderBy(sort, searchTerm);
+  const orderByList = buildOrderBy(sort, searchTerm, near_lat, near_lng);
 
   const baseSelect = db
     .select({
@@ -230,9 +277,9 @@ export async function listActiveStationsGroup(
   filters: ListActiveStationsFilters,
   limitPerGroup: number
 ): Promise<StationWithAvailableSlots[]> {
-  const { search, city, sort, format_id, wash_type_ids, service_scope } = filters;
+  const { search, city, sort, format_id, wash_type_ids, service_scope, near_lat, near_lng, open_today } = filters;
   const searchTerm = search?.trim();
-  const whereClause = listActiveStationsWhere(search, city, format_id, wash_type_ids, service_scope);
+  const whereClause = listActiveStationsWhere(search, city, format_id, wash_type_ids, service_scope, open_today);
 
   const groupOrder: StationSortCriterion[] =
     group === 'available_now'
@@ -241,7 +288,7 @@ export async function listActiveStationsGroup(
         ? ['rating_desc', ...(sort ?? [])]
         : ['completed_count_desc', ...(sort ?? [])];
 
-  const orderByList = buildOrderBy(groupOrder.length ? groupOrder : undefined, searchTerm);
+  const orderByList = buildOrderBy(groupOrder.length ? groupOrder : undefined, searchTerm, near_lat, near_lng);
 
   const baseSelect = () =>
     db

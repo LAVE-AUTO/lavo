@@ -32,17 +32,34 @@ export const cancelReservationBodySchema = z
   })
   .strict();
 
-/** POST /stations/:id/reservations - create reservation. */
+/** POST /stations/:id/reservations - create reservation.
+ *  Accepts either:
+ *    - `time_slot_id` (legacy: pre-generated slot), or
+ *    - `start_time`   (new: per-post availability flow; server creates the slot).
+ *  When neither or both are supplied the request is rejected. */
 export const createReservationBodySchema = z
   .object({
     service_id: uuidSchema,
-    time_slot_id: uuidSchema,
+    time_slot_id: uuidSchema.optional(),
+    start_time: z
+      .string()
+      .datetime({ message: 'start_time must be a valid ISO 8601 datetime' })
+      .optional(),
     vehicle_format_id: uuidSchema.optional(),
     qr_token: qrTokenSchema.optional(),
     v: qrVersionSchema.optional(),
   })
   .strict()
   .superRefine((data, ctx) => {
+    const hasSlot = typeof data.time_slot_id === 'string';
+    const hasStart = typeof data.start_time === 'string';
+    if (hasSlot === hasStart) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: 'Provide either time_slot_id or start_time, not both',
+        path: ['time_slot_id'],
+      });
+    }
     const hasToken = typeof data.qr_token === 'string';
     const hasVersion = typeof data.v === 'string' && data.v.length > 0;
     if (hasToken !== hasVersion) {
@@ -83,6 +100,17 @@ export const stationPatchEntryBodySchema = z
     status: z.enum(['in_progress', 'completed', 'cancelled'], {
       errorMap: () => ({ message: 'status must be in_progress, completed, or cancelled' }),
     }),
+  })
+  .strict();
+
+/** POST /station/entries/:entryId/start - 6-character ticket code from the client. */
+export const stationStartEntryBodySchema = z
+  .object({
+    code: z
+      .string()
+      .min(1, 'code is required')
+      .max(20, 'code must be at most 20 characters')
+      .transform((s) => s.replace(/\s+/g, '').toUpperCase()),
   })
   .strict();
 
@@ -138,8 +166,13 @@ export const listEntriesQuerySchema = z.object({
   status: z.string().optional(),
   from: z.string().datetime({ message: 'from must be an ISO 8601 date' }).optional(),
   to: z.string().datetime({ message: 'to must be an ISO 8601 date' }).optional(),
+  /** Filter by time_slot.start_time (applies to reservation entries). */
+  slot_from: z.string().datetime({ message: 'slot_from must be an ISO 8601 date' }).optional(),
+  slot_to: z.string().datetime({ message: 'slot_to must be an ISO 8601 date' }).optional(),
+  /** Restrict to a specific entry type. */
+  entry_type: z.enum(['reservation', 'queue']).optional(),
   page: z.coerce.number().int().min(1).optional().default(1),
-  per_page: z.coerce.number().int().min(1).max(100).optional().default(20),
+  per_page: z.coerce.number().int().min(1).max(500).optional().default(20),
 });
 
 export type ListEntriesQuery = z.infer<typeof listEntriesQuerySchema>;

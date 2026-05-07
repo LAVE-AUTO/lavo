@@ -46,6 +46,10 @@ export async function POST(request: Request): Promise<NextResponse> {
 
   const stationId = stationParsed.data.id;
   const { time_slot_id, service_id, vehicle_format_id } = bodyParsed.data;
+  if (!time_slot_id) {
+    /* Dev path only supports the legacy time_slot_id flow for now. */
+    return error400('time_slot_id is required for /dev/reservations', ApiCode.VALIDATION_FAILED);
+  }
 
   try {
     const station = await findStationById(stationId);

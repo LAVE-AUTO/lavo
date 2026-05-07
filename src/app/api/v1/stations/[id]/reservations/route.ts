@@ -97,7 +97,7 @@ import { successResponse, error400, error404, error409, error500, fromAppError }
 import { ApiCode } from '@/types/api-codes';
 import { stationIdParamSchema, mapZodErrors } from '@/validators/station';
 import { createReservationBodySchema, mapZodErrors as mapEntryZodErrors } from '@/validators/entry';
-import { createReservation } from '@/server/reservations/reservation-service';
+import { createReservation, createReservationByStartTime } from '@/server/reservations/reservation-service';
 import { findStationById } from '@/server/station/station-repository';
 import { serializeEntry } from '@/server/reservations/entry-serializer';
 import {
@@ -137,18 +137,36 @@ export async function POST(request: Request, { params }: Params): Promise<NextRe
   if (!station.stripe_account_id) return error409('Station has no payment account configured', ApiCode.CONFLICT);
 
   try {
-    const { entry, clientSecret } = await createReservation(
-      auth.sub,
-      paramParsed.data.id,
-      station.stripe_account_id,
-      bodyParsed.data.time_slot_id,
-      bodyParsed.data.service_id,
-      bodyParsed.data.vehicle_format_id ?? null,
-      {
-        qrToken: bodyParsed.data.qr_token,
-        qrVersion: bodyParsed.data.v,
-      }
-    );
+    /* Two booking modes:
+     *   - legacy: client picks a pre-generated time_slot_id
+     *   - new:    client picks a start_time computed via the per-post
+     *             availability endpoint; server picks the bay & creates the slot
+     * The validator already enforces exactly one of the two is supplied. */
+    const { entry, clientSecret } = bodyParsed.data.start_time
+      ? await createReservationByStartTime(
+          auth.sub,
+          paramParsed.data.id,
+          station.stripe_account_id,
+          bodyParsed.data.start_time,
+          bodyParsed.data.service_id,
+          bodyParsed.data.vehicle_format_id ?? null,
+          {
+            qrToken: bodyParsed.data.qr_token,
+            qrVersion: bodyParsed.data.v,
+          }
+        )
+      : await createReservation(
+          auth.sub,
+          paramParsed.data.id,
+          station.stripe_account_id,
+          bodyParsed.data.time_slot_id!,
+          bodyParsed.data.service_id,
+          bodyParsed.data.vehicle_format_id ?? null,
+          {
+            qrToken: bodyParsed.data.qr_token,
+            qrVersion: bodyParsed.data.v,
+          }
+        );
     return successResponse(
       {
         reservation_id: entry.id,

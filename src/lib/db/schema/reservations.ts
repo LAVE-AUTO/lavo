@@ -17,7 +17,7 @@ import {
   uuid,
   varchar,
 } from "drizzle-orm/pg-core";
-import { stations, vehicleFormats } from "./stations";
+import { stations, stationPosts, vehicleFormats } from "./stations";
 import { timeSlots } from "./slots";
 import { users } from "./users";
 
@@ -43,8 +43,21 @@ export const reservations = pgTable(
       .references(() => stations.id, { onDelete: "cascade" }),
     vehicle_format_id: uuid("vehicle_format_id")
       .references(() => vehicleFormats.id),
+    /**
+     * Wash bay assigned to this entry. Filled by the booking flow that
+     * picks an available post for a given start_time. Nullable for queue
+     * entries (no fixed time → no fixed bay) and legacy reservations
+     * created before the per-post availability model.
+     */
+    post_id: uuid("post_id").references(() => stationPosts.id, { onDelete: "set null" }),
     status: varchar("status", { length: 30 }).notNull(),
     queue_position: integer("queue_position"),
+    /**
+     * 6-character service code shown to the client and required by the station
+     * to start the service. Generated server-side on entry creation. Made of
+     * digits + uppercase letters (no ambiguous chars).
+     */
+    ticket_code: varchar("ticket_code", { length: 6 }),
     amount_paid: decimal("amount_paid", { precision: 10, scale: 2 }).notNull(),
     commission_rate: decimal("commission_rate", { precision: 5, scale: 4 }).notNull(),
     commission_amount: decimal("commission_amount", { precision: 10, scale: 2 }).notNull().default("0.00"),
@@ -98,6 +111,8 @@ export const reservations = pgTable(
     index("reservations_stripe_payment_succeeded_at_idx").on(table.stripe_payment_succeeded_at),
     index("reservations_entry_type_station_idx").on(table.entry_type, table.station_id),
     index("reservations_booking_source_idx").on(table.booking_source),
+    /** Used by computeAvailability to look up post occupancy for a given day. */
+    index("reservations_post_id_idx").on(table.post_id),
   ]
 );
 

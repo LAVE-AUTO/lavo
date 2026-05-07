@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect, useCallback, useRef } from 'react';
-import { useLocale, useTranslations } from 'next-intl';
+import { useTranslations } from 'next-intl';
 import { getFromApi, patchWithApi, postWithApi } from '@/services';
 import { useAuth } from '@/context/auth-context';
 import { useToast } from '@/context/toast-context';
@@ -10,8 +10,7 @@ import { PageLoader } from '@/components/ui/PageLoader';
 import { DashboardKpiRow, type KpiData } from './DashboardKpiRow';
 import { DashboardDateNav } from './DashboardDateNav';
 import { DashboardQueuePanel } from './DashboardQueuePanel';
-import { DashboardPostGrid, type Post, type PostEntry } from './DashboardPostGrid';
-import { DashboardLegendBar } from './DashboardLegendBar';
+import { DashboardReservationsPanel, type ReservationItem } from './DashboardReservationsPanel';
 import { DashboardDelaysPanel, type DashboardDelayItem } from './DashboardDelaysPanel';
 import type { QueueEntry } from './QueueCard';
 
@@ -25,8 +24,6 @@ interface RawDelayPreview {
   created_at: string;
 }
 
-// All KPIs start as null so the UI shows a placeholder rather than a misleading 0
-// before the first dashboard fetch resolves.
 const EMPTY_KPI: KpiData = { revenue: null, clients: null, lateFees: null, occupancy: null };
 
 interface RawEntry {
@@ -39,32 +36,13 @@ interface RawEntry {
   status: string;
   queue_position: number | null;
   amount_paid: string | null;
+  slot_start_time: string | null;
+  slot_end_time: string | null;
   created_at: string;
   updated_at: string;
   completed_at: string | null;
   user?: { first_name: string | null } | null;
   vehicle_format?: { id: string; label: string } | null;
-}
-
-/** Pretty-print the entry's client name, falling back to an anonymised handle. */
-function clientNameOf(entry: RawEntry): string {
-  const first = entry.user?.first_name?.trim();
-  if (first) return first;
-  return `Client #${entry.user_id.slice(0, 4).toUpperCase()}`;
-}
-
-/** Day window [start, end) for the given date in the user's local timezone. */
-function dayRange(date: Date): { from: string; to: string } {
-  const start = new Date(date);
-  start.setHours(0, 0, 0, 0);
-  const end = new Date(start);
-  end.setDate(end.getDate() + 1);
-  return { from: start.toISOString(), to: end.toISOString() };
-}
-
-interface RawConfig {
-  config: { wash_post_count: number };
-  posts: { id: string; position: number; is_active: boolean }[];
 }
 
 interface RawDashboard {
@@ -87,8 +65,21 @@ interface PendingAction {
   entryId: string;
 }
 
+function clientNameOf(entry: RawEntry): string {
+  const first = entry.user?.first_name?.trim();
+  if (first) return first;
+  return `Client #${entry.user_id.slice(0, 4).toUpperCase()}`;
+}
+
+function dayRange(date: Date): { from: string; to: string } {
+  const start = new Date(date);
+  start.setHours(0, 0, 0, 0);
+  const end = new Date(start);
+  end.setDate(end.getDate() + 1);
+  return { from: start.toISOString(), to: end.toISOString() };
+}
+
 function buildQueueEntries(raw: RawEntry[]): QueueEntry[] {
-  // Show in_progress first (being served), then pending (waiting), sorted by queue_position
   const inProgress = raw
     .filter((e) => e.status === 'in_progress')
     .map((e, idx): QueueEntry => ({
@@ -115,39 +106,22 @@ function buildQueueEntries(raw: RawEntry[]): QueueEntry[] {
   return [...inProgress, ...waiting];
 }
 
-function buildPosts(
-  rawConfig: RawConfig,
-  rawEntries: RawEntry[],
-  serviceFallbackLabel: string,
-  locale: string,
-): Post[] {
-  // The serializer denormalises user.first_name and vehicle_format.label;
-  // service name/duration are still missing on /station/entries (tracked in
-  // project_pending_backend_specs.md) so we use the format label as a useful
-  // placeholder for now.
-  const inProgress = rawEntries.filter((e) => e.status === 'in_progress');
-  return rawConfig.posts.map((post): Post => {
-    const postEntries: PostEntry[] = inProgress
-      .filter((_, i) => i % rawConfig.posts.length === rawConfig.posts.indexOf(post))
-      .map((e): PostEntry => {
-        const start = new Date(e.created_at);
-        const startMin = start.getHours() * 60 + start.getMinutes();
-        return {
-          id: e.id,
-          status: 'active',
-          timeRange: start.toLocaleTimeString(locale, { hour: '2-digit', minute: '2-digit' }),
-          serviceLabel: e.vehicle_format?.label ?? serviceFallbackLabel,
-          clientName: clientNameOf(e),
-          price: e.amount_paid ? parseFloat(e.amount_paid) : undefined,
-          startMinutes: startMin,
-          // No reliable end time without service.duration on the entry - assume
-          // 45 min as a visual placeholder. Replace with real duration once the
-          // backend denormalizes service/duration on /station/entries.
-          endMinutes: startMin + 45,
-        };
-      });
-    return { id: post.id, position: post.position, isActive: post.is_active, entries: postEntries };
-  });
+function buildReservationItems(raw: RawEntry[]): ReservationItem[] {
+  return [...raw]
+    .sort((a, b) => {
+      const ta = a.slot_start_time ? new Date(a.slot_start_time).getTime() : 0;
+      const tb = b.slot_start_time ? new Date(b.slot_start_time).getTime() : 0;
+      return ta - tb;
+    })
+    .map((e): ReservationItem => ({
+      id: e.id,
+      clientName: clientNameOf(e),
+      vehicleFormat: e.vehicle_format?.label ?? null,
+      status: e.status,
+      slotStart: e.slot_start_time ?? null,
+      slotEnd: e.slot_end_time ?? null,
+      amountPaid: e.amount_paid ? parseFloat(e.amount_paid) : null,
+    }));
 }
 
 const ACTION_STATUS_MAP: Partial<Record<DashboardAction, string>> = {
@@ -161,7 +135,6 @@ export function StationDashboard() {
   const { isLoading: authLoading } = useAuth();
   const { error: showError } = useToast();
   const t = useTranslations('station_dashboard');
-  const locale = useLocale();
   const mountedRef = useRef(true);
   useEffect(() => { mountedRef.current = true; return () => { mountedRef.current = false; }; }, []);
 
@@ -169,11 +142,11 @@ export function StationDashboard() {
   const [view, setView] = useState<'weekly' | 'monthly'>('weekly');
   const [kpi, setKpi] = useState<KpiData>(EMPTY_KPI);
   const [queueEntries, setQueueEntries] = useState<QueueEntry[]>([]);
-  const [posts, setPosts] = useState<Post[]>([]);
+  const [reservationItems, setReservationItems] = useState<ReservationItem[]>([]);
   const [delays, setDelays] = useState<DashboardDelayItem[]>([]);
   const [delaysPendingTotal, setDelaysPendingTotal] = useState(0);
+  const [stationBreak, setStationBreak] = useState<{ start: string | null; end: string | null }>({ start: null, end: null });
   const [loading, setLoading] = useState(true);
-
   const [pending, setPending] = useState<PendingAction | null>(null);
   const [actionLoading, setActionLoading] = useState(false);
 
@@ -189,31 +162,40 @@ export function StationDashboard() {
   }
 
   const loadData = useCallback(async () => {
-    /* Scope entries to the day picked in the calendar. The dashboard KPIs
-     * and pending delays remain global since they aggregate over the whole
-     * billing period. */
     const { from, to } = dayRange(selectedDate);
-    const entriesQuery = `?from=${encodeURIComponent(from)}&to=${encodeURIComponent(to)}&per_page=200`;
+    // Queue: filter by creation date (live session-scoped entries)
+    const queueQuery = `?entry_type=queue&from=${encodeURIComponent(from)}&to=${encodeURIComponent(to)}&per_page=200`;
+    // Reservations: filter by slot start_time so we see appointments for the selected day
+    const reservationsQuery = `?entry_type=reservation&slot_from=${encodeURIComponent(from)}&slot_to=${encodeURIComponent(to)}&per_page=200`;
 
-    const [entriesResult, configResult, dashboardResult, delaysResult] = await Promise.all([
-      getFromApi(`/station/entries${entriesQuery}`),
-      getFromApi('/station/config'),
+    const [queueResult, reservationsResult, dashboardResult, delaysResult, configResult] = await Promise.all([
+      getFromApi(`/station/entries${queueQuery}`),
+      getFromApi(`/station/entries${reservationsQuery}`),
       getFromApi('/station/dashboard'),
       getFromApi(`/station/delays?status=pending&per_page=${DELAYS_PREVIEW_SIZE}`),
+      getFromApi('/station/config'),
     ]);
-
-    const [entriesOk, entriesData] = entriesResult;
-    const [configOk, configData] = configResult;
-    const [dashboardOk, dashboardData] = dashboardResult;
-    const [delaysOk, delaysData] = delaysResult;
 
     if (!mountedRef.current) return;
 
-    if (entriesOk && configOk) {
-      const raw = (entriesData as { data: { entries: RawEntry[] } }).data.entries ?? [];
-      const config = (configData as { data: RawConfig }).data;
+    const [queueOk, queueData] = queueResult;
+    const [reservationsOk, reservationsData] = reservationsResult;
+    const [dashboardOk, dashboardData] = dashboardResult;
+    const [delaysOk, delaysData] = delaysResult;
+    const [configOk, configData] = configResult;
+    if (configOk) {
+      const cfg = (configData as { data?: { break_start?: string | null; break_end?: string | null } })?.data;
+      setStationBreak({ start: cfg?.break_start ?? null, end: cfg?.break_end ?? null });
+    }
+
+    if (queueOk) {
+      const raw = (queueData as { data: { entries: RawEntry[] } }).data?.entries ?? [];
       setQueueEntries(buildQueueEntries(raw));
-      setPosts(buildPosts(config, raw, t('post_unknown_service'), locale));
+    }
+
+    if (reservationsOk) {
+      const raw = (reservationsData as { data: { entries: RawEntry[] } }).data?.entries ?? [];
+      setReservationItems(buildReservationItems(raw));
     }
 
     if (dashboardOk) {
@@ -226,8 +208,6 @@ export function StationDashboard() {
     if (delaysOk) {
       const payload = (delaysData as { data?: { items?: RawDelayPreview[]; meta?: { total?: number } } })?.data;
       const items = payload?.items ?? [];
-      // /station/delays does not denormalize the user - show anonymised id until the
-      // backend returns a name (see project_pending_backend_specs.md).
       setDelays(
         items
           .filter((d) => d.status === 'pending')
@@ -242,55 +222,76 @@ export function StationDashboard() {
     }
 
     setLoading(false);
-  }, [t, locale, selectedDate]);
+  }, [selectedDate]);
 
   useEffect(() => {
-    if (!authLoading) loadData();
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    if (!authLoading) { loadData(); }
   }, [authLoading, loadData]);
 
   function requestAction(type: DashboardAction, entryId: string) {
     setPending({ type, entryId });
   }
 
+  async function handleStartEntry(entryId: string) {
+    const [ok, data] = await patchWithApi(`/station/entries/${entryId}`, { status: 'in_progress' });
+    if (!mountedRef.current) return;
+    if (ok) {
+      await loadData();
+    } else {
+      const raw = (data as { message?: string })?.message ?? '';
+      showError(raw.includes('Cannot transition') ? t('error_invalid_transition') : t('action_error_generic'));
+    }
+  }
+
+  async function handleExtraTime(entryId: string, minutes: number) {
+    const [ok] = await postWithApi('/station/extra-time', { reservation_id: entryId, extra_minutes: minutes });
+    if (!mountedRef.current) return;
+    if (ok) {
+      await loadData();
+    } else {
+      showError(t('extra_time_error'));
+    }
+  }
+
   async function executeAction() {
-    if (!pending) return;
+    /* Re-entry guard: a double-click on Confirm (or React Strict Mode firing
+     * the effect twice in dev) used to send two PATCH requests for the same
+     * entry. The second one would 409 because the entry was already
+     * transitioned. We hold `actionLoading=true` until everything completes
+     * (network round-trip + dashboard refresh) and bail out early when a
+     * call is already in flight. */
+    if (!pending || actionLoading) return;
     setActionLoading(true);
 
-    // call_next hits a queue-scoped endpoint (promote the next waiting
-    // entry); every other action targets a specific entry by id.
-    if (pending.type === 'call_next') {
-      const [ok, data] = await postWithApi('/station/queue/next', {});
+    try {
+      if (pending.type === 'call_next') {
+        const [ok, data] = await postWithApi('/station/queue/next', {});
+        if (!mountedRef.current) return;
+        if (ok) {
+          setPending(null);
+          await loadData();
+          return;
+        }
+        const payload = data as { message?: string; code?: string } | null;
+        showError(payload?.code === 'NOT_FOUND' ? t('error_queue_empty') : t('action_error_generic'));
+        setPending(null);
+        return;
+      }
+
+      const newStatus = ACTION_STATUS_MAP[pending.type];
+      const [ok, data] = await patchWithApi(`/station/entries/${pending.entryId}`, { status: newStatus });
       if (!mountedRef.current) return;
-      setActionLoading(false);
       if (ok) {
         setPending(null);
         await loadData();
         return;
       }
-      const payload = data as { message?: string; code?: string } | null;
-      const errorMsg = payload?.code === 'NOT_FOUND'
-        ? t('error_queue_empty')
-        : t('action_error_generic');
-      showError(errorMsg);
-      setPending(null);
-      return;
-    }
-
-    const newStatus = ACTION_STATUS_MAP[pending.type];
-    const [ok, data] = await patchWithApi(`/station/entries/${pending.entryId}`, { status: newStatus });
-    if (!mountedRef.current) return;
-    setActionLoading(false);
-    if (ok) {
-      setPending(null);
-      await loadData();
-    } else {
       const raw = (data as { message?: string })?.message ?? '';
-      // Translate the backend transition error into a user-friendly toast
-      const errorMsg = raw.includes('Cannot transition')
-        ? t('error_invalid_transition')
-        : t('action_error_generic');
-      showError(errorMsg);
+      showError(raw.includes('Cannot transition') ? t('error_invalid_transition') : t('action_error_generic'));
       setPending(null);
+    } finally {
+      if (mountedRef.current) setActionLoading(false);
     }
   }
 
@@ -332,8 +333,8 @@ export function StationDashboard() {
         onViewChange={setView}
       />
       <div className="flex flex-1 flex-col overflow-auto md:flex-row md:overflow-hidden">
-        {/* Left column: queue + delays shortcut, stacked */}
-        <div className="flex shrink-0 flex-col md:w-[280px] md:overflow-hidden">
+        {/* Left column: queue + delays shortcut */}
+        <div className="flex shrink-0 flex-col md:w-70 md:overflow-hidden">
           <DashboardQueuePanel
             entries={queueEntries}
             onCallEntry={(id) => requestAction('call', id)}
@@ -342,14 +343,18 @@ export function StationDashboard() {
           />
           <DashboardDelaysPanel items={delays} totalPending={delaysPendingTotal} />
         </div>
-        <DashboardPostGrid
-          posts={posts}
-          onCompleteEntry={(id) => requestAction('complete', id)}
-          onCancelEntry={(id) => requestAction('cancel', id)}
-          onStartEntry={(id) => requestAction('start', id)}
+        {/* Central column: reservations for the selected day */}
+        <DashboardReservationsPanel
+          items={reservationItems}
+          selectedDate={selectedDate}
+          breakStart={stationBreak.start}
+          breakEnd={stationBreak.end}
+          onStart={handleStartEntry}
+          onComplete={(id) => requestAction('complete', id)}
+          onCancel={(id) => requestAction('cancel', id)}
+          onExtraTime={handleExtraTime}
         />
       </div>
-      <DashboardLegendBar />
 
       <ConfirmDialog
         open={pending !== null}

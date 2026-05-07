@@ -21,8 +21,10 @@ const RESERVATION_COLUMNS = {
   time_slot_id: reservations.time_slot_id,
   station_id: reservations.station_id,
   vehicle_format_id: reservations.vehicle_format_id,
+  post_id: reservations.post_id,
   status: reservations.status,
   queue_position: reservations.queue_position,
+  ticket_code: reservations.ticket_code,
   amount_paid: reservations.amount_paid,
   commission_rate: reservations.commission_rate,
   commission_amount: reservations.commission_amount,
@@ -48,6 +50,7 @@ export type CreateReservationEntryData = {
   user_id: string;
   station_id: string;
   vehicle_format_id?: string | null;
+  post_id?: string | null;
   time_slot_id: string;
   booking_source?: 'standard' | 'qr';
   status: string;
@@ -56,6 +59,7 @@ export type CreateReservationEntryData = {
   commission_amount?: string;
   station_payout?: string;
   stripe_payment_id?: string | null;
+  ticket_code?: string | null;
 };
 
 /** Payload for creating a queue entry: queue_position required. */
@@ -70,6 +74,7 @@ export type CreateQueueEntryData = {
   commission_amount?: string;
   station_payout?: string;
   stripe_payment_id?: string | null;
+  ticket_code?: string | null;
 };
 
 /**
@@ -86,6 +91,7 @@ export async function createReservationEntry(
       user_id: data.user_id,
       station_id: data.station_id,
       vehicle_format_id: data.vehicle_format_id,
+      post_id: data.post_id ?? null,
       entry_type: 'reservation',
       booking_source: data.booking_source ?? 'standard',
       time_slot_id: data.time_slot_id,
@@ -96,6 +102,7 @@ export async function createReservationEntry(
       commission_amount: data.commission_amount ?? '0.00',
       station_payout: data.station_payout ?? '0.00',
       stripe_payment_id: data.stripe_payment_id ?? null,
+      ticket_code: data.ticket_code ?? null,
     })
     .returning();
   if (!row) throw new Error('Insert reservation entry failed');
@@ -123,6 +130,7 @@ export async function createQueueEntry(data: CreateQueueEntryData, tx?: DbTransa
       commission_amount: data.commission_amount ?? '0.00',
       station_payout: data.station_payout ?? '0.00',
       stripe_payment_id: data.stripe_payment_id ?? null,
+      ticket_code: data.ticket_code ?? null,
     })
     .returning();
   if (!row) throw new Error('Insert queue entry failed');
@@ -425,6 +433,11 @@ export type ListEntriesFilters = {
   status?: string;
   from?: Date;
   to?: Date;
+  /** Filter by time_slot.start_time >= slot_from (reservation entries). */
+  slot_from?: Date;
+  /** Filter by time_slot.start_time < slot_to (reservation entries). */
+  slot_to?: Date;
+  entry_type?: 'reservation' | 'queue';
   page?: number;
   per_page?: number;
 };
@@ -821,6 +834,7 @@ export type RichEntry = {
   vehicle_format_id: string;
   status: string;
   queue_position: number | null;
+  ticket_code: string | null;
   amount_paid: string;
   created_at: Date;
   updated_at: Date;
@@ -838,6 +852,10 @@ export type RichEntry = {
   is_rated: boolean;
   is_tipped: boolean;
   estimated_wait_minutes: number | null;
+  /** Reservation slot start (denormalized from time_slots). Null for queue entries. */
+  slot_start_time: Date | null;
+  /** Reservation slot end (denormalized from time_slots). Null for queue entries. */
+  slot_end_time: Date | null;
 };
 
 /** Shared SELECT projection for rich entry queries. */
@@ -853,6 +871,8 @@ function richEntrySelect() {
     station_free_cancellation_minutes: stationConfigs.cancellation_delay_minutes,
     station_wash_duration_minutes: stationConfigs.wash_duration_minutes,
     station_wash_post_count: stationConfigs.wash_post_count,
+    slot_start_time: timeSlots.start_time,
+    slot_end_time: timeSlots.end_time,
     vf_label: vehicleFormats.label,
     vf_price: vehicleFormats.price,
     is_rated: sql<boolean>`EXISTS (SELECT 1 FROM ratings WHERE ratings.reservation_id = ${reservations.id})`,
@@ -874,6 +894,7 @@ function mapToRichEntry(r: Record<string, unknown>): RichEntry {
     vehicle_format_id: r.vehicle_format_id as string,
     status: r.status as string,
     queue_position: r.queue_position as number | null,
+    ticket_code: r.ticket_code as string | null,
     amount_paid: r.amount_paid as string,
     created_at: r.created_at as Date,
     updated_at: r.updated_at as Date,
@@ -897,6 +918,8 @@ function mapToRichEntry(r: Record<string, unknown>): RichEntry {
     is_rated: Boolean(r.is_rated),
     is_tipped: Boolean(r.is_tipped),
     estimated_wait_minutes: r.estimated_wait_minutes as number | null,
+    slot_start_time: (r.slot_start_time as Date | null) ?? null,
+    slot_end_time: (r.slot_end_time as Date | null) ?? null,
   };
 }
 
@@ -926,6 +949,7 @@ export async function listRichEntriesByUser(
       .leftJoin(stations, eq(stations.id, reservations.station_id))
       .leftJoin(stationConfigs, eq(stationConfigs.id, reservations.station_id))
       .leftJoin(vehicleFormats, eq(vehicleFormats.id, reservations.vehicle_format_id))
+      .leftJoin(timeSlots, eq(timeSlots.id, reservations.time_slot_id))
       .where(where)
       .orderBy(desc(reservations.created_at))
       .limit(limit)
@@ -954,6 +978,7 @@ export async function findRichEntryByIdAndUser(
     .leftJoin(stations, eq(stations.id, reservations.station_id))
     .leftJoin(stationConfigs, eq(stationConfigs.id, reservations.station_id))
     .leftJoin(vehicleFormats, eq(vehicleFormats.id, reservations.vehicle_format_id))
+    .leftJoin(timeSlots, eq(timeSlots.id, reservations.time_slot_id))
     .where(and(eq(reservations.id, entryId), eq(reservations.user_id, userId)))
     .limit(1);
   return rows[0] ? mapToRichEntry(rows[0] as unknown as Record<string, unknown>) : undefined;
@@ -966,6 +991,8 @@ export async function findRichEntryByIdAndUser(
 export type RichStationEntry = Entry & {
   user_first_name: string | null;
   vehicle_format: { id: string; label: string } | null;
+  slot_start_time: Date | null;
+  slot_end_time: Date | null;
 };
 
 /**
@@ -976,24 +1003,33 @@ export async function listRichStationEntriesPaginated(
   stationId: string,
   filters: ListEntriesFilters = {}
 ): Promise<{ rows: RichStationEntry[]; total: number; page: number; per_page: number }> {
-  const { status, from, to, page = 1, per_page = 20 } = filters;
-  const limit = Math.min(Math.max(1, per_page), 100);
+  const { status, from, to, slot_from, slot_to, entry_type, page = 1, per_page = 20 } = filters;
+  const limit = Math.min(Math.max(1, per_page), 500);
   const offset = (Math.max(1, page) - 1) * limit;
 
   const conditions = [eq(reservations.station_id, stationId)];
   if (status) conditions.push(eq(reservations.status, status));
+  if (entry_type) conditions.push(eq(reservations.entry_type, entry_type));
   if (from) conditions.push(gte(reservations.created_at, from));
   if (to) conditions.push(lte(reservations.created_at, to));
+  if (slot_from) conditions.push(gte(timeSlots.start_time, slot_from));
+  if (slot_to) conditions.push(lt(timeSlots.start_time, slot_to));
   const where = and(...conditions);
 
   const [countRows, rows] = await Promise.all([
-    db.select({ count: sql<number>`count(*)::int` }).from(reservations).where(where),
+    db
+      .select({ count: sql<number>`count(*)::int` })
+      .from(reservations)
+      .leftJoin(timeSlots, eq(reservations.time_slot_id, timeSlots.id))
+      .where(where),
     db
       .select({
         ...RESERVATION_COLUMNS,
         user_first_name: users.first_name,
         vf_id: vehicleFormats.id,
         vf_label: vehicleFormats.label,
+        slot_start_time: timeSlots.start_time,
+        slot_end_time: timeSlots.end_time,
       })
       .from(reservations)
       .leftJoin(timeSlots, eq(reservations.time_slot_id, timeSlots.id))
@@ -1009,6 +1045,8 @@ export async function listRichStationEntriesPaginated(
     ...(r as Entry),
     user_first_name: r.user_first_name,
     vehicle_format: r.vf_id ? { id: r.vf_id, label: r.vf_label ?? '' } : null,
+    slot_start_time: r.slot_start_time ?? null,
+    slot_end_time: r.slot_end_time ?? null,
   }));
 
   return { rows: richRows, total: countRows[0]?.count ?? 0, page, per_page: limit };

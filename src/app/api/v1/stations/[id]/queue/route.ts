@@ -35,7 +35,7 @@ function serializeEntry(entry: {
   id: string;
   entry_type: string;
   station_id: string;
-  vehicle_format_id: string;
+  vehicle_format_id: string | null;
   status: string;
   queue_position: number | null;
   amount_paid: string;

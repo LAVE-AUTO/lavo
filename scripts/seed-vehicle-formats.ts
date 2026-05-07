@@ -5,8 +5,7 @@
 import "dotenv/config";
 import { drizzle } from "drizzle-orm/node-postgres";
 import { Pool } from "pg";
-import { vehicleFormats, stations } from "../src/lib/db/schema";
-import { eq } from "drizzle-orm";
+import { vehicleFormats } from "../src/lib/db/schema";
 
 const connectionString = process.env.DATABASE_URL;
 if (!connectionString) {
@@ -14,34 +13,22 @@ if (!connectionString) {
 }
 
 const pool = new Pool({ connectionString });
-const db = drizzle(pool, { schema: { vehicleFormats, stations } });
+const db = drizzle(pool, { schema: { vehicleFormats } });
 
 async function main() {
   console.log("🌱 Seeding vehicle formats...");
 
   try {
-    // Get first station (for demo)
-    const station = await db.query.stations.findFirst();
-
-    if (!station) {
-      console.log("❌ No station found. Seed a station first via npm run db:seed");
-      process.exit(1);
-    }
-
-    console.log(`✅ Using station: ${station.name}`);
-
-    // Insert 2 vehicle formats
+    // Insert 2 global vehicle formats
     const formats = await db
       .insert(vehicleFormats)
       .values([
         {
-          station_id: station.id,
           label: "Berline",
           price: "25.99",
           is_active: true,
         },
         {
-          station_id: station.id,
           label: "SUV",
           price: "35.99",
           is_active: true,

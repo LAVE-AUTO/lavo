@@ -102,6 +102,7 @@ export function PublicNavbar({
     ? [
         { href: '/stations',             label: t('stations') },
         { href: '/client/reservations',  label: t('reservations') },
+        { href: '/client/history',       label: t('history') },
         { href: '/favorites',            label: t('favorites') },
       ]
     : isStation

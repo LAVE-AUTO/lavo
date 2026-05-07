@@ -14,7 +14,7 @@
  *   - Stripe PaymentIntent (Connect charges)
  *   - Notifications (fire-and-forget entry updates)
  */
-import { NotFoundError, ConflictError, ActiveReservationExistsError, SlotFullError, ValidationError } from '@/lib/errors';
+import { NotFoundError, ConflictError, ActiveReservationExistsError, SlotFullError, ValidationError, InvalidTicketCodeError } from '@/lib/errors';
 import { getPlatformSettingWithFallback, getCancellationPolicy } from '@/server/admin/platform-settings-service';
 import { db } from '@/lib/db';
 import { getConfigByStationId } from '@/server/station/config-repository';
@@ -29,7 +29,12 @@ import {
 import { createPaymentIntent, cancelPaymentIntent, capturePaymentIntent, refundPaymentIntent, distributePenalty, updatePaymentIntentMetadata } from '@/server/payments/payment-service';
 import { cancelReservation } from '@/server/reservations/cancellation-service';
 import { notifyEntry } from '@/server/notifications/notification-service';
+import { notifyStationFeed } from '@/server/notifications/station-feed-notifications';
 import { sendEscrowReleasedNotificationsForEntry } from '@/server/notifications/escrow-released-notifications';
+import { findMatchingAvailabilitySlot } from '@/server/station/post-availability-service';
+import { generateTicketCode } from './ticket-code';
+import { sql as sqlInline } from 'drizzle-orm';
+import { timeSlots as timeSlotsTable } from '@/lib/db/schema';
 import {
   createReservationEntry,
   createQueueEntry,
@@ -266,6 +271,7 @@ export async function createReservation(
         commission_amount: toDecimal(split.commissionAmount),
         station_payout: toDecimal(split.stationPayout),
         stripe_payment_id: paymentIntentId,
+        ticket_code: generateTicketCode(),
       },
       tx
     );
@@ -290,6 +296,164 @@ export async function createReservation(
     userId,
     stationId,
     type: 'reservation_created',
+  });
+
+  await notifyStationFeed({
+    stationId,
+    entryId: entry.id,
+    kind: 'reservation_new',
+    body: `${toDecimal(amountTotal)} $${entry.ticket_code ? ` · Code ${entry.ticket_code}` : ''}`,
+  });
+
+  return { entry, clientSecret };
+}
+
+
+// %%%%% Reservation by start_time (per-post availability flow) %%%%%
+//
+// Replaces the merchant-pre-generated `time_slots` flow: the client picks a
+// `start_time` (and a service that defines duration), the server picks a
+// free wash bay, creates a fresh `time_slots` row + reservation atomically.
+//
+// Concurrency: we serialise bookings on the same station by SELECT FOR UPDATE
+// on the chosen station_posts row before the availability re-check.
+
+/**
+ * Creates a reservation from a `start_time` chosen against the per-post
+ * availability endpoint. Picks the first active post that is still free at
+ * that exact start_time, locks it, re-verifies availability, and inserts a
+ * one-shot time_slot + reservation pair.
+ *
+ * Throws:
+ *   - NotFoundError       service / vehicle format missing
+ *   - SlotFullError       no free post at this time anymore
+ *   - ConflictError       window beyond Stripe auth horizon
+ *   - ValidationError     bad QR token context
+ */
+export async function createReservationByStartTime(
+  userId: string,
+  stationId: string,
+  stationStripeAccountId: string,
+  startTimeIso: string,
+  serviceId: string,
+  vehicleFormatId: string | null | undefined,
+  options?: { qrToken?: string; qrVersion?: string }
+): Promise<CreateReservationResult> {
+  const service = await findServiceByIdAndStation(serviceId, stationId);
+  if (!service) throw new NotFoundError('Service not found');
+
+  const { amountTotal, vehicleEntry } = await resolveReservationAmount(serviceId, vehicleFormatId, stationId);
+  const durationMin = vehicleEntry?.duration_min ?? 30;
+
+  /* Pre-check (cheap, non-locking): make sure at least one post is free at
+   * `startTime`. We let the transactional re-check decide the final post. */
+  const preMatch = await findMatchingAvailabilitySlot(stationId, startTimeIso, durationMin);
+  if (!preMatch) throw new SlotFullError();
+
+  const startTime = new Date(startTimeIso);
+  const endTime = new Date(startTime.getTime() + durationMin * 60_000);
+
+  /* Stripe authorization horizon. */
+  const { maxDays, maxAdvanceMs } = await getMaxAdvanceBookingMs();
+  if (startTime.getTime() - Date.now() > maxAdvanceMs) {
+    throw new ConflictError(`Reservations cannot be made more than ${maxDays} days in advance`);
+  }
+
+  const hasQrPayload = Boolean(options?.qrToken || options?.qrVersion);
+  const qrValidation = options?.qrToken
+    ? verifyQrToken({ stationId, qrToken: options.qrToken, version: options.qrVersion })
+    : { isValid: false as const, reason: undefined };
+  const isQrBooking = Boolean(options?.qrToken) && qrValidation.isValid;
+  if (hasQrPayload && !isQrBooking) {
+    throw new ValidationError('Invalid QR booking token context');
+  }
+
+  const split = await computeReservationSplit({ amountTotal, isQrBooking });
+  const amountCents = Math.round(amountTotal * 100);
+  const commissionCents = Math.round(split.commissionAmount * 100);
+
+  /* Stripe-first: create PI before the DB transaction. If the txn fails,
+   * the PI auto-expires after 24h (never charged). */
+  const { paymentIntentId, clientSecret } = await createPaymentIntent({
+    amountCents,
+    userId,
+    stationId,
+    stationStripeAccountId,
+    commissionCents,
+    metadata: {
+      service_id: serviceId,
+      vehicle_format_id: vehicleFormatId ?? '',
+      start_time: startTime.toISOString(),
+    },
+  });
+
+  const entry = await db.transaction(async (tx) => {
+    /* Lock all active posts of the station to serialise concurrent bookings.
+     * Only a few rows per station, so the lock is short-lived. */
+    await tx.execute(
+      sqlInline`SELECT id FROM station_posts WHERE station_id = ${stationId} AND is_active = true FOR UPDATE`
+    );
+
+    const fresh = await findMatchingAvailabilitySlot(stationId, startTimeIso, durationMin);
+    if (!fresh) throw new SlotFullError();
+
+    /* Insert the one-shot time_slot. capacity = 1 because the post-level
+     * model already enforces single-booking per slot. */
+    const [slot] = await tx
+      .insert(timeSlotsTable)
+      .values({
+        station_id: stationId,
+        start_time: startTime,
+        end_time: endTime,
+        capacity: 1,
+        booked_count: 1,
+        status: 'available',
+      })
+      .returning();
+    if (!slot) throw new Error('Insert time slot failed');
+
+    return createReservationEntry(
+      {
+        user_id: userId,
+        station_id: stationId,
+        vehicle_format_id: vehicleFormatId ?? null,
+        post_id: fresh.post_id,
+        time_slot_id: slot.id,
+        status: STATUS_PENDING_PAYMENT,
+        amount_paid: toDecimal(amountTotal),
+        booking_source: split.bookingSource,
+        commission_rate: split.commissionRate,
+        commission_amount: toDecimal(split.commissionAmount),
+        station_payout: toDecimal(split.stationPayout),
+        stripe_payment_id: paymentIntentId,
+        ticket_code: generateTicketCode(),
+      },
+      tx
+    );
+  });
+
+  try {
+    await updatePaymentIntentMetadata(paymentIntentId, { reservation_id: entry.id });
+  } catch (e) {
+    console.error('[CREATE_RESERVATION_BY_START_TIME] PI metadata update failed - non-fatal', {
+      entryId: entry.id,
+      paymentIntentId,
+      error: e instanceof Error ? e.message : String(e),
+    });
+  }
+
+  await notifyEntry({
+    entryId: entry.id,
+    userId,
+    stationId,
+    type: 'reservation_created',
+  });
+
+  await notifyStationFeed({
+    stationId,
+    entryId: entry.id,
+    kind: 'reservation_new',
+    body: `${toDecimal(amountTotal)} $${entry.ticket_code ? ` · Code ${entry.ticket_code}` : ''}`,
   });
 
   return { entry, clientSecret };
@@ -666,8 +830,10 @@ export async function upgradeQueueToReservation(
 
 
 const VALID_STATION_TRANSITIONS: Record<string, readonly string[]> = {
-  confirmed: ['in_progress', 'cancelled'],
-  in_progress: ['completed', 'cancelled'],
+  pending_payment: ['in_progress', 'cancelled'],
+  pending:         ['in_progress', 'cancelled'],
+  confirmed:       ['in_progress', 'cancelled'],
+  in_progress:     ['completed', 'cancelled'],
 };
 
 /**
@@ -763,6 +929,39 @@ export async function setEntryStatusByStation(
 }
 
 
+// %%%%% Start entry with ticket code %%%%%
+// Station verifies the 6-character code given by the client before starting the service.
+
+/**
+ * Starts a service for an entry only if the code matches the one issued at booking.
+ * Wraps the same transition logic as setEntryStatusByStation('in_progress') but
+ * adds a code-equality check (uppercased + whitespace-trimmed on both sides).
+ *
+ * Throws:
+ *  - NotFoundError if the entry is not found or does not belong to the station
+ *  - InvalidTicketCodeError (400) if the code is missing or does not match
+ *  - ConflictError if the entry status cannot transition to in_progress
+ */
+export async function startEntryByStation(
+  entryId: string,
+  stationId: string,
+  rawCode: string
+): Promise<Entry> {
+  const entry = await findEntryByIdAndStation(entryId, stationId);
+  if (!entry) throw new NotFoundError('Entry not found');
+
+  // Compare with constant-time-ish equality on uppercased trimmed strings.
+  // ticket_code is null on legacy entries (pre-migration) - reject those too.
+  const normalizedInput = (rawCode ?? '').replace(/\s+/g, '').toUpperCase();
+  const stored = (entry.ticket_code ?? '').toUpperCase();
+  if (!stored || normalizedInput.length !== stored.length || normalizedInput !== stored) {
+    throw new InvalidTicketCodeError();
+  }
+
+  return setEntryStatusByStation(entryId, stationId, 'in_progress');
+}
+
+
 // %%%%% Walk-in entry creation %%%%%
 // Station creates an entry for a walk-in client (no Stripe payment flow)
 
@@ -799,6 +998,7 @@ export async function createWalkInEntry(
       commission_rate: '0',
       commission_amount: '0',
       station_payout: toDecimal(String(format.price)),
+      ticket_code: generateTicketCode(),
     });
   }
 
@@ -813,6 +1013,7 @@ export async function createWalkInEntry(
     commission_rate: '0',
     commission_amount: '0',
     station_payout: toDecimal(String(format.price)),
+    ticket_code: generateTicketCode(),
   });
 }
 

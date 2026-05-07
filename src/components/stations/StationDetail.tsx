@@ -102,7 +102,7 @@ export function StationDetail({ id }: StationDetailProps) {
 
   const handleOpenBooking = async () => {
     if (!isAuthenticated) {
-      const callbackUrl = encodeURIComponent(`/stations/${id}`);
+      const callbackUrl = encodeURIComponent(`/${locale ?? 'fr'}/stations/${id}`);
       router.push(`/${locale ?? 'fr'}/login?callbackUrl=${callbackUrl}`);
       return;
     }
@@ -180,12 +180,14 @@ export function StationDetail({ id }: StationDetailProps) {
             </div>
             <div className="text-[11px] text-[#555] dark:text-[#C0C0B0] mt-1">{t('min_attente')}</div>
           </div>
-          <div>
-            <div className="text-[20px] font-black text-[#000C1F] dark:text-[#FFF8EC] leading-none">
-              {distanceLabel ?? '--'}
+          {distanceLabel ? (
+            <div>
+              <div className="text-[20px] font-black text-[#000C1F] dark:text-[#FFF8EC] leading-none">
+                {distanceLabel}
+              </div>
+              <div className="text-[11px] text-[#555] dark:text-[#C0C0B0] mt-1">{t('detail_distance')}</div>
             </div>
-            <div className="text-[11px] text-[#555] dark:text-[#C0C0B0] mt-1">{t('detail_distance')}</div>
-          </div>
+          ) : null}
         </div>
       </div>
 
@@ -280,27 +282,40 @@ export function StationDetail({ id }: StationDetailProps) {
             </svg>
           </button>
 
-          <div className="absolute bottom-0 left-0 right-0 px-4 sm:px-6 lg:px-8 pb-5 pt-12">
-            <div className="max-w-[1440px] mx-auto">
-              <h1 className="text-[26px] sm:text-[32px] lg:text-[38px] font-black text-white leading-tight drop-shadow mb-2">
-                {station.name}
-              </h1>
-              <div className="flex flex-wrap items-center gap-x-4 gap-y-2">
-                <span className="flex items-center gap-2 text-white text-[16px]">
-                  <span className="text-gold text-[18px]">&#9733;</span>
-                  <span className="font-bold">{station.rating.toFixed(1)}</span>
-                  <span className="opacity-90">{t('reviews_count', { count: station.reviewCount })}</span>
-                </span>
-                {station.verified && (
-                  <Badge variant="verified" className="backdrop-blur-sm border border-gold/40 px-3 py-1 text-[13px]">
-                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" className="mr-1.5"><polyline points="20 6 9 17 4 12" /></svg>
-                    {t('detail_verified')}
-                  </Badge>
-                )}
-                {station.openingHours && (
-                  <span className="text-white/90 text-[15px] font-medium">&#183; {station.openingHours}</span>
-                )}
+          {/* Overlay with key information - station name on top, stats below */}
+          <div className="absolute top-4 right-16 max-w-[calc(100%-5rem)] bg-black/60 backdrop-blur-sm rounded-xl px-4 py-3 border border-white/20 text-white">
+            <h1 className="text-[26px] sm:text-[32px] lg:text-[38px] font-black leading-tight truncate text-right sm:text-left">
+              {station.name}
+            </h1>
+            <div className="mt-2 flex flex-wrap items-center justify-end sm:justify-start gap-x-3 gap-y-1">
+              <div className="flex items-center gap-1.5">
+                <span className="text-[14px] font-black leading-none">{station.rating.toFixed(1)}</span>
+                <span className="text-[10px] opacity-80 uppercase tracking-wider">{t('rating')}</span>
               </div>
+
+              <span className="w-px h-3.5 bg-white/30" aria-hidden="true" />
+
+              <div className="flex items-center gap-1.5">
+                <span className="text-[14px] font-black leading-none">{station.reviewCount}</span>
+                <span className="text-[10px] opacity-80 uppercase tracking-wider">{t('reviews_count', { count: station.reviewCount })}</span>
+              </div>
+
+              {station.openingHours && (
+                <>
+                  <span className="w-px h-3.5 bg-white/30" aria-hidden="true" />
+                  <span className="text-[13px] font-semibold leading-none">{station.openingHours}</span>
+                </>
+              )}
+
+              {distanceLabel ? (
+                <>
+                  <span className="w-px h-3.5 bg-white/30" aria-hidden="true" />
+                  <div className="flex items-center gap-1.5">
+                    <span className="text-[14px] font-black leading-none">{distanceLabel}</span>
+                    <span className="text-[10px] opacity-80 uppercase tracking-wider">{t('stat_distance')}</span>
+                  </div>
+                </>
+              ) : null}
             </div>
           </div>
         </div>

@@ -42,7 +42,7 @@ export function TimeExtensionModal({
       });
 
       if (!success) {
-        setError(data?.error || t('error_queue_empty'));
+        setError((data as { message?: string })?.message || t('error_queue_empty'));
         return;
       }
 
@@ -56,7 +56,7 @@ export function TimeExtensionModal({
   }, [minutes, entryId, onClose, onSuccess, t]);
 
   return (
-    <Modal isOpen={isOpen} onClose={onClose} title={t('time_extension_title')} blocking>
+    <Modal open={isOpen} onClose={onClose} title={t('time_extension_title')}>
       <div className="space-y-4 p-4">
         <p className="text-sm text-slate-600 dark:text-slate-400">
           {t('time_extension_subtitle')} <span className="font-semibold">{currentEndTime}</span>

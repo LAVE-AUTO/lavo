@@ -18,6 +18,13 @@ interface HourDay {
   afternoon_end: string | null;
 }
 
+interface HourTemplate {
+  morning_start: string;
+  morning_end: string;
+  afternoon_start: string;
+  afternoon_end: string;
+}
+
 interface Props {
   config: StationConfig;
   locked: boolean;
@@ -36,11 +43,19 @@ function buildDefaultDays(): HourDay[] {
   }));
 }
 
+const timeInputClass =
+  'w-full rounded-lg border border-[#E0DCD0] bg-white px-2.5 py-1.5 text-center font-mono text-[12px] tabular-nums text-[#1A1A0A] outline-none transition-all duration-150 placeholder:text-[#BBBBAA] hover:border-[#D0C8B0] focus:border-[#C49A1E] focus:shadow-[0_0_0_3px_rgba(196,154,30,0.12)] disabled:cursor-not-allowed disabled:opacity-50 dark:border-[#243020] dark:bg-[#0F1A0C] dark:text-[#F0EDD4] dark:placeholder:text-[#4A4A3A] dark:hover:border-[#2E3C2A]';
+
 export function HoursTab({ config, locked }: Props) {
   const t = useTranslations('station_config');
   const { success, error: showError } = useToast();
 
-  const hasSingleHours = Boolean(config.opening_time || config.closing_time);
+  const [template, setTemplate] = useState<HourTemplate>({
+    morning_start: config.opening_time ?? '',
+    morning_end: config.break_start ?? '',
+    afternoon_start: config.break_end ?? '',
+    afternoon_end: config.closing_time ?? '',
+  });
 
   const [days, setDays] = useState<HourDay[]>(buildDefaultDays());
   const [exceptions, setExceptions] = useState<HourException[]>([]);
@@ -83,14 +98,40 @@ export function HoursTab({ config, locked }: Props) {
     );
   }
 
+  function applyTemplateToAllDays() {
+    setDays((prev) =>
+      prev.map((d) => ({
+        ...d,
+        is_open: true,
+        morning_start: template.morning_start || null,
+        morning_end: template.morning_end || null,
+        afternoon_start: template.afternoon_start || null,
+        afternoon_end: template.afternoon_end || null,
+      })),
+    );
+  }
+
   async function handleSave() {
     setSaving(true);
-    const [ok] = await patchWithApi('/station/hours', { days });
-    if (ok) {
+
+    const configPayload = {
+      opening_time: template.morning_start || null,
+      break_start: template.morning_end || null,
+      break_end: template.afternoon_start || null,
+      closing_time: template.afternoon_end || null,
+    };
+
+    const [[configOk], [hoursOk]] = await Promise.all([
+      patchWithApi('/station/config', configPayload),
+      patchWithApi('/station/hours', { days }),
+    ]);
+
+    if (configOk && hoursOk) {
       success(t('hours_save_success'));
     } else {
       showError(t('hours_save_error'));
     }
+
     setSaving(false);
   }
 
@@ -121,49 +162,82 @@ export function HoursTab({ config, locked }: Props) {
 
   return (
     <div className="flex flex-col gap-5">
-      {hasSingleHours && (
-        <section className="rounded-2xl border border-[#E8E4DC] bg-white p-6 shadow-sm dark:border-[#1A2A14] dark:bg-[#182214]">
-          <h3 className="mb-3 text-[11px] font-bold uppercase tracking-[1.5px] text-[#C49A1E]">
-            {t('hours_current_title')}
-          </h3>
-          <p className="mb-4 text-[12px] leading-snug text-[#888] dark:text-[#9A9A8A]">
-            {t('hours_current_hint')}
-          </p>
-          <div className="flex flex-wrap items-center gap-5 rounded-xl bg-[#F7F6F2] px-5 py-4 dark:bg-[#0F1A0C]">
-            <div className="flex flex-col gap-0.5">
-              <span className="text-[11px] font-semibold uppercase tracking-wider text-[#AAAAAA] dark:text-[#4A4A3A]">
-                {t('field_opening_time')}
-              </span>
-              <span className="text-[20px] font-black tabular-nums leading-none text-[#1A1A0A] dark:text-[#F0EDD4]">
-                {config.opening_time || '-'}
-              </span>
-            </div>
-            <span className="text-[18px] font-light text-[#C49A1E]">→</span>
-            <div className="flex flex-col gap-0.5">
-              <span className="text-[11px] font-semibold uppercase tracking-wider text-[#AAAAAA] dark:text-[#4A4A3A]">
-                {t('field_closing_time')}
-              </span>
-              <span className="text-[20px] font-black tabular-nums leading-none text-[#1A1A0A] dark:text-[#F0EDD4]">
-                {config.closing_time || '-'}
-              </span>
-            </div>
-            {(config.break_start || config.break_end) && (
-              <>
-                <span className="h-7 w-px bg-[#E0DCD0] dark:bg-[#243020]" />
-                <div className="flex flex-col gap-0.5">
-                  <span className="text-[11px] font-semibold uppercase tracking-wider text-[#AAAAAA] dark:text-[#4A4A3A]">
-                    {t('hours_break')}
-                  </span>
-                  <span className="text-[14px] font-bold tabular-nums text-[#888] dark:text-[#9A9A8A]">
-                    {config.break_start || '-'} – {config.break_end || '-'}
-                  </span>
-                </div>
-              </>
-            )}
-          </div>
-        </section>
-      )}
+      {/* Global template — defines default hours applied to all days */}
+      <section className="rounded-2xl border border-[#E8E4DC] bg-white p-6 shadow-sm dark:border-[#1A2A14] dark:bg-[#182214]">
+        <h3 className="mb-2 text-[11px] font-bold uppercase tracking-[1.5px] text-[#C49A1E]">
+          {t('hours_template_title')}
+        </h3>
+        <p className="mb-4 text-[12px] leading-snug text-[#888] dark:text-[#9A9A8A]">
+          {t('hours_template_hint')}
+        </p>
 
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+          {/* Morning slot */}
+          <div className="rounded-xl bg-[#F7F6F2] p-4 dark:bg-[#0F1A0C]">
+            <span className="mb-3 block text-[10px] font-bold uppercase tracking-[0.5px] text-[#AAAAAA] dark:text-[#5A5A4A]">
+              {t('hours_morning')}
+            </span>
+            <div className="flex items-center gap-2">
+              <input
+                className={timeInputClass}
+                type="time"
+                value={template.morning_start}
+                disabled={locked || saving}
+                onChange={(e) => setTemplate((p) => ({ ...p, morning_start: e.target.value }))}
+                aria-label={t('hours_morning_start')}
+              />
+              <span className="shrink-0 text-[12px] font-bold text-[#C49A1E]" aria-hidden="true">→</span>
+              <input
+                className={timeInputClass}
+                type="time"
+                value={template.morning_end}
+                disabled={locked || saving}
+                onChange={(e) => setTemplate((p) => ({ ...p, morning_end: e.target.value }))}
+                aria-label={t('hours_morning_end')}
+              />
+            </div>
+          </div>
+
+          {/* Afternoon slot */}
+          <div className="rounded-xl bg-[#F7F6F2] p-4 dark:bg-[#0F1A0C]">
+            <span className="mb-3 block text-[10px] font-bold uppercase tracking-[0.5px] text-[#AAAAAA] dark:text-[#5A5A4A]">
+              {t('hours_afternoon')}
+            </span>
+            <div className="flex items-center gap-2">
+              <input
+                className={timeInputClass}
+                type="time"
+                value={template.afternoon_start}
+                disabled={locked || saving}
+                onChange={(e) => setTemplate((p) => ({ ...p, afternoon_start: e.target.value }))}
+                aria-label={t('hours_afternoon_start')}
+              />
+              <span className="shrink-0 text-[12px] font-bold text-[#C49A1E]" aria-hidden="true">→</span>
+              <input
+                className={timeInputClass}
+                type="time"
+                value={template.afternoon_end}
+                disabled={locked || saving}
+                onChange={(e) => setTemplate((p) => ({ ...p, afternoon_end: e.target.value }))}
+                aria-label={t('hours_afternoon_end')}
+              />
+            </div>
+          </div>
+        </div>
+
+        <div className="mt-4 flex justify-end">
+          <button
+            type="button"
+            onClick={applyTemplateToAllDays}
+            disabled={locked || saving}
+            className="rounded-xl border border-[#C49A1E] px-4 py-2 text-[12px] font-bold text-[#C49A1E] transition-colors hover:bg-[#C49A1E]/10 disabled:cursor-not-allowed disabled:opacity-40"
+          >
+            {t('hours_apply_to_all')}
+          </button>
+        </div>
+      </section>
+
+      {/* Per-day schedule */}
       <section className="rounded-2xl border border-[#E8E4DC] bg-white p-6 shadow-sm dark:border-[#1A2A14] dark:bg-[#182214]">
         <h3 className="mb-2 text-[11px] font-bold uppercase tracking-[1.5px] text-[#C49A1E]">
           {t('hours_per_day_title')}

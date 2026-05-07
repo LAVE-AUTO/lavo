@@ -68,7 +68,10 @@ export function ClientHistoryView() {
   const loadEntries = useCallback(async () => {
     setLoading(true);
     setLoadError(false);
-    const [ok, data] = await getFromApi<HistoryApiResponse>('/history/client?limit=200');
+    /* Backend caps `limit` at 100 (validators/history.ts). Use the max so we
+     * surface as many entries as possible in a single fetch; pagination can
+     * be added later if users routinely have more than 100 historical items. */
+    const [ok, data] = await getFromApi<HistoryApiResponse>('/history/client?limit=100');
 
     const raw = ok && data && typeof data === 'object' && 'data' in data
       ? (data as HistoryApiResponse).data?.items
