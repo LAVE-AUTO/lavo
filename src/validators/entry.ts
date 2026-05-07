@@ -138,8 +138,13 @@ export const listEntriesQuerySchema = z.object({
   status: z.string().optional(),
   from: z.string().datetime({ message: 'from must be an ISO 8601 date' }).optional(),
   to: z.string().datetime({ message: 'to must be an ISO 8601 date' }).optional(),
+  /** Filter by time_slot.start_time (applies to reservation entries). */
+  slot_from: z.string().datetime({ message: 'slot_from must be an ISO 8601 date' }).optional(),
+  slot_to: z.string().datetime({ message: 'slot_to must be an ISO 8601 date' }).optional(),
+  /** Restrict to a specific entry type. */
+  entry_type: z.enum(['reservation', 'queue']).optional(),
   page: z.coerce.number().int().min(1).optional().default(1),
-  per_page: z.coerce.number().int().min(1).max(100).optional().default(20),
+  per_page: z.coerce.number().int().min(1).max(500).optional().default(20),
 });
 
 export type ListEntriesQuery = z.infer<typeof listEntriesQuerySchema>;

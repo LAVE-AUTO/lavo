@@ -666,8 +666,10 @@ export async function upgradeQueueToReservation(
 
 
 const VALID_STATION_TRANSITIONS: Record<string, readonly string[]> = {
-  confirmed: ['in_progress', 'cancelled'],
-  in_progress: ['completed', 'cancelled'],
+  pending_payment: ['in_progress', 'cancelled'],
+  pending:         ['in_progress', 'cancelled'],
+  confirmed:       ['in_progress', 'cancelled'],
+  in_progress:     ['completed', 'cancelled'],
 };
 
 /**

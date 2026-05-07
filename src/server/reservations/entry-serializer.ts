@@ -62,7 +62,7 @@ export function serializeStationEntry(entry: Entry) {
   };
 }
 
-/** Station-side rich entry: adds denormalized user first_name and vehicle format. */
+/** Station-side rich entry: adds denormalized user first_name, vehicle format, and slot times. */
 export function serializeRichStationEntry(entry: RichStationEntry) {
   return {
     id: entry.id,
@@ -78,6 +78,8 @@ export function serializeRichStationEntry(entry: RichStationEntry) {
     created_at: entry.created_at,
     updated_at: entry.updated_at,
     completed_at: entry.completed_at,
+    slot_start_time: entry.slot_start_time?.toISOString() ?? null,
+    slot_end_time: entry.slot_end_time?.toISOString() ?? null,
     user: { first_name: entry.user_first_name },
     vehicle_format: entry.vehicle_format,
   };

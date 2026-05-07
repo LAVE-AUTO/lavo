@@ -1,6 +1,6 @@
 import { and, asc, desc, eq, getTableColumns, ilike, inArray, isNotNull, or, sql } from 'drizzle-orm';
 import { db } from '@/lib/db';
-import { reservations, stationStats, stationWashTypes, stations, timeSlots } from '@/lib/db/schema';
+import { reservations, stationHours, stationStats, stationWashTypes, stations, timeSlots } from '@/lib/db/schema';
 import type { StationSortCriterion } from '@/helpers/sort-stations';
 
 export type Station = typeof stations.$inferSelect;
@@ -50,6 +50,8 @@ export type ListActiveStationsFilters = {
   wash_type_ids?: string[];
   /** Filter to stations where service_scope equals this value (exterior | interior | both). */
   service_scope?: string;
+  /** When true, restricts to stations with is_open=true for today's day_of_week in station_hours. */
+  open_today?: boolean;
 };
 
 export type ListActiveStationsResult = {
@@ -108,7 +110,8 @@ function listActiveStationsWhere(
   city: string | undefined,
   formatId: string | undefined,
   washTypeIds: string[] | undefined,
-  serviceScope: string | undefined
+  serviceScope: string | undefined,
+  openToday?: boolean
 ) {
   const conditions = [eq(stations.status, 'active')];
   if (city) conditions.push(eq(stations.city, city));
@@ -135,6 +138,12 @@ function listActiveStationsWhere(
   }
   if (serviceScope) {
     conditions.push(eq(stations.service_scope, serviceScope));
+  }
+  if (openToday) {
+    const todayDow = new Date().getDay();
+    conditions.push(
+      sql`EXISTS (SELECT 1 FROM ${stationHours} WHERE ${stationHours.station_id} = ${stations.id} AND ${stationHours.day_of_week} = ${todayDow} AND ${stationHours.is_open} = true)`
+    );
   }
   return conditions.length === 1 ? conditions[0] : and(...conditions);
 }
@@ -185,9 +194,9 @@ function buildOrderBy(sort: StationSortCriterion[] | undefined, searchTerm: stri
 export async function listActiveStations(
   filters: ListActiveStationsFilters = {}
 ): Promise<ListActiveStationsResult> {
-  const { search, city, sort, page = 1, per_page = 20, format_id, wash_type_ids, service_scope } = filters;
+  const { search, city, sort, page = 1, per_page = 20, format_id, wash_type_ids, service_scope, open_today } = filters;
   const searchTerm = search?.trim();
-  const whereClause = listActiveStationsWhere(search, city, format_id, wash_type_ids, service_scope);
+  const whereClause = listActiveStationsWhere(search, city, format_id, wash_type_ids, service_scope, open_today);
 
   const limit = Math.min(Math.max(1, per_page ?? 20), 100);
   const offset = (Math.max(1, page ?? 1) - 1) * limit;
@@ -230,9 +239,9 @@ export async function listActiveStationsGroup(
   filters: ListActiveStationsFilters,
   limitPerGroup: number
 ): Promise<StationWithAvailableSlots[]> {
-  const { search, city, sort, format_id, wash_type_ids, service_scope } = filters;
+  const { search, city, sort, format_id, wash_type_ids, service_scope, open_today } = filters;
   const searchTerm = search?.trim();
-  const whereClause = listActiveStationsWhere(search, city, format_id, wash_type_ids, service_scope);
+  const whereClause = listActiveStationsWhere(search, city, format_id, wash_type_ids, service_scope, open_today);
 
   const groupOrder: StationSortCriterion[] =
     group === 'available_now'
