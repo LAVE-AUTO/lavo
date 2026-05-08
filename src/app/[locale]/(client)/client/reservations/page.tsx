@@ -2,7 +2,8 @@
 
 import { useState, useMemo, useEffect, useRef, useCallback } from 'react';
 import { useTranslations, useLocale } from 'next-intl';
-import { Link } from '@/i18n/navigation';
+import { Link, useRouter } from '@/i18n/navigation';
+import { ConfirmDialog } from '@/components/ui/ConfirmDialog';
 import { getFromApi, patchWithApi } from '@/services/axios-service';
 import { useToast } from '@/context';
 import { useAuth } from '@/context/auth-context';
@@ -43,6 +44,8 @@ interface ApiRichEntry {
   estimated_wait_minutes: number | null;
   slot_start_time: string | null;
   slot_end_time: string | null;
+  is_rated?: boolean;
+  is_tipped?: boolean;
 }
 
 /* ------------------------------------------------------------------ */
@@ -70,6 +73,8 @@ interface ClientReservation {
   ticketCode: string | null;
   createdAt: string;
   freeCancellationMinutes: number;
+  isRated: boolean;
+  isTipped: boolean;
 }
 
 interface ClientQueueEntry {
@@ -95,11 +100,30 @@ interface ClientQueueEntry {
 /* Helpers                                                              */
 /* ------------------------------------------------------------------ */
 
-function isWithinFreeWindow(slotStart: string | null, freeWindowMinutes: number): boolean {
-  if (!slotStart) return false;
-  const slotTime = new Date(slotStart);
-  const diff = slotTime.getTime() - Date.now();
-  return diff > 0 && diff < freeWindowMinutes * 60 * 1000;
+/** Free cancellation rule: more than 1h before service start (3 600 000 ms). */
+const FREE_CANCEL_THRESHOLD_MS = 60 * 60 * 1000;
+
+/** Signal-delay window: button surfaces only within the last 2h before start. */
+const SIGNAL_DELAY_WINDOW_MS = 2 * 60 * 60 * 1000;
+
+function msUntilStart(slotStart: string | null): number {
+  if (!slotStart) return Infinity;
+  return new Date(slotStart).getTime() - Date.now();
+}
+
+/**
+ * `isWithinFeeWindow` is true when cancelling now would trigger the fee.
+ * UX rule: free cancellation if more than 1h before start, fee otherwise.
+ */
+function isWithinFeeWindow(slotStart: string | null): boolean {
+  const ms = msUntilStart(slotStart);
+  return ms > 0 && ms <= FREE_CANCEL_THRESHOLD_MS;
+}
+
+/** Surface the "I'm running late" button only within the last 2 hours. */
+function canSignalDelay(slotStart: string | null): boolean {
+  const ms = msUntilStart(slotStart);
+  return ms > 0 && ms <= SIGNAL_DELAY_WINDOW_MS;
 }
 
 function isPastReservation(r: ClientReservation): boolean {
@@ -161,6 +185,8 @@ function enrichEntry(entry: ApiRichEntry): ClientReservation | ClientQueueEntry 
       status: entry.status as ReservationStatus,
       createdAt: entry.created_at,
       freeCancellationMinutes: entry.station?.free_cancellation_minutes ?? 60,
+      isRated: Boolean(entry.is_rated),
+      isTipped: Boolean(entry.is_tipped),
     };
   }
 
@@ -184,6 +210,7 @@ export default function ClientReservationsPage() {
   const locale = useLocale();
   const { success, error } = useToast();
   const { isLoading: authLoading } = useAuth();
+  const router = useRouter();
 
   const mountedRef = useRef(true);
   useEffect(() => { mountedRef.current = true; return () => { mountedRef.current = false; }; }, []);
@@ -195,6 +222,10 @@ export default function ClientReservationsPage() {
   const [loadError, setLoadError]         = useState(false);
   const [cancelTarget, setCancelTarget]   = useState<ClientReservation | null>(null);
   const [cancelLoading, setCancelLoading] = useState(false);
+
+  /* Queue actions: leave (refund) or leave + book a slot at the same station. */
+  const [queueAction, setQueueAction] = useState<{ entry: ClientQueueEntry; mode: 'leave' | 'leave_and_book' } | null>(null);
+  const [queueActionLoading, setQueueActionLoading] = useState(false);
 
   const loadEntries = useCallback(async () => {
     setLoading(true);
@@ -265,16 +296,32 @@ export default function ClientReservationsPage() {
         }),
     [reservations],
   );
-  /* First completed reservation without a rating - used to show the rating prompt */
+  /* Top-of-page prompts surface only the most recent COMPLETED reservation
+   * that still needs a rating / tip. The card-level buttons handle older
+   * un-rated entries. Once `is_rated` / `is_tipped` flips to true, both the
+   * top prompt and the card button disappear automatically. */
   const pendingRating = useMemo(
-    () => reservations.find((r) => r.status === 'completed'),
+    () =>
+      [...reservations]
+        .filter((r) => r.status === 'completed' && !r.isRated)
+        .sort((a, b) => {
+          const ta = a.slotStart ? new Date(a.slotStart).getTime() : new Date(a.createdAt).getTime();
+          const tb = b.slotStart ? new Date(b.slotStart).getTime() : new Date(b.createdAt).getTime();
+          return tb - ta;
+        })[0],
     [reservations],
   );
-  /* Second completed reservation (or same if only one) - used to show the tip prompt */
-  const pendingTip = useMemo(() => {
-    const completed = reservations.filter((r) => r.status === 'completed');
-    return completed.length > 1 ? completed[1] : completed[0] ?? null;
-  }, [reservations]);
+  const pendingTip = useMemo(
+    () =>
+      [...reservations]
+        .filter((r) => r.status === 'completed' && !r.isTipped)
+        .sort((a, b) => {
+          const ta = a.slotStart ? new Date(a.slotStart).getTime() : new Date(a.createdAt).getTime();
+          const tb = b.slotStart ? new Date(b.slotStart).getTime() : new Date(b.createdAt).getTime();
+          return tb - ta;
+        })[0],
+    [reservations],
+  );
 
   const handleCancelConfirm = async () => {
     if (!cancelTarget) return;
@@ -288,6 +335,31 @@ export default function ClientReservationsPage() {
     } else {
       error(t('toast_cancel_error'));
     }
+  };
+
+  /**
+   * Both queue actions cancel the queue entry first (full refund). The
+   * "leave + book" variant then redirects to the station detail so the user
+   * can pick a service slot via the per-post booking flow.
+   */
+  const handleQueueActionConfirm = async () => {
+    if (!queueAction) return;
+    setQueueActionLoading(true);
+    const [ok] = await patchWithApi(`/me/entries/${queueAction.entry.id}/cancel`, {});
+    setQueueActionLoading(false);
+    if (!ok) {
+      error(t('toast_cancel_error'));
+      return;
+    }
+    success(t('toast_queue_leave_success'));
+    const stationId = queueAction.entry.stationId;
+    const mode = queueAction.mode;
+    setQueueAction(null);
+    if (mode === 'leave_and_book') {
+      router.push(`/stations/${stationId}`);
+      return;
+    }
+    await loadEntries();
   };
 
   /* Loading state */
@@ -455,7 +527,13 @@ export default function ClientReservationsPage() {
           <div className="space-y-3">
             {queueEntries.length > 0 ? (
               queueEntries.map((entry) => (
-                <QueueCard key={entry.id} entry={entry} t={t} />
+                <QueueCard
+                  key={entry.id}
+                  entry={entry}
+                  t={t}
+                  onLeave={() => setQueueAction({ entry, mode: 'leave' })}
+                  onLeaveAndBook={() => setQueueAction({ entry, mode: 'leave_and_book' })}
+                />
               ))
             ) : (
               <EmptyState
@@ -481,6 +559,31 @@ export default function ClientReservationsPage() {
           onClose={() => { if (!cancelLoading) setCancelTarget(null); }}
         />
       )}
+
+      {/* Queue leave / leave + book confirmation */}
+      <ConfirmDialog
+        open={queueAction !== null}
+        title={
+          queueAction?.mode === 'leave_and_book'
+            ? t('queue_leave_and_book_title')
+            : t('queue_leave_title')
+        }
+        message={
+          queueAction?.mode === 'leave_and_book'
+            ? t('queue_leave_and_book_message')
+            : t('queue_leave_message')
+        }
+        variant={queueAction?.mode === 'leave_and_book' ? 'default' : 'danger'}
+        confirmLabel={
+          queueAction?.mode === 'leave_and_book'
+            ? t('queue_leave_and_book')
+            : t('queue_leave')
+        }
+        cancelLabel={t('cancel_modal_keep')}
+        loading={queueActionLoading}
+        onConfirm={handleQueueActionConfirm}
+        onCancel={() => { if (!queueActionLoading) setQueueAction(null); }}
+      />
     </main>
   );
 }
@@ -517,15 +620,21 @@ function ReservationCard({
   };
 
   /* Upcoming actions are hidden once the entry is in_progress (only the
-   * station can act on it from that point). Cancellation surfaces only when
-   * `onCancel` is provided (status confirmed/pending and not yet started). */
+   * station can act on it from that point). Two time-based rules:
+   *   - signalDelay: surfaces only within the last 2h before service start
+   *     (no point warning a station 5 days in advance)
+   *   - reschedule:  available for confirmed/pending entries until start */
   const canReschedule = variant === 'upcoming' && (r.status === 'confirmed' || r.status === 'pending');
-  const canSignalDelay = variant === 'upcoming' && r.status === 'confirmed';
+  const showSignalDelay = variant === 'upcoming' && r.status === 'confirmed' && canSignalDelay(r.slotStart);
+
+  /* Past completed reservations keep rate/tip buttons until each is filled. */
+  const showRateAction = variant === 'past' && r.status === 'completed' && !r.isRated;
+  const showTipAction  = variant === 'past' && r.status === 'completed' && !r.isTipped;
 
   const showActions =
     variant === 'upcoming'
-      ? onCancel || canReschedule || canSignalDelay
-      : r.status === 'completed';
+      ? onCancel || canReschedule || showSignalDelay
+      : showRateAction || showTipAction;
 
   return (
     <div className="bg-[#E8E8D8] dark:bg-dark-card rounded-xl border border-[#D0D0C0] dark:border-tab-inactive overflow-hidden hover:border-gold/30 transition-colors">
@@ -590,7 +699,7 @@ function ReservationCard({
               {t('reschedule_btn')}
             </Link>
           )}
-          {canSignalDelay && (
+          {showSignalDelay && (
             <Link
               href={`/client/reservations/${r.id}/signal-delay`}
               className="text-[13px] font-semibold text-[#666] dark:text-[#B0B0A0] hover:text-gold transition-colors"
@@ -607,21 +716,21 @@ function ReservationCard({
               {t('cancel_reservation')}
             </button>
           )}
-          {variant === 'past' && r.status === 'completed' && (
-            <>
-              <Link
-                href={`/client/reservations/${r.id}/rate`}
-                className="text-[13px] font-semibold text-gold hover:opacity-75 transition-opacity"
-              >
-                {t('rate_btn')}
-              </Link>
-              <Link
-                href={`/client/reservations/${r.id}/tip`}
-                className="text-[13px] font-semibold text-[#666] dark:text-[#B0B0A0] hover:text-gold transition-colors"
-              >
-                {t('tip_btn')}
-              </Link>
-            </>
+          {showRateAction && (
+            <Link
+              href={`/client/reservations/${r.id}/rate`}
+              className="text-[13px] font-semibold text-gold hover:opacity-75 transition-opacity"
+            >
+              {t('rate_btn')}
+            </Link>
+          )}
+          {showTipAction && (
+            <Link
+              href={`/client/reservations/${r.id}/tip`}
+              className="text-[13px] font-semibold text-[#666] dark:text-[#B0B0A0] hover:text-gold transition-colors"
+            >
+              {t('tip_btn')}
+            </Link>
           )}
         </div>
       )}
@@ -679,7 +788,9 @@ function CancelModal({
     };
   }, []);
 
-  const showFeesWarning = isWithinFreeWindow(r.slotStart, r.freeCancellationMinutes);
+  /* UX rule: free cancellation if more than 1h before service start. Within
+   * the last hour, the station applies a fee. */
+  const showFeesWarning = isWithinFeeWindow(r.slotStart);
   const dateLabel = new Date(`${r.date}T${r.timeSlot}`).toLocaleDateString(
     locale === 'en' ? 'en-CA' : 'fr-CA',
     { weekday: 'short', day: 'numeric', month: 'short' },
@@ -720,7 +831,7 @@ function CancelModal({
                 <line x1="12" y1="9" x2="12" y2="13" /><line x1="12" y1="17" x2="12.01" y2="17" />
               </svg>
               <p className="text-[12px] font-semibold text-lavo-error leading-relaxed">
-                {t('cancel_modal_fees_warning', { minutes: r.freeCancellationMinutes })}
+                {t('cancel_modal_fees_warning')}
               </p>
             </div>
           )}
@@ -759,45 +870,90 @@ function CancelModal({
 /* Queue card                                                           */
 /* ------------------------------------------------------------------ */
 
-function QueueCard({ entry: q, t }: { entry: ClientQueueEntry; t: ReturnType<typeof useTranslations> }) {
+function QueueCard({
+  entry: q,
+  t,
+  onLeave,
+  onLeaveAndBook,
+}: {
+  entry: ClientQueueEntry;
+  t: ReturnType<typeof useTranslations>;
+  onLeave: () => void;
+  onLeaveAndBook: () => void;
+}) {
   const isActive = q.status === 'in_progress';
+  /* In-progress entries are being served right now: only the station can act
+   * on them. Cancellation buttons disappear in that state. */
+  const showActions = !isActive;
+
   return (
-    <Link
-      href={`/client/reservations/queue/${q.id}`}
-      className="block bg-[#E8E8D8] dark:bg-dark-card rounded-xl border border-[#D0D0C0] dark:border-tab-inactive p-4 hover:border-gold/30 transition-colors"
-    >
-      <div className="flex gap-3">
-        <div className="w-16 h-16 rounded-lg overflow-hidden shrink-0 bg-[#D0D0C0] dark:bg-tab-inactive">
-          {q.stationImageUrl && (
-            <img src={q.stationImageUrl} alt={q.stationName} className="w-full h-full object-cover" />
-          )}
-        </div>
-
-        <div className="flex-1 min-w-0">
-          <div className="flex items-start justify-between gap-2">
-            <h3 className="text-[15px] font-bold text-[#0A0A14] dark:text-white leading-tight truncate">
-              {q.stationName}
-            </h3>
-            <span className={`shrink-0 px-2 py-0.5 rounded-full text-[11px] font-bold ${isActive ? 'bg-gold/15 text-gold' : 'bg-blue-500/15 text-blue-500'}`}>
-              {isActive ? t('queue_in_progress') : t('queue_waiting')}
-            </span>
-          </div>
-
-          <p className="text-[13px] text-[#666] dark:text-[#B0B0A0] mt-0.5">{q.forfaitName}</p>
-
-          <div className="flex items-center gap-3 mt-2 text-[13px]">
-            <span className="flex items-center gap-1 text-[#555] dark:text-[#C0C0B0]">
-              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-                <path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2" /><circle cx="9" cy="7" r="4" />
-                <path d="M23 21v-2a4 4 0 00-3-3.87" /><path d="M16 3.13a4 4 0 010 7.75" />
+    <div className="bg-[#E8E8D8] dark:bg-dark-card rounded-xl border border-[#D0D0C0] dark:border-tab-inactive overflow-hidden hover:border-gold/30 transition-colors">
+      <Link href={`/client/reservations/queue/${q.id}`} className="block p-4">
+        <div className="flex gap-3">
+          <div className="w-16 h-16 rounded-lg overflow-hidden shrink-0 bg-[#D0D0C0] dark:bg-tab-inactive flex items-center justify-center">
+            {q.stationImageUrl ? (
+              <img src={q.stationImageUrl} alt={q.stationName} className="w-full h-full object-cover" />
+            ) : (
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#9A9A8A" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                <path d="M3 17l2-7h14l2 7" /><path d="M5 17v2h2v-2M17 17v2h2v-2" /><circle cx="7.5" cy="17" r="1.5" fill="#9A9A8A" /><circle cx="16.5" cy="17" r="1.5" fill="#9A9A8A" />
               </svg>
-              {t('queue_position', { position: q.position })}
-            </span>
-            <span className="ml-auto font-bold text-gold">{q.totalPrice.toFixed(2)}$</span>
+            )}
+          </div>
+
+          <div className="flex-1 min-w-0">
+            <div className="flex items-start justify-between gap-2">
+              <h3 className="text-[15px] font-bold text-[#0A0A14] dark:text-white leading-tight truncate">
+                {q.stationName}
+              </h3>
+              <span className={`shrink-0 px-2 py-0.5 rounded-full text-[11px] font-bold ${isActive ? 'bg-gold/15 text-gold' : 'bg-blue-500/15 text-blue-500'}`}>
+                {isActive ? t('queue_in_progress') : t('queue_waiting')}
+              </span>
+            </div>
+
+            <p className="text-[13px] text-[#666] dark:text-[#B0B0A0] mt-0.5 truncate">{q.forfaitName}</p>
+
+            <div className="flex items-center gap-3 mt-2 text-[13px]">
+              <span className="flex items-center gap-1 text-[#555] dark:text-[#C0C0B0]">
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                  <path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2" /><circle cx="9" cy="7" r="4" />
+                  <path d="M23 21v-2a4 4 0 00-3-3.87" /><path d="M16 3.13a4 4 0 010 7.75" />
+                </svg>
+                {t('queue_position', { position: q.position })}
+              </span>
+              <span className="ml-auto font-bold text-gold">{q.totalPrice.toFixed(2)}$</span>
+            </div>
+
+            {q.ticketCode && (
+              <div className="mt-2 inline-flex items-center gap-1.5 px-2 py-0.5 rounded-md bg-gold/10 border border-gold/30 text-[11px] font-bold text-gold">
+                <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                  <rect x="3" y="11" width="18" height="11" rx="2" /><path d="M7 11V7a5 5 0 0110 0v4" />
+                </svg>
+                <span className="font-mono tracking-[2px]">{q.ticketCode}</span>
+              </div>
+            )}
           </div>
         </div>
-      </div>
-    </Link>
+      </Link>
+
+      {showActions && (
+        <div className="px-4 pb-3 pt-2 border-t border-[#D0D0C0] dark:border-tab-inactive flex flex-wrap items-center gap-x-4 gap-y-1.5">
+          <button
+            type="button"
+            onClick={onLeaveAndBook}
+            className="text-[13px] font-semibold text-gold hover:opacity-75 transition-opacity cursor-pointer"
+          >
+            {t('queue_leave_and_book')}
+          </button>
+          <button
+            type="button"
+            onClick={onLeave}
+            className="text-[13px] font-semibold text-lavo-error hover:opacity-75 transition-opacity cursor-pointer"
+          >
+            {t('queue_leave')}
+          </button>
+        </div>
+      )}
+    </div>
   );
 }
 

@@ -284,7 +284,7 @@ export function StationDetail({ id }: StationDetailProps) {
 
           {/* Overlay with key information - station name on top, stats below */}
           <div className="absolute top-4 right-16 max-w-[calc(100%-5rem)] bg-black/60 backdrop-blur-sm rounded-xl px-4 py-3 border border-white/20 text-white">
-            <h1 className="text-[26px] sm:text-[32px] lg:text-[38px] font-black leading-tight truncate text-right sm:text-left">
+            <h1 className="text-[20px] sm:text-[10px] lg:text-[30px] font-black leading-tight truncate text-right sm:text-left">
               {station.name}
             </h1>
             <div className="mt-2 flex flex-wrap items-center justify-end sm:justify-start gap-x-3 gap-y-1">
