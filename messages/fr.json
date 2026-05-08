@@ -980,7 +980,7 @@
         "queue_leave_title": "Quitter la file d'attente ?",
         "queue_leave_message": "Vous serez retiré de la file et remboursé intégralement.",
         "queue_leave_and_book_title": "Quitter la file et réserver ?",
-        "queue_leave_and_book_message": "Vous serez remboursé intégralement, puis redirigé vers la station pour choisir un créneau.",
+        "queue_leave_and_book_message": "Vous serez remboursé intégralement de votre place dans la file. Vous serez ensuite redirigé vers la fiche de la station pour choisir un créneau précis. Des frais de réservation peuvent s'appliquer selon la politique de la station, et le paiement sera confirmé par carte bancaire à l'étape suivante.",
         "confirm_title": "Confirmation de réservation",
         "confirm_id_label": "ID",
         "new_title": "Nouvelle réservation",

@@ -980,7 +980,7 @@
         "queue_leave_title": "Leave the queue?",
         "queue_leave_message": "You will be removed from the queue and fully refunded.",
         "queue_leave_and_book_title": "Leave the queue and book a slot?",
-        "queue_leave_and_book_message": "You will be fully refunded, then redirected to the station to pick a time slot.",
+        "queue_leave_and_book_message": "You will be fully refunded for your queue spot. You will then be redirected to the station page to pick a time slot. A reservation fee may apply per the station's policy, and payment will be confirmed by card at the next step.",
         "confirm_title": "Reservation confirmation",
         "confirm_id_label": "ID",
         "new_title": "New reservation",
