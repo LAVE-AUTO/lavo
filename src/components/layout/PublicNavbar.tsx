@@ -97,12 +97,13 @@ export function PublicNavbar({
   /* Logo always goes to the landing page regardless of auth state */
   const logoHref = '/' as const;
 
-  /* Nav links shown to logged-in users (desktop) */
+  /* Nav links shown to logged-in users (desktop). The history page is wired
+   * through a dedicated icon in the right cluster (next to the avatar) so it
+   * stays accessible without crowding the main horizontal links. */
   const authNavLinks = isClient
     ? [
         { href: '/stations',             label: t('stations') },
         { href: '/client/reservations',  label: t('reservations') },
-        { href: '/client/history',       label: t('history') },
         { href: '/favorites',            label: t('favorites') },
       ]
     : isStation
@@ -186,7 +187,28 @@ export function PublicNavbar({
             {/* Desktop actions */}
             <div className="hidden lg:flex items-center gap-2.5 ml-1">
               {((isAuthenticated && user) || (isLoading && user)) ? (
-                /* Authenticated - avatar + name trigger + dropdown */
+                <>
+                {/* Statements & invoices shortcut for clients (desktop only) */}
+                {isClient && (
+                  <Link
+                    href="/client/history"
+                    aria-label={t('history')}
+                    title={t('history')}
+                    className={`hidden lg:flex w-[34px] h-[34px] items-center justify-center rounded-full border transition-colors ${
+                      pathname.startsWith('/client/history')
+                        ? 'border-[#c8980a] bg-[rgba(200,152,10,0.15)] text-[#c8980a]'
+                        : 'border-[rgba(200,152,10,0.25)] text-[#4a6a4d] dark:text-[#7a9a7d] hover:border-[#c8980a] hover:text-[#c8980a]'
+                    }`}
+                  >
+                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                      <path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z" />
+                      <polyline points="14 2 14 8 20 8" />
+                      <line x1="9" y1="13" x2="15" y2="13" />
+                      <line x1="9" y1="17" x2="15" y2="17" />
+                    </svg>
+                  </Link>
+                )}
+                {/* Authenticated - avatar + name trigger + dropdown */}
                 <div ref={dropdownRef} className="relative">
                   <button
                     type="button"
@@ -255,6 +277,7 @@ export function PublicNavbar({
                     </div>
                   )}
                 </div>
+                </>
               ) : (
                 /* Not authenticated: merchant pill + login + register */
                 <>
