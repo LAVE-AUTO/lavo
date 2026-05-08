@@ -1229,8 +1229,9 @@
         "receipt_entry_type_reservation": "Reservation",
         "receipt_entry_type_queue": "Queue",
         "receipt_service_unknown": "Service not specified",
-        "receipt_commission": "Commission",
         "receipt_tip": "Tip",
+        "receipt_items": "Details",
+        "receipt_subtotal_line": "Subtotal",
         "detail_close": "Close"
     },
     "faq_page": {

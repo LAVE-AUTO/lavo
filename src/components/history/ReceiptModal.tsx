@@ -11,6 +11,8 @@ interface HistoryReservation {
   vehicleFormatLabel: string | null;
   entryType: 'reservation' | 'queue';
   amountPaid: number;
+  /** Tip portion of amountPaid, surfaced as a separate line. Optional. */
+  tipAmount?: number | null;
   status: 'completed' | 'cancelled';
   createdAt: string;
 }
@@ -67,6 +69,11 @@ export function ReceiptModal({ entry: e, locale, onClose }: ReceiptModalProps) {
   const serviceLabel = e.vehicleFormatLabel ?? t('receipt_service_unknown');
 
   const isCompleted = e.status === 'completed';
+
+  /* Items breakdown: service line first (subtotal = total - tip) and an
+   * optional tip line. Commission is internal accounting and never shown. */
+  const tipAmount = Number(e.tipAmount ?? 0);
+  const subtotal = Math.max(0, e.amountPaid - tipAmount);
 
   const handleDownload = async () => {
     // If Stripe receipt URL is available, open it directly
@@ -263,12 +270,79 @@ export function ReceiptModal({ entry: e, locale, onClose }: ReceiptModalProps) {
       flex-shrink: 0;
     }
 
+    /* ── Items table ── */
+    .items-table {
+      width: 100%;
+      border-collapse: collapse;
+      border: 1px solid #e8e8e0;
+      border-radius: 8px;
+      overflow: hidden;
+    }
+    .items-table td {
+      padding: 12px 14px;
+      vertical-align: middle;
+      border-bottom: 1px solid #f0f0e8;
+    }
+    .items-table tr:last-child td { border-bottom: none; }
+    .item-title {
+      font-size: 13px;
+      font-weight: 700;
+      color: #111;
+    }
+    .item-title.item-secondary {
+      font-size: 11px;
+      font-weight: 600;
+      color: #999;
+      text-transform: uppercase;
+      letter-spacing: .8px;
+    }
+    .item-sub {
+      font-size: 11px;
+      color: #888;
+      margin-top: 2px;
+    }
+    .amount-cell {
+      text-align: right;
+      font-family: 'Roboto Mono', monospace;
+      font-size: 13px;
+      font-weight: 700;
+      color: #111;
+      white-space: nowrap;
+    }
+    .amount-cell.amount-secondary {
+      color: #555;
+      font-weight: 600;
+    }
+
     /* ── Total ── */
     .total-block {
-      margin-top: 28px;
+      margin-top: 24px;
       background: #0f1a0e;
       border-radius: 10px;
-      padding: 20px 24px;
+      padding: 18px 22px;
+    }
+    .subtotal-line {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding-bottom: 10px;
+      border-bottom: 1px solid rgba(122,154,125,0.25);
+      margin-bottom: 10px;
+    }
+    .subtotal-label {
+      font-size: 11px;
+      font-weight: 700;
+      color: #7a9a7d;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+    }
+    .subtotal-amount {
+      font-family: 'Roboto Mono', monospace;
+      font-size: 13px;
+      color: #C0C0B0;
+      font-weight: 600;
+    }
+    .total-line {
       display: flex;
       align-items: center;
       justify-content: space-between;
@@ -405,31 +479,36 @@ export function ReceiptModal({ entry: e, locale, onClose }: ReceiptModalProps) {
         </div>
       </div>
 
-      <div class="section-title">${t('receipt_forfait')}</div>
-      <div class="info-grid">
-        <div class="info-cell">
-          <div class="cell-label">${t('receipt_service')}</div>
-          <div class="cell-value">${escapeHtml(serviceLabel)}</div>
-        </div>
-        <div class="info-cell">
-          <div class="cell-label">${t('receipt_entry_type')}</div>
-          <div class="cell-value">${escapeHtml(typeLabel)}</div>
-        </div>
-        <div class="info-cell">
-          <div class="cell-label">${t('receipt_address')}</div>
-          <div class="cell-value">${escapeHtml(e.stationAddress)}</div>
-        </div>
-        <div class="info-cell">
-          <div class="cell-label">${t('receipt_status')}</div>
-          <div class="cell-value">
-            <span class="status-chip status-${e.status}">${t(`status_${e.status}`)}</span>
-          </div>
-        </div>
-      </div>
+      <div class="section-title">${t('receipt_items')}</div>
+      <table class="items-table">
+        <tbody>
+          <tr>
+            <td>
+              <div class="item-title">${escapeHtml(serviceLabel)}</div>
+              <div class="item-sub">${escapeHtml(typeLabel)}</div>
+            </td>
+            <td class="amount-cell">${subtotal.toFixed(2)} $</td>
+          </tr>
+          ${tipAmount > 0 ? `<tr>
+            <td><div class="item-title">${escapeHtml(t('receipt_tip'))}</div></td>
+            <td class="amount-cell amount-secondary">${tipAmount.toFixed(2)} $</td>
+          </tr>` : ''}
+          <tr>
+            <td><div class="item-title item-secondary">${t('receipt_status')}</div></td>
+            <td class="amount-cell"><span class="status-chip status-${e.status}">${t(`status_${e.status}`)}</span></td>
+          </tr>
+        </tbody>
+      </table>
 
       <div class="total-block">
-        <span class="total-label">${t('receipt_total')}</span>
-        <span class="total-amount">${e.amountPaid.toFixed(2)}$</span>
+        ${tipAmount > 0 ? `<div class="subtotal-line">
+          <span class="subtotal-label">${t('receipt_subtotal_line')}</span>
+          <span class="subtotal-amount">${subtotal.toFixed(2)} $</span>
+        </div>` : ''}
+        <div class="total-line">
+          <span class="total-label">${t('receipt_total')}</span>
+          <span class="total-amount">${e.amountPaid.toFixed(2)} $</span>
+        </div>
       </div>
 
     </div>
@@ -520,23 +599,47 @@ export function ReceiptModal({ entry: e, locale, onClose }: ReceiptModalProps) {
               </div>
             </div>
 
-            {/* Service */}
+            {/* Items breakdown */}
             <div>
-              <p className="text-[10px] font-black text-gold uppercase tracking-widest mb-2">{t('receipt_forfait')}</p>
-              <div className="rounded-lg border border-[#E0E0D0] dark:border-tab-inactive overflow-hidden">
-                <div className="grid grid-cols-2">
-                  <ReceiptRowGrid label={t('receipt_service')}  value={serviceLabel}      borderRight />
-                  <ReceiptRowGrid label={t('receipt_entry_type')} value={typeLabel}                />
-                  <ReceiptRowGrid label={t('receipt_address')} value={e.stationAddress} borderRight borderTop />
-                  <ReceiptRowGrid label={t('receipt_status')}   value={t(`status_${e.status}`)} borderTop chip={e.status} />
+              <p className="text-[10px] font-black text-gold uppercase tracking-widest mb-2">{t('receipt_items')}</p>
+              <div className="rounded-lg border border-[#E0E0D0] dark:border-tab-inactive overflow-hidden bg-white dark:bg-dark-bg/30">
+                {/* Service line */}
+                <div className="flex items-start justify-between gap-4 px-3.5 py-3 border-b border-[#E0E0D0] dark:border-tab-inactive">
+                  <div className="min-w-0">
+                    <div className="text-[13px] font-bold text-[#0A0A14] dark:text-white truncate">{serviceLabel}</div>
+                    <div className="text-[11px] text-[#888] dark:text-[#9A9A8A] mt-0.5">{typeLabel}</div>
+                  </div>
+                  <span className="text-[13px] font-mono font-bold text-[#0A0A14] dark:text-white whitespace-nowrap">{subtotal.toFixed(2)}$</span>
+                </div>
+                {/* Tip line (only when present) */}
+                {tipAmount > 0 && (
+                  <div className="flex items-start justify-between gap-4 px-3.5 py-3 border-b border-[#E0E0D0] dark:border-tab-inactive">
+                    <div className="text-[13px] font-semibold text-[#555] dark:text-[#C0C0B0]">{t('receipt_tip')}</div>
+                    <span className="text-[13px] font-mono font-semibold text-[#555] dark:text-[#C0C0B0] whitespace-nowrap">{tipAmount.toFixed(2)}$</span>
+                  </div>
+                )}
+                {/* Status row */}
+                <div className="flex items-center justify-between gap-4 px-3.5 py-2.5">
+                  <span className="text-[11px] font-bold text-[#999] uppercase tracking-wide">{t('receipt_status')}</span>
+                  <span className={`text-[11px] font-bold px-2 py-0.5 rounded-full ${e.status === 'completed' ? 'bg-lavo-success/15 text-lavo-success' : 'bg-lavo-error/15 text-lavo-error'}`}>
+                    {t(`status_${e.status}`)}
+                  </span>
                 </div>
               </div>
             </div>
 
-            {/* Total */}
-            <div className="flex items-center justify-between bg-[#0f1a0e] rounded-xl px-4 py-4">
-              <span className="text-[12px] font-bold text-[#7a9a7d] uppercase tracking-widest">{t('receipt_total')}</span>
-              <span className="text-[26px] font-black text-gold leading-none">{e.amountPaid.toFixed(2)}$</span>
+            {/* Subtotal + Total */}
+            <div className="rounded-xl bg-[#0f1a0e] px-4 py-3 space-y-2">
+              {tipAmount > 0 && (
+                <div className="flex items-center justify-between">
+                  <span className="text-[11px] font-semibold text-[#7a9a7d] uppercase tracking-wider">{t('receipt_subtotal_line')}</span>
+                  <span className="text-[13px] font-mono text-[#C0C0B0] whitespace-nowrap">{subtotal.toFixed(2)}$</span>
+                </div>
+              )}
+              <div className="flex items-center justify-between">
+                <span className="text-[12px] font-bold text-[#7a9a7d] uppercase tracking-widest">{t('receipt_total')}</span>
+                <span className="text-[26px] font-black text-gold leading-none whitespace-nowrap">{e.amountPaid.toFixed(2)}$</span>
+              </div>
             </div>
 
             <p className="text-[11px] text-[#AAA] text-center pb-1">{t('receipt_footer')}</p>
