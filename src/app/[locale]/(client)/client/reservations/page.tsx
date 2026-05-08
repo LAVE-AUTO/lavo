@@ -401,13 +401,13 @@ export default function ClientReservationsPage() {
   return (
     <main className="min-h-screen bg-[#F5F5E6] dark:bg-[#0F0F0D] pb-24 sm:pb-8">
       {/* Header */}
-      <div className="px-4 pt-6 pb-4 max-w-2xl mx-auto">
-        <h1 className="text-[22px] font-black text-[#0A0A14] dark:text-white">{t('title')}</h1>
+      <div className="px-4 sm:px-6 lg:px-8 pt-6 pb-4 max-w-6xl mx-auto">
+        <h1 className="text-[22px] sm:text-[26px] font-black text-[#0A0A14] dark:text-white">{t('title')}</h1>
       </div>
 
       {/* Rating prompt - shown when a completed reservation has not yet been rated */}
       {pendingRating && (
-        <div className="px-4 max-w-2xl mx-auto mb-4">
+        <div className="px-4 sm:px-6 lg:px-8 max-w-6xl mx-auto mb-4">
           <div className="flex items-center gap-3 bg-gold/10 border border-gold/30 rounded-xl p-4">
             <div className="w-10 h-10 rounded-full bg-gold/20 flex items-center justify-center shrink-0">
               <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#af8408" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
@@ -430,7 +430,7 @@ export default function ClientReservationsPage() {
 
       {/* Tip prompt - shown when a completed reservation has not yet received a tip */}
       {pendingTip && (
-        <div className="px-4 max-w-2xl mx-auto mb-4">
+        <div className="px-4 sm:px-6 lg:px-8 max-w-6xl mx-auto mb-4">
           <div className="flex items-center gap-3 bg-[#E8E8D8] dark:bg-dark-card border border-[#D0D0C0] dark:border-tab-inactive rounded-xl p-4">
             <div className="w-10 h-10 rounded-full bg-gold/20 flex items-center justify-center shrink-0">
               <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#af8408" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
@@ -452,8 +452,8 @@ export default function ClientReservationsPage() {
       )}
 
       {/* Tabs */}
-      <div className="px-4 max-w-2xl mx-auto">
-        <div className="flex bg-[#E0E0D0] dark:bg-dark-card rounded-xl p-1 mb-6">
+      <div className="px-4 sm:px-6 lg:px-8 max-w-6xl mx-auto">
+        <div className="flex bg-[#E0E0D0] dark:bg-dark-card rounded-xl p-1 mb-6 sm:max-w-md">
           {(['reservations', 'queue'] as const).map((key) => (
             <button
               key={key}
@@ -476,7 +476,7 @@ export default function ClientReservationsPage() {
       </div>
 
       {/* Content */}
-      <div className="px-4 max-w-2xl mx-auto">
+      <div className="px-4 sm:px-6 lg:px-8 max-w-6xl mx-auto">
         {tab === 'reservations' ? (
           <div className="space-y-6">
             {upcoming.length > 0 && (
@@ -485,7 +485,7 @@ export default function ClientReservationsPage() {
                   {t('upcoming')}
                   <span className="ml-2 text-[12px] font-semibold opacity-70">({upcoming.length})</span>
                 </h2>
-                <div className="space-y-3">
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-3">
                   {upcoming.map((res) => (
                     <ReservationCard
                       key={res.id}
@@ -510,7 +510,7 @@ export default function ClientReservationsPage() {
                   {t('past')}
                   <span className="ml-2 text-[12px] font-semibold opacity-70">({past.length})</span>
                 </h2>
-                <div className="space-y-3">
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-3">
                   {past.map((res) => (
                     <ReservationCard
                       key={res.id}
@@ -535,7 +535,7 @@ export default function ClientReservationsPage() {
             )}
           </div>
         ) : (
-          <div className="space-y-3">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-3">
             {queueEntries.length > 0 ? (
               queueEntries.map((entry) => (
                 <QueueCard
@@ -547,13 +547,15 @@ export default function ClientReservationsPage() {
                 />
               ))
             ) : (
-              <EmptyState
-                title={t('empty_queue_title')}
-                description={t('empty_queue_desc')}
-                ctaLabel={t('empty_queue_cta')}
-                ctaHref="/stations"
-                historyLabel={t('empty_queue_history')}
-              />
+              <div className="lg:col-span-2">
+                <EmptyState
+                  title={t('empty_queue_title')}
+                  description={t('empty_queue_desc')}
+                  ctaLabel={t('empty_queue_cta')}
+                  ctaHref="/stations"
+                  historyLabel={t('empty_queue_history')}
+                />
+              </div>
             )}
           </div>
         )}
