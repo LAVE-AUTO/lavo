@@ -132,6 +132,17 @@ function isPastReservation(r: ClientReservation): boolean {
   return new Date(r.slotStart).getTime() <= Date.now();
 }
 
+/**
+ * Hide internal `pending_payment` / `pending` states from the UI: payment
+ * runs through Stripe so the client should always see "confirmed" once the
+ * reservation row exists. The DB keeps the precise status for the backend
+ * lifecycle, this is purely display normalisation.
+ */
+function displayStatus(status: ReservationStatus): ReservationStatus {
+  if (status === 'pending_payment' || status === 'pending') return 'confirmed';
+  return status;
+}
+
 function slotToDateParts(startTime: string): { date: string; timeSlot: string } {
   const d = new Date(startTime);
   const yyyy = d.getFullYear();
@@ -655,8 +666,8 @@ function ReservationCard({
               <h3 className="text-[15px] font-bold text-[#0A0A14] dark:text-white leading-tight truncate">
                 {r.stationName}
               </h3>
-              <span className={`shrink-0 px-2 py-0.5 rounded-full text-[11px] font-bold ${statusColors[r.status] || 'bg-gray-200 text-gray-600'}`}>
-                {t(`status_${r.status}`)}
+              <span className={`shrink-0 px-2 py-0.5 rounded-full text-[11px] font-bold ${statusColors[displayStatus(r.status)] || 'bg-gray-200 text-gray-600'}`}>
+                {t(`status_${displayStatus(r.status)}`)}
               </span>
             </div>
 

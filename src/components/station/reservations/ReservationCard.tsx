@@ -43,8 +43,12 @@ export function ReservationCard({ entry, onValidate, onStart, onCancel, onExtraT
   const [codeVisible, setCodeVisible] = useState(false);
   const [showTimePicker, setShowTimePicker] = useState(false);
 
-  const st = STATUS_MAP[entry.status] ?? STATUS_MAP.pending;
-  const accent = ACCENT_MAP[entry.status] ?? '#888888';
+  /* `pending_payment` is a transient internal lifecycle (Stripe card auth in
+   * flight). The merchant doesn't need to see it - the booking exists and
+   * the slot is held. We surface "confirmed" until the webhook reconciles. */
+  const displayStatus: EntryStatus = entry.status === 'pending_payment' ? 'confirmed' : entry.status;
+  const st = STATUS_MAP[displayStatus] ?? STATUS_MAP.pending;
+  const accent = ACCENT_MAP[displayStatus] ?? '#888888';
   const clientLabel = `${t('client_label')} #${entry.user_id.slice(0, 8)}`;
   const time = new Date(entry.created_at).toLocaleTimeString('fr-CA', { hour: '2-digit', minute: '2-digit' });
   const isReservation = entry.entry_type === 'reservation';

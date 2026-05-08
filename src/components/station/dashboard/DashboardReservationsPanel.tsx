@@ -80,7 +80,10 @@ function ReservationCard({
   const [codeVisible, setCodeVisible] = useState(false);
   const [showTimePicker, setShowTimePicker] = useState(false);
 
-  const cfg = STATUS_CONFIG[item.status] ?? STATUS_CONFIG.pending;
+  // Hide internal pending_payment lifecycle: surface as "confirmed" since the
+  // booking exists and the slot is held; the Stripe webhook will reconcile.
+  const _displayStatusA = item.status === 'pending_payment' ? 'confirmed' : item.status;
+  const cfg = STATUS_CONFIG[_displayStatusA] ?? STATUS_CONFIG.pending;
   const timeStart = formatTime(item.slotStart, locale);
   const timeEnd = formatTime(item.slotEnd, locale);
   const color = avatarColor(item.clientName);
@@ -205,7 +208,8 @@ function ReservationCard({
 
 function DoneCard({ item, locale }: { item: ReservationItem; locale: string }) {
   const t = useTranslations('station_dashboard');
-  const cfg = STATUS_CONFIG[item.status] ?? STATUS_CONFIG.completed;
+  const _displayStatusB = item.status === 'pending_payment' ? 'confirmed' : item.status;
+  const cfg = STATUS_CONFIG[_displayStatusB] ?? STATUS_CONFIG.completed;
   return (
     <div className="flex items-center gap-3 rounded-xl border border-[#F0EDE4] bg-[#F7F6F2] px-4 py-2.5 opacity-60 dark:border-[#1A2A14] dark:bg-[#0F1A0C]">
       <div className="font-mono text-[12px] font-bold text-[#888] dark:text-[#9A9A8A]">

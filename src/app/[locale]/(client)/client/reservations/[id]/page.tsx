@@ -284,9 +284,13 @@ export default function ReservationDetailPage() {
     in_progress:     'bg-gold/15 text-gold',
     completed:       'bg-[#999]/15 text-[#666]',
     cancelled:       'bg-lavo-error/15 text-lavo-error',
-    pending:         'bg-blue-500/15 text-blue-500',
-    pending_payment: 'bg-[#999]/15 text-[#888]',
   };
+  /* Hide the internal `pending_payment` / `pending` lifecycle from the UI:
+   * once the booking exists the client has already paid via Stripe, so we
+   * surface "confirmed" until the webhook reconciles. */
+  const displayedStatus = (reservation.status === 'pending_payment' || reservation.status === 'pending')
+    ? 'confirmed'
+    : reservation.status;
 
   const handleStartNavigation = () => {
     const destination = encodeURIComponent(`${reservation.stationLatitude},${reservation.stationLongitude}`);
@@ -405,8 +409,8 @@ export default function ReservationDetailPage() {
             <h1 className="text-[20px] font-black text-white drop-shadow">{reservation.stationName}</h1>
             <p className="text-[13px] text-white/80">{reservation.stationAddress}</p>
           </div>
-          <span className={`absolute top-3 right-3 px-3 py-1 rounded-full text-[12px] font-bold ${statusColors[reservation.status] || 'bg-gray-200 text-gray-600'}`}>
-            {t(`status_${reservation.status}`)}
+          <span className={`absolute top-3 right-3 px-3 py-1 rounded-full text-[12px] font-bold ${statusColors[displayedStatus] || 'bg-gray-200 text-gray-600'}`}>
+            {t(`status_${displayedStatus}`)}
           </span>
         </div>
 
