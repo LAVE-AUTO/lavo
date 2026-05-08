@@ -2465,7 +2465,13 @@
         "btn_view_station": "Voir la fiche station",
         "btn_back_reservations": "Retour à mes réservations",
         "already_tipped_title": "Pourboire déjà envoyé",
-        "already_tipped_desc": "Vous avez déjà laissé un pourboire pour cette réservation."
+        "already_tipped_desc": "Vous avez déjà laissé un pourboire pour cette réservation.",
+        "error_submit": "Impossible d'enregistrer le pourboire. Veuillez réessayer.",
+        "error_stripe": "Le paiement a échoué. Vérifiez vos informations de carte.",
+        "pay_title": "Confirmer le paiement",
+        "pay_subtitle": "Saisissez votre carte pour finaliser le pourboire.",
+        "payment_secured": "Paiement sécurisé via Stripe",
+        "btn_pay": "Payer {amount} $"
     },
     "signal_delay": {
         "page_title": "Signaler un retard",

@@ -2465,7 +2465,13 @@
         "btn_view_station": "View station",
         "btn_back_reservations": "View my reservations",
         "already_tipped_title": "Tip already sent",
-        "already_tipped_desc": "You have already left a tip for this reservation."
+        "already_tipped_desc": "You have already left a tip for this reservation.",
+        "error_submit": "Could not save the tip. Please try again.",
+        "error_stripe": "Payment failed. Please check your card details.",
+        "pay_title": "Confirm payment",
+        "pay_subtitle": "Enter your card to finalise the tip.",
+        "payment_secured": "Secure payment by Stripe",
+        "btn_pay": "Pay {amount} $"
     },
     "signal_delay": {
         "page_title": "Signal a delay",

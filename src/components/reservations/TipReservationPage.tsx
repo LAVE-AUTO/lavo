@@ -5,8 +5,30 @@ import type { ReactNode } from 'react';
 import { useTranslations, useLocale } from 'next-intl';
 import { Link } from '@/i18n/navigation';
 import { useParams } from 'next/navigation';
-import { postWithApi } from '@/services/axios-service';
+import { loadStripe } from '@stripe/stripe-js';
+import { Elements, CardElement, useStripe, useElements } from '@stripe/react-stripe-js';
+import { getFromApi, postWithApi } from '@/services/axios-service';
 import { RESERVATIONS_MOCK_ENABLED, findMockReservation } from '@/data/reservations-mock';
+
+/** Lazy Stripe singleton (deferred until first render to avoid SSR issues). */
+let stripePromise: ReturnType<typeof loadStripe> | null = null;
+function getStripePromise() {
+  if (stripePromise !== null) return stripePromise;
+  const key = process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY;
+  if (key) stripePromise = loadStripe(key);
+  return stripePromise;
+}
+
+interface RichEntryShape {
+  id: string;
+  status: string;
+  station_id: string;
+  station: { name: string | null; address: string | null; city: string | null } | null;
+  vehicle_format: { label: string } | null;
+  amount_paid: string | null;
+  slot_start_time: string | null;
+  is_tipped?: boolean;
+}
 
 /* ------------------------------------------------------------------ */
 /* Constants                                                            */
@@ -18,7 +40,7 @@ const PRESET_AMOUNTS = [2, 5, 10, 15];
 /* Types                                                                */
 /* ------------------------------------------------------------------ */
 
-type PageState = 'loading' | 'error' | 'already_tipped' | 'form' | 'success';
+type PageState = 'loading' | 'error' | 'already_tipped' | 'form' | 'pay' | 'success';
 
 interface ResInfo {
   stationId:   string;
@@ -48,6 +70,8 @@ export default function TipReservationPage() {
   const [preset, setPreset]         = useState<number | null>(null);
   const [custom, setCustom]         = useState('');
   const [submitting, setSubmitting] = useState(false);
+  const [clientSecret, setClientSecret] = useState<string | null>(null);
+  const [submitError, setSubmitError]   = useState<string | null>(null);
 
   const loadData = useCallback(async () => {
     setPageState('loading');
@@ -70,9 +94,33 @@ export default function TipReservationPage() {
       return;
     }
 
-    // TODO: connect to API once endpoints are available
-    // GET /me/entries/:id - verify status === 'completed'; check tip_amount for already_tipped
-    setPageState('error');
+    /* /me/entries returns the rich entry shape with denormalised station +
+     * vehicle format + slot times + is_tipped flag, so a single fetch is
+     * enough. The endpoint paginates - 100 is well above any realistic count
+     * of recent entries for a single client. */
+    const [ok, data] = await getFromApi<{ data: { entries: RichEntryShape[] } }>('/me/entries?per_page=100');
+    if (!mountedRef.current) return;
+    if (!ok || !data || !('data' in data)) { setPageState('error'); return; }
+
+    const entries = (data as { data: { entries: RichEntryShape[] } }).data?.entries ?? [];
+    const entry = entries.find((e) => e.id === id);
+    if (!entry) { setPageState('error'); return; }
+    if (entry.status !== 'completed') { setPageState('error'); return; }
+    if (entry.is_tipped) { setPageState('already_tipped'); return; }
+
+    const slotDate = entry.slot_start_time ? new Date(entry.slot_start_time) : new Date(entry.id);
+    setRes({
+      stationId:   entry.station_id,
+      stationName: entry.station?.name ?? '',
+      forfaitName: entry.vehicle_format?.label ?? '-',
+      dateLabel: Number.isNaN(slotDate.getTime())
+        ? ''
+        : slotDate.toLocaleDateString(locale === 'en' ? 'en-CA' : 'fr-CA', {
+            weekday: 'short', day: 'numeric', month: 'long', year: 'numeric',
+          }),
+      totalPrice: parseFloat(entry.amount_paid ?? '0'),
+    });
+    setPageState('form');
   }, [id, locale]);
 
   useEffect(() => { loadData(); }, [loadData]);
@@ -98,9 +146,8 @@ export default function TipReservationPage() {
     const amount = resolvedAmount();
     if (amount <= 0 || submitting) return;
     setSubmitting(true);
+    setSubmitError(null);
 
-    // TODO: connect to API once endpoint is available
-    // POST /reservations/:id/tip { amount }
     if (RESERVATIONS_MOCK_ENABLED) {
       await new Promise((r) => setTimeout(r, 800));
       if (!mountedRef.current) return;
@@ -109,10 +156,31 @@ export default function TipReservationPage() {
       return;
     }
 
-    const [ok] = await postWithApi(`/reservations/${id}/tip`, { amount });
+    /* The endpoint creates the tip row and returns a Stripe `clientSecret`.
+     * The card payment confirmation happens in the next step (StripeCardForm)
+     * so we move the page state to `pay` once the secret is available. */
+    const [ok, data] = await postWithApi<{ data: { clientSecret?: string; client_secret?: string } }>(
+      `/reservations/${id}/tip`,
+      { amount },
+    );
     if (!mountedRef.current) return;
     setSubmitting(false);
-    if (ok) setPageState('success');
+    if (!ok) {
+      const err = data as { code?: string; message?: string } | null;
+      if (err?.code === 'TIP_ALREADY_EXISTS') { setPageState('already_tipped'); return; }
+      setSubmitError(err?.message ?? t('error_submit'));
+      return;
+    }
+    const payload = (data as { data: { clientSecret?: string; client_secret?: string } }).data;
+    const secret = payload?.clientSecret ?? payload?.client_secret ?? null;
+    if (!secret) {
+      /* Backend acknowledged but no Stripe secret means a free station path -
+       * surface success directly. */
+      setPageState('success');
+      return;
+    }
+    setClientSecret(secret);
+    setPageState('pay');
   };
 
   /* ---- Non-form states ---- */
@@ -153,6 +221,18 @@ export default function TipReservationPage() {
   }
   if (pageState === 'success') {
     return <SuccessView stationId={res?.stationId ?? ''} />;
+  }
+  if (pageState === 'pay' && clientSecret) {
+    return (
+      <Elements stripe={getStripePromise()} options={{ clientSecret }}>
+        <TipPayStep
+          amount={resolvedAmount()}
+          clientSecret={clientSecret}
+          onBack={() => { setPageState('form'); setClientSecret(null); }}
+          onSuccess={() => setPageState('success')}
+        />
+      </Elements>
+    );
   }
 
   const amount = resolvedAmount();
@@ -238,6 +318,10 @@ export default function TipReservationPage() {
             <p className="text-[14px] font-bold text-[#0A0A14] dark:text-white">{t('amount_preview')}</p>
             <p className="text-[18px] font-black text-gold">{amount.toFixed(2)}$</p>
           </div>
+        )}
+
+        {submitError && (
+          <p className="text-[13px] text-lavo-error text-center" role="alert">{submitError}</p>
         )}
 
         {/* Submit */}
@@ -347,6 +431,119 @@ function StatusView({
             {backLabel}
           </Link>
         )}
+      </div>
+    </main>
+  );
+}
+
+/**
+ * Stripe card payment step for the tip flow. Reuses the same card-element
+ * pattern as the booking PaymentStep, scoped to the tip's PaymentIntent.
+ */
+function TipPayStep({
+  amount,
+  clientSecret,
+  onBack,
+  onSuccess,
+}: {
+  amount: number;
+  clientSecret: string;
+  onBack: () => void;
+  onSuccess: () => void;
+}) {
+  const t = useTranslations('tip');
+  const stripe = useStripe();
+  const elements = useElements();
+  const [stripeError, setStripeError] = useState<string | null>(null);
+  const [processing, setProcessing] = useState(false);
+
+  const handlePay = async () => {
+    if (!stripe || !elements) return;
+    const cardElement = elements.getElement(CardElement);
+    if (!cardElement) return;
+    setProcessing(true);
+    setStripeError(null);
+    try {
+      const { error } = await stripe.confirmCardPayment(clientSecret, {
+        payment_method: { card: cardElement },
+      });
+      if (error) {
+        setStripeError(error.message ?? t('error_stripe'));
+        return;
+      }
+      onSuccess();
+    } catch {
+      setStripeError(t('error_stripe'));
+    } finally {
+      setProcessing(false);
+    }
+  };
+
+  return (
+    <main className="min-h-screen bg-[#F5F5E6] dark:bg-[#0F0F0D] pb-24 sm:pb-8">
+      <div className="px-4 pt-4 pb-2 max-w-2xl mx-auto">
+        <button
+          type="button"
+          onClick={onBack}
+          className="inline-flex items-center gap-2 text-[14px] font-bold text-gold hover:text-gold-hover transition-colors cursor-pointer"
+        >
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+            <polyline points="15 18 9 12 15 6" />
+          </svg>
+          {t('btn_back')}
+        </button>
+        <h1 className="text-[22px] font-black text-[#0A0A14] dark:text-white mt-3">{t('pay_title')}</h1>
+        <p className="text-[14px] text-[#666] dark:text-[#B0B0A0] mt-1">{t('pay_subtitle')}</p>
+      </div>
+
+      <div className="px-4 max-w-2xl mx-auto space-y-4">
+        <div className="bg-[#E8E8D8] dark:bg-dark-card rounded-xl border border-[#D0D0C0] dark:border-tab-inactive p-5 space-y-4">
+          <div className="flex items-center gap-2">
+            <svg width="28" height="18" viewBox="0 0 28 18" fill="none" aria-hidden="true">
+              <rect width="28" height="18" rx="3" fill="#635BFF" />
+              <text x="5" y="13" fontSize="10" fill="white" fontWeight="bold">S</text>
+            </svg>
+            <span className="text-[13px] font-bold text-[#555] dark:text-[#A0A090]">{t('payment_secured')}</span>
+          </div>
+          <div className="rounded-lg border-2 border-[#D0D0C0] dark:border-tab-inactive bg-white dark:bg-dark-bg/40 px-4 py-3">
+            <CardElement
+              options={{
+                style: {
+                  base: {
+                    fontSize: '15px',
+                    color: '#000C1F',
+                    '::placeholder': { color: '#BBBBBB' },
+                    fontFamily: 'Rajdhani, sans-serif',
+                  },
+                  invalid: { color: '#E8472A' },
+                },
+                hidePostalCode: true,
+              }}
+            />
+          </div>
+          {stripeError && (
+            <p className="text-[13px] text-lavo-error" role="alert">{stripeError}</p>
+          )}
+        </div>
+
+        <div className="bg-gold/10 border-2 border-gold rounded-xl px-4 py-3 flex items-center justify-between">
+          <span className="text-[14px] font-bold text-[#0A0A14] dark:text-white">{t('amount_preview')}</span>
+          <span className="text-[20px] font-black text-gold">{amount.toFixed(2)}$</span>
+        </div>
+
+        <button
+          type="button"
+          onClick={handlePay}
+          disabled={!stripe || processing}
+          className="w-full py-3.5 rounded-[10px] bg-gold hover:bg-gold-hover text-dark-bg text-[15px] font-black transition-colors cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+        >
+          {processing && (
+            <svg className="animate-spin" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" aria-hidden="true">
+              <path d="M21 12a9 9 0 11-6.219-8.56" />
+            </svg>
+          )}
+          {processing ? t('processing') : t('btn_pay', { amount: amount.toFixed(2) })}
+        </button>
       </div>
     </main>
   );
