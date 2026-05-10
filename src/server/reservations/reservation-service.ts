@@ -852,6 +852,133 @@ export async function upgradeQueueToReservation(
   return { entry: updated, clientSecret };
 }
 
+/**
+ * Upgrades a queue entry to a reservation using a dynamic `start_time` selected
+ * from the per-post availability flow. This aligns queue upgrade UX with the
+ * booking flow that relies on real-time availability (duration + opening window).
+ */
+export async function upgradeQueueToReservationByStartTime(
+  entryId: string,
+  userId: string,
+  startTimeIso: string,
+  stationId: string,
+  stationStripeAccountId: string
+): Promise<UpgradeToReservationResult> {
+  const entry = await findEntryByIdAndUser(entryId, userId);
+  if (!entry) throw new NotFoundError('Entry not found');
+  if (entry.entry_type !== 'queue') throw new ConflictError('Entry is not a queue entry');
+  if (entry.station_id !== stationId) throw new NotFoundError('Entry does not belong to this station');
+
+  const config = await getConfigByStationId(stationId);
+  const surcharge = config?.reservation_surcharge ? parseDecimal(String(config.reservation_surcharge)) : 0;
+  const amountTotal = parseDecimal(String(entry.amount_paid)) + surcharge;
+  if (amountTotal <= 0) throw new ConflictError('Invalid amount for upgrade');
+
+  const durationMin = Math.max(1, config?.wash_duration_minutes ?? 30);
+  const preMatch = await findMatchingAvailabilitySlot(stationId, startTimeIso, durationMin);
+  if (!preMatch) throw new SlotFullError();
+
+  const startTime = new Date(startTimeIso);
+  const endTime = new Date(startTime.getTime() + durationMin * 60_000);
+  const { maxDays, maxAdvanceMs } = await getMaxAdvanceBookingMs();
+  if (startTime.getTime() - Date.now() > maxAdvanceMs) {
+    throw new ConflictError(`Reservations cannot be made more than ${maxDays} days in advance`);
+  }
+
+  const split = await computeReservationSplit({ amountTotal, isQrBooking: false });
+  const amountCents = Math.round(amountTotal * 100);
+  const commissionCents = Math.round(split.commissionAmount * 100);
+
+  const { paymentIntentId, clientSecret } = await createPaymentIntent({
+    amountCents,
+    userId,
+    stationId,
+    stationStripeAccountId,
+    commissionCents,
+    metadata: {
+      vehicle_format_id: entry.vehicle_format_id ?? '',
+      upgraded_from_queue: 'true',
+      start_time: startTime.toISOString(),
+    },
+  });
+
+  const updated = await db.transaction(async (tx) => {
+    await tx.execute(
+      sqlInline`SELECT id FROM station_posts WHERE station_id = ${stationId} AND is_active = true FOR UPDATE`
+    );
+    const fresh = await findMatchingAvailabilitySlot(stationId, startTimeIso, durationMin);
+    if (!fresh) throw new SlotFullError();
+
+    const [slot] = await tx
+      .insert(timeSlotsTable)
+      .values({
+        station_id: stationId,
+        start_time: startTime,
+        end_time: endTime,
+        capacity: 1,
+        booked_count: 1,
+        status: 'available',
+      })
+      .returning();
+    if (!slot) throw new Error('Insert time slot failed');
+
+    const oldPosition = entry.queue_position ?? 0;
+    await shiftQueuePositions(stationId, oldPosition + 1, -1, tx);
+    return updateEntry(
+      entryId,
+      {
+        entry_type: 'reservation',
+        post_id: fresh.post_id,
+        time_slot_id: slot.id,
+        queue_position: null,
+        status: STATUS_PENDING_PAYMENT,
+        amount_paid: toDecimal(amountTotal),
+        booking_source: 'standard',
+        commission_rate: split.commissionRate,
+        commission_amount: toDecimal(split.commissionAmount),
+        station_payout: toDecimal(split.stationPayout),
+        stripe_payment_id: paymentIntentId,
+      },
+      tx
+    );
+  }).catch(async (txError: unknown) => {
+    try {
+      await cancelPaymentIntent(paymentIntentId);
+    } catch (cancelErr) {
+      console.error('[UPGRADE_TO_RESERVATION_BY_START_TIME] Failed to cancel orphaned PI after TX failure', {
+        paymentIntentId,
+        error: cancelErr instanceof Error ? cancelErr.message : String(cancelErr),
+      });
+    }
+    throw txError;
+  });
+
+  try {
+    await updatePaymentIntentMetadata(paymentIntentId, { reservation_id: entryId });
+  } catch (e) {
+    console.error('[UPGRADE_TO_RESERVATION_BY_START_TIME] PI metadata update failed - non-fatal', {
+      entryId,
+      paymentIntentId,
+      error: e instanceof Error ? e.message : String(e),
+    });
+  }
+
+  await notifyEntry({
+    entryId,
+    userId,
+    stationId,
+    type: 'reservation_created',
+  });
+  await notifyStationFeed({
+    stationId,
+    entryId,
+    kind: 'queue_upgraded_to_reservation',
+    body: `Client #${userId.slice(0, 4).toUpperCase()} · ${amountTotal.toFixed(2)} $`,
+  });
+
+  return { entry: updated, clientSecret };
+}
+
 
 const VALID_STATION_TRANSITIONS: Record<string, readonly string[]> = {
   pending_payment: ['in_progress', 'cancelled'],

@@ -1,8 +1,7 @@
 'use client';
 
-import { useState, useEffect, useRef, useMemo } from 'react';
+import { useState, useEffect, useRef, useMemo, useCallback } from 'react';
 import { useTranslations, useLocale } from 'next-intl';
-import { useRouter } from '@/i18n/navigation';
 import { getFromApi, postWithApi } from '@/services/axios-service';
 import { useToast } from '@/context/toast-context';
 import { loadStripe } from '@stripe/stripe-js';
@@ -17,13 +16,9 @@ function getStripePromise() {
   return stripePromise;
 }
 
-
-interface ApiTimeSlot {
-  id: string;
+interface AvailabilitySlot {
   start_time: string;
-  capacity: number;
-  booked_count: number;
-  status: string;
+  end_time: string;
 }
 
 interface Props {
@@ -132,7 +127,6 @@ function UpgradeCardForm({
 export default function UpgradeToReservationModal({ entryId, stationId, onClose, onSuccess }: Props) {
   const t = useTranslations('queue_detail');
   const locale = useLocale();
-  const router = useRouter();
   const { success: toastSuccess, error: toastError } = useToast();
   const dialogRef = useRef<HTMLDivElement | null>(null);
   const mountedRef = useRef(true);
@@ -146,22 +140,49 @@ export default function UpgradeToReservationModal({ entryId, stationId, onClose,
   const [clientSecret, setClientSecret] = useState<string | null>(null);
   const [reservationId, setReservationId] = useState<string | null>(null);
 
+  const loadAvailableSlots = useCallback(async (): Promise<AvailableSlot[]> => {
+    const [stationOk, stationData] = await getFromApi(`/stations/${stationId}`);
+    if (!stationOk) return [];
+    const station = (stationData as { data: { stationConfig?: { wash_duration_minutes?: number } | null } }).data;
+    const durationMin = Math.max(1, station?.stationConfig?.wash_duration_minutes ?? 30);
+
+    const now = new Date();
+    const days = Array.from({ length: 7 }).map((_, i) => {
+      const d = new Date(now);
+      d.setDate(d.getDate() + i);
+      return d.toISOString().slice(0, 10);
+    });
+
+    const slotsByStart = new Map<string, AvailabilitySlot>();
+    for (const day of days) {
+      const [ok, data] = await getFromApi(
+        `/stations/${stationId}/availability?date=${day}&duration_min=${durationMin}`
+      );
+      if (!ok) continue;
+      const slots = (data as { data?: { slots?: AvailabilitySlot[] } })?.data?.slots ?? [];
+      for (const s of slots) {
+        if (!slotsByStart.has(s.start_time)) {
+          slotsByStart.set(s.start_time, s);
+        }
+      }
+    }
+
+    return Array.from(slotsByStart.values())
+      .filter((s) => new Date(s.start_time).getTime() > Date.now())
+      .sort((a, b) => a.start_time.localeCompare(b.start_time))
+      .map((s) => ({
+        id: s.start_time,
+        startTime: s.start_time,
+        isFull: false,
+      }));
+  }, [stationId]);
+
   useEffect(() => {
     (async () => {
       setLoadingSlots(true);
       try {
-        const [ok, data] = await getFromApi(`/stations/${stationId}`);
+        const available = await loadAvailableSlots();
         if (!mountedRef.current) return;
-        if (!ok) return;
-        const station = (data as { data: { timeSlots: ApiTimeSlot[] } }).data;
-        const now = new Date();
-        const available: AvailableSlot[] = (station.timeSlots ?? [])
-          .filter((s) => new Date(s.start_time) > now && s.status === 'available')
-          .map((s) => ({
-            id: s.id,
-            startTime: s.start_time,
-            isFull: s.booked_count >= s.capacity,
-          }));
         setSlots(available);
       } catch {
         // keep empty slots on failure
@@ -169,7 +190,7 @@ export default function UpgradeToReservationModal({ entryId, stationId, onClose,
         if (mountedRef.current) setLoadingSlots(false);
       }
     })();
-  }, [stationId]);
+  }, [loadAvailableSlots]);
 
   // Focus trap + Escape
   useEffect(() => {
@@ -193,8 +214,19 @@ export default function UpgradeToReservationModal({ entryId, stationId, onClose,
     if (!selectedSlotId) return;
     setUpgrading(true);
     try {
+      // Revalidate availability right before upgrade to avoid stale slot picks.
+      const fresh = await loadAvailableSlots();
+      if (!mountedRef.current) return;
+      setSlots(fresh);
+      const stillAvailable = fresh.some((s) => s.id === selectedSlotId);
+      if (!stillAvailable) {
+        setSelectedSlotId(null);
+        toastError(t('upgrade_error_slot_full'));
+        return;
+      }
+
       const [ok, data] = await postWithApi(`/me/entries/${entryId}/upgrade-to-reservation`, {
-        time_slot_id: selectedSlotId,
+        start_time: selectedSlotId,
       });
       if (!mountedRef.current) return;
 
@@ -204,6 +236,11 @@ export default function UpgradeToReservationModal({ entryId, stationId, onClose,
         const msg  = errBody?.message ?? '';
         // Slot raced into capacity between picker render and submit.
         if (code === 'SLOT_FULL' || msg.toLowerCase().includes('full')) {
+          const refreshed = await loadAvailableSlots();
+          if (mountedRef.current) {
+            setSlots(refreshed);
+            setSelectedSlotId(null);
+          }
           toastError(t('upgrade_error_slot_full'));
         // Slot is too far in advance (advance booking window exceeded).
         } else if (msg.toLowerCase().includes('advance')) {

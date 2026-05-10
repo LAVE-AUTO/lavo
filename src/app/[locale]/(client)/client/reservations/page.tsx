@@ -49,6 +49,8 @@ interface ApiRichEntry {
   is_tipped?: boolean;
 }
 
+const ACTIVE_QUEUE_STATUSES = new Set(['pending', 'confirmed', 'in_progress', 'late']);
+
 /* ------------------------------------------------------------------ */
 /* Client-side mapped shapes                                            */
 /* ------------------------------------------------------------------ */
@@ -270,8 +272,11 @@ export default function ClientReservationsPage() {
     const queueArr: ClientQueueEntry[] = [];
     for (const entry of entries) {
       const enriched = enrichEntry(entry);
-      if (entry.entry_type === 'reservation') resArr.push(enriched as ClientReservation);
-      else queueArr.push(enriched as ClientQueueEntry);
+      if (entry.entry_type === 'reservation') {
+        resArr.push(enriched as ClientReservation);
+      } else if (ACTIVE_QUEUE_STATUSES.has(entry.status)) {
+        queueArr.push(enriched as ClientQueueEntry);
+      }
     }
     setReservations(resArr);
     setQueueEntries(queueArr);
@@ -279,7 +284,11 @@ export default function ClientReservationsPage() {
   }, [error, t]);
 
   useEffect(() => {
-    if (!authLoading) loadEntries();
+    if (authLoading) return;
+    const timer = window.setTimeout(() => {
+      void loadEntries();
+    }, 0);
+    return () => window.clearTimeout(timer);
   }, [authLoading, loadEntries]);
 
   /* Sectioning by time, not by status:
@@ -341,6 +350,9 @@ export default function ClientReservationsPage() {
     const [ok, data] = await patchWithApi(`/me/entries/${cancelTarget.id}/cancel`, {});
     setCancelLoading(false);
     if (ok) {
+      setReservations((prev) =>
+        prev.map((item) => (item.id === cancelTarget.id ? { ...item, status: 'cancelled' } : item))
+      );
       setCancelTarget(null);
       success(t('toast_cancel_success'));
       await loadEntries();
@@ -359,11 +371,13 @@ export default function ClientReservationsPage() {
   const handleQueueActionConfirm = async () => {
     if (!queueAction) return;
     setQueueActionLoading(true);
+    const leavingId = queueAction.entry.id;
     const [ok, data] = await patchWithApi(`/me/entries/${queueAction.entry.id}/cancel`, {});
     setQueueActionLoading(false);
     if (!ok) {
       const err = data as { code?: string; message?: string } | null;
       if (err?.code === 'CONFLICT' && (err.message ?? '').toLowerCase().includes('already cancelled')) {
+        setQueueEntries((prev) => prev.filter((item) => item.id !== leavingId));
         setQueueAction(null);
         await loadEntries();
         return;
@@ -371,6 +385,7 @@ export default function ClientReservationsPage() {
       error(t('toast_cancel_error'));
       return;
     }
+    setQueueEntries((prev) => prev.filter((item) => item.id !== leavingId));
     success(t('toast_queue_leave_success'));
     setQueueAction(null);
     await loadEntries();
