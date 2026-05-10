@@ -10,10 +10,21 @@ import { getFromApi, patchWithApi, postWithApi } from '@/services/axios-service'
 import { RESERVATIONS_MOCK_ENABLED, findMockReservation } from '@/data/reservations-mock';
 
 /* ------------------------------------------------------------------ */
-/* API shapes                                                           */
+/* API shapes (rich entry returned by GET /me/entries)                  */
 /* ------------------------------------------------------------------ */
 
-interface ApiEntry {
+interface ApiRichStation {
+  id: string;
+  name: string;
+  address: string;
+  city: string;
+  latitude: string | null;
+  longitude: string | null;
+  image_url: string | null;
+  free_cancellation_minutes: number | null;
+}
+
+interface ApiRichEntry {
   id: string;
   entry_type: 'reservation' | 'queue';
   time_slot_id: string | null;
@@ -21,23 +32,15 @@ interface ApiEntry {
   vehicle_format_id: string | null;
   status: string;
   queue_position: number | null;
+  ticket_code: string | null;
   amount_paid: string | null;
   created_at: string;
-}
-
-interface ApiVehicleFormat { id: string; label: string; price: string; is_active: boolean }
-interface ApiTimeSlot { id: string; start_time: string }
-interface ApiStation {
-  id: string;
-  name: string;
-  address: string;
-  city: string;
-  latitude: string | null;
-  longitude: string | null;
-  vehicleFormats: ApiVehicleFormat[];
-  timeSlots: ApiTimeSlot[];
-  stationConfig?: { wash_duration_minutes: number } | null;
-  free_cancellation_minutes?: number;
+  station: ApiRichStation;
+  vehicle_format: { id: string; label: string; price: string } | null;
+  is_rated?: boolean;
+  is_tipped?: boolean;
+  slot_start_time: string | null;
+  slot_end_time: string | null;
 }
 
 /* ------------------------------------------------------------------ */
@@ -46,6 +49,7 @@ interface ApiStation {
 
 interface EnrichedReservation {
   id: string;
+  stationId: string;
   stationName: string;
   stationAddress: string;
   stationImageUrl: string;
@@ -54,11 +58,18 @@ interface EnrichedReservation {
   forfaitName: string;
   date: string;
   timeSlot: string;
+  /** ISO start_time used for past/upcoming + cancel-window detection. */
+  slotStart: string | null;
   duration: number;
   totalPrice: number;
   status: string;
-  freeCancellationMinutes: number;
+  ticketCode: string | null;
+  isRated: boolean;
+  isTipped: boolean;
 }
+
+/** Free cancellation rule: more than 1h before service start. */
+const FREE_CANCEL_THRESHOLD_MS = 60 * 60 * 1000;
 
 function slotToDateParts(startTime: string): { date: string; timeSlot: string } {
   const d = new Date(startTime);
@@ -109,6 +120,7 @@ export default function ReservationDetailPage() {
       if (!mock) { setNotFound(true); setLoading(false); return; }
       setReservation({
         id: mock.id,
+        stationId: mock.stationId ?? '',
         stationName: mock.stationName,
         stationAddress: mock.stationAddress,
         stationImageUrl: mock.stationImageUrl,
@@ -117,15 +129,21 @@ export default function ReservationDetailPage() {
         forfaitName: mock.forfaitName,
         date: mock.date,
         timeSlot: mock.timeSlot,
+        slotStart: `${mock.date}T${mock.timeSlot}`,
         duration: mock.duration,
         totalPrice: mock.totalPrice,
         status: mock.status,
-        freeCancellationMinutes: 60,
+        ticketCode: null,
+        isRated: false,
+        isTipped: false,
       });
       setLoading(false);
       return;
     }
 
+    /* Rich entries already include denormalised station, slot times, vehicle
+     * format, ticket_code and is_rated/is_tipped flags - no extra fetch
+     * needed. */
     const [ok, data] = await getFromApi('/me/entries?per_page=100');
     if (!mountedRef.current) return;
 
@@ -135,8 +153,8 @@ export default function ReservationDetailPage() {
       return;
     }
 
-    const res = data as { data: { entries: ApiEntry[] } };
-    const entries: ApiEntry[] = res?.data?.entries ?? [];
+    const res = data as { data: { entries: ApiRichEntry[] } };
+    const entries: ApiRichEntry[] = res?.data?.entries ?? [];
     const entry = entries.find((e) => e.id === id);
 
     if (!entry) {
@@ -145,37 +163,34 @@ export default function ReservationDetailPage() {
       return;
     }
 
-    /* Fetch station to enrich */
-    const [stationOk, stationData] = await getFromApi(`/stations/${entry.station_id}`);
-    if (!mountedRef.current) return;
-
-    const station = stationOk && stationData
-      ? (stationData as { data: ApiStation }).data
-      : null;
-
-    const format = station?.vehicleFormats.find((f) => f.id === entry.vehicle_format_id);
-    const slot = entry.time_slot_id
-      ? station?.timeSlots.find((s) => s.id === entry.time_slot_id)
-      : undefined;
-
-    const { date, timeSlot } = slot
-      ? slotToDateParts(slot.start_time)
+    const { date, timeSlot } = entry.slot_start_time
+      ? slotToDateParts(entry.slot_start_time)
       : { date: entry.created_at.split('T')[0], timeSlot: '00:00' };
+
+    const duration = (() => {
+      if (!entry.slot_start_time || !entry.slot_end_time) return 30;
+      const ms = new Date(entry.slot_end_time).getTime() - new Date(entry.slot_start_time).getTime();
+      return Math.max(1, Math.round(ms / 60_000));
+    })();
 
     setReservation({
       id: entry.id,
-      stationName: station?.name ?? `#${entry.station_id.slice(0, 8)}`,
-      stationAddress: station ? `${station.address}, ${station.city}` : '',
-      stationImageUrl: '',
-      stationLatitude: parseFloat(station?.latitude ?? '0'),
-      stationLongitude: parseFloat(station?.longitude ?? '0'),
-      forfaitName: format?.label ?? '-',
+      stationId: entry.station_id,
+      stationName: entry.station?.name ?? `#${entry.station_id.slice(0, 8)}`,
+      stationAddress: entry.station ? `${entry.station.address}, ${entry.station.city}` : '',
+      stationImageUrl: entry.station?.image_url ?? '',
+      stationLatitude: entry.station?.latitude ? parseFloat(entry.station.latitude) : 0,
+      stationLongitude: entry.station?.longitude ? parseFloat(entry.station.longitude) : 0,
+      forfaitName: entry.vehicle_format?.label ?? '-',
       date,
       timeSlot,
-      duration: station?.stationConfig?.wash_duration_minutes ?? 30,
+      slotStart: entry.slot_start_time,
+      duration,
       totalPrice: parseFloat(entry.amount_paid ?? '0'),
       status: entry.status,
-      freeCancellationMinutes: station?.free_cancellation_minutes ?? 60,
+      ticketCode: entry.ticket_code,
+      isRated: Boolean(entry.is_rated),
+      isTipped: Boolean(entry.is_tipped),
     });
     setLoading(false);
   }, [id]);
@@ -242,16 +257,23 @@ export default function ReservationDetailPage() {
     );
   }
 
-  const slotDateTime = new Date(`${reservation.date}T${reservation.timeSlot}`);
+  const slotDateTime = reservation.slotStart
+    ? new Date(reservation.slotStart)
+    : new Date(`${reservation.date}T${reservation.timeSlot}`);
   const now = new Date();
-  const minutesUntilSlot = (slotDateTime.getTime() - now.getTime()) / 60000;
+  const msUntilSlot = slotDateTime.getTime() - now.getTime();
+  const minutesUntilSlot = msUntilSlot / 60000;
 
-  /* Start button: active 30–45 min before slot time */
+  /* Start button: active 30-45 min before slot time. */
   const canStart = minutesUntilSlot >= 0 && minutesUntilSlot <= 45;
-  /* Cancel warning: if inside the free cancellation window, warn about fees */
-  const cancelHasFees = minutesUntilSlot >= 0 && minutesUntilSlot < reservation.freeCancellationMinutes;
-  const isUpcoming = reservation.status === 'confirmed' && minutesUntilSlot > 0;
-  const isPast = reservation.status === 'completed' || reservation.status === 'cancelled';
+  /* Cancel warning: applies fees within the last hour before service start. */
+  const cancelHasFees = msUntilSlot > 0 && msUntilSlot <= FREE_CANCEL_THRESHOLD_MS;
+  /* Past = cancelled / completed OR slot already started. */
+  const isPast =
+    reservation.status === 'completed' ||
+    reservation.status === 'cancelled' ||
+    msUntilSlot <= 0;
+  const isUpcoming = !isPast && (reservation.status === 'confirmed' || reservation.status === 'pending');
 
   const dateLabel = slotDateTime.toLocaleDateString(locale === 'en' ? 'en-CA' : 'fr-CA', {
     weekday: 'long', day: 'numeric', month: 'long', year: 'numeric',
@@ -262,9 +284,13 @@ export default function ReservationDetailPage() {
     in_progress:     'bg-gold/15 text-gold',
     completed:       'bg-[#999]/15 text-[#666]',
     cancelled:       'bg-lavo-error/15 text-lavo-error',
-    pending:         'bg-blue-500/15 text-blue-500',
-    pending_payment: 'bg-[#999]/15 text-[#888]',
   };
+  /* Hide the internal `pending_payment` / `pending` lifecycle from the UI:
+   * once the booking exists the client has already paid via Stripe, so we
+   * surface "confirmed" until the webhook reconciles. */
+  const displayedStatus = (reservation.status === 'pending_payment' || reservation.status === 'pending')
+    ? 'confirmed'
+    : reservation.status;
 
   const handleStartNavigation = () => {
     const destination = encodeURIComponent(`${reservation.stationLatitude},${reservation.stationLongitude}`);
@@ -383,8 +409,8 @@ export default function ReservationDetailPage() {
             <h1 className="text-[20px] font-black text-white drop-shadow">{reservation.stationName}</h1>
             <p className="text-[13px] text-white/80">{reservation.stationAddress}</p>
           </div>
-          <span className={`absolute top-3 right-3 px-3 py-1 rounded-full text-[12px] font-bold ${statusColors[reservation.status] || 'bg-gray-200 text-gray-600'}`}>
-            {t(`status_${reservation.status}`)}
+          <span className={`absolute top-3 right-3 px-3 py-1 rounded-full text-[12px] font-bold ${statusColors[displayedStatus] || 'bg-gray-200 text-gray-600'}`}>
+            {t(`status_${displayedStatus}`)}
           </span>
         </div>
 
@@ -490,24 +516,31 @@ export default function ReservationDetailPage() {
             </p>
             {reservation.status === 'completed' && (
               <>
-                <Link
-                  href={`/client/reservations/${id}/rate`}
-                  className="flex items-center justify-center gap-2 w-full py-3 rounded-xl border-2 border-gold/40 text-[14px] font-bold text-gold hover:bg-gold/10 hover:border-gold/60 transition-colors"
-                >
-                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-                    <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z" />
-                  </svg>
-                  {t('rate_btn')}
-                </Link>
-                <Link
-                  href={`/client/reservations/${id}/tip`}
-                  className="flex items-center justify-center gap-2 w-full py-3 rounded-xl border-2 border-[#D0D0C0] dark:border-tab-inactive text-[14px] font-bold text-[#555] dark:text-[#B0B0A0] hover:border-gold/30 hover:text-gold transition-colors"
-                >
-                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-                    <line x1="12" y1="1" x2="12" y2="23" /><path d="M17 5H9.5a3.5 3.5 0 000 7h5a3.5 3.5 0 010 7H6" />
-                  </svg>
-                  {t('tip_btn')}
-                </Link>
+                {/* Rate/tip surface only while the action is still pending.
+                 * Once `is_rated` / `is_tipped` flips on the server, the
+                 * button disappears so we never push a duplicate prompt. */}
+                {!reservation.isRated && (
+                  <Link
+                    href={`/client/reservations/${id}/rate`}
+                    className="flex items-center justify-center gap-2 w-full py-3 rounded-xl border-2 border-gold/40 text-[14px] font-bold text-gold hover:bg-gold/10 hover:border-gold/60 transition-colors"
+                  >
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                      <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z" />
+                    </svg>
+                    {t('rate_btn')}
+                  </Link>
+                )}
+                {!reservation.isTipped && (
+                  <Link
+                    href={`/client/reservations/${id}/tip`}
+                    className="flex items-center justify-center gap-2 w-full py-3 rounded-xl border-2 border-[#D0D0C0] dark:border-tab-inactive text-[14px] font-bold text-[#555] dark:text-[#B0B0A0] hover:border-gold/30 hover:text-gold transition-colors"
+                  >
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                      <line x1="12" y1="1" x2="12" y2="23" /><path d="M17 5H9.5a3.5 3.5 0 000 7h5a3.5 3.5 0 010 7H6" />
+                    </svg>
+                    {t('tip_btn')}
+                  </Link>
+                )}
                 <button
                   type="button"
                   onClick={() => setShowDisputeModal(true)}
@@ -678,7 +711,7 @@ export default function ReservationDetailPage() {
                     <line x1="12" y1="9" x2="12" y2="13" /><line x1="12" y1="17" x2="12.01" y2="17" />
                   </svg>
                   <p className="text-[12px] font-semibold text-lavo-error leading-relaxed">
-                    {t('cancel_modal_fees_warning', { minutes: reservation.freeCancellationMinutes })}
+                    {t('cancel_modal_fees_warning')}
                   </p>
                 </div>
               )}

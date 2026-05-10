@@ -17,6 +17,8 @@ type HistoryReservation = {
   vehicleFormatLabel: string | null;
   entryType: 'reservation' | 'queue';
   amountPaid: number;
+  /** Tip portion of amountPaid; used for the receipt's items breakdown. */
+  tipAmount: number | null;
   status: 'completed' | 'cancelled';
   createdAt: string;
 };
@@ -30,6 +32,7 @@ type HistoryApiEntry = {
   station: { name: string | null; address: string | null; city: string | null };
   vehicle_format_label: string | null;
   amount_paid: string;
+  tip_amount?: string | null;
 };
 
 type HistoryApiResponse = {
@@ -88,6 +91,7 @@ export function ClientHistoryView() {
             vehicleFormatLabel: entry.vehicle_format_label,
             entryType: entry.entry_type,
             amountPaid: Number.parseFloat(entry.amount_paid) || 0,
+            tipAmount: entry.tip_amount != null ? Number.parseFloat(entry.tip_amount) || 0 : null,
             status: entry.status as HistoryReservation['status'],
             createdAt: entry.created_at,
           })),

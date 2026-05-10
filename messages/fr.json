@@ -373,7 +373,7 @@
         "queue": "File d'attente",
         "config": "Configuration",
         "clients": "Clients",
-        "history": "Historique",
+        "history": "Relevés & factures",
         "support": "Support",
         "bottom_nav_aria": "Navigation principale",
         "appearance_aria": "Apparence"
@@ -959,7 +959,7 @@
         "cancel_reservation": "Annuler la réservation",
         "cancel_modal_title": "Annuler la réservation ?",
         "cancel_modal_desc": "Vous recevrez un remboursement complet.",
-        "cancel_modal_fees_warning": "Attention : l'annulation à moins de {minutes} minutes du créneau peut entraîner des frais.",
+        "cancel_modal_fees_warning": "Attention : l'annulation à moins d'une heure du début du service entraîne des frais d'annulation.",
         "cancel_modal_keep": "Garder",
         "cancel_modal_confirm": "Annuler",
         "past_completed": "Cette réservation est terminée.",
@@ -974,6 +974,13 @@
         "reschedule_btn": "Reporter la réservation",
         "toast_cancel_success": "Réservation annulée avec succès",
         "toast_cancel_error": "Impossible d'annuler la réservation. Veuillez réessayer.",
+        "toast_queue_leave_success": "Vous avez quitté la file d'attente. Le remboursement intégral est en cours.",
+        "queue_leave": "Quitter la file",
+        "queue_leave_and_book": "Quitter et réserver",
+        "queue_leave_title": "Quitter la file d'attente ?",
+        "queue_leave_message": "Vous serez retiré de la file et remboursé intégralement.",
+        "queue_leave_and_book_title": "Quitter la file et réserver ?",
+        "queue_leave_and_book_message": "Vous serez remboursé intégralement de votre place dans la file. Vous serez ensuite redirigé vers la fiche de la station pour choisir un créneau précis. Des frais de réservation peuvent s'appliquer selon la politique de la station, et le paiement sera confirmé par carte bancaire à l'étape suivante.",
         "confirm_title": "Confirmation de réservation",
         "confirm_id_label": "ID",
         "new_title": "Nouvelle réservation",
@@ -1222,8 +1229,9 @@
         "receipt_entry_type_reservation": "Réservation",
         "receipt_entry_type_queue": "File d'attente",
         "receipt_service_unknown": "Service non précisé",
-        "receipt_commission": "Commission",
         "receipt_tip": "Pourboire",
+        "receipt_items": "Détails",
+        "receipt_subtotal_line": "Sous-total",
         "detail_close": "Fermer"
     },
     "faq_page": {
@@ -2457,7 +2465,13 @@
         "btn_view_station": "Voir la fiche station",
         "btn_back_reservations": "Retour à mes réservations",
         "already_tipped_title": "Pourboire déjà envoyé",
-        "already_tipped_desc": "Vous avez déjà laissé un pourboire pour cette réservation."
+        "already_tipped_desc": "Vous avez déjà laissé un pourboire pour cette réservation.",
+        "error_submit": "Impossible d'enregistrer le pourboire. Veuillez réessayer.",
+        "error_stripe": "Le paiement a échoué. Vérifiez vos informations de carte.",
+        "pay_title": "Confirmer le paiement",
+        "pay_subtitle": "Saisissez votre carte pour finaliser le pourboire.",
+        "payment_secured": "Paiement sécurisé via Stripe",
+        "btn_pay": "Payer {amount} $"
     },
     "signal_delay": {
         "page_title": "Signaler un retard",

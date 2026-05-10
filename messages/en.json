@@ -373,7 +373,7 @@
         "queue": "Queue",
         "config": "Configuration",
         "clients": "Clients",
-        "history": "History",
+        "history": "Statements & invoices",
         "support": "Support",
         "bottom_nav_aria": "Main navigation",
         "appearance_aria": "Appearance"
@@ -959,7 +959,7 @@
         "cancel_reservation": "Cancel reservation",
         "cancel_modal_title": "Cancel reservation?",
         "cancel_modal_desc": "You will receive a full refund.",
-        "cancel_modal_fees_warning": "Warning: cancelling less than {minutes} minutes before your slot may incur fees.",
+        "cancel_modal_fees_warning": "Warning: cancelling less than 1 hour before service start incurs cancellation fees.",
         "cancel_modal_keep": "Keep it",
         "cancel_modal_confirm": "Cancel",
         "past_completed": "This reservation is completed.",
@@ -974,6 +974,13 @@
         "reschedule_btn": "Reschedule reservation",
         "toast_cancel_success": "Reservation cancelled successfully",
         "toast_cancel_error": "Unable to cancel the reservation. Please try again.",
+        "toast_queue_leave_success": "You have left the queue. Your full refund is on its way.",
+        "queue_leave": "Leave queue",
+        "queue_leave_and_book": "Leave & book a slot",
+        "queue_leave_title": "Leave the queue?",
+        "queue_leave_message": "You will be removed from the queue and fully refunded.",
+        "queue_leave_and_book_title": "Leave the queue and book a slot?",
+        "queue_leave_and_book_message": "You will be fully refunded for your queue spot. You will then be redirected to the station page to pick a time slot. A reservation fee may apply per the station's policy, and payment will be confirmed by card at the next step.",
         "confirm_title": "Reservation confirmation",
         "confirm_id_label": "ID",
         "new_title": "New reservation",
@@ -1222,8 +1229,9 @@
         "receipt_entry_type_reservation": "Reservation",
         "receipt_entry_type_queue": "Queue",
         "receipt_service_unknown": "Service not specified",
-        "receipt_commission": "Commission",
         "receipt_tip": "Tip",
+        "receipt_items": "Details",
+        "receipt_subtotal_line": "Subtotal",
         "detail_close": "Close"
     },
     "faq_page": {
@@ -2457,7 +2465,13 @@
         "btn_view_station": "View station",
         "btn_back_reservations": "View my reservations",
         "already_tipped_title": "Tip already sent",
-        "already_tipped_desc": "You have already left a tip for this reservation."
+        "already_tipped_desc": "You have already left a tip for this reservation.",
+        "error_submit": "Could not save the tip. Please try again.",
+        "error_stripe": "Payment failed. Please check your card details.",
+        "pay_title": "Confirm payment",
+        "pay_subtitle": "Enter your card to finalise the tip.",
+        "payment_secured": "Secure payment by Stripe",
+        "btn_pay": "Pay {amount} $"
     },
     "signal_delay": {
         "page_title": "Signal a delay",
