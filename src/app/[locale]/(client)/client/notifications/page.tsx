@@ -1,0 +1,114 @@
+'use client';
+
+import { useEffect, useState } from 'react';
+import { useTranslations } from 'next-intl';
+import { deleteWithApi, getFromApi, patchWithApi } from '@/services/axios-service';
+import { useTheme } from '@/context/theme-context';
+
+type UserNotification = {
+  id: string;
+  title: string | null;
+  body: string | null;
+  is_read: boolean;
+};
+
+export default function ClientNotificationsPage() {
+  const t = useTranslations('station_dashboard');
+  const { resolvedTheme } = useTheme();
+  const isDark = resolvedTheme === 'dark';
+  const [loading, setLoading] = useState(true);
+  const [items, setItems] = useState<UserNotification[]>([]);
+
+  useEffect(() => {
+    (async () => {
+      setLoading(true);
+      const [ok, data] = await getFromApi<{ data?: { items: UserNotification[] } }>('/me/notifications?limit=50');
+      if (ok && data && typeof data === 'object' && 'data' in data) {
+        setItems(data.data?.items ?? []);
+      }
+      setLoading(false);
+    })();
+  }, []);
+
+  async function markOneRead(id: string) {
+    const [ok] = await patchWithApi(`/me/notifications/${id}/read`, {});
+    if (!ok) return;
+    setItems((prev) => prev.map((item) => (item.id === id ? { ...item, is_read: true } : item)));
+  }
+
+  async function markAllRead() {
+    const [ok] = await patchWithApi('/me/notifications/read-all', {});
+    if (!ok) return;
+    setItems((prev) => prev.map((item) => ({ ...item, is_read: true })));
+  }
+
+  async function removeOne(id: string) {
+    const [ok] = await deleteWithApi(`/me/notifications/${id}`);
+    if (!ok) return;
+    setItems((prev) => prev.filter((item) => item.id !== id));
+  }
+
+  return (
+    <main className="min-h-screen bg-[#F5F5E6] px-4 pb-24 pt-6 dark:bg-[#0F0F0D] sm:px-6">
+      <div className="mx-auto w-full max-w-3xl">
+        <div className="mb-4 flex items-center justify-between">
+          <h1 className="text-[22px] font-black text-[#0A0A14] dark:text-white">{t('notif_title')}</h1>
+          <button
+            type="button"
+            onClick={markAllRead}
+            className="text-[13px] font-semibold hover:underline"
+            style={{ color: isDark ? '#E4C56A' : '#6B5A23' }}
+          >
+            {t('notif_mark_all_read')}
+          </button>
+        </div>
+
+        {loading ? <p className="text-sm" style={{ color: isDark ? '#C9C4B2' : '#5E5A4D' }}>{t('notif_loading')}</p> : null}
+        {!loading && items.length === 0 ? <p className="text-sm" style={{ color: isDark ? '#C9C4B2' : '#5E5A4D' }}>{t('notif_empty')}</p> : null}
+
+        {!loading && items.length > 0 ? (
+          <div className="space-y-2">
+            {items.map((item) => (
+              <div
+                key={item.id}
+                className="rounded-lg p-3"
+                style={{
+                  backgroundColor: isDark
+                    ? (item.is_read ? '#1A2318' : '#242113')
+                    : (item.is_read ? '#F4F1E8' : '#EEE7D2'),
+                }}
+              >
+                <div className="text-[15px] font-bold" style={{ color: isDark ? '#F3F1E8' : '#1F1E19' }}>
+                  {item.title ?? t('notif_default_title')}
+                </div>
+                <div className="mt-1 text-[14px]" style={{ color: isDark ? '#D2CEBE' : '#4F4C40' }}>
+                  {item.body ?? '-'}
+                </div>
+                <div className="mt-2 flex items-center gap-4">
+                  {!item.is_read && (
+                    <button
+                      type="button"
+                      onClick={() => markOneRead(item.id)}
+                      className="text-[14px] font-semibold hover:underline"
+                      style={{ color: isDark ? '#8ED17C' : '#2E6125' }}
+                    >
+                      {t('notif_mark_read')}
+                    </button>
+                  )}
+                  <button
+                    type="button"
+                    onClick={() => removeOne(item.id)}
+                    className="text-[14px] font-semibold hover:underline"
+                    style={{ color: isDark ? '#FF9E8D' : '#8C3A2B' }}
+                  >
+                    {t('notif_delete')}
+                  </button>
+                </div>
+              </div>
+            ))}
+          </div>
+        ) : null}
+      </div>
+    </main>
+  );
+}
