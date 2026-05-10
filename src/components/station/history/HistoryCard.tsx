@@ -9,16 +9,18 @@ interface Props {
 }
 
 const STATUS_BADGE: Record<string, { bg: string; text: string }> = {
+  confirmed:   { bg: '#057960ff', text: '#FFFFFF' },
   completed:   { bg: '#00C851', text: '#FFFFFF' },
   cancelled:   { bg: '#FF2525', text: '#FFFFFF' },
   pending:     { bg: '#FF8800', text: '#FFFFFF' },
   in_progress: { bg: '#00C851', text: '#FFFFFF' },
-  late:        { bg: '#FF8800', text: '#FFFFFF' },
+  late:        { bg: '#ae024dff', text: '#FFFFFF' },
 };
 
 const ACCENT: Record<string, string> = {
+  confirmed: '#057960ff',
   completed: '#00C851', cancelled: '#FF2525', pending: '#FF8800',
-  in_progress: '#00C851', late: '#FF8800',
+  in_progress: '#00C851', late: '#ae024dff',
 };
 
 export function HistoryCard({ entry }: Props) {

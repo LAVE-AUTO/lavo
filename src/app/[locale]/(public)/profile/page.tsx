@@ -93,12 +93,11 @@ export default function ProfilePage() {
   const [photoUrl, setPhotoUrl] = useState<string | null>(null);
   const avatarInputRef = useRef<HTMLInputElement | null>(null);
 
-  /* Notification toggles - local-only state until PATCH /me/notifications ships;
-     the toggles are visually disabled so the user knows the change won't persist. */
-  const [notifWash]     = useState(true);
-  const [notifReminder] = useState(true);
-  const [notifOffers]   = useState(false);
-  const [notifReview]   = useState(true);
+  const [notifWash, setNotifWash] = useState(true);
+  const [notifReminder, setNotifReminder] = useState(true);
+  const [notifOffers, setNotifOffers] = useState(false);
+  const [notifReview, setNotifReview] = useState(true);
+  const [savingNotif, setSavingNotif] = useState(false);
 
   /* Modals (only password is wired to a real endpoint today) */
   const [showPasswordModal, setShowPasswordModal] = useState(false);
@@ -162,6 +161,37 @@ export default function ProfilePage() {
     })();
     return () => { cancelled = true; };
   }, [user]);
+
+  useEffect(() => {
+    if (!user) return;
+    let cancelled = false;
+    (async () => {
+      const [ok, data] = await getFromApi('/me/notification-prefs');
+      if (!ok || cancelled || !mountedRef.current) return;
+      const prefs = (data as { data?: { wash_status?: boolean; reminder?: boolean; offers?: boolean; review?: boolean } }).data;
+      setNotifWash(prefs?.wash_status !== false);
+      setNotifReminder(prefs?.reminder !== false);
+      setNotifOffers(prefs?.offers === true);
+      setNotifReview(prefs?.review !== false);
+    })();
+    return () => { cancelled = true; };
+  }, [user]);
+
+  async function saveNotifPatch(patch: Partial<{ wash_status: boolean; reminder: boolean; offers: boolean; review: boolean }>) {
+    setSavingNotif(true);
+    const [ok, data] = await patchWithApi('/me/notification-prefs', patch);
+    if (mountedRef.current) setSavingNotif(false);
+    if (!ok || !mountedRef.current) {
+      showError(t('error_generic'));
+      return;
+    }
+    const prefs = (data as { data?: { wash_status?: boolean; reminder?: boolean; offers?: boolean; review?: boolean } }).data;
+    setNotifWash(prefs?.wash_status !== false);
+    setNotifReminder(prefs?.reminder !== false);
+    setNotifOffers(prefs?.offers === true);
+    setNotifReview(prefs?.review !== false);
+    showSuccess(t('toast_notif_saved'));
+  }
 
   const memberSinceLabel = (() => {
     const iso = stats?.firstActivityAt ?? user?.created_at;
@@ -501,20 +531,26 @@ export default function ProfilePage() {
 
         {/* ── Notifications ── */}
         <Section>
-          <SectionHeader title={t('notif_section')} action={<ComingSoonBadge label={t('coming_soon')} />} />
-          <div className="divide-y divide-[rgba(200,152,10,0.08)] opacity-60 pointer-events-none">
+          <SectionHeader title={t('notif_section')} />
+          <div className={`divide-y divide-[rgba(200,152,10,0.08)] ${savingNotif ? 'opacity-60' : ''}`}>
             {[
-              { label: t('notif_wash_status'),    desc: t('notif_wash_status_desc'),    checked: notifWash },
-              { label: t('notif_reminder'),       desc: t('notif_reminder_desc'),       checked: notifReminder },
-              { label: t('notif_offers'),         desc: t('notif_offers_desc'),         checked: notifOffers },
-              { label: t('notif_review'),         desc: t('notif_review_desc'),         checked: notifReview },
-            ].map(({ label, desc, checked }) => (
-              <div key={label} className="flex items-center justify-between gap-4 px-5 py-3.5">
+              { key: 'wash_status', label: t('notif_wash_status'), desc: t('notif_wash_status_desc'), checked: notifWash },
+              { key: 'reminder', label: t('notif_reminder'), desc: t('notif_reminder_desc'), checked: notifReminder },
+              { key: 'offers', label: t('notif_offers'), desc: t('notif_offers_desc'), checked: notifOffers },
+              { key: 'review', label: t('notif_review'), desc: t('notif_review_desc'), checked: notifReview },
+            ].map(({ key, label, desc, checked }) => (
+              <div key={key} className="flex items-center justify-between gap-4 px-5 py-3.5">
                 <div className="min-w-0">
                   <p className="text-[14px] font-semibold text-[#1a1a1a] dark:text-white leading-snug">{label}</p>
                   <p className="text-[12px] text-[#888] dark:text-[#666] mt-0.5 leading-snug">{desc}</p>
                 </div>
-                <Toggle checked={checked} onChange={() => { /* disabled: PATCH /me/notifications missing */ }} />
+                <Toggle checked={checked} onChange={() => {
+                  if (savingNotif) return;
+                  if (key === 'wash_status') void saveNotifPatch({ wash_status: !notifWash });
+                  else if (key === 'reminder') void saveNotifPatch({ reminder: !notifReminder });
+                  else if (key === 'offers') void saveNotifPatch({ offers: !notifOffers });
+                  else if (key === 'review') void saveNotifPatch({ review: !notifReview });
+                }} />
               </div>
             ))}
           </div>
