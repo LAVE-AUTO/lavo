@@ -106,7 +106,11 @@ export function PublicNavbar({
 
   useEffect(() => {
     if (!isAuthenticated || !isClient) return;
-    void refreshNotifUnread();
+    (async () => {
+      const [ok, data] = await getFromApi<{ data?: { unread_count: number } }>('/me/notifications/unread-count');
+      if (!ok || !data || typeof data !== 'object' || !('data' in data)) return;
+      setNotifUnreadCount(data.data?.unread_count ?? 0);
+    })();
   }, [isAuthenticated, isClient]);
 
   async function refreshNotifUnread() {
@@ -271,28 +275,32 @@ export function PublicNavbar({
                       )}
                     </button>
                     {notifOpen && (
-                      <div className="absolute right-0 top-[calc(100%+10px)] z-50 w-96 rounded-xl border border-[#E0DCD0] bg-[rgba(247,243,236,0.99)] p-3 shadow-xl dark:border-[#2B3A22] dark:bg-[rgba(13,31,15,0.99)]">
+                      <div className="absolute right-0 top-[calc(100%+10px)] z-50 w-96 rounded-xl border border-[#D8D2C3] bg-[#FFFDF8] p-3 shadow-xl dark:border-[#3A4A36] dark:bg-[#121A10]">
                         <div className="mb-2 flex items-center justify-between">
-                          <div className="text-sm font-semibold text-[#1B1B18] dark:text-[#EAEADC]">{tn('notif_title')}</div>
-                          <button type="button" onClick={markAllNotifRead} className="text-xs font-medium text-[#7A6A2A] hover:underline">
+                          <div className="text-sm font-semibold text-[#1B1B18] dark:text-[#F3F1E8]">{tn('notif_title')}</div>
+                          <button type="button" onClick={markAllNotifRead} className="text-xs font-semibold text-[#6B5A23] hover:underline dark:text-[#E4C56A]">
                             {tn('notif_mark_all_read')}
                           </button>
                         </div>
-                        {notifLoading ? <div className="py-4 text-sm text-[#6D6A5F] dark:text-[#B8B5A8]">{tn('notif_loading')}</div> : null}
-                        {!notifLoading && notifItems.length === 0 ? <div className="py-4 text-sm text-[#6D6A5F] dark:text-[#B8B5A8]">{tn('notif_empty')}</div> : null}
+                        {notifLoading ? <div className="py-4 text-sm text-[#5E5A4D] dark:text-[#C9C4B2]">{tn('notif_loading')}</div> : null}
+                        {!notifLoading && notifItems.length === 0 ? <div className="py-4 text-sm text-[#5E5A4D] dark:text-[#C9C4B2]">{tn('notif_empty')}</div> : null}
                         {!notifLoading && notifItems.length > 0 ? (
                           <div className="max-h-96 space-y-2 overflow-auto">
                             {notifItems.map((item) => (
-                              <div key={item.id} className={`rounded-lg border p-2 ${item.is_read ? 'border-[#E7E2D4] dark:border-[#2B3A22]' : 'border-[#D1B04B] bg-[#FFFBEF] dark:bg-[#2A2414]'}`}>
-                                <div className="text-xs font-semibold text-[#2A2A24] dark:text-[#F2F0E8]">{item.title ?? tn('notif_default_title')}</div>
-                                <div className="mt-0.5 text-xs text-[#656254] dark:text-[#B8B5A8]">{item.body ?? '-'}</div>
+                              <div key={item.id} className={`rounded-lg border p-2 ${
+                                item.is_read
+                                  ? 'border-[#E7E2D4] bg-[#FFFEFB] dark:border-[#33422F] dark:bg-[#182017]'
+                                  : 'border-[#D1B04B] bg-[#FFF6DD] dark:border-[#8A6F25] dark:bg-[#2A2515]'
+                              }`}>
+                                <div className="text-xs font-semibold text-[#1F1E19] dark:text-[#F3F1E8]">{item.title ?? tn('notif_default_title')}</div>
+                                <div className="mt-0.5 text-xs text-[#4F4C40] dark:text-[#D2CEBE]">{item.body ?? '-'}</div>
                                 <div className="mt-2 flex items-center gap-3">
                                   {!item.is_read && (
-                                    <button type="button" onClick={() => markNotifRead(item.id)} className="text-xs font-medium text-[#4A6A2A] hover:underline">
+                                    <button type="button" onClick={() => markNotifRead(item.id)} className="text-xs font-semibold text-[#2E6125] hover:underline dark:text-[#8ED17C]">
                                       {tn('notif_mark_read')}
                                     </button>
                                   )}
-                                  <button type="button" onClick={() => deleteNotif(item.id)} className="text-xs font-medium text-[#8C3A2B] hover:underline">
+                                  <button type="button" onClick={() => deleteNotif(item.id)} className="text-xs font-semibold text-[#8C3A2B] hover:underline dark:text-[#FF9E8D]">
                                     {tn('notif_delete')}
                                   </button>
                                 </div>
@@ -352,7 +360,7 @@ export function PublicNavbar({
 
                   {/* Dropdown panel */}
                   {dropdownOpen && (
-                    <div className="absolute top-[calc(100%+10px)] right-0 w-[230px] bg-[rgba(247,243,236,0.99)] dark:bg-[rgba(13,31,15,0.99)] border border-[rgba(200,152,10,0.2)] rounded-[6px] shadow-[0_16px_48px_rgba(0,0,0,0.2)] animate-fade-in overflow-hidden z-50">
+                    <div className="absolute top-[calc(100%+10px)] right-0 z-50 w-[230px] overflow-hidden rounded-[6px] border border-[rgba(200,152,10,0.2)] bg-[#F7F3EC] shadow-[0_16px_48px_rgba(0,0,0,0.2)] animate-fade-in dark:bg-[#0D1F0F]">
                       {/* Profile info */}
                       <div className="px-4 py-3.5 border-b border-[rgba(200,152,10,0.12)]">
                         <div className="flex items-center gap-3">
