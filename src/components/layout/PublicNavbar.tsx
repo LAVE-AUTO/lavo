@@ -8,6 +8,7 @@ import { ThemeToggle } from '@/components/auth/ThemeToggle';
 import { LangToggle } from '@/components/auth/LangToggle';
 import { useTheme } from '@/context/theme-context';
 import { useAuth } from '@/context';
+import { deleteWithApi, getFromApi, patchWithApi } from '@/services/axios-service';
 
 function MenuIcon() {
   return (
@@ -58,6 +59,7 @@ export function PublicNavbar({
   withMobileScrollSpacer = true,
 }: PublicNavbarProps) {
   const t        = useTranslations('nav');
+  const tn       = useTranslations('station_dashboard');
   const locale   = useLocale();
   const pathname = usePathname();
   const { resolvedTheme } = useTheme();
@@ -66,7 +68,12 @@ export function PublicNavbar({
 
   const [menuOpen,     setMenuOpen]     = useState(false);
   const [dropdownOpen, setDropdownOpen] = useState(false);
+  const [notifOpen, setNotifOpen] = useState(false);
+  const [notifLoading, setNotifLoading] = useState(false);
+  const [notifItems, setNotifItems] = useState<UserNotification[]>([]);
+  const [notifUnreadCount, setNotifUnreadCount] = useState(0);
   const dropdownRef = useRef<HTMLDivElement>(null);
+  const notifRef = useRef<HTMLDivElement>(null);
 
   /* Close drawer on navigation */
   useEffect(() => {
@@ -85,6 +92,62 @@ export function PublicNavbar({
     document.addEventListener('mousedown', handler);
     return () => document.removeEventListener('mousedown', handler);
   }, [dropdownOpen]);
+
+  useEffect(() => {
+    if (!notifOpen) return;
+    const handler = (e: MouseEvent) => {
+      if (notifRef.current && !notifRef.current.contains(e.target as Node)) {
+        setNotifOpen(false);
+      }
+    };
+    document.addEventListener('mousedown', handler);
+    return () => document.removeEventListener('mousedown', handler);
+  }, [notifOpen]);
+
+  useEffect(() => {
+    if (!isAuthenticated || !isClient) return;
+    void refreshNotifUnread();
+  }, [isAuthenticated, isClient]);
+
+  async function refreshNotifUnread() {
+    const [ok, data] = await getFromApi<{ data?: { unread_count: number } }>('/me/notifications/unread-count');
+    if (!ok || !data || typeof data !== 'object' || !('data' in data)) return;
+    setNotifUnreadCount(data.data?.unread_count ?? 0);
+  }
+
+  async function toggleNotifications() {
+    const nextOpen = !notifOpen;
+    setNotifOpen(nextOpen);
+    if (!nextOpen) return;
+    setNotifLoading(true);
+    const [ok, data] = await getFromApi<{ data?: { items: UserNotification[]; unread_count: number } }>('/me/notifications?limit=20');
+    if (ok && data && typeof data === 'object' && 'data' in data) {
+      setNotifItems(data.data?.items ?? []);
+      setNotifUnreadCount(data.data?.unread_count ?? 0);
+    }
+    setNotifLoading(false);
+  }
+
+  async function markNotifRead(id: string) {
+    const [ok] = await patchWithApi(`/me/notifications/${id}/read`, {});
+    if (!ok) return;
+    setNotifItems((prev) => prev.map((item) => (item.id === id ? { ...item, is_read: true } : item)));
+    void refreshNotifUnread();
+  }
+
+  async function markAllNotifRead() {
+    const [ok] = await patchWithApi('/me/notifications/read-all', {});
+    if (!ok) return;
+    setNotifItems((prev) => prev.map((item) => ({ ...item, is_read: true })));
+    setNotifUnreadCount(0);
+  }
+
+  async function deleteNotif(id: string) {
+    const [ok] = await deleteWithApi(`/me/notifications/${id}`);
+    if (!ok) return;
+    setNotifItems((prev) => prev.filter((item) => item.id !== id));
+    void refreshNotifUnread();
+  }
 
   const lightLogoSrc = locale === 'fr' ? '/logo/logo2_2.png' : '/logo/logo_anglais_1.png';
 
@@ -188,6 +251,59 @@ export function PublicNavbar({
             <div className="hidden lg:flex items-center gap-2.5 ml-1">
               {((isAuthenticated && user) || (isLoading && user)) ? (
                 <>
+                {isClient && (
+                  <div ref={notifRef} className="relative">
+                    <button
+                      type="button"
+                      aria-label={tn('notif_tooltip')}
+                      title={tn('notif_tooltip')}
+                      onClick={toggleNotifications}
+                      className="hidden lg:flex w-[34px] h-[34px] items-center justify-center rounded-full border border-[rgba(200,152,10,0.25)] text-[#4a6a4d] dark:text-[#7a9a7d] hover:border-[#c8980a] hover:text-[#c8980a] transition-colors relative"
+                    >
+                      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                        <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9" />
+                        <path d="M13.73 21a2 2 0 0 1-3.46 0" />
+                      </svg>
+                      {notifUnreadCount > 0 && (
+                        <span className="absolute -right-1 -top-1 min-w-4 rounded-full bg-[#C49A1E] px-1 text-center text-[10px] font-bold leading-4 text-white">
+                          {notifUnreadCount > 99 ? '99+' : notifUnreadCount}
+                        </span>
+                      )}
+                    </button>
+                    {notifOpen && (
+                      <div className="absolute right-0 top-[calc(100%+10px)] z-50 w-96 rounded-xl border border-[#E0DCD0] bg-[rgba(247,243,236,0.99)] p-3 shadow-xl dark:border-[#2B3A22] dark:bg-[rgba(13,31,15,0.99)]">
+                        <div className="mb-2 flex items-center justify-between">
+                          <div className="text-sm font-semibold text-[#1B1B18] dark:text-[#EAEADC]">{tn('notif_title')}</div>
+                          <button type="button" onClick={markAllNotifRead} className="text-xs font-medium text-[#7A6A2A] hover:underline">
+                            {tn('notif_mark_all_read')}
+                          </button>
+                        </div>
+                        {notifLoading ? <div className="py-4 text-sm text-[#6D6A5F] dark:text-[#B8B5A8]">{tn('notif_loading')}</div> : null}
+                        {!notifLoading && notifItems.length === 0 ? <div className="py-4 text-sm text-[#6D6A5F] dark:text-[#B8B5A8]">{tn('notif_empty')}</div> : null}
+                        {!notifLoading && notifItems.length > 0 ? (
+                          <div className="max-h-96 space-y-2 overflow-auto">
+                            {notifItems.map((item) => (
+                              <div key={item.id} className={`rounded-lg border p-2 ${item.is_read ? 'border-[#E7E2D4] dark:border-[#2B3A22]' : 'border-[#D1B04B] bg-[#FFFBEF] dark:bg-[#2A2414]'}`}>
+                                <div className="text-xs font-semibold text-[#2A2A24] dark:text-[#F2F0E8]">{item.title ?? tn('notif_default_title')}</div>
+                                <div className="mt-0.5 text-xs text-[#656254] dark:text-[#B8B5A8]">{item.body ?? '-'}</div>
+                                <div className="mt-2 flex items-center gap-3">
+                                  {!item.is_read && (
+                                    <button type="button" onClick={() => markNotifRead(item.id)} className="text-xs font-medium text-[#4A6A2A] hover:underline">
+                                      {tn('notif_mark_read')}
+                                    </button>
+                                  )}
+                                  <button type="button" onClick={() => deleteNotif(item.id)} className="text-xs font-medium text-[#8C3A2B] hover:underline">
+                                    {tn('notif_delete')}
+                                  </button>
+                                </div>
+                              </div>
+                            ))}
+                          </div>
+                        ) : null}
+                      </div>
+                    )}
+                  </div>
+                )}
                 {/* Statements & invoices shortcut for clients (desktop only) */}
                 {isClient && (
                   <Link
@@ -384,3 +500,10 @@ export function PublicNavbar({
     </>
   );
 }
+
+type UserNotification = {
+  id: string;
+  title: string | null;
+  body: string | null;
+  is_read: boolean;
+};
