@@ -36,6 +36,7 @@ import { timeSlots } from "./slots";
 import { favorites } from "./favorites";
 import { stationHours, stationHourExceptions } from "./station-hours";
 import { userNotifications } from "./user-notifications";
+import { userNotificationPrefs } from "./user-notification-prefs";
 import {
   stationServices,
   serviceVehicleEntries,
@@ -70,6 +71,7 @@ export * from "./device-tokens";
 export * from "./favorites";
 export * from "./station-hours";
 export * from "./user-notifications";
+export * from "./user-notification-prefs";
 export * from "./services";
 
 

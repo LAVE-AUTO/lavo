@@ -7,7 +7,7 @@ import { Link } from '@/i18n/navigation';
 import { useAuth } from '@/context';
 import { useToast } from '@/context/toast-context';
 import { isPasswordValid } from '@/helpers/validators';
-import { getFromApi, postWithApi } from '@/services/axios-service';
+import { getFromApi, postWithApi, patchWithApi } from '@/services/axios-service';
 
 /* ─── Toggle switch ─── */
 function Toggle({ checked, onChange }: { checked: boolean; onChange: () => void }) {
@@ -66,25 +66,46 @@ interface ApiEntry {
   created_at: string;
 }
 
+/**
+ * Defense-in-depth: only allow http(s) or relative URLs as image src.
+ * Blocks `javascript:`, `data:`, `vbscript:`, etc. that could be smuggled
+ * through a compromised upload endpoint or response tampering.
+ */
+function isSafeImageUrl(url: string): boolean {
+  if (typeof url !== 'string' || url.length === 0) return false;
+  // Allow same-origin relative paths
+  if (url.startsWith('/') && !url.startsWith('//')) return true;
+  try {
+    const parsed = new URL(url);
+    return parsed.protocol === 'http:' || parsed.protocol === 'https:';
+  } catch {
+    return false;
+  }
+}
+
 /* ─── Main page ─── */
 export default function ProfilePage() {
   const t      = useTranslations('profile');
   const locale = useLocale();
-  const { user } = useAuth();
+  const { user, refetchUser } = useAuth();
   const { success: showSuccess, error: showError } = useToast();
 
   const [photoUrl, setPhotoUrl] = useState<string | null>(null);
   const avatarInputRef = useRef<HTMLInputElement | null>(null);
 
-  /* Notification toggles - local-only state until PATCH /me/notifications ships;
-     the toggles are visually disabled so the user knows the change won't persist. */
-  const [notifWash]     = useState(true);
-  const [notifReminder] = useState(true);
-  const [notifOffers]   = useState(false);
-  const [notifReview]   = useState(true);
+  const [notifWash, setNotifWash] = useState(true);
+  const [notifReminder, setNotifReminder] = useState(true);
+  const [notifOffers, setNotifOffers] = useState(false);
+  const [notifReview, setNotifReview] = useState(true);
+  const [savingNotif, setSavingNotif] = useState(false);
 
   /* Modals (only password is wired to a real endpoint today) */
   const [showPasswordModal, setShowPasswordModal] = useState(false);
+
+  /* Personal info edit state */
+  const [editingInfo, setEditingInfo] = useState(false);
+  const [infoForm, setInfoForm] = useState({ first_name: '', last_name: '', phone: '' });
+  const [savingInfo, setSavingInfo] = useState(false);
 
   /* Mock saved cards - kept until GET /me/payment-methods exists */
   const cards = [
@@ -141,6 +162,37 @@ export default function ProfilePage() {
     return () => { cancelled = true; };
   }, [user]);
 
+  useEffect(() => {
+    if (!user) return;
+    let cancelled = false;
+    (async () => {
+      const [ok, data] = await getFromApi('/me/notification-prefs');
+      if (!ok || cancelled || !mountedRef.current) return;
+      const prefs = (data as { data?: { wash_status?: boolean; reminder?: boolean; offers?: boolean; review?: boolean } }).data;
+      setNotifWash(prefs?.wash_status !== false);
+      setNotifReminder(prefs?.reminder !== false);
+      setNotifOffers(prefs?.offers === true);
+      setNotifReview(prefs?.review !== false);
+    })();
+    return () => { cancelled = true; };
+  }, [user]);
+
+  async function saveNotifPatch(patch: Partial<{ wash_status: boolean; reminder: boolean; offers: boolean; review: boolean }>) {
+    setSavingNotif(true);
+    const [ok, data] = await patchWithApi('/me/notification-prefs', patch);
+    if (mountedRef.current) setSavingNotif(false);
+    if (!ok || !mountedRef.current) {
+      showError(t('error_generic'));
+      return;
+    }
+    const prefs = (data as { data?: { wash_status?: boolean; reminder?: boolean; offers?: boolean; review?: boolean } }).data;
+    setNotifWash(prefs?.wash_status !== false);
+    setNotifReminder(prefs?.reminder !== false);
+    setNotifOffers(prefs?.offers === true);
+    setNotifReview(prefs?.review !== false);
+    showSuccess(t('toast_notif_saved'));
+  }
+
   const memberSinceLabel = (() => {
     const iso = stats?.firstActivityAt ?? user?.created_at;
     if (!iso) return t('stats_empty');
@@ -186,7 +238,7 @@ export default function ProfilePage() {
 
       const body = (await response.json()) as { data?: { url?: string } };
       const url = body?.data?.url ?? null;
-      if (!url) {
+      if (!url || !isSafeImageUrl(url)) {
         showError(t('avatar_upload_error'));
         return;
       }
@@ -195,6 +247,35 @@ export default function ProfilePage() {
       showSuccess(t('avatar_upload_success'));
     } catch {
       showError(t('avatar_upload_error'));
+    }
+  };
+
+  const handleEditInfo = () => {
+    setInfoForm({
+      first_name: user?.first_name ?? '',
+      last_name:  user?.last_name  ?? '',
+      phone:      user?.phone      ?? '',
+    });
+    setEditingInfo(true);
+  };
+
+  const handleSaveInfo = async () => {
+    setSavingInfo(true);
+    const body: Record<string, string> = {};
+    if (infoForm.first_name.trim()) body.first_name = infoForm.first_name.trim();
+    if (infoForm.last_name.trim())  body.last_name  = infoForm.last_name.trim();
+    if (infoForm.phone.trim())      body.phone      = infoForm.phone.trim();
+
+    const [ok] = await patchWithApi('/me/profile', body);
+    if (!mountedRef.current) return;
+    setSavingInfo(false);
+    if (ok) {
+      await refetchUser();
+      if (!mountedRef.current) return;
+      setEditingInfo(false);
+      showSuccess(t('info_save_success'));
+    } else {
+      showError(t('info_save_error'));
     }
   };
 
@@ -304,20 +385,86 @@ export default function ProfilePage() {
         <Section>
           <SectionHeader
             title={t('personal_info')}
-            action={<ComingSoonBadge label={t('coming_soon')} />}
+            action={
+              editingInfo ? (
+                <div className="flex gap-2">
+                  <button
+                    type="button"
+                    onClick={() => setEditingInfo(false)}
+                    disabled={savingInfo}
+                    className="text-[12px] font-bold text-[#888] hover:text-[#1a1a1a] dark:hover:text-white transition-colors cursor-pointer disabled:opacity-50"
+                  >
+                    {t('cancel')}
+                  </button>
+                  <button
+                    type="button"
+                    onClick={handleSaveInfo}
+                    disabled={savingInfo}
+                    className="flex items-center gap-1.5 px-3 py-1.5 bg-gold rounded-lg text-[12px] font-bold text-dark-bg hover:bg-gold-hover transition-colors cursor-pointer disabled:opacity-60"
+                  >
+                    {savingInfo && (
+                      <svg className="animate-spin" width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" aria-hidden="true">
+                        <path d="M21 12a9 9 0 11-6.219-8.56" />
+                      </svg>
+                    )}
+                    {t('save')}
+                  </button>
+                </div>
+              ) : (
+                <button
+                  type="button"
+                  onClick={handleEditInfo}
+                  className="flex items-center gap-1.5 text-[12px] font-bold text-[#c8980a] hover:text-[#a07008] transition-colors cursor-pointer"
+                >
+                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" aria-hidden="true">
+                    <path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/>
+                    <path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/>
+                  </svg>
+                  {t('modify')}
+                </button>
+              )
+            }
           />
           <div className="divide-y divide-[rgba(200,152,10,0.08)]">
-            {[
-              { label: t('first_name'), value: user?.first_name || '-' },
-              { label: t('last_name'),  value: user?.last_name  || '-' },
-              { label: t('phone'),      value: user?.phone      || '-' },
-              { label: t('email'),      value: user?.email      || '-' },
-            ].map(({ label, value }) => (
-              <div key={label} className="flex items-center justify-between px-5 py-3.5">
-                <span className="text-[12px] font-bold uppercase tracking-wider text-[#888] dark:text-[#666] w-28 shrink-0">{label}</span>
-                <span className="text-[14px] text-[#1a1a1a] dark:text-white text-right truncate">{value}</span>
-              </div>
-            ))}
+            {editingInfo ? (
+              <>
+                {[
+                  { key: 'first_name', label: t('first_name') },
+                  { key: 'last_name',  label: t('last_name')  },
+                  { key: 'phone',      label: t('phone')      },
+                ].map(({ key, label }) => (
+                  <div key={key} className="flex items-center justify-between gap-4 px-5 py-3">
+                    <span className="text-[12px] font-bold uppercase tracking-wider text-[#888] dark:text-[#666] w-28 shrink-0">{label}</span>
+                    <input
+                      type={key === 'phone' ? 'tel' : 'text'}
+                      value={infoForm[key as keyof typeof infoForm]}
+                      onChange={(e) => setInfoForm((f) => ({ ...f, [key]: e.target.value }))}
+                      disabled={savingInfo}
+                      className="flex-1 min-w-0 bg-white dark:bg-[#1E1E1A] border border-[#D0D0C0] dark:border-[#3A3A36] rounded-xl px-3 py-2 text-[14px] text-[#1a1a1a] dark:text-white text-right outline-none focus:border-gold focus:ring-1 focus:ring-gold/30 transition disabled:opacity-50"
+                    />
+                  </div>
+                ))}
+                {/* Email is never editable */}
+                <div className="flex items-center justify-between px-5 py-3.5">
+                  <span className="text-[12px] font-bold uppercase tracking-wider text-[#888] dark:text-[#666] w-28 shrink-0">{t('email')}</span>
+                  <span className="text-[14px] text-[#888] dark:text-[#666] text-right truncate">{user?.email || '-'}</span>
+                </div>
+              </>
+            ) : (
+              <>
+                {[
+                  { label: t('first_name'), value: user?.first_name || '-' },
+                  { label: t('last_name'),  value: user?.last_name  || '-' },
+                  { label: t('phone'),      value: user?.phone      || '-' },
+                  { label: t('email'),      value: user?.email      || '-' },
+                ].map(({ label, value }) => (
+                  <div key={label} className="flex items-center justify-between px-5 py-3.5">
+                    <span className="text-[12px] font-bold uppercase tracking-wider text-[#888] dark:text-[#666] w-28 shrink-0">{label}</span>
+                    <span className="text-[14px] text-[#1a1a1a] dark:text-white text-right truncate">{value}</span>
+                  </div>
+                ))}
+              </>
+            )}
           </div>
         </Section>
 
@@ -384,20 +531,26 @@ export default function ProfilePage() {
 
         {/* ── Notifications ── */}
         <Section>
-          <SectionHeader title={t('notif_section')} action={<ComingSoonBadge label={t('coming_soon')} />} />
-          <div className="divide-y divide-[rgba(200,152,10,0.08)] opacity-60 pointer-events-none">
+          <SectionHeader title={t('notif_section')} />
+          <div className={`divide-y divide-[rgba(200,152,10,0.08)] ${savingNotif ? 'opacity-60' : ''}`}>
             {[
-              { label: t('notif_wash_status'),    desc: t('notif_wash_status_desc'),    checked: notifWash },
-              { label: t('notif_reminder'),       desc: t('notif_reminder_desc'),       checked: notifReminder },
-              { label: t('notif_offers'),         desc: t('notif_offers_desc'),         checked: notifOffers },
-              { label: t('notif_review'),         desc: t('notif_review_desc'),         checked: notifReview },
-            ].map(({ label, desc, checked }) => (
-              <div key={label} className="flex items-center justify-between gap-4 px-5 py-3.5">
+              { key: 'wash_status', label: t('notif_wash_status'), desc: t('notif_wash_status_desc'), checked: notifWash },
+              { key: 'reminder', label: t('notif_reminder'), desc: t('notif_reminder_desc'), checked: notifReminder },
+              { key: 'offers', label: t('notif_offers'), desc: t('notif_offers_desc'), checked: notifOffers },
+              { key: 'review', label: t('notif_review'), desc: t('notif_review_desc'), checked: notifReview },
+            ].map(({ key, label, desc, checked }) => (
+              <div key={key} className="flex items-center justify-between gap-4 px-5 py-3.5">
                 <div className="min-w-0">
                   <p className="text-[14px] font-semibold text-[#1a1a1a] dark:text-white leading-snug">{label}</p>
                   <p className="text-[12px] text-[#888] dark:text-[#666] mt-0.5 leading-snug">{desc}</p>
                 </div>
-                <Toggle checked={checked} onChange={() => { /* disabled: PATCH /me/notifications missing */ }} />
+                <Toggle checked={checked} onChange={() => {
+                  if (savingNotif) return;
+                  if (key === 'wash_status') void saveNotifPatch({ wash_status: !notifWash });
+                  else if (key === 'reminder') void saveNotifPatch({ reminder: !notifReminder });
+                  else if (key === 'offers') void saveNotifPatch({ offers: !notifOffers });
+                  else if (key === 'review') void saveNotifPatch({ review: !notifReview });
+                }} />
               </div>
             ))}
           </div>

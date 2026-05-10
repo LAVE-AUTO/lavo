@@ -1,9 +1,9 @@
 'use client';
 
-import { useTranslations } from 'next-intl';
-import { useLocale } from 'next-intl';
+import { useTranslations, useLocale } from 'next-intl';
 import Link from 'next/link';
 import { QueueCard, type QueueEntry } from './QueueCard';
+import { ACTIVE_QUEUE_STATUSES } from './StationDashboard';
 
 interface DashboardQueuePanelProps {
   entries: QueueEntry[];
@@ -11,21 +11,21 @@ interface DashboardQueuePanelProps {
   onCompleteEntry?: (id: string) => void;
   onCallNext?: () => void;
 }
-
 export function DashboardQueuePanel({ entries, onCallEntry, onCompleteEntry, onCallNext }: DashboardQueuePanelProps) {
   const t = useTranslations('station_dashboard');
   const locale = useLocale();
 
-  // Fix: use entry.status directly instead of isNext + position heuristic
   const inProgressEntries = entries.filter((e) => e.status === 'in_progress');
-  const waitingEntries = entries.filter((e) => e.status === 'pending');
+  const waitingEntries = entries.filter(
+    (e) => e.status && (ACTIVE_QUEUE_STATUSES as readonly string[]).includes(e.status),
+  );
   const waitingCount = waitingEntries.length;
   const totalCount = entries.length;
   const canCallNext = Boolean(onCallNext) && waitingCount > 0;
 
   return (
     <div className="flex w-full max-h-[40vh] flex-shrink-0 flex-col overflow-hidden border-b border-[#E0DCD0] bg-[#F0EDE0] md:max-h-none md:w-[280px] md:border-b-0 md:border-r dark:border-[#1A2A14] dark:bg-[#182214]">
-      {/* Header */}
+      {/* = Header */}
       <div className="border-b border-[#E0DCD0] px-4 py-3.5 dark:border-[#1A2A14]">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
@@ -65,7 +65,7 @@ export function DashboardQueuePanel({ entries, onCallEntry, onCompleteEntry, onC
         )}
       </div>
 
-      {/* Entries */}
+      {/* = Entries list */}
       <div className="flex flex-1 flex-col gap-2 overflow-y-auto p-2.5">
         {entries.length === 0 ? (
           <div className="flex flex-1 items-center justify-center text-[13px] text-[#666] dark:text-[#A0A090]">

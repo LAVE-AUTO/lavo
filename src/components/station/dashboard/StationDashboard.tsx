@@ -11,6 +11,7 @@ import { DashboardKpiRow, type KpiData } from './DashboardKpiRow';
 import { DashboardDateNav } from './DashboardDateNav';
 import { DashboardQueuePanel } from './DashboardQueuePanel';
 import { DashboardReservationsPanel, type ReservationItem } from './DashboardReservationsPanel';
+import { DashboardGroupedPanel } from './DashboardGroupedPanel';
 import { DashboardDelaysPanel, type DashboardDelayItem } from './DashboardDelaysPanel';
 import type { QueueEntry } from './QueueCard';
 
@@ -25,6 +26,8 @@ interface RawDelayPreview {
 }
 
 const EMPTY_KPI: KpiData = { revenue: null, clients: null, lateFees: null, occupancy: null };
+
+export const ACTIVE_QUEUE_STATUSES = ['pending', 'confirmed', 'late', 'pending_payment'] as const;
 
 interface RawEntry {
   id: string;
@@ -71,12 +74,31 @@ function clientNameOf(entry: RawEntry): string {
   return `Client #${entry.user_id.slice(0, 4).toUpperCase()}`;
 }
 
+
 function dayRange(date: Date): { from: string; to: string } {
   const start = new Date(date);
   start.setHours(0, 0, 0, 0);
   const end = new Date(start);
   end.setDate(end.getDate() + 1);
   return { from: start.toISOString(), to: end.toISOString() };
+}
+
+function buildDateRange(date: Date, view: 'daily' | 'weekly' | 'monthly'): { from: string; to: string } {
+  if (view === 'weekly') {
+    const mon = new Date(date);
+    const dow = mon.getDay();
+    mon.setDate(mon.getDate() - (dow === 0 ? 6 : dow - 1));
+    mon.setHours(0, 0, 0, 0);
+    const sun = new Date(mon);
+    sun.setDate(mon.getDate() + 7);
+    return { from: mon.toISOString(), to: sun.toISOString() };
+  }
+  if (view === 'monthly') {
+    const start = new Date(date.getFullYear(), date.getMonth(), 1, 0, 0, 0, 0);
+    const end = new Date(date.getFullYear(), date.getMonth() + 1, 1, 0, 0, 0, 0);
+    return { from: start.toISOString(), to: end.toISOString() };
+  }
+  return dayRange(date);
 }
 
 function buildQueueEntries(raw: RawEntry[]): QueueEntry[] {
@@ -88,11 +110,11 @@ function buildQueueEntries(raw: RawEntry[]): QueueEntry[] {
       clientName: clientNameOf(e),
       entryType: e.entry_type,
       price: e.amount_paid ? parseFloat(e.amount_paid) : undefined,
-      isNext: idx === 0 && raw.filter((x) => x.status === 'pending').length === 0,
+      isNext: idx === 0 && raw.filter((x) => (ACTIVE_QUEUE_STATUSES as readonly string[]).includes(x.status)).length === 0,
       status: e.status,
     }));
   const waiting = raw
-    .filter((e) => e.status === 'pending')
+    .filter((e) => (ACTIVE_QUEUE_STATUSES as readonly string[]).includes(e.status))
     .sort((a, b) => (a.queue_position ?? 999) - (b.queue_position ?? 999))
     .map((e, idx): QueueEntry => ({
       id: e.id,
@@ -131,6 +153,25 @@ const ACTION_STATUS_MAP: Partial<Record<DashboardAction, string>> = {
   start: 'in_progress',
 };
 
+function mapDashboardToKpi(raw: RawDashboard): KpiData {
+  const revenue = Number.parseFloat(raw.total_revenue ?? '');
+  const lateFees = Number.parseFloat(raw.late_fees_total ?? '');
+  return {
+    revenue: Number.isFinite(revenue) ? Math.round(revenue) : 0,
+    clients: typeof raw.total_clients === 'number' ? raw.total_clients : 0,
+    lateFees: Number.isFinite(lateFees) ? Math.round(lateFees) : 0,
+    occupancy: typeof raw.fill_rate_pct === 'number' ? raw.fill_rate_pct : 0,
+  };
+}
+
+const CONFIRM_DIALOG_LABELS: Record<DashboardAction, { title: string; message: string }> = {
+  call:      { title: 'confirm_call_title',      message: 'confirm_call_message' },
+  complete:  { title: 'confirm_complete_title',  message: 'confirm_complete_message' },
+  cancel:    { title: 'confirm_cancel_title',    message: 'confirm_cancel_message' },
+  start:     { title: 'confirm_start_title',     message: 'confirm_start_message' },
+  call_next: { title: 'confirm_call_next_title', message: 'confirm_call_next_message' },
+};
+
 export function StationDashboard() {
   const { isLoading: authLoading } = useAuth();
   const { error: showError } = useToast();
@@ -139,7 +180,7 @@ export function StationDashboard() {
   useEffect(() => { mountedRef.current = true; return () => { mountedRef.current = false; }; }, []);
 
   const [selectedDate, setSelectedDate] = useState(() => new Date());
-  const [view, setView] = useState<'weekly' | 'monthly'>('weekly');
+  const [view, setView] = useState<'daily' | 'weekly' | 'monthly'>('daily');
   const [kpi, setKpi] = useState<KpiData>(EMPTY_KPI);
   const [queueEntries, setQueueEntries] = useState<QueueEntry[]>([]);
   const [reservationItems, setReservationItems] = useState<ReservationItem[]>([]);
@@ -150,23 +191,13 @@ export function StationDashboard() {
   const [pending, setPending] = useState<PendingAction | null>(null);
   const [actionLoading, setActionLoading] = useState(false);
 
-  function mapDashboardToKpi(raw: RawDashboard): KpiData {
-    const revenue = Number.parseFloat(raw.total_revenue ?? '');
-    const lateFees = Number.parseFloat(raw.late_fees_total ?? '');
-    return {
-      revenue: Number.isFinite(revenue) ? Math.round(revenue) : 0,
-      clients: typeof raw.total_clients === 'number' ? raw.total_clients : 0,
-      lateFees: Number.isFinite(lateFees) ? Math.round(lateFees) : 0,
-      occupancy: typeof raw.fill_rate_pct === 'number' ? raw.fill_rate_pct : 0,
-    };
-  }
-
   const loadData = useCallback(async () => {
-    const { from, to } = dayRange(selectedDate);
-    // Queue: filter by creation date (live session-scoped entries)
-    const queueQuery = `?entry_type=queue&from=${encodeURIComponent(from)}&to=${encodeURIComponent(to)}&per_page=200`;
-    // Reservations: filter by slot start_time so we see appointments for the selected day
-    const reservationsQuery = `?entry_type=reservation&slot_from=${encodeURIComponent(from)}&slot_to=${encodeURIComponent(to)}&per_page=200`;
+    const { from: queueFrom, to: queueTo } = dayRange(selectedDate);
+    const { from: resFrom, to: resTo } = buildDateRange(selectedDate, view);
+    // Queue: always scoped to the selected day (live queue)
+    const queueQuery = `?entry_type=queue&from=${encodeURIComponent(queueFrom)}&to=${encodeURIComponent(queueTo)}&per_page=200`;
+    // Reservations: range depends on view (day / week / month)
+    const reservationsQuery = `?entry_type=reservation&slot_from=${encodeURIComponent(resFrom)}&slot_to=${encodeURIComponent(resTo)}&per_page=200`;
 
     const [queueResult, reservationsResult, dashboardResult, delaysResult, configResult] = await Promise.all([
       getFromApi(`/station/entries${queueQuery}`),
@@ -222,7 +253,7 @@ export function StationDashboard() {
     }
 
     setLoading(false);
-  }, [selectedDate]);
+  }, [selectedDate, view]);
 
   useEffect(() => {
     // eslint-disable-next-line react-hooks/set-state-in-effect
@@ -295,29 +326,7 @@ export function StationDashboard() {
     }
   }
 
-  function confirmDialogTitle(): string {
-    if (!pending) return '';
-    const labels: Record<DashboardAction, string> = {
-      call: t('confirm_call_title'),
-      complete: t('confirm_complete_title'),
-      cancel: t('confirm_cancel_title'),
-      start: t('confirm_start_title'),
-      call_next: t('confirm_call_next_title'),
-    };
-    return labels[pending.type];
-  }
-
-  function confirmDialogMessage(): string {
-    if (!pending) return '';
-    const labels: Record<DashboardAction, string> = {
-      call: t('confirm_call_message'),
-      complete: t('confirm_complete_message'),
-      cancel: t('confirm_cancel_message'),
-      start: t('confirm_start_message'),
-      call_next: t('confirm_call_next_message'),
-    };
-    return labels[pending.type];
-  }
+  const dialogLabels = pending ? CONFIRM_DIALOG_LABELS[pending.type] : null;
 
   if (loading) {
     return <PageLoader label={t('loading')} />;
@@ -326,12 +335,14 @@ export function StationDashboard() {
   return (
     <div className="flex flex-1 flex-col overflow-hidden animate-fade-in">
       <DashboardKpiRow data={kpi} />
+
       <DashboardDateNav
         selectedDate={selectedDate}
         onDateChange={setSelectedDate}
         view={view}
         onViewChange={setView}
       />
+
       <div className="flex flex-1 flex-col overflow-auto md:flex-row md:overflow-hidden">
         {/* Left column: queue + delays shortcut */}
         <div className="flex shrink-0 flex-col md:w-70 md:overflow-hidden">
@@ -343,23 +354,32 @@ export function StationDashboard() {
           />
           <DashboardDelaysPanel items={delays} totalPending={delaysPendingTotal} />
         </div>
-        {/* Central column: reservations for the selected day */}
-        <DashboardReservationsPanel
-          items={reservationItems}
-          selectedDate={selectedDate}
-          breakStart={stationBreak.start}
-          breakEnd={stationBreak.end}
-          onStart={handleStartEntry}
-          onComplete={(id) => requestAction('complete', id)}
-          onCancel={(id) => requestAction('cancel', id)}
-          onExtraTime={handleExtraTime}
-        />
+
+        {/* Central column: daily view shows time-slot panel; weekly/monthly shows grouped panel */}
+        {view === 'daily' ? (
+          <DashboardReservationsPanel
+            items={reservationItems}
+            selectedDate={selectedDate}
+            breakStart={stationBreak.start}
+            breakEnd={stationBreak.end}
+            onStart={handleStartEntry}
+            onComplete={(id) => requestAction('complete', id)}
+            onCancel={(id) => requestAction('cancel', id)}
+            onExtraTime={handleExtraTime}
+          />
+        ) : (
+          <DashboardGroupedPanel
+            items={reservationItems}
+            view={view}
+            selectedDate={selectedDate}
+          />
+        )}
       </div>
 
       <ConfirmDialog
         open={pending !== null}
-        title={confirmDialogTitle()}
-        message={confirmDialogMessage()}
+        title={dialogLabels ? t(dialogLabels.title) : ''}
+        message={dialogLabels ? t(dialogLabels.message) : ''}
         confirmLabel={t('confirm_btn_confirm')}
         cancelLabel={t('confirm_btn_cancel')}
         variant={pending?.type === 'cancel' ? 'danger' : 'default'}

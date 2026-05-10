@@ -3,6 +3,7 @@
  * Push notifications are dispatched via fcm-service (stub until Firebase is configured).
  * Used by reservation, queue, reminder, and pick flows.
  */
+
 import { sendPushNotification } from './fcm-service';
 
 export type NotifyEntryParams = {
@@ -20,6 +21,11 @@ export type NotifyEntryParams = {
     | 'invitation_to_rate'
     | 'reservation_reminder_5h'
     | 'reservation_reminder_30min'
+    | 'reservation_reminder_24h'
+    | 'reservation_reminder_2h'
+    | 'reservation_reminder_1h'
+    | 'service_started'
+    | 'service_completed'
     | 'client_late'
     | 'queue_pick'
     | 'queue_position_changed'
@@ -50,6 +56,11 @@ const PUSH_MESSAGES: Record<NotifyEntryParams['type'], { title: string; body: st
   invitation_to_rate: { title: 'How was your experience?', body: 'Rate your last visit to help us improve.' },
   reservation_reminder_5h: { title: 'Reminder: reservation in 5 hours', body: 'Do not forget to confirm your presence 30 minutes before your appointment.' },
   reservation_reminder_30min: { title: 'Your appointment is in 30 minutes', body: 'Please confirm your presence now so your slot is kept.' },
+  reservation_reminder_24h: { title: 'Reminder: reservation tomorrow', body: 'You have a reservation scheduled for tomorrow. Get ready!' },
+  reservation_reminder_2h: { title: 'Reminder: reservation in 2 hours', body: 'Your appointment is coming up in 2 hours. Do not forget!' },
+  reservation_reminder_1h: { title: 'Reminder: reservation in 1 hour', body: 'Your appointment is in 1 hour. Please head over soon.' },
+  service_started: { title: 'Service started', body: 'Your car wash has begun. We will notify you when it is complete.' },
+  service_completed: { title: 'Service complete', body: 'Your car wash is done! Come pick up your vehicle.' },
   client_late: { title: 'You have been moved to the walk-in queue', body: 'Your reservation window has passed. You are now at the front of the walk-in queue.' },
   queue_pick: { title: 'It is your turn!', body: 'The station is ready for you. Please proceed to the wash bay.' },
   queue_position_changed: { title: 'Queue update', body: 'Your position in the queue has been updated.' },
@@ -67,6 +78,7 @@ const PUSH_MESSAGES: Record<NotifyEntryParams['type'], { title: string; body: st
   queue_cancelled_by_client: { title: 'Queue booking cancelled', body: 'You have cancelled your place in the queue. A cancellation fee has been applied.' },
   queue_no_show: { title: 'No-show: booking cancelled', body: 'Your queue booking has been cancelled because the station has closed for the day. A cancellation fee has been applied.' },
 };
+
 
 /**
  * Sends a push notification for an entry event via FCM and logs the intent.
@@ -86,10 +98,4 @@ export async function notifyEntry(params: NotifyEntryParams): Promise<void> {
   }
 }
 
-/**
- * Placeholder for notification services (legacy). Prefer notifyEntry.
- */
-export function notificationServicePlaceholder() {
-  // no-op; use notifyEntry for new flows
-}
 

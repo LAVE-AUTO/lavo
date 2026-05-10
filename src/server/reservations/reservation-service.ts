@@ -14,6 +14,7 @@
  *   - Stripe PaymentIntent (Connect charges)
  *   - Notifications (fire-and-forget entry updates)
  */
+
 import { NotFoundError, ConflictError, ActiveReservationExistsError, SlotFullError, ValidationError, InvalidTicketCodeError } from '@/lib/errors';
 import { getPlatformSettingWithFallback, getCancellationPolicy } from '@/server/admin/platform-settings-service';
 import { db } from '@/lib/db';
@@ -64,16 +65,10 @@ import { verifyQrToken } from '@/server/qr/qr-token-service';
 import { refreshStationStats } from '@/server/station/station-stats-service';
 
 
-// %%%%% Constants %%%%%
-// Entry status values
-
 const STATUS_PENDING_PAYMENT = 'pending_payment';
 const STATUS_CANCELLED = 'cancelled';
 const STATUS_CONFIRMED = 'confirmed';
 
-
-// %%%%% Utilities %%%%%
-// Number formatting and parsing
 
 function toDecimal(v: string | number): string {
   return typeof v === 'number' ? v.toFixed(2) : String(v);
@@ -120,9 +115,6 @@ async function resolveReservationAmount(
 }
 
 
-// %%%%% Types %%%%%
-// Operation results
-
 /**
  * Result of createReservation operation.
  * Includes the created entry and Stripe client_secret for frontend payment UI.
@@ -144,9 +136,6 @@ export type CancelEntryResult = {
   isLateCancellation?: boolean;
 };
 
-
-// %%%%% Create reservation %%%%%
-// Atomic slot lock, capacity check, entry creation, Stripe intent
 
 /**
  * Creates a new reservation for the given time slot and vehicle format.
@@ -298,25 +287,19 @@ export async function createReservation(
     type: 'reservation_created',
   });
 
+  // Note: ticket_code is intentionally omitted from the feed body. It is the
+  // client's secret used to authorise service start at the station kiosk; once
+  // surfaced in the station feed it loses its verification value.
   await notifyStationFeed({
     stationId,
     entryId: entry.id,
     kind: 'reservation_new',
-    body: `${toDecimal(amountTotal)} $${entry.ticket_code ? ` · Code ${entry.ticket_code}` : ''}`,
+    body: `${toDecimal(amountTotal)} $`,
   });
 
   return { entry, clientSecret };
 }
 
-
-// %%%%% Reservation by start_time (per-post availability flow) %%%%%
-//
-// Replaces the merchant-pre-generated `time_slots` flow: the client picks a
-// `start_time` (and a service that defines duration), the server picks a
-// free wash bay, creates a fresh `time_slots` row + reservation atomically.
-//
-// Concurrency: we serialise bookings on the same station by SELECT FOR UPDATE
-// on the chosen station_posts row before the availability re-check.
 
 /**
  * Creates a reservation from a `start_time` chosen against the per-post
@@ -449,15 +432,17 @@ export async function createReservationByStartTime(
     type: 'reservation_created',
   });
 
+  // ticket_code intentionally omitted from feed body (see createReservation).
   await notifyStationFeed({
     stationId,
     entryId: entry.id,
     kind: 'reservation_new',
-    body: `${toDecimal(amountTotal)} $${entry.ticket_code ? ` · Code ${entry.ticket_code}` : ''}`,
+    body: `${toDecimal(amountTotal)} $`,
   });
 
   return { entry, clientSecret };
 }
+
 
 /**
  * Unified entry cancellation for PATCH /me/entries/:entryId/cancel.
@@ -480,6 +465,12 @@ export async function cancelEntry(
   // Confirmed reservations: full cancellation with Stripe refund and penalty policy.
   if (entry.entry_type === 'reservation' && entry.status === STATUS_CONFIRMED) {
     const result = await cancelReservation(entryId, userId, reason);
+    await notifyStationFeed({
+      stationId: entry.station_id,
+      entryId,
+      kind: 'reservation_cancelled_by_client',
+      body: `Client #${userId.slice(0, 4).toUpperCase()}`,
+    });
     return {
       entry: result.entry,
       refundedAmount: result.refundedAmount,
@@ -605,6 +596,12 @@ export async function cancelEntry(
       type: 'queue_cancelled_by_client',
       payload: { penaltyAmount, refundedAmount },
     });
+    await notifyStationFeed({
+      stationId: entry.station_id,
+      entryId,
+      kind: 'queue_cancelled_by_client',
+      body: `Client #${userId.slice(0, 4).toUpperCase()}`,
+    });
     return { entry: updated, penaltyAmount, refundedAmount, isLateCancellation: true };
   }
 
@@ -641,8 +638,15 @@ export async function cancelEntry(
     stationId: entry.station_id,
     type: 'entry_cancelled',
   });
+  await notifyStationFeed({
+    stationId: entry.station_id,
+    entryId,
+    kind: entry.entry_type === 'reservation' ? 'reservation_cancelled_by_client' : 'queue_cancelled_by_client',
+    body: `Client #${userId.slice(0, 4).toUpperCase()}`,
+  });
   return { entry: updated };
 }
+
 
 /**
  * Confirms the client's presence for a reservation.
@@ -657,6 +661,7 @@ export async function confirmPresence(reservationId: string, userId: string): Pr
   if (entry.client_confirmed) throw new ConflictError('Presence already confirmed');
   return updateEntry(reservationId, { client_confirmed: true });
 }
+
 
 /**
  * Returns paginated entries (reservations and queue) for the user.
@@ -709,6 +714,7 @@ export async function listRichStationEntries(
   return listRichStationEntriesPaginated(stationId, filters);
 }
 
+
 /** Result of upgradeQueueToReservation: updated entry + Stripe client_secret for frontend payment. */
 export type UpgradeToReservationResult = {
   entry: Entry;
@@ -749,6 +755,7 @@ export async function upgradeQueueToReservation(
   const config = await getConfigByStationId(stationId);
   const surcharge = config?.reservation_surcharge ? parseDecimal(String(config.reservation_surcharge)) : 0;
   const amountTotal = parseDecimal(String(entry.amount_paid)) + surcharge;
+  if (amountTotal <= 0) throw new ConflictError('Invalid amount for upgrade');
 
   const split = await computeReservationSplit({ amountTotal, isQrBooking: false });
 
@@ -771,6 +778,7 @@ export async function upgradeQueueToReservation(
   });
 
   // Atomic: slot lock, capacity check, queue shift, entry conversion with stripe_payment_id already set.
+  // On any DB error, cancel the PI that was already created to prevent Stripe orphans.
   const updated = await db.transaction(async (tx) => {
     const slot = await lockSlotForUpdate(timeSlotId, stationId, tx);
     if (!slot) throw new NotFoundError('Time slot not found or does not belong to this station');
@@ -804,6 +812,16 @@ export async function upgradeQueueToReservation(
     );
     await incrementSlotBookedCount(timeSlotId, tx);
     return result;
+  }).catch(async (txError: unknown) => {
+    try {
+      await cancelPaymentIntent(paymentIntentId);
+    } catch (cancelErr) {
+      console.error('[UPGRADE_TO_RESERVATION] Failed to cancel orphaned PI after TX failure', {
+        paymentIntentId,
+        error: cancelErr instanceof Error ? cancelErr.message : String(cancelErr),
+      });
+    }
+    throw txError;
   });
 
   // Update PI metadata with reservation_id now that the entry ID is confirmed.
@@ -823,6 +841,12 @@ export async function upgradeQueueToReservation(
     userId,
     stationId,
     type: 'reservation_created',
+  });
+  await notifyStationFeed({
+    stationId,
+    entryId,
+    kind: 'queue_upgraded_to_reservation',
+    body: `Client #${userId.slice(0, 4).toUpperCase()} · ${amountTotal.toFixed(2)} $`,
   });
 
   return { entry: updated, clientSecret };
@@ -887,7 +911,6 @@ export async function setEntryStatusByStation(
       }
     }
 
-    // %%%%% ESCROW FALLBACK - webhook before "completed" %%%%%
     // Late capture: `updated` reflects RETURNING row (not stale `entry`) for succeeded_at / notify flag.
     if (updated.entry_type === 'reservation' && updated.stripe_payment_succeeded_at) {
       try {
@@ -912,8 +935,6 @@ export async function setEntryStatusByStation(
         const msg = err instanceof Error ? err.message : String(err);
         console.error('[ESCROW_FALLBACK] Failed to send completed escrow notifications', { error: msg });
       }
-
-      // %%%%% END - ESCROW FALLBACK - webhook before "completed" %%%%%
     }
 
     // Refresh station_stats so completed_count stays current for the "most visited" sort group.
@@ -925,12 +946,17 @@ export async function setEntryStatusByStation(
       });
     });
   }
+
+  // Notify the client of service status changes (best-effort, never block the station UI).
+  if (status === 'in_progress') {
+    notifyEntry({ entryId, userId: entry.user_id, stationId, type: 'service_started' }).catch(() => {});
+  } else if (status === 'completed') {
+    notifyEntry({ entryId, userId: entry.user_id, stationId, type: 'service_completed' }).catch(() => {});
+  }
+
   return updated;
 }
 
-
-// %%%%% Start entry with ticket code %%%%%
-// Station verifies the 6-character code given by the client before starting the service.
 
 /**
  * Starts a service for an entry only if the code matches the one issued at booking.
@@ -961,9 +987,6 @@ export async function startEntryByStation(
   return setEntryStatusByStation(entryId, stationId, 'in_progress');
 }
 
-
-// %%%%% Walk-in entry creation %%%%%
-// Station creates an entry for a walk-in client (no Stripe payment flow)
 
 /**
  * Creates a walk-in entry for the station.
@@ -1017,9 +1040,6 @@ export async function createWalkInEntry(
   });
 }
 
-
-// %%%%% Queue priority management %%%%%
-// Station sets queue_position for an entry
 
 /** Terminal statuses that block priority changes. */
 const TERMINAL_STATUSES = ['cancelled', 'completed', 'in_progress'];

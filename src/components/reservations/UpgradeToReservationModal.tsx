@@ -9,10 +9,6 @@ import { loadStripe } from '@stripe/stripe-js';
 import { Elements, CardElement, useStripe, useElements } from '@stripe/react-stripe-js';
 import type { AvailableSlot } from './SlotPicker';
 
-/* ------------------------------------------------------------------ */
-/* Stripe singleton                                                     */
-/* ------------------------------------------------------------------ */
-
 let stripePromise: ReturnType<typeof loadStripe> | null = null;
 function getStripePromise() {
   if (stripePromise !== null) return stripePromise;
@@ -21,9 +17,6 @@ function getStripePromise() {
   return stripePromise;
 }
 
-/* ------------------------------------------------------------------ */
-/* Types                                                                */
-/* ------------------------------------------------------------------ */
 
 interface ApiTimeSlot {
   id: string;
@@ -40,9 +33,6 @@ interface Props {
   onSuccess: (reservationId: string) => void;
 }
 
-/* ------------------------------------------------------------------ */
-/* Stripe card sub-form                                                 */
-/* ------------------------------------------------------------------ */
 
 function UpgradeCardForm({
   clientSecret,
@@ -138,9 +128,6 @@ function UpgradeCardForm({
   );
 }
 
-/* ------------------------------------------------------------------ */
-/* Main modal                                                           */
-/* ------------------------------------------------------------------ */
 
 export default function UpgradeToReservationModal({ entryId, stationId, onClose, onSuccess }: Props) {
   const t = useTranslations('queue_detail');
@@ -151,7 +138,6 @@ export default function UpgradeToReservationModal({ entryId, stationId, onClose,
   const mountedRef = useRef(true);
   useEffect(() => { mountedRef.current = true; return () => { mountedRef.current = false; }; }, []);
 
-  // Steps: 'slot' → 'payment' → 'done'
   const [step, setStep] = useState<'slot' | 'payment'>('slot');
   const [slots, setSlots] = useState<AvailableSlot[]>([]);
   const [loadingSlots, setLoadingSlots] = useState(true);
@@ -160,7 +146,6 @@ export default function UpgradeToReservationModal({ entryId, stationId, onClose,
   const [clientSecret, setClientSecret] = useState<string | null>(null);
   const [reservationId, setReservationId] = useState<string | null>(null);
 
-  // Load available slots
   useEffect(() => {
     (async () => {
       setLoadingSlots(true);
@@ -218,8 +203,11 @@ export default function UpgradeToReservationModal({ entryId, stationId, onClose,
         const code = errBody?.code ?? '';
         const msg  = errBody?.message ?? '';
         // Slot raced into capacity between picker render and submit.
-        if (code === 'SLOT_FULL' || msg.includes('full') || msg.includes('SLOT_FULL')) {
+        if (code === 'SLOT_FULL' || msg.toLowerCase().includes('full')) {
           toastError(t('upgrade_error_slot_full'));
+        // Slot is too far in advance (advance booking window exceeded).
+        } else if (msg.toLowerCase().includes('advance')) {
+          toastError(t('upgrade_error_advance_limit'));
         // Station has no Stripe Connect account configured (typically dev / sandbox).
         } else if (code === 'CONFLICT' && msg.toLowerCase().includes('payment')) {
           toastError(t('upgrade_error_stripe'));
@@ -275,7 +263,7 @@ export default function UpgradeToReservationModal({ entryId, stationId, onClose,
         onClick={(e) => e.stopPropagation()}
         className="relative bg-[#F5F5E6] dark:bg-[#1A1A18] rounded-t-2xl sm:rounded-2xl shadow-2xl w-full sm:max-w-md max-h-[92vh] flex flex-col animate-fade-in-up"
       >
-        {/* Close button */}
+        {/* = Close button */}
         <button
           type="button"
           onClick={onClose}
@@ -288,7 +276,7 @@ export default function UpgradeToReservationModal({ entryId, stationId, onClose,
           </svg>
         </button>
 
-        {/* Header */}
+        {/* = Header */}
         <div className="px-6 pt-6 pb-4 text-center shrink-0">
           <div className="w-12 h-12 rounded-full bg-gold/15 border border-gold/30 flex items-center justify-center mx-auto mb-3">
             <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#af8408" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
@@ -304,7 +292,7 @@ export default function UpgradeToReservationModal({ entryId, stationId, onClose,
           </p>
         </div>
 
-        {/* Body - scrollable */}
+        {/* = Body (scrollable) */}
         <div className="flex-1 overflow-y-auto px-6">
           {step === 'slot' && (
             loadingSlots ? (
@@ -345,7 +333,7 @@ export default function UpgradeToReservationModal({ entryId, stationId, onClose,
           )}
         </div>
 
-        {/* Footer actions - only on slot step (payment step has its own buttons) */}
+        {/* = Footer actions (slot step only) */}
         {step === 'slot' && (
           <div className="px-6 pt-3 pb-5 border-t border-[#D0D0C0] dark:border-tab-inactive flex gap-3 shrink-0 bg-[#F5F5E6] dark:bg-[#1A1A18]">
             <button
@@ -376,9 +364,6 @@ export default function UpgradeToReservationModal({ entryId, stationId, onClose,
   );
 }
 
-/* ------------------------------------------------------------------ */
-/* Step-paginated slot picker                                          */
-/* ------------------------------------------------------------------ */
 
 interface SlotStepPickerProps {
   slots: AvailableSlot[];
@@ -432,7 +417,7 @@ function SlotStepPicker({ slots, selectedSlotId, onSelect, locale, pickDateLabel
 
   return (
     <div className="space-y-5 pb-2">
-      {/* Date strip */}
+      {/* = Date selection strip */}
       <div>
         <p className="text-[11px] font-bold text-[#555] dark:text-[#A0A090] uppercase tracking-wider mb-2">
           {pickDateLabel}
@@ -462,7 +447,7 @@ function SlotStepPicker({ slots, selectedSlotId, onSelect, locale, pickDateLabel
         </div>
       </div>
 
-      {/* Time slots for the picked day */}
+      {/* = Time slot selection for the picked day */}
       <div>
         <p className="text-[11px] font-bold text-[#555] dark:text-[#A0A090] uppercase tracking-wider mb-2">
           {pickTimeLabel}

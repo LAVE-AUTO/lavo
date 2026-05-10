@@ -1,12 +1,14 @@
 'use client';
 
 import Image from 'next/image';
+import { useEffect, useRef, useState } from 'react';
 import { useTranslations, useLocale } from 'next-intl';
 import { Link } from '@/i18n/navigation';
 import { useAuth } from '@/context/auth-context';
 import { useTheme } from '@/context/theme-context';
 import { ThemeToggle } from '@/components/auth/ThemeToggle';
 import { LangToggle } from '@/components/auth/LangToggle';
+import { deleteWithApi, getFromApi, patchWithApi } from '@/services/axios-service';
 
 interface StationTopNavProps {
   stationName?: string;
@@ -21,6 +23,63 @@ export function StationTopNav({ stationName }: StationTopNavProps) {
   const isDark = resolvedTheme === 'dark';
   const displayName = stationName ?? user?.first_name ?? 'Station';
   const lightLogoSrc = locale === 'fr' ? '/logo/logo2_2.png' : '/logo/logo_anglais_1.png';
+  const [isOpen, setIsOpen] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [items, setItems] = useState<UserNotification[]>([]);
+  const [unreadCount, setUnreadCount] = useState(0);
+  const panelRef = useRef<HTMLDivElement | null>(null);
+
+  useEffect(() => {
+    const onClick = (event: MouseEvent) => {
+      if (!panelRef.current) return;
+      if (!panelRef.current.contains(event.target as Node)) setIsOpen(false);
+    };
+    document.addEventListener('mousedown', onClick);
+    return () => document.removeEventListener('mousedown', onClick);
+  }, []);
+
+  useEffect(() => {
+    void refreshUnread();
+  }, []);
+
+  async function refreshUnread() {
+    const [ok, data] = await getFromApi<{ data?: { unread_count: number } }>('/me/notifications/unread-count');
+    if (!ok || !data || typeof data !== 'object' || !('data' in data)) return;
+    setUnreadCount(data.data?.unread_count ?? 0);
+  }
+
+  async function openNotifications() {
+    setIsOpen((v) => !v);
+    if (isOpen) return;
+    setLoading(true);
+    const [ok, data] = await getFromApi<{ data?: { items: UserNotification[]; unread_count: number } }>('/me/notifications?limit=20');
+    if (ok && data && typeof data === 'object' && 'data' in data) {
+      setItems(data.data?.items ?? []);
+      setUnreadCount(data.data?.unread_count ?? 0);
+    }
+    setLoading(false);
+  }
+
+  async function markOneRead(id: string) {
+    const [ok] = await patchWithApi(`/me/notifications/${id}/read`, {});
+    if (!ok) return;
+    setItems((prev) => prev.map((item) => (item.id === id ? { ...item, is_read: true } : item)));
+    void refreshUnread();
+  }
+
+  async function markAllRead() {
+    const [ok] = await patchWithApi('/me/notifications/read-all', {});
+    if (!ok) return;
+    setItems((prev) => prev.map((item) => ({ ...item, is_read: true })));
+    setUnreadCount(0);
+  }
+
+  async function removeOne(id: string) {
+    const [ok] = await deleteWithApi(`/me/notifications/${id}`);
+    if (!ok) return;
+    setItems((prev) => prev.filter((item) => item.id !== id));
+    void refreshUnread();
+  }
 
   return (
     <header className="flex h-14 flex-shrink-0 items-center justify-between border-b border-[#E0DCD0] bg-white px-6 dark:border-[#1A2A14] dark:bg-[#111A0E]">
@@ -58,25 +117,65 @@ export function StationTopNav({ stationName }: StationTopNavProps) {
         <ThemeToggle />
         <LangToggle />
 
-        {/* Notification bell - disabled until /me/notifications endpoints ship.
-            See project_pending_backend_specs.md for the spec. */}
-        <button
-          type="button"
-          disabled
-          aria-label={t('notif_coming_soon')}
-          title={t('notif_coming_soon')}
-          className="relative flex h-9 w-9 cursor-not-allowed items-center justify-center rounded-full bg-[#F0EDE0] opacity-60 dark:bg-[#182214]"
-        >
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#888" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-            <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9" />
-            <path d="M13.73 21a2 2 0 0 1-3.46 0" />
-          </svg>
-          <span
-            className="absolute -right-0.5 -bottom-0.5 h-2.5 w-2.5 rounded-full border-2 border-white bg-[#C49A1E] dark:border-[#111A0E]"
-            aria-hidden="true"
-          />
-        </button>
+        <div className="relative" ref={panelRef}>
+          <button
+            type="button"
+            aria-label={t('notif_tooltip')}
+            title={t('notif_tooltip')}
+            onClick={openNotifications}
+            className="relative flex h-9 w-9 items-center justify-center rounded-full bg-[#F0EDE0] hover:bg-[#E8E1CA] dark:bg-[#182214] dark:hover:bg-[#22301a]"
+          >
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#888" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+              <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9" />
+              <path d="M13.73 21a2 2 0 0 1-3.46 0" />
+            </svg>
+            {unreadCount > 0 && (
+              <span className="absolute -right-1 -top-1 min-w-4 rounded-full bg-[#C49A1E] px-1 text-center text-[10px] font-bold leading-4 text-white">
+                {unreadCount > 99 ? '99+' : unreadCount}
+              </span>
+            )}
+          </button>
+          {isOpen && (
+            <div className="absolute right-0 top-11 z-50 w-96 rounded-xl border border-[#E0DCD0] bg-white p-3 shadow-xl dark:border-[#2B3A22] dark:bg-[#0F160D]">
+              <div className="mb-2 flex items-center justify-between">
+                <div className="text-sm font-semibold text-[#1B1B18] dark:text-[#EAEADC]">{t('notif_title')}</div>
+                <button type="button" onClick={markAllRead} className="text-xs font-medium text-[#7A6A2A] hover:underline">
+                  {t('notif_mark_all_read')}
+                </button>
+              </div>
+              {loading ? <div className="py-4 text-sm text-[#6D6A5F]">{t('notif_loading')}</div> : null}
+              {!loading && items.length === 0 ? <div className="py-4 text-sm text-[#6D6A5F]">{t('notif_empty')}</div> : null}
+              {!loading && items.length > 0 ? (
+                <div className="max-h-96 space-y-2 overflow-auto">
+                  {items.map((item) => (
+                    <div key={item.id} className={`rounded-lg border p-2 ${item.is_read ? 'border-[#E7E2D4]' : 'border-[#D1B04B] bg-[#FFFBEF]'}`}>
+                      <div className="text-xs font-semibold text-[#2A2A24]">{item.title ?? t('notif_default_title')}</div>
+                      <div className="mt-0.5 text-xs text-[#656254]">{item.body ?? '-'}</div>
+                      <div className="mt-2 flex items-center gap-3">
+                        {!item.is_read && (
+                          <button type="button" onClick={() => markOneRead(item.id)} className="text-xs font-medium text-[#4A6A2A] hover:underline">
+                            {t('notif_mark_read')}
+                          </button>
+                        )}
+                        <button type="button" onClick={() => removeOne(item.id)} className="text-xs font-medium text-[#8C3A2B] hover:underline">
+                          {t('notif_delete')}
+                        </button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              ) : null}
+            </div>
+          )}
+        </div>
       </div>
     </header>
   );
 }
+
+type UserNotification = {
+  id: string;
+  title: string | null;
+  body: string | null;
+  is_read: boolean;
+};

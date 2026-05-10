@@ -1,5 +1,5 @@
 /**
- * PATCH /api/v1/me/notifications/read-all - mark all unread notifications as read. Auth: client.
+ * PATCH /api/v1/me/notifications/read-all - mark all unread notifications as read. Auth: client|station.
  */
 import { requireRole } from '@/lib/require-role';
 import { successResponse, error500, fromAppError } from '@/lib/responses';
@@ -9,7 +9,7 @@ import { AppError } from '@/lib/errors';
 import type { NextResponse } from 'next/server';
 
 export async function PATCH(request: Request): Promise<NextResponse> {
-  const auth = await requireRole(request, 'client');
+  const auth = await requireRole(request, 'client', 'station');
   if (auth instanceof Response) return applyNoStoreHeaders(auth as NextResponse);
 
   try {

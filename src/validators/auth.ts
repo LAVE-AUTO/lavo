@@ -62,3 +62,26 @@ export const resetPasswordSchema = z
     message: 'Passwords do not match',
     path: ['confirm_new_password'],
   });
+
+/**
+ * PATCH /api/v1/me/profile — partial update of user personal info.
+ * At least one field is required.
+ *
+ * `.strict()` is used so unknown keys (e.g. an attempt to smuggle `email`,
+ * `password_hash`, `role`, `status`, etc.) are rejected with a validation
+ * error rather than silently dropped. This is intentional defense-in-depth
+ * for an endpoint that writes to the user record.
+ */
+export const updateProfileBodySchema = z
+  .object({
+    first_name: z.string().min(2, 'First name must be at least 2 characters').max(100).optional(),
+    last_name:  z.string().min(2, 'Last name must be at least 2 characters').max(100).optional(),
+    phone:      phoneSchema.optional(),
+  })
+  .strict()
+  .refine(
+    (data) => data.first_name !== undefined || data.last_name !== undefined || data.phone !== undefined,
+    { message: 'At least one field must be provided' }
+  );
+
+export type UpdateProfileDto = z.infer<typeof updateProfileBodySchema>;
