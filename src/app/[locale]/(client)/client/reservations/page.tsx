@@ -49,7 +49,7 @@ interface ApiRichEntry {
   is_tipped?: boolean;
 }
 
-const ACTIVE_QUEUE_STATUSES = new Set(['pending', 'confirmed', 'in_progress', 'late']);
+const ACTIVE_QUEUE_STATUSES = new Set(['pending_payment', 'pending', 'confirmed', 'in_progress', 'late']);
 
 /* ------------------------------------------------------------------ */
 /* Client-side mapped shapes                                            */
