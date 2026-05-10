@@ -4,7 +4,7 @@
  *  Strategy: network-first for API/navigation, cache-first for static assets.
  * ------------------------------------------------------------------ */
 
-const CACHE_NAME = 'slowtime-v1';
+const CACHE_NAME = 'slowtime-v2';
 
 /* Static assets to pre-cache on install */
 const PRECACHE_URLS = [
@@ -51,6 +51,9 @@ self.addEventListener('fetch', (event) => {
 
   /* Only handle same-origin requests */
   if (url.origin !== self.location.origin) return;
+
+  /* Never cache Next build assets/chunks - avoids stale UI logic after deploy/reload. */
+  if (url.pathname.startsWith('/_next/')) return;
 
   /* Skip API routes - never cache them */
   if (url.pathname.startsWith('/api/')) return;

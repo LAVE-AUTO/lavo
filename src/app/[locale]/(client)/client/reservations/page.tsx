@@ -2,8 +2,9 @@
 
 import { useState, useMemo, useEffect, useRef, useCallback } from 'react';
 import { useTranslations, useLocale } from 'next-intl';
-import { Link, useRouter } from '@/i18n/navigation';
+import { Link } from '@/i18n/navigation';
 import { ConfirmDialog } from '@/components/ui/ConfirmDialog';
+import UpgradeToReservationModal from '@/components/reservations/UpgradeToReservationModal';
 import { getFromApi, patchWithApi } from '@/services/axios-service';
 import { useToast } from '@/context';
 import { useAuth } from '@/context/auth-context';
@@ -47,6 +48,8 @@ interface ApiRichEntry {
   is_rated?: boolean;
   is_tipped?: boolean;
 }
+
+const ACTIVE_QUEUE_STATUSES = new Set(['pending_payment', 'pending', 'confirmed', 'in_progress', 'late']);
 
 /* ------------------------------------------------------------------ */
 /* Client-side mapped shapes                                            */
@@ -221,7 +224,6 @@ export default function ClientReservationsPage() {
   const locale = useLocale();
   const { success, error } = useToast();
   const { isLoading: authLoading } = useAuth();
-  const router = useRouter();
 
   const mountedRef = useRef(true);
   useEffect(() => { mountedRef.current = true; return () => { mountedRef.current = false; }; }, []);
@@ -234,9 +236,10 @@ export default function ClientReservationsPage() {
   const [cancelTarget, setCancelTarget]   = useState<ClientReservation | null>(null);
   const [cancelLoading, setCancelLoading] = useState(false);
 
-  /* Queue actions: leave (refund) or leave + book a slot at the same station. */
-  const [queueAction, setQueueAction] = useState<{ entry: ClientQueueEntry; mode: 'leave' | 'leave_and_book' } | null>(null);
+  /* Queue actions: leave (refund). Upgrade to reservation uses dedicated modal. */
+  const [queueAction, setQueueAction] = useState<{ entry: ClientQueueEntry } | null>(null);
   const [queueActionLoading, setQueueActionLoading] = useState(false);
+  const [upgradeTarget, setUpgradeTarget] = useState<ClientQueueEntry | null>(null);
 
   const loadEntries = useCallback(async () => {
     setLoading(true);
@@ -269,8 +272,11 @@ export default function ClientReservationsPage() {
     const queueArr: ClientQueueEntry[] = [];
     for (const entry of entries) {
       const enriched = enrichEntry(entry);
-      if (entry.entry_type === 'reservation') resArr.push(enriched as ClientReservation);
-      else queueArr.push(enriched as ClientQueueEntry);
+      if (entry.entry_type === 'reservation') {
+        resArr.push(enriched as ClientReservation);
+      } else if (ACTIVE_QUEUE_STATUSES.has(entry.status)) {
+        queueArr.push(enriched as ClientQueueEntry);
+      }
     }
     setReservations(resArr);
     setQueueEntries(queueArr);
@@ -278,7 +284,11 @@ export default function ClientReservationsPage() {
   }, [error, t]);
 
   useEffect(() => {
-    if (!authLoading) loadEntries();
+    if (authLoading) return;
+    const timer = window.setTimeout(() => {
+      void loadEntries();
+    }, 0);
+    return () => window.clearTimeout(timer);
   }, [authLoading, loadEntries]);
 
   /* Sectioning by time, not by status:
@@ -337,39 +347,47 @@ export default function ClientReservationsPage() {
   const handleCancelConfirm = async () => {
     if (!cancelTarget) return;
     setCancelLoading(true);
-    const [ok] = await patchWithApi(`/me/entries/${cancelTarget.id}/cancel`, {});
+    const [ok, data] = await patchWithApi(`/me/entries/${cancelTarget.id}/cancel`, {});
     setCancelLoading(false);
     if (ok) {
+      setReservations((prev) =>
+        prev.map((item) => (item.id === cancelTarget.id ? { ...item, status: 'cancelled' } : item))
+      );
       setCancelTarget(null);
       success(t('toast_cancel_success'));
       await loadEntries();
     } else {
+      const err = data as { code?: string; message?: string } | null;
+      if (err?.code === 'CONFLICT' && (err.message ?? '').toLowerCase().includes('already cancelled')) {
+        setCancelTarget(null);
+        success(t('toast_cancel_success'));
+        await loadEntries();
+        return;
+      }
       error(t('toast_cancel_error'));
     }
   };
 
-  /**
-   * Both queue actions cancel the queue entry first (full refund). The
-   * "leave + book" variant then redirects to the station detail so the user
-   * can pick a service slot via the per-post booking flow.
-   */
   const handleQueueActionConfirm = async () => {
     if (!queueAction) return;
     setQueueActionLoading(true);
-    const [ok] = await patchWithApi(`/me/entries/${queueAction.entry.id}/cancel`, {});
+    const leavingId = queueAction.entry.id;
+    const [ok, data] = await patchWithApi(`/me/entries/${queueAction.entry.id}/cancel`, {});
     setQueueActionLoading(false);
     if (!ok) {
+      const err = data as { code?: string; message?: string } | null;
+      if (err?.code === 'CONFLICT' && (err.message ?? '').toLowerCase().includes('already cancelled')) {
+        setQueueEntries((prev) => prev.filter((item) => item.id !== leavingId));
+        setQueueAction(null);
+        await loadEntries();
+        return;
+      }
       error(t('toast_cancel_error'));
       return;
     }
+    setQueueEntries((prev) => prev.filter((item) => item.id !== leavingId));
     success(t('toast_queue_leave_success'));
-    const stationId = queueAction.entry.stationId;
-    const mode = queueAction.mode;
     setQueueAction(null);
-    if (mode === 'leave_and_book') {
-      router.push(`/stations/${stationId}`);
-      return;
-    }
     await loadEntries();
   };
 
@@ -542,8 +560,8 @@ export default function ClientReservationsPage() {
                   key={entry.id}
                   entry={entry}
                   t={t}
-                  onLeave={() => setQueueAction({ entry, mode: 'leave' })}
-                  onLeaveAndBook={() => setQueueAction({ entry, mode: 'leave_and_book' })}
+                  onLeave={() => setQueueAction({ entry })}
+                  onLeaveAndBook={() => setUpgradeTarget(entry)}
                 />
               ))
             ) : (
@@ -576,27 +594,28 @@ export default function ClientReservationsPage() {
       {/* Queue leave / leave + book confirmation */}
       <ConfirmDialog
         open={queueAction !== null}
-        title={
-          queueAction?.mode === 'leave_and_book'
-            ? t('queue_leave_and_book_title')
-            : t('queue_leave_title')
-        }
-        message={
-          queueAction?.mode === 'leave_and_book'
-            ? t('queue_leave_and_book_message')
-            : t('queue_leave_message')
-        }
-        variant={queueAction?.mode === 'leave_and_book' ? 'default' : 'danger'}
-        confirmLabel={
-          queueAction?.mode === 'leave_and_book'
-            ? t('queue_leave_and_book')
-            : t('queue_leave')
-        }
+        title={t('queue_leave_title')}
+        message={t('queue_leave_message')}
+        variant="danger"
+        confirmLabel={t('queue_leave')}
         cancelLabel={t('cancel_modal_keep')}
         loading={queueActionLoading}
         onConfirm={handleQueueActionConfirm}
         onCancel={() => { if (!queueActionLoading) setQueueAction(null); }}
       />
+
+      {upgradeTarget && (
+        <UpgradeToReservationModal
+          entryId={upgradeTarget.id}
+          stationId={upgradeTarget.stationId}
+          onClose={() => setUpgradeTarget(null)}
+          onSuccess={() => {
+            setUpgradeTarget(null);
+            void loadEntries();
+            setTab('reservations');
+          }}
+        />
+      )}
     </main>
   );
 }

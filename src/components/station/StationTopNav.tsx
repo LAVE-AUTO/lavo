@@ -39,7 +39,11 @@ export function StationTopNav({ stationName }: StationTopNavProps) {
   }, []);
 
   useEffect(() => {
-    void refreshUnread();
+    (async () => {
+      const [ok, data] = await getFromApi<{ data?: { unread_count: number } }>('/me/notifications/unread-count');
+      if (!ok || !data || typeof data !== 'object' || !('data' in data)) return;
+      setUnreadCount(data.data?.unread_count ?? 0);
+    })();
   }, []);
 
   async function refreshUnread() {
@@ -80,6 +84,11 @@ export function StationTopNav({ stationName }: StationTopNavProps) {
     setItems((prev) => prev.filter((item) => item.id !== id));
     void refreshUnread();
   }
+
+  const notifPanelStyle = {
+    backgroundColor: isDark ? '#121A10' : '#FFFDF8',
+    color: isDark ? '#F3F1E8' : '#1B1B18',
+  } as const;
 
   return (
     <header className="flex h-14 flex-shrink-0 items-center justify-between border-b border-[#E0DCD0] bg-white px-6 dark:border-[#1A2A14] dark:bg-[#111A0E]">
@@ -136,28 +145,54 @@ export function StationTopNav({ stationName }: StationTopNavProps) {
             )}
           </button>
           {isOpen && (
-            <div className="absolute right-0 top-11 z-50 w-96 rounded-xl border border-[#E0DCD0] bg-white p-3 shadow-xl dark:border-[#2B3A22] dark:bg-[#0F160D]">
+            <div
+              className="absolute right-0 top-11 z-50 w-96 rounded-xl p-3 shadow-xl opacity-100 backdrop-blur-0"
+              style={notifPanelStyle}
+            >
               <div className="mb-2 flex items-center justify-between">
-                <div className="text-sm font-semibold text-[#1B1B18] dark:text-[#EAEADC]">{t('notif_title')}</div>
-                <button type="button" onClick={markAllRead} className="text-xs font-medium text-[#7A6A2A] hover:underline">
+                <div className="text-sm font-semibold" style={{ color: isDark ? '#F3F1E8' : '#1B1B18' }}>{t('notif_title')}</div>
+                <button
+                  type="button"
+                  onClick={markAllRead}
+                  className="text-xs font-semibold hover:underline"
+                  style={{ color: isDark ? '#E4C56A' : '#6B5A23' }}
+                >
                   {t('notif_mark_all_read')}
                 </button>
               </div>
-              {loading ? <div className="py-4 text-sm text-[#6D6A5F]">{t('notif_loading')}</div> : null}
-              {!loading && items.length === 0 ? <div className="py-4 text-sm text-[#6D6A5F]">{t('notif_empty')}</div> : null}
+              {loading ? <div className="py-4 text-sm" style={{ color: isDark ? '#C9C4B2' : '#5E5A4D' }}>{t('notif_loading')}</div> : null}
+              {!loading && items.length === 0 ? <div className="py-4 text-sm" style={{ color: isDark ? '#C9C4B2' : '#5E5A4D' }}>{t('notif_empty')}</div> : null}
               {!loading && items.length > 0 ? (
                 <div className="max-h-96 space-y-2 overflow-auto">
                   {items.map((item) => (
-                    <div key={item.id} className={`rounded-lg border p-2 ${item.is_read ? 'border-[#E7E2D4]' : 'border-[#D1B04B] bg-[#FFFBEF]'}`}>
-                      <div className="text-xs font-semibold text-[#2A2A24]">{item.title ?? t('notif_default_title')}</div>
-                      <div className="mt-0.5 text-xs text-[#656254]">{item.body ?? '-'}</div>
+                    <div
+                      key={item.id}
+                      className="rounded-lg p-2"
+                      style={{
+                        backgroundColor: isDark
+                          ? (item.is_read ? '#1A2318' : '#242113')
+                          : (item.is_read ? '#F4F1E8' : '#EEE7D2'),
+                      }}
+                    >
+                      <div className="text-xs font-semibold" style={{ color: isDark ? '#F3F1E8' : '#1F1E19' }}>{item.title ?? t('notif_default_title')}</div>
+                      <div className="mt-0.5 text-xs" style={{ color: isDark ? '#D2CEBE' : '#4F4C40' }}>{item.body ?? '-'}</div>
                       <div className="mt-2 flex items-center gap-3">
                         {!item.is_read && (
-                          <button type="button" onClick={() => markOneRead(item.id)} className="text-xs font-medium text-[#4A6A2A] hover:underline">
+                          <button
+                            type="button"
+                            onClick={() => markOneRead(item.id)}
+                            className="text-xs font-semibold hover:underline"
+                            style={{ color: isDark ? '#8ED17C' : '#2E6125' }}
+                          >
                             {t('notif_mark_read')}
                           </button>
                         )}
-                        <button type="button" onClick={() => removeOne(item.id)} className="text-xs font-medium text-[#8C3A2B] hover:underline">
+                        <button
+                          type="button"
+                          onClick={() => removeOne(item.id)}
+                          className="text-xs font-semibold hover:underline"
+                          style={{ color: isDark ? '#FF9E8D' : '#8C3A2B' }}
+                        >
                           {t('notif_delete')}
                         </button>
                       </div>

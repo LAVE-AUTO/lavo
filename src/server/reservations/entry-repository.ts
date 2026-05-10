@@ -533,6 +533,7 @@ export async function updateEntry(
     status: string;
     entry_type: 'reservation' | 'queue';
     booking_source: 'standard' | 'qr';
+    post_id: string | null;
     time_slot_id: string | null;
     queue_position: number | null;
     amount_paid: string;
@@ -990,6 +991,7 @@ export async function findRichEntryByIdAndUser(
 /** Station-side denormalized entry shape: includes user first_name and vehicle format label. */
 export type RichStationEntry = Entry & {
   user_first_name: string | null;
+  user_last_name: string | null;
   vehicle_format: { id: string; label: string } | null;
   slot_start_time: Date | null;
   slot_end_time: Date | null;
@@ -997,7 +999,7 @@ export type RichStationEntry = Entry & {
 
 /**
  * Lists entries for a station with pagination and optional filters.
- * Enriched with user.first_name and vehicle_format id/label via LEFT JOINs.
+ * Enriched with user first/last name and vehicle_format id/label via LEFT JOINs.
  */
 export async function listRichStationEntriesPaginated(
   stationId: string,
@@ -1026,6 +1028,7 @@ export async function listRichStationEntriesPaginated(
       .select({
         ...RESERVATION_COLUMNS,
         user_first_name: users.first_name,
+        user_last_name: users.last_name,
         vf_id: vehicleFormats.id,
         vf_label: vehicleFormats.label,
         slot_start_time: timeSlots.start_time,
@@ -1044,6 +1047,7 @@ export async function listRichStationEntriesPaginated(
   const richRows: RichStationEntry[] = rows.map((r) => ({
     ...(r as Entry),
     user_first_name: r.user_first_name,
+    user_last_name: r.user_last_name,
     vehicle_format: r.vf_id ? { id: r.vf_id, label: r.vf_label ?? '' } : null,
     slot_start_time: r.slot_start_time ?? null,
     slot_end_time: r.slot_end_time ?? null,

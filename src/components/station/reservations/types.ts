@@ -20,6 +20,10 @@ export interface ReservationEntry {
   created_at: string;
   updated_at: string;
   completed_at: string | null;
+  user?: {
+    first_name: string | null;
+    last_name: string | null;
+  } | null;
 }
 
 export type StatusTab = 'all' | 'confirmed' | 'in_progress' | 'completed' | 'cancelled' | 'late';

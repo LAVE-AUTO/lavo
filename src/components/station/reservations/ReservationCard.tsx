@@ -49,8 +49,11 @@ export function ReservationCard({ entry, onValidate, onStart, onCancel, onExtraT
   const displayStatus: EntryStatus = entry.status === 'pending_payment' ? 'confirmed' : entry.status;
   const st = STATUS_MAP[displayStatus] ?? STATUS_MAP.pending;
   const accent = ACCENT_MAP[displayStatus] ?? '#888888';
-  const clientLabel = `${t('client_label')} #${entry.user_id.slice(0, 8)}`;
-  const time = new Date(entry.created_at).toLocaleTimeString('fr-CA', { hour: '2-digit', minute: '2-digit' });
+  const firstName = entry.user?.first_name?.trim();
+  const lastName = entry.user?.last_name?.trim();
+  const fullName = [firstName, lastName].filter((part): part is string => Boolean(part && part.length > 0)).join(' ');
+  const clientIdentity = fullName.length > 0 ? fullName : `#${entry.user_id.slice(0, 8)}`;
+  const time = formatHourMinute(entry.created_at);
   const isReservation = entry.entry_type === 'reservation';
   const verificationCode = entry.id.slice(0, 8).toUpperCase();
 
@@ -67,14 +70,14 @@ export function ReservationCard({ entry, onValidate, onStart, onCancel, onExtraT
         onClick={() => setExpanded(!expanded)}
         className="flex w-full items-center gap-4 p-4 pl-5 text-left"
       >
-        <div className="flex h-10 w-14 shrink-0 items-center justify-center rounded-lg bg-white/60 dark:bg-dark-surface">
-          <span className="font-mono text-[13px] font-bold text-[#000C1F] dark:text-[#FFF8EC]">{time}</span>
+        <div className="flex h-10 w-20 shrink-0 items-center justify-center rounded-lg bg-white/60 dark:bg-dark-surface">
+          <span className="whitespace-nowrap font-mono text-[13px] font-bold text-[#000C1F] dark:text-[#FFF8EC]">{time}</span>
         </div>
 
         <div className="min-w-0 flex-1">
           <div className="flex items-center gap-2">
             <span className="truncate text-[14px] font-semibold text-[#000C1F] dark:text-[#FFF8EC]">
-              {clientLabel}
+              {clientIdentity}
             </span>
             <span className={`shrink-0 rounded px-1.5 py-px text-[9px] font-bold uppercase tracking-wide ${
               isReservation
@@ -215,6 +218,11 @@ export function ReservationCard({ entry, onValidate, onStart, onCancel, onExtraT
 
 function formatTime(iso: string): string {
   return new Date(iso).toLocaleTimeString('fr-CA', { hour: '2-digit', minute: '2-digit' });
+}
+
+function formatHourMinute(iso: string): string {
+  const d = new Date(iso);
+  return `${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`;
 }
 
 function ExtraTimeInput({

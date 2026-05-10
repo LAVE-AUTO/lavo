@@ -90,9 +90,24 @@ export const cancelEntryBodySchema = z
 /** POST /me/entries/:entryId/upgrade-to-reservation - upgrade queue to reservation. */
 export const upgradeToReservationBodySchema = z
   .object({
-    time_slot_id: uuidSchema,
+    time_slot_id: uuidSchema.optional(),
+    start_time: z
+      .string()
+      .datetime({ message: 'start_time must be a valid ISO 8601 datetime' })
+      .optional(),
   })
-  .strict();
+  .strict()
+  .superRefine((data, ctx) => {
+    const hasSlot = typeof data.time_slot_id === 'string';
+    const hasStart = typeof data.start_time === 'string';
+    if (hasSlot === hasStart) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: 'Provide either time_slot_id or start_time, not both',
+        path: ['time_slot_id'],
+      });
+    }
+  });
 
 /** PATCH /station/entries/:entryId - set status (in_progress, completed, cancelled). */
 export const stationPatchEntryBodySchema = z

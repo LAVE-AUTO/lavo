@@ -6,7 +6,7 @@
 import { stripe } from '@/lib/stripe';
 import type Stripe from 'stripe';
 import { APP_URL } from '@/helpers/constants';
-import { NotImplementedError, ValidationError } from '@/lib/errors';
+import { ConflictError, NotImplementedError, ValidationError } from '@/lib/errors';
 
 // ─── Legacy queue payment (immediate charge) ────────────────────────────────
 
@@ -90,17 +90,29 @@ export async function createPaymentIntent(
     station_id: params.stationId,
   };
 
-  const paymentIntent = await stripe.paymentIntents.create({
-    amount: amountCents,
-    currency,
-    capture_method: 'manual',
-    application_fee_amount: commissionCents,
-    transfer_data: {
-      destination,
-    },
-    metadata: mergedMetadata,
-    automatic_payment_methods: { enabled: true, allow_redirects: 'never' },
-  });
+  let paymentIntent: Stripe.PaymentIntent;
+  try {
+    paymentIntent = await stripe.paymentIntents.create({
+      amount: amountCents,
+      currency,
+      capture_method: 'manual',
+      application_fee_amount: commissionCents,
+      transfer_data: {
+        destination,
+      },
+      metadata: mergedMetadata,
+      automatic_payment_methods: { enabled: true, allow_redirects: 'never' },
+    });
+  } catch (e) {
+    const msg = e instanceof Error ? e.message : String(e);
+    if (
+      msg.includes('destination account needs to have at least one of the following capabilities') ||
+      msg.includes('capabilities.stripe_balance.stripe_transfers')
+    ) {
+      throw new ConflictError('Station payment account is not fully configured');
+    }
+    throw e;
+  }
 
   if (!paymentIntent.client_secret) {
     throw new Error('Stripe did not return a client_secret');

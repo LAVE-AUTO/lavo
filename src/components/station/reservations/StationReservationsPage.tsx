@@ -122,7 +122,12 @@ export function StationReservationsPage() {
     setLoading(false);
   }, [selectedDate, entryTypeFilter]);
 
-  useEffect(() => { loadData(); }, [loadData]);
+  useEffect(() => {
+    const timer = window.setTimeout(() => {
+      void loadData();
+    }, 0);
+    return () => window.clearTimeout(timer);
+  }, [loadData]);
 
   const filtered = useMemo(() => {
     const base = activeTab === 'all' ? entries : entries.filter((e) => {
@@ -155,7 +160,11 @@ export function StationReservationsPage() {
 
   function requestAction(type: ActionType, entryId: string) {
     const entry = entries.find((e) => e.id === entryId);
-    const clientLabel = entry ? `${t('client_label')} #${entry.user_id.slice(0, 8)}` : '';
+    const firstName = entry?.user?.first_name?.trim();
+    const lastName = entry?.user?.last_name?.trim();
+    const fullName = [firstName, lastName].filter((part): part is string => Boolean(part && part.length > 0)).join(' ');
+    const clientIdentity = fullName.length > 0 ? fullName : (entry ? `#${entry.user_id.slice(0, 8)}` : '');
+    const clientLabel = entry ? clientIdentity : '';
     setPending({ type, entryId, clientLabel });
     setActionError(null);
   }
