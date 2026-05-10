@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { useTranslations } from 'next-intl';
 import { useToast } from '@/context/toast-context';
 import { getFromApi, patchWithApi } from '@/services';
@@ -10,13 +10,13 @@ interface Props {
   locked: boolean;
 }
 
-type NotifKey = 'queue_new' | 'no_show' | 'auto_switch' | 'stripe_transfer' | 'daily_report';
+type NotifKey = 'queue_new' | 'reservation_new' | 'delay_request' | 'cancellations' | 'daily_report';
 
 const NOTIF_KEYS: NotifKey[] = [
   'queue_new',
-  'no_show',
-  'auto_switch',
-  'stripe_transfer',
+  'reservation_new',
+  'delay_request',
+  'cancellations',
   'daily_report',
 ];
 
@@ -24,11 +24,12 @@ type NotifPrefs = Record<NotifKey, boolean>;
 
 const DEFAULT_PREFS: NotifPrefs = {
   queue_new: true,
-  no_show: true,
-  auto_switch: true,
-  stripe_transfer: true,
+  reservation_new: true,
+  delay_request: true,
+  cancellations: true,
   daily_report: false,
 };
+
 
 function ToggleRow({
   label,
@@ -74,9 +75,12 @@ function ToggleRow({
   );
 }
 
+
 export function NotificationsTab({ locked }: Props) {
   const t = useTranslations('station_config');
   const { success, error: showError } = useToast();
+  const mountedRef = useRef(true);
+  useEffect(() => { mountedRef.current = true; return () => { mountedRef.current = false; }; }, []);
 
   const [prefs, setPrefs] = useState<NotifPrefs>(DEFAULT_PREFS);
   const [loading, setLoading] = useState(true);
@@ -84,13 +88,14 @@ export function NotificationsTab({ locked }: Props) {
 
   const loadPrefs = useCallback(async () => {
     const [ok, data] = await getFromApi('/station/notification-prefs');
+    if (!mountedRef.current) return;
     if (ok) {
       const raw = (data as { data: Record<string, unknown> }).data ?? {};
       setPrefs({
         queue_new: raw.queue_new !== false,
-        no_show: raw.no_show !== false,
-        auto_switch: raw.auto_switch !== false,
-        stripe_transfer: raw.stripe_transfer !== false,
+        reservation_new: raw.reservation_new !== false,
+        delay_request: raw.delay_request !== false,
+        cancellations: raw.cancellations !== false,
         daily_report: raw.daily_report === true,
       });
     } else {
@@ -106,6 +111,7 @@ export function NotificationsTab({ locked }: Props) {
   async function handleSave() {
     setSaving(true);
     const [ok] = await patchWithApi('/station/notification-prefs', prefs);
+    if (!mountedRef.current) return;
     if (ok) {
       success(t('notifications_save_success'));
     } else {

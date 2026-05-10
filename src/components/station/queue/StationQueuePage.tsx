@@ -12,6 +12,7 @@ import { getFromApi, patchWithApi, postWithApi } from '@/services';
 import { useToast } from '@/context/toast-context';
 import { ConfirmDialog } from '@/components/ui/ConfirmDialog';
 import { QueueCard, type QueueEntry } from '@/components/station/dashboard/QueueCard';
+import { ACTIVE_QUEUE_STATUSES } from '@/components/station/dashboard/StationDashboard';
 
 const POLL_INTERVAL = 30_000;
 
@@ -38,6 +39,7 @@ function toQueueEntry(e: RawEntry, idx: number, isNext: boolean): QueueEntry {
     isNext,
   };
 }
+
 
 export function StationQueuePage() {
   const t = useTranslations('station_queue');
@@ -66,16 +68,14 @@ export function StationQueuePage() {
       showError(t('error_load'));
     }
     if (!silent) setLoading(false);
-  }, []);
+  }, [showError, t]);
 
-  /* Initial load + polling */
   useEffect(() => {
     loadData();
     const interval = setInterval(() => loadData(true), POLL_INTERVAL);
     return () => clearInterval(interval);
   }, [loadData]);
 
-  /* Derived queues */
   const inProgressEntries = useMemo(
     () => entries.filter((e) => e.status === 'in_progress'),
     [entries]
@@ -83,7 +83,7 @@ export function StationQueuePage() {
   const waitingEntries = useMemo(
     () =>
       entries
-        .filter((e) => e.status === 'pending' || e.status === 'waiting')
+        .filter((e) => (ACTIVE_QUEUE_STATUSES as readonly string[]).includes(e.status))
         .sort((a, b) => (a.queue_position ?? 999) - (b.queue_position ?? 999)),
     [entries]
   );
@@ -92,7 +92,7 @@ export function StationQueuePage() {
   const walkInCount   = useMemo(() => waitingEntries.filter((e) => e.entry_type === 'queue').length,        [waitingEntries]);
 
   async function executeAction() {
-    if (!pending) return;
+    if (!pending || actionLoading) return;
     setActionLoading(true);
     setActionError(null);
     const newStatus = pending.type === 'call' ? 'in_progress' : 'completed';
@@ -134,7 +134,6 @@ export function StationQueuePage() {
     ? t('last_updated', { time: lastUpdated.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) })
     : '';
 
-  /* ---- Render ---- */
   if (loading) {
     return (
       <div className="flex flex-1 items-center justify-center">
@@ -159,7 +158,7 @@ export function StationQueuePage() {
 
   return (
     <div className="flex flex-1 flex-col overflow-hidden bg-[#EDEDED] dark:bg-[#1A2116]">
-      {/* Header */}
+      {/* = Header */}
       <div className="border-b border-[#CCCCCC] bg-[#E0E0D0] px-6 pb-4 pt-5 dark:border-[#3A4A36] dark:bg-[#243020]">
         <div className="flex items-center justify-between gap-4">
           <div>
@@ -192,7 +191,7 @@ export function StationQueuePage() {
         )}
       </div>
 
-      {/* Content */}
+      {/* = Content */}
       <div className="flex-1 overflow-y-auto p-4 space-y-6">
         {inProgressEntries.length === 0 && waitingEntries.length === 0 ? (
           <EmptyState label={t('queue_empty')} />
@@ -253,7 +252,7 @@ export function StationQueuePage() {
         )}
       </div>
 
-      {/* Confirm modal */}
+      {/* = Confirm modal */}
       <ConfirmDialog
         open={pending !== null}
         title={pending?.type === 'call' ? t('confirm_call_title') : t('confirm_complete_title')}
@@ -262,7 +261,7 @@ export function StationQueuePage() {
           : pending?.type === 'call' ? t('confirm_call_message') : t('confirm_complete_message')}
         confirmLabel={pending?.type === 'call' ? t('btn_call') : t('btn_complete')}
         cancelLabel={t('btn_cancel')}
-        variant={pending?.type === 'complete' ? 'default' : 'default'}
+        variant="default"
         loading={actionLoading}
         blocking
         onConfirm={executeAction}
@@ -272,7 +271,6 @@ export function StationQueuePage() {
   );
 }
 
-/* ---- Sub-components ---- */
 
 function StatChip({ count, color, label }: { count: number; color: string; label: string }) {
   return (

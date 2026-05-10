@@ -7,10 +7,16 @@
  * All inserts are best-effort: a failed notification must never abort the
  * underlying entry creation - we log and swallow.
  */
-import { findStationById } from '@/server/station/station-repository';
+
+import { findStationById, getNotificationPrefs } from '@/server/station/station-repository';
 import { insertUserNotification } from './user-notifications-repository';
 
-type StationFeedKind = 'queue_new' | 'reservation_new';
+type StationFeedKind =
+  | 'queue_new'
+  | 'reservation_new'
+  | 'reservation_cancelled_by_client'
+  | 'queue_cancelled_by_client'
+  | 'queue_upgraded_to_reservation';
 
 interface NotifyStationParams {
   stationId: string;
@@ -20,10 +26,22 @@ interface NotifyStationParams {
   body: string;
 }
 
+const KIND_TO_PREF: Record<StationFeedKind, string> = {
+  queue_new: 'queue_new',
+  reservation_new: 'reservation_new',
+  reservation_cancelled_by_client: 'cancellations',
+  queue_cancelled_by_client: 'cancellations',
+  queue_upgraded_to_reservation: 'reservation_new',
+};
+
 const TITLES: Record<StationFeedKind, string> = {
   queue_new: 'Nouveau client en file',
   reservation_new: 'Nouvelle réservation',
+  reservation_cancelled_by_client: 'Réservation annulée',
+  queue_cancelled_by_client: 'File d\'attente annulée',
+  queue_upgraded_to_reservation: 'Conversion file → réservation',
 };
+
 
 /**
  * Inserts a `user_notifications` row addressed to the station owner. Always
@@ -32,8 +50,16 @@ const TITLES: Record<StationFeedKind, string> = {
  */
 export async function notifyStationFeed(params: NotifyStationParams): Promise<void> {
   try {
-    const station = await findStationById(params.stationId);
+    const [station, prefs] = await Promise.all([
+      findStationById(params.stationId),
+      getNotificationPrefs(params.stationId),
+    ]);
     if (!station?.user_id) return;
+    // Deny-by-default: an unknown kind has no mapped preference key, so we should
+    // not deliver the notification rather than silently bypass user settings.
+    const prefKey = KIND_TO_PREF[params.kind];
+    if (!prefKey) return;
+    if (prefs && prefs[prefKey] === false) return;
     await insertUserNotification({
       user_id: station.user_id,
       kind: params.kind,
