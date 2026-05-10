@@ -101,6 +101,7 @@ export default function ProfilePage() {
 
   /* Modals (only password is wired to a real endpoint today) */
   const [showPasswordModal, setShowPasswordModal] = useState(false);
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
 
   /* Personal info edit state */
   const [editingInfo, setEditingInfo] = useState(false);
@@ -239,7 +240,7 @@ export default function ProfilePage() {
     };
 
     try {
-      let url = await uploadOnce();
+      const url = await uploadOnce();
       if (!url) {
         showError(t('avatar_upload_error'));
         return;
@@ -282,9 +283,9 @@ export default function ProfilePage() {
             const newUser = refreshed?.data?.user;
             if (newToken && newUser) {
               login(newToken, newUser);
-              url = await uploadOnce();
-              if (url && isSafeImageUrl(url)) {
-                setPhotoUrl(url);
+              const retriedUrl = await uploadOnce();
+              if (retriedUrl && isSafeImageUrl(retriedUrl)) {
+                setPhotoUrl(retriedUrl);
                 showSuccess(t('avatar_upload_success'));
                 return;
               }
@@ -634,18 +635,16 @@ export default function ProfilePage() {
         <div className="bg-lavo-error/5 rounded-2xl border border-lavo-error/20 overflow-hidden">
           <div className="flex items-center justify-between px-5 py-4 border-b border-lavo-error/15">
             <h2 className="text-[14px] font-black uppercase tracking-wider text-lavo-error/70">{t('danger_zone')}</h2>
-            <ComingSoonBadge label={t('coming_soon')} />
           </div>
-          <div className="flex items-center justify-between px-5 py-4 opacity-60">
+          <div className="flex items-center justify-between px-5 py-4">
             <div>
               <p className="text-[14px] font-semibold text-[#1a1a1a] dark:text-white">{t('delete_account')}</p>
               <p className="text-[12px] text-[#888] dark:text-[#666] mt-0.5 max-w-[260px] leading-snug">{t('danger_desc')}</p>
             </div>
             <button
               type="button"
-              disabled
-              title={t('coming_soon')}
-              className="shrink-0 px-4 py-2 bg-lavo-error/5 border border-lavo-error/20 rounded-xl text-[12px] font-bold text-lavo-error/50 cursor-not-allowed"
+              onClick={() => setShowDeleteModal(true)}
+              className="shrink-0 px-4 py-2 bg-lavo-error/10 border border-lavo-error/30 rounded-xl text-[12px] font-bold text-lavo-error hover:bg-lavo-error/15 transition-colors cursor-pointer"
             >
               {t('delete_account_btn')}
             </button>
@@ -659,6 +658,15 @@ export default function ProfilePage() {
         <PasswordModal
           onClose={() => setShowPasswordModal(false)}
           onSuccess={() => showSuccess(t('toast_password_success'))}
+        />
+      )}
+      {showDeleteModal && (
+        <DeleteAccountModal
+          onClose={() => setShowDeleteModal(false)}
+          onDeleted={() => {
+            showSuccess(t('toast_delete_success'));
+            window.location.href = `/${locale}/login`;
+          }}
         />
       )}
     </main>
@@ -754,6 +762,83 @@ function PasswordModal({ onClose, onSuccess }: { onClose: () => void; onSuccess:
           </div>
         </>
       )}
+    </Modal>
+  );
+}
+
+function DeleteAccountModal({ onClose, onDeleted }: { onClose: () => void; onDeleted: () => void }) {
+  const t = useTranslations('profile');
+  const [password, setPassword] = useState('');
+  const [error, setError] = useState('');
+  const [submitting, setSubmitting] = useState(false);
+
+  const mountedRef = useRef(true);
+  useEffect(() => { mountedRef.current = true; return () => { mountedRef.current = false; }; }, []);
+
+  const inputClass = 'w-full px-4 py-2.5 bg-[#F5F5E6] dark:bg-[#0F0F0D] border border-[#D0D0C0] dark:border-tab-inactive rounded-xl text-[14px] text-[#1a1a1a] dark:text-white focus:outline-none focus:border-lavo-error transition-colors';
+
+  const handleDelete = async () => {
+    setError('');
+    if (!password.trim()) { setError(t('error_required')); return; }
+    setSubmitting(true);
+    try {
+      const api = getAxiosInstance();
+      await api.delete('/auth/me', {
+        data: { current_password: password },
+        headers: { 'X-Requested-With': 'XMLHttpRequest' },
+      });
+      if (!mountedRef.current) return;
+      onDeleted();
+    } catch (e) {
+      if (!mountedRef.current) return;
+      const code = (e as { response?: { data?: { code?: string } } })?.response?.data?.code;
+      if (code === 'UNAUTHORIZED') setError(t('error_old_password'));
+      else setError(t('error_generic'));
+    } finally {
+      if (mountedRef.current) setSubmitting(false);
+    }
+  };
+
+  return (
+    <Modal onClose={onClose}>
+      <h3 className="text-[18px] font-black text-[#1a1a1a] dark:text-white mb-2">{t('delete_title')}</h3>
+      <p className="text-[13px] text-lavo-error mb-4">{t('delete_warning')}</p>
+      <div className="space-y-4">
+        <div>
+          <label className="block text-[12px] font-bold uppercase tracking-wider text-[#555] dark:text-[#888] mb-1.5">{t('confirm_with_password')}</label>
+          <input
+            type="password"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            placeholder={t('password_placeholder')}
+            className={inputClass}
+          />
+        </div>
+        {error && <p className="text-[13px] text-lavo-error font-semibold">{error}</p>}
+      </div>
+      <div className="flex gap-3 mt-6">
+        <button
+          type="button"
+          onClick={onClose}
+          disabled={submitting}
+          className="flex-1 py-3 border-2 border-[#D0D0C0] dark:border-tab-inactive rounded-xl text-[14px] font-bold text-[#555] dark:text-[#B0B0A0] hover:bg-[#E0E0D0] dark:hover:bg-[#1A1A18] transition-colors cursor-pointer disabled:opacity-50"
+        >
+          {t('cancel')}
+        </button>
+        <button
+          type="button"
+          onClick={handleDelete}
+          disabled={submitting}
+          className="flex-1 py-3 bg-lavo-error hover:bg-lavo-error/90 rounded-xl text-[14px] font-black text-white transition-colors cursor-pointer disabled:opacity-60 flex items-center justify-center gap-2"
+        >
+          {submitting && (
+            <svg className="animate-spin" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" aria-hidden="true">
+              <path d="M21 12a9 9 0 11-6.219-8.56" />
+            </svg>
+          )}
+          {t('delete_confirm')}
+        </button>
+      </div>
     </Modal>
   );
 }
