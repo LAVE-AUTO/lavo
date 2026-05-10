@@ -7,7 +7,7 @@ import { Link } from '@/i18n/navigation';
 import { useAuth } from '@/context';
 import { useToast } from '@/context/toast-context';
 import { isPasswordValid } from '@/helpers/validators';
-import { getFromApi, postWithApi, patchWithApi } from '@/services/axios-service';
+import { getAxiosInstance, getFromApi, postWithApi, patchWithApi } from '@/services/axios-service';
 
 /* ─── Toggle switch ─── */
 function Toggle({ checked, onChange }: { checked: boolean; onChange: () => void }) {
@@ -87,7 +87,7 @@ function isSafeImageUrl(url: string): boolean {
 export default function ProfilePage() {
   const t      = useTranslations('profile');
   const locale = useLocale();
-  const { user, refetchUser } = useAuth();
+  const { user, login, refetchUser } = useAuth();
   const { success: showSuccess, error: showError } = useToast();
 
   const [photoUrl, setPhotoUrl] = useState<string | null>(null);
@@ -225,27 +225,75 @@ export default function ProfilePage() {
     const formData = new FormData();
     formData.append('file', file);
 
-    try {
-      const response = await fetch('/api/v1/upload', {
-        method: 'POST',
-        body: formData,
+    const uploadOnce = async (): Promise<string | null> => {
+      const api = getAxiosInstance();
+      const response = await api.post('/upload', formData, {
+        headers: {
+          'Content-Type': 'multipart/form-data',
+          'X-Requested-With': 'XMLHttpRequest',
+        },
       });
+      if (response.status !== 201) return null;
+      const body = response.data as { data?: { url?: string } };
+      return body?.data?.url ?? null;
+    };
 
-      if (!response.ok) {
+    try {
+      let url = await uploadOnce();
+      if (!url) {
         showError(t('avatar_upload_error'));
         return;
       }
-
-      const body = (await response.json()) as { data?: { url?: string } };
-      const url = body?.data?.url ?? null;
-      if (!url || !isSafeImageUrl(url)) {
+      if (!isSafeImageUrl(url)) {
         showError(t('avatar_upload_error'));
         return;
       }
-
       setPhotoUrl(url);
       showSuccess(t('avatar_upload_success'));
-    } catch {
+      return;
+    } catch (err) {
+      const status = (err as { response?: { status?: number } })?.response?.status;
+      if (status === 401) {
+        try {
+          const refreshRes = await fetch('/api/v1/auth/refresh', {
+            method: 'POST',
+            credentials: 'include',
+            headers: { 'X-Requested-With': 'XMLHttpRequest' },
+          });
+          if (refreshRes.ok) {
+            const refreshed = (await refreshRes.json()) as {
+              data?: {
+                access_token?: string;
+                user?: {
+                  id: string;
+                  email: string;
+                  role: 'client' | 'station' | 'admin';
+                  first_name?: string;
+                  last_name?: string;
+                  phone?: string;
+                  station_id?: string | null;
+                  force_password_change?: boolean;
+                  email_verified_at?: string | null;
+                  created_at?: string;
+                };
+              };
+            };
+            const newToken = refreshed?.data?.access_token;
+            const newUser = refreshed?.data?.user;
+            if (newToken && newUser) {
+              login(newToken, newUser);
+              url = await uploadOnce();
+              if (url && isSafeImageUrl(url)) {
+                setPhotoUrl(url);
+                showSuccess(t('avatar_upload_success'));
+                return;
+              }
+            }
+          }
+        } catch {
+          // fall through to generic error
+        }
+      }
       showError(t('avatar_upload_error'));
     }
   };

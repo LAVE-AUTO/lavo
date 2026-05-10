@@ -4,7 +4,7 @@ import { useState, useEffect, useRef, useCallback } from 'react';
 import { useTranslations, useLocale } from 'next-intl';
 import { Link } from '@/i18n/navigation';
 import { useParams } from 'next/navigation';
-import { postWithApi } from '@/services/axios-service';
+import { getFromApi, postWithApi } from '@/services/axios-service';
 import { RESERVATIONS_MOCK_ENABLED, findMockReservation } from '@/data/reservations-mock';
 
 /* ------------------------------------------------------------------ */
@@ -24,6 +24,16 @@ interface ResInfo {
   forfaitName: string;
   dateLabel:   string;
   timeSlot:    string;
+}
+
+interface RichEntryResponse {
+  data?: {
+    entry_type?: 'reservation' | 'queue';
+    status?: string;
+    slot_start_time?: string | null;
+    station?: { name?: string };
+    vehicle_format?: { label?: string } | null;
+  };
 }
 
 /* ------------------------------------------------------------------ */
@@ -66,9 +76,30 @@ export default function SignalDelayPage() {
       return;
     }
 
-    // TODO: connect to API once GET /me/entries/:id is available
-    // GET /me/entries/:id - verify status === 'confirmed' or 'in_progress'
-    setPageState('error');
+    const [ok, data] = await getFromApi(`/me/entries/${id}`);
+    if (!mountedRef.current) return;
+    if (!ok) { setPageState('error'); return; }
+
+    const entry = (data as RichEntryResponse)?.data;
+    const isReservation = entry?.entry_type === 'reservation';
+    const status = entry?.status ?? '';
+    const canSignal = status === 'confirmed' || status === 'in_progress';
+    const slotStart = entry?.slot_start_time ? new Date(entry.slot_start_time) : null;
+
+    if (!isReservation || !canSignal || !slotStart || Number.isNaN(slotStart.getTime())) {
+      setPageState('error');
+      return;
+    }
+
+    setRes({
+      stationName: entry?.station?.name ?? '-',
+      forfaitName: entry?.vehicle_format?.label ?? '-',
+      dateLabel: slotStart.toLocaleDateString(locale === 'en' ? 'en-CA' : 'fr-CA', {
+        weekday: 'short', day: 'numeric', month: 'long', year: 'numeric',
+      }),
+      timeSlot: `${String(slotStart.getHours()).padStart(2, '0')}:${String(slotStart.getMinutes()).padStart(2, '0')}`,
+    });
+    setPageState('form');
   }, [id, locale]);
 
   useEffect(() => { loadData(); }, [loadData]);

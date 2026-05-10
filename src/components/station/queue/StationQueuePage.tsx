@@ -19,6 +19,7 @@ const POLL_INTERVAL = 30_000;
 interface RawEntry {
   id: string;
   user_id: string;
+  user?: { first_name?: string | null } | null;
   entry_type: 'reservation' | 'queue';
   queue_position: number | null;
   status: string;
@@ -30,10 +31,12 @@ type ActionType = 'call' | 'complete';
 interface PendingAction { type: ActionType; entryId: string }
 
 function toQueueEntry(e: RawEntry, idx: number, isNext: boolean): QueueEntry {
+  const fallbackCode = `Client #${e.user_id.slice(0, 6).toUpperCase()}`;
+  const clientName = e.user?.first_name?.trim() || fallbackCode;
   return {
     id: e.id,
     position: e.queue_position ?? idx + 1,
-    clientName: `Client #${e.user_id.slice(0, 6).toUpperCase()}`,
+    clientName,
     entryType: e.entry_type,
     price: e.amount_paid ? parseFloat(e.amount_paid) : undefined,
     isNext,

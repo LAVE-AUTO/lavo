@@ -337,13 +337,20 @@ export default function ClientReservationsPage() {
   const handleCancelConfirm = async () => {
     if (!cancelTarget) return;
     setCancelLoading(true);
-    const [ok] = await patchWithApi(`/me/entries/${cancelTarget.id}/cancel`, {});
+    const [ok, data] = await patchWithApi(`/me/entries/${cancelTarget.id}/cancel`, {});
     setCancelLoading(false);
     if (ok) {
       setCancelTarget(null);
       success(t('toast_cancel_success'));
       await loadEntries();
     } else {
+      const err = data as { code?: string; message?: string } | null;
+      if (err?.code === 'CONFLICT' && (err.message ?? '').toLowerCase().includes('already cancelled')) {
+        setCancelTarget(null);
+        success(t('toast_cancel_success'));
+        await loadEntries();
+        return;
+      }
       error(t('toast_cancel_error'));
     }
   };
@@ -356,9 +363,15 @@ export default function ClientReservationsPage() {
   const handleQueueActionConfirm = async () => {
     if (!queueAction) return;
     setQueueActionLoading(true);
-    const [ok] = await patchWithApi(`/me/entries/${queueAction.entry.id}/cancel`, {});
+    const [ok, data] = await patchWithApi(`/me/entries/${queueAction.entry.id}/cancel`, {});
     setQueueActionLoading(false);
     if (!ok) {
+      const err = data as { code?: string; message?: string } | null;
+      if (err?.code === 'CONFLICT' && (err.message ?? '').toLowerCase().includes('already cancelled')) {
+        setQueueAction(null);
+        await loadEntries();
+        return;
+      }
       error(t('toast_cancel_error'));
       return;
     }
