@@ -96,8 +96,8 @@ function generateLaterSlots(config: StationConfigPublic | null, serviceDuration:
   return slots;
 }
 
-function generateDates(count: number, appLocale: string): { key: string; dayShort: string; dateNum: number; monthShort: string }[] {
-  const days: { key: string; dayShort: string; dateNum: number; monthShort: string }[] = [];
+function generateDates(count: number, appLocale: string): { key: string; dayShort: string; dateNum: number; monthShort: string; dayOfWeek: number }[] {
+  const days: { key: string; dayShort: string; dateNum: number; monthShort: string; dayOfWeek: number }[] = [];
   const now = new Date();
   const dateFmtLocale = appLocale === 'en' ? 'en-CA' : 'fr-FR';
   for (let i = 0; i < count; i++) {
@@ -106,7 +106,7 @@ function generateDates(count: number, appLocale: string): { key: string; dayShor
     const key = toLocalDateKey(d);
     const dayShort = d.toLocaleDateString(dateFmtLocale, { weekday: 'short' }).slice(0, 3);
     const monthShort = d.toLocaleDateString(dateFmtLocale, { month: 'short' }).slice(0, 4);
-    days.push({ key, dayShort, dateNum: d.getDate(), monthShort });
+    days.push({ key, dayShort, dateNum: d.getDate(), monthShort, dayOfWeek: d.getDay() });
   }
   return days;
 }
@@ -123,6 +123,7 @@ interface MonthGridDay {
   inMonth: boolean;
   bookable: boolean;
   isToday: boolean;
+  dayOfWeek: number;
 }
 
 /** Build a 6×7 calendar grid for a given (year, month). Days outside the
@@ -141,7 +142,7 @@ function buildMonthGrid(year: number, month: number, todayKey: string, maxDate: 
     const key = toLocalDateKey(d);
     const inMonth = d.getMonth() === month;
     const bookable = d >= today && d <= maxDate;
-    cells.push({ key, dateNum: d.getDate(), inMonth, bookable, isToday: key === todayKey });
+    cells.push({ key, dateNum: d.getDate(), inMonth, bookable, isToday: key === todayKey, dayOfWeek: d.getDay() });
   }
   return cells;
 }
@@ -181,6 +182,17 @@ export function ArrivalStep({
   const t = useTranslations('booking');
   const locale = useLocale();
   const dates = useMemo(() => generateDates(MAX_BOOKING_DAYS, locale), [locale]);
+
+  /* Days of the week the station is closed (0 = Sunday … 6 = Saturday).
+   * Used to greyed-out closed days in both the horizontal strip and the
+   * month-view grid so the client cannot pick an unbookable date. */
+  const closedDows = useMemo(() => {
+    const set = new Set<number>();
+    for (const h of station.stationHours ?? []) {
+      if (!h.isOpen) set.add(h.dayOfWeek);
+    }
+    return set;
+  }, [station.stationHours]);
 
   /* Per-post availability fetched when the user picks a date in book_slot mode.
    * Replaces the legacy `station.timeSlots` (pre-generated slots). The server
@@ -592,23 +604,33 @@ export function ArrivalStep({
                   <div className="grid grid-cols-7 gap-1">
                     {monthGrid.map((cell) => {
                       const isSelected = selectedDate === cell.key && arrivalMode === 'book_slot';
+                      const isClosed = cell.bookable && closedDows.has(cell.dayOfWeek);
+                      const disabled = !cell.bookable || isClosed;
                       return (
                         <button
                           key={cell.key}
                           type="button"
-                          disabled={!cell.bookable}
-                          onClick={() => { onSetDate(cell.key); onSetMode('book_slot'); setMonthViewOpen(false); }}
-                          className={`aspect-square rounded-lg text-[13px] font-bold transition-colors ${
+                          disabled={disabled}
+                          onClick={() => { if (disabled) return; onSetDate(cell.key); onSetMode('book_slot'); setMonthViewOpen(false); }}
+                          className={`relative aspect-square rounded-lg text-[13px] font-bold transition-colors ${
                             !cell.bookable
                               ? 'text-[#CCC] dark:text-[#444] cursor-not-allowed'
-                              : isSelected
-                                ? 'bg-gold text-dark-bg cursor-pointer'
-                                : cell.isToday
-                                  ? 'bg-gold/15 text-gold border border-gold/40 cursor-pointer hover:bg-gold/25'
-                                  : `${cell.inMonth ? 'text-[#000C1F] dark:text-[#FFF8EC]' : 'text-[#999] dark:text-[#666]'} hover:bg-gold/15 cursor-pointer`
+                              : isClosed
+                                ? 'text-[#999] dark:text-[#666] bg-[#E8E8D8]/60 dark:bg-dark-bg/40 cursor-not-allowed'
+                                : isSelected
+                                  ? 'bg-gold text-dark-bg cursor-pointer'
+                                  : cell.isToday
+                                    ? 'bg-gold/15 text-gold border border-gold/40 cursor-pointer hover:bg-gold/25'
+                                    : `${cell.inMonth ? 'text-[#000C1F] dark:text-[#FFF8EC]' : 'text-[#999] dark:text-[#666]'} hover:bg-gold/15 cursor-pointer`
                           }`}
+                          aria-label={isClosed ? t('arrival_closed_badge') : undefined}
                         >
-                          {cell.dateNum}
+                          {isClosed && (
+                            <span className="absolute top-0.5 left-1/2 -translate-x-1/2 px-1 rounded-full bg-Hurryline-error text-white text-[7px] font-black uppercase tracking-wider leading-tight">
+                              {t('arrival_closed_badge')}
+                            </span>
+                          )}
+                          <span className={isClosed ? 'line-through opacity-60' : ''}>{cell.dateNum}</span>
                         </button>
                       );
                     })}
@@ -618,26 +640,39 @@ export function ArrivalStep({
 
               {/* Date scroller (5-week horizontal strip) */}
               <div className="flex gap-2 overflow-x-auto pb-2 scrollbar-hide">
-                {dates.map((d) => (
-                  <button
-                    key={d.key}
-                    type="button"
-                    onClick={() => { onSetDate(d.key); onSetMode('book_slot'); }}
-                    className={`flex flex-col items-center min-w-[58px] py-2 px-3 rounded-xl border-2 transition-colors cursor-pointer ${
-                      selectedDate === d.key && arrivalMode === 'book_slot'
-                        ? 'bg-gold border-gold text-dark-bg'
-                        : 'border-[#D0D0C0] dark:border-tab-inactive text-[#000C1F] dark:text-[#FFF8EC] hover:border-gold/40'
-                    }`}
-                  >
-                    <span className={`text-[11px] font-bold uppercase ${selectedDate === d.key && arrivalMode === 'book_slot' ? 'text-dark-bg' : 'text-[#888]'}`}>
-                      {d.dayShort}
-                    </span>
-                    <span className="text-[18px] font-black">{d.dateNum}</span>
-                    <span className={`text-[10px] font-semibold uppercase ${selectedDate === d.key && arrivalMode === 'book_slot' ? 'text-dark-bg/80' : 'text-[#999]'}`}>
-                      {d.monthShort}
-                    </span>
-                  </button>
-                ))}
+                {dates.map((d) => {
+                  const isClosed = closedDows.has(d.dayOfWeek);
+                  const isSelected = selectedDate === d.key && arrivalMode === 'book_slot';
+                  return (
+                    <button
+                      key={d.key}
+                      type="button"
+                      disabled={isClosed}
+                      onClick={() => { if (isClosed) return; onSetDate(d.key); onSetMode('book_slot'); }}
+                      className={`relative flex flex-col items-center min-w-[58px] py-2 px-3 rounded-xl border-2 transition-colors ${
+                        isClosed
+                          ? 'border-[#D0D0C0] dark:border-tab-inactive bg-[#E5E5D5]/60 dark:bg-dark-bg/40 text-[#999] dark:text-[#666] cursor-not-allowed'
+                          : isSelected
+                            ? 'bg-gold border-gold text-dark-bg cursor-pointer'
+                            : 'border-[#D0D0C0] dark:border-tab-inactive text-[#000C1F] dark:text-[#FFF8EC] hover:border-gold/40 cursor-pointer'
+                      }`}
+                      aria-label={isClosed ? t('arrival_closed_badge') : undefined}
+                    >
+                      {isClosed && (
+                        <span className="absolute -top-1.5 left-1/2 -translate-x-1/2 px-1.5 py-px rounded-full bg-Hurryline-error text-white text-[9px] font-black uppercase tracking-wider">
+                          {t('arrival_closed_badge')}
+                        </span>
+                      )}
+                      <span className={`text-[11px] font-bold uppercase ${isClosed ? 'text-[#AAA] dark:text-[#666]' : isSelected ? 'text-dark-bg' : 'text-[#888]'}`}>
+                        {d.dayShort}
+                      </span>
+                      <span className={`text-[18px] font-black ${isClosed ? 'line-through opacity-60' : ''}`}>{d.dateNum}</span>
+                      <span className={`text-[10px] font-semibold uppercase ${isClosed ? 'text-[#AAA] dark:text-[#666]' : isSelected ? 'text-dark-bg/80' : 'text-[#999]'}`}>
+                        {d.monthShort}
+                      </span>
+                    </button>
+                  );
+                })}
               </div>
 
               {/* Time slots grid (from per-post availability endpoint) */}

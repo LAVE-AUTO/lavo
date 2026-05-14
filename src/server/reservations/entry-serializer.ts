@@ -37,6 +37,7 @@ export function serializeRichEntry(entry: RichEntry) {
     amount_paid: entry.amount_paid,
     created_at: entry.created_at,
     updated_at: entry.updated_at,
+    completed_at: entry.completed_at?.toISOString() ?? null,
     station: entry.station,
     vehicle_format: entry.vehicle_format,
     is_rated: entry.is_rated,

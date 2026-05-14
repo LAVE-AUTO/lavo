@@ -561,7 +561,7 @@ export default function ProfilePage() {
         </Section>
 
         {/* ── Moyens de paiement ── */}
-        <Section>
+        {/* <Section>
           <SectionHeader
             title={t('payment_section')}
             action={<ComingSoonBadge label={t('coming_soon')} />}
@@ -598,7 +598,7 @@ export default function ProfilePage() {
               ))}
             </div>
           )}
-        </Section>
+        </Section> */}
 
         {/* ── Notifications ── */}
         <Section>

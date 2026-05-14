@@ -522,7 +522,7 @@ export function PublicNavbar({
       {/* Spacer - push page content below fixed header (can be disabled per-layout) */}
       {withTopSpacer && <div className="h-[62px]" aria-hidden="true" />}
       {/* Extra spacer for mobile bottom nav (can be disabled per-layout) */}
-      {withMobileScrollSpacer && <div className="sm:hidden h-16" aria-hidden="true" />}
+      {withMobileScrollSpacer && <div className="sm:hidden" aria-hidden="true" />}
     </>
   );
 }

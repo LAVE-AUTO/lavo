@@ -884,6 +884,7 @@
         "arrival_custom_time_confirmed": "Arrival scheduled at {time}.",
         "arrival_loading_slots": "Loading availability…",
         "arrival_day_closed": "The station is closed on this day.",
+        "arrival_closed_badge": "Closed",
         "arrival_no_active_post": "This station has no active wash bay configured.",
         "summary_subtitle": "Review your order details.",
         "summary_service": "Service",
