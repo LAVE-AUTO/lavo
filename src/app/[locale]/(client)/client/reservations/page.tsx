@@ -666,7 +666,12 @@ function ReservationCard({
    *     (no point warning a station 5 days in advance)
    *   - reschedule:  available for confirmed/pending entries until start */
   const canReschedule = variant === 'upcoming' && (r.status === 'confirmed' || r.status === 'pending');
-  const showSignalDelay = variant === 'upcoming' && r.status === 'confirmed' && canSignalDelay(r.slotStart);
+  /* The signal-delay button is shown on every upcoming confirmed/pending reservation
+   * but only enabled within the 2h window before slotStart. Outside the window the
+   * button stays visible (disabled + tooltip) so the affordance is always discoverable. */
+  const showSignalDelay =
+    variant === 'upcoming' && (r.status === 'confirmed' || r.status === 'pending' || r.status === 'pending_payment');
+  const signalDelayEnabled = showSignalDelay && r.status === 'confirmed' && canSignalDelay(r.slotStart);
 
   /* Past completed reservations keep rate/tip buttons until each is filled.
    * Tip prompts disappear once we are 7 days past the service so old entries
@@ -744,12 +749,22 @@ function ReservationCard({
             </Link>
           )}
           {showSignalDelay && (
-            <Link
-              href={`/client/reservations/${r.id}/signal-delay`}
-              className="text-[13px] font-semibold text-[#666] dark:text-[#B0B0A0] hover:text-gold transition-colors"
-            >
-              {t('signal_delay_btn')}
-            </Link>
+            signalDelayEnabled ? (
+              <Link
+                href={`/client/reservations/${r.id}/signal-delay`}
+                className="text-[13px] font-semibold text-[#666] dark:text-[#B0B0A0] hover:text-gold transition-colors"
+              >
+                {t('signal_delay_btn')}
+              </Link>
+            ) : (
+              <span
+                className="text-[13px] font-semibold text-[#999] dark:text-[#666] cursor-not-allowed"
+                title={t('signal_delay_btn_disabled_tooltip')}
+                aria-disabled="true"
+              >
+                {t('signal_delay_btn')}
+              </span>
+            )
           )}
           {onCancel && (
             <button
