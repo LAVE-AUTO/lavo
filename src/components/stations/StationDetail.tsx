@@ -5,6 +5,7 @@ import { useTranslations, useLocale } from 'next-intl';
 import { Link } from '@/i18n/navigation';
 import { useSearchParams, useRouter } from 'next/navigation';
 import { StationReviews } from './StationReviews';
+import { StationOpeningHours } from './StationOpeningHours';
 import { BookingFlow } from './booking/BookingFlow';
 import { StationServicesSection } from './StationServicesSection';
 import { fetchStationById } from '@/services/station-api';
@@ -417,6 +418,11 @@ export function StationDetail({ id }: StationDetailProps) {
                   <h2 className="text-[17px] font-black text-[#000C1F] dark:text-[#FFF8EC] mb-2">{t('detail_description')}</h2>
                   <p className="text-[14.5px] text-[#555] dark:text-[#C0C0B0] leading-[1.75]">{station.description}</p>
                 </div>
+              )}
+
+              {/* Opening hours by day */}
+              {station.stationHours.length > 0 && (
+                <StationOpeningHours hours={station.stationHours} />
               )}
 
               {/* Location */}

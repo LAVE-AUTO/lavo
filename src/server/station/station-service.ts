@@ -53,6 +53,7 @@ import {
 } from './document-repository';
 import { findAllFormats } from './format-repository';
 import { findPublicServicesForStation } from './service-repository';
+import { getStationHours } from './station-hours-service';
 
 export type StationOnboardingDto = {
   // Step 1 - account credentials
@@ -589,11 +590,12 @@ export async function listStationsPublic(
  * Throws NotFoundError if station does not exist or is not active.
  */
 export async function getStationDetailPublic(id: string) {
-  const [station, vehicleFormats, completed_count, stationServices] = await Promise.all([
+  const [station, vehicleFormats, completed_count, stationServices, hourRows] = await Promise.all([
     findActiveStationWithDetail(id),
     findAllFormats(),
     getCompletedCountForStation(id),
     findPublicServicesForStation(id),
+    getStationHours(id),
   ]);
   if (!station) throw new NotFoundError('Station not found');
 
@@ -629,6 +631,15 @@ export async function getStationDetailPublic(id: string) {
       }
     : null;
 
+  const station_hours = hourRows.map((row) => ({
+    day_of_week: row.day_of_week,
+    is_open: row.is_open,
+    morning_start: row.morning_start,
+    morning_end: row.morning_end,
+    afternoon_start: row.afternoon_start,
+    afternoon_end: row.afternoon_end,
+  }));
+
   const { photos: _p, stationWashTypes: _w, ...rest } = station;
   return {
     ...rest,
@@ -641,6 +652,7 @@ export async function getStationDetailPublic(id: string) {
     vehicleFormats,
     station_services: stationServices,
     station_config,
+    station_hours,
   };
 }
 

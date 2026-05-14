@@ -1,5 +1,5 @@
 import { getFromApi } from './axios-service';
-import type { Station, StationDetailData, ServiceCategory, TimeSlot, Review, StationServicePublic, StationServiceEntry, StationServiceExtra } from '@/types/station';
+import type { Station, StationDetailData, ServiceCategory, TimeSlot, Review, StationServicePublic, StationServiceEntry, StationServiceExtra, StationHourRow } from '@/types/station';
 
 /* ------------------------------------------------------------------ */
 /*  API response shapes (snake_case, matching backend output)          */
@@ -91,6 +91,15 @@ interface ApiStationDetailConfig {
     reservation_surcharge: number | null;
 }
 
+interface ApiStationHour {
+    day_of_week: number;
+    is_open: boolean;
+    morning_start: string | null;
+    morning_end: string | null;
+    afternoon_start: string | null;
+    afternoon_end: string | null;
+}
+
 interface ApiStationDetail extends ApiStationListItem {
     stationConfig: ApiStationConfig | null;
     vehicleFormats: ApiVehicleFormat[];
@@ -98,6 +107,7 @@ interface ApiStationDetail extends ApiStationListItem {
     station_services?: ApiPublicStationService[];
     station_config?: ApiStationDetailConfig | null;
     photos?: string[];
+    station_hours?: ApiStationHour[];
 }
 
 interface ApiStationListResponse {
@@ -218,6 +228,7 @@ function mapApiStationToDetail(s: ApiStationListItem): StationDetailData {
         stationServices: [],
         stationConfig: null,
         photos: [],
+        stationHours: [],
     };
 }
 
@@ -323,6 +334,16 @@ function mapApiDetailToStationDetail(
     /* Dedupe photos: backend may return the same URL multiple times when the
      * photo is registered twice in station_photos. */
     const photos = Array.from(new Set(s.photos ?? []));
+
+    const stationHours: StationHourRow[] = (s.station_hours ?? []).map((h) => ({
+        dayOfWeek: h.day_of_week,
+        isOpen: h.is_open,
+        morningStart: h.morning_start,
+        morningEnd: h.morning_end,
+        afternoonStart: h.afternoon_start,
+        afternoonEnd: h.afternoon_end,
+    }));
+
     return {
         ...base,
         reviewCount: reviewCountOverride ?? base.reviewCount,
@@ -340,6 +361,7 @@ function mapApiDetailToStationDetail(
         stationServices,
         stationConfig,
         photos,
+        stationHours,
     };
 }
 
