@@ -1871,6 +1871,7 @@
         "section_evening_empty": "Aucune réservation cet après-midi",
         "btn_complete": "Terminer",
         "btn_extra_time": "Temps supp.",
+        "btn_close": "Fermer",
         "extra_time_error": "Impossible d'ajouter le temps. Réessayez."
     },
     "station_reservations": {
