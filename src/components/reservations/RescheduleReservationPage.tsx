@@ -13,7 +13,7 @@ import RescheduleSuccessView from '@/components/reservations/RescheduleSuccessVi
 /* Shapes API                                                           */
 /* ------------------------------------------------------------------ */
 
-interface ApiEntry {
+interface ApiRichEntry {
   id: string;
   entry_type: 'reservation' | 'queue';
   time_slot_id: string | null;
@@ -22,23 +22,27 @@ interface ApiEntry {
   status: string;
   amount_paid: string | null;
   created_at: string;
+  slot_start_time: string | null;
+  slot_end_time: string | null;
+  station: { id: string; name: string } | null;
+  vehicle_format: { id: string; label: string; price: string } | null;
 }
 
-interface ApiTimeSlot {
-  id: string;
+interface ApiAvailabilitySlot {
   start_time: string;
-  status: string;
-  booked_count: number;
-  capacity: number;
+  end_time: string;
 }
 
-interface ApiStation {
-  id: string;
-  name: string;
-  vehicleFormats: Array<{ id: string; label: string; price: string }>;
-  timeSlots: ApiTimeSlot[];
-  stationConfig?: { wash_duration_minutes: number } | null;
+interface ApiAvailabilityResponse {
+  data: {
+    date: string;
+    slots: ApiAvailabilitySlot[];
+  };
 }
+
+/* How many days ahead we expose in the date picker. Bound at 14 to keep the
+ * parallel availability fetches cheap; matches the typical booking horizon. */
+const RESCHEDULE_HORIZON_DAYS = 14;
 
 /* ------------------------------------------------------------------ */
 /* Helpers                                                              */
@@ -138,55 +142,79 @@ export default function RescheduleReservationPage() {
       return;
     }
 
-    const [entriesOk, entriesData] = await getFromApi('/me/entries?per_page=100');
+    /* Fetch the rich entry directly (denormalised station + vehicle format +
+     * slot times) to avoid an N+1 list scan. */
+    const [entryOk, entryData] = await getFromApi(`/me/entries/${id}`);
     if (!mountedRef.current) return;
 
-    if (!entriesOk) { setLoadError(true); setLoading(false); return; }
+    if (!entryOk) { setLoadError(true); setLoading(false); return; }
 
-    const entries: ApiEntry[] = (entriesData as { data: { entries: ApiEntry[] } })?.data?.entries ?? [];
-    const entry = entries.find((e) => e.id === id && e.entry_type === 'reservation');
-
-    if (!entry) { setLoadError(true); setLoading(false); return; }
-
-    const [stationOk, stationData] = await getFromApi(`/stations/${entry.station_id}`);
-    if (!mountedRef.current) return;
-
-    if (!stationOk) { setLoadError(true); setLoading(false); return; }
-
-    const station = (stationData as { data: ApiStation }).data;
-
-    /* Créneau actuel */
-    const currentSlot = entry.time_slot_id
-      ? station.timeSlots.find((s) => s.id === entry.time_slot_id)
-      : null;
+    const entry = (entryData as { data: ApiRichEntry })?.data;
+    if (!entry || entry.entry_type !== 'reservation') {
+      setLoadError(true); setLoading(false); return;
+    }
 
     const now = Date.now();
 
-    if (currentSlot) {
-      const slotDate = new Date(currentSlot.start_time);
+    /* Current slot label + late-fee detection from the original slot times. */
+    let currentSlotMs = 0;
+    if (entry.slot_start_time) {
+      const slotDate = new Date(entry.slot_start_time);
+      currentSlotMs = slotDate.getTime();
       const label = slotDate.toLocaleDateString(locale === 'en' ? 'en-CA' : 'fr-CA', {
         weekday: 'short', day: 'numeric', month: 'short',
       }) + ' ' + String(slotDate.getHours()).padStart(2, '0') + ':' + String(slotDate.getMinutes()).padStart(2, '0');
       setCurrentLabel(label);
 
-      const minutesUntil = (slotDate.getTime() - now) / 60000;
+      const minutesUntil = (currentSlotMs - now) / 60000;
       setHasFee(minutesUntil > 0 && minutesUntil < LATE_RESCHEDULE_THRESHOLD_MINUTES);
     }
 
-    const format = station.vehicleFormats.find((f) => f.id === entry.vehicle_format_id);
-    setForfaitLabel(format?.label ?? '-');
-    setStationName(station.name);
+    setForfaitLabel(entry.vehicle_format?.label ?? '-');
+    setStationName(entry.station?.name ?? '-');
     setAmount(safeFloat(entry.amount_paid));
 
-    /* Créneaux disponibles : futurs, pas pleins, différents du créneau actuel */
-    const future: AvailableSlot[] = station.timeSlots
-      .filter((s) => new Date(s.start_time).getTime() > now && s.id !== entry.time_slot_id)
-      .map((s) => ({
-        id: s.id,
-        startTime: s.start_time,
-        isFull: s.status === 'full' || s.booked_count >= s.capacity,
-      }));
-    setAvailableSlots(future);
+    /* Duration is inherited from the original slot. Used as `duration_min`
+     * for every availability call. Default to 30 min when missing. */
+    let durationMin = 30;
+    if (entry.slot_start_time && entry.slot_end_time) {
+      durationMin = Math.max(
+        1,
+        Math.round((new Date(entry.slot_end_time).getTime() - new Date(entry.slot_start_time).getTime()) / 60_000),
+      );
+    }
+
+    /* Build the next 14 calendar days, skipping today if we are past closing.
+     * Then fan out availability calls in parallel. The composite slot id is
+     * the ISO start_time itself — that's what the modern booking flow uses
+     * and what the reschedule endpoint expects in `new_start_time`. */
+    const candidateDays: string[] = [];
+    for (let day = 0; day < RESCHEDULE_HORIZON_DAYS; day++) {
+      const d = new Date(now);
+      d.setDate(d.getDate() + day);
+      candidateDays.push(toLocalDateKey(d));
+    }
+
+    const results = await Promise.all(
+      candidateDays.map((date) =>
+        getFromApi(`/stations/${entry.station_id}/availability?date=${date}&duration_min=${durationMin}`),
+      ),
+    );
+    if (!mountedRef.current) return;
+
+    const aggregated: AvailableSlot[] = [];
+    for (const [ok, data] of results) {
+      if (!ok) continue;
+      const payload = (data as ApiAvailabilityResponse | null)?.data;
+      const slots = payload?.slots ?? [];
+      for (const s of slots) {
+        const startMs = new Date(s.start_time).getTime();
+        if (Number.isNaN(startMs) || startMs <= now) continue;
+        if (currentSlotMs && startMs === currentSlotMs) continue;
+        aggregated.push({ id: s.start_time, startTime: s.start_time, isFull: false });
+      }
+    }
+    setAvailableSlots(aggregated);
     setLoading(false);
   }, [id, locale]);
 
@@ -275,7 +303,9 @@ export default function RescheduleReservationPage() {
     setShowConfirmModal(false);
     setSubmitting(true);
 
-    const [ok] = await postWithApi(`/reservations/${id}/reschedule`, { new_time_slot_id: selectedSlotId });
+    /* selectedSlotId is the ISO start_time (composite id from the availability
+     * endpoint). The backend creates the time_slots row server-side. */
+    const [ok] = await postWithApi(`/reservations/${id}/reschedule`, { new_start_time: selectedSlotId });
     if (!mountedRef.current) return;
     setSubmitting(false);
     if (ok) { setDone(true); return; }
