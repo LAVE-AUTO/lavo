@@ -129,9 +129,12 @@ export default function SignalDelayPage() {
       return;
     }
 
-    const errData = data as { code?: string };
+    const errData = data as { code?: string; message?: string };
+    /* Backend returns 409 CONFLICT for both cases - distinguish them so the
+     * "already signaled" page only fires when an active request actually exists. */
     if (errData?.code === 'CONFLICT') {
-      setPageState('already_signaled');
+      const isAlreadySignaled = (errData.message ?? '').toLowerCase().includes('already active');
+      setPageState(isAlreadySignaled ? 'already_signaled' : 'error');
     } else {
       setPageState('error');
     }
