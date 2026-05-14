@@ -15,6 +15,8 @@ import { DashboardQueueBand } from './DashboardQueueBand';
 import { DashboardGroupedPanel } from './DashboardGroupedPanel';
 import { DashboardDelaysPanel, type DashboardDelayItem } from './DashboardDelaysPanel';
 import { DashboardBayFilter } from './DashboardBayFilter';
+import { AgendaSlotDetailModal } from './AgendaSlotDetailModal';
+import { StartServiceModal } from './StartServiceModal';
 import type { KpiData, ReservationItem } from './types';
 import type { QueueEntry } from './QueueCard';
 
@@ -76,7 +78,7 @@ interface RawConfig {
   posts: Array<{ id: string; position: number; is_active: boolean }>;
 }
 
-type DashboardAction = 'call' | 'complete' | 'cancel' | 'start' | 'call_next';
+type DashboardAction = 'complete' | 'cancel';
 
 interface PendingAction {
   type: DashboardAction;
@@ -175,11 +177,9 @@ function buildReservationItems(raw: RawEntry[]): ReservationItem[] {
     }));
 }
 
-const ACTION_STATUS_MAP: Partial<Record<DashboardAction, string>> = {
-  call: 'in_progress',
+const ACTION_STATUS_MAP: Record<DashboardAction, string> = {
   complete: 'completed',
   cancel: 'cancelled',
-  start: 'in_progress',
 };
 
 function mapDashboardToKpi(raw: RawDashboard): KpiData {
@@ -194,11 +194,8 @@ function mapDashboardToKpi(raw: RawDashboard): KpiData {
 }
 
 const CONFIRM_DIALOG_LABELS: Record<DashboardAction, { title: string; message: string }> = {
-  call:      { title: 'confirm_call_title',      message: 'confirm_call_message' },
-  complete:  { title: 'confirm_complete_title',  message: 'confirm_complete_message' },
-  cancel:    { title: 'confirm_cancel_title',    message: 'confirm_cancel_message' },
-  start:     { title: 'confirm_start_title',     message: 'confirm_start_message' },
-  call_next: { title: 'confirm_call_next_title', message: 'confirm_call_next_message' },
+  complete: { title: 'confirm_complete_title', message: 'confirm_complete_message' },
+  cancel:   { title: 'confirm_cancel_title',   message: 'confirm_cancel_message' },
 };
 
 export function StationDashboard() {
@@ -227,6 +224,10 @@ export function StationDashboard() {
   const [loading, setLoading] = useState(true);
   const [pending, setPending] = useState<PendingAction | null>(null);
   const [actionLoading, setActionLoading] = useState(false);
+  /* Detail/start modals are local to the dashboard so the timeline stays a
+   * pure presentational component. */
+  const [detailEntry, setDetailEntry] = useState<AgendaEntry | null>(null);
+  const [startEntry, setStartEntry] = useState<AgendaEntry | null>(null);
 
   const loadData = useCallback(async () => {
     const { from: queueFrom, to: queueTo } = dayRange(selectedDate);
@@ -325,25 +326,47 @@ export function StationDashboard() {
     showInfo(t('queue_manual_add_redirect'));
   }
 
+  function requestStart(id: string) {
+    /* Resolve the agenda entry so the modal can show client name + verify. */
+    const entry = agendaEntries.find((e) => e.id === id);
+    if (entry) setStartEntry(entry);
+  }
+
+  function requestQueueStart(id: string) {
+    /* Queue entries live in a different slice but share the start-with-code
+     * flow: we synthesize a minimal AgendaEntry for the modal. */
+    const q = queueEntries.find((e) => e.id === id);
+    if (!q) return;
+    setStartEntry({
+      id: q.id,
+      clientName: q.clientName,
+      vehicleFormat: q.serviceLabel ?? null,
+      status: q.status ?? 'pending',
+      slotStart: null,
+      slotEnd: null,
+      amountPaid: q.price ?? null,
+      postId: null,
+    });
+  }
+
+  async function submitStartCode(code: string): Promise<{ ok: boolean; reason?: 'invalid_code' | 'generic' }> {
+    if (!startEntry) return { ok: false, reason: 'generic' };
+    const [ok, data] = await postWithApi(`/station/entries/${startEntry.id}/start`, { code });
+    if (!mountedRef.current) return { ok: false, reason: 'generic' };
+    if (ok) {
+      await loadData();
+      return { ok: true };
+    }
+    const payload = data as { message?: string; code?: string } | null;
+    const isInvalidCode = payload?.code === 'VALIDATION_FAILED' && /code/i.test(payload?.message ?? '');
+    return { ok: false, reason: isInvalidCode ? 'invalid_code' : 'generic' };
+  }
+
   async function executeAction() {
     if (!pending || actionLoading) return;
     setActionLoading(true);
 
     try {
-      if (pending.type === 'call_next') {
-        const [ok, data] = await postWithApi('/station/queue/next', {});
-        if (!mountedRef.current) return;
-        if (ok) {
-          setPending(null);
-          await loadData();
-          return;
-        }
-        const payload = data as { message?: string; code?: string } | null;
-        showError(payload?.code === 'NOT_FOUND' ? t('error_queue_empty') : t('action_error_generic'));
-        setPending(null);
-        return;
-      }
-
       const newStatus = ACTION_STATUS_MAP[pending.type];
       const [ok, data] = await patchWithApi(`/station/entries/${pending.entryId}`, { status: newStatus });
       if (!mountedRef.current) return;
@@ -403,10 +426,7 @@ export function StationDashboard() {
               breakStart={config.breakStart}
               breakEnd={config.breakEnd}
               selectedPostId={selectedPostId}
-              onStart={(id) => requestAction('start', id)}
-              onComplete={(id) => requestAction('complete', id)}
-              onCancel={(id) => requestAction('cancel', id)}
-              onExtraTime={handleExtraTime}
+              onSelectEntry={setDetailEntry}
             />
           ) : (
             <DashboardGroupedPanel
@@ -420,8 +440,7 @@ export function StationDashboard() {
           {view === 'daily' && (
             <DashboardQueueBand
               entries={queueEntries}
-              onCallNext={() => requestAction('call_next', '')}
-              onCallEntry={(id) => requestAction('call', id)}
+              onStartEntry={requestQueueStart}
               onCompleteEntry={(id) => requestAction('complete', id)}
               onOpenManualAdd={handleOpenManualAdd}
             />
@@ -443,6 +462,23 @@ export function StationDashboard() {
         blocking
         onConfirm={executeAction}
         onCancel={() => { if (!actionLoading) setPending(null); }}
+      />
+
+      <AgendaSlotDetailModal
+        open={detailEntry !== null}
+        entry={detailEntry}
+        onClose={() => setDetailEntry(null)}
+        onStart={requestStart}
+        onComplete={(id) => requestAction('complete', id)}
+        onCancel={(id) => requestAction('cancel', id)}
+        onExtraTime={handleExtraTime}
+      />
+
+      <StartServiceModal
+        open={startEntry !== null}
+        clientName={startEntry?.clientName ?? ''}
+        onClose={() => setStartEntry(null)}
+        onSubmit={submitStartCode}
       />
     </div>
   );

@@ -7,13 +7,12 @@ import { ACTIVE_QUEUE_STATUSES } from './StationDashboard';
 
 interface Props {
   entries: QueueEntry[];
-  onCallNext: () => void;
-  onCallEntry: (id: string) => void;
+  onStartEntry: (id: string) => void;
   onCompleteEntry: (id: string) => void;
   onOpenManualAdd: () => void;
 }
 
-export function DashboardQueueBand({ entries, onCallNext, onCallEntry, onCompleteEntry, onOpenManualAdd }: Props) {
+export function DashboardQueueBand({ entries, onStartEntry, onCompleteEntry, onOpenManualAdd }: Props) {
   const t = useTranslations('station_dashboard');
   const locale = useLocale();
 
@@ -23,6 +22,7 @@ export function DashboardQueueBand({ entries, onCallNext, onCallEntry, onComplet
   );
   const canCallNext = waiting.length > 0;
   const totalWaiting = waiting.length;
+  const headOfQueueId = waiting[0]?.id ?? null;
 
   return (
     <section className="flex-shrink-0 border-t border-[#E0DCD0] bg-[#F7F6F2] dark:border-[#1A2A14] dark:bg-[#111A0E]">
@@ -62,10 +62,10 @@ export function DashboardQueueBand({ entries, onCallNext, onCallEntry, onComplet
 
       {/* Horizontal scroll */}
       <div className="mt-3 flex gap-2.5 overflow-x-auto px-5 pb-4 [-ms-overflow-style:none] [scrollbar-width:thin] [&::-webkit-scrollbar]:h-1.5 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb]:bg-[#D8D4C4] dark:[&::-webkit-scrollbar-thumb]:bg-[#1A2A14]">
-        {/* Call next button as the first card */}
+        {/* Call next button as the first card — starts head of queue */}
         <button
           type="button"
-          onClick={onCallNext}
+          onClick={() => { if (headOfQueueId) onStartEntry(headOfQueueId); }}
           disabled={!canCallNext}
           className="flex h-[140px] w-[130px] flex-shrink-0 flex-col items-center justify-center gap-1.5 rounded-2xl bg-[#C49A1E] text-[#0C1209] font-black transition-all hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-40"
         >
@@ -95,9 +95,9 @@ export function DashboardQueueBand({ entries, onCallNext, onCallEntry, onComplet
             entry={entry}
             position={entry.position}
             isNext={idx === 0 && inProgress.length === 0}
-            onPrimary={() => onCallEntry(entry.id)}
-            primaryLabel={t('queue_call_now')}
-            primaryColor="#C49A1E"
+            onPrimary={() => onStartEntry(entry.id)}
+            primaryLabel={t('queue_start_service')}
+            primaryColor="#3B82F6"
             delay={(inProgress.length + idx) * 50}
           />
         ))}

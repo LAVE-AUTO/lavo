@@ -29,10 +29,7 @@ interface Props {
   breakStart: string | null;
   breakEnd: string | null;
   selectedPostId: string | 'all';
-  onStart: (id: string) => void;
-  onComplete: (id: string) => void;
-  onCancel: (id: string) => void;
-  onExtraTime: (id: string, minutes: number) => void;
+  onSelectEntry: (entry: AgendaEntry) => void;
 }
 
 const PX_PER_MINUTE = 1.5; // 60 min = 90 px (compact yet readable)
@@ -105,8 +102,10 @@ function statusLabelKey(status: string): string {
   if (status === 'in_progress') return 'status_in_progress';
   if (status === 'cancelled') return 'status_cancelled';
   if (status === 'late') return 'status_late';
-  if (status === 'pending') return 'status_pending';
-  if (status === 'pending_payment') return 'status_pending_payment';
+  /* pending / pending_payment / confirmed all surface as "À venir" since the
+   * client pre-authorizes payment in Stripe; the merchant is paid once the
+   * service is completed. The intermediate "Paiement en attente" badge was
+   * confusing for the merchant. */
   return 'status_confirmed';
 }
 
@@ -123,10 +122,7 @@ export function DashboardAgendaTimeline({
   breakStart,
   breakEnd,
   selectedPostId,
-  onStart,
-  onComplete,
-  onCancel,
-  onExtraTime,
+  onSelectEntry,
 }: Props) {
   const t = useTranslations('station_dashboard');
   const [now, setNow] = useState<Date>(() => new Date());
@@ -295,10 +291,7 @@ export function DashboardAgendaTimeline({
                     entry={entry}
                     openMinutes={openMinutes}
                     closeMinutes={closeMinutes}
-                    onStart={onStart}
-                    onComplete={onComplete}
-                    onCancel={onCancel}
-                    onExtraTime={onExtraTime}
+                    onSelect={onSelectEntry}
                   />
                 ))}
               </div>
@@ -314,13 +307,10 @@ interface SlotBlockProps {
   entry: AgendaEntry;
   openMinutes: number;
   closeMinutes: number;
-  onStart: (id: string) => void;
-  onComplete: (id: string) => void;
-  onCancel: (id: string) => void;
-  onExtraTime: (id: string, minutes: number) => void;
+  onSelect: (entry: AgendaEntry) => void;
 }
 
-function SlotBlock({ entry, openMinutes, closeMinutes, onStart, onComplete, onCancel, onExtraTime }: SlotBlockProps) {
+function SlotBlock({ entry, openMinutes, closeMinutes, onSelect }: SlotBlockProps) {
   const t = useTranslations('station_dashboard');
   if (!entry.slotStart) return null;
   const start = new Date(entry.slotStart);
@@ -332,14 +322,24 @@ function SlotBlock({ entry, openMinutes, closeMinutes, onStart, onComplete, onCa
   if (clampedEnd <= clampedStart) return null;
 
   const top = clampedStart * PX_PER_MINUTE;
-  const height = Math.max(36, (clampedEnd - clampedStart) * PX_PER_MINUTE);
+  /* Minimum 64px so the price + status badge always fit. If the real slot
+   * duration is short, we slightly overlap the next hour gridline — better
+   * than hiding actionable info. */
+  const height = Math.max(64, (clampedEnd - clampedStart) * PX_PER_MINUTE);
   const styles = statusToBlockClass(entry.status);
   const statusLbl = t(statusLabelKey(entry.status));
-  const compact = height < 64;
+  const showPrimary = entry.status === 'confirmed' || entry.status === 'pending' || entry.status === 'pending_payment' || entry.status === 'in_progress';
+  const primaryLabel = entry.status === 'in_progress' ? t('btn_complete') : t('btn_start');
+  const primaryClass = entry.status === 'in_progress'
+    ? 'bg-[#2ECC71] text-white'
+    : 'bg-[#3B82F6] text-white';
 
   return (
-    <div
-      className={`absolute left-1.5 right-1.5 overflow-hidden rounded-lg border ${styles.bg} ${styles.border} px-2 py-1.5 shadow-sm transition-shadow hover:shadow-md`}
+    <button
+      type="button"
+      onClick={() => onSelect(entry)}
+      aria-label={t('slot_block_aria', { name: entry.clientName, time: `${formatTime(start)}–${formatTime(end)}` })}
+      className={`group absolute left-1.5 right-1.5 flex flex-col overflow-hidden rounded-lg border text-left ${styles.bg} ${styles.border} px-2 py-1.5 shadow-sm transition-all hover:-translate-y-px hover:shadow-md focus:outline-none focus:ring-2 focus:ring-[#C49A1E]/40`}
       style={{ top, height }}
     >
       <div className="flex items-start gap-1.5">
@@ -353,49 +353,20 @@ function SlotBlock({ entry, openMinutes, closeMinutes, onStart, onComplete, onCa
       <div className="mt-0.5 truncate text-[11px] font-semibold text-[#1A1A0A] dark:text-[#F0EDD4]">
         {entry.clientName}
       </div>
-      {!compact && (entry.vehicleFormat || entry.amountPaid !== null) && (
-        <div className="mt-0.5 truncate text-[10px] text-[#666] dark:text-[#A0A090]">
+      <div className="mt-auto flex items-end justify-between gap-1.5 pt-1">
+        <div className="min-w-0 truncate text-[10px] text-[#666] dark:text-[#A0A090]">
           {entry.vehicleFormat ?? ''}
           {entry.vehicleFormat && entry.amountPaid !== null ? ' · ' : ''}
-          {entry.amountPaid !== null ? `${entry.amountPaid}$` : ''}
+          {entry.amountPaid !== null ? (
+            <span className="font-black text-[#1A1A0A] dark:text-[#F0EDD4]">{entry.amountPaid}$</span>
+          ) : null}
         </div>
-      )}
-      {!compact && entry.status === 'in_progress' && (
-        <div className="mt-1 flex items-center gap-1">
-          <button
-            type="button"
-            onClick={() => onComplete(entry.id)}
-            className="rounded-md bg-[#2ECC71] px-2 py-0.5 text-[10px] font-black text-white hover:opacity-90"
-          >
-            {t('btn_complete')}
-          </button>
-          <button
-            type="button"
-            onClick={() => onExtraTime(entry.id, 15)}
-            className="rounded-md border border-[#C49A1E]/50 px-2 py-0.5 text-[10px] font-bold text-[#C49A1E] hover:bg-[#C49A1E]/10"
-          >
-            {t('btn_extra_time')}
-          </button>
-        </div>
-      )}
-      {!compact && (entry.status === 'confirmed' || entry.status === 'pending' || entry.status === 'pending_payment') && (
-        <div className="mt-1 flex items-center gap-1">
-          <button
-            type="button"
-            onClick={() => onStart(entry.id)}
-            className="rounded-md bg-[#3B82F6] px-2 py-0.5 text-[10px] font-black text-white hover:opacity-90"
-          >
-            {t('btn_start')}
-          </button>
-          <button
-            type="button"
-            onClick={() => onCancel(entry.id)}
-            className="rounded-md border border-[#E8472A]/50 px-2 py-0.5 text-[10px] font-bold text-[#E8472A] hover:bg-[#E8472A]/10"
-          >
-            {t('btn_cancel')}
-          </button>
-        </div>
-      )}
-    </div>
+        {showPrimary && (
+          <span className={`shrink-0 rounded-md px-2 py-0.5 text-[10px] font-black ${primaryClass}`}>
+            {primaryLabel}
+          </span>
+        )}
+      </div>
+    </button>
   );
 }
