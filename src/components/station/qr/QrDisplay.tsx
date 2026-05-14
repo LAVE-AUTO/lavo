@@ -1,7 +1,7 @@
 'use client';
 
 import { useRef, useEffect, useState } from 'react';
-import QRCode from 'qrcode';
+import { renderQrWithLogo } from './qr-with-logo';
 
 interface Props {
   url: string;
@@ -9,8 +9,6 @@ interface Props {
 }
 
 const QR_SIZE = 240;
-const QR_COLOR_DARK = '#1A1A0A';
-const QR_COLOR_LIGHT = '#FFFFFF';
 
 export function QrDisplay({ url }: Props) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
@@ -18,17 +16,13 @@ export function QrDisplay({ url }: Props) {
 
   useEffect(() => {
     if (!url || !canvasRef.current) return;
-    QRCode.toCanvas(canvasRef.current, url, {
-      width: QR_SIZE,
-      margin: 2,
-      color: { dark: QR_COLOR_DARK, light: QR_COLOR_LIGHT },
-      errorCorrectionLevel: 'H',
-    })
-      .then(() => setReady(true))
-      .catch(() => {
-        // QR generation failed silently - canvas stays blank, pulse animation stops
-        setReady(true);
-      });
+    let cancelled = false;
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    setReady(false);
+    renderQrWithLogo(canvasRef.current, url, QR_SIZE)
+      .then(() => { if (!cancelled) setReady(true); })
+      .catch(() => { if (!cancelled) setReady(true); });
+    return () => { cancelled = true; };
   }, [url]);
 
   return (
