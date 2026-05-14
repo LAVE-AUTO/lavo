@@ -1,18 +1,21 @@
 'use client';
 
-import { useState, useEffect, useCallback, useRef } from 'react';
+import { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import { useTranslations } from 'next-intl';
 import { getFromApi, patchWithApi, postWithApi } from '@/services';
 import { useAuth } from '@/context/auth-context';
 import { useToast } from '@/context/toast-context';
 import { ConfirmDialog } from '@/components/ui/ConfirmDialog';
 import { PageLoader } from '@/components/ui/PageLoader';
-import { DashboardKpiRow, type KpiData } from './DashboardKpiRow';
+import { DashboardOverviewSection } from './DashboardOverviewSection';
 import { DashboardDateNav } from './DashboardDateNav';
-import { DashboardQueuePanel } from './DashboardQueuePanel';
-import { DashboardReservationsPanel, type ReservationItem } from './DashboardReservationsPanel';
+import { DashboardAgendaTimeline, type AgendaEntry, type AgendaPost } from './DashboardAgendaTimeline';
+import { DashboardLegendBar } from './DashboardLegendBar';
+import { DashboardQueueBand } from './DashboardQueueBand';
 import { DashboardGroupedPanel } from './DashboardGroupedPanel';
 import { DashboardDelaysPanel, type DashboardDelayItem } from './DashboardDelaysPanel';
+import { DashboardBayFilter } from './DashboardBayFilter';
+import type { KpiData, ReservationItem } from './types';
 import type { QueueEntry } from './QueueCard';
 
 const DELAYS_PREVIEW_SIZE = 5;
@@ -36,6 +39,7 @@ interface RawEntry {
   time_slot_id: string | null;
   station_id: string;
   vehicle_format_id: string | null;
+  post_id: string | null;
   status: string;
   queue_position: number | null;
   amount_paid: string | null;
@@ -61,6 +65,17 @@ interface RawDashboard {
   clients_previous_period: number;
 }
 
+interface RawConfig {
+  config: {
+    opening_time: string | null;
+    closing_time: string | null;
+    break_start: string | null;
+    break_end: string | null;
+    wash_post_count: number | null;
+  };
+  posts: Array<{ id: string; position: number; is_active: boolean }>;
+}
+
 type DashboardAction = 'call' | 'complete' | 'cancel' | 'start' | 'call_next';
 
 interface PendingAction {
@@ -73,7 +88,6 @@ function clientNameOf(entry: RawEntry): string {
   if (first) return first;
   return `Client #${entry.user_id.slice(0, 4).toUpperCase()}`;
 }
-
 
 function dayRange(date: Date): { from: string; to: string } {
   const start = new Date(date);
@@ -104,13 +118,14 @@ function buildDateRange(date: Date, view: 'daily' | 'weekly' | 'monthly'): { fro
 function buildQueueEntries(raw: RawEntry[]): QueueEntry[] {
   const inProgress = raw
     .filter((e) => e.status === 'in_progress')
-    .map((e, idx): QueueEntry => ({
+    .map((e): QueueEntry => ({
       id: e.id,
       position: 0,
       clientName: clientNameOf(e),
       entryType: e.entry_type,
+      serviceLabel: e.vehicle_format?.label ?? undefined,
       price: e.amount_paid ? parseFloat(e.amount_paid) : undefined,
-      isNext: idx === 0 && raw.filter((x) => (ACTIVE_QUEUE_STATUSES as readonly string[]).includes(x.status)).length === 0,
+      isNext: false,
       status: e.status,
     }));
   const waiting = raw
@@ -121,11 +136,25 @@ function buildQueueEntries(raw: RawEntry[]): QueueEntry[] {
       position: e.queue_position ?? idx + 1,
       clientName: clientNameOf(e),
       entryType: e.entry_type,
+      serviceLabel: e.vehicle_format?.label ?? undefined,
       price: e.amount_paid ? parseFloat(e.amount_paid) : undefined,
       isNext: inProgress.length === 0 && idx === 0,
       status: e.status,
     }));
   return [...inProgress, ...waiting];
+}
+
+function buildAgendaEntries(raw: RawEntry[]): AgendaEntry[] {
+  return raw.map((e): AgendaEntry => ({
+    id: e.id,
+    clientName: clientNameOf(e),
+    vehicleFormat: e.vehicle_format?.label ?? null,
+    status: e.status,
+    slotStart: e.slot_start_time,
+    slotEnd: e.slot_end_time,
+    amountPaid: e.amount_paid ? parseFloat(e.amount_paid) : null,
+    postId: e.post_id,
+  }));
 }
 
 function buildReservationItems(raw: RawEntry[]): ReservationItem[] {
@@ -174,7 +203,7 @@ const CONFIRM_DIALOG_LABELS: Record<DashboardAction, { title: string; message: s
 
 export function StationDashboard() {
   const { isLoading: authLoading } = useAuth();
-  const { error: showError } = useToast();
+  const { error: showError, info: showInfo } = useToast();
   const t = useTranslations('station_dashboard');
   const mountedRef = useRef(true);
   useEffect(() => { mountedRef.current = true; return () => { mountedRef.current = false; }; }, []);
@@ -183,10 +212,18 @@ export function StationDashboard() {
   const [view, setView] = useState<'daily' | 'weekly' | 'monthly'>('daily');
   const [kpi, setKpi] = useState<KpiData>(EMPTY_KPI);
   const [queueEntries, setQueueEntries] = useState<QueueEntry[]>([]);
+  const [agendaEntries, setAgendaEntries] = useState<AgendaEntry[]>([]);
   const [reservationItems, setReservationItems] = useState<ReservationItem[]>([]);
+  const [posts, setPosts] = useState<AgendaPost[]>([]);
   const [delays, setDelays] = useState<DashboardDelayItem[]>([]);
   const [delaysPendingTotal, setDelaysPendingTotal] = useState(0);
-  const [stationBreak, setStationBreak] = useState<{ start: string | null; end: string | null }>({ start: null, end: null });
+  const [config, setConfig] = useState<{
+    openingTime: string | null;
+    closingTime: string | null;
+    breakStart: string | null;
+    breakEnd: string | null;
+  }>({ openingTime: null, closingTime: null, breakStart: null, breakEnd: null });
+  const [selectedPostId, setSelectedPostId] = useState<string | 'all'>('all');
   const [loading, setLoading] = useState(true);
   const [pending, setPending] = useState<PendingAction | null>(null);
   const [actionLoading, setActionLoading] = useState(false);
@@ -194,9 +231,7 @@ export function StationDashboard() {
   const loadData = useCallback(async () => {
     const { from: queueFrom, to: queueTo } = dayRange(selectedDate);
     const { from: resFrom, to: resTo } = buildDateRange(selectedDate, view);
-    // Queue: always scoped to the selected day (live queue)
     const queueQuery = `?entry_type=queue&from=${encodeURIComponent(queueFrom)}&to=${encodeURIComponent(queueTo)}&per_page=200`;
-    // Reservations: range depends on view (day / week / month)
     const reservationsQuery = `?entry_type=reservation&slot_from=${encodeURIComponent(resFrom)}&slot_to=${encodeURIComponent(resTo)}&per_page=200`;
 
     const [queueResult, reservationsResult, dashboardResult, delaysResult, configResult] = await Promise.all([
@@ -214,9 +249,19 @@ export function StationDashboard() {
     const [dashboardOk, dashboardData] = dashboardResult;
     const [delaysOk, delaysData] = delaysResult;
     const [configOk, configData] = configResult;
+
     if (configOk) {
-      const cfg = (configData as { data?: { break_start?: string | null; break_end?: string | null } })?.data;
-      setStationBreak({ start: cfg?.break_start ?? null, end: cfg?.break_end ?? null });
+      const payload = (configData as { data?: RawConfig })?.data;
+      const cfg = payload?.config;
+      setConfig({
+        openingTime: cfg?.opening_time ?? null,
+        closingTime: cfg?.closing_time ?? null,
+        breakStart: cfg?.break_start ?? null,
+        breakEnd: cfg?.break_end ?? null,
+      });
+      setPosts(
+        (payload?.posts ?? []).map((p) => ({ id: p.id, position: p.position, isActive: p.is_active })),
+      );
     }
 
     if (queueOk) {
@@ -227,6 +272,7 @@ export function StationDashboard() {
     if (reservationsOk) {
       const raw = (reservationsData as { data: { entries: RawEntry[] } }).data?.entries ?? [];
       setReservationItems(buildReservationItems(raw));
+      setAgendaEntries(buildAgendaEntries(raw));
     }
 
     if (dashboardOk) {
@@ -256,23 +302,11 @@ export function StationDashboard() {
   }, [selectedDate, view]);
 
   useEffect(() => {
-    // eslint-disable-next-line react-hooks/set-state-in-effect
     if (!authLoading) { loadData(); }
   }, [authLoading, loadData]);
 
   function requestAction(type: DashboardAction, entryId: string) {
     setPending({ type, entryId });
-  }
-
-  async function handleStartEntry(entryId: string) {
-    const [ok, data] = await patchWithApi(`/station/entries/${entryId}`, { status: 'in_progress' });
-    if (!mountedRef.current) return;
-    if (ok) {
-      await loadData();
-    } else {
-      const raw = (data as { message?: string })?.message ?? '';
-      showError(raw.includes('Cannot transition') ? t('error_invalid_transition') : t('action_error_generic'));
-    }
   }
 
   async function handleExtraTime(entryId: string, minutes: number) {
@@ -285,13 +319,13 @@ export function StationDashboard() {
     }
   }
 
+  function handleOpenManualAdd() {
+    /* Manual queue add modal requires vehicleFormats + availableSlots wiring
+     * which lives on the queue page. For now we direct the merchant there. */
+    showInfo(t('queue_manual_add_redirect'));
+  }
+
   async function executeAction() {
-    /* Re-entry guard: a double-click on Confirm (or React Strict Mode firing
-     * the effect twice in dev) used to send two PATCH requests for the same
-     * entry. The second one would 409 because the entry was already
-     * transitioned. We hold `actionLoading=true` until everything completes
-     * (network round-trip + dashboard refresh) and bail out early when a
-     * call is already in flight. */
     if (!pending || actionLoading) return;
     setActionLoading(true);
 
@@ -328,13 +362,18 @@ export function StationDashboard() {
 
   const dialogLabels = pending ? CONFIRM_DIALOG_LABELS[pending.type] : null;
 
+  const visibleAgendaEntries = useMemo(() => {
+    if (selectedPostId === 'all') return agendaEntries;
+    return agendaEntries.filter((e) => e.postId === selectedPostId || e.postId === null);
+  }, [agendaEntries, selectedPostId]);
+
   if (loading) {
     return <PageLoader label={t('loading')} />;
   }
 
   return (
     <div className="flex flex-1 flex-col overflow-hidden animate-fade-in">
-      <DashboardKpiRow data={kpi} />
+      <DashboardOverviewSection data={kpi} />
 
       <DashboardDateNav
         selectedDate={selectedDate}
@@ -343,37 +382,54 @@ export function StationDashboard() {
         onViewChange={setView}
       />
 
-      <div className="flex flex-1 flex-col overflow-auto md:flex-row md:overflow-hidden">
-        {/* Left column: queue + delays shortcut */}
-        <div className="flex shrink-0 flex-col md:w-70 md:overflow-hidden">
-          <DashboardQueuePanel
-            entries={queueEntries}
-            onCallEntry={(id) => requestAction('call', id)}
-            onCompleteEntry={(id) => requestAction('complete', id)}
-            onCallNext={() => requestAction('call_next', '')}
-          />
-          <DashboardDelaysPanel items={delays} totalPending={delaysPendingTotal} />
-        </div>
-
-        {/* Central column: daily view shows time-slot panel; weekly/monthly shows grouped panel */}
-        {view === 'daily' ? (
-          <DashboardReservationsPanel
-            items={reservationItems}
-            selectedDate={selectedDate}
-            breakStart={stationBreak.start}
-            breakEnd={stationBreak.end}
-            onStart={handleStartEntry}
-            onComplete={(id) => requestAction('complete', id)}
-            onCancel={(id) => requestAction('cancel', id)}
-            onExtraTime={handleExtraTime}
-          />
-        ) : (
-          <DashboardGroupedPanel
-            items={reservationItems}
-            view={view}
-            selectedDate={selectedDate}
+      <div className="flex flex-1 min-h-0 overflow-hidden">
+        {/* Bay filter (desktop only) */}
+        {view === 'daily' && posts.length > 0 && (
+          <DashboardBayFilter
+            posts={posts}
+            selectedPostId={selectedPostId}
+            onSelect={setSelectedPostId}
           />
         )}
+
+        <div className="flex flex-1 min-w-0 flex-col overflow-hidden">
+          {view === 'daily' ? (
+            <DashboardAgendaTimeline
+              posts={posts}
+              entries={visibleAgendaEntries}
+              selectedDate={selectedDate}
+              openingTime={config.openingTime}
+              closingTime={config.closingTime}
+              breakStart={config.breakStart}
+              breakEnd={config.breakEnd}
+              selectedPostId={selectedPostId}
+              onStart={(id) => requestAction('start', id)}
+              onComplete={(id) => requestAction('complete', id)}
+              onCancel={(id) => requestAction('cancel', id)}
+              onExtraTime={handleExtraTime}
+            />
+          ) : (
+            <DashboardGroupedPanel
+              items={reservationItems}
+              view={view}
+              selectedDate={selectedDate}
+            />
+          )}
+
+          {view === 'daily' && <DashboardLegendBar />}
+          {view === 'daily' && (
+            <DashboardQueueBand
+              entries={queueEntries}
+              onCallNext={() => requestAction('call_next', '')}
+              onCallEntry={(id) => requestAction('call', id)}
+              onCompleteEntry={(id) => requestAction('complete', id)}
+              onOpenManualAdd={handleOpenManualAdd}
+            />
+          )}
+          {view === 'daily' && delays.length > 0 && (
+            <DashboardDelaysPanel items={delays} totalPending={delaysPendingTotal} />
+          )}
+        </div>
       </div>
 
       <ConfirmDialog
