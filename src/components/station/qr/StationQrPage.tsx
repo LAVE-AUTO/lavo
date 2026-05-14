@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect, useCallback, useRef } from 'react';
+import Image from 'next/image';
 import { useTranslations, useLocale } from 'next-intl';
 import { getFromApi } from '@/services';
 import { QrDisplay } from './QrDisplay';
@@ -28,6 +29,7 @@ export function StationQrPage() {
 
   const [stationId, setStationId] = useState<string | null>(null);
   const [stationName, setStationName] = useState('');
+  const [stationCity, setStationCity] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(false);
   const [qrToken, setQrToken] = useState<string | null>(null);
@@ -37,6 +39,7 @@ export function StationQrPage() {
   const mountedRef = useRef(true);
   useEffect(() => { mountedRef.current = true; return () => { mountedRef.current = false; }; }, []);
 
+  // eslint-disable-next-line react-hooks/set-state-in-effect
   useEffect(() => { setOrigin(window.location.origin); }, []);
 
   const publicUrl = stationId && origin && qrToken && qrVersion
@@ -55,7 +58,6 @@ export function StationQrPage() {
       if (ok && okToken) {
         const res = data as StationMe;
         const tokenRes = tokenData as StationQrTokenResponse;
-        // Validate the response shape before using it
         const token = tokenRes?.data?.qr_token;
         const version = tokenRes?.data?.v;
         const tokenStationId = tokenRes?.data?.station_id;
@@ -73,6 +75,7 @@ export function StationQrPage() {
         }
         setStationId(res.data.id);
         setStationName(res.data.name);
+        setStationCity(res.data.city ?? null);
         setQrToken(token);
         setQrVersion(version);
       } else {
@@ -84,6 +87,7 @@ export function StationQrPage() {
     setLoading(false);
   }, []);
 
+  // eslint-disable-next-line react-hooks/set-state-in-effect
   useEffect(() => { loadStation(); }, [loadStation]);
 
   /* Loading state */
@@ -115,47 +119,90 @@ export function StationQrPage() {
 
   return (
     <div className="flex flex-1 flex-col items-center px-4 py-8 sm:py-12">
-      {/* Header */}
-      <h1 className="text-center text-[20px] font-bold text-[#1A1A0A] dark:text-[#F0EDD4]">
-        {t('page_title')}
-      </h1>
-      <p className="mt-1 max-w-md text-center text-[13px] text-[#888] dark:text-[#9A9A8A]">
-        {t('page_subtitle')}
-      </p>
+      {/* Branded card */}
+      <div className="relative w-full max-w-md overflow-hidden rounded-3xl bg-gradient-to-br from-white via-white to-[#F7F3E4] p-8 shadow-2xl dark:from-[#1A2218] dark:via-[#161E12] dark:to-[#0F1A0C]">
+        {/* Top gold accent line */}
+        <div className="absolute inset-x-0 top-0 h-1 bg-gradient-to-r from-transparent via-[#C49A1E] to-transparent" />
+        {/* Diagonal subtle pattern */}
+        <div
+          className="pointer-events-none absolute inset-0 opacity-[0.04]"
+          style={{
+            backgroundImage:
+              'repeating-linear-gradient(135deg, #C49A1E 0 1px, transparent 1px 14px)',
+          }}
+          aria-hidden="true"
+        />
 
-      {/* QR card */}
-      <div className="mt-8 w-full max-w-sm rounded-xl border border-[#E8E4DC] bg-white p-6 shadow-sm dark:border-[#1A2A14] dark:bg-[#182214]">
-        {/* Station name */}
-        <div className="mb-5 text-center">
-          <span className="text-[12px] font-semibold uppercase tracking-wider text-[#BBBBAA] dark:text-[#4A4A3A]">
-            {t('station_name_label')}
-          </span>
-          <p className="mt-0.5 text-[16px] font-bold text-[#1A1A0A] dark:text-[#F0EDD4]">
-            {stationName}
-          </p>
+        {/* Brand wordmark */}
+        <div className="relative flex items-center justify-center">
+          <Image
+            src="/logo/logo_anglais_1.png"
+            alt="Hurryline"
+            width={160}
+            height={64}
+            className="h-10 w-auto"
+            priority
+          />
         </div>
 
-        {/* QR code canvas */}
-        <QrDisplay url={publicUrl} stationName={stationName} />
+        {/* Station name */}
+        <div className="relative mt-6 text-center">
+          <div className="text-[10px] font-bold uppercase tracking-[0.18em] text-[#C49A1E]">
+            {t('station_name_label')}
+          </div>
+          <h1 className="mt-1 text-[22px] font-black leading-tight text-[#1A1A0A] dark:text-[#F0EDD4]">
+            {stationName}
+          </h1>
+          {stationCity && (
+            <div className="mt-0.5 text-[12px] font-semibold text-[#888] dark:text-[#9A9A8A]">
+              {stationCity}
+            </div>
+          )}
+        </div>
 
-        {/* Public URL preview */}
-        <div className="mt-4 rounded-lg bg-[#F7F6F2] px-3 py-2 dark:bg-[#0F1A0C]">
-          <span className="block text-[11px] font-semibold uppercase tracking-wider text-[#BBBBAA] dark:text-[#4A4A3A]">
-            {t('station_url_label')}
+        {/* QR with brackets */}
+        <div className="relative mt-8 flex justify-center">
+          <QrDisplay url={publicUrl} stationName={stationName} />
+        </div>
+
+        {/* Scan instruction */}
+        <div className="relative mt-8 flex items-center justify-center gap-2">
+          <ScanIcon />
+          <span className="text-[13px] font-bold uppercase tracking-wider text-[#1A1A0A] dark:text-[#F0EDD4]">
+            {t('scan_label')}
           </span>
-          <p className="mt-0.5 break-all font-mono text-[13px] text-[#666] dark:text-[#A0A090]">
+        </div>
+
+        {/* URL preview */}
+        <div className="relative mt-3 rounded-xl border border-[#E8E4DC] bg-[#F7F6F2] px-3 py-2 dark:border-[#243020] dark:bg-[#0F1A0C]">
+          <div className="text-[9px] font-bold uppercase tracking-wider text-[#999] dark:text-[#5A5A4A]">
+            {t('station_url_label')}
+          </div>
+          <p className="mt-0.5 break-all font-mono text-[11px] text-[#666] dark:text-[#A0A090]">
             {publicUrl}
           </p>
         </div>
 
-        {/* Action buttons */}
-        <QrActions url={publicUrl} stationName={stationName} />
+        {/* Actions */}
+        <div className="relative mt-5">
+          <QrActions url={publicUrl} stationName={stationName} />
+        </div>
       </div>
 
       {/* Print hint */}
-      <p className="mt-6 max-w-sm text-center text-[13px] text-[#BBBBAA] dark:text-[#4A4A3A]">
+      <p className="mt-6 max-w-sm text-center text-[12px] text-[#888] dark:text-[#5A5A4A]">
         {t('print_hint')}
       </p>
     </div>
   );
 }
+
+const ScanIcon = () => (
+  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#C49A1E" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+    <path d="M3 7V5a2 2 0 0 1 2-2h2" />
+    <path d="M17 3h2a2 2 0 0 1 2 2v2" />
+    <path d="M21 17v2a2 2 0 0 1-2 2h-2" />
+    <path d="M7 21H5a2 2 0 0 1-2-2v-2" />
+    <line x1="7" y1="12" x2="17" y2="12" />
+  </svg>
+);

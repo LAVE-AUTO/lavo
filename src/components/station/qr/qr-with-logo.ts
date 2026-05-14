@@ -1,15 +1,17 @@
 import QRCode from 'qrcode';
 
-export const QR_COLOR_DARK = '#1A1A0A';
+export const QR_COLOR_DARK = '#0C1209';
 export const QR_COLOR_LIGHT = '#FFFFFF';
-export const QR_LOGO_SRC = '/logo/logo_anglais_1.png';
+/* The square hourglass icon reads better at small sizes than the full
+ * wordmark, and stays balanced inside the centered white badge. */
+export const QR_LOGO_SRC = '/logo/frame2.png';
 
-/* Logo footprint as a ratio of the QR size. We use errorCorrectionLevel "H"
- * (30% recovery) and stay well below that threshold so the code remains
- * scannable on any scanner. */
-const LOGO_WIDTH_RATIO = 0.26;
-const LOGO_PADDING_RATIO = 0.025;
-const LOGO_BG_RADIUS_RATIO = 0.04;
+/* Logo footprint as a ratio of the QR size. errorCorrectionLevel "H"
+ * recovers up to 30% of the code; we stay at ~28% to keep a wide margin
+ * for printers and angled scans. */
+const LOGO_WIDTH_RATIO = 0.28;
+const LOGO_PADDING_RATIO = 0.03;
+const LOGO_BG_RADIUS_RATIO = 0.05;
 
 function loadLogo(): Promise<HTMLImageElement> {
   return new Promise((resolve, reject) => {
