@@ -59,6 +59,8 @@ export function StationDetail({ id }: StationDetailProps) {
   const [heroImgFailed, setHeroImgFailed] = useState(false);
   const [photoIndex, setPhotoIndex] = useState(0);
   const [selectedServiceId, setSelectedServiceId] = useState<string | null>(null);
+  /* Format entry choice persisted per service id - lets users switch services without losing earlier picks. */
+  const [formatEntryByService, setFormatEntryByService] = useState<Record<string, string>>({});
   const userLocation = useUserLocation();
 
   useEffect(() => {
@@ -94,6 +96,24 @@ export function StationDetail({ id }: StationDetailProps) {
     [station, selectedServiceId],
   );
 
+  const selectedFormatEntryId = selectedServiceId
+    ? formatEntryByService[selectedServiceId] ?? null
+    : null;
+
+  const handleSelectService = (id: string) => {
+    setSelectedServiceId(id);
+  };
+
+  const handleSelectFormatEntry = (entryId: string | null) => {
+    if (!selectedServiceId) return;
+    setFormatEntryByService((prev) => {
+      const next = { ...prev };
+      if (entryId == null) delete next[selectedServiceId];
+      else next[selectedServiceId] = entryId;
+      return next;
+    });
+  };
+
   if (station === undefined) return <PageSpinner />;
 
   if (!station) {
@@ -110,7 +130,19 @@ export function StationDetail({ id }: StationDetailProps) {
   const isOpen = station.isOpen !== false;
   const hasServices = station.stationServices.length > 0;
 
-  const currentPrice = selectedService ? minPrice(selectedService) : station.priceFrom;
+  const selectedFormatEntry = selectedService && selectedFormatEntryId
+    ? selectedService.vehicleEntries.find((e) => e.id === selectedFormatEntryId) ?? null
+    : null;
+
+  const currentPrice = selectedService
+    ? (selectedService.category === 'hand_wash'
+        ? (selectedFormatEntry?.price ?? minPrice(selectedService))
+        : minPrice(selectedService))
+    : station.priceFrom;
+
+  const needsFormatChoice = selectedService?.category === 'hand_wash'
+    && selectedService.vehicleEntries.some((e) => e.vehicleFormatId != null)
+    && !selectedFormatEntry;
 
   const distanceLabel = userLocation && station.latitude != null && station.longitude != null
     ? (() => {
@@ -175,9 +207,9 @@ export function StationDetail({ id }: StationDetailProps) {
         </div>
         <div>
           <p className="text-[22px] font-black text-[#000C1F] dark:text-[#FFF8EC] leading-none">
-            {station.availableSlots ?? '--'}
+            {distanceLabel ?? '--'}
           </p>
-          <p className="text-[10.5px] text-[#666] dark:text-[#B0B0A0] mt-1.5 uppercase tracking-wider font-bold">{t('places_dispo')}</p>
+          <p className="text-[10.5px] text-[#666] dark:text-[#B0B0A0] mt-1.5 uppercase tracking-wider font-bold">{t('queue_distance')}</p>
         </div>
       </div>
       {station.queueCount > 0 && distanceLabel && (
@@ -371,10 +403,12 @@ export function StationDetail({ id }: StationDetailProps) {
               <StationServicesSection
                 services={station.stationServices}
                 selectedServiceId={selectedServiceId}
-                onSelectService={setSelectedServiceId}
+                selectedFormatEntryId={selectedFormatEntryId}
+                onSelectService={handleSelectService}
+                onSelectFormatEntry={handleSelectFormatEntry}
                 onBook={handleOpenBooking}
                 bookingLoading={bookingRefreshing}
-                disabledBook={!isOpen && !hasServices}
+                disabledBook={(!isOpen && !hasServices) || needsFormatChoice}
               />
 
               {/* Description */}
@@ -471,6 +505,7 @@ export function StationDetail({ id }: StationDetailProps) {
           qrToken={qrToken}
           qrVersion={qrVersion}
           initialServiceId={selectedServiceId}
+          initialFormatEntryId={selectedFormatEntryId}
           onClose={() => setBookingOpen(false)}
         />
       )}

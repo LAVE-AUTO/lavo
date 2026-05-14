@@ -7,7 +7,9 @@ import type { StationServicePublic } from '@/types/station';
 interface StationServicesSectionProps {
   services: StationServicePublic[];
   selectedServiceId: string | null;
+  selectedFormatEntryId: string | null;
   onSelectService: (id: string) => void;
+  onSelectFormatEntry: (entryId: string | null) => void;
   onBook: () => void;
   bookingLoading?: boolean;
   disabledBook?: boolean;
@@ -54,7 +56,9 @@ function minDuration(svc: StationServicePublic): number | null {
 export function StationServicesSection({
   services,
   selectedServiceId,
+  selectedFormatEntryId,
   onSelectService,
+  onSelectFormatEntry,
   onBook,
   bookingLoading = false,
   disabledBook = false,
@@ -96,7 +100,9 @@ export function StationServicesSection({
           service={featured}
           selected={selectedServiceId === featured.id}
           locale={locale}
+          selectedFormatEntryId={selectedFormatEntryId}
           onSelect={() => onSelectService(featured.id)}
+          onSelectFormatEntry={onSelectFormatEntry}
           onBook={onBook}
           bookingLoading={bookingLoading}
           disabledBook={disabledBook}
@@ -133,7 +139,9 @@ interface FeaturedServiceCardProps {
   service: StationServicePublic;
   selected: boolean;
   locale: 'fr' | 'en';
+  selectedFormatEntryId: string | null;
   onSelect: () => void;
+  onSelectFormatEntry: (entryId: string | null) => void;
   onBook: () => void;
   bookingLoading: boolean;
   disabledBook: boolean;
@@ -143,14 +151,28 @@ function FeaturedServiceCard({
   service,
   selected,
   locale,
+  selectedFormatEntryId,
   onSelect,
+  onSelectFormatEntry,
   onBook,
   bookingLoading,
   disabledBook,
 }: FeaturedServiceCardProps) {
   const t = useTranslations('stations');
-  const price = minPrice(service);
-  const duration = minDuration(service);
+  const isHandWash = service.category === 'hand_wash';
+  const formatEntries = isHandWash
+    ? service.vehicleEntries.filter((e) => e.vehicleFormatId != null)
+    : [];
+  const selectedEntry = formatEntries.find((e) => e.id === selectedFormatEntryId) ?? null;
+
+  /* For hand_wash, price/duration reflect the picked format. Otherwise show the cheapest entry as a hint. */
+  const price = isHandWash
+    ? (selectedEntry?.price ?? null)
+    : minPrice(service);
+  const duration = isHandWash
+    ? (selectedEntry?.duration ?? null)
+    : minDuration(service);
+  const needsFormat = isHandWash && formatEntries.length > 0 && !selectedEntry;
 
   return (
     <div className={[
@@ -216,6 +238,50 @@ function FeaturedServiceCard({
         </div>
       )}
 
+      {isHandWash && formatEntries.length > 0 && (
+        <div className="px-5 mt-4">
+          <p className="text-[11px] font-black text-[#555] dark:text-[#A0A090] uppercase tracking-[0.15em] mb-2.5">
+            {t('services_format_label')}
+          </p>
+          <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+            {formatEntries.map((entry) => {
+              const isSelected = selectedFormatEntryId === entry.id;
+              return (
+                <button
+                  key={entry.id}
+                  type="button"
+                  onClick={() => onSelectFormatEntry(entry.id)}
+                  aria-pressed={isSelected}
+                  className={[
+                    'text-left rounded-xl border-[1.5px] p-3 transition-colors cursor-pointer',
+                    isSelected
+                      ? 'border-gold bg-gold/10 dark:bg-gold/15'
+                      : 'border-[#D8D8C8] dark:border-tab-inactive bg-white/60 dark:bg-dark-bg/50 hover:border-gold/40',
+                  ].join(' ')}
+                >
+                  <div className="flex items-center justify-between gap-2">
+                    <span className="text-[13px] font-black text-[#000C1F] dark:text-[#FFF8EC] leading-tight truncate">
+                      {entry.formatLabel}
+                    </span>
+                    <span className={`w-4 h-4 rounded-full border-2 flex items-center justify-center shrink-0 ${isSelected ? 'border-gold bg-gold' : 'border-[#BBB] dark:border-[#555]'}`}>
+                      {isSelected && <span className="w-1.5 h-1.5 rounded-full bg-dark-bg" />}
+                    </span>
+                  </div>
+                  <div className="mt-1.5 flex items-baseline gap-1.5">
+                    <span className="text-[14px] font-black text-gold leading-none">
+                      {entry.price.toLocaleString()}$
+                    </span>
+                    <span className="text-[10.5px] font-bold text-[#888] dark:text-[#888]">
+                      · {entry.duration} min
+                    </span>
+                  </div>
+                </button>
+              );
+            })}
+          </div>
+        </div>
+      )}
+
       <div className="px-5 py-4 mt-4 border-t border-[#D8D8C8] dark:border-tab-inactive flex items-center gap-3 bg-[#E8E8D8]/40 dark:bg-dark-bg/30">
         <button
           type="button"
@@ -233,10 +299,15 @@ function FeaturedServiceCard({
         <button
           type="button"
           onClick={onBook}
-          disabled={bookingLoading || disabledBook || !selected}
+          disabled={bookingLoading || disabledBook || !selected || needsFormat}
+          title={needsFormat ? t('services_pick_format_hint') : undefined}
           className="flex-1 py-2.5 bg-gold hover:bg-gold-hover rounded-xl text-[13.5px] font-black text-dark-bg transition-colors cursor-pointer disabled:opacity-60 disabled:cursor-not-allowed btn-shine"
         >
-          {bookingLoading ? t('services_loading') : t('services_book_now')}
+          {bookingLoading
+            ? t('services_loading')
+            : needsFormat
+              ? t('services_pick_format')
+              : t('services_book_now')}
         </button>
       </div>
     </div>

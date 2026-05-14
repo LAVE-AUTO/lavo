@@ -31,10 +31,12 @@ interface BookingFlowProps {
   qrVersion?: '1' | null;
   /** Service id picked on the station detail screen; pre-selects + skips the service step. */
   initialServiceId?: string | null;
+  /** Vehicle format entry picked on the station detail screen; pre-selects + skips the format step. */
+  initialFormatEntryId?: string | null;
   onClose: () => void;
 }
 
-export function BookingFlow({ station, qrToken, qrVersion, initialServiceId, onClose }: BookingFlowProps) {
+export function BookingFlow({ station, qrToken, qrVersion, initialServiceId, initialFormatEntryId, onClose }: BookingFlowProps) {
   const t = useTranslations('booking');
   const userLocation = useUserLocation();
   const dialogRootRef = useRef<HTMLDivElement | null>(null);
@@ -42,12 +44,19 @@ export function BookingFlow({ station, qrToken, qrVersion, initialServiceId, onC
   const initialService = initialServiceId
     ? station.stationServices.find((s) => s.id === initialServiceId) ?? null
     : null;
-  const initialEntry =
-    initialService && initialService.category !== 'hand_wash'
-      ? initialService.vehicleEntries[0] ?? null
+  const preselectedFormatEntry =
+    initialService && initialService.category === 'hand_wash' && initialFormatEntryId
+      ? initialService.vehicleEntries.find((e) => e.id === initialFormatEntryId) ?? null
       : null;
+  const initialEntry = initialService
+    ? (initialService.category === 'hand_wash'
+        ? preselectedFormatEntry
+        : initialService.vehicleEntries[0] ?? null)
+    : null;
   const initialStep: Step = initialService
-    ? (initialService.category === 'hand_wash' ? 'format' : 'extras')
+    ? (initialService.category === 'hand_wash'
+        ? (preselectedFormatEntry ? 'extras' : 'format')
+        : 'extras')
     : 'service';
 
   const [step, setStep] = useState<Step>(initialStep);
