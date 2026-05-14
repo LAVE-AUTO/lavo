@@ -169,9 +169,7 @@ export function PublicNavbar({
   /* Logo always goes to the landing page regardless of auth state */
   const logoHref = '/' as const;
 
-  /* Nav links shown to logged-in users (desktop). The history page is wired
-   * through a dedicated icon in the right cluster (next to the avatar) so it
-   * stays accessible without crowding the main horizontal links. */
+  /* Nav links shown to logged-in users (desktop). */
   const authNavLinks = isClient
     ? [
         { href: '/stations',             label: t('stations') },
@@ -210,13 +208,13 @@ export function PublicNavbar({
         <div className="max-w-[1440px] mx-auto px-6 lg:px-16 flex items-center justify-between gap-6 py-3">
 
           {/* Logo */}
-          <Link href={logoHref} className="shrink-0" aria-label="Slowtime - Accueil">
+          <Link href={logoHref} className="shrink-0" aria-label="Hurryline - Accueil">
             {isDark ? (
               <div className="flex items-center gap-2">
                 <div className="rounded-lg bg-white/95 p-0.5 border border-[rgba(200,152,10,0.25)] shadow-sm shrink-0">
                   <Image src="/logo/frame2.png" alt="" width={28} height={28} className="w-7 h-7 object-contain" aria-hidden="true" />
                 </div>
-                <span className="font-playfair text-[18px] font-black text-[#c8980a] tracking-[3px]">Slowtime</span>
+                <span className="font-playfair text-[18px] font-black text-[#c8980a] tracking-[3px]">Hurryline</span>
               </div>
             ) : (
               <Image src={lightLogoSrc} alt={t('logo_alt')} width={130} height={34} className="h-9 w-auto object-contain" priority />
