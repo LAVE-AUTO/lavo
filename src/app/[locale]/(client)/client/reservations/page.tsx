@@ -671,7 +671,10 @@ function ReservationCard({
    * button stays visible (disabled + tooltip) so the affordance is always discoverable. */
   const showSignalDelay =
     variant === 'upcoming' && (r.status === 'confirmed' || r.status === 'pending' || r.status === 'pending_payment');
-  const signalDelayEnabled = showSignalDelay && r.status === 'confirmed' && canSignalDelay(r.slotStart);
+  /* Enabled whenever we are in the 2h window. Status check stays loose: the
+   * frontend already shows pending/pending_payment as "Confirmé" via displayStatus,
+   * and the backend accepts the same set. */
+  const signalDelayEnabled = showSignalDelay && canSignalDelay(r.slotStart);
 
   /* Past completed reservations keep rate/tip buttons until each is filled.
    * Tip prompts disappear once we are 7 days past the service so old entries
@@ -725,17 +728,27 @@ function ReservationCard({
               <span className="ml-auto font-bold text-gold">{r.totalPrice.toFixed(2)}$</span>
             </div>
 
-            {/* Service code reminder for upcoming entries */}
-            {variant === 'upcoming' && r.ticketCode && (
-              <div className="mt-2 inline-flex items-center gap-1.5 px-2 py-0.5 rounded-md bg-gold/10 border border-gold/30 text-[11px] font-bold text-gold">
-                <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-                  <rect x="3" y="11" width="18" height="11" rx="2" /><path d="M7 11V7a5 5 0 0110 0v4" />
-                </svg>
-                <span className="font-mono tracking-[2px]">{r.ticketCode}</span>
-              </div>
-            )}
           </div>
         </div>
+
+        {/* Service code — prominent so the client can read it on arrival without
+         * digging into the detail page. Shown only on upcoming entries. */}
+        {variant === 'upcoming' && r.ticketCode && (
+          <div className="mt-3 flex items-center justify-between gap-3 rounded-xl bg-gold/10 border border-gold/30 px-3.5 py-2.5">
+            <div className="flex flex-col">
+              <span className="text-[10px] font-bold uppercase tracking-widest text-gold/80">
+                {t('ticket_code_label')}
+              </span>
+              <span className="font-mono text-[18px] font-black tracking-[6px] text-gold leading-none mt-0.5">
+                {r.ticketCode}
+              </span>
+            </div>
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#af8408" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+              <rect x="3" y="11" width="18" height="11" rx="2" />
+              <path d="M7 11V7a5 5 0 0110 0v4" />
+            </svg>
+          </div>
+        )}
       </Link>
 
       {showActions && (
@@ -1025,16 +1038,25 @@ function QueueCard({
               <span className="ml-auto font-bold text-gold">{q.totalPrice.toFixed(2)}$</span>
             </div>
 
-            {variant === 'upcoming' && q.ticketCode && (
-              <div className="mt-2 inline-flex items-center gap-1.5 px-2 py-0.5 rounded-md bg-gold/10 border border-gold/30 text-[11px] font-bold text-gold">
-                <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-                  <rect x="3" y="11" width="18" height="11" rx="2" /><path d="M7 11V7a5 5 0 0110 0v4" />
-                </svg>
-                <span className="font-mono tracking-[2px]">{q.ticketCode}</span>
-              </div>
-            )}
           </div>
         </div>
+
+        {variant === 'upcoming' && q.ticketCode && (
+          <div className="mt-3 flex items-center justify-between gap-3 rounded-xl bg-gold/10 border border-gold/30 px-3.5 py-2.5">
+            <div className="flex flex-col">
+              <span className="text-[10px] font-bold uppercase tracking-widest text-gold/80">
+                {t('ticket_code_label')}
+              </span>
+              <span className="font-mono text-[18px] font-black tracking-[6px] text-gold leading-none mt-0.5">
+                {q.ticketCode}
+              </span>
+            </div>
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#af8408" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+              <rect x="3" y="11" width="18" height="11" rx="2" />
+              <path d="M7 11V7a5 5 0 0110 0v4" />
+            </svg>
+          </div>
+        )}
       </Link>
 
       {showActions && (
