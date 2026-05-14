@@ -204,7 +204,7 @@ function FeaturedServiceCard({
                 key={extra.id}
                 className="flex items-center gap-2 rounded-xl border border-[#D8D8C8] dark:border-tab-inactive bg-white/60 dark:bg-dark-bg/50 px-3 py-2 text-[12.5px] font-semibold text-[#222] dark:text-[#D0D0C0]"
               >
-                <span className="w-5 h-5 rounded-md bg-lavo-success flex items-center justify-center shrink-0">
+                <span className="w-5 h-5 rounded-md bg-Hurryline-success flex items-center justify-center shrink-0">
                   <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
                     <polyline points="20 6 9 17 4 12" />
                   </svg>

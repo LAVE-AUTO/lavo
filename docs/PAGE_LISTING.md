@@ -1,4 +1,4 @@
-# LAVO Page Listing
+# Hurryline Page Listing
 
 This project has a frontend web UI. All routes are **locale-prefixed** using `next-intl`:
 

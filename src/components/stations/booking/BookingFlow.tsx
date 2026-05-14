@@ -391,7 +391,7 @@ export function BookingFlow({ station, qrToken, qrVersion, initialServiceId, onC
     if (isSuccess) {
       return (
         <div className="flex flex-col items-center px-4 sm:px-6 py-6 gap-4">
-          <div className="w-16 h-16 rounded-full bg-lavo-success/15 flex items-center justify-center">
+          <div className="w-16 h-16 rounded-full bg-Hurryline-success/15 flex items-center justify-center">
             <svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="#00C851" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12" /></svg>
           </div>
 
@@ -423,7 +423,7 @@ export function BookingFlow({ station, qrToken, qrVersion, initialServiceId, onC
             />
           )}
 
-          <div className="flex flex-col sm:flex-row gap-2 w-full max-w-md mt-2 lavo-receipt-actions">
+          <div className="flex flex-col sm:flex-row gap-2 w-full max-w-md mt-2 Hurryline-receipt-actions">
             {isQueueNow ? (
               <>
                 <a
@@ -470,7 +470,7 @@ export function BookingFlow({ station, qrToken, qrVersion, initialServiceId, onC
 
     return (
       <div className="flex flex-col items-center justify-center text-center px-6 py-12 gap-5">
-        <div className="w-20 h-20 rounded-full bg-lavo-error/15 flex items-center justify-center">
+        <div className="w-20 h-20 rounded-full bg-Hurryline-error/15 flex items-center justify-center">
           <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="#E8472A" strokeWidth="2.5" strokeLinecap="round"><line x1="18" y1="6" x2="6" y2="18" /><line x1="6" y1="6" x2="18" y2="18" /></svg>
         </div>
 

@@ -168,7 +168,7 @@ export default function ClientReservationConfirmPage() {
     return (
       <main className="min-h-screen bg-[#F5F5E6] dark:bg-dark-bg px-4 pb-24 sm:pb-8">
         <div className="mx-auto flex min-h-[60vh] max-w-xl flex-col items-center justify-center text-center">
-          <div className="mb-6 flex h-16 w-16 items-center justify-center rounded-full bg-lavo-error/15 text-lavo-error">
+          <div className="mb-6 flex h-16 w-16 items-center justify-center rounded-full bg-Hurryline-error/15 text-Hurryline-error">
             <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
               <line x1="18" y1="6" x2="6" y2="18" />
               <line x1="6" y1="6" x2="18" y2="18" />
@@ -223,7 +223,7 @@ export default function ClientReservationConfirmPage() {
     <main className="min-h-screen bg-[#F5F5E6] dark:bg-dark-bg px-4 pb-24 pt-10 sm:pb-8">
       <div className="mx-auto max-w-xl space-y-5">
         <div className="flex flex-col items-center text-center">
-          <div className="mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-lavo-success/15 text-lavo-success">
+          <div className="mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-Hurryline-success/15 text-Hurryline-success">
             <svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
               <polyline points="20 6 9 17 4 12" />
             </svg>

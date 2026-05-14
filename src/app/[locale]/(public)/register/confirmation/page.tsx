@@ -49,17 +49,17 @@ export default async function RegisterConfirmationPage({ params }: Props) {
       <AuthPageLayout>
         <div className="w-full max-w-lg animate-fade-in">
           <div className="bg-white dark:bg-dark-card rounded-2xl shadow-[0_4px_24px_rgba(0,0,0,0.08),_0_1px_2px_rgba(0,0,0,0.04)] dark:shadow-[0_8px_40px_rgba(0,0,0,0.5)] dark:ring-1 dark:ring-gold/10 p-10 text-center">
-            <div className="w-20 h-20 rounded-full bg-lavo-success/10 border border-lavo-success/20 flex items-center justify-center mx-auto mb-6">
+            <div className="w-20 h-20 rounded-full bg-Hurryline-success/10 border border-Hurryline-success/20 flex items-center justify-center mx-auto mb-6">
               <EnvelopeIcon />
             </div>
 
             <h1 className="text-[26px] font-bold text-[#000C1F] dark:text-white mb-3">
               {t('confirmation_title')}
             </h1>
-            <p className="text-[15px] text-[#555] dark:text-lavo-muted mb-3 leading-relaxed">
+            <p className="text-[15px] text-[#555] dark:text-Hurryline-muted mb-3 leading-relaxed">
               {t('confirmation_message')}
             </p>
-            <p className="text-[20px] text-[#888] dark:text-lavo-muted mb-10">
+            <p className="text-[20px] text-[#888] dark:text-Hurryline-muted mb-10">
               {t('confirmation_spam')}
             </p>
 

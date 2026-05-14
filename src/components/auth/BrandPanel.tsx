@@ -224,7 +224,7 @@ export function BrandPanel() {
   };
 
   const textPrimary   = isDark ? 'text-white'             : 'text-dark-bg';
-  const textSecondary = isDark ? 'text-lavo-muted'         : 'text-[#5A6B54]';
+  const textSecondary = isDark ? 'text-Hurryline-muted'         : 'text-[#5A6B54]';
   const trackColor    = isDark ? 'bg-white/10'             : 'bg-black/10';
   const inactiveDot   = isDark ? 'bg-white/20 hover:bg-white/40' : 'bg-black/20 hover:bg-black/40';
   const featureCardBg = isDark ? 'bg-white/5 border border-white/8' : 'bg-black/5 border border-black/6';

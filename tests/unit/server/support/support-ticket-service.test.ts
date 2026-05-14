@@ -594,7 +594,7 @@ describe('getSupportSettings', () => {
 
     const result = await getSupportSettings();
 
-    expect(result.support_email).toBe('support@lavo.ca');
+    expect(result.support_email).toBe('support@Hurryline.ca');
     process.env.SUPPORT_EMAIL = originalEnv;
   });
 });
@@ -611,7 +611,7 @@ describe('updateSupportSettings', () => {
 
   it('delegates to repo.updateSettings with the full settings map (atomic)', async () => {
     const settings = {
-      support_email: 'help@lavo.ca',
+      support_email: 'help@Hurryline.ca',
       max_open_tickets_per_user: '3',
     };
 
@@ -629,10 +629,10 @@ describe('updateSupportSettings', () => {
   });
 
   it('passes a single-key map to repo.updateSettings', async () => {
-    await updateSupportSettings({ support_email: 'ops@lavo.ca' });
+    await updateSupportSettings({ support_email: 'ops@Hurryline.ca' });
 
     expect(mockUpdateSettings).toHaveBeenCalledTimes(1);
-    expect(mockUpdateSettings).toHaveBeenCalledWith({ support_email: 'ops@lavo.ca' });
+    expect(mockUpdateSettings).toHaveBeenCalledWith({ support_email: 'ops@Hurryline.ca' });
   });
 });
 

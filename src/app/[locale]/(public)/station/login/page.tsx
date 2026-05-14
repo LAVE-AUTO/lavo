@@ -58,7 +58,7 @@ export default async function StationLoginPage({ params }: Props) {
               <h1 className="text-[26px] sm:text-[30px] font-bold text-dark-bg dark:text-white mb-2">
                 {t('welcome_title')}
               </h1>
-              <p className="text-[15px] text-[#555] dark:text-lavo-muted">
+              <p className="text-[15px] text-[#555] dark:text-Hurryline-muted">
                 {t('welcome_subtitle')}
               </p>
             </div>

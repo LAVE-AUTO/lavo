@@ -67,7 +67,7 @@ test('admin login with valid credentials redirects to /fr/admin', async ({ page 
 
 test('accessing /fr/admin without auth redirects to the login page', async ({ page }) => {
   /*
-   * The Next.js middleware checks for the lavo_admin_session cookie and
+   * The Next.js middleware checks for the Hurryline_admin_session cookie and
    * redirects to /fr/login when absent.  A fresh browser context has no
    * cookies, so this request must always land on the login page.
    */

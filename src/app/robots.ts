@@ -12,7 +12,7 @@ const localeDisallow = LOCALES.flatMap((locale) => [
 ]);
 
 export default function robots(): MetadataRoute.Robots {
-  const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? 'https://lavo.cm';
+  const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? 'https://Hurryline.cm';
 
   return {
     rules: [

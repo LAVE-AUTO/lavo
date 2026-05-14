@@ -17,7 +17,7 @@ import {
 describe("seed-data", () => {
   describe("SEED_ADMIN_EMAIL", () => {
     it("is the expected admin email", () => {
-      expect(SEED_ADMIN_EMAIL).toBe("admin@lavo.local");
+      expect(SEED_ADMIN_EMAIL).toBe("admin@Hurryline.local");
     });
   });
 
@@ -101,7 +101,7 @@ describe("seed-data", () => {
   // ---------------------------------------------------------------------------
   describe("seed station constants", () => {
     it("SEED_STATION_NAME is set (legacy: first station)", () => {
-      expect(SEED_STATION_NAME).toBe("LAVO Paris Centre");
+      expect(SEED_STATION_NAME).toBe("Hurryline Paris Centre");
     });
     it("SEED_STATION_ADDRESS is set", () => {
       expect(SEED_STATION_ADDRESS).toBe("12 rue de Rivoli");

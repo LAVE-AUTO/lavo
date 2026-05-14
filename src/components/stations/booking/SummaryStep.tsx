@@ -145,7 +145,7 @@ export function SummaryStep({
       {/* Actions */}
       <div className="border-t border-[#D0D0C0] dark:border-tab-inactive pt-4 space-y-3">
         {error && (
-          <p className="text-[13px] text-lavo-error text-center">{error}</p>
+          <p className="text-[13px] text-Hurryline-error text-center">{error}</p>
         )}
         <div className="flex gap-3">
           <button

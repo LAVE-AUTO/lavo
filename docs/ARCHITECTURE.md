@@ -1,9 +1,9 @@
-# LAVO Architecture
+# Hurryline Architecture
 
 ## Project Tree Structure
 
 ```
-lavo/
+Hurryline/
 ├── docs/                    # Project documentation
 │   ├── ARCHITECTURE.md
 │   ├── CHARTS_PROVIDER.md
@@ -76,7 +76,7 @@ Route groups `(public)`, `(client)`, `(station)`, `(admin)` do not appear in URL
 
 ## System Overview
 
-LAVO is a full-stack Next.js application that combines a web UI (clients, stations, and Super Admin) with REST API endpoints under `/api/v1`. The codebase is structured by business domains and follows a layered approach to keep pages/routes thin and concentrate business rules inside server-side services.
+Hurryline is a full-stack Next.js application that combines a web UI (clients, stations, and Super Admin) with REST API endpoints under `/api/v1`. The codebase is structured by business domains and follows a layered approach to keep pages/routes thin and concentrate business rules inside server-side services.
 
 ## Architecture Diagram
 

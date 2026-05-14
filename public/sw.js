@@ -98,8 +98,8 @@ importScripts('https://www.gstatic.com/firebasejs/12.12.0/firebase-messaging-com
 // Service workers cannot access process.env, so the values are inlined here.
 firebase.initializeApp({
   apiKey: 'AIzaSyCBFjrozYd9QQpZejqWG6ogqjv4HHWqajE',
-  authDomain: 'lavo-e19b8.firebaseapp.com',
-  projectId: 'lavo-e19b8',
+  authDomain: 'Hurryline-e19b8.firebaseapp.com',
+  projectId: 'Hurryline-e19b8',
   messagingSenderId: '699133261235',
   appId: '1:699133261235:web:5fc63b300714bc1bab07c6',
 });
@@ -113,7 +113,7 @@ const messaging = firebase.messaging();
  * call showNotification ourselves.
  */
 messaging.onBackgroundMessage((payload) => {
-  const title = payload.notification?.title || 'Lavo';
+  const title = payload.notification?.title || 'Hurryline';
   const options = {
     body: payload.notification?.body || '',
     icon: '/icons/icon-192x192.png',

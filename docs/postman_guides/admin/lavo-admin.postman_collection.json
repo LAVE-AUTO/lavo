@@ -1,7 +1,7 @@
 {
   "info": {
-    "name": "LAVO - Admin API",
-    "description": "Collection pour les endpoints d'administration LAVO.\n\nVariable requise : `base_url` (ex: http://localhost:3000)\nVariable requise : `access_token` (JWT admin, obtenu après login admin)\nVariable requise : `station_id` (UUID de la station ciblée)\nVariable requise : `user_id` (UUID de l'utilisateur ciblé)\nVariable requise : `dispute_id` (UUID du litige ciblé)\n\n## Groupes\n- **Admin - Stations** : lister (paginé), détailler, approuver, rejeter, modifier les stations\n- **Admin - Users** : modifier les informations, débloquer un compte utilisateur\n- **Admin - Litiges** : lister (paginé + filtres), rembourser, clôturer (résoudre/rejeter)",
+    "name": "Hurryline - Admin API",
+    "description": "Collection pour les endpoints d'administration Hurryline.\n\nVariable requise : `base_url` (ex: http://localhost:3000)\nVariable requise : `access_token` (JWT admin, obtenu après login admin)\nVariable requise : `station_id` (UUID de la station ciblée)\nVariable requise : `user_id` (UUID de l'utilisateur ciblé)\nVariable requise : `dispute_id` (UUID du litige ciblé)\n\n## Groupes\n- **Admin - Stations** : lister (paginé), détailler, approuver, rejeter, modifier les stations\n- **Admin - Users** : modifier les informations, débloquer un compte utilisateur\n- **Admin - Litiges** : lister (paginé + filtres), rembourser, clôturer (résoudre/rejeter)",
     "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
   },
   "variable": [

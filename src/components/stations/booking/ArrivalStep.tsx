@@ -363,7 +363,7 @@ export function ArrivalStep({
               {/* Queue position card */}
               <div className="rounded-xl bg-[#E8E8D8] dark:bg-dark-card border border-[#D0D0C0] dark:border-tab-inactive p-4">
                 <div className="flex items-center gap-2 mb-3">
-                  <span className="w-2 h-2 rounded-full bg-lavo-success animate-pulse shrink-0" />
+                  <span className="w-2 h-2 rounded-full bg-Hurryline-success animate-pulse shrink-0" />
                   <span className="text-[12px] font-bold text-[#555] dark:text-[#A0A090] uppercase tracking-wider">
                     {t('arrival_queue_status')}
                   </span>
@@ -488,10 +488,10 @@ export function ArrivalStep({
                       </button>
                     </div>
                     {customTimeError && (
-                      <p className="text-[12px] text-lavo-error mt-1.5">{customTimeError}</p>
+                      <p className="text-[12px] text-Hurryline-error mt-1.5">{customTimeError}</p>
                     )}
                     {laterTime && customTime === laterTime && !customTimeError && (
-                      <p className="text-[12px] text-lavo-success mt-1.5">
+                      <p className="text-[12px] text-Hurryline-success mt-1.5">
                         {t('arrival_custom_time_confirmed', { time: laterTime })}
                       </p>
                     )}

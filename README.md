@@ -1,4 +1,4 @@
-# LAVO
+# Hurryline
 
 Car wash station booking and payments platform.
 

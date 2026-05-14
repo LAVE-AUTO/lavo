@@ -14,7 +14,7 @@ export default function RescheduleSuccessView() {
     <main className="min-h-screen bg-[#F5F5E6] dark:bg-[#0F0F0D] flex items-center justify-center px-4 pb-24 sm:pb-8">
       <div className="w-full max-w-sm text-center space-y-6">
         {/* Icône de validation */}
-        <div className="w-20 h-20 rounded-full bg-lavo-success/15 flex items-center justify-center mx-auto">
+        <div className="w-20 h-20 rounded-full bg-Hurryline-success/15 flex items-center justify-center mx-auto">
           <svg
             width="40"
             height="40"

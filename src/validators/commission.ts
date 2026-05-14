@@ -32,7 +32,7 @@ export const transactionLogsQuerySchema = z
   .object({
     page: z.coerce.number().int().min(1).default(1),
     per_page: z.coerce.number().int().min(1).max(100).default(20),
-    /** Filter by LAVO business type. */
+    /** Filter by Hurryline business type. */
     type: z.enum(['reservation', 'tip', 'penalty']).optional(),
     /** Filter by station UUID. */
     station_id: z.string().uuid('Invalid station ID').optional(),

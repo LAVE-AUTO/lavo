@@ -87,7 +87,7 @@ export function PhoneMockup() {
                 <div className="flex items-center gap-1 mt-1.5">
                   <span className="text-[11px] text-gold">&#9733; 4.9</span>
                   <span className="text-[10px] text-[#AAA]">(312)</span>
-                  <span className="ml-auto text-[10px] px-2 py-0.5 rounded-full bg-lavo-success/15 text-lavo-success font-bold">
+                  <span className="ml-auto text-[10px] px-2 py-0.5 rounded-full bg-Hurryline-success/15 text-Hurryline-success font-bold">
                     3 dispo
                   </span>
                 </div>
@@ -124,7 +124,7 @@ export function PhoneMockup() {
                 <div className="flex items-center gap-1 mt-1.5">
                   <span className="text-[11px] text-gold">&#9733; 4.7</span>
                   <span className="text-[10px] text-[#AAA]">(187)</span>
-                  <span className="ml-auto text-[10px] px-2 py-0.5 rounded-full bg-lavo-success/15 text-lavo-success font-bold">
+                  <span className="ml-auto text-[10px] px-2 py-0.5 rounded-full bg-Hurryline-success/15 text-Hurryline-success font-bold">
                     5 dispo
                   </span>
                 </div>
@@ -135,7 +135,7 @@ export function PhoneMockup() {
           {/* Floating confirmation toast */}
           <div className="mx-4 mt-2 rounded-xl bg-[#0A0A14] dark:bg-gold/10 p-3 animate-float-card">
             <div className="flex items-center gap-2.5">
-              <div className="w-8 h-8 rounded-full bg-lavo-success/20 flex items-center justify-center flex-shrink-0">
+              <div className="w-8 h-8 rounded-full bg-Hurryline-success/20 flex items-center justify-center flex-shrink-0">
                 <svg
                   width="14"
                   height="14"

@@ -110,7 +110,7 @@ export function ContactContent() {
         <div className="bg-[#E8E8D8] dark:bg-dark-card rounded-2xl p-6 sm:p-8 border border-[rgba(200,152,10,0.12)] shadow-sm">
           {status === 'sent' ? (
             <div className="flex flex-col items-center justify-center text-center py-10 gap-4">
-              <div className="w-14 h-14 rounded-full bg-lavo-success/15 flex items-center justify-center">
+              <div className="w-14 h-14 rounded-full bg-Hurryline-success/15 flex items-center justify-center">
                 <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#00C851" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12" /></svg>
               </div>
               <h2 className="text-[20px] font-black text-[#1a1a1a] dark:text-white">{t('success_title')}</h2>
@@ -152,7 +152,7 @@ export function ContactContent() {
               </div>
 
               {status === 'error' && (
-                <p role="alert" className="text-[13px] font-semibold text-lavo-error">{t('error_generic')}</p>
+                <p role="alert" className="text-[13px] font-semibold text-Hurryline-error">{t('error_generic')}</p>
               )}
 
               <button

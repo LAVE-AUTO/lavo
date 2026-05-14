@@ -157,7 +157,7 @@ export function StationDetail({ id }: StationDetailProps) {
   const QueueBlock = (
     <div className="rounded-2xl border border-[#D8D8C8] dark:border-tab-inactive bg-[#F0F0E2] dark:bg-dark-bg/40 overflow-hidden">
       <div className="flex items-center gap-2 px-5 pt-4">
-        <span className="w-2 h-2 rounded-full bg-lavo-success animate-pulse" />
+        <span className="w-2 h-2 rounded-full bg-Hurryline-success animate-pulse" />
         <p className="text-[11px] font-black text-[#555] dark:text-[#A0A090] uppercase tracking-[0.15em] flex-1">
           {t('detail_queue')}
         </p>
@@ -204,7 +204,7 @@ export function StationDetail({ id }: StationDetailProps) {
           </p>
         </div>
         <Badge variant={isOpen ? 'status-open' : 'status-closed'} className="px-3 py-1 text-[12px]">
-          <span className={`w-2 h-2 rounded-full mr-1.5 ${isOpen ? 'bg-lavo-success animate-pulse' : 'bg-lavo-error'}`} />
+          <span className={`w-2 h-2 rounded-full mr-1.5 ${isOpen ? 'bg-Hurryline-success animate-pulse' : 'bg-Hurryline-error'}`} />
           {isOpen ? t('status_open') : t('status_closed')}
         </Badge>
       </div>
@@ -340,8 +340,8 @@ export function StationDetail({ id }: StationDetailProps) {
               )}
             </div>
             <div className="flex flex-wrap gap-1.5 mt-3">
-              <span className={`inline-flex items-center gap-1 rounded-full px-2.5 py-0.5 text-[10.5px] font-bold uppercase tracking-wider ${isOpen ? 'bg-lavo-success/20 text-white border border-lavo-success/40' : 'bg-lavo-error/20 text-white border border-lavo-error/40'}`}>
-                <span className={`w-1.5 h-1.5 rounded-full ${isOpen ? 'bg-lavo-success animate-pulse' : 'bg-lavo-error'}`} />
+              <span className={`inline-flex items-center gap-1 rounded-full px-2.5 py-0.5 text-[10.5px] font-bold uppercase tracking-wider ${isOpen ? 'bg-Hurryline-success/20 text-white border border-Hurryline-success/40' : 'bg-Hurryline-error/20 text-white border border-Hurryline-error/40'}`}>
+                <span className={`w-1.5 h-1.5 rounded-full ${isOpen ? 'bg-Hurryline-success animate-pulse' : 'bg-Hurryline-error'}`} />
                 {isOpen ? t('status_open') : t('status_closed')}
               </span>
               <span className="inline-flex items-center gap-1 rounded-full px-2.5 py-0.5 text-[10.5px] font-bold uppercase tracking-wider bg-gold/25 text-white border border-gold/50">

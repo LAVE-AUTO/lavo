@@ -36,7 +36,7 @@ interface BookingReceiptProps {
  * `POST /station/entries/:id/start { code }` once the backend ships it).
  *
  * The "Download" action triggers `window.print()` scoped to the receipt block
- * via the `lavo-receipt-print` class and the dedicated @media print rules in
+ * via the `Hurryline-receipt-print` class and the dedicated @media print rules in
  * globals.css. Works without external libraries (no jsPDF/html2canvas).
  */
 export function BookingReceipt({
@@ -97,13 +97,13 @@ export function BookingReceipt({
       {/* Receipt panel */}
       <div
         ref={printRef}
-        className="lavo-receipt-print bg-white dark:bg-[#FFFEF8] text-[#0A0A14] rounded-2xl border-2 border-gold/30 shadow-lg overflow-hidden"
+        className="Hurryline-receipt-print bg-white dark:bg-[#FFFEF8] text-[#0A0A14] rounded-2xl border-2 border-gold/30 shadow-lg overflow-hidden"
       >
         {/* Header band */}
         <div className="bg-gold px-5 py-4 flex items-center justify-between">
           <div>
             <div className="text-[11px] font-black uppercase tracking-[2px] text-dark-bg/70">
-              LAVO
+              Hurryline
             </div>
             <div className="text-[18px] font-black text-dark-bg leading-tight">
               {t('receipt_title')}
@@ -202,7 +202,7 @@ export function BookingReceipt({
       </div>
 
       {/* Actions (hidden when printing) */}
-      <div className="lavo-receipt-actions flex flex-col sm:flex-row gap-2">
+      <div className="Hurryline-receipt-actions flex flex-col sm:flex-row gap-2">
         <button
           type="button"
           onClick={handleDownload}

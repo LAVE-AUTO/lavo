@@ -83,8 +83,8 @@ export async function createSupportTicket(
       // Postgres unique_violation code is 23505. Retry only on that error.
       const code =
         err &&
-        typeof err === "object" &&
-        "code" in err
+          typeof err === "object" &&
+          "code" in err
           ? (err as { code?: string }).code
           : undefined;
       if (code === "23505") {
@@ -190,10 +190,10 @@ export async function getSupportTickets(
  * A closed ticket cannot be re-opened or moved to any other state.
  */
 const ALLOWED_TRANSITIONS: Record<SupportStatus, SupportStatus[]> = {
-  ouvert:   ["en_cours", "resolu", "ferme"],
+  ouvert: ["en_cours", "resolu", "ferme"],
   en_cours: ["ouvert", "resolu", "ferme"],
-  resolu:   ["ouvert", "en_cours", "ferme"],
-  ferme:    [],
+  resolu: ["ouvert", "en_cours", "ferme"],
+  ferme: [],
 };
 
 /**
@@ -233,7 +233,7 @@ export async function getSupportSettings(): Promise<Record<string, string>> {
     support_email:
       dbSettings.support_email ||
       process.env.SUPPORT_EMAIL ||
-      "support@lavo.ca",
+      "support@Hurryline.ca",
   };
 }
 

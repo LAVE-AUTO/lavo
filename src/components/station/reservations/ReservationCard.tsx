@@ -179,7 +179,7 @@ export function ReservationCard({ entry, onValidate, onStart, onCancel, onExtraT
                       <button
                         type="button"
                         onClick={(e) => { e.stopPropagation(); onValidate(entry.id); }}
-                        className="flex items-center gap-1.5 rounded-[10px] bg-lavo-success px-4 py-2 text-[13px] font-bold text-white transition-all hover:opacity-90 active:scale-[0.98]"
+                        className="flex items-center gap-1.5 rounded-[10px] bg-Hurryline-success px-4 py-2 text-[13px] font-bold text-white transition-all hover:opacity-90 active:scale-[0.98]"
                       >
                         <CheckIcon />
                         {t('btn_validate')}

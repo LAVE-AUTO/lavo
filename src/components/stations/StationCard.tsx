@@ -70,7 +70,7 @@ export function StationCard({ station, unavailable = false }: StationCardProps) 
         </div>
 
         {unavailable && (
-          <span className="absolute top-2 left-2 px-2 py-0.5 rounded-full bg-lavo-error/90 text-white text-[13px] font-bold tracking-wide">
+          <span className="absolute top-2 left-2 px-2 py-0.5 rounded-full bg-Hurryline-error/90 text-white text-[13px] font-bold tracking-wide">
             {t('no_slots')}
           </span>
         )}

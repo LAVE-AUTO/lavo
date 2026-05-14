@@ -251,7 +251,7 @@ export default function QueueDetailPage({ params }: PageProps) {
           aria-atomic="false"
         >
           <div className="flex items-center gap-2 mb-4">
-            <span className={`w-2.5 h-2.5 rounded-full shrink-0 animate-pulse ${isActive ? 'bg-gold' : 'bg-lavo-success'}`} />
+            <span className={`w-2.5 h-2.5 rounded-full shrink-0 animate-pulse ${isActive ? 'bg-gold' : 'bg-Hurryline-success'}`} />
             <span className="text-[12px] font-bold text-[#555] dark:text-[#A0A090] uppercase tracking-wider">
               {isActive ? t('status_in_progress') : t('status_waiting')}
             </span>
@@ -269,8 +269,8 @@ export default function QueueDetailPage({ params }: PageProps) {
           </div>
 
           {q.position === 1 && !isActive && (
-            <div className="mt-4 px-4 py-3 bg-lavo-success/10 border border-lavo-success/30 rounded-xl text-center">
-              <span className="text-[14px] font-bold text-lavo-success">{t('next_up')}</span>
+            <div className="mt-4 px-4 py-3 bg-Hurryline-success/10 border border-Hurryline-success/30 rounded-xl text-center">
+              <span className="text-[14px] font-bold text-Hurryline-success">{t('next_up')}</span>
             </div>
           )}
         </div>

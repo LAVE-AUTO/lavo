@@ -46,7 +46,7 @@ export function PasswordRules({ password, namespace = 'register' }: PasswordRule
           <p
             key={key}
             className={`text-[13px] font-medium flex items-center gap-1.5 transition-colors duration-200 ${
-              valid ? 'text-lavo-success' : 'text-lavo-muted'
+              valid ? 'text-Hurryline-success' : 'text-Hurryline-muted'
             }`}
           >
             <span className="w-3 text-center font-bold shrink-0">

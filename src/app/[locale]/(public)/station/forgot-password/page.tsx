@@ -56,7 +56,7 @@ export default async function StationForgotPasswordPage({ params }: Props) {
               <h1 className="text-[26px] sm:text-[30px] font-bold text-dark-bg dark:text-white mb-2">
                 {t('title')}
               </h1>
-              <p className="text-[15px] text-[#555] dark:text-lavo-muted">
+              <p className="text-[15px] text-[#555] dark:text-Hurryline-muted">
                 {t('subtitle')}
               </p>
             </div>

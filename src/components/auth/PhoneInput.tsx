@@ -107,7 +107,7 @@ function CountrySelect({
     'flex items-center gap-1.5 px-3 py-3 bg-white dark:bg-dark-card border-[1.5px] rounded-lg',
     'outline-none transition-all duration-150 whitespace-nowrap',
     hasError
-      ? 'border-lavo-error bg-[#FFF8F7] dark:bg-[#2A1A18]'
+      ? 'border-Hurryline-error bg-[#FFF8F7] dark:bg-[#2A1A18]'
       : 'border-[#CCCCCC] dark:border-tab-inactive focus:border-gold dark:focus:border-gold focus:shadow-[0_0_0_3px_rgba(196,154,30,0.18)] dark:focus:shadow-[0_0_0_3px_rgba(196,154,30,0.15)]',
   ].join(' ');
 
@@ -256,7 +256,7 @@ export function PhoneInput({
     'text-[16px] text-[#1A1A1A] dark:text-white placeholder-[#AAAAAA] dark:placeholder-[#4A5A46]',
     'outline-none transition-all duration-150',
     error
-      ? 'border-lavo-error bg-[#FFF8F7] dark:bg-[#2A1A18] focus:shadow-[0_0_0_3px_rgba(232,71,42,0.2)]'
+      ? 'border-Hurryline-error bg-[#FFF8F7] dark:bg-[#2A1A18] focus:shadow-[0_0_0_3px_rgba(232,71,42,0.2)]'
       : 'border-[#CCCCCC] dark:border-tab-inactive focus:border-gold dark:focus:border-gold focus:shadow-[0_0_0_3px_rgba(196,154,30,0.18)] dark:focus:shadow-[0_0_0_3px_rgba(196,154,30,0.15)]',
   ].join(' ');
 
@@ -284,7 +284,7 @@ export function PhoneInput({
       </div>
 
       {error && (
-        <p className="mt-1.5 text-[13px] font-medium text-lavo-error flex items-center gap-1">
+        <p className="mt-1.5 text-[13px] font-medium text-Hurryline-error flex items-center gap-1">
           <span aria-hidden="true">!</span>
           {error}
         </p>

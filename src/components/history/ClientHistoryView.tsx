@@ -219,8 +219,8 @@ export function ClientHistoryView() {
               className={[
                 'px-3 py-1.5 rounded-full text-[13px] font-bold transition-colors',
                 status === key
-                  ? key === 'completed' ? 'bg-lavo-success text-white'
-                  : key === 'cancelled' ? 'bg-lavo-error text-white'
+                  ? key === 'completed' ? 'bg-Hurryline-success text-white'
+                  : key === 'cancelled' ? 'bg-Hurryline-error text-white'
                   : 'bg-gold text-dark-bg'
                   : 'bg-[#E0E0D0] dark:bg-dark-card text-[#555] dark:text-[#C0C0B0] hover:bg-[#D0D0C0] dark:hover:bg-tab-inactive',
               ].join(' ')}
@@ -297,8 +297,8 @@ function HistoryCard({ entry: e, locale, t, onSelect }: HistoryCardProps) {
             <span className={[
               'shrink-0 px-2 py-0.5 rounded-full text-[11px] font-bold',
               isCompleted
-                ? 'bg-lavo-success/15 text-lavo-success'
-                : 'bg-lavo-error/15 text-lavo-error',
+                ? 'bg-Hurryline-success/15 text-Hurryline-success'
+                : 'bg-Hurryline-error/15 text-Hurryline-error',
             ].join(' ')}>
               {t(`status_${e.status}`)}
             </span>

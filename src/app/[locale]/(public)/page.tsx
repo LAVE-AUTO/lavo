@@ -13,16 +13,16 @@ import { NotificationsSection } from '@/components/home/NotificationsSection';
 import { TestimonialsSection } from '@/components/home/TestimonialsSection';
 import { FaqSection } from '@/components/home/FaqSection';
 
-const APP_URL = process.env.NEXT_PUBLIC_APP_URL ?? 'https://lavo.cm';
+const APP_URL = process.env.NEXT_PUBLIC_APP_URL ?? 'https://Hurryline.cm';
 
 const organizationJsonLd = {
   '@context': 'https://schema.org',
   '@type': 'Organization',
-  name: 'LAVO',
+  name: 'Hurryline',
   url: APP_URL,
   logo: `${APP_URL}/icons/icon-192x192.png`,
   description:
-    'LAVO is the booking and payment platform for car wash stations in Cameroon. Find a station, book a slot, and get your car washed effortlessly.',
+    'Hurryline is the booking and payment platform for car wash stations in Cameroon. Find a station, book a slot, and get your car washed effortlessly.',
   sameAs: [],
 };
 

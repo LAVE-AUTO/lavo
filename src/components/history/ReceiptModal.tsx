@@ -621,7 +621,7 @@ export function ReceiptModal({ entry: e, locale, onClose }: ReceiptModalProps) {
                 {/* Status row */}
                 <div className="flex items-center justify-between gap-4 px-3.5 py-2.5">
                   <span className="text-[11px] font-bold text-[#999] uppercase tracking-wide">{t('receipt_status')}</span>
-                  <span className={`text-[11px] font-bold px-2 py-0.5 rounded-full ${e.status === 'completed' ? 'bg-lavo-success/15 text-lavo-success' : 'bg-lavo-error/15 text-lavo-error'}`}>
+                  <span className={`text-[11px] font-bold px-2 py-0.5 rounded-full ${e.status === 'completed' ? 'bg-Hurryline-success/15 text-Hurryline-success' : 'bg-Hurryline-error/15 text-Hurryline-error'}`}>
                     {t(`status_${e.status}`)}
                   </span>
                 </div>
@@ -705,9 +705,9 @@ function ReceiptRowGrid({
   chip?: string;
 }) {
   const chipClass = chip === 'completed'
-    ? 'bg-lavo-success/15 text-lavo-success'
+    ? 'bg-Hurryline-success/15 text-Hurryline-success'
     : chip === 'cancelled'
-    ? 'bg-lavo-error/15 text-lavo-error'
+    ? 'bg-Hurryline-error/15 text-Hurryline-error'
     : '';
 
   return (

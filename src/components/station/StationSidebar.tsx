@@ -13,7 +13,7 @@ interface NavItem {
   icon: React.ReactNode;
 }
 
-const COLLAPSE_STORAGE_KEY = 'lavo_station_sidebar_collapsed';
+const COLLAPSE_STORAGE_KEY = 'Hurryline_station_sidebar_collapsed';
 
 const HomeIcon = () => (
   <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">

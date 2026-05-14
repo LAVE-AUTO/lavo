@@ -2,7 +2,7 @@
  * Application-wide constants.
  */
 
-export const APP_NAME = 'LAVO';
+export const APP_NAME = 'Hurryline';
 export const APP_URL =
   (typeof process !== 'undefined' && process.env?.NEXT_PUBLIC_APP_URL) ||
   'http://localhost:3000';

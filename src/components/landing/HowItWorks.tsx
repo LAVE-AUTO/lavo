@@ -35,8 +35,8 @@ const STEPS = [
         <polyline points="20 6 9 17 4 12" />
       </svg>
     ),
-    color: 'bg-lavo-success/10 text-lavo-success',
-    numColor: 'bg-lavo-success',
+    color: 'bg-Hurryline-success/10 text-Hurryline-success',
+    numColor: 'bg-Hurryline-success',
   },
 ] as const;
 

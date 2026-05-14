@@ -1,7 +1,7 @@
-# LAVO - Guide de test Postman : module Support
+# Hurryline - Guide de test Postman : module Support
 
 Ce guide explique comment importer et utiliser la collection
-`lavo-support.postman_collection.json` pour tester les endpoints du module
+`Hurryline-support.postman_collection.json` pour tester les endpoints du module
 support dans Postman.
 
 ---
@@ -10,7 +10,7 @@ support dans Postman.
 
 ### Environnement Postman
 
-Importez l'environnement partagé `lavo.local.postman_environment.json` situé
+Importez l'environnement partagé `Hurryline.local.postman_environment.json` situé
 dans `docs/postman_guides/`. Cet environnement fournit la variable `base_url`
 préconfigurée à `http://localhost:3000`.
 

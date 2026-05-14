@@ -2,7 +2,7 @@
 
 ## Principles
 
-- Keep changes aligned with `lavo/.hidden/LAVO_TRELLO.md` and the technical specification.
+- Keep changes aligned with `Hurryline/.hidden/Hurryline_TRELLO.md` and the technical specification.
 - Prefer small, reviewable pull requests with clear scope.
 - Maintain domain boundaries: UI routes/pages -> API routes -> `src/server/*` services -> data access.
 - Avoid duplicated concepts across documentation (reference existing docs instead).

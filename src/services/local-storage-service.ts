@@ -50,7 +50,7 @@ export function removeFromLocalStorage(key: string): void {
 }
 
 /**
- * Remove all keys with the given prefix (e.g. "lavo_").
+ * Remove all keys with the given prefix (e.g. "Hurryline_").
  */
 export function clearLocalStorageByPrefix(prefix: string): void {
   if (!isAvailable() || !prefix) return;

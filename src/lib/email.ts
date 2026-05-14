@@ -24,7 +24,7 @@ import { getPlatformSetting } from '@/server/admin/platform-settings-service';
 // %%%%% Constants %%%%%
 // Email configuration
 
-const FROM = process.env.EMAIL_FROM ?? 'noreply@lavo.app';
+const FROM = process.env.EMAIL_FROM ?? 'noreply@Hurryline.app';
 
 type Locale = 'fr' | 'en';
 
@@ -503,12 +503,12 @@ export async function sendStationApprovalEmail(
 
   const qrBlock = safeQrUrl
     ? (
-        qrImageDataUrl
-          ? `<br/><br/><p><strong>${t.qrLabel}</strong></p>
+      qrImageDataUrl
+        ? `<br/><br/><p><strong>${t.qrLabel}</strong></p>
              <p style="margin: 10px 0;"><img src="${qrImageDataUrl}" alt="${t.qrAlt}" width="220" height="220" style="display:block;border:1px solid #e8e4da;border-radius:8px;padding:6px;background:#ffffff;" /></p>
              <p><a href="${safeQrUrl}" target="_blank" rel="noopener noreferrer">${safeQrUrl}</a></p>`
-          : `<br/><br/><p><strong>${t.qrLinkLabel}</strong> <a href="${safeQrUrl}" target="_blank" rel="noopener noreferrer">${safeQrUrl}</a></p>`
-      )
+        : `<br/><br/><p><strong>${t.qrLinkLabel}</strong> <a href="${safeQrUrl}" target="_blank" rel="noopener noreferrer">${safeQrUrl}</a></p>`
+    )
     : '';
 
   await client.emails.send({
@@ -609,17 +609,16 @@ export async function sendStationApplicationAdminNotification(
     ? `
       <p style="margin: 0 0 8px;"><strong>Station approved:</strong> ${safeName}</p>
       <p style="margin: 0 0 8px;"><strong>Station ID:</strong> ${safeId}</p>
-      ${
-        safeQrUrl
-          ? (
-              qrImageDataUrl
-                ? `<p style="margin: 12px 0 8px;"><strong>Booking QR:</strong></p>
+      ${safeQrUrl
+      ? (
+        qrImageDataUrl
+          ? `<p style="margin: 12px 0 8px;"><strong>Booking QR:</strong></p>
                    <p style="margin: 0 0 10px;"><img src="${qrImageDataUrl}" alt="Station booking QR" width="220" height="220" style="display:block;border:1px solid #e8e4da;border-radius:8px;padding:6px;background:#ffffff;" /></p>
                    <p style="margin: 0;"><a href="${safeQrUrl}" target="_blank" rel="noopener noreferrer">${safeQrUrl}</a></p>`
-                : `<p style="margin: 12px 0 0;"><strong>Booking QR link:</strong> <a href="${safeQrUrl}" target="_blank" rel="noopener noreferrer">${safeQrUrl}</a></p>`
-            )
-          : ''
-      }
+          : `<p style="margin: 12px 0 0;"><strong>Booking QR link:</strong> <a href="${safeQrUrl}" target="_blank" rel="noopener noreferrer">${safeQrUrl}</a></p>`
+      )
+      : ''
+    }
     `
     : `
       <p style="margin: 0 0 8px;"><strong>Station name:</strong> ${safeName}</p>
@@ -865,16 +864,16 @@ export async function sendWeeklyEscrowTransactionsReportEmail(
     rows.length === 0
       ? `<tr><td colspan="9" style="padding: 10px 8px; color: #888;">${emptyRowMessage}</td></tr>`
       : rows
-          .map((r) => {
-            const at = escapeHtmlPlain(
-              r.succeededAt.toLocaleString(locale === 'en' ? 'en-GB' : 'fr-FR')
-            );
-            const stName = escapeHtmlPlain(safePlainTextSnippet(r.stationName, 500));
-            const cEmail = escapeHtmlPlain(safePlainTextSnippet(r.clientEmail, 320));
-            const resId = escapeHtmlPlain(safePlainTextSnippet(r.reservationId, 128));
-            const resStat = escapeHtmlPlain(safePlainTextSnippet(r.reservationStatus, 64));
-            const xfer = escapeHtmlPlain(safePlainTextSnippet(r.stripeTransferId ?? '', 128));
-            return `<tr>
+        .map((r) => {
+          const at = escapeHtmlPlain(
+            r.succeededAt.toLocaleString(locale === 'en' ? 'en-GB' : 'fr-FR')
+          );
+          const stName = escapeHtmlPlain(safePlainTextSnippet(r.stationName, 500));
+          const cEmail = escapeHtmlPlain(safePlainTextSnippet(r.clientEmail, 320));
+          const resId = escapeHtmlPlain(safePlainTextSnippet(r.reservationId, 128));
+          const resStat = escapeHtmlPlain(safePlainTextSnippet(r.reservationStatus, 64));
+          const xfer = escapeHtmlPlain(safePlainTextSnippet(r.stripeTransferId ?? '', 128));
+          return `<tr>
               <td style="padding: 8px 8px; border-bottom: 1px solid #eee;">${at}</td>
               <td style="padding: 8px 8px; border-bottom: 1px solid #eee;"><strong>${stName}</strong></td>
               <td style="padding: 8px 8px; border-bottom: 1px solid #eee;">${cEmail}</td>
@@ -885,8 +884,8 @@ export async function sendWeeklyEscrowTransactionsReportEmail(
               <td style="padding: 8px 8px; border-bottom: 1px solid #eee; text-align:right;">${formatMoneyEUR(r.stationPayout)}</td>
               <td style="padding: 8px 8px; border-bottom: 1px solid #eee;">${xfer}</td>
             </tr>`;
-          })
-          .join('');
+        })
+        .join('');
 
   const bodyHtml = `
     <p style="margin: 0 0 12px;">${locale === 'en' ? 'Here is the weekly summary of escrow transactions captured through Stripe.' : 'Voici le récapitulatif hebdomadaire des transactions escrow capturées via Stripe.'}</p>

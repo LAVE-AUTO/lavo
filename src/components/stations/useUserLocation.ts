@@ -7,7 +7,7 @@ interface UserLocation {
     longitude: number;
 }
 
-const DISMISS_KEY = 'lavo_geo_banner_dismissed';
+const DISMISS_KEY = 'Hurryline_geo_banner_dismissed';
 
 let cachedLocation: UserLocation | null = null;
 const listeners = new Set<(loc: UserLocation | null) => void>();
@@ -125,13 +125,13 @@ export function useGeolocationBanner(): GeolocationBannerState {
         const loc = await requestUserLocation();
         if (!loc) {
             // Browser denied or timed out - keep the banner gone for this session
-            try { sessionStorage.setItem(DISMISS_KEY, '1'); } catch {}
+            try { sessionStorage.setItem(DISMISS_KEY, '1'); } catch { }
         }
     };
 
     const dismiss = () => {
         setVisible(false);
-        try { sessionStorage.setItem(DISMISS_KEY, '1'); } catch {}
+        try { sessionStorage.setItem(DISMISS_KEY, '1'); } catch { }
     };
 
     return { visible, request, dismiss };

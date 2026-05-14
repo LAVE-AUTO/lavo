@@ -138,7 +138,7 @@ export function AdminSupportSettings() {
           <label htmlFor="support-email" className="text-[12px] font-black uppercase tracking-wider text-[#A0A090] dark:text-[#9A9A8A]">{t('settings_email_label')}</label>
           <input id="support-email" type="email" maxLength={254} value={settings.support_email}
             onChange={(e) => setSettings((s) => ({ ...s, support_email: e.target.value }))}
-            placeholder="support@lavo.ca"
+            placeholder="support@Hurryline.ca"
             className="rounded-[10px] border-2 border-[#D8D4C8] bg-white px-4 py-2.5 text-[13px] text-[#1A1A0A] outline-none transition-all focus:border-[#C49A1E] focus:shadow-[0_0_0_4px_rgba(196,154,30,0.12)] dark:border-[#243020] dark:bg-[#0F1A0C] dark:text-[#F0EDD4] dark:focus:border-[#C49A1E]" />
           <p className="text-[12px] text-[#AAAAAA] dark:text-[#A0A090]">{t('settings_email_hint')}</p>
         </div>

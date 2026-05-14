@@ -1,5 +1,5 @@
 /**
- * Seed data constants for LAVO platform.
+ * Seed data constants for Hurryline platform.
  *
  * Used by scripts/seed.ts to bootstrap demo database.
  * Exported for unit testing without DB access.
@@ -13,7 +13,7 @@
 // %%%%% Admin credentials %%%%%
 // Demo admin account for development and testing
 
-export const SEED_ADMIN_EMAIL = "admin@lavo.local";
+export const SEED_ADMIN_EMAIL = "admin@Hurryline.local";
 
 /**
  * Demo passwords (dev only, change for production).
@@ -163,77 +163,77 @@ export const SEED_STATIONS: Array<{
   vehicle_formats?: Array<{ label: string; price: string }>;
   wash_post_count?: number;
 }> = [
-  {
-    name: "LAVO Paris Centre",
-    city: "Paris",
-    address: "12 rue de Rivoli",
-    description: "Lavage main et automatique en plein cœur de Paris.",
-    service_scope: "both",
-    wash_type_codes: ["hand_wash", "automatic"],
-    manager_email: "station.paris@lavo.demo",
-    wash_post_count: 2,
-  },
-  {
-    name: "LAVO Lyon Confluence",
-    city: "Lyon",
-    address: "5 quai Rambaud",
-    description: "Station libre-service et lavage automatique.",
-    service_scope: "exterior",
-    wash_type_codes: ["self_service", "automatic"],
-    manager_email: "station.lyon@lavo.demo",
-    wash_post_count: 2,
-  },
-  {
-    name: "LAVO Marseille Vieux-Port",
-    city: "Marseille",
-    address: "3 rue Paradis",
-    description: "Lavage à la main et intérieur/extérieur.",
-    service_scope: "both",
-    wash_type_codes: ["hand_wash", "automatic"],
-    manager_email: "station.marseille@lavo.demo",
-    wash_post_count: 2,
-  },
-  {
-    name: "LAVO Bordeaux Saint-Pierre",
-    city: "Bordeaux",
-    address: "8 place de la Bourse",
-    description: "Libre-service et automatique.",
-    service_scope: "exterior",
-    wash_type_codes: ["self_service", "automatic"],
-    manager_email: "station.bordeaux@lavo.demo",
-    wash_post_count: 1,
-  },
-  {
-    name: "LAVO Toulouse Capitole",
-    city: "Toulouse",
-    address: "2 rue du Taur",
-    description: "Lavage main, soin intérieur et extérieur.",
-    service_scope: "both",
-    wash_type_codes: ["hand_wash", "automatic", "self_service"],
-    manager_email: "station.toulouse@lavo.demo",
-    wash_post_count: 2,
-  },
-  {
-    name: "LAVO Nantes Commerce",
-    city: "Nantes",
-    address: "15 rue du Commerce",
-    description: "Station automatique rapide.",
-    service_scope: "exterior",
-    wash_type_codes: ["automatic"],
-    manager_email: "station.nantes@lavo.demo",
-    wash_post_count: 2,
-  },
-  {
-    name: "LAVO Strasbourg Grande Île",
-    city: "Strasbourg",
-    address: "7 rue des Orfèvres",
-    description: "Lavage main et libre-service.",
-    service_scope: "both",
-    wash_type_codes: ["hand_wash", "self_service"],
-    manager_email: "station.strasbourg@lavo.demo",
-    wash_post_count: 2,
-  },
-];
+    {
+      name: "Hurryline Paris Centre",
+      city: "Paris",
+      address: "12 rue de Rivoli",
+      description: "Lavage main et automatique en plein cœur de Paris.",
+      service_scope: "both",
+      wash_type_codes: ["hand_wash", "automatic"],
+      manager_email: "station.paris@Hurryline.demo",
+      wash_post_count: 2,
+    },
+    {
+      name: "Hurryline Lyon Confluence",
+      city: "Lyon",
+      address: "5 quai Rambaud",
+      description: "Station libre-service et lavage automatique.",
+      service_scope: "exterior",
+      wash_type_codes: ["self_service", "automatic"],
+      manager_email: "station.lyon@Hurryline.demo",
+      wash_post_count: 2,
+    },
+    {
+      name: "Hurryline Marseille Vieux-Port",
+      city: "Marseille",
+      address: "3 rue Paradis",
+      description: "Lavage à la main et intérieur/extérieur.",
+      service_scope: "both",
+      wash_type_codes: ["hand_wash", "automatic"],
+      manager_email: "station.marseille@Hurryline.demo",
+      wash_post_count: 2,
+    },
+    {
+      name: "Hurryline Bordeaux Saint-Pierre",
+      city: "Bordeaux",
+      address: "8 place de la Bourse",
+      description: "Libre-service et automatique.",
+      service_scope: "exterior",
+      wash_type_codes: ["self_service", "automatic"],
+      manager_email: "station.bordeaux@Hurryline.demo",
+      wash_post_count: 1,
+    },
+    {
+      name: "Hurryline Toulouse Capitole",
+      city: "Toulouse",
+      address: "2 rue du Taur",
+      description: "Lavage main, soin intérieur et extérieur.",
+      service_scope: "both",
+      wash_type_codes: ["hand_wash", "automatic", "self_service"],
+      manager_email: "station.toulouse@Hurryline.demo",
+      wash_post_count: 2,
+    },
+    {
+      name: "Hurryline Nantes Commerce",
+      city: "Nantes",
+      address: "15 rue du Commerce",
+      description: "Station automatique rapide.",
+      service_scope: "exterior",
+      wash_type_codes: ["automatic"],
+      manager_email: "station.nantes@Hurryline.demo",
+      wash_post_count: 2,
+    },
+    {
+      name: "Hurryline Strasbourg Grande Île",
+      city: "Strasbourg",
+      address: "7 rue des Orfèvres",
+      description: "Lavage main et libre-service.",
+      service_scope: "both",
+      wash_type_codes: ["hand_wash", "self_service"],
+      manager_email: "station.strasbourg@Hurryline.demo",
+      wash_post_count: 2,
+    },
+  ];
 
 /** Client users (role = client). Passwords use SEED_PASSWORD_CLIENT. */
 export const SEED_CLIENTS: Array<{
@@ -241,14 +241,14 @@ export const SEED_CLIENTS: Array<{
   first_name: string;
   last_name: string;
 }> = [
-  { email: "alice@lavo.demo", first_name: "Alice", last_name: "Martin" },
-  { email: "bob@lavo.demo", first_name: "Bob", last_name: "Bernard" },
-  { email: "claire@lavo.demo", first_name: "Claire", last_name: "Dubois" },
-  { email: "david@lavo.demo", first_name: "David", last_name: "Petit" },
-  { email: "emma@lavo.demo", first_name: "Emma", last_name: "Robert" },
-  { email: "francois@lavo.demo", first_name: "François", last_name: "Richard" },
-  { email: "lea@lavo.demo", first_name: "Léa", last_name: "Durand" },
-];
+    { email: "alice@Hurryline.demo", first_name: "Alice", last_name: "Martin" },
+    { email: "bob@Hurryline.demo", first_name: "Bob", last_name: "Bernard" },
+    { email: "claire@Hurryline.demo", first_name: "Claire", last_name: "Dubois" },
+    { email: "david@Hurryline.demo", first_name: "David", last_name: "Petit" },
+    { email: "emma@Hurryline.demo", first_name: "Emma", last_name: "Robert" },
+    { email: "francois@Hurryline.demo", first_name: "François", last_name: "Richard" },
+    { email: "lea@Hurryline.demo", first_name: "Léa", last_name: "Durand" },
+  ];
 
 /** All seed client emails (for cleanup before reseed). */
 export const SEED_CLIENT_EMAILS = SEED_CLIENTS.map((c) => c.email);

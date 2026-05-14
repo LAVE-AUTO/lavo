@@ -1,7 +1,7 @@
 {
   "info": {
-    "name": "LAVO - Auth API",
-    "description": "Collection de tests pour le module d'authentification LAVO.\n\nVariable requise : `base_url` (ex: http://localhost:3000)\nVariable auto-remplie : `access_token` (sauvegardé après login/register)\n\n## Architecture JWT hybride\n- `access_token` : dans le body (stockage mémoire JS côté client, 15 min)\n- `refresh_token` : httpOnly cookie (path /api/v1/auth, 1–30 jours, jamais exposé au JS)\n\n## Flux de test recommandé\n1. Register → data.user + data.access_token (sauvegardé automatiquement) + cookie refresh_token\n2. Verify Email → status passe à active\n3. Login → idem\n4. Me → header Authorization: Bearer {{access_token}}\n5. Refresh → POST sans body (cookie envoyé automatiquement) → nouveau access_token + nouveau cookie\n6. Forgot Password → email de réinitialisation\n7. Reset Password → nouveau mot de passe\n8. Logout → header Authorization: Bearer {{access_token}} + cookie effacé",
+    "name": "Hurryline - Auth API",
+    "description": "Collection de tests pour le module d'authentification Hurryline.\n\nVariable requise : `base_url` (ex: http://localhost:3000)\nVariable auto-remplie : `access_token` (sauvegardé après login/register)\n\n## Architecture JWT hybride\n- `access_token` : dans le body (stockage mémoire JS côté client, 15 min)\n- `refresh_token` : httpOnly cookie (path /api/v1/auth, 1–30 jours, jamais exposé au JS)\n\n## Flux de test recommandé\n1. Register → data.user + data.access_token (sauvegardé automatiquement) + cookie refresh_token\n2. Verify Email → status passe à active\n3. Login → idem\n4. Me → header Authorization: Bearer {{access_token}}\n5. Refresh → POST sans body (cookie envoyé automatiquement) → nouveau access_token + nouveau cookie\n6. Forgot Password → email de réinitialisation\n7. Reset Password → nouveau mot de passe\n8. Logout → header Authorization: Bearer {{access_token}} + cookie effacé",
     "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
   },
   "variable": [
@@ -2012,7 +2012,7 @@
             },
             "body": {
               "mode": "raw",
-              "raw": "{\"station_name\":\"Lavo Station Paris 15\",\"legal_name\":\"Lavo SAS\",\"registration_number\":\"RCS PARIS 123456789\",\"address\":\"12 rue de la Paix\",\"city\":\"Paris\",\"latitude\":48.8566,\"longitude\":2.3522,\"wash_post_count\":4,\"wash_type\":\"automatic\",\"description\":\"Station de lavage automatique.\"}",
+              "raw": "{\"station_name\":\"Hurryline Station Paris 15\",\"legal_name\":\"Hurryline SAS\",\"registration_number\":\"RCS PARIS 123456789\",\"address\":\"12 rue de la Paix\",\"city\":\"Paris\",\"latitude\":48.8566,\"longitude\":2.3522,\"wash_post_count\":4,\"wash_type\":\"automatic\",\"description\":\"Station de lavage automatique.\"}",
               "options": {
                 "raw": {
                   "language": "json"

@@ -66,9 +66,9 @@ export function LandingService() {
           <ScrollReveal delay={0.15}>
             <div className="space-y-6">
               {/* Badge */}
-              <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-lavo-success/10 border border-lavo-success/20">
-                <span className="w-2 h-2 rounded-full bg-lavo-success" />
-                <span className="text-[13px] font-bold text-lavo-success tracking-wide uppercase">
+              <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-Hurryline-success/10 border border-Hurryline-success/20">
+                <span className="w-2 h-2 rounded-full bg-Hurryline-success" />
+                <span className="text-[13px] font-bold text-Hurryline-success tracking-wide uppercase">
                   {t('service_badge')}
                 </span>
               </div>

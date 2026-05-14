@@ -643,10 +643,10 @@ function ReservationCard({
   });
 
   const statusColors: Record<string, string> = {
-    confirmed:       'bg-lavo-success/15 text-lavo-success',
+    confirmed:       'bg-Hurryline-success/15 text-Hurryline-success',
     in_progress:     'bg-gold/15 text-gold',
     completed:       'bg-[#999]/15 text-[#666]',
-    cancelled:       'bg-lavo-error/15 text-lavo-error',
+    cancelled:       'bg-Hurryline-error/15 text-Hurryline-error',
     pending:         'bg-blue-500/15 text-blue-500',
     pending_payment: 'bg-[#999]/15 text-[#888]',
   };
@@ -743,7 +743,7 @@ function ReservationCard({
             <button
               type="button"
               onClick={onCancel}
-              className="text-[13px] font-semibold text-lavo-error hover:opacity-75 transition-opacity cursor-pointer"
+              className="text-[13px] font-semibold text-Hurryline-error hover:opacity-75 transition-opacity cursor-pointer"
             >
               {t('cancel_reservation')}
             </button>
@@ -857,12 +857,12 @@ function CancelModal({
           <p className="text-[13px] text-[#555] dark:text-[#C0C0B0]">{t('cancel_modal_desc')}</p>
 
           {showFeesWarning && (
-            <div className="flex gap-2.5 bg-lavo-error/10 border border-lavo-error/20 rounded-xl px-3.5 py-3">
+            <div className="flex gap-2.5 bg-Hurryline-error/10 border border-Hurryline-error/20 rounded-xl px-3.5 py-3">
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#E8472A" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="shrink-0 mt-0.5" aria-hidden="true">
                 <path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z" />
                 <line x1="12" y1="9" x2="12" y2="13" /><line x1="12" y1="17" x2="12.01" y2="17" />
               </svg>
-              <p className="text-[12px] font-semibold text-lavo-error leading-relaxed">
+              <p className="text-[12px] font-semibold text-Hurryline-error leading-relaxed">
                 {t('cancel_modal_fees_warning')}
               </p>
             </div>
@@ -883,7 +883,7 @@ function CancelModal({
             type="button"
             onClick={onConfirm}
             disabled={loading}
-            className="flex-1 py-3 rounded-xl text-[14px] font-black text-white bg-lavo-error hover:bg-lavo-error/90 transition-colors cursor-pointer disabled:opacity-50 flex items-center justify-center gap-2"
+            className="flex-1 py-3 rounded-xl text-[14px] font-black text-white bg-Hurryline-error hover:bg-Hurryline-error/90 transition-colors cursor-pointer disabled:opacity-50 flex items-center justify-center gap-2"
           >
             {loading && (
               <svg className="animate-spin" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" aria-hidden="true">
@@ -979,7 +979,7 @@ function QueueCard({
           <button
             type="button"
             onClick={onLeave}
-            className="text-[13px] font-semibold text-lavo-error hover:opacity-75 transition-opacity cursor-pointer"
+            className="text-[13px] font-semibold text-Hurryline-error hover:opacity-75 transition-opacity cursor-pointer"
           >
             {t('queue_leave')}
           </button>

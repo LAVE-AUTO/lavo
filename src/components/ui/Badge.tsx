@@ -20,18 +20,18 @@ export interface BadgeProps {
 
 const VARIANT_CLASSES: Record<BadgeVariant, string> = {
   tag:
-    'bg-[#E8E8D8] dark:bg-dark-surface text-[#444] dark:text-lavo-muted ' +
+    'bg-[#E8E8D8] dark:bg-dark-surface text-[#444] dark:text-Hurryline-muted ' +
     'text-[11px] font-medium px-2.5 py-0.5 rounded-full',
   'status-open':
-    'bg-lavo-success/15 text-lavo-success text-[11px] font-semibold px-2.5 py-0.5 rounded-full',
+    'bg-Hurryline-success/15 text-Hurryline-success text-[11px] font-semibold px-2.5 py-0.5 rounded-full',
   'status-closed':
-    'bg-lavo-error/15 text-lavo-error text-[11px] font-semibold px-2.5 py-0.5 rounded-full',
+    'bg-Hurryline-error/15 text-Hurryline-error text-[11px] font-semibold px-2.5 py-0.5 rounded-full',
   'status-pending':
     'bg-yellow-400/15 text-yellow-600 dark:text-yellow-400 text-[11px] font-semibold px-2.5 py-0.5 rounded-full',
   'status-active':
-    'bg-lavo-success/15 text-lavo-success text-[11px] font-semibold px-2.5 py-0.5 rounded-full',
+    'bg-Hurryline-success/15 text-Hurryline-success text-[11px] font-semibold px-2.5 py-0.5 rounded-full',
   'status-rejected':
-    'bg-lavo-error/15 text-lavo-error text-[11px] font-semibold px-2.5 py-0.5 rounded-full',
+    'bg-Hurryline-error/15 text-Hurryline-error text-[11px] font-semibold px-2.5 py-0.5 rounded-full',
   'status-suspended':
     'bg-orange-400/15 text-orange-600 dark:text-orange-400 text-[11px] font-semibold px-2.5 py-0.5 rounded-full',
   distance:

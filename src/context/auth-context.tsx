@@ -102,9 +102,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           // Hint cookie for middleware-level admin guard (non-httpOnly, non-sensitive)
           if (typeof document !== 'undefined') {
             if (normalized.role === 'admin') {
-              document.cookie = `lavo_admin_session=1; path=/; SameSite=Lax${secureFlag()}`;
+              document.cookie = `Hurryline_admin_session=1; path=/; SameSite=Lax${secureFlag()}`;
             } else {
-              document.cookie = `lavo_admin_session=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT; SameSite=Lax${secureFlag()}`;
+              document.cookie = `Hurryline_admin_session=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT; SameSite=Lax${secureFlag()}`;
             }
           }
           return data.access_token;
@@ -124,7 +124,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       baseURL: process.env.NEXT_PUBLIC_API_URL || '/api/v1',
     });
     if (typeof document !== 'undefined') {
-      document.cookie = `lavo_admin_session=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT; SameSite=Lax${secureFlag()}`;
+      document.cookie = `Hurryline_admin_session=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT; SameSite=Lax${secureFlag()}`;
     }
     if (typeof window !== 'undefined') {
       window.location.href = loginPath;
@@ -172,9 +172,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     // Hint cookie for middleware-level admin guard (non-httpOnly, non-sensitive)
     if (typeof document !== 'undefined') {
       if (normalized.role === 'admin') {
-        document.cookie = `lavo_admin_session=1; path=/; SameSite=Lax${secureFlag()}`;
+        document.cookie = `Hurryline_admin_session=1; path=/; SameSite=Lax${secureFlag()}`;
       } else {
-        document.cookie = `lavo_admin_session=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT; SameSite=Lax${secureFlag()}`;
+        document.cookie = `Hurryline_admin_session=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT; SameSite=Lax${secureFlag()}`;
       }
     }
     refreshAxiosService({
@@ -198,7 +198,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       baseURL: process.env.NEXT_PUBLIC_API_URL || '/api/v1',
     });
     if (typeof document !== 'undefined') {
-      document.cookie = `lavo_admin_session=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT; SameSite=Lax${secureFlag()}`;
+      document.cookie = `Hurryline_admin_session=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT; SameSite=Lax${secureFlag()}`;
     }
     if (typeof window !== 'undefined') {
       window.location.href = homePath;

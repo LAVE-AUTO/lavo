@@ -99,7 +99,7 @@ export function StepDocuments({ data, errors, isLoading, onChange, onErrors, onS
               data.termsAccepted
                 ? 'bg-gold border-gold'
                 : errors.terms
-                ? 'border-lavo-error bg-[#FFF8F7] dark:bg-[#2A1A18]'
+                ? 'border-Hurryline-error bg-[#FFF8F7] dark:bg-[#2A1A18]'
                 : 'border-[#CCCCCC] dark:border-tab-inactive bg-white dark:bg-dark-card group-hover:border-gold',
             ].join(' ')}>
               {data.termsAccepted && (
@@ -114,7 +114,7 @@ export function StepDocuments({ data, errors, isLoading, onChange, onErrors, onS
           </span>
         </label>
         {errors.terms && (
-          <p id="terms-error" role="alert" className="mt-1.5 text-[13px] font-medium text-lavo-error flex items-center gap-1">
+          <p id="terms-error" role="alert" className="mt-1.5 text-[13px] font-medium text-Hurryline-error flex items-center gap-1">
             <span aria-hidden="true">!</span>
             {errors.terms}
           </p>
