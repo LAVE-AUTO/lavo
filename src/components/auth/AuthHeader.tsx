@@ -16,12 +16,12 @@ interface AuthHeaderProps {
  * Desktop: only controls top-right (brand panel handles the logo).
  *
  * Logo strategy (CSS dark-mode classes - no client JS needed):
- *   Light + FR  → logo2_2.png       (gold S + "Slowtime / ANTICIPONS MIEUX")
- *   Light + EN  → logo_anglais_1.png (gold S + "Slowtime / LET'S ANTICIPATE BETTER")
- *   Dark + any  → frame2.png badge  + "Slowtime" text
+ *   Light + FR  → logo2_2.png       (gold S + "Hurryline / ANTICIPONS MIEUX")
+ *   Light + EN  → logo_anglais_1.png (gold S + "Hurryline / LET'S ANTICIPATE BETTER")
+ *   Dark + any  → frame2.png badge  + "Hurryline" text
  */
 export function AuthHeader({ title, subtitle, locale }: AuthHeaderProps) {
-  const lightLogoSrc = locale === 'fr' ? '/logo/logo2_2.png' : '/logo/logo_anglais_1.png';
+  const lightLogoSrc = locale === 'fr' ? '/logo/logo2_anglais_1.png' : '/logo/logo_anglais_1.png';
 
   return (
     <div className="mb-6">
@@ -31,10 +31,10 @@ export function AuthHeader({ title, subtitle, locale }: AuthHeaderProps) {
         {/* Light mode: full wordmark */}
         <Image
           src={lightLogoSrc}
-          alt="Slowtime"
-          width={140}
-          height={36}
-          className="object-contain h-8 w-auto dark:hidden"
+          alt="Hurryline"
+          width={190}
+          height={50}
+          className="object-contain h-12 w-auto dark:hidden"
           priority
         />
 
@@ -52,7 +52,7 @@ export function AuthHeader({ title, subtitle, locale }: AuthHeaderProps) {
             />
           </div>
           <span className="text-lg font-bold text-white tracking-wide">
-            Slowtime
+            Hurryline
           </span>
         </div>
 

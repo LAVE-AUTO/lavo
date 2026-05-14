@@ -117,7 +117,7 @@ export function ReceiptModal({ entry: e, locale, onClose }: ReceiptModalProps) {
 <html lang="${escapeHtml(locale)}">
 <head>
   <meta charset="utf-8">
-  <title>Slowtime - ${t('receipt_title')} ${escapeHtml(e.id.toUpperCase())}</title>
+  <title>Hurryline - ${t('receipt_title')} ${escapeHtml(e.id.toUpperCase())}</title>
   <style>
 
     * { box-sizing: border-box; margin: 0; padding: 0; }
@@ -444,8 +444,8 @@ export function ReceiptModal({ entry: e, locale, onClose }: ReceiptModalProps) {
 
     <div class="header">
       <div>
-        <div class="brand-name">Slowtime</div>
-        <div class="brand-sub">slowtime.app - Lavage auto simplifié</div>
+        <div class="brand-name">Hurryline</div>
+        <div class="brand-sub">Hurryline.app - Lavage auto simplifié</div>
       </div>
       <div class="receipt-badge">${t('receipt_title')}</div>
     </div>
@@ -515,7 +515,7 @@ export function ReceiptModal({ entry: e, locale, onClose }: ReceiptModalProps) {
 
     <div class="footer">
       <p class="thank-you">${t('receipt_footer')}</p>
-      <p>Slowtime inc. &mdash; slowtime.app</p>
+      <p>Hurryline inc. &mdash; Hurryline.app</p>
     </div>
 
   </div>
@@ -546,7 +546,7 @@ export function ReceiptModal({ entry: e, locale, onClose }: ReceiptModalProps) {
           <div>
             <h2 className="text-[17px] font-black text-[#0A0A14] dark:text-white">{t('receipt_title')}</h2>
             <p className="text-[12px] text-[#666] dark:text-[#999] mt-0.5 font-semibold tracking-wide">
-              Slowtime &mdash; #{e.id.toUpperCase()}
+              Hurryline &mdash; #{e.id.toUpperCase()}
             </p>
           </div>
           <button
@@ -567,8 +567,8 @@ export function ReceiptModal({ entry: e, locale, onClose }: ReceiptModalProps) {
           {/* Brand strip */}
           <div className="bg-[#0f1a0e] px-5 py-4 flex items-center justify-between">
             <div>
-              <div className="text-[18px] font-black text-gold tracking-widest uppercase">Slowtime</div>
-              <div className="text-[11px] text-[#7a9a7d] mt-0.5">slowtime.app</div>
+              <div className="text-[18px] font-black text-gold tracking-widest uppercase">Hurryline</div>
+              <div className="text-[11px] text-[#7a9a7d] mt-0.5">Hurryline.app</div>
             </div>
             <span className="text-[10px] font-black text-[#0f1a0e] bg-gold px-3 py-1 rounded-full tracking-wider uppercase">
               {t('receipt_title')}

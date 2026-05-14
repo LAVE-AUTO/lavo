@@ -176,7 +176,7 @@ async function toPdfTextLines(receipt: ClientHistoryAppReceipt, locale: string):
   const subtotal = Math.max(0, total - tip);
 
   const lines: string[] = [
-    `Slowtime - ${t['receipt_title'] ?? 'Receipt'}`,
+    `Hurryline - ${t['receipt_title'] ?? 'Receipt'}`,
     `${t['receipt_ref'] ?? 'Reference'}: ${receipt.reference}`,
     `${t['receipt_date'] ?? 'Date'}: ${receipt.date}`,
     `${t['receipt_status'] ?? 'Status'}: ${receipt.status}`,

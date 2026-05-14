@@ -128,17 +128,17 @@ function isReasonableRecipientEmail(to: string): boolean {
 const TEXTS = {
   verification: {
     fr: {
-      subject: 'Vérifiez votre compte Slowtime',
+      subject: 'Vérifiez votre compte Hurryline',
       greeting: (name: string) => `Bonjour ${name},`,
-      body: 'Merci de vous être inscrit sur Slowtime. Veuillez confirmer votre adresse e-mail en cliquant sur le bouton ci-dessous.',
+      body: 'Merci de vous être inscrit sur Hurryline. Veuillez confirmer votre adresse e-mail en cliquant sur le bouton ci-dessous.',
       cta: 'Vérifier mon compte',
       expiry: 'Ce lien expire dans 24 heures.',
       ignore: "Si vous n'avez pas créé de compte, vous pouvez ignorer cet e-mail.",
     },
     en: {
-      subject: 'Verify your Slowtime account',
+      subject: 'Verify your Hurryline account',
       greeting: (name: string) => `Hi ${name},`,
-      body: 'Thank you for signing up for Slowtime. Please confirm your email address by clicking the button below.',
+      body: 'Thank you for signing up for Hurryline. Please confirm your email address by clicking the button below.',
       cta: 'Verify my account',
       expiry: 'This link expires in 24 hours.',
       ignore: 'If you did not create an account, you can safely ignore this email.',
@@ -146,7 +146,7 @@ const TEXTS = {
   },
   passwordReset: {
     fr: {
-      subject: 'Réinitialisation de votre mot de passe Slowtime',
+      subject: 'Réinitialisation de votre mot de passe Hurryline',
       greeting: (name: string) => `Bonjour ${name},`,
       body: 'Vous avez demandé la réinitialisation de votre mot de passe. Cliquez sur le bouton ci-dessous pour en définir un nouveau.',
       cta: 'Réinitialiser mon mot de passe',
@@ -154,7 +154,7 @@ const TEXTS = {
       ignore: "Si vous n'avez pas fait cette demande, vous pouvez ignorer cet e-mail.",
     },
     en: {
-      subject: 'Reset your Slowtime password',
+      subject: 'Reset your Hurryline password',
       greeting: (name: string) => `Hi ${name},`,
       body: 'You requested a password reset. Click the button below to set a new password.',
       cta: 'Reset my password',
@@ -164,51 +164,51 @@ const TEXTS = {
   },
   stationRejection: {
     fr: {
-      subject: (name: string) => `[Slowtime] Votre demande pour la station ${name} n'a pas été approuvée`,
+      subject: (name: string) => `[Hurryline] Votre demande pour la station ${name} n'a pas été approuvée`,
       greeting: 'Bonjour,',
       body: (name: string) =>
         `Nous vous informons que votre demande d'adhésion pour la station <strong>${name}</strong> n'a malheureusement pas été approuvée par notre équipe.`,
       reasonLabel: 'Motif du refus :',
       extra: 'Vous pouvez corriger les informations et resoumettre votre dossier depuis votre espace. Pour toute question, n\'hésitez pas à contacter notre support.',
       cta: 'Resoumettre mon dossier',
-      closing: 'L\'équipe Slowtime',
+      closing: 'L\'équipe Hurryline',
     },
     en: {
-      subject: (name: string) => `[Slowtime] Your application for station ${name} was not approved`,
+      subject: (name: string) => `[Hurryline] Your application for station ${name} was not approved`,
       greeting: 'Hello,',
       body: (name: string) =>
         `We regret to inform you that your membership application for station <strong>${name}</strong> has not been approved by our team.`,
       reasonLabel: 'Reason for rejection:',
       extra: 'You may correct the information and resubmit your application from your account. If you have any questions, please contact our support team.',
       cta: 'Resubmit my application',
-      closing: 'The Slowtime team',
+      closing: 'The Hurryline team',
     },
   },
   stationApproval: {
     fr: {
-      subject: (name: string) => `[Slowtime] Votre station ${name} a été approuvée`,
+      subject: (name: string) => `[Hurryline] Votre station ${name} a été approuvée`,
       greeting: 'Bonjour,',
       body: (name: string) =>
-        `Nous avons le plaisir de vous informer que votre station <strong>${name}</strong> a été approuvée et est maintenant active sur Slowtime.`,
+        `Nous avons le plaisir de vous informer que votre station <strong>${name}</strong> a été approuvée et est maintenant active sur Hurryline.`,
       extra: 'Vous pouvez dès à présent vous connecter avec votre adresse e-mail et le mot de passe choisi lors de votre inscription.',
       stripePrompt: 'Pour recevoir vos paiements, veuillez compléter la configuration de votre compte Stripe en cliquant sur le bouton ci-dessous.',
       stripeCta: 'Configurer mon compte Stripe',
-      cta: 'Se connecter à Slowtime',
-      closing: 'Bienvenue dans la communauté Slowtime !',
+      cta: 'Se connecter à Hurryline',
+      closing: 'Bienvenue dans la communauté Hurryline !',
       qrLabel: 'QR réservation :',
       qrAlt: 'QR de réservation station',
       qrLinkLabel: 'Lien de réservation QR :',
     },
     en: {
-      subject: (name: string) => `[Slowtime] Your station ${name} has been approved`,
+      subject: (name: string) => `[Hurryline] Your station ${name} has been approved`,
       greeting: 'Hello,',
       body: (name: string) =>
-        `We are pleased to inform you that your station <strong>${name}</strong> has been approved and is now active on Slowtime.`,
+        `We are pleased to inform you that your station <strong>${name}</strong> has been approved and is now active on Hurryline.`,
       extra: 'You can now log in using the email address and password you chose during registration.',
       stripePrompt: 'To receive payments, please complete your Stripe account setup by clicking the button below.',
       stripeCta: 'Set up my Stripe account',
-      cta: 'Log in to Slowtime',
-      closing: 'Welcome to the Slowtime community!',
+      cta: 'Log in to Hurryline',
+      closing: 'Welcome to the Hurryline community!',
       qrLabel: 'Booking QR:',
       qrAlt: 'Station booking QR',
       qrLinkLabel: 'Booking QR link:',
@@ -216,47 +216,47 @@ const TEXTS = {
   },
   paymentSuccess: {
     fr: {
-      subject: 'Paiement confirmé - Slowtime',
+      subject: 'Paiement confirmé - Hurryline',
       greeting: 'Bonjour,',
       lead: 'Votre paiement a bien été prélevé et votre prestation est terminée.',
       stationPrefix: 'Station :',
       refPrefix: 'Référence réservation :',
-      closing: "Merci d'avoir choisi Slowtime.",
-      cta: 'Ouvrir Slowtime',
+      closing: "Merci d'avoir choisi Hurryline.",
+      cta: 'Ouvrir Hurryline',
     },
     en: {
-      subject: 'Payment confirmed - Slowtime',
+      subject: 'Payment confirmed - Hurryline',
       greeting: 'Hello,',
       lead: 'Your payment has been captured and your service is complete.',
       stationPrefix: 'Station:',
       refPrefix: 'Reservation reference:',
-      closing: 'Thank you for choosing Slowtime.',
-      cta: 'Open Slowtime',
+      closing: 'Thank you for choosing Hurryline.',
+      cta: 'Open Hurryline',
     },
   },
   paymentFailed: {
     fr: {
-      subject: 'Paiement non abouti - Slowtime',
+      subject: 'Paiement non abouti - Hurryline',
       greeting: 'Bonjour,',
       body: "Nous n'avons pas pu finaliser votre paiement. Votre réservation a été annulée. Vous pouvez réessayer depuis l'application lorsque vous le souhaitez.",
       reasonLabel: 'Motif indiqué :',
-      cta: 'Réessayer sur Slowtime',
+      cta: 'Réessayer sur Hurryline',
     },
     en: {
-      subject: 'Payment could not be completed - Slowtime',
+      subject: 'Payment could not be completed - Hurryline',
       greeting: 'Hello,',
       body: 'We could not complete your payment. Your reservation has been cancelled. You can try again from the app whenever you are ready.',
       reasonLabel: 'Details:',
-      cta: 'Try again on Slowtime',
+      cta: 'Try again on Hurryline',
     },
   },
   footer: {
     fr: {
-      teamLine: "L'équipe Slowtime",
+      teamLine: "L'équipe Hurryline",
       autoMessage: 'Cet e-mail a été envoyé automatiquement. Merci de ne pas y répondre.',
     },
     en: {
-      teamLine: 'The Slowtime Team',
+      teamLine: 'The Hurryline Team',
       autoMessage: 'This email was sent automatically. Please do not reply.',
     },
   },
@@ -314,7 +314,7 @@ function brandedEmail(
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <meta http-equiv="X-UA-Compatible" content="IE=edge" />
-  <title>Slowtime</title>
+  <title>Hurryline</title>
 </head>
 <body style="margin: 0; padding: 0; background-color: #f4f2ec; font-family: 'Rajdhani', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;">
   <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background-color: #f4f2ec; padding: 40px 16px;">
@@ -325,7 +325,7 @@ function brandedEmail(
           <!-- Logo header -->
           <tr>
             <td align="center" style="padding: 0 0 24px;">
-              <img src="${logoUrl}" alt="Slowtime" width="48" height="48" style="display: block; border: 0; width: 48px; height: 48px;" />
+              <img src="${logoUrl}" alt="Hurryline" width="48" height="48" style="display: block; border: 0; width: 48px; height: 48px;" />
             </td>
           </tr>
 
@@ -384,7 +384,7 @@ function brandedEmail(
             <td align="center" style="padding: 20px 0 0;">
               <p style="margin: 0 0 4px; font-size: 13px; color: #af8408; font-weight: 600; letter-spacing: 0.04em;">${f.teamLine}</p>
               <p style="margin: 0 0 4px; font-size: 12px; color: #aaaaaa;">${f.autoMessage}</p>
-              <p style="margin: 0; font-size: 12px; color: #aaaaaa;">© ${new Date().getFullYear()} Slowtime. ${locale === 'fr' ? 'Tous droits réservés.' : 'All rights reserved.'}</p>
+              <p style="margin: 0; font-size: 12px; color: #aaaaaa;">© ${new Date().getFullYear()} Hurryline. ${locale === 'fr' ? 'Tous droits réservés.' : 'All rights reserved.'}</p>
             </td>
           </tr>
 
@@ -602,8 +602,8 @@ export async function sendStationApplicationAdminNotification(
 
   const subject =
     context === 'approval'
-      ? `[Slowtime] Station approved with QR: ${safePlainTextSnippet(stationName, 120)}`
-      : `[Slowtime] New station application: ${safePlainTextSnippet(stationName, 120)}`;
+      ? `[Hurryline] Station approved with QR: ${safePlainTextSnippet(stationName, 120)}`
+      : `[Hurryline] New station application: ${safePlainTextSnippet(stationName, 120)}`;
 
   const bodyHtml = context === 'approval'
     ? `
@@ -757,8 +757,8 @@ export async function sendKycExpiryReminderEmail(params: {
   const formattedExpiry = expiryDate.toLocaleDateString('fr-FR');
 
   const subject = isAdmin
-    ? `[Slowtime Admin] Document KYC expirant dans ${thresholdDays} jours - ${safePlainTextSnippet(stationName, 100)}`
-    : `[Slowtime] Votre document KYC expire dans ${thresholdDays} jours`;
+    ? `[Hurryline Admin] Document KYC expirant dans ${thresholdDays} jours - ${safePlainTextSnippet(stationName, 100)}`
+    : `[Hurryline] Votre document KYC expire dans ${thresholdDays} jours`;
 
   const greeting = isAdmin ? 'Notification administrateur KYC' : 'Bonjour,';
 

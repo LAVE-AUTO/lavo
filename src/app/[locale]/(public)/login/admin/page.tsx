@@ -48,7 +48,7 @@ export default async function AdminLoginPage({ params }: Props) {
             {/* Mobile top bar */}
             <div className="flex items-center justify-between mb-5 lg:hidden">
               <span className="text-[16px] font-bold text-dark-bg dark:text-white tracking-wide">
-                Slowtime
+                Hurryline
               </span>
               <div className="flex items-center gap-2">
                 <ThemeToggle />

@@ -39,7 +39,7 @@ export async function PublicFooter() {
           {/* Brand column */}
           <div>
             <div className="font-playfair text-[30px] font-black text-[#c8980a] tracking-[4px] mb-3">
-              Slowtime
+              Hurryline
             </div>
             <p className="text-[13px] text-[#7a9a7d] leading-[1.7] max-w-[260px]">
               {t('tagline')}

@@ -10,7 +10,7 @@ type Props = {
 export async function generateMetadata({ params }: Props) {
   const { locale } = await params;
   const t = await getTranslations({ locale, namespace: 'change_password' });
-  return { title: `Slowtime - ${t('title')}` };
+  return { title: `Hurryline - ${t('title')}` };
 }
 
 export default async function ChangePasswordPage({ params }: Props) {

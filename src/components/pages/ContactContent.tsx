@@ -60,7 +60,7 @@ export function ContactContent() {
                   </svg>
                 ),
                 label: t('email_label'),
-                value: 'support@slowtime.ca',
+                value: 'support@Hurryline.ca',
               },
               {
                 icon: (

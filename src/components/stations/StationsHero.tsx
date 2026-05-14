@@ -65,7 +65,7 @@ export async function StationsHero({ metrics }: StationsHeroProps) {
                 <span className="absolute inline-flex h-full w-full rounded-full bg-[#4ADE80] opacity-75 animate-ping" />
                 <span className="relative inline-flex h-2 w-2 rounded-full bg-[#4ADE80]" />
               </span>
-              <span className="text-[12px] font-bold text-white/70 uppercase tracking-[0.15em]">Slowtime Network</span>
+              <span className="text-[12px] font-bold text-white/70 uppercase tracking-[0.15em]">Hurryline Network</span>
               <span className="w-px h-3 bg-white/20 shrink-0" />
               <span className="text-[12px] font-bold text-gold tracking-wide">{activeBadgeLabel}</span>
             </div>

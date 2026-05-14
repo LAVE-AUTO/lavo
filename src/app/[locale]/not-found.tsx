@@ -4,7 +4,7 @@ import { useTranslations } from 'next-intl';
 import { Link } from '@/i18n/navigation';
 
 /**
- * Branded 404 page - Slowtime hero language (gold orbs, dot pattern,
+ * Branded 404 page - Hurryline hero language (gold orbs, dot pattern,
  * shimmer line, gradient 404 numerals) with two CTAs and a support hint.
  */
 export default function NotFoundPage() {

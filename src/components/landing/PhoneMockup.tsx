@@ -32,7 +32,7 @@ export function PhoneMockup() {
           {/* App header */}
           <div className="px-4 pt-3 pb-4">
             <p className="text-[11px] font-bold text-gold tracking-wider uppercase">
-              Slowtime
+              Hurryline
             </p>
             <p className="text-[16px] font-black text-[#0A0A14] dark:text-white mt-1 leading-tight">
               {t('step_1_title')}

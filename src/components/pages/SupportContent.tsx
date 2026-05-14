@@ -55,8 +55,8 @@ export function SupportContent() {
         </svg>
       ),
       label: t('channel_email'),
-      desc: 'support@slowtime.ca',
-      href: 'mailto:support@slowtime.ca',
+      desc: 'support@Hurryline.ca',
+      href: 'mailto:support@Hurryline.ca',
       cta: t('channel_email_cta'),
       highlight: false,
     },

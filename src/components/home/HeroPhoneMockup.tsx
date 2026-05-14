@@ -45,7 +45,7 @@ export function HeroPhoneMockup() {
           {/* Header */}
           <div className="flex items-center justify-between">
             <span className="font-playfair text-[17px] font-black tracking-[3px] text-[#c8980a]">
-              Slowtime
+              Hurryline
             </span>
             <div className="h-[26px] w-[26px] rounded-full border border-[rgba(200,152,10,0.35)] bg-[#162218]" />
           </div>

@@ -11,7 +11,7 @@ type Props = {
 export async function generateMetadata({ params }: Props) {
   const { locale } = await params;
   const t = await getTranslations({ locale, namespace: 'forgot_password' });
-  return { title: `Slowtime - ${t('title')}` };
+  return { title: `Hurryline - ${t('title')}` };
 }
 
 /**

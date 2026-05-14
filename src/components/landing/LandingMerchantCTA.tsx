@@ -101,7 +101,7 @@ export function LandingMerchantCTA() {
                     <div className="w-3 h-3 rounded-full bg-yellow-400/80" />
                     <div className="w-3 h-3 rounded-full bg-green-400/80" />
                     <span className="ml-3 text-[12px] text-white/40 font-mono">
-                      dashboard.slowtime.app
+                      dashboard.Hurryline.app
                     </span>
                   </div>
 
@@ -155,7 +155,7 @@ export function LandingMerchantCTA() {
                     <div className="w-2.5 h-2.5 rounded-full bg-yellow-400/80" />
                     <div className="w-2.5 h-2.5 rounded-full bg-green-400/80" />
                     <span className="ml-2 text-[11px] text-white/30 font-mono">
-                      dashboard.slowtime.app
+                      dashboard.Hurryline.app
                     </span>
                   </div>
                   <div className="grid grid-cols-3 gap-2">

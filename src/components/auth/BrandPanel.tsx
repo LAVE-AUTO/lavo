@@ -186,7 +186,7 @@ function BrandEmblem({ isDark }: { isDark: boolean }) {
  * Left-side branding panel for auth pages on desktop.
  *
  * Logo strategy:
- *   Dark + any locale → frame2.png badge + "Slowtime" text
+ *   Dark + any locale → frame2.png badge + "Hurryline" text
  *   Light + FR        → logo2_2.png       (full FR wordmark)
  *   Light + EN        → logo_anglais_1.png (full EN wordmark)
  *
@@ -270,16 +270,16 @@ export function BrandPanel() {
                 />
               </div>
               <span className="text-xl font-bold text-white tracking-wide">
-                Slowtime
+                Hurryline
               </span>
             </div>
           ) : (
             <Image
               src={lightLogoSrc}
-              alt="Slowtime"
-              width={180}
-              height={48}
-              className="object-contain h-10 w-auto"
+              alt="Hurryline"
+              width={260}
+              height={70}
+              className="object-contain h-16 w-auto"
             />
           )}
         </div>
