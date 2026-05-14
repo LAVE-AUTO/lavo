@@ -29,21 +29,34 @@ interface BookingFlowProps {
   station: StationDetailData;
   qrToken?: string | null;
   qrVersion?: '1' | null;
+  /** Service id picked on the station detail screen; pre-selects + skips the service step. */
+  initialServiceId?: string | null;
   onClose: () => void;
 }
 
-export function BookingFlow({ station, qrToken, qrVersion, onClose }: BookingFlowProps) {
+export function BookingFlow({ station, qrToken, qrVersion, initialServiceId, onClose }: BookingFlowProps) {
   const t = useTranslations('booking');
   const userLocation = useUserLocation();
   const dialogRootRef = useRef<HTMLDivElement | null>(null);
 
-  const [step, setStep] = useState<Step>('service');
+  const initialService = initialServiceId
+    ? station.stationServices.find((s) => s.id === initialServiceId) ?? null
+    : null;
+  const initialEntry =
+    initialService && initialService.category !== 'hand_wash'
+      ? initialService.vehicleEntries[0] ?? null
+      : null;
+  const initialStep: Step = initialService
+    ? (initialService.category === 'hand_wash' ? 'format' : 'extras')
+    : 'service';
+
+  const [step, setStep] = useState<Step>(initialStep);
   const [paymentResult, setPaymentResult] = useState<'success' | 'error' | null>(null);
   const [ticketCode, setTicketCode] = useState<string | null>(null);
 
   // Booking selections
-  const [selectedService, setSelectedService] = useState<StationServicePublic | null>(null);
-  const [selectedEntry, setSelectedEntry] = useState<StationServiceEntry | null>(null);
+  const [selectedService, setSelectedService] = useState<StationServicePublic | null>(initialService);
+  const [selectedEntry, setSelectedEntry] = useState<StationServiceEntry | null>(initialEntry);
   const [selectedExtraIds, setSelectedExtraIds] = useState<string[]>([]);
 
   // Arrival state
