@@ -102,40 +102,55 @@ export function DashboardOverviewSection({ data }: Props) {
         <span className="text-[11px] font-bold uppercase tracking-[0.12em] text-[#888] dark:text-[#9A9A8A]">
           {t('overview_title')}
         </span>
-        {masked && (
-          <span className="text-[10px] font-bold text-[#999] dark:text-[#5A5A4A]">
-            {t('overview_masked')}
-          </span>
-        )}
         <button
           type="button"
           onClick={toggle}
           aria-pressed={masked}
           aria-label={masked ? t('overview_reveal') : t('overview_hide_aria')}
           title={masked ? t('overview_reveal') : t('overview_hide_aria')}
-          className="ml-auto inline-flex h-7 w-7 items-center justify-center rounded-full bg-[#E8E4D8] text-[#666] transition-colors hover:bg-[#DDD8C4] hover:text-[#1A1A0A] dark:bg-[#1A2A14] dark:text-[#A0A090] dark:hover:bg-[#243020] dark:hover:text-[#F0EDD4]"
+          className="inline-flex h-7 w-7 items-center justify-center rounded-full bg-[#E8E4D8] text-[#666] transition-colors hover:bg-[#DDD8C4] hover:text-[#1A1A0A] dark:bg-[#1A2A14] dark:text-[#A0A090] dark:hover:bg-[#243020] dark:hover:text-[#F0EDD4]"
         >
           {masked ? <EyeOffIcon /> : <EyeIcon />}
         </button>
+        {masked && (
+          <span className="text-[10px] font-bold text-[#999] dark:text-[#5A5A4A]">
+            {t('overview_masked')}
+          </span>
+        )}
       </div>
 
       <div className="grid grid-cols-2 gap-3 px-5 pb-4 xl:grid-cols-4">
         {cards.map((card, idx) => (
-          <FullKpiCard key={card.label} card={card} delay={idx * 60} masked={masked} />
+          <FullKpiCard
+            key={card.label}
+            card={card}
+            delay={idx * 60}
+            masked={masked}
+          />
         ))}
       </div>
     </section>
   );
 }
 
-function FullKpiCard({ card, delay, masked }: { card: CardConfig; delay: number; masked: boolean }) {
+function FullKpiCard({
+  card,
+  delay,
+  masked,
+}: {
+  card: CardConfig;
+  delay: number;
+  masked: boolean;
+}) {
   const Icon = card.Icon;
   return (
     <div
-      className="group animate-fade-in-up rounded-2xl border border-[#E8E4DC] bg-white p-4 shadow-sm transition-all duration-200 hover:-translate-y-0.5 hover:shadow-md dark:border-[#1A2A14] dark:bg-[#182214]"
+      className="group relative animate-fade-in-up rounded-2xl border border-[#E8E4DC] bg-white p-4 shadow-sm transition-all duration-200 hover:-translate-y-0.5 hover:shadow-md dark:border-[#1A2A14] dark:bg-[#182214]"
       style={{ animationDelay: `${delay}ms` }}
     >
-      <div className="mb-2.5 leading-none"><Icon /></div>
+      <div className="mb-2.5 leading-none">
+        <Icon />
+      </div>
       <div
         className={`mb-0.5 text-[28px] font-black leading-none text-[#1A1A0A] dark:text-[#F0EDD4] tabular-nums ${
           masked ? 'tracking-[0.08em]' : ''
