@@ -1,7 +1,10 @@
 'use client';
 
+import { useState } from 'react';
 import { useTranslations } from 'next-intl';
 import type { AgendaPost } from './DashboardAgendaTimeline';
+
+const PAGE_SIZE = 8;
 
 interface Props {
   posts: AgendaPost[];
@@ -11,22 +14,33 @@ interface Props {
 
 export function DashboardBayFilter({ posts, selectedPostId, onSelect }: Props) {
   const t = useTranslations('station_dashboard');
-  const active = posts.filter((p) => p.isActive).sort((a, b) => a.position - b.position);
+  const [cursor, setCursor] = useState(0);
 
+  const active = posts.filter((p) => p.isActive).sort((a, b) => a.position - b.position);
   if (active.length === 0) return null;
+
+  const totalPages = Math.ceil(active.length / PAGE_SIZE);
+  const currentPage = Math.floor(cursor / PAGE_SIZE);
+  const paginated = active.slice(cursor, cursor + PAGE_SIZE);
+  const hasPrev = cursor > 0;
+  const hasNext = cursor + PAGE_SIZE < active.length;
+
+  function goNext() { setCursor((c) => Math.min(c + PAGE_SIZE, (totalPages - 1) * PAGE_SIZE)); }
+  function goPrev() { setCursor((c) => Math.max(c - PAGE_SIZE, 0)); }
 
   return (
     <aside className="hidden w-[180px] flex-shrink-0 flex-col border-r border-[#E0DCD0] bg-[#F7F6F2] px-3 py-4 lg:flex dark:border-[#1A2A14] dark:bg-[#0F1A0C]">
       <div className="mb-2 px-1 text-[10px] font-bold uppercase tracking-[0.12em] text-[#888] dark:text-[#9A9A8A]">
         {t('filter_bay_title')}
       </div>
-      <div className="flex flex-col gap-1.5">
+
+      <div className="flex flex-1 min-h-0 flex-col gap-1.5 overflow-y-auto pr-0.5">
         <BayItem
           active={selectedPostId === 'all'}
           onClick={() => onSelect('all')}
           label={t('filter_all_posts')}
         />
-        {active.map((p) => (
+        {paginated.map((p) => (
           <BayItem
             key={p.id}
             active={selectedPostId === p.id}
@@ -35,7 +49,61 @@ export function DashboardBayFilter({ posts, selectedPostId, onSelect }: Props) {
           />
         ))}
       </div>
+
+      {totalPages > 1 && (
+        <div className="mt-3 flex items-center justify-between gap-1">
+          <button
+            type="button"
+            disabled={!hasPrev}
+            onClick={goPrev}
+            className="flex h-6 w-6 items-center justify-center rounded text-[#888] transition-colors hover:bg-[#E8E4D0] disabled:opacity-30 dark:text-[#9A9A8A] dark:hover:bg-[#243020]"
+            aria-label={t('filter_page_prev')}
+          >
+            <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
+              <path d="M7.5 2L4 6l3.5 4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+            </svg>
+          </button>
+          <span className="text-[10px] font-medium text-[#999] dark:text-[#6A6A5A]">
+            {currentPage + 1}/{totalPages}
+          </span>
+          <button
+            type="button"
+            disabled={!hasNext}
+            onClick={goNext}
+            className="flex h-6 w-6 items-center justify-center rounded text-[#888] transition-colors hover:bg-[#E8E4D0] disabled:opacity-30 dark:text-[#9A9A8A] dark:hover:bg-[#243020]"
+            aria-label={t('filter_page_next')}
+          >
+            <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
+              <path d="M4.5 2L8 6l-3.5 4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+            </svg>
+          </button>
+        </div>
+      )}
     </aside>
+  );
+}
+
+export function BayFilterMobilePills({ posts, selectedPostId, onSelect }: Props) {
+  const t = useTranslations('station_dashboard');
+  const active = posts.filter((p) => p.isActive).sort((a, b) => a.position - b.position);
+  if (active.length === 0) return null;
+
+  return (
+    <div className="flex lg:hidden items-center gap-2 overflow-x-auto border-b border-[#E0DCD0] bg-[#F7F6F2] px-4 py-2 scrollbar-hide dark:border-[#1A2A14] dark:bg-[#0F1A0C]">
+      <MobilePill
+        active={selectedPostId === 'all'}
+        onClick={() => onSelect('all')}
+        label={t('filter_all_posts')}
+      />
+      {active.map((p) => (
+        <MobilePill
+          key={p.id}
+          active={selectedPostId === p.id}
+          onClick={() => onSelect(p.id)}
+          label={t('filter_post', { n: p.position })}
+        />
+      ))}
+    </div>
   );
 }
 
@@ -55,6 +123,23 @@ function BayItem({ active, onClick, label }: ItemProps) {
         active
           ? 'border border-[#C49A1E] bg-[#C49A1E]/10 text-[#C49A1E]'
           : 'border border-transparent bg-[#EFECDE] text-[#666] hover:bg-[#E8E4D0] dark:bg-[#1A2A14] dark:text-[#A0A090] dark:hover:bg-[#243020]',
+      ].join(' ')}
+    >
+      {label}
+    </button>
+  );
+}
+
+function MobilePill({ active, onClick, label }: ItemProps) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      className={[
+        'flex-shrink-0 rounded-full px-3 py-1.5 text-[11px] font-bold transition-all whitespace-nowrap',
+        active
+          ? 'border border-[#C49A1E] bg-[#C49A1E]/10 text-[#C49A1E]'
+          : 'border border-[#E0DCD0] bg-[#EFECDE] text-[#666] hover:bg-[#E8E4D0] dark:border-[#1A2A14] dark:bg-[#1A2A14] dark:text-[#A0A090] dark:hover:bg-[#243020]',
       ].join(' ')}
     >
       {label}

@@ -14,7 +14,7 @@ import { DashboardLegendBar } from './DashboardLegendBar';
 import { DashboardQueueBand } from './DashboardQueueBand';
 import { DashboardGroupedPanel } from './DashboardGroupedPanel';
 import { DashboardDelaysPanel, type DashboardDelayItem } from './DashboardDelaysPanel';
-import { DashboardBayFilter } from './DashboardBayFilter';
+import { DashboardBayFilter, BayFilterMobilePills } from './DashboardBayFilter';
 import { AgendaSlotDetailModal } from './AgendaSlotDetailModal';
 import { StartServiceModal } from './StartServiceModal';
 import type { KpiData, ReservationItem } from './types';
@@ -405,8 +405,15 @@ export function StationDashboard() {
         onViewChange={setView}
       />
 
+      {view === 'daily' && posts.length > 0 && (
+        <BayFilterMobilePills
+          posts={posts}
+          selectedPostId={selectedPostId}
+          onSelect={setSelectedPostId}
+        />
+      )}
+
       <div className="flex flex-1 min-h-0 overflow-hidden">
-        {/* Bay filter (desktop only) */}
         {view === 'daily' && posts.length > 0 && (
           <DashboardBayFilter
             posts={posts}
