@@ -101,7 +101,6 @@ export function StationServicesSection({
           selected={selectedServiceId === featured.id}
           locale={locale}
           selectedFormatEntryId={selectedFormatEntryId}
-          onSelect={() => onSelectService(featured.id)}
           onSelectFormatEntry={onSelectFormatEntry}
           onBook={onBook}
           bookingLoading={bookingLoading}
@@ -140,7 +139,6 @@ interface FeaturedServiceCardProps {
   selected: boolean;
   locale: 'fr' | 'en';
   selectedFormatEntryId: string | null;
-  onSelect: () => void;
   onSelectFormatEntry: (entryId: string | null) => void;
   onBook: () => void;
   bookingLoading: boolean;
@@ -152,7 +150,6 @@ function FeaturedServiceCard({
   selected,
   locale,
   selectedFormatEntryId,
-  onSelect,
   onSelectFormatEntry,
   onBook,
   bookingLoading,
@@ -282,26 +279,13 @@ function FeaturedServiceCard({
         </div>
       )}
 
-      <div className="px-5 py-4 mt-4 border-t border-[#D8D8C8] dark:border-tab-inactive flex items-center gap-3 bg-[#E8E8D8]/40 dark:bg-dark-bg/30">
-        <button
-          type="button"
-          onClick={onSelect}
-          aria-pressed={selected}
-          className={[
-            'flex-1 py-2.5 rounded-xl text-[13.5px] font-bold transition-colors cursor-pointer',
-            selected
-              ? 'bg-gold text-dark-bg'
-              : 'bg-white/70 dark:bg-tab-inactive text-[#222] dark:text-[#D0D0C0] hover:bg-gold/20',
-          ].join(' ')}
-        >
-          {selected ? t('services_selected') : t('services_select')}
-        </button>
+      <div className="px-5 py-4 mt-4 border-t border-[#D8D8C8] dark:border-tab-inactive bg-[#E8E8D8]/40 dark:bg-dark-bg/30">
         <button
           type="button"
           onClick={onBook}
-          disabled={bookingLoading || disabledBook || !selected || needsFormat}
+          disabled={bookingLoading || disabledBook || needsFormat}
           title={needsFormat ? t('services_pick_format_hint') : undefined}
-          className="flex-1 py-2.5 bg-gold hover:bg-gold-hover rounded-xl text-[13.5px] font-black text-dark-bg transition-colors cursor-pointer disabled:opacity-60 disabled:cursor-not-allowed btn-shine"
+          className="w-full py-2.5 bg-gold hover:bg-gold-hover rounded-xl text-[13.5px] font-black text-dark-bg transition-colors cursor-pointer disabled:opacity-60 disabled:cursor-not-allowed btn-shine"
         >
           {bookingLoading
             ? t('services_loading')
@@ -358,9 +342,6 @@ function OtherServiceCard({ service, locale, onSelect }: OtherServiceCardProps) 
             ${price.toLocaleString()}
           </span>
         )}
-        <span className="text-[10px] font-bold uppercase tracking-wider text-gold bg-gold/10 border border-gold/30 rounded-full px-2.5 py-0.5">
-          {t('services_select_short')}
-        </span>
       </div>
     </button>
   );

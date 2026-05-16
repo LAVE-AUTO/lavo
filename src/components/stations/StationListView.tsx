@@ -37,6 +37,7 @@ const DEFAULT_FILTERS: StationFiltersState = {
   priceMax:          '',
   timeFrom:          '',
   timeTo:            '',
+  maxDistanceKm:     0,
 };
 
 /** Convert "HHhMM - HHhMM" or "HH:MM - HH:MM" into [openMinutes, closeMinutes]. */
@@ -164,6 +165,9 @@ export function StationListView({ washTypes, vehicleFormats }: StationListViewPr
         return true;
       });
     }
+    if (filters.maxDistanceKm > 0 && userLocation) {
+      out = out.filter((s) => s.distanceKm != null && s.distanceKm <= filters.maxDistanceKm);
+    }
     if (sort === 'price_asc') {
       out = [...out].sort((a, b) => {
         const ap = a.priceFrom ?? Number.POSITIVE_INFINITY;
@@ -195,7 +199,8 @@ export function StationListView({ washTypes, vehicleFormats }: StationListViewPr
     (filters.serviceScope ? 1 : 0) +
     (filters.formatId ? 1 : 0) +
     (priceMinNum != null || priceMaxNum != null ? 1 : 0) +
-    (timeFromMin != null || timeToMin != null ? 1 : 0);
+    (timeFromMin != null || timeToMin != null ? 1 : 0) +
+    (filters.maxDistanceKm > 0 ? 1 : 0);
 
   const handleReset = () => {
     setFilters(DEFAULT_FILTERS);
@@ -304,6 +309,7 @@ export function StationListView({ washTypes, vehicleFormats }: StationListViewPr
         washTypes={washTypes}
         vehicleFormats={vehicleFormats}
         activeCount={activeCount}
+        hasLocation={userLocation != null}
       />
 
       {/* Results */}

@@ -20,7 +20,10 @@ export interface StationFiltersState {
   priceMax: string;
   timeFrom: string;
   timeTo: string;
+  maxDistanceKm: number; // 0 = no filter
 }
+
+const DISTANCE_PRESETS = [5, 10, 25, 50] as const;
 
 interface StationFiltersProps {
   open: boolean;
@@ -31,6 +34,7 @@ interface StationFiltersProps {
   washTypes: WashTypeOption[];
   vehicleFormats: VehicleFormatOption[];
   activeCount: number;
+  hasLocation: boolean;
 }
 
 /**
@@ -49,6 +53,7 @@ export function StationFilters({
   washTypes,
   vehicleFormats,
   activeCount,
+  hasLocation,
 }: StationFiltersProps) {
   const t = useTranslations('stations');
 
@@ -194,6 +199,45 @@ export function StationFilters({
                 unit={t('filter_currency_unit')}
               />
             </div>
+          </FilterRow>
+
+          {/* Distance */}
+          <FilterRow label={t('filter_distance_label')}>
+            {hasLocation ? (
+              <div className="flex flex-wrap gap-2">
+                <button
+                  type="button"
+                  onClick={() => patch({ maxDistanceKm: 0 })}
+                  className={[
+                    'py-1.5 px-3.5 rounded-full text-[13px] font-bold border transition-colors',
+                    value.maxDistanceKm === 0
+                      ? 'bg-gold text-dark-bg border-gold'
+                      : 'bg-[#F5F5EE] dark:bg-tab-inactive text-[#1A1A1A] dark:text-white border-[#E0E0D0] dark:border-tab-inactive hover:border-gold',
+                  ].join(' ')}
+                >
+                  {t('filter_distance_all')}
+                </button>
+                {DISTANCE_PRESETS.map((km) => (
+                  <button
+                    key={km}
+                    type="button"
+                    onClick={() => patch({ maxDistanceKm: km })}
+                    className={[
+                      'py-1.5 px-3.5 rounded-full text-[13px] font-bold border transition-colors',
+                      value.maxDistanceKm === km
+                        ? 'bg-gold text-dark-bg border-gold'
+                        : 'bg-[#F5F5EE] dark:bg-tab-inactive text-[#1A1A1A] dark:text-white border-[#E0E0D0] dark:border-tab-inactive hover:border-gold',
+                    ].join(' ')}
+                  >
+                    {t('filter_distance_km', { distance: km })}
+                  </button>
+                ))}
+              </div>
+            ) : (
+              <p className="text-[12.5px] text-[#9A9A8A] dark:text-[#707068] italic px-1">
+                {t('filter_distance_no_location')}
+              </p>
+            )}
           </FilterRow>
 
           {/* Time range */}
