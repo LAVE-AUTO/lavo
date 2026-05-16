@@ -4,6 +4,7 @@ import { useState, useMemo, useEffect } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { useTranslations } from 'next-intl';
 import { fetchStations, type FetchStationsResult } from '@/services/station-api';
+import { useUserLocation, requestUserLocation } from './useUserLocation';
 import { SearchBar } from './SearchBar';
 import { StationCard } from './StationCard';
 import { PageSpinner } from '@/components/ui/PageSpinner';
@@ -17,7 +18,7 @@ import {
 } from './StationFilters';
 import type { StationDetailData } from '@/types/station';
 
-type SortKey = 'default' | 'best_rated' | 'price_asc';
+type SortKey = 'default' | 'best_rated' | 'price_asc' | 'nearest';
 
 interface StationListViewProps {
   washTypes: WashTypeOption[];
@@ -79,6 +80,8 @@ export function StationListView({ washTypes, vehicleFormats }: StationListViewPr
   const t = useTranslations('stations');
   const searchParams = useSearchParams();
 
+  const userLocation = useUserLocation();
+
   const [cityQuery, setCityQuery] = useState('');
   const [filters, setFilters] = useState<StationFiltersState>(DEFAULT_FILTERS);
   const [sort, setSort] = useState<SortKey>('default');
@@ -110,9 +113,14 @@ export function StationListView({ washTypes, vehicleFormats }: StationListViewPr
     if (debouncedText.q)                       params.q = debouncedText.q;
     if (debouncedText.city)                    params.city = debouncedText.city;
     if (sort === 'best_rated')                 params.sort = 'rating_desc';
+    if (sort === 'nearest' && userLocation)    params.sort = 'distance_asc';
     if (filters.selectedWashTypes.length > 0)  params.wash_type_ids = filters.selectedWashTypes.join(',');
     if (filters.serviceScope)                  params.service_scope = filters.serviceScope;
     if (filters.formatId)                      params.format_id = filters.formatId;
+    if (userLocation) {
+      params.near_lat = String(userLocation.latitude);
+      params.near_lng = String(userLocation.longitude);
+    }
 
     fetchStations(params).then((result) => {
       if (cancelled) return;
@@ -122,7 +130,7 @@ export function StationListView({ washTypes, vehicleFormats }: StationListViewPr
     }).catch(() => { if (!cancelled) setLoading(false); });
 
     return () => { cancelled = true; };
-  }, [debouncedText, sort, filters.selectedWashTypes, filters.serviceScope, filters.formatId]);
+  }, [debouncedText, sort, filters.selectedWashTypes, filters.serviceScope, filters.formatId, userLocation]);
 
   /* Hydrate cityQuery from URL ?q= */
   useEffect(() => {
@@ -195,8 +203,9 @@ export function StationListView({ washTypes, vehicleFormats }: StationListViewPr
     setPanelOpen(false);
   };
 
-  const sortChips: { key: SortKey; label: string }[] = [
+  const sortChips: { key: SortKey; label: string; icon?: string }[] = [
     { key: 'default',    label: t('filter_all') },
+    { key: 'nearest',    label: t('filter_nearby'), icon: '📍' },
     { key: 'best_rated', label: t('filter_best_rated') },
     { key: 'price_asc',  label: t('filter_price_asc') },
   ];
@@ -238,18 +247,24 @@ export function StationListView({ washTypes, vehicleFormats }: StationListViewPr
 
         {/* Sort + available pills */}
         <div className="flex gap-1.5 overflow-x-auto pb-0.5 scrollbar-none -mx-1 px-1">
-          {sortChips.map(({ key, label }) => (
+          {sortChips.map(({ key, label, icon }) => (
             <button
               key={key}
               type="button"
-              onClick={() => setSort(key)}
+              onClick={async () => {
+                if (key === 'nearest' && !userLocation) {
+                  await requestUserLocation();
+                }
+                setSort(key);
+              }}
               className={[
-                'py-1.5 px-3.5 rounded-full text-[13.5px] font-bold whitespace-nowrap transition-colors duration-150 shrink-0',
+                'py-1.5 px-3.5 rounded-full text-[13.5px] font-bold whitespace-nowrap transition-colors duration-150 shrink-0 flex items-center gap-1.5',
                 sort === key
                   ? 'bg-gold text-dark-bg'
                   : 'bg-[#E0E0D0] dark:bg-dark-card text-[#222] dark:text-[#D0D0C0] hover:bg-[#D0D0C0] dark:hover:bg-tab-inactive',
               ].join(' ')}
             >
+              {icon && <span aria-hidden="true">{icon}</span>}
               {label}
             </button>
           ))}

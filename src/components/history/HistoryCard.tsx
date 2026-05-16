@@ -36,7 +36,7 @@ function stationGradient(name: string): string {
 }
 
 function formatAmount(amount: number, locale: string): string {
-  return `${amount.toLocaleString(locale === 'en' ? 'en-CA' : 'fr-CA', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}$`;
+  return `$${amount.toLocaleString(locale === 'en' ? 'en-CA' : 'fr-CA', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
 }
 
 /**

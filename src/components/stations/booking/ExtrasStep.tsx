@@ -82,7 +82,7 @@ export function ExtrasStep({
                         </div>
                       </div>
                     </div>
-                    <span className="text-[16px] font-black text-gold shrink-0">+{extra.price.toLocaleString()}$</span>
+                    <span className="text-[16px] font-black text-gold shrink-0">+${extra.price.toLocaleString()}</span>
                   </div>
                 </button>
               );
@@ -98,20 +98,20 @@ export function ExtrasStep({
 
           <div className="flex justify-between text-[14px]">
             <span className="text-[#000C1F] dark:text-[#FFF8EC] font-semibold">{serviceName}</span>
-            <span className="text-[#000C1F] dark:text-[#FFF8EC] font-bold">{servicePrice.toLocaleString()}$</span>
+            <span className="text-[#000C1F] dark:text-[#FFF8EC] font-bold">${servicePrice.toLocaleString()}</span>
           </div>
 
           {selectedItems.map((item) => (
             <div key={item.id} className="flex justify-between text-[13px]">
               <span className="text-[#555] dark:text-[#B0B0A0]">+ {item.name}</span>
-              <span className="text-[#555] dark:text-[#B0B0A0]">{item.price.toLocaleString()}$</span>
+              <span className="text-[#555] dark:text-[#B0B0A0]">${item.price.toLocaleString()}</span>
             </div>
           ))}
 
           {extrasTotal > 0 && (
             <div className="flex justify-between text-[13px] border-t border-[#D0D0C0] dark:border-tab-inactive pt-2 mt-2">
               <span className="text-[#555] dark:text-[#B0B0A0]">{t('ticket_extras_total')}</span>
-              <span className="text-gold font-bold">{extrasTotal.toLocaleString()}$</span>
+              <span className="text-gold font-bold">${extrasTotal.toLocaleString()}</span>
             </div>
           )}
 
@@ -122,7 +122,7 @@ export function ExtrasStep({
 
           <div className="flex justify-between text-[16px] border-t border-[#D0D0C0] dark:border-tab-inactive pt-2 mt-2">
             <span className="font-black text-[#000C1F] dark:text-[#FFF8EC]">{t('ticket_total')}</span>
-            <span className="font-black text-gold">{grandTotal.toLocaleString()}$</span>
+            <span className="font-black text-gold">${grandTotal.toLocaleString()}</span>
           </div>
         </div>
 

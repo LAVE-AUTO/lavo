@@ -144,12 +144,15 @@ export function StationDetail({ id }: StationDetailProps) {
     && selectedService.vehicleEntries.some((e) => e.vehicleFormatId != null)
     && !selectedFormatEntry;
 
-  const distanceLabel = userLocation && station.latitude != null && station.longitude != null
-    ? (() => {
-        const km = haversineKm(userLocation.latitude, userLocation.longitude, station.latitude, station.longitude);
-        return km < 1 ? t('distance_m', { distance: Math.round(km * 1000) }) : t('distance_km', { distance: km.toFixed(1) });
-      })()
-    : null;
+  const distanceLabel = (() => {
+    const km = station.distanceKm != null
+      ? station.distanceKm
+      : (userLocation && station.latitude != null && station.longitude != null)
+        ? haversineKm(userLocation.latitude, userLocation.longitude, station.latitude, station.longitude)
+        : null;
+    if (km == null) return null;
+    return km < 1 ? t('distance_m', { distance: Math.round(km * 1000) }) : t('distance_km', { distance: km.toFixed(1) });
+  })();
 
   const handleOpenBooking = async () => {
     if (!isAuthenticated) {
@@ -229,8 +232,8 @@ export function StationDetail({ id }: StationDetailProps) {
           <p className="text-[32px] font-black text-[#000C1F] dark:text-[#FFF8EC] leading-none mt-1">
             {currentPrice != null ? (
               <>
+                <span className="text-[16px] font-bold mr-1 text-[#555] dark:text-[#C0C0B0]">{t('price_unit')}</span>
                 {currentPrice.toLocaleString()}
-                <span className="text-[16px] font-bold ml-1 text-[#555] dark:text-[#C0C0B0]">{t('price_unit')}</span>
               </>
             ) : '--'}
           </p>
@@ -469,7 +472,7 @@ export function StationDetail({ id }: StationDetailProps) {
             <div className="min-w-0">
               <p className="text-[20px] font-black text-[#000C1F] dark:text-[#FFF8EC] leading-none">
                 {currentPrice != null ? (
-                  <>{currentPrice.toLocaleString()}<span className="text-[14px] font-semibold text-[#555] dark:text-[#C0C0B0] ml-1">{t('price_unit')}</span></>
+                  <><span className="text-[14px] font-semibold text-[#555] dark:text-[#C0C0B0] mr-1">{t('price_unit')}</span>{currentPrice.toLocaleString()}</>
                 ) : '--'}
               </p>
               <p className="text-[11px] text-[#555] dark:text-[#C0C0B0] mt-1 truncate">

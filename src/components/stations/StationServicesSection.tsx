@@ -269,7 +269,7 @@ function FeaturedServiceCard({
                   </div>
                   <div className="mt-1.5 flex items-baseline gap-1.5">
                     <span className="text-[14px] font-black text-gold leading-none">
-                      {entry.price.toLocaleString()}$
+                      ${entry.price.toLocaleString()}
                     </span>
                     <span className="text-[10.5px] font-bold text-[#888] dark:text-[#888]">
                       · {entry.duration} min
@@ -355,7 +355,7 @@ function OtherServiceCard({ service, locale, onSelect }: OtherServiceCardProps) 
       <div className="flex flex-col items-end gap-1.5 shrink-0">
         {price != null && (
           <span className="text-[20px] font-black text-gold leading-none">
-            {price.toLocaleString()}$
+            ${price.toLocaleString()}
           </span>
         )}
         <span className="text-[10px] font-bold uppercase tracking-wider text-gold bg-gold/10 border border-gold/30 rounded-full px-2.5 py-0.5">

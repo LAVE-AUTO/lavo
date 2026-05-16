@@ -23,6 +23,8 @@ export interface Station {
   latitude?: number;
   longitude?: number;
   isOpen?: boolean;
+  /** Distance from the user in km, computed server-side when near_lat/near_lng are passed. */
+  distanceKm?: number;
 }
 
 /**

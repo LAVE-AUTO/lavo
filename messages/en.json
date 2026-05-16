@@ -901,7 +901,7 @@
         "payment_expiry": "Expiration",
         "payment_cvc": "CVC",
         "payment_processing": "Processing...",
-        "payment_confirm": "Confirm and pay {amount}$",
+        "payment_confirm": "Confirm and pay ${amount}",
         "result_success_title": "Payment successful!",
         "result_success_desc": "Your booking has been confirmed. You will receive a confirmation email shortly.",
         "result_error_title": "Payment failed",
@@ -2543,7 +2543,7 @@
         "pay_title": "Confirm payment",
         "pay_subtitle": "Enter your card to finalise the tip.",
         "payment_secured": "Secure payment by Stripe",
-        "btn_pay": "Pay {amount} $"
+        "btn_pay": "Pay ${amount}"
     },
     "signal_delay": {
         "page_title": "Signal a delay",

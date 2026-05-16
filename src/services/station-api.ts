@@ -26,6 +26,7 @@ interface ApiStationListItem {
     verified?: boolean;
     queue_count?: number;
     opening_hours?: { open: string; close: string } | null;
+    distance_km?: number | null;
     [key: string]: unknown;
 }
 
@@ -207,6 +208,7 @@ function mapApiStationToStation(s: ApiStationListItem): Station {
         tags: [],
         latitude: Number.isFinite(lat) ? lat : undefined,
         longitude: Number.isFinite(lng) ? lng : undefined,
+        distanceKm: (s.distance_km != null && Number.isFinite(s.distance_km)) ? s.distance_km : undefined,
         isOpen: s.is_open,
         description: s.description || undefined,
         imageUrl: s.image_url ?? undefined,

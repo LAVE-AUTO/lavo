@@ -148,27 +148,27 @@ export function BookingReceipt({
                 <div className="text-[14px] font-bold truncate">{serviceName}</div>
                 {formatLabel && <div className="text-[12px] text-[#888]">{formatLabel}</div>}
               </div>
-              <div className="text-[14px] font-mono shrink-0">{servicePrice.toLocaleString()} $</div>
+              <div className="text-[14px] font-mono shrink-0">${servicePrice.toLocaleString()}</div>
             </div>
 
             {extras.map((ex) => (
               <div key={ex.id} className="flex items-baseline justify-between gap-3 text-[13px] text-[#555]">
                 <span className="truncate">+ {ex.name}</span>
-                <span className="font-mono shrink-0">{ex.price.toLocaleString()} $</span>
+                <span className="font-mono shrink-0">${ex.price.toLocaleString()}</span>
               </div>
             ))}
 
             {surchargeAmount > 0 && (
               <div className="flex items-baseline justify-between gap-3 text-[13px] text-[#555]">
                 <span>{t('receipt_reservation_surcharge')}</span>
-                <span className="font-mono shrink-0">{surchargeAmount.toLocaleString()} $</span>
+                <span className="font-mono shrink-0">${surchargeAmount.toLocaleString()}</span>
               </div>
             )}
 
             {extrasTotal > 0 || surchargeAmount > 0 ? (
               <div className="flex items-baseline justify-between gap-3 text-[12px] text-[#888] pt-1">
                 <span>{t('receipt_subtotal')}</span>
-                <span className="font-mono">{(servicePrice + extrasTotal + surchargeAmount).toLocaleString()} $</span>
+                <span className="font-mono">${(servicePrice + extrasTotal + surchargeAmount).toLocaleString()}</span>
               </div>
             ) : null}
           </div>
@@ -178,7 +178,7 @@ export function BookingReceipt({
             <span className="text-[13px] font-black uppercase tracking-wider text-[#0A0A14]">
               {t('receipt_total')}
             </span>
-            <span className="text-[20px] font-black text-gold">{grandTotal.toLocaleString()} $</span>
+            <span className="text-[20px] font-black text-gold">${grandTotal.toLocaleString()}</span>
           </div>
 
           {/* Ticket code */}

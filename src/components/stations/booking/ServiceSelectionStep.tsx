@@ -126,7 +126,7 @@ export function ServiceSelectionStep({
                     {price != null && (
                       <div className="text-right shrink-0">
                         <span className="text-[11px] text-[#888] dark:text-[#888]">{t('service_from')}</span>
-                        <div className="text-[18px] font-black text-gold">{price.toLocaleString()}$</div>
+                        <div className="text-[18px] font-black text-gold">${price.toLocaleString()}</div>
                       </div>
                     )}
                   </div>

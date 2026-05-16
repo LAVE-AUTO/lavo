@@ -360,7 +360,7 @@ export function ArrivalStep({
                 </span>
                 {serviceBasePrice > 0 && (
                   <span className="ml-2 text-[13px] font-black text-gold">
-                    {serviceBasePrice.toLocaleString()}$
+                    ${serviceBasePrice.toLocaleString()}
                   </span>
                 )}
               </div>
@@ -535,12 +535,12 @@ export function ArrivalStep({
                 </span>
                 {serviceBasePrice > 0 && (
                   <span className="text-[13px] font-black text-gold">
-                    {(serviceBasePrice + (reservationSurcharge ?? 0)).toLocaleString()}$
+                    ${(serviceBasePrice + (reservationSurcharge ?? 0)).toLocaleString()}
                   </span>
                 )}
                 {reservationSurcharge != null && reservationSurcharge > 0 && (
                   <span className="text-[11px] font-bold px-1.5 py-0.5 rounded-full bg-gold/15 text-gold border border-gold/30">
-                    +{reservationSurcharge.toLocaleString()}$ {t('arrival_surcharge_label')}
+                    +${reservationSurcharge.toLocaleString()} {t('arrival_surcharge_label')}
                   </span>
                 )}
               </div>

@@ -96,7 +96,7 @@ function StripeCardForm({ grandTotal, clientSecret, onConfirm, onBack }: StripeC
 
         <div className="bg-gold/10 dark:bg-gold/5 border-2 border-gold rounded-xl p-4 flex justify-between items-center">
           <span className="text-[15px] font-bold text-[#000C1F] dark:text-[#FFF8EC]">{t('ticket_total')}</span>
-          <span className="text-[20px] font-black text-gold">{grandTotal}$</span>
+          <span className="text-[20px] font-black text-gold">${grandTotal}</span>
         </div>
       </div>
 
@@ -154,7 +154,7 @@ function QueueConfirmForm({ grandTotal, onConfirm, onBack }: { grandTotal: numbe
         <p className="text-[14px] text-[#555] dark:text-[#B0B0A0]">{t('payment_queue_subtitle')}</p>
         <div className="bg-gold/10 dark:bg-gold/5 border-2 border-gold rounded-xl p-4 flex justify-between items-center">
           <span className="text-[15px] font-bold text-[#000C1F] dark:text-[#FFF8EC]">{t('ticket_total')}</span>
-          <span className="text-[20px] font-black text-gold">{grandTotal}$</span>
+          <span className="text-[20px] font-black text-gold">${grandTotal}</span>
         </div>
       </div>
 

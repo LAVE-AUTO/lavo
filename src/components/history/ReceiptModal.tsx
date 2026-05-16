@@ -487,11 +487,11 @@ export function ReceiptModal({ entry: e, locale, onClose }: ReceiptModalProps) {
               <div class="item-title">${escapeHtml(serviceLabel)}</div>
               <div class="item-sub">${escapeHtml(typeLabel)}</div>
             </td>
-            <td class="amount-cell">${subtotal.toFixed(2)} $</td>
+            <td class="amount-cell">$${subtotal.toFixed(2)}</td>
           </tr>
           ${tipAmount > 0 ? `<tr>
             <td><div class="item-title">${escapeHtml(t('receipt_tip'))}</div></td>
-            <td class="amount-cell amount-secondary">${tipAmount.toFixed(2)} $</td>
+            <td class="amount-cell amount-secondary">$${tipAmount.toFixed(2)}</td>
           </tr>` : ''}
           <tr>
             <td><div class="item-title item-secondary">${t('receipt_status')}</div></td>
@@ -503,11 +503,11 @@ export function ReceiptModal({ entry: e, locale, onClose }: ReceiptModalProps) {
       <div class="total-block">
         ${tipAmount > 0 ? `<div class="subtotal-line">
           <span class="subtotal-label">${t('receipt_subtotal_line')}</span>
-          <span class="subtotal-amount">${subtotal.toFixed(2)} $</span>
+          <span class="subtotal-amount">$${subtotal.toFixed(2)}</span>
         </div>` : ''}
         <div class="total-line">
           <span class="total-label">${t('receipt_total')}</span>
-          <span class="total-amount">${e.amountPaid.toFixed(2)} $</span>
+          <span class="total-amount">$${e.amountPaid.toFixed(2)}</span>
         </div>
       </div>
 
@@ -609,13 +609,13 @@ export function ReceiptModal({ entry: e, locale, onClose }: ReceiptModalProps) {
                     <div className="text-[13px] font-bold text-[#0A0A14] dark:text-white truncate">{serviceLabel}</div>
                     <div className="text-[11px] text-[#888] dark:text-[#9A9A8A] mt-0.5">{typeLabel}</div>
                   </div>
-                  <span className="text-[13px] font-mono font-bold text-[#0A0A14] dark:text-white whitespace-nowrap">{subtotal.toFixed(2)}$</span>
+                  <span className="text-[13px] font-mono font-bold text-[#0A0A14] dark:text-white whitespace-nowrap">${subtotal.toFixed(2)}</span>
                 </div>
                 {/* Tip line (only when present) */}
                 {tipAmount > 0 && (
                   <div className="flex items-start justify-between gap-4 px-3.5 py-3 border-b border-[#E0E0D0] dark:border-tab-inactive">
                     <div className="text-[13px] font-semibold text-[#555] dark:text-[#C0C0B0]">{t('receipt_tip')}</div>
-                    <span className="text-[13px] font-mono font-semibold text-[#555] dark:text-[#C0C0B0] whitespace-nowrap">{tipAmount.toFixed(2)}$</span>
+                    <span className="text-[13px] font-mono font-semibold text-[#555] dark:text-[#C0C0B0] whitespace-nowrap">${tipAmount.toFixed(2)}</span>
                   </div>
                 )}
                 {/* Status row */}
@@ -633,12 +633,12 @@ export function ReceiptModal({ entry: e, locale, onClose }: ReceiptModalProps) {
               {tipAmount > 0 && (
                 <div className="flex items-center justify-between">
                   <span className="text-[11px] font-semibold text-[#7a9a7d] uppercase tracking-wider">{t('receipt_subtotal_line')}</span>
-                  <span className="text-[13px] font-mono text-[#C0C0B0] whitespace-nowrap">{subtotal.toFixed(2)}$</span>
+                  <span className="text-[13px] font-mono text-[#C0C0B0] whitespace-nowrap">${subtotal.toFixed(2)}</span>
                 </div>
               )}
               <div className="flex items-center justify-between">
                 <span className="text-[12px] font-bold text-[#7a9a7d] uppercase tracking-widest">{t('receipt_total')}</span>
-                <span className="text-[26px] font-black text-gold leading-none whitespace-nowrap">{e.amountPaid.toFixed(2)}$</span>
+                <span className="text-[26px] font-black text-gold leading-none whitespace-nowrap">${e.amountPaid.toFixed(2)}</span>
               </div>
             </div>
 

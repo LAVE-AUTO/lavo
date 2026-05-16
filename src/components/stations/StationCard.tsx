@@ -24,11 +24,12 @@ export function StationCard({ station, unavailable = false }: StationCardProps) 
   const [imgFailed, setImgFailed] = useState(false);
 
   const distanceLabel = (() => {
-    if (!userLocation || station.latitude == null || station.longitude == null) return null;
-    const km = haversineKm(
-      userLocation.latitude, userLocation.longitude,
-      station.latitude,      station.longitude,
-    );
+    const km = station.distanceKm != null
+      ? station.distanceKm
+      : (userLocation && station.latitude != null && station.longitude != null)
+        ? haversineKm(userLocation.latitude, userLocation.longitude, station.latitude, station.longitude)
+        : null;
+    if (km == null) return null;
     if (km < 1) return t('distance_m', { distance: Math.round(km * 1000) });
     return t('distance_km', { distance: km.toFixed(1) });
   })();
@@ -96,7 +97,7 @@ export function StationCard({ station, unavailable = false }: StationCardProps) 
           </h3>
           {station.priceFrom != null && (
             <span className="text-[18px] font-bold text-gold shrink-0">
-              {station.priceFrom.toLocaleString()} <span className="text-[13px] font-semibold">{t('price_unit')}</span>
+              <span className="text-[13px] font-semibold">{t('price_unit')}</span>{station.priceFrom.toLocaleString()}
             </span>
           )}
         </div>

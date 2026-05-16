@@ -22,6 +22,7 @@ const VALID_SORT_TOKENS = [
   'rating_asc', 'rating_desc',
   'total_ratings_asc', 'total_ratings_desc',
   'completed_count_asc', 'completed_count_desc',
+  'distance_asc', 'distance_desc',
 ] as const;
 
 const VALID_SORT_MESSAGE =

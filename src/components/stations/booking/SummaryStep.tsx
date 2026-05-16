@@ -93,7 +93,7 @@ export function SummaryStep({
           {selectedEntry?.vehicleFormatId && (
             <div className="flex justify-between text-[14px]">
               <span className="text-[#555] dark:text-[#B0B0A0]">{entryLabel}</span>
-              <span className="text-[#000C1F] dark:text-[#FFF8EC] font-bold">{entryPrice.toLocaleString()}$</span>
+              <span className="text-[#000C1F] dark:text-[#FFF8EC] font-bold">${entryPrice.toLocaleString()}</span>
             </div>
           )}
 
@@ -101,14 +101,14 @@ export function SummaryStep({
           {!selectedEntry?.vehicleFormatId && entryPrice > 0 && (
             <div className="flex justify-between text-[14px]">
               <span className="text-[#555] dark:text-[#B0B0A0]">{t('summary_base_price')}</span>
-              <span className="text-[#000C1F] dark:text-[#FFF8EC] font-bold">{entryPrice.toLocaleString()}$</span>
+              <span className="text-[#000C1F] dark:text-[#FFF8EC] font-bold">${entryPrice.toLocaleString()}</span>
             </div>
           )}
 
           {selectedExtras.map((extra) => (
             <div key={extra.id} className="flex justify-between text-[13px]">
               <span className="text-[#555] dark:text-[#B0B0A0]">+ {extra.name}</span>
-              <span className="text-[#555] dark:text-[#B0B0A0]">{extra.price.toLocaleString()}$</span>
+              <span className="text-[#555] dark:text-[#B0B0A0]">${extra.price.toLocaleString()}</span>
             </div>
           ))}
 
@@ -116,7 +116,7 @@ export function SummaryStep({
           {arrivalMode === 'book_slot' && reservationSurcharge != null && reservationSurcharge > 0 && (
             <div className="flex justify-between text-[13px] border-t border-[#D0D0C0] dark:border-tab-inactive pt-2 mt-1">
               <span className="text-[#555] dark:text-[#B0B0A0]">{t('summary_reservation_surcharge')}</span>
-              <span className="text-gold font-bold">+{reservationSurcharge.toLocaleString()}$</span>
+              <span className="text-gold font-bold">+${reservationSurcharge.toLocaleString()}</span>
             </div>
           )}
         </div>
@@ -137,7 +137,7 @@ export function SummaryStep({
           </div>
           <div className="flex justify-between text-[18px]">
             <span className="font-black text-[#000C1F] dark:text-[#FFF8EC]">{t('ticket_total')}</span>
-            <span className="font-black text-gold">{grandTotal.toLocaleString()}$</span>
+            <span className="font-black text-gold">${grandTotal.toLocaleString()}</span>
           </div>
         </div>
       </div>
