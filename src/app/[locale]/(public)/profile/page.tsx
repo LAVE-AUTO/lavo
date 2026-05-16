@@ -334,11 +334,6 @@ export default function ProfilePage() {
         <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2z"/><path d="M8 12h8M12 8v8"/>
       </svg>
     )},
-    { label: t('stats_spent'),  value: totalSpentLabel, icon: (
-      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-        <line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 000 7h5a3.5 3.5 0 010 7H6"/>
-      </svg>
-    )},
     { label: t('stats_since'),  value: memberSinceLabel, icon: (
       <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
         <rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/>
@@ -436,8 +431,8 @@ export default function ProfilePage() {
             </svg>
           </Link>
 
-          {/* Stats row - live from /me/entries (completed count, total spent, member since) */}
-          <div className="grid grid-cols-3 gap-3 mt-5 pt-5 border-t border-[rgba(200,152,10,0.1)]">
+          {/* Stats row - live from /me/entries (completed count, member since) */}
+          <div className="grid grid-cols-2 gap-3 mt-5 pt-5 border-t border-[rgba(200,152,10,0.1)]">
             {statsRow.map(({ label, value, icon }) => (
               <div key={label} className="flex flex-col items-center gap-1.5 text-center">
                 <div className="w-9 h-9 rounded-xl bg-gold/10 text-[#c8980a] flex items-center justify-center">
