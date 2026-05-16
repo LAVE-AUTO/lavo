@@ -203,38 +203,37 @@ export function StationFilters({
 
           {/* Distance */}
           <FilterRow label={t('filter_distance_label')}>
-            {hasLocation ? (
-              <div className="flex flex-wrap gap-2">
+            <div className="flex flex-wrap gap-2">
+              <button
+                type="button"
+                onClick={() => patch({ maxDistanceKm: 0 })}
+                className={[
+                  'py-1.5 px-3.5 rounded-full text-[13px] font-bold border transition-colors',
+                  value.maxDistanceKm === 0
+                    ? 'bg-gold text-dark-bg border-gold'
+                    : 'bg-[#F5F5EE] dark:bg-tab-inactive text-[#1A1A1A] dark:text-white border-[#E0E0D0] dark:border-tab-inactive hover:border-gold',
+                ].join(' ')}
+              >
+                {t('filter_distance_all')}
+              </button>
+              {DISTANCE_PRESETS.map((km) => (
                 <button
+                  key={km}
                   type="button"
-                  onClick={() => patch({ maxDistanceKm: 0 })}
+                  onClick={() => patch({ maxDistanceKm: km })}
                   className={[
                     'py-1.5 px-3.5 rounded-full text-[13px] font-bold border transition-colors',
-                    value.maxDistanceKm === 0
+                    value.maxDistanceKm === km
                       ? 'bg-gold text-dark-bg border-gold'
                       : 'bg-[#F5F5EE] dark:bg-tab-inactive text-[#1A1A1A] dark:text-white border-[#E0E0D0] dark:border-tab-inactive hover:border-gold',
                   ].join(' ')}
                 >
-                  {t('filter_distance_all')}
+                  {t('filter_distance_km', { distance: km })}
                 </button>
-                {DISTANCE_PRESETS.map((km) => (
-                  <button
-                    key={km}
-                    type="button"
-                    onClick={() => patch({ maxDistanceKm: km })}
-                    className={[
-                      'py-1.5 px-3.5 rounded-full text-[13px] font-bold border transition-colors',
-                      value.maxDistanceKm === km
-                        ? 'bg-gold text-dark-bg border-gold'
-                        : 'bg-[#F5F5EE] dark:bg-tab-inactive text-[#1A1A1A] dark:text-white border-[#E0E0D0] dark:border-tab-inactive hover:border-gold',
-                    ].join(' ')}
-                  >
-                    {t('filter_distance_km', { distance: km })}
-                  </button>
-                ))}
-              </div>
-            ) : (
-              <p className="text-[12.5px] text-[#9A9A8A] dark:text-[#707068] italic px-1">
+              ))}
+            </div>
+            {!hasLocation && (
+              <p className="mt-2 text-[12px] text-[#9A9A8A] dark:text-[#707068] italic">
                 {t('filter_distance_no_location')}
               </p>
             )}
