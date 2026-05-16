@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { useTranslations } from 'next-intl';
-import { postWithApi, updateWithApi } from '@/services';
+import { patchWithApi, postWithApi } from '@/services';
 import { TextField } from '@/components/station/config/TextField';
 import { Textarea } from '@/components/station/config/Textarea';
 import { NumberStepper } from '@/components/station/config/NumberStepper';
@@ -196,20 +196,65 @@ export function ServiceModal({ service, vehicleFormats, availableExtras, onClose
       },
     ];
 
+    const editHandWashEntries = entries
+      .filter((entry) => selectedFormatIds.includes(entry.vehicle_format_id))
+      .map((entry) => ({
+        vehicle_format_id: entry.vehicle_format_id,
+        vehicle_label: entry.vehicle_label,
+        price: entry.price,
+        duration_min: Math.max(1, Number(entry.duration_min) || 1),
+        staff_required: 0,
+        is_active: true,
+      }));
+
+    if (isEdit && category === 'hand_wash') {
+      if (editHandWashEntries.length === 0) {
+        setSaving(false);
+        setError(t('format_not_in_list'));
+        return;
+      }
+      const hasInvalidPrice = editHandWashEntries.some((entry) => {
+        const n = parseFloat(String(entry.price));
+        return !Number.isFinite(n) || n <= 0;
+      });
+      if (hasInvalidPrice) {
+        setSaving(false);
+        setError(t('price_error_positive'));
+        return;
+      }
+    }
+
     const payloadEntries = category === 'automatic'
       ? automaticModeEntries
       : category === 'self_service'
       ? selfServiceEntries
       : isEdit
-      ? entries.map((entry) => ({
-          vehicle_format_id: entry.vehicle_format_id,
-          vehicle_label: entry.vehicle_label,
-          price: entry.price,
-          duration_min: entry.duration_min,
-          staff_required: 0,
-          is_active: selectedFormatIds.includes(entry.vehicle_format_id),
-        }))
+      ? editHandWashEntries
       : createModeEntries;
+
+    if (payloadEntries.length === 0) {
+      setSaving(false);
+      setError(t('format_not_in_list'));
+      return;
+    }
+
+    const hasInvalidEntry = payloadEntries.some((entry) => {
+      const label = String(entry.vehicle_label ?? '').trim();
+      const price = parseFloat(String(entry.price));
+      const duration = Number(entry.duration_min);
+      return (
+        label.length === 0 ||
+        !Number.isFinite(price) ||
+        price <= 0 ||
+        !Number.isFinite(duration) ||
+        duration < 1
+      );
+    });
+    if (hasInvalidEntry) {
+      setSaving(false);
+      setError(t('price_error_positive'));
+      return;
+    }
 
     const payload = {
       name: isEdit ? name.trim() : computedCreateName,
@@ -223,7 +268,7 @@ export function ServiceModal({ service, vehicleFormats, availableExtras, onClose
     };
 
     const [ok, data] = service
-      ? await updateWithApi(`/station/services/${service.id}`, payload)
+      ? await patchWithApi(`/station/services/${service.id}`, payload)
       : await postWithApi('/station/services', payload);
 
     setSaving(false);
@@ -347,7 +392,7 @@ export function ServiceModal({ service, vehicleFormats, availableExtras, onClose
         </div>
 
         <form onSubmit={handleSubmit} className="flex flex-1 flex-col overflow-hidden">
-          <div className="grid flex-1 grid-cols-1 gap-4 overflow-y-auto p-5 lg:grid-cols-[1fr_320px]">
+          <div className="hover-scrollbar grid flex-1 grid-cols-1 gap-4 overflow-y-auto p-5 lg:grid-cols-[1fr_320px]">
             {/* Left form */}
             <div className="space-y-4">
               {isEdit && (

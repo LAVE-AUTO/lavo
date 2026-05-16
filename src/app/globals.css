@@ -529,6 +529,38 @@ button,
     transform: translateY(0);
 }
 
+/* Scrollbar appears only on hover/focus for dense modal panes. */
+.hover-scrollbar {
+    scrollbar-width: none; /* Firefox */
+}
+
+.hover-scrollbar::-webkit-scrollbar {
+    width: 0;
+    height: 0;
+}
+
+.hover-scrollbar:hover,
+.hover-scrollbar:focus-within {
+    scrollbar-width: thin; /* Firefox */
+}
+
+.hover-scrollbar:hover::-webkit-scrollbar,
+.hover-scrollbar:focus-within::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+}
+
+.hover-scrollbar:hover::-webkit-scrollbar-track,
+.hover-scrollbar:focus-within::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+.hover-scrollbar:hover::-webkit-scrollbar-thumb,
+.hover-scrollbar:focus-within::-webkit-scrollbar-thumb {
+    background: rgba(148, 148, 132, 0.55);
+    border-radius: 999px;
+}
+
 
 /* Responsive font scaling for admin and station dashboards.
    Targets .app-shell (set on AdminShell and StationShell roots) so the
@@ -548,4 +580,3 @@ button,
     .app-shell .text-\[12px\] { font-size: 14px; }
     .app-shell .text-\[13px\] { font-size: 15px; }
 }
-
