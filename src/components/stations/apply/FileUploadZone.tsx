@@ -112,10 +112,10 @@ export function FileUploadZone({ label, hint, required, value, onChange, error }
         {label}
         {required && <span className="text-gold ml-0.5">*</span>}
       </p>
-      <p className="text-[13px] text-[#888] dark:text-lavo-muted mb-2">{hint}</p>
+      <p className="text-[13px] text-[#888] dark:text-Hurryline-muted mb-2">{hint}</p>
 
       {value ? (
-        <div className="flex items-center gap-3 px-4 py-3 bg-lavo-success/5 border border-lavo-success/30 rounded-lg">
+        <div className="flex items-center gap-3 px-4 py-3 bg-Hurryline-success/5 border border-Hurryline-success/30 rounded-lg">
           <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#00C851" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
             <path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z" />
             <polyline points="14 2 14 8 20 8" />
@@ -124,7 +124,7 @@ export function FileUploadZone({ label, hint, required, value, onChange, error }
           <button
             type="button"
             onClick={() => onChange(null)}
-            className="text-[13px] font-semibold text-lavo-error hover:text-[#C03010] transition-colors shrink-0"
+            className="text-[13px] font-semibold text-Hurryline-error hover:text-[#C03010] transition-colors shrink-0"
           >
             {t('file_remove')}
           </button>
@@ -144,14 +144,14 @@ export function FileUploadZone({ label, hint, required, value, onChange, error }
             isDragging
               ? 'border-gold bg-gold/5'
               : displayError
-              ? 'border-lavo-error bg-[#FFF8F7] dark:bg-[#2A1A18]'
+              ? 'border-Hurryline-error bg-[#FFF8F7] dark:bg-[#2A1A18]'
               : 'border-[#CCCCCC] dark:border-[#2A3826] hover:border-gold dark:hover:border-gold bg-white dark:bg-dark-card',
           ].join(' ')}
         >
           {isUploading ? (
             <>
               <div className="w-5 h-5 border-2 border-gold border-t-transparent rounded-full animate-spin" aria-hidden="true" />
-              <span className="text-[14px] text-[#888] dark:text-lavo-muted">{t('uploading')}</span>
+              <span className="text-[14px] text-[#888] dark:text-Hurryline-muted">{t('uploading')}</span>
             </>
           ) : (
             <>
@@ -160,14 +160,14 @@ export function FileUploadZone({ label, hint, required, value, onChange, error }
                 <polyline points="17 8 12 3 7 8" />
                 <line x1="12" y1="3" x2="12" y2="15" />
               </svg>
-              <span className="text-[14px] text-[#888] dark:text-lavo-muted text-center px-4">{t('drop_or_click')}</span>
+              <span className="text-[14px] text-[#888] dark:text-Hurryline-muted text-center px-4">{t('drop_or_click')}</span>
             </>
           )}
         </div>
       )}
 
       {displayError && (
-        <p role="alert" className="mt-1.5 text-[13px] font-medium text-lavo-error flex items-center gap-1">
+        <p role="alert" className="mt-1.5 text-[13px] font-medium text-Hurryline-error flex items-center gap-1">
           <span aria-hidden="true">!</span>
           {displayError}
         </p>

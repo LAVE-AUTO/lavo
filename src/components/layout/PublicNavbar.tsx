@@ -169,9 +169,7 @@ export function PublicNavbar({
   /* Logo always goes to the landing page regardless of auth state */
   const logoHref = '/' as const;
 
-  /* Nav links shown to logged-in users (desktop). The history page is wired
-   * through a dedicated icon in the right cluster (next to the avatar) so it
-   * stays accessible without crowding the main horizontal links. */
+  /* Nav links shown to logged-in users (desktop). */
   const authNavLinks = isClient
     ? [
         { href: '/stations',             label: t('stations') },
@@ -210,13 +208,13 @@ export function PublicNavbar({
         <div className="max-w-[1440px] mx-auto px-6 lg:px-16 flex items-center justify-between gap-6 py-3">
 
           {/* Logo */}
-          <Link href={logoHref} className="shrink-0" aria-label="Slowtime - Accueil">
+          <Link href={logoHref} className="shrink-0" aria-label="Hurryline - Accueil" suppressHydrationWarning>
             {isDark ? (
               <div className="flex items-center gap-2">
-                <div className="rounded-lg bg-white/95 p-0.5 border border-[rgba(200,152,10,0.25)] shadow-sm shrink-0">
+                <div className="rounded-lg bg-white/95 p-1 border border-[rgba(200,152,10,0.25)] shadow-sm shrink-0">
                   <Image src="/logo/frame2.png" alt="" width={28} height={28} className="w-7 h-7 object-contain" aria-hidden="true" />
                 </div>
-                <span className="font-playfair text-[18px] font-black text-[#c8980a] tracking-[3px]">Slowtime</span>
+                <span className="font-playfair text-[18px] font-black text-[#c8980a] tracking-[3px]">Hurryline</span>
               </div>
             ) : (
               <Image src={lightLogoSrc} alt={t('logo_alt')} width={130} height={34} className="h-9 w-auto object-contain" priority />
@@ -274,7 +272,7 @@ export function PublicNavbar({
                         <path d="M13.73 21a2 2 0 0 1-3.46 0" />
                       </svg>
                       {notifUnreadCount > 0 && (
-                        <span className="absolute -right-1 -top-1 min-w-4 rounded-full bg-[#C49A1E] px-1 text-center text-[10px] font-bold leading-4 text-white">
+                        <span className="absolute -right-1 -top-1 min-w-[18px] h-[18px] rounded-full bg-Hurryline-error px-1 text-center text-[10px] font-black leading-[18px] text-white shadow-sm ring-2 ring-white dark:ring-dark-bg">
                           {notifUnreadCount > 99 ? '99+' : notifUnreadCount}
                         </span>
                       )}
@@ -338,26 +336,6 @@ export function PublicNavbar({
                       </div>
                     )}
                   </div>
-                )}
-                {/* Statements & invoices shortcut for clients (desktop only) */}
-                {isClient && (
-                  <Link
-                    href="/client/history"
-                    aria-label={t('history')}
-                    title={t('history')}
-                    className={`hidden lg:flex w-[34px] h-[34px] items-center justify-center rounded-full border transition-colors ${
-                      pathname.startsWith('/client/history')
-                        ? 'border-[#c8980a] bg-[rgba(200,152,10,0.15)] text-[#c8980a]'
-                        : 'border-[rgba(200,152,10,0.25)] text-[#4a6a4d] dark:text-[#7a9a7d] hover:border-[#c8980a] hover:text-[#c8980a]'
-                    }`}
-                  >
-                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-                      <path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z" />
-                      <polyline points="14 2 14 8 20 8" />
-                      <line x1="9" y1="13" x2="15" y2="13" />
-                      <line x1="9" y1="17" x2="15" y2="17" />
-                    </svg>
-                  </Link>
                 )}
                 {/* Authenticated - avatar + name trigger + dropdown */}
                 <div ref={dropdownRef} className="relative">
@@ -542,9 +520,9 @@ export function PublicNavbar({
       </header>
 
       {/* Spacer - push page content below fixed header (can be disabled per-layout) */}
-      {withTopSpacer && <div className="h-[62px]" aria-hidden="true" />}
+      {withTopSpacer && <div className="h-[60px]" aria-hidden="true" />}
       {/* Extra spacer for mobile bottom nav (can be disabled per-layout) */}
-      {withMobileScrollSpacer && <div className="sm:hidden h-16" aria-hidden="true" />}
+      {withMobileScrollSpacer && <div className="sm:hidden" aria-hidden="true" />}
     </>
   );
 }

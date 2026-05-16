@@ -29,21 +29,43 @@ interface BookingFlowProps {
   station: StationDetailData;
   qrToken?: string | null;
   qrVersion?: '1' | null;
+  /** Service id picked on the station detail screen; pre-selects + skips the service step. */
+  initialServiceId?: string | null;
+  /** Vehicle format entry picked on the station detail screen; pre-selects + skips the format step. */
+  initialFormatEntryId?: string | null;
   onClose: () => void;
 }
 
-export function BookingFlow({ station, qrToken, qrVersion, onClose }: BookingFlowProps) {
+export function BookingFlow({ station, qrToken, qrVersion, initialServiceId, initialFormatEntryId, onClose }: BookingFlowProps) {
   const t = useTranslations('booking');
   const userLocation = useUserLocation();
   const dialogRootRef = useRef<HTMLDivElement | null>(null);
 
-  const [step, setStep] = useState<Step>('service');
+  const initialService = initialServiceId
+    ? station.stationServices.find((s) => s.id === initialServiceId) ?? null
+    : null;
+  const preselectedFormatEntry =
+    initialService && initialService.category === 'hand_wash' && initialFormatEntryId
+      ? initialService.vehicleEntries.find((e) => e.id === initialFormatEntryId) ?? null
+      : null;
+  const initialEntry = initialService
+    ? (initialService.category === 'hand_wash'
+        ? preselectedFormatEntry
+        : initialService.vehicleEntries[0] ?? null)
+    : null;
+  const initialStep: Step = initialService
+    ? (initialService.category === 'hand_wash'
+        ? (preselectedFormatEntry ? 'extras' : 'format')
+        : 'extras')
+    : 'service';
+
+  const [step, setStep] = useState<Step>(initialStep);
   const [paymentResult, setPaymentResult] = useState<'success' | 'error' | null>(null);
   const [ticketCode, setTicketCode] = useState<string | null>(null);
 
   // Booking selections
-  const [selectedService, setSelectedService] = useState<StationServicePublic | null>(null);
-  const [selectedEntry, setSelectedEntry] = useState<StationServiceEntry | null>(null);
+  const [selectedService, setSelectedService] = useState<StationServicePublic | null>(initialService);
+  const [selectedEntry, setSelectedEntry] = useState<StationServiceEntry | null>(initialEntry);
   const [selectedExtraIds, setSelectedExtraIds] = useState<string[]>([]);
 
   // Arrival state
@@ -378,7 +400,7 @@ export function BookingFlow({ station, qrToken, qrVersion, onClose }: BookingFlo
     if (isSuccess) {
       return (
         <div className="flex flex-col items-center px-4 sm:px-6 py-6 gap-4">
-          <div className="w-16 h-16 rounded-full bg-lavo-success/15 flex items-center justify-center">
+          <div className="w-16 h-16 rounded-full bg-Hurryline-success/15 flex items-center justify-center">
             <svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="#00C851" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12" /></svg>
           </div>
 
@@ -410,7 +432,7 @@ export function BookingFlow({ station, qrToken, qrVersion, onClose }: BookingFlo
             />
           )}
 
-          <div className="flex flex-col sm:flex-row gap-2 w-full max-w-md mt-2 lavo-receipt-actions">
+          <div className="flex flex-col sm:flex-row gap-2 w-full max-w-md mt-2 Hurryline-receipt-actions">
             {isQueueNow ? (
               <>
                 <a
@@ -457,7 +479,7 @@ export function BookingFlow({ station, qrToken, qrVersion, onClose }: BookingFlo
 
     return (
       <div className="flex flex-col items-center justify-center text-center px-6 py-12 gap-5">
-        <div className="w-20 h-20 rounded-full bg-lavo-error/15 flex items-center justify-center">
+        <div className="w-20 h-20 rounded-full bg-Hurryline-error/15 flex items-center justify-center">
           <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="#E8472A" strokeWidth="2.5" strokeLinecap="round"><line x1="18" y1="6" x2="6" y2="18" /><line x1="6" y1="6" x2="18" y2="18" /></svg>
         </div>
 

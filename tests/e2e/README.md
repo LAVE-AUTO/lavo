@@ -1,6 +1,6 @@
 # E2E Tests - Playwright
 
-End-to-end tests for the Lavo application. Tests run against a live Next.js
+End-to-end tests for the Hurryline application. Tests run against a live Next.js
 server and cover the critical user flows from browser interaction to visible
 UI result.
 
@@ -29,7 +29,7 @@ UI result.
 To target a different server (e.g. a staging deployment):
 
 ```bash
-PLAYWRIGHT_BASE_URL=https://staging.lavo.cm npm run test:e2e
+PLAYWRIGHT_BASE_URL=https://staging.Hurryline.cm npm run test:e2e
 ```
 
 ## Required environment variables

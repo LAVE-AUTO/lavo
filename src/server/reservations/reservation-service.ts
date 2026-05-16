@@ -29,8 +29,10 @@ import {
 } from '@/server/station/slot-repository';
 import { createPaymentIntent, cancelPaymentIntent, capturePaymentIntent, refundPaymentIntent, distributePenalty, updatePaymentIntentMetadata } from '@/server/payments/payment-service';
 import { cancelReservation } from '@/server/reservations/cancellation-service';
+import { findById } from '@/server/auth/user-repository';
 import { notifyEntry } from '@/server/notifications/notification-service';
 import { notifyStationFeed } from '@/server/notifications/station-feed-notifications';
+import { notifyClientFeed } from '@/server/notifications/client-feed-notifications';
 import { sendEscrowReleasedNotificationsForEntry } from '@/server/notifications/escrow-released-notifications';
 import { findMatchingAvailabilitySlot } from '@/server/station/post-availability-service';
 import { generateTicketCode } from './ticket-code';
@@ -286,15 +288,24 @@ export async function createReservation(
     stationId,
     type: 'reservation_created',
   });
+  await notifyClientFeed({
+    userId,
+    entryId: entry.id,
+    stationId,
+    kind: 'reservation_created',
+    body: 'Votre réservation a été enregistrée. Complétez le paiement pour confirmer.',
+  });
 
   // Note: ticket_code is intentionally omitted from the feed body. It is the
   // client's secret used to authorise service start at the station kiosk; once
   // surfaced in the station feed it loses its verification value.
+  const client = await findById(userId);
+  const clientName = client?.first_name ?? 'Un client';
   await notifyStationFeed({
     stationId,
     entryId: entry.id,
     kind: 'reservation_new',
-    body: `${toDecimal(amountTotal)} $`,
+    body: `${clientName} a réservé un créneau (${toDecimal(amountTotal)} $)`,
   });
 
   return { entry, clientSecret };
@@ -431,13 +442,22 @@ export async function createReservationByStartTime(
     stationId,
     type: 'reservation_created',
   });
+  await notifyClientFeed({
+    userId,
+    entryId: entry.id,
+    stationId,
+    kind: 'reservation_created',
+    body: 'Votre réservation a été enregistrée. Complétez le paiement pour confirmer.',
+  });
 
   // ticket_code intentionally omitted from feed body (see createReservation).
+  const client = await findById(userId);
+  const clientName = client?.first_name ?? 'Un client';
   await notifyStationFeed({
     stationId,
     entryId: entry.id,
     kind: 'reservation_new',
-    body: `${toDecimal(amountTotal)} $`,
+    body: `${clientName} a réservé un créneau (${toDecimal(amountTotal)} $)`,
   });
 
   return { entry, clientSecret };
@@ -464,12 +484,14 @@ export async function cancelEntry(
 
   // Confirmed reservations: full cancellation with Stripe refund and penalty policy.
   if (entry.entry_type === 'reservation' && entry.status === STATUS_CONFIRMED) {
+    const client = await findById(userId);
+    const clientName = client?.first_name ?? 'Un client';
     const result = await cancelReservation(entryId, userId, reason);
     await notifyStationFeed({
       stationId: entry.station_id,
       entryId,
       kind: 'reservation_cancelled_by_client',
-      body: `Client #${userId.slice(0, 4).toUpperCase()}`,
+      body: `${clientName} a annulé sa réservation (${toDecimal(entry.amount_paid)} $)`,
     });
     return {
       entry: result.entry,
@@ -589,6 +611,8 @@ export async function cancelEntry(
       }
     }
 
+    const client = await findById(userId);
+    const clientName = client?.first_name ?? 'Un client';
     await notifyEntry({
       entryId,
       userId,
@@ -596,11 +620,18 @@ export async function cancelEntry(
       type: 'queue_cancelled_by_client',
       payload: { penaltyAmount, refundedAmount },
     });
+    await notifyClientFeed({
+      userId,
+      entryId,
+      stationId: entry.station_id,
+      kind: 'queue_cancelled_by_client',
+      body: "Vous avez annulé votre place dans la file d'attente.",
+    });
     await notifyStationFeed({
       stationId: entry.station_id,
       entryId,
       kind: 'queue_cancelled_by_client',
-      body: `Client #${userId.slice(0, 4).toUpperCase()}`,
+      body: `${clientName} a annulé sa place en file (${toDecimal(entry.amount_paid)} $)`,
     });
     return { entry: updated, penaltyAmount, refundedAmount, isLateCancellation: true };
   }
@@ -632,17 +663,28 @@ export async function cancelEntry(
     }
   }
 
+  const client = await findById(userId);
+  const clientName = client?.first_name ?? 'Un client';
   await notifyEntry({
     entryId,
     userId,
     stationId: entry.station_id,
     type: 'entry_cancelled',
   });
+  await notifyClientFeed({
+    userId,
+    entryId,
+    stationId: entry.station_id,
+    kind: 'entry_cancelled',
+    body: "Votre réservation a été annulée.",
+  });
   await notifyStationFeed({
     stationId: entry.station_id,
     entryId,
     kind: entry.entry_type === 'reservation' ? 'reservation_cancelled_by_client' : 'queue_cancelled_by_client',
-    body: `Client #${userId.slice(0, 4).toUpperCase()}`,
+    body: entry.entry_type === 'reservation'
+      ? `${clientName} a annulé sa réservation (${toDecimal(entry.amount_paid)} $)`
+      : `${clientName} a annulé sa place en file (${toDecimal(entry.amount_paid)} $)`,
   });
   return { entry: updated };
 }
@@ -836,17 +878,26 @@ export async function upgradeQueueToReservation(
     });
   }
 
+  const client = await findById(userId);
+  const clientName = client?.first_name ?? 'Un client';
   await notifyEntry({
     entryId,
     userId,
     stationId,
     type: 'reservation_created',
   });
+  await notifyClientFeed({
+    userId,
+    entryId,
+    stationId,
+    kind: 'reservation_created',
+    body: 'Votre réservation a été enregistrée. Complétez le paiement pour confirmer.',
+  });
   await notifyStationFeed({
     stationId,
     entryId,
     kind: 'queue_upgraded_to_reservation',
-    body: `Client #${userId.slice(0, 4).toUpperCase()} · ${amountTotal.toFixed(2)} $`,
+    body: `${clientName} a converti sa place en réservation (${amountTotal.toFixed(2)} $)`,
   });
 
   return { entry: updated, clientSecret };
@@ -963,17 +1014,26 @@ export async function upgradeQueueToReservationByStartTime(
     });
   }
 
+  const client = await findById(userId);
+  const clientName = client?.first_name ?? 'Un client';
   await notifyEntry({
     entryId,
     userId,
     stationId,
     type: 'reservation_created',
   });
+  await notifyClientFeed({
+    userId,
+    entryId,
+    stationId,
+    kind: 'reservation_created',
+    body: 'Votre réservation a été enregistrée. Complétez le paiement pour confirmer.',
+  });
   await notifyStationFeed({
     stationId,
     entryId,
     kind: 'queue_upgraded_to_reservation',
-    body: `Client #${userId.slice(0, 4).toUpperCase()} · ${amountTotal.toFixed(2)} $`,
+    body: `${clientName} a converti sa place en réservation (${amountTotal.toFixed(2)} $)`,
   });
 
   return { entry: updated, clientSecret };
@@ -1077,8 +1137,10 @@ export async function setEntryStatusByStation(
   // Notify the client of service status changes (best-effort, never block the station UI).
   if (status === 'in_progress') {
     notifyEntry({ entryId, userId: entry.user_id, stationId, type: 'service_started' }).catch(() => {});
+    notifyClientFeed({ userId: entry.user_id, entryId, stationId, kind: 'service_started', body: 'Votre lavage a commencé. Vous serez notifié quand il sera terminé.' }).catch(() => {});
   } else if (status === 'completed') {
     notifyEntry({ entryId, userId: entry.user_id, stationId, type: 'service_completed' }).catch(() => {});
+    notifyClientFeed({ userId: entry.user_id, entryId, stationId, kind: 'service_completed', body: 'Votre lavage est terminé ! Venez récupérer votre véhicule.' }).catch(() => {});
   }
 
   return updated;

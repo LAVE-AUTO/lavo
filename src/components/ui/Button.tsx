@@ -32,7 +32,7 @@ const VARIANT_CLASSES: Record<ButtonVariant, string> = {
   ghost:
     'bg-transparent text-gold hover:text-gold-hover font-semibold transition-colors disabled:opacity-50',
   danger:
-    'bg-lavo-error hover:bg-[#D03020] active:scale-[0.98] disabled:opacity-70 ' +
+    'bg-Hurryline-error hover:bg-[#D03020] active:scale-[0.98] disabled:opacity-70 ' +
     'text-white font-bold rounded-[10px] transition-all duration-150',
 };
 

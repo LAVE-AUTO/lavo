@@ -15,20 +15,20 @@ const geistMono = Geist_Mono({
   subsets: ["latin"],
 });
 
-const APP_URL = process.env.NEXT_PUBLIC_APP_URL ?? 'https://lavo.cm';
+const APP_URL = process.env.NEXT_PUBLIC_APP_URL ?? 'https://Hurryline.cm';
 
 export const metadata: Metadata = {
   title: {
-    default: 'LAVO - Réservation de lavage auto',
-    template: '%s | LAVO',
+    default: 'Hurryline - Réservation de lavage auto',
+    template: '%s | Hurryline',
   },
   description:
-    'LAVO est la plateforme de réservation et de paiement pour stations de lavage auto au Cameroun. Trouvez une station, réservez un créneau et lavez votre véhicule en toute simplicité.',
+    'Hurryline est la plateforme de réservation et de paiement pour stations de lavage auto au Cameroun. Trouvez une station, réservez un créneau et lavez votre véhicule en toute simplicité.',
   metadataBase: new URL(APP_URL),
   openGraph: {
     type: 'website',
-    siteName: 'LAVO',
-    title: 'LAVO - Réservation de lavage auto',
+    siteName: 'Hurryline',
+    title: 'Hurryline - Réservation de lavage auto',
     description:
       'Réservez facilement un créneau dans une station de lavage auto près de chez vous.',
     url: APP_URL,
@@ -37,13 +37,13 @@ export const metadata: Metadata = {
         url: '/og-image.png',
         width: 1200,
         height: 630,
-        alt: 'LAVO - Plateforme de lavage auto',
+        alt: 'Hurryline - Plateforme de lavage auto',
       },
     ],
   },
   twitter: {
     card: 'summary_large_image',
-    title: 'LAVO - Réservation de lavage auto',
+    title: 'Hurryline - Réservation de lavage auto',
     description:
       'Réservez facilement un créneau dans une station de lavage auto près de chez vous.',
     images: ['/og-image.png'],
@@ -63,6 +63,7 @@ export default function RootLayout({
     <html lang="fr" suppressHydrationWarning>
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
+        suppressHydrationWarning
       >
         <GoogleAnalytics />
         <PageSense />

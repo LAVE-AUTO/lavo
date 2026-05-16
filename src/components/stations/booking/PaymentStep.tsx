@@ -90,13 +90,13 @@ function StripeCardForm({ grandTotal, clientSecret, onConfirm, onBack }: StripeC
             />
           </div>
           {stripeError && (
-            <p className="text-[13px] text-lavo-error" role="alert">{stripeError}</p>
+            <p className="text-[13px] text-Hurryline-error" role="alert">{stripeError}</p>
           )}
         </div>
 
         <div className="bg-gold/10 dark:bg-gold/5 border-2 border-gold rounded-xl p-4 flex justify-between items-center">
           <span className="text-[15px] font-bold text-[#000C1F] dark:text-[#FFF8EC]">{t('ticket_total')}</span>
-          <span className="text-[20px] font-black text-gold">{grandTotal}$</span>
+          <span className="text-[20px] font-black text-gold">${grandTotal}</span>
         </div>
       </div>
 
@@ -154,7 +154,7 @@ function QueueConfirmForm({ grandTotal, onConfirm, onBack }: { grandTotal: numbe
         <p className="text-[14px] text-[#555] dark:text-[#B0B0A0]">{t('payment_queue_subtitle')}</p>
         <div className="bg-gold/10 dark:bg-gold/5 border-2 border-gold rounded-xl p-4 flex justify-between items-center">
           <span className="text-[15px] font-bold text-[#000C1F] dark:text-[#FFF8EC]">{t('ticket_total')}</span>
-          <span className="text-[20px] font-black text-gold">{grandTotal}$</span>
+          <span className="text-[20px] font-black text-gold">${grandTotal}</span>
         </div>
       </div>
 
@@ -203,7 +203,7 @@ export function PaymentStep({ grandTotal, clientSecret, onConfirm, onBack }: Pay
     return (
       <div className="flex flex-col h-full">
         <div className="flex-1 flex items-center justify-center py-8 text-center">
-          <p className="text-[14px] text-lavo-error">{t('error_stripe_unavailable')}</p>
+          <p className="text-[14px] text-Hurryline-error">{t('error_stripe_unavailable')}</p>
         </div>
         <div className="border-t border-[#D0D0C0] dark:border-tab-inactive pt-4">
           <button

@@ -1,7 +1,7 @@
 {
   "info": {
-    "name": "LAVO - Support API",
-    "description": "Collection pour les endpoints du module support LAVO.\n\nVariable requise : `base_url` (ex: http://localhost:3000)\nVariable requise : `access_token` (JWT client ou admin selon le groupe testé)\nVariable requise : `ticket_id` (UUID auto-rempli par le script de test de création)\n\n## Groupes\n- **Support - Client** : créer un ticket, lister ses tickets, consulter le détail, ajouter un message\n- **Support - Admin** : lister tous les tickets, changer le statut, assigner un ticket",
+    "name": "Hurryline - Support API",
+    "description": "Collection pour les endpoints du module support Hurryline.\n\nVariable requise : `base_url` (ex: http://localhost:3000)\nVariable requise : `access_token` (JWT client ou admin selon le groupe testé)\nVariable requise : `ticket_id` (UUID auto-rempli par le script de test de création)\n\n## Groupes\n- **Support - Client** : créer un ticket, lister ses tickets, consulter le détail, ajouter un message\n- **Support - Admin** : lister tous les tickets, changer le statut, assigner un ticket",
     "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
   },
   "variable": [

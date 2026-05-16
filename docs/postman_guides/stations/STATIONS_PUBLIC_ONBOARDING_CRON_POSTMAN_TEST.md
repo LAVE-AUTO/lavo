@@ -1,7 +1,7 @@
-## LAVO - Stations (Public + Onboarding + Cron) - Postman Test Guide
+## Hurryline - Stations (Public + Onboarding + Cron) - Postman Test Guide
 
 This guide complements the importable Postman collection:
-- `lavo/docs/postman_guides/stations/lavo-stations-public-onboarding-cron.postman_collection.json`
+- `Hurryline/docs/postman_guides/stations/Hurryline-stations-public-onboarding-cron.postman_collection.json`
 
 It covers:
 
@@ -18,7 +18,7 @@ It covers:
 
 ### Environment variables
 
-Import: `lavo/docs/postman_guides/lavo.local.postman_environment.json`
+Import: `Hurryline/docs/postman_guides/Hurryline.local.postman_environment.json`
 
 Required:
 - **`base_url`**

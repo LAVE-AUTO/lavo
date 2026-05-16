@@ -1,13 +1,13 @@
-## LAVO - Admin Dashboard & Analytics API (Postman Test Guide)
+## Hurryline - Admin Dashboard & Analytics API (Postman Test Guide)
 
 This guide complements the importable Postman collection:
-- `lavo/docs/postman_guides/admin/lavo-admin-dashboard.postman_collection.json`
+- `Hurryline/docs/postman_guides/admin/Hurryline-admin-dashboard.postman_collection.json`
 
 ---
 
 ### Prerequisites
 
-1. A running LAVO server (`npm run dev` or equivalent). Default base URL: `http://localhost:3000`.
+1. A running Hurryline server (`npm run dev` or equivalent). Default base URL: `http://localhost:3000`.
 2. A valid **admin** JWT. Obtain one by authenticating through `POST /api/v1/auth/login` with an account whose role is `admin`, then copy the returned `access_token`.
 3. Postman desktop (v10+) or Postman web.
 
@@ -17,8 +17,8 @@ This guide complements the importable Postman collection:
 
 1. Open Postman.
 2. Click **Import** (top-left).
-3. Drag and drop `lavo-admin-dashboard.postman_collection.json`, or browse to the file.
-4. The collection "LAVO - Admin Dashboard & Analytics API" will appear in your sidebar.
+3. Drag and drop `Hurryline-admin-dashboard.postman_collection.json`, or browse to the file.
+4. The collection "Hurryline - Admin Dashboard & Analytics API" will appear in your sidebar.
 
 ---
 
@@ -28,7 +28,7 @@ The collection defines two collection-level variables. Set them before running a
 
 | Variable | Type | Description |
 |---|---|---|
-| `base_url` | string | Root URL of the LAVO API server. Default: `http://localhost:3000`. Change this to match your environment (staging, production, etc.). |
+| `base_url` | string | Root URL of the Hurryline API server. Default: `http://localhost:3000`. Change this to match your environment (staging, production, etc.). |
 | `access_token` | string | Bearer token of an **admin** user. Paste the JWT value here (without the `Bearer ` prefix). |
 
 To edit collection variables:
@@ -37,7 +37,7 @@ To edit collection variables:
 2. Open the **Variables** tab.
 3. Set the **Current Value** column for `base_url` and `access_token`.
 
-Alternatively, use the shared environment file `lavo/docs/postman_guides/lavo.local.postman_environment.json` - it exposes the same `base_url` and `access_token` keys and will override the collection variables when selected.
+Alternatively, use the shared environment file `Hurryline/docs/postman_guides/Hurryline.local.postman_environment.json` - it exposes the same `base_url` and `access_token` keys and will override the collection variables when selected.
 
 ---
 
@@ -163,7 +163,7 @@ Valid metric slugs:
 |---|---|---|
 | `transactions` | number | Confirmed/paid reservations |
 | `revenue` | string (decimal) | Total gross revenue |
-| `commissions` | string (decimal) | LAVO platform commissions |
+| `commissions` | string (decimal) | Hurryline platform commissions |
 | `registrations` | number | New client accounts created |
 | `stations` | number | New stations activated |
 | `reservations` | number | All reservations (all statuses) |

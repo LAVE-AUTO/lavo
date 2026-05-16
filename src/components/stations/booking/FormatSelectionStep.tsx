@@ -59,7 +59,7 @@ export function FormatSelectionStep({
                     }`}>
                       {selected && <span className="w-2.5 h-2.5 rounded-full bg-[#1a1a1a]" />}
                     </span>
-                    <span className="text-[18px] font-black text-gold">{entry.price.toLocaleString()}$</span>
+                    <span className="text-[18px] font-black text-gold">${entry.price.toLocaleString()}</span>
                   </div>
 
                   {/* Format name */}

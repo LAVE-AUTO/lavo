@@ -14,7 +14,7 @@ type Props = {
 export async function generateMetadata({ params }: Props) {
   const { locale } = await params;
   const t = await getTranslations({ locale, namespace: 'station_login' });
-  return { title: `Slowtime - ${t('meta_title')}` };
+  return { title: `Hurryline - ${t('meta_title')}` };
 }
 
 /**
@@ -47,7 +47,7 @@ export default async function StationLoginPage({ params }: Props) {
 
             {/* Mobile top bar */}
             <div className="flex items-center justify-between mb-5 lg:hidden">
-              <span className="text-[16px] font-bold text-dark-bg dark:text-white tracking-wide">Slowtime</span>
+              <span className="text-[16px] font-bold text-dark-bg dark:text-white tracking-wide">Hurryline</span>
               <div className="flex items-center gap-2">
                 <ThemeToggle />
                 <LangToggle />
@@ -58,7 +58,7 @@ export default async function StationLoginPage({ params }: Props) {
               <h1 className="text-[26px] sm:text-[30px] font-bold text-dark-bg dark:text-white mb-2">
                 {t('welcome_title')}
               </h1>
-              <p className="text-[15px] text-[#555] dark:text-lavo-muted">
+              <p className="text-[15px] text-[#555] dark:text-Hurryline-muted">
                 {t('welcome_subtitle')}
               </p>
             </div>

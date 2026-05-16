@@ -129,12 +129,31 @@ export const stationStartEntryBodySchema = z
   })
   .strict();
 
-/** POST /reservations/:id/reschedule - new time slot id. */
+/** POST /reservations/:id/reschedule
+ *  Accepts either:
+ *    - `new_time_slot_id` (legacy: pre-generated slot row), or
+ *    - `new_start_time`   (modern per-post availability flow; server creates the slot).
+ *  Exactly one must be provided. */
 export const rescheduleBodySchema = z
   .object({
-    new_time_slot_id: z.string().uuid('new_time_slot_id must be a valid UUID'),
+    new_time_slot_id: z.string().uuid('new_time_slot_id must be a valid UUID').optional(),
+    new_start_time: z
+      .string()
+      .datetime({ message: 'new_start_time must be a valid ISO 8601 datetime' })
+      .optional(),
   })
-  .strict();
+  .strict()
+  .superRefine((data, ctx) => {
+    const hasSlot = typeof data.new_time_slot_id === 'string';
+    const hasStart = typeof data.new_start_time === 'string';
+    if (hasSlot === hasStart) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: 'Provide either new_time_slot_id or new_start_time, not both',
+        path: ['new_time_slot_id'],
+      });
+    }
+  });
 
 /** POST /reservations/:id/signal-delay - optional client message. */
 export const signalDelayBodySchema = z

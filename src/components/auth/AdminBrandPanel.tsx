@@ -145,13 +145,13 @@ export function AdminBrandPanel() {
                 <Image src="/logo/frame2.png" alt="" width={36} height={36} className="w-9 h-9 object-contain" aria-hidden="true" />
               </div>
               <div>
-                <span className="text-xl font-bold text-white tracking-wide">Slowtime</span>
+                <span className="text-xl font-bold text-white tracking-wide">Hurryline</span>
                 <p className="text-[10px] font-semibold tracking-[2px] uppercase text-[#C8980A] leading-none">Administration</p>
               </div>
             </div>
           ) : (
             <div>
-              <Image src={lightLogoSrc} alt="Slowtime" width={160} height={44} className="object-contain h-9 w-auto" />
+              <Image src={lightLogoSrc} alt="Hurryline" width={160} height={44} className="object-contain h-9 w-auto" />
               <p className="text-[10px] font-semibold tracking-[2px] uppercase text-[#C8980A] mt-1">Administration</p>
             </div>
           )}

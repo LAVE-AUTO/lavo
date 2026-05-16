@@ -67,7 +67,7 @@ export function SocialButtons({ namespace = 'register' }: SocialButtonsProps) {
     <div>
       <div className="flex items-center gap-3 my-5">
         <div className="flex-1 h-px bg-[#E0E0E0] dark:bg-[#444]" />
-        <span className="text-[12px] font-medium text-[#888] dark:text-lavo-muted tracking-wider uppercase">
+        <span className="text-[12px] font-medium text-[#888] dark:text-Hurryline-muted tracking-wider uppercase">
           {t('or_continue_with')}
         </span>
         <div className="flex-1 h-px bg-[#E0E0E0] dark:bg-[#444]" />

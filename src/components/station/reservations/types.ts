@@ -24,6 +24,11 @@ export interface ReservationEntry {
     first_name: string | null;
     last_name: string | null;
   } | null;
+  /* Denormalised by the rich-station serializer so the merchant card can show
+   * "what was booked" without an extra fetch. */
+  vehicle_format?: { id: string; label: string } | null;
+  slot_start_time?: string | null;
+  slot_end_time?: string | null;
 }
 
 export type StatusTab = 'all' | 'confirmed' | 'in_progress' | 'completed' | 'cancelled' | 'late';

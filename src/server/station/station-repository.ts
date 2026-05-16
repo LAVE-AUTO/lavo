@@ -54,6 +54,10 @@ export type ListActiveStationsFilters = {
   near_lat?: number;
   /** User longitude in degrees; required (with near_lat) to support `distance_asc`/`distance_desc` sort. */
   near_lng?: number;
+  /** Minimum distance from user in km (requires near_lat/near_lng). */
+  distance_min_km?: number;
+  /** Maximum distance from user in km (requires near_lat/near_lng). */
+  distance_max_km?: number;
   /** When true, restricts to stations with is_open=true for today's day_of_week in station_hours. */
   open_today?: boolean;
 };
@@ -77,6 +81,20 @@ function distanceOrderExpr(nearLat: number, nearLng: number) {
   )`;
 }
 
+/** Haversine distance in km between station and user. Returns NULL when station has no coordinates. */
+function distanceKmExpr(nearLat: number, nearLng: number) {
+  return sql<number | null>`(
+    CASE
+      WHEN ${stations.latitude} IS NULL OR ${stations.longitude} IS NULL THEN NULL
+      ELSE 2 * 6371.0 * ASIN(SQRT(
+        POWER(SIN(RADIANS(((${stations.latitude})::float - ${nearLat}::float) / 2)), 2)
+        + COS(RADIANS(${nearLat}::float)) * COS(RADIANS((${stations.latitude})::float))
+          * POWER(SIN(RADIANS(((${stations.longitude})::float - ${nearLng}::float) / 2)), 2)
+      ))
+    END
+  )`;
+}
+
 export type ListActiveStationsResult = {
   rows: StationWithAvailableSlots[];
   total: number;
@@ -92,6 +110,7 @@ export type StationWithAvailableSlots = Station & {
   opening_time: string | null;
   closing_time: string | null;
   min_duration: number | null;
+  distance_km: number | null;
 };
 
 type StationEnrichedRow = Station & {
@@ -103,6 +122,7 @@ type StationEnrichedRow = Station & {
   opening_time: string | null;
   closing_time: string | null;
   min_duration: number | null;
+  distance_km: number | null;
 };
 
 function rowToStationWithSlots(row: StationEnrichedRow): StationWithAvailableSlots {
@@ -134,7 +154,11 @@ function listActiveStationsWhere(
   formatId: string | undefined,
   washTypeIds: string[] | undefined,
   serviceScope: string | undefined,
-  openToday?: boolean
+  openToday?: boolean,
+  nearLat?: number,
+  nearLng?: number,
+  distanceMinKm?: number,
+  distanceMaxKm?: number,
 ) {
   const conditions = [eq(stations.status, 'active')];
   if (city) conditions.push(eq(stations.city, city));
@@ -167,6 +191,11 @@ function listActiveStationsWhere(
     conditions.push(
       sql`EXISTS (SELECT 1 FROM ${stationHours} WHERE ${stationHours.station_id} = ${stations.id} AND ${stationHours.day_of_week} = ${todayDow} AND ${stationHours.is_open} = true)`
     );
+  }
+  if (nearLat != null && nearLng != null) {
+    const distExpr = distanceKmExpr(nearLat, nearLng);
+    if (distanceMinKm != null) conditions.push(sql`${distExpr} >= ${distanceMinKm}`);
+    if (distanceMaxKm != null) conditions.push(sql`${distExpr} <= ${distanceMaxKm}`);
   }
   return conditions.length === 1 ? conditions[0] : and(...conditions);
 }
@@ -232,14 +261,18 @@ function buildOrderBy(
 export async function listActiveStations(
   filters: ListActiveStationsFilters = {}
 ): Promise<ListActiveStationsResult> {
-  const { search, city, sort, page = 1, per_page = 20, format_id, wash_type_ids, service_scope, near_lat, near_lng, open_today } = filters;
+  const { search, city, sort, page = 1, per_page = 20, format_id, wash_type_ids, service_scope, near_lat, near_lng, distance_min_km, distance_max_km, open_today } = filters;
   const searchTerm = search?.trim();
-  const whereClause = listActiveStationsWhere(search, city, format_id, wash_type_ids, service_scope, open_today);
+  const whereClause = listActiveStationsWhere(search, city, format_id, wash_type_ids, service_scope, open_today, near_lat, near_lng, distance_min_km, distance_max_km);
 
   const limit = Math.min(Math.max(1, per_page ?? 20), 100);
   const offset = (Math.max(1, page ?? 1) - 1) * limit;
 
   const orderByList = buildOrderBy(sort, searchTerm, near_lat, near_lng);
+
+  const distKm = (near_lat != null && near_lng != null)
+    ? distanceKmExpr(near_lat, near_lng).as('distance_km')
+    : sql<null>`NULL::float`.as('distance_km');
 
   const baseSelect = db
     .select({
@@ -252,6 +285,7 @@ export async function listActiveStations(
       opening_time: openingTimeExpr.as('opening_time'),
       closing_time: closingTimeExpr.as('closing_time'),
       min_duration: minDurationExpr.as('min_duration'),
+      distance_km: distKm,
     })
     .from(stations)
     .leftJoin(stationStats, eq(stationStats.station_id, stations.id))
@@ -277,9 +311,9 @@ export async function listActiveStationsGroup(
   filters: ListActiveStationsFilters,
   limitPerGroup: number
 ): Promise<StationWithAvailableSlots[]> {
-  const { search, city, sort, format_id, wash_type_ids, service_scope, near_lat, near_lng, open_today } = filters;
+  const { search, city, sort, format_id, wash_type_ids, service_scope, near_lat, near_lng, distance_min_km, distance_max_km, open_today } = filters;
   const searchTerm = search?.trim();
-  const whereClause = listActiveStationsWhere(search, city, format_id, wash_type_ids, service_scope, open_today);
+  const whereClause = listActiveStationsWhere(search, city, format_id, wash_type_ids, service_scope, open_today, near_lat, near_lng, distance_min_km, distance_max_km);
 
   const groupOrder: StationSortCriterion[] =
     group === 'available_now'
@@ -289,6 +323,10 @@ export async function listActiveStationsGroup(
         : ['completed_count_desc', ...(sort ?? [])];
 
   const orderByList = buildOrderBy(groupOrder.length ? groupOrder : undefined, searchTerm, near_lat, near_lng);
+
+  const distKm = (near_lat != null && near_lng != null)
+    ? distanceKmExpr(near_lat, near_lng).as('distance_km')
+    : sql<null>`NULL::float`.as('distance_km');
 
   const baseSelect = () =>
     db
@@ -302,6 +340,7 @@ export async function listActiveStationsGroup(
         opening_time: openingTimeExpr.as('opening_time'),
         closing_time: closingTimeExpr.as('closing_time'),
         min_duration: minDurationExpr.as('min_duration'),
+        distance_km: distKm,
       })
       .from(stations)
       .leftJoin(stationStats, eq(stationStats.station_id, stations.id))

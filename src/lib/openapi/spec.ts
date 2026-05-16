@@ -1,5 +1,5 @@
 /**
- * OpenAPI 3.1 specification definition for the Lavo API.
+ * OpenAPI 3.1 specification definition for the Hurryline API.
  *
  * Centralizes the base swagger definition (info, servers, security schemes,
  * and reusable component schemas). The full spec is assembled at runtime by
@@ -17,14 +17,14 @@ import type { OAS3Definition } from 'swagger-jsdoc';
 export const swaggerDefinition: OAS3Definition = {
   openapi: '3.1.0',
   info: {
-    title: 'Lavo API',
+    title: 'Hurryline API',
     version: '1.0.0',
     description:
-      'REST API for the Lavo car-wash platform. ' +
+      'REST API for the Hurryline car-wash platform. ' +
       'Authentication uses Bearer JWT access tokens issued at login/register. ' +
       'The refresh token is stored in an httpOnly cookie and rotated via POST /api/v1/auth/refresh.',
     contact: {
-      name: 'Lavo Engineering',
+      name: 'Hurryline Engineering',
     },
   },
   servers: [

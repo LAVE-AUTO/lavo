@@ -31,6 +31,7 @@ import {
 import type { TimeSlot } from '@/server/station/slot-repository';
 import { getConfigByStationId } from '@/server/station/config-repository';
 import { notifyEntry } from '@/server/notifications/notification-service';
+import { notifyClientFeed } from '@/server/notifications/client-feed-notifications';
 
 type AffectedEntry = { id: string; user_id: string; station_id: string };
 
@@ -52,16 +53,27 @@ async function notifyAffected(
   type: 'slot_beyond_closing' | 'extra_time_delay',
   extraMinutes: number
 ): Promise<number> {
+  const clientFeedBody = type === 'slot_beyond_closing'
+    ? "Votre créneau dépasse l'heure de fermeture. Vous pouvez annuler pour un remboursement complet."
+    : `Votre rendez-vous a été décalé de ${extraMinutes} min.`;
+
   const results = await Promise.allSettled(
-    entries.map((affected) =>
-      notifyEntry({
+    entries.map(async (affected) => {
+      await notifyEntry({
         entryId: affected.id,
         userId: affected.user_id,
         stationId: affected.station_id,
         type,
         payload: { extra_minutes: extraMinutes },
-      })
-    )
+      });
+      await notifyClientFeed({
+        userId: affected.user_id,
+        entryId: affected.id,
+        stationId: affected.station_id,
+        kind: type,
+        body: clientFeedBody,
+      });
+    })
   );
   let succeeded = 0;
   for (const result of results) {

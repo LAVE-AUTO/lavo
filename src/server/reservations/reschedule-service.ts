@@ -22,7 +22,7 @@
  * A reschedule_request record is always created on success for audit purposes.
  */
 import { db } from '@/lib/db';
-import { rescheduleRequests } from '@/lib/db/schema';
+import { rescheduleRequests, timeSlots as timeSlotsTable } from '@/lib/db/schema';
 import { ConflictError, NotFoundError, SlotFullError } from '@/lib/errors';
 import { MAX_ADVANCE_BOOKING_DAYS } from '@/helpers/constants';
 import { getCancellationPolicy } from '@/server/admin/platform-settings-service';
@@ -34,7 +34,10 @@ import {
   updatePaymentIntentMetadata,
 } from '@/server/payments/payment-service';
 import { notifyEntry } from '@/server/notifications/notification-service';
+import { notifyClientFeed } from '@/server/notifications/client-feed-notifications';
 import { findStationById } from '@/server/station/station-repository';
+import { findMatchingAvailabilitySlot } from '@/server/station/post-availability-service';
+import { findSlotById } from '@/server/station/slot-repository';
 import {
   countReservationsBySlotId,
   incrementSlotBookedCount,
@@ -49,6 +52,7 @@ import {
   updateEntry,
   type Entry,
 } from './entry-repository';
+import { sql as sqlInline } from 'drizzle-orm';
 
 export type RescheduleResult = {
   originalEntry: Entry;
@@ -61,6 +65,97 @@ export type RescheduleResult = {
 };
 
 const RESCHEDULABLE_STATUSES = ['confirmed'] as const;
+
+
+// %%%%% Reschedule by start time %%%%%
+// Modern flow: caller provides an ISO start_time (from /stations/:id/availability).
+// The server picks an active wash post, atomically inserts a new time_slots row,
+// then delegates to rescheduleReservation with the freshly created slot id.
+
+/**
+ * Reschedules a confirmed reservation to a target ISO start_time.
+ * The duration is inferred from the original reservation's slot length.
+ */
+export async function rescheduleReservationByStartTime(
+  reservationId: string,
+  userId: string,
+  newStartTimeIso: string,
+  stationStripeAccountId: string,
+): Promise<RescheduleResult> {
+  const reservation = await findReservationWithSlot(reservationId, userId);
+  if (!reservation) throw new NotFoundError('Reservation not found');
+  if (reservation.entry_type !== 'reservation') {
+    throw new ConflictError('Only reservations can be rescheduled');
+  }
+  if (!(RESCHEDULABLE_STATUSES as readonly string[]).includes(reservation.status)) {
+    throw new ConflictError(`Reservation cannot be rescheduled from status '${reservation.status}'`);
+  }
+
+  /* Duration is inherited from the original slot — same service, same format,
+   * same expected time. Default to 30 min when the original slot is missing. */
+  let durationMin = 30;
+  if (reservation.time_slot_id) {
+    const originalSlot = await findSlotById(reservation.time_slot_id);
+    if (originalSlot?.start_time && originalSlot?.end_time) {
+      durationMin = Math.max(
+        1,
+        Math.round((originalSlot.end_time.getTime() - originalSlot.start_time.getTime()) / 60_000),
+      );
+    }
+  }
+
+  const newStart = new Date(newStartTimeIso);
+  if (Number.isNaN(newStart.getTime())) {
+    throw new ConflictError('Invalid new_start_time');
+  }
+  if (reservation.slotStartTime && newStart.getTime() === reservation.slotStartTime.getTime()) {
+    throw new ConflictError('New time slot is the same as the current one');
+  }
+
+  /* Pre-check (cheap, non-locking): make sure at least one post is free at
+   * `newStart`. The transactional insert below is the source of truth. */
+  const preMatch = await findMatchingAvailabilitySlot(
+    reservation.station_id,
+    newStartTimeIso,
+    durationMin,
+  );
+  if (!preMatch) throw new SlotFullError();
+
+  const endTime = new Date(newStart.getTime() + durationMin * 60_000);
+
+  /* Insert the one-shot time slot inside a short transaction that locks the
+   * station's posts (mirrors createReservationByStartTime). booked_count
+   * starts at 0 so the existing rescheduleReservation flow can lock it,
+   * verify capacity, and increment. */
+  const newSlotId = await db.transaction(async (tx) => {
+    await tx.execute(
+      sqlInline`SELECT id FROM station_posts WHERE station_id = ${reservation.station_id} AND is_active = true FOR UPDATE`,
+    );
+
+    const fresh = await findMatchingAvailabilitySlot(
+      reservation.station_id,
+      newStartTimeIso,
+      durationMin,
+    );
+    if (!fresh) throw new SlotFullError();
+
+    const [slot] = await tx
+      .insert(timeSlotsTable)
+      .values({
+        station_id: reservation.station_id,
+        start_time: newStart,
+        end_time: endTime,
+        capacity: 1,
+        booked_count: 0,
+        status: 'available',
+      })
+      .returning();
+    if (!slot) throw new Error('Insert time slot for reschedule failed');
+    return slot.id;
+  });
+
+  return rescheduleReservation(reservationId, userId, newSlotId, stationStripeAccountId);
+}
 
 /**
  * Reschedules a confirmed reservation to a new time slot.
@@ -342,6 +437,13 @@ export async function rescheduleReservation(
       stationId: reservation.station_id,
       type: 'reservation_rescheduled',
       payload: { isLateCancellation, penaltyAmount, refundedAmount },
+    });
+    await notifyClientFeed({
+      userId,
+      entryId: newEntry.id,
+      stationId: reservation.station_id,
+      kind: 'reservation_rescheduled',
+      body: 'Votre réservation a été déplacée vers un nouveau créneau.',
     });
   } catch (e) {
     console.error('[RESCHEDULE_CLIENT_NOTIFY_FAILED]', {

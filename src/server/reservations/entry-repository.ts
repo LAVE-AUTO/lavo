@@ -839,6 +839,8 @@ export type RichEntry = {
   amount_paid: string;
   created_at: Date;
   updated_at: Date;
+  /** Completion timestamp set when the entry transitions to status='completed'. */
+  completed_at: Date | null;
   station: {
     id: string;
     name: string;
@@ -899,6 +901,7 @@ function mapToRichEntry(r: Record<string, unknown>): RichEntry {
     amount_paid: r.amount_paid as string,
     created_at: r.created_at as Date,
     updated_at: r.updated_at as Date,
+    completed_at: (r.completed_at as Date | null) ?? null,
     station: {
       id: r.station_id as string,
       name: (r.station_name as string | null) ?? '',

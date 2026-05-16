@@ -35,7 +35,7 @@ export function StepperHeader({ currentStep }: StepperHeaderProps) {
                     ? 'bg-gold text-dark-bg'
                     : isActive
                     ? 'bg-gold text-dark-bg ring-4 ring-gold/20'
-                    : 'bg-[#CCCCCC] dark:bg-[#2A3826] text-[#888] dark:text-lavo-muted',
+                    : 'bg-[#CCCCCC] dark:bg-[#2A3826] text-[#888] dark:text-Hurryline-muted',
                 ].join(' ')}
                 aria-current={isActive ? 'step' : undefined}
               >
@@ -49,7 +49,7 @@ export function StepperHeader({ currentStep }: StepperHeaderProps) {
               </div>
               <span className={[
                 'text-[12px] font-semibold tracking-wide whitespace-nowrap',
-                isActive ? 'text-gold' : isDone ? 'text-[#555] dark:text-lavo-muted' : 'text-[#AAAAAA] dark:text-[#3A4A36]',
+                isActive ? 'text-gold' : isDone ? 'text-[#555] dark:text-Hurryline-muted' : 'text-[#AAAAAA] dark:text-[#3A4A36]',
               ].join(' ')}>
                 {t(key)}
               </span>

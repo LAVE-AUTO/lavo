@@ -1,7 +1,7 @@
-## LAVO - Reservations API (Postman Test Guide)
+## Hurryline - Reservations API (Postman Test Guide)
 
 This guide complements the importable Postman collection:
-- `lavo/docs/postman_guides/reservations/lavo-reservations.postman_collection.json`
+- `Hurryline/docs/postman_guides/reservations/Hurryline-reservations.postman_collection.json`
 
 It covers the full reservation lifecycle:
 
@@ -24,7 +24,7 @@ It covers the full reservation lifecycle:
 
 ### Environment variables
 
-Import: `lavo/docs/postman_guides/lavo.local.postman_environment.json`
+Import: `Hurryline/docs/postman_guides/Hurryline.local.postman_environment.json`
 
 Required before running any request:
 
@@ -51,9 +51,9 @@ The `entry_id` variable (already present in the shared environment) must be set 
 ### Import instructions
 
 1. Open Postman and select **Import** from the top-left menu.
-2. Drop `lavo-reservations.postman_collection.json` into the import dialog and confirm.
-3. Select **Environments** in the left sidebar, then import `lavo.local.postman_environment.json`.
-4. Select the **LAVO - Local** environment from the environment dropdown (top-right of Postman).
+2. Drop `Hurryline-reservations.postman_collection.json` into the import dialog and confirm.
+3. Select **Environments** in the left sidebar, then import `Hurryline.local.postman_environment.json`.
+4. Select the **Hurryline - Local** environment from the environment dropdown (top-right of Postman).
 5. Fill in `access_token`, `station_id`, `time_slot_id`, and `vehicle_format_id` before running the first group.
 
 ---

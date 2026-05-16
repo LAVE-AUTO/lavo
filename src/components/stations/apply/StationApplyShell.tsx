@@ -40,7 +40,7 @@ export function StationApplyShell({ washTypes }: StationApplyShellProps) {
 
           {/* Mobile top bar */}
           <div className="flex items-center justify-between mb-5 lg:hidden">
-            <span className="text-[16px] font-bold text-dark-bg dark:text-white tracking-wide">Slowtime</span>
+            <span className="text-[16px] font-bold text-dark-bg dark:text-white tracking-wide">Hurryline</span>
             <div className="flex items-center gap-2">
               <ThemeToggle />
               <LangToggle />
@@ -51,7 +51,7 @@ export function StationApplyShell({ washTypes }: StationApplyShellProps) {
             <h1 className="text-[26px] sm:text-[30px] font-bold text-dark-bg dark:text-white mb-2">
               {t('heading')}
             </h1>
-            <p className="text-[15px] text-[#555] dark:text-lavo-muted">
+            <p className="text-[15px] text-[#555] dark:text-Hurryline-muted">
               {t('subheading')}
             </p>
           </div>

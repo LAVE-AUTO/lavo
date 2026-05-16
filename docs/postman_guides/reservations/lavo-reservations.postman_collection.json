@@ -1,6 +1,6 @@
 {
   "info": {
-    "name": "LAVO - Reservations API",
+    "name": "Hurryline - Reservations API",
     "description": "Collection pour le systeme de reservation incluant la creation, la consultation (user/station), l'annulation, la confirmation de presence, la signalisation de retard, la replanification, et le webhook Stripe.\n\nVariables requises : `base_url`, `access_token`, `station_id`, `time_slot_id`, `vehicle_format_id`, `new_time_slot_id`\nVariables auto-remplies : `reservation_id`, `stripe_client_secret`",
     "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
   },

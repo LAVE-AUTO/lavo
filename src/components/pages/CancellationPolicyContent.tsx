@@ -21,9 +21,9 @@ export function CancellationPolicyContent() {
   const t = useTranslations('cancel_policy');
 
   const tiers = [
-    { delay: t('tier1_delay'), refund: t('tier1_refund'), color: 'text-lavo-success' },
+    { delay: t('tier1_delay'), refund: t('tier1_refund'), color: 'text-Hurryline-success' },
     { delay: t('tier2_delay'), refund: t('tier2_refund'), color: 'text-gold' },
-    { delay: t('tier3_delay'), refund: t('tier3_refund'), color: 'text-lavo-error' },
+    { delay: t('tier3_delay'), refund: t('tier3_refund'), color: 'text-Hurryline-error' },
   ];
 
   return (

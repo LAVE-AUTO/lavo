@@ -2,7 +2,7 @@
 
 import { useMemo } from 'react';
 import { useLocale } from 'next-intl';
-import type { ReservationItem } from './DashboardReservationsPanel';
+import type { ReservationItem } from './types';
 
 interface Props {
   items: ReservationItem[];

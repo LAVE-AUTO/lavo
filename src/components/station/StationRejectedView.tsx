@@ -104,7 +104,7 @@ export function StationRejectedView({ stationName, rejectionReason }: Props) {
     <div className="flex min-h-screen flex-col bg-[#F5F5EE] dark:bg-[#0C1209]">
       {/* Minimal top bar */}
       <div className="flex items-center justify-between border-b border-[#E0DCD0] bg-white px-6 py-3.5 dark:border-[#1A2A14] dark:bg-[#111A0E]">
-        <span className="text-[14px] font-black text-[#1A1A0A] dark:text-[#F0EDD4]">Slowtime</span>
+        <span className="text-[14px] font-black text-[#1A1A0A] dark:text-[#F0EDD4]">Hurryline</span>
         <button type="button" onClick={logout}
           className="flex items-center gap-1.5 rounded-[8px] border border-[#E0DCD0] px-3 py-1.5 text-[13px] font-semibold text-[#888] transition-colors hover:bg-[#F0EDE0] dark:border-[#243020] dark:text-[#9A9A8A]">
           <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">

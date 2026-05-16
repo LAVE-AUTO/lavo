@@ -1,8 +1,8 @@
-# LAVO - Project Summary (Phase 1)
+# Hurryline - Project Summary (Phase 1)
 
 ## Project purpose
 
-LAVO is a full-stack booking and payments platform for car wash stations. Clients can discover stations, book time slots, and pay online; stations manage slots and validate completed services; a Super Admin oversees KYC, disputes, commissions, and platform governance.
+Hurryline is a full-stack booking and payments platform for car wash stations. Clients can discover stations, book time slots, and pay online; stations manage slots and validate completed services; a Super Admin oversees KYC, disputes, commissions, and platform governance.
 
 ## Architecture type
 

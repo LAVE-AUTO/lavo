@@ -1,8 +1,8 @@
 {
   "info": {
     "_postman_id": "2ef04412-e41a-4ece-97a7-12091ab0dd12",
-    "name": "LAVO - Stations (Queue + Formats + Cron)",
-    "description": "Collection pour les endpoints non couverts par lavo-stations et lavo-reservations :\n- **Stations Publiques** : join station (get maps URL)\n- **Onboarding** : upload document (multipart)\n- **Formats** : CRUD formats de vehicule (public GET + station auth PUT/PATCH/DELETE)\n- **Client - File d'attente** : rejoindre la file, voir la file, upgrade vers reservation\n- **Station - Entries** : repositionner une entree dans la file (queue_position), picker un client walk-in\n- **Cron** : sync uploads, downgrade reservations tardives, rappels reservation (5h et 30min)\n\nNOTE : Liste des stations et detail → lavo-stations (Stations Publiques)\nNOTE : Creation reservation, consultation, annulation, confirmation presence → lavo-reservations\n\nRequired: base_url. Optional: station_id, format_id, entry_id, queue_entry_id, time_slot_id, access_token, cron_secret.",
+    "name": "Hurryline - Stations (Queue + Formats + Cron)",
+    "description": "Collection pour les endpoints non couverts par Hurryline-stations et Hurryline-reservations :\n- **Stations Publiques** : join station (get maps URL)\n- **Onboarding** : upload document (multipart)\n- **Formats** : CRUD formats de vehicule (public GET + station auth PUT/PATCH/DELETE)\n- **Client - File d'attente** : rejoindre la file, voir la file, upgrade vers reservation\n- **Station - Entries** : repositionner une entree dans la file (queue_position), picker un client walk-in\n- **Cron** : sync uploads, downgrade reservations tardives, rappels reservation (5h et 30min)\n\nNOTE : Liste des stations et detail → Hurryline-stations (Stations Publiques)\nNOTE : Creation reservation, consultation, annulation, confirmation presence → Hurryline-reservations\n\nRequired: base_url. Optional: station_id, format_id, entry_id, queue_entry_id, time_slot_id, access_token, cron_secret.",
     "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
   },
   "variable": [
@@ -50,7 +50,7 @@
   "item": [
     {
       "name": "Stations Publiques",
-      "description": "Endpoints publics supplementaires. Pour la liste et le detail des stations, voir lavo-stations (groupe Stations Publiques).",
+      "description": "Endpoints publics supplementaires. Pour la liste et le detail des stations, voir Hurryline-stations (groupe Stations Publiques).",
       "item": [
         {
           "name": "Join station - get maps URL (200)",
@@ -94,7 +94,7 @@
     },
     {
       "name": "Onboarding",
-      "description": "Upload uniquement. Pour validate/step1, validate/step2 et submit, voir lavo-stations (groupe Station Onboarding).",
+      "description": "Upload uniquement. Pour validate/step1, validate/step2 et submit, voir Hurryline-stations (groupe Station Onboarding).",
       "item": [
         {
           "name": "Upload document (201)",
@@ -376,7 +376,7 @@
     },
     {
       "name": "Client - File d'attente",
-      "description": "Endpoints file d'attente. Pour consulter ses entrees (avec pagination/filtres) et annuler, voir lavo-reservations.",
+      "description": "Endpoints file d'attente. Pour consulter ses entrees (avec pagination/filtres) et annuler, voir Hurryline-reservations.",
       "item": [
         {
           "name": "Join queue (201)",
@@ -476,7 +476,7 @@
     },
     {
       "name": "Station - Entries",
-      "description": "Repositionnement en file uniquement. Pour lister les entrees et mettre a jour le statut, voir lavo-reservations.",
+      "description": "Repositionnement en file uniquement. Pour lister les entrees et mettre a jour le statut, voir Hurryline-reservations.",
       "item": [
         {
           "name": "PATCH entry position (200)",

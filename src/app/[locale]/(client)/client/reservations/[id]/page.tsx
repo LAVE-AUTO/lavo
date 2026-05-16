@@ -280,10 +280,10 @@ export default function ReservationDetailPage() {
   });
 
   const statusColors: Record<string, string> = {
-    confirmed:       'bg-lavo-success/15 text-lavo-success',
+    confirmed:       'bg-Hurryline-success/15 text-Hurryline-success',
     in_progress:     'bg-gold/15 text-gold',
     completed:       'bg-[#999]/15 text-[#666]',
-    cancelled:       'bg-lavo-error/15 text-lavo-error',
+    cancelled:       'bg-Hurryline-error/15 text-Hurryline-error',
   };
   /* Hide the internal `pending_payment` / `pending` lifecycle from the UI:
    * once the booking exists the client has already paid via Stripe, so we
@@ -439,7 +439,7 @@ export default function ReservationDetailPage() {
                 type="button"
                 onClick={handleConfirmPresence}
                 disabled={confirmPresenceLoading}
-                className="w-full py-3.5 rounded-xl text-[15px] font-black text-center transition-all flex items-center justify-center gap-2 bg-lavo-success hover:bg-lavo-success/90 text-white cursor-pointer disabled:opacity-50"
+                className="w-full py-3.5 rounded-xl text-[15px] font-black text-center transition-all flex items-center justify-center gap-2 bg-Hurryline-success hover:bg-Hurryline-success/90 text-white cursor-pointer disabled:opacity-50"
               >
                 {confirmPresenceLoading ? (
                   <svg className="animate-spin" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" aria-hidden="true">
@@ -454,11 +454,11 @@ export default function ReservationDetailPage() {
               </button>
             )}
             {canStart && presenceConfirmed && (
-              <div className="flex items-center justify-center gap-2 py-3 rounded-xl bg-lavo-success/10 border border-lavo-success/30">
+              <div className="flex items-center justify-center gap-2 py-3 rounded-xl bg-Hurryline-success/10 border border-Hurryline-success/30">
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#00C851" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
                   <polyline points="20 6 9 17 4 12" />
                 </svg>
-                <span className="text-[14px] font-bold text-lavo-success">{t('confirm_presence_done')}</span>
+                <span className="text-[14px] font-bold text-Hurryline-success">{t('confirm_presence_done')}</span>
               </div>
             )}
 
@@ -482,7 +482,7 @@ export default function ReservationDetailPage() {
               </p>
             )}
             {canStart && (
-              <p className="text-[12px] text-lavo-success text-center font-semibold">{t('start_ready')}</p>
+              <p className="text-[12px] text-Hurryline-success text-center font-semibold">{t('start_ready')}</p>
             )}
 
             <Link
@@ -494,7 +494,7 @@ export default function ReservationDetailPage() {
 
             <Link
               href={`/client/reservations/${id}/signal-delay`}
-              className="block w-full py-3.5 rounded-xl text-[15px] font-bold text-center text-[#555] dark:text-[#B0B0A0] border-2 border-[#D0D0C0] dark:border-tab-inactive hover:border-lavo-error/40 hover:text-lavo-error transition-colors"
+              className="block w-full py-3.5 rounded-xl text-[15px] font-bold text-center text-[#555] dark:text-[#B0B0A0] border-2 border-[#D0D0C0] dark:border-tab-inactive hover:border-Hurryline-error/40 hover:text-Hurryline-error transition-colors"
             >
               {t('signal_delay_btn')}
             </Link>
@@ -502,7 +502,7 @@ export default function ReservationDetailPage() {
             <button
               type="button"
               onClick={() => setShowCancelModal(true)}
-              className="w-full py-3.5 rounded-xl text-[15px] font-bold text-lavo-error border-2 border-lavo-error/30 hover:bg-lavo-error/5 transition-colors cursor-pointer"
+              className="w-full py-3.5 rounded-xl text-[15px] font-bold text-Hurryline-error border-2 border-Hurryline-error/30 hover:bg-Hurryline-error/5 transition-colors cursor-pointer"
             >
               {t('cancel_reservation')}
             </button>
@@ -544,7 +544,7 @@ export default function ReservationDetailPage() {
                 <button
                   type="button"
                   onClick={() => setShowDisputeModal(true)}
-                  className="flex items-center justify-center gap-2 w-full py-3 rounded-xl border-2 border-lavo-error/30 text-[14px] font-bold text-lavo-error hover:bg-lavo-error/5 hover:border-lavo-error/50 transition-colors cursor-pointer"
+                  className="flex items-center justify-center gap-2 w-full py-3 rounded-xl border-2 border-Hurryline-error/30 text-[14px] font-bold text-Hurryline-error hover:bg-Hurryline-error/5 hover:border-Hurryline-error/50 transition-colors cursor-pointer"
                 >
                   <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
                     <path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z" />
@@ -573,7 +573,7 @@ export default function ReservationDetailPage() {
               aria-labelledby="dispute-modal-title"
               className="bg-[#F5F5E6] dark:bg-[#1A1A18] rounded-2xl shadow-2xl w-full max-w-md p-6 space-y-4 max-h-[90vh] overflow-y-auto"
             >
-              <div className="w-14 h-14 rounded-full bg-lavo-error/15 flex items-center justify-center mx-auto">
+              <div className="w-14 h-14 rounded-full bg-Hurryline-error/15 flex items-center justify-center mx-auto">
                 <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#E8472A" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
                   <path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z" />
                   <line x1="12" y1="9" x2="12" y2="13" /><line x1="12" y1="17" x2="12.01" y2="17" />
@@ -594,7 +594,7 @@ export default function ReservationDetailPage() {
                 {/* Reason (required) */}
                 <div>
                   <label htmlFor="dispute-reason" className="block text-[13px] font-bold text-[#0A0A14] dark:text-white mb-1.5">
-                    {t('dispute_field_reason')} <span className="text-lavo-error">*</span>
+                    {t('dispute_field_reason')} <span className="text-Hurryline-error">*</span>
                   </label>
                   <textarea
                     id="dispute-reason"
@@ -660,7 +660,7 @@ export default function ReservationDetailPage() {
                   <button
                     type="submit"
                     disabled={disputeLoading || !disputeReason.trim()}
-                    className="flex-1 py-3 bg-lavo-error hover:bg-lavo-error/90 rounded-xl text-[14px] font-bold text-white transition-colors cursor-pointer disabled:opacity-50 flex items-center justify-center gap-2"
+                    className="flex-1 py-3 bg-Hurryline-error hover:bg-Hurryline-error/90 rounded-xl text-[14px] font-bold text-white transition-colors cursor-pointer disabled:opacity-50 flex items-center justify-center gap-2"
                   >
                     {disputeLoading && (
                       <svg className="animate-spin" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" aria-hidden="true">
@@ -690,7 +690,7 @@ export default function ReservationDetailPage() {
               aria-labelledby="cancel-reservation-title"
               className="bg-[#F5F5E6] dark:bg-[#1A1A18] rounded-2xl shadow-2xl w-full max-w-sm p-6 space-y-4"
             >
-              <div className="w-14 h-14 rounded-full bg-lavo-error/15 flex items-center justify-center mx-auto">
+              <div className="w-14 h-14 rounded-full bg-Hurryline-error/15 flex items-center justify-center mx-auto">
                 <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#EF4444" strokeWidth="2" strokeLinecap="round"><circle cx="12" cy="12" r="10" /><line x1="12" y1="8" x2="12" y2="12" /><line x1="12" y1="16" x2="12.01" y2="16" /></svg>
               </div>
 
@@ -705,12 +705,12 @@ export default function ReservationDetailPage() {
               </p>
 
               {cancelHasFees && (
-                <div className="flex gap-2.5 bg-lavo-error/10 border border-lavo-error/20 rounded-xl px-3.5 py-3 text-left">
+                <div className="flex gap-2.5 bg-Hurryline-error/10 border border-Hurryline-error/20 rounded-xl px-3.5 py-3 text-left">
                   <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#E8472A" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="shrink-0 mt-0.5" aria-hidden="true">
                     <path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z" />
                     <line x1="12" y1="9" x2="12" y2="13" /><line x1="12" y1="17" x2="12.01" y2="17" />
                   </svg>
-                  <p className="text-[12px] font-semibold text-lavo-error leading-relaxed">
+                  <p className="text-[12px] font-semibold text-Hurryline-error leading-relaxed">
                     {t('cancel_modal_fees_warning')}
                   </p>
                 </div>
@@ -729,7 +729,7 @@ export default function ReservationDetailPage() {
                   type="button"
                   onClick={handleConfirmCancel}
                   disabled={cancelLoading}
-                  className="flex-1 py-3 bg-lavo-error hover:bg-lavo-error/90 rounded-xl text-[14px] font-bold text-white transition-colors cursor-pointer disabled:opacity-50 flex items-center justify-center gap-2"
+                  className="flex-1 py-3 bg-Hurryline-error hover:bg-Hurryline-error/90 rounded-xl text-[14px] font-bold text-white transition-colors cursor-pointer disabled:opacity-50 flex items-center justify-center gap-2"
                 >
                   {cancelLoading && (
                     <svg className="animate-spin" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" aria-hidden="true">

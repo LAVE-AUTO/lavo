@@ -1,7 +1,7 @@
 {
   "info": {
-    "name": "LAVO - Admin Dashboard & Analytics API",
-    "description": "Collection pour les endpoints admin de tableau de bord et d'analytiques LAVO.\n\nVariable requise : `base_url` (ex: http://localhost:3000)\nVariable requise : `access_token` (JWT admin, obtenu apres login admin)\n\n## Groupes\n- **Admin - Dashboard** : KPI snapshot (totaux, metriques de periode, alertes)\n- **Admin - Analytics** : series temporelles par metrique (transactions, revenue, commissions, etc.)\n\n## Cache\nLes deux endpoints repondent avec `Cache-Control: max-age=60, s-maxage=60`.\nUne reponse servie depuis le cache reste un 200 valide.",
+    "name": "Hurryline - Admin Dashboard & Analytics API",
+    "description": "Collection pour les endpoints admin de tableau de bord et d'analytiques Hurryline.\n\nVariable requise : `base_url` (ex: http://localhost:3000)\nVariable requise : `access_token` (JWT admin, obtenu apres login admin)\n\n## Groupes\n- **Admin - Dashboard** : KPI snapshot (totaux, metriques de periode, alertes)\n- **Admin - Analytics** : series temporelles par metrique (transactions, revenue, commissions, etc.)\n\n## Cache\nLes deux endpoints repondent avec `Cache-Control: max-age=60, s-maxage=60`.\nUne reponse servie depuis le cache reste un 200 valide.",
     "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
   },
   "variable": [
@@ -619,7 +619,7 @@
                 }
               ]
             },
-            "description": "Serie des commissions LAVO par semaine ISO (debut lundi).\n\nLes valeurs monetaires sont des chaines decimales.\nLes semaines sans commission ont value: '0.00' (gap-fill)."
+            "description": "Serie des commissions Hurryline par semaine ISO (debut lundi).\n\nLes valeurs monetaires sont des chaines decimales.\nLes semaines sans commission ont value: '0.00' (gap-fill)."
           }
         },
         {

@@ -11,7 +11,7 @@ export function ApplySuccess() {
 
   return (
     <div className="text-center animate-fade-in px-4 py-6">
-      <div className="w-20 h-20 rounded-full bg-lavo-success/10 border border-lavo-success/20 flex items-center justify-center mx-auto mb-6">
+      <div className="w-20 h-20 rounded-full bg-Hurryline-success/10 border border-Hurryline-success/20 flex items-center justify-center mx-auto mb-6">
         <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="#00C851" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
           <path d="M22 11.08V12a10 10 0 11-5.93-9.14" />
           <polyline points="22 4 12 14.01 9 11.01" />
@@ -21,7 +21,7 @@ export function ApplySuccess() {
       <h2 className="text-[22px] font-bold text-dark-bg dark:text-white mb-3">
         {t('success_title')}
       </h2>
-      <p className="text-[15px] text-[#555] dark:text-lavo-muted leading-relaxed mb-8 max-w-sm mx-auto">
+      <p className="text-[15px] text-[#555] dark:text-Hurryline-muted leading-relaxed mb-8 max-w-sm mx-auto">
         {t('success_message')}
       </p>
 

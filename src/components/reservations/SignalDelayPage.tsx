@@ -129,9 +129,12 @@ export default function SignalDelayPage() {
       return;
     }
 
-    const errData = data as { code?: string };
+    const errData = data as { code?: string; message?: string };
+    /* Backend returns 409 CONFLICT for both cases - distinguish them so the
+     * "already signaled" page only fires when an active request actually exists. */
     if (errData?.code === 'CONFLICT') {
-      setPageState('already_signaled');
+      const isAlreadySignaled = (errData.message ?? '').toLowerCase().includes('already active');
+      setPageState(isAlreadySignaled ? 'already_signaled' : 'error');
     } else {
       setPageState('error');
     }
@@ -150,7 +153,7 @@ export default function SignalDelayPage() {
     return (
       <main className="min-h-screen bg-[#F5F5E6] dark:bg-[#0F0F0D] flex items-center justify-center p-6 pb-20">
         <div className="flex flex-col items-center text-center gap-4 max-w-xs w-full">
-          <div className="w-16 h-16 rounded-full bg-lavo-error/15 flex items-center justify-center">
+          <div className="w-16 h-16 rounded-full bg-Hurryline-error/15 flex items-center justify-center">
             <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#E8472A" strokeWidth="2" strokeLinecap="round" aria-hidden="true">
               <circle cx="12" cy="12" r="10" /><line x1="12" y1="8" x2="12" y2="12" /><line x1="12" y1="16" x2="12.01" y2="16" />
             </svg>
@@ -194,7 +197,7 @@ export default function SignalDelayPage() {
     return (
       <main className="min-h-screen bg-[#F5F5E6] dark:bg-[#0F0F0D] flex items-center justify-center p-6 pb-20">
         <div className="flex flex-col items-center text-center gap-5 max-w-xs w-full">
-          <div className="w-20 h-20 rounded-full bg-lavo-success/15 flex items-center justify-center">
+          <div className="w-20 h-20 rounded-full bg-Hurryline-success/15 flex items-center justify-center">
             <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="#00C851" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
               <polyline points="20 6 9 17 4 12" />
             </svg>
@@ -232,12 +235,12 @@ export default function SignalDelayPage() {
 
       <div className="px-4 max-w-2xl mx-auto space-y-4">
         {/* Warning banner */}
-        <div className="flex gap-3 bg-lavo-error/10 border border-lavo-error/25 rounded-xl px-4 py-3.5">
+        <div className="flex gap-3 bg-Hurryline-error/10 border border-Hurryline-error/25 rounded-xl px-4 py-3.5">
           <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#E8472A" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="shrink-0 mt-0.5" aria-hidden="true">
             <path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z" />
             <line x1="12" y1="9" x2="12" y2="13" /><line x1="12" y1="17" x2="12.01" y2="17" />
           </svg>
-          <p className="text-[13px] font-semibold text-lavo-error leading-relaxed">{t('warning')}</p>
+          <p className="text-[13px] font-semibold text-Hurryline-error leading-relaxed">{t('warning')}</p>
         </div>
 
         {/* Reservation recap */}
@@ -289,7 +292,7 @@ export default function SignalDelayPage() {
           type="button"
           disabled={submitting}
           onClick={handleSubmit}
-          className="w-full py-3.5 rounded-[10px] bg-lavo-error hover:bg-lavo-error/90 text-white text-[15px] font-black transition-colors cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+          className="w-full py-3.5 rounded-[10px] bg-Hurryline-error hover:bg-Hurryline-error/90 text-white text-[15px] font-black transition-colors cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
         >
           {submitting && (
             <svg className="animate-spin" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" aria-hidden="true">

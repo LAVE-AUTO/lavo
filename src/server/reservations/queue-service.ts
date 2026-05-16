@@ -8,8 +8,10 @@ import { db } from '@/lib/db';
 import { findServiceVehicleEntryForBooking, findServiceByIdAndStation } from '@/server/station/service-repository';
 import { decrementSlotBookedCount } from '@/server/station/slot-repository';
 import { createPaymentIntent, cancelPaymentIntent, updatePaymentIntentMetadata } from '@/server/payments/payment-service';
+import { findById } from '@/server/auth/user-repository';
 import { notifyEntry } from '@/server/notifications/notification-service';
 import { notifyStationFeed } from '@/server/notifications/station-feed-notifications';
+import { notifyClientFeed } from '@/server/notifications/client-feed-notifications';
 import { getQueuePositionWhenMovingFromReservation } from './queue-position-helper';
 import { generateTicketCode } from './ticket-code';
 import {
@@ -131,13 +133,22 @@ export async function joinQueue(
     stationId,
     type: 'queue_joined',
   });
+  await notifyClientFeed({
+    userId,
+    entryId: entry.id,
+    stationId,
+    kind: 'queue_joined',
+    body: "Vous êtes dans la file d'attente. Vous serez notifié quand ce sera votre tour.",
+  });
 
   /* Push to the station owner's in-app feed (best-effort, never blocks). */
+  const client = await findById(userId);
+  const clientName = client?.first_name ?? 'Un client';
   await notifyStationFeed({
     stationId,
     entryId: entry.id,
     kind: 'queue_new',
-    body: `${vehicleEntry.vehicle_label ?? 'Service'} · ${entryPrice.toFixed(2)} $${entry.ticket_code ? ` · Code ${entry.ticket_code}` : ''}`,
+    body: `${clientName} a rejoint la file d'attente (${entryPrice.toFixed(2)} $)`,
   });
 
   return { entry, clientSecret };
@@ -194,6 +205,13 @@ export async function moveReservationToQueue(entryId: string): Promise<Entry> {
     stationId,
     type: 'moved_to_queue',
   });
+  await notifyClientFeed({
+    userId: entry.user_id,
+    entryId,
+    stationId,
+    kind: 'moved_to_queue',
+    body: "Votre créneau est passé. Vous avez été placé en tête de file d'attente.",
+  });
   return updated;
 }
 
@@ -228,6 +246,13 @@ export async function pickQueueEntry(stationId: string, queueEntryId: string): P
       userId: entry.user_id,
       stationId,
       type: 'queue_pick',
+    });
+    await notifyClientFeed({
+      userId: entry.user_id,
+      entryId: queueEntryId,
+      stationId,
+      kind: 'queue_pick',
+      body: 'La station est prête pour vous. Rendez-vous à la baie de lavage.',
     });
   } catch (e) {
     console.error('Failed to send pick notification for entry', queueEntryId, e);

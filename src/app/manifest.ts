@@ -2,8 +2,8 @@ import type { MetadataRoute } from 'next';
 
 export default function manifest(): MetadataRoute.Manifest {
   return {
-    name: 'Slowtime',
-    short_name: 'Slowtime',
+    name: 'Hurryline',
+    short_name: 'Hurryline',
     description: 'Réservation et paiement pour stations de lavage',
     start_url: '/',
     display: 'standalone',

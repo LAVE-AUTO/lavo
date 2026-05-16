@@ -334,11 +334,6 @@ export default function ProfilePage() {
         <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2z"/><path d="M8 12h8M12 8v8"/>
       </svg>
     )},
-    { label: t('stats_spent'),  value: totalSpentLabel, icon: (
-      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-        <line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 000 7h5a3.5 3.5 0 010 7H6"/>
-      </svg>
-    )},
     { label: t('stats_since'),  value: memberSinceLabel, icon: (
       <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
         <rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/>
@@ -397,7 +392,7 @@ export default function ProfilePage() {
               <p className="text-[19px] font-black text-[#1a1a1a] dark:text-white truncate leading-tight">{fullName}</p>
               <p className="text-[13px] text-[#888] dark:text-[#666] truncate mt-0.5">{user?.email}</p>
               {isVerified ? (
-                <span className="inline-flex items-center gap-1 mt-2 text-[11px] font-bold text-lavo-success bg-lavo-success/10 px-2.5 py-0.5 rounded-full">
+                <span className="inline-flex items-center gap-1 mt-2 text-[11px] font-bold text-Hurryline-success bg-Hurryline-success/10 px-2.5 py-0.5 rounded-full">
                   <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round"><polyline points="20 6 9 17 4 12"/></svg>
                   {t('verified')}
                 </span>
@@ -414,8 +409,30 @@ export default function ProfilePage() {
             </div>
           </div>
 
-          {/* Stats row - live from /me/entries (completed count, total spent, member since) */}
-          <div className="grid grid-cols-3 gap-3 mt-5 pt-5 border-t border-[rgba(200,152,10,0.1)]">
+          {/* Statements & invoices shortcut - replaces the removed navbar entry */}
+          <Link
+            href="/client/history"
+            className="mt-5 group flex items-center gap-3 rounded-xl border border-gold/30 bg-gold/8 hover:bg-gold/15 px-4 py-3 transition-colors"
+          >
+            <span className="w-10 h-10 rounded-xl bg-gold/15 flex items-center justify-center text-[#c8980a] shrink-0">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                <path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z" />
+                <polyline points="14 2 14 8 20 8" />
+                <line x1="9" y1="13" x2="15" y2="13" />
+                <line x1="9" y1="17" x2="15" y2="17" />
+              </svg>
+            </span>
+            <div className="flex-1 min-w-0">
+              <p className="text-[14px] font-black text-[#1a1a1a] dark:text-white leading-tight">{t('statements_invoices')}</p>
+              <p className="text-[12px] text-[#888] dark:text-[#666] mt-0.5">{t('statements_invoices_desc')}</p>
+            </div>
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#c8980a" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="shrink-0 group-hover:translate-x-0.5 transition-transform" aria-hidden="true">
+              <polyline points="9 18 15 12 9 6" />
+            </svg>
+          </Link>
+
+          {/* Stats row - live from /me/entries (completed count, member since) */}
+          <div className="grid grid-cols-2 gap-3 mt-5 pt-5 border-t border-[rgba(200,152,10,0.1)]">
             {statsRow.map(({ label, value, icon }) => (
               <div key={label} className="flex flex-col items-center gap-1.5 text-center">
                 <div className="w-9 h-9 rounded-xl bg-gold/10 text-[#c8980a] flex items-center justify-center">
@@ -539,7 +556,7 @@ export default function ProfilePage() {
         </Section>
 
         {/* ── Moyens de paiement ── */}
-        <Section>
+        {/* <Section>
           <SectionHeader
             title={t('payment_section')}
             action={<ComingSoonBadge label={t('coming_soon')} />}
@@ -576,7 +593,7 @@ export default function ProfilePage() {
               ))}
             </div>
           )}
-        </Section>
+        </Section> */}
 
         {/* ── Notifications ── */}
         <Section>
@@ -632,9 +649,9 @@ export default function ProfilePage() {
         </Section>
 
         {/* ── Zone de danger ── */}
-        <div className="bg-lavo-error/5 rounded-2xl border border-lavo-error/20 overflow-hidden">
-          <div className="flex items-center justify-between px-5 py-4 border-b border-lavo-error/15">
-            <h2 className="text-[14px] font-black uppercase tracking-wider text-lavo-error/70">{t('danger_zone')}</h2>
+        <div className="bg-Hurryline-error/5 rounded-2xl border border-Hurryline-error/20 overflow-hidden">
+          <div className="flex items-center justify-between px-5 py-4 border-b border-Hurryline-error/15">
+            <h2 className="text-[14px] font-black uppercase tracking-wider text-Hurryline-error/70">{t('danger_zone')}</h2>
           </div>
           <div className="flex items-center justify-between px-5 py-4">
             <div>
@@ -644,7 +661,7 @@ export default function ProfilePage() {
             <button
               type="button"
               onClick={() => setShowDeleteModal(true)}
-              className="shrink-0 px-4 py-2 bg-lavo-error/10 border border-lavo-error/30 rounded-xl text-[12px] font-bold text-lavo-error hover:bg-lavo-error/15 transition-colors cursor-pointer"
+              className="shrink-0 px-4 py-2 bg-Hurryline-error/10 border border-Hurryline-error/30 rounded-xl text-[12px] font-bold text-Hurryline-error hover:bg-Hurryline-error/15 transition-colors cursor-pointer"
             >
               {t('delete_account_btn')}
             </button>
@@ -725,7 +742,7 @@ function PasswordModal({ onClose, onSuccess }: { onClose: () => void; onSuccess:
     <Modal onClose={onClose}>
       {done ? (
         <div className="flex flex-col items-center gap-4 py-4">
-          <div className="w-14 h-14 rounded-full bg-lavo-success/15 flex items-center justify-center">
+          <div className="w-14 h-14 rounded-full bg-Hurryline-success/15 flex items-center justify-center">
             <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#00C851" strokeWidth="2.5" strokeLinecap="round"><polyline points="20 6 9 17 4 12"/></svg>
           </div>
           <p className="text-[18px] font-black text-[#1a1a1a] dark:text-white">{t('password_success')}</p>
@@ -747,7 +764,7 @@ function PasswordModal({ onClose, onSuccess }: { onClose: () => void; onSuccess:
               <label className="block text-[12px] font-bold uppercase tracking-wider text-[#555] dark:text-[#888] mb-1.5">{t('confirm_password')}</label>
               <input type="password" value={confirmPwd} onChange={(e) => setConfirmPwd(e.target.value)} className={inputClass} />
             </div>
-            {error && <p className="text-[13px] text-lavo-error font-semibold">{error}</p>}
+            {error && <p className="text-[13px] text-Hurryline-error font-semibold">{error}</p>}
           </div>
           <div className="flex gap-3 mt-6">
             <button type="button" onClick={onClose} disabled={submitting} className="flex-1 py-3 border-2 border-[#D0D0C0] dark:border-tab-inactive rounded-xl text-[14px] font-bold text-[#555] dark:text-[#B0B0A0] hover:bg-[#E0E0D0] dark:hover:bg-[#1A1A18] transition-colors cursor-pointer disabled:opacity-50">{t('cancel')}</button>
@@ -775,7 +792,7 @@ function DeleteAccountModal({ onClose, onDeleted }: { onClose: () => void; onDel
   const mountedRef = useRef(true);
   useEffect(() => { mountedRef.current = true; return () => { mountedRef.current = false; }; }, []);
 
-  const inputClass = 'w-full px-4 py-2.5 bg-[#F5F5E6] dark:bg-[#0F0F0D] border border-[#D0D0C0] dark:border-tab-inactive rounded-xl text-[14px] text-[#1a1a1a] dark:text-white focus:outline-none focus:border-lavo-error transition-colors';
+  const inputClass = 'w-full px-4 py-2.5 bg-[#F5F5E6] dark:bg-[#0F0F0D] border border-[#D0D0C0] dark:border-tab-inactive rounded-xl text-[14px] text-[#1a1a1a] dark:text-white focus:outline-none focus:border-Hurryline-error transition-colors';
 
   const handleDelete = async () => {
     setError('');
@@ -802,7 +819,7 @@ function DeleteAccountModal({ onClose, onDeleted }: { onClose: () => void; onDel
   return (
     <Modal onClose={onClose}>
       <h3 className="text-[18px] font-black text-[#1a1a1a] dark:text-white mb-2">{t('delete_title')}</h3>
-      <p className="text-[13px] text-lavo-error mb-4">{t('delete_warning')}</p>
+      <p className="text-[13px] text-Hurryline-error mb-4">{t('delete_warning')}</p>
       <div className="space-y-4">
         <div>
           <label className="block text-[12px] font-bold uppercase tracking-wider text-[#555] dark:text-[#888] mb-1.5">{t('confirm_with_password')}</label>
@@ -814,7 +831,7 @@ function DeleteAccountModal({ onClose, onDeleted }: { onClose: () => void; onDel
             className={inputClass}
           />
         </div>
-        {error && <p className="text-[13px] text-lavo-error font-semibold">{error}</p>}
+        {error && <p className="text-[13px] text-Hurryline-error font-semibold">{error}</p>}
       </div>
       <div className="flex gap-3 mt-6">
         <button
@@ -829,7 +846,7 @@ function DeleteAccountModal({ onClose, onDeleted }: { onClose: () => void; onDel
           type="button"
           onClick={handleDelete}
           disabled={submitting}
-          className="flex-1 py-3 bg-lavo-error hover:bg-lavo-error/90 rounded-xl text-[14px] font-black text-white transition-colors cursor-pointer disabled:opacity-60 flex items-center justify-center gap-2"
+          className="flex-1 py-3 bg-Hurryline-error hover:bg-Hurryline-error/90 rounded-xl text-[14px] font-black text-white transition-colors cursor-pointer disabled:opacity-60 flex items-center justify-center gap-2"
         >
           {submitting && (
             <svg className="animate-spin" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" aria-hidden="true">

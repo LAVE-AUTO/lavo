@@ -1,7 +1,7 @@
 'use client';
 
 /**
- * /docs - Swagger UI viewer for the Lavo OpenAPI specification.
+ * /docs - Swagger UI viewer for the Hurryline OpenAPI specification.
  *
  * Displays the full API documentation by loading the spec from GET /api/docs.
  *

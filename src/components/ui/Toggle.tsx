@@ -37,7 +37,7 @@ export function Toggle({ checked, onChange, label, disabled = false, id }: Toggl
         className={[
           'relative w-11 h-6 rounded-full transition-colors duration-200 focus:outline-none',
           'focus-visible:ring-2 focus-visible:ring-gold/50',
-          checked ? 'bg-gold' : 'bg-[#CCCCCC] dark:bg-tab-inactive',
+          checked ? 'bg-gold' : 'bg-[#CCCCCC] dark:bg-[#4A4A5A]',
         ].join(' ')}
       >
         <span

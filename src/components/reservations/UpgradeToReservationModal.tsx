@@ -93,7 +93,7 @@ function UpgradeCardForm({
       </div>
 
       {error && (
-        <p className="text-[13px] text-lavo-error text-center" role="alert">{error}</p>
+        <p className="text-[13px] text-Hurryline-error text-center" role="alert">{error}</p>
       )}
 
       <div className="flex gap-3 pt-2">
@@ -364,7 +364,7 @@ export default function UpgradeToReservationModal({ entryId, stationId, onClose,
               </Elements>
             ) : (
               <div className="text-center py-8">
-                <p className="text-[13px] text-lavo-error">{t('upgrade_error_stripe')}</p>
+                <p className="text-[13px] text-Hurryline-error">{t('upgrade_error_stripe')}</p>
               </div>
             )
           )}

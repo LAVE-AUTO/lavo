@@ -7,13 +7,36 @@ interface UserLocation {
     longitude: number;
 }
 
-const DISMISS_KEY = 'lavo_geo_banner_dismissed';
+const DISMISS_KEY = 'Hurryline_geo_banner_dismissed';
+const LOCATION_KEY = 'Hurryline_geo_location';
 
-let cachedLocation: UserLocation | null = null;
+function readStoredLocation(): UserLocation | null {
+    try {
+        const raw = sessionStorage.getItem(LOCATION_KEY);
+        if (!raw) return null;
+        const parsed = JSON.parse(raw) as unknown;
+        if (
+            parsed && typeof parsed === 'object' &&
+            'latitude' in parsed && 'longitude' in parsed &&
+            typeof (parsed as UserLocation).latitude === 'number' &&
+            typeof (parsed as UserLocation).longitude === 'number'
+        ) {
+            return parsed as UserLocation;
+        }
+    } catch { /* storage unavailable */ }
+    return null;
+}
+
+let cachedLocation: UserLocation | null =
+    typeof window !== 'undefined' ? readStoredLocation() : null;
+
 const listeners = new Set<(loc: UserLocation | null) => void>();
 
 function broadcast(loc: UserLocation | null) {
     cachedLocation = loc;
+    if (loc) {
+        try { sessionStorage.setItem(LOCATION_KEY, JSON.stringify(loc)); } catch { /* storage unavailable */ }
+    }
     listeners.forEach((l) => l(loc));
 }
 
@@ -55,18 +78,30 @@ export function haversineKm(lat1: number, lon1: number, lat2: number, lon2: numb
 }
 
 /**
- * Subscribes to the cached browser geolocation. Does NOT trigger the native
- * permission prompt - call `requestUserLocation()` (typically via the
- * in-app banner) once the user opts in.
+ * Subscribes to the cached browser geolocation.
+ * When permission is already `granted`, silently fetches on mount so
+ * distances populate without any user interaction.
+ * Does NOT trigger the native permission prompt when permission is `prompt`.
  */
 export function useUserLocation(): UserLocation | null {
     const [location, setLocation] = useState<UserLocation | null>(cachedLocation);
 
     useEffect(() => {
         listeners.add(setLocation);
-        return () => {
-            listeners.delete(setLocation);
-        };
+        return () => { listeners.delete(setLocation); };
+    }, []);
+
+    useEffect(() => {
+        if (cachedLocation) return;
+        if (typeof navigator === 'undefined' || !navigator.geolocation) return;
+
+        const permissions = (navigator as Navigator & { permissions?: { query: (d: { name: PermissionName }) => Promise<PermissionStatus> } }).permissions;
+        if (!permissions?.query) return;
+
+        permissions
+            .query({ name: 'geolocation' as PermissionName })
+            .then((result) => { if (result.state === 'granted') void requestUserLocation(); })
+            .catch(() => {});
     }, []);
 
     return location;
@@ -125,13 +160,13 @@ export function useGeolocationBanner(): GeolocationBannerState {
         const loc = await requestUserLocation();
         if (!loc) {
             // Browser denied or timed out - keep the banner gone for this session
-            try { sessionStorage.setItem(DISMISS_KEY, '1'); } catch {}
+            try { sessionStorage.setItem(DISMISS_KEY, '1'); } catch { }
         }
     };
 
     const dismiss = () => {
         setVisible(false);
-        try { sessionStorage.setItem(DISMISS_KEY, '1'); } catch {}
+        try { sessionStorage.setItem(DISMISS_KEY, '1'); } catch { }
     };
 
     return { visible, request, dismiss };

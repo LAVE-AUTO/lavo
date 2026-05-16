@@ -1,5 +1,5 @@
 /**
- * LAVO comprehensive demo seed: platform settings, admin, commission, wash types,
+ * Hurryline comprehensive demo seed: platform settings, admin, commission, wash types,
  * station + client users, stations with configs/posts/formats/wash_types, time slots,
  * reservations (completed + future), ratings, and station aggregate scores.
  *
@@ -180,7 +180,7 @@ async function seed(): Promise<void> {
         const [inserted] = await tx
           .insert(users)
           .values({
-            first_name: "LAVO",
+            first_name: "Hurryline",
             last_name: "Seed Admin",
             email: SEED_ADMIN_EMAIL,
             phone: null,

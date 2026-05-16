@@ -2,7 +2,9 @@
  * POST /api/v1/reservations/:id/reschedule
  * Client requests a slot change on their confirmed reservation. Auth: client.
  *
- * Body: { new_time_slot_id: string (uuid) }
+ * Body: exactly one of
+ *   - { new_time_slot_id: string (uuid) }      // legacy: pre-generated slot
+ *   - { new_start_time: string (ISO 8601) }    // modern per-post availability flow
  *
  * Response 201:
  *   {
@@ -22,7 +24,7 @@ import { AppError, ConflictError, NotFoundError, SlotFullError } from '@/lib/err
 import { requireRole } from '@/lib/require-role';
 import { error400, error404, error409, error500, fromAppError, successResponse } from '@/lib/responses';
 import { findEntryById } from '@/server/reservations/entry-repository';
-import { rescheduleReservation } from '@/server/reservations/reschedule-service';
+import { rescheduleReservation, rescheduleReservationByStartTime } from '@/server/reservations/reschedule-service';
 import { serializeEntry } from '@/server/reservations/entry-serializer';
 import { findStationById } from '@/server/station/station-repository';
 import { ApiCode } from '@/types/api-codes';
@@ -66,12 +68,19 @@ export async function POST(request: Request, { params }: Params): Promise<NextRe
   }
 
   try {
-    const result = await rescheduleReservation(
-      paramParsed.data.id,
-      auth.sub,
-      bodyParsed.data.new_time_slot_id,
-      station.stripe_account_id
-    );
+    const result = bodyParsed.data.new_start_time
+      ? await rescheduleReservationByStartTime(
+          paramParsed.data.id,
+          auth.sub,
+          bodyParsed.data.new_start_time,
+          station.stripe_account_id,
+        )
+      : await rescheduleReservation(
+          paramParsed.data.id,
+          auth.sub,
+          bodyParsed.data.new_time_slot_id!,
+          station.stripe_account_id,
+        );
 
     return successResponse(
       {

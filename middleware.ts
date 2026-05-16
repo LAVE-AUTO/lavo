@@ -21,7 +21,7 @@ export function middleware(request: NextRequest) {
   );
 
   if (isAdminPath) {
-    const adminSession = request.cookies.get('lavo_admin_session');
+    const adminSession = request.cookies.get('Hurryline_admin_session');
     if (!adminSession?.value) {
       const locale = LOCALES.find((l) => pathname.startsWith(`/${l}/`)) ?? LOCALES[0];
       const loginUrl = new URL(`/${locale}/login`, request.url);

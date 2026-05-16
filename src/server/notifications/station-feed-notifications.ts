@@ -16,7 +16,8 @@ type StationFeedKind =
   | 'reservation_new'
   | 'reservation_cancelled_by_client'
   | 'queue_cancelled_by_client'
-  | 'queue_upgraded_to_reservation';
+  | 'queue_upgraded_to_reservation'
+  | 'delay_request';
 
 interface NotifyStationParams {
   stationId: string;
@@ -32,6 +33,9 @@ const KIND_TO_PREF: Record<StationFeedKind, string> = {
   reservation_cancelled_by_client: 'cancellations',
   queue_cancelled_by_client: 'cancellations',
   queue_upgraded_to_reservation: 'reservation_new',
+  /* Reuse the cancellations preference: clients running late falls under the
+   * same "schedule disruption" bucket from the merchant's point of view. */
+  delay_request: 'cancellations',
 };
 
 const TITLES: Record<StationFeedKind, string> = {
@@ -40,6 +44,7 @@ const TITLES: Record<StationFeedKind, string> = {
   reservation_cancelled_by_client: 'Réservation annulée',
   queue_cancelled_by_client: 'File d\'attente annulée',
   queue_upgraded_to_reservation: 'Conversion file → réservation',
+  delay_request: 'Demande de retard',
 };
 
 
@@ -60,12 +65,15 @@ export async function notifyStationFeed(params: NotifyStationParams): Promise<vo
     const prefKey = KIND_TO_PREF[params.kind];
     if (!prefKey) return;
     if (prefs && prefs[prefKey] === false) return;
+    /* Delay requests have a dedicated review page; everything else points back
+     * to the dashboard summary. */
+    const actionUrl = params.kind === 'delay_request' ? '/station/delays' : '/station/dashboard';
     await insertUserNotification({
       user_id: station.user_id,
       kind: params.kind,
       title: TITLES[params.kind],
       body: params.body,
-      action_url: '/station/dashboard',
+      action_url: actionUrl,
       payload: { entry_id: params.entryId, station_id: params.stationId },
     });
   } catch (e) {

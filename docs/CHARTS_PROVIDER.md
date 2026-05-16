@@ -1,4 +1,4 @@
-# LAVO Charts Provider
+# Hurryline Charts Provider
 
 ## System Architecture
 **Purpose**: High-level components and external integrations

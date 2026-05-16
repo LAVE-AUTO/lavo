@@ -12,7 +12,7 @@ type Props = {
 export async function generateMetadata({ params }: Props) {
   const { locale } = await params;
   const t = await getTranslations({ locale, namespace: 'forgot_password' });
-  return { title: `Slowtime - ${t('title')}` };
+  return { title: `Hurryline - ${t('title')}` };
 }
 
 /**
@@ -45,7 +45,7 @@ export default async function StationForgotPasswordPage({ params }: Props) {
 
             {/* Mobile top bar */}
             <div className="flex items-center justify-between mb-5 lg:hidden">
-              <span className="text-[16px] font-bold text-dark-bg dark:text-white tracking-wide">Slowtime</span>
+              <span className="text-[16px] font-bold text-dark-bg dark:text-white tracking-wide">Hurryline</span>
               <div className="flex items-center gap-2">
                 <ThemeToggle />
                 <LangToggle />
@@ -56,7 +56,7 @@ export default async function StationForgotPasswordPage({ params }: Props) {
               <h1 className="text-[26px] sm:text-[30px] font-bold text-dark-bg dark:text-white mb-2">
                 {t('title')}
               </h1>
-              <p className="text-[15px] text-[#555] dark:text-lavo-muted">
+              <p className="text-[15px] text-[#555] dark:text-Hurryline-muted">
                 {t('subtitle')}
               </p>
             </div>

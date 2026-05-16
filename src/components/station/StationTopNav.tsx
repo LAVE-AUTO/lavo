@@ -95,20 +95,20 @@ export function StationTopNav({ stationName }: StationTopNavProps) {
 
       {/* Logo - always links to landing page */}
       <div className="flex flex-col justify-center">
-        <Link href="/" aria-label="Slowtime - Accueil">
+        <Link href="/" aria-label="Hurryline - Accueil">
           {isDark ? (
             <div className="flex items-center gap-2">
               <div className="shrink-0 rounded-lg border border-[rgba(200,152,10,0.25)] bg-white/95 p-0.5 shadow-sm">
                 <Image src="/logo/frame2.png" alt="" width={24} height={24} className="h-6 w-6 object-contain" aria-hidden="true" />
               </div>
               <span className="font-playfair text-[18px] font-black leading-none tracking-[3px] text-[#C49A1E]">
-                Slowtime
+                Hurryline
               </span>
             </div>
           ) : (
             <Image
               src={lightLogoSrc}
-              alt="Slowtime"
+              alt="Hurryline"
               width={110}
               height={30}
               className="h-8 w-auto object-contain"
@@ -139,7 +139,7 @@ export function StationTopNav({ stationName }: StationTopNavProps) {
               <path d="M13.73 21a2 2 0 0 1-3.46 0" />
             </svg>
             {unreadCount > 0 && (
-              <span className="absolute -right-1 -top-1 min-w-4 rounded-full bg-[#C49A1E] px-1 text-center text-[10px] font-bold leading-4 text-white">
+              <span className="absolute -right-1 -top-1 min-w-[18px] h-[18px] rounded-full bg-Hurryline-error px-1 text-center text-[10px] font-black leading-[18px] text-white shadow-sm ring-2 ring-[#F0EDE0] dark:ring-[#182214]">
                 {unreadCount > 99 ? '99+' : unreadCount}
               </span>
             )}

@@ -62,123 +62,6 @@ const FEATURE_KEYS = [
 ] as const;
 
 /* ------------------------------------------------------------------ */
-/* Brand emblem - premium animated mark replacing the legacy car       */
-/* ------------------------------------------------------------------ */
-
-/**
- * Quiet, premium illustration that ties to the car-wash service without
- * resorting to a literal vehicle: a soft gold halo with concentric rings,
- * a centered water droplet and a few gentle shimmer accents. All motion
- * is subtle (slow scale + opacity), no bounce.
- */
-function BrandEmblem({ isDark }: { isDark: boolean }) {
-  const gold = '#C49A1E';
-  const goldStrong = '#D4AA2E';
-  const ringStroke = isDark ? 'rgba(196,154,30,0.28)' : 'rgba(196,154,30,0.32)';
-  const dropFill = isDark ? '#1A2518' : '#FFFCF1';
-  const dropStroke = goldStrong;
-
-  return (
-    <div className="relative flex w-full max-w-[260px] items-center justify-center">
-      {/* Outer halo glow */}
-      <div
-        className="absolute inset-0 -z-10 m-auto h-56 w-56 rounded-full opacity-60 blur-3xl"
-        style={{
-          background: `radial-gradient(circle, ${gold} 0%, transparent 70%)`,
-        }}
-        aria-hidden="true"
-      />
-
-      <svg viewBox="0 0 240 240" fill="none" className="w-full" aria-hidden="true">
-        <defs>
-          <linearGradient id="dropGrad" x1="0" y1="0" x2="0" y2="1">
-            <stop offset="0%" stopColor={goldStrong} stopOpacity="0.95" />
-            <stop offset="100%" stopColor={gold} stopOpacity="0.65" />
-          </linearGradient>
-          <radialGradient id="dropHighlight" cx="0.35" cy="0.35" r="0.4">
-            <stop offset="0%" stopColor="white" stopOpacity="0.55" />
-            <stop offset="100%" stopColor="white" stopOpacity="0" />
-          </radialGradient>
-          <filter id="emblemGlow">
-            <feGaussianBlur stdDeviation="2.5" result="blur" />
-            <feMerge>
-              <feMergeNode in="blur" />
-              <feMergeNode in="SourceGraphic" />
-            </feMerge>
-          </filter>
-        </defs>
-
-        {/* Concentric pulse rings - 3 staggered for a calm rhythm */}
-        <g stroke={ringStroke} fill="none">
-          <circle
-            cx="120"
-            cy="120"
-            r="100"
-            strokeWidth="1.2"
-            className="origin-center animate-emblem-pulse"
-            style={{ animationDelay: '0s' }}
-          />
-          <circle
-            cx="120"
-            cy="120"
-            r="80"
-            strokeWidth="1.4"
-            className="origin-center animate-emblem-pulse"
-            style={{ animationDelay: '1s' }}
-          />
-          <circle
-            cx="120"
-            cy="120"
-            r="60"
-            strokeWidth="1.6"
-            className="origin-center animate-emblem-pulse"
-            style={{ animationDelay: '2s' }}
-          />
-        </g>
-
-        {/* Central disc - gold ring with subtle inner bevel */}
-        <circle cx="120" cy="120" r="48" fill={isDark ? 'rgba(15,26,12,0.6)' : 'rgba(255,253,245,0.7)'} stroke={gold} strokeWidth="1.5" />
-        <circle cx="120" cy="120" r="44" fill="none" stroke={gold} strokeWidth="0.6" strokeDasharray="2 4" opacity="0.5" />
-
-        {/* Water droplet at the heart of the emblem */}
-        <g filter="url(#emblemGlow)" className="origin-center animate-float">
-          <path
-            d="M120 82 C100 110 92 124 92 138 a28 28 0 0 0 56 0 c0 -14 -8 -28 -28 -56 z"
-            fill="url(#dropGrad)"
-            stroke={dropStroke}
-            strokeWidth="1.5"
-          />
-          {/* Inner droplet body so it sits on the dark background cleanly */}
-          <path
-            d="M120 92 C104 116 98 126 98 138 a22 22 0 0 0 44 0 c0 -12 -6 -22 -22 -46 z"
-            fill={dropFill}
-            opacity="0.18"
-          />
-          {/* Glossy highlight on the upper-left of the droplet */}
-          <ellipse
-            cx="111"
-            cy="118"
-            rx="6"
-            ry="14"
-            fill="url(#dropHighlight)"
-            transform="rotate(-18 111 118)"
-          />
-        </g>
-
-        {/* Sparkle accents around the rings */}
-        <g filter="url(#emblemGlow)">
-          <circle cx="50" cy="60" r="2" fill={gold} opacity="0.6" className="animate-gold-shimmer" />
-          <circle cx="200" cy="70" r="2.5" fill={gold} opacity="0.55" className="animate-gold-shimmer animation-delay-300" />
-          <circle cx="60" cy="180" r="1.8" fill={gold} opacity="0.5" className="animate-gold-shimmer animation-delay-500" />
-          <circle cx="190" cy="180" r="2.2" fill={gold} opacity="0.55" className="animate-gold-shimmer animation-delay-200" />
-          <circle cx="120" cy="30" r="1.6" fill={gold} opacity="0.45" className="animate-gold-shimmer animation-delay-400" />
-        </g>
-      </svg>
-    </div>
-  );
-}
-
-/* ------------------------------------------------------------------ */
 /* BrandPanel                                                           */
 /* ------------------------------------------------------------------ */
 
@@ -186,7 +69,7 @@ function BrandEmblem({ isDark }: { isDark: boolean }) {
  * Left-side branding panel for auth pages on desktop.
  *
  * Logo strategy:
- *   Dark + any locale → frame2.png badge + "Slowtime" text
+ *   Dark + any locale → frame2.png badge + "Hurryline" text
  *   Light + FR        → logo2_2.png       (full FR wordmark)
  *   Light + EN        → logo_anglais_1.png (full EN wordmark)
  *
@@ -224,7 +107,7 @@ export function BrandPanel() {
   };
 
   const textPrimary   = isDark ? 'text-white'             : 'text-dark-bg';
-  const textSecondary = isDark ? 'text-lavo-muted'         : 'text-[#5A6B54]';
+  const textSecondary = isDark ? 'text-Hurryline-muted'         : 'text-[#5A6B54]';
   const trackColor    = isDark ? 'bg-white/10'             : 'bg-black/10';
   const inactiveDot   = isDark ? 'bg-white/20 hover:bg-white/40' : 'bg-black/20 hover:bg-black/40';
   const featureCardBg = isDark ? 'bg-white/5 border border-white/8' : 'bg-black/5 border border-black/6';
@@ -250,13 +133,13 @@ export function BrandPanel() {
       />
 
       {/* Gold shimmer top bar */}
-      <div className="absolute top-0 left-0 right-0 h-[3px] bg-gold animate-gold-shimmer" />
+      <div className="absolute top-0 left-0 right-0 h-[3px] bg-gold" />
 
       {/* Content */}
-      <div className="relative z-10 flex flex-col justify-between h-full p-10 xl:p-14">
+      <div className="relative z-10 flex flex-col h-full p-10 xl:p-14">
 
         {/* ── Logo ── */}
-        <div className="animate-fade-in">
+        <div className="animate-fade-in flex justify-center">
           {isDark ? (
             <div className="flex items-center gap-2.5">
               <div className="rounded-xl bg-white/95 p-1 border border-gold/25 shadow-sm shrink-0">
@@ -270,24 +153,22 @@ export function BrandPanel() {
                 />
               </div>
               <span className="text-xl font-bold text-white tracking-wide">
-                Slowtime
+                Hurryline
               </span>
             </div>
           ) : (
             <Image
               src={lightLogoSrc}
-              alt="Slowtime"
-              width={180}
-              height={48}
-              className="object-contain h-10 w-auto"
+              alt="Hurryline"
+              width={260}
+              height={70}
+              className="object-contain h-16 w-auto"
             />
           )}
         </div>
 
-        {/* ── Brand emblem + headline ── */}
-        <div className="flex flex-col items-center text-center gap-6">
-          <BrandEmblem isDark={isDark} />
-
+        {/* ── Brand headline ── */}
+        <div className="mt-auto flex flex-col items-center text-center gap-6">
           <div>
             <h2 className={`text-4xl xl:text-[2.75rem] font-bold leading-tight animate-fade-in-up animation-delay-100 ${textPrimary}`}>
               {t('headline')}{' '}
@@ -300,7 +181,7 @@ export function BrandPanel() {
         </div>
 
         {/* ── Feature carousel ── */}
-        <div className="flex flex-col gap-3">
+        <div className="flex flex-col gap-3 mt-12 items-center w-full">
 
           {/* Editorial counter + divider */}
           <div className="flex items-center gap-3">
@@ -308,17 +189,18 @@ export function BrandPanel() {
             <span className={`text-[11px] font-bold tracking-[0.2em] uppercase ${isDark ? 'text-gold/80' : 'text-gold'}`}>
               {String(activeIdx + 1).padStart(2, '0')} / {String(FEATURE_KEYS.length).padStart(2, '0')}
             </span>
+            <div className="h-px w-8 bg-gold/60" />
           </div>
 
           {/* Active feature card */}
           <div
             key={activeIdx}
-            className={`flex items-center gap-5 animate-fade-in-up rounded-2xl p-5 ${featureCardBg}`}
+            className={`flex items-center gap-5 animate-fade-in-up rounded-2xl p-5 w-full ${featureCardBg}`}
           >
             <div className="w-16 h-16 rounded-2xl bg-gold/20 border-2 border-gold/40 flex items-center justify-center text-gold shrink-0">
               {FEATURE_ICONS[activeIdx]}
             </div>
-            <div>
+            <div className="text-left">
               <p className={`text-[21px] font-bold leading-tight ${textPrimary}`}>
                 {t(FEATURE_KEYS[activeIdx].label)}
               </p>
@@ -329,7 +211,7 @@ export function BrandPanel() {
           </div>
 
           {/* Progress bar + dot navigation */}
-          <div className="flex items-center gap-4">
+          <div className="flex items-center gap-4 w-full">
             <div className={`flex-1 h-[3px] rounded-full ${trackColor}`}>
               <div
                 key={progressKey}

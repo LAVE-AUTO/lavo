@@ -57,13 +57,13 @@ export function LandingHero() {
                     />
                   </div>
                   <span className="text-[22px] font-bold text-white tracking-wide">
-                    Slowtime
+                    Hurryline
                   </span>
                 </div>
               ) : (
                 <Image
                   src={lightLogoSrc}
-                  alt="Slowtime"
+                  alt="Hurryline"
                   width={150}
                   height={40}
                   className="h-10 w-auto object-contain"

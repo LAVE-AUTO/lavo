@@ -212,7 +212,7 @@ describe('client-history-service', () => {
     expect(result.filename).toBe(`receipt-${row.id}.pdf`);
     expect(result.stripe_receipt_url).toBe('https://pay.stripe.com/receipts/pi_123');
     // First line uses the locale-aware receipt_title key.
-    expect(result.text_lines[0]).toBe('Slowtime - Recu de reservation');
+    expect(result.text_lines[0]).toBe('Hurryline - Recu de reservation');
   });
 
   it('returns english pdf labels when locale is en', async () => {
@@ -221,7 +221,7 @@ describe('client-history-service', () => {
 
     const result = await getClientHistoryReceiptPdf('client-1', row.id, 'en');
 
-    expect(result.text_lines[0]).toBe('Slowtime - Reservation Receipt');
+    expect(result.text_lines[0]).toBe('Hurryline - Reservation Receipt');
     expect(result.text_lines[1]).toBe(`Reference: ${row.id}`);
     expect(result.text_lines[7]).toBe('Entry type: reservation');
   });

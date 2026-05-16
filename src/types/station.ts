@@ -23,6 +23,8 @@ export interface Station {
   latitude?: number;
   longitude?: number;
   isOpen?: boolean;
+  /** Distance from the user in km, computed server-side when near_lat/near_lng are passed. */
+  distanceKm?: number;
 }
 
 /**
@@ -117,6 +119,19 @@ export interface StationConfigPublic {
 }
 
 /**
+ * One row of opening hours for a station. day_of_week: 0=Sunday … 6=Saturday.
+ * Each half-day can be null (e.g. closed in the morning but open in the afternoon).
+ */
+export interface StationHourRow {
+  dayOfWeek: number;
+  isOpen: boolean;
+  morningStart: string | null;
+  morningEnd: string | null;
+  afternoonStart: string | null;
+  afternoonEnd: string | null;
+}
+
+/**
  * Extended station data returned by GET /stations/:id.
  */
 export interface StationDetailData extends Station {
@@ -132,4 +147,6 @@ export interface StationDetailData extends Station {
   stationConfig: StationConfigPublic | null;
   /** Public photos for the station detail hero carousel. */
   photos?: string[];
+  /** Per-day opening hours, ordered Sunday → Saturday. Always 7 rows. */
+  stationHours: StationHourRow[];
 }

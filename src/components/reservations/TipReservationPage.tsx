@@ -321,7 +321,7 @@ export default function TipReservationPage() {
         )}
 
         {submitError && (
-          <p className="text-[13px] text-lavo-error text-center" role="alert">{submitError}</p>
+          <p className="text-[13px] text-Hurryline-error text-center" role="alert">{submitError}</p>
         )}
 
         {/* Submit */}
@@ -362,7 +362,7 @@ function SuccessView({ stationId }: { stationId: string }) {
   return (
     <main className="min-h-screen bg-[#F5F5E6] dark:bg-[#0F0F0D] flex items-center justify-center p-6 pb-20">
       <div className="flex flex-col items-center text-center gap-5 max-w-xs w-full">
-        <div className="w-20 h-20 rounded-full bg-lavo-success/15 flex items-center justify-center">
+        <div className="w-20 h-20 rounded-full bg-Hurryline-success/15 flex items-center justify-center">
           <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="#00C851" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
             <polyline points="20 6 9 17 4 12" />
           </svg>
@@ -413,8 +413,8 @@ function StatusView({
     ),
   };
   const bgMap: Record<string, string> = {
-    error: 'bg-lavo-error/15',
-    check: 'bg-lavo-success/15',
+    error: 'bg-Hurryline-error/15',
+    check: 'bg-Hurryline-success/15',
   };
 
   return (
@@ -522,7 +522,7 @@ function TipPayStep({
             />
           </div>
           {stripeError && (
-            <p className="text-[13px] text-lavo-error" role="alert">{stripeError}</p>
+            <p className="text-[13px] text-Hurryline-error" role="alert">{stripeError}</p>
           )}
         </div>
 

@@ -25,6 +25,9 @@ jest.mock('@/server/station/config-repository', () => ({
 jest.mock('@/server/notifications/notification-service', () => ({
   notifyEntry: (...args: unknown[]) => mockNotifyEntry(...args),
 }));
+jest.mock('@/server/notifications/client-feed-notifications', () => ({
+  notifyClientFeed: jest.fn().mockResolvedValue(undefined),
+}));
 jest.mock('@/helpers/date-helper', () => ({
   parseTimeForDate: jest.fn((dateStr: string, timeStr: string) => new Date(`${dateStr}T${timeStr}Z`)),
 }));

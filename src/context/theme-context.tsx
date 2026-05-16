@@ -9,7 +9,7 @@ import {
   type ReactNode,
 } from 'react';
 
-const THEME_STORAGE_KEY = 'lavo_theme';
+const THEME_STORAGE_KEY = 'Hurryline_theme';
 
 export type ThemeMode = 'light' | 'dark' | 'system';
 

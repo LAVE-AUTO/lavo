@@ -12,7 +12,7 @@ import { RESERVATIONS_MOCK_ENABLED, MOCK_RESERVATIONS, MOCK_QUEUE_ENTRIES } from
 
 type Tab = 'reservations' | 'queue';
 type ReservationStatus = 'confirmed' | 'in_progress' | 'completed' | 'cancelled' | 'pending_payment' | 'pending';
-type QueueStatus = 'waiting' | 'in_progress';
+type QueueStatus = 'waiting' | 'in_progress' | 'completed' | 'cancelled';
 
 /* ------------------------------------------------------------------ */
 /* API shapes (rich entry returned by GET /me/entries)                  */
@@ -40,6 +40,8 @@ interface ApiRichEntry {
   ticket_code: string | null;
   amount_paid: string | null;
   created_at: string;
+  updated_at: string;
+  completed_at: string | null;
   station: ApiRichStation;
   vehicle_format: { id: string; label: string; price: string } | null;
   estimated_wait_minutes: number | null;
@@ -49,7 +51,8 @@ interface ApiRichEntry {
   is_tipped?: boolean;
 }
 
-const ACTIVE_QUEUE_STATUSES = new Set(['pending_payment', 'pending', 'confirmed', 'in_progress', 'late']);
+/** Tip button is hidden after this delay since the service was completed. */
+const TIP_ELIGIBILITY_WINDOW_MS = 7 * 24 * 60 * 60 * 1000;
 
 /* ------------------------------------------------------------------ */
 /* Client-side mapped shapes                                            */
@@ -97,6 +100,10 @@ interface ClientQueueEntry {
   status: QueueStatus;
   ticketCode: string | null;
   joinedAt: string;
+  /** Completion or last-update timestamp used for past sectioning + tip 7-day rule. */
+  completedAt: string | null;
+  isRated: boolean;
+  isTipped: boolean;
 }
 
 /* ------------------------------------------------------------------ */
@@ -133,6 +140,18 @@ function isPastReservation(r: ClientReservation): boolean {
   if (r.status === 'completed' || r.status === 'cancelled') return true;
   if (!r.slotStart) return false;
   return new Date(r.slotStart).getTime() <= Date.now();
+}
+
+function isPastQueue(q: ClientQueueEntry): boolean {
+  return q.status === 'completed' || q.status === 'cancelled';
+}
+
+/** Tip button stays visible while we are within `TIP_ELIGIBILITY_WINDOW_MS` of
+ * the service time. After that the prompt disappears so old completed services
+ * do not nag the client forever. */
+function isTipStillEligible(serviceTime: string | null): boolean {
+  if (!serviceTime) return true;
+  return Date.now() - new Date(serviceTime).getTime() < TIP_ELIGIBILITY_WINDOW_MS;
 }
 
 /**
@@ -204,14 +223,24 @@ function enrichEntry(entry: ApiRichEntry): ClientReservation | ClientQueueEntry 
     };
   }
 
+  const queueStatus: QueueStatus = (() => {
+    if (entry.status === 'completed') return 'completed';
+    if (entry.status === 'cancelled') return 'cancelled';
+    if (entry.status === 'in_progress') return 'in_progress';
+    return 'waiting';
+  })();
+
   return {
     id: entry.id,
     ...base,
     position: entry.queue_position ?? 1,
     estimatedWaitMinutes: entry.estimated_wait_minutes ?? 0,
     totalPrice,
-    status: (entry.status === 'in_progress' ? 'in_progress' : 'waiting') as QueueStatus,
+    status: queueStatus,
     joinedAt: entry.created_at,
+    completedAt: entry.completed_at ?? (queueStatus === 'completed' || queueStatus === 'cancelled' ? entry.updated_at ?? null : null),
+    isRated: Boolean(entry.is_rated),
+    isTipped: Boolean(entry.is_tipped),
   };
 }
 
@@ -274,7 +303,10 @@ export default function ClientReservationsPage() {
       const enriched = enrichEntry(entry);
       if (entry.entry_type === 'reservation') {
         resArr.push(enriched as ClientReservation);
-      } else if (ACTIVE_QUEUE_STATUSES.has(entry.status)) {
+      } else {
+        /* Keep every queue entry regardless of status: past services
+         * (completed/cancelled) still need to surface so the client can rate
+         * or tip them from this page. */
         queueArr.push(enriched as ClientQueueEntry);
       }
     }
@@ -317,31 +349,24 @@ export default function ClientReservationsPage() {
         }),
     [reservations],
   );
-  /* Top-of-page prompts surface only the most recent COMPLETED reservation
-   * that still needs a rating / tip. The card-level buttons handle older
-   * un-rated entries. Once `is_rated` / `is_tipped` flips to true, both the
-   * top prompt and the card button disappear automatically. */
-  const pendingRating = useMemo(
+  /* Queue tab sectioning: active = waiting/in_progress, past = completed/cancelled. */
+  const upcomingQueue = useMemo(
     () =>
-      [...reservations]
-        .filter((r) => r.status === 'completed' && !r.isRated)
-        .sort((a, b) => {
-          const ta = a.slotStart ? new Date(a.slotStart).getTime() : new Date(a.createdAt).getTime();
-          const tb = b.slotStart ? new Date(b.slotStart).getTime() : new Date(b.createdAt).getTime();
-          return tb - ta;
-        })[0],
-    [reservations],
+      [...queueEntries]
+        .filter((q) => !isPastQueue(q))
+        .sort((a, b) => new Date(a.joinedAt).getTime() - new Date(b.joinedAt).getTime()),
+    [queueEntries],
   );
-  const pendingTip = useMemo(
+  const pastQueue = useMemo(
     () =>
-      [...reservations]
-        .filter((r) => r.status === 'completed' && !r.isTipped)
+      [...queueEntries]
+        .filter(isPastQueue)
         .sort((a, b) => {
-          const ta = a.slotStart ? new Date(a.slotStart).getTime() : new Date(a.createdAt).getTime();
-          const tb = b.slotStart ? new Date(b.slotStart).getTime() : new Date(b.createdAt).getTime();
+          const ta = a.completedAt ? new Date(a.completedAt).getTime() : new Date(a.joinedAt).getTime();
+          const tb = b.completedAt ? new Date(b.completedAt).getTime() : new Date(b.joinedAt).getTime();
           return tb - ta;
-        })[0],
-    [reservations],
+        }),
+    [queueEntries],
   );
 
   const handleCancelConfirm = async () => {
@@ -422,52 +447,6 @@ export default function ClientReservationsPage() {
       <div className="px-4 sm:px-6 lg:px-8 pt-6 pb-4 max-w-6xl mx-auto">
         <h1 className="text-[22px] sm:text-[26px] font-black text-[#0A0A14] dark:text-white">{t('title')}</h1>
       </div>
-
-      {/* Rating prompt - shown when a completed reservation has not yet been rated */}
-      {pendingRating && (
-        <div className="px-4 sm:px-6 lg:px-8 max-w-6xl mx-auto mb-4">
-          <div className="flex items-center gap-3 bg-gold/10 border border-gold/30 rounded-xl p-4">
-            <div className="w-10 h-10 rounded-full bg-gold/20 flex items-center justify-center shrink-0">
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#af8408" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-                <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z" />
-              </svg>
-            </div>
-            <div className="flex-1 min-w-0">
-              <p className="text-[14px] font-bold text-[#0A0A14] dark:text-white leading-snug">{t('rating_prompt_title')}</p>
-              <p className="text-[12px] text-[#666] dark:text-[#B0B0A0] mt-0.5 truncate">{pendingRating.stationName}</p>
-            </div>
-            <Link
-              href={`/client/reservations/${pendingRating.id}/rate`}
-              className="shrink-0 px-3 py-2 bg-gold hover:bg-gold-hover rounded-[10px] text-[13px] font-black text-dark-bg transition-colors"
-            >
-              {t('rate_btn')}
-            </Link>
-          </div>
-        </div>
-      )}
-
-      {/* Tip prompt - shown when a completed reservation has not yet received a tip */}
-      {pendingTip && (
-        <div className="px-4 sm:px-6 lg:px-8 max-w-6xl mx-auto mb-4">
-          <div className="flex items-center gap-3 bg-[#E8E8D8] dark:bg-dark-card border border-[#D0D0C0] dark:border-tab-inactive rounded-xl p-4">
-            <div className="w-10 h-10 rounded-full bg-gold/20 flex items-center justify-center shrink-0">
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#af8408" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-                <line x1="12" y1="1" x2="12" y2="23" /><path d="M17 5H9.5a3.5 3.5 0 000 7h5a3.5 3.5 0 010 7H6" />
-              </svg>
-            </div>
-            <div className="flex-1 min-w-0">
-              <p className="text-[14px] font-bold text-[#0A0A14] dark:text-white leading-snug">{t('tip_prompt_title')}</p>
-              <p className="text-[12px] text-[#666] dark:text-[#B0B0A0] mt-0.5 truncate">{pendingTip.stationName}</p>
-            </div>
-            <Link
-              href={`/client/reservations/${pendingTip.id}/tip`}
-              className="shrink-0 px-3 py-2 border border-gold/50 rounded-[10px] text-[13px] font-bold text-gold hover:bg-gold/10 transition-colors"
-            >
-              {t('tip_btn')}
-            </Link>
-          </div>
-        </div>
-      )}
 
       {/* Tabs */}
       <div className="px-4 sm:px-6 lg:px-8 max-w-6xl mx-auto">
@@ -553,27 +532,57 @@ export default function ClientReservationsPage() {
             )}
           </div>
         ) : (
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-3">
-            {queueEntries.length > 0 ? (
-              queueEntries.map((entry) => (
-                <QueueCard
-                  key={entry.id}
-                  entry={entry}
-                  t={t}
-                  onLeave={() => setQueueAction({ entry })}
-                  onLeaveAndBook={() => setUpgradeTarget(entry)}
-                />
-              ))
-            ) : (
-              <div className="lg:col-span-2">
-                <EmptyState
-                  title={t('empty_queue_title')}
-                  description={t('empty_queue_desc')}
-                  ctaLabel={t('empty_queue_cta')}
-                  ctaHref="/stations"
-                  historyLabel={t('empty_queue_history')}
-                />
-              </div>
+          <div className="space-y-6">
+            {upcomingQueue.length > 0 && (
+              <section>
+                <h2 className="text-[15px] font-black text-[#555] dark:text-[#B0B0A0] uppercase tracking-widest mb-3">
+                  {t('upcoming')}
+                  <span className="ml-2 text-[12px] font-semibold opacity-70">({upcomingQueue.length})</span>
+                </h2>
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-3">
+                  {upcomingQueue.map((entry) => (
+                    <QueueCard
+                      key={entry.id}
+                      entry={entry}
+                      t={t}
+                      locale={locale}
+                      variant="upcoming"
+                      onLeave={() => setQueueAction({ entry })}
+                      onLeaveAndBook={() => setUpgradeTarget(entry)}
+                    />
+                  ))}
+                </div>
+              </section>
+            )}
+
+            {pastQueue.length > 0 && (
+              <section>
+                <h2 className="text-[15px] font-black text-[#555] dark:text-[#B0B0A0] uppercase tracking-widest mb-3">
+                  {t('past')}
+                  <span className="ml-2 text-[12px] font-semibold opacity-70">({pastQueue.length})</span>
+                </h2>
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-3">
+                  {pastQueue.map((entry) => (
+                    <QueueCard
+                      key={entry.id}
+                      entry={entry}
+                      t={t}
+                      locale={locale}
+                      variant="past"
+                    />
+                  ))}
+                </div>
+              </section>
+            )}
+
+            {queueEntries.length === 0 && (
+              <EmptyState
+                title={t('empty_queue_title')}
+                description={t('empty_queue_desc')}
+                ctaLabel={t('empty_queue_cta')}
+                ctaHref="/stations"
+                historyLabel={t('empty_queue_history')}
+              />
             )}
           </div>
         )}
@@ -643,10 +652,10 @@ function ReservationCard({
   });
 
   const statusColors: Record<string, string> = {
-    confirmed:       'bg-lavo-success/15 text-lavo-success',
+    confirmed:       'bg-Hurryline-success/15 text-Hurryline-success',
     in_progress:     'bg-gold/15 text-gold',
     completed:       'bg-[#999]/15 text-[#666]',
-    cancelled:       'bg-lavo-error/15 text-lavo-error',
+    cancelled:       'bg-Hurryline-error/15 text-Hurryline-error',
     pending:         'bg-blue-500/15 text-blue-500',
     pending_payment: 'bg-[#999]/15 text-[#888]',
   };
@@ -657,11 +666,22 @@ function ReservationCard({
    *     (no point warning a station 5 days in advance)
    *   - reschedule:  available for confirmed/pending entries until start */
   const canReschedule = variant === 'upcoming' && (r.status === 'confirmed' || r.status === 'pending');
-  const showSignalDelay = variant === 'upcoming' && r.status === 'confirmed' && canSignalDelay(r.slotStart);
+  /* The signal-delay button is shown on every upcoming confirmed/pending reservation
+   * but only enabled within the 2h window before slotStart. Outside the window the
+   * button stays visible (disabled + tooltip) so the affordance is always discoverable. */
+  const showSignalDelay =
+    variant === 'upcoming' && (r.status === 'confirmed' || r.status === 'pending' || r.status === 'pending_payment');
+  /* Enabled whenever we are in the 2h window. Status check stays loose: the
+   * frontend already shows pending/pending_payment as "Confirmé" via displayStatus,
+   * and the backend accepts the same set. */
+  const signalDelayEnabled = showSignalDelay && canSignalDelay(r.slotStart);
 
-  /* Past completed reservations keep rate/tip buttons until each is filled. */
+  /* Past completed reservations keep rate/tip buttons until each is filled.
+   * Tip prompts disappear once we are 7 days past the service so old entries
+   * do not keep nagging the client forever. */
   const showRateAction = variant === 'past' && r.status === 'completed' && !r.isRated;
-  const showTipAction  = variant === 'past' && r.status === 'completed' && !r.isTipped;
+  const showTipAction  =
+    variant === 'past' && r.status === 'completed' && !r.isTipped && isTipStillEligible(r.slotStart ?? r.createdAt);
 
   const showActions =
     variant === 'upcoming'
@@ -708,17 +728,27 @@ function ReservationCard({
               <span className="ml-auto font-bold text-gold">{r.totalPrice.toFixed(2)}$</span>
             </div>
 
-            {/* Service code reminder for upcoming entries */}
-            {variant === 'upcoming' && r.ticketCode && (
-              <div className="mt-2 inline-flex items-center gap-1.5 px-2 py-0.5 rounded-md bg-gold/10 border border-gold/30 text-[11px] font-bold text-gold">
-                <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-                  <rect x="3" y="11" width="18" height="11" rx="2" /><path d="M7 11V7a5 5 0 0110 0v4" />
-                </svg>
-                <span className="font-mono tracking-[2px]">{r.ticketCode}</span>
-              </div>
-            )}
           </div>
         </div>
+
+        {/* Service code — prominent so the client can read it on arrival without
+         * digging into the detail page. Shown only on upcoming entries. */}
+        {variant === 'upcoming' && r.ticketCode && (
+          <div className="mt-3 flex items-center justify-between gap-3 rounded-xl bg-gold/10 border border-gold/30 px-3.5 py-2.5">
+            <div className="flex flex-col">
+              <span className="text-[10px] font-bold uppercase tracking-widest text-gold/80">
+                {t('ticket_code_label')}
+              </span>
+              <span className="font-mono text-[18px] font-black tracking-[6px] text-gold leading-none mt-0.5">
+                {r.ticketCode}
+              </span>
+            </div>
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#af8408" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+              <rect x="3" y="11" width="18" height="11" rx="2" />
+              <path d="M7 11V7a5 5 0 0110 0v4" />
+            </svg>
+          </div>
+        )}
       </Link>
 
       {showActions && (
@@ -732,18 +762,28 @@ function ReservationCard({
             </Link>
           )}
           {showSignalDelay && (
-            <Link
-              href={`/client/reservations/${r.id}/signal-delay`}
-              className="text-[13px] font-semibold text-[#666] dark:text-[#B0B0A0] hover:text-gold transition-colors"
-            >
-              {t('signal_delay_btn')}
-            </Link>
+            signalDelayEnabled ? (
+              <Link
+                href={`/client/reservations/${r.id}/signal-delay`}
+                className="text-[13px] font-semibold text-[#666] dark:text-[#B0B0A0] hover:text-gold transition-colors"
+              >
+                {t('signal_delay_btn')}
+              </Link>
+            ) : (
+              <span
+                className="text-[13px] font-semibold text-[#999] dark:text-[#666] cursor-not-allowed"
+                title={t('signal_delay_btn_disabled_tooltip')}
+                aria-disabled="true"
+              >
+                {t('signal_delay_btn')}
+              </span>
+            )
           )}
           {onCancel && (
             <button
               type="button"
               onClick={onCancel}
-              className="text-[13px] font-semibold text-lavo-error hover:opacity-75 transition-opacity cursor-pointer"
+              className="text-[13px] font-semibold text-Hurryline-error hover:opacity-75 transition-opacity cursor-pointer"
             >
               {t('cancel_reservation')}
             </button>
@@ -857,12 +897,12 @@ function CancelModal({
           <p className="text-[13px] text-[#555] dark:text-[#C0C0B0]">{t('cancel_modal_desc')}</p>
 
           {showFeesWarning && (
-            <div className="flex gap-2.5 bg-lavo-error/10 border border-lavo-error/20 rounded-xl px-3.5 py-3">
+            <div className="flex gap-2.5 bg-Hurryline-error/10 border border-Hurryline-error/20 rounded-xl px-3.5 py-3">
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#E8472A" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="shrink-0 mt-0.5" aria-hidden="true">
                 <path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z" />
                 <line x1="12" y1="9" x2="12" y2="13" /><line x1="12" y1="17" x2="12.01" y2="17" />
               </svg>
-              <p className="text-[12px] font-semibold text-lavo-error leading-relaxed">
+              <p className="text-[12px] font-semibold text-Hurryline-error leading-relaxed">
                 {t('cancel_modal_fees_warning')}
               </p>
             </div>
@@ -883,7 +923,7 @@ function CancelModal({
             type="button"
             onClick={onConfirm}
             disabled={loading}
-            className="flex-1 py-3 rounded-xl text-[14px] font-black text-white bg-lavo-error hover:bg-lavo-error/90 transition-colors cursor-pointer disabled:opacity-50 flex items-center justify-center gap-2"
+            className="flex-1 py-3 rounded-xl text-[14px] font-black text-white bg-Hurryline-error hover:bg-Hurryline-error/90 transition-colors cursor-pointer disabled:opacity-50 flex items-center justify-center gap-2"
           >
             {loading && (
               <svg className="animate-spin" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" aria-hidden="true">
@@ -905,18 +945,54 @@ function CancelModal({
 function QueueCard({
   entry: q,
   t,
+  locale,
+  variant,
   onLeave,
   onLeaveAndBook,
 }: {
   entry: ClientQueueEntry;
   t: ReturnType<typeof useTranslations>;
-  onLeave: () => void;
-  onLeaveAndBook: () => void;
+  locale: string;
+  variant: 'upcoming' | 'past';
+  onLeave?: () => void;
+  onLeaveAndBook?: () => void;
 }) {
-  const isActive = q.status === 'in_progress';
-  /* In-progress entries are being served right now: only the station can act
-   * on them. Cancellation buttons disappear in that state. */
-  const showActions = !isActive;
+  const isInProgress = q.status === 'in_progress';
+  const isCancelled = q.status === 'cancelled';
+  const isCompleted = q.status === 'completed';
+
+  /* Past completed queue entries reuse the reservation rate/tip flows; the
+   * dedicated routes accept any entry id. Tip prompt vanishes after the 7-day
+   * window (uses completedAt when available, otherwise joinedAt as a fallback). */
+  const showRateAction = variant === 'past' && isCompleted && !q.isRated;
+  const showTipAction  =
+    variant === 'past' && isCompleted && !q.isTipped && isTipStillEligible(q.completedAt ?? q.joinedAt);
+
+  const showActiveActions = variant === 'upcoming' && !isInProgress;
+  const showActions = showActiveActions || showRateAction || showTipAction;
+
+  const statusLabel = isCompleted
+    ? t('status_completed')
+    : isCancelled
+      ? t('status_cancelled')
+      : isInProgress
+        ? t('queue_in_progress')
+        : t('queue_waiting');
+  const statusBadgeClass = isCompleted
+    ? 'bg-[#999]/15 text-[#666]'
+    : isCancelled
+      ? 'bg-Hurryline-error/15 text-Hurryline-error'
+      : isInProgress
+        ? 'bg-gold/15 text-gold'
+        : 'bg-blue-500/15 text-blue-500';
+
+  /* Past entries highlight the date they took place; active entries keep the
+   * queue-position metadata they had at join time. */
+  const completedLabel = q.completedAt
+    ? new Date(q.completedAt).toLocaleDateString(locale === 'en' ? 'en-CA' : 'fr-CA', {
+        weekday: 'short', day: 'numeric', month: 'short',
+      })
+    : null;
 
   return (
     <div className="bg-[#E8E8D8] dark:bg-dark-card rounded-xl border border-[#D0D0C0] dark:border-tab-inactive overflow-hidden hover:border-gold/30 transition-colors">
@@ -937,52 +1013,88 @@ function QueueCard({
               <h3 className="text-[15px] font-bold text-[#0A0A14] dark:text-white leading-tight truncate">
                 {q.stationName}
               </h3>
-              <span className={`shrink-0 px-2 py-0.5 rounded-full text-[11px] font-bold ${isActive ? 'bg-gold/15 text-gold' : 'bg-blue-500/15 text-blue-500'}`}>
-                {isActive ? t('queue_in_progress') : t('queue_waiting')}
+              <span className={`shrink-0 px-2 py-0.5 rounded-full text-[11px] font-bold ${statusBadgeClass}`}>
+                {statusLabel}
               </span>
             </div>
 
             <p className="text-[13px] text-[#666] dark:text-[#B0B0A0] mt-0.5 truncate">{q.forfaitName}</p>
 
             <div className="flex items-center gap-3 mt-2 text-[13px]">
-              <span className="flex items-center gap-1 text-[#555] dark:text-[#C0C0B0]">
-                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-                  <path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2" /><circle cx="9" cy="7" r="4" />
-                  <path d="M23 21v-2a4 4 0 00-3-3.87" /><path d="M16 3.13a4 4 0 010 7.75" />
-                </svg>
-                {t('queue_position', { position: q.position })}
-              </span>
+              {variant === 'past' && completedLabel ? (
+                <span className="flex items-center gap-1 text-[#555] dark:text-[#C0C0B0]">
+                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><rect x="3" y="4" width="18" height="18" rx="2" /><line x1="16" y1="2" x2="16" y2="6" /><line x1="8" y1="2" x2="8" y2="6" /><line x1="3" y1="10" x2="21" y2="10" /></svg>
+                  {completedLabel}
+                </span>
+              ) : (
+                <span className="flex items-center gap-1 text-[#555] dark:text-[#C0C0B0]">
+                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                    <path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2" /><circle cx="9" cy="7" r="4" />
+                    <path d="M23 21v-2a4 4 0 00-3-3.87" /><path d="M16 3.13a4 4 0 010 7.75" />
+                  </svg>
+                  {t('queue_position', { position: q.position })}
+                </span>
+              )}
               <span className="ml-auto font-bold text-gold">{q.totalPrice.toFixed(2)}$</span>
             </div>
 
-            {q.ticketCode && (
-              <div className="mt-2 inline-flex items-center gap-1.5 px-2 py-0.5 rounded-md bg-gold/10 border border-gold/30 text-[11px] font-bold text-gold">
-                <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-                  <rect x="3" y="11" width="18" height="11" rx="2" /><path d="M7 11V7a5 5 0 0110 0v4" />
-                </svg>
-                <span className="font-mono tracking-[2px]">{q.ticketCode}</span>
-              </div>
-            )}
           </div>
         </div>
+
+        {variant === 'upcoming' && q.ticketCode && (
+          <div className="mt-3 flex items-center justify-between gap-3 rounded-xl bg-gold/10 border border-gold/30 px-3.5 py-2.5">
+            <div className="flex flex-col">
+              <span className="text-[10px] font-bold uppercase tracking-widest text-gold/80">
+                {t('ticket_code_label')}
+              </span>
+              <span className="font-mono text-[18px] font-black tracking-[6px] text-gold leading-none mt-0.5">
+                {q.ticketCode}
+              </span>
+            </div>
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#af8408" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+              <rect x="3" y="11" width="18" height="11" rx="2" />
+              <path d="M7 11V7a5 5 0 0110 0v4" />
+            </svg>
+          </div>
+        )}
       </Link>
 
       {showActions && (
         <div className="px-4 pb-3 pt-2 border-t border-[#D0D0C0] dark:border-tab-inactive flex flex-wrap items-center gap-x-4 gap-y-1.5">
-          <button
-            type="button"
-            onClick={onLeaveAndBook}
-            className="text-[13px] font-semibold text-gold hover:opacity-75 transition-opacity cursor-pointer"
-          >
-            {t('queue_leave_and_book')}
-          </button>
-          <button
-            type="button"
-            onClick={onLeave}
-            className="text-[13px] font-semibold text-lavo-error hover:opacity-75 transition-opacity cursor-pointer"
-          >
-            {t('queue_leave')}
-          </button>
+          {showActiveActions && onLeaveAndBook && (
+            <button
+              type="button"
+              onClick={onLeaveAndBook}
+              className="text-[13px] font-semibold text-gold hover:opacity-75 transition-opacity cursor-pointer"
+            >
+              {t('queue_leave_and_book')}
+            </button>
+          )}
+          {showActiveActions && onLeave && (
+            <button
+              type="button"
+              onClick={onLeave}
+              className="text-[13px] font-semibold text-Hurryline-error hover:opacity-75 transition-opacity cursor-pointer"
+            >
+              {t('queue_leave')}
+            </button>
+          )}
+          {showRateAction && (
+            <Link
+              href={`/client/reservations/${q.id}/rate`}
+              className="text-[13px] font-semibold text-gold hover:opacity-75 transition-opacity"
+            >
+              {t('rate_btn')}
+            </Link>
+          )}
+          {showTipAction && (
+            <Link
+              href={`/client/reservations/${q.id}/tip`}
+              className="text-[13px] font-semibold text-[#666] dark:text-[#B0B0A0] hover:text-gold transition-colors"
+            >
+              {t('tip_btn')}
+            </Link>
+          )}
         </div>
       )}
     </div>

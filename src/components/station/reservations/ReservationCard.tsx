@@ -87,11 +87,16 @@ export function ReservationCard({ entry, onValidate, onStart, onCancel, onExtraT
               {isReservation ? t('type_reservation') : t('type_queue')}
             </span>
           </div>
-          {entry.amount_paid && (
-            <span className="mt-0.5 block font-mono text-[13px] font-bold text-[#C09A18]">
-              {parseFloat(entry.amount_paid).toFixed(2)}$
+          <div className="mt-0.5 flex items-center gap-2">
+            <span className="truncate text-[12px] font-semibold text-[#000C1F]/70 dark:text-[#FFF8EC]/70">
+              {entry.vehicle_format?.label ?? t('label_no_service')}
             </span>
-          )}
+            {entry.amount_paid && (
+              <span className="font-mono text-[13px] font-bold text-[#C09A18]">
+                {parseFloat(entry.amount_paid).toFixed(2)}$
+              </span>
+            )}
+          </div>
         </div>
 
         <span
@@ -113,6 +118,11 @@ export function ReservationCard({ entry, onValidate, onStart, onCancel, onExtraT
           <div className="border-t border-[#B8B8A4] px-5 pb-4 pt-3 dark:border-[#3A4A36]">
             {/* Details grid */}
             <div className="mb-3 grid grid-cols-2 gap-x-6 gap-y-2 text-[13px]">
+              <DetailRow
+                label={t('detail_service')}
+                value={entry.vehicle_format?.label ?? t('label_no_service')}
+                muted={!entry.vehicle_format?.label}
+              />
               <DetailRow label={t('detail_entry_type')} value={isReservation ? t('type_reservation') : t('type_queue')} />
               <DetailRow label={t('detail_entry_id')} value={`#${entry.id.slice(0, 8)}`} mono />
               <DetailRow label={t('detail_created_at')} value={formatTime(entry.created_at)} />
@@ -179,7 +189,7 @@ export function ReservationCard({ entry, onValidate, onStart, onCancel, onExtraT
                       <button
                         type="button"
                         onClick={(e) => { e.stopPropagation(); onValidate(entry.id); }}
-                        className="flex items-center gap-1.5 rounded-[10px] bg-lavo-success px-4 py-2 text-[13px] font-bold text-white transition-all hover:opacity-90 active:scale-[0.98]"
+                        className="flex items-center gap-1.5 rounded-[10px] bg-Hurryline-success px-4 py-2 text-[13px] font-bold text-white transition-all hover:opacity-90 active:scale-[0.98]"
                       >
                         <CheckIcon />
                         {t('btn_validate')}

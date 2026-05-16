@@ -1,4 +1,4 @@
-# LAVO Testing Strategy
+# Hurryline Testing Strategy
 
 ## Testing Pyramid
 

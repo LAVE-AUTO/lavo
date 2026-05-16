@@ -2,7 +2,7 @@
 
 import { useState, useCallback, useEffect } from 'react';
 
-const STORAGE_KEY = 'lavo_favorites';
+const STORAGE_KEY = 'Hurryline_favorites';
 
 function readIds(): string[] {
   if (typeof window === 'undefined') return [];

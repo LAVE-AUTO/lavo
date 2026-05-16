@@ -47,6 +47,15 @@ jest.mock('@/server/reservations/cancellation-service', () => ({
 jest.mock('@/server/notifications/notification-service', () => ({
   notifyEntry: (...args: unknown[]) => mockNotifyEntry(...args),
 }));
+jest.mock('@/server/notifications/client-feed-notifications', () => ({
+  notifyClientFeed: jest.fn().mockResolvedValue(undefined),
+}));
+jest.mock('@/server/notifications/station-feed-notifications', () => ({
+  notifyStationFeed: jest.fn().mockResolvedValue(undefined),
+}));
+jest.mock('@/server/auth/user-repository', () => ({
+  findById: jest.fn().mockResolvedValue(null),
+}));
 
 jest.mock('@/server/notifications/escrow-released-notifications', () => ({
   sendEscrowReleasedNotificationsForEntry: jest.fn(),
