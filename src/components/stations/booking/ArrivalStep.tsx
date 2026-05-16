@@ -626,7 +626,7 @@ export function ArrivalStep({
                           aria-label={isClosed ? t('arrival_closed_badge') : undefined}
                         >
                           {isClosed && (
-                            <span className="absolute top-0.5 left-1/2 -translate-x-1/2 px-1 rounded-full bg-Hurryline-error text-white text-[7px] font-black uppercase tracking-wider leading-tight">
+                            <span className="absolute top-1 left-1/2 -translate-x-1/2 px-1 rounded-full bg-Hurryline-error text-white text-[7px] font-black uppercase tracking-wider leading-tight">
                               {t('arrival_closed_badge')}
                             </span>
                           )}
@@ -639,7 +639,7 @@ export function ArrivalStep({
               )}
 
               {/* Date scroller (5-week horizontal strip) */}
-              <div className="flex gap-2 overflow-x-auto pb-2 scrollbar-hide">
+              <div className="flex gap-2 overflow-x-auto pt-2 pb-2 scrollbar-hide">
                 {dates.map((d) => {
                   const isClosed = closedDows.has(d.dayOfWeek);
                   const isSelected = selectedDate === d.key && arrivalMode === 'book_slot';
