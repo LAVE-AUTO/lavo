@@ -54,6 +54,10 @@ export type ListActiveStationsFilters = {
   near_lat?: number;
   /** User longitude in degrees; required (with near_lat) to support `distance_asc`/`distance_desc` sort. */
   near_lng?: number;
+  /** Minimum distance from user in km (requires near_lat/near_lng). */
+  distance_min_km?: number;
+  /** Maximum distance from user in km (requires near_lat/near_lng). */
+  distance_max_km?: number;
   /** When true, restricts to stations with is_open=true for today's day_of_week in station_hours. */
   open_today?: boolean;
 };
@@ -150,7 +154,11 @@ function listActiveStationsWhere(
   formatId: string | undefined,
   washTypeIds: string[] | undefined,
   serviceScope: string | undefined,
-  openToday?: boolean
+  openToday?: boolean,
+  nearLat?: number,
+  nearLng?: number,
+  distanceMinKm?: number,
+  distanceMaxKm?: number,
 ) {
   const conditions = [eq(stations.status, 'active')];
   if (city) conditions.push(eq(stations.city, city));
@@ -183,6 +191,11 @@ function listActiveStationsWhere(
     conditions.push(
       sql`EXISTS (SELECT 1 FROM ${stationHours} WHERE ${stationHours.station_id} = ${stations.id} AND ${stationHours.day_of_week} = ${todayDow} AND ${stationHours.is_open} = true)`
     );
+  }
+  if (nearLat != null && nearLng != null) {
+    const distExpr = distanceKmExpr(nearLat, nearLng);
+    if (distanceMinKm != null) conditions.push(sql`${distExpr} >= ${distanceMinKm}`);
+    if (distanceMaxKm != null) conditions.push(sql`${distExpr} <= ${distanceMaxKm}`);
   }
   return conditions.length === 1 ? conditions[0] : and(...conditions);
 }
@@ -248,9 +261,9 @@ function buildOrderBy(
 export async function listActiveStations(
   filters: ListActiveStationsFilters = {}
 ): Promise<ListActiveStationsResult> {
-  const { search, city, sort, page = 1, per_page = 20, format_id, wash_type_ids, service_scope, near_lat, near_lng, open_today } = filters;
+  const { search, city, sort, page = 1, per_page = 20, format_id, wash_type_ids, service_scope, near_lat, near_lng, distance_min_km, distance_max_km, open_today } = filters;
   const searchTerm = search?.trim();
-  const whereClause = listActiveStationsWhere(search, city, format_id, wash_type_ids, service_scope, open_today);
+  const whereClause = listActiveStationsWhere(search, city, format_id, wash_type_ids, service_scope, open_today, near_lat, near_lng, distance_min_km, distance_max_km);
 
   const limit = Math.min(Math.max(1, per_page ?? 20), 100);
   const offset = (Math.max(1, page ?? 1) - 1) * limit;
@@ -298,9 +311,9 @@ export async function listActiveStationsGroup(
   filters: ListActiveStationsFilters,
   limitPerGroup: number
 ): Promise<StationWithAvailableSlots[]> {
-  const { search, city, sort, format_id, wash_type_ids, service_scope, near_lat, near_lng, open_today } = filters;
+  const { search, city, sort, format_id, wash_type_ids, service_scope, near_lat, near_lng, distance_min_km, distance_max_km, open_today } = filters;
   const searchTerm = search?.trim();
-  const whereClause = listActiveStationsWhere(search, city, format_id, wash_type_ids, service_scope, open_today);
+  const whereClause = listActiveStationsWhere(search, city, format_id, wash_type_ids, service_scope, open_today, near_lat, near_lng, distance_min_km, distance_max_km);
 
   const groupOrder: StationSortCriterion[] =
     group === 'available_now'

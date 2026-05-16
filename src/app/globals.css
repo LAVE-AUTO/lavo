@@ -369,6 +369,39 @@ button,
 }
 
 
+/* Show scrollbar only on hover */
+
+.scrollbar-hover {
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+}
+
+.scrollbar-hover::-webkit-scrollbar {
+    width: 4px;
+    opacity: 0;
+    transition: opacity 0.2s;
+}
+
+.scrollbar-hover::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+.scrollbar-hover::-webkit-scrollbar-thumb {
+    background: transparent;
+    border-radius: 9999px;
+    transition: background 0.2s;
+}
+
+.scrollbar-hover:hover {
+    scrollbar-width: thin;
+    scrollbar-color: #C8980A33 transparent;
+}
+
+.scrollbar-hover:hover::-webkit-scrollbar-thumb {
+    background: #C8980A55;
+}
+
+
 /* ------------------------------------------------------------------ */
 
 

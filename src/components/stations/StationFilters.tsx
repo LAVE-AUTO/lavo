@@ -20,10 +20,9 @@ export interface StationFiltersState {
   priceMax: string;
   timeFrom: string;
   timeTo: string;
-  maxDistanceKm: number; // 0 = no filter
+  distanceMinKm: string;
+  distanceMaxKm: string;
 }
-
-const DISTANCE_PRESETS = [5, 10, 25, 50] as const;
 
 interface StationFiltersProps {
   open: boolean;
@@ -122,7 +121,7 @@ export function StationFilters({
         </div>
 
         {/* Body */}
-        <div className="flex-1 overflow-y-auto px-5 sm:px-6 py-5 space-y-5">
+        <div className="scrollbar-hover flex-1 overflow-y-auto px-5 sm:px-6 py-5 space-y-5">
 
           {/* Name */}
           <FilterRow label={t('filter_name_label')}>
@@ -203,34 +202,17 @@ export function StationFilters({
 
           {/* Distance */}
           <FilterRow label={t('filter_distance_label')}>
-            <div className="flex flex-wrap gap-2">
-              <button
-                type="button"
-                onClick={() => patch({ maxDistanceKm: 0 })}
-                className={[
-                  'py-1.5 px-3.5 rounded-full text-[13px] font-bold border transition-colors',
-                  value.maxDistanceKm === 0
-                    ? 'bg-gold text-dark-bg border-gold'
-                    : 'bg-[#F5F5EE] dark:bg-tab-inactive text-[#1A1A1A] dark:text-white border-[#E0E0D0] dark:border-tab-inactive hover:border-gold',
-                ].join(' ')}
-              >
-                {t('filter_distance_all')}
-              </button>
-              {DISTANCE_PRESETS.map((km) => (
-                <button
-                  key={km}
-                  type="button"
-                  onClick={() => patch({ maxDistanceKm: km })}
-                  className={[
-                    'py-1.5 px-3.5 rounded-full text-[13px] font-bold border transition-colors',
-                    value.maxDistanceKm === km
-                      ? 'bg-gold text-dark-bg border-gold'
-                      : 'bg-[#F5F5EE] dark:bg-tab-inactive text-[#1A1A1A] dark:text-white border-[#E0E0D0] dark:border-tab-inactive hover:border-gold',
-                  ].join(' ')}
-                >
-                  {t('filter_distance_km', { distance: km })}
-                </button>
-              ))}
+            <div className="grid grid-cols-2 gap-2.5">
+              <DistanceInput
+                value={value.distanceMinKm}
+                onChange={(v) => patch({ distanceMinKm: v })}
+                placeholder={t('filter_distance_min_placeholder')}
+              />
+              <DistanceInput
+                value={value.distanceMaxKm}
+                onChange={(v) => patch({ distanceMaxKm: v })}
+                placeholder={t('filter_distance_max_placeholder')}
+              />
             </div>
             {!hasLocation && (
               <p className="mt-2 text-[12px] text-[#9A9A8A] dark:text-[#707068] italic">
@@ -294,6 +276,32 @@ function FilterRow({ label, children }: { label: string; children: React.ReactNo
         {label}
       </p>
       {children}
+    </div>
+  );
+}
+
+function DistanceInput({ value, onChange, placeholder }: {
+  value: string;
+  onChange: (v: string) => void;
+  placeholder: string;
+}) {
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const raw = e.target.value;
+    if (raw === '' || /^\d*\.?\d*$/.test(raw)) onChange(raw);
+  };
+  return (
+    <div className="relative">
+      <input
+        type="text"
+        inputMode="decimal"
+        value={value}
+        onChange={handleChange}
+        placeholder={placeholder}
+        className="w-full rounded-xl border border-[#E0E0D0] bg-[#F5F5EE] py-2.5 pl-3.5 pr-10 text-[14px] text-[#1A1A1A] placeholder-[#9A9A8A] outline-none focus:border-gold dark:border-tab-inactive dark:bg-tab-inactive dark:text-white transition-colors"
+      />
+      <span className="pointer-events-none absolute right-3.5 top-1/2 -translate-y-1/2 text-[12px] font-bold text-[#888]">
+        km
+      </span>
     </div>
   );
 }

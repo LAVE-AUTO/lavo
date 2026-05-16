@@ -37,7 +37,8 @@ const DEFAULT_FILTERS: StationFiltersState = {
   priceMax:          '',
   timeFrom:          '',
   timeTo:            '',
-  maxDistanceKm:     0,
+  distanceMinKm:     '',
+  distanceMaxKm:     '',
 };
 
 /** Convert "HHhMM - HHhMM" or "HH:MM - HH:MM" into [openMinutes, closeMinutes]. */
@@ -122,6 +123,8 @@ export function StationListView({ washTypes, vehicleFormats }: StationListViewPr
       params.near_lat = String(userLocation.latitude);
       params.near_lng = String(userLocation.longitude);
     }
+    if (filters.distanceMinKm !== '') params.distance_min_km = filters.distanceMinKm;
+    if (filters.distanceMaxKm !== '') params.distance_max_km = filters.distanceMaxKm;
 
     fetchStations(params).then((result) => {
       if (cancelled) return;
@@ -131,7 +134,7 @@ export function StationListView({ washTypes, vehicleFormats }: StationListViewPr
     }).catch(() => { if (!cancelled) setLoading(false); });
 
     return () => { cancelled = true; };
-  }, [debouncedText, sort, filters.selectedWashTypes, filters.serviceScope, filters.formatId, userLocation]);
+  }, [debouncedText, sort, filters.selectedWashTypes, filters.serviceScope, filters.formatId, filters.distanceMinKm, filters.distanceMaxKm, userLocation]);
 
   /* Hydrate cityQuery from URL ?q= */
   useEffect(() => {
@@ -165,8 +168,15 @@ export function StationListView({ washTypes, vehicleFormats }: StationListViewPr
         return true;
       });
     }
-    if (filters.maxDistanceKm > 0 && userLocation) {
-      out = out.filter((s) => s.distanceKm != null && s.distanceKm <= filters.maxDistanceKm);
+    const distMin = filters.distanceMinKm !== '' ? parseFloat(filters.distanceMinKm) : null;
+    const distMax = filters.distanceMaxKm !== '' ? parseFloat(filters.distanceMaxKm) : null;
+    if ((distMin != null || distMax != null) && userLocation) {
+      out = out.filter((s) => {
+        if (s.distanceKm == null) return false;
+        if (distMin != null && s.distanceKm < distMin) return false;
+        if (distMax != null && s.distanceKm > distMax) return false;
+        return true;
+      });
     }
     if (sort === 'price_asc') {
       out = [...out].sort((a, b) => {
@@ -200,7 +210,7 @@ export function StationListView({ washTypes, vehicleFormats }: StationListViewPr
     (filters.formatId ? 1 : 0) +
     (priceMinNum != null || priceMaxNum != null ? 1 : 0) +
     (timeFromMin != null || timeToMin != null ? 1 : 0) +
-    (filters.maxDistanceKm > 0 ? 1 : 0);
+    (filters.distanceMinKm !== '' || filters.distanceMaxKm !== '' ? 1 : 0);
 
   const handleReset = () => {
     setFilters(DEFAULT_FILTERS);
@@ -210,7 +220,7 @@ export function StationListView({ washTypes, vehicleFormats }: StationListViewPr
 
   const sortChips: { key: SortKey; label: string; icon?: string }[] = [
     { key: 'default',    label: t('filter_all') },
-    { key: 'nearest',    label: t('filter_nearby'), icon: '📍' },
+    { key: 'nearest',    label: t('filter_nearby') },
     { key: 'best_rated', label: t('filter_best_rated') },
     { key: 'price_asc',  label: t('filter_price_asc') },
   ];

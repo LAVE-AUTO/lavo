@@ -570,9 +570,9 @@
         "filter_coming_soon_pill": "Coming soon",
         "filter_coming_soon_hint": "These filters are previewed here - they will become active as soon as the data is available on the platform.",
         "filter_currency_unit": "$",
-        "filter_distance_label": "Max distance",
-        "filter_distance_all": "All",
-        "filter_distance_km": "{distance} km",
+        "filter_distance_label": "Distance (km)",
+        "filter_distance_min_placeholder": "Min",
+        "filter_distance_max_placeholder": "Max",
         "filter_distance_no_location": "Enable location to filter by distance",
         "rating": "Rating"
     },

@@ -354,6 +354,20 @@ export const listStationsQuerySchema = z.object({
     .refine((n) => n === undefined || (Number.isFinite(n) && n >= -180 && n <= 180), {
       message: 'near_lng must be a number between -180 and 180',
     }),
+  distance_min_km: z
+    .string()
+    .optional()
+    .transform((s) => (s === '' || s === undefined ? undefined : Number(s)))
+    .refine((n) => n === undefined || (Number.isFinite(n) && n >= 0), {
+      message: 'distance_min_km must be a non-negative number',
+    }),
+  distance_max_km: z
+    .string()
+    .optional()
+    .transform((s) => (s === '' || s === undefined ? undefined : Number(s)))
+    .refine((n) => n === undefined || (Number.isFinite(n) && n > 0), {
+      message: 'distance_max_km must be a positive number',
+    }),
 });
 
 
