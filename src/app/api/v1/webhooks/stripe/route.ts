@@ -23,6 +23,7 @@ import {
 import { users } from '@/lib/db/schema';
 import { decrementSlotBookedCount } from '@/server/station/slot-repository';
 import { notifyEntry } from '@/server/notifications/notification-service';
+import { notifyClientFeed } from '@/server/notifications/client-feed-notifications';
 import { sendEscrowReleasedNotificationsForEntry } from '@/server/notifications/escrow-released-notifications';
 
 const webhookSecret = process.env.STRIPE_WEBHOOK_SECRET;
@@ -274,6 +275,13 @@ async function handlePaymentAuthorized(paymentIntentId: string): Promise<void> {
       stationId: entry.station_id,
       type: 'reservation_confirmed',
     });
+    await notifyClientFeed({
+      userId: entry.user_id,
+      entryId: entry.id,
+      stationId: entry.station_id,
+      kind: 'reservation_confirmed',
+      body: 'Votre réservation est confirmée. À bientôt !',
+    });
   } catch (err) {
     const error = err instanceof Error ? err.message : String(err);
     console.error('Webhook: notification failed for reservation_confirmed', { entryId: entry.id, error });
@@ -311,6 +319,13 @@ async function handlePaymentCancelled(paymentIntentId: string, reason: string): 
       userId: cancelled.user_id,
       stationId: cancelled.station_id,
       type: 'entry_cancelled',
+    });
+    await notifyClientFeed({
+      userId: cancelled.user_id,
+      entryId: cancelled.id,
+      stationId: cancelled.station_id,
+      kind: 'entry_cancelled',
+      body: 'Votre réservation a été annulée.',
     });
   } catch (err) {
     const error = err instanceof Error ? err.message : String(err);

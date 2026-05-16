@@ -25,6 +25,7 @@ import {
   distributePenalty,
 } from '@/server/payments/payment-service';
 import { notifyEntry } from '@/server/notifications/notification-service';
+import { notifyClientFeed } from '@/server/notifications/client-feed-notifications';
 import {
   listActiveQueueEntries,
   updateEntry,
@@ -174,6 +175,13 @@ export async function markQueueNoShows(): Promise<MarkNoShowsResult> {
         stationId: entry.station_id,
         type: 'queue_no_show',
         payload: { penaltyAmount, refundedAmount },
+      });
+      await notifyClientFeed({
+        userId: entry.user_id,
+        entryId: entry.id,
+        stationId: entry.station_id,
+        kind: 'queue_no_show',
+        body: 'Votre réservation a été annulée car la station a fermé pour la journée.',
       });
     } catch (e) {
       console.error('[NO_SHOW_NOTIFY_FAILED]', {

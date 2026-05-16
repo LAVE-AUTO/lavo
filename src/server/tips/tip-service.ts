@@ -34,6 +34,7 @@ import { AppError } from '@/lib/errors';
 import { HTTP_STATUS } from '@/helpers/constants';
 import { createTipPaymentIntent } from '@/server/payments/payment-service';
 import { notifyEntry } from '@/server/notifications/notification-service';
+import { notifyClientFeed } from '@/server/notifications/client-feed-notifications';
 import { getPlatformSettingWithFallback } from '@/server/admin/platform-settings-service';
 import * as repo from './tip-repository';
 import type { CreateTipInput } from '@/validators/tip';
@@ -189,6 +190,13 @@ export async function createTip(
     userId,
     entryId: reservationId,
     type: 'tip_sent',
+  }).catch(() => undefined);
+  notifyClientFeed({
+    userId,
+    entryId: reservationId,
+    stationId: reservation.station_id,
+    kind: 'tip_sent',
+    body: 'Votre pourboire a bien été envoyé. Merci !',
   }).catch(() => undefined);
 
   return { tip, clientSecret };

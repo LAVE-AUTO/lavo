@@ -24,6 +24,7 @@ import { parseTimeForDate } from '@/helpers/date-helper';
 import { getCancellationPolicy } from '@/server/admin/platform-settings-service';
 import { getConfigByStationId } from '@/server/station/config-repository';
 import { notifyEntry } from '@/server/notifications/notification-service';
+import { notifyClientFeed } from '@/server/notifications/client-feed-notifications';
 import {
   capturePaymentIntent,
   cancelPaymentIntent,
@@ -232,6 +233,13 @@ export async function cancelReservation(
     stationId: reservation.station_id,
     type: 'reservation_cancelled',
     payload: { penaltyAmount, refundedAmount, isLateCancellation },
+  });
+  await notifyClientFeed({
+    userId,
+    entryId: reservationId,
+    stationId: reservation.station_id,
+    kind: 'reservation_cancelled',
+    body: 'Votre réservation a été annulée et un remboursement a été initié.',
   });
 
   return { entry: updated, refundedAmount, penaltyAmount, isLateCancellation };

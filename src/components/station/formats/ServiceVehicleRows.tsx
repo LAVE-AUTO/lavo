@@ -95,31 +95,12 @@ export function ServiceVehicleRows({
             />
           </div>
 
-          {/* Staff */}
-          <div className="w-[90px] shrink-0">
-            <p className="mb-1 text-[9px] font-bold uppercase tracking-[0.6px] text-[#888] dark:text-[#5A5A4A]">
-              {t('vehicle_col_staff')}
-            </p>
-            <TextField
-              value={String(entry.staff_required)}
-              onChange={(v) => {
-                const n = parseInt(v, 10);
-                update(entry.vehicle_format_id, 'staff_required', isNaN(n) ? 0 : n);
-              }}
-              type="number"
-              inputMode="numeric"
-              min={0}
-              step={1}
-              disabled={!entry.is_active}
-            />
-          </div>
-
           {/* Active toggle */}
           <button
             type="button"
             onClick={() => update(entry.vehicle_format_id, 'is_active', !entry.is_active)}
             aria-pressed={entry.is_active}
-            className={`shrink-0 self-center rounded-lg px-3 py-2 text-[11px] font-bold transition-all ${
+            className={`shrink-0 self-end rounded-lg px-3 py-2 text-[11px] font-bold transition-all ${
               entry.is_active
                 ? 'bg-[#C49A1E] text-[#0C1209] hover:opacity-85'
                 : 'border border-[#E0DCD0] bg-white text-[#AAA] hover:border-[#C49A1E]/40 dark:border-[#243020] dark:bg-[#182214] dark:text-[#5A5A4A]'

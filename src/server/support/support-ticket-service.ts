@@ -1,5 +1,6 @@
 import * as repo from "./support-ticket-repository";
 import { notifyEntry } from "@/server/notifications/notification-service";
+import { notifyClientFeed } from "@/server/notifications/client-feed-notifications";
 import { AppError } from "@/lib/errors";
 import { HTTP_STATUS } from "@/helpers/constants";
 import { z } from "zod";
@@ -73,6 +74,12 @@ export async function createSupportTicket(
         entryId: ticket.id,
         type: "support_ticket_created",
       });
+      await notifyClientFeed({
+        userId,
+        entryId: ticket.id,
+        kind: 'support_ticket_created',
+        body: 'Votre demande a été enregistrée avec succès.',
+      });
 
       return ticket;
     } catch (err: unknown) {
@@ -139,6 +146,15 @@ export async function addSupportMessage(
       entryId: ticket.id,
       type: "support_message_received",
     });
+    // Only push to client feed when an admin replies; client-to-admin messages target the admin's feed.
+    if (isAdmin) {
+      await notifyClientFeed({
+        userId: recipientId,
+        entryId: ticket.id,
+        kind: 'support_message_received',
+        body: 'Vous avez reçu une réponse à votre ticket.',
+      });
+    }
   }
   // TODO: When ticket.assigned_to is null and a client sends a message, no admin
   // receives a notification. A future improvement should query for users with the

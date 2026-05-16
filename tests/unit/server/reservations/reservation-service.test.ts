@@ -2,7 +2,10 @@
  * Unit tests for reservation-service: createReservation, cancelEntry, listMyEntries (mocked deps).
  */
 const mockGetConfigByStationId = jest.fn();
-const mockFindFormatByIdAndStation = jest.fn();
+const mockFindServiceByIdAndStation = jest.fn();
+const mockFindServiceVehicleEntryForBooking = jest.fn();
+const mockHasActiveReservationForSlot = jest.fn();
+const mockFindPendingPaymentReservationForSlot = jest.fn();
 const mockLockSlotForUpdate = jest.fn();
 const mockCountReservationsBySlotId = jest.fn();
 const mockIncrementSlotBookedCount = jest.fn();
@@ -31,8 +34,12 @@ jest.mock('@/server/admin/platform-settings-service', () => ({
 jest.mock('@/server/station/config-repository', () => ({
   getConfigByStationId: (...args: unknown[]) => mockGetConfigByStationId(...args),
 }));
+jest.mock('@/server/station/service-repository', () => ({
+  findServiceByIdAndStation: (...args: unknown[]) => mockFindServiceByIdAndStation(...args),
+  findServiceVehicleEntryForBooking: (...args: unknown[]) => mockFindServiceVehicleEntryForBooking(...args),
+}));
 jest.mock('@/server/station/format-repository', () => ({
-  findFormatByIdAndStation: (...args: unknown[]) => mockFindFormatByIdAndStation(...args),
+  findFormatById: jest.fn(),
 }));
 jest.mock('@/server/station/slot-repository', () => ({
   lockSlotForUpdate: (...args: unknown[]) => mockLockSlotForUpdate(...args),
@@ -52,15 +59,31 @@ jest.mock('@/server/notifications/escrow-released-notifications', () => ({
 jest.mock('@/server/notifications/notification-service', () => ({
   notifyEntry: (...args: unknown[]) => mockNotifyEntry(...args),
 }));
+jest.mock('@/server/notifications/client-feed-notifications', () => ({
+  notifyClientFeed: jest.fn().mockResolvedValue(undefined),
+}));
+jest.mock('@/server/notifications/station-feed-notifications', () => ({
+  notifyStationFeed: jest.fn().mockResolvedValue(undefined),
+}));
+jest.mock('@/server/auth/user-repository', () => ({
+  findById: jest.fn().mockResolvedValue(null),
+}));
 jest.mock('@/server/reservations/entry-repository', () => ({
   createReservationEntry: (...args: unknown[]) => mockCreateReservationEntry(...args),
   findEntryByIdAndUser: (...args: unknown[]) => mockFindEntryByIdAndUser(...args),
   findEntryByIdAndStation: (...args: unknown[]) => mockFindEntryByIdAndStation(...args),
   hasActiveEntryAtStation: (...args: unknown[]) => mockHasActiveEntryAtStation(...args),
+  hasActiveReservationForSlot: (...args: unknown[]) => mockHasActiveReservationForSlot(...args),
+  findPendingPaymentReservationForSlot: (...args: unknown[]) => mockFindPendingPaymentReservationForSlot(...args),
   listEntriesByUserPaginated: (...args: unknown[]) => mockListEntriesByUserPaginated(...args),
+  listRichEntriesByUser: jest.fn(),
   listEntriesByStationPaginated: jest.fn(),
+  listRichStationEntriesPaginated: jest.fn(),
   updateEntry: (...args: unknown[]) => mockUpdateEntry(...args),
   shiftQueuePositions: jest.fn(),
+  repositionQueueEntry: jest.fn(),
+  getNextQueuePosition: jest.fn().mockResolvedValue(1),
+  createQueueEntry: jest.fn(),
   setStripePaymentSucceededNotifiedAtIfMissing: (...args: unknown[]) =>
     mockSetStripePaymentSucceededNotifiedAtIfMissing(...args),
   clearStripePaymentSucceededNotifiedAt: (...args: unknown[]) =>
@@ -98,6 +121,11 @@ describe('reservation-service', () => {
   beforeEach(() => {
     jest.clearAllMocks();
     mockHasActiveEntryAtStation.mockResolvedValue(false);
+    mockHasActiveReservationForSlot.mockResolvedValue(false);
+    mockFindPendingPaymentReservationForSlot.mockResolvedValue(null);
+    mockFindServiceByIdAndStation.mockResolvedValue({ id: formatId });
+    mockFindServiceVehicleEntryForBooking.mockResolvedValue({ price: '10', is_active: true });
+    mockCreatePaymentIntent.mockResolvedValue({ paymentIntentId: 'pi_default', clientSecret: 'secret_default' });
     process.env.QR_TOKEN_SECRET = 'unit-test-qr-secret-0123456789abcdef';
   });
 

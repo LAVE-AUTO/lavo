@@ -17,6 +17,7 @@
 
 import { listReservationsForReminder } from '@/server/reservations/entry-repository';
 import { notifyEntry, type NotifyEntryParams } from '@/server/notifications/notification-service';
+import { notifyClientFeed } from '@/server/notifications/client-feed-notifications';
 import { getPlatformSettingWithFallback } from '@/server/admin/platform-settings-service';
 import { runWithConcurrencyLimit } from '@/helpers/concurrency';
 
@@ -30,6 +31,14 @@ type ReminderType = Extract<
   | 'reservation_reminder_5h'
   | 'reservation_reminder_30min'
 >;
+
+const REMINDER_FEED_BODY: Record<ReminderType, string> = {
+  reservation_reminder_24h:  'Vous avez une réservation prévue demain.',
+  reservation_reminder_2h:   'Votre réservation est dans 2 heures.',
+  reservation_reminder_1h:   'Votre réservation est dans 1 heure.',
+  reservation_reminder_5h:   'Votre réservation est dans 5 heures.',
+  reservation_reminder_30min:'Votre réservation est dans 30 minutes.',
+};
 
 export type SendRemindersResult = {
   reminders_24h: { processed: number; succeeded: number; failed: number };
@@ -58,6 +67,13 @@ async function sendRemindersForWindow(
       userId: entry.user_id,
       stationId: entry.station_id,
       type,
+    });
+    await notifyClientFeed({
+      userId: entry.user_id,
+      entryId: entry.id,
+      stationId: entry.station_id,
+      kind: type,
+      body: REMINDER_FEED_BODY[type],
     });
   });
 

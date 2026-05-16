@@ -14,6 +14,7 @@ import {
 import { isTruePlatformSetting } from "@/helpers/platform-setting-boolean";
 import { sendPushNotification } from "./fcm-service";
 import { notifyEntry } from "./notification-service";
+import { notifyClientFeed } from "./client-feed-notifications";
 import type { Entry } from "@/server/reservations/entry-repository";
 
 /**
@@ -31,6 +32,13 @@ export async function sendEscrowReleasedNotificationsForEntry(
       userId: entry.user_id,
       stationId: entry.station_id,
       type: "invitation_to_rate",
+    });
+    await notifyClientFeed({
+      userId: entry.user_id,
+      entryId: entry.id,
+      stationId: entry.station_id,
+      kind: "invitation_to_rate",
+      body: "Évaluez votre dernière visite pour nous aider à nous améliorer.",
     });
   } catch (err) {
     const error = err instanceof Error ? err.message : String(err);

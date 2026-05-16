@@ -28,6 +28,9 @@ jest.mock('@/server/support/support-ticket-repository', () => ({
 jest.mock('@/server/notifications/notification-service', () => ({
   notifyEntry: (...args: unknown[]) => mockNotifyEntry(...args),
 }));
+jest.mock('@/server/notifications/client-feed-notifications', () => ({
+  notifyClientFeed: jest.fn().mockResolvedValue(undefined),
+}));
 
 jest.mock('@/lib/db', () => ({
   db: {

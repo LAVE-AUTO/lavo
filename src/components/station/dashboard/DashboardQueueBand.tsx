@@ -70,7 +70,7 @@ export function DashboardQueueBand({ entries, onStartEntry, onCompleteEntry, onO
           className="flex h-[140px] w-[130px] flex-shrink-0 flex-col items-center justify-center gap-1.5 rounded-2xl bg-[#C49A1E] text-[#0C1209] font-black transition-all hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-40"
         >
           <PlayIcon />
-          <span className="text-center text-[12px] leading-tight">{t('btn_call_next')}</span>
+          <span className="text-center text-[11px] px-2 leading-tight">{t('btn_call_next')}</span>
         </button>
 
         {/* In-progress entries first */}

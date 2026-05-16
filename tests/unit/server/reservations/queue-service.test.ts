@@ -2,8 +2,8 @@
  * Unit tests for queue-service: joinQueue, listQueue, moveReservationToQueue, callNextInQueue (mocked deps).
  * @jest-environment node
  */
-const mockFindFormatByIdAndStation = jest.fn();
-const mockProcessPayment = jest.fn();
+const mockFindServiceByIdAndStation = jest.fn();
+const mockFindServiceVehicleEntryForBooking = jest.fn();
 const mockNotifyEntry = jest.fn();
 const mockCreateQueueEntry = jest.fn();
 const mockListQueueByStation = jest.fn();
@@ -14,21 +14,35 @@ const mockShiftQueuePositions = jest.fn();
 const mockDecrementSlotBookedCount = jest.fn();
 const mockFindFirstActiveQueueEntry = jest.fn();
 const mockCreatePaymentIntent = jest.fn();
+const mockCancelPaymentIntent = jest.fn();
 const mockUpdatePaymentIntentMetadata = jest.fn();
 const mockComputeReservationSplit = jest.fn();
+const mockFindPendingPaymentQueueEntryAtStation = jest.fn();
+const mockHasActiveQueueEntryAtStation = jest.fn();
 
-jest.mock('@/server/station/format-repository', () => ({
-  findFormatByIdAndStation: (...args: unknown[]) => mockFindFormatByIdAndStation(...args),
+jest.mock('@/server/station/service-repository', () => ({
+  findServiceByIdAndStation: (...args: unknown[]) => mockFindServiceByIdAndStation(...args),
+  findServiceVehicleEntryForBooking: (...args: unknown[]) => mockFindServiceVehicleEntryForBooking(...args),
 }));
 jest.mock('@/server/station/slot-repository', () => ({
   decrementSlotBookedCount: (...args: unknown[]) => mockDecrementSlotBookedCount(...args),
 }));
 jest.mock('@/server/payments/payment-service', () => ({
   createPaymentIntent: (...args: unknown[]) => mockCreatePaymentIntent(...args),
+  cancelPaymentIntent: (...args: unknown[]) => mockCancelPaymentIntent(...args),
   updatePaymentIntentMetadata: (...args: unknown[]) => mockUpdatePaymentIntentMetadata(...args),
 }));
 jest.mock('@/server/notifications/notification-service', () => ({
   notifyEntry: (...args: unknown[]) => mockNotifyEntry(...args),
+}));
+jest.mock('@/server/notifications/client-feed-notifications', () => ({
+  notifyClientFeed: jest.fn().mockResolvedValue(undefined),
+}));
+jest.mock('@/server/notifications/station-feed-notifications', () => ({
+  notifyStationFeed: jest.fn().mockResolvedValue(undefined),
+}));
+jest.mock('@/server/auth/user-repository', () => ({
+  findById: jest.fn().mockResolvedValue(null),
 }));
 jest.mock('@/server/reservations/entry-repository', () => ({
   createQueueEntry: (...args: unknown[]) => mockCreateQueueEntry(...args),
@@ -39,7 +53,8 @@ jest.mock('@/server/reservations/entry-repository', () => ({
   shiftQueuePositions: (...args: unknown[]) => mockShiftQueuePositions(...args),
   findFirstActiveQueueEntry: (...args: unknown[]) => mockFindFirstActiveQueueEntry(...args),
   getNextQueuePosition: jest.fn().mockResolvedValue(1),
-  hasActiveEntryAtStation: jest.fn().mockResolvedValue(false),
+  hasActiveQueueEntryAtStation: (...args: unknown[]) => mockHasActiveQueueEntryAtStation(...args),
+  findPendingPaymentQueueEntryAtStation: (...args: unknown[]) => mockFindPendingPaymentQueueEntryAtStation(...args),
 }));
 jest.mock('@/server/reservations/compute-reservation-split', () => ({
   computeReservationSplit: (...args: unknown[]) => mockComputeReservationSplit(...args),
@@ -58,7 +73,7 @@ import { joinQueue, listQueue, moveReservationToQueue, callNextInQueue } from '@
 import { NotFoundError, ConflictError } from '@/lib/errors';
 
 const stationId = 'station-1';
-const formatId = 'format-1';
+const serviceId = 'service-1';
 const userId = 'user-1';
 const entryId = 'entry-1';
 const stationStripeAccountId = 'acct_test_station';
@@ -66,23 +81,27 @@ const stationStripeAccountId = 'acct_test_station';
 describe('queue-service', () => {
   beforeEach(() => {
     jest.clearAllMocks();
+    mockFindPendingPaymentQueueEntryAtStation.mockResolvedValue(null);
+    mockHasActiveQueueEntryAtStation.mockResolvedValue(false);
   });
 
   describe('joinQueue', () => {
-    it('throws NotFoundError when format not found', async () => {
-      mockFindFormatByIdAndStation.mockResolvedValue(undefined);
-      await expect(joinQueue(userId, stationId, formatId, stationStripeAccountId)).rejects.toThrow(NotFoundError);
+    it('throws NotFoundError when service not found', async () => {
+      mockFindServiceByIdAndStation.mockResolvedValue(undefined);
+      await expect(joinQueue(userId, stationId, serviceId, null, stationStripeAccountId)).rejects.toThrow(NotFoundError);
       expect(mockCreateQueueEntry).not.toHaveBeenCalled();
     });
 
-    it('throws ConflictError when format is inactive', async () => {
-      mockFindFormatByIdAndStation.mockResolvedValue({ id: formatId, price: '10', is_active: false });
-      await expect(joinQueue(userId, stationId, formatId, stationStripeAccountId)).rejects.toThrow(ConflictError);
+    it('throws ConflictError when vehicle entry is inactive', async () => {
+      mockFindServiceByIdAndStation.mockResolvedValue({ id: serviceId });
+      mockFindServiceVehicleEntryForBooking.mockResolvedValue({ price: '10', is_active: false });
+      await expect(joinQueue(userId, stationId, serviceId, null, stationStripeAccountId)).rejects.toThrow(ConflictError);
       expect(mockCreateQueueEntry).not.toHaveBeenCalled();
     });
 
     it('creates queue entry when payment succeeds', async () => {
-      mockFindFormatByIdAndStation.mockResolvedValue({ id: formatId, price: '15', is_active: true });
+      mockFindServiceByIdAndStation.mockResolvedValue({ id: serviceId });
+      mockFindServiceVehicleEntryForBooking.mockResolvedValue({ price: '15', is_active: true });
       mockComputeReservationSplit.mockResolvedValue({
         commissionRate: '0.10',
         commissionAmount: 1.5,
@@ -92,7 +111,7 @@ describe('queue-service', () => {
       mockUpdatePaymentIntentMetadata.mockResolvedValue(undefined);
       const created = { id: entryId, entry_type: 'queue', queue_position: 1 };
       mockCreateQueueEntry.mockResolvedValue(created);
-      const result = await joinQueue(userId, stationId, formatId, stationStripeAccountId);
+      const result = await joinQueue(userId, stationId, serviceId, null, stationStripeAccountId);
       expect(result.entry).toEqual(created);
       expect(result.clientSecret).toBe('secret_1');
       expect(mockNotifyEntry).toHaveBeenCalledWith(

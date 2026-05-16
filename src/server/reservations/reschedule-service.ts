@@ -34,6 +34,7 @@ import {
   updatePaymentIntentMetadata,
 } from '@/server/payments/payment-service';
 import { notifyEntry } from '@/server/notifications/notification-service';
+import { notifyClientFeed } from '@/server/notifications/client-feed-notifications';
 import { findStationById } from '@/server/station/station-repository';
 import { findMatchingAvailabilitySlot } from '@/server/station/post-availability-service';
 import { findSlotById } from '@/server/station/slot-repository';
@@ -436,6 +437,13 @@ export async function rescheduleReservation(
       stationId: reservation.station_id,
       type: 'reservation_rescheduled',
       payload: { isLateCancellation, penaltyAmount, refundedAmount },
+    });
+    await notifyClientFeed({
+      userId,
+      entryId: newEntry.id,
+      stationId: reservation.station_id,
+      kind: 'reservation_rescheduled',
+      body: 'Votre réservation a été déplacée vers un nouveau créneau.',
     });
   } catch (e) {
     console.error('[RESCHEDULE_CLIENT_NOTIFY_FAILED]', {
