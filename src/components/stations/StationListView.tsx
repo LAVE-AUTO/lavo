@@ -219,7 +219,7 @@ export function StationListView({ washTypes, vehicleFormats }: StationListViewPr
     <div className="animate-fade-in">
 
       {/* Sticky controls */}
-      <div className="sticky top-[60px] z-30 bg-[#EDEDED] dark:bg-dark-bg pb-3 -mx-4 px-4 sm:-mx-6 sm:px-6 pt-3 space-y-3">
+      <div className="sticky top-[58px] z-30 bg-[#EDEDED] dark:bg-dark-bg pb-3 -mx-4 px-4 sm:-mx-6 sm:px-6 pt-3 space-y-3">
         <div className="flex gap-2">
           <div className="flex-1">
             <SearchBar value={cityQuery} onChange={setCityQuery} placeholder={t('search_city_placeholder')} />

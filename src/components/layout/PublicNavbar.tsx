@@ -211,7 +211,7 @@ export function PublicNavbar({
           <Link href={logoHref} className="shrink-0" aria-label="Hurryline - Accueil" suppressHydrationWarning>
             {isDark ? (
               <div className="flex items-center gap-2">
-                <div className="rounded-lg bg-white/95 p-0.5 border border-[rgba(200,152,10,0.25)] shadow-sm shrink-0">
+                <div className="rounded-lg bg-white/95 p-1 border border-[rgba(200,152,10,0.25)] shadow-sm shrink-0">
                   <Image src="/logo/frame2.png" alt="" width={28} height={28} className="w-7 h-7 object-contain" aria-hidden="true" />
                 </div>
                 <span className="font-playfair text-[18px] font-black text-[#c8980a] tracking-[3px]">Hurryline</span>
