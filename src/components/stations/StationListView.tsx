@@ -6,7 +6,6 @@ import { useTranslations } from 'next-intl';
 import { fetchStations, type FetchStationsResult } from '@/services/station-api';
 import { SearchBar } from './SearchBar';
 import { StationCard } from './StationCard';
-import { LocationPermissionBanner } from './LocationPermissionBanner';
 import { PageSpinner } from '@/components/ui/PageSpinner';
 import { EmptyState } from '@/components/ui/EmptyState';
 import { SectionHeader } from '@/components/ui/SectionHeader';
@@ -204,7 +203,6 @@ export function StationListView({ washTypes, vehicleFormats }: StationListViewPr
 
   return (
     <div className="animate-fade-in">
-      <LocationPermissionBanner />
 
       {/* Sticky controls */}
       <div className="sticky top-16 z-30 bg-[#EDEDED] dark:bg-dark-bg pb-3 -mx-4 px-4 sm:-mx-6 sm:px-6 pt-3 space-y-3">

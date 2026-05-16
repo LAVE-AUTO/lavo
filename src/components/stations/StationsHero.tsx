@@ -73,7 +73,6 @@ export async function StationsHero({ metrics }: StationsHeroProps) {
             {/* Title */}
             <h1 className="font-black leading-[1.05] mb-5 animate-fade-in-up animation-delay-100">
               <span className="block text-[42px] sm:text-[60px] text-white">{t('page_title')}</span>
-              <span className="block text-[42px] sm:text-[60px] hero-title-gradient">{t('hero_near_you')}</span>
             </h1>
 
             {/* Subtitle */}

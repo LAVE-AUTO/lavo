@@ -11,7 +11,6 @@ import { StationServicesSection } from './StationServicesSection';
 import { fetchStationById } from '@/services/station-api';
 import { useFavorites } from './useFavorites';
 import { useUserLocation, haversineKm } from './useUserLocation';
-import { LocationPermissionBanner } from './LocationPermissionBanner';
 import { PageSpinner } from '@/components/ui/PageSpinner';
 import { Badge } from '@/components/ui/Badge';
 import { ConfirmDialog } from '@/components/ui/ConfirmDialog';
@@ -389,7 +388,6 @@ export function StationDetail({ id }: StationDetailProps) {
 
         {/* ── Main content ── */}
         <div className="max-w-[1440px] mx-auto px-4 sm:px-6 lg:px-16 py-7 pb-36 sm:pb-28 lg:pb-14">
-          <LocationPermissionBanner />
           <div className="lg:grid lg:grid-cols-[1fr_400px] lg:gap-12 lg:items-start">
 
             {/* ── Left column ── */}
