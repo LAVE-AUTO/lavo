@@ -208,7 +208,7 @@ export function PublicNavbar({
         <div className="max-w-[1440px] mx-auto px-6 lg:px-16 flex items-center justify-between gap-6 py-3">
 
           {/* Logo */}
-          <Link href={logoHref} className="shrink-0" aria-label="Hurryline - Accueil">
+          <Link href={logoHref} className="shrink-0" aria-label="Hurryline - Accueil" suppressHydrationWarning>
             {isDark ? (
               <div className="flex items-center gap-2">
                 <div className="rounded-lg bg-white/95 p-0.5 border border-[rgba(200,152,10,0.25)] shadow-sm shrink-0">
@@ -520,7 +520,7 @@ export function PublicNavbar({
       </header>
 
       {/* Spacer - push page content below fixed header (can be disabled per-layout) */}
-      {withTopSpacer && <div className="h-[62px]" aria-hidden="true" />}
+      {withTopSpacer && <div className="h-[60px]" aria-hidden="true" />}
       {/* Extra spacer for mobile bottom nav (can be disabled per-layout) */}
       {withMobileScrollSpacer && <div className="sm:hidden" aria-hidden="true" />}
     </>

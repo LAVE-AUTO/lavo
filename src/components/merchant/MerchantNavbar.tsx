@@ -168,7 +168,7 @@ export function MerchantNavbar() {
         )}
       </header>
 
-      <div className="h-[62px]" aria-hidden="true" />
+      <div className="h-[60px]" aria-hidden="true" />
       <div className="sm:hidden h-16" aria-hidden="true" />
     </>
   );
