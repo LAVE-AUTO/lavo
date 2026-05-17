@@ -19,9 +19,9 @@
  * Run: npm run db:seed-production
  *
  * Default passwords (dev only):
- *   admin   admin@hurryline.local      / @Admin2026
- *   station station@<city>.demo        / @Station2026
- *   client  prod-seed.<n>@hurryline.demo / @Client2026
+ *   admin   admin@hurryline.local        / @Admin2026
+ *   station prod-seed.<city>.demo        / @Station2026
+ *   client  prod-seed.<name>.<n>@...demo / @User2026
  */
 import "dotenv/config";
 import { eq, inArray, like, sql } from "drizzle-orm";
@@ -29,24 +29,35 @@ import { drizzle } from "drizzle-orm/node-postgres";
 import { Pool } from "pg";
 import * as schema from "../src/lib/db/schema";
 import {
+  adminLogs,
   commissionSettings,
   delayRequests,
+  disputes,
+  extraVehicleEntries,
+  favorites,
   noShowFees,
   notifications,
   ratings,
   rescheduleRequests,
+  reservationTips,
   reservations,
+  serviceExtraCompatibility,
+  serviceVehicleEntries,
   settings,
   stationConfigs,
   stationDocuments,
+  stationExtras,
+  stationHourExceptions,
   stationHours,
   stationPhotos,
   stationPosts,
+  stationServices,
   stationWashTypes,
   stations,
   supportMessages,
   supportTickets,
   timeSlots,
+  userNotificationPrefs,
   userNotifications,
   users,
   vehicleFormats,
@@ -67,11 +78,18 @@ const TOTAL_QUEUE = 800;
 const FUTURE_RESERVATIONS = 50;
 const FUTURE_QUEUE = 20;
 const COMMISSION_RATE = "0.1000";
-const DEFAULT_PASSWORD_HASH =
-  process.env.SEED_DEFAULT_PASSWORD_HASH ??
-  "$2b$10$q0/a/xj6fSrI/aArWuDqOO0hJVyDUwh8tCilT0vaDpAklhjgST/dm";
-/* Hash of @Admin2026 / @Client2026 / @Station2026 — same bcrypt hash for the
- * three roles so ts-node does not need bcrypt at runtime. Override via env. */
+/* Bcrypt hashes pre-computed at cost=10 (fast enough for seed, safe for dev).
+ * Override individual roles via SEED_HASH_ADMIN / SEED_HASH_STATION / SEED_HASH_CLIENT env vars.
+ * Re-generate with: node -e "require('bcrypt').hash('<pw>',10).then(console.log)" */
+const HASH_ADMIN =
+  process.env.SEED_HASH_ADMIN ??
+  "$2b$10$W7m7WoFK/mh2UVqwGU11AujeVpQ8yzjB.JRB2WWewyQ/PD7pGJtqS"; /* @Admin2026 */
+const HASH_STATION =
+  process.env.SEED_HASH_STATION ??
+  "$2b$10$5X1kQMT1m9tx2lb56PofUO0N/rAlLqIYHA1UeN4QVDsajoZfEYQ1e"; /* @Station2026 */
+const HASH_CLIENT =
+  process.env.SEED_HASH_CLIENT ??
+  "$2b$10$53EiujNvl0tquP1UGMXMfeKPS/9xpjHd424L5CU2TFqLeVyeP23.K"; /* @User2026 */
 
 const FRENCH_FIRST_NAMES = [
   "Alexandre", "Amélie", "Antoine", "Arthur", "Camille", "Catherine", "Charlotte",
@@ -322,6 +340,70 @@ const CITY_PROFILES: CityProfile[] = [
   },
 ];
 
+interface ScenarioProfile {
+  name: string;
+  address: string;
+  postal: string;
+  lat: number;
+  lng: number;
+  managerEmail: string;
+  description: string;
+  status: "pending_admin_validation" | "rejected" | "inactive";
+  rejectionReason?: string;
+  docs: Array<"business_license" | "insurance" | "identity_document">;
+}
+
+/* Non-active stations: cover KYC/validation/closed scenarios. */
+const SCENARIO_PROFILES: ScenarioProfile[] = [
+  {
+    name: "Hurryline Repentigny (En attente de validation)",
+    address: "850 rue Notre-Dame",
+    postal: "J6A 2Y8",
+    lat: 45.7414, lng: -73.4572,
+    managerEmail: "station.repentigny@hurryline.demo",
+    description: "Nouvelle station en attente de validation administrative.",
+    status: "pending_admin_validation",
+    docs: ["business_license", "insurance"],
+  },
+  {
+    name: "Hurryline Joliette (Documents incomplets)",
+    address: "100 boulevard Dollard",
+    postal: "J6E 4M3",
+    lat: 46.0251, lng: -73.4486,
+    managerEmail: "station.joliette@hurryline.demo",
+    description: "Dossier de validation en cours, documents partiels.",
+    status: "pending_admin_validation",
+    docs: ["business_license"],
+  },
+  {
+    name: "Hurryline Saint-Hyacinthe (Rejetée)",
+    address: "1590 avenue Johnson",
+    postal: "J2S 7V3",
+    lat: 45.6261, lng: -72.9572,
+    managerEmail: "station.sthyacinthe@hurryline.demo",
+    description: "Station ayant soumis des documents non conformes.",
+    status: "rejected",
+    rejectionReason: "Les documents soumis ne correspondent pas au registre des entreprises du Québec. Veuillez soumettre des documents à jour et dûment certifiés.",
+    docs: ["business_license"],
+  },
+  {
+    name: "Hurryline Drummondville (Temporairement fermée)",
+    address: "505 boulevard Saint-Joseph",
+    postal: "J2C 2C1",
+    lat: 45.8842, lng: -72.4796,
+    managerEmail: "station.drummondville@hurryline.demo",
+    description: "Station temporairement fermée pour travaux de rénovation.",
+    status: "inactive",
+    docs: ["business_license", "insurance", "identity_document"],
+  },
+];
+
+const DOC_URLS: Record<string, string> = {
+  business_license: "https://res.cloudinary.com/demo/image/upload/sample.pdf",
+  insurance: "https://res.cloudinary.com/demo/image/upload/sample2.pdf",
+  identity_document: "https://res.cloudinary.com/demo/image/upload/sample3.pdf",
+};
+
 /* Vehicle formats ramped up so amount_paid totals look realistic. Each station
  * gets a slightly different price grid to mimic real pricing variability. */
 const FORMAT_BASE: Array<{ label: string; basePrice: number }> = [
@@ -460,6 +542,7 @@ async function cleanupPreviousSeed(tx: any): Promise<void> {
   }
 
   await tx.delete(userNotifications).where(inArray(userNotifications.user_id, userIds));
+  await tx.delete(userNotificationPrefs).where(inArray(userNotificationPrefs.user_id, userIds));
   await tx.delete(notifications).where(inArray(notifications.user_id, userIds));
   await tx.delete(users).where(inArray(users.id, userIds));
   console.log(`Cleanup: removed ${userIds.length} prod-seed users + ${stationIds.length} stations.`);
@@ -477,7 +560,7 @@ async function ensureAdmin(tx: any): Promise<string> {
     last_name: "Admin",
     email: "admin@hurryline.local",
     phone: null,
-    password_hash: DEFAULT_PASSWORD_HASH,
+    password_hash: HASH_ADMIN,
     status: "active",
     role: "admin",
     email_verified_at: new Date(),
@@ -542,7 +625,7 @@ async function createStationManagers(tx: any): Promise<Map<number, string>> {
       last_name: null,
       email,
       phone: `+1438555${String(2000 + i).padStart(4, "0")}`,
-      password_hash: DEFAULT_PASSWORD_HASH,
+      password_hash: HASH_STATION,
       status: "active",
       role: "station",
       email_verified_at: monthsAgoMs(8 + (i % 3)),
@@ -569,7 +652,7 @@ async function createClients(tx: any): Promise<string[]> {
       last_name: last,
       email,
       phone: `+1514${String(randInt(2000000, 9999999))}`,
-      password_hash: DEFAULT_PASSWORD_HASH,
+      password_hash: HASH_CLIENT,
       status: "active",
       role: "client",
       email_verified_at: verified,
@@ -678,15 +761,14 @@ async function createStations(
     /* Open every day of the week with a 12 h amplitude — matches the booking
      * flow's availability calc which reads station_hours, not just configs. */
     for (let day = 0; day < 7; day++) {
-      const closed = day === 0; /* Sunday closed, mimics typical schedule. */
       await tx.insert(stationHours).values({
         station_id: station.id,
         day_of_week: day,
-        is_open: !closed,
-        morning_start: closed ? null : "08:00:00",
-        morning_end: closed ? null : "12:00:00",
-        afternoon_start: closed ? null : "13:00:00",
-        afternoon_end: closed ? null : "20:00:00",
+        is_open: true,
+        morning_start: "08:00:00",
+        morning_end: "12:00:00",
+        afternoon_start: "13:00:00",
+        afternoon_end: "20:00:00",
       });
     }
 
@@ -696,6 +778,147 @@ async function createStations(
         url: c.photos[p],
         position: p,
       });
+    }
+
+    /* ── Services (packages) per station ── */
+    const serviceTemplates = [
+      { name: "Lavage extérieur", category: "hand_wash", service_type: "exterior", desc: "Nettoyage soigné de la carrosserie, jantes et vitres.", popular: true },
+      { name: "Lavage intérieur", category: "hand_wash", service_type: "interior", desc: "Aspiration complète, nettoyage tableau de bord et vitres intérieures.", popular: false },
+      { name: "Lavage complet",   category: "hand_wash", service_type: "complete",  desc: "Intérieur + extérieur, nettoyage approfondi.", popular: true },
+    ];
+    if (c.washTypes.includes("automatic")) {
+      serviceTemplates.push({ name: "Lavage automatique", category: "automatic", service_type: "exterior", desc: "Tunnel automatique haute pression.", popular: false });
+    }
+    if (c.washTypes.includes("self_service")) {
+      serviceTemplates.push({ name: "Libre-service", category: "self_service", service_type: "exterior", desc: "Poste libre-service avec équipement fourni.", popular: false });
+    }
+
+    for (const svc of serviceTemplates) {
+      const [sRow] = await tx.insert(stationServices).values({
+        station_id: station.id,
+        name: svc.name,
+        category: svc.category,
+        service_type: svc.service_type,
+        description: svc.desc,
+        is_active: true,
+        is_popular: svc.popular,
+      }).returning({ id: stationServices.id });
+
+      /* Price entries per vehicle format for hand_wash; single entry for others. */
+      if (svc.category === "hand_wash") {
+        const baseMultiplier = svc.service_type === "complete" ? 1.8 : svc.service_type === "interior" ? 0.85 : 1;
+        for (const fId of formatIds) {
+          const fPrice = formatPrices.get(fId) ?? 15;
+          await tx.insert(serviceVehicleEntries).values({
+            service_id: sRow.id,
+            vehicle_format_id: fId,
+            vehicle_label: "Standard",
+            price: (fPrice * baseMultiplier).toFixed(2),
+            duration_min: svc.service_type === "complete" ? 60 : 35,
+            staff_required: svc.service_type === "complete" ? 2 : 1,
+            is_active: true,
+          });
+        }
+      } else {
+        const flatPrice = svc.category === "automatic" ? "8.99" : "5.50";
+        await tx.insert(serviceVehicleEntries).values({
+          service_id: sRow.id,
+          vehicle_format_id: null,
+          vehicle_label: svc.category === "automatic" ? "Tous véhicules" : "Libre-service",
+          price: flatPrice,
+          duration_min: 15,
+          staff_required: 0,
+          is_active: true,
+        });
+      }
+    }
+
+    /* ── Extras (add-ons) per station ── */
+    const extraTemplates = [
+      { label: "Cire de protection",      scope: "exterior", price: "6.00",  duration_min: 10 },
+      { label: "Shampooing moquettes",    scope: "interior", price: "8.50",  duration_min: 15 },
+      { label: "Désinfection habitacle",  scope: "interior", price: "5.00",  duration_min: 10 },
+      { label: "Nettoyage des vitres",    scope: "both",     price: "4.00",  duration_min: 8  },
+      { label: "Protection jantes",       scope: "exterior", price: "7.00",  duration_min: 10 },
+    ];
+    /* Each station gets 2–4 extras picked pseudo-randomly. */
+    const numExtras = 2 + (i % 3);
+    for (let e = 0; e < numExtras; e++) {
+      const extra = extraTemplates[e % extraTemplates.length];
+      const [eRow] = await tx.insert(stationExtras).values({
+        station_id: station.id,
+        label: extra.label,
+        scope: extra.scope,
+        price: extra.price,
+        duration_min: extra.duration_min,
+        staff_required: 0,
+        is_active: true,
+      }).returning({ id: stationExtras.id });
+
+      for (const fId of formatIds) {
+        await tx.insert(extraVehicleEntries).values({
+          extra_id: eRow.id,
+          vehicle_format_id: fId,
+          price: extra.price,
+          is_active: true,
+        });
+      }
+    }
+
+    /* ── KYC Documents for active stations ── */
+    const docTypes: Array<"business_license" | "insurance" | "identity_document"> =
+      ["business_license", "insurance", "identity_document"];
+    const expiryBase = new Date();
+    expiryBase.setFullYear(expiryBase.getFullYear() + 1);
+    for (const docType of docTypes) {
+      const expiry = new Date(expiryBase);
+      expiry.setMonth(expiry.getMonth() + (i % 6)); /* stagger expiries */
+      await tx.insert(stationDocuments).values({
+        station_id: station.id,
+        document_type: docType,
+        file_url: DOC_URLS[docType],
+        storage: "cloudinary",
+        terms_accepted: true,
+        expiry_date: expiry,
+        created_at: approvedAt,
+      });
+    }
+
+    /* ── serviceExtraCompatibility: link hand_wash services to all extras ── */
+    const svcRows = await tx
+      .select({ id: stationServices.id, category: stationServices.category })
+      .from(stationServices)
+      .where(eq(stationServices.station_id, station.id));
+    const extraRows = await tx
+      .select({ id: stationExtras.id })
+      .from(stationExtras)
+      .where(eq(stationExtras.station_id, station.id));
+    for (const svc of svcRows) {
+      if (svc.category !== "hand_wash") continue;
+      for (const ex of extraRows) {
+        await tx.insert(serviceExtraCompatibility).values({
+          service_id: svc.id,
+          extra_id: ex.id,
+        });
+      }
+    }
+
+    /* ── Station hour exceptions (1-2 holidays per station) ── */
+    const today = new Date();
+    const holidayDates = [
+      new Date(today.getFullYear(), 0, 1),   /* Jan 1 */
+      new Date(today.getFullYear(), 11, 25), /* Dec 25 */
+    ];
+    for (const hd of holidayDates) {
+      if (i % 2 === 0 && hd > approvedAt) {
+        const dateStr = hd.toISOString().slice(0, 10);
+        await tx.insert(stationHourExceptions).values({
+          station_id: station.id,
+          exception_date: dateStr,
+          reason: hd.getMonth() === 0 ? "Jour de l'An" : "Jour de Noël",
+          created_at: approvedAt,
+        }).onConflictDoNothing();
+      }
     }
 
     out.push({ id: station.id, config: c, postIds, formatIds, formatPrices });
@@ -712,7 +935,10 @@ async function createBookings(
   tx: any,
   ctxs: StationContext[],
   clientIds: string[],
-): Promise<{ totalCompleted: number; completedSamples: Array<{ id: string; userId: string; stationId: string }> }> {
+): Promise<{
+  totalCompleted: number;
+  completedSamples: Array<{ id: string; userId: string; stationId: string; tipAmount: string | null }>;
+}> {
   /* Status distribution for past entries (entry_type = reservation):
    *   completed 80 %, cancelled 8 %, no_show 6 %, late→queue 6 % */
   const PAST_STATUS = [
@@ -730,7 +956,7 @@ async function createBookings(
   ] as const;
 
   let totalCompleted = 0;
-  const completedSamples: Array<{ id: string; userId: string; stationId: string }> = [];
+  const completedSamples: Array<{ id: string; userId: string; stationId: string; tipAmount: string | null }> = [];
 
   /* ─── Past reservations (entry_type=reservation) ─── */
   for (let i = 0; i < TOTAL_RESERVATIONS; i++) {
@@ -761,6 +987,10 @@ async function createBookings(
 
     const finalStatus = status === "moved_to_queue" ? "cancelled" : status === "no_show" ? "cancelled" : status;
     const cancellationReason = status === "no_show" ? "no_show" : status === "moved_to_queue" ? "moved_to_queue" : status === "cancelled" ? "client_request" : null;
+    /* Late cancellation: ~40 % of cancelled reservations were within the free window
+     * and incurred a penalty (20 % of total). */
+    const hasLatePenalty = (status === "cancelled") && rand() < 0.4;
+    const penaltyAmount = hasLatePenalty ? (total * 0.2).toFixed(2) : null;
 
     const [res] = await tx.insert(reservations).values({
       user_id: userId,
@@ -777,6 +1007,7 @@ async function createBookings(
       commission_amount: commission.toFixed(2),
       station_payout: payout.toFixed(2),
       tip_amount: tipAmount,
+      penalty_amount: penaltyAmount,
       cancellation_reason: cancellationReason,
       confirmed_at: new Date(startTime.getTime() - randInt(60, 60 * 24 * 5) * 60_000),
       completed_at: completedAt,
@@ -784,10 +1015,35 @@ async function createBookings(
       updated_at: completedAt ?? endTime,
     }).returning({ id: reservations.id });
 
+    if (status === "no_show") {
+      const feeAmt = (price * 0.2).toFixed(2);
+      await tx.insert(noShowFees).values({
+        reservation_id: res.id,
+        user_id: userId,
+        station_id: ctx.id,
+        amount: feeAmt,
+        reason: "Client absent au créneau réservé.",
+        status: rand() < 0.7 ? "charged" : "waived",
+        created_at: endTime,
+      });
+    }
+
     if (status === "completed") {
       totalCompleted++;
       if (completedSamples.length < 2200) {
-        completedSamples.push({ id: res.id, userId, stationId: ctx.id });
+        completedSamples.push({ id: res.id, userId, stationId: ctx.id, tipAmount: tipAmount });
+      }
+      if (tipAmount) {
+        await tx.insert(reservationTips).values({
+          reservation_id: res.id,
+          client_id: userId,
+          station_id: ctx.id,
+          amount: tipAmount,
+          stripe_payment_intent_id: `pi_seed_${res.id.replace(/-/g, "").slice(0, 20)}`,
+          stripe_transfer_id: `tr_seed_${res.id.replace(/-/g, "").slice(0, 20)}`,
+          status: "completed",
+          created_at: completedAt ?? endTime,
+        });
       }
     }
   }
@@ -807,6 +1063,7 @@ async function createBookings(
     const completedAt = status === "completed" ? new Date(joinedAt.getTime() + randInt(15, 90) * 60_000) : null;
     const commission = Math.round(price * 0.1 * 100) / 100;
     const payout = Math.round((price - commission) * 100) / 100;
+    const queueTip = status === "completed" && rand() < 0.15 ? (randInt(1, 4)).toFixed(2) : null;
 
     const [res] = await tx.insert(reservations).values({
       user_id: userId,
@@ -823,7 +1080,7 @@ async function createBookings(
       commission_rate: COMMISSION_RATE,
       commission_amount: commission.toFixed(2),
       station_payout: payout.toFixed(2),
-      tip_amount: status === "completed" && rand() < 0.15 ? (randInt(1, 4)).toFixed(2) : null,
+      tip_amount: queueTip,
       cancellation_reason: status === "no_show" ? "no_show" : status === "cancelled" ? "client_request" : null,
       completed_at: completedAt,
       created_at: joinedAt,
@@ -833,7 +1090,19 @@ async function createBookings(
     if (status === "completed") {
       totalCompleted++;
       if (completedSamples.length < 2400) {
-        completedSamples.push({ id: res.id, userId, stationId: ctx.id });
+        completedSamples.push({ id: res.id, userId, stationId: ctx.id, tipAmount: queueTip });
+      }
+      if (queueTip) {
+        await tx.insert(reservationTips).values({
+          reservation_id: res.id,
+          client_id: userId,
+          station_id: ctx.id,
+          amount: queueTip,
+          stripe_payment_intent_id: `pi_seed_q${res.id.replace(/-/g, "").slice(0, 19)}`,
+          stripe_transfer_id: `tr_seed_q${res.id.replace(/-/g, "").slice(0, 19)}`,
+          status: "completed",
+          created_at: completedAt ?? joinedAt,
+        });
       }
     }
   }
@@ -921,7 +1190,7 @@ async function createBookings(
 
 async function createRatings(
   tx: any,
-  completed: Array<{ id: string; userId: string; stationId: string }>,
+  completed: Array<{ id: string; userId: string; stationId: string; tipAmount: string | null }>,
 ): Promise<void> {
   const SCORES = [
     { value: 5, weight: 55 },
@@ -946,6 +1215,299 @@ async function createRatings(
   }
   console.log(`Ratings: ${n} created.`);
 }
+
+
+// %%%%% Favorites %%%%%
+// ~30 % of clients favorite 1–5 stations they've visited
+
+async function createFavorites(
+  tx: any,
+  ctxs: StationContext[],
+  clientIds: string[],
+): Promise<void> {
+  const stationIds = ctxs.map((c) => c.id);
+  const seen = new Set<string>();
+  let n = 0;
+  for (const userId of clientIds) {
+    if (rand() > 0.30) continue;
+    const count = randInt(1, Math.min(5, stationIds.length));
+    const shuffled = [...stationIds].sort(() => rand() - 0.5).slice(0, count);
+    for (const stationId of shuffled) {
+      const key = `${userId}:${stationId}`;
+      if (seen.has(key)) continue;
+      seen.add(key);
+      await tx.insert(favorites).values({ user_id: userId, station_id: stationId });
+      n++;
+    }
+  }
+  console.log(`Favorites: ${n} created.`);
+}
+
+
+// %%%%% Scenario stations %%%%%
+// Non-active stations: pending KYC, rejected, inactive — covers admin validation flow
+
+async function createScenarioStations(
+  tx: any,
+  adminId: string,
+): Promise<void> {
+  for (let i = 0; i < SCENARIO_PROFILES.length; i++) {
+    const p = SCENARIO_PROFILES[i];
+    const email = `${SEED_USER_PREFIX}${p.managerEmail}`;
+    const [mgr] = await tx.insert(users).values({
+      first_name: null,
+      last_name: null,
+      email,
+      phone: `+1438666${String(3000 + i).padStart(4, "0")}`,
+      password_hash: HASH_STATION,
+      status: "active",
+      role: "station",
+      email_verified_at: new Date(),
+    }).returning({ id: users.id });
+
+    const createdAt = monthsAgoMs(rand() * 3 + 1);
+    const [station] = await tx.insert(stations).values({
+      user_id: mgr.id,
+      name: p.name,
+      legal_name: p.name + " Inc.",
+      registration_number: `9900000${String(i).padStart(2, "0")}`,
+      address: p.address,
+      city: p.name.split(" ")[1] ?? "Québec",
+      postal_code: p.postal,
+      latitude: String(p.lat),
+      longitude: String(p.lng),
+      description: p.description,
+      service_scope: "both",
+      wash_post_count: 2,
+      status: p.status,
+      is_open: false,
+      stripe_account_id: null,
+      approved_by: p.status === "rejected" ? adminId : null,
+      approved_at: null,
+      rejection_reason: p.rejectionReason ?? null,
+      rejection_count: p.status === "rejected" ? 1 : 0,
+      created_at: createdAt,
+    }).returning({ id: stations.id });
+
+    /* Docs: partial for pending KYC, one bad doc for rejected, full for inactive. */
+    for (const docType of p.docs) {
+      const expiry = new Date();
+      expiry.setFullYear(expiry.getFullYear() + 2);
+      await tx.insert(stationDocuments).values({
+        station_id: station.id,
+        document_type: docType,
+        file_url: DOC_URLS[docType],
+        storage: "cloudinary",
+        terms_accepted: p.status !== "pending_admin_validation",
+        expiry_date: expiry,
+        created_at: createdAt,
+      });
+    }
+
+    /* Inactive station has full hours config so it could re-open at any time. */
+    if (p.status === "inactive") {
+      await tx.insert(stationConfigs).values({
+        id: station.id,
+        opening_time: "08:00:00+00",
+        closing_time: "20:00:00+00",
+        break_start: null,
+        break_end: null,
+        wash_duration_minutes: 20,
+        wash_post_count: 2,
+        late_tolerance_minutes: 5,
+        cancellation_delay_minutes: 60,
+        max_concurrent_posts: 2,
+        margin_before_minutes: 5,
+        margin_after_minutes: 10,
+        reservation_surcharge: "2.00",
+      });
+      for (let day = 0; day < 7; day++) {
+        await tx.insert(stationHours).values({
+          station_id: station.id,
+          day_of_week: day,
+          is_open: day !== 0,
+          morning_start: day !== 0 ? "08:00:00" : null,
+          morning_end: day !== 0 ? "12:00:00" : null,
+          afternoon_start: day !== 0 ? "13:00:00" : null,
+          afternoon_end: day !== 0 ? "20:00:00" : null,
+        });
+      }
+    }
+  }
+  console.log(`Scenario stations: ${SCENARIO_PROFILES.length} (pending/rejected/inactive).`);
+}
+
+
+// %%%%% Disputes %%%%%
+// ~15 disputes on completed reservations (open / refunded / resolved / rejected mix)
+
+async function createDisputes(
+  tx: any,
+  completed: Array<{ id: string; userId: string; stationId: string; tipAmount: string | null }>,
+  adminId: string,
+): Promise<void> {
+  const DISPUTE_REASONS = [
+    "Lavage incomplet, plusieurs zones non nettoyées.",
+    "Rayure constatée après le lavage.",
+    "Montant débité ne correspond pas au tarif affiché.",
+    "Service non rendu, station fermée à mon arrivée.",
+    "Intérieur mouillé et non séché correctement.",
+  ];
+  const sampled = [...completed].sort(() => rand() - 0.5).slice(0, 15);
+  let n = 0;
+  for (const s of sampled) {
+    const status = pickWeighted([
+      { value: "open",     weight: 30 },
+      { value: "refunded", weight: 25 },
+      { value: "resolved", weight: 25 },
+      { value: "rejected", weight: 20 },
+    ]);
+    const createdAt = monthsAgoMs(rand() * HISTORY_MONTHS);
+    await tx.insert(disputes).values({
+      reservation_id: s.id,
+      client_id: s.userId,
+      station_id: s.stationId,
+      reason: pick(DISPUTE_REASONS),
+      description: rand() < 0.6 ? "Je souhaite un remboursement partiel pour la prestation non conforme." : null,
+      status,
+      requested_amount: (randInt(5, 30)).toFixed(2),
+      refunded_amount: status === "refunded" ? (randInt(5, 25)).toFixed(2) : "0.00",
+      closed_by: status !== "open" ? adminId : null,
+      closed_reason: status === "rejected" ? "La demande ne remplit pas les critères de remboursement." :
+                     status === "resolved" ? "Résolu à l'amiable avec la station." : null,
+      created_at: createdAt,
+      updated_at: createdAt,
+    });
+    n++;
+  }
+  console.log(`Disputes: ${n} created.`);
+}
+
+
+// %%%%% User notifications %%%%%
+// In-app notification feed entries for clients
+
+async function createUserNotifications(
+  tx: any,
+  clientIds: string[],
+  ctxs: StationContext[],
+): Promise<void> {
+  const NOTIF_KINDS = [
+    {
+      kind: "reservation_confirmed",
+      title: "Réservation confirmée",
+      body: (stationName: string) => `Votre réservation chez ${stationName} a été confirmée.`,
+      url: "/reservations",
+    },
+    {
+      kind: "reservation_completed",
+      title: "Lavage terminé",
+      body: (stationName: string) => `Votre véhicule a été lavé chez ${stationName}. N'oubliez pas de laisser un avis !`,
+      url: "/reservations",
+    },
+    {
+      kind: "queue_new",
+      title: "Votre tour approche",
+      body: (stationName: string) => `Vous êtes le prochain dans la file chez ${stationName}.`,
+      url: "/reservations",
+    },
+    {
+      kind: "delay_request",
+      title: "Demande de retard",
+      body: (_: string) => "Votre demande de retard a été acceptée par la station.",
+      url: "/reservations",
+    },
+    {
+      kind: "system",
+      title: "Bienvenue sur Hurryline",
+      body: (_: string) => "Découvrez les stations proches de vous et réservez en quelques secondes.",
+      url: "/stations",
+    },
+  ];
+
+  let n = 0;
+  for (const userId of clientIds) {
+    const count = randInt(2, 7);
+    for (let k = 0; k < count; k++) {
+      const tpl = pick(NOTIF_KINDS);
+      const ctx = pick(ctxs);
+      const createdAt = monthsAgoMs(rand() * HISTORY_MONTHS);
+      const isRead = rand() < 0.65;
+      await tx.insert(userNotifications).values({
+        user_id: userId,
+        kind: tpl.kind,
+        title: tpl.title,
+        body: tpl.body(ctx.config.name),
+        action_url: tpl.url,
+        payload: { station_id: ctx.id },
+        read_at: isRead ? new Date(createdAt.getTime() + randInt(60, 3600) * 1000) : null,
+        created_at: createdAt,
+      });
+      n++;
+    }
+  }
+  console.log(`UserNotifications: ${n} in-app entries.`);
+}
+
+
+// %%%%% Notification prefs %%%%%
+// Default notification preference rows for all users
+
+async function createNotificationPrefs(
+  tx: any,
+  allUserIds: string[],
+): Promise<void> {
+  const DEFAULT_PREFS = {
+    reservation_confirmed: true,
+    reservation_completed: true,
+    queue_update: true,
+    delay_accepted: true,
+    marketing: false,
+  };
+  for (const userId of allUserIds) {
+    await tx.insert(userNotificationPrefs).values({
+      user_id: userId,
+      prefs: DEFAULT_PREFS,
+    }).onConflictDoNothing();
+  }
+  console.log(`NotificationPrefs: ${allUserIds.length} rows.`);
+}
+
+
+// %%%%% Admin logs %%%%%
+// Audit trail: station approvals, dispute closures, setting changes
+
+async function createAdminLogs(
+  tx: any,
+  adminId: string,
+  ctxs: StationContext[],
+): Promise<void> {
+  let n = 0;
+  for (const ctx of ctxs) {
+    await tx.insert(adminLogs).values({
+      admin_id: adminId,
+      action: "station_approved",
+      target_type: "station",
+      target_id: ctx.id,
+      details: { name: ctx.config.name, city: ctx.config.name.split(" ")[1] ?? "Montréal" },
+      created_at: monthsAgoMs(8 + (n % 3)),
+    });
+    n++;
+  }
+  /* A few setting update audit rows. */
+  for (let i = 0; i < 5; i++) {
+    await tx.insert(adminLogs).values({
+      admin_id: adminId,
+      action: "setting_updated",
+      target_type: "settings",
+      target_id: null,
+      details: { key: "commission_rate", old: "0.0800", new: COMMISSION_RATE },
+      created_at: monthsAgoMs(HISTORY_MONTHS - i),
+    });
+  }
+  console.log(`AdminLogs: ${n + 5} entries.`);
+}
+
 
 async function refreshStationAggregates(tx: any, stationIds: string[]): Promise<void> {
   for (const sid of stationIds) {
@@ -972,7 +1534,7 @@ async function refreshStationAggregates(tx: any, stationIds: string[]): Promise<
 async function createMiscActivity(
   tx: any,
   ctxs: StationContext[],
-  completed: Array<{ id: string; userId: string; stationId: string }>,
+  completed: Array<{ id: string; userId: string; stationId: string; tipAmount: string | null }>,
   clientIds: string[],
 ): Promise<void> {
   /* Delay requests: pick 25 random completed reservations, half accepted, the
@@ -1114,7 +1676,10 @@ async function main(): Promise<void> {
     console.error("DATABASE_URL is not set.");
     process.exit(1);
   }
-  console.log(`Production seed: ${TOTAL_CLIENTS} clients, ${CITY_PROFILES.length} stations, ${TOTAL_RESERVATIONS + TOTAL_QUEUE} historical entries over ${HISTORY_MONTHS} months.`);
+  console.log(
+    `Production seed: ${TOTAL_CLIENTS} clients, ${CITY_PROFILES.length} active + ${SCENARIO_PROFILES.length} scenario stations, ` +
+    `${TOTAL_RESERVATIONS + TOTAL_QUEUE} historical entries over ${HISTORY_MONTHS} months.`,
+  );
 
   const pool = new Pool({ connectionString: url });
   const db = drizzle(pool, { schema });
@@ -1135,8 +1700,20 @@ async function main(): Promise<void> {
 
       const { completedSamples } = await createBookings(tx, ctxs, clientIds);
       await createRatings(tx, completedSamples);
+      await createFavorites(tx, ctxs, clientIds);
       await refreshStationAggregates(tx, ctxs.map((c) => c.id));
       await createMiscActivity(tx, ctxs, completedSamples, clientIds);
+
+      /* Extended scenarios */
+      await createScenarioStations(tx, adminId);
+      await createDisputes(tx, completedSamples, adminId);
+      await createUserNotifications(tx, clientIds, ctxs);
+      const allUserIds = [
+        ...clientIds,
+        ...Array.from({ length: CITY_PROFILES.length }, (_, i) => managerById.get(i)!),
+      ];
+      await createNotificationPrefs(tx, allUserIds);
+      await createAdminLogs(tx, adminId, ctxs);
     });
 
     const seconds = Math.round((Date.now() - start) / 1000);
