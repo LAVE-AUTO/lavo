@@ -34,6 +34,8 @@ interface StationFiltersProps {
   vehicleFormats: VehicleFormatOption[];
   activeCount: number;
   hasLocation: boolean;
+  /** Desktop-only: render as an inline card instead of a modal sheet. */
+  inline?: boolean;
 }
 
 /**
@@ -53,21 +55,21 @@ export function StationFilters({
   vehicleFormats,
   activeCount,
   hasLocation,
+  inline = false,
 }: StationFiltersProps) {
   const t = useTranslations('stations');
 
+  /* Lock body scroll only for the modal sheet, not the inline panel. */
   useEffect(() => {
-    if (!open) return;
+    if (inline || !open) return;
     document.body.style.overflow = 'hidden';
-    const handleKey = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') onClose();
-    };
+    const handleKey = (e: KeyboardEvent) => { if (e.key === 'Escape') onClose(); };
     document.addEventListener('keydown', handleKey);
     return () => {
       document.body.style.overflow = '';
       document.removeEventListener('keydown', handleKey);
     };
-  }, [open, onClose]);
+  }, [open, onClose, inline]);
 
   if (!open) return null;
 
@@ -77,6 +79,104 @@ export function StationFilters({
       ? value.selectedWashTypes.filter((x) => x !== id)
       : [...value.selectedWashTypes, id] });
 
+  const inputBase = 'w-full rounded-lg border border-[#E0E0D0] dark:border-tab-inactive bg-[#F5F5EE] dark:bg-tab-inactive text-[13px] text-[#1A1A1A] dark:text-white placeholder-[#9A9A8A] outline-none focus:border-gold transition-colors';
+  const labelBase = 'block text-[11px] font-black text-[#555] dark:text-[#A0A090] uppercase tracking-[0.12em] mb-1.5';
+
+  /* ── Inline desktop panel (main-branch style, dev-branch fields) ── */
+  if (inline) {
+    return (
+      <div className="bg-white dark:bg-dark-card rounded-xl p-4 border border-[#E0E0D0] dark:border-tab-inactive shadow-sm animate-fade-in">
+
+        {/* Header */}
+        <div className="flex items-center justify-between mb-4">
+          <div className="flex items-center gap-2">
+            <span className="text-[12px] sm:text-[13px] font-black text-[#1A1A1A] dark:text-white uppercase tracking-wider">
+              {t('filter_panel_title')}
+            </span>
+            {activeCount > 0 && (
+              <span className="text-[11px] font-black px-2 py-0.5 rounded-full bg-gold text-dark-bg">{activeCount}</span>
+            )}
+          </div>
+          {activeCount > 0 && (
+            <button type="button" onClick={onReset} className="text-[12px] sm:text-[13px] font-bold text-gold hover:text-gold-hover transition-colors cursor-pointer">
+              {t('filter_reset')}
+            </button>
+          )}
+        </div>
+
+        {/* Row 1: Name + Available */}
+        <div className="grid grid-cols-2 gap-3 mb-3">
+          <div>
+            <label className={labelBase}>{t('filter_name_label')}</label>
+            <input type="text" value={value.nameSearch} onChange={(e) => patch({ nameSearch: e.target.value })} placeholder={t('filter_name_placeholder')} className={`${inputBase} px-2.5 py-2`} />
+          </div>
+          <div>
+            <p className={labelBase}>{t('filter_available_only')}</p>
+            <div className="h-[34px] flex items-center px-2.5 rounded-lg border border-[#E0E0D0] dark:border-tab-inactive bg-[#F5F5EE] dark:bg-tab-inactive">
+              <Toggle checked={value.onlyAvail} onChange={(v) => patch({ onlyAvail: v })} />
+              <span className="ml-auto text-[12px] font-semibold text-[#555] dark:text-[#B0B0A0]">
+                {value.onlyAvail ? t('filter_on') : t('filter_off')}
+              </span>
+            </div>
+          </div>
+        </div>
+
+        {/* Row 2: Wash types + Service scope */}
+        <div className="grid grid-cols-2 gap-3 mb-3">
+          <div>
+            <p className={labelBase}>{t('filter_wash_type_label')}</p>
+            <CustomMultiSelect options={washTypes.map((w) => ({ value: w.id, label: w.label }))} selected={value.selectedWashTypes} onToggle={toggleWashType} placeholder={t('filter_wash_type_placeholder')} />
+          </div>
+          <div>
+            <p className={labelBase}>{t('filter_scope_label')}</p>
+            <CustomSelect value={value.serviceScope} onChange={(v) => patch({ serviceScope: v as ServiceScope })} placeholder={t('filter_scope_all')} options={[{ value: '', label: t('filter_scope_all') }, { value: 'exterior', label: t('filter_scope_exterior') }, { value: 'interior', label: t('filter_scope_interior') }, { value: 'both', label: t('filter_scope_both') }]} />
+          </div>
+        </div>
+
+        {/* Row 3: Vehicle + Price */}
+        <div className="grid grid-cols-2 gap-3 mb-3">
+          <div>
+            <p className={labelBase}>{t('filter_vehicle_label')}</p>
+            <CustomSelect value={value.formatId} onChange={(v) => patch({ formatId: v })} placeholder={t('filter_vehicle_placeholder')} options={[{ value: '', label: t('filter_vehicle_placeholder') }, ...vehicleFormats.map((f) => ({ value: f.id, label: f.label }))]} />
+          </div>
+          <div>
+            <p className={labelBase}>{t('filter_price_label')}</p>
+            <div className="flex gap-2 items-center">
+              <PriceInput value={value.priceMin} onChange={(v) => patch({ priceMin: v })} placeholder={t('filter_price_min_placeholder')} unit={t('filter_currency_unit')} />
+              <span className="text-[#999] dark:text-[#555] text-[12px] font-bold shrink-0">—</span>
+              <PriceInput value={value.priceMax} onChange={(v) => patch({ priceMax: v })} placeholder={t('filter_price_max_placeholder')} unit={t('filter_currency_unit')} />
+            </div>
+          </div>
+        </div>
+
+        {/* Row 4: Distance */}
+        <div className="mb-3">
+          <p className={labelBase}>{t('filter_distance_label')}</p>
+          <div className="grid grid-cols-2 gap-2.5">
+            <DistanceInput value={value.distanceMinKm} onChange={(v) => patch({ distanceMinKm: v })} placeholder={t('filter_distance_min_placeholder')} />
+            <DistanceInput value={value.distanceMaxKm} onChange={(v) => patch({ distanceMaxKm: v })} placeholder={t('filter_distance_max_placeholder')} />
+          </div>
+          {!hasLocation && (
+            <p className="mt-1.5 text-[11px] text-[#9A9A8A] dark:text-[#707068] italic">{t('filter_distance_no_location')}</p>
+          )}
+        </div>
+
+        {/* Row 5: Time range */}
+        <div>
+          <p className={labelBase}>{t('filter_time_label')}</p>
+          <div className="flex items-center gap-2">
+            <span className="text-[11px] font-semibold text-[#555] dark:text-[#B0B0A0] shrink-0">{t('filter_time_from')}</span>
+            <input type="time" value={value.timeFrom} onChange={(e) => patch({ timeFrom: e.target.value })} aria-label={t('filter_time_from')} className={`flex-1 ${inputBase} px-2 py-1.5 text-center font-mono`} />
+            <span className="text-[#AAA] dark:text-[#555] text-[12px] font-bold shrink-0">—</span>
+            <span className="text-[11px] font-semibold text-[#555] dark:text-[#B0B0A0] shrink-0">{t('filter_time_to')}</span>
+            <input type="time" value={value.timeTo} onChange={(e) => patch({ timeTo: e.target.value })} aria-label={t('filter_time_to')} className={`flex-1 ${inputBase} px-2 py-1.5 text-center font-mono`} />
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  /* ── Modal sheet (mobile / non-desktop) ── */
   return (
     <div
       className="fixed inset-0 z-[60] bg-black/55 backdrop-blur-[2px] animate-fade-in flex items-end sm:items-center justify-center p-0 sm:p-6"
@@ -122,141 +222,51 @@ export function StationFilters({
 
         {/* Body */}
         <div className="scrollbar-hover flex-1 overflow-y-auto px-5 sm:px-6 py-5 space-y-5">
-
-          {/* Name */}
           <FilterRow label={t('filter_name_label')}>
-            <input
-              type="text"
-              value={value.nameSearch}
-              onChange={(e) => patch({ nameSearch: e.target.value })}
-              placeholder={t('filter_name_placeholder')}
-              className="w-full px-3.5 py-2.5 rounded-xl bg-[#F5F5EE] dark:bg-tab-inactive border border-[#E0E0D0] dark:border-tab-inactive text-[14px] text-[#1A1A1A] dark:text-white placeholder-[#9A9A8A] outline-none focus:border-gold transition-colors"
-            />
+            <input type="text" value={value.nameSearch} onChange={(e) => patch({ nameSearch: e.target.value })} placeholder={t('filter_name_placeholder')} className="w-full px-3.5 py-2.5 rounded-xl bg-[#F5F5EE] dark:bg-tab-inactive border border-[#E0E0D0] dark:border-tab-inactive text-[14px] text-[#1A1A1A] dark:text-white placeholder-[#9A9A8A] outline-none focus:border-gold transition-colors" />
           </FilterRow>
-
-          {/* Available */}
           <FilterRow label={t('filter_available_only')}>
             <div className="h-[44px] flex items-center px-3.5 rounded-xl border border-[#E0E0D0] dark:border-tab-inactive bg-[#F5F5EE] dark:bg-tab-inactive">
               <Toggle checked={value.onlyAvail} onChange={(v) => patch({ onlyAvail: v })} />
-              <span className="ml-auto text-[12.5px] font-semibold text-[#555] dark:text-[#B0B0A0]">
-                {value.onlyAvail ? t('filter_on') : t('filter_off')}
-              </span>
+              <span className="ml-auto text-[12.5px] font-semibold text-[#555] dark:text-[#B0B0A0]">{value.onlyAvail ? t('filter_on') : t('filter_off')}</span>
             </div>
           </FilterRow>
-
-          {/* Wash types */}
           <FilterRow label={t('filter_wash_type_label')}>
-            <CustomMultiSelect
-              options={washTypes.map((w) => ({ value: w.id, label: w.label }))}
-              selected={value.selectedWashTypes}
-              onToggle={toggleWashType}
-              placeholder={t('filter_wash_type_placeholder')}
-            />
+            <CustomMultiSelect options={washTypes.map((w) => ({ value: w.id, label: w.label }))} selected={value.selectedWashTypes} onToggle={toggleWashType} placeholder={t('filter_wash_type_placeholder')} />
           </FilterRow>
-
-          {/* Service scope */}
           <FilterRow label={t('filter_scope_label')}>
-            <CustomSelect
-              value={value.serviceScope}
-              onChange={(v) => patch({ serviceScope: v as ServiceScope })}
-              placeholder={t('filter_scope_all')}
-              options={[
-                { value: '',         label: t('filter_scope_all') },
-                { value: 'exterior', label: t('filter_scope_exterior') },
-                { value: 'interior', label: t('filter_scope_interior') },
-                { value: 'both',     label: t('filter_scope_both') },
-              ]}
-            />
+            <CustomSelect value={value.serviceScope} onChange={(v) => patch({ serviceScope: v as ServiceScope })} placeholder={t('filter_scope_all')} options={[{ value: '', label: t('filter_scope_all') }, { value: 'exterior', label: t('filter_scope_exterior') }, { value: 'interior', label: t('filter_scope_interior') }, { value: 'both', label: t('filter_scope_both') }]} />
           </FilterRow>
-
-          {/* Vehicle */}
           <FilterRow label={t('filter_vehicle_label')}>
-            <CustomSelect
-              value={value.formatId}
-              onChange={(v) => patch({ formatId: v })}
-              placeholder={t('filter_vehicle_placeholder')}
-              options={[
-                { value: '', label: t('filter_vehicle_placeholder') },
-                ...vehicleFormats.map((f) => ({ value: f.id, label: f.label })),
-              ]}
-            />
+            <CustomSelect value={value.formatId} onChange={(v) => patch({ formatId: v })} placeholder={t('filter_vehicle_placeholder')} options={[{ value: '', label: t('filter_vehicle_placeholder') }, ...vehicleFormats.map((f) => ({ value: f.id, label: f.label }))]} />
           </FilterRow>
-
-          {/* Price range */}
           <FilterRow label={t('filter_price_label')}>
             <div className="grid grid-cols-2 gap-2.5">
-              <PriceInput
-                value={value.priceMin}
-                onChange={(v) => patch({ priceMin: v })}
-                placeholder={t('filter_price_min_placeholder')}
-                unit={t('filter_currency_unit')}
-              />
-              <PriceInput
-                value={value.priceMax}
-                onChange={(v) => patch({ priceMax: v })}
-                placeholder={t('filter_price_max_placeholder')}
-                unit={t('filter_currency_unit')}
-              />
+              <PriceInput value={value.priceMin} onChange={(v) => patch({ priceMin: v })} placeholder={t('filter_price_min_placeholder')} unit={t('filter_currency_unit')} />
+              <PriceInput value={value.priceMax} onChange={(v) => patch({ priceMax: v })} placeholder={t('filter_price_max_placeholder')} unit={t('filter_currency_unit')} />
             </div>
           </FilterRow>
-
-          {/* Distance */}
           <FilterRow label={t('filter_distance_label')}>
             <div className="grid grid-cols-2 gap-2.5">
-              <DistanceInput
-                value={value.distanceMinKm}
-                onChange={(v) => patch({ distanceMinKm: v })}
-                placeholder={t('filter_distance_min_placeholder')}
-              />
-              <DistanceInput
-                value={value.distanceMaxKm}
-                onChange={(v) => patch({ distanceMaxKm: v })}
-                placeholder={t('filter_distance_max_placeholder')}
-              />
+              <DistanceInput value={value.distanceMinKm} onChange={(v) => patch({ distanceMinKm: v })} placeholder={t('filter_distance_min_placeholder')} />
+              <DistanceInput value={value.distanceMaxKm} onChange={(v) => patch({ distanceMaxKm: v })} placeholder={t('filter_distance_max_placeholder')} />
             </div>
-            {!hasLocation && (
-              <p className="mt-2 text-[12px] text-[#9A9A8A] dark:text-[#707068] italic">
-                {t('filter_distance_no_location')}
-              </p>
-            )}
+            {!hasLocation && <p className="mt-2 text-[12px] text-[#9A9A8A] dark:text-[#707068] italic">{t('filter_distance_no_location')}</p>}
           </FilterRow>
-
-          {/* Time range */}
           <FilterRow label={t('filter_time_label')}>
             <div className="grid grid-cols-2 gap-2.5">
-              <input
-                type="time"
-                value={value.timeFrom}
-                onChange={(e) => patch({ timeFrom: e.target.value })}
-                aria-label={t('filter_time_from')}
-                className="w-full rounded-xl border border-[#E0E0D0] bg-[#F5F5EE] px-3 py-2.5 text-center font-mono text-[14px] text-[#1A1A1A] outline-none focus:border-gold dark:border-tab-inactive dark:bg-tab-inactive dark:text-white transition-colors"
-              />
-              <input
-                type="time"
-                value={value.timeTo}
-                onChange={(e) => patch({ timeTo: e.target.value })}
-                aria-label={t('filter_time_to')}
-                className="w-full rounded-xl border border-[#E0E0D0] bg-[#F5F5EE] px-3 py-2.5 text-center font-mono text-[14px] text-[#1A1A1A] outline-none focus:border-gold dark:border-tab-inactive dark:bg-tab-inactive dark:text-white transition-colors"
-              />
+              <input type="time" value={value.timeFrom} onChange={(e) => patch({ timeFrom: e.target.value })} aria-label={t('filter_time_from')} className="w-full rounded-xl border border-[#E0E0D0] bg-[#F5F5EE] px-3 py-2.5 text-center font-mono text-[14px] text-[#1A1A1A] outline-none focus:border-gold dark:border-tab-inactive dark:bg-tab-inactive dark:text-white transition-colors" />
+              <input type="time" value={value.timeTo} onChange={(e) => patch({ timeTo: e.target.value })} aria-label={t('filter_time_to')} className="w-full rounded-xl border border-[#E0E0D0] bg-[#F5F5EE] px-3 py-2.5 text-center font-mono text-[14px] text-[#1A1A1A] outline-none focus:border-gold dark:border-tab-inactive dark:bg-tab-inactive dark:text-white transition-colors" />
             </div>
           </FilterRow>
         </div>
 
         {/* Footer */}
         <div className="px-5 sm:px-6 py-4 border-t border-[#E0E0D0] dark:border-tab-inactive shrink-0 flex items-center gap-3">
-          <button
-            type="button"
-            onClick={onReset}
-            disabled={activeCount === 0}
-            className="px-4 py-2.5 rounded-xl border border-[#D0D0C0] dark:border-tab-inactive text-[13.5px] font-bold text-[#555] dark:text-[#B0B0A0] hover:bg-[#F0F0E2] dark:hover:bg-tab-inactive transition-colors cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed"
-          >
+          <button type="button" onClick={onReset} disabled={activeCount === 0} className="px-4 py-2.5 rounded-xl border border-[#D0D0C0] dark:border-tab-inactive text-[13.5px] font-bold text-[#555] dark:text-[#B0B0A0] hover:bg-[#F0F0E2] dark:hover:bg-tab-inactive transition-colors cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed">
             {t('filter_reset')}
           </button>
-          <button
-            type="button"
-            onClick={onClose}
-            className="flex-1 py-2.5 bg-gold hover:bg-gold-hover rounded-xl text-[14px] font-black text-dark-bg transition-colors cursor-pointer"
-          >
+          <button type="button" onClick={onClose} className="flex-1 py-2.5 bg-gold hover:bg-gold-hover rounded-xl text-[14px] font-black text-dark-bg transition-colors cursor-pointer">
             {t('filter_apply')}
           </button>
         </div>
