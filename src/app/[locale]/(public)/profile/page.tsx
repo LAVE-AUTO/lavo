@@ -8,6 +8,7 @@ import { useAuth } from '@/context';
 import { useToast } from '@/context/toast-context';
 import { isPasswordValid } from '@/helpers/validators';
 import { getAxiosInstance, getFromApi, postWithApi, patchWithApi } from '@/services/axios-service';
+import { useUserLocation, requestUserLocation } from '@/components/stations/useUserLocation';
 
 /* ─── Toggle switch ─── */
 function Toggle({ checked, onChange }: { checked: boolean; onChange: () => void }) {
@@ -89,6 +90,15 @@ export default function ProfilePage() {
   const locale = useLocale();
   const { user, login, refetchUser } = useAuth();
   const { success: showSuccess, error: showError } = useToast();
+
+  const userLocation = useUserLocation();
+  const [locationActivating, setLocationActivating] = useState(false);
+
+  const handleActivateLocation = async () => {
+    setLocationActivating(true);
+    await requestUserLocation(!!userLocation);
+    setLocationActivating(false);
+  };
 
   const [photoUrl, setPhotoUrl] = useState<string | null>(null);
   const avatarInputRef = useRef<HTMLInputElement | null>(null);
@@ -446,6 +456,50 @@ export default function ProfilePage() {
             ))}
           </div>
         </div>
+
+        {/* ── Localisation ── */}
+        <Section>
+          <SectionHeader
+            title={t('location_section')}
+            action={userLocation ? (
+              <span className="text-[11px] font-mono text-[#c8980a]/50 tabular-nums">
+                {userLocation.latitude.toFixed(5)}, {userLocation.longitude.toFixed(5)}
+              </span>
+            ) : undefined}
+          />
+          <div className="flex items-center justify-between gap-4 px-5 py-4">
+            <div className="flex items-center gap-3 min-w-0">
+              <span className="shrink-0 w-9 h-9 rounded-xl bg-gold/10 flex items-center justify-center text-[#c8980a]" aria-hidden="true">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z"/>
+                  <circle cx="12" cy="10" r="3"/>
+                </svg>
+              </span>
+              <div className="min-w-0">
+                <p className="text-[14px] font-semibold text-[#1a1a1a] dark:text-white">{t('location_label')}</p>
+                <p className="text-[12px] text-[#888] dark:text-[#666] mt-0.5">{t('location_desc')}</p>
+              </div>
+            </div>
+            <button
+              type="button"
+              onClick={() => void handleActivateLocation()}
+              disabled={locationActivating}
+              className="shrink-0 flex items-center gap-1.5 px-4 py-2 border border-gold/40 rounded-xl text-[12px] font-bold text-[#c8980a] hover:bg-gold/10 transition-colors cursor-pointer disabled:opacity-60 disabled:cursor-not-allowed"
+            >
+              {locationActivating ? (
+                <svg className="animate-spin" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" aria-hidden="true">
+                  <path d="M21 12a9 9 0 11-6.219-8.56"/>
+                </svg>
+              ) : userLocation ? (
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                  <polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/>
+                  <path d="M3.51 9a9 9 0 0114.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0020.49 15"/>
+                </svg>
+              ) : null}
+              {userLocation ? t('location_btn_refresh') : t('location_btn_activate')}
+            </button>
+          </div>
+        </Section>
 
         {/* ── Informations personnelles ── */}
         <Section>

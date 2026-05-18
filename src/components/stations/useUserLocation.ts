@@ -46,7 +46,7 @@ function broadcast(loc: UserLocation | null) {
  * the user denies permission, the navigator API is missing, or the request
  * times out.
  */
-export async function requestUserLocation(): Promise<UserLocation | null> {
+export async function requestUserLocation(forceRefresh = false): Promise<UserLocation | null> {
     if (typeof navigator === 'undefined' || !navigator.geolocation) {
         return null;
     }
@@ -58,7 +58,7 @@ export async function requestUserLocation(): Promise<UserLocation | null> {
                 resolve(loc);
             },
             () => resolve(null),
-            { enableHighAccuracy: false, timeout: 8000, maximumAge: 300000 },
+            { enableHighAccuracy: false, timeout: 8000, maximumAge: forceRefresh ? 0 : 300000 },
         );
     });
 }

@@ -13,9 +13,8 @@
         "db:generate": "drizzle-kit generate",
         "db:migrate": "drizzle-kit migrate",
         "db:push": "drizzle-kit push",
-        "db:seed": "ts-node --compiler-options '{\"module\":\"CommonJS\",\"moduleResolution\":\"node\"}' scripts/seed.ts",
+        "db:seed": "ts-node --compiler-options '{\"module\":\"CommonJS\",\"moduleResolution\":\"node\"}' scripts/seed-production.ts",
         "db:seed-production": "ts-node --compiler-options '{\"module\":\"CommonJS\",\"moduleResolution\":\"node\"}' scripts/seed-production.ts",
-        "db:hash-passwords": "ts-node --compiler-options '{\"module\":\"CommonJS\",\"moduleResolution\":\"node\"}' scripts/hash-passwords.ts",
         "db:studio": "drizzle-kit studio",
         "test:e2e": "playwright test",
         "test:e2e:ui": "playwright test --ui"
