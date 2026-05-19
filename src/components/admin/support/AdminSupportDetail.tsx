@@ -5,9 +5,10 @@ import { useTranslations } from 'next-intl';
 import { Link } from '@/i18n/navigation';
 import { useToast } from '@/context/toast-context';
 import { useAuth } from '@/context/auth-context';
-import { patchWithApi } from '@/services/axios-service';
+import { getFromApi, patchWithApi, postWithApi } from '@/services/axios-service';
 import { Modal } from '@/components/ui/Modal';
-import { MOCK_TICKETS, type SupportTicket, type TicketStatus } from '@/components/support/support-mock';
+import { type SupportTicket, type TicketStatus } from '@/components/support/support-mock';
+import { mapApiStatus } from '@/components/support/support-types';
 
 const STATUS_STYLE: Record<TicketStatus, { badge: string; dot: string; label: string }> = {
   open:        { badge: 'bg-[#FFF4EC] text-[#C2410C] ring-1 ring-[#F97316]/20', dot: 'bg-[#F97316]', label: 'status_open' },
@@ -20,6 +21,50 @@ const ROLE_COLOR: Record<string, string> = {
   client:  'bg-[#EFF6FF] text-[#1D4ED8] dark:bg-[#1D4ED8]/10 dark:text-[#60A5FA]',
   station: 'bg-[#F0FDF4] text-[#15803D] dark:bg-[#15803D]/10 dark:text-[#4ADE80]',
 };
+
+type SupportTicketDetailApi = {
+  id: string;
+  subject: string;
+  status: string;
+  created_by: string;
+  assigned_to: string | null;
+  created_at: string;
+  updated_at: string;
+  messages: Array<{ id: string; sender_id: string; is_from_admin: boolean; content: string; created_at: string }>;
+  createdByUser?: { first_name: string; last_name: string; role: string };
+  assignedToAdmin?: { first_name: string; last_name: string; role: string } | null;
+};
+
+function displayName(firstName?: string, lastName?: string, fallback = '') {
+  return [firstName, lastName].filter(Boolean).join(' ').trim() || fallback;
+}
+
+function mapTicketDetail(ticket: SupportTicketDetailApi): SupportTicket {
+  const creator = ticket.createdByUser;
+  const assignee = ticket.assignedToAdmin;
+  const creatorLabel = displayName(creator?.first_name, creator?.last_name, ticket.created_by);
+  const assigneeLabel = assignee
+    ? displayName(assignee.first_name, assignee.last_name, ticket.assigned_to ?? '')
+    : null;
+
+  return {
+    id: ticket.id,
+    subject: ticket.subject,
+    status: mapApiStatus(ticket.status),
+    role: creator?.role === 'station' ? 'station' : 'client',
+    created_by: creatorLabel,
+    assigned_to: assigneeLabel,
+    messages: ticket.messages.map((message) => ({
+      id: message.id,
+      author: message.is_from_admin ? (assigneeLabel ?? 'Admin Support') : creatorLabel,
+      role: message.is_from_admin ? 'admin' : 'user',
+      body: message.content,
+      created_at: message.created_at,
+    })),
+    created_at: ticket.created_at,
+    updated_at: ticket.updated_at,
+  };
+}
 
 function formatDateTime(d: string) {
   try {
@@ -87,14 +132,37 @@ export function AdminSupportDetail({ id }: Props) {
   const mountedRef = useRef(true);
   useEffect(() => { mountedRef.current = true; return () => { mountedRef.current = false; }; }, []);
 
-  // TODO: replace with getFromApi(`/admin/support/tickets/${id}`) once endpoint is available
-  const found = MOCK_TICKETS.find((tk) => tk.id === id);
-  const [ticket, setTicket] = useState<SupportTicket | undefined>(found);
+  const [ticket, setTicket] = useState<SupportTicket | null>(null);
+  const [loading, setLoading] = useState(true);
 
   const [reply,           setReply]           = useState('');
   const [replySaving,     setReplySaving]     = useState(false);
   const [actionBusy,      setActionBusy]      = useState(false);
   const [showCloseModal,  setShowCloseModal]  = useState(false);
+
+  useEffect(() => {
+    (async () => {
+      setLoading(true);
+      try {
+        const [ok, data] = await getFromApi(`/support/${id}`);
+        if (!mountedRef.current) return;
+        if (ok) {
+          const apiTicket = (data as { data?: SupportTicketDetailApi })?.data;
+          setTicket(apiTicket ? mapTicketDetail(apiTicket) : null);
+        }
+      } finally {
+        if (mountedRef.current) setLoading(false);
+      }
+    })();
+  }, [id]);
+
+  if (loading) {
+    return (
+      <div className="flex flex-1 items-center justify-center p-6">
+        <p className="text-[13px] text-[#999]">{t('loading')}</p>
+      </div>
+    );
+  }
 
   if (!ticket) {
     return (
@@ -113,15 +181,27 @@ export function AdminSupportDetail({ id }: Props) {
     if (!reply.trim()) { toastError(t('error_reply_empty')); return; }
     setReplySaving(true);
     try {
-      // TODO: connect to API once endpoint is available (POST /admin/support/tickets/:id/messages)
-      await new Promise((r) => setTimeout(r, 500));
+      const [ok, data] = await postWithApi(`/support/${id}/messages`, { content: reply.trim() });
       if (!mountedRef.current) return;
+      if (!ok) {
+        toastError(t('reply_error'));
+        return;
+      }
+      const message = (data as { data?: { id: string; sender_id: string; is_from_admin: boolean; content: string; created_at: string } })?.data;
       setTicket((prev) => {
         if (!prev) return prev;
         return {
           ...prev,
           status: prev.status === 'open' ? 'in_progress' : prev.status,
-          messages: [...prev.messages, { id: `m-${Date.now()}`, author: 'Admin Support', role: 'admin', body: reply.trim(), created_at: new Date().toISOString() }],
+          messages: [...prev.messages, message
+            ? {
+                id: message.id,
+                author: 'Admin Support',
+                role: 'admin',
+                body: message.content,
+                created_at: message.created_at,
+              }
+            : { id: `m-${Date.now()}`, author: 'Admin Support', role: 'admin', body: reply.trim(), created_at: new Date().toISOString() }],
         };
       });
       setReply('');
@@ -156,9 +236,12 @@ export function AdminSupportDetail({ id }: Props) {
   async function handleResolve() {
     setActionBusy(true);
     try {
-      // TODO: connect to API once endpoint is available (PATCH /admin/support/tickets/:id)
-      await new Promise((r) => setTimeout(r, 400));
+      const [ok] = await patchWithApi(`/support/${id}`, { status: 'resolu' });
       if (!mountedRef.current) return;
+      if (!ok) {
+        toastError(t('action_error'));
+        return;
+      }
       setTicket((prev) => prev ? { ...prev, status: 'resolved' } : prev);
       toastSuccess(t('resolve_success'));
     } catch {
@@ -171,9 +254,12 @@ export function AdminSupportDetail({ id }: Props) {
   async function handleReopen() {
     setActionBusy(true);
     try {
-      // TODO: connect to API once endpoint is available (PATCH /admin/support/tickets/:id)
-      await new Promise((r) => setTimeout(r, 400));
+      const [ok] = await patchWithApi(`/support/${id}`, { status: 'ouvert' });
       if (!mountedRef.current) return;
+      if (!ok) {
+        toastError(t('action_error'));
+        return;
+      }
       setTicket((prev) => prev ? { ...prev, status: 'open' } : prev);
       toastSuccess(t('reopen_success'));
     } catch {
@@ -186,9 +272,12 @@ export function AdminSupportDetail({ id }: Props) {
   async function handleClose(reason: string) {
     setActionBusy(true);
     try {
-      // TODO: connect to API once endpoint is available (PATCH /admin/support/tickets/:id)
-      await new Promise((r) => setTimeout(r, 500));
+      const [ok] = await patchWithApi(`/support/${id}`, { status: 'ferme' });
       if (!mountedRef.current) return;
+      if (!ok) {
+        toastError(t('action_error'));
+        return;
+      }
       setTicket((prev) => prev ? { ...prev, status: 'closed', close_reason: reason } : prev);
       setShowCloseModal(false);
       toastSuccess(t('close_success'));

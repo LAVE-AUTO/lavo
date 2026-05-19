@@ -26,21 +26,36 @@ export function AdminMerchantsClients() {
   const [tab, setTab]               = useState<Tab>('stations');
   const [stations, setStations]     = useState<StationRow[]>([]);
   const [loading, setLoading]       = useState(true);
+  const [clientCount, setClientCount] = useState<number | string>('…');
   const [fetchError, setFetchError] = useState(false);
   const [query, setQuery]           = useState('');
   const [addUserOpen,    setAddUserOpen]    = useState(false);
   const [addStationOpen, setAddStationOpen] = useState(false);
 
   useEffect(() => {
-    getFromApi('/admin/stations?status=all').then(([ok, data]) => {
-      if (!mountedRef.current) return;
-      if (ok) setStations(((data as { data: StationRow[] }).data) ?? []);
-      else setFetchError(true);
-    }).catch(() => {
-      if (mountedRef.current) setFetchError(true);
-    }).finally(() => {
-      if (mountedRef.current) setLoading(false);
-    });
+    (async () => {
+      try {
+        const [stationsResult, dashboardResult] = await Promise.all([
+          getFromApi('/admin/stations?status=all'),
+          getFromApi('/admin/dashboard'),
+        ]);
+
+        if (!mountedRef.current) return;
+
+        const [stationsOk, stationsData] = stationsResult;
+        if (stationsOk) setStations(((stationsData as { data: StationRow[] }).data) ?? []);
+        else setFetchError(true);
+
+        const [dashboardOk, dashboardData] = dashboardResult;
+        if (dashboardOk) {
+          setClientCount(((dashboardData as { data?: { totals?: { total_clients?: number } } })?.data?.totals?.total_clients ?? 0));
+        }
+      } catch {
+        if (mountedRef.current) setFetchError(true);
+      } finally {
+        if (mountedRef.current) setLoading(false);
+      }
+    })();
   }, []);
 
   async function handleStationAction(id: string, action: 'activate' | 'suspend') {
@@ -82,11 +97,9 @@ export function AdminMerchantsClients() {
   const actives   = managed.filter((s) => s.status === 'active').length;
   const suspended = managed.filter((s) => s.status === 'suspended').length;
 
-  // TODO: replace with real client count from API
-  const MOCK_CLIENT_COUNT = process.env.NODE_ENV === 'development' ? 6 : 0;
   const tabs = [
     { id: 'stations' as Tab, count: loading ? '…' : managed.length },
-    { id: 'clients'  as Tab, count: MOCK_CLIENT_COUNT },
+    { id: 'clients'  as Tab, count: clientCount },
   ];
 
   return (

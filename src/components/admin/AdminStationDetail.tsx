@@ -51,7 +51,6 @@ export function AdminStationDetail({ id }: Props) {
   const [station, setStation]           = useState<ApiStation | null>(null);
   const [loading, setLoading]           = useState(true);
   const [loadError, setLoadError]       = useState(false);
-  // TODO: connect to API once endpoint is available (ADM-14).
   // Backend schema currently has no `expiry_date` column on `station_documents`;
   // expiries live in client state only and do not persist across sessions.
   const [expiries, setExpiries]         = useState<Record<string, string | null>>({});

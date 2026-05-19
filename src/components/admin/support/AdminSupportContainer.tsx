@@ -1,8 +1,10 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useTranslations } from 'next-intl';
-import { MOCK_TICKETS } from '@/components/support/support-mock';
+import { getFromApi } from '@/services/axios-service';
+import { type SupportTicket } from '@/components/support/support-mock';
+import { mapApiStatus } from '@/components/support/support-types';
 import { AdminSupportList } from './AdminSupportList';
 import { AdminSupportSettings } from './AdminSupportSettings';
 
@@ -13,13 +15,79 @@ const STAT_CARDS = [
   { key: 'closed',      labelKey: 'status_closed',      color: '#94A3B8', bg: 'bg-[#F8FAFC] dark:bg-[#94A3B8]/8',  ring: 'ring-[#94A3B8]/20', text: 'text-[#64748B] dark:text-[#94A3B8]' },
 ] as const;
 
+type SupportTicketSummaryApi = {
+  id: string;
+  subject: string;
+  status: string;
+  created_by: string;
+  assigned_to: string | null;
+  lastMessage: { content: string; created_at: string } | null;
+  created_at: string;
+  updated_at: string;
+  createdByUser?: { first_name: string; last_name: string; role: string };
+  assignedToAdmin?: { first_name: string; last_name: string; role: string } | null;
+};
+
+function displayName(firstName?: string, lastName?: string, fallback = '') {
+  return [firstName, lastName].filter(Boolean).join(' ').trim() || fallback;
+}
+
+function mapTicketSummary(ticket: SupportTicketSummaryApi): SupportTicket {
+  const creator = ticket.createdByUser;
+  const assignee = ticket.assignedToAdmin;
+  const creatorLabel = displayName(creator?.first_name, creator?.last_name, ticket.created_by);
+  const assigneeLabel = assignee
+    ? displayName(assignee.first_name, assignee.last_name, ticket.assigned_to ?? '')
+    : null;
+
+  return {
+    id: ticket.id,
+    subject: ticket.subject,
+    status: mapApiStatus(ticket.status),
+    role: creator?.role === 'station' ? 'station' : 'client',
+    created_by: creatorLabel,
+    assigned_to: assigneeLabel,
+    messages: ticket.lastMessage
+      ? [{
+          id: `${ticket.id}-preview`,
+          author: creatorLabel,
+          role: 'user',
+          body: ticket.lastMessage.content,
+          created_at: ticket.lastMessage.created_at,
+        }]
+      : [],
+    created_at: ticket.created_at,
+    updated_at: ticket.updated_at,
+  };
+}
+
 export function AdminSupportContainer() {
   const t     = useTranslations('admin_support');
   const [query, setQuery] = useState('');
   const [showSettings, setShowSettings] = useState(false);
+  const [tickets, setTickets] = useState<SupportTicket[]>([]);
+  const [loading, setLoading] = useState(true);
+  const mountedRef = useRef(true);
 
-  // TODO: replace with getFromApi('/admin/support/tickets') once endpoint is available
-  const tickets = MOCK_TICKETS;
+  useEffect(() => {
+    mountedRef.current = true;
+    return () => { mountedRef.current = false; };
+  }, []);
+
+  useEffect(() => {
+    (async () => {
+      try {
+        const [ok, data] = await getFromApi('/support');
+        if (!mountedRef.current) return;
+        if (ok) {
+          const items = ((data as { data?: SupportTicketSummaryApi[] })?.data ?? []).map(mapTicketSummary);
+          setTickets(items);
+        }
+      } finally {
+        if (mountedRef.current) setLoading(false);
+      }
+    })();
+  }, []);
 
   const counts = { open: 0, in_progress: 0, resolved: 0, closed: 0 };
   for (const tk of tickets) counts[tk.status as keyof typeof counts]++;
@@ -78,6 +146,11 @@ export function AdminSupportContainer() {
 
       {/* Content */}
       <div className="flex-1 overflow-y-auto bg-[#F5F5EE] p-6 dark:bg-[#0C1209]">
+        {loading && (
+          <div className="mb-6 rounded-2xl border border-[#E8E4DC] bg-white px-5 py-4 text-[13px] text-[#888] shadow-sm dark:border-[#1E2E18] dark:bg-[#131E10] dark:text-[#A0A090]">
+            Chargement des tickets en cours…
+          </div>
+        )}
         {showSettings && (
           <div className="mb-6">
             <AdminSupportSettings />
