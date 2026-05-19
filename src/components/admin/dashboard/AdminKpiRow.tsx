@@ -14,6 +14,7 @@ interface KpiCardProps {
   sparkline: number[];
   accentColor: string;
   animationDelay?: string;
+  masked?: boolean;
 }
 
 function Sparkline({ bars, color }: { bars: number[]; color: string }) {
@@ -35,7 +36,7 @@ function Sparkline({ bars, color }: { bars: number[]; color: string }) {
   );
 }
 
-function KpiCard({ icon, value, label, trendValue, trendLabel, trendUp, sparkline, accentColor, animationDelay }: KpiCardProps) {
+function KpiCard({ icon, value, label, trendValue, trendLabel, trendUp, sparkline, accentColor, animationDelay, masked }: KpiCardProps) {
   return (
     <div
       data-testid="kpi-card"
@@ -63,7 +64,7 @@ function KpiCard({ icon, value, label, trendValue, trendLabel, trendUp, sparklin
 
       {/* Value */}
       <div className="mb-0.5 text-[28px] font-black leading-none tracking-tight text-[#0F1A0C] dark:text-[#F0EDD4]">
-        {value}
+        {masked ? '••••' : value}
       </div>
       <div className="mb-4 text-[12px] font-medium text-[#888] dark:text-[#9A9A8A]">
         {label}
@@ -102,6 +103,7 @@ const ClientsIcon = () => (
 
 interface DashboardResponse {
   data: {
+    period: { from: string; to: string; days: number };
     totals: { active_stations: number; total_clients: number; pending_kyc: number; open_support_tickets: number };
     metrics: { total_transactions: number; total_revenue: string; total_commissions: string };
   };
@@ -113,7 +115,7 @@ function fmtCurrency(v: string | number) {
   return n.toLocaleString('fr-CA', { style: 'currency', currency: 'CAD', minimumFractionDigits: 0, maximumFractionDigits: 0 });
 }
 
-export function AdminKpiRow() {
+export function AdminKpiRow({ masked = false }: { masked?: boolean }) {
   const t = useTranslations('admin_dashboard');
   const mountedRef = useRef(true);
   useEffect(() => { mountedRef.current = true; return () => { mountedRef.current = false; }; }, []);
@@ -145,19 +147,38 @@ export function AdminKpiRow() {
 
   const totals = data?.totals;
   const metrics = data?.metrics;
+  const period = data?.period;
 
   const cards: KpiCardProps[] = [
-    { icon: <TransactionsIcon />, value: fmtCurrency(metrics?.total_revenue ?? '0'), label: t('kpi_transactions'), trendValue: String(metrics?.total_transactions ?? 0), trendUp: true, trendLabel: t('kpi_trend_vs_yesterday'), sparkline: [], accentColor: GOLD, animationDelay: '0ms' },
-    { icon: <CommissionIcon />,   value: fmtCurrency(metrics?.total_commissions ?? '0'), label: t('kpi_commissions'), trendValue: '-', trendUp: true, trendLabel: t('kpi_trend_vs_yesterday'), sparkline: [], accentColor: GOLD, animationDelay: '60ms' },
-    { icon: <MerchantsIcon />,    value: String(totals?.active_stations ?? 0), label: t('kpi_merchants'), trendValue: `${totals?.pending_kyc ?? 0} KYC`, trendUp: (totals?.pending_kyc ?? 0) > 0, trendLabel: t('kpi_vs_last_month'), sparkline: [], accentColor: '#3B82F6', animationDelay: '120ms' },
-    { icon: <ClientsIcon />,      value: String(totals?.total_clients ?? 0), label: t('kpi_clients'), trendValue: '-', trendUp: true, trendLabel: t('kpi_vs_last_month'), sparkline: [], accentColor: '#10B981', animationDelay: '180ms' },
+    { icon: <TransactionsIcon />, value: fmtCurrency(metrics?.total_revenue ?? '0'), label: t('kpi_revenue'), trendValue: `${period?.days ?? 0}d`, trendUp: true, trendLabel: t('kpi_period_label'), sparkline: [], accentColor: GOLD, animationDelay: '0ms', masked },
+    { icon: <CommissionIcon />,   value: fmtCurrency(metrics?.total_commissions ?? '0'), label: t('kpi_commissions'), trendValue: String(metrics?.total_transactions ?? 0), trendUp: true, trendLabel: t('kpi_transactions_count'), sparkline: [], accentColor: GOLD, animationDelay: '60ms', masked },
+    { icon: <MerchantsIcon />,    value: String(totals?.active_stations ?? 0), label: t('kpi_active_stations'), trendValue: `${totals?.pending_kyc ?? 0}`, trendUp: (totals?.pending_kyc ?? 0) > 0, trendLabel: t('kpi_pending_kyc_short'), sparkline: [], accentColor: '#3B82F6', animationDelay: '120ms', masked },
+    { icon: <ClientsIcon />,      value: String(totals?.total_clients ?? 0), label: t('kpi_clients'), trendValue: `${totals?.open_support_tickets ?? 0}`, trendUp: (totals?.open_support_tickets ?? 0) > 0, trendLabel: t('kpi_support_short'), sparkline: [], accentColor: '#10B981', animationDelay: '180ms', masked },
+    { icon: <PendingIcon />,      value: String(totals?.pending_kyc ?? 0), label: t('kpi_pending_kyc'), trendValue: 'live', trendUp: (totals?.pending_kyc ?? 0) > 0, trendLabel: t('kpi_live_data'), sparkline: [], accentColor: '#F59E0B', animationDelay: '240ms', masked },
+    { icon: <TicketsIcon />,      value: String(totals?.open_support_tickets ?? 0), label: t('kpi_open_support_tickets'), trendValue: 'live', trendUp: (totals?.open_support_tickets ?? 0) > 0, trendLabel: t('kpi_live_data'), sparkline: [], accentColor: '#EF4444', animationDelay: '300ms', masked },
   ];
 
   return (
-    <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
+    <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 xl:grid-cols-3">
       {cards.map((card, i) => (
         <KpiCard key={i} {...card} />
       ))}
     </div>
   );
 }
+
+const PendingIcon = () => (
+  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke={GOLD} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
+    <polyline points="14 2 14 8 20 8" />
+    <path d="M8 13h8M8 17h5" />
+  </svg>
+);
+
+const TicketsIcon = () => (
+  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#EF4444" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z" />
+    <line x1="12" y1="9" x2="12" y2="13" />
+    <line x1="12" y1="17" x2="12.01" y2="17" />
+  </svg>
+);
