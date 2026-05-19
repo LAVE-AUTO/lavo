@@ -82,22 +82,13 @@ function KpiCard({ icon, value, label, trendValue, trendLabel, trendUp, sparklin
         </span>
       </div>
 
-      <div className="relative flex items-end justify-between gap-4 rounded-2xl border border-black/[0.05] bg-white/70 px-4 py-3 backdrop-blur-sm dark:border-white/10 dark:bg-white/[0.04]">
-        <div className="min-w-0">
-          <div className="text-[10px] font-bold uppercase tracking-[0.2em] text-[#8A8A7C] dark:text-[#A0A090]">
-            {trendLabel}
-          </div>
-          <div className="mt-1 text-sm font-black leading-tight text-[#0F1A0C] dark:text-[#F0EDD4]">
-            {trendValue}
-          </div>
-        </div>
-        <div className="flex h-8 items-center justify-end">
-          {sparkline.length > 0 ? (
-            <Sparkline bars={sparkline} color={accentColor} />
-          ) : (
-            <div className="h-px w-20 rounded-full bg-gradient-to-r from-transparent via-black/10 to-transparent dark:via-white/10" />
-          )}
-        </div>
+      {/* Value */}
+      <div className="mb-0.5 text-[28px] font-black leading-none tracking-tight text-[#0F1A0C] dark:text-[#F0EDD4]">
+        {masked ? '••••' : value}
+      </div>
+      <div className="mb-4 text-[12px] font-medium text-[#888] dark:text-[#9A9A8A]">
+        {label}
+        <span className="ml-1.5 text-[#AAA] dark:text-[#A0A090]">- {trendLabel}</span>
       </div>
     </div>
   );
@@ -175,21 +166,18 @@ export function AdminKpiRow({ masked = false }: { masked?: boolean }) {
   const totals = data?.totals;
   const metrics = data?.metrics;
   const period = data?.period;
-  const alerts = data?.alerts;
-  const pendingKycCount = alerts?.pending_kyc?.length ?? totals?.pending_kyc ?? 0;
-  const openTicketCount = alerts?.open_support_tickets?.length ?? totals?.open_support_tickets ?? 0;
 
   const cards: KpiCardProps[] = [
     { icon: <TransactionsIcon />, value: fmtCurrency(metrics?.total_revenue ?? '0'), label: t('kpi_revenue'), trendValue: `${period?.days ?? 0}d`, trendUp: true, trendLabel: t('kpi_period_label'), sparkline: [], accentColor: GOLD, animationDelay: '0ms', masked },
     { icon: <CommissionIcon />,   value: fmtCurrency(metrics?.total_commissions ?? '0'), label: t('kpi_commissions'), trendValue: String(metrics?.total_transactions ?? 0), trendUp: true, trendLabel: t('kpi_transactions_count'), sparkline: [], accentColor: GOLD, animationDelay: '60ms', masked },
-    { icon: <MerchantsIcon />,    value: String(totals?.active_stations ?? 0), label: t('kpi_active_stations'), trendValue: String(pendingKycCount), trendUp: pendingKycCount > 0, trendLabel: t('kpi_pending_kyc_short'), sparkline: [], accentColor: '#3B82F6', animationDelay: '120ms', masked },
-    { icon: <ClientsIcon />,      value: String(totals?.total_clients ?? 0), label: t('kpi_clients'), trendValue: String(openTicketCount), trendUp: openTicketCount > 0, trendLabel: t('kpi_support_short'), sparkline: [], accentColor: '#10B981', animationDelay: '180ms', masked },
-    { icon: <PendingIcon />,      value: String(pendingKycCount), label: t('kpi_pending_kyc'), trendValue: 'live', trendUp: pendingKycCount > 0, trendLabel: t('kpi_live_data'), sparkline: [], accentColor: '#F59E0B', animationDelay: '240ms', masked },
-    { icon: <TicketsIcon />,      value: String(openTicketCount), label: t('kpi_open_support_tickets'), trendValue: 'live', trendUp: openTicketCount > 0, trendLabel: t('kpi_live_data'), sparkline: [], accentColor: '#EF4444', animationDelay: '300ms', masked },
+    { icon: <MerchantsIcon />,    value: String(totals?.active_stations ?? 0), label: t('kpi_active_stations'), trendValue: `${totals?.pending_kyc ?? 0}`, trendUp: (totals?.pending_kyc ?? 0) > 0, trendLabel: t('kpi_pending_kyc_short'), sparkline: [], accentColor: '#3B82F6', animationDelay: '120ms', masked },
+    { icon: <ClientsIcon />,      value: String(totals?.total_clients ?? 0), label: t('kpi_clients'), trendValue: `${totals?.open_support_tickets ?? 0}`, trendUp: (totals?.open_support_tickets ?? 0) > 0, trendLabel: t('kpi_support_short'), sparkline: [], accentColor: '#10B981', animationDelay: '180ms', masked },
+    { icon: <PendingIcon />,      value: String(totals?.pending_kyc ?? 0), label: t('kpi_pending_kyc'), trendValue: 'live', trendUp: (totals?.pending_kyc ?? 0) > 0, trendLabel: t('kpi_live_data'), sparkline: [], accentColor: '#F59E0B', animationDelay: '240ms', masked },
+    { icon: <TicketsIcon />,      value: String(totals?.open_support_tickets ?? 0), label: t('kpi_open_support_tickets'), trendValue: 'live', trendUp: (totals?.open_support_tickets ?? 0) > 0, trendLabel: t('kpi_live_data'), sparkline: [], accentColor: '#EF4444', animationDelay: '300ms', masked },
   ];
 
   return (
-    <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 xl:grid-cols-3">
+    <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 xl:grid-cols-3">
       {cards.map((card, i) => (
         <KpiCard key={i} {...card} />
       ))}
