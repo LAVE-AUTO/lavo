@@ -2805,6 +2805,7 @@
         "col_set_by": "Changed by",
         "col_date": "Date",
         "empty_history": "No change history.",
+        "set_by_admin": "Administrator",
         "platform_share": "Platform",
         "station_share": "Station",
         "preview_title": "Split",
