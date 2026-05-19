@@ -40,39 +40,65 @@ function KpiCard({ icon, value, label, trendValue, trendLabel, trendUp, sparklin
   return (
     <div
       data-testid="kpi-card"
-      className="animate-fade-in-up relative overflow-hidden rounded-2xl bg-white p-5 shadow-sm ring-1 ring-black/[0.04] transition-all duration-200 hover:-translate-y-0.5 hover:shadow-md dark:bg-[#1A2416] dark:ring-white/[0.06]"
+      className="animate-fade-in-up group relative isolate overflow-hidden rounded-[28px] border border-white/70 bg-[linear-gradient(180deg,rgba(255,255,255,0.96)_0%,rgba(249,247,239,0.92)_100%)] p-5 shadow-[0_18px_45px_rgba(15,26,12,0.08)] ring-1 ring-black/[0.04] transition-all duration-300 hover:-translate-y-1 hover:shadow-[0_24px_60px_rgba(15,26,12,0.12)] dark:border-white/10 dark:bg-[linear-gradient(180deg,rgba(20,28,16,0.96)_0%,rgba(14,20,10,0.92)_100%)] dark:ring-white/[0.06]"
       style={{ animationDelay }}
     >
-      {/* Top row: icon + trend badge */}
-      <div className="mb-4 flex items-start justify-between">
-        <div
-          className="flex h-10 w-10 items-center justify-center rounded-xl"
-          style={{ background: `${accentColor}18` }}
-        >
-          {icon}
+      <div
+        className="absolute inset-x-0 top-0 h-1.5"
+        style={{ background: accentColor }}
+      />
+      <div
+        className="pointer-events-none absolute -right-10 -top-10 h-28 w-28 rounded-full blur-3xl opacity-20 transition-opacity duration-300 group-hover:opacity-30"
+        style={{ background: `radial-gradient(circle, ${accentColor} 0%, transparent 70%)` }}
+      />
+
+      <div className="relative mb-5 flex items-start justify-between gap-4">
+        <div className="flex min-w-0 flex-1 items-start gap-3">
+          <div
+            className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl border border-white/70 shadow-[0_8px_18px_rgba(15,26,12,0.08)] ring-1 ring-black/[0.04] dark:border-white/10 dark:ring-white/[0.05]"
+            style={{ background: `${accentColor}16` }}
+          >
+            {icon}
+          </div>
+          <div className="min-w-0">
+            <div className="truncate text-[11px] font-bold uppercase tracking-[0.22em] text-[#8A8A7C] dark:text-[#A0A090]">
+              {label}
+            </div>
+            <div className="mt-2 text-[clamp(1.9rem,3vw,2.6rem)] font-black leading-none tracking-tight text-[#0F1A0C] dark:text-[#F0EDD4]">
+              {masked ? '••••' : value}
+            </div>
+          </div>
         </div>
         <span
-          className="flex items-center gap-1 rounded-full px-2.5 py-1 text-[11px] font-black"
+          className="inline-flex items-center gap-1 rounded-full border px-3 py-1 text-[11px] font-black uppercase tracking-[0.14em] shadow-sm"
           style={{
-            background: trendUp ? '#00C85118' : '#EF444418',
+            background: trendUp ? '#00C85114' : '#EF444414',
+            borderColor: trendUp ? '#00C85120' : '#EF444420',
             color: trendUp ? '#00A041' : '#EF4444',
           }}
         >
-          {trendUp ? '▲' : '▼'} {trendValue}
+          <span className="text-[10px] leading-none">{trendUp ? '▲' : '▼'}</span>
+          {trendValue}
         </span>
       </div>
 
-      {/* Value */}
-      <div className="mb-0.5 text-[28px] font-black leading-none tracking-tight text-[#0F1A0C] dark:text-[#F0EDD4]">
-        {masked ? '••••' : value}
+      <div className="relative flex items-end justify-between gap-4 rounded-2xl border border-black/[0.05] bg-white/70 px-4 py-3 backdrop-blur-sm dark:border-white/10 dark:bg-white/[0.04]">
+        <div className="min-w-0">
+          <div className="text-[10px] font-bold uppercase tracking-[0.2em] text-[#8A8A7C] dark:text-[#A0A090]">
+            {trendLabel}
+          </div>
+          <div className="mt-1 text-sm font-black leading-tight text-[#0F1A0C] dark:text-[#F0EDD4]">
+            {trendValue}
+          </div>
+        </div>
+        <div className="flex h-8 items-center justify-end">
+          {sparkline.length > 0 ? (
+            <Sparkline bars={sparkline} color={accentColor} />
+          ) : (
+            <div className="h-px w-20 rounded-full bg-gradient-to-r from-transparent via-black/10 to-transparent dark:via-white/10" />
+          )}
+        </div>
       </div>
-      <div className="mb-4 text-[12px] font-medium text-[#888] dark:text-[#9A9A8A]">
-        {label}
-        <span className="ml-1.5 text-[#AAA] dark:text-[#A0A090]">- {trendLabel}</span>
-      </div>
-
-      {/* Sparkline */}
-      <Sparkline bars={sparkline} color={accentColor} />
     </div>
   );
 }
@@ -163,7 +189,7 @@ export function AdminKpiRow({ masked = false }: { masked?: boolean }) {
   ];
 
   return (
-    <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 xl:grid-cols-3">
+    <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 xl:grid-cols-3">
       {cards.map((card, i) => (
         <KpiCard key={i} {...card} />
       ))}
