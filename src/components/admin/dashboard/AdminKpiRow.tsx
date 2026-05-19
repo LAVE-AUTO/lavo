@@ -82,13 +82,22 @@ function KpiCard({ icon, value, label, trendValue, trendLabel, trendUp, sparklin
         </span>
       </div>
 
-      {/* Value */}
-      <div className="mb-0.5 text-[28px] font-black leading-none tracking-tight text-[#0F1A0C] dark:text-[#F0EDD4]">
-        {masked ? '••••' : value}
-      </div>
-      <div className="mb-4 text-[12px] font-medium text-[#888] dark:text-[#9A9A8A]">
-        {label}
-        <span className="ml-1.5 text-[#AAA] dark:text-[#A0A090]">- {trendLabel}</span>
+      <div className="relative flex items-end justify-between gap-4 rounded-2xl border border-black/[0.05] bg-white/70 px-4 py-3 backdrop-blur-sm dark:border-white/10 dark:bg-white/[0.04]">
+        <div className="min-w-0">
+          <div className="text-[10px] font-bold uppercase tracking-[0.2em] text-[#8A8A7C] dark:text-[#A0A090]">
+            {trendLabel}
+          </div>
+          <div className="mt-1 text-sm font-black leading-tight text-[#0F1A0C] dark:text-[#F0EDD4]">
+            {trendValue}
+          </div>
+        </div>
+        <div className="flex h-8 items-center justify-end">
+          {sparkline.length > 0 ? (
+            <Sparkline bars={sparkline} color={accentColor} />
+          ) : (
+            <div className="h-px w-20 rounded-full bg-gradient-to-r from-transparent via-black/10 to-transparent dark:via-white/10" />
+          )}
+        </div>
       </div>
     </div>
   );
@@ -180,7 +189,7 @@ export function AdminKpiRow({ masked = false }: { masked?: boolean }) {
   ];
 
   return (
-    <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 xl:grid-cols-3">
+    <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 xl:grid-cols-3">
       {cards.map((card, i) => (
         <KpiCard key={i} {...card} />
       ))}
