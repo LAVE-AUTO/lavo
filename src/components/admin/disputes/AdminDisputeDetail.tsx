@@ -38,6 +38,51 @@ function initials(name: string) {
 
 interface Props { id: string }
 
+interface ApiDispute {
+  id: string;
+  reason: string;
+  description: string | null;
+  status: string;
+  requested_amount: string | null;
+  refunded_amount: string | null;
+  client_id: string;
+  station_id: string;
+  reservation_id: string;
+  created_at: string;
+  client: {
+    id: string;
+    first_name: string | null;
+    last_name: string | null;
+    email: string;
+    phone: string | null;
+  } | null;
+  station: {
+    id: string;
+    name: string;
+    city: string;
+    address: string;
+    contact_email: string | null;
+    contact_phone: string | null;
+  } | null;
+}
+
+function mapApiStatus(s: string): DisputeStatus {
+  if (s === 'refunded') return 'refunded_full';
+  if (s === 'resolved' || s === 'rejected') return 'closed';
+  return 'open';
+}
+
+function clientDisplayName(client: ApiDispute['client']): string {
+  if (!client) return '—';
+  const full = [client.first_name, client.last_name].filter(Boolean).join(' ');
+  return full || client.email;
+}
+
+function clientContact(client: ApiDispute['client']): string | null {
+  if (!client) return null;
+  return client.phone ?? client.email ?? null;
+}
+
 export function AdminDisputeDetail({ id }: Props) {
   const t = useTranslations('admin_disputes');
   const { success: toastSuccess, error: toastError } = useToast();
@@ -45,37 +90,37 @@ export function AdminDisputeDetail({ id }: Props) {
   useEffect(() => { mountedRef.current = true; return () => { mountedRef.current = false; }; }, []);
 
   const [dispute, setDispute] = useState<DisputeRow | undefined>(undefined);
+  const [apiData, setApiData] = useState<ApiDispute | null>(null);
   const [loading, setLoading] = useState(true);
   const [modal, setModal]     = useState<ModalMode | null>(null);
   const [busy, setBusy]       = useState(false);
 
-  interface ApiDispute {
-    id: string; reason: string; description: string | null; status: string;
-    requested_amount: string | null; refunded_amount: string | null;
-    client_id: string; station_id: string; reservation_id: string; created_at: string;
-    station: { id: string; name: string; city: string; address: string } | null;
-  }
-
-  function mapApiStatus(s: string): DisputeStatus {
-    if (s === 'refunded') return 'refunded_full';
-    if (s === 'resolved' || s === 'rejected') return 'closed';
-    return 'open';
-  }
-
   useEffect(() => {
     (async () => {
       try {
-        const [ok, data] = await getFromApi('/admin/disputes');
+        const [ok, data] = await getFromApi(`/admin/disputes/${id}`);
         if (!mountedRef.current) return;
         if (ok) {
-          const items = ((data as { data: { items: ApiDispute[] } }).data?.items) ?? [];
-          const found = items.find((d) => d.id === id);
+          const found = (data as { data: ApiDispute }).data;
           if (found) {
+            setApiData(found);
             setDispute({
               id: found.id,
-              client: { name: found.client_id.slice(0, 8), email: '' },
-              station: { name: found.station?.name ?? '', city: found.station?.city ?? '' },
-              reservation: { id: found.reservation_id, date: found.created_at, amount_paid: parseFloat(found.requested_amount ?? '0'), vehicle_format: '', status: '' },
+              client: {
+                name: clientDisplayName(found.client),
+                email: found.client?.email ?? '',
+              },
+              station: {
+                name: found.station?.name ?? '',
+                city: found.station?.city ?? '',
+              },
+              reservation: {
+                id: found.reservation_id,
+                date: found.created_at,
+                amount_paid: parseFloat(found.requested_amount ?? '0'),
+                vehicle_format: '',
+                status: '',
+              },
               reason: found.reason,
               status: mapApiStatus(found.status),
               created_at: found.created_at,
@@ -112,6 +157,8 @@ export function AdminDisputeDetail({ id }: Props) {
 
   const s          = STATUS_STYLE[dispute.status];
   const isResolved = dispute.status !== 'open';
+  const contact    = clientContact(apiData?.client ?? null);
+  const stationContact = apiData?.station?.contact_phone ?? apiData?.station?.contact_email ?? null;
 
   async function handleAction(payload: { amount?: number; reason?: string }) {
     if (!dispute) return;
@@ -210,9 +257,12 @@ export function AdminDisputeDetail({ id }: Props) {
                 <div className={`mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-xl ${s.bar}`}>
                   <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2" strokeLinecap="round"><path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z" /><line x1="12" y1="9" x2="12" y2="13" /><line x1="12" y1="17" x2="12.01" y2="17" /></svg>
                 </div>
-                <div>
+                <div className="min-w-0 flex-1">
                   <p className="mb-1 text-[11px] font-black uppercase tracking-widest text-[#AAAAAA] dark:text-[#A0A090]">{t('label_reason')}</p>
                   <p className="text-[14px] leading-relaxed text-[#333] dark:text-[#C0C0B0]">{dispute.reason}</p>
+                  {apiData?.description && (
+                    <p className="mt-2 text-[13px] leading-relaxed text-[#666] dark:text-[#9A9A8A]">{apiData.description}</p>
+                  )}
                 </div>
               </div>
 
@@ -320,13 +370,41 @@ export function AdminDisputeDetail({ id }: Props) {
                 <div className="border-b border-[#F0EDE6] bg-[#F9F8F5] px-5 py-3 dark:border-[#1A2A14] dark:bg-[#0E1A0C]">
                   <p className="text-[12px] font-black uppercase tracking-widest text-[#AAAAAA] dark:text-[#A0A090]">{t('label_client')}</p>
                 </div>
-                <div className="flex items-center gap-3 p-4">
-                  <div className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-xl text-[13px] font-black text-white ${s.bar}`}>
-                    {initials(dispute.client.name)}
+                <div className="p-4">
+                  <div className="flex items-center gap-3">
+                    <div className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-xl text-[13px] font-black text-white ${s.bar}`}>
+                      {initials(dispute.client.name)}
+                    </div>
+                    <div className="min-w-0">
+                      <p className="truncate text-[13px] font-bold text-[#1A1A0A] dark:text-[#F0EDD4]">{dispute.client.name}</p>
+                    </div>
                   </div>
-                  <div className="min-w-0">
-                    <p className="truncate text-[13px] font-bold text-[#1A1A0A] dark:text-[#F0EDD4]">{dispute.client.name}</p>
-                    <p className="truncate text-[12px] text-[#BBBBAA] dark:text-[#A0A090]">{dispute.client.email}</p>
+                  <div className="mt-3 flex flex-col gap-1.5">
+                    {contact ? (
+                      <a
+                        href={contact.startsWith('+') || /^\d/.test(contact) ? `tel:${contact}` : `mailto:${contact}`}
+                        className="flex items-center gap-2 rounded-xl bg-[#F5F5EE] px-3 py-2 text-[12px] font-semibold text-[#444] transition-colors hover:bg-[#EDEAE0] dark:bg-[#0E1A0C] dark:text-[#C0C0B0] dark:hover:bg-[#152010]"
+                      >
+                        {contact.startsWith('+') || /^\d/.test(contact) ? (
+                          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#C49A1E" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M22 16.92v3a2 2 0 01-2.18 2 19.79 19.79 0 01-8.63-3.07A19.5 19.5 0 013.07 10.8 19.79 19.79 0 01.03 2.18 2 2 0 012 0h3a2 2 0 012 1.72c.127.96.361 1.903.7 2.81a2 2 0 01-.45 2.11L6.91 7.91a16 16 0 006.72 6.72l1.28-1.27a2 2 0 012.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0122 16.92z" /></svg>
+                        ) : (
+                          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#C49A1E" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z" /><polyline points="22,6 12,13 2,6" /></svg>
+                        )}
+                        <span className="truncate">{contact}</span>
+                      </a>
+                    ) : (
+                      <p className="text-[12px] text-[#BBBBAA] dark:text-[#A0A090]">{t('no_contact')}</p>
+                    )}
+                    {/* Always show email if phone was shown and email also exists */}
+                    {apiData?.client?.phone && apiData?.client?.email && (
+                      <a
+                        href={`mailto:${apiData.client.email}`}
+                        className="flex items-center gap-2 rounded-xl bg-[#F5F5EE] px-3 py-2 text-[12px] font-semibold text-[#444] transition-colors hover:bg-[#EDEAE0] dark:bg-[#0E1A0C] dark:text-[#C0C0B0] dark:hover:bg-[#152010]"
+                      >
+                        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#C49A1E" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z" /><polyline points="22,6 12,13 2,6" /></svg>
+                        <span className="truncate">{apiData.client.email}</span>
+                      </a>
+                    )}
                   </div>
                 </div>
               </div>
@@ -336,14 +414,41 @@ export function AdminDisputeDetail({ id }: Props) {
                 <div className="border-b border-[#F0EDE6] bg-[#F9F8F5] px-5 py-3 dark:border-[#1A2A14] dark:bg-[#0E1A0C]">
                   <p className="text-[12px] font-black uppercase tracking-widest text-[#AAAAAA] dark:text-[#A0A090]">{t('label_station')}</p>
                 </div>
-                <div className="flex items-center gap-3 p-4">
-                  <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-[#F0EDE6] dark:bg-[#1A2A14]">
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#C49A1E" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z" /></svg>
+                <div className="p-4">
+                  <div className="flex items-center gap-3">
+                    <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-[#F0EDE6] dark:bg-[#1A2A14]">
+                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#C49A1E" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z" /></svg>
+                    </div>
+                    <div className="min-w-0">
+                      <p className="truncate text-[13px] font-bold text-[#1A1A0A] dark:text-[#F0EDD4]">{dispute.station.name}</p>
+                      <p className="truncate text-[12px] text-[#BBBBAA] dark:text-[#A0A090]">{dispute.station.city}</p>
+                    </div>
                   </div>
-                  <div className="min-w-0">
-                    <p className="truncate text-[13px] font-bold text-[#1A1A0A] dark:text-[#F0EDD4]">{dispute.station.name}</p>
-                    <p className="truncate text-[12px] text-[#BBBBAA] dark:text-[#A0A090]">{dispute.station.city}</p>
-                  </div>
+                  {stationContact && (
+                    <div className="mt-3">
+                      <a
+                        href={stationContact.startsWith('+') || /^\d/.test(stationContact) ? `tel:${stationContact}` : `mailto:${stationContact}`}
+                        className="flex items-center gap-2 rounded-xl bg-[#F5F5EE] px-3 py-2 text-[12px] font-semibold text-[#444] transition-colors hover:bg-[#EDEAE0] dark:bg-[#0E1A0C] dark:text-[#C0C0B0] dark:hover:bg-[#152010]"
+                      >
+                        {stationContact.startsWith('+') || /^\d/.test(stationContact) ? (
+                          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#C49A1E" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M22 16.92v3a2 2 0 01-2.18 2 19.79 19.79 0 01-8.63-3.07A19.5 19.5 0 013.07 10.8 19.79 19.79 0 01.03 2.18 2 2 0 012 0h3a2 2 0 012 1.72c.127.96.361 1.903.7 2.81a2 2 0 01-.45 2.11L6.91 7.91a16 16 0 006.72 6.72l1.28-1.27a2 2 0 012.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0122 16.92z" /></svg>
+                        ) : (
+                          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#C49A1E" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z" /><polyline points="22,6 12,13 2,6" /></svg>
+                        )}
+                        <span className="truncate">{stationContact}</span>
+                      </a>
+                      {/* Show both phone and email if both exist */}
+                      {apiData?.station?.contact_phone && apiData?.station?.contact_email && (
+                        <a
+                          href={`mailto:${apiData.station.contact_email}`}
+                          className="mt-1.5 flex items-center gap-2 rounded-xl bg-[#F5F5EE] px-3 py-2 text-[12px] font-semibold text-[#444] transition-colors hover:bg-[#EDEAE0] dark:bg-[#0E1A0C] dark:text-[#C0C0B0] dark:hover:bg-[#152010]"
+                        >
+                          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#C49A1E" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z" /><polyline points="22,6 12,13 2,6" /></svg>
+                          <span className="truncate">{apiData.station.contact_email}</span>
+                        </a>
+                      )}
+                    </div>
+                  )}
                 </div>
               </div>
             </div>

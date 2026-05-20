@@ -2789,7 +2789,9 @@
     "not_found": "Dispute not found.",
     "label_station": "Station",
     "fetch_error": "Unable to load disputes.",
-    "btn_retry": "Retry"
+    "btn_retry": "Retry",
+    "no_contact": "No contact available",
+    "label_description": "Description"
   },
   "admin_commission": {
     "page_title": "Commission",

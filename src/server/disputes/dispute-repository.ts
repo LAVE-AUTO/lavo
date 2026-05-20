@@ -1,6 +1,7 @@
+import { alias } from 'drizzle-orm/pg-core';
 import { and, count, eq, gte, lte, sql } from 'drizzle-orm';
 import { db } from '@/lib/db';
-import { disputes, stations } from '@/lib/db/schema';
+import { disputes, stations, users } from '@/lib/db/schema';
 import type { DbTransaction } from '@/lib/db';
 import { DisputeAlreadyExistsError } from '@/lib/errors';
 
@@ -11,6 +12,28 @@ export type DisputeStation = {
   name: string;
   city: string;
   address: string;
+};
+
+export type DisputeClient = {
+  id: string;
+  first_name: string | null;
+  last_name: string | null;
+  email: string;
+  phone: string | null;
+};
+
+export type DisputeStationDetail = {
+  id: string;
+  name: string;
+  city: string;
+  address: string;
+  contact_email: string | null;
+  contact_phone: string | null;
+};
+
+export type DisputeWithDetails = Dispute & {
+  client: DisputeClient | null;
+  station: DisputeStationDetail | null;
 };
 
 export type DisputeListItem = Dispute & {
@@ -54,6 +77,45 @@ export async function findDisputeByReservationId(reservationId: string): Promise
   return db.query.disputes.findFirst({
     where: eq(disputes.reservation_id, reservationId),
   });
+}
+
+export async function findDisputeByIdWithDetails(id: string): Promise<DisputeWithDetails | undefined> {
+  const clientUser = alias(users, 'client_user');
+  const stationOwner = alias(users, 'station_owner');
+
+  const rows = await db
+    .select({
+      dispute: disputes,
+      client: {
+        id: clientUser.id,
+        first_name: clientUser.first_name,
+        last_name: clientUser.last_name,
+        email: clientUser.email,
+        phone: clientUser.phone,
+      },
+      station: {
+        id: stations.id,
+        name: stations.name,
+        city: stations.city,
+        address: stations.address,
+        contact_email: stationOwner.email,
+        contact_phone: stationOwner.phone,
+      },
+    })
+    .from(disputes)
+    .leftJoin(clientUser, eq(disputes.client_id, clientUser.id))
+    .leftJoin(stations, eq(disputes.station_id, stations.id))
+    .leftJoin(stationOwner, eq(stations.user_id, stationOwner.id))
+    .where(eq(disputes.id, id))
+    .limit(1);
+
+  if (rows.length === 0) return undefined;
+  const { dispute, client, station } = rows[0];
+  return {
+    ...dispute,
+    client: client?.id ? (client as DisputeClient) : null,
+    station: station?.id ? (station as DisputeStationDetail) : null,
+  };
 }
 
 export async function createDispute(data: CreateDisputeData): Promise<Dispute> {

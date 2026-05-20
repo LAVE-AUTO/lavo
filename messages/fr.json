@@ -2789,7 +2789,9 @@
     "not_found": "Litige introuvable.",
     "label_station": "Station",
     "fetch_error": "Impossible de charger les litiges.",
-    "btn_retry": "Réessayer"
+    "btn_retry": "Réessayer",
+    "no_contact": "Aucun contact disponible",
+    "label_description": "Description"
   },
   "admin_commission": {
     "page_title": "Commission",
