@@ -200,6 +200,17 @@ export const changePasswordSchema = z
     path: ['confirm_new_password'],
   });
 
+/** Body for POST /admin/stations/:id/promo-qr. */
+export const updateStationPromoQrSchema = z.object({
+  commission_rate_percent: z
+    .number({ invalid_type_error: 'commission_rate_percent must be a number' })
+    .min(0, 'commission_rate_percent must be between 0 and 50')
+    .max(50, 'commission_rate_percent must be between 0 and 50')
+    .refine((value) => Number.isInteger(value * 2), {
+      message: 'commission_rate_percent must be a multiple of 0.5',
+    }),
+});
+
 
 // %%%%% END - Admin schemas %%%%%
 

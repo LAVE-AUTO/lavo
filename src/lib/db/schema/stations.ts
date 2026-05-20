@@ -85,6 +85,13 @@ export const stations = pgTable(
     /** Type de prestation: exterior only, interior only, or both. Nullable for existing stations. */
     service_scope: varchar("service_scope", { length: 20 }),
     wash_post_count: integer("wash_post_count"),
+    /** Promo QR configuration stored by the admin promo section. */
+    promo_commission_rate: decimal("promo_commission_rate", { precision: 5, scale: 4 }),
+    promo_ref_code: varchar("promo_ref_code", { length: 128 }),
+    promo_ref_generated_at: timestamp("promo_ref_generated_at", {
+      mode: "date",
+      withTimezone: true,
+    }),
     status: varchar("status", { length: 30 }).notNull(),
     is_open: boolean("is_open").notNull().default(false),
     stripe_account_id: varchar("stripe_account_id", { length: 100 }),
@@ -119,6 +126,7 @@ export const stations = pgTable(
     index("stations_service_scope_idx").on(table.service_scope),
     index("stations_approved_at_idx").on(table.approved_at),
     index("stations_updated_at_idx").on(table.updated_at),
+    index("stations_promo_ref_code_idx").on(table.promo_ref_code),
   ],
 );
 

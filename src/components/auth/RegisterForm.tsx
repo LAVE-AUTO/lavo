@@ -1,11 +1,11 @@
 'use client';
 
-import { useState, type ChangeEvent, type FormEvent } from 'react';
+import { useEffect, useState, type ChangeEvent, type FormEvent } from 'react';
 import { useTranslations } from 'next-intl';
 import { useRouter } from '@/i18n/navigation';
 import { useToast } from '@/context/toast-context';
 import { useAuth } from '@/context/auth-context';
-import { postWithApi } from '@/services/axios-service';
+import { getFromApi, postWithApi } from '@/services/axios-service';
 import { validateEmail, validateName, validatePhone, isPasswordValid, joinPhoneNumber } from '@/helpers/validators';
 import { Button } from '@/components/ui/Button';
 import { FormField } from './FormField';
@@ -23,6 +23,17 @@ interface RegisterFormData {
 }
 
 type FormErrors = Partial<Record<keyof RegisterFormData, string>>;
+
+interface PromoReferralInfo {
+  station_name: string;
+  city: string;
+  promo_commission_rate_percent: number | null;
+  promo_ref_code: string;
+}
+
+interface RegisterFormProps {
+  promoCode?: string | null;
+}
 
 const INITIAL_DATA: RegisterFormData = {
   firstName: '',
@@ -57,7 +68,7 @@ function EyeIcon({ open }: { open: boolean }) {
  * Complete registration form with client-side validation and API submission.
  * On success, redirects to /register/confirmation.
  */
-export function RegisterForm() {
+export function RegisterForm({ promoCode }: RegisterFormProps) {
   const t = useTranslations('register');
   const router = useRouter();
   const { error: showError, success: showSuccess } = useToast();
@@ -68,6 +79,43 @@ export function RegisterForm() {
   const [isLoading, setIsLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirm, setShowConfirm] = useState(false);
+  const [promoInfo, setPromoInfo] = useState<PromoReferralInfo | null>(null);
+  const [promoLoading, setPromoLoading] = useState(false);
+  const [promoError, setPromoError] = useState<string | null>(null);
+
+  useEffect(() => {
+    let cancelled = false;
+
+    if (!promoCode) {
+      setPromoInfo(null);
+      setPromoError(null);
+      setPromoLoading(false);
+      return () => {
+        cancelled = true;
+      };
+    }
+
+    setPromoLoading(true);
+    setPromoError(null);
+
+    void (async () => {
+      const [ok, data] = await getFromApi<PromoReferralInfo>(`/promo/referrals/${encodeURIComponent(promoCode)}`);
+      if (cancelled) return;
+
+      if (!ok) {
+        setPromoInfo(null);
+        setPromoError((data as { message?: string })?.message ?? t('promo_banner_invalid'));
+      } else {
+        setPromoInfo((data as { data?: PromoReferralInfo })?.data ?? null);
+        setPromoError(null);
+      }
+      setPromoLoading(false);
+    })();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [promoCode, t]);
 
   const handleChange =
     (field: keyof RegisterFormData) => (e: ChangeEvent<HTMLInputElement>) => {
@@ -218,6 +266,26 @@ export function RegisterForm() {
 
   return (
     <form onSubmit={handleSubmit} noValidate className="px-8 pb-8">
+      {(promoLoading || promoInfo || promoError) && (
+        <div className="mb-5 rounded-2xl border border-[#C49A1E]/20 bg-[#C49A1E]/8 p-4">
+          {promoLoading ? (
+            <p className="text-[13px] font-semibold text-[#8A6A10]">{t('promo_banner_loading')}</p>
+          ) : promoError ? (
+            <p className="text-[13px] font-semibold text-[#B42318]">{promoError}</p>
+          ) : promoInfo ? (
+            <div className="space-y-1.5">
+              <p className="text-[11px] font-black uppercase tracking-[0.15em] text-[#C49A1E]">{t('promo_banner_title')}</p>
+              <p className="text-[13px] font-semibold text-[#0F1A0C] dark:text-[#F0EDD4]">
+                {t('promo_banner_station', { station: promoInfo.station_name })}
+              </p>
+              <p className="text-[12px] text-[#666] dark:text-[#9A9A8A]">
+                {promoInfo.city} · {t('promo_banner_rate', { rate: promoInfo.promo_commission_rate_percent ?? 0 })}
+              </p>
+            </div>
+          ) : null}
+        </div>
+      )}
+
       {/* Name row - side by side on larger screens */}
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-4">
         <FormField
