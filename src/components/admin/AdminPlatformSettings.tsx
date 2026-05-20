@@ -3,15 +3,12 @@
 import { useState, useRef, useEffect } from 'react';
 import { useTranslations } from 'next-intl';
 import { useToast } from '@/context/toast-context';
-import { useCommission } from '@/context/commission-context';
 import { getFromApi, patchWithApi } from '@/services/axios-service';
 
 interface PlatformSettingRow {
   key: string;
   value: string | null;
 }
-
-const DEFAULT_SETTINGS = { penalty_rate: 15, reschedule_delay_minutes: 30 };
 
 function NumericField({
   label, hint, value, unit, min, max, step, onChange, readOnly,
@@ -58,28 +55,19 @@ function SectionCard({ icon, title, children }: { icon: React.ReactNode; title: 
   );
 }
 
+const DEFAULT_PENALTY_RATE = 15;
+
 export function AdminPlatformSettings() {
   const t = useTranslations('admin_settings');
   const { success: toastSuccess, error: toastError } = useToast();
-  const { rate: savedCommissionRate, updateRate } = useCommission();
   const mountedRef = useRef(true);
   useEffect(() => { mountedRef.current = true; return () => { mountedRef.current = false; }; }, []);
 
-  const [penaltyRate, setPenaltyRate]         = useState(DEFAULT_SETTINGS.penalty_rate);
-  const [adminShare, setAdminShare]           = useState(savedCommissionRate);
-  const [rescheduleDelay, setRescheduleDelay] = useState(DEFAULT_SETTINGS.reschedule_delay_minutes);
-  const [saving, setSaving]                   = useState(false);
+  const [penaltyRate, setPenaltyRate] = useState(DEFAULT_PENALTY_RATE);
+  const [saving, setSaving]           = useState(false);
   const [loadingSettings, setLoadingSettings] = useState(true);
-  // Track last committed values so isDirty resets correctly after each save
-  const [committed, setCommitted] = useState({
-    penalty_rate: DEFAULT_SETTINGS.penalty_rate,
-    reschedule_delay_minutes: DEFAULT_SETTINGS.reschedule_delay_minutes,
-  });
+  const [committed, setCommitted] = useState({ penalty_rate: DEFAULT_PENALTY_RATE });
 
-  /* Sync local input if commission rate changed from commission page */
-  useEffect(() => { setAdminShare(savedCommissionRate); }, [savedCommissionRate]);
-
-  /* Load settings from backend */
   useEffect(() => {
     (async () => {
       try {
@@ -90,10 +78,10 @@ export function AdminPlatformSettings() {
         const map = new Map(rows.map((r) => [r.key, r.value]));
 
         const penalty = parseFloat(map.get('cancellation_penalty_percent') ?? '');
-        const delay = parseInt(map.get('default_late_tolerance_minutes') ?? '', 10);
-
-        if (!isNaN(penalty)) { setPenaltyRate(penalty); setCommitted((c) => ({ ...c, penalty_rate: penalty })); }
-        if (!isNaN(delay)) { setRescheduleDelay(delay); setCommitted((c) => ({ ...c, reschedule_delay_minutes: delay })); }
+        if (!isNaN(penalty)) {
+          setPenaltyRate(penalty);
+          setCommitted({ penalty_rate: penalty });
+        }
       } catch {
         // keep defaults on failure
       } finally {
@@ -102,17 +90,10 @@ export function AdminPlatformSettings() {
     })();
   }, []);
 
-  const stationShare = 100 - adminShare;
-
-  const isDirty =
-    penaltyRate !== committed.penalty_rate ||
-    adminShare  !== savedCommissionRate    ||
-    rescheduleDelay !== committed.reschedule_delay_minutes;
+  const isDirty = penaltyRate !== committed.penalty_rate;
 
   function validate(): string | null {
-    if (penaltyRate < 0 || penaltyRate > 100)          return t('error_penalty_range');
-    if (adminShare < 0 || adminShare > 100)             return t('error_share_range');
-    if (rescheduleDelay < 1 || rescheduleDelay > 10080) return t('error_delay_range');
+    if (penaltyRate < 0 || penaltyRate > 100) return t('error_penalty_range');
     return null;
   }
 
@@ -125,15 +106,13 @@ export function AdminPlatformSettings() {
     try {
       const payload: Record<string, string> = {
         cancellation_penalty_percent: penaltyRate.toFixed(2),
-        default_late_tolerance_minutes: String(rescheduleDelay),
       };
 
       const [ok] = await patchWithApi('/admin/settings', payload);
       if (!mountedRef.current) return;
 
       if (ok) {
-        if (adminShare !== savedCommissionRate) updateRate(Math.round(adminShare * 10) / 10);
-        setCommitted({ penalty_rate: penaltyRate, reschedule_delay_minutes: rescheduleDelay });
+        setCommitted({ penalty_rate: penaltyRate });
         toastSuccess(t('save_success'));
       } else {
         toastError(t('save_error'));
@@ -156,7 +135,7 @@ export function AdminPlatformSettings() {
   return (
     <form onSubmit={handleSave} className="flex min-h-full flex-col">
 
-      {/* Sticky header bar - title left, save right */}
+      {/* Sticky header */}
       <div className="sticky top-0 z-10 flex shrink-0 items-center justify-between border-b border-[#E0DCD0] bg-[#F5F5EE]/95 px-6 py-4 backdrop-blur-sm dark:border-[#1A2A14] dark:bg-[#0C1209]/95">
         <div>
           <h1 className="text-[18px] font-black text-[#1A1A0A] dark:text-[#F0EDD4]">{t('page_title')}</h1>
@@ -166,7 +145,7 @@ export function AdminPlatformSettings() {
           {isDirty && !saving && (
             <span className="text-[12px] font-semibold text-[#AAAAAA] dark:text-[#A0A090]">{t('label_unsaved')}</span>
           )}
-          <button type="submit" disabled={saving}
+          <button type="submit" disabled={saving || !isDirty}
             className="relative flex items-center gap-2 rounded-[10px] bg-[#C49A1E] px-6 py-2.5 text-[13px] font-bold text-[#0C1209] shadow-sm transition-all duration-200 hover:bg-[#D4A830] hover:shadow-md active:scale-[0.98] disabled:opacity-50">
             {saving
               ? <><span className="h-3.5 w-3.5 animate-spin rounded-full border-2 border-[#0C1209] border-t-transparent" />{t('btn_saving')}</>
@@ -178,46 +157,13 @@ export function AdminPlatformSettings() {
         </div>
       </div>
 
-      {/* Sections grid - fills available space */}
       <div className="grid flex-1 auto-rows-min gap-5 p-6 md:grid-cols-2 xl:grid-cols-3">
-
-        {/* Commission - spans 2 cols on xl to give split bar room */}
-        <div className="md:col-span-2 xl:col-span-2">
-          <SectionCard title={t('section_commission')} icon={
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="12" y1="1" x2="12" y2="23" /><path d="M17 5H9.5a3.5 3.5 0 000 7h5a3.5 3.5 0 010 7H6" /></svg>
-          }>
-            <div className="grid gap-4 sm:grid-cols-2">
-              <NumericField label={t('field_admin_share')} hint={t('hint_admin_share')} value={adminShare} unit="%" min={0} max={100} onChange={setAdminShare} />
-              <NumericField label={t('field_station_share')} hint={t('hint_station_share')} value={stationShare} unit="%" readOnly />
-            </div>
-            {/* Split bar */}
-            <div className="pt-1">
-              <div className="overflow-hidden rounded-full bg-[#F0EDE0] dark:bg-[#0E1A0A]" style={{ height: 8 }}>
-                <div
-                  className="h-full rounded-full bg-gradient-to-r from-[#C49A1E] to-[#D4A830] transition-all duration-500 ease-out"
-                  style={{ width: `${Math.max(1, adminShare)}%` }}
-                />
-              </div>
-              <div className="mt-2 flex justify-between text-[12px] font-bold">
-                <span className="text-[#C49A1E]">{t('label_platform')} · {adminShare}%</span>
-                <span className="text-[#5A8A50] dark:text-[#7AAA6A]">{t('label_station')} · {stationShare}%</span>
-              </div>
-            </div>
-          </SectionCard>
-        </div>
 
         {/* Penalties */}
         <SectionCard title={t('section_penalties')} icon={
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" /></svg>
         }>
           <NumericField label={t('field_penalty_rate')} hint={t('hint_penalty_rate')} value={penaltyRate} unit="%" min={0} max={100} onChange={setPenaltyRate} />
-        </SectionCard>
-
-        {/* Reschedule delay */}
-        <SectionCard title={t('section_reschedule')} icon={
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10" /><polyline points="12 6 12 12 16 14" /></svg>
-        }>
-          <NumericField label={t('field_reschedule_delay')} hint={t('hint_reschedule_delay')} value={rescheduleDelay} unit={t('unit_minutes')} min={1} max={10080} step={1} onChange={(v) => setRescheduleDelay(Math.round(v))} />
         </SectionCard>
 
       </div>

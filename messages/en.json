@@ -2706,7 +2706,7 @@
   },
   "admin_settings": {
     "page_title": "Platform settings",
-    "page_subtitle": "Configure commission rules, penalties, and processing delays.",
+    "page_subtitle": "Configure penalty rules and operational parameters for the platform.",
     "section_commission": "Commission",
     "field_admin_share": "Platform share",
     "hint_admin_share": "Percentage taken by the platform on each transaction.",
