@@ -38,7 +38,7 @@ export function AdminCommissionView() {
   useEffect(() => { setRate(savedRate); }, [savedRate]);
 
   const isDirty      = rate !== savedRate;
-  const stationShare = 100 - rate;
+  const stationShare = Math.round((100 - rate) * 10) / 10;
   const barWidth     = Math.max(2, Math.min(98, rate));
 
   async function handleSave() {

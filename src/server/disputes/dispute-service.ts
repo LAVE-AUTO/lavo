@@ -88,6 +88,18 @@ export async function createDispute(
   });
 }
 
+// ─── Admin: get by id ─────────────────────────────────────────────────────────
+
+/**
+ * Returns a single dispute with enriched client and station contact details.
+ * @throws NotFoundError - dispute not found
+ */
+export async function getDisputeByIdAdmin(disputeId: string): Promise<repo.DisputeWithDetails> {
+  const dispute = await repo.findDisputeByIdWithDetails(disputeId);
+  if (!dispute) throw new NotFoundError('Dispute not found');
+  return dispute;
+}
+
 // ─── Admin: list ──────────────────────────────────────────────────────────────
 
 export type DisputeListResult = {
