@@ -51,7 +51,7 @@ export function middleware(request: NextRequest) {
   if (isAdminPath) {
     const adminSession = request.cookies.get('Hurryline_admin_session');
     if (!adminSession?.value) {
-      return NextResponse.redirect(new URL(`/${locale}/login`, request.url));
+      return NextResponse.redirect(new URL(`/${locale}/login/admin`, request.url));
     }
   }
 

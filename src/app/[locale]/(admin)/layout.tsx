@@ -16,7 +16,7 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
   useEffect(() => {
     if (isLoading) return;
     if (!isAuthenticated || !isSuperAdmin) {
-      router.replace(`/${locale}/login`);
+      router.replace(`/${locale}/login/admin`);
     }
   }, [isLoading, isAuthenticated, isSuperAdmin, router, locale]);
 
