@@ -12,6 +12,13 @@ import { AdminAddStationModal } from './stations/AdminAddStationModal';
 
 type Tab = 'stations' | 'clients';
 
+interface MetricCard {
+  label: string;
+  value: string;
+  hint: string;
+  accent: string;
+}
+
 export interface StationRow {
   id: string; name: string; city?: string | null;
   status: string; email?: string | null; created_at: string;
@@ -103,10 +110,10 @@ export function AdminMerchantsClients() {
   ];
 
   const metrics = [
-    { label: t('tab_stations'), value: loading ? '…' : String(managed.length), note: `${actives} ${t('chip_active')}` },
-    { label: t('tab_clients'), value: String(clientCount), note: t('page_subtitle') },
-    { label: t('chip_active'), value: String(actives), note: t('btn_activate') },
-    { label: t('chip_suspended'), value: String(suspended), note: t('btn_suspend') },
+    { label: t('tab_stations'), value: loading ? '…' : String(managed.length), hint: `${actives} ${t('chip_active')}`, accent: '#C49A1E' },
+    { label: t('tab_clients'), value: String(clientCount), hint: t('chip_active'), accent: '#3B82F6' },
+    { label: t('chip_active'), value: String(actives), hint: t('btn_activate'), accent: '#16A34A' },
+    { label: t('chip_suspended'), value: String(suspended), hint: t('btn_suspend'), accent: '#EA580C' },
   ];
 
   return (
@@ -130,10 +137,21 @@ export function AdminMerchantsClients() {
 
             <div className="grid grid-cols-2 gap-4 md:grid-cols-4 xl:w-[640px] 2xl:w-[720px]">
               {metrics.map((metric) => (
-                <div key={metric.label} className="rounded-[22px] border border-[#E9E4D8] bg-[#FBFAF7] px-5 py-4 shadow-[0_10px_30px_rgba(26,26,10,0.05)] dark:border-[#1E2E18] dark:bg-[#0C150B]">
-                  <div className="text-[11px] font-bold uppercase tracking-[0.18em] text-[#9B9588] dark:text-[#7E8A75]">{metric.label}</div>
-                  <div className="mt-3 text-[28px] font-black leading-none text-[#1A1A0A] dark:text-[#F0EDD4]">{metric.value}</div>
-                  <div className="mt-2.5 text-[12px] font-semibold text-[#B29A52] dark:text-[#D0BF7E]">{metric.note}</div>
+                <div
+                  key={metric.label}
+                  className="group relative overflow-hidden rounded-[24px] border border-[#E9E4D8] bg-[#FBFAF7] px-5 py-4 shadow-[0_10px_30px_rgba(26,26,10,0.05)] transition-transform duration-200 hover:-translate-y-0.5 dark:border-[#1E2E18] dark:bg-[#0C150B]"
+                >
+                  <div className="absolute inset-x-0 top-0 h-1.5" style={{ background: metric.accent }} />
+                  <div className="pointer-events-none absolute -right-8 -top-8 h-20 w-20 rounded-full blur-3xl opacity-15 transition-opacity duration-200 group-hover:opacity-25" style={{ background: metric.accent }} />
+                  <div className="flex items-start justify-between gap-3">
+                    <div className="min-w-0">
+                      <div className="truncate text-[11px] font-bold uppercase tracking-[0.18em] text-[#9B9588] dark:text-[#7E8A75]">{metric.label}</div>
+                      <div className="mt-3 text-[30px] font-black leading-none text-[#1A1A0A] dark:text-[#F0EDD4]">{metric.value}</div>
+                    </div>
+                    <span className="mt-1 inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-full border border-black/5 bg-white/80 text-[11px] font-black text-[#6F6B5F] shadow-sm dark:border-white/10 dark:bg-white/5 dark:text-[#D0BF7E]">
+                      {metric.hint.slice(0, 2).toUpperCase()}
+                    </span>
+                  </div>
                 </div>
               ))}
             </div>
