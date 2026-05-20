@@ -113,9 +113,9 @@ export function AdminMerchantsClients() {
     <div className="relative flex h-full min-h-0 flex-col overflow-hidden bg-[radial-gradient(circle_at_top,_rgba(196,154,30,0.12),_transparent_36%),linear-gradient(180deg,#faf8f2_0%,#f2efe7_100%)] dark:bg-[radial-gradient(circle_at_top,_rgba(196,154,30,0.12),_transparent_32%),linear-gradient(180deg,#0C1209_0%,#091009_100%)]">
       <div className="pointer-events-none absolute inset-0 bg-[linear-gradient(135deg,rgba(255,255,255,0.55),transparent_42%)] dark:bg-[linear-gradient(135deg,rgba(255,255,255,0.04),transparent_42%)]" />
 
-      <div className="relative mx-auto flex h-full min-h-0 w-full max-w-7xl flex-1 flex-col gap-5 overflow-y-auto px-4 py-5 sm:px-6 lg:px-8 lg:py-7">
+      <div className="relative mx-auto flex h-full min-h-0 w-full max-w-none flex-1 flex-col gap-5 overflow-y-auto scrollbar-none px-3 py-4 sm:px-4 lg:px-6 lg:py-6">
         <section className="rounded-[28px] border border-[#E1DBCF] bg-white/88 p-5 shadow-[0_24px_80px_rgba(26,26,10,0.08)] backdrop-blur-xl dark:border-[#1E2E18] dark:bg-[#101A0D]/90 dark:shadow-[0_24px_80px_rgba(0,0,0,0.35)]">
-          <div className="flex flex-col gap-5 xl:flex-row xl:items-end xl:justify-between">
+          <div className="flex flex-col gap-6 xl:flex-row xl:items-end xl:justify-between">
             <div className="max-w-3xl">
               <span className="inline-flex rounded-full border border-[#C49A1E]/18 bg-[#C49A1E]/10 px-3 py-1 text-[11px] font-black uppercase tracking-[0.22em] text-[#9A7A13] dark:border-[#C49A1E]/25 dark:bg-[#C49A1E]/12 dark:text-[#F0D98C]">
                 Gestion
@@ -128,12 +128,12 @@ export function AdminMerchantsClients() {
               </p>
             </div>
 
-            <div className="grid grid-cols-2 gap-3 sm:grid-cols-4 xl:w-[560px]">
+            <div className="grid grid-cols-2 gap-4 md:grid-cols-4 xl:w-[640px] 2xl:w-[720px]">
               {metrics.map((metric) => (
-                <div key={metric.label} className="rounded-[22px] border border-[#E9E4D8] bg-[#FBFAF7] px-4 py-3 shadow-[0_10px_30px_rgba(26,26,10,0.05)] dark:border-[#1E2E18] dark:bg-[#0C150B]">
+                <div key={metric.label} className="rounded-[22px] border border-[#E9E4D8] bg-[#FBFAF7] px-5 py-4 shadow-[0_10px_30px_rgba(26,26,10,0.05)] dark:border-[#1E2E18] dark:bg-[#0C150B]">
                   <div className="text-[11px] font-bold uppercase tracking-[0.18em] text-[#9B9588] dark:text-[#7E8A75]">{metric.label}</div>
-                  <div className="mt-2 text-[26px] font-black leading-none text-[#1A1A0A] dark:text-[#F0EDD4]">{metric.value}</div>
-                  <div className="mt-2 text-[12px] font-semibold text-[#B29A52] dark:text-[#D0BF7E]">{metric.note}</div>
+                  <div className="mt-3 text-[28px] font-black leading-none text-[#1A1A0A] dark:text-[#F0EDD4]">{metric.value}</div>
+                  <div className="mt-2.5 text-[12px] font-semibold text-[#B29A52] dark:text-[#D0BF7E]">{metric.note}</div>
                 </div>
               ))}
             </div>
