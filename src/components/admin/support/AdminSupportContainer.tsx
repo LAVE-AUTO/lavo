@@ -1,8 +1,8 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useTranslations } from 'next-intl';
-import { MOCK_TICKETS } from '@/components/support/support-mock';
+import { getFromApi } from '@/services/axios-service';
 import { AdminSupportList } from './AdminSupportList';
 import { AdminSupportSettings } from './AdminSupportSettings';
 
@@ -18,8 +18,19 @@ export function AdminSupportContainer() {
   const [query, setQuery] = useState('');
   const [showSettings, setShowSettings] = useState(false);
 
-  // TODO: replace with getFromApi('/admin/support/tickets') once endpoint is available
-  const tickets = MOCK_TICKETS;
+  const mountedRef = useRef(true);
+  useEffect(() => { mountedRef.current = true; return () => { mountedRef.current = false; }; }, []);
+
+  const [tickets, setTickets] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    setLoading(true);
+    getFromApi('/support').then(([ok, data]) => {
+      if (!mountedRef.current) return;
+      if (ok) setTickets((data as any).data ?? (data as any) ?? []);
+    }).finally(() => { if (mountedRef.current) setLoading(false); });
+  }, []);
 
   const counts = { open: 0, in_progress: 0, resolved: 0, closed: 0 };
   for (const tk of tickets) counts[tk.status as keyof typeof counts]++;

@@ -5,9 +5,9 @@ import { useTranslations } from 'next-intl';
 import { Link } from '@/i18n/navigation';
 import { useToast } from '@/context/toast-context';
 import { useAuth } from '@/context/auth-context';
-import { patchWithApi } from '@/services/axios-service';
+import { patchWithApi, getFromApi, postWithApi } from '@/services/axios-service';
 import { Modal } from '@/components/ui/Modal';
-import { MOCK_TICKETS, type SupportTicket, type TicketStatus } from '@/components/support/support-mock';
+import type { SupportTicket, TicketStatus } from '@/components/support/support-mock';
 
 const STATUS_STYLE: Record<TicketStatus, { badge: string; dot: string; label: string }> = {
   open:        { badge: 'bg-[#FFF4EC] text-[#C2410C] ring-1 ring-[#F97316]/20', dot: 'bg-[#F97316]', label: 'status_open' },
@@ -87,9 +87,18 @@ export function AdminSupportDetail({ id }: Props) {
   const mountedRef = useRef(true);
   useEffect(() => { mountedRef.current = true; return () => { mountedRef.current = false; }; }, []);
 
-  // TODO: replace with getFromApi(`/admin/support/tickets/${id}`) once endpoint is available
-  const found = MOCK_TICKETS.find((tk) => tk.id === id);
-  const [ticket, setTicket] = useState<SupportTicket | undefined>(found);
+  const [ticket, setTicket] = useState<SupportTicket | undefined>(undefined);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    let active = true;
+    setLoading(true);
+    getFromApi(`/support/${id}`).then(([ok, data]) => {
+      if (!active) return;
+      if (ok) setTicket((data as any).data ?? (data as any));
+    }).catch(() => {}).finally(() => { if (active) setLoading(false); });
+    return () => { active = false; };
+  }, [id]);
 
   const [reply,           setReply]           = useState('');
   const [replySaving,     setReplySaving]     = useState(false);
@@ -97,6 +106,13 @@ export function AdminSupportDetail({ id }: Props) {
   const [showCloseModal,  setShowCloseModal]  = useState(false);
 
   if (!ticket) {
+    if (loading) {
+      return (
+        <div className="flex flex-1 items-center justify-center p-6">
+          <p className="text-[13px] text-[#999]">{t('loading')}</p>
+        </div>
+      );
+    }
     return (
       <div className="flex flex-1 items-center justify-center p-6">
         <p className="text-[13px] text-[#999]">{t('not_found')}</p>
@@ -113,19 +129,23 @@ export function AdminSupportDetail({ id }: Props) {
     if (!reply.trim()) { toastError(t('error_reply_empty')); return; }
     setReplySaving(true);
     try {
-      // TODO: connect to API once endpoint is available (POST /admin/support/tickets/:id/messages)
-      await new Promise((r) => setTimeout(r, 500));
+      const [ok, data] = await postWithApi(`/support/${id}/messages`, { content: reply.trim() });
       if (!mountedRef.current) return;
-      setTicket((prev) => {
-        if (!prev) return prev;
-        return {
-          ...prev,
-          status: prev.status === 'open' ? 'in_progress' : prev.status,
-          messages: [...prev.messages, { id: `m-${Date.now()}`, author: 'Admin Support', role: 'admin', body: reply.trim(), created_at: new Date().toISOString() }],
-        };
-      });
-      setReply('');
-      toastSuccess(t('reply_success'));
+      if (ok) {
+        const message = (data as any).data ?? (data as any);
+        setTicket((prev) => {
+          if (!prev) return prev;
+          return {
+            ...prev,
+            status: prev.status === 'open' ? 'in_progress' : prev.status,
+            messages: [...prev.messages, message],
+          };
+        });
+        setReply('');
+        toastSuccess(t('reply_success'));
+      } else {
+        toastError(t('reply_error'));
+      }
     } catch {
       if (mountedRef.current) toastError(t('reply_error'));
     } finally {
@@ -156,11 +176,15 @@ export function AdminSupportDetail({ id }: Props) {
   async function handleResolve() {
     setActionBusy(true);
     try {
-      // TODO: connect to API once endpoint is available (PATCH /admin/support/tickets/:id)
-      await new Promise((r) => setTimeout(r, 400));
+      const statusMap: Record<string, string> = { resolved: 'resolu', open: 'ouvert', in_progress: 'en_cours', closed: 'ferme' };
+      const [ok] = await patchWithApi(`/support/${id}`, { status: statusMap['resolved'] });
       if (!mountedRef.current) return;
-      setTicket((prev) => prev ? { ...prev, status: 'resolved' } : prev);
-      toastSuccess(t('resolve_success'));
+      if (ok) {
+        setTicket((prev) => prev ? { ...prev, status: 'resolved' } : prev);
+        toastSuccess(t('resolve_success'));
+      } else {
+        toastError(t('action_error'));
+      }
     } catch {
       if (mountedRef.current) toastError(t('action_error'));
     } finally {
@@ -171,11 +195,15 @@ export function AdminSupportDetail({ id }: Props) {
   async function handleReopen() {
     setActionBusy(true);
     try {
-      // TODO: connect to API once endpoint is available (PATCH /admin/support/tickets/:id)
-      await new Promise((r) => setTimeout(r, 400));
+      const statusMap: Record<string, string> = { resolved: 'resolu', open: 'ouvert', in_progress: 'en_cours', closed: 'ferme' };
+      const [ok] = await patchWithApi(`/support/${id}`, { status: statusMap['open'] });
       if (!mountedRef.current) return;
-      setTicket((prev) => prev ? { ...prev, status: 'open' } : prev);
-      toastSuccess(t('reopen_success'));
+      if (ok) {
+        setTicket((prev) => prev ? { ...prev, status: 'open' } : prev);
+        toastSuccess(t('reopen_success'));
+      } else {
+        toastError(t('action_error'));
+      }
     } catch {
       if (mountedRef.current) toastError(t('action_error'));
     } finally {
@@ -186,12 +214,16 @@ export function AdminSupportDetail({ id }: Props) {
   async function handleClose(reason: string) {
     setActionBusy(true);
     try {
-      // TODO: connect to API once endpoint is available (PATCH /admin/support/tickets/:id)
-      await new Promise((r) => setTimeout(r, 500));
+      const statusMap: Record<string, string> = { resolved: 'resolu', open: 'ouvert', in_progress: 'en_cours', closed: 'ferme' };
+      const [ok] = await patchWithApi(`/support/${id}`, { status: statusMap['closed'], close_reason: reason });
       if (!mountedRef.current) return;
-      setTicket((prev) => prev ? { ...prev, status: 'closed', close_reason: reason } : prev);
-      setShowCloseModal(false);
-      toastSuccess(t('close_success'));
+      if (ok) {
+        setTicket((prev) => prev ? { ...prev, status: 'closed', close_reason: reason } : prev);
+        setShowCloseModal(false);
+        toastSuccess(t('close_success'));
+      } else {
+        toastError(t('action_error'));
+      }
     } catch {
       if (mountedRef.current) toastError(t('action_error'));
     } finally {
