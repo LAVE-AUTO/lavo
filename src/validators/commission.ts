@@ -11,7 +11,7 @@ export const updateCommissionSchema = z.object({
    */
   rate: z
     .number({ invalid_type_error: 'rate must be a number' })
-    .positive('Rate must be greater than 0')
+    .min(0, 'Rate cannot be negative')
     .max(1, 'Rate must not exceed 1 (100%)')
     .transform((v) => Math.round(v * 10000) / 10000),
 });
