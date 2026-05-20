@@ -2677,8 +2677,11 @@
     "tab_clients": "Clients",
     "status_active": "Active",
     "status_suspended": "Suspended",
+    "status_blocked": "Blocked",
+    "status_pending": "Pending",
     "status_pending_admin_validation": "Pending KYC",
     "status_rejected": "Rejected",
+    "loading": "Loading…",
     "btn_activate": "Activate",
     "btn_suspend": "Suspend",
     "btn_unblock": "Unblock",
@@ -2702,7 +2705,8 @@
     "col_actions": "Actions",
     "btn_add_user": "Add user",
     "action_success": "Action completed successfully.",
-    "action_error": "Unable to perform this action."
+    "action_error": "Unable to perform this action.",
+    "pagination_info": "{from}–{to} of {total}"
   },
   "admin_settings": {
     "page_title": "Platform settings",

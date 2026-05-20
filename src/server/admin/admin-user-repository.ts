@@ -1,4 +1,4 @@
-import { eq } from 'drizzle-orm';
+import { eq, and, desc, sql } from 'drizzle-orm';
 import { db } from '@/lib/db';
 import { users, stations, authRateLimits } from '@/lib/db/schema';
 import type { UpdateUserInput, UpdateStationAdminInput } from '@/validators/admin-user';
@@ -10,6 +10,29 @@ function stripPasswordHash(user: typeof users.$inferSelect): AdminSafeUser {
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const { password_hash, ...safe } = user;
   return safe;
+}
+
+/**
+ * Lists client-role users with pagination and optional status filter.
+ * Returns both the page rows and the total matching count.
+ */
+export async function listUsersForAdmin(
+  status?: string,
+  page = 1,
+  perPage = 20,
+): Promise<{ rows: AdminSafeUser[]; total: number }> {
+  const limit  = Math.min(100, Math.max(1, perPage));
+  const offset = (Math.max(1, page) - 1) * limit;
+  const filter = status
+    ? and(eq(users.role, 'client'), eq(users.status, status))
+    : eq(users.role, 'client');
+
+  const [rows, countResult] = await Promise.all([
+    db.select().from(users).where(filter).orderBy(desc(users.created_at)).limit(limit).offset(offset),
+    db.select({ count: sql<number>`count(*)::int` }).from(users).where(filter),
+  ]);
+
+  return { rows: rows.map(stripPasswordHash), total: countResult[0]?.count ?? 0 };
 }
 
 /** Finds a user by id. Returns undefined if not found. */

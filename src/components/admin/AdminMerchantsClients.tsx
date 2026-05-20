@@ -17,31 +17,44 @@ export interface StationRow {
   status: string; email?: string | null; created_at: string;
 }
 
+interface PaginationMeta { total: number; page: number; per_page: number; total_pages: number; }
+
+const STATIONS_PER_PAGE = 50;
+
 export function AdminMerchantsClients() {
   const t = useTranslations('admin_clients');
   const { success: toastSuccess, error: toastError } = useToast();
   const mountedRef = useRef(true);
   useEffect(() => { mountedRef.current = true; return () => { mountedRef.current = false; }; }, []);
 
-  const [tab, setTab]               = useState<Tab>('stations');
-  const [stations, setStations]     = useState<StationRow[]>([]);
-  const [loading, setLoading]       = useState(true);
-  const [fetchError, setFetchError] = useState(false);
-  const [query, setQuery]           = useState('');
+  const [tab, setTab]                 = useState<Tab>('stations');
+  const [stations, setStations]       = useState<StationRow[]>([]);
+  const [stationMeta, setStationMeta] = useState<PaginationMeta | null>(null);
+  const [stationPage, setStationPage] = useState(1);
+  const [loading, setLoading]         = useState(true);
+  const [fetchError, setFetchError]   = useState(false);
+  const [query, setQuery]             = useState('');
+  const [clientCount, setClientCount] = useState<number | '…'>('…');
   const [addUserOpen,    setAddUserOpen]    = useState(false);
   const [addStationOpen, setAddStationOpen] = useState(false);
 
   useEffect(() => {
-    getFromApi('/admin/stations?status=all').then(([ok, data]) => {
-      if (!mountedRef.current) return;
-      if (ok) setStations(((data as { data: StationRow[] }).data) ?? []);
-      else setFetchError(true);
-    }).catch(() => {
-      if (mountedRef.current) setFetchError(true);
-    }).finally(() => {
-      if (mountedRef.current) setLoading(false);
-    });
-  }, []);
+    setLoading(true);
+    setFetchError(false);
+    getFromApi(`/admin/stations?status=all&page=${stationPage}&per_page=${STATIONS_PER_PAGE}`)
+      .then(([ok, data]) => {
+        if (!mountedRef.current) return;
+        if (ok) {
+          const payload = (data as { data: { stations: StationRow[]; meta: PaginationMeta } }).data;
+          setStations(payload?.stations ?? []);
+          setStationMeta(payload?.meta ?? null);
+        } else {
+          setFetchError(true);
+        }
+      })
+      .catch(() => { if (mountedRef.current) setFetchError(true); })
+      .finally(() => { if (mountedRef.current) setLoading(false); });
+  }, [stationPage]);
 
   async function handleStationAction(id: string, action: 'activate' | 'suspend') {
     try {
@@ -82,11 +95,9 @@ export function AdminMerchantsClients() {
   const actives   = managed.filter((s) => s.status === 'active').length;
   const suspended = managed.filter((s) => s.status === 'suspended').length;
 
-  // TODO: replace with real client count from API
-  const MOCK_CLIENT_COUNT = process.env.NODE_ENV === 'development' ? 6 : 0;
   const tabs = [
-    { id: 'stations' as Tab, count: loading ? '…' : managed.length },
-    { id: 'clients'  as Tab, count: MOCK_CLIENT_COUNT },
+    { id: 'stations' as Tab, count: loading ? '…' : (stationMeta?.total ?? managed.length) },
+    { id: 'clients'  as Tab, count: clientCount },
   ];
 
   return (
@@ -145,11 +156,38 @@ export function AdminMerchantsClients() {
       </div>
 
       {/* Content */}
-      <div className="flex-1 overflow-y-auto bg-[#F5F5EE] p-6 dark:bg-[#0C1209]">
-        {tab === 'stations'
-          ? <AdminStationsManagement stations={stations} loading={loading} error={fetchError} query={query} onAction={handleStationAction} />
-          : <AdminClientsList query={query} onAction={handleClientAction} />
-        }
+      <div className="flex flex-col gap-4 flex-1 overflow-y-auto bg-[#F5F5EE] p-6 dark:bg-[#0C1209]">
+        {tab === 'stations' ? (
+          <>
+            <AdminStationsManagement stations={stations} loading={loading} error={fetchError} query={query} onAction={handleStationAction} />
+            {stationMeta && stationMeta.total_pages > 1 && (
+              <div className="flex items-center justify-between px-1">
+                <p className="text-[12px] text-[#999] dark:text-[#A0A090]">
+                  {t('pagination_info', {
+                    from:  (stationPage - 1) * STATIONS_PER_PAGE + 1,
+                    to:    Math.min(stationPage * STATIONS_PER_PAGE, stationMeta.total),
+                    total: stationMeta.total,
+                  })}
+                </p>
+                <div className="flex items-center gap-1.5">
+                  <button type="button" disabled={stationPage <= 1} onClick={() => setStationPage((p) => p - 1)}
+                    className="flex h-7 w-7 items-center justify-center rounded-lg border border-[#D8D4C8] bg-white text-[#555] transition-colors hover:bg-[#F5F3EE] disabled:cursor-not-allowed disabled:opacity-40 dark:border-[#1E2E18] dark:bg-[#0F1A0C] dark:text-[#9A9A8A] dark:hover:bg-[#182416]">
+                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" aria-hidden="true"><polyline points="15 18 9 12 15 6" /></svg>
+                  </button>
+                  <span className="min-w-15 text-center text-[12px] font-semibold text-[#555] dark:text-[#9A9A8A]">
+                    {stationPage} / {stationMeta.total_pages}
+                  </span>
+                  <button type="button" disabled={stationPage >= stationMeta.total_pages} onClick={() => setStationPage((p) => p + 1)}
+                    className="flex h-7 w-7 items-center justify-center rounded-lg border border-[#D8D4C8] bg-white text-[#555] transition-colors hover:bg-[#F5F3EE] disabled:cursor-not-allowed disabled:opacity-40 dark:border-[#1E2E18] dark:bg-[#0F1A0C] dark:text-[#9A9A8A] dark:hover:bg-[#182416]">
+                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" aria-hidden="true"><polyline points="9 18 15 12 9 6" /></svg>
+                  </button>
+                </div>
+              </div>
+            )}
+          </>
+        ) : (
+          <AdminClientsList query={query} onAction={handleClientAction} onCountChange={setClientCount} />
+        )}
       </div>
 
       <AdminAddUserModal    open={addUserOpen}    onClose={() => setAddUserOpen(false)} />

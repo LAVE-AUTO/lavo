@@ -225,16 +225,31 @@ export async function getPendingStations(page = 1, perPage = 20): Promise<Pendin
   };
 }
 
-export async function getStationsForAdmin(status?: string): Promise<Station[]> {
-  const rows = await listAllStationsForAdmin(status);
-  // Ensure DB numeric/decimal types are converted to JSON-serializable primitives
-  return rows.map((r) => ({
+export type StationsAdminResult = {
+  stations: Station[];
+  meta: { total: number; page: number; per_page: number; total_pages: number };
+};
+
+export async function getStationsForAdmin(
+  status?: string,
+  page = 1,
+  perPage = 50,
+): Promise<StationsAdminResult> {
+  const safePer = Math.min(100, Math.max(1, perPage));
+  const { rows, total } = await listAllStationsForAdmin(status, page, safePer);
+
+  const formatted = rows.map((r) => ({
     ...r,
     promo_commission_rate: r.promo_commission_rate == null ? null : String(r.promo_commission_rate),
-    latitude: r.latitude == null ? null : String(r.latitude),
-    longitude: r.longitude == null ? null : String(r.longitude),
+    latitude:     r.latitude     == null ? null : String(r.latitude),
+    longitude:    r.longitude    == null ? null : String(r.longitude),
     average_score: r.average_score == null ? null : String(r.average_score),
   } as Station));
+
+  return {
+    stations: formatted,
+    meta: { total, page, per_page: safePer, total_pages: Math.max(1, Math.ceil(total / safePer)) },
+  };
 }
 
 export async function getStationById(id: string): Promise<StationWithDocuments> {

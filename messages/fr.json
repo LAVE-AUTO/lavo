@@ -2677,8 +2677,11 @@
     "tab_clients": "Clients",
     "status_active": "Actif",
     "status_suspended": "Suspendu",
+    "status_blocked": "Bloqué",
+    "status_pending": "En attente",
     "status_pending_admin_validation": "En attente KYC",
     "status_rejected": "Rejeté",
+    "loading": "Chargement…",
     "btn_activate": "Activer",
     "btn_suspend": "Suspendre",
     "btn_unblock": "Débloquer",
@@ -2702,7 +2705,8 @@
     "col_actions": "Actions",
     "btn_add_user": "Ajouter",
     "action_success": "Action effectuée avec succès.",
-    "action_error": "Impossible d'effectuer cette action."
+    "action_error": "Impossible d'effectuer cette action.",
+    "pagination_info": "{from}–{to} sur {total}"
   },
   "admin_settings": {
     "page_title": "Paramètres plateforme",

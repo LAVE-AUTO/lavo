@@ -63,6 +63,31 @@ function stripSensitiveUserFields(
 
 // ooooo User operations ooooo
 
+export type AdminUserRow = Omit<repo.AdminSafeUser, 'stripe_customer_id'>;
+export type PaginationMeta = { total: number; page: number; per_page: number; total_pages: number };
+
+/**
+ * Lists client accounts with pagination, optionally filtered by status.
+ * Strips stripe_customer_id from every row for consistency with other user endpoints.
+ */
+export async function listUsers(
+  status?: string,
+  page = 1,
+  perPage = 20,
+): Promise<{ users: AdminUserRow[]; meta: PaginationMeta }> {
+  const safePer = Math.min(100, Math.max(1, perPage));
+  const { rows, total } = await repo.listUsersForAdmin(status, page, safePer);
+  return {
+    users: rows.map(({ stripe_customer_id: _stripe, ...safe }) => safe),
+    meta: {
+      total,
+      page,
+      per_page: safePer,
+      total_pages: Math.max(1, Math.ceil(total / safePer)),
+    },
+  };
+}
+
 /**
  * Updates whitelisted user fields and writes an audit log entry.
  *

@@ -9,6 +9,17 @@ export const adminIdParamSchema = z.object({
   id: z.string().uuid('Invalid id (must be a valid UUID)'),
 });
 
+const USER_STATUS_FILTER_VALUES = ['active', 'suspended', 'blocked', 'pending_verification'] as const;
+
+/** GET /admin/users query params. */
+export const listUsersQuerySchema = z.object({
+  page:     z.coerce.number().int().min(1).optional().default(1),
+  per_page: z.coerce.number().int().min(1).max(100).optional().default(20),
+  status:   z.enum(USER_STATUS_FILTER_VALUES).optional(),
+});
+
+export type ListUsersQuery = z.infer<typeof listUsersQuerySchema>;
+
 // ─── User update ──────────────────────────────────────────────────────────────
 
 const USER_STATUS_VALUES = ['active', 'suspended', 'blocked', 'pending_verification'] as const;
