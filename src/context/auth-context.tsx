@@ -89,6 +89,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const isRefreshingRef = useRef(false);
   const refreshPromiseRef = useRef<Promise<string | null> | null>(null);
 
+  // Prevents double clearAuth calls (concurrent 401s, StrictMode double-effects)
+  const isLoggedOutRef = useRef(false);
+
+  // Always holds the latest clearAuth so the axios interceptor never captures a stale closure
+  const latestClearAuthRef = useRef<() => void>(() => {});
+
   // Keep axios Accept-Language in sync with the app locale
   useEffect(() => {
     setAxiosLocale(locale);
@@ -128,6 +134,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const clearAuth = useCallback(() => {
+    if (isLoggedOutRef.current) return;
+    isLoggedOutRef.current = true;
     tokenRef.current = null;
     setToken(null);
     setUser(null);
@@ -142,6 +150,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       window.location.replace(loginPath);
     }
   }, [loginPath]);
+
+  // Keep the ref in sync so the axios interceptor always redirects to the correct locale
+  useEffect(() => {
+    latestClearAuthRef.current = clearAuth;
+  }, [clearAuth]);
 
   // Deduplicated refresh - multiple concurrent callers share the same in-flight promise.
   const tryRefreshToken = useCallback(async (): Promise<string | null> => {
@@ -162,12 +175,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, [tryRefreshToken, clearAuth]);
 
   // On mount: restore session from the httpOnly refresh token cookie.
-  // The user object is fetched from the server - nothing is read from localStorage.
+  // Uses tryRefreshToken (deduplicated) so React StrictMode's double-invocation
+  // of effects shares a single in-flight request instead of rotating the cookie twice.
   useEffect(() => {
-    refreshAccessToken().then(async (newToken) => {
+    tryRefreshToken().then(async (newToken) => {
       if (!newToken) {
-        // Refresh failed — the cookie is stale or the DB was wiped. Clear it
-        // server-side so AuthRedirectGuard stops bouncing the user away from /login.
+        // Refresh failed — cookie is stale or DB was wiped. Clear it server-side
+        // so AuthRedirectGuard stops bouncing the user away from /login.
         await fetch(`${process.env.NEXT_PUBLIC_API_URL || '/api/v1'}/auth/logout`, {
           method: 'POST',
           credentials: 'include',
@@ -177,7 +191,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         baseURL: process.env.NEXT_PUBLIC_API_URL || '/api/v1',
         tokenGetter: () => tokenRef.current,
         tokenRefresher: tryRefreshToken,
-        onUnauthorized: clearAuth,
+        onUnauthorized: () => latestClearAuthRef.current(),
       });
       setIsLoading(false);
     });
@@ -185,6 +199,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const login = useCallback((newToken: string, newUser: AuthUser) => {
+    isLoggedOutRef.current = false; // Allow clearAuth to fire again after re-login
     const normalized = normalizeUser(newUser as unknown as Record<string, unknown>);
     tokenRef.current = newToken;
     setToken(newToken);
@@ -202,9 +217,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       baseURL: process.env.NEXT_PUBLIC_API_URL || '/api/v1',
       tokenGetter: () => tokenRef.current,
       tokenRefresher: tryRefreshToken,
-      onUnauthorized: clearAuth,
+      onUnauthorized: () => latestClearAuthRef.current(),
     });
-  }, [tryRefreshToken, clearAuth]);
+  }, [tryRefreshToken]);
 
   const logout = useCallback(async () => {
     try {
