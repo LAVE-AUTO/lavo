@@ -3312,5 +3312,32 @@
     "desc": "Activez votre localisation pour voir les stations proches et connaître les distances en temps réel.",
     "btn_close": "Fermer",
     "btn_activate": "Activer"
+  },
+  "admin_logs": {
+    "page_title": "Journal d'activité",
+    "page_subtitle": "Historique de toutes les actions effectuées par les administrateurs.",
+    "filter_all_actions": "Toutes les actions",
+    "filter_label": "Filtrer",
+    "empty": "Aucune entrée dans le journal.",
+    "empty_filtered": "Aucun résultat pour ces filtres.",
+    "load_more": "Charger plus",
+    "col_action": "Action",
+    "col_target": "Cible",
+    "col_admin": "Administrateur",
+    "col_date": "Date",
+    "action_UPDATE_USER": "Modification utilisateur",
+    "action_UNBLOCK_ACCOUNT": "Déblocage compte",
+    "action_UPDATE_STATION": "Modification station",
+    "action_station_approved": "Station approuvée",
+    "action_station_rejected": "Station rejetée",
+    "action_REFUND_DISPUTE": "Remboursement litige",
+    "action_CLOSE_DISPUTE": "Clôture litige",
+    "action_toggle_rating_visibility": "Visibilité avis modifiée",
+    "action_UPDATE_STATION_PROMO_QR": "QR code promo mis à jour",
+    "action_commission_rate_updated": "Taux de commission modifié",
+    "target_user": "Utilisateur",
+    "target_station": "Station",
+    "target_dispute": "Litige",
+    "target_rating": "Avis"
   }
 }
