@@ -325,8 +325,8 @@ export function AdminPlatformSettings() {
   return (
     <form onSubmit={handleSave} className="flex min-h-full flex-col">
 
-      {/* Sticky header */}
-      <div className="sticky top-0 z-10 flex shrink-0 items-center justify-between border-b border-[#E0DCD0] bg-[#F5F5EE]/95 px-6 py-4 backdrop-blur-sm dark:border-[#1A2A14] dark:bg-[#0C1209]/95">
+      {/* Header */}
+      <div className="shrink-0 flex items-center justify-between border-b border-[#E0DCD0] bg-[#F5F5EE] px-6 py-4 dark:border-[#1A2A14] dark:bg-[#0C1209]">
         <div>
           <h1 className="text-[18px] font-black text-[#1A1A0A] dark:text-[#F0EDD4]">{t('page_title')}</h1>
           <p className="text-[13px] text-[#888] dark:text-[#9A9A8A]">{t('page_subtitle')}</p>
@@ -347,7 +347,8 @@ export function AdminPlatformSettings() {
         </div>
       </div>
 
-      <div className="grid flex-1 auto-rows-min gap-5 p-6 md:grid-cols-2 xl:grid-cols-3">
+      <div className="flex-1 overflow-y-auto bg-[#F5F5EE] dark:bg-[#0C1209]">
+      <div className="grid auto-rows-min gap-5 p-6 md:grid-cols-2 xl:grid-cols-3">
 
         {/* ── Groupe A — Annulation ── */}
         <SectionCard title={t('section_cancellation')} icon={iconCancellation} colSpan="md:col-span-2 xl:col-span-2">
@@ -489,6 +490,7 @@ export function AdminPlatformSettings() {
           />
         </SectionCard>
 
+      </div>
       </div>
     </form>
   );
