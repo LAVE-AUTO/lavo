@@ -48,45 +48,60 @@ export function AdminTransactionsView() {
 
   const [transactions, setTransactions] = useState<TxRow[]>([]);
   const [loading, setLoading] = useState(true);
-  const [truncated, setTruncated] = useState(false);
-  const [filter, setFilter]     = useState<TxStatus | 'all'>('all');
-  const [query, setQuery]       = useState('');
-  const [copied, setCopied]     = useState<string | null>(null);
+  const [total, setTotal]     = useState(0);
+  const [page, setPage]       = useState(1);
+  const [hasMore, setHasMore] = useState(false);
+  const [loadingMore, setLoadingMore] = useState(false);
+  const [filter, setFilter]   = useState<TxStatus | 'all'>('all');
+  const [query, setQuery]     = useState('');
+  const [copied, setCopied]   = useState<string | null>(null);
   const [selected, setSelected] = useState<TxRow | null>(null);
 
+  // Default: last 30 days
+  const today    = new Date().toISOString().slice(0, 10);
+  const thirtyDaysAgo = new Date(Date.now() - 30 * 86400_000).toISOString().slice(0, 10);
+  const [dateFrom, setDateFrom] = useState(thirtyDaysAgo);
+  const [dateTo, setDateTo]     = useState(today);
+
+  const fetchPage = useCallback(async (p: number, replace: boolean) => {
+    const params = new URLSearchParams({ page: String(p), per_page: '50' });
+    if (dateFrom) params.set('date_from', dateFrom);
+    if (dateTo)   params.set('date_to',   dateTo + 'T23:59:59');
+    try {
+      const [ok, data] = await getFromApi(`/admin/transactions/logs?${params.toString()}`);
+      if (!mountedRef.current || !ok) return;
+      const result = (data as { data: { logs: ApiTransactionLog[]; meta: { total: number; total_pages: number; page: number } } }).data;
+      const logs = result?.logs ?? [];
+      const meta = result?.meta;
+      const mapped = logs.map((l): TxRow => {
+        const amount = parseFloat(l.amount) || 0;
+        const commission = parseFloat(l.commission_amount ?? '0') || 0;
+        return {
+          id: l.id, stripe_id: l.id,
+          station: l.station_name ?? l.station_id.slice(0, 8),
+          client: l.type,
+          gross: amount, commission, payout: amount - commission,
+          status: mapStatus(l.status), date: l.created_at,
+        };
+      });
+      setTransactions((prev) => replace ? mapped : [...prev, ...mapped]);
+      setTotal(meta?.total ?? 0);
+      setPage(p);
+      setHasMore(p < (meta?.total_pages ?? 1));
+    } catch { /* keep current */ }
+  }, [dateFrom, dateTo]);
+
   useEffect(() => {
-    (async () => {
-      try {
-        const [ok, data] = await getFromApi('/admin/transactions/logs?per_page=100');
-        if (!mountedRef.current) return;
-        if (ok) {
-          const result = (data as { data: { logs: ApiTransactionLog[]; meta?: { total?: number } } }).data;
-          const logs = result?.logs ?? [];
-          const total = result?.meta?.total ?? 0;
-          if (total > 100) setTruncated(true);
-          setTransactions(logs.map((l): TxRow => {
-            const amount = parseFloat(l.amount) || 0;
-            const commission = parseFloat(l.commission_amount ?? '0') || 0;
-            return {
-              id: l.id,
-              stripe_id: l.id,
-              station: l.station_name ?? l.station_id.slice(0, 8),
-              client: l.type,
-              gross: amount,
-              commission,
-              payout: amount - commission,
-              status: mapStatus(l.status),
-              date: l.created_at,
-            };
-          }));
-        }
-      } catch {
-        // keep empty
-      } finally {
-        if (mountedRef.current) setLoading(false);
-      }
-    })();
-  }, []);
+    setLoading(true);
+    setTransactions([]);
+    fetchPage(1, true).finally(() => { if (mountedRef.current) setLoading(false); });
+  }, [fetchPage]);
+
+  async function handleLoadMore() {
+    setLoadingMore(true);
+    await fetchPage(page + 1, false);
+    if (mountedRef.current) setLoadingMore(false);
+  }
 
   const STATUS_LABELS: Record<TxStatus, string> = {
     succeeded: t('status_succeeded'),
@@ -97,13 +112,15 @@ export function AdminTransactionsView() {
   const q        = query.toLowerCase();
   const filtered = transactions
     .filter((tx) => filter === 'all' || tx.status === filter)
-    .filter((tx) => !q || tx.stripe_id.toLowerCase().includes(q) || tx.station.toLowerCase().includes(q) || tx.client.toLowerCase().includes(q));
+    .filter((tx) => !q || tx.station.toLowerCase().includes(q) || tx.client.toLowerCase().includes(q));
 
   const succeeded  = transactions.filter((tx) => tx.status === 'succeeded');
   const volume     = succeeded.reduce((s, tx) => s + tx.gross, 0);
   const commTotal  = succeeded.reduce((s, tx) => s + tx.commission, 0);
   const counts: Record<string, number> = { all: transactions.length };
   for (const tx of transactions) counts[tx.status] = (counts[tx.status] ?? 0) + 1;
+
+  const inputCls = 'rounded-lg border border-[#D8D4C8] bg-white px-3 py-1.5 text-[12px] text-[#1A1A0A] outline-none transition-all focus:border-[#C49A1E] focus:shadow-[0_0_0_3px_rgba(196,154,30,0.10)] dark:border-[#243020] dark:bg-[#0F1A0C] dark:text-[#F0EDD4] dark:focus:border-[#C49A1E]';
 
   function copyId(e: React.MouseEvent, id: string) {
     e.stopPropagation();
@@ -142,27 +159,39 @@ export function AdminTransactionsView() {
               {fmt(commTotal)} {t('chip_commissions')}
             </span>
             <span className="rounded-full border border-[#D8D4C8] bg-white px-3 py-1 text-[12px] font-bold text-[#888] dark:border-[#243020] dark:bg-[#131E10] dark:text-[#A0A090]">
-              {transactions.length} {t('chip_count')}
+              {total} {t('chip_count')}
             </span>
           </div>
         </div>
 
-        {/* Filters + search */}
-        <div className="mt-5 flex items-end justify-between gap-4">
-          <div className="flex flex-wrap gap-2">
-            {FILTERS.map(({ key, label, dot }) => (
-              <button key={key} type="button" onClick={() => setFilter(key)}
-                className={['flex items-center gap-1.5 rounded-xl px-3 py-1.5 text-[12px] font-bold transition-all', filter === key ? 'bg-white text-[#1A1A0A] shadow-sm ring-1 ring-[#E0DCD0] dark:bg-[#1E2E18] dark:text-[#F0EDD4] dark:ring-[#2A3820]' : 'text-[#999] hover:text-[#555] dark:text-[#A0A090] dark:hover:text-[#9A9A8A]'].join(' ')}>
-                {dot && <span className="h-1.5 w-1.5 rounded-full" style={{ background: filter === key ? dot : '#CCCCCC' }} />}
-                {label}
-                <span className={['min-w-[16px] rounded-full px-1 py-0.5 text-center text-[11px] font-black', filter === key ? 'bg-[#C49A1E] text-[#0C1209]' : 'bg-[#E8E4DC] text-[#AAAAAA] dark:bg-[#1E2E18] dark:text-[#A0A090]'].join(' ')}>{counts[key] ?? 0}</span>
-              </button>
-            ))}
+        {/* Date range + status filters + search */}
+        <div className="mt-4 flex flex-col gap-3 pb-4">
+          {/* Date pickers */}
+          <div className="flex flex-wrap items-center gap-2">
+            <span className="text-[12px] font-bold text-[#AAAAAA] dark:text-[#A0A090]">{t('filter_from')}</span>
+            <input type="date" value={dateFrom} max={dateTo} onChange={(e) => setDateFrom(e.target.value)}
+              className={inputCls} />
+            <span className="text-[12px] font-bold text-[#AAAAAA] dark:text-[#A0A090]">{t('filter_to')}</span>
+            <input type="date" value={dateTo} min={dateFrom} max={today} onChange={(e) => setDateTo(e.target.value)}
+              className={inputCls} />
           </div>
-          <div className="relative mb-2.5">
-            <svg className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-[#BBBBAA]" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"><circle cx="11" cy="11" r="8" /><path d="m21 21-4.35-4.35" /></svg>
-            <input type="text" value={query} onChange={(e) => setQuery(e.target.value)} placeholder={t('search_placeholder')}
-              className="w-[220px] rounded-[8px] border border-[#D8D4C8] bg-white py-1.5 pl-8 pr-3 text-[13px] text-[#1A1A0A] outline-none transition-all focus:border-[#C49A1E] focus:shadow-[0_0_0_3px_rgba(196,154,30,0.10)] dark:border-[#243020] dark:bg-[#0F1A0C] dark:text-[#F0EDD4] dark:focus:border-[#C49A1E]" />
+          {/* Status pills + search */}
+          <div className="flex flex-wrap items-center justify-between gap-3">
+            <div className="flex flex-wrap gap-2">
+              {FILTERS.map(({ key, label, dot }) => (
+                <button key={key} type="button" onClick={() => setFilter(key)}
+                  className={['flex items-center gap-1.5 rounded-xl px-3 py-1.5 text-[12px] font-bold transition-all', filter === key ? 'bg-white text-[#1A1A0A] shadow-sm ring-1 ring-[#E0DCD0] dark:bg-[#1E2E18] dark:text-[#F0EDD4] dark:ring-[#2A3820]' : 'text-[#999] hover:text-[#555] dark:text-[#A0A090] dark:hover:text-[#9A9A8A]'].join(' ')}>
+                  {dot && <span className="h-1.5 w-1.5 rounded-full" style={{ background: filter === key ? dot : '#CCCCCC' }} />}
+                  {label}
+                  <span className={['min-w-4 rounded-full px-1 py-0.5 text-center text-[11px] font-black', filter === key ? 'bg-[#C49A1E] text-[#0C1209]' : 'bg-[#E8E4DC] text-[#AAAAAA] dark:bg-[#1E2E18] dark:text-[#A0A090]'].join(' ')}>{counts[key] ?? 0}</span>
+                </button>
+              ))}
+            </div>
+            <div className="relative">
+              <svg className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-[#BBBBAA]" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"><circle cx="11" cy="11" r="8" /><path d="m21 21-4.35-4.35" /></svg>
+              <input type="text" value={query} onChange={(e) => setQuery(e.target.value)} placeholder={t('search_placeholder')}
+                className="w-55 rounded-lg border border-[#D8D4C8] bg-white py-1.5 pl-8 pr-3 text-[13px] text-[#1A1A0A] outline-none transition-all focus:border-[#C49A1E] focus:shadow-[0_0_0_3px_rgba(196,154,30,0.10)] dark:border-[#243020] dark:bg-[#0F1A0C] dark:text-[#F0EDD4] dark:focus:border-[#C49A1E]" />
+            </div>
           </div>
         </div>
       </div>
@@ -182,11 +211,6 @@ export function AdminTransactionsView() {
           </div>
         ) : (
           <div className="flex flex-col gap-2.5">
-            {truncated && (
-              <p className="mb-2 rounded-xl bg-[#FFF4EC] px-4 py-2 text-center text-[12px] font-semibold text-[#C2410C] dark:bg-[#2A1408] dark:text-[#FDBA74]">
-                {t('truncated_warning')}
-              </p>
-            )}
             {filtered.map((tx) => {
               const s = STATUS_META[tx.status];
               return (
@@ -238,6 +262,17 @@ export function AdminTransactionsView() {
                 </div>
               );
             })}
+
+            {hasMore && (
+              <div className="flex justify-center pt-2">
+                <button type="button" onClick={handleLoadMore} disabled={loadingMore}
+                  className="flex items-center gap-2 rounded-xl border border-[#D8D4C8] bg-white px-5 py-2.5 text-[13px] font-bold text-[#4A4A3A] transition-all hover:border-[#C49A1E] hover:text-[#C49A1E] disabled:opacity-50 dark:border-[#243020] dark:bg-[#131E10] dark:text-[#A0A090] dark:hover:border-[#C49A1E]">
+                  {loadingMore
+                    ? <><span className="h-3.5 w-3.5 animate-spin rounded-full border-2 border-[#C49A1E] border-t-transparent" />{t('loading_more')}</>
+                    : t('load_more')}
+                </button>
+              </div>
+            )}
           </div>
         )}
       </div>

@@ -46,6 +46,7 @@ export const ALLOWED_PLATFORM_SETTING_KEYS = [
   'dispute_window_days',
   'kyc_reminder_first_threshold_days',
   'kyc_reminder_second_threshold_days',
+  'admin_log_retention_days',
 ] as const;
 
 export type PlatformSettingKey = (typeof ALLOWED_PLATFORM_SETTING_KEYS)[number];
@@ -301,6 +302,13 @@ export const updatePlatformSettingsSchema = z
       const val = parsePositiveInteger(obj.kyc_reminder_second_threshold_days!);
       if (isNaN(val)) {
         addIssue(ctx, 'kyc_reminder_second_threshold_days', 'kyc_reminder_second_threshold_days must be a positive integer (minimum 1, default 7)');
+      }
+    }
+
+    if ('admin_log_retention_days' in obj) {
+      const val = parseBoundedInteger(obj.admin_log_retention_days!, 7, 3650);
+      if (isNaN(val)) {
+        addIssue(ctx, 'admin_log_retention_days', 'admin_log_retention_days must be an integer between 7 and 3650 days');
       }
     }
 

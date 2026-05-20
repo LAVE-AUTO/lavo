@@ -2787,7 +2787,10 @@
         "error_reminder_second_range": "The secondary reminder must be at least 5 minutes in advance.",
         "error_max_tip_range": "The tip amount cannot be negative.",
         "error_kyc_first_range": "The initial KYC reminder threshold must be at least 1 day.",
-        "error_kyc_second_range": "The final KYC reminder threshold must be at least 1 day."
+        "error_kyc_second_range": "The final KYC reminder threshold must be at least 1 day.",
+        "field_log_retention": "Activity log retention",
+        "hint_log_retention": "How long admin activity logs are kept before automatic deletion. Min: 7 days, Max: 3,650 days (10 years).",
+        "error_log_retention_range": "Retention period must be between 7 and 3,650 days."
     },
     "admin_disputes": {
         "page_title": "Disputes",
@@ -2919,7 +2922,10 @@
         "btn_close": "Close",
         "pdf_generated_on": "Generated on",
         "error_export": "Failed to generate PDF.",
-        "truncated_warning": "Only the last 100 transactions are displayed."
+        "filter_from": "From",
+        "filter_to": "to",
+        "load_more": "Load more",
+        "loading_more": "Loading…"
     },
     "admin_ratings": {
         "page_title": "Ratings & Reviews",
@@ -3332,5 +3338,32 @@
         "desc": "Enable your location to see nearby stations and get real-time distances on Hurryline.",
         "btn_close": "Close",
         "btn_activate": "Enable"
+    },
+    "admin_logs": {
+        "page_title": "Activity log",
+        "page_subtitle": "History of all actions performed by administrators.",
+        "filter_all_actions": "All actions",
+        "filter_label": "Filter",
+        "empty": "No log entries yet.",
+        "empty_filtered": "No results for these filters.",
+        "load_more": "Load more",
+        "col_action": "Action",
+        "col_target": "Target",
+        "col_admin": "Administrator",
+        "col_date": "Date",
+        "action_UPDATE_USER": "User updated",
+        "action_UNBLOCK_ACCOUNT": "Account unblocked",
+        "action_UPDATE_STATION": "Station updated",
+        "action_station_approved": "Station approved",
+        "action_station_rejected": "Station rejected",
+        "action_REFUND_DISPUTE": "Dispute refunded",
+        "action_CLOSE_DISPUTE": "Dispute closed",
+        "action_toggle_rating_visibility": "Rating visibility toggled",
+        "action_UPDATE_STATION_PROMO_QR": "Promo QR code updated",
+        "action_commission_rate_updated": "Commission rate updated",
+        "target_user": "User",
+        "target_station": "Station",
+        "target_dispute": "Dispute",
+        "target_rating": "Rating"
     }
 }

@@ -106,6 +106,7 @@ const DEFAULTS = {
   max_tip_amount_xaf: 50000,
   kyc_reminder_first_threshold_days: 30,
   kyc_reminder_second_threshold_days: 7,
+  admin_log_retention_days: 365,
 };
 
 type Committed = typeof DEFAULTS;
@@ -140,6 +141,7 @@ export function AdminPlatformSettings() {
   const [maxTip, setMaxTip]               = useState(DEFAULTS.max_tip_amount_xaf);
   const [kycFirst, setKycFirst]           = useState(DEFAULTS.kyc_reminder_first_threshold_days);
   const [kycSecond, setKycSecond]         = useState(DEFAULTS.kyc_reminder_second_threshold_days);
+  const [logRetention, setLogRetention]   = useState(DEFAULTS.admin_log_retention_days);
 
   const [committed, setCommitted]         = useState<Committed>({ ...DEFAULTS });
   const [saving, setSaving]               = useState(false);
@@ -172,6 +174,7 @@ export function AdminPlatformSettings() {
         const mt   = i('max_tip_amount_xaf');
         const kf   = i('kyc_reminder_first_threshold_days');
         const ks   = i('kyc_reminder_second_threshold_days');
+        const lr   = i('admin_log_retention_days');
 
         const platformPctVal = ppr !== null ? Math.round(ppr * 100 * 10) / 10 : DEFAULTS.cancellation_penalty_platform_rate_pct;
 
@@ -189,6 +192,7 @@ export function AdminPlatformSettings() {
           max_tip_amount_xaf:                     mt  ?? DEFAULTS.max_tip_amount_xaf,
           kyc_reminder_first_threshold_days:      kf  ?? DEFAULTS.kyc_reminder_first_threshold_days,
           kyc_reminder_second_threshold_days:     ks  ?? DEFAULTS.kyc_reminder_second_threshold_days,
+          admin_log_retention_days:               lr  ?? DEFAULTS.admin_log_retention_days,
         };
 
         setFreeWindow(next.cancellation_free_window_minutes);
@@ -204,6 +208,7 @@ export function AdminPlatformSettings() {
         setMaxTip(next.max_tip_amount_xaf);
         setKycFirst(next.kyc_reminder_first_threshold_days);
         setKycSecond(next.kyc_reminder_second_threshold_days);
+        setLogRetention(next.admin_log_retention_days);
         setCommitted(next);
       } catch {
         // keep defaults on failure
@@ -230,7 +235,8 @@ export function AdminPlatformSettings() {
     reminderSecond !== committed.reminder_second_window_minutes ||
     maxTip         !== committed.max_tip_amount_xaf ||
     kycFirst       !== committed.kyc_reminder_first_threshold_days ||
-    kycSecond      !== committed.kyc_reminder_second_threshold_days;
+    kycSecond      !== committed.kyc_reminder_second_threshold_days ||
+    logRetention   !== committed.admin_log_retention_days;
 
   // ── Validation ──
 
@@ -248,6 +254,7 @@ export function AdminPlatformSettings() {
     if (maxTip < 0)                          return t('error_max_tip_range');
     if (kycFirst < 1)                        return t('error_kyc_first_range');
     if (kycSecond < 1)                       return t('error_kyc_second_range');
+    if (logRetention < 7 || logRetention > 3650) return t('error_log_retention_range');
     return null;
   }
 
@@ -275,6 +282,7 @@ export function AdminPlatformSettings() {
         max_tip_amount_xaf:                  String(maxTip),
         kyc_reminder_first_threshold_days:   String(kycFirst),
         kyc_reminder_second_threshold_days:  String(kycSecond),
+        admin_log_retention_days:            String(logRetention),
       };
 
       const [ok] = await patchWithApi('/admin/settings', payload);
@@ -295,6 +303,7 @@ export function AdminPlatformSettings() {
           max_tip_amount_xaf:                     maxTip,
           kyc_reminder_first_threshold_days:      kycFirst,
           kyc_reminder_second_threshold_days:     kycSecond,
+          admin_log_retention_days:               logRetention,
         });
         toastSuccess(t('save_success'));
       } else {
@@ -487,6 +496,15 @@ export function AdminPlatformSettings() {
             unit={t('unit_days')}
             min={1}
             onChange={setKycSecond}
+          />
+          <NumericField
+            label={t('field_log_retention')}
+            hint={t('hint_log_retention')}
+            value={logRetention}
+            unit={t('unit_days')}
+            min={7}
+            max={3650}
+            onChange={setLogRetention}
           />
         </SectionCard>
 
