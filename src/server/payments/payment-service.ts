@@ -159,8 +159,9 @@ export async function cancelPaymentIntent(paymentIntentId: string): Promise<void
 
 /**
  * Issues a Stripe refund for a PaymentIntent.
- * Uses reverse_transfer: false so the refund comes from the platform balance.
- * The station's transfer is handled separately via distributePenalty.
+ * If reverseTransfer is true, Stripe also reverses the connected-account transfer so the
+ * station bears the cost (used when the station has already been paid out).
+ * Otherwise the refund comes from the platform balance.
  * If amountCents is provided, issues a partial refund; otherwise refunds the full amount.
  * An optional idempotencyKey prevents double-refunds when the caller retries on timeout.
  * Returns the Stripe refund ID for tracking.
@@ -168,12 +169,13 @@ export async function cancelPaymentIntent(paymentIntentId: string): Promise<void
 export async function refundPaymentIntent(
   paymentIntentId: string,
   amountCents?: number,
-  idempotencyKey?: string
+  idempotencyKey?: string,
+  reverseTransfer = false,
 ): Promise<string> {
   const refund = await stripe.refunds.create(
     {
       payment_intent: paymentIntentId,
-      reverse_transfer: false,
+      reverse_transfer: reverseTransfer,
       ...(amountCents !== undefined && { amount: amountCents }),
     },
     idempotencyKey ? { idempotencyKey } : undefined

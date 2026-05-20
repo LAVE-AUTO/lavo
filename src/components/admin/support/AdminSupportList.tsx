@@ -3,9 +3,10 @@
 import { useState } from 'react';
 import { useTranslations } from 'next-intl';
 import { Link } from '@/i18n/navigation';
-import type { SupportTicket, TicketStatus, TicketRole } from '@/components/support/support-mock';
+import type { ApiTicketListItem, DisplayStatus } from '@/types/support';
+import { STATUS_MAP, userDisplayName } from '@/types/support';
 
-const STATUS_STYLE: Record<TicketStatus, { bar: string; badge: string; dot: string; label: string }> = {
+const STATUS_STYLE: Record<DisplayStatus, { bar: string; badge: string; dot: string; label: string }> = {
   open:        { bar: 'bg-[#F97316]', badge: 'bg-[#FFF4EC] text-[#C2410C] ring-1 ring-[#F97316]/20',  dot: 'bg-[#F97316]', label: 'status_open' },
   in_progress: { bar: 'bg-[#3B82F6]', badge: 'bg-[#EFF6FF] text-[#1D4ED8] ring-1 ring-[#3B82F6]/20',  dot: 'bg-[#3B82F6]', label: 'status_in_progress' },
   resolved:    { bar: 'bg-[#22C55E]', badge: 'bg-[#F0FDF4] text-[#15803D] ring-1 ring-[#22C55E]/20',  dot: 'bg-[#22C55E]', label: 'status_resolved' },
@@ -18,23 +19,45 @@ function formatDate(d: string) {
 }
 
 function initials(name: string) {
-  return name.split(' ').map((w) => w[0] ?? '').join('').toUpperCase().slice(0, 2);
+  return name.split(' ').map((w) => w[0] ?? '').join('').toUpperCase().slice(0, 2) || '?';
 }
 
-type FilterKey = TicketStatus | 'all';
-interface Props { tickets: SupportTicket[]; query: string }
+type FilterKey = DisplayStatus | 'all';
+interface Props { tickets: ApiTicketListItem[]; query: string; loading: boolean }
 
-export function AdminSupportList({ tickets, query }: Props) {
+export function AdminSupportList({ tickets, query, loading }: Props) {
   const t = useTranslations('admin_support');
   const [filter, setFilter] = useState<FilterKey>('all');
 
+  if (loading) {
+    return (
+      <div className="flex flex-col gap-2.5">
+        {[1, 2, 3].map((i) => (
+          <div key={i} className="flex overflow-hidden rounded-2xl border border-[#E8E4DC] bg-white shadow-sm dark:border-[#1E2E18] dark:bg-[#131E10]">
+            <div className="w-1 shrink-0 bg-[#E8E4DC] dark:bg-[#1E2E18]" />
+            <div className="flex min-w-0 flex-1 items-center gap-5 px-5 py-4">
+              <div className="h-10 w-10 shrink-0 animate-pulse rounded-xl bg-[#E8E4DC] dark:bg-[#1E2E18]" />
+              <div className="min-w-0 flex-1 space-y-2">
+                <div className="h-3.5 w-48 animate-pulse rounded bg-[#E8E4DC] dark:bg-[#1E2E18]" />
+                <div className="h-3 w-72 animate-pulse rounded bg-[#F0EDE4] dark:bg-[#1A2416]" />
+              </div>
+            </div>
+          </div>
+        ))}
+      </div>
+    );
+  }
+
   const q        = query.toLowerCase();
   const filtered = tickets
-    .filter((tk) => filter === 'all' || tk.status === filter)
-    .filter((tk) => !q || tk.subject.toLowerCase().includes(q) || tk.created_by.toLowerCase().includes(q));
+    .filter((tk) => filter === 'all' || STATUS_MAP[tk.status] === filter)
+    .filter((tk) => !q || tk.subject.toLowerCase().includes(q) || userDisplayName(tk.createdByUser).toLowerCase().includes(q));
 
   const counts: Record<string, number> = { all: tickets.length };
-  for (const tk of tickets) counts[tk.status] = (counts[tk.status] ?? 0) + 1;
+  for (const tk of tickets) {
+    const key = STATUS_MAP[tk.status];
+    counts[key] = (counts[key] ?? 0) + 1;
+  }
 
   const FILTERS: Array<{ key: FilterKey; label: string; color?: string }> = [
     { key: 'all',         label: t('filter_all') },
@@ -43,11 +66,6 @@ export function AdminSupportList({ tickets, query }: Props) {
     { key: 'resolved',    label: t('status_resolved'),    color: '#22C55E' },
     { key: 'closed',      label: t('status_closed'),      color: '#94A3B8' },
   ];
-
-  const ROLE_LABEL: Record<TicketRole, string> = {
-    client:  t('role_client'),
-    station: t('role_station'),
-  };
 
   return (
     <div className="flex flex-col gap-4">
@@ -88,9 +106,14 @@ export function AdminSupportList({ tickets, query }: Props) {
       ) : (
         <div className="flex flex-col gap-2.5">
           {filtered.map((tk) => {
-            const s        = STATUS_STYLE[tk.status];
-            const lastMsg  = tk.messages[tk.messages.length - 1];
-            const msgCount = tk.messages.length;
+            const displayStatus = STATUS_MAP[tk.status];
+            const s             = STATUS_STYLE[displayStatus];
+            const creatorName   = userDisplayName(tk.createdByUser);
+            const role          = tk.createdByUser.role as 'client' | 'station';
+            const ROLE_LABEL: Record<'client' | 'station', string> = {
+              client:  t('role_client'),
+              station: t('role_station'),
+            };
             return (
               <Link
                 key={tk.id}
@@ -102,7 +125,7 @@ export function AdminSupportList({ tickets, query }: Props) {
                 <div className="flex min-w-0 flex-1 items-center gap-5 px-5 py-4">
                   {/* Avatar */}
                   <div className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-xl text-[13px] font-black text-white ${s.bar}`}>
-                    {initials(tk.created_by)}
+                    {initials(creatorName)}
                   </div>
 
                   {/* Body */}
@@ -113,17 +136,16 @@ export function AdminSupportList({ tickets, query }: Props) {
                         <span className={`h-1.5 w-1.5 rounded-full ${s.dot}`} />{t(s.label)}
                       </span>
                       <span className="shrink-0 rounded-full bg-[#F0EDE0] px-2 py-0.5 text-[11px] font-bold text-[#888] dark:bg-[#1A2A14] dark:text-[#A0A090]">
-                        {ROLE_LABEL[tk.role]}
+                        {ROLE_LABEL[role] ?? role}
                       </span>
                     </div>
-                    {lastMsg ? (
+                    {tk.lastMessage ? (
                       <p className="mt-0.5 truncate text-[13px] text-[#AAAAAA] dark:text-[#A0A090]">
-                        {lastMsg.body}
+                        {tk.lastMessage.content}
                       </p>
                     ) : null}
                     <p className="mt-0.5 text-[12px] text-[#CCCCBB] dark:text-[#A0A090]">
-                      {tk.created_by} · {formatDate(tk.created_at)}
-                      {msgCount > 0 && <span className="ml-2 text-[#BBBBAA] dark:text-[#A0A090]">· {t('label_msg', { count: msgCount })}</span>}
+                      {creatorName} · {formatDate(tk.created_at)}
                     </p>
                   </div>
 

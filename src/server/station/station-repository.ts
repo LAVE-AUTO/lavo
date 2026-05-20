@@ -418,26 +418,54 @@ export async function listStationsByStatus(
 }
 
 /**
- * List all stations for admin KYC history, optionally filtered by status.
- * Ordered by updated_at DESC so most recent activity appears first.
- *
- * Accepts optional pagination params; defaults to page=1, perPage=500.
- * Hard cap: perPage is clamped to 500 regardless of what is passed.
- * Existing callers that pass no params continue to work unchanged.
+ * List stations for admin management with pagination and optional status filter.
+ * Returns both the page rows and the total matching count.
+ * Hard cap: perPage is clamped to 100.
  */
 export async function listAllStationsForAdmin(
   status?: string,
   page = 1,
-  perPage = 500
-): Promise<Station[]> {
-  const limit = Math.min(Math.floor(perPage), 500);
+  perPage = 50,
+): Promise<{ rows: Station[]; total: number }> {
+  const limit  = Math.min(100, Math.max(1, Math.floor(perPage)));
   const offset = (Math.max(1, Math.floor(page)) - 1) * limit;
-  return db.query.stations.findMany({
-    where: status ? eq(stations.status, status) : undefined,
-    orderBy: (t, { desc }) => [desc(t.updated_at)],
-    limit,
-    offset,
-  });
+  const filter = status ? eq(stations.status, status) : undefined;
+
+  const [rows, countResult] = await Promise.all([
+    db.select().from(stations).where(filter).orderBy(desc(stations.updated_at)).limit(limit).offset(offset),
+    db.select({ count: sql<number>`count(*)::int` }).from(stations).where(filter),
+  ]);
+
+  return { rows, total: countResult[0]?.count ?? 0 };
+}
+
+/**
+ * Lists active + suspended stations (managed) with pagination.
+ * Returns page rows, total managed count, and per-status counts for chip display.
+ * Three parallel queries: rows, total, counts grouped by status.
+ */
+export async function listManagedStationsForAdmin(
+  page = 1,
+  perPage = 50,
+): Promise<{ rows: Station[]; total: number; total_active: number; total_suspended: number }> {
+  const limit  = Math.min(100, Math.max(1, Math.floor(perPage)));
+  const offset = (Math.max(1, Math.floor(page)) - 1) * limit;
+  const filter = inArray(stations.status, ['active', 'suspended']);
+
+  const [rows, countResult, statusCounts] = await Promise.all([
+    db.select().from(stations).where(filter).orderBy(desc(stations.updated_at)).limit(limit).offset(offset),
+    db.select({ count: sql<number>`count(*)::int` }).from(stations).where(filter),
+    db.select({ status: stations.status, count: sql<number>`count(*)::int` })
+      .from(stations).where(filter).groupBy(stations.status),
+  ]);
+
+  const byStatus = Object.fromEntries(statusCounts.map((r) => [r.status, r.count]));
+  return {
+    rows,
+    total: countResult[0]?.count ?? 0,
+    total_active:    byStatus['active']    ?? 0,
+    total_suspended: byStatus['suspended'] ?? 0,
+  };
 }
 
 export async function updateStationStatus(

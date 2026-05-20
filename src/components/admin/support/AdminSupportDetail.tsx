@@ -5,11 +5,12 @@ import { useTranslations } from 'next-intl';
 import { Link } from '@/i18n/navigation';
 import { useToast } from '@/context/toast-context';
 import { useAuth } from '@/context/auth-context';
-import { patchWithApi, getFromApi, postWithApi } from '@/services/axios-service';
+import { getFromApi, postWithApi, patchWithApi } from '@/services/axios-service';
 import { Modal } from '@/components/ui/Modal';
-import type { SupportTicket, TicketStatus } from '@/components/support/support-mock';
+import type { ApiTicketDetail, ApiMessage, DisplayStatus } from '@/types/support';
+import { STATUS_MAP, userDisplayName } from '@/types/support';
 
-const STATUS_STYLE: Record<TicketStatus, { badge: string; dot: string; label: string }> = {
+const STATUS_STYLE: Record<DisplayStatus, { badge: string; dot: string; label: string }> = {
   open:        { badge: 'bg-[#FFF4EC] text-[#C2410C] ring-1 ring-[#F97316]/20', dot: 'bg-[#F97316]', label: 'status_open' },
   in_progress: { badge: 'bg-[#EFF6FF] text-[#1D4ED8] ring-1 ring-[#3B82F6]/20', dot: 'bg-[#3B82F6]', label: 'status_in_progress' },
   resolved:    { badge: 'bg-[#F0FDF4] text-[#15803D] ring-1 ring-[#22C55E]/20', dot: 'bg-[#22C55E]', label: 'status_resolved' },
@@ -31,18 +32,11 @@ function nameInitials(name: string) {
   return name.split(' ').map((w) => w[0] ?? '').join('').toUpperCase().slice(0, 2) || '?';
 }
 
-/* ---- Close modal ---- */
-interface CloseModalProps { open: boolean; onConfirm: (reason: string) => void; onCancel: () => void; busy: boolean }
+/* ---- Close confirmation modal ---- */
+interface CloseModalProps { open: boolean; onConfirm: () => void; onCancel: () => void; busy: boolean }
 
 function CloseModal({ open, onConfirm, onCancel, busy }: CloseModalProps) {
   const t = useTranslations('admin_support');
-  const [reason, setReason] = useState('');
-
-  function handleConfirm(e: React.FormEvent) {
-    e.preventDefault();
-    if (!reason.trim()) return;
-    onConfirm(reason.trim());
-  }
 
   return (
     <Modal
@@ -52,27 +46,17 @@ function CloseModal({ open, onConfirm, onCancel, busy }: CloseModalProps) {
       footer={
         <div className="flex items-center justify-end gap-2">
           <button type="button" onClick={onCancel} disabled={busy}
-            className="rounded-[10px] border border-[#E0DCD0] px-4 py-2 text-[13px] font-semibold text-[#666] transition-colors hover:bg-[#F0EDE0] disabled:opacity-50 dark:border-[#243020] dark:text-[#9A9A8A]">
+            className="rounded-[10px] border border-[#E0DCD0] px-4 py-2 text-[13px] font-semibold text-[#666] transition-colors hover:bg-[#F0EDE0] disabled:opacity-50 dark:border-dark-surface dark:text-[#9A9A8A]">
             {t('close_modal_cancel')}
           </button>
-          <button type="submit" form="close-ticket-form" disabled={busy || !reason.trim()}
+          <button type="button" onClick={onConfirm} disabled={busy}
             className="rounded-[10px] bg-[#94A3B8] px-5 py-2 text-[13px] font-bold text-white transition-opacity hover:opacity-80 disabled:opacity-50">
             {t('close_modal_confirm')}
           </button>
         </div>
       }
     >
-      <form id="close-ticket-form" onSubmit={handleConfirm} className="flex flex-col gap-4">
-        <div className="flex flex-col gap-1.5">
-          <label htmlFor="close-ticket-reason" className="text-[13px] font-medium text-[#5A5A4A] dark:text-[#9A9A8A]">{t('close_modal_reason_label')}</label>
-          <textarea id="close-ticket-reason" rows={3} maxLength={500}
-            className="w-full resize-none rounded-[8px] border border-[#D8D4C8] bg-[#F7F6F2] px-3 py-2.5 text-[13px] text-[#1A1A0A] outline-none placeholder:text-[#BBBBAA] focus:border-[#C49A1E] focus:bg-white focus:shadow-[0_0_0_3px_rgba(196,154,30,0.12)] dark:border-[#243020] dark:bg-[#0F1A0C] dark:text-[#F0EDD4] dark:focus:border-[#C49A1E]"
-            placeholder={t('close_modal_reason_placeholder')}
-            value={reason}
-            onChange={(e) => setReason(e.target.value)}
-          />
-        </div>
-      </form>
+      <p className="text-[13px] text-[#5A5A4A] dark:text-[#9A9A8A]">{t('close_modal_reason_placeholder')}</p>
     </Modal>
   );
 }
@@ -87,60 +71,66 @@ export function AdminSupportDetail({ id }: Props) {
   const mountedRef = useRef(true);
   useEffect(() => { mountedRef.current = true; return () => { mountedRef.current = false; }; }, []);
 
-  const [ticket, setTicket] = useState<SupportTicket | undefined>(undefined);
-  const [loading, setLoading] = useState(true);
+  const [ticket, setTicket]           = useState<ApiTicketDetail | undefined>();
+  const [loading, setLoading]         = useState(true);
+  const [fetchError, setFetchError]   = useState(false);
+  const [reply, setReply]             = useState('');
+  const [replySaving, setReplySaving] = useState(false);
+  const [actionBusy, setActionBusy]   = useState(false);
+  const [showCloseModal, setShowCloseModal] = useState(false);
 
   useEffect(() => {
-    let active = true;
+    let mounted = true;
     setLoading(true);
-    getFromApi(`/support/${id}`).then(([ok, data]) => {
-      if (!active) return;
-      if (ok) setTicket((data as any).data ?? (data as any));
-    }).catch(() => {}).finally(() => { if (active) setLoading(false); });
-    return () => { active = false; };
+    setFetchError(false);
+    getFromApi<{ data: ApiTicketDetail }>(`/support/${id}`).then(([ok, res]) => {
+      if (!mounted) return;
+      if (ok && res && typeof res === 'object' && 'data' in res) {
+        setTicket((res as { data: ApiTicketDetail }).data);
+      } else {
+        setFetchError(true);
+      }
+      setLoading(false);
+    });
+    return () => { mounted = false; };
   }, [id]);
 
-  const [reply,           setReply]           = useState('');
-  const [replySaving,     setReplySaving]     = useState(false);
-  const [actionBusy,      setActionBusy]      = useState(false);
-  const [showCloseModal,  setShowCloseModal]  = useState(false);
-
-  if (!ticket) {
-    if (loading) {
-      return (
-        <div className="flex flex-1 items-center justify-center p-6">
-          <p className="text-[13px] text-[#999]">{t('loading')}</p>
-        </div>
-      );
-    }
+  if (loading) {
     return (
       <div className="flex flex-1 items-center justify-center p-6">
-        <p className="text-[13px] text-[#999]">{t('not_found')}</p>
+        <div className="h-6 w-6 animate-spin rounded-full border-2 border-[#C49A1E] border-t-transparent" />
       </div>
     );
   }
 
-  const s          = STATUS_STYLE[ticket.status];
-  const isClosed   = ticket.status === 'closed';
-  const isResolved = ticket.status === 'resolved';
+  if (fetchError || !ticket) {
+    return (
+      <div className="flex flex-1 items-center justify-center p-6">
+        <p className="text-[13px] text-[#999]">{fetchError ? t('load_error') : t('not_found')}</p>
+      </div>
+    );
+  }
+
+  const isClosed    = ticket.status === 'ferme';
+  const isResolved  = ticket.status === 'resolu';
+  const s           = STATUS_STYLE[STATUS_MAP[ticket.status]];
+  const adminName   = ticket.assignedToAdmin ? userDisplayName(ticket.assignedToAdmin) : 'Admin';
+  const creatorName = userDisplayName(ticket.createdByUser);
+  const assignedDisplayName = ticket.assignedToAdmin ? userDisplayName(ticket.assignedToAdmin) : null;
 
   async function handleSendReply(e: React.FormEvent) {
     e.preventDefault();
     if (!reply.trim()) { toastError(t('error_reply_empty')); return; }
     setReplySaving(true);
     try {
-      const [ok, data] = await postWithApi(`/support/${id}/messages`, { content: reply.trim() });
+      const [ok, res] = await postWithApi<{ data: ApiMessage }>(
+        `/support/${id}/messages`,
+        { content: reply.trim() },
+      );
       if (!mountedRef.current) return;
-      if (ok) {
-        const message = (data as any).data ?? (data as any);
-        setTicket((prev) => {
-          if (!prev) return prev;
-          return {
-            ...prev,
-            status: prev.status === 'open' ? 'in_progress' : prev.status,
-            messages: [...prev.messages, message],
-          };
-        });
+      if (ok && res && typeof res === 'object' && 'data' in res) {
+        const newMsg = (res as { data: ApiMessage }).data;
+        setTicket((prev) => prev ? { ...prev, messages: [...prev.messages, newMsg] } : prev);
         setReply('');
         toastSuccess(t('reply_success'));
       } else {
@@ -160,8 +150,20 @@ export function AdminSupportDetail({ id }: Props) {
       const [ok] = await patchWithApi(`/admin/support/${id}/assign`, { assigned_to: user.id });
       if (!mountedRef.current) return;
       if (ok) {
-        const displayName = [user.first_name, user.last_name].filter(Boolean).join(' ') || 'Admin';
-        setTicket((prev) => prev ? { ...prev, assigned_to: displayName } : prev);
+        setTicket((prev) => {
+          if (!prev) return prev;
+          return {
+            ...prev,
+            assigned_to: user.id,
+            assignedToAdmin: {
+              id: user.id,
+              first_name: user.first_name ?? null,
+              last_name: user.last_name ?? null,
+              email: user.email ?? '',
+              role: 'admin',
+            },
+          };
+        });
         toastSuccess(t('assign_success'));
       } else {
         toastError(t('assign_error'));
@@ -176,11 +178,10 @@ export function AdminSupportDetail({ id }: Props) {
   async function handleResolve() {
     setActionBusy(true);
     try {
-      const statusMap: Record<string, string> = { resolved: 'resolu', open: 'ouvert', in_progress: 'en_cours', closed: 'ferme' };
-      const [ok] = await patchWithApi(`/support/${id}`, { status: statusMap['resolved'] });
+      const [ok] = await patchWithApi(`/support/${id}`, { status: 'resolu' });
       if (!mountedRef.current) return;
       if (ok) {
-        setTicket((prev) => prev ? { ...prev, status: 'resolved' } : prev);
+        setTicket((prev) => prev ? { ...prev, status: 'resolu' } : prev);
         toastSuccess(t('resolve_success'));
       } else {
         toastError(t('action_error'));
@@ -195,11 +196,10 @@ export function AdminSupportDetail({ id }: Props) {
   async function handleReopen() {
     setActionBusy(true);
     try {
-      const statusMap: Record<string, string> = { resolved: 'resolu', open: 'ouvert', in_progress: 'en_cours', closed: 'ferme' };
-      const [ok] = await patchWithApi(`/support/${id}`, { status: statusMap['open'] });
+      const [ok] = await patchWithApi(`/support/${id}`, { status: 'ouvert' });
       if (!mountedRef.current) return;
       if (ok) {
-        setTicket((prev) => prev ? { ...prev, status: 'open' } : prev);
+        setTicket((prev) => prev ? { ...prev, status: 'ouvert' } : prev);
         toastSuccess(t('reopen_success'));
       } else {
         toastError(t('action_error'));
@@ -211,14 +211,13 @@ export function AdminSupportDetail({ id }: Props) {
     }
   }
 
-  async function handleClose(reason: string) {
+  async function handleClose() {
     setActionBusy(true);
     try {
-      const statusMap: Record<string, string> = { resolved: 'resolu', open: 'ouvert', in_progress: 'en_cours', closed: 'ferme' };
-      const [ok] = await patchWithApi(`/support/${id}`, { status: statusMap['closed'], close_reason: reason });
+      const [ok] = await patchWithApi(`/support/${id}`, { status: 'ferme' });
       if (!mountedRef.current) return;
       if (ok) {
-        setTicket((prev) => prev ? { ...prev, status: 'closed', close_reason: reason } : prev);
+        setTicket((prev) => prev ? { ...prev, status: 'ferme' } : prev);
         setShowCloseModal(false);
         toastSuccess(t('close_success'));
       } else {
@@ -255,14 +254,14 @@ export function AdminSupportDetail({ id }: Props) {
                 <span className={`shrink-0 inline-flex items-center gap-1.5 rounded-full px-2.5 py-0.5 text-[12px] font-bold ${s.badge}`}>
                   <span className={`h-1.5 w-1.5 rounded-full ${s.dot}`} />{t(s.label)}
                 </span>
-                <span className={`shrink-0 rounded-full px-2.5 py-0.5 text-[12px] font-bold ${ROLE_COLOR[ticket.role] ?? 'bg-[#F0EDE0] text-[#888]'}`}>
-                  {t(ticket.role === 'client' ? 'role_client' : 'role_station')}
+                <span className={`shrink-0 rounded-full px-2.5 py-0.5 text-[12px] font-bold ${ROLE_COLOR[ticket.createdByUser.role] ?? 'bg-[#F0EDE0] text-[#888]'}`}>
+                  {t(ticket.createdByUser.role === 'client' ? 'role_client' : 'role_station')}
                 </span>
               </div>
               <p className="mt-1.5 text-[13px] text-[#888] dark:text-[#9A9A8A]">
-                {t('detail_from')} <span className="font-semibold text-[#444] dark:text-[#AAA]">{ticket.created_by}</span>
+                {t('detail_from')} <span className="font-semibold text-[#444] dark:text-[#AAA]">{creatorName}</span>
                 <span className="mx-2 text-[#CCC] dark:text-[#A0A090]" aria-hidden="true">·</span>
-                {t('detail_assigned')}: <span className="font-semibold text-[#444] dark:text-[#AAA]">{ticket.assigned_to ?? t('detail_unassigned')}</span>
+                {t('detail_assigned')}: <span className="font-semibold text-[#444] dark:text-[#AAA]">{assignedDisplayName ?? t('detail_unassigned')}</span>
               </p>
             </div>
 
@@ -271,7 +270,7 @@ export function AdminSupportDetail({ id }: Props) {
               {!isClosed && (
                 <button type="button" onClick={handleAssignMe} disabled={actionBusy}
                   className="rounded-[10px] border border-[#C49A1E]/40 px-3 py-2 text-[13px] font-semibold text-[#C49A1E] transition-colors hover:bg-[#C49A1E]/8 disabled:opacity-50">
-                  {ticket.assigned_to ? t('detail_reassign_me') : t('detail_assign_me')}
+                  {assignedDisplayName ? t('detail_reassign_me') : t('detail_assign_me')}
                 </button>
               )}
               {!isResolved && !isClosed && (
@@ -280,7 +279,7 @@ export function AdminSupportDetail({ id }: Props) {
                   {t('btn_resolve')}
                 </button>
               )}
-              {(isResolved || ticket.status === 'in_progress') && (
+              {(isResolved || ticket.status === 'en_cours') && (
                 <button type="button" onClick={() => setShowCloseModal(true)} disabled={actionBusy}
                   className="rounded-[10px] border border-[#CBD5E1] px-3 py-2 text-[13px] font-bold text-[#64748B] transition-colors hover:bg-[#F8FAFC] disabled:opacity-50 dark:border-[#2A3828] dark:text-[#94A3B8]">
                   {t('btn_close_ticket')}
@@ -309,26 +308,27 @@ export function AdminSupportDetail({ id }: Props) {
                 </div>
               ) : (
                 ticket.messages.map((msg) => {
-                  const isAdmin = msg.role === 'admin';
+                  const isAdmin    = msg.is_from_admin;
+                  const authorName = isAdmin ? adminName : creatorName;
                   return (
                     <div key={msg.id} className={`flex gap-3 ${isAdmin ? 'flex-row-reverse' : ''}`}>
                       <div className={[
                         'flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-[12px] font-black leading-none',
                         isAdmin ? 'bg-[#C49A1E] text-[#0C1209]' : 'bg-[#E8E4DC] text-[#666] dark:bg-[#1E2E18] dark:text-[#A0A090]',
                       ].join(' ')}>
-                        {nameInitials(msg.author)}
+                        {nameInitials(authorName)}
                       </div>
                       <div className={[
                         'max-w-[78%] rounded-2xl px-4 py-3',
                         isAdmin
                           ? 'rounded-tr-sm bg-[#C49A1E]/10 dark:bg-[#C49A1E]/8'
-                          : 'rounded-tl-sm bg-white shadow-sm ring-1 ring-black/[0.04] dark:bg-[#1A2416] dark:ring-white/[0.04]',
+                          : 'rounded-tl-sm bg-white shadow-sm ring-1 ring-black/4 dark:bg-[#1A2416] dark:ring-white/4',
                       ].join(' ')}>
                         <p className={`mb-1 text-[12px] font-black tracking-wide ${isAdmin ? 'text-[#C49A1E]/90' : 'text-[#888] dark:text-[#9A9A8A]'}`}>
-                          {msg.author}
+                          {authorName}
                         </p>
-                        <p className="text-[13px] leading-relaxed text-[#1A1A0A] dark:text-[#F0EDD4]">{msg.body}</p>
-                        <p className="mt-1.5 text-[11px] text-[#BBBBAA] dark:text-[#A0A090]">{formatDateTime(msg.created_at)}</p>
+                        <p className="text-[13px] leading-relaxed text-[#1A1A0A] dark:text-[#F0EDD4]">{msg.content}</p>
+                        <p className="mt-1.5 text-[11px] text-[#BBBBAA] dark:text-[#A0A090]">{formatDateTime(typeof msg.created_at === 'string' ? msg.created_at : new Date(msg.created_at).toISOString())}</p>
                       </div>
                     </div>
                   );
@@ -336,9 +336,7 @@ export function AdminSupportDetail({ id }: Props) {
               )}
             </div>
 
-            {/* Reply form - only shown for open/in_progress tickets.
-                Resolved and closed tickets no longer accept new replies:
-                resolved = admin confirmed the issue is fixed; closed = ticket archived. */}
+            {/* Reply form - only shown for open/in_progress tickets */}
             {!isClosed && !isResolved && (
               <div className="rounded-2xl border border-[#E8E4DC] bg-white shadow-sm dark:border-[#1E2E18] dark:bg-[#131E10]">
                 <div className="border-b border-[#F0EDE4] px-5 py-3 dark:border-[#1A2A14]">
@@ -346,7 +344,7 @@ export function AdminSupportDetail({ id }: Props) {
                 </div>
                 <form onSubmit={handleSendReply} className="flex flex-col gap-3 p-5">
                   <textarea id="admin-reply-field" rows={4} maxLength={2000}
-                    className="w-full resize-none rounded-[8px] border border-[#D8D4C8] bg-[#F7F6F2] px-3 py-2.5 text-[13px] text-[#1A1A0A] outline-none placeholder:text-[#BBBBAA] focus:border-[#C49A1E] focus:bg-white focus:shadow-[0_0_0_3px_rgba(196,154,30,0.12)] dark:border-[#243020] dark:bg-[#0F1A0C] dark:text-[#F0EDD4] dark:focus:border-[#C49A1E]"
+                    className="w-full resize-none rounded-lg border border-[#D8D4C8] bg-[#F7F6F2] px-3 py-2.5 text-[13px] text-[#1A1A0A] outline-none placeholder:text-[#BBBBAA] focus:border-[#C49A1E] focus:bg-white focus:shadow-[0_0_0_3px_rgba(196,154,30,0.12)] dark:border-dark-surface dark:bg-[#0F1A0C] dark:text-[#F0EDD4] dark:focus:border-[#C49A1E]"
                     placeholder={t('field_reply_placeholder')}
                     value={reply}
                     onChange={(e) => setReply(e.target.value)}

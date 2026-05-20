@@ -3,37 +3,48 @@
 import { useState, useEffect, useRef } from 'react';
 import { useTranslations } from 'next-intl';
 import { getFromApi } from '@/services/axios-service';
+import type { ApiTicketListItem } from '@/types/support';
+import { STATUS_MAP } from '@/types/support';
 import { AdminSupportList } from './AdminSupportList';
 import { AdminSupportSettings } from './AdminSupportSettings';
 
 const STAT_CARDS = [
-  { key: 'open',        labelKey: 'status_open',        color: '#F97316', bg: 'bg-[#FFF4EC] dark:bg-[#F97316]/8',  ring: 'ring-[#F97316]/20', text: 'text-[#C2410C] dark:text-[#F97316]' },
-  { key: 'in_progress', labelKey: 'status_in_progress', color: '#3B82F6', bg: 'bg-[#EFF6FF] dark:bg-[#3B82F6]/8',  ring: 'ring-[#3B82F6]/20', text: 'text-[#1D4ED8] dark:text-[#60A5FA]' },
-  { key: 'resolved',    labelKey: 'status_resolved',    color: '#22C55E', bg: 'bg-[#F0FDF4] dark:bg-[#22C55E]/8',  ring: 'ring-[#22C55E]/20', text: 'text-[#15803D] dark:text-[#4ADE80]' },
-  { key: 'closed',      labelKey: 'status_closed',      color: '#94A3B8', bg: 'bg-[#F8FAFC] dark:bg-[#94A3B8]/8',  ring: 'ring-[#94A3B8]/20', text: 'text-[#64748B] dark:text-[#94A3B8]' },
+  { key: 'open',        labelKey: 'status_open',        bg: 'bg-[#FFF4EC] dark:bg-[#F97316]/8',  ring: 'ring-[#F97316]/20', text: 'text-[#C2410C] dark:text-[#F97316]' },
+  { key: 'in_progress', labelKey: 'status_in_progress', bg: 'bg-[#EFF6FF] dark:bg-[#3B82F6]/8',  ring: 'ring-[#3B82F6]/20', text: 'text-[#1D4ED8] dark:text-[#60A5FA]' },
+  { key: 'resolved',    labelKey: 'status_resolved',    bg: 'bg-[#F0FDF4] dark:bg-[#22C55E]/8',  ring: 'ring-[#22C55E]/20', text: 'text-[#15803D] dark:text-[#4ADE80]' },
+  { key: 'closed',      labelKey: 'status_closed',      bg: 'bg-[#F8FAFC] dark:bg-[#94A3B8]/8',  ring: 'ring-[#94A3B8]/20', text: 'text-[#64748B] dark:text-[#94A3B8]' },
 ] as const;
 
 export function AdminSupportContainer() {
-  const t     = useTranslations('admin_support');
-  const [query, setQuery] = useState('');
+  const t = useTranslations('admin_support');
+  const [query, setQuery]               = useState('');
   const [showSettings, setShowSettings] = useState(false);
+  const [tickets, setTickets]           = useState<ApiTicketListItem[]>([]);
+  const [loading, setLoading]           = useState(true);
+  const [error, setError]               = useState(false);
 
   const mountedRef = useRef(true);
   useEffect(() => { mountedRef.current = true; return () => { mountedRef.current = false; }; }, []);
 
-  const [tickets, setTickets] = useState<any[]>([]);
-  const [loading, setLoading] = useState(true);
-
   useEffect(() => {
     setLoading(true);
-    getFromApi('/support').then(([ok, data]) => {
+    setError(false);
+    getFromApi<{ data: ApiTicketListItem[] }>('/support').then(([ok, res]) => {
       if (!mountedRef.current) return;
-      if (ok) setTickets((data as any).data ?? (data as any) ?? []);
-    }).finally(() => { if (mountedRef.current) setLoading(false); });
+      if (ok && res && typeof res === 'object' && 'data' in res) {
+        setTickets((res as { data: ApiTicketListItem[] }).data ?? []);
+      } else {
+        setError(true);
+      }
+      setLoading(false);
+    });
   }, []);
 
   const counts = { open: 0, in_progress: 0, resolved: 0, closed: 0 };
-  for (const tk of tickets) counts[tk.status as keyof typeof counts]++;
+  for (const tk of tickets) {
+    const key = STATUS_MAP[tk.status];
+    counts[key as keyof typeof counts]++;
+  }
 
   return (
     <div className="flex min-h-full flex-col">
@@ -49,10 +60,10 @@ export function AdminSupportContainer() {
           <div className="flex items-center gap-2 mt-1">
             <button type="button" onClick={() => setShowSettings((v) => !v)}
               className={[
-                'flex items-center gap-1.5 rounded-[8px] border px-3 py-2 text-[13px] font-semibold transition-colors',
+                'flex items-center gap-1.5 rounded-lg border px-3 py-2 text-[13px] font-semibold transition-colors',
                 showSettings
                   ? 'border-[#C49A1E]/40 bg-[#C49A1E]/10 text-[#C49A1E]'
-                  : 'border-[#D8D4C8] text-[#888] hover:border-[#C49A1E]/40 hover:text-[#C49A1E] dark:border-[#243020] dark:text-[#9A9A8A]',
+                  : 'border-[#D8D4C8] text-[#888] hover:border-[#C49A1E]/40 hover:text-[#C49A1E] dark:border-dark-surface dark:text-[#9A9A8A]',
               ].join(' ')}>
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="3" /><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 01-2.83 2.83l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83-2.83l.06-.06A1.65 1.65 0 004.68 15a1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 012.83-2.83l.06.06A1.65 1.65 0 009 4.68a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 2.83l-.06.06A1.65 1.65 0 0019.4 9a1.65 1.65 0 001.51 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z" /></svg>
               {t('btn_settings')}
@@ -66,7 +77,7 @@ export function AdminSupportContainer() {
                 value={query}
                 onChange={(e) => setQuery(e.target.value)}
                 placeholder={t('search_placeholder')}
-                className="w-[220px] rounded-[8px] border border-[#D8D4C8] bg-white py-2 pl-8 pr-3 text-[13px] text-[#1A1A0A] outline-none transition-all focus:border-[#C49A1E] focus:shadow-[0_0_0_3px_rgba(196,154,30,0.10)] dark:border-[#243020] dark:bg-[#0F1A0C] dark:text-[#F0EDD4] dark:focus:border-[#C49A1E]"
+                className="w-55 rounded-lg border border-[#D8D4C8] bg-white py-2 pl-8 pr-3 text-[13px] text-[#1A1A0A] outline-none transition-all focus:border-[#C49A1E] focus:shadow-[0_0_0_3px_rgba(196,154,30,0.10)] dark:border-dark-surface dark:bg-[#0F1A0C] dark:text-[#F0EDD4] dark:focus:border-[#C49A1E]"
               />
             </div>
           </div>
@@ -77,7 +88,7 @@ export function AdminSupportContainer() {
           {STAT_CARDS.map(({ key, labelKey, bg, ring, text }) => (
             <div key={key} className={`flex items-center gap-3 rounded-xl px-4 py-3 ring-1 ${bg} ${ring}`}>
               <span className={`text-[22px] font-black leading-none ${text}`}>
-                {counts[key as keyof typeof counts]}
+                {loading ? '…' : counts[key as keyof typeof counts]}
               </span>
               <span className={`text-[12px] font-bold leading-tight ${text} opacity-80`}>
                 {t(labelKey)}
@@ -94,7 +105,13 @@ export function AdminSupportContainer() {
             <AdminSupportSettings />
           </div>
         )}
-        <AdminSupportList tickets={tickets} query={query} />
+        {error ? (
+          <div className="flex flex-col items-center gap-3 py-24 text-center">
+            <p className="text-[13px] font-semibold text-[#999]">{t('load_error')}</p>
+          </div>
+        ) : (
+          <AdminSupportList tickets={tickets} query={query} loading={loading} />
+        )}
       </div>
     </div>
   );

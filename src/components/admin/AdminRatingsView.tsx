@@ -21,9 +21,10 @@ interface RatingItem {
 }
 
 interface PaginationMeta {
-  total: number;
-  page:  number;
-  limit: number;
+  total:       number;
+  page:        number;
+  limit:       number;
+  total_pages: number;
 }
 
 type VisibilityFilter = 'all' | 'visible' | 'hidden';
@@ -79,15 +80,24 @@ export function AdminRatingsView() {
   const [page, setPage]                         = useState(1);
   const [visibilityFilter, setVisibilityFilter] = useState<VisibilityFilter>('all');
   const [scoreFilter, setScoreFilter]           = useState<ScoreFilter>(0);
+  const [stationSearch, setStationSearch]       = useState('');
+  const [stationDebounced, setStationDebounced] = useState('');
   const [togglingId, setTogglingId]             = useState<string | null>(null);
 
-  const loadData = useCallback(async (p: number, vis: VisibilityFilter, sc: ScoreFilter) => {
+  /* Debounce station search by 300 ms */
+  useEffect(() => {
+    const timer = setTimeout(() => setStationDebounced(stationSearch), 300);
+    return () => clearTimeout(timer);
+  }, [stationSearch]);
+
+  const loadData = useCallback(async (p: number, vis: VisibilityFilter, sc: ScoreFilter, station: string) => {
     setLoading(true);
     setLoadError(false);
 
     const params = new URLSearchParams({ page: String(p), limit: '20' });
     if (vis !== 'all') params.set('is_visible', vis === 'visible' ? 'true' : 'false');
     if (sc > 0) { params.set('score_min', String(sc)); params.set('score_max', String(sc)); }
+    if (station.trim()) params.set('station_name', station.trim());
 
     const [ok, data] = await getFromApi(`/admin/ratings?${params.toString()}`);
     if (!mountedRef.current) return;
@@ -101,7 +111,9 @@ export function AdminRatingsView() {
     setLoading(false);
   }, []);
 
-  useEffect(() => { loadData(1, visibilityFilter, scoreFilter); }, [visibilityFilter, scoreFilter, loadData]);
+  useEffect(() => {
+    loadData(1, visibilityFilter, scoreFilter, stationDebounced);
+  }, [visibilityFilter, scoreFilter, stationDebounced, loadData]);
 
   async function handleToggle(item: RatingItem) {
     if (togglingId === item.id) return;
@@ -128,7 +140,7 @@ export function AdminRatingsView() {
     { value: 1, label: t('filter_1star') },
   ];
 
-  const totalPages = meta ? Math.ceil(meta.total / meta.limit) : 1;
+  const totalPages = meta?.total_pages ?? 1;
 
   return (
     <div className="flex min-h-full flex-col">
@@ -140,49 +152,68 @@ export function AdminRatingsView() {
       </div>
 
       {/* Filters */}
-      <div className="shrink-0 flex flex-wrap items-center gap-2 border-b border-[#E0DCD0] bg-[#FAFAF5] px-6 py-3 dark:border-[#1A2A14] dark:bg-[#0A1208]">
+      <div className="shrink-0 border-b border-[#E0DCD0] bg-[#FAFAF5] px-6 py-3 dark:border-[#1A2A14] dark:bg-[#0A1208]">
 
-        {/* Visibility toggle */}
-        {(['all', 'visible', 'hidden'] as VisibilityFilter[]).map((v) => (
-          <button
-            key={v}
-            type="button"
-            onClick={() => setVisibilityFilter(v)}
-            className={[
-              'rounded-full px-3 py-1.5 text-[13px] font-bold transition-colors',
-              visibilityFilter === v
-                ? 'bg-[#C49A1E] text-[#0C1209]'
-                : 'bg-[#F0EDE6] text-[#666] hover:bg-[#E8E4DC] dark:bg-[#1A2A14] dark:text-[#9A9A8A] dark:hover:bg-[#1E2E18]',
-            ].join(' ')}
-          >
-            {v === 'all' ? t('filter_all') : v === 'visible' ? t('filter_visible') : t('filter_hidden')}
-          </button>
-        ))}
+        {/* Row 1: station search */}
+        <div className="relative mb-2.5 w-full max-w-xs">
+          <svg className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-[#BBBBAA]" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" aria-hidden="true"><circle cx="11" cy="11" r="8" /><path d="m21 21-4.35-4.35" /></svg>
+          <input
+            type="text"
+            value={stationSearch}
+            onChange={(e) => setStationSearch(e.target.value)}
+            placeholder={t('search_station_placeholder')}
+            className="w-full rounded-lg border border-[#D8D4C8] bg-white py-1.5 pl-8 pr-8 text-[13px] text-[#1A1A0A] outline-none transition-all focus:border-[#C49A1E] focus:shadow-[0_0_0_3px_rgba(196,154,30,0.10)] dark:border-dark-surface dark:bg-[#0F1A0C] dark:text-[#F0EDD4] dark:focus:border-[#C49A1E]"
+          />
+          {stationSearch && (
+            <button type="button" onClick={() => setStationSearch('')}
+              className="absolute right-2.5 top-1/2 -translate-y-1/2 text-[#BBBBAA] hover:text-[#666] dark:hover:text-[#CCC]">
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" aria-hidden="true"><line x1="18" y1="6" x2="6" y2="18" /><line x1="6" y1="6" x2="18" y2="18" /></svg>
+            </button>
+          )}
+        </div>
 
-        <div className="h-4 w-px bg-[#D8D4CC] dark:bg-[#1A2A14]" />
+        {/* Row 2: visibility + score pills + total */}
+        <div className="flex flex-wrap items-center gap-2">
+          {(['all', 'visible', 'hidden'] as VisibilityFilter[]).map((v) => (
+            <button
+              key={v}
+              type="button"
+              onClick={() => setVisibilityFilter(v)}
+              className={[
+                'rounded-full px-3 py-1.5 text-[13px] font-bold transition-colors',
+                visibilityFilter === v
+                  ? 'bg-[#C49A1E] text-[#0C1209]'
+                  : 'bg-[#F0EDE6] text-[#666] hover:bg-[#E8E4DC] dark:bg-[#1A2A14] dark:text-[#9A9A8A] dark:hover:bg-[#1E2E18]',
+              ].join(' ')}
+            >
+              {v === 'all' ? t('filter_all') : v === 'visible' ? t('filter_visible') : t('filter_hidden')}
+            </button>
+          ))}
 
-        {/* Score pills */}
-        {SCORE_FILTERS.map((sf) => (
-          <button
-            key={sf.value}
-            type="button"
-            onClick={() => setScoreFilter(sf.value)}
-            className={[
-              'rounded-full px-3 py-1.5 text-[13px] font-bold transition-colors',
-              scoreFilter === sf.value
-                ? 'bg-[#1A1A0A] text-[#F0EDD4] dark:bg-[#F0EDD4] dark:text-[#0C1209]'
-                : 'bg-[#F0EDE6] text-[#666] hover:bg-[#E8E4DC] dark:bg-[#1A2A14] dark:text-[#9A9A8A] dark:hover:bg-[#1E2E18]',
-            ].join(' ')}
-          >
-            {sf.label}
-          </button>
-        ))}
+          <div className="h-4 w-px bg-[#D8D4CC] dark:bg-[#1A2A14]" />
 
-        {meta && (
-          <span className="ml-auto text-[13px] text-[#AAA] dark:text-[#A0A090]">
-            {t('meta_total', { count: meta.total })}
-          </span>
-        )}
+          {SCORE_FILTERS.map((sf) => (
+            <button
+              key={sf.value}
+              type="button"
+              onClick={() => setScoreFilter(sf.value)}
+              className={[
+                'rounded-full px-3 py-1.5 text-[13px] font-bold transition-colors',
+                scoreFilter === sf.value
+                  ? 'bg-[#1A1A0A] text-[#F0EDD4] dark:bg-[#F0EDD4] dark:text-[#0C1209]'
+                  : 'bg-[#F0EDE6] text-[#666] hover:bg-[#E8E4DC] dark:bg-[#1A2A14] dark:text-[#9A9A8A] dark:hover:bg-[#1E2E18]',
+              ].join(' ')}
+            >
+              {sf.label}
+            </button>
+          ))}
+
+          {meta && (
+            <span className="ml-auto text-[13px] text-[#AAA] dark:text-[#A0A090]">
+              {t('meta_total', { count: meta.total })}
+            </span>
+          )}
+        </div>
       </div>
 
       {/* Body */}
@@ -199,7 +230,7 @@ export function AdminRatingsView() {
             <p className="text-[14px] text-[#888] dark:text-[#A0A090]">{t('error_load')}</p>
             <button
               type="button"
-              onClick={() => loadData(page, visibilityFilter, scoreFilter)}
+              onClick={() => loadData(page, visibilityFilter, scoreFilter, stationDebounced)}
               className="rounded-lg border border-[#C49A1E]/50 px-4 py-2 text-[13px] font-semibold text-[#C49A1E] hover:bg-[#C49A1E]/10 transition-colors"
             >
               {t('btn_retry')}
@@ -308,40 +339,37 @@ export function AdminRatingsView() {
 
         {/* Pagination */}
         {!loading && !loadError && totalPages > 1 && (
-          <div className="mt-5 flex items-center justify-center gap-2">
-            <button
-              type="button"
-              aria-label={t('pagination_prev')}
-              disabled={page === 1}
-              onClick={() => loadData(page - 1, visibilityFilter, scoreFilter)}
-              className="flex h-8 w-8 items-center justify-center rounded-lg border border-[#D8D4CC] text-[#888] transition-colors hover:border-[#C49A1E] hover:text-[#C49A1E] disabled:opacity-40 dark:border-[#1A2A14] dark:text-[#A0A090]"
-            >
-              <svg aria-hidden="true" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"><polyline points="15 18 9 12 15 6" /></svg>
-            </button>
-            {Array.from({ length: totalPages }, (_, i) => i + 1).map((p) => (
+          <div className="mt-5 flex items-center justify-between px-1">
+            <p className="text-[12px] text-[#999] dark:text-[#A0A090]">
+              {t('pagination_info', {
+                from:  (page - 1) * 20 + 1,
+                to:    Math.min(page * 20, meta?.total ?? 0),
+                total: meta?.total ?? 0,
+              })}
+            </p>
+            <div className="flex items-center gap-1.5">
               <button
-                key={p}
                 type="button"
-                onClick={() => loadData(p, visibilityFilter, scoreFilter)}
-                className={[
-                  'flex h-8 w-8 items-center justify-center rounded-lg text-[13px] font-bold transition-colors',
-                  p === page
-                    ? 'bg-[#C49A1E] text-[#0C1209]'
-                    : 'border border-[#D8D4CC] text-[#888] hover:border-[#C49A1E] hover:text-[#C49A1E] dark:border-[#1A2A14] dark:text-[#A0A090]',
-                ].join(' ')}
+                aria-label={t('pagination_prev')}
+                disabled={page <= 1}
+                onClick={() => loadData(page - 1, visibilityFilter, scoreFilter, stationDebounced)}
+                className="flex h-7 w-7 items-center justify-center rounded-lg border border-[#D8D4C8] bg-white text-[#555] transition-colors hover:bg-[#F5F3EE] disabled:cursor-not-allowed disabled:opacity-40 dark:border-[#1E2E18] dark:bg-[#0F1A0C] dark:text-[#9A9A8A] dark:hover:bg-[#182416]"
               >
-                {p}
+                <svg aria-hidden="true" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"><polyline points="15 18 9 12 15 6" /></svg>
               </button>
-            ))}
-            <button
-              type="button"
-              aria-label={t('pagination_next')}
-              disabled={page === totalPages}
-              onClick={() => loadData(page + 1, visibilityFilter, scoreFilter)}
-              className="flex h-8 w-8 items-center justify-center rounded-lg border border-[#D8D4CC] text-[#888] transition-colors hover:border-[#C49A1E] hover:text-[#C49A1E] disabled:opacity-40 dark:border-[#1A2A14] dark:text-[#A0A090]"
-            >
-              <svg aria-hidden="true" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"><polyline points="9 18 15 12 9 6" /></svg>
-            </button>
+              <span className="min-w-15 text-center text-[12px] font-semibold text-[#555] dark:text-[#9A9A8A]">
+                {page} / {totalPages}
+              </span>
+              <button
+                type="button"
+                aria-label={t('pagination_next')}
+                disabled={page >= totalPages}
+                onClick={() => loadData(page + 1, visibilityFilter, scoreFilter, stationDebounced)}
+                className="flex h-7 w-7 items-center justify-center rounded-lg border border-[#D8D4C8] bg-white text-[#555] transition-colors hover:bg-[#F5F3EE] disabled:cursor-not-allowed disabled:opacity-40 dark:border-[#1E2E18] dark:bg-[#0F1A0C] dark:text-[#9A9A8A] dark:hover:bg-[#182416]"
+              >
+                <svg aria-hidden="true" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"><polyline points="9 18 15 12 9 6" /></svg>
+              </button>
+            </div>
           </div>
         )}
       </div>
