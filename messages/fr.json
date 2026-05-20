@@ -2727,7 +2727,7 @@
 
     "section_notifications": "Notifications & Emails",
     "field_admin_email": "Email de notification admin",
-    "hint_admin_email": "Adresse qui reçoit les alertes opérationnelles (nouveaux litiges, paiements bloqués…). Laisser vide pour désactiver.",
+    "hint_admin_email": "Adresse qui reçoit les notifications lors d'une nouvelle candidature de station. Laisser vide pour désactiver.",
     "field_report_email": "Email rapport hebdomadaire",
     "hint_report_email": "Adresse qui reçoit le résumé hebdomadaire des transactions et réservations. Laisser vide pour désactiver.",
     "field_reminder_first": "Rappel principal",
@@ -2739,9 +2739,9 @@
     "field_max_tip": "Pourboire maximum",
     "hint_max_tip": "Montant maximum en XAF qu'un client peut ajouter en pourboire à une réservation.",
     "field_kyc_first": "Rappel KYC initial",
-    "hint_kyc_first": "Nombre de jours après l'inscription au-delà duquel la première alerte KYC est envoyée à une station non vérifiée.",
+    "hint_kyc_first": "Nombre de jours avant l'expiration d'un document KYC à partir duquel le premier rappel est envoyé à la station et aux admins.",
     "field_kyc_second": "Rappel KYC final",
-    "hint_kyc_second": "Nombre de jours avant la suspension où le second rappel KYC est envoyé à une station non vérifiée.",
+    "hint_kyc_second": "Nombre de jours avant l'expiration d'un document KYC à partir duquel le second rappel (urgent) est envoyé.",
 
     "unit_minutes": "min",
     "unit_hours": "h",

@@ -44,7 +44,7 @@ import type { CreateTipInput } from '@/validators/tip';
 // Fallback defaults for platform settings
 
 const DEFAULT_PLATFORM_CURRENCY = 'cad';
-const DEFAULT_TIP_MAX_AMOUNT = 500;
+const DEFAULT_TIP_MAX_AMOUNT = 50000;
 
 
 // %%%%% Types %%%%%

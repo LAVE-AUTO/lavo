@@ -2727,7 +2727,7 @@
 
     "section_notifications": "Notifications & Emails",
     "field_admin_email": "Admin notification email",
-    "hint_admin_email": "Address that receives operational alerts (new disputes, blocked payments…). Leave empty to disable.",
+    "hint_admin_email": "Address that receives notifications when a new station application is submitted. Leave empty to disable.",
     "field_report_email": "Weekly report email",
     "hint_report_email": "Address that receives the weekly summary of transactions and bookings. Leave empty to disable.",
     "field_reminder_first": "Primary reminder",
@@ -2739,9 +2739,9 @@
     "field_max_tip": "Maximum tip",
     "hint_max_tip": "Maximum amount in XAF a client can add as a tip to a booking.",
     "field_kyc_first": "Initial KYC reminder",
-    "hint_kyc_first": "Number of days after registration beyond which the first KYC alert is sent to an unverified station.",
+    "hint_kyc_first": "Number of days before a KYC document expires at which the first reminder is sent to the station and admins.",
     "field_kyc_second": "Final KYC reminder",
-    "hint_kyc_second": "Number of days before suspension at which the second KYC reminder is sent to an unverified station.",
+    "hint_kyc_second": "Number of days before a KYC document expires at which the second (urgent) reminder is sent.",
 
     "unit_minutes": "min",
     "unit_hours": "h",
