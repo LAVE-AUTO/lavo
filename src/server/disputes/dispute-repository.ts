@@ -1,7 +1,7 @@
 import { alias } from 'drizzle-orm/pg-core';
 import { and, count, eq, gte, lte, sql } from 'drizzle-orm';
 import { db } from '@/lib/db';
-import { disputes, stations, users } from '@/lib/db/schema';
+import { disputes, stations, users, reservations, timeSlots, vehicleFormats } from '@/lib/db/schema';
 import type { DbTransaction } from '@/lib/db';
 import { DisputeAlreadyExistsError } from '@/lib/errors';
 
@@ -31,9 +31,23 @@ export type DisputeStationDetail = {
   contact_phone: string | null;
 };
 
+export type DisputeReservationDetail = {
+  id: string;
+  amount_paid: string;
+  ticket_code: string | null;
+  entry_type: string;
+  status: string;
+  service_start: Date | null;
+  service_end: Date | null;
+  vehicle_format_label: string | null;
+  completed_at: Date | null;
+  created_at: Date;
+};
+
 export type DisputeWithDetails = Dispute & {
   client: DisputeClient | null;
   station: DisputeStationDetail | null;
+  reservation: DisputeReservationDetail | null;
 };
 
 export type DisputeListItem = Dispute & {
@@ -101,20 +115,51 @@ export async function findDisputeByIdWithDetails(id: string): Promise<DisputeWit
         contact_email: stationOwner.email,
         contact_phone: stationOwner.phone,
       },
+      reservation: {
+        id: reservations.id,
+        amount_paid: reservations.amount_paid,
+        ticket_code: reservations.ticket_code,
+        entry_type: reservations.entry_type,
+        status: reservations.status,
+        completed_at: reservations.completed_at,
+        created_at: reservations.created_at,
+      },
+      slot: {
+        start_time: timeSlots.start_time,
+        end_time: timeSlots.end_time,
+      },
+      vehicle: {
+        label: vehicleFormats.label,
+      },
     })
     .from(disputes)
     .leftJoin(clientUser, eq(disputes.client_id, clientUser.id))
     .leftJoin(stations, eq(disputes.station_id, stations.id))
     .leftJoin(stationOwner, eq(stations.user_id, stationOwner.id))
+    .leftJoin(reservations, eq(disputes.reservation_id, reservations.id))
+    .leftJoin(timeSlots, eq(reservations.time_slot_id, timeSlots.id))
+    .leftJoin(vehicleFormats, eq(reservations.vehicle_format_id, vehicleFormats.id))
     .where(eq(disputes.id, id))
     .limit(1);
 
   if (rows.length === 0) return undefined;
-  const { dispute, client, station } = rows[0];
+  const { dispute, client, station, reservation, slot, vehicle } = rows[0];
   return {
     ...dispute,
     client: client?.id ? (client as DisputeClient) : null,
     station: station?.id ? (station as DisputeStationDetail) : null,
+    reservation: reservation?.id ? {
+      id: reservation.id,
+      amount_paid: reservation.amount_paid,
+      ticket_code: reservation.ticket_code,
+      entry_type: reservation.entry_type,
+      status: reservation.status,
+      completed_at: reservation.completed_at,
+      created_at: reservation.created_at,
+      service_start: slot?.start_time ?? null,
+      service_end: slot?.end_time ?? null,
+      vehicle_format_label: vehicle?.label ?? null,
+    } : null,
   };
 }
 

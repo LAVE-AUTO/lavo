@@ -64,6 +64,18 @@ interface ApiDispute {
     contact_email: string | null;
     contact_phone: string | null;
   } | null;
+  reservation: {
+    id: string;
+    amount_paid: string;
+    ticket_code: string | null;
+    entry_type: string;
+    status: string;
+    service_start: string | null;
+    service_end: string | null;
+    vehicle_format_label: string | null;
+    completed_at: string | null;
+    created_at: string;
+  } | null;
 }
 
 function mapApiStatus(s: string): DisputeStatus {
@@ -116,10 +128,10 @@ export function AdminDisputeDetail({ id }: Props) {
               },
               reservation: {
                 id: found.reservation_id,
-                date: found.created_at,
-                amount_paid: parseFloat(found.requested_amount ?? '0'),
-                vehicle_format: '',
-                status: '',
+                date: found.reservation?.service_start ?? found.reservation?.created_at ?? found.created_at,
+                amount_paid: parseFloat(found.reservation?.amount_paid ?? found.requested_amount ?? '0'),
+                vehicle_format: found.reservation?.vehicle_format_label ?? '',
+                status: found.reservation?.status ?? '',
               },
               reason: found.reason,
               status: mapApiStatus(found.status),
@@ -273,13 +285,29 @@ export function AdminDisputeDetail({ id }: Props) {
                 </div>
                 <div className="grid grid-cols-3 divide-x divide-[#F0EDE6] dark:divide-[#1A2A14]">
                   {[
-                    { label: t('label_date'),        value: formatDate(dispute.reservation.date, false).split(' à ')[0] ?? formatDate(dispute.reservation.date) },
-                    { label: t('label_vehicle'),     value: dispute.reservation.vehicle_format },
-                    { label: t('label_amount_paid'), value: formatAmount(dispute.reservation.amount_paid) },
-                  ].map(({ label, value }) => (
+                    {
+                      label: t('label_service_date'),
+                      value: formatDate(dispute.reservation.date),
+                      sub: apiData?.reservation?.service_end
+                        ? `→ ${formatDate(apiData.reservation.service_end, true)}`
+                        : null,
+                    },
+                    {
+                      label: t('label_vehicle'),
+                      value: apiData?.reservation?.vehicle_format_label
+                        ?? (apiData?.reservation?.entry_type === 'queue' ? t('label_entry_queue') : t('label_vehicle_unknown')),
+                      sub: null,
+                    },
+                    {
+                      label: t('label_amount_paid'),
+                      value: formatAmount(dispute.reservation.amount_paid),
+                      sub: null,
+                    },
+                  ].map(({ label, value, sub }) => (
                     <div key={label} className="flex flex-col items-center gap-1 px-5 py-4 text-center">
                       <p className="text-[11px] font-black uppercase tracking-widest text-[#AAAAAA] dark:text-[#A0A090]">{label}</p>
                       <p className="text-[15px] font-black text-[#1A1A0A] dark:text-[#F0EDD4]">{value}</p>
+                      {sub && <p className="text-[11px] text-[#BBBBAA] dark:text-[#A0A090]">{sub}</p>}
                     </div>
                   ))}
                 </div>

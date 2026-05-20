@@ -2791,7 +2791,10 @@
     "fetch_error": "Impossible de charger les litiges.",
     "btn_retry": "Réessayer",
     "no_contact": "Aucun contact disponible",
-    "label_description": "Description"
+    "label_description": "Description",
+    "label_service_date": "Date du service",
+    "label_entry_queue": "File d'attente",
+    "label_vehicle_unknown": "Non renseigné"
   },
   "admin_commission": {
     "page_title": "Commission",
