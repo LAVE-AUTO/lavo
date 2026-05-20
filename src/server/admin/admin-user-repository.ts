@@ -36,7 +36,16 @@ export async function updateUserById(
 
 /** Finds a station by id regardless of status. Returns undefined if not found. */
 export async function findStationForAdmin(id: string): Promise<AdminStation | undefined> {
-  return db.query.stations.findFirst({ where: eq(stations.id, id) });
+  const row = await db.query.stations.findFirst({ where: eq(stations.id, id) });
+  if (!row) return undefined;
+  // Normalize decimal/numeric fields to JSON-serializable primitives
+  return {
+    ...row,
+    promo_commission_rate: row.promo_commission_rate == null ? null : String(row.promo_commission_rate),
+    latitude: row.latitude == null ? null : String(row.latitude),
+    longitude: row.longitude == null ? null : String(row.longitude),
+    average_score: row.average_score == null ? null : String(row.average_score),
+  } as AdminStation;
 }
 
 /**
@@ -60,7 +69,40 @@ export async function updateStationById(
     .set({ ...dbFields, updated_at: new Date() })
     .where(eq(stations.id, id))
     .returning();
-  return updated ?? undefined;
+  if (!updated) return undefined;
+  return {
+    ...updated,
+    promo_commission_rate: updated.promo_commission_rate == null ? null : String(updated.promo_commission_rate),
+    latitude: updated.latitude == null ? null : String(updated.latitude),
+    longitude: updated.longitude == null ? null : String(updated.longitude),
+    average_score: updated.average_score == null ? null : String(updated.average_score),
+  } as AdminStation;
+}
+
+export type UpdateStationPromoQrInput = {
+  promo_commission_rate: string | null;
+  promo_ref_code: string | null;
+  promo_ref_generated_at: Date | null;
+};
+
+/** Updates promo QR fields for a station and returns the updated row. */
+export async function updateStationPromoQrById(
+  id: string,
+  fields: UpdateStationPromoQrInput
+): Promise<AdminStation | undefined> {
+  const [updated] = await db
+    .update(stations)
+    .set({ ...fields, updated_at: new Date() })
+    .where(eq(stations.id, id))
+    .returning();
+  if (!updated) return undefined;
+  return {
+    ...updated,
+    promo_commission_rate: updated.promo_commission_rate == null ? null : String(updated.promo_commission_rate),
+    latitude: updated.latitude == null ? null : String(updated.latitude),
+    longitude: updated.longitude == null ? null : String(updated.longitude),
+    average_score: updated.average_score == null ? null : String(updated.average_score),
+  } as AdminStation;
 }
 
 /**

@@ -348,6 +348,11 @@
         "error_rate_limit": "Trop de tentatives. Veuillez réessayer dans quelques minutes.",
         "error_validation": "Veuillez vérifier les champs du formulaire.",
         "error_password_invalid": "Le mot de passe ne respecte pas les critères de sécurité.",
+        "promo_banner_title": "Référence promo détectée",
+        "promo_banner_station": "Station : {station}",
+        "promo_banner_rate": "Commission promo active : {rate}%",
+        "promo_banner_loading": "Vérification du code promo...",
+        "promo_banner_invalid": "Ce code promo est invalide ou expiré.",
         "toast_success": "Compte créé avec succès"
     },
     "nav": {
@@ -2434,7 +2439,7 @@
         "expiry_badge_valid": "Valide",
         "expiry_badge_warning": "Bientôt expiré",
         "expiry_badge_expired": "Expiré",
-        "expiry_unsaved_notice": "Les dates d'expiration ne sont pas encore sauvegardées côté serveur - elles seront perdues au rechargement de la page.",
+        "expiry_unsaved_notice": "Les modifications d'expiration sont sauvegardées côté serveur quand vous cliquez sur Enregistrer. Un brouillon non enregistré sera perdu au rechargement de la page.",
         "label_submitted_on": "Soumis le",
         "confirm_approve_label": "Confirmer",
         "detail_history": "Historique",
@@ -3185,9 +3190,13 @@
         "qr_notice_title": "Comment ça fonctionne",
         "qr_notice_body": "Le client scanne ce QR → redirigé vers l'inscription avec un code de référence. Lors de son premier service dans cette station, la commission personnalisée est appliquée une seule fois par client.",
         "referral_url_label": "Lien de référence",
+        "ref_code_label": "Code de référence enregistré",
+        "saved_notice": "QR enregistré côté serveur. La régénération remplace le code précédent.",
+        "error_save_failed": "Impossible d'enregistrer le QR promo.",
+        "error_session_expired": "Session expirée, veuillez vous reconnecter.",
         "error_commission_required": "Le taux de commission est requis.",
         "error_commission_invalid": "Le taux doit être compris entre 0 et 50.",
-        "preview_only_notice": "Aperçu uniquement - ce QR code ne sera fonctionnel qu'une fois l'API connectée.",
+        "preview_only_notice": "Aucun QR promo n'est encore enregistré. Générez-en un pour activer la section.",
         "error_commission_step": "La commission doit être un multiple de 0,5 (ex. : 5, 5,5, 10)."
     },
     "admin_legal": {

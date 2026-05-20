@@ -3,8 +3,8 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { useTranslations, useLocale } from 'next-intl';
 import { Link, useRouter } from '@/i18n/navigation';
-import { getFromApi, postWithApi } from '@/services/axios-service';
-import { useToast } from '@/context';
+import { getFromApi, patchWithApi, postWithApi } from '@/services/axios-service';
+import { useAuth, useToast } from '@/context';
 import { AdminPromoQr } from './stations/AdminPromoQr';
 
 const MAX_REASON = 500;
@@ -19,7 +19,7 @@ type ExpiryStatus = 'none' | 'valid' | 'warning' | 'expired';
 // feel early for admins west of UTC - acceptable for internal tooling.
 function computeExpiryStatus(iso: string | null): ExpiryStatus {
   if (!iso) return 'none';
-  const expiry = new Date(`${iso}T00:00:00Z`).getTime();
+  const expiry = parseExpiryDate(iso)?.getTime() ?? Number.NaN;
   if (Number.isNaN(expiry)) return 'none';
   const now = Date.now();
   if (expiry < now) return 'expired';
@@ -27,17 +27,41 @@ function computeExpiryStatus(iso: string | null): ExpiryStatus {
   return diffDays <= EXPIRY_WARNING_DAYS ? 'warning' : 'valid';
 }
 
-interface ApiDocument { id: string; document_type: string; file_url: string; }
+function parseExpiryDate(value: string | null): Date | null {
+  if (!value) return null;
+
+  const normalized = value.includes('T') ? value : `${value}T00:00:00Z`;
+  const parsed = new Date(normalized);
+  return Number.isNaN(parsed.getTime()) ? null : parsed;
+}
+
+interface ApiDocument { id: string; document_type: string; file_url: string; expiry_date?: string | null; }
 interface ApiStation {
   id: string; name: string; legal_name: string | null; registration_number: string | null;
   address: string; city: string; description: string | null;
   service_scope: string | null; wash_post_count: number | null;
+  promo_commission_rate?: string | null;
+  promo_ref_code?: string | null;
   status: string; created_at: string; updated_at: string;
   approved_at?: string | null; rejection_reason?: string | null;
   documents: ApiDocument[];
 }
 
 interface Props { id: string }
+
+function getFileExtension(fileUrl: string): string {
+  try {
+    const pathname = new URL(fileUrl).pathname;
+    const match = pathname.match(/\.([a-z0-9]+)$/i);
+    return match?.[1]?.toLowerCase() ?? '';
+  } catch {
+    return '';
+  }
+}
+
+function isPreviewableImage(fileUrl: string): boolean {
+  return ['jpg', 'jpeg', 'png', 'gif', 'webp', 'avif', 'bmp', 'svg'].includes(getFileExtension(fileUrl));
+}
 
 export function AdminStationDetail({ id }: Props) {
   const t      = useTranslations('admin_stations');
@@ -51,9 +75,6 @@ export function AdminStationDetail({ id }: Props) {
   const [station, setStation]           = useState<ApiStation | null>(null);
   const [loading, setLoading]           = useState(true);
   const [loadError, setLoadError]       = useState(false);
-  // TODO: connect to API once endpoint is available (ADM-14).
-  // Backend schema currently has no `expiry_date` column on `station_documents`;
-  // expiries live in client state only and do not persist across sessions.
   const [expiries, setExpiries]         = useState<Record<string, string | null>>({});
   const [approving, setApproving]       = useState(false);
   const [confirmApprove, setConfirmApprove] = useState(false);
@@ -67,7 +88,14 @@ export function AdminStationDetail({ id }: Props) {
     const [ok, data] = await getFromApi(`/admin/stations/${id}`);
     if (!mountedRef.current) return;
     if (!ok) { setLoadError(true); setLoading(false); return; }
-    setStation((data as { data: ApiStation }).data);
+    const nextStation = (data as { data: ApiStation }).data;
+    setStation(nextStation);
+    setExpiries(
+      nextStation.documents.reduce<Record<string, string | null>>((acc, document) => {
+        acc[document.id] = document.expiry_date ?? null;
+        return acc;
+      }, {})
+    );
     setLoading(false);
   }, [id]);
 
@@ -239,13 +267,26 @@ export function AdminStationDetail({ id }: Props) {
               {station.documents.map((doc) => (
                 <DocCard
                   key={doc.id}
+                  stationId={station.id}
                   doc={doc}
                   label={docLabel(doc.document_type)}
                   openLabel={t('doc_open')}
                   expiry={expiries[doc.id] ?? null}
-                  onSaveExpiry={(value) => {
-                    setExpiries((prev) => ({ ...prev, [doc.id]: value }));
-                    success(value ? t('expiry_saved') : t('expiry_removed'));
+                  onSaveExpiry={async (value) => {
+                    const [ok, data] = await patchWithApi(`/admin/stations/${station.id}/documents/${doc.id}`, {
+                      expiry_date: value,
+                    });
+
+                    if (!ok) {
+                      const message = (data as { message?: string })?.message ?? t('action_error');
+                      showError(message);
+                      throw new Error(message);
+                    }
+
+                    const updated = data as { data?: { expiry_date?: string | null } };
+                    const nextValue = updated.data?.expiry_date ?? value;
+                    setExpiries((prev) => ({ ...prev, [doc.id]: nextValue }));
+                    success(nextValue ? t('expiry_saved') : t('expiry_removed'));
                   }}
                   labels={{
                     set: t('expiry_set'),
@@ -267,7 +308,12 @@ export function AdminStationDetail({ id }: Props) {
         )}
         {/* ── QR Promotionnel (stations actives uniquement) ── */}
         {station.status === 'active' && (
-          <AdminPromoQr stationId={station.id} stationName={station.name} />
+          <AdminPromoQr
+            stationId={station.id}
+            stationName={station.name}
+            initialPromoCommissionRate={station.promo_commission_rate ?? null}
+            initialPromoRefCode={station.promo_ref_code ?? null}
+          />
         )}
 
         {/* ── History timeline ── */}
@@ -414,16 +460,19 @@ interface ExpiryLabels {
 }
 
 function DocCard({
-  doc, label, openLabel, expiry, onSaveExpiry, labels, locale,
+  stationId, doc, label, openLabel, expiry, onSaveExpiry, labels, locale,
 }: {
+  stationId: string;
   doc: ApiDocument;
   label: string;
   openLabel: string;
   expiry: string | null;
-  onSaveExpiry: (value: string | null) => void;
+  onSaveExpiry: (value: string | null) => Promise<void>;
   labels: ExpiryLabels;
   locale: string;
 }) {
+  const { token } = useAuth();
+  const { error: showError } = useToast();
   const [editing, setEditing] = useState(false);
   const [draft, setDraft] = useState<string>(expiry ?? '');
   const inputId = `expiry-${doc.id}`;
@@ -436,8 +485,9 @@ function DocCard({
     expired: { bg: 'bg-[#FEE2E2] dark:bg-[#2A0A0A]', text: 'text-[#991B1B] dark:text-[#FCA5A5]', label: labels.expired },
   };
   const badge = badgeStyle[status];
-  const formattedExpiry = expiry
-    ? new Date(`${expiry}T00:00:00Z`).toLocaleDateString(
+  const expiryDate = parseExpiryDate(expiry);
+  const formattedExpiry = expiryDate
+    ? expiryDate.toLocaleDateString(
         locale === 'en' ? 'en-CA' : 'fr-CA',
         { day: 'numeric', month: 'long', year: 'numeric', timeZone: 'UTC' },
       )
@@ -448,19 +498,27 @@ function DocCard({
     setEditing(true);
   };
 
-  const handleSave = () => {
-    onSaveExpiry(draft || null);
-    setEditing(false);
+  const handleSave = async () => {
+    try {
+      await onSaveExpiry(draft || null);
+      setEditing(false);
+    } catch {
+      // Error already displayed by onSaveExpiry; editing stays open for retry.
+    }
   };
 
   const handleCancel = () => {
     setEditing(false);
   };
 
-  const handleClear = () => {
+  const handleClear = async () => {
     setDraft('');
-    onSaveExpiry(null);
-    setEditing(false);
+    try {
+      await onSaveExpiry(null);
+      setEditing(false);
+    } catch {
+      setDraft(expiry ?? '');
+    }
   };
 
   return (
@@ -484,6 +542,11 @@ function DocCard({
       </div>
 
       <p className="text-[13px] font-bold leading-snug text-[#0F1A0C] dark:text-[#F0EDD4]">{label}</p>
+      <p className="text-[11px] font-semibold text-[#888] dark:text-[#9A9A8A]">
+        {formattedExpiry
+          ? `Date d'expiration enregistrée : ${formattedExpiry}`
+          : 'Aucune date d\'expiration enregistrée'}
+      </p>
 
       {/* Expiry section */}
       <div className="flex flex-col gap-1.5">
@@ -534,10 +597,55 @@ function DocCard({
       </div>
 
       {/* Open link */}
-      <a
-        href={doc.file_url}
-        target="_blank"
-        rel="noopener noreferrer"
+      <button
+        type="button"
+        onClick={async () => {
+          try {
+            const directPreview = isPreviewableImage(doc.file_url);
+
+            if (directPreview) {
+              window.open(doc.file_url, '_blank', 'noopener');
+              return;
+            }
+
+            if (!token) {
+              showError('Session expirée, veuillez vous reconnecter.');
+              return;
+            }
+
+            const response = await fetch(
+              `/api/v1/admin/stations/${encodeURIComponent(stationId)}/documents/${encodeURIComponent(doc.id)}/download`,
+              {
+                headers: { Authorization: `Bearer ${token}` },
+                credentials: 'include',
+              }
+            );
+
+            if (!response.ok) {
+              showError('Impossible de télécharger le document.');
+              return;
+            }
+
+            const contentType = response.headers.get('content-type') ?? 'application/octet-stream';
+            const blob = new Blob([await response.blob()], { type: contentType });
+            const url = URL.createObjectURL(blob);
+            const anchor = document.createElement('a');
+            anchor.href = url;
+            const extension = getFileExtension(doc.file_url) || (
+              contentType.includes('pdf') ? 'pdf' :
+              contentType.includes('wordprocessingml') ? 'docx' :
+              contentType.includes('msword') ? 'doc' :
+              'bin'
+            );
+            anchor.download = `${stationId}-${doc.id}.${extension}`;
+            document.body.appendChild(anchor);
+            anchor.click();
+            anchor.remove();
+            setTimeout(() => URL.revokeObjectURL(url), 60_000);
+          } catch {
+            showError('Unable to download document');
+          }
+        }}
         className="flex items-center gap-1 rounded text-[12px] font-semibold text-[#C49A1E] transition-colors hover:text-[#B08A10] focus:outline-none focus-visible:ring-2 focus-visible:ring-[#C49A1E]"
       >
         {openLabel}
@@ -546,7 +654,7 @@ function DocCard({
           <polyline points="15 3 21 3 21 9" />
           <line x1="10" y1="14" x2="21" y2="3" />
         </svg>
-      </a>
+      </button>
     </div>
   );
 }

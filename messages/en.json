@@ -348,6 +348,11 @@
         "error_rate_limit": "Too many attempts. Please try again in a few minutes.",
         "error_validation": "Please check the form fields.",
         "error_password_invalid": "Password does not meet security requirements.",
+        "promo_banner_title": "Promo referral detected",
+        "promo_banner_station": "Station: {station}",
+        "promo_banner_rate": "Active promo commission: {rate}%",
+        "promo_banner_loading": "Verifying promo code...",
+        "promo_banner_invalid": "This promo code is invalid or expired.",
         "toast_success": "Account created successfully"
     },
     "nav": {
@@ -2434,7 +2439,7 @@
         "expiry_badge_valid": "Valid",
         "expiry_badge_warning": "Expiring soon",
         "expiry_badge_expired": "Expired",
-        "expiry_unsaved_notice": "Expiry dates are not yet persisted server-side - they will be lost on page reload.",
+        "expiry_unsaved_notice": "Expiry changes are saved on the server when you click Save. Any unsaved draft will be lost on page reload.",
         "label_submitted_on": "Submitted on",
         "confirm_approve_label": "Confirm",
         "detail_history": "History",
@@ -3185,9 +3190,13 @@
         "qr_notice_title": "How it works",
         "qr_notice_body": "Client scans this QR → redirected to registration with a referral code. On their first service at this station, the custom commission is applied once per client.",
         "referral_url_label": "Referral link",
+        "ref_code_label": "Saved referral code",
+        "saved_notice": "QR saved on the server. Regenerating replaces the previous code.",
+        "error_save_failed": "Unable to save the promo QR.",
+        "error_session_expired": "Session expired, please sign in again.",
         "error_commission_required": "Commission rate is required.",
         "error_commission_invalid": "Rate must be between 0 and 50.",
-        "preview_only_notice": "Preview only - this QR code will not be functional until the API is connected.",
+        "preview_only_notice": "No promo QR has been saved yet. Generate one to activate this section.",
         "error_commission_step": "Commission must be a multiple of 0.5 (e.g. 5, 5.5, 10)."
     },
     "admin_legal": {
