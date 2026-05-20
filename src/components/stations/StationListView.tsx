@@ -89,6 +89,16 @@ export function StationListView({ washTypes, vehicleFormats }: StationListViewPr
   const [sort, setSort] = useState<SortKey>('default');
   const [panelOpen, setPanelOpen] = useState(false);
 
+  /* Desktop detection — false on SSR, updated after hydration. */
+  const [isDesktop, setIsDesktop] = useState(false);
+  useEffect(() => {
+    const mq = window.matchMedia('(min-width: 1024px)');
+    setIsDesktop(mq.matches);
+    const handler = (e: MediaQueryListEvent) => setIsDesktop(e.matches);
+    mq.addEventListener('change', handler);
+    return () => mq.removeEventListener('change', handler);
+  }, []);
+
   /* Debounced text inputs */
   const [debouncedText, setDebouncedText] = useState({ city: '', q: '' });
   useEffect(() => {
@@ -237,10 +247,11 @@ export function StationListView({ washTypes, vehicleFormats }: StationListViewPr
 
           <button
             type="button"
-            onClick={() => setPanelOpen(true)}
+            onClick={() => setPanelOpen((v) => !v)}
+            aria-expanded={panelOpen}
             className={[
               'relative flex items-center gap-1.5 px-4 py-2.5 rounded-xl text-[14px] font-bold transition-colors cursor-pointer',
-              activeCount > 0
+              panelOpen || activeCount > 0
                 ? 'bg-gold text-dark-bg'
                 : 'bg-[#E0E0D0] dark:bg-tab-inactive text-[#222] dark:text-[#D0D0C0] hover:bg-[#D0D0C0] dark:hover:bg-tab-inactive',
             ].join(' ')}
@@ -259,6 +270,22 @@ export function StationListView({ washTypes, vehicleFormats }: StationListViewPr
             )}
           </button>
         </div>
+
+        {/* Desktop: inline filter panel inside sticky bar */}
+        {isDesktop && panelOpen && (
+          <StationFilters
+            inline
+            open={panelOpen}
+            onClose={() => setPanelOpen(false)}
+            value={filters}
+            onChange={setFilters}
+            onReset={handleReset}
+            washTypes={washTypes}
+            vehicleFormats={vehicleFormats}
+            activeCount={activeCount}
+            hasLocation={userLocation != null}
+          />
+        )}
 
         {/* Sort + available pills */}
         <div className="flex gap-1.5 overflow-x-auto pb-0.5 scrollbar-none -mx-1 px-1">
@@ -309,18 +336,20 @@ export function StationListView({ washTypes, vehicleFormats }: StationListViewPr
         </div>
       </div>
 
-      {/* Filter sheet */}
-      <StationFilters
-        open={panelOpen}
-        onClose={() => setPanelOpen(false)}
-        value={filters}
-        onChange={setFilters}
-        onReset={handleReset}
-        washTypes={washTypes}
-        vehicleFormats={vehicleFormats}
-        activeCount={activeCount}
-        hasLocation={userLocation != null}
-      />
+      {/* Mobile: modal sheet filter */}
+      {!isDesktop && (
+        <StationFilters
+          open={panelOpen}
+          onClose={() => setPanelOpen(false)}
+          value={filters}
+          onChange={setFilters}
+          onReset={handleReset}
+          washTypes={washTypes}
+          vehicleFormats={vehicleFormats}
+          activeCount={activeCount}
+          hasLocation={userLocation != null}
+        />
+      )}
 
       {/* Results */}
       <div className="mt-4">

@@ -49,6 +49,16 @@ function secureFlag(): string {
   return typeof window !== 'undefined' && window.isSecureContext ? '; Secure' : '';
 }
 
+function setRoleCookie(role: string) {
+  if (typeof document === 'undefined') return;
+  document.cookie = `Hurryline_auth_role=${role}; path=/; SameSite=Lax${secureFlag()}`;
+}
+
+function clearRoleCookie() {
+  if (typeof document === 'undefined') return;
+  document.cookie = `Hurryline_auth_role=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT; SameSite=Lax${secureFlag()}`;
+}
+
 function normalizeRole(role: string): UserRole {
   const lower = role.toLowerCase();
   if (lower === 'admin') return 'admin';
@@ -106,6 +116,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             } else {
               document.cookie = `Hurryline_admin_session=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT; SameSite=Lax${secureFlag()}`;
             }
+            setRoleCookie(normalized.role);
           }
           return data.access_token;
         }
@@ -125,9 +136,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     });
     if (typeof document !== 'undefined') {
       document.cookie = `Hurryline_admin_session=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT; SameSite=Lax${secureFlag()}`;
+      clearRoleCookie();
     }
     if (typeof window !== 'undefined') {
-      window.location.href = loginPath;
+      window.location.replace(loginPath);
     }
   }, [loginPath]);
 
@@ -152,7 +164,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   // On mount: restore session from the httpOnly refresh token cookie.
   // The user object is fetched from the server - nothing is read from localStorage.
   useEffect(() => {
-    refreshAccessToken().then(() => {
+    refreshAccessToken().then(async (newToken) => {
+      if (!newToken) {
+        // Refresh failed — the cookie is stale or the DB was wiped. Clear it
+        // server-side so AuthRedirectGuard stops bouncing the user away from /login.
+        await fetch(`${process.env.NEXT_PUBLIC_API_URL || '/api/v1'}/auth/logout`, {
+          method: 'POST',
+          credentials: 'include',
+        }).catch(() => {});
+      }
       refreshAxiosService({
         baseURL: process.env.NEXT_PUBLIC_API_URL || '/api/v1',
         tokenGetter: () => tokenRef.current,
@@ -169,13 +189,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     tokenRef.current = newToken;
     setToken(newToken);
     setUser(normalized);
-    // Hint cookie for middleware-level admin guard (non-httpOnly, non-sensitive)
+    // Hint cookies for middleware-level guards (non-httpOnly, non-sensitive)
     if (typeof document !== 'undefined') {
       if (normalized.role === 'admin') {
         document.cookie = `Hurryline_admin_session=1; path=/; SameSite=Lax${secureFlag()}`;
       } else {
         document.cookie = `Hurryline_admin_session=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT; SameSite=Lax${secureFlag()}`;
       }
+      setRoleCookie(normalized.role);
     }
     refreshAxiosService({
       baseURL: process.env.NEXT_PUBLIC_API_URL || '/api/v1',
@@ -199,9 +220,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     });
     if (typeof document !== 'undefined') {
       document.cookie = `Hurryline_admin_session=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT; SameSite=Lax${secureFlag()}`;
+      clearRoleCookie();
     }
+    // replace() instead of href so the logged-in pages are not in browser history
     if (typeof window !== 'undefined') {
-      window.location.href = homePath;
+      window.location.replace(`${homePath}`);
     }
   }, [homePath]);
 
