@@ -96,7 +96,8 @@ export const stationRatingsQuerySchema = z.object({
  */
 export const adminRatingsQuerySchema = z
   .object({
-    station_id: uuidSchema.optional(),
+    station_id:   uuidSchema.optional(),
+    station_name: z.string().max(100).optional(),
     is_visible: z
       .enum(['true', 'false'])
       .transform((v) => v === 'true')

@@ -17,7 +17,10 @@ export interface StationRow {
   status: string; email?: string | null; created_at: string;
 }
 
-interface PaginationMeta { total: number; page: number; per_page: number; total_pages: number; }
+interface StationMeta {
+  total: number; page: number; per_page: number; total_pages: number;
+  total_active: number; total_suspended: number;
+}
 
 const STATIONS_PER_PAGE = 50;
 
@@ -29,7 +32,7 @@ export function AdminMerchantsClients() {
 
   const [tab, setTab]                 = useState<Tab>('stations');
   const [stations, setStations]       = useState<StationRow[]>([]);
-  const [stationMeta, setStationMeta] = useState<PaginationMeta | null>(null);
+  const [stationMeta, setStationMeta] = useState<StationMeta | null>(null);
   const [stationPage, setStationPage] = useState(1);
   const [loading, setLoading]         = useState(true);
   const [fetchError, setFetchError]   = useState(false);
@@ -41,11 +44,11 @@ export function AdminMerchantsClients() {
   useEffect(() => {
     setLoading(true);
     setFetchError(false);
-    getFromApi(`/admin/stations?status=all&page=${stationPage}&per_page=${STATIONS_PER_PAGE}`)
+    getFromApi(`/admin/stations?status=managed&page=${stationPage}&per_page=${STATIONS_PER_PAGE}`)
       .then(([ok, data]) => {
         if (!mountedRef.current) return;
         if (ok) {
-          const payload = (data as { data: { stations: StationRow[]; meta: PaginationMeta } }).data;
+          const payload = (data as { data: { stations: StationRow[]; meta: StationMeta } }).data;
           setStations(payload?.stations ?? []);
           setStationMeta(payload?.meta ?? null);
         } else {
@@ -91,12 +94,11 @@ export function AdminMerchantsClients() {
     }
   }
 
-  const managed   = stations.filter((s) => s.status === 'active' || s.status === 'suspended');
-  const actives   = managed.filter((s) => s.status === 'active').length;
-  const suspended = managed.filter((s) => s.status === 'suspended').length;
+  const actives   = stationMeta?.total_active    ?? 0;
+  const suspended = stationMeta?.total_suspended ?? 0;
 
   const tabs = [
-    { id: 'stations' as Tab, count: loading ? '…' : (stationMeta?.total ?? managed.length) },
+    { id: 'stations' as Tab, count: loading ? '…' : (stationMeta?.total ?? 0) },
     { id: 'clients'  as Tab, count: clientCount },
   ];
 

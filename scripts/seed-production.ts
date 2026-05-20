@@ -513,6 +513,10 @@ async function cleanupPreviousSeed(tx: any): Promise<void> {
       .where(inArray(reservations.station_id, stationIds));
     const resIds: string[] = rowsRes.map((r: any) => r.id);
     if (resIds.length > 0) {
+      /* Explicit deletes — do not rely on DB-level CASCADE which may not be present
+         in older migration snapshots. Order matters: children before parents. */
+      await tx.delete(disputes).where(inArray(disputes.reservation_id, resIds));
+      await tx.delete(reservationTips).where(inArray(reservationTips.reservation_id, resIds));
       await tx.delete(notifications).where(inArray(notifications.reservation_id, resIds));
       await tx.delete(ratings).where(inArray(ratings.reservation_id, resIds));
       await tx.delete(noShowFees).where(inArray(noShowFees.reservation_id, resIds));
@@ -520,13 +524,33 @@ async function cleanupPreviousSeed(tx: any): Promise<void> {
       await tx.delete(rescheduleRequests).where(inArray(rescheduleRequests.original_reservation_id, resIds));
       await tx.delete(reservations).where(inArray(reservations.id, resIds));
     }
+    await tx.delete(favorites).where(inArray(favorites.station_id, stationIds));
     await tx.delete(timeSlots).where(inArray(timeSlots.station_id, stationIds));
     await tx.delete(stationDocuments).where(inArray(stationDocuments.station_id, stationIds));
     await tx.delete(stationPhotos).where(inArray(stationPhotos.station_id, stationIds));
     await tx.delete(stationHours).where(inArray(stationHours.station_id, stationIds));
+    await tx.delete(stationHourExceptions).where(inArray(stationHourExceptions.station_id, stationIds));
     await tx.delete(stationWashTypes).where(inArray(stationWashTypes.station_id, stationIds));
     await tx.delete(stationPosts).where(inArray(stationPosts.station_id, stationIds));
+    /* Station services + extras (and their cross-table children). */
+    const prevServices = await tx.select({ id: stationServices.id }).from(stationServices).where(inArray(stationServices.station_id, stationIds));
+    const serviceIds: string[] = prevServices.map((s: { id: string }) => s.id);
+    if (serviceIds.length > 0) {
+      await tx.delete(serviceExtraCompatibility).where(inArray(serviceExtraCompatibility.service_id, serviceIds));
+      await tx.delete(serviceVehicleEntries).where(inArray(serviceVehicleEntries.service_id, serviceIds));
+      await tx.delete(stationServices).where(inArray(stationServices.id, serviceIds));
+    }
+    const prevExtras = await tx.select({ id: stationExtras.id }).from(stationExtras).where(inArray(stationExtras.station_id, stationIds));
+    const extraIds: string[] = prevExtras.map((e: { id: string }) => e.id);
+    if (extraIds.length > 0) {
+      await tx.delete(serviceExtraCompatibility).where(inArray(serviceExtraCompatibility.extra_id, extraIds));
+      await tx.delete(extraVehicleEntries).where(inArray(extraVehicleEntries.extra_id, extraIds));
+      await tx.delete(stationExtras).where(inArray(stationExtras.id, extraIds));
+    }
     await tx.delete(stationConfigs).where(inArray(stationConfigs.id, stationIds));
+    /* stations.user_id has no onDelete (RESTRICT by default) — must nullify before
+       deleting users or the user DELETE will be blocked by this FK. */
+    await tx.update(stations).set({ user_id: null }).where(inArray(stations.id, stationIds));
     await tx.delete(stations).where(inArray(stations.id, stationIds));
   }
 
@@ -541,6 +565,7 @@ async function cleanupPreviousSeed(tx: any): Promise<void> {
     await tx.delete(supportTickets).where(inArray(supportTickets.id, ticketIds));
   }
 
+  await tx.delete(favorites).where(inArray(favorites.user_id, userIds));
   await tx.delete(userNotifications).where(inArray(userNotifications.user_id, userIds));
   await tx.delete(userNotificationPrefs).where(inArray(userNotificationPrefs.user_id, userIds));
   await tx.delete(notifications).where(inArray(notifications.user_id, userIds));
@@ -621,8 +646,8 @@ async function createStationManagers(tx: any): Promise<Map<number, string>> {
     /* Email already routed via SEED_USER_PREFIX through `prod-seed.station.<i>` */
     const email = `${SEED_USER_PREFIX}${c.managerEmail}`;
     const [row] = await tx.insert(users).values({
-      first_name: null,
-      last_name: null,
+      first_name: pick(FRENCH_FIRST_NAMES),
+      last_name: pick(FRENCH_LAST_NAMES),
       email,
       phone: `+1438555${String(2000 + i).padStart(4, "0")}`,
       password_hash: HASH_STATION,
@@ -1255,8 +1280,8 @@ async function createScenarioStations(
     const p = SCENARIO_PROFILES[i];
     const email = `${SEED_USER_PREFIX}${p.managerEmail}`;
     const [mgr] = await tx.insert(users).values({
-      first_name: null,
-      last_name: null,
+      first_name: pick(FRENCH_FIRST_NAMES),
+      last_name: pick(FRENCH_LAST_NAMES),
       email,
       phone: `+1438666${String(3000 + i).padStart(4, "0")}`,
       password_hash: HASH_STATION,

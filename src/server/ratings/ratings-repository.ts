@@ -1,7 +1,7 @@
 /**
  * Data access for ratings. One rating per completed reservation; admin moderation via visibility toggle.
  */
-import { and, asc, desc, eq, gte, lte, sql } from 'drizzle-orm';
+import { and, asc, desc, eq, gte, ilike, inArray, lte, sql } from 'drizzle-orm';
 import { db, type DbTransaction } from '@/lib/db';
 import { adminLogs, ratings, stations, users } from '@/lib/db/schema';
 
@@ -216,6 +216,7 @@ export type AdminRatingItem = {
 
 export type AdminRatingsFilters = {
   station_id?: string;
+  station_name?: string;
   is_visible?: boolean;
   score_min?: number;
   score_max?: number;
@@ -234,11 +235,20 @@ export type AdminRatingsFilters = {
 export async function listAdminRatings(
   filters: AdminRatingsFilters
 ): Promise<{ items: AdminRatingItem[]; total: number }> {
-  const { station_id, is_visible, score_min, score_max, from, to, sort_by, sort_order, page, limit } = filters;
+  const { station_id, station_name, is_visible, score_min, score_max, from, to, sort_by, sort_order, page, limit } = filters;
   const offset = (page - 1) * limit;
 
   const conditions = [];
   if (station_id !== undefined) conditions.push(eq(ratings.station_id, station_id));
+  if (station_name !== undefined && station_name.trim() !== '') {
+    const trimmed = station_name.trim();
+    conditions.push(
+      inArray(
+        ratings.station_id,
+        db.select({ id: stations.id }).from(stations).where(ilike(stations.name, `%${trimmed}%`)),
+      ),
+    );
+  }
   if (is_visible !== undefined) conditions.push(eq(ratings.is_visible, is_visible));
   if (score_min !== undefined) conditions.push(gte(ratings.score, score_min));
   if (score_max !== undefined) conditions.push(lte(ratings.score, score_max));

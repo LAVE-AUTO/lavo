@@ -6,7 +6,6 @@ import {
   ForbiddenError,
   DisputeAlreadyExistsError,
   DisputeAlreadyClosedError,
-  RefundNotEligibleError,
   ValidationError,
   ConflictError,
 } from '@/lib/errors';
@@ -150,7 +149,6 @@ export async function listDisputesAdmin(query: ListDisputesQuery): Promise<Dispu
  * @throws NotFoundError - dispute not found
  * @throws DisputeAlreadyClosedError - dispute is not open
  * @throws NotFoundError - reservation not found
- * @throws RefundNotEligibleError - stripe_transfer_id exists (transfer already made)
  * @throws ValidationError - refund amount exceeds amount paid
  */
 export async function refundDispute(
@@ -168,11 +166,6 @@ export async function refundDispute(
   if (!reservation) throw new NotFoundError('Reservation not found');
   if (!reservation.stripe_payment_id) throw new ValidationError('Reservation has no Stripe payment');
 
-  // Block refund if a transfer to the station has already been made.
-  if (reservation.stripe_transfer_id) {
-    throw new RefundNotEligibleError();
-  }
-
   const amountPaidCents = Math.round(parseFloat(reservation.amount_paid) * 100);
 
   let refundAmountCents: number | undefined;
@@ -187,10 +180,14 @@ export async function refundDispute(
   // Call Stripe - outside the transaction to avoid holding a DB lock during network I/O.
   // The idempotency key is scoped to this dispute so retries on network timeout do not
   // issue a second refund.
+  // If the station has already been paid out, reverse the transfer so the
+  // station bears the cost rather than the platform.
+  const shouldReverseTransfer = !!reservation.stripe_transfer_id;
   const stripeRefundId = await refundPaymentIntent(
     reservation.stripe_payment_id,
     refundAmountCents,
-    `refund_dispute_${disputeId}`
+    `refund_dispute_${disputeId}`,
+    shouldReverseTransfer,
   );
 
   const refundedAmountCents = refundAmountCents ?? amountPaidCents;

@@ -439,6 +439,35 @@ export async function listAllStationsForAdmin(
   return { rows, total: countResult[0]?.count ?? 0 };
 }
 
+/**
+ * Lists active + suspended stations (managed) with pagination.
+ * Returns page rows, total managed count, and per-status counts for chip display.
+ * Three parallel queries: rows, total, counts grouped by status.
+ */
+export async function listManagedStationsForAdmin(
+  page = 1,
+  perPage = 50,
+): Promise<{ rows: Station[]; total: number; total_active: number; total_suspended: number }> {
+  const limit  = Math.min(100, Math.max(1, Math.floor(perPage)));
+  const offset = (Math.max(1, Math.floor(page)) - 1) * limit;
+  const filter = inArray(stations.status, ['active', 'suspended']);
+
+  const [rows, countResult, statusCounts] = await Promise.all([
+    db.select().from(stations).where(filter).orderBy(desc(stations.updated_at)).limit(limit).offset(offset),
+    db.select({ count: sql<number>`count(*)::int` }).from(stations).where(filter),
+    db.select({ status: stations.status, count: sql<number>`count(*)::int` })
+      .from(stations).where(filter).groupBy(stations.status),
+  ]);
+
+  const byStatus = Object.fromEntries(statusCounts.map((r) => [r.status, r.count]));
+  return {
+    rows,
+    total: countResult[0]?.count ?? 0,
+    total_active:    byStatus['active']    ?? 0,
+    total_suspended: byStatus['suspended'] ?? 0,
+  };
+}
+
 export async function updateStationStatus(
   id: string,
   status: StationStatus,

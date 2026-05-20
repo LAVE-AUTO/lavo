@@ -40,6 +40,7 @@ import {
   listActiveStationsGroup,
   listStationsByStatus,
   listAllStationsForAdmin,
+  listManagedStationsForAdmin,
   updateStationInfo,
   type ListActiveStationsFilters,
   type Station,
@@ -249,6 +250,42 @@ export async function getStationsForAdmin(
   return {
     stations: formatted,
     meta: { total, page, per_page: safePer, total_pages: Math.max(1, Math.ceil(total / safePer)) },
+  };
+}
+
+export type ManagedStationsResult = {
+  stations: Station[];
+  meta: {
+    total: number; page: number; per_page: number; total_pages: number;
+    total_active: number; total_suspended: number;
+  };
+};
+
+/** Returns active + suspended stations with pagination and per-status counts. */
+export async function getManagedStationsForAdmin(
+  page = 1,
+  perPage = 50,
+): Promise<ManagedStationsResult> {
+  const safePer = Math.min(100, Math.max(1, perPage));
+  const { rows, total, total_active, total_suspended } =
+    await listManagedStationsForAdmin(page, safePer);
+
+  const formatted = rows.map((r) => ({
+    ...r,
+    promo_commission_rate: r.promo_commission_rate == null ? null : String(r.promo_commission_rate),
+    latitude:      r.latitude      == null ? null : String(r.latitude),
+    longitude:     r.longitude     == null ? null : String(r.longitude),
+    average_score: r.average_score == null ? null : String(r.average_score),
+  } as Station));
+
+  return {
+    stations: formatted,
+    meta: {
+      total, page, per_page: safePer,
+      total_pages: Math.max(1, Math.ceil(total / safePer)),
+      total_active,
+      total_suspended,
+    },
   };
 }
 

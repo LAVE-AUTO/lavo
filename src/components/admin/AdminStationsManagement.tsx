@@ -55,9 +55,8 @@ export function AdminStationsManagement({ stations, loading, error, query, onAct
 
   if (error) return <p className="text-[13px] text-red-500">{t('error_load')}</p>;
 
-  const managed  = stations.filter((s) => s.status === 'active' || s.status === 'suspended');
   const q        = query.toLowerCase();
-  const filtered = q ? managed.filter((s) => s.name.toLowerCase().includes(q) || (s.city ?? '').toLowerCase().includes(q)) : managed;
+  const filtered = q ? stations.filter((s) => s.name.toLowerCase().includes(q) || (s.city ?? '').toLowerCase().includes(q)) : stations;
 
   if (!filtered.length) return (
     <div className="flex flex-col items-center gap-3 py-20 text-center">
@@ -128,7 +127,7 @@ export function AdminStationsManagement({ stations, loading, error, query, onAct
                     {isBusy ? '…' : t('btn_confirm')}
                   </button>
                   <button type="button" onClick={() => { setConfirmId(null); setConfirmAction(null); }}
-                    className="rounded-lg border border-[#D8D4C8] px-3 py-1.5 text-[12px] font-semibold text-[#666] hover:bg-[#F5F3EE] dark:border-[#243020] dark:text-[#9A9A8A]">
+                    className="rounded-lg border border-[#D8D4C8] px-3 py-1.5 text-[12px] font-semibold text-[#666] hover:bg-[#F5F3EE] dark:border-dark-surface dark:text-[#9A9A8A]">
                     {t('btn_cancel')}
                   </button>
                 </>

@@ -1,5 +1,9 @@
 import { requireRole } from '@/lib/require-role';
-import { getPendingStations, getStationsForAdmin } from '@/server/station/station-service';
+import {
+  getPendingStations,
+  getStationsForAdmin,
+  getManagedStationsForAdmin,
+} from '@/server/station/station-service';
 import { successResponse, error400, error500, fromAppError } from '@/lib/responses';
 import { AppError } from '@/lib/errors';
 import { ApiCode } from '@/types/api-codes';
@@ -15,10 +19,12 @@ type AllowedStatus = (typeof ALLOWED_STATUSES)[number];
  * Lists stations for admin management with pagination.
  *
  * Query params:
- *   status    pending_admin_validation | active | rejected | suspended | all
- *             (omit = pending only, legacy behaviour)
+ *   status    managed           → active + suspended only, includes per-status counts in meta
+ *             all               → all statuses
+ *             pending_admin_validation | active | rejected | suspended
+ *             (omit)            → pending only (legacy behaviour)
  *   page      (default 1)
- *   per_page  (default 20 for pending, 50 for other cases — max 100)
+ *   per_page  (default 20 for pending, 50 for other — max 100)
  *
  * Responses:
  *   200 { data: { stations: Station[], meta: PaginationMeta } }
@@ -51,6 +57,11 @@ export async function GET(request: Request): Promise<NextResponse> {
       return applyNoStoreHeaders(successResponse(result));
     }
 
+    if (statusParam === 'managed') {
+      const result = await getManagedStationsForAdmin(parsed.data.page, parsed.data.per_page);
+      return applyNoStoreHeaders(successResponse(result));
+    }
+
     if (statusParam === 'all') {
       const result = await getStationsForAdmin(undefined, parsed.data.page, parsed.data.per_page);
       return applyNoStoreHeaders(successResponse(result));
@@ -61,7 +72,7 @@ export async function GET(request: Request): Promise<NextResponse> {
       return applyNoStoreHeaders(successResponse(result));
     }
 
-    // Unknown status value → fall back to pending
+    // Unknown status → fall back to pending
     const result = await getPendingStations(parsed.data.page, parsed.data.per_page);
     return applyNoStoreHeaders(successResponse(result));
   } catch (e) {
