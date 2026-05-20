@@ -2767,7 +2767,10 @@
     "error_reminder_second_range": "Le rappel secondaire doit être d'au moins 5 minutes.",
     "error_max_tip_range": "Le montant du pourboire ne peut pas être négatif.",
     "error_kyc_first_range": "Le seuil du rappel KYC initial doit être d'au moins 1 jour.",
-    "error_kyc_second_range": "Le seuil du rappel KYC final doit être d'au moins 1 jour."
+    "error_kyc_second_range": "Le seuil du rappel KYC final doit être d'au moins 1 jour.",
+    "field_log_retention": "Rétention des journaux d'activité",
+    "hint_log_retention": "Durée de conservation des actions admin avant suppression automatique. Min : 7 jours, Max : 3 650 jours (10 ans).",
+    "error_log_retention_range": "La durée de rétention doit être comprise entre 7 et 3 650 jours."
   },
   "admin_disputes": {
     "page_title": "Litiges",
@@ -2899,7 +2902,10 @@
     "btn_close": "Fermer",
     "pdf_generated_on": "Généré le",
     "error_export": "Échec de la génération du PDF.",
-    "truncated_warning": "Seules les 100 dernières transactions sont affichées."
+    "filter_from": "Du",
+    "filter_to": "au",
+    "load_more": "Charger plus",
+    "loading_more": "Chargement…"
   },
   "admin_ratings": {
     "page_title": "Avis & notes",

@@ -2767,7 +2767,10 @@
     "error_reminder_second_range": "The secondary reminder must be at least 5 minutes in advance.",
     "error_max_tip_range": "The tip amount cannot be negative.",
     "error_kyc_first_range": "The initial KYC reminder threshold must be at least 1 day.",
-    "error_kyc_second_range": "The final KYC reminder threshold must be at least 1 day."
+    "error_kyc_second_range": "The final KYC reminder threshold must be at least 1 day.",
+    "field_log_retention": "Activity log retention",
+    "hint_log_retention": "How long admin activity logs are kept before automatic deletion. Min: 7 days, Max: 3,650 days (10 years).",
+    "error_log_retention_range": "Retention period must be between 7 and 3,650 days."
   },
   "admin_disputes": {
     "page_title": "Disputes",
@@ -2899,7 +2902,10 @@
     "btn_close": "Close",
     "pdf_generated_on": "Generated on",
     "error_export": "Failed to generate PDF.",
-    "truncated_warning": "Only the last 100 transactions are displayed."
+    "filter_from": "From",
+    "filter_to": "to",
+    "load_more": "Load more",
+    "loading_more": "Loading…"
   },
   "admin_ratings": {
     "page_title": "Ratings & Reviews",
