@@ -44,6 +44,8 @@ const nextConfig: NextConfig = {
   reactCompiler: true,
   /** ESM package; required so Jest (next/jest) transpiles it when importing @/lib/jwt in tests. */
   transpilePackages: ["jose"],
+  /** CJS packages that Next.js must not bundle — imported lazily via dynamic import in route handlers. */
+  serverExternalPackages: ["cloudinary"],
   async headers() {
     return [
       {

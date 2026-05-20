@@ -142,6 +142,11 @@ export async function findStationById(id: string): Promise<Station | undefined> 
   return db.query.stations.findFirst({ where: eq(stations.id, id) });
 }
 
+/** Finds a station by its promo referral code. */
+export async function findStationByPromoRefCode(refCode: string): Promise<Station | undefined> {
+  return db.query.stations.findFirst({ where: eq(stations.promo_ref_code, refCode) });
+}
+
 /**
  * Builds WHERE conditions for listActiveStations and listActiveStationsCount.
  * Shared so count and list use identical filters.

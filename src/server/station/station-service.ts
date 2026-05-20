@@ -226,7 +226,15 @@ export async function getPendingStations(page = 1, perPage = 20): Promise<Pendin
 }
 
 export async function getStationsForAdmin(status?: string): Promise<Station[]> {
-  return listAllStationsForAdmin(status);
+  const rows = await listAllStationsForAdmin(status);
+  // Ensure DB numeric/decimal types are converted to JSON-serializable primitives
+  return rows.map((r) => ({
+    ...r,
+    promo_commission_rate: r.promo_commission_rate == null ? null : String(r.promo_commission_rate),
+    latitude: r.latitude == null ? null : String(r.latitude),
+    longitude: r.longitude == null ? null : String(r.longitude),
+    average_score: r.average_score == null ? null : String(r.average_score),
+  } as Station));
 }
 
 export async function getStationById(id: string): Promise<StationWithDocuments> {
