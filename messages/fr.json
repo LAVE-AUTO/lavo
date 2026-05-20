@@ -348,7 +348,12 @@
         "error_rate_limit": "Trop de tentatives. Veuillez réessayer dans quelques minutes.",
         "error_validation": "Veuillez vérifier les champs du formulaire.",
         "error_password_invalid": "Le mot de passe ne respecte pas les critères de sécurité.",
-        "toast_success": "Compte créé avec succès"
+        "toast_success": "Compte créé avec succès",
+        "promo_banner_invalid": "Promo Banner Invalid",
+        "promo_banner_loading": "Promo Banner Loading",
+        "promo_banner_title": "Promo Banner Title",
+        "promo_banner_station": "Promo Banner Station",
+        "promo_banner_rate": "Promo Banner Rate"
     },
     "nav": {
         "home": "Accueil",
@@ -944,7 +949,18 @@
         "result_arrival_queue_now": "File d'attente — arrivée immédiate",
         "result_arrival_queue_later": "File d'attente — arrivée prévue à {time}",
         "result_arrival_queue_later_no_time": "File d'attente — arrivée différée",
-        "result_arrival_book_slot": "Réservation le {date} à {time}"
+        "result_arrival_book_slot": "Réservation le {date} à {time}",
+        "detail_services": "Detail Services",
+        "services_other": "Services Other",
+        "badge_popular": "Badge Popular",
+        "badge_duration": "Badge Duration",
+        "detail_price_from": "Detail Price From",
+        "services_extras_label": "Services Extras Label",
+        "services_format_label": "Services Format Label",
+        "services_pick_format_hint": "Services Pick Format Hint",
+        "services_loading": "Services Loading",
+        "services_pick_format": "Services Pick Format",
+        "services_book_now": "Services Book Now"
     },
     "coupons": {
         "title": "Mes réservations",
@@ -1888,7 +1904,23 @@
         "btn_complete": "Terminer",
         "btn_extra_time": "Temps supp.",
         "btn_close": "Fermer",
-        "extra_time_error": "Impossible d'ajouter le temps. Réessayez."
+        "extra_time_error": "Impossible d'ajouter le temps. Réessayez.",
+        "stations": "Stations",
+        "reservations": "Reservations",
+        "favorites": "Favorites",
+        "dashboard": "Dashboard",
+        "queue": "Queue",
+        "config": "Config",
+        "clients": "Clients",
+        "logo_alt": "Logo Alt",
+        "how_it_works": "How It Works",
+        "reminders": "Reminders",
+        "faq": "Faq",
+        "profile": "Profile",
+        "logout": "Logout",
+        "merchant_pill": "Merchant Pill",
+        "login": "Login",
+        "register": "Register"
     },
     "station_reservations": {
         "page_title": "Réservations du jour",
@@ -2599,7 +2631,10 @@
         "confirm_modal_title": "Confirmer le report ?",
         "confirm_modal_desc": "Votre réservation sera déplacée vers le créneau sélectionné.",
         "confirm_modal_keep": "Conserver",
-        "confirm_modal_confirm": "Confirmer"
+        "confirm_modal_confirm": "Confirmer",
+        "success_title": "Success Title",
+        "success_desc": "Success Desc",
+        "btn_view_reservation": "Btn View Reservation"
     },
     "station_queue": {
         "page_title": "File d'attente",
@@ -2809,7 +2844,8 @@
         "station_share": "Station",
         "preview_title": "Répartition",
         "unsaved_dot": "Modification non sauvegardée",
-        "save_error": "Impossible de mettre à jour le taux de commission."
+        "save_error": "Impossible de mettre à jour le taux de commission.",
+        "set_by_admin": "Set By Admin"
     },
     "admin_transactions": {
         "page_title": "Transactions Stripe",
@@ -3066,7 +3102,8 @@
         "settings_error_max_tickets": "Le nombre de tickets doit être un entier positif ou zéro.",
         "settings_error_auto_close": "Le délai de fermeture doit être d'au moins 1 jour.",
         "settings_error_html": "Le message d'accueil ne doit pas contenir de balises HTML.",
-        "action_error": "Impossible d'effectuer cette action. Veuillez réessayer."
+        "action_error": "Impossible d'effectuer cette action. Veuillez réessayer.",
+        "loading": "Loading"
     },
     "admin_add_user": {
         "modal_title": "Ajouter un utilisateur",
@@ -3213,7 +3250,11 @@
         "error_commission_required": "Le taux de commission est requis.",
         "error_commission_invalid": "Le taux doit être compris entre 0 et 50.",
         "preview_only_notice": "Aperçu uniquement - ce QR code ne sera fonctionnel qu'une fois l'API connectée.",
-        "error_commission_step": "La commission doit être un multiple de 0,5 (ex. : 5, 5,5, 10)."
+        "error_commission_step": "La commission doit être un multiple de 0,5 (ex. : 5, 5,5, 10).",
+        "error_session_expired": "Error Session Expired",
+        "error_save_failed": "Error Save Failed",
+        "saved_notice": "Saved Notice",
+        "ref_code_label": "Ref Code Label"
     },
     "admin_legal": {
         "section_title": "Contenu légal et informatif",
