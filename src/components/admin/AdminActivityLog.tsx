@@ -107,10 +107,163 @@ function FilterPill({
   );
 }
 
-function DetailExpander({ details }: { details: Record<string, unknown> }) {
+// ─── Details rendering ────────────────────────────────────────────────────────
+
+const FIELD_LABELS: Record<string, string> = {
+  first_name: 'Prénom',
+  last_name: 'Nom',
+  email: 'Email',
+  phone: 'Téléphone',
+  status: 'Statut',
+  name: 'Nom',
+  city: 'Ville',
+  address: 'Adresse',
+  is_active: 'Actif',
+  is_visible: 'Visible',
+  promo_ref_code: 'Code promo',
+  promo_commission_rate: 'Commission promo',
+  promo_ref_generated_at: 'Généré le',
+};
+
+const STATUS_LABELS: Record<string, string> = {
+  open: 'Ouvert', refunded: 'Remboursé', resolved: 'Résolu', rejected: 'Rejeté',
+  active: 'Actif', blocked: 'Bloqué', pending: 'En attente',
+};
+
+function fmtValue(key: string, val: unknown): string {
+  if (val === null || val === undefined) return '—';
+  if (typeof val === 'boolean') return val ? 'oui' : 'non';
+  const s = String(val);
+  if (key === 'promo_commission_rate') {
+    const n = parseFloat(s);
+    return Number.isFinite(n) ? `${Math.round(n * 100 * 10) / 10} %` : s;
+  }
+  if (key === 'promo_ref_generated_at') {
+    try { return new Date(s).toLocaleDateString('fr-CA', { day: 'numeric', month: 'short', year: 'numeric' }); }
+    catch { return s; }
+  }
+  if (key === 'status') return STATUS_LABELS[s] ?? s;
+  return s;
+}
+
+function Arrow() {
+  return <span className="text-[#BBBBAA] dark:text-[#505040]">→</span>;
+}
+
+function Row({ label, children }: { label: string; children: React.ReactNode }) {
+  return (
+    <div className="flex flex-wrap items-center gap-x-2 gap-y-0.5">
+      <span className="text-[#8A8A7A] dark:text-[#7A7A6A]">{label} :</span>
+      <span className="text-[#3A3A2A] dark:text-[#C8C5AE]">{children}</span>
+    </div>
+  );
+}
+
+function DiffRows({ before, after }: { before: Record<string, unknown>; after: Record<string, unknown> }) {
+  const changedKeys = Object.keys({ ...before, ...after }).filter(
+    (k) => JSON.stringify(before[k]) !== JSON.stringify(after[k]),
+  );
+  if (changedKeys.length === 0) return <p className="text-[#AAAAAA]">Aucun changement détecté.</p>;
+  return (
+    <>
+      {changedKeys.map((k) => (
+        <Row key={k} label={FIELD_LABELS[k] ?? k}>
+          <span className="line-through opacity-60">{fmtValue(k, before[k])}</span>{' '}
+          <Arrow /> {fmtValue(k, after[k])}
+        </Row>
+      ))}
+    </>
+  );
+}
+
+function DetailsContent({ action, details }: { action: string; details: Record<string, unknown> }) {
+  // commission_rate_updated: { previous_rate, new_rate } (decimal fractions)
+  if (action === 'commission_rate_updated') {
+    const prev = parseFloat(String(details.previous_rate ?? '')) * 100;
+    const next = parseFloat(String(details.new_rate ?? '')) * 100;
+    return (
+      <Row label="Taux de commission">
+        <span className="line-through opacity-60">{Number.isFinite(prev) ? `${Math.round(prev * 10) / 10} %` : '—'}</span>{' '}
+        <Arrow /> {Number.isFinite(next) ? `${Math.round(next * 10) / 10} %` : '—'}
+      </Row>
+    );
+  }
+
+  // REFUND_DISPUTE: { amount, stripe_refund_id, previous_status, new_status }
+  if (action === 'REFUND_DISPUTE') {
+    return (
+      <>
+        {details.amount != null && <Row label="Montant remboursé">{String(details.amount)} XAF</Row>}
+        {details.stripe_refund_id && (
+          <Row label="Réf. Stripe">
+            <span className="font-mono text-[10px]">{String(details.stripe_refund_id).slice(0, 20)}…</span>
+          </Row>
+        )}
+      </>
+    );
+  }
+
+  // CLOSE_DISPUTE: { previous_status, new_status, reason }
+  if (action === 'CLOSE_DISPUTE') {
+    return (
+      <>
+        <Row label="Statut">
+          <span className="line-through opacity-60">{STATUS_LABELS[String(details.previous_status ?? '')] ?? String(details.previous_status)}</span>{' '}
+          <Arrow /> {STATUS_LABELS[String(details.new_status ?? '')] ?? String(details.new_status)}
+        </Row>
+        {details.reason && <Row label="Motif">{String(details.reason)}</Row>}
+      </>
+    );
+  }
+
+  // toggle_rating_visibility: { score, previous_is_visible, new_is_visible, station_id }
+  if (action === 'toggle_rating_visibility') {
+    return (
+      <>
+        {details.score != null && <Row label="Note">{String(details.score)}/5</Row>}
+        <Row label="Visibilité">
+          <span className="line-through opacity-60">{details.previous_is_visible ? 'Visible' : 'Masqué'}</span>{' '}
+          <Arrow /> {details.new_is_visible ? 'Visible' : 'Masqué'}
+        </Row>
+      </>
+    );
+  }
+
+  // station_approved: { stripe_account_id, stripe_connected }
+  if (action === 'station_approved') {
+    return <Row label="Stripe">Compte connecté avec succès</Row>;
+  }
+
+  // station_rejected: { reason }
+  if (action === 'station_rejected') {
+    return details.reason
+      ? <Row label="Motif du rejet">{String(details.reason)}</Row>
+      : null;
+  }
+
+  // Diff actions: UPDATE_USER, UPDATE_STATION, UNBLOCK_ACCOUNT, UPDATE_STATION_PROMO_QR
+  if ('before' in details && 'after' in details) {
+    return (
+      <DiffRows
+        before={details.before as Record<string, unknown>}
+        after={details.after as Record<string, unknown>}
+      />
+    );
+  }
+
+  // Fallback: show key: value pairs (no raw JSON)
+  return (
+    <>
+      {Object.entries(details).map(([k, v]) => (
+        <Row key={k} label={FIELD_LABELS[k] ?? k}>{fmtValue(k, v)}</Row>
+      ))}
+    </>
+  );
+}
+
+function DetailExpander({ action, details }: { action: string; details: Record<string, unknown> }) {
   const [open, setOpen] = useState(false);
-  const keys = Object.keys(details);
-  if (keys.length === 0) return null;
+  if (Object.keys(details).length === 0) return null;
   return (
     <div className="mt-2">
       <button
@@ -122,12 +275,12 @@ function DetailExpander({ details }: { details: Record<string, unknown> }) {
           style={{ transform: open ? 'rotate(90deg)' : undefined, transition: 'transform 0.15s' }}>
           <path d="M3 1.5l4 3.5-4 3.5V1.5z"/>
         </svg>
-        {open ? 'Masquer les détails' : `${keys.length} détail${keys.length > 1 ? 's' : ''}`}
+        {open ? 'Masquer les détails' : 'Voir les détails'}
       </button>
       {open && (
-        <pre className="mt-1.5 overflow-x-auto rounded-lg bg-[#F5F2EC] p-3 text-[11px] text-[#4A4A3A] dark:bg-[#0E1A0C] dark:text-[#A0A090]">
-          {JSON.stringify(details, null, 2)}
-        </pre>
+        <div className="mt-2 flex flex-col gap-1 rounded-lg bg-[#F5F2EC] px-3 py-2.5 text-[12px] dark:bg-[#0E1A0C]">
+          <DetailsContent action={action} details={details} />
+        </div>
       )}
     </div>
   );
@@ -306,7 +459,7 @@ function LogRow({ entry, t }: { entry: LogEntry; t: ReturnType<typeof useTransla
           </span>
         </div>
         {entry.details && Object.keys(entry.details).length > 0 && (
-          <DetailExpander details={entry.details} />
+          <DetailExpander action={entry.action} details={entry.details} />
         )}
       </div>
 
@@ -316,7 +469,7 @@ function LogRow({ entry, t }: { entry: LogEntry; t: ReturnType<typeof useTransla
         <div className="flex flex-col gap-1.5">
           <ActionBadge action={entry.action} label={actionLabel} />
           {entry.details && Object.keys(entry.details).length > 0 && (
-            <DetailExpander details={entry.details} />
+            <DetailExpander action={entry.action} details={entry.details} />
           )}
         </div>
 
