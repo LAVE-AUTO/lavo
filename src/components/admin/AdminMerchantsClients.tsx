@@ -82,11 +82,11 @@ export function AdminMerchantsClients() {
   const actives   = managed.filter((s) => s.status === 'active').length;
   const suspended = managed.filter((s) => s.status === 'suspended').length;
 
-  // TODO: replace with real client count from API
-  const MOCK_CLIENT_COUNT = process.env.NODE_ENV === 'development' ? 6 : 0;
+  // Client count: endpoint not exposed as list yet — show empty state until backend ships
+  const clientCount = loading ? '…' : 0;
   const tabs = [
     { id: 'stations' as Tab, count: loading ? '…' : managed.length },
-    { id: 'clients'  as Tab, count: MOCK_CLIENT_COUNT },
+    { id: 'clients'  as Tab, count: clientCount },
   ];
 
   return (
