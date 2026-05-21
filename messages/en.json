@@ -3001,6 +3001,7 @@
     "group_month": "Month",
     "kpi_active_stations": "Active stations",
     "kpi_hide_aria": "Hide indicators",
+    "kpi_masked": "Hidden",
     "kpi_live_data": "Live data",
     "kpi_open_support_tickets": "Open support tickets",
     "kpi_pending_kyc": "Pending KYC",
