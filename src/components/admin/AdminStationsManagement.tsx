@@ -21,9 +21,11 @@ function formatDate(d: string) {
 interface Props {
   stations: StationRow[]; loading: boolean; error: boolean; query: string;
   onAction: (id: string, action: 'activate' | 'suspend') => Promise<void>;
+  onEdit:   (station: StationRow) => void;
+  onDelete: (station: StationRow) => void;
 }
 
-export function AdminStationsManagement({ stations, loading, error, query, onAction }: Props) {
+export function AdminStationsManagement({ stations, loading, error, query, onAction, onEdit, onDelete }: Props) {
   const t = useTranslations('admin_clients');
   const [confirmId, setConfirmId]         = useState<string | null>(null);
   const [confirmAction, setConfirmAction] = useState<'activate' | 'suspend' | null>(null);
@@ -148,6 +150,14 @@ export function AdminStationsManagement({ stations, loading, error, query, onAct
 
               <div className="mt-4 flex flex-wrap gap-2">
                 {renderActionButton(station, true)}
+                <button type="button" onClick={() => onEdit(station)} title={t('btn_edit')}
+                  className="flex h-8 w-8 items-center justify-center rounded-[12px] border border-[#E1DBCF] bg-white text-[#888] transition-colors hover:border-[#C49A1E]/40 hover:bg-[#FCF6E5] hover:text-[#9A7A13] dark:border-[#1E2E18] dark:bg-[#0E170C] dark:text-[#A0A090]">
+                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7" /><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z" /></svg>
+                </button>
+                <button type="button" onClick={() => onDelete(station)} title={t('btn_delete')}
+                  className="flex h-8 w-8 items-center justify-center rounded-[12px] border border-red-200/60 bg-white text-red-400 transition-colors hover:bg-red-50 hover:text-red-600 dark:border-red-900/30 dark:bg-[#0E170C] dark:text-red-500">
+                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><polyline points="3 6 5 6 21 6" /><path d="M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6" /><path d="M10 11v6M14 11v6" /><path d="M9 6V4a1 1 0 011-1h4a1 1 0 011 1v2" /></svg>
+                </button>
               </div>
             </article>
           );
@@ -155,7 +165,7 @@ export function AdminStationsManagement({ stations, loading, error, query, onAct
       </div>
 
       <div className="hidden md:block">
-        <div className="grid grid-cols-[40px_1fr_1fr_120px_140px] items-center gap-4 border-b border-[#E9E4D8] bg-[#FCFBF8] px-5 py-3 dark:border-[#1E2E18] dark:bg-[#0D150B]">
+        <div className="grid grid-cols-[40px_1fr_1fr_120px_180px] items-center gap-4 border-b border-[#E9E4D8] bg-[#FCFBF8] px-5 py-3 dark:border-[#1E2E18] dark:bg-[#0D150B]">
           {['', t('col_account'), t('col_location'), t('col_status'), t('col_actions')].map((h, i) => (
             <span key={i} className={`text-[11px] font-black uppercase tracking-[0.22em] text-[#AAA395] dark:text-[#8F998A] ${i === 4 ? 'text-right' : ''}`}>{h}</span>
           ))}
@@ -168,7 +178,7 @@ export function AdminStationsManagement({ stations, loading, error, query, onAct
             return (
               <div key={station.id}
                 className={[
-                  'grid grid-cols-[40px_1fr_1fr_120px_140px] items-center gap-4 border-b px-5 py-4 transition-colors duration-150 last:border-0',
+                  'grid grid-cols-[40px_1fr_1fr_120px_180px] items-center gap-4 border-b px-5 py-4 transition-colors duration-150 last:border-0',
                   isConfirming
                     ? confirmAction === 'suspend'
                       ? 'border-red-100 bg-red-50/80 dark:border-[#2A1010] dark:bg-[#1A0808]'
@@ -194,8 +204,16 @@ export function AdminStationsManagement({ stations, loading, error, query, onAct
 
                 <div>{renderStatus(station)}</div>
 
-                <div className="flex justify-end gap-1.5">
+                <div className="flex items-center justify-end gap-1.5">
                   {renderActionButton(station)}
+                  <button type="button" onClick={() => onEdit(station)} title={t('btn_edit')}
+                    className="flex h-8 w-8 items-center justify-center rounded-[12px] border border-[#E1DBCF] bg-white text-[#888] transition-colors hover:border-[#C49A1E]/40 hover:bg-[#FCF6E5] hover:text-[#9A7A13] dark:border-[#1E2E18] dark:bg-[#0E170C] dark:text-[#A0A090] dark:hover:bg-[#1A2410] dark:hover:text-[#F0D98C]">
+                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7" /><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z" /></svg>
+                  </button>
+                  <button type="button" onClick={() => onDelete(station)} title={t('btn_delete')}
+                    className="flex h-8 w-8 items-center justify-center rounded-[12px] border border-red-200/60 bg-white text-red-400 transition-colors hover:bg-red-50 hover:text-red-600 dark:border-red-900/30 dark:bg-[#0E170C] dark:text-red-500 dark:hover:bg-red-950/30 dark:hover:text-red-400">
+                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><polyline points="3 6 5 6 21 6" /><path d="M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6" /><path d="M10 11v6M14 11v6" /><path d="M9 6V4a1 1 0 011-1h4a1 1 0 011 1v2" /></svg>
+                  </button>
                 </div>
               </div>
             );

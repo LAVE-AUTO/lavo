@@ -796,6 +796,159 @@ export async function sendKycExpiryReminderEmail(params: {
 }
 
 
+// %%%%% Admin OTP & welcome emails %%%%%
+
+/**
+ * Sends a 6-digit OTP code to an admin for sensitive operations.
+ *
+ * @param toEmail   - Recipient email address.
+ * @param adminName - Admin display name for the greeting.
+ * @param code      - The raw 6-digit OTP code.
+ * @param purpose   - Whether this OTP is for email or password change.
+ */
+export async function sendAdminOtpEmail(
+  toEmail: string,
+  adminName: string,
+  code: string,
+  purpose: 'email_change' | 'password_change'
+): Promise<void> {
+  const client = getResendClient();
+  if (!client) {
+    warnResendMissingOnce('sendAdminOtpEmail');
+    return;
+  }
+  if (!isReasonableRecipientEmail(toEmail)) return;
+
+  const safeCode = escapeHtmlPlain(safePlainTextSnippet(code, 6));
+  const safeName = escapeHtmlPlain(safePlainTextSnippet(adminName, 100));
+
+  const subjectFr =
+    purpose === 'email_change'
+      ? 'Code de vérification — Changement d\'adresse e-mail'
+      : 'Code de vérification — Changement de mot de passe';
+  const purposeLabelFr =
+    purpose === 'email_change'
+      ? 'changement d\'adresse e-mail'
+      : 'changement de mot de passe';
+
+  const bodyHtml = `
+    <p style="margin: 0 0 16px;">
+      Voici votre code de vérification pour votre <strong>${purposeLabelFr}</strong>.
+    </p>
+    <div style="margin: 0 0 16px; text-align: center;">
+      <span style="
+        display: inline-block;
+        background-color: #f4f2ec;
+        border: 1.5px solid #C49A1E;
+        border-radius: 12px;
+        padding: 16px 32px;
+        font-size: 32px;
+        font-weight: 900;
+        letter-spacing: 0.25em;
+        color: #1A1A0A;
+        font-family: 'Courier New', Courier, monospace;
+      ">${safeCode}</span>
+    </div>
+    <p style="margin: 0 0 8px; font-size: 14px; color: #666;">
+      Ce code est valable pendant <strong>10 minutes</strong>.
+    </p>
+    <p style="margin: 0; font-size: 13px; color: #999;">
+      Si vous n'avez pas demandé ce code, ignorez cet e-mail.
+      Votre compte reste sécurisé.
+    </p>
+  `;
+
+  await client.emails.send({
+    from: FROM,
+    to: toEmail,
+    subject: subjectFr,
+    html: brandedEmail('fr', {
+      greeting: `Bonjour ${safeName},`,
+      bodyHtml,
+      footNote: 'Ce code expire dans 10 minutes et ne peut être utilisé qu\'une seule fois.',
+    }),
+  });
+}
+
+
+/**
+ * Sends a welcome email with a temporary password to a newly created admin-provisioned account.
+ *
+ * @param toEmail      - Recipient email address.
+ * @param firstName    - First name for the greeting.
+ * @param tempPassword - The plain-text temporary password (will be escaped for HTML).
+ * @param role         - The account role ('client', 'admin', 'station').
+ */
+export async function sendAdminWelcomeEmail(
+  toEmail: string,
+  firstName: string,
+  tempPassword: string,
+  role: string
+): Promise<void> {
+  const client = getResendClient();
+  if (!client) {
+    warnResendMissingOnce('sendAdminWelcomeEmail');
+    return;
+  }
+  if (!isReasonableRecipientEmail(toEmail)) return;
+
+  const safeName     = escapeHtmlPlain(safePlainTextSnippet(firstName || 'utilisateur', 100));
+  const safePassword = escapeHtmlPlain(safePlainTextSnippet(tempPassword, 128));
+  const loginUrl     = safeHttpUrlForEmailHref(`${APP_URL}/fr/login`) ?? '';
+
+  const roleLabelFr: Record<string, string> = {
+    client:  'client',
+    admin:   'administrateur',
+    station: 'station',
+  };
+  const roleLabel = roleLabelFr[role] ?? role;
+
+  const bodyHtml = `
+    <p style="margin: 0 0 12px;">
+      Un compte <strong>${escapeHtmlPlain(roleLabel)}</strong> a été créé pour vous sur la plateforme Hurryline.
+    </p>
+    <p style="margin: 0 0 16px;">Voici vos identifiants de connexion :</p>
+    <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin: 0 0 16px;">
+      <tr>
+        <td style="padding: 8px 12px; background: #f4f2ec; border-radius: 8px 8px 0 0; border: 1px solid #e8e4da;">
+          <span style="font-size: 13px; color: #888;">Adresse e-mail</span><br/>
+          <strong style="font-size: 14px; color: #1A1A0A;">${escapeHtmlPlain(toEmail)}</strong>
+        </td>
+      </tr>
+      <tr>
+        <td style="padding: 8px 12px; background: #f4f2ec; border-radius: 0 0 8px 8px; border: 1px solid #e8e4da; border-top: none;">
+          <span style="font-size: 13px; color: #888;">Mot de passe temporaire</span><br/>
+          <strong style="font-size: 16px; font-family: 'Courier New', Courier, monospace; letter-spacing: 0.08em; color: #1A1A0A;">${safePassword}</strong>
+        </td>
+      </tr>
+    </table>
+    <div style="padding: 12px 16px; background: #FFF8E8; border-left: 3px solid #C49A1E; border-radius: 4px; margin: 0 0 12px;">
+      <p style="margin: 0; font-size: 13px; color: #7A5E0A;">
+        Vous devrez changer ce mot de passe lors de votre première connexion.
+      </p>
+    </div>
+    <p style="margin: 0; font-size: 13px; color: #888;">
+      Conservez ces informations en lieu sûr. Ne partagez jamais votre mot de passe.
+    </p>
+  `;
+
+  await client.emails.send({
+    from: FROM,
+    to: toEmail,
+    subject: 'Bienvenue sur Hurryline — Vos identifiants de connexion',
+    html: brandedEmail('fr', {
+      greeting: `Bonjour ${safeName},`,
+      bodyHtml,
+      ctaUrl:   loginUrl || undefined,
+      ctaLabel: 'Se connecter',
+      footNote: 'Si vous n\'avez pas sollicité la création de ce compte, contactez le support immédiatement.',
+    }),
+  });
+}
+
+// %%%%% END - Admin OTP & welcome emails %%%%%
+
+
 // %%%%% END - Transactional sends %%%%%
 
 

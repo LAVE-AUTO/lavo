@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { useTranslations } from 'next-intl';
+import { postWithApi } from '@/services';
 import { AdminAddUserForm, type Role } from './AdminAddUserForm';
 import { AdminAddUserSuccess } from './AdminAddUserSuccess';
 type Step = 'form' | 'success';
@@ -60,8 +61,31 @@ export function AdminAddUserModal({ open, onClose }: Props) {
     const errs = validate();
     if (Object.keys(errs).length) { setErrors(errs); return; }
     setErrors({});
-    // POST /admin/users endpoint not exposed yet — see project_pending_backend_specs.md.
-    // The submit button is disabled in AdminAddUserForm; this guard is defensive.
+    setBusy(true);
+    try {
+      const [ok, data] = await postWithApi('/admin/users', {
+        first_name: firstName.trim(),
+        last_name:  lastName.trim(),
+        email:      email.trim(),
+        role,
+      });
+      if (ok) {
+        const created = (data as { data: SuccessData }).data;
+        setSuccess(created);
+        setStep('success');
+      } else {
+        const errData = data as { code?: string; message?: string };
+        if (errData?.code === 'EMAIL_ALREADY_EXISTS') {
+          setErrors({ email: t('error_email_conflict') });
+        } else {
+          setErrors({ email: errData?.message ?? t('error_generic') });
+        }
+      }
+    } catch {
+      setErrors({ email: t('error_generic') });
+    } finally {
+      setBusy(false);
+    }
   }
 
   if (!open) return null;

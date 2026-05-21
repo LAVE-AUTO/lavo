@@ -1,10 +1,10 @@
 import { requireRole } from '@/lib/require-role';
 import { getStationById } from '@/server/station/station-service';
-import { updateStation } from '@/server/admin/admin-management-service';
+import { updateStation, deleteStation } from '@/server/admin/admin-management-service';
 import { successResponse, error400, error404, error500, fromAppError } from '@/lib/responses';
 import { AppError, NotFoundError } from '@/lib/errors';
 import { adminStationIdParamSchema, mapZodErrors } from '@/validators/station';
-import { updateStationAdminSchema } from '@/validators/admin-user';
+import { updateStationAdminSchema, deleteEntitySchema } from '@/validators/admin-user';
 import { ApiCode } from '@/types/api-codes';
 import { applyNoStoreHeaders } from '@/lib/response-headers';
 import type { NextResponse } from 'next/server';
@@ -122,6 +122,54 @@ export async function PUT(
     // updateStation returns with stripe_account_id and rejection_reason already stripped.
     const station = await updateStation(auth.sub, stationId, parsed.data);
     return applyNoStoreHeaders(successResponse(station, 'Station updated successfully'));
+  } catch (e) {
+    return handleServiceError(e);
+  }
+}
+
+
+/**
+ * DELETE /api/v1/admin/stations/:id
+ * Soft-disables or permanently deletes a station.
+ *
+ * Query params:
+ *   permanent  true  → hard delete (irreversible)
+ *              false → soft delete (status → disabled)  [default]
+ *
+ * Role: admin only.
+ *
+ * Responses:
+ *   200 { data: { deleted: true } }                               hard delete
+ *   200 { data: AdminStation (stripe_account_id stripped) }       soft delete
+ *   400 VALIDATION_FAILED
+ *   401 UNAUTHORIZED
+ *   403 FORBIDDEN
+ *   404 NOT_FOUND
+ *   500 INTERNAL_ERROR
+ */
+export async function DELETE(
+  request: Request,
+  { params }: { params: Promise<{ id: string }> }
+) {
+  const auth = await requireRole(request, 'admin');
+  if (auth instanceof Response) return applyNoStoreHeaders(auth as NextResponse);
+
+  const stationId = await parseStationId(params);
+  if (stationId instanceof Response) return stationId;
+
+  const { searchParams } = new URL(request.url);
+  const queryParsed = deleteEntitySchema.safeParse({
+    permanent: searchParams.get('permanent') ?? 'false',
+  });
+  if (!queryParsed.success) {
+    return applyNoStoreHeaders(
+      error400('Invalid query params', ApiCode.VALIDATION_FAILED, mapZodErrors(queryParsed.error))
+    );
+  }
+
+  try {
+    const result = await deleteStation(auth.sub, stationId, queryParsed.data.permanent);
+    return applyNoStoreHeaders(successResponse(result));
   } catch (e) {
     return handleServiceError(e);
   }

@@ -10,7 +10,14 @@ import {
   UnauthorizedError,
 } from '@/lib/errors';
 import { ApiCode } from '@/types/api-codes';
-import { ACCESS_TOKEN_MAX_AGE, JWT_DEFAULT_MAX_AGE, JWT_REMEMBER_MAX_AGE } from '@/helpers/server-constants';
+import {
+  ACCESS_TOKEN_MAX_AGE,
+  JWT_DEFAULT_MAX_AGE,
+  JWT_REMEMBER_MAX_AGE,
+  BCRYPT_ROUNDS,
+  EMAIL_VERIFICATION_TTL_MS,
+  PASSWORD_RESET_TTL_MS,
+} from '@/helpers/server-constants';
 import {
   findByEmail,
   findById,
@@ -36,10 +43,6 @@ import {
 
 // Domain logic for registration, login, email verification, password management,
 // OAuth user provisioning, and session refresh.
-
-// Token TTLs in milliseconds
-const EMAIL_VERIFICATION_TTL_MS = 24 * 60 * 60 * 1000; // 24 hours
-const PASSWORD_RESET_TTL_MS = 60 * 60 * 1000;           // 1 hour
 
 // Pre-computed bcrypt hash used as a timing-attack guard when the user is not found.
 // bcrypt.compare always runs a full comparison so login timing is consistent.
@@ -127,7 +130,7 @@ export async function registerWithPassword(dto: RegisterDto, locale: 'fr' | 'en'
   const existing = await findByEmail(dto.email);
   if (existing) throw new ConflictError('Email already in use');
 
-  const password_hash = await bcrypt.hash(dto.password, 12);
+  const password_hash = await bcrypt.hash(dto.password, BCRYPT_ROUNDS);
 
   const user = await createUser({
     first_name: dto.first_name,
@@ -326,7 +329,7 @@ export async function changePassword(
     if (!matches) throw new UnauthorizedError('Current password is incorrect');
   }
 
-  const newHash = await bcrypt.hash(newPassword, 12);
+  const newHash = await bcrypt.hash(newPassword, BCRYPT_ROUNDS);
   await updatePassword(userId, newHash);
   await updateForcePasswordChange(userId, false);
 }
@@ -377,7 +380,7 @@ export async function resetPassword(token: string, newPassword: string): Promise
     throw new NotFoundError('Reset token not found');
   }
 
-  const password_hash = await bcrypt.hash(newPassword, 12);
+  const password_hash = await bcrypt.hash(newPassword, BCRYPT_ROUNDS);
   await updatePassword(record.user_id, password_hash);
   await markTokenUsed(record.id);
 }

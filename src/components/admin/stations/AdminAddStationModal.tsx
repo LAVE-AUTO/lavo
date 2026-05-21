@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { useTranslations } from 'next-intl';
+import { postWithApi } from '@/services';
 import { AdminAddStationAccount, type StationAccountData, type StationAccountErrors } from './AdminAddStationAccount';
 import { AdminAddStationInfo, type StationInfoData, type StationInfoErrors } from './AdminAddStationInfo';
 import { AdminAddStationDocs, type StationDocsData, type StationDocsErrors } from './AdminAddStationDocs';
@@ -9,8 +10,9 @@ import { AdminAddStationSuccess, type StationSuccessData } from './AdminAddStati
 type Step = 1 | 2 | 3 | 'success';
 
 interface Props {
-  open:    boolean;
-  onClose: () => void;
+  open:       boolean;
+  onClose:    () => void;
+  onCreated?: () => void;
 }
 
 const ACCOUNT_INIT: StationAccountData = { firstName: '', lastName: '', email: '', phone: '' };
@@ -20,7 +22,7 @@ const INFO_INIT: StationInfoData = {
 };
 const DOCS_INIT: StationDocsData = { mode: 'later', certificate: null, addressProof: null, license: null };
 
-export function AdminAddStationModal({ open, onClose }: Props) {
+export function AdminAddStationModal({ open, onClose, onCreated }: Props) {
   const t = useTranslations('admin_add_station');
 
   const [step,         setStep]         = useState<Step>(1);
@@ -86,8 +88,48 @@ export function AdminAddStationModal({ open, onClose }: Props) {
 
   async function handleSubmit() {
     if (!validateDocs()) return;
-    // POST /admin/stations endpoint not exposed yet — see project_pending_backend_specs.md.
-    // The submit button is disabled in AdminAddStationDocs; this guard is defensive.
+    setBusy(true);
+    try {
+      const [ok, data] = await postWithApi('/admin/stations', {
+        owner: {
+          first_name: account.firstName.trim(),
+          last_name:  account.lastName.trim(),
+          email:      account.email.trim(),
+          ...(account.phone.trim() ? { phone: account.phone.trim() } : {}),
+        },
+        station: {
+          name:          info.stationName.trim(),
+          ...(info.legalName.trim()  ? { legal_name:  info.legalName.trim()  } : {}),
+          address:       info.address.trim(),
+          city:          info.city.trim(),
+          ...(info.serviceScope ? { service_scope: info.serviceScope } : {}),
+          ...(info.description.trim() ? { description: info.description.trim() } : {}),
+        },
+      });
+      if (ok) {
+        const created = (data as { data: { user: { first_name: string; last_name: string; email: string } } }).data;
+        setSuccess({
+          email:      created.user.email,
+          first_name: created.user.first_name,
+          last_name:  created.user.last_name,
+          docsMode:   docs.mode,
+        });
+        onCreated?.();
+        setStep('success');
+      } else {
+        const errData = data as { code?: string; message?: string };
+        if (errData?.code === 'EMAIL_ALREADY_EXISTS') {
+          setStep(1);
+          setAccountErrs({ email: t('error_email_conflict') });
+        } else {
+          setDocsErrs({ certificate: errData?.message ?? t('error_generic') });
+        }
+      }
+    } catch {
+      setDocsErrs({ certificate: t('error_generic') });
+    } finally {
+      setBusy(false);
+    }
   }
 
   const STEP_LABELS: Record<1 | 2 | 3, string> = { 1: t('step_account'), 2: t('step_info'), 3: t('step_docs') };
