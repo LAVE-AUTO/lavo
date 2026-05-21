@@ -2873,6 +2873,7 @@
   "admin_transactions": {
     "page_title": "Stripe Transactions",
     "page_subtitle": "Logs of payments, commissions and station payouts.",
+    "unknown_station": "Unknown station",
     "col_reference": "Reference",
     "col_station": "Station",
     "col_client": "Client",
@@ -2978,6 +2979,7 @@
     "alert_disputes_title": "Open disputes",
     "alert_disputes_empty": "No open disputes.",
     "alert_disputes_loading": "Loading disputes…",
+    "alert_disputes_unknown_station": "Unknown station",
     "alert_disputes_action": "View all disputes",
     "notif_tooltip": "Notifications",
     "notif_title": "Notifications",

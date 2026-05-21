@@ -73,10 +73,6 @@ function formatDateTime(iso: string) {
   }
 }
 
-function shortId(id: string | null) {
-  return id ? id.slice(0, 8) + '…' : '—';
-}
-
 // ─── Sub-components ──────────────────────────────────────────────────────────
 
 function ActionBadge({ action, label }: { action: string; label: string }) {
@@ -448,9 +444,6 @@ function LogRow({ entry, t }: { entry: LogEntry; t: ReturnType<typeof useTransla
             <span className="flex items-center gap-1">
               <span className="h-1.5 w-1.5 rounded-full bg-[#CCCCBB]" />
               {targetLabel}
-              {entry.target_id && (
-                <span className="font-mono text-[10px] text-[#AAAAAA]">{shortId(entry.target_id)}</span>
-              )}
             </span>
           )}
           <span className="flex items-center gap-1">
@@ -478,11 +471,6 @@ function LogRow({ entry, t }: { entry: LogEntry; t: ReturnType<typeof useTransla
           {targetLabel
             ? <span className="text-[13px] font-semibold text-[#3A3A2A] dark:text-[#D0CDB8]">{targetLabel}</span>
             : <span className="text-[12px] text-[#AAAAAA]">—</span>}
-          {entry.target_id && (
-            <span className="font-mono text-[11px] text-[#BBBBAA] dark:text-[#A0A090]">
-              {shortId(entry.target_id)}
-            </span>
-          )}
         </div>
 
         {/* Admin */}

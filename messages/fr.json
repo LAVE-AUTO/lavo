@@ -2873,6 +2873,7 @@
   "admin_transactions": {
     "page_title": "Transactions Stripe",
     "page_subtitle": "Logs des paiements, commissions et virements vers les stations.",
+    "unknown_station": "Station inconnue",
     "col_reference": "Référence",
     "col_station": "Station",
     "col_client": "Client",
@@ -2978,6 +2979,7 @@
     "alert_disputes_title": "Litiges ouverts",
     "alert_disputes_empty": "Aucun litige en cours.",
     "alert_disputes_loading": "Chargement des litiges…",
+    "alert_disputes_unknown_station": "Station inconnue",
     "alert_disputes_action": "Voir tous les litiges",
     "notif_tooltip": "Notifications",
     "notif_title": "Notifications",

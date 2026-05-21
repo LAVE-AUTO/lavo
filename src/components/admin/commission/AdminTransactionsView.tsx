@@ -78,7 +78,7 @@ export function AdminTransactionsView() {
         const commission = parseFloat(l.commission_amount ?? '0') || 0;
         return {
           id: l.id, stripe_id: l.id,
-          station: l.station_name ?? l.station_id.slice(0, 8),
+          station: l.station_name ?? t('unknown_station'),
           client: l.type,
           gross: amount, commission, payout: amount - commission,
           status: mapStatus(l.status), date: l.created_at,
@@ -89,7 +89,7 @@ export function AdminTransactionsView() {
       setPage(p);
       setHasMore(p < (meta?.total_pages ?? 1));
     } catch { /* keep current */ }
-  }, [dateFrom, dateTo]);
+  }, [dateFrom, dateTo, t]);
 
   useEffect(() => {
     setLoading(true);
