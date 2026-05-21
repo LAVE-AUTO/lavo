@@ -3034,7 +3034,10 @@
         "nav_section_configuration": "Configuration",
         "nav_section_operations": "Operations",
         "nav_section_support": "Support & History",
-        "nav_profile": "My profile"
+        "nav_profile": "My profile",
+        "notif_error": "Unable to load notifications.",
+        "notif_open_cta": "Open",
+        "notif_load_more": "Load more"
     },
     "client_support": {
         "page_title": "Support",
@@ -3561,7 +3564,17 @@
         "error_generic": "An error occurred. Please try again.",
         "success_profile_saved": "Profile updated.",
         "success_email_changed": "Email address updated.",
-        "success_password_changed": "Password updated."
+        "success_password_changed": "Password updated.",
+        "section_notifications": "Admin notification preferences",
+        "section_notifications_hint": "Choose delivery channels per alert type.",
+        "notif_station_lifecycle": "Station lifecycle",
+        "notif_kyc_alerts": "KYC alerts",
+        "notif_support_alerts": "Support alerts",
+        "notif_channel_in_app": "In-app",
+        "notif_channel_push": "Push",
+        "notif_channel_email": "Email",
+        "btn_save_notifications": "Save notifications",
+        "success_notifications_saved": "Notification preferences saved"
     },
     "admin_client_detail": {
         "back_to_list": "Clients",
