@@ -8,14 +8,50 @@ import { useToast } from '@/context/toast-context';
 import { AdminStationsManagement } from './AdminStationsManagement';
 import { AdminClientsList } from './AdminClientsList';
 import { AdminAddUserModal } from './users/AdminAddUserModal';
+import { AdminEditUserModal } from './users/AdminEditUserModal';
+import { AdminDeleteUserModal } from './users/AdminDeleteUserModal';
 import { AdminAddStationModal } from './stations/AdminAddStationModal';
+import { AdminEditStationModal } from './stations/AdminEditStationModal';
+import { AdminDeleteStationModal } from './stations/AdminDeleteStationModal';
 import { AdminPagination } from './ui/AdminPagination';
 
 type Tab = 'stations' | 'clients';
 
+interface ClientRow {
+  id: string;
+  first_name: string | null;
+  last_name: string | null;
+  email: string;
+  phone: string | null;
+  status: string;
+  created_at: string;
+}
+
+interface EditableUser {
+  id: string;
+  first_name: string | null;
+  last_name: string | null;
+  phone: string | null;
+  status: string;
+}
+
+interface EditableStation {
+  id: string;
+  name: string;
+  legal_name?: string | null;
+  address: string;
+  city: string;
+  service_scope?: string | null;
+  description?: string | null;
+  status: string;
+  is_open: boolean;
+}
+
 export interface StationRow {
   id: string; name: string; city?: string | null;
   status: string; email?: string | null; created_at: string;
+  address?: string; legal_name?: string | null; service_scope?: string | null;
+  description?: string | null; is_open?: boolean;
 }
 
 interface StationMeta {
@@ -39,8 +75,14 @@ export function AdminMerchantsClients() {
   const [fetchError, setFetchError]   = useState(false);
   const [query, setQuery]             = useState('');
   const [clientCount, setClientCount] = useState<number | '…'>('…');
-  const [addUserOpen,    setAddUserOpen]    = useState(false);
-  const [addStationOpen, setAddStationOpen] = useState(false);
+  const [addUserOpen,       setAddUserOpen]       = useState(false);
+  const [addStationOpen,    setAddStationOpen]    = useState(false);
+  const [editStation,       setEditStation]       = useState<StationRow | null>(null);
+  const [deleteStation,     setDeleteStation]     = useState<StationRow | null>(null);
+  const [editUser,          setEditUser]          = useState<ClientRow | null>(null);
+  const [deleteUser,        setDeleteUser]        = useState<ClientRow | null>(null);
+  const [clientsRefreshKey,  setClientsRefreshKey]  = useState(0);
+  const [stationsRefreshKey, setStationsRefreshKey] = useState(0);
 
   useEffect(() => {
     setLoading(true);
@@ -58,7 +100,31 @@ export function AdminMerchantsClients() {
       })
       .catch(() => { if (mountedRef.current) setFetchError(true); })
       .finally(() => { if (mountedRef.current) setLoading(false); });
-  }, [stationPage]);
+  }, [stationPage, stationsRefreshKey]);
+
+  function handleUserSaved(_updated: EditableUser) {
+    setClientsRefreshKey((k) => k + 1);
+    toastSuccess(t('action_success'));
+  }
+
+  function handleUserDeleted(_userId: string, _permanent: boolean) {
+    setClientsRefreshKey((k) => k + 1);
+    toastSuccess(t('action_success'));
+  }
+
+  function handleStationSaved(updated: EditableStation) {
+    setStations((prev) => prev.map((s) => s.id === updated.id ? { ...s, ...updated } : s));
+    toastSuccess(t('action_success'));
+  }
+
+  function handleStationDeleted(stationId: string, permanent: boolean) {
+    if (permanent) {
+      setStations((prev) => prev.filter((s) => s.id !== stationId));
+    } else {
+      setStations((prev) => prev.map((s) => s.id === stationId ? { ...s, status: 'disabled' } : s));
+    }
+    toastSuccess(t('action_success'));
+  }
 
   async function handleStationAction(id: string, action: 'activate' | 'suspend') {
     try {
@@ -198,7 +264,7 @@ export function AdminMerchantsClients() {
         <section className="flex flex-col gap-4 rounded-[28px] border border-[#E1DBCF] bg-white/88 p-5 shadow-[0_24px_80px_rgba(26,26,10,0.07)] backdrop-blur-xl dark:border-[#1E2E18] dark:bg-[#101A0D]/90 dark:shadow-[0_24px_80px_rgba(0,0,0,0.35)]">
           {tab === 'stations' ? (
             <>
-              <AdminStationsManagement stations={stations} loading={loading} error={fetchError} query={query} onAction={handleStationAction} />
+              <AdminStationsManagement stations={stations} loading={loading} error={fetchError} query={query} onAction={handleStationAction} onEdit={setEditStation} onDelete={setDeleteStation} />
               {stationMeta && (
                 <AdminPagination
                   page={stationPage}
@@ -211,13 +277,62 @@ export function AdminMerchantsClients() {
               )}
             </>
           ) : (
-            <AdminClientsList query={query} onAction={handleClientAction} onCountChange={setClientCount} />
+            <AdminClientsList
+              query={query}
+              onAction={handleClientAction}
+              onCountChange={setClientCount}
+              onEditUser={setEditUser}
+              onDeleteUser={setDeleteUser}
+              refreshKey={clientsRefreshKey}
+            />
           )}
         </section>
       </div>
 
       <AdminAddUserModal    open={addUserOpen}    onClose={() => setAddUserOpen(false)} />
-      <AdminAddStationModal open={addStationOpen} onClose={() => setAddStationOpen(false)} />
+      <AdminEditUserModal
+        open={!!editUser}
+        user={editUser}
+        onClose={() => setEditUser(null)}
+        onSaved={handleUserSaved}
+      />
+      <AdminDeleteUserModal
+        open={!!deleteUser}
+        user={deleteUser}
+        onClose={() => setDeleteUser(null)}
+        onDeleted={handleUserDeleted}
+      />
+      <AdminAddStationModal
+        open={addStationOpen}
+        onClose={() => setAddStationOpen(false)}
+        onCreated={() => { setStationsRefreshKey((k) => k + 1); toastSuccess(t('action_success')); }}
+      />
+      <AdminEditStationModal
+        open={!!editStation}
+        station={
+          editStation
+            ? {
+                id: editStation.id,
+                name: editStation.name,
+                legal_name: editStation.legal_name ?? null,
+                address: editStation.address ?? '',
+                city: editStation.city ?? '',
+                service_scope: editStation.service_scope ?? null,
+                description: editStation.description ?? null,
+                status: editStation.status,
+                is_open: editStation.is_open ?? false,
+              }
+            : null
+        }
+        onClose={() => setEditStation(null)}
+        onSaved={handleStationSaved}
+      />
+      <AdminDeleteStationModal
+        open={!!deleteStation}
+        station={deleteStation}
+        onClose={() => setDeleteStation(null)}
+        onDeleted={handleStationDeleted}
+      />
     </div>
   );
 }

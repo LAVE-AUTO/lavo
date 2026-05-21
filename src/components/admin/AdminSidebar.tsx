@@ -22,6 +22,7 @@ const LogsIcon     = () => <svg width="15" height="15" viewBox="0 0 24 24" fill=
 const SupportIcon  = () => <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10" /><path d="M9.09 9a3 3 0 015.83 1c0 2-3 3-3 3" /><line x1="12" y1="17" x2="12.01" y2="17" /></svg>;
 const RatingsIcon  = () => <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" /></svg>;
 const LegalIcon    = () => <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z" /><polyline points="14 2 14 8 20 8" /><line x1="16" y1="13" x2="8" y2="13" /><line x1="16" y1="17" x2="8" y2="17" /></svg>;
+const ProfileIcon  = () => <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2" /><circle cx="12" cy="7" r="4" /></svg>;
 const LogoutIcon   = () => <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4" /><polyline points="16 17 21 12 16 7" /><line x1="21" y1="12" x2="9" y2="12" /></svg>;
 const CollapseIcon = ({ collapsed }: { collapsed: boolean }) => (
   <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className={`transition-transform duration-200 ${collapsed ? 'rotate-180' : ''}`} aria-hidden="true">
@@ -164,6 +165,24 @@ export function AdminSidebar({ open = false, onClose }: AdminSidebarProps) {
 
       <div className="mt-auto pt-3">
         <div className="mb-3 h-px bg-[#E0DCD0] dark:bg-[#1A2A14]" />
+
+        {/* Profile link */}
+        <Link
+          href={'/admin/profile' as Parameters<typeof Link>[0]['href']}
+          title={collapsed ? t('nav_profile') : undefined}
+          aria-label={collapsed ? t('nav_profile') : undefined}
+          onClick={onClose}
+          className={`group relative mb-1 flex items-center rounded-lg text-[13px] font-semibold transition-colors duration-150 ${base} ${layoutClass} ${pathname.includes('/admin/profile') ? active : idle}`}
+        >
+          <ProfileIcon />
+          {!collapsed && <span className="truncate">{t('nav_profile')}</span>}
+          {collapsed && (
+            <span className="pointer-events-none absolute left-full top-1/2 z-30 ml-2 -translate-y-1/2 whitespace-nowrap rounded-lg bg-[#0C1209] px-2.5 py-1 text-[12px] font-semibold text-[#F0EDD4] opacity-0 shadow-lg transition-opacity duration-150 group-hover:opacity-100">
+              {t('nav_profile')}
+            </span>
+          )}
+        </Link>
+
         <button
           type="button"
           onClick={() => logout()}

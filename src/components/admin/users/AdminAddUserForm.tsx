@@ -89,13 +89,6 @@ export function AdminAddUserForm({
           <p className="text-[12px] leading-snug text-[#666] dark:text-[#A0A090]">{t('form_password_notice')}</p>
         </div>
 
-        {/* Preview notice - endpoint not yet available */}
-        <div className="flex items-start gap-2 rounded-lg border border-orange-200 bg-orange-50 px-3 py-2.5 dark:border-orange-900/40 dark:bg-orange-950/20">
-          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#F97316" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="mt-0.5 shrink-0" aria-hidden="true">
-            <path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z" /><line x1="12" y1="9" x2="12" y2="13" /><line x1="12" y1="17" x2="12.01" y2="17" />
-          </svg>
-          <p className="text-[12px] leading-snug text-orange-700 dark:text-orange-400">{t('form_api_unavailable_notice')}</p>
-        </div>
       </div>
 
       {/* Footer */}
@@ -104,11 +97,9 @@ export function AdminAddUserForm({
           className="rounded-lg border border-[#D8D4C8] px-4 py-2 text-[13px] font-semibold text-[#666] transition-colors hover:bg-[#F5F3EE] disabled:opacity-50 dark:border-[#243020] dark:text-[#9A9A8A]">
           {t('btn_cancel')}
         </button>
-        {/* Submit disabled until POST /admin/users ships — see project_pending_backend_specs.md */}
-        <button type="button" onClick={onSubmit} disabled
-          title={t('form_api_unavailable_notice')}
-          className="rounded-lg bg-[#C49A1E] px-4 py-2 text-[13px] font-bold text-[#0C1209] opacity-40 cursor-not-allowed">
-          {t('btn_create')}
+        <button type="button" onClick={onSubmit} disabled={busy}
+          className="rounded-lg bg-[#C49A1E] px-4 py-2 text-[13px] font-bold text-[#0C1209] transition-colors hover:bg-[#B08A14] disabled:opacity-50 disabled:cursor-not-allowed">
+          {busy ? t('btn_creating') : t('btn_create')}
         </button>
       </div>
     </>
