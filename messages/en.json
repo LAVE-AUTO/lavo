@@ -3082,6 +3082,7 @@
     "message_send_error": "Unable to send the message."
   },
   "admin_support": {
+    "badge_support": "Support",
     "page_title": "Support tickets",
     "page_subtitle": "Manage client and station requests",
     "search_placeholder": "Search a ticket…",
