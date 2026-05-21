@@ -54,10 +54,11 @@ export function ClientSupportContainer({ sectionLabel }: Props) {
   const loadTickets = useCallback(async () => {
     setLoading(true);
     setLoadErrorKind(null);
-    const [ok, data] = await getFromApi<{ data: SupportTicketSummary[] }>('/support');
+    const [ok, data] = await getFromApi<{ data: { items: SupportTicketSummary[] } }>('/support?limit=100');
     if (!mountedRef.current) return;
-    if (ok && 'data' in (data as object) && (data as { data: SupportTicketSummary[] }).data) {
-      setTickets((data as { data: SupportTicketSummary[] }).data);
+    if (ok && 'data' in (data as object)) {
+      const items = (data as { data?: { items?: SupportTicketSummary[] } }).data?.items ?? [];
+      setTickets(items);
     } else {
       const code = (data as { code?: string } | undefined)?.code;
       setLoadErrorKind(resolveErrorKind(code));

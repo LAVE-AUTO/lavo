@@ -419,7 +419,7 @@ export async function fetchStationById(id: string): Promise<StationDetailData | 
     const [detailResult, ratingsResult, queueResult] = await Promise.all([
         getFromApi<{ data: ApiStationDetail }>(`/stations/${encodedId}`),
         getFromApi<ApiRatingsResponse>(`/stations/${encodedId}/ratings?limit=10`),
-        getFromApi<{ data: ApiQueueEntry[] }>(`/stations/${encodedId}/queue`),
+        getFromApi<{ data: { items: ApiQueueEntry[]; meta?: { total?: number } } }>(`/stations/${encodedId}/queue?page=1&per_page=20`),
     ]);
 
     const [ok, data] = detailResult;
@@ -436,11 +436,12 @@ export async function fetchStationById(id: string): Promise<StationDetailData | 
     const reviewCountFromApi = ratingsPayload?.meta?.total;
 
     const [queueOk, queueData] = queueResult;
-    const queueEntries: ApiQueueEntry[] = (queueOk && queueData && 'data' in (queueData as object))
-        ? ((queueData as { data: ApiQueueEntry[] }).data || [])
-        : [];
+    const queuePayload = (queueOk && queueData && 'data' in (queueData as object))
+        ? ((queueData as { data: { items: ApiQueueEntry[]; meta?: { total?: number } } }).data)
+        : null;
+    const queueEntries: ApiQueueEntry[] = queuePayload?.items ?? [];
     const activeStatuses = new Set(['waiting', 'in_progress', 'pending']);
-    const queueCount = queueEntries.filter((e) => activeStatuses.has(e.status)).length;
+    const queueCount = queuePayload?.meta?.total ?? queueEntries.filter((e) => activeStatuses.has(e.status)).length;
     const washDuration = station.stationConfig?.wash_duration_minutes ?? 30;
     const washPostCount = station.wash_post_count ?? 1;
     const estimatedWaitMinutes = calcEstimatedWait(queueCount, washDuration, washPostCount);

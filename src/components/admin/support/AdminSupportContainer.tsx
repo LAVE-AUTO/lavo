@@ -25,10 +25,11 @@ export function AdminSupportContainer() {
   useEffect(() => {
     setLoading(true);
     setError(false);
-    getFromApi<{ data: ApiTicketListItem[] }>('/support').then(([ok, res]) => {
+    getFromApi<{ data: { items: ApiTicketListItem[] } }>('/support?limit=100').then(([ok, res]) => {
       if (!mountedRef.current) return;
       if (ok && res && typeof res === 'object' && 'data' in res) {
-        setTickets((res as { data: ApiTicketListItem[] }).data ?? []);
+        const items = (res as { data?: { items?: ApiTicketListItem[] } }).data?.items ?? [];
+        setTickets(items);
       } else {
         setError(true);
       }

@@ -126,10 +126,10 @@ export function DelayRequestsPage() {
     const formats = new Map<string, string>();
     const stationId = meOk ? (meData as { data?: { id?: string } })?.data?.id : null;
     if (stationId) {
-      const [formatsOk, formatsData] = await getFromApi(`/stations/${stationId}/formats`);
+      const [formatsOk, formatsData] = await getFromApi(`/stations/${stationId}/formats?page=1&per_page=100`);
       if (!mountedRef.current) return;
       if (formatsOk) {
-        const list = (formatsData as { data?: RawFormat[] })?.data ?? [];
+        const list = (formatsData as { data?: { items?: RawFormat[] } })?.data?.items ?? [];
         for (const f of list) formats.set(f.id, f.label);
       }
     }

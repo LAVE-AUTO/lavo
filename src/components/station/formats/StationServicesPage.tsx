@@ -17,10 +17,10 @@ interface StationMeData {
   data: { id: string };
 }
 interface FormatsData {
-  data: VehicleFormat[];
+  data: { items: VehicleFormat[] };
 }
 interface ServicesData {
-  data: Service[];
+  data: { items: Service[] };
 }
 interface RawExtra {
   id: string;
@@ -32,7 +32,7 @@ interface RawExtra {
   is_active: boolean;
 }
 interface ExtrasData {
-  data: RawExtra[];
+  data: { items: RawExtra[] };
 }
 
 function groupExtras(raw: RawExtra[]): StationExtras {
@@ -86,9 +86,9 @@ export function StationServicesPage() {
 
     const [meResult, servicesResult, extrasResult, formatsResult] = await Promise.all([
       getFromApi('/station/me'),
-      getFromApi('/station/services'),
-      getFromApi('/station/extras'),
-      getFromApi('/formats'),
+      getFromApi('/station/services?limit=100'),
+      getFromApi('/station/extras?limit=100'),
+      getFromApi('/formats?page=1&per_page=100'),
     ]);
 
     const [meOk] = meResult;
@@ -102,15 +102,17 @@ export function StationServicesPage() {
       return;
     }
 
-    if (servicesOk && Array.isArray((servicesData as ServicesData).data)) {
-      setServices((servicesData as ServicesData).data);
+    if (servicesOk) {
+      const items = (servicesData as ServicesData).data?.items ?? [];
+      setServices(items);
     }
 
-    if (extrasOk && Array.isArray((extrasData as ExtrasData).data)) {
-      setExtras(groupExtras((extrasData as ExtrasData).data));
+    if (extrasOk) {
+      const items = (extrasData as ExtrasData).data?.items ?? [];
+      setExtras(groupExtras(items));
     }
 
-    if (formatsOk) setFormats((formatsData as FormatsData).data);
+    if (formatsOk) setFormats((formatsData as FormatsData).data?.items ?? []);
     setLoading(false);
   }, []);
 
