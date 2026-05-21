@@ -1,6 +1,7 @@
 import * as repo from "./support-ticket-repository";
 import { notifyEntry } from "@/server/notifications/notification-service";
 import { notifyClientFeed } from "@/server/notifications/client-feed-notifications";
+import { notifyAdminEvent } from "@/server/notifications/admin-notification-service";
 import { AppError } from "@/lib/errors";
 import { HTTP_STATUS } from "@/helpers/constants";
 import { z } from "zod";
@@ -79,6 +80,9 @@ export async function createSupportTicket(
         entryId: ticket.id,
         kind: 'support_ticket_created',
         body: 'Votre demande a été enregistrée avec succès.',
+      });
+      await notifyAdminEvent({
+        type: 'support_ticket_created',
       });
 
       return ticket;
@@ -159,6 +163,11 @@ export async function addSupportMessage(
   // TODO: When ticket.assigned_to is null and a client sends a message, no admin
   // receives a notification. A future improvement should query for users with the
   // 'admin' role and notify them all (or use a dedicated admin notification channel).
+  if (!isAdmin) {
+    await notifyAdminEvent({
+      type: 'support_message_received',
+    });
+  }
 
   return message;
 }
