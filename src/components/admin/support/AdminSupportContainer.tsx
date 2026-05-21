@@ -148,7 +148,7 @@ export function AdminSupportContainer() {
           </section>
         )}
 
-        <section className="flex flex-1 min-h-0 flex-col gap-4 rounded-[28px] border border-[#E1DBCF] bg-white/88 p-5 shadow-[0_24px_80px_rgba(26,26,10,0.07)] backdrop-blur-xl dark:border-[#1E2E18] dark:bg-[#101A0D]/90 dark:shadow-[0_24px_80px_rgba(0,0,0,0.35)]">
+        <section className="flex flex-col gap-4 rounded-[28px] border border-[#E1DBCF] bg-white/88 p-5 shadow-[0_24px_80px_rgba(26,26,10,0.07)] backdrop-blur-xl dark:border-[#1E2E18] dark:bg-[#101A0D]/90 dark:shadow-[0_24px_80px_rgba(0,0,0,0.35)]">
           {error ? (
             <div className="flex flex-col items-center gap-3 py-24 text-center">
               <p className="text-[13px] font-semibold text-[#999]">{t('load_error')}</p>

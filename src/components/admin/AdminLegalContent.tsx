@@ -10,14 +10,18 @@ type BackendKey =
   | 'cgu'
   | 'cgu_stations'
   | 'politique_confidentialite'
+  | 'politique_annulation'
   | 'mentions_legales'
   | 'contact'
+  | 'landing_faq'
   | 'landing_how_it_works';
 
 interface LegalPage {
   key: BackendKey;
   labelKey: string;
   descKey: string;
+  route: string;
+  group: 'legal' | 'site';
   icon: React.ReactNode;
 }
 
@@ -26,6 +30,8 @@ const PAGES: LegalPage[] = [
     key: 'politique_confidentialite',
     labelKey: 'page_privacy',
     descKey: 'page_privacy_desc',
+    route: '/politique-de-confidentialite',
+    group: 'legal',
     icon: (
       <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
         <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
@@ -36,6 +42,8 @@ const PAGES: LegalPage[] = [
     key: 'cgu',
     labelKey: 'page_terms_clients',
     descKey: 'page_terms_clients_desc',
+    route: '/cgu',
+    group: 'legal',
     icon: (
       <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
         <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
@@ -47,6 +55,8 @@ const PAGES: LegalPage[] = [
     key: 'cgu_stations',
     labelKey: 'page_terms_stations',
     descKey: 'page_terms_stations_desc',
+    route: '/cgu-stations',
+    group: 'legal',
     icon: (
       <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
         <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" /><polyline points="9 22 9 12 15 12 15 22" />
@@ -54,9 +64,23 @@ const PAGES: LegalPage[] = [
     ),
   },
   {
+    key: 'politique_annulation',
+    labelKey: 'page_cancellation',
+    descKey: 'page_cancellation_desc',
+    route: '/politique-annulation',
+    group: 'legal',
+    icon: (
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+        <circle cx="12" cy="12" r="10" /><line x1="4.93" y1="4.93" x2="19.07" y2="19.07" />
+      </svg>
+    ),
+  },
+  {
     key: 'mentions_legales',
     labelKey: 'page_legal_mentions',
     descKey: 'page_legal_mentions_desc',
+    route: '/mentions-legales',
+    group: 'legal',
     icon: (
       <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
         <circle cx="12" cy="12" r="10" /><line x1="12" y1="16" x2="12" y2="12" /><line x1="12" y1="8" x2="12.01" y2="8" />
@@ -67,6 +91,8 @@ const PAGES: LegalPage[] = [
     key: 'contact',
     labelKey: 'page_contact',
     descKey: 'page_contact_desc',
+    route: '/nous-contacter',
+    group: 'site',
     icon: (
       <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
         <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72c.127.96.36 1.903.7 2.81a2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 22 16.92z" />
@@ -77,9 +103,23 @@ const PAGES: LegalPage[] = [
     key: 'landing_how_it_works',
     labelKey: 'page_how_it_works',
     descKey: 'page_how_it_works_desc',
+    route: '/#how-it-works',
+    group: 'site',
     icon: (
       <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
         <circle cx="12" cy="12" r="10" /><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3" /><line x1="12" y1="17" x2="12.01" y2="17" />
+      </svg>
+    ),
+  },
+  {
+    key: 'landing_faq',
+    labelKey: 'page_faq',
+    descKey: 'page_faq_desc',
+    route: '/#faq',
+    group: 'site',
+    icon: (
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+        <path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z" />
       </svg>
     ),
   },
@@ -126,7 +166,9 @@ export function AdminLegalContent() {
     setPageLoading(false);
   }, []);
 
-  /* Lazy-load the active page if it has never been fetched */
+  /* Lazy-load the active page if it has never been fetched.
+     Gated by `loadedKeys` so we only fetch each key once per session
+     unless the user explicitly discards their edits. */
   useEffect(() => {
     if (loadedKeys.has(activePage)) {
       setPageError(false);
@@ -177,16 +219,62 @@ export function AdminLegalContent() {
   const wordCount = text ? text.split(/\s+/).filter(Boolean).length : 0;
   const charCount = text.length;
   const lastSaved = savedAt[activePage];
+  const isEmpty = !text && !activeContent.trim() && loadedKeys.has(activePage) && !isActiveDirty;
 
   const dirtyCount = dirty.size;
   const totalPages = PAGES.length;
 
   const metrics = [
-    { label: t('metric_pages'),    value: String(totalPages),                                                  accent: '#C49A1E' },
-    { label: t('metric_dirty'),    value: String(dirtyCount),                                                  accent: dirtyCount > 0 ? '#F97316' : '#94A3B8' },
-    { label: t('metric_words'),    value: text ? String(wordCount) : '—',                                       accent: '#3B82F6' },
-    { label: t('metric_chars'),    value: text ? String(charCount) : '—',                                       accent: '#22C55E' },
+    { label: t('metric_pages'),    value: String(totalPages),                  accent: '#C49A1E' },
+    { label: t('metric_dirty'),    value: String(dirtyCount),                  accent: dirtyCount > 0 ? '#F97316' : '#94A3B8' },
+    { label: t('metric_words'),    value: text ? String(wordCount) : '—',       accent: '#3B82F6' },
+    { label: t('metric_chars'),    value: text ? String(charCount) : '—',       accent: '#22C55E' },
   ];
+
+  const legalPages = PAGES.filter((p) => p.group === 'legal');
+  const sitePages  = PAGES.filter((p) => p.group === 'site');
+
+  function renderSidebarButton(p: LegalPage) {
+    const isActive = activePage === p.key;
+    const isDirty  = dirty.has(p.key);
+    return (
+      <button
+        key={p.key}
+        type="button"
+        onClick={() => setActivePage(p.key)}
+        className={[
+          'group flex w-full items-start gap-3 rounded-[14px] px-3 py-2.5 text-left transition-all duration-150',
+          isActive
+            ? 'bg-[#1A1A0A] text-[#F0EDD4] shadow-[0_10px_24px_rgba(26,26,10,0.18)] dark:bg-[#F0EDD4] dark:text-[#1A1A0A]'
+            : 'text-[#5A554B] hover:bg-white hover:shadow-[0_4px_10px_rgba(26,26,10,0.05)] dark:text-[#A6A091] dark:hover:bg-[#182214]',
+        ].join(' ')}
+      >
+        <span className={[
+          'mt-0.5 flex h-7 w-7 shrink-0 items-center justify-center rounded-[10px]',
+          isActive ? 'bg-[#F0EDD4]/15 text-[#F0EDD4] dark:bg-[#1A1A0A]/12 dark:text-[#1A1A0A]' : 'bg-[#1A1A0A]/5 text-[#5A554B] dark:bg-[#F0EDD4]/8 dark:text-[#A6A091]',
+        ].join(' ')}>
+          {p.icon}
+        </span>
+        <span className="min-w-0 flex-1">
+          <span className="flex items-center gap-1.5">
+            <span className="truncate text-[13px] font-bold">{t(p.labelKey)}</span>
+            {isDirty && (
+              <span className={[
+                'h-1.5 w-1.5 shrink-0 rounded-full',
+                isActive ? 'bg-[#F0D98C]' : 'bg-[#C49A1E]',
+              ].join(' ')} aria-label={t('unsaved_indicator')} />
+            )}
+          </span>
+          <span className={[
+            'mt-0.5 block truncate font-mono text-[10.5px]',
+            isActive ? 'text-[#F0EDD4]/60 dark:text-[#1A1A0A]/60' : 'text-[#9B9588] dark:text-[#7E8A75]',
+          ].join(' ')}>
+            {p.route}
+          </span>
+        </span>
+      </button>
+    );
+  }
 
   return (
     <div className="relative flex h-full min-h-0 flex-col overflow-hidden bg-[radial-gradient(circle_at_top,_rgba(196,154,30,0.12),_transparent_36%),linear-gradient(180deg,#faf8f2_0%,#f2efe7_100%)] dark:bg-[radial-gradient(circle_at_top,_rgba(196,154,30,0.12),_transparent_32%),linear-gradient(180deg,#0C1209_0%,#091009_100%)]">
@@ -223,62 +311,42 @@ export function AdminLegalContent() {
           </div>
         </section>
 
-        <section className="flex flex-1 min-h-0 flex-col gap-4 rounded-[28px] border border-[#E1DBCF] bg-white/88 p-5 shadow-[0_24px_80px_rgba(26,26,10,0.07)] backdrop-blur-xl dark:border-[#1E2E18] dark:bg-[#101A0D]/90 dark:shadow-[0_24px_80px_rgba(0,0,0,0.35)] lg:flex-row lg:gap-5">
+        <section className="flex flex-col gap-4 rounded-[28px] border border-[#E1DBCF] bg-white/88 p-5 shadow-[0_24px_80px_rgba(26,26,10,0.07)] backdrop-blur-xl dark:border-[#1E2E18] dark:bg-[#101A0D]/90 dark:shadow-[0_24px_80px_rgba(0,0,0,0.35)] lg:flex-row lg:gap-5">
 
           {/* Sidebar */}
-          <aside className="flex shrink-0 flex-col gap-2 rounded-[20px] border border-[#E9E4D8] bg-[#FBFAF7]/90 p-2 dark:border-[#1E2E18] dark:bg-[#0C150B]/85 lg:w-[260px]">
-            <p className="px-3 pt-2 text-[10.5px] font-black uppercase tracking-[0.2em] text-[#9B9588] dark:text-[#7E8A75]">
-              {t('section_pages')}
-            </p>
-            {PAGES.map((p) => {
-              const isActive = activePage === p.key;
-              const isDirty  = dirty.has(p.key);
-              return (
-                <button
-                  key={p.key}
-                  type="button"
-                  onClick={() => setActivePage(p.key)}
-                  className={[
-                    'group flex w-full items-start gap-3 rounded-[14px] px-3 py-2.5 text-left transition-all duration-150',
-                    isActive
-                      ? 'bg-[#1A1A0A] text-[#F0EDD4] shadow-[0_10px_24px_rgba(26,26,10,0.18)] dark:bg-[#F0EDD4] dark:text-[#1A1A0A]'
-                      : 'text-[#5A554B] hover:bg-white hover:shadow-[0_4px_10px_rgba(26,26,10,0.05)] dark:text-[#A6A091] dark:hover:bg-[#182214]',
-                  ].join(' ')}
-                >
-                  <span className={[
-                    'mt-0.5 flex h-7 w-7 shrink-0 items-center justify-center rounded-[10px]',
-                    isActive ? 'bg-[#F0EDD4]/15 text-[#F0EDD4] dark:bg-[#1A1A0A]/12 dark:text-[#1A1A0A]' : 'bg-[#1A1A0A]/5 text-[#5A554B] dark:bg-[#F0EDD4]/8 dark:text-[#A6A091]',
-                  ].join(' ')}>
-                    {p.icon}
-                  </span>
-                  <span className="min-w-0 flex-1">
-                    <span className="flex items-center gap-1.5">
-                      <span className="truncate text-[13px] font-bold">{t(p.labelKey)}</span>
-                      {isDirty && (
-                        <span className={[
-                          'h-1.5 w-1.5 shrink-0 rounded-full',
-                          isActive ? 'bg-[#F0D98C]' : 'bg-[#C49A1E]',
-                        ].join(' ')} aria-label={t('unsaved_indicator')} />
-                      )}
-                    </span>
-                    <span className={[
-                      'mt-0.5 block truncate text-[11.5px]',
-                      isActive ? 'text-[#F0EDD4]/60 dark:text-[#1A1A0A]/60' : 'text-[#9B9588] dark:text-[#7E8A75]',
-                    ].join(' ')}>
-                      {t(p.descKey)}
-                    </span>
-                  </span>
-                </button>
-              );
-            })}
+          <aside className="flex shrink-0 flex-col gap-3 rounded-[20px] border border-[#E9E4D8] bg-[#FBFAF7]/90 p-2 dark:border-[#1E2E18] dark:bg-[#0C150B]/85 lg:w-[280px]">
+            <div className="flex flex-col gap-1">
+              <p className="px-3 pt-2 text-[10.5px] font-black uppercase tracking-[0.2em] text-[#9B9588] dark:text-[#7E8A75]">
+                {t('group_legal')}
+              </p>
+              {legalPages.map(renderSidebarButton)}
+            </div>
+
+            <div className="mx-2 h-px bg-[#E7E1D5] dark:bg-[#1E2E18]" />
+
+            <div className="flex flex-col gap-1">
+              <p className="px-3 pt-1 text-[10.5px] font-black uppercase tracking-[0.2em] text-[#9B9588] dark:text-[#7E8A75]">
+                {t('group_site')}
+              </p>
+              {sitePages.map(renderSidebarButton)}
+            </div>
           </aside>
 
           {/* Editor pane */}
           <div className="flex min-w-0 flex-1 flex-col gap-3">
             <div className="flex flex-wrap items-start justify-between gap-3">
               <div className="min-w-0">
-                <h2 className="truncate text-[16px] font-black text-[#1A1A0A] dark:text-[#F0EDD4]">{t(activeMeta.labelKey)}</h2>
-                <p className="mt-0.5 text-[12px] text-[#9B9588] dark:text-[#7E8A75]">
+                <div className="flex flex-wrap items-center gap-2">
+                  <h2 className="truncate text-[16px] font-black text-[#1A1A0A] dark:text-[#F0EDD4]">{t(activeMeta.labelKey)}</h2>
+                  <span className="inline-flex items-center gap-1 rounded-[8px] border border-[#E1DBCF] bg-white px-2 py-0.5 font-mono text-[11px] font-semibold text-[#5A554B] dark:border-[#1E2E18] dark:bg-[#0E170C] dark:text-[#A6A091]">
+                    <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                      <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" />
+                      <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" />
+                    </svg>
+                    {activeMeta.route}
+                  </span>
+                </div>
+                <p className="mt-1 text-[12px] text-[#9B9588] dark:text-[#7E8A75]">
                   {isActiveDirty ? (
                     <span className="font-bold text-[#C2410C] dark:text-[#FDBA74]">{t('unsaved_changes')}</span>
                   ) : lastSaved ? (
@@ -330,12 +398,28 @@ export function AdminLegalContent() {
                 </button>
               </div>
             ) : (
-              <LegalEditor
-                pageKey={activePage}
-                html={activeContent}
-                onChange={handleChange}
-                disabled={saving}
-              />
+              <>
+                {isEmpty && (
+                  <div className="flex items-start gap-3 rounded-[14px] border border-amber-300/40 bg-amber-50 px-4 py-3 dark:border-amber-500/20 dark:bg-amber-950/15">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#D97706" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="mt-0.5 shrink-0" aria-hidden="true">
+                      <circle cx="12" cy="12" r="10" />
+                      <line x1="12" y1="8" x2="12" y2="12" />
+                      <line x1="12" y1="16" x2="12.01" y2="16" />
+                    </svg>
+                    <div>
+                      <p className="text-[12.5px] font-bold text-amber-800 dark:text-amber-300">{t('empty_page_title')}</p>
+                      <p className="mt-0.5 text-[11.5px] leading-snug text-amber-800/80 dark:text-amber-300/80">{t('empty_page_desc')}</p>
+                    </div>
+                  </div>
+                )}
+
+                <LegalEditor
+                  pageKey={activePage}
+                  html={activeContent}
+                  onChange={handleChange}
+                  disabled={saving}
+                />
+              </>
             )}
           </div>
         </section>
