@@ -1,7 +1,11 @@
+import bcrypt from 'bcrypt';
 import { NotFoundError, ConflictError } from '@/lib/errors';
 import { insertAdminLog } from './admin-log-repository';
 import * as repo from './admin-user-repository';
-import type { UpdateUserInput, UpdateStationAdminInput } from '@/validators/admin-user';
+import { generatePassword } from '@/helpers/generate-password';
+import { sendAdminWelcomeEmail } from '@/lib/email';
+import { BCRYPT_ROUNDS } from '@/helpers/server-constants';
+import type { UpdateUserInput, UpdateStationAdminInput, CreateUserInput, CreateStationAdminInput } from '@/validators/admin-user';
 
 
 // %%%%% Admin management service %%%%%
@@ -208,6 +212,228 @@ export async function updateStation(
 
 
 // ooooo END - Station operations ooooo
+
+
+// ooooo Create / delete user ooooo
+
+/**
+ * Creates a new user account (client or admin).
+ *
+ * Validates email uniqueness, generates a temporary password, hashes it with bcrypt,
+ * inserts the user, dispatches a welcome email (best-effort), and writes an audit log.
+ *
+ * @param adminId - ID of the admin performing the action.
+ * @param data    - Validated create-user input (name, email, role, optional phone).
+ * @returns The created user with stripe_customer_id omitted.
+ * @throws {ConflictError} If a user with the same email already exists.
+ */
+export async function createUser(
+  adminId: string,
+  data: CreateUserInput
+): Promise<Omit<repo.AdminSafeUser, 'stripe_customer_id'>> {
+  const existing = await repo.findUserByEmail(data.email);
+  if (existing) throw new ConflictError('Email address is already in use');
+
+  const tempPassword = generatePassword();
+  const passwordHash = await bcrypt.hash(tempPassword, BCRYPT_ROUNDS);
+
+  const user = await repo.insertUser({
+    first_name:            data.first_name,
+    last_name:             data.last_name,
+    email:                 data.email,
+    phone:                 data.phone ?? null,
+    password_hash:         passwordHash,
+    role:                  data.role,
+    status:                'active',
+    force_password_change: true,
+    email_verified_at:     new Date(),
+  });
+
+  sendAdminWelcomeEmail(user.email, data.first_name, tempPassword, data.role).catch((err) =>
+    console.error('[admin-management-service] Welcome email failed', err)
+  );
+
+  insertAdminLog({
+    admin_id:    adminId,
+    action:      'CREATE_USER',
+    target_type: 'user',
+    target_id:   user.id,
+    details:     { email: user.email, role: user.role },
+  }).catch((err) => console.error('[admin-log] Failed to write audit log', err));
+
+  return stripSensitiveUserFields(user);
+}
+
+/**
+ * Deletes or soft-blocks a user account.
+ *
+ * Soft delete: sets status to 'blocked' (reversible).
+ * Hard delete: permanently removes the row from the database.
+ *
+ * @param adminId   - ID of the admin performing the action.
+ * @param userId    - ID of the user to delete.
+ * @param permanent - When true, performs a hard (irreversible) delete.
+ * @returns The updated user (soft) or { deleted: true } (hard).
+ * @throws {NotFoundError} If the user does not exist.
+ * @throws {ConflictError} If the admin attempts to delete their own account.
+ */
+export async function deleteUser(
+  adminId: string,
+  userId: string,
+  permanent: boolean
+): Promise<Omit<repo.AdminSafeUser, 'stripe_customer_id'> | { deleted: true }> {
+  if (adminId === userId) throw new ConflictError('You cannot delete your own account');
+
+  const before = await repo.findUserForAdmin(userId);
+  if (!before) throw new NotFoundError('User not found');
+
+  if (permanent) {
+    await repo.hardDeleteUserById(userId);
+    insertAdminLog({
+      admin_id:    adminId,
+      action:      'DELETE_USER_PERMANENT',
+      target_type: 'user',
+      target_id:   userId,
+      details:     { email: before.email, role: before.role },
+    }).catch((err) => console.error('[admin-log] Failed to write audit log', err));
+    return { deleted: true };
+  }
+
+  const after = await repo.updateUserById(userId, { status: 'blocked' });
+  if (!after) throw new NotFoundError('User not found');
+
+  insertAdminLog({
+    admin_id:    adminId,
+    action:      'DELETE_USER_SOFT',
+    target_type: 'user',
+    target_id:   userId,
+    details:     buildDiff({ status: before.status }, { status: after.status }),
+  }).catch((err) => console.error('[admin-log] Failed to write audit log', err));
+
+  return stripSensitiveUserFields(after);
+}
+
+// ooooo END - Create / delete user ooooo
+
+
+// ooooo Create / delete station ooooo
+
+/**
+ * Creates a station owner user (role='station') and a station record in a single operation.
+ *
+ * Both the user and station are inserted separately (no DB transaction, but user insert
+ * happens first — if the station insert fails, the orphan user is harmless and can be deleted).
+ * Welcome email is sent best-effort.
+ *
+ * @param adminId - ID of the admin performing the action.
+ * @param data    - Validated create-station input (owner + station data).
+ * @returns An object containing the created user and station records (sensitive fields stripped).
+ * @throws {ConflictError} If a user with the owner email already exists.
+ */
+export async function createStation(
+  adminId: string,
+  data: CreateStationAdminInput
+): Promise<{
+  user: Omit<repo.AdminSafeUser, 'stripe_customer_id'>;
+  station: Omit<repo.AdminStation, 'stripe_account_id' | 'rejection_reason'>;
+}> {
+  const existing = await repo.findUserByEmail(data.owner.email);
+  if (existing) throw new ConflictError('Email address is already in use');
+
+  const tempPassword = generatePassword();
+  const passwordHash = await bcrypt.hash(tempPassword, BCRYPT_ROUNDS);
+
+  const user = await repo.insertUser({
+    first_name:            data.owner.first_name,
+    last_name:             data.owner.last_name,
+    email:                 data.owner.email,
+    phone:                 data.owner.phone ?? null,
+    password_hash:         passwordHash,
+    role:                  'station',
+    status:                'active',
+    force_password_change: true,
+    email_verified_at:     new Date(),
+  });
+
+  const station = await repo.insertStation({
+    user_id:       user.id,
+    name:          data.station.name,
+    legal_name:    data.station.legal_name ?? null,
+    address:       data.station.address,
+    city:          data.station.city,
+    service_scope: data.station.service_scope ?? null,
+    description:   data.station.description ?? null,
+    status:        'active',
+    is_open:       false,
+    approved_at:   new Date(),
+    approved_by:   adminId,
+  });
+
+  sendAdminWelcomeEmail(user.email, data.owner.first_name, tempPassword, 'station').catch((err) =>
+    console.error('[admin-management-service] Station welcome email failed', err)
+  );
+
+  insertAdminLog({
+    admin_id:    adminId,
+    action:      'CREATE_STATION',
+    target_type: 'station',
+    target_id:   station.id,
+    details:     { owner_email: user.email, station_name: station.name },
+  }).catch((err) => console.error('[admin-log] Failed to write audit log', err));
+
+  return {
+    user:    stripSensitiveUserFields(user),
+    station: stripSensitiveStationFields(station),
+  };
+}
+
+/**
+ * Deletes or soft-disables a station.
+ *
+ * Soft delete: sets station status to 'disabled'.
+ * Hard delete: permanently removes the station row from the database.
+ *
+ * @param adminId   - ID of the admin performing the action.
+ * @param stationId - ID of the station to delete.
+ * @param permanent - When true, performs a hard (irreversible) delete.
+ * @returns The updated station (soft) or { deleted: true } (hard).
+ * @throws {NotFoundError} If the station does not exist.
+ */
+export async function deleteStation(
+  adminId: string,
+  stationId: string,
+  permanent: boolean
+): Promise<Omit<repo.AdminStation, 'stripe_account_id' | 'rejection_reason'> | { deleted: true }> {
+  const before = await repo.findStationForAdmin(stationId);
+  if (!before) throw new NotFoundError('Station not found');
+
+  if (permanent) {
+    await repo.hardDeleteStationById(stationId);
+    insertAdminLog({
+      admin_id:    adminId,
+      action:      'DELETE_STATION_PERMANENT',
+      target_type: 'station',
+      target_id:   stationId,
+      details:     { name: before.name },
+    }).catch((err) => console.error('[admin-log] Failed to write audit log', err));
+    return { deleted: true };
+  }
+
+  const after = await repo.updateStationById(stationId, { status: 'disabled' });
+  if (!after) throw new NotFoundError('Station not found');
+
+  insertAdminLog({
+    admin_id:    adminId,
+    action:      'DELETE_STATION_SOFT',
+    target_type: 'station',
+    target_id:   stationId,
+    details:     buildDiff({ status: before.status }, { status: after.status }),
+  }).catch((err) => console.error('[admin-log] Failed to write audit log', err));
+
+  return stripSensitiveStationFields(after);
+}
+
+// ooooo END - Create / delete station ooooo
 
 
 // %%%%% END - Admin management service %%%%%

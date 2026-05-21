@@ -1,5 +1,6 @@
 import { randomUUID } from 'crypto';
 import bcrypt from 'bcrypt';
+import { BCRYPT_ROUNDS } from '@/helpers/server-constants';
 import { and, eq, inArray } from 'drizzle-orm';
 import { db } from '@/lib/db';
 import { getCachedOrFetch } from '@/lib/redis-cache';
@@ -101,7 +102,7 @@ export async function completeStationOnboarding(
   const existing = await findByEmail(dto.email);
   if (existing) throw new ConflictError('Email already in use');
 
-  const password_hash = await bcrypt.hash(dto.password, 12);
+  const password_hash = await bcrypt.hash(dto.password, BCRYPT_ROUNDS);
   const verificationToken = randomUUID();
 
   const uniqueWashTypeIds = [...new Set(dto.wash_type_ids)];
