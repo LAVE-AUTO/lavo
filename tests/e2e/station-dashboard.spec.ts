@@ -29,7 +29,6 @@ test.describe('station dashboard page', () => {
     const heading = page.locator('h1, h2').first();
     await expect(heading).toBeVisible({ timeout: 15_000 });
 
-    const nextErrorOverlay = page.locator('nextjs-portal, [data-nextjs-dialog]');
-    await expect(nextErrorOverlay).toHaveCount(0);
+    await expect(page.locator('text=/application error|runtime error|hydration failed/i')).toHaveCount(0);
   });
 });

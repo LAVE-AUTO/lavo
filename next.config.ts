@@ -40,7 +40,7 @@ function buildCsp(): string {
 }
 
 const nextConfig: NextConfig = {
-  allowedDevOrigins: ['*.ngrok-free.app', '*.ngrok-free.dev', '*.ngrok.io'],
+  allowedDevOrigins: ['127.0.0.1', 'localhost', '*.ngrok-free.app', '*.ngrok-free.dev', '*.ngrok.io'],
   reactCompiler: true,
   /** ESM package; required so Jest (next/jest) transpiles it when importing @/lib/jwt in tests. */
   transpilePackages: ["jose"],

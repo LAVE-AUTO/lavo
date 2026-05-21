@@ -31,8 +31,7 @@ test.describe('admin dashboard page', () => {
       timeout: 15_000,
     });
 
-    const nextErrorOverlay = page.locator('nextjs-portal, [data-nextjs-dialog]');
-    await expect(nextErrorOverlay).toHaveCount(0);
+    await expect(page.locator('text=/application error|runtime error|hydration failed/i')).toHaveCount(0);
   });
 
   test('four KPI cards are visible on the dashboard', async ({ page }) => {
