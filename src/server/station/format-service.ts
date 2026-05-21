@@ -3,6 +3,7 @@
  */
 import {
   findAllFormats,
+  findFormatsPaginated,
   findFormatById,
   createFormat as repoCreateFormat,
   updateFormat as repoUpdateFormat,
@@ -16,6 +17,10 @@ import { ConflictError, NotFoundError } from '@/lib/errors';
 
 export async function getAllFormats(): Promise<VehicleFormat[]> {
   return findAllFormats();
+}
+
+export async function getFormatsPaginated(page: number, perPage: number): Promise<{ items: VehicleFormat[]; total: number }> {
+  return findFormatsPaginated(page, perPage);
 }
 
 export type CreateFormatDto = {

@@ -5,7 +5,7 @@ import {
   supportTickets,
   users,
 } from "@/lib/db/schema";
-import { and, asc, desc, eq, getTableColumns, inArray, sql } from "drizzle-orm";
+import { and, asc, desc, eq, getTableColumns, inArray, lt, or, sql } from "drizzle-orm";
 import { AppError } from "@/lib/errors";
 import { HTTP_STATUS } from "@/helpers/constants";
 import type { z } from "zod";
@@ -231,6 +231,134 @@ export async function listTickets(
   });
 
   return { data, total };
+}
+
+export async function listTicketsCursor(
+  filters: {
+    userId?: string;
+    status?: TicketStatus;
+    limit: number;
+    cursor?: string;
+  }
+): Promise<{ items: Awaited<ReturnType<typeof listTickets>>["data"]; next_cursor: string | null }> {
+  const { userId, status, cursor } = filters;
+  const safeLimit = Math.min(Math.max(1, Math.floor(filters.limit)), 100);
+
+  const conditions: ReturnType<typeof eq>[] = [];
+  if (userId) conditions.push(eq(supportTickets.created_by, userId));
+  if (status) conditions.push(eq(supportTickets.status, status));
+
+  if (cursor) {
+    try {
+      const [cursorTs, cursorId] = Buffer.from(cursor, "base64").toString().split("|");
+      const cursorDate = new Date(cursorTs ?? "");
+      const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+      if (!Number.isNaN(cursorDate.getTime()) && cursorId && UUID_RE.test(cursorId)) {
+        conditions.push(
+          or(
+            lt(supportTickets.updated_at, cursorDate),
+            and(eq(supportTickets.updated_at, cursorDate), lt(supportTickets.id, cursorId))
+          )!
+        );
+      }
+    } catch {
+      // ignore invalid cursor and return from first page
+    }
+  }
+
+  const whereClause = conditions.length > 0 ? and(...conditions) : undefined;
+  const ticketCols = getTableColumns(supportTickets);
+
+  const rows = await db
+    .select({
+      ...ticketCols,
+      createdByUser: SAFE_USER_SELECT,
+      lm_content: sql<string | null>`lm.content`,
+      lm_created_at: sql<string | null>`lm.created_at`,
+    })
+    .from(supportTickets)
+    .leftJoin(users, eq(supportTickets.created_by, users.id))
+    .leftJoin(
+      sql`LATERAL (
+        SELECT content, created_at
+        FROM support_messages
+        WHERE ticket_id = ${supportTickets.id}
+        ORDER BY created_at DESC
+        LIMIT 1
+      ) lm`,
+      sql`true`
+    )
+    .where(whereClause)
+    .orderBy(desc(supportTickets.updated_at), desc(supportTickets.id))
+    .limit(safeLimit + 1);
+
+  const hasMore = rows.length > safeLimit;
+  const pageRows = hasMore ? rows.slice(0, safeLimit) : rows;
+
+  const items = pageRows.map((row) => {
+    const { lm_content, lm_created_at, ...ticket } = row;
+    const lastMessage: LastMessagePreview =
+      lm_content != null && lm_created_at != null
+        ? {
+            content: lm_content.length > 200 ? lm_content.slice(0, 200) + "…" : lm_content,
+            created_at: new Date(lm_created_at),
+          }
+        : null;
+    return { ...ticket, lastMessage };
+  });
+
+  let next_cursor: string | null = null;
+  if (hasMore && items.length > 0) {
+    const last = items[items.length - 1]!;
+    next_cursor = Buffer.from(`${last.updated_at.toISOString()}|${last.id}`).toString("base64");
+  }
+
+  return { items, next_cursor };
+}
+
+export async function listTicketMessagesCursor(
+  ticketId: string,
+  options: { limit: number; cursor?: string }
+): Promise<{ items: Message[]; next_cursor: string | null }> {
+  const safeLimit = Math.min(Math.max(1, Math.floor(options.limit)), 100);
+  const conditions = [eq(supportMessages.ticket_id, ticketId)];
+
+  if (options.cursor) {
+    try {
+      const [cursorTs, cursorId] = Buffer.from(options.cursor, "base64").toString().split("|");
+      const cursorDate = new Date(cursorTs ?? "");
+      const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+      if (!Number.isNaN(cursorDate.getTime()) && cursorId && UUID_RE.test(cursorId)) {
+        conditions.push(
+          or(
+            lt(supportMessages.created_at, cursorDate),
+            and(eq(supportMessages.created_at, cursorDate), lt(supportMessages.id, cursorId))
+          )!
+        );
+      }
+    } catch {
+      // ignore invalid cursor and return from first page
+    }
+  }
+
+  const rows = await db.query.supportMessages.findMany({
+    where: and(...conditions),
+    orderBy: [desc(supportMessages.created_at), desc(supportMessages.id)],
+    limit: safeLimit + 1,
+  });
+
+  const hasMore = rows.length > safeLimit;
+  const page = hasMore ? rows.slice(0, safeLimit) : rows;
+  // Keep oldest-to-newest rendering to preserve current UI behavior.
+  const items = [...page].reverse();
+
+  let next_cursor: string | null = null;
+  if (hasMore && page.length > 0) {
+    const last = page[page.length - 1]!;
+    next_cursor = Buffer.from(`${last.created_at.toISOString()}|${last.id}`).toString("base64");
+  }
+
+  return { items, next_cursor };
 }
 
 /**

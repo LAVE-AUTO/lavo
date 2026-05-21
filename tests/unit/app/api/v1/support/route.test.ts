@@ -64,7 +64,7 @@ describe('GET /api/v1/support', () => {
   beforeEach(() => {
     jest.clearAllMocks();
     mockRequireRole.mockResolvedValue(clientAuth);
-    mockGetSupportTickets.mockResolvedValue([ticketFixture]);
+    mockGetSupportTickets.mockResolvedValue({ items: [ticketFixture], next_cursor: null });
   });
 
   // --- Happy path ---
@@ -74,21 +74,36 @@ describe('GET /api/v1/support', () => {
 
     expect(res.status).toBe(200);
     const body = await res.json();
-    expect(Array.isArray(body.data)).toBe(true);
-    expect(body.data[0].ticket_number).toBe('SUP-ABCD1234');
-    expect(mockGetSupportTickets).toHaveBeenCalledWith(clientAuth.sub, clientAuth.role, undefined);
+    expect(Array.isArray(body.data.items)).toBe(true);
+    expect(body.data.items[0].ticket_number).toBe('SUP-ABCD1234');
+    expect(mockGetSupportTickets).toHaveBeenCalledWith(
+      clientAuth.sub,
+      clientAuth.role,
+      undefined,
+      { limit: 50, cursor: undefined }
+    );
   });
 
   it('passes status query param to the service', async () => {
     await GET(makeGetRequest('status=ouvert'));
 
-    expect(mockGetSupportTickets).toHaveBeenCalledWith(clientAuth.sub, clientAuth.role, 'ouvert');
+    expect(mockGetSupportTickets).toHaveBeenCalledWith(
+      clientAuth.sub,
+      clientAuth.role,
+      'ouvert',
+      { limit: 50, cursor: undefined }
+    );
   });
 
   it('passes no status when query param is absent', async () => {
     await GET(makeGetRequest());
 
-    expect(mockGetSupportTickets).toHaveBeenCalledWith(clientAuth.sub, clientAuth.role, undefined);
+    expect(mockGetSupportTickets).toHaveBeenCalledWith(
+      clientAuth.sub,
+      clientAuth.role,
+      undefined,
+      { limit: 50, cursor: undefined }
+    );
   });
 
   // --- Status filter validation ---
@@ -113,22 +128,32 @@ describe('GET /api/v1/support', () => {
 
   it('admin sees all tickets - passes admin role to service', async () => {
     mockRequireRole.mockResolvedValue(adminAuth);
-    mockGetSupportTickets.mockResolvedValue([ticketFixture]);
+    mockGetSupportTickets.mockResolvedValue({ items: [ticketFixture], next_cursor: null });
 
     const res = await GET(makeGetRequest());
 
     expect(res.status).toBe(200);
-    expect(mockGetSupportTickets).toHaveBeenCalledWith(adminAuth.sub, adminAuth.role, undefined);
+    expect(mockGetSupportTickets).toHaveBeenCalledWith(
+      adminAuth.sub,
+      adminAuth.role,
+      undefined,
+      { limit: 50, cursor: undefined }
+    );
   });
 
   it('station user can list their own tickets', async () => {
     mockRequireRole.mockResolvedValue(stationAuth);
-    mockGetSupportTickets.mockResolvedValue([]);
+    mockGetSupportTickets.mockResolvedValue({ items: [], next_cursor: null });
 
     const res = await GET(makeGetRequest());
 
     expect(res.status).toBe(200);
-    expect(mockGetSupportTickets).toHaveBeenCalledWith(stationAuth.sub, stationAuth.role, undefined);
+    expect(mockGetSupportTickets).toHaveBeenCalledWith(
+      stationAuth.sub,
+      stationAuth.role,
+      undefined,
+      { limit: 50, cursor: undefined }
+    );
   });
 
   // --- Auth errors ---
