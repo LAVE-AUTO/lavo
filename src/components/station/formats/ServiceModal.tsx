@@ -6,7 +6,7 @@ import { patchWithApi, postWithApi } from '@/services';
 import { TextField } from '@/components/station/config/TextField';
 import { Textarea } from '@/components/station/config/Textarea';
 import { NumberStepper } from '@/components/station/config/NumberStepper';
-import type { StationExtras, StationExtra } from '@/components/station/config/StationExtrasForm';
+import type { StationExtras, StationExtra } from '@/components/station/config/station-extras-types';
 import type { Service, VehicleFormat, ServiceVehicleEntry, ServiceCategory, ServiceType } from './types';
 import { ServiceVehicleRows } from './ServiceVehicleRows';
 

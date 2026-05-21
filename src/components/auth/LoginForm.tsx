@@ -179,7 +179,8 @@ export function LoginForm({
       } else if (data?.code === 'BUSINESS_REJECTED') {
         showError(t('error_account_rejected'));
       } else if (data?.code === 'FORBIDDEN') {
-        // TODO: connect to API once backend returns distinct codes for all statuses at login
+        // Generic fallback for any non-approved status the backend may return
+        // without a more specific code (e.g. ACCOUNT_SUSPENDED).
         showError(t('error_account_not_active'));
       } else if (data?.code === 'INVALID_CREDENTIALS' || data?.code === 'UNAUTHORIZED') {
         setErrors({

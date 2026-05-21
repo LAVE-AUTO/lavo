@@ -5,7 +5,6 @@ import { useTranslations, useLocale } from 'next-intl';
 import { Link } from '@/i18n/navigation';
 import { useParams } from 'next/navigation';
 import { getFromApi, postWithApi } from '@/services/axios-service';
-import { RESERVATIONS_MOCK_ENABLED, findMockReservation } from '@/data/reservations-mock';
 
 /* ------------------------------------------------------------------ */
 /* Constants                                                            */
@@ -59,23 +58,6 @@ export default function SignalDelayPage() {
   const loadData = useCallback(async () => {
     setPageState('loading');
 
-    // TODO: remove mock block once booking flow is connected to Stripe
-    if (RESERVATIONS_MOCK_ENABLED) {
-      const mock = findMockReservation(id);
-      if (!mock || mock.status !== 'confirmed') { setPageState('error'); return; }
-      const d = new Date(`${mock.date}T${mock.timeSlot}`);
-      setRes({
-        stationName: mock.stationName,
-        forfaitName: mock.forfaitName,
-        dateLabel:   d.toLocaleDateString(locale === 'en' ? 'en-CA' : 'fr-CA', {
-          weekday: 'short', day: 'numeric', month: 'long', year: 'numeric',
-        }),
-        timeSlot: mock.timeSlot,
-      });
-      setPageState('form');
-      return;
-    }
-
     const [ok, data] = await getFromApi(`/me/entries/${id}`);
     if (!mountedRef.current) return;
     if (!ok) { setPageState('error'); return; }
@@ -107,15 +89,6 @@ export default function SignalDelayPage() {
   const handleSubmit = async () => {
     if (submitting) return;
     setSubmitting(true);
-
-    // TODO: remove mock block once booking flow is connected to Stripe
-    if (RESERVATIONS_MOCK_ENABLED) {
-      await new Promise((r) => setTimeout(r, 700));
-      if (!mountedRef.current) return;
-      setSubmitting(false);
-      setPageState('success');
-      return;
-    }
 
     const payload: Record<string, unknown> = {};
     if (message.trim()) payload.message = message.trim();

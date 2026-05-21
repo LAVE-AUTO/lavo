@@ -153,8 +153,6 @@ export function CreateBlockModal({
 
   function handleSubmit() {
     if (!validate()) return;
-    // TODO: connect to API once endpoint is available
-    // POST /station/availability-blocks
     onSave({
       dates,
       startTime,

@@ -5,7 +5,7 @@ import { useTranslations, useLocale } from 'next-intl';
 import Link from 'next/link';
 import { getFromApi } from '@/services';
 import { useAuth } from '@/context/auth-context';
-import type { StationExtras, StationExtra } from '@/components/station/config/StationExtrasForm';
+import type { StationExtras, StationExtra } from '@/components/station/config/station-extras-types';
 import type { Service, VehicleFormat } from './types';
 import { ServiceCard } from './ServiceCard';
 import { ExtraCard } from './ExtraCard';

@@ -85,30 +85,35 @@ function ActionBadge({ action, label }: { action: string; label: string }) {
 
 // ─── Details rendering ────────────────────────────────────────────────────────
 
-const FIELD_LABELS: Record<string, string> = {
-  first_name: 'Prénom',
-  last_name: 'Nom',
-  email: 'Email',
-  phone: 'Téléphone',
-  status: 'Statut',
-  name: 'Nom',
-  city: 'Ville',
-  address: 'Adresse',
-  is_active: 'Actif',
-  is_visible: 'Visible',
-  promo_ref_code: 'Code promo',
-  promo_commission_rate: 'Commission promo',
-  promo_ref_generated_at: 'Généré le',
-};
+type LogsT = ReturnType<typeof useTranslations<'admin_logs'>>;
 
-const STATUS_LABELS: Record<string, string> = {
-  open: 'Ouvert', refunded: 'Remboursé', resolved: 'Résolu', rejected: 'Rejeté',
-  active: 'Actif', blocked: 'Bloqué', pending: 'En attente',
-};
+const KNOWN_FIELD_KEYS = new Set([
+  'first_name', 'last_name', 'email', 'phone', 'status', 'name', 'city', 'address',
+  'is_active', 'is_visible', 'promo_ref_code', 'promo_commission_rate', 'promo_ref_generated_at',
+]);
 
-function fmtValue(key: string, val: unknown): string {
+const KNOWN_STATUS_KEYS = new Set([
+  'open', 'refunded', 'resolved', 'rejected',
+  'active', 'suspended', 'blocked', 'pending', 'pending_admin_validation',
+]);
+
+function fieldLabel(t: LogsT, key: string): string {
+  if (KNOWN_FIELD_KEYS.has(key)) {
+    return t(`field_${key}` as Parameters<typeof t>[0]);
+  }
+  return key;
+}
+
+function statusLabel(t: LogsT, raw: string): string {
+  if (KNOWN_STATUS_KEYS.has(raw)) {
+    return t(`status_${raw}` as Parameters<typeof t>[0]);
+  }
+  return raw;
+}
+
+function fmtValue(t: LogsT, key: string, val: unknown): string {
   if (val === null || val === undefined) return '—';
-  if (typeof val === 'boolean') return val ? 'oui' : 'non';
+  if (typeof val === 'boolean') return val ? t('value_yes') : t('value_no');
   const s = String(val);
   if (key === 'promo_commission_rate') {
     const n = parseFloat(s);
@@ -118,12 +123,35 @@ function fmtValue(key: string, val: unknown): string {
     try { return new Date(s).toLocaleDateString('fr-CA', { day: 'numeric', month: 'short', year: 'numeric' }); }
     catch { return s; }
   }
-  if (key === 'status') return STATUS_LABELS[s] ?? s;
+  if (key === 'status') return statusLabel(t, s);
   return s;
 }
 
+/**
+ * Tries to pull a friendly target name from the `details` payload.
+ * Returns null when no name field is present (e.g. dispute-only actions).
+ */
+function extractTargetName(details: Record<string, unknown> | null): string | null {
+  if (!details) return null;
+  const candidates: Array<Record<string, unknown> | undefined> = [
+    details.after as Record<string, unknown> | undefined,
+    details.before as Record<string, unknown> | undefined,
+    details,
+  ];
+  for (const src of candidates) {
+    if (!src) continue;
+    if (typeof src.name === 'string' && src.name.trim()) return src.name.trim();
+    const fn = typeof src.first_name === 'string' ? src.first_name.trim() : '';
+    const ln = typeof src.last_name === 'string'  ? src.last_name.trim()  : '';
+    const full = [fn, ln].filter(Boolean).join(' ');
+    if (full) return full;
+    if (typeof src.email === 'string' && src.email.trim()) return src.email.trim();
+  }
+  return null;
+}
+
 function Arrow() {
-  return <span className="text-[#BBBBAA] dark:text-[#505040]">→</span>;
+  return <span className="text-[#BBBBAA] dark:text-[#505040]" aria-hidden="true">→</span>;
 }
 
 function Row({ label, children }: { label: string; children: React.ReactNode }) {
@@ -135,109 +163,110 @@ function Row({ label, children }: { label: string; children: React.ReactNode }) 
   );
 }
 
-function DiffRows({ before, after }: { before: Record<string, unknown>; after: Record<string, unknown> }) {
+function DiffRows({ before, after, t }: { before: Record<string, unknown>; after: Record<string, unknown>; t: LogsT }) {
   const changedKeys = Object.keys({ ...before, ...after }).filter(
     (k) => JSON.stringify(before[k]) !== JSON.stringify(after[k]),
   );
-  if (changedKeys.length === 0) return <p className="text-[#AAAAAA]">Aucun changement détecté.</p>;
+  if (changedKeys.length === 0) return <p className="text-[#AAAAAA]">{t('no_change_detected')}</p>;
   return (
     <>
       {changedKeys.map((k) => (
-        <Row key={k} label={FIELD_LABELS[k] ?? k}>
-          <span className="line-through opacity-60">{fmtValue(k, before[k])}</span>{' '}
-          <Arrow /> {fmtValue(k, after[k])}
+        <Row key={k} label={fieldLabel(t, k)}>
+          <span className="line-through opacity-60">{fmtValue(t, k, before[k])}</span>{' '}
+          <Arrow /> {fmtValue(t, k, after[k])}
         </Row>
       ))}
     </>
   );
 }
 
-function DetailsContent({ action, details }: { action: string; details: Record<string, unknown> }) {
-  // commission_rate_updated: { previous_rate, new_rate } (decimal fractions)
+function DetailsContent({ action, details, t }: { action: string; details: Record<string, unknown>; t: LogsT }) {
   if (action === 'commission_rate_updated') {
     const prev = parseFloat(String(details.previous_rate ?? '')) * 100;
     const next = parseFloat(String(details.new_rate ?? '')) * 100;
     return (
-      <Row label="Taux de commission">
+      <Row label={t('detail_rate_label')}>
         <span className="line-through opacity-60">{Number.isFinite(prev) ? `${Math.round(prev * 10) / 10} %` : '—'}</span>{' '}
         <Arrow /> {Number.isFinite(next) ? `${Math.round(next * 10) / 10} %` : '—'}
       </Row>
     );
   }
 
-  // REFUND_DISPUTE: { amount, stripe_refund_id, previous_status, new_status }
   if (action === 'REFUND_DISPUTE') {
     return (
       <>
-        {details.amount != null && <Row label="Montant remboursé">{String(details.amount)} XAF</Row>}
-        {details.stripe_refund_id && (
-          <Row label="Réf. Stripe">
-            <span className="font-mono text-[10px]">{String(details.stripe_refund_id).slice(0, 20)}…</span>
+        {details.amount != null && (
+          <Row label={t('detail_amount_refunded')}>
+            {parseFloat(String(details.amount)).toLocaleString('fr-CA', { style: 'currency', currency: 'CAD' })}
+          </Row>
+        )}
+        {typeof details.stripe_refund_id === 'string' && details.stripe_refund_id && (
+          <Row label={t('detail_stripe_ref')}>
+            <span className="font-mono text-[10px]">{details.stripe_refund_id.slice(0, 20)}…</span>
           </Row>
         )}
       </>
     );
   }
 
-  // CLOSE_DISPUTE: { previous_status, new_status, reason }
   if (action === 'CLOSE_DISPUTE') {
     return (
       <>
-        <Row label="Statut">
-          <span className="line-through opacity-60">{STATUS_LABELS[String(details.previous_status ?? '')] ?? String(details.previous_status)}</span>{' '}
-          <Arrow /> {STATUS_LABELS[String(details.new_status ?? '')] ?? String(details.new_status)}
+        <Row label={t('detail_status_change')}>
+          <span className="line-through opacity-60">{statusLabel(t, String(details.previous_status ?? ''))}</span>{' '}
+          <Arrow /> {statusLabel(t, String(details.new_status ?? ''))}
         </Row>
-        {details.reason && <Row label="Motif">{String(details.reason)}</Row>}
+        {typeof details.reason === 'string' && details.reason && (
+          <Row label={t('detail_close_reason')}>{details.reason}</Row>
+        )}
       </>
     );
   }
 
-  // toggle_rating_visibility: { score, previous_is_visible, new_is_visible, station_id }
   if (action === 'toggle_rating_visibility') {
     return (
       <>
-        {details.score != null && <Row label="Note">{String(details.score)}/5</Row>}
-        <Row label="Visibilité">
-          <span className="line-through opacity-60">{details.previous_is_visible ? 'Visible' : 'Masqué'}</span>{' '}
-          <Arrow /> {details.new_is_visible ? 'Visible' : 'Masqué'}
+        {details.score != null && (
+          <Row label={t('detail_rating_score')}>{t('score_template', { score: String(details.score) })}</Row>
+        )}
+        <Row label={t('detail_visibility')}>
+          <span className="line-through opacity-60">{details.previous_is_visible ? t('visibility_visible') : t('visibility_hidden')}</span>{' '}
+          <Arrow /> {details.new_is_visible ? t('visibility_visible') : t('visibility_hidden')}
         </Row>
       </>
     );
   }
 
-  // station_approved: { stripe_account_id, stripe_connected }
   if (action === 'station_approved') {
-    return <Row label="Stripe">Compte connecté avec succès</Row>;
+    return <Row label={t('detail_stripe_connected_label')}>{t('detail_stripe_connected_value')}</Row>;
   }
 
-  // station_rejected: { reason }
   if (action === 'station_rejected') {
-    return details.reason
-      ? <Row label="Motif du rejet">{String(details.reason)}</Row>
+    return typeof details.reason === 'string' && details.reason
+      ? <Row label={t('detail_reject_reason')}>{details.reason}</Row>
       : null;
   }
 
-  // Diff actions: UPDATE_USER, UPDATE_STATION, UNBLOCK_ACCOUNT, UPDATE_STATION_PROMO_QR
   if ('before' in details && 'after' in details) {
     return (
       <DiffRows
         before={details.before as Record<string, unknown>}
         after={details.after as Record<string, unknown>}
+        t={t}
       />
     );
   }
 
-  // Fallback: show key: value pairs (no raw JSON)
   return (
     <>
       {Object.entries(details).map(([k, v]) => (
-        <Row key={k} label={FIELD_LABELS[k] ?? k}>{fmtValue(k, v)}</Row>
+        <Row key={k} label={fieldLabel(t, k)}>{fmtValue(t, k, v)}</Row>
       ))}
     </>
   );
 }
 
-function DetailExpander({ action, details, tDetails }: { action: string; details: Record<string, unknown>; tDetails: { show: string; hide: string } }) {
+function DetailExpander({ action, details, t }: { action: string; details: Record<string, unknown>; t: LogsT }) {
   const [open, setOpen] = useState(false);
   if (Object.keys(details).length === 0) return null;
   return (
@@ -251,11 +280,11 @@ function DetailExpander({ action, details, tDetails }: { action: string; details
           style={{ transform: open ? 'rotate(90deg)' : undefined, transition: 'transform 0.15s' }}>
           <path d="M3 1.5l4 3.5-4 3.5V1.5z"/>
         </svg>
-        {open ? tDetails.hide : tDetails.show}
+        {open ? t('details_hide') : t('details_show')}
       </button>
       {open && (
         <div className="mt-2 flex flex-col gap-1 rounded-[12px] bg-[#F5F2EC] px-3 py-2.5 text-[12px] dark:bg-[#0E1A0C]">
-          <DetailsContent action={action} details={details} />
+          <DetailsContent action={action} details={details} t={t} />
         </div>
       )}
     </div>
@@ -425,12 +454,14 @@ export function AdminActivityLog() {
 
 // ─── Log row ─────────────────────────────────────────────────────────────────
 
-function LogRow({ entry, t }: { entry: LogEntry; t: ReturnType<typeof useTranslations<'admin_logs'>> }) {
-  const actionKey = `action_${entry.action}` as Parameters<typeof t>[0];
-  const targetKey = entry.target_type ? (`target_${entry.target_type}` as Parameters<typeof t>[0]) : null;
-  const actionLabel = t.has(actionKey) ? t(actionKey) : entry.action;
-  const targetLabel = targetKey && t.has(targetKey) ? t(targetKey) : entry.target_type;
-  const tDetails = { show: t('details_show'), hide: t('details_hide') };
+function LogRow({ entry, t }: { entry: LogEntry; t: LogsT }) {
+  const actionKey  = `action_${entry.action}` as Parameters<typeof t>[0];
+  const summaryKey = `summary_${entry.action}` as Parameters<typeof t>[0];
+  const targetKey  = entry.target_type ? (`target_${entry.target_type}` as Parameters<typeof t>[0]) : null;
+  const actionLabel  = t.has(actionKey)  ? t(actionKey)  : entry.action;
+  const summaryLabel = t.has(summaryKey) ? t(summaryKey) : null;
+  const targetTypeLabel = targetKey && t.has(targetKey) ? t(targetKey) : entry.target_type;
+  const targetName = extractTargetName(entry.details);
 
   return (
     <div className="bg-white px-4 py-4 transition-colors hover:bg-[#FAFAF7] sm:px-6 dark:bg-[#131E10] dark:hover:bg-[#182416]">
@@ -443,45 +474,65 @@ function LogRow({ entry, t }: { entry: LogEntry; t: ReturnType<typeof useTransla
             {formatDateTime(entry.created_at)}
           </time>
         </div>
+        {summaryLabel && (
+          <p className="text-[13px] font-semibold text-[#3A3A2A] dark:text-[#D0CDB8]">
+            {summaryLabel}
+            {targetName && <span className="text-[#5A554B] dark:text-[#A6A091]"> — {targetName}</span>}
+          </p>
+        )}
         <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-[12px] text-[#666] dark:text-[#9A9A8A]">
-          {targetLabel && (
+          {targetTypeLabel && (
             <span className="flex items-center gap-1">
-              <span className="h-1.5 w-1.5 rounded-full bg-[#CCCCBB]" />
-              {targetLabel}
+              <span className="h-1.5 w-1.5 rounded-full bg-[#CCCCBB]" aria-hidden="true" />
+              {targetTypeLabel}
             </span>
           )}
           <span className="flex items-center gap-1">
-            <span className="h-1.5 w-1.5 rounded-full bg-[#CCCCBB]" />
+            <span className="h-1.5 w-1.5 rounded-full bg-[#CCCCBB]" aria-hidden="true" />
             {entry.admin_name}
           </span>
         </div>
         {entry.details && Object.keys(entry.details).length > 0 && (
-          <DetailExpander action={entry.action} details={entry.details} tDetails={tDetails} />
+          <DetailExpander action={entry.action} details={entry.details} t={t} />
         )}
       </div>
 
       {/* Desktop: 4-column grid */}
       <div className="hidden sm:grid sm:grid-cols-[2fr_1.5fr_1.5fr_1fr] sm:items-start sm:gap-4">
-        {/* Action */}
+        {/* Action + human summary */}
         <div className="flex flex-col gap-1.5">
           <ActionBadge action={entry.action} label={actionLabel} />
+          {summaryLabel && (
+            <p className="text-[13px] font-semibold text-[#3A3A2A] dark:text-[#D0CDB8]">
+              {summaryLabel}
+            </p>
+          )}
           {entry.details && Object.keys(entry.details).length > 0 && (
-            <DetailExpander action={entry.action} details={entry.details} tDetails={tDetails} />
+            <DetailExpander action={entry.action} details={entry.details} t={t} />
           )}
         </div>
 
-        {/* Target */}
+        {/* Target (type + name when known) */}
         <div className="flex flex-col gap-0.5 pt-0.5">
-          {targetLabel
-            ? <span className="text-[13px] font-semibold text-[#3A3A2A] dark:text-[#D0CDB8]">{targetLabel}</span>
-            : <span className="text-[12px] text-[#AAAAAA]">—</span>}
+          {targetName ? (
+            <>
+              <span className="truncate text-[13px] font-semibold text-[#3A3A2A] dark:text-[#D0CDB8]">{targetName}</span>
+              {targetTypeLabel && (
+                <span className="text-[11px] text-[#A8A293] dark:text-[#7E8A75]">{targetTypeLabel}</span>
+              )}
+            </>
+          ) : targetTypeLabel ? (
+            <span className="text-[13px] font-semibold text-[#3A3A2A] dark:text-[#D0CDB8]">{targetTypeLabel}</span>
+          ) : (
+            <span className="text-[12px] text-[#AAAAAA]">—</span>
+          )}
         </div>
 
         {/* Admin */}
         <div className="flex flex-col gap-0.5 pt-0.5">
-          <span className="text-[13px] font-semibold text-[#3A3A2A] dark:text-[#D0CDB8]">{entry.admin_name}</span>
+          <span className="truncate text-[13px] font-semibold text-[#3A3A2A] dark:text-[#D0CDB8]">{entry.admin_name}</span>
           {entry.admin_email && (
-            <span className="text-[11px] text-[#BBBBAA] dark:text-[#A0A090]">{entry.admin_email}</span>
+            <span className="truncate text-[11px] text-[#A8A293] dark:text-[#7E8A75]">{entry.admin_email}</span>
           )}
         </div>
 

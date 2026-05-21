@@ -5,7 +5,6 @@ import { useTranslations, useLocale } from 'next-intl';
 import { Link } from '@/i18n/navigation';
 import { useParams } from 'next/navigation';
 import { getFromApi, postWithApi } from '@/services/axios-service';
-import { RESERVATIONS_MOCK_ENABLED, findMockReservation } from '@/data/reservations-mock';
 import type { AvailableSlot } from '@/components/reservations/SlotPicker';
 import RescheduleSuccessView from '@/components/reservations/RescheduleSuccessView';
 
@@ -102,45 +101,6 @@ export default function RescheduleReservationPage() {
   const loadData = useCallback(async () => {
     setLoading(true);
     setLoadError(false);
-
-    // TODO: remove mock block once booking flow is connected to Stripe
-    if (RESERVATIONS_MOCK_ENABLED) {
-      const mock = findMockReservation(id);
-      if (!mock) { setLoadError(true); setLoading(false); return; }
-
-      const now = Date.now();
-      const slotDate = new Date(`${mock.date}T${mock.timeSlot}`);
-      const label = slotDate.toLocaleDateString(locale === 'en' ? 'en-CA' : 'fr-CA', {
-        weekday: 'short', day: 'numeric', month: 'short',
-      }) + ' ' + mock.timeSlot;
-      setCurrentLabel(label);
-
-      const minutesUntil = (slotDate.getTime() - now) / 60000;
-      setHasFee(minutesUntil > 0 && minutesUntil < LATE_RESCHEDULE_THRESHOLD_MINUTES);
-
-      setForfaitLabel(mock.forfaitName);
-      setStationName(mock.stationName);
-      setAmount(mock.totalPrice);
-
-      /* Créneaux fictifs disponibles sur les 5 prochains jours */
-      const hours = [8, 9, 10, 11, 14, 15, 16, 17];
-      const fullSlots = new Set([1, 4, 6]); /* indices marqués complets pour réalisme */
-      const mockSlots: AvailableSlot[] = [];
-      let idx = 0;
-      for (let day = 1; day <= 5; day++) {
-        const base = new Date(now);
-        base.setDate(base.getDate() + day);
-        for (const hour of hours) {
-          const s = new Date(base);
-          s.setHours(hour, 0, 0, 0);
-          mockSlots.push({ id: `mock-slot-${idx}`, startTime: s.toISOString(), isFull: fullSlots.has(idx) });
-          idx++;
-        }
-      }
-      setAvailableSlots(mockSlots);
-      setLoading(false);
-      return;
-    }
 
     /* Fetch the rich entry directly (denormalised station + vehicle format +
      * slot times) to avoid an N+1 list scan. */
