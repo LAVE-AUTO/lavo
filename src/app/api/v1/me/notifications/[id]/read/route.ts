@@ -1,5 +1,5 @@
 /**
- * PATCH /api/v1/me/notifications/:id/read - mark a single notification as read. Auth: client|station.
+ * PATCH /api/v1/me/notifications/:id/read - mark a single notification as read. Auth: client|station|admin.
  */
 import { requireRole } from '@/lib/require-role';
 import { successResponse, error400, error404, error500, fromAppError } from '@/lib/responses';
@@ -18,7 +18,7 @@ export async function PATCH(
   request: Request,
   { params }: { params: Promise<{ id: string }> }
 ): Promise<NextResponse> {
-  const auth = await requireRole(request, 'client', 'station');
+  const auth = await requireRole(request, 'client', 'station', 'admin');
   if (auth instanceof Response) return applyNoStoreHeaders(auth as NextResponse);
 
   const parsed = paramsSchema.safeParse(await params);

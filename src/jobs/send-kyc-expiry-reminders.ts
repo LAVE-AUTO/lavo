@@ -24,6 +24,7 @@ import {
   setReminderSent,
 } from '@/server/station/document-repository';
 import { sendPushNotification } from '@/server/notifications/fcm-service';
+import { notifyAdminEvent } from '@/server/notifications/admin-notification-service';
 import { sendKycExpiryReminderEmail } from '@/lib/email';
 import { runWithConcurrencyLimit } from '@/helpers/concurrency';
 
@@ -307,6 +308,9 @@ async function sendRemindersForThreshold(
       notifyAdminsPush(admins, documentId, documentType, stationName, thresholdDays),
       emailStationOwner(stationOwnerEmail, documentId, documentType, expiryDate, stationName, thresholdDays),
       emailAdmins(admins, documentId, documentType, expiryDate, stationName, thresholdDays),
+      notifyAdminEvent({
+        type: 'kyc_expiry_reminder',
+      }),
     ]);
 
     // Stamp the anti-duplicate flag only after all notifications have been dispatched.
