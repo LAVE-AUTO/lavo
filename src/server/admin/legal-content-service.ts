@@ -1,11 +1,16 @@
 /**
  * Legal content service.
  *
- * Reads and writes legal documents (CGU, privacy policy, legal notices) from the
- * settings table using type='legal' and entity_id=null (global scope).
+ * Reads and writes legal/landing documents (CGU, privacy policy, legal notices,
+ * cancellation, contact, landing sections) from the settings table using
+ * type='legal' and entity_id=null (global scope).
  *
  * Content is sanitized with DOMPurify before persistence to strip XSS vectors.
- * Only the three keys declared in LEGAL_CONTENT_KEYS are accepted.
+ * Only the keys declared in LEGAL_CONTENT_KEYS are accepted.
+ *
+ * When no row exists yet for a key, getLegalContent falls back to the bundled
+ * HTML default (see legal-content-defaults.ts). The public pages read through
+ * this same helper so admin saves take effect immediately.
  *
  * requires: npm install isomorphic-dompurify
  */
@@ -14,20 +19,24 @@ import DOMPurify from 'isomorphic-dompurify';
 
 import { db } from '@/lib/db';
 import { settings } from '@/lib/db/schema';
+import { getDefaultLegalContent } from './legal-content-defaults';
+import type { LegalContentKey } from '@/validators/legal-content';
 
 
 // %%%%% Read %%%%%
 // Retrieve legal content by key from the settings table
 
 /**
- * Returns the stored legal content for the given key, or null if not yet set.
+ * Returns the stored legal content for the given key, or the bundled HTML
+ * default when no row exists yet. Both the admin editor and the public
+ * pages call through this helper so they always see the same content.
  *
- * Queries the settings table for type='legal', entity_id IS NULL, key=key.
- *
- * @param key - One of the supported legal content keys
- * @returns   - Raw stored content string, or null if not found
+ * Pass `withDefault=false` to inspect raw storage (returns null when empty).
  */
-export async function getLegalContent(key: string): Promise<string | null> {
+export async function getLegalContent(
+  key: string,
+  options: { withDefault?: boolean; locale?: 'fr' | 'en' } = {},
+): Promise<string | null> {
   const row = await db.query.settings.findFirst({
     where: and(
       eq(settings.type, 'legal'),
@@ -35,7 +44,11 @@ export async function getLegalContent(key: string): Promise<string | null> {
       eq(settings.key, key)
     ),
   });
-  return row?.value ?? null;
+  if (row?.value) return row.value;
+
+  const withDefault = options.withDefault !== false;
+  if (!withDefault) return null;
+  return getDefaultLegalContent(key as LegalContentKey, options.locale ?? 'fr');
 }
 
 

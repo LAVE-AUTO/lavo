@@ -129,16 +129,13 @@ export function AdminTopNav({ onToggleSidebar }: AdminTopNavProps) {
               <Image
                 src={lightLogoSrc}
                 alt="Hurryline"
-                width={110}
-                height={30}
-                className="h-8 w-auto object-contain"
+                width={200}
+                height={80}
+                className="h-20 w-auto object-contain"
                 priority
               />
             )}
           </Link>
-          <div className="mt-0.5 text-[11px] font-medium text-[#666] dark:text-[#A0A090]">
-            Administration
-          </div>
         </div>
       </div>
 

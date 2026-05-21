@@ -1,68 +1,57 @@
-'use client';
-
-import { useState } from 'react';
-import { useTranslations } from 'next-intl';
 import { Link } from '@/i18n/navigation';
 
-interface FaqItem {
-  q: string;
-  a: string;
+interface Props {
+  /** Sanitized HTML body (admin-editable Q&A). */
+  html: string;
+  eyebrow: string;
+  title: string;
+  titleAccent: string;
+  subtitle: string;
+  ctaTitle: string;
+  ctaDesc: string;
+  ctaBtn: string;
 }
 
-function AccordionItem({ item, index }: { item: FaqItem; index: number }) {
-  const [open, setOpen] = useState(index === 0);
-  return (
-    <div className={`rounded-xl border transition-all duration-200 ${open ? 'border-gold/40 bg-gold/3' : 'border-[rgba(200,152,10,0.12)] bg-transparent hover:border-gold/25'}`}>
-      <button
-        type="button"
-        onClick={() => setOpen((v) => !v)}
-        className="w-full flex items-center justify-between px-6 py-5 text-left cursor-pointer"
-        aria-expanded={open}
-      >
-        <span className={`text-[15px] sm:text-[16px] font-bold leading-snug pr-4 ${open ? 'text-[#1a1a1a] dark:text-white' : 'text-[#2a2a2a] dark:text-[#d0d0c0]'}`}>
-          {item.q}
-        </span>
-        <span className={`shrink-0 w-7 h-7 rounded-full flex items-center justify-center transition-all duration-200 ${open ? 'bg-gold text-dark-bg rotate-45' : 'bg-[rgba(200,152,10,0.1)] text-[#c8980a]'}`}>
-          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" aria-hidden="true">
-            <line x1="12" y1="5" x2="12" y2="19" />
-            <line x1="5" y1="12" x2="19" y2="12" />
-          </svg>
-        </span>
-      </button>
-      {open && (
-        <div className="px-6 pb-5 text-[14px] sm:text-[15px] text-[#555] dark:text-[#A0A090] leading-[1.75] animate-fade-in">
-          {item.a}
-        </div>
-      )}
-    </div>
-  );
-}
-
-export function FaqPageContent() {
-  const t = useTranslations('faq_page');
-
-  const items: FaqItem[] = Array.from({ length: 10 }, (_, i) => ({
-    q: t(`q${i + 1}`),
-    a: t(`a${i + 1}`),
-  }));
-
+export function FaqPageContent({
+  html,
+  eyebrow,
+  title,
+  titleAccent,
+  subtitle,
+  ctaTitle,
+  ctaDesc,
+  ctaBtn,
+}: Props) {
   return (
     <div className="max-w-[1440px] mx-auto px-6 lg:px-16 pt-12 pb-20">
 
       {/* Header */}
       <div className="max-w-2xl mb-12">
-        <p className="text-[12px] font-bold tracking-[3px] uppercase text-[#c8980a] mb-3">{t('eyebrow')}</p>
+        <p className="text-[12px] font-bold tracking-[3px] uppercase text-[#c8980a] mb-3">{eyebrow}</p>
         <h1 className="font-playfair text-[36px] sm:text-[48px] font-black text-[#1a1a1a] dark:text-white leading-tight mb-4">
-          {t('title')} <span className="text-[#c8980a]">{t('title_accent')}</span>
+          {title} <span className="text-[#c8980a]">{titleAccent}</span>
         </h1>
-        <p className="text-[15px] sm:text-[16px] text-[#555] dark:text-[#A0A090] leading-relaxed">{t('subtitle')}</p>
+        <p className="text-[15px] sm:text-[16px] text-[#555] dark:text-[#A0A090] leading-relaxed">{subtitle}</p>
       </div>
 
-      {/* Two-column grid on desktop */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 mb-14">
-        {items.map((item, i) => (
-          <AccordionItem key={i} item={item} index={i} />
-        ))}
+      {/* Admin-editable Q&A body */}
+      <div className="mb-14 max-w-3xl">
+        <div
+          className={[
+            'text-[14px] sm:text-[15px] text-[#555] dark:text-[#A0A090] leading-[1.85]',
+            '[&_h2]:font-playfair [&_h2]:text-[22px] [&_h2]:font-black [&_h2]:text-[#1a1a1a] dark:[&_h2]:text-white [&_h2]:mt-10 [&_h2]:mb-3',
+            '[&_h3]:relative [&_h3]:pl-5 [&_h3]:text-[16px] sm:[&_h3]:text-[17px] [&_h3]:font-bold [&_h3]:text-[#1a1a1a] dark:[&_h3]:text-white [&_h3]:mt-8 [&_h3]:mb-2',
+            '[&_h3]:before:content-[""] [&_h3]:before:absolute [&_h3]:before:left-0 [&_h3]:before:top-1/2 [&_h3]:before:-translate-y-1/2 [&_h3]:before:h-4 [&_h3]:before:w-1 [&_h3]:before:rounded-full [&_h3]:before:bg-[#c8980a]',
+            '[&_p]:mb-4',
+            '[&_ul]:list-disc [&_ul]:pl-6 [&_ul]:mb-4 [&_ul]:space-y-1.5',
+            '[&_ol]:list-decimal [&_ol]:pl-6 [&_ol]:mb-4 [&_ol]:space-y-1.5',
+            '[&_strong]:text-[#1a1a1a] dark:[&_strong]:text-white [&_strong]:font-bold',
+            '[&_a]:text-[#c8980a] [&_a]:font-semibold [&_a]:underline [&_a]:underline-offset-2',
+          ].join(' ')}
+          // Sanitized server-side via DOMPurify before persistence.
+          // eslint-disable-next-line react/no-danger
+          dangerouslySetInnerHTML={{ __html: html }}
+        />
       </div>
 
       {/* Still have questions */}
@@ -72,13 +61,13 @@ export function FaqPageContent() {
             <path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z" />
           </svg>
         </div>
-        <h2 className="text-[20px] font-black text-[#1a1a1a] dark:text-white mb-2">{t('cta_title')}</h2>
-        <p className="text-[14px] text-[#555] dark:text-[#A0A090] mb-5">{t('cta_desc')}</p>
+        <h2 className="text-[20px] font-black text-[#1a1a1a] dark:text-white mb-2">{ctaTitle}</h2>
+        <p className="text-[14px] text-[#555] dark:text-[#A0A090] mb-5">{ctaDesc}</p>
         <Link
-          href="/nous-contacter"
+          href={`/nous-contacter` as Parameters<typeof Link>[0]['href']}
           className="inline-block px-6 py-3 bg-gold hover:bg-gold-hover text-dark-bg text-[14px] font-bold rounded-xl transition-colors btn-shine"
         >
-          {t('cta_btn')}
+          {ctaBtn}
         </Link>
       </div>
     </div>
