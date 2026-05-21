@@ -1,5 +1,5 @@
 /**
- * GET /api/v1/me/notifications - list notifications (cursor-paginated). Auth: client|station.
+ * GET /api/v1/me/notifications - list notifications (cursor-paginated). Auth: client|station|admin.
  *
  * Query: limit (1-100, default 20), cursor (opaque string), unread_only (boolean)
  */
@@ -19,7 +19,7 @@ const querySchema = z.object({
 });
 
 export async function GET(request: Request): Promise<NextResponse> {
-  const auth = await requireRole(request, 'client', 'station');
+  const auth = await requireRole(request, 'client', 'station', 'admin');
   if (auth instanceof Response) return applyNoStoreHeaders(auth as NextResponse);
 
   const { searchParams } = new URL(request.url);

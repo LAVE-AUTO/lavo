@@ -3034,7 +3034,10 @@
         "nav_section_configuration": "Configuration",
         "nav_section_operations": "Opérations",
         "nav_section_support": "Support & Historique",
-        "nav_profile": "Mon profil"
+        "nav_profile": "Mon profil",
+        "notif_error": "Impossible de charger les notifications.",
+        "notif_open_cta": "Ouvrir",
+        "notif_load_more": "Charger plus"
     },
     "client_support": {
         "page_title": "Support",
@@ -3561,7 +3564,17 @@
         "error_generic": "Une erreur est survenue. Veuillez réessayer.",
         "success_profile_saved": "Profil mis à jour.",
         "success_email_changed": "Adresse e-mail mise à jour.",
-        "success_password_changed": "Mot de passe mis à jour."
+        "success_password_changed": "Mot de passe mis à jour.",
+        "section_notifications": "Préférences notifications admin",
+        "section_notifications_hint": "Choisissez les canaux de livraison par type d’alerte.",
+        "notif_station_lifecycle": "Cycle de vie station",
+        "notif_kyc_alerts": "Alertes KYC",
+        "notif_support_alerts": "Alertes support",
+        "notif_channel_in_app": "In-app",
+        "notif_channel_push": "Push",
+        "notif_channel_email": "Email",
+        "btn_save_notifications": "Enregistrer les notifications",
+        "success_notifications_saved": "Préférences notifications enregistrées"
     },
     "admin_client_detail": {
         "back_to_list": "Clients",

@@ -22,6 +22,7 @@ import {
 } from '@/lib/email';
 import { APP_URL } from '@/helpers/constants';
 import { buildStationQrPublicUrl } from '@/server/qr/qr-token-service';
+import { notifyAdminEvent } from '@/server/notifications/admin-notification-service';
 import {
   createStripeConnectAccount,
   createStripeOnboardingLink,
@@ -193,6 +194,10 @@ export async function completeStationOnboarding(
   sendVerificationEmail(user.email, dto.station_name ?? '', verificationToken, locale).catch(() => void 0);
 
   sendStationApplicationAdminNotification(station.name, station.id).catch(() => void 0);
+  notifyAdminEvent({
+    type: 'station_application_submitted',
+    stationId: station.id,
+  }).catch(() => void 0);
 
   return { user, station };
 }
@@ -381,6 +386,10 @@ export async function approveStation(
 
   sendStationApplicationAdminNotification(station.name, station.id, { context: 'approval', qrPublicUrl })
     .catch(() => void 0);
+  notifyAdminEvent({
+    type: 'station_application_approved',
+    stationId: station.id,
+  }).catch(() => void 0);
 }
 
 export async function rejectStation(
@@ -734,4 +743,3 @@ export async function getStationJoinPublic(id: string): Promise<{ mapsUrl: strin
   const mapsUrl = `https://www.google.com/maps?q=${q}`;
   return { mapsUrl };
 }
-

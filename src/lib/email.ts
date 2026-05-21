@@ -640,6 +640,39 @@ export async function sendStationApplicationAdminNotification(
   });
 }
 
+export async function sendAdminOperationalEmail(params: {
+  to: string;
+  adminName?: string;
+  subject: string;
+  body: string;
+  actionUrl?: string;
+}): Promise<void> {
+  const client = getResendClient();
+  if (!client) {
+    warnResendMissingOnce('sendAdminOperationalEmail');
+    return;
+  }
+  if (!isReasonableRecipientEmail(params.to)) return;
+
+  const safeName = escapeHtmlPlain(safePlainTextSnippet(params.adminName ?? 'Admin', 100));
+  const safeBody = escapeHtmlPlain(safePlainTextSnippet(params.body, 2000));
+  const safeActionUrl = safeHttpUrlForEmailHref(
+    params.actionUrl ? `${APP_URL}${params.actionUrl}` : undefined
+  );
+  const safeSubject = safePlainTextSnippet(params.subject, 160);
+
+  await client.emails.send({
+    from: FROM,
+    to: params.to,
+    subject: `[Hurryline Admin] ${safeSubject}`,
+    html: brandedEmail('en', {
+      greeting: `Hello ${safeName},`,
+      bodyHtml: safeBody,
+      ...(safeActionUrl ? { ctaUrl: safeActionUrl, ctaLabel: 'Open admin panel' } : {}),
+    }),
+  });
+}
+
 
 /** Payment captured / service complete (Stripe path). No-op without Resend; send errors logged only. */
 export async function sendPaymentSuccessEmail(params: {

@@ -69,6 +69,12 @@ export function AdminProfileView() {
   const [pwdErrs,      setPwdErrs]      = useState<Record<string, string>>({});
   const [savingPwd,    setSavingPwd]    = useState(false);
   const [sendingPwdOtp, setSendingPwdOtp] = useState(false);
+  const [savingNotif, setSavingNotif] = useState(false);
+  const [notifPrefs, setNotifPrefs] = useState({
+    station_lifecycle: { in_app: true, push: true, email: true },
+    kyc_alerts: { in_app: true, push: true, email: true },
+    support_alerts: { in_app: true, push: true, email: true },
+  });
 
   // Load profile on mount
   useEffect(() => {
@@ -88,6 +94,66 @@ export function AdminProfileView() {
       .catch(() => { if (mountedRef.current) setLoadError(true); })
       .finally(() => { if (mountedRef.current) setLoadingData(false); });
   }, []);
+
+  useEffect(() => {
+    getFromApi('/me/notification-prefs')
+      .then(([ok, data]) => {
+        if (!mountedRef.current || !ok) return;
+        const prefs = (data as {
+          data?: {
+            station_lifecycle?: { in_app?: boolean; push?: boolean; email?: boolean };
+            kyc_alerts?: { in_app?: boolean; push?: boolean; email?: boolean };
+            support_alerts?: { in_app?: boolean; push?: boolean; email?: boolean };
+          };
+        }).data;
+        if (!prefs) return;
+        setNotifPrefs({
+          station_lifecycle: {
+            in_app: prefs.station_lifecycle?.in_app !== false,
+            push: prefs.station_lifecycle?.push !== false,
+            email: prefs.station_lifecycle?.email !== false,
+          },
+          kyc_alerts: {
+            in_app: prefs.kyc_alerts?.in_app !== false,
+            push: prefs.kyc_alerts?.push !== false,
+            email: prefs.kyc_alerts?.email !== false,
+          },
+          support_alerts: {
+            in_app: prefs.support_alerts?.in_app !== false,
+            push: prefs.support_alerts?.push !== false,
+            email: prefs.support_alerts?.email !== false,
+          },
+        });
+      })
+      .catch(() => void 0);
+  }, []);
+
+  async function handleSaveNotificationPrefs() {
+    setSavingNotif(true);
+    const [ok, data] = await updateWithApi('/me/notification-prefs', notifPrefs);
+    if (!mountedRef.current) return;
+    setSavingNotif(false);
+    if (!ok) {
+      const errData = data as { message?: string };
+      toastError(errData?.message ?? t('error_generic'));
+      return;
+    }
+    toastSuccess(t('success_notifications_saved'));
+  }
+
+  function toggleNotif(
+    section: 'station_lifecycle' | 'kyc_alerts' | 'support_alerts',
+    channel: 'in_app' | 'push' | 'email',
+    checked: boolean
+  ) {
+    setNotifPrefs((prev) => ({
+      ...prev,
+      [section]: {
+        ...prev[section],
+        [channel]: checked,
+      },
+    }));
+  }
 
   // Cooldown countdown for email OTP
   useEffect(() => {
@@ -487,6 +553,47 @@ export function AdminProfileView() {
                 {savingPwd ? t('btn_saving') : t('btn_change_password')}
               </button>
             </div>
+          </div>
+        </section>
+
+        <section className="rounded-[28px] border border-[#E1DBCF] bg-white/88 p-5 shadow-[0_12px_40px_rgba(26,26,10,0.06)] backdrop-blur-xl dark:border-[#1E2E18] dark:bg-[#101A0D]/90">
+          <h2 className="mb-4 text-[14px] font-black text-[#1A1A0A] dark:text-[#F0EDD4]">{t('section_notifications')}</h2>
+          <p className="mb-4 text-[13px] text-[#6F6B5F] dark:text-[#A6A091]">{t('section_notifications_hint')}</p>
+          {([
+            ['station_lifecycle', t('notif_station_lifecycle')],
+            ['kyc_alerts', t('notif_kyc_alerts')],
+            ['support_alerts', t('notif_support_alerts')],
+          ] as const).map(([key, label]) => (
+            <div key={key} className="mb-3 rounded-2xl border border-[#E1DBCF] bg-[#FBF9F3] p-3 dark:border-[#243020] dark:bg-[#0E170B]">
+              <p className="mb-2 text-[13px] font-bold text-[#1A1A0A] dark:text-[#F0EDD4]">{label}</p>
+              <div className="grid grid-cols-1 gap-2 sm:grid-cols-3">
+                {([
+                  ['in_app', t('notif_channel_in_app')],
+                  ['push', t('notif_channel_push')],
+                  ['email', t('notif_channel_email')],
+                ] as const).map(([channel, channelLabel]) => (
+                  <label key={channel} className="flex items-center gap-2 rounded-lg border border-[#E1DBCF] px-3 py-2 text-[12px] dark:border-[#243020]">
+                    <input
+                      type="checkbox"
+                      checked={notifPrefs[key][channel]}
+                      onChange={(e) => toggleNotif(key, channel, e.target.checked)}
+                      className="h-4 w-4 accent-[#C49A1E]"
+                    />
+                    <span className="font-semibold text-[#4F4C40] dark:text-[#D2CEBE]">{channelLabel}</span>
+                  </label>
+                ))}
+              </div>
+            </div>
+          ))}
+          <div className="flex justify-end">
+            <button
+              type="button"
+              onClick={handleSaveNotificationPrefs}
+              disabled={savingNotif}
+              className="rounded-lg bg-[#C49A1E] px-4 py-2 text-[13px] font-bold text-[#0C1209] transition-colors hover:bg-[#B08A14] disabled:cursor-not-allowed disabled:opacity-50"
+            >
+              {savingNotif ? t('btn_saving') : t('btn_save_notifications')}
+            </button>
           </div>
         </section>
 

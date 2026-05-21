@@ -18,6 +18,8 @@ type UserNotification = {
   title: string | null;
   body: string | null;
   is_read: boolean;
+  action_url?: string | null;
+  created_at?: string;
 };
 
 export function AdminTopNav({ onToggleSidebar }: AdminTopNavProps) {
@@ -31,7 +33,9 @@ export function AdminTopNav({ onToggleSidebar }: AdminTopNavProps) {
   const [isOpen, setIsOpen] = useState(false);
   const [loading, setLoading] = useState(false);
   const [items, setItems] = useState<UserNotification[]>([]);
+  const [nextCursor, setNextCursor] = useState<string | null>(null);
   const [unreadCount, setUnreadCount] = useState(0);
+  const [errorLoading, setErrorLoading] = useState(false);
   const panelRef = useRef<HTMLDivElement | null>(null);
 
   useEffect(() => {
@@ -61,12 +65,27 @@ export function AdminTopNav({ onToggleSidebar }: AdminTopNavProps) {
     setIsOpen((v) => !v);
     if (isOpen) return;
     setLoading(true);
+    setErrorLoading(false);
     const [ok, data] = await getFromApi<{ data?: { items: UserNotification[]; unread_count: number } }>('/me/notifications?limit=20');
     if (ok && data && typeof data === 'object' && 'data' in data) {
       setItems(data.data?.items ?? []);
       setUnreadCount(data.data?.unread_count ?? 0);
+      setNextCursor((data.data as { next_cursor?: string | null } | undefined)?.next_cursor ?? null);
+    } else {
+      setErrorLoading(true);
     }
     setLoading(false);
+  }
+
+  async function loadMoreNotifications() {
+    if (!nextCursor) return;
+    const [ok, data] = await getFromApi<{ data?: { items: UserNotification[]; next_cursor: string | null } }>(
+      `/me/notifications?limit=20&cursor=${encodeURIComponent(nextCursor)}`
+    );
+    if (!ok || !data || typeof data !== 'object' || !('data' in data)) return;
+    const incoming = data.data?.items ?? [];
+    setItems((prev) => [...prev, ...incoming]);
+    setNextCursor(data.data?.next_cursor ?? null);
   }
 
   async function markOneRead(id: string) {
@@ -164,7 +183,7 @@ export function AdminTopNav({ onToggleSidebar }: AdminTopNavProps) {
           </button>
           {isOpen && (
             <div
-              className="absolute right-0 top-11 z-50 w-96 rounded-xl p-3 shadow-xl opacity-100 backdrop-blur-0"
+              className="absolute right-0 top-11 z-50 w-96 rounded-2xl border border-[#E1DBCF] p-3 shadow-xl opacity-100 backdrop-blur-0 dark:border-[#1E2E18]"
               style={notifPanelStyle}
             >
               <div className="mb-2 flex items-center justify-between">
@@ -179,7 +198,8 @@ export function AdminTopNav({ onToggleSidebar }: AdminTopNavProps) {
                 </button>
               </div>
               {loading ? <div className="py-4 text-sm" style={{ color: isDark ? '#C9C4B2' : '#5E5A4D' }}>{t('notif_loading')}</div> : null}
-              {!loading && items.length === 0 ? <div className="py-4 text-sm" style={{ color: isDark ? '#C9C4B2' : '#5E5A4D' }}>{t('notif_empty')}</div> : null}
+              {!loading && errorLoading ? <div className="py-4 text-sm" style={{ color: isDark ? '#FF9E8D' : '#8C3A2B' }}>{t('notif_error')}</div> : null}
+              {!loading && !errorLoading && items.length === 0 ? <div className="py-4 text-sm" style={{ color: isDark ? '#C9C4B2' : '#5E5A4D' }}>{t('notif_empty')}</div> : null}
               {!loading && items.length > 0 ? (
                 <div className="max-h-96 space-y-2 overflow-auto">
                   {items.map((item) => (
@@ -194,7 +214,17 @@ export function AdminTopNav({ onToggleSidebar }: AdminTopNavProps) {
                     >
                       <div className="text-xs font-semibold" style={{ color: isDark ? '#F3F1E8' : '#1F1E19' }}>{item.title ?? t('notif_default_title')}</div>
                       <div className="mt-0.5 text-xs" style={{ color: isDark ? '#D2CEBE' : '#4F4C40' }}>{item.body ?? '-'}</div>
+                      {item.created_at && (
+                        <div className="mt-1 text-[11px]" style={{ color: isDark ? '#A9A38F' : '#7A7668' }}>
+                          {new Date(item.created_at).toLocaleString(locale === 'en' ? 'en-CA' : 'fr-CA')}
+                        </div>
+                      )}
                       <div className="mt-2 flex items-center gap-3">
+                        {item.action_url && (
+                          <Link href={item.action_url} className="text-xs font-semibold hover:underline" style={{ color: isDark ? '#E4C56A' : '#6B5A23' }}>
+                            {t('notif_open_cta')}
+                          </Link>
+                        )}
                         {!item.is_read && (
                           <button
                             type="button"
@@ -216,6 +246,15 @@ export function AdminTopNav({ onToggleSidebar }: AdminTopNavProps) {
                       </div>
                     </div>
                   ))}
+                  {nextCursor && (
+                    <button
+                      type="button"
+                      onClick={loadMoreNotifications}
+                      className="w-full rounded-lg border border-[#D8D4C8] px-3 py-2 text-xs font-semibold text-[#6B5A23] transition-colors hover:bg-[#F5F3EE] dark:border-[#243020] dark:text-[#E4C56A] dark:hover:bg-[#1A2318]"
+                    >
+                      {t('notif_load_more')}
+                    </button>
+                  )}
                 </div>
               ) : null}
             </div>
