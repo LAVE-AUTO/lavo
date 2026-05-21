@@ -2926,6 +2926,12 @@
     "btn_retry": "Retry"
   },
   "admin_ratings": {
+    "badge_moderation": "Moderation",
+    "metric_total": "Reviews shown",
+    "metric_avg": "Average score",
+    "metric_visible": "Visible",
+    "metric_hidden": "Hidden",
+    "search_clear": "Clear search",
     "page_title": "Ratings & Reviews",
     "page_subtitle": "Moderate client reviews. Hide or publish comments on station profiles.",
     "filter_all": "All",

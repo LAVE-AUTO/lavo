@@ -2926,6 +2926,12 @@
     "btn_retry": "Réessayer"
   },
   "admin_ratings": {
+    "badge_moderation": "Modération",
+    "metric_total": "Avis affichés",
+    "metric_avg": "Note moyenne",
+    "metric_visible": "Visibles",
+    "metric_hidden": "Masqués",
+    "search_clear": "Effacer la recherche",
     "page_title": "Avis & notes",
     "page_subtitle": "Modérez les avis clients. Masquez ou rendez visibles les commentaires.",
     "filter_all": "Tous",
