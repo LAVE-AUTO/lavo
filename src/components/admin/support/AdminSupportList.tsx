@@ -1,16 +1,15 @@
 'use client';
 
-import { useState } from 'react';
 import { useTranslations } from 'next-intl';
 import { Link } from '@/i18n/navigation';
 import type { ApiTicketListItem, DisplayStatus } from '@/types/support';
 import { STATUS_MAP, userDisplayName } from '@/types/support';
 
-const STATUS_STYLE: Record<DisplayStatus, { bar: string; badge: string; dot: string; label: string }> = {
-  open:        { bar: 'bg-[#F97316]', badge: 'bg-[#FFF4EC] text-[#C2410C] ring-1 ring-[#F97316]/20',  dot: 'bg-[#F97316]', label: 'status_open' },
-  in_progress: { bar: 'bg-[#3B82F6]', badge: 'bg-[#EFF6FF] text-[#1D4ED8] ring-1 ring-[#3B82F6]/20',  dot: 'bg-[#3B82F6]', label: 'status_in_progress' },
-  resolved:    { bar: 'bg-[#22C55E]', badge: 'bg-[#F0FDF4] text-[#15803D] ring-1 ring-[#22C55E]/20',  dot: 'bg-[#22C55E]', label: 'status_resolved' },
-  closed:      { bar: 'bg-[#94A3B8]', badge: 'bg-[#F8FAFC] text-[#64748B] ring-1 ring-[#CBD5E1]/60',  dot: 'bg-[#94A3B8]', label: 'status_closed' },
+const STATUS_STYLE: Record<DisplayStatus, { bar: string; dot: string; text: string; label: string }> = {
+  open:        { bar: 'bg-[#F97316]', dot: 'bg-[#F97316]', text: 'text-[#C2410C] dark:text-[#FDBA74]', label: 'status_open' },
+  in_progress: { bar: 'bg-[#3B82F6]', dot: 'bg-[#3B82F6]', text: 'text-[#1D4ED8] dark:text-[#93C5FD]', label: 'status_in_progress' },
+  resolved:    { bar: 'bg-[#22C55E]', dot: 'bg-[#22C55E]', text: 'text-[#166534] dark:text-[#86EFAC]', label: 'status_resolved' },
+  closed:      { bar: 'bg-[#94A3B8]', dot: 'bg-[#94A3B8]', text: 'text-[#64748B] dark:text-[#CBD5E1]', label: 'status_closed' },
 };
 
 function formatDate(d: string) {
@@ -23,20 +22,19 @@ function initials(name: string) {
 }
 
 type FilterKey = DisplayStatus | 'all';
-interface Props { tickets: ApiTicketListItem[]; query: string; loading: boolean }
+interface Props { tickets: ApiTicketListItem[]; query: string; loading: boolean; filter: FilterKey }
 
-export function AdminSupportList({ tickets, query, loading }: Props) {
+export function AdminSupportList({ tickets, query, loading, filter }: Props) {
   const t = useTranslations('admin_support');
-  const [filter, setFilter] = useState<FilterKey>('all');
 
   if (loading) {
     return (
       <div className="flex flex-col gap-2.5">
         {[1, 2, 3].map((i) => (
-          <div key={i} className="flex overflow-hidden rounded-2xl border border-[#E8E4DC] bg-white shadow-sm dark:border-[#1E2E18] dark:bg-[#131E10]">
+          <div key={i} className="flex overflow-hidden rounded-[18px] border border-[#E8E4DC] bg-white shadow-sm dark:border-[#1E2E18] dark:bg-[#131E10]">
             <div className="w-1 shrink-0 bg-[#E8E4DC] dark:bg-[#1E2E18]" />
             <div className="flex min-w-0 flex-1 items-center gap-5 px-5 py-4">
-              <div className="h-10 w-10 shrink-0 animate-pulse rounded-xl bg-[#E8E4DC] dark:bg-[#1E2E18]" />
+              <div className="h-10 w-10 shrink-0 animate-pulse rounded-[12px] bg-[#E8E4DC] dark:bg-[#1E2E18]" />
               <div className="min-w-0 flex-1 space-y-2">
                 <div className="h-3.5 w-48 animate-pulse rounded bg-[#E8E4DC] dark:bg-[#1E2E18]" />
                 <div className="h-3 w-72 animate-pulse rounded bg-[#F0EDE4] dark:bg-[#1A2416]" />
@@ -53,113 +51,71 @@ export function AdminSupportList({ tickets, query, loading }: Props) {
     .filter((tk) => filter === 'all' || STATUS_MAP[tk.status] === filter)
     .filter((tk) => !q || tk.subject.toLowerCase().includes(q) || userDisplayName(tk.createdByUser).toLowerCase().includes(q));
 
-  const counts: Record<string, number> = { all: tickets.length };
-  for (const tk of tickets) {
-    const key = STATUS_MAP[tk.status];
-    counts[key] = (counts[key] ?? 0) + 1;
+  if (!filtered.length) {
+    return (
+      <div className="flex flex-col items-center gap-3 py-24 text-center">
+        <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-white shadow-sm ring-1 ring-[#E8E4DC] dark:bg-[#131E10] dark:ring-[#1E2E18]">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#C49A1E" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+            <path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z" />
+          </svg>
+        </div>
+        <p className="text-[13px] font-semibold text-[#999]">{q ? t('empty_search') : t('empty_tickets')}</p>
+      </div>
+    );
   }
 
-  const FILTERS: Array<{ key: FilterKey; label: string; color?: string }> = [
-    { key: 'all',         label: t('filter_all') },
-    { key: 'open',        label: t('status_open'),        color: '#F97316' },
-    { key: 'in_progress', label: t('status_in_progress'), color: '#3B82F6' },
-    { key: 'resolved',    label: t('status_resolved'),    color: '#22C55E' },
-    { key: 'closed',      label: t('status_closed'),      color: '#94A3B8' },
-  ];
-
   return (
-    <div className="flex flex-col gap-4">
-      {/* Filter tabs */}
-      <div className="flex flex-wrap gap-2">
-        {FILTERS.map(({ key, label, color }) => {
-          const isActive = filter === key;
-          const count    = counts[key] ?? 0;
-          return (
-            <button key={key} type="button" onClick={() => setFilter(key)}
-              className={[
-                'flex items-center gap-2 rounded-xl px-3.5 py-1.5 text-[13px] font-bold transition-all duration-150',
-                isActive
-                  ? 'bg-white text-[#1A1A0A] shadow-[0_2px_8px_rgba(0,0,0,0.10)] ring-1 ring-[#E0DCD0] dark:bg-[#1E2E18] dark:text-[#F0EDD4] dark:ring-[#2A3820]'
-                  : 'text-[#999] hover:text-[#555] hover:bg-white/60 dark:text-[#A0A090] dark:hover:text-[#9A9A8A]',
-              ].join(' ')}>
-              {color && <span className="h-2 w-2 rounded-full" style={{ background: isActive ? color : '#CCCCCC' }} />}
-              {label}
-              <span className={[
-                'min-w-[18px] rounded-full px-1.5 py-0.5 text-center text-[11px] font-black',
-                isActive ? 'bg-[#C49A1E] text-[#0C1209]' : 'bg-[#E8E4DC] text-[#AAAAAA] dark:bg-[#1E2E18] dark:text-[#A0A090]',
-              ].join(' ')}>{count}</span>
-            </button>
-          );
-        })}
-      </div>
+    <div className="flex flex-col gap-2">
+      {filtered.map((tk) => {
+        const displayStatus = STATUS_MAP[tk.status];
+        const s             = STATUS_STYLE[displayStatus];
+        const creatorName   = userDisplayName(tk.createdByUser);
+        const role          = tk.createdByUser.role as 'client' | 'station';
+        const ROLE_LABEL: Record<'client' | 'station', string> = {
+          client:  t('role_client'),
+          station: t('role_station'),
+        };
+        return (
+          <Link
+            key={tk.id}
+            href={`/admin/support/${tk.id}` as Parameters<typeof Link>[0]['href']}
+            className="group flex overflow-hidden rounded-[18px] border border-[#E8E4DC] bg-white shadow-[0_4px_12px_rgba(26,26,10,0.04)] transition-all duration-200 hover:-translate-y-0.5 hover:shadow-[0_12px_30px_rgba(26,26,10,0.08)] dark:border-[#1E2E18] dark:bg-[#131E10]"
+          >
+            <div className={`w-1 shrink-0 ${s.bar}`} />
 
-      {/* Cards */}
-      {!filtered.length ? (
-        <div className="flex flex-col items-center gap-3 py-24 text-center">
-          <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-white shadow-sm ring-1 ring-[#E8E4DC] dark:bg-[#131E10] dark:ring-[#1E2E18]">
-            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#C49A1E" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-              <path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z" />
-            </svg>
-          </div>
-          <p className="text-[13px] font-semibold text-[#999]">{q ? t('empty_search') : t('empty_tickets')}</p>
-        </div>
-      ) : (
-        <div className="flex flex-col gap-2.5">
-          {filtered.map((tk) => {
-            const displayStatus = STATUS_MAP[tk.status];
-            const s             = STATUS_STYLE[displayStatus];
-            const creatorName   = userDisplayName(tk.createdByUser);
-            const role          = tk.createdByUser.role as 'client' | 'station';
-            const ROLE_LABEL: Record<'client' | 'station', string> = {
-              client:  t('role_client'),
-              station: t('role_station'),
-            };
-            return (
-              <Link
-                key={tk.id}
-                href={`/admin/support/${tk.id}` as Parameters<typeof Link>[0]['href']}
-                className="group flex overflow-hidden rounded-2xl border border-[#E8E4DC] bg-white shadow-sm transition-all duration-200 hover:-translate-y-0.5 hover:border-[#D0CCC4] hover:shadow-md dark:border-[#1E2E18] dark:bg-[#131E10] dark:hover:border-[#2A3820]"
-              >
-                <div className={`w-1 shrink-0 ${s.bar}`} />
+            <div className="flex min-w-0 flex-1 items-center gap-4 px-5 py-3.5">
+              <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-[12px] bg-[#1A1A0A]/5 text-[12px] font-black text-[#1A1A0A] ring-1 ring-inset ring-[#1A1A0A]/8 dark:bg-[#F0EDD4]/8 dark:text-[#F0EDD4] dark:ring-[#F0EDD4]/10">
+                {initials(creatorName)}
+              </div>
 
-                <div className="flex min-w-0 flex-1 items-center gap-5 px-5 py-4">
-                  {/* Avatar */}
-                  <div className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-xl text-[13px] font-black text-white ${s.bar}`}>
-                    {initials(creatorName)}
-                  </div>
-
-                  {/* Body */}
-                  <div className="min-w-0 flex-1">
-                    <div className="flex flex-wrap items-center gap-2">
-                      <p className="truncate text-[14px] font-bold text-[#1A1A0A] dark:text-[#F0EDD4]">{tk.subject}</p>
-                      <span className={`shrink-0 inline-flex items-center gap-1.5 rounded-full px-2.5 py-0.5 text-[12px] font-bold ${s.badge}`}>
-                        <span className={`h-1.5 w-1.5 rounded-full ${s.dot}`} />{t(s.label)}
-                      </span>
-                      <span className="shrink-0 rounded-full bg-[#F0EDE0] px-2 py-0.5 text-[11px] font-bold text-[#888] dark:bg-[#1A2A14] dark:text-[#A0A090]">
-                        {ROLE_LABEL[role] ?? role}
-                      </span>
-                    </div>
-                    {tk.lastMessage ? (
-                      <p className="mt-0.5 truncate text-[13px] text-[#AAAAAA] dark:text-[#A0A090]">
-                        {tk.lastMessage.content}
-                      </p>
-                    ) : null}
-                    <p className="mt-0.5 text-[12px] text-[#CCCCBB] dark:text-[#A0A090]">
-                      {creatorName} · {formatDate(tk.created_at)}
-                    </p>
-                  </div>
-
-                  {/* Arrow */}
-                  <div className="flex shrink-0 items-center gap-1 text-[12px] font-bold text-[#CCCCBB] transition-colors group-hover:text-[#C49A1E] dark:text-[#A0A090]">
-                    {t('btn_detail')}
-                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" aria-hidden="true"><polyline points="9 18 15 12 9 6" /></svg>
-                  </div>
+              <div className="min-w-0 flex-1">
+                <div className="flex flex-wrap items-center gap-2">
+                  <p className="truncate text-[13.5px] font-bold text-[#1A1A0A] dark:text-[#F0EDD4]">{tk.subject}</p>
+                  <span className={`shrink-0 inline-flex items-center gap-1.5 rounded-full bg-[#F4F1E8] px-2.5 py-0.5 text-[11.5px] font-bold dark:bg-[#171F12] ${s.text}`}>
+                    <span className={`h-1.5 w-1.5 rounded-full ${s.dot}`} />{t(s.label)}
+                  </span>
+                  <span className="shrink-0 rounded-full bg-[#F4F2EC] px-2.5 py-0.5 text-[11px] font-bold text-[#5A554B] dark:bg-[#171F12] dark:text-[#A6A091]">
+                    {ROLE_LABEL[role] ?? role}
+                  </span>
                 </div>
-              </Link>
-            );
-          })}
-        </div>
-      )}
+                {tk.lastMessage ? (
+                  <p className="mt-0.5 truncate text-[12.5px] text-[#9B9588] dark:text-[#7E8A75]">
+                    {tk.lastMessage.content}
+                  </p>
+                ) : null}
+                <p className="mt-1 text-[11.5px] font-semibold text-[#A8A293] dark:text-[#7E8A75]">
+                  {creatorName} · {formatDate(tk.created_at)}
+                </p>
+              </div>
+
+              <div className="flex shrink-0 items-center gap-1 text-[12px] font-bold text-[#BBB6A7] transition-colors group-hover:text-[#9A7A13] dark:text-[#A0A090] dark:group-hover:text-[#F0D98C]">
+                {t('btn_detail')}
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" aria-hidden="true"><polyline points="9 18 15 12 9 6" /></svg>
+              </div>
+            </div>
+          </Link>
+        );
+      })}
     </div>
   );
 }

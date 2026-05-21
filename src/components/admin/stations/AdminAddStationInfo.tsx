@@ -4,8 +4,8 @@ import { type ReactNode } from 'react';
 import { useTranslations } from 'next-intl';
 import { AdminCityInput } from './AdminCityInput';
 
-// Wash types: hardcoded codes - backend resolves codes to IDs.
-// TODO: connect to API once endpoint is available (GET /admin/wash-types or similar)
+// Wash types: backend resolves these codes to the matching wash_types row.
+// Mirrors the wash_types enum in src/lib/db/schema/stations.ts.
 export const WASH_TYPE_CODES = ['hand_wash', 'automatic', 'self_service'] as const;
 export type WashTypeCode = (typeof WASH_TYPE_CODES)[number];
 

@@ -17,11 +17,12 @@ interface ApiDispute {
   status: string;
   requested_amount: string | null;
   created_at: string;
+  station: { id: string; name: string; city: string } | null;
 }
 
 interface DisputeAlert {
   id: string;
-  client: string;
+  label: string;
   amount: string;
   date: string;
   urgent: boolean;
@@ -142,7 +143,7 @@ export function AdminAlertsSection() {
             .slice(0, 5)
             .map((d): DisputeAlert => ({
               id: d.id,
-              client: d.client_id.slice(0, 8),
+              label: d.station?.name ?? t('alert_disputes_unknown_station'),
               amount: d.requested_amount ? `${parseFloat(d.requested_amount).toFixed(0)} $` : '-',
               date: d.created_at,
               urgent: Date.now() - new Date(d.created_at).getTime() > 3 * 24 * 60 * 60 * 1000,
@@ -219,10 +220,10 @@ export function AdminAlertsSection() {
             className={`flex items-center gap-3 px-5 py-3 transition-colors hover:bg-[#F8F6EE] dark:hover:bg-[#182214]${i > 0 ? ' border-t border-[#F0EDE0] dark:border-[#1E2A1A]' : ''}`}
           >
             <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-[#E8472A]/10 text-[12px] font-black text-[#E8472A]">
-              {initials(d.client)}
+              {initials(d.label)}
             </div>
             <div className="min-w-0 flex-1">
-              <div className="truncate text-[13px] font-bold text-[#0F1A0C] dark:text-[#F0EDD4]">{d.client}</div>
+              <div className="truncate text-[13px] font-bold text-[#0F1A0C] dark:text-[#F0EDD4]">{d.label}</div>
               <div className="text-[11px] text-[#AAA] dark:text-[#A0A090]">{formatDate(d.date)}</div>
             </div>
             <div className="flex shrink-0 flex-col items-end gap-1">

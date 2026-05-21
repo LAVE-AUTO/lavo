@@ -104,7 +104,7 @@ export function AdminAddStationDocs({ data, errors, busy, onChange, onErrors, on
           className="rounded-lg border border-[#D8D4C8] px-4 py-2 text-[13px] font-semibold text-[#666] transition-colors hover:bg-[#F5F3EE] disabled:opacity-50 dark:border-[#243020] dark:text-[#9A9A8A]">
           {t('btn_prev')}
         </button>
-        {/* Submit disabled - TODO: enable once POST /admin/stations endpoint is available */}
+        {/* Submit disabled until POST /admin/stations ships — see project_pending_backend_specs.md */}
         <button type="button" onClick={onSubmit} disabled
           title={t('form_api_unavailable_notice')}
           className="rounded-lg bg-[#C49A1E] px-4 py-2 text-[13px] font-bold text-[#0C1209] opacity-40 cursor-not-allowed">

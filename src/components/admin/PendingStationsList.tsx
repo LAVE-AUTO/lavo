@@ -21,10 +21,17 @@ interface ApiStation {
   documents?: { id: string }[];
 }
 
+interface ApiResponse {
+  data: {
+    stations: ApiStation[];
+    meta: { total: number; page: number; per_page: number; total_pages: number };
+  };
+}
+
 type Tab = 'all' | 'pending' | 'approved' | 'rejected';
 
 function initials(name: string): string {
-  return name.split(' ').map((w) => w[0]).join('').slice(0, 2).toUpperCase();
+  return name.split(' ').map((w) => w[0] ?? '').join('').slice(0, 2).toUpperCase() || '?';
 }
 
 function formatDate(iso: string | null | undefined, locale: string): string {
@@ -34,58 +41,16 @@ function formatDate(iso: string | null | undefined, locale: string): string {
   });
 }
 
-// ─── Status config ────────────────────────────────────────────────────────────
-
 const STATUS_STYLES: Record<string, { dot: string; bg: string; text: string; border: string; barColor: string }> = {
-  pending_admin_validation: {
-    dot: '#C49A1E', bg: 'rgba(196,154,30,0.08)', text: '#C49A1E', border: 'rgba(196,154,30,0.2)', barColor: '#C49A1E',
-  },
-  active: {
-    dot: '#00C851', bg: 'rgba(0,200,81,0.07)', text: '#00C851', border: 'rgba(0,200,81,0.2)', barColor: '#00C851',
-  },
-  rejected: {
-    dot: '#EF4444', bg: 'rgba(239,68,68,0.07)', text: '#EF4444', border: 'rgba(239,68,68,0.2)', barColor: '#EF4444',
-  },
-  suspended: {
-    dot: '#AAAAAA', bg: 'rgba(170,170,170,0.07)', text: '#888', border: 'rgba(170,170,170,0.2)', barColor: '#AAAAAA',
-  },
+  pending_admin_validation: { dot: '#C49A1E', bg: 'rgba(196,154,30,0.08)', text: '#C49A1E', border: 'rgba(196,154,30,0.2)', barColor: '#C49A1E' },
+  active:                   { dot: '#00C851', bg: 'rgba(0,200,81,0.07)',   text: '#00C851', border: 'rgba(0,200,81,0.2)',   barColor: '#00C851' },
+  rejected:                 { dot: '#EF4444', bg: 'rgba(239,68,68,0.07)',  text: '#EF4444', border: 'rgba(239,68,68,0.2)',  barColor: '#EF4444' },
+  suspended:                { dot: '#AAAAAA', bg: 'rgba(170,170,170,0.07)',text: '#888',    border: 'rgba(170,170,170,0.2)',barColor: '#AAAAAA' },
 };
 
-// ─── Tab button ───────────────────────────────────────────────────────────────
-
-function TabButton({
-  label, count, active, color, onClick,
-}: { label: string; count: number; active: boolean; color?: string; onClick: () => void }) {
-  return (
-    <button
-      type="button"
-      onClick={onClick}
-      className="relative flex flex-col items-center gap-0.5 px-4 py-2.5 text-[13px] font-bold transition-colors duration-150 focus:outline-none"
-      style={{ color: active ? (color ?? '#C49A1E') : undefined }}
-    >
-      <span className={active ? '' : 'text-[#888] dark:text-[#5A5A5A]'}>{label}</span>
-      <span className={[
-        'text-[18px] font-black leading-none',
-        active ? '' : 'text-[#333] dark:text-[#B0B0A0]',
-      ].join(' ')} style={{ color: active ? (color ?? '#C49A1E') : undefined }}>
-        {count}
-      </span>
-      {/* Active underline */}
-      <span className={[
-        'absolute bottom-0 left-3 right-3 h-[2.5px] rounded-full transition-opacity duration-150',
-        active ? 'opacity-100' : 'opacity-0',
-      ].join(' ')} style={{ background: color ?? '#C49A1E' }} />
-    </button>
-  );
-}
-
-// ─── Station card ─────────────────────────────────────────────────────────────
-
-function StationCard({
-  s, locale, t,
-}: { s: ApiStation; locale: string; t: ReturnType<typeof useTranslations<'admin_stations'>> }) {
+function StationCard({ s, locale, t }: { s: ApiStation; locale: string; t: ReturnType<typeof useTranslations<'admin_stations'>> }) {
   const style     = STATUS_STYLES[s.status] ?? STATUS_STYLES['suspended'];
-  const isPending = s.status === 'pending_admin_validation';
+  const isPending  = s.status === 'pending_admin_validation';
   const isApproved = s.status === 'active';
   const isRejected = s.status === 'rejected';
 
@@ -96,40 +61,32 @@ function StationCard({
   const datePrefixLabel = isPending
     ? t('label_submitted_on')
     : isApproved
-    ? t('label_approved_on')
-    : isRejected
-    ? t('label_rejected_on')
-    : t('label_updated_on');
+      ? t('label_approved_on')
+      : isRejected
+        ? t('label_rejected_on')
+        : t('label_updated_on');
 
   const statusLabel = isPending
     ? t('status_pending')
     : isApproved
-    ? t('status_active')
-    : isRejected
-    ? t('status_rejected')
-    : t('status_suspended');
+      ? t('status_active')
+      : isRejected
+        ? t('status_rejected')
+        : t('status_suspended');
 
   const docCount = s.documents?.length ?? 0;
 
   return (
     <div className="group relative flex items-stretch overflow-hidden rounded-2xl bg-white shadow-sm ring-1 ring-black/[0.05] transition-all duration-200 hover:-translate-y-px hover:shadow-md hover:ring-black/[0.08] dark:bg-[#161F13] dark:ring-white/[0.06] dark:hover:ring-white/[0.10]">
+      <div className="w-[4px] shrink-0 rounded-l-2xl transition-all duration-200 group-hover:w-[5px]" style={{ background: style.barColor }} />
 
-      {/* Colored left bar - always visible */}
-      <div className="w-[4px] shrink-0 rounded-l-2xl transition-all duration-200 group-hover:w-[5px]"
-        style={{ background: style.barColor }} />
-
-      {/* Card body */}
       <div className="flex min-w-0 flex-1 items-center gap-4 px-5 py-4">
-
-        {/* Avatar */}
         <div className="flex h-[48px] w-[48px] shrink-0 items-center justify-center rounded-xl text-[14px] font-black"
           style={{ background: style.bg, color: style.dot, boxShadow: `0 0 0 1px ${style.border}` }}>
           {initials(s.name)}
         </div>
 
-        {/* Info */}
         <div className="min-w-0 flex-1">
-          {/* Name + badge */}
           <div className="flex items-center gap-2">
             <p className="truncate text-[14px] font-black text-[#0F1A0C] dark:text-[#F0EDD4]">{s.name}</p>
             <span className="shrink-0 rounded-[5px] px-1.5 py-0.5 text-[9px] font-black uppercase tracking-widest"
@@ -138,39 +95,33 @@ function StationCard({
             </span>
           </div>
 
-          {/* Location */}
           <p className="mt-0.5 truncate text-[12px] text-[#AAA] dark:text-[#555]">
             {[s.city, s.address].filter(Boolean).join(' · ')}
           </p>
 
-          {/* Meta row */}
           <div className="mt-2 flex flex-wrap items-center gap-2">
-            {/* Date */}
             <span className="flex items-center gap-1 text-[11px] font-semibold text-[#999] dark:text-[#A0A090]">
               <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
                 <rect x="3" y="4" width="18" height="18" rx="2" /><line x1="16" y1="2" x2="16" y2="6" /><line x1="8" y1="2" x2="8" y2="6" /><line x1="3" y1="10" x2="21" y2="10" />
               </svg>
-              <span className="text-[#BBBB]">{datePrefixLabel}</span>
+              <span className="text-[#BBBBAA] dark:text-[#7E8A75]">{datePrefixLabel}</span>
               {dateLabel}
             </span>
 
-            {/* Separator */}
-            {isPending && docCount > 0 && <span className="text-[#DDD] dark:text-[#9A9A8A]">·</span>}
+            {isPending && docCount > 0 && <span className="text-[#DDD] dark:text-[#3A4A33]">·</span>}
 
-            {/* Docs count */}
             {isPending && docCount > 0 && (
               <span className="flex items-center gap-1 text-[11px] font-semibold text-[#999] dark:text-[#A0A090]">
                 <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
                   <path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z" /><polyline points="14 2 14 8 20 8" />
                 </svg>
-                {docCount} doc{docCount > 1 ? 's' : ''}
+                {t('label_docs_count', { n: docCount })}
               </span>
             )}
 
-            {/* Rejection count */}
             {s.rejection_count > 0 && (
               <>
-                <span className="text-[#DDD] dark:text-[#9A9A8A]">·</span>
+                <span className="text-[#DDD] dark:text-[#3A4A33]">·</span>
                 <span className="flex items-center gap-1 text-[11px] font-semibold" style={{ color: '#EF4444' }}>
                   <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
                     <circle cx="12" cy="12" r="10" /><line x1="15" y1="9" x2="9" y2="15" /><line x1="9" y1="9" x2="15" y2="15" />
@@ -181,7 +132,6 @@ function StationCard({
             )}
           </div>
 
-          {/* Rejection reason */}
           {isRejected && s.rejection_reason && (
             <p className="mt-2 line-clamp-1 rounded-[6px] bg-[#FEF2F2] px-2 py-1 text-[11px] italic leading-relaxed text-[#EF4444]/80 dark:bg-[#1E0A0A] dark:text-[#EF4444]/60">
               {s.rejection_reason}
@@ -189,12 +139,9 @@ function StationCard({
           )}
         </div>
 
-        {/* CTA */}
-        <Link
-          href={`/admin/stations/${s.id}` as Parameters<typeof Link>[0]['href']}
+        <Link href={`/admin/stations/${s.id}` as Parameters<typeof Link>[0]['href']}
           className="flex shrink-0 items-center gap-1.5 self-center rounded-[10px] px-3.5 py-2 text-[12px] font-bold text-white transition-opacity hover:opacity-80"
-          style={{ background: style.dot }}
-        >
+          style={{ background: style.dot }}>
           {t('btn_review')}
           <svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
             <line x1="5" y1="12" x2="19" y2="12" /><polyline points="12 5 19 12 12 19" />
@@ -204,8 +151,6 @@ function StationCard({
     </div>
   );
 }
-
-// ─── Main component ───────────────────────────────────────────────────────────
 
 export function PendingStationsList() {
   const t      = useTranslations('admin_stations');
@@ -222,10 +167,11 @@ export function PendingStationsList() {
   const loadStations = useCallback(async () => {
     setLoading(true);
     setLoadError(false);
-    const [ok, data] = await getFromApi('/admin/stations?status=all');
+    const [ok, data] = await getFromApi(`/admin/stations?status=all&per_page=100`);
     if (!mountedRef.current) return;
     if (!ok) { setLoadError(true); setLoading(false); return; }
-    setAllStations((data as { data: ApiStation[] }).data ?? []);
+    const payload = (data as ApiResponse)?.data;
+    setAllStations(payload?.stations ?? []);
     setLoading(false);
   }, []);
 
@@ -248,112 +194,118 @@ export function PendingStationsList() {
 
   const emptyKey = activeTab === 'approved' ? 'empty_approved'
     : activeTab === 'rejected' ? 'empty_rejected'
-    : activeTab === 'all'      ? 'empty_all'
-    : 'empty_title';
+      : activeTab === 'all'      ? 'empty_all'
+        : 'empty_title';
+
+  const TABS: Array<{ key: Tab; label: string; color: string }> = [
+    { key: 'pending',  label: t('tab_pending'),  color: '#C49A1E' },
+    { key: 'approved', label: t('tab_approved'), color: '#00C851' },
+    { key: 'rejected', label: t('tab_rejected'), color: '#EF4444' },
+    { key: 'all',      label: t('tab_all'),      color: '#C49A1E' },
+  ];
+
+  const metrics = [
+    { label: t('tab_pending'),  value: loading ? '…' : String(counts.pending),  accent: '#C49A1E' },
+    { label: t('tab_approved'), value: loading ? '…' : String(counts.approved), accent: '#00C851' },
+    { label: t('tab_rejected'), value: loading ? '…' : String(counts.rejected), accent: '#EF4444' },
+    { label: t('tab_all'),      value: loading ? '…' : String(counts.all),      accent: '#94A3B8' },
+  ];
 
   return (
-    /* Outer: no scroll - header stays fixed, only body scrolls */
-    <div className="flex h-full flex-col overflow-hidden bg-[#F5F5EE] dark:bg-[#0C1209]">
+    <div className="relative flex h-full min-h-0 flex-col overflow-hidden bg-[radial-gradient(circle_at_top,_rgba(196,154,30,0.12),_transparent_36%),linear-gradient(180deg,#faf8f2_0%,#f2efe7_100%)] dark:bg-[radial-gradient(circle_at_top,_rgba(196,154,30,0.12),_transparent_32%),linear-gradient(180deg,#0C1209_0%,#091009_100%)]">
+      <div className="pointer-events-none absolute inset-0 bg-[linear-gradient(135deg,rgba(255,255,255,0.55),transparent_42%)] dark:bg-[linear-gradient(135deg,rgba(255,255,255,0.04),transparent_42%)]" />
 
-      {/* ── Sticky header ── */}
-      <div className="shrink-0 border-b border-[#E8E4D8] bg-white dark:border-[#1A2A14] dark:bg-[#111A0E]">
+      <div className="relative mx-auto flex h-full min-h-0 w-full max-w-none flex-1 flex-col gap-5 overflow-y-auto scrollbar-none px-3 py-4 sm:px-4 lg:px-6 lg:py-6">
 
-        {/* Title row */}
-        <div className="relative overflow-hidden px-7 pt-6 pb-0">
-          <div className="pointer-events-none absolute right-0 top-0 h-full w-64 bg-gradient-to-l from-[#C49A1E]/4 to-transparent" />
-          <div className="flex items-start justify-between">
-            <div>
-              <div className="flex items-center gap-2.5">
-                <h1 className="text-[20px] font-black tracking-tight text-[#0F1A0C] dark:text-[#F0EDD4]">
-                  {t('page_title_history')}
-                </h1>
-                {!loading && counts.pending > 0 && (
-                  <span className="flex h-5 min-w-[20px] items-center justify-center rounded-full bg-[#C49A1E] px-1.5 text-[11px] font-black text-white">
-                    {counts.pending}
-                  </span>
-                )}
-              </div>
-              <p className="mt-0.5 text-[12px] text-[#AAA] dark:text-[#A0A090]">
+        <section className="rounded-[28px] border border-[#E1DBCF] bg-white/88 p-5 shadow-[0_24px_80px_rgba(26,26,10,0.08)] backdrop-blur-xl dark:border-[#1E2E18] dark:bg-[#101A0D]/90 dark:shadow-[0_24px_80px_rgba(0,0,0,0.35)]">
+          <div className="flex flex-col gap-6 xl:flex-row xl:items-end xl:justify-between">
+            <div className="max-w-3xl">
+              <span className="inline-flex rounded-full border border-[#C49A1E]/18 bg-[#C49A1E]/10 px-3 py-1 text-[11px] font-black uppercase tracking-[0.22em] text-[#9A7A13] dark:border-[#C49A1E]/25 dark:bg-[#C49A1E]/12 dark:text-[#F0D98C]">
+                KYC
+              </span>
+              <h1 className="mt-4 text-[clamp(28px,3vw,42px)] font-black leading-[1.04] text-[#1A1A0A] dark:text-[#F0EDD4]">
+                {t('page_title_history')}
+              </h1>
+              <p className="mt-3 max-w-2xl text-[14px] leading-6 text-[#6F6B5F] dark:text-[#A6A091]">
                 {t('page_subtitle_history')}
               </p>
             </div>
 
-            {/* Live KYC indicator */}
-            {!loading && counts.pending > 0 && (
-              <div className="flex items-center gap-2 rounded-full border border-[#C49A1E]/20 bg-[#C49A1E]/6 px-3 py-1.5">
-                <span className="relative flex h-1.5 w-1.5">
-                  <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-[#C49A1E] opacity-60" />
-                  <span className="relative inline-flex h-1.5 w-1.5 rounded-full bg-[#C49A1E]" />
-                </span>
-                <span className="text-[11px] font-black uppercase tracking-widest text-[#C49A1E]">KYC</span>
-              </div>
-            )}
+            <div className="grid grid-cols-2 gap-4 md:grid-cols-4 xl:w-[640px] 2xl:w-[720px]">
+              {metrics.map((metric) => (
+                <div key={metric.label} className="group relative overflow-hidden rounded-[24px] border border-[#E9E4D8] bg-[#FBFAF7] px-5 py-4 shadow-[0_10px_30px_rgba(26,26,10,0.05)] transition-transform duration-200 hover:-translate-y-0.5 dark:border-[#1E2E18] dark:bg-[#0C150B]">
+                  <div className="absolute inset-x-0 top-0 h-1.5" style={{ background: metric.accent }} />
+                  <div className="pointer-events-none absolute -right-8 -top-8 h-20 w-20 rounded-full blur-3xl opacity-15 transition-opacity duration-200 group-hover:opacity-25" style={{ background: metric.accent }} />
+                  <div className="min-w-0">
+                    <div className="truncate text-[11px] font-bold uppercase tracking-[0.18em] text-[#9B9588] dark:text-[#7E8A75]">{metric.label}</div>
+                    <div className="mt-3 text-[30px] font-black leading-none text-[#1A1A0A] dark:text-[#F0EDD4]">{metric.value}</div>
+                  </div>
+                </div>
+              ))}
+            </div>
           </div>
-        </div>
 
-        {/* Tab bar */}
-        <div className="flex items-end border-b border-[#F0EDE0] px-5 dark:border-[#1A2A14]">
-          {!loading && !loadError && (
-            <>
-              <TabButton label={t('tab_pending')}  count={counts.pending}  active={activeTab === 'pending'}  color="#C49A1E" onClick={() => setActiveTab('pending')}  />
-              <TabButton label={t('tab_approved')} count={counts.approved} active={activeTab === 'approved'} color="#00C851" onClick={() => setActiveTab('approved')} />
-              <TabButton label={t('tab_rejected')} count={counts.rejected} active={activeTab === 'rejected'} color="#EF4444" onClick={() => setActiveTab('rejected')} />
-              <TabButton label={t('tab_all')}      count={counts.all}      active={activeTab === 'all'}      color="#C49A1E" onClick={() => setActiveTab('all')}      />
-            </>
-          )}
-          {/* Skeleton tabs while loading */}
+          {/* Tabs */}
+          <div className="mt-5 rounded-[24px] border border-[#E7E1D5] bg-[#F8F6F1]/90 p-3 shadow-[inset_0_1px_0_rgba(255,255,255,0.75)] backdrop-blur dark:border-[#1E2E18] dark:bg-[#0C150B]/85">
+            <div className="flex flex-wrap gap-2">
+              {TABS.map(({ key, label, color }) => {
+                const isActive = activeTab === key;
+                return (
+                  <button key={key} type="button" onClick={() => setActiveTab(key)}
+                    className={[
+                      'relative flex items-center gap-2 rounded-[14px] px-4 py-2.5 text-[13px] font-bold transition-colors duration-150',
+                      isActive ? 'bg-[#1A1A0A] text-[#F0EDD4] shadow-[0_10px_20px_rgba(26,26,10,0.18)] dark:bg-[#F0EDD4] dark:text-[#1A1A0A]' : 'text-[#847E70] hover:bg-[#EFE8D7] hover:text-[#1A1A0A] dark:text-[#A0A090] dark:hover:bg-[#182214] dark:hover:text-[#F0EDD4]',
+                    ].join(' ')}>
+                    <span className="h-2 w-2 rounded-full" style={{ background: isActive ? color : '#CCCCCC' }} />
+                    {label}
+                    <span className={[
+                      'min-w-[22px] rounded-full px-1.5 py-0.5 text-center text-[11px] font-black',
+                      isActive ? 'bg-[#C49A1E] text-[#0C1209]' : 'bg-[#E1DBCF] text-[#7E796B] dark:bg-[#1E2E18] dark:text-[#9A9A8A]',
+                    ].join(' ')}>{counts[key]}</span>
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+        </section>
+
+        {/* Body */}
+        <section className="flex flex-1 min-h-0 flex-col rounded-[28px] border border-[#E1DBCF] bg-white/88 p-5 shadow-[0_24px_80px_rgba(26,26,10,0.07)] backdrop-blur-xl dark:border-[#1E2E18] dark:bg-[#101A0D]/90 dark:shadow-[0_24px_80px_rgba(0,0,0,0.35)]">
           {loading && (
-            <div className="flex gap-1 py-2.5 px-2">
-              {[80, 90, 80, 60].map((w, i) => (
-                <div key={i} className="h-8 animate-pulse rounded-lg bg-[#F0EDE0] dark:bg-[#1A2416]" style={{ width: w }} />
+            <div className="flex flex-1 items-center justify-center py-24">
+              <div className="h-8 w-8 animate-spin rounded-full border-[3px] border-[#C49A1E] border-t-transparent" />
+            </div>
+          )}
+
+          {!loading && loadError && (
+            <div className="flex flex-1 flex-col items-center justify-center gap-3 py-24 text-center">
+              <p className="text-[13px] font-semibold text-[#888] dark:text-[#9A9A8A]">{t('error_load')}</p>
+              <button type="button" onClick={loadStations}
+                className="rounded-xl border border-[#C49A1E]/40 px-4 py-2 text-[13px] font-bold text-[#C49A1E] transition-colors hover:bg-[#C49A1E]/8">
+                {t('btn_retry')}
+              </button>
+            </div>
+          )}
+
+          {!loading && !loadError && filtered.length === 0 && (
+            <div className="flex flex-1 flex-col items-center justify-center gap-3 py-24 text-center">
+              <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-white shadow-sm ring-1 ring-black/[0.04] dark:bg-[#1A2416] dark:ring-white/[0.06]">
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#C49A1E" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                  <path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z" /><polyline points="9 22 9 12 15 12 15 22" />
+                </svg>
+              </div>
+              <p className="text-[14px] font-bold text-[#1A1A0A] dark:text-[#F0EDD4]">{t(emptyKey)}</p>
+            </div>
+          )}
+
+          {!loading && !loadError && filtered.length > 0 && (
+            <div className="flex flex-col gap-2.5">
+              {filtered.map((s) => (
+                <StationCard key={s.id} s={s} locale={locale} t={t} />
               ))}
             </div>
           )}
-        </div>
-      </div>
-
-      {/* ── Scrollable body ── */}
-      <div className="flex flex-1 flex-col overflow-y-auto">
-
-        {/* Loading spinner */}
-        {loading && (
-          <div className="flex flex-1 items-center justify-center py-24">
-            <div className="h-8 w-8 animate-spin rounded-full border-[3px] border-[#C49A1E] border-t-transparent" />
-          </div>
-        )}
-
-        {/* Error */}
-        {!loading && loadError && (
-          <div className="flex flex-1 flex-col items-center justify-center gap-3 py-24 text-center">
-            <p className="text-[13px] font-semibold text-[#888] dark:text-[#9A9A8A]">{t('error_load')}</p>
-            <button type="button" onClick={loadStations}
-              className="rounded-xl border border-[#C49A1E]/40 px-4 py-2 text-[13px] font-bold text-[#C49A1E] transition-colors hover:bg-[#C49A1E]/8">
-              {t('btn_retry')}
-            </button>
-          </div>
-        )}
-
-        {/* Empty */}
-        {!loading && !loadError && filtered.length === 0 && (
-          <div className="flex flex-1 flex-col items-center justify-center gap-3 py-24 text-center">
-            <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-white shadow-sm ring-1 ring-black/[0.04] dark:bg-[#1A2416] dark:ring-white/[0.06]">
-              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#C49A1E" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-                <path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z" /><polyline points="9 22 9 12 15 12 15 22" />
-              </svg>
-            </div>
-            <p className="text-[14px] font-bold text-[#1A1A0A] dark:text-[#F0EDD4]">{t(emptyKey)}</p>
-          </div>
-        )}
-
-        {/* Cards list */}
-        {!loading && !loadError && filtered.length > 0 && (
-          <div className="flex flex-col gap-2.5 px-7 py-5">
-            {filtered.map((s) => (
-              <StationCard key={s.id} s={s} locale={locale} t={t} />
-            ))}
-          </div>
-        )}
-
+        </section>
       </div>
     </div>
   );

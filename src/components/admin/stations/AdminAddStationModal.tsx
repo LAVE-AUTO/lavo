@@ -86,14 +86,8 @@ export function AdminAddStationModal({ open, onClose }: Props) {
 
   async function handleSubmit() {
     if (!validateDocs()) return;
-
-    // TODO: connect to API once endpoint is available (POST /admin/stations)
-    // Payload: { first_name, last_name, email, phone, password: generatePassword(), station_name, legal_name,
-    //   registration_number, address, city, wash_post_count, wash_type_codes, service_scope,
-    //   description, docs: { certificate_url, address_proof_url, license_url } }
-    // Backend must: create user (role=station) + station, hash password, set force_password_change: true,
-    //   link uploaded docs, send credentials by email, notify station to upload docs if mode=later.
-    // Submission is disabled until the endpoint exists - do not show a success screen for a stubbed call.
+    // POST /admin/stations endpoint not exposed yet — see project_pending_backend_specs.md.
+    // The submit button is disabled in AdminAddStationDocs; this guard is defensive.
   }
 
   const STEP_LABELS: Record<1 | 2 | 3, string> = { 1: t('step_account'), 2: t('step_info'), 3: t('step_docs') };

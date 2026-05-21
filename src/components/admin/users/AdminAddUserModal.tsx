@@ -60,13 +60,8 @@ export function AdminAddUserModal({ open, onClose }: Props) {
     const errs = validate();
     if (Object.keys(errs).length) { setErrors(errs); return; }
     setErrors({});
-    setBusy(true);
-
-    // TODO: connect to API once endpoint is available (POST /admin/users)
-    // Payload: { role, first_name, last_name, email, password: generatePassword() }
-    // The backend must hash the password, set force_password_change: true, and send credentials by email.
-    // Submission is disabled until the endpoint exists - do not show a success screen for a stubbed call.
-    setBusy(false);
+    // POST /admin/users endpoint not exposed yet — see project_pending_backend_specs.md.
+    // The submit button is disabled in AdminAddUserForm; this guard is defensive.
   }
 
   if (!open) return null;
