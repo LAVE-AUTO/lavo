@@ -2382,6 +2382,7 @@
     "page_subtitle": "Display this code at your station so clients can scan and access your page.",
     "station_name_label": "Station",
     "station_url_label": "Public link",
+    "poster_caption": "Scan to book",
     "download_png": "Download PNG",
     "download_svg": "Download SVG",
     "copy_link": "Copy link",
@@ -3289,6 +3290,8 @@
   "admin_promo_qr": {
     "section_title": "Promotional QR Code",
     "section_subtitle": "Unique QR per station, separate from the operational QR. The client is redirected to registration with a referral code.",
+    "poster_caption_promo": "Scan to enjoy",
+    "poster_footer_promo": "Promo -{rate}%",
     "field_commission": "Promo commission rate (%)",
     "field_commission_hint": "Commission applied to the referred client's first service (0 – 50%)",
     "field_commission_placeholder": "e.g. 5",

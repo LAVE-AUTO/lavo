@@ -2382,6 +2382,7 @@
     "page_subtitle": "Affichez ce code dans votre station pour que vos clients puissent scanner et acceder a votre page.",
     "station_name_label": "Station",
     "station_url_label": "Lien public",
+    "poster_caption": "Scannez pour réserver",
     "download_png": "Telecharger PNG",
     "download_svg": "Telecharger SVG",
     "copy_link": "Copier le lien",
@@ -3289,6 +3290,8 @@
   "admin_promo_qr": {
     "section_title": "QR Code promotionnel",
     "section_subtitle": "QR unique par station, distinct du QR opérationnel. Le client est redirigé vers l'inscription avec un code de référence.",
+    "poster_caption_promo": "Scannez pour bénéficier",
+    "poster_footer_promo": "Promo -{rate}%",
     "field_commission": "Taux de commission promo (%)",
     "field_commission_hint": "Commission appliquée au premier service du client référé (0 – 50 %)",
     "field_commission_placeholder": "Ex : 5",

@@ -352,7 +352,7 @@ export function AdminProfileView() {
     <div className="relative flex h-full min-h-0 flex-col overflow-hidden bg-[radial-gradient(circle_at_top,_rgba(196,154,30,0.12),_transparent_36%),linear-gradient(180deg,#faf8f2_0%,#f2efe7_100%)] dark:bg-[radial-gradient(circle_at_top,_rgba(196,154,30,0.12),_transparent_32%),linear-gradient(180deg,#0C1209_0%,#091009_100%)]">
       <div className="pointer-events-none absolute inset-0 bg-[linear-gradient(135deg,rgba(255,255,255,0.55),transparent_42%)] dark:bg-[linear-gradient(135deg,rgba(255,255,255,0.04),transparent_42%)]" />
 
-      <div className="relative mx-auto flex h-full min-h-0 w-full max-w-[1100px] flex-1 flex-col gap-5 overflow-y-auto scrollbar-none px-3 py-4 sm:px-4 lg:px-6 lg:py-6">
+      <div className="relative mx-auto flex h-full min-h-0 w-full max-w-[1280px] flex-1 flex-col gap-5 overflow-y-auto scrollbar-none px-3 py-4 sm:px-4 lg:px-6 lg:py-6">
 
         {/* Page header — matches /admin/clients shell */}
         <section className="rounded-[28px] border border-[#E1DBCF] bg-white/88 p-5 shadow-[0_24px_80px_rgba(26,26,10,0.08)] backdrop-blur-xl dark:border-[#1E2E18] dark:bg-[#101A0D]/90 dark:shadow-[0_24px_80px_rgba(0,0,0,0.35)]">
@@ -397,6 +397,9 @@ export function AdminProfileView() {
             </div>
           </div>
         </section>
+
+        {/* Identity + security sections — single column on mobile, side-by-side on lg+ */}
+        <div className="grid grid-cols-1 gap-5 lg:grid-cols-[minmax(0,1fr)_minmax(0,1.15fr)] lg:items-start">
 
         {/* Identity section */}
         <Section eyebrow="01" title={t('section_identity')}>
@@ -450,6 +453,9 @@ export function AdminProfileView() {
             </div>
           </div>
         </Section>
+
+        {/* Right column — security: email + password stacked */}
+        <div className="flex flex-col gap-5">
 
         {/* Email change */}
         <Section
@@ -601,6 +607,9 @@ export function AdminProfileView() {
             </div>
           </div>
         </Section>
+
+        </div>{/* /right column */}
+        </div>{/* /grid */}
 
       </div>
     </div>

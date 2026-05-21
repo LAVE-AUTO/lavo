@@ -2,8 +2,8 @@
 
 import { useState, useRef, useEffect, useCallback } from 'react';
 import { useTranslations, useLocale } from 'next-intl';
-import QRCode from 'qrcode';
 import { useAuth } from '@/context';
+import { renderQrWithLogo, renderBrandedQrPosterToDataUrl } from '@/components/station/qr/qr-with-logo';
 
 interface Props {
   stationId:   string;
@@ -71,10 +71,9 @@ export function AdminPromoQr({
   useEffect(() => {
     if (!promoUrl || !canvasRef.current) return;
     setQrReady(false);
-    QRCode.toCanvas(canvasRef.current, promoUrl, {
-      width: QR_SIZE, margin: 2, errorCorrectionLevel: 'H',
-      color: { dark: '#1A1A0A', light: '#FFFFFF' },
-    }).then(() => setQrReady(true)).catch(() => setQrReady(true));
+    renderQrWithLogo(canvasRef.current, promoUrl, QR_SIZE)
+      .then(() => setQrReady(true))
+      .catch(() => setQrReady(true));
   }, [promoUrl]);
 
   const validate = useCallback((): boolean => {
@@ -137,9 +136,10 @@ export function AdminPromoQr({
   async function downloadPng() {
     if (!promoUrl) return;
     try {
-      const dataUrl = await QRCode.toDataURL(promoUrl, {
-        width: 1024, margin: 2, errorCorrectionLevel: 'H',
-        color: { dark: '#1A1A0A', light: '#FFFFFF' },
+      const dataUrl = await renderBrandedQrPosterToDataUrl(promoUrl, {
+        stationName,
+        caption: t('poster_caption_promo'),
+        footerTag: appliedRate ? t('poster_footer_promo', { rate: appliedRate }) : undefined,
       });
       const a = document.createElement('a');
       a.href = dataUrl;
@@ -152,12 +152,19 @@ export function AdminPromoQr({
     if (!promoUrl) return;
     try {
       const { jsPDF } = await import('jspdf');
-      const dataUrl = await QRCode.toDataURL(promoUrl, {
-        width: 1024, margin: 2, errorCorrectionLevel: 'H',
-        color: { dark: '#1A1A0A', light: '#FFFFFF' },
+      const dataUrl = await renderBrandedQrPosterToDataUrl(promoUrl, {
+        stationName,
+        caption: t('poster_caption_promo'),
+        footerTag: appliedRate ? t('poster_footer_promo', { rate: appliedRate }) : undefined,
       });
-      const doc = new jsPDF({ orientation: 'portrait', unit: 'mm', format: [100, 100] });
-      doc.addImage(dataUrl, 'PNG', 10, 10, 80, 80);
+      // A4 portrait for crisp poster output (210x297 mm)
+      const doc = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
+      const pageW = 210;
+      const posterW = 150;          // 15 cm wide
+      const posterH = posterW * (1500 / 1080);
+      const x = (pageW - posterW) / 2;
+      const y = 25;
+      doc.addImage(dataUrl, 'PNG', x, y, posterW, posterH);
       doc.save(`qr-promo-${sanitizeFilename(stationName)}.pdf`);
     } catch { /* silently ignore - user stays on the page */ }
   }
