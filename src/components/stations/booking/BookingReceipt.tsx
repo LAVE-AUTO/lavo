@@ -31,9 +31,9 @@ interface BookingReceiptProps {
 /**
  * Printable receipt + ticket code panel shown after a successful payment.
  *
- * The 6-char ticket code is generated client-side for now; the station-side
- * validation requires a backend endpoint that doesn't exist yet (TODO: wire
- * `POST /station/entries/:id/start { code }` once the backend ships it).
+ * The ticket code is sourced from the booking endpoint response and falls
+ * back to a client-side generator when the backend payload omits it (legacy
+ * entries created before the backend started persisting ticket_code).
  *
  * The "Download" action opens a dedicated print document and calls native
  * browser print/save-to-PDF there. This guarantees a single-page receipt and
@@ -330,8 +330,8 @@ export function BookingReceipt({
  * Generate a 6-character ticket code with digits + uppercase letters.
  * Avoids visually ambiguous characters (0/O, 1/I/L).
  *
- * TODO: replace with the value returned by the backend once the booking
- * endpoint persists a `ticket_code` on the entry.
+ * Used only as a defensive fallback when the booking endpoint response
+ * does not include a server-issued `ticket_code` (legacy entries).
  */
 export function generateTicketCode(): string {
   const ALPHABET = 'ABCDEFGHJKMNPQRSTUVWXYZ23456789';

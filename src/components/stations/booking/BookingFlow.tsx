@@ -12,7 +12,6 @@ import { PaymentStep } from './PaymentStep';
 import { BookingReceipt, generateTicketCode } from './BookingReceipt';
 import { useUserLocation } from '../useUserLocation';
 import { postWithApi } from '@/services/axios-service';
-import { RESERVATIONS_MOCK_ENABLED } from '@/data/reservations-mock';
 import type {
   StationDetailData,
   StationServicePublic,
@@ -173,8 +172,6 @@ export function BookingFlow({ station, qrToken, qrVersion, initialServiceId, ini
     setClientSecret(null);
     setSummaryError(null);
 
-    if (RESERVATIONS_MOCK_ENABLED) { goNext(); return; }
-
     const isQueueMode = arrivalMode === 'queue_now' || arrivalMode === 'queue_later';
 
     if (isQueueMode) {
@@ -238,8 +235,6 @@ export function BookingFlow({ station, qrToken, qrVersion, initialServiceId, ini
   }, [arrivalMode, station.id, selectedService, selectedEntry, selectedSlot, qrToken, qrVersion, devSkipPayment, goNext, t]);
 
   const handlePaymentConfirm = useCallback(async (): Promise<void> => {
-    if (RESERVATIONS_MOCK_ENABLED) { setPaymentResult('success'); return; }
-
     const isQueueMode = arrivalMode === 'queue_now' || arrivalMode === 'queue_later';
 
     if (isQueueMode) {

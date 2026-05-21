@@ -8,7 +8,6 @@ import UpgradeToReservationModal from '@/components/reservations/UpgradeToReserv
 import { getFromApi, patchWithApi } from '@/services/axios-service';
 import { useToast } from '@/context';
 import { useAuth } from '@/context/auth-context';
-import { RESERVATIONS_MOCK_ENABLED, MOCK_RESERVATIONS, MOCK_QUEUE_ENTRIES } from '@/data/reservations-mock';
 
 type Tab = 'reservations' | 'queue';
 type ReservationStatus = 'confirmed' | 'in_progress' | 'completed' | 'cancelled' | 'pending_payment' | 'pending';
@@ -273,14 +272,6 @@ export default function ClientReservationsPage() {
   const loadEntries = useCallback(async () => {
     setLoading(true);
     setLoadError(false);
-
-    // TODO: remove mock block once booking flow is connected to Stripe
-    if (RESERVATIONS_MOCK_ENABLED) {
-      setReservations(MOCK_RESERVATIONS as unknown as ClientReservation[]);
-      setQueueEntries(MOCK_QUEUE_ENTRIES as unknown as ClientQueueEntry[]);
-      setLoading(false);
-      return;
-    }
 
     /* /me/entries returns rich entries with denormalised station, vehicle format
      * and slot times - no N+1 fetch needed. */

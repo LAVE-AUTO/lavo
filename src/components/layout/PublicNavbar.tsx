@@ -217,7 +217,7 @@ export function PublicNavbar({
                 <span className="font-playfair text-[18px] font-black text-[#c8980a] tracking-[3px]">Hurryline</span>
               </div>
             ) : (
-              <Image src={lightLogoSrc} alt={t('logo_alt')} width={130} height={34} className="h-9 w-auto object-contain" priority />
+              <Image src={lightLogoSrc} alt={t('logo_alt')} width={130} height={34} className="h-20 w-auto object-contain" priority />
             )}
           </Link>
 

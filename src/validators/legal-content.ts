@@ -15,14 +15,27 @@ import { z } from 'zod';
 
 /**
  * The complete set of legal content keys managed through this API.
- *   - cgu: Conditions Générales d'Utilisation
- *   - politique_confidentialite: Privacy policy
- *   - mentions_legales: Legal notices
+ *   - cgu:                       Client terms of service             (/cgu)
+ *   - cgu_stations:              Station/merchant terms of service   (/cgu-stations)
+ *   - politique_confidentialite: Privacy policy                      (/politique-de-confidentialite)
+ *   - politique_annulation:      Cancellation policy                 (/politique-annulation)
+ *   - mentions_legales:          Legal notices                       (/mentions-legales)
+ *   - contact:                   Contact page content                (/nous-contacter)
+ *   - landing_faq:               FAQ section on the landing          (/#faq)
+ *   - landing_how_it_works:      "How it works" section on landing   (/#how-it-works)
+ *
+ * All keys are stored in the generic `settings` table (type='legal', entity_id=null)
+ * so adding more keys requires no migration.
  */
 export const LEGAL_CONTENT_KEYS = [
   'cgu',
+  'cgu_stations',
   'politique_confidentialite',
+  'politique_annulation',
   'mentions_legales',
+  'contact',
+  'landing_faq',
+  'landing_how_it_works',
 ] as const;
 
 export type LegalContentKey = (typeof LEGAL_CONTENT_KEYS)[number];

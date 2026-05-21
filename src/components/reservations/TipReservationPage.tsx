@@ -8,7 +8,6 @@ import { useParams } from 'next/navigation';
 import { loadStripe } from '@stripe/stripe-js';
 import { Elements, CardElement, useStripe, useElements } from '@stripe/react-stripe-js';
 import { getFromApi, postWithApi } from '@/services/axios-service';
-import { RESERVATIONS_MOCK_ENABLED, findMockReservation } from '@/data/reservations-mock';
 
 /** Lazy Stripe singleton (deferred until first render to avoid SSR issues). */
 let stripePromise: ReturnType<typeof loadStripe> | null = null;
@@ -76,24 +75,6 @@ export default function TipReservationPage() {
   const loadData = useCallback(async () => {
     setPageState('loading');
 
-    // TODO: remove mock block once API is available
-    if (RESERVATIONS_MOCK_ENABLED) {
-      const mock = findMockReservation(id);
-      if (!mock || mock.status !== 'completed') { setPageState('error'); return; }
-      const d = new Date(`${mock.date}T${mock.timeSlot}`);
-      setRes({
-        stationId:   mock.stationId,
-        stationName: mock.stationName,
-        forfaitName: mock.forfaitName,
-        dateLabel:   d.toLocaleDateString(locale === 'en' ? 'en-CA' : 'fr-CA', {
-          weekday: 'short', day: 'numeric', month: 'long', year: 'numeric',
-        }),
-        totalPrice: mock.totalPrice,
-      });
-      setPageState('form');
-      return;
-    }
-
     /* /me/entries returns the rich entry shape with denormalised station +
      * vehicle format + slot times + is_tipped flag, so a single fetch is
      * enough. The endpoint paginates - 100 is well above any realistic count
@@ -147,14 +128,6 @@ export default function TipReservationPage() {
     if (amount <= 0 || submitting) return;
     setSubmitting(true);
     setSubmitError(null);
-
-    if (RESERVATIONS_MOCK_ENABLED) {
-      await new Promise((r) => setTimeout(r, 800));
-      if (!mountedRef.current) return;
-      setSubmitting(false);
-      setPageState('success');
-      return;
-    }
 
     /* The endpoint creates the tip row and returns a Stripe `clientSecret`.
      * The card payment confirmation happens in the next step (StripeCardForm)

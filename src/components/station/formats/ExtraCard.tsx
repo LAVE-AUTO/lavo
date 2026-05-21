@@ -4,7 +4,7 @@ import { useState } from 'react';
 import { useTranslations } from 'next-intl';
 import { deleteWithApi, patchWithApi } from '@/services';
 import { ConfirmDialog } from '@/components/ui/ConfirmDialog';
-import type { StationExtra } from '@/components/station/config/StationExtrasForm';
+import type { StationExtra } from '@/components/station/config/station-extras-types';
 
 interface Props {
   extra: StationExtra;

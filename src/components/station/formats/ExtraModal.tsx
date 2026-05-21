@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react';
 import { postWithApi, updateWithApi } from '@/services';
 import { TextField } from '@/components/station/config/TextField';
 import { NumberStepper } from '@/components/station/config/NumberStepper';
-import type { StationExtra } from '@/components/station/config/StationExtrasForm';
+import type { StationExtra } from '@/components/station/config/station-extras-types';
 
 interface Props {
   extra: StationExtra | null;

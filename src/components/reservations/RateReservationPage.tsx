@@ -6,7 +6,6 @@ import { useTranslations, useLocale } from 'next-intl';
 import { Link } from '@/i18n/navigation';
 import { useParams } from 'next/navigation';
 import { getFromApi, postWithApi } from '@/services/axios-service';
-import { RESERVATIONS_MOCK_ENABLED, findMockReservation } from '@/data/reservations-mock';
 
 /* ------------------------------------------------------------------ */
 /* Constants                                                            */
@@ -63,23 +62,6 @@ export default function RateReservationPage() {
   const loadData = useCallback(async () => {
     setPageState('loading');
 
-    // TODO: remove mock block once API is available
-    if (RESERVATIONS_MOCK_ENABLED) {
-      const mock = findMockReservation(id);
-      if (!mock || mock.status !== 'completed') { setPageState('error'); return; }
-      const d = new Date(`${mock.date}T${mock.timeSlot}`);
-      setRes({
-        stationId:   mock.stationId,
-        stationName: mock.stationName,
-        forfaitName: mock.forfaitName,
-        dateLabel:   d.toLocaleDateString(locale === 'en' ? 'en-CA' : 'fr-CA', {
-          weekday: 'short', day: 'numeric', month: 'long', year: 'numeric',
-        }),
-      });
-      setPageState('form');
-      return;
-    }
-
     const [entriesOk, entriesData] = await getFromApi('/me/entries?per_page=100');
     if (!mountedRef.current) return;
     if (!entriesOk) { setPageState('error'); return; }
@@ -116,16 +98,6 @@ export default function RateReservationPage() {
   const handleSubmit = async () => {
     if (score === 0 || submitting) return;
     setSubmitting(true);
-
-    // TODO: connect to API once endpoint is available
-    // POST /ratings { reservation_id: id, score, comment? }
-    if (RESERVATIONS_MOCK_ENABLED) {
-      await new Promise((r) => setTimeout(r, 800));
-      if (!mountedRef.current) return;
-      setSubmitting(false);
-      setPageState('success');
-      return;
-    }
 
     const payload: Record<string, unknown> = { reservation_id: id, score };
     if (comment.trim()) payload.comment = comment.trim();
