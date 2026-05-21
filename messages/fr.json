@@ -2671,6 +2671,15 @@
     "impact_scheduled_unknown": "Non renseigné",
     "impact_format_unknown": "Non renseigné"
   },
+  "admin_pagination": {
+    "aria_label": "Pagination",
+    "range": "{from}–{to} sur {total}",
+    "first": "Première page",
+    "previous": "Page précédente",
+    "next": "Page suivante",
+    "last": "Dernière page",
+    "page_n": "Page {n}"
+  },
   "admin_clients": {
     "badge_management": "Gestion",
     "page_title": "Gestion marchands & clients",
@@ -2912,8 +2921,9 @@
     "error_export": "Échec de la génération du PDF.",
     "filter_from": "Du",
     "filter_to": "au",
-    "load_more": "Charger plus",
-    "loading_more": "Chargement…"
+    "metric_avg_tx": "Panier moyen",
+    "fetch_error": "Impossible de charger les transactions.",
+    "btn_retry": "Réessayer"
   },
   "admin_ratings": {
     "page_title": "Avis & notes",

@@ -9,6 +9,7 @@ import { AdminStationsManagement } from './AdminStationsManagement';
 import { AdminClientsList } from './AdminClientsList';
 import { AdminAddUserModal } from './users/AdminAddUserModal';
 import { AdminAddStationModal } from './stations/AdminAddStationModal';
+import { AdminPagination } from './ui/AdminPagination';
 
 type Tab = 'stations' | 'clients';
 
@@ -137,14 +138,10 @@ export function AdminMerchantsClients() {
                 >
                   <div className="absolute inset-x-0 top-0 h-1.5" style={{ background: metric.accent }} />
                   <div className="pointer-events-none absolute -right-8 -top-8 h-20 w-20 rounded-full blur-3xl opacity-15 transition-opacity duration-200 group-hover:opacity-25" style={{ background: metric.accent }} />
-                  <div className="flex items-start justify-between gap-3">
-                    <div className="min-w-0">
-                      <div className="truncate text-[11px] font-bold uppercase tracking-[0.18em] text-[#9B9588] dark:text-[#7E8A75]">{metric.label}</div>
-                      <div className="mt-3 text-[30px] font-black leading-none text-[#1A1A0A] dark:text-[#F0EDD4]">{metric.value}</div>
-                    </div>
-                    <span className="mt-1 inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-full border border-black/5 bg-white/80 text-[11px] font-black text-[#6F6B5F] shadow-sm dark:border-white/10 dark:bg-white/5 dark:text-[#D0BF7E]">
-                      {metric.hint.slice(0, 2).toUpperCase()}
-                    </span>
+                  <div className="min-w-0">
+                    <div className="truncate text-[11px] font-bold uppercase tracking-[0.18em] text-[#9B9588] dark:text-[#7E8A75]">{metric.label}</div>
+                    <div className="mt-3 text-[30px] font-black leading-none text-[#1A1A0A] dark:text-[#F0EDD4]">{metric.value}</div>
+                    <div className="mt-1 truncate text-[11px] font-semibold text-[#9B9588] dark:text-[#7E8A75]">{metric.hint}</div>
                   </div>
                 </div>
               ))}
@@ -202,29 +199,15 @@ export function AdminMerchantsClients() {
           {tab === 'stations' ? (
             <>
               <AdminStationsManagement stations={stations} loading={loading} error={fetchError} query={query} onAction={handleStationAction} />
-              {stationMeta && stationMeta.total_pages > 1 && (
-                <div className="flex items-center justify-between px-1">
-                  <p className="text-[12px] text-[#999] dark:text-[#A0A090]">
-                    {t('pagination_info', {
-                      from:  (stationPage - 1) * STATIONS_PER_PAGE + 1,
-                      to:    Math.min(stationPage * STATIONS_PER_PAGE, stationMeta.total),
-                      total: stationMeta.total,
-                    })}
-                  </p>
-                  <div className="flex items-center gap-1.5">
-                    <button type="button" disabled={stationPage <= 1} onClick={() => setStationPage((p) => p - 1)}
-                      className="flex h-7 w-7 items-center justify-center rounded-lg border border-[#D8D4C8] bg-white text-[#555] transition-colors hover:bg-[#F5F3EE] disabled:cursor-not-allowed disabled:opacity-40 dark:border-[#1E2E18] dark:bg-[#0F1A0C] dark:text-[#9A9A8A] dark:hover:bg-[#182416]">
-                      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" aria-hidden="true"><polyline points="15 18 9 12 15 6" /></svg>
-                    </button>
-                    <span className="min-w-15 text-center text-[12px] font-semibold text-[#555] dark:text-[#9A9A8A]">
-                      {stationPage} / {stationMeta.total_pages}
-                    </span>
-                    <button type="button" disabled={stationPage >= stationMeta.total_pages} onClick={() => setStationPage((p) => p + 1)}
-                      className="flex h-7 w-7 items-center justify-center rounded-lg border border-[#D8D4C8] bg-white text-[#555] transition-colors hover:bg-[#F5F3EE] disabled:cursor-not-allowed disabled:opacity-40 dark:border-[#1E2E18] dark:bg-[#0F1A0C] dark:text-[#9A9A8A] dark:hover:bg-[#182416]">
-                      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" aria-hidden="true"><polyline points="9 18 15 12 9 6" /></svg>
-                    </button>
-                  </div>
-                </div>
+              {stationMeta && (
+                <AdminPagination
+                  page={stationPage}
+                  totalPages={stationMeta.total_pages}
+                  total={stationMeta.total}
+                  perPage={STATIONS_PER_PAGE}
+                  onPageChange={setStationPage}
+                  loading={loading}
+                />
               )}
             </>
           ) : (

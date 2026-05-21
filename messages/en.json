@@ -2671,6 +2671,15 @@
     "impact_scheduled_unknown": "Not provided",
     "impact_format_unknown": "Not provided"
   },
+  "admin_pagination": {
+    "aria_label": "Pagination",
+    "range": "{from}–{to} of {total}",
+    "first": "First page",
+    "previous": "Previous page",
+    "next": "Next page",
+    "last": "Last page",
+    "page_n": "Page {n}"
+  },
   "admin_clients": {
     "badge_management": "Management",
     "page_title": "Merchants & clients management",
@@ -2912,8 +2921,9 @@
     "error_export": "Failed to generate PDF.",
     "filter_from": "From",
     "filter_to": "to",
-    "load_more": "Load more",
-    "loading_more": "Loading…"
+    "metric_avg_tx": "Avg basket",
+    "fetch_error": "Unable to load transactions.",
+    "btn_retry": "Retry"
   },
   "admin_ratings": {
     "page_title": "Ratings & Reviews",
