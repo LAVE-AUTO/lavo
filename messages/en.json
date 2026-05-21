@@ -2671,6 +2671,7 @@
     "impact_format_unknown": "Not provided"
   },
   "admin_clients": {
+    "badge_management": "Management",
     "page_title": "Merchants & clients management",
     "page_subtitle": "Activate, suspend or unblock merchant and client accounts.",
     "tab_stations": "Merchants",

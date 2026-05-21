@@ -2671,6 +2671,7 @@
     "impact_format_unknown": "Non renseigné"
   },
   "admin_clients": {
+    "badge_management": "Gestion",
     "page_title": "Gestion marchands & clients",
     "page_subtitle": "Activez, suspendez ou débloquez les comptes marchands et clients.",
     "tab_stations": "Marchands",
