@@ -110,13 +110,21 @@ export async function notifyAdminEvent(params: NotifyAdminEventParams): Promise<
     admins = [];
   }
 
+  // Fetch all admin notification prefs in parallel before the per-admin loop
+  // to avoid one DB query per admin (N+1 pattern).
+  const prefsMap = new Map(
+    await Promise.all(
+      admins.map(async (admin) => [admin.id, await getAdminNotificationPrefs(admin.id)] as const)
+    )
+  );
+
   await Promise.all(
     admins.map(async (admin) => {
-      const prefs = await getAdminNotificationPrefs(admin.id);
+      const prefs = prefsMap.get(admin.id)!;
       const channels = computeChannelPrefs(prefs, params.type);
       const spec: AdminEventSpec = {
         ...specBase,
-        payload: params.payload ?? null,
+        payload: params.payload ?? undefined,
       };
 
       if (channels.in_app) {

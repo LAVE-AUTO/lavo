@@ -69,7 +69,7 @@ export function ClientSupportContainer({ sectionLabel }: Props) {
   useEffect(() => { loadTickets(); }, [loadTickets]);
 
   const counts = { open: 0, in_progress: 0, resolved: 0, closed: 0 };
-  for (const tk of tickets) {
+  for (const tk of Array.isArray(tickets) ? tickets : []) {
     const mapped = mapApiStatus(tk.status);
     if (mapped in counts) counts[mapped as keyof typeof counts]++;
   }

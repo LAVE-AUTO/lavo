@@ -2,7 +2,12 @@
 
 import { useState, useCallback, useEffect } from 'react';
 import { useTranslations } from 'next-intl';
-import { renderQrWithLogoToDataUrl, QR_COLOR_DARK, QR_COLOR_LIGHT, QR_LOGO_SRC } from './qr-with-logo';
+import {
+  renderBrandedQrPosterToDataUrl,
+  QR_COLOR_DARK,
+  QR_COLOR_LIGHT,
+  QR_LOGO_SRC,
+} from './qr-with-logo';
 import QRCode from 'qrcode';
 
 interface Props {
@@ -29,14 +34,17 @@ export function QrActions({ url, stationName }: Props) {
     setCanShare(typeof navigator !== 'undefined' && 'share' in navigator);
   }, []);
 
-  /* Download as PNG */
+  /* Download as PNG — branded poster (wordmark + station name + caption) */
   const downloadPng = useCallback(async () => {
-    const dataUrl = await renderQrWithLogoToDataUrl(url, 1024);
+    const dataUrl = await renderBrandedQrPosterToDataUrl(url, {
+      stationName,
+      caption: t('poster_caption'),
+    });
     const a = document.createElement('a');
     a.href = dataUrl;
     a.download = `qr-${sanitizeFilename(stationName)}.png`;
     a.click();
-  }, [url, stationName]);
+  }, [url, stationName, t]);
 
   /* Download as SVG (logo embedded as a base64 <image>) */
   const downloadSvg = useCallback(async () => {

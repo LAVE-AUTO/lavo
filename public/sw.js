@@ -2,9 +2,16 @@
  *  Hurryline - Service Worker
  *  Scope: /
  *  Strategy: network-first for API/navigation, cache-first for static assets.
+ *
+ *  !! BUMP SW_VERSION ON EVERY PRODUCTION DEPLOYMENT !!
+ *  Changing this string makes the sw.js file differ byte-for-byte so the
+ *  browser detects a new SW, runs install → activate, clears the old cache,
+ *  and posts SW_UPDATED to all open tabs (which triggers a page reload in
+ *  PwaRegister.tsx so users immediately get the latest deployment UI).
  * ------------------------------------------------------------------ */
 
-const CACHE_NAME = 'Hurryline-v2';
+const SW_VERSION = '2026-05-22.1'; // ← bump on every deploy (YYYY-MM-DD.N)
+const CACHE_NAME = `Hurryline-${SW_VERSION}`;
 
 /* Static assets to pre-cache on install */
 const PRECACHE_URLS = [
@@ -30,13 +37,26 @@ self.addEventListener('install', (event) => {
 
 self.addEventListener('activate', (event) => {
     event.waitUntil(
-        caches.keys().then((keys) =>
-            Promise.all(
-                keys
-                .filter((key) => key !== CACHE_NAME)
-                .map((key) => caches.delete(key)),
+        caches.keys()
+            .then((keys) =>
+                Promise.all(
+                    keys
+                        .filter((key) => key !== CACHE_NAME)
+                        .map((key) => caches.delete(key)),
+                ),
+            )
+            .then(() =>
+                // Notify all open tabs so PwaRegister.tsx can reload the page.
+                // This ensures users immediately see the new deployment UI instead
+                // of having to refresh manually after a new SW takes over.
+                self.clients
+                    .matchAll({ type: 'window', includeUncontrolled: true })
+                    .then((clients) =>
+                        clients.forEach((client) =>
+                            client.postMessage({ type: 'SW_UPDATED' }),
+                        ),
+                    ),
             ),
-        ),
     );
     self.clients.claim();
 });
@@ -58,9 +78,21 @@ self.addEventListener('fetch', (event) => {
     /* Skip API routes - never cache them */
     if (url.pathname.startsWith('/api/')) return;
 
+    /* Images change more often between deploys (logos, avatars, QR posters),
+       so use network-first to avoid serving an old brand asset after login. */
+    if (request.destination === 'image') {
+        event.respondWith(
+            fetch(request).then((response) => {
+                const clone = response.clone();
+                caches.open(CACHE_NAME).then((cache) => cache.put(request, clone));
+                return response;
+            }).catch(() => caches.match(request)),
+        );
+        return;
+    }
+
     /* Static assets: cache-first */
     if (
-        request.destination === 'image' ||
         request.destination === 'font' ||
         request.destination === 'style' ||
         request.destination === 'script'
@@ -113,9 +145,9 @@ const messaging = firebase.messaging();
  * call showNotification ourselves.
  */
 messaging.onBackgroundMessage((payload) => {
-    const title = payload.notification ? .title || 'Hurryline';
+    const title = payload.notification?.title || 'Hurryline';
     const options = {
-        body: payload.notification ? .body || '',
+        body: payload.notification?.body || '',
         icon: '/icons/icon-192x192.png',
         badge: '/icons/icon-192x192.png',
         data: payload.data || {},

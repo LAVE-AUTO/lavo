@@ -129,7 +129,7 @@ export function refineDateRange(
     const diffDays = Math.ceil(
       (toDate.getTime() - fromDate.getTime()) / (1000 * 60 * 60 * 24)
     );
-    if (diffDays > 364) {
+    if (diffDays > 365) {
       ctx.addIssue({
         code: z.ZodIssueCode.custom,
         message: 'Date range must not exceed 365 days',

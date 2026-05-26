@@ -242,7 +242,7 @@ export async function postWithApi<T = unknown>(
     const result =
       data !== null
         ? await instance.post<T>(endpoint, data, config)
-        : await instance.post<T>(endpoint, config);
+        : await instance.post<T>(endpoint, undefined, config);
 
     if (
       result.status === successStatus ||
