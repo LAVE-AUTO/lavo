@@ -225,7 +225,9 @@ export function LoginForm({
           <button
             type="button"
             onClick={() => setShowPassword((v) => !v)}
+            onMouseDown={(e) => e.preventDefault()}
             aria-label={showPassword ? 'Hide password' : 'Show password'}
+            aria-pressed={showPassword}
             className="text-[#888] hover:text-[#555] dark:hover:text-[#ccc] transition-colors"
           >
             <EyeIcon open={showPassword} />

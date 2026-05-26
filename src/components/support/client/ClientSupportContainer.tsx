@@ -56,8 +56,14 @@ export function ClientSupportContainer({ sectionLabel }: Props) {
     setLoadErrorKind(null);
     const [ok, data] = await getFromApi<{ data: SupportTicketSummary[] }>('/support');
     if (!mountedRef.current) return;
-    if (ok && 'data' in (data as object) && (data as { data: SupportTicketSummary[] }).data) {
-      setTickets((data as { data: SupportTicketSummary[] }).data);
+    if (ok) {
+      const payload = data as { data?: unknown } | unknown;
+      const nextTickets = Array.isArray(payload)
+        ? payload
+        : Array.isArray((payload as { data?: unknown } | null)?.data)
+          ? (payload as { data: SupportTicketSummary[] }).data
+          : [];
+      setTickets(nextTickets);
     } else {
       const code = (data as { code?: string } | undefined)?.code;
       setLoadErrorKind(resolveErrorKind(code));
@@ -68,7 +74,7 @@ export function ClientSupportContainer({ sectionLabel }: Props) {
   useEffect(() => { loadTickets(); }, [loadTickets]);
 
   const counts = { open: 0, in_progress: 0, resolved: 0, closed: 0 };
-  for (const tk of tickets) {
+  for (const tk of Array.isArray(tickets) ? tickets : []) {
     const mapped = mapApiStatus(tk.status);
     if (mapped in counts) counts[mapped as keyof typeof counts]++;
   }

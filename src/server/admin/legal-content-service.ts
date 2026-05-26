@@ -5,22 +5,47 @@
  * cancellation, contact, landing sections) from the settings table using
  * type='legal' and entity_id=null (global scope).
  *
- * Content is sanitized with DOMPurify before persistence to strip XSS vectors.
+ * Content is sanitized with sanitize-html before persistence to strip XSS vectors.
+ * sanitize-html is a pure Node.js sanitizer with no jsdom dependency, which avoids
+ * the ESM/CJS conflict caused by isomorphic-dompurify → jsdom → html-encoding-sniffer
+ * → @exodus/bytes (ESM-only) on Vercel serverless functions.
  * Only the keys declared in LEGAL_CONTENT_KEYS are accepted.
  *
  * When no row exists yet for a key, getLegalContent falls back to the bundled
  * HTML default (see legal-content-defaults.ts). The public pages read through
  * this same helper so admin saves take effect immediately.
  *
- * requires: npm install isomorphic-dompurify
+ * requires: npm install sanitize-html @types/sanitize-html
  */
 import { and, eq, isNull, sql } from 'drizzle-orm';
-import DOMPurify from 'isomorphic-dompurify';
+import sanitizeHtml from 'sanitize-html';
 
 import { db } from '@/lib/db';
 import { settings } from '@/lib/db/schema';
 import { getDefaultLegalContent } from './legal-content-defaults';
 import type { LegalContentKey } from '@/validators/legal-content';
+
+// Allowlist matching Tiptap's output: headings, text marks, lists, links, hr, blockquote, code.
+// style is restricted to text-align only; href is restricted to safe schemes.
+const SANITIZE_OPTIONS: sanitizeHtml.IOptions = {
+  allowedTags: [
+    'h2', 'h3', 'p', 'br', 'hr',
+    'strong', 'em', 'u', 's', 'code', 'pre',
+    'ul', 'ol', 'li',
+    'blockquote',
+    'a',
+  ],
+  allowedAttributes: {
+    a: ['href', 'target', 'rel', 'class'],
+    '*': ['class', 'style'],
+  },
+  allowedStyles: {
+    '*': {
+      'text-align': [/^(?:left|right|center|justify)$/],
+    },
+  },
+  allowedSchemes: ['http', 'https', 'mailto', 'tel'],
+};
 
 
 // %%%%% Read %%%%%
@@ -58,7 +83,7 @@ export async function getLegalContent(
 /**
  * Sanitizes and upserts legal content for the given key.
  *
- * Sanitization strips any XSS vectors from the HTML content using DOMPurify
+ * Sanitization strips any XSS vectors from the HTML content using sanitize-html
  * before the value reaches the database. The sanitized value - not the raw
  * input - is what gets stored and later served.
  *
@@ -75,7 +100,7 @@ export async function updateLegalContent(
   content: string,
   adminId: string
 ): Promise<string> {
-  const sanitized = DOMPurify.sanitize(content);
+  const sanitized = sanitizeHtml(content, SANITIZE_OPTIONS);
   const now = new Date();
 
   await db

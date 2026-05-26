@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
+import { headers } from "next/headers";
 import { PwaRegister } from "@/components/layout/PwaRegister";
 import { GoogleAnalytics } from "@/components/layout/GoogleAnalytics";
 import { PageSense } from "@/components/layout/PageSense";
@@ -54,19 +55,21 @@ export const metadata: Metadata = {
   },
 };
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  const nonce = (await headers()).get('x-nonce') ?? undefined;
+
   return (
     <html lang="fr" suppressHydrationWarning>
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
         suppressHydrationWarning
       >
-        <GoogleAnalytics />
-        <PageSense />
+        <GoogleAnalytics nonce={nonce} />
+        <PageSense nonce={nonce} />
         <PwaRegister />
         {children}
       </body>

@@ -59,7 +59,7 @@ export async function createDispute(
   );
   // Guard against a corrupt DB value: fall back to 30 days if parseInt returns NaN or non-positive.
   const windowDays = Number.isFinite(rawWindowDays) && rawWindowDays > 0 ? rawWindowDays : 30;
-  const completedAt = reservation.completed_at ?? reservation.updated_at;
+  const completedAt = reservation.completed_at ?? reservation.created_at;
   const windowMs = windowDays * 24 * 60 * 60 * 1000;
   if (Date.now() - completedAt.getTime() > windowMs) {
     throw new ConflictError('Dispute window has expired');

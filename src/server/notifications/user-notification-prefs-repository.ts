@@ -27,6 +27,12 @@ export type AdminNotificationPrefs = {
   };
 };
 
+export type AdminNotificationPrefsPatch = {
+  station_lifecycle?: Partial<AdminNotificationPrefs['station_lifecycle']>;
+  kyc_alerts?: Partial<AdminNotificationPrefs['kyc_alerts']>;
+  support_alerts?: Partial<AdminNotificationPrefs['support_alerts']>;
+};
+
 export const DEFAULT_CLIENT_NOTIFICATION_PREFS: ClientNotificationPrefs = {
   wash_status: true,
   reminder: true,
@@ -98,9 +104,9 @@ export async function getAdminNotificationPrefs(userId: string): Promise<AdminNo
     const value = raw[key] as Record<string, unknown> | undefined;
     const defaults = DEFAULT_ADMIN_NOTIFICATION_PREFS[key];
     return {
-      in_app: value?.in_app !== false ? defaults.in_app : false,
-      push: value?.push !== false ? defaults.push : false,
-      email: value?.email !== false ? defaults.email : false,
+      in_app: typeof value?.in_app === 'boolean' ? value.in_app : defaults.in_app,
+      push: typeof value?.push === 'boolean' ? value.push : defaults.push,
+      email: typeof value?.email === 'boolean' ? value.email : defaults.email,
     };
   };
 
@@ -113,7 +119,7 @@ export async function getAdminNotificationPrefs(userId: string): Promise<AdminNo
 
 export async function patchAdminNotificationPrefs(
   userId: string,
-  patch: Partial<AdminNotificationPrefs>
+  patch: AdminNotificationPrefsPatch
 ): Promise<AdminNotificationPrefs> {
   const current = await getAdminNotificationPrefs(userId);
   const merged: AdminNotificationPrefs = {

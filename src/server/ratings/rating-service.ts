@@ -101,7 +101,7 @@ export async function submitRating(userId: string, body: SubmitRatingData): Prom
   }
 
   // 4. Configurable rating window since completed_at (fallback updated_at)
-  const completedAt = owned.completed_at ?? owned.updated_at;
+  const completedAt = owned.completed_at ?? owned.created_at;
   const ratingWindowDaysRaw = parseInt(
     await getPlatformSettingWithFallback('rating_window_days', 'PLATFORM_RATING_WINDOW_DAYS', '7'),
     10
