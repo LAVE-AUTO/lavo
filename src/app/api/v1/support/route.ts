@@ -5,11 +5,17 @@ import { createSupportTicket, getSupportTickets } from '@/server/support/support
 import { AppError } from '@/lib/errors';
 import type { NextResponse } from 'next/server';
 import { checkSlidingWindowRateLimit, normalizeRateLimitKey } from '@/lib/rate-limiter';
+import { z } from 'zod';
 
 /** Maximum number of tickets a user may create per hour. */
 const TICKET_CREATE_LIMIT = 5;
 /** Sliding window size for ticket creation rate limit: 1 hour. */
 const TICKET_CREATE_WINDOW_SECS = 3600;
+const listQuerySchema = z.object({
+  status: supportStatusFilterSchema.optional(),
+  limit: z.coerce.number().int().min(1).max(100).optional().default(50),
+  cursor: z.string().optional(),
+});
 
 /**
  * GET /api/v1/support
@@ -20,22 +26,23 @@ export async function GET(request: Request) {
   if (auth instanceof Response) return auth as NextResponse;
 
   const { searchParams } = new URL(request.url);
-  const rawStatus = searchParams.get('status') ?? undefined;
-
-  // Validate the optional status filter against the allowed enum values.
-  const statusResult = supportStatusFilterSchema.safeParse(rawStatus);
-  if (!statusResult.success) {
-    return error400('Invalid status filter. Allowed: ouvert, en_cours, resolu, ferme');
+  const queryParsed = listQuerySchema.safeParse(Object.fromEntries(searchParams));
+  if (!queryParsed.success) {
+    return error400('Validation failed');
   }
 
   try {
-    const tickets = await getSupportTickets(auth.sub, auth.role, statusResult.data);
-    // `getSupportTickets` returns a paginated result { data, total } from the
-    // repository. The client-side `ClientSupportContainer` expects the `data`
-    // array directly in the success envelope, so unwrap here to avoid a
-    // double-wrapped `data.data` response which caused runtime errors like
-    // "tickets is not iterable" on the client.
-    return successResponse(tickets.data);
+    const result = await getSupportTickets(
+      auth.sub,
+      auth.role,
+      queryParsed.data.status,
+      { limit: queryParsed.data.limit, cursor: queryParsed.data.cursor }
+    );
+    return successResponse({
+      items: result.items,
+      next_cursor: result.next_cursor,
+      has_more: Boolean(result.next_cursor),
+    });
   } catch (e) {
     if (e instanceof AppError) return fromAppError(e);
     return error500(e);
@@ -79,4 +86,3 @@ export async function POST(request: Request) {
     return error500(e);
   }
 }
-

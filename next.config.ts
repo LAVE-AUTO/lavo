@@ -6,7 +6,7 @@ const withNextIntl = createNextIntlPlugin("./src/i18n/request.ts");
 const isProd = process.env.NODE_ENV === "production";
 
 const nextConfig: NextConfig = {
-  allowedDevOrigins: ['*.ngrok-free.app', '*.ngrok-free.dev', '*.ngrok.io'],
+  allowedDevOrigins: ['127.0.0.1', 'localhost', '*.ngrok-free.app', '*.ngrok-free.dev', '*.ngrok.io'],
   reactCompiler: true,
   /** ESM package; required so Jest (next/jest) transpiles it when importing @/lib/jwt in tests. */
   transpilePackages: ["jose"],

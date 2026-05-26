@@ -178,7 +178,8 @@ export async function addSupportMessage(
 export async function getTicketDetails(
   userId: string,
   role: string,
-  ticketId: string
+  ticketId: string,
+  options?: { limit?: number; cursor?: string }
 ) {
   const ticket = await repo.findTicketById(ticketId);
   if (!ticket) throw new AppError("Ticket not found", HTTP_STATUS.NOT_FOUND);
@@ -188,7 +189,19 @@ export async function getTicketDetails(
     throw new AppError("Forbidden", HTTP_STATUS.FORBIDDEN);
   }
 
-  return ticket;
+  const messagesPage = await repo.listTicketMessagesCursor(ticketId, {
+    limit: options?.limit ?? 50,
+    cursor: options?.cursor,
+  });
+
+  return {
+    ...ticket,
+    messages: messagesPage.items,
+    messages_meta: {
+      next_cursor: messagesPage.next_cursor,
+      has_more: Boolean(messagesPage.next_cursor),
+    },
+  };
 }
 
 /**
@@ -197,7 +210,8 @@ export async function getTicketDetails(
 export async function getSupportTickets(
   userId: string,
   role: string,
-  status?: SupportStatus
+  status?: SupportStatus,
+  options?: { limit?: number; cursor?: string }
 ) {
   const filters: { userId?: string; status?: SupportStatus } = {};
   if (role !== "admin") {
@@ -207,7 +221,9 @@ export async function getSupportTickets(
     filters.status = status;
   }
 
-  return await repo.listTickets(filters);
+  const limit = options?.limit ?? 50;
+  const cursor = options?.cursor;
+  return await repo.listTicketsCursor({ ...filters, limit, cursor });
 }
 
 /**

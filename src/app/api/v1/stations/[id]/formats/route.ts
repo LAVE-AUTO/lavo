@@ -4,16 +4,31 @@
  */
 import type { NextResponse } from 'next/server';
 import { successResponse, error500, fromAppError } from '@/lib/responses';
-import { getAllFormats } from '@/server/station/format-service';
+import { getFormatsPaginated } from '@/server/station/format-service';
 import { AppError } from '@/lib/errors';
 import { serializeFormat } from '@/server/station/serializers';
+import { z } from 'zod';
 
 type Params = { params: Promise<{ id: string }> };
+const querySchema = z.object({
+  page: z.coerce.number().int().min(1).optional().default(1),
+  per_page: z.coerce.number().int().min(1).max(100).optional().default(20),
+});
 
-export async function GET(_request: Request, _ctx: Params): Promise<NextResponse> {
+export async function GET(request: Request, _ctx: Params): Promise<NextResponse> {
   try {
-    const formats = await getAllFormats();
-    return successResponse(formats.map(serializeFormat));
+    const { searchParams } = new URL(request.url);
+    const parsed = querySchema.parse(Object.fromEntries(searchParams));
+    const result = await getFormatsPaginated(parsed.page, parsed.per_page);
+    return successResponse({
+      items: result.items.map(serializeFormat),
+      meta: {
+        total: result.total,
+        page: parsed.page,
+        per_page: parsed.per_page,
+        total_pages: Math.max(1, Math.ceil(result.total / parsed.per_page)),
+      },
+    });
   } catch (e) {
     if (e instanceof AppError) return fromAppError(e);
     return error500(e);

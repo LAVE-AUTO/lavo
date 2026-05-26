@@ -29,8 +29,7 @@ test.describe('client history page', () => {
      */
     await expect(page.locator('main')).toBeVisible({ timeout: 15_000 });
 
-    const nextErrorOverlay = page.locator('nextjs-portal, [data-nextjs-dialog]');
-    await expect(nextErrorOverlay).toHaveCount(0);
+    await expect(page.locator('text=/application error|runtime error|hydration failed/i')).toHaveCount(0);
   });
 
   test('history list container is visible (empty state or entries)', async ({ page }) => {

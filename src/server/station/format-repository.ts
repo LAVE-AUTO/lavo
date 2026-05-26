@@ -27,6 +27,28 @@ export async function findAllFormats(): Promise<VehicleFormat[]> {
   });
 }
 
+export async function findFormatsPaginated(
+  page: number,
+  perPage: number
+): Promise<{ items: VehicleFormat[]; total: number }> {
+  const safePerPage = Math.min(Math.max(1, Math.floor(perPage)), 100);
+  const safePage = Math.max(1, Math.floor(page));
+  const offset = (safePage - 1) * safePerPage;
+  const [countRows, items] = await Promise.all([
+    db
+      .select({ count: sql<number>`count(*)::int` })
+      .from(vehicleFormats)
+      .where(eq(vehicleFormats.is_active, true)),
+    db.query.vehicleFormats.findMany({
+      where: eq(vehicleFormats.is_active, true),
+      orderBy: (vf, { asc }) => [asc(vf.label)],
+      limit: safePerPage,
+      offset,
+    }),
+  ]);
+  return { items, total: countRows[0]?.count ?? 0 };
+}
+
 export async function findFormatById(formatId: string): Promise<VehicleFormat | undefined> {
   return db.query.vehicleFormats.findFirst({
     where: eq(vehicleFormats.id, formatId),

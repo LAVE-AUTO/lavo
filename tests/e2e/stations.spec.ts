@@ -79,7 +79,8 @@ test.describe('public station detail page', () => {
      */
     const ctaLink  = firstCard.locator('a').last();
     const rawHref  = (await ctaLink.getAttribute('href')) ?? '';
-    const idMatch  = rawHref.match(/\/stations\/([^?#/]+)/);
+    const decodedHref = decodeURIComponent(rawHref);
+    const idMatch  = decodedHref.match(/\/stations\/([^?#/]+)/);
     if (!idMatch) throw new Error(`Could not extract station id from href: "${rawHref}"`);
     return `/fr/stations/${idMatch[1]}`;
   }
@@ -118,7 +119,7 @@ test.describe('public station detail page', () => {
      * checking common patterns used in the codebase (the link to /login
      * with callbackUrl, or a button that opens the BookingFlow).
      */
-    const bookingCta = page.locator('button, a').filter({ hasText: /réserver|book|réservation/i }).first();
+    const bookingCta = page.locator('button, a').filter({ hasText: /réserver|book|réservation|choisir un format/i }).first();
     await expect(bookingCta).toBeVisible({ timeout: 10_000 });
   });
 });

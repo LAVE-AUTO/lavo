@@ -44,9 +44,10 @@ describe('GET /api/v1/stations/:id/queue', () => {
     const res = await GET(req, { params: buildParams(stationId) });
     expect(res.status).toBe(200);
     const data = await res.json();
-    expect(Array.isArray(data.data)).toBe(true);
-    expect(data.data[0].entry_type).toBe('queue');
-    expect(data.data[0].queue_position).toBe(1);
+    expect(Array.isArray(data.data.items)).toBe(true);
+    expect(data.data.items[0].entry_type).toBe('queue');
+    expect(data.data.items[0].queue_position).toBe(1);
+    expect(data.data.meta.total).toBe(1);
     expect(mockListQueue).toHaveBeenCalledWith(stationId);
   });
 

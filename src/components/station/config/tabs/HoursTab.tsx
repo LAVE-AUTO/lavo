@@ -65,7 +65,7 @@ export function HoursTab({ config, locked }: Props) {
   const loadData = useCallback(async () => {
     const [[hoursOk, hoursData], [exceptionsOk, exceptionsData]] = await Promise.all([
       getFromApi('/station/hours'),
-      getFromApi('/station/hour-exceptions'),
+      getFromApi('/station/hour-exceptions?page=1&per_page=100'),
     ]);
 
     if (hoursOk) {
@@ -82,7 +82,9 @@ export function HoursTab({ config, locked }: Props) {
     }
 
     if (exceptionsOk) {
-      setExceptions((exceptionsData as { data: HourException[] }).data ?? []);
+      const items =
+        (exceptionsData as { data?: { items?: HourException[] } })?.data?.items ?? [];
+      setExceptions(items);
     }
 
     setLoading(false);
