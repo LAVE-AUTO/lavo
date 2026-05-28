@@ -1676,6 +1676,8 @@
         "notif_error": "Impossible de charger les notifications",
         "notif_load_more": "Charger plus",
         "notif_open_cta": "Ouvrir",
+        "station_identity_eyebrow": "Espace station",
+        "station_identity_aria": "Espace station {name} — ouvrir les paramètres",
         "nav_home": "Accueil",
         "nav_availability": "Disponibilité",
         "nav_reservations": "Réservations",

@@ -154,23 +154,57 @@ export function StationTopNav({ onToggleSidebar, stationName }: StationTopNavPro
 
           {/* Logo - same treatment as PublicNavbar / MerchantNavbar /
               AdminTopNav, always links to the landing page (NAV-1 rule). */}
-          <div className="flex flex-col justify-center">
-            <Link href="/" className="shrink-0" aria-label="Hurryline - Accueil" suppressHydrationWarning>
-              <Image
-                src={isDark ? darkLogoSrc : lightLogoSrc}
-                alt={t('logo_alt')}
-                width={130}
-                height={34}
-                className="h-12 w-auto object-contain"
-                priority
+          <Link href="/" className="shrink-0" aria-label="Hurryline - Accueil" suppressHydrationWarning>
+            <Image
+              src={isDark ? darkLogoSrc : lightLogoSrc}
+              alt={t('logo_alt')}
+              width={130}
+              height={34}
+              className="h-12 w-auto object-contain"
+              priority
+            />
+          </Link>
+
+          {/* Station identity breadcrumb. Lives between the logo and the
+              right cluster so the merchant always knows which station
+              they are operating, without competing with the logo. The
+              whole block is a discrete link to the station settings. */}
+          {stationName && (
+            <>
+              <span
+                className="hidden sm:block h-7 w-px bg-[rgba(221,175,59,0.28)] dark:bg-[rgba(221,175,59,0.22)]"
+                aria-hidden="true"
               />
-            </Link>
-            {stationName && (
-              <span className="text-[11px] font-medium text-foreground/65 dark:text-[#B0BFB1] truncate max-w-[180px]">
-                {stationName}
-              </span>
-            )}
-          </div>
+              <Link
+                href="/station/config"
+                className="group flex items-center gap-2.5 min-w-0 -mx-1 px-1 py-1 rounded-md transition-colors hover:bg-[rgba(221,175,59,0.06)]"
+                aria-label={t('station_identity_aria', { name: stationName })}
+              >
+                {/* Storefront pastille — gold-tinted disc with the same 34x34
+                    footprint as the right-side controls, keeping vertical
+                    rhythm consistent across the bar. */}
+                <span className="hidden sm:flex h-[34px] w-[34px] items-center justify-center rounded-full border border-[rgba(221,175,59,0.28)] bg-[rgba(221,175,59,0.10)] text-[#DDAF3B] shrink-0 group-hover:border-[#DDAF3B] transition-colors">
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                    <path d="M3 9l2-5h14l2 5" />
+                    <path d="M3 9v11a1 1 0 001 1h4v-7h8v7h4a1 1 0 001-1V9" />
+                    <path d="M3 9h18" />
+                  </svg>
+                </span>
+
+                {/* Eyebrow + station name. Mobile shows the name only;
+                    desktop adds the small gold eyebrow for the premium
+                    'workspace switcher' feel found in app shells. */}
+                <span className="min-w-0 flex flex-col leading-none">
+                  <span className="hidden sm:block font-bebas text-[10px] tracking-[0.22em] uppercase text-[#DDAF3B]/85">
+                    {t('station_identity_eyebrow')}
+                  </span>
+                  <span className="text-[13px] sm:text-[14.5px] font-bold text-foreground dark:text-[#FFEECA] truncate max-w-[160px] sm:max-w-[220px] sm:mt-1 group-hover:text-[#DDAF3B] transition-colors">
+                    {stationName}
+                  </span>
+                </span>
+              </Link>
+            </>
+          )}
         </div>
 
         {/* Right controls - mirror Admin: theme, lang, notifs */}

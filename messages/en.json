@@ -1676,6 +1676,8 @@
     "notif_error": "Couldn't load notifications",
     "notif_load_more": "Load more",
     "notif_open_cta": "Open",
+    "station_identity_eyebrow": "Station workspace",
+    "station_identity_aria": "Station workspace {name} — open settings",
     "nav_home": "Home",
     "nav_availability": "Availability",
     "nav_reservations": "Reservations",
