@@ -23,7 +23,7 @@ export function AnalyticsPeriodToggle({ value, onChange }: AnalyticsPeriodToggle
     <div
       role="tablist"
       aria-label={t('period_label')}
-      className="inline-flex gap-1 rounded-xl border border-[#E0DCD0] bg-white p-1 dark:border-[#001A05] dark:bg-[#0F1A0C]"
+      className="inline-flex gap-1 rounded-xl border border-[#E0DCD0] bg-white p-1 dark:border-[#001A05] dark:bg-[#001201]"
     >
       {PERIODS.map((period) => {
         const active = value === period.id;

@@ -110,7 +110,7 @@ export function AdminCommissionView() {
               <div className="p-5">
                 <p className="mb-3 text-[12px] font-bold uppercase tracking-wider text-[#A0A090] dark:text-[#A0A090]">{t('label_rate')}</p>
                 {/* Big rate input */}
-                <div className="flex overflow-hidden rounded-xl border-2 border-[#D8D4C8] bg-white transition-all focus-within:border-[#DDAF3B] focus-within:shadow-[0_0_0_4px_rgba(221, 175, 59,0.12)] dark:border-[#001A05] dark:bg-[#0F1A0C] dark:focus-within:border-[#DDAF3B]">
+                <div className="flex overflow-hidden rounded-xl border-2 border-[#D8D4C8] bg-white transition-all focus-within:border-[#DDAF3B] focus-within:shadow-[0_0_0_4px_rgba(221, 175, 59,0.12)] dark:border-[#001A05] dark:bg-[#001201] dark:focus-within:border-[#DDAF3B]">
                   <input type="number" min={0} max={100} step={0.5} value={rate}
                     onChange={(e) => { const v = parseFloat(e.target.value); if (!isNaN(v)) setRate(Math.min(100, Math.max(0, v))); }}
                     className="flex-1 bg-transparent px-5 py-4 text-[32px] font-black text-[#001201] outline-none [appearance:textfield] dark:text-[#FFF9EC]" />

@@ -83,7 +83,7 @@ export function NumberStepper({
 
   return (
     <div
-      className={`group relative flex items-stretch overflow-hidden rounded-xl border bg-white transition-all duration-150 focus-within:border-[#DDAF3B] focus-within:shadow-[0_0_0_3px_rgba(221, 175, 59,0.12)] dark:bg-[#0F1A0C] ${
+      className={`group relative flex items-stretch overflow-hidden rounded-xl border bg-white transition-all duration-150 focus-within:border-[#DDAF3B] focus-within:shadow-[0_0_0_3px_rgba(221, 175, 59,0.12)] dark:bg-[#001201] ${
         disabled
           ? 'cursor-not-allowed border-[#E8E4DC] opacity-60 dark:border-[#1A2A14]'
           : 'border-[#E0DCD0] hover:border-[#D0C8B0] dark:border-[#001A05] dark:hover:border-[#2E3C2A]'

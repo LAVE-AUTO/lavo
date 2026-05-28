@@ -136,7 +136,7 @@ export function AdminTransactionsView() {
     { key: 'failed',    label: t('status_failed'),    dot: '#F43F5E' },
   ];
 
-  const dateInputCls = 'rounded-[12px] border border-[#D8D4C8] bg-white px-3 py-2 text-[12.5px] font-semibold text-[#001201] outline-none transition-all focus:border-[#DDAF3B] focus:shadow-[0_0_0_3px_rgba(221, 175, 59,0.10)] dark:border-[#001A05] dark:bg-[#0F1A0C] dark:text-[#FFF9EC] dark:focus:border-[#DDAF3B]';
+  const dateInputCls = 'rounded-[12px] border border-[#D8D4C8] bg-white px-3 py-2 text-[12.5px] font-semibold text-[#001201] outline-none transition-all focus:border-[#DDAF3B] focus:shadow-[0_0_0_3px_rgba(221, 175, 59,0.10)] dark:border-[#001A05] dark:bg-[#001201] dark:text-[#FFF9EC] dark:focus:border-[#DDAF3B]';
 
   const metrics = [
     { label: t('chip_volume'),      value: loading ? '…' : fmt(volume),    accent: '#DDAF3B' },

@@ -184,7 +184,7 @@ export function SupportTicketCard({ ticket, onMessageSent }: Props) {
                       'max-w-[82%] rounded-2xl px-4 py-2.5',
                       isAdmin
                         ? 'rounded-tr-sm bg-[#DDAF3B]/10 dark:bg-[#DDAF3B]/8'
-                        : 'rounded-tl-sm bg-[#F5F5EE] ring-1 ring-black/[0.04] dark:bg-[#0F1A0C] dark:ring-white/[0.04]',
+                        : 'rounded-tl-sm bg-[#F5F5EE] ring-1 ring-black/[0.04] dark:bg-[#001201] dark:ring-white/[0.04]',
                     ].join(' ')}>
                       {isAdmin && (
                         <p className="mb-1 text-[10px] font-black tracking-wide text-[#DDAF3B]/90">{t('thread_admin_label')}</p>
@@ -208,7 +208,7 @@ export function SupportTicketCard({ ticket, onMessageSent }: Props) {
                   onChange={(e) => setReplyContent(e.target.value)}
                   placeholder={t('reply_placeholder')}
                   maxLength={5000}
-                  className="flex-1 resize-none rounded-[8px] border border-[#D8D4C8] bg-[#F7F6F2] px-3 py-2 text-[13px] text-[#001201] outline-none transition-colors placeholder:text-[#BBBBAA] focus:border-[#DDAF3B] dark:border-[#001A05] dark:bg-[#0F1A0C] dark:text-[#FFF9EC] dark:placeholder:text-[#4A4A3A]"
+                  className="flex-1 resize-none rounded-[8px] border border-[#D8D4C8] bg-[#F7F6F2] px-3 py-2 text-[13px] text-[#001201] outline-none transition-colors placeholder:text-[#BBBBAA] focus:border-[#DDAF3B] dark:border-[#001A05] dark:bg-[#001201] dark:text-[#FFF9EC] dark:placeholder:text-[#4A4A3A]"
                 />
                 <button
                   type="submit"

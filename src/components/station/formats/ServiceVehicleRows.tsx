@@ -51,7 +51,7 @@ export function ServiceVehicleRows({
       {visibleEntries.map((entry) => (
         <div
           key={entry.vehicle_format_id}
-          className="flex flex-wrap items-end gap-3 rounded-xl bg-[#F7F6F2] px-3 py-3 dark:bg-[#0F1A0C]"
+          className="flex flex-wrap items-end gap-3 rounded-xl bg-[#F7F6F2] px-3 py-3 dark:bg-[#001201]"
         >
           {/* Format label */}
           <span className="w-[80px] shrink-0 self-center text-[11px] font-black uppercase tracking-[0.6px] text-[#DDAF3B]">

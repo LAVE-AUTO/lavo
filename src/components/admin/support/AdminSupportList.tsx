@@ -37,7 +37,7 @@ export function AdminSupportList({ tickets, query, loading, filter }: Props) {
               <div className="h-10 w-10 shrink-0 animate-pulse rounded-[12px] bg-[#E8E4DC] dark:bg-[#1E2E18]" />
               <div className="min-w-0 flex-1 space-y-2">
                 <div className="h-3.5 w-48 animate-pulse rounded bg-[#E8E4DC] dark:bg-[#1E2E18]" />
-                <div className="h-3 w-72 animate-pulse rounded bg-[#F0EDE4] dark:bg-[#1A2416]" />
+                <div className="h-3 w-72 animate-pulse rounded bg-[#F0EDE4] dark:bg-[#001A05]" />
               </div>
             </div>
           </div>

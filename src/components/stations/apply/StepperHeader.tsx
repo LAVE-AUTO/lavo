@@ -35,7 +35,7 @@ export function StepperHeader({ currentStep }: StepperHeaderProps) {
                     ? 'bg-gold text-dark-bg'
                     : isActive
                     ? 'bg-gold text-dark-bg ring-4 ring-gold/20'
-                    : 'bg-[#CCCCCC] dark:bg-[#2A3826] text-foreground/55 dark:text-Hurryline-muted',
+                    : 'bg-[#CCCCCC] dark:bg-[#001A05] text-foreground/55 dark:text-Hurryline-muted',
                 ].join(' ')}
                 aria-current={isActive ? 'step' : undefined}
               >
@@ -58,7 +58,7 @@ export function StepperHeader({ currentStep }: StepperHeaderProps) {
             {idx < STEPS.length - 1 && (
               <div className={[
                 'mx-3 mb-5 h-[2px] w-12 sm:w-20 rounded-full transition-colors duration-200',
-                number < currentStep ? 'bg-gold' : 'bg-[#CCCCCC] dark:bg-[#2A3826]',
+                number < currentStep ? 'bg-gold' : 'bg-[#CCCCCC] dark:bg-[#001A05]',
               ].join(' ')} aria-hidden="true" />
             )}
           </div>

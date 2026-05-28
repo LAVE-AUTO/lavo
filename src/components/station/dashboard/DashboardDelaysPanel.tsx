@@ -83,7 +83,7 @@ export function DashboardDelaysPanel({ items, totalPending }: Props) {
             <Link
               key={item.id}
               href={`/${locale}/station/delays`}
-              className="group flex flex-col gap-1 rounded-xl border border-[#E8E4DC] bg-white p-3 transition-all duration-150 hover:border-[#DDAF3B]/40 hover:shadow-sm dark:border-[#1A2A14] dark:bg-[#0F1A0C]"
+              className="group flex flex-col gap-1 rounded-xl border border-[#E8E4DC] bg-white p-3 transition-all duration-150 hover:border-[#DDAF3B]/40 hover:shadow-sm dark:border-[#1A2A14] dark:bg-[#001201]"
             >
               <div className="flex items-center justify-between gap-2">
                 <span className="truncate text-[12px] font-bold text-[#001201] dark:text-[#FFF9EC]">

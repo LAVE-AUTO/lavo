@@ -39,7 +39,7 @@ export function AdminAddUserForm({
         {/* Role toggle */}
         <div className="flex flex-col gap-1.5">
           <span className="text-[13px] font-bold text-foreground/70 dark:text-[#9A9A8A]">{t('field_role')}</span>
-          <div className="flex overflow-hidden rounded-[10px] border border-[#D8D4C8] bg-[#F5F3EE] p-0.5 dark:border-[#001A05] dark:bg-[#0F1A0C]">
+          <div className="flex overflow-hidden rounded-[10px] border border-[#D8D4C8] bg-[#F5F3EE] p-0.5 dark:border-[#001A05] dark:bg-[#001201]">
             {(['client', 'admin'] as Role[]).map((r) => (
               <button key={r} type="button" onClick={() => onRoleChange(r)}
                 className={[

@@ -204,8 +204,8 @@ export function PublicNavbar({
 
   return (
     <>
-      <header className="fixed top-0 left-0 right-0 z-40 bg-[rgba(247,243,236,0.95)] dark:bg-[rgba(13,31,15,0.92)] backdrop-blur-[16px] border-b border-[rgba(221,175,59,0.18)]">
-        <div className="max-w-[1440px] mx-auto px-6 lg:px-16 flex items-center justify-between gap-6 py-3">
+      <header className="fixed top-0 left-0 right-0 z-40 bg-[rgba(247,243,236,0.95)] dark:bg-dark-bg backdrop-blur-lg border-b border-[rgba(221,175,59,0.18)]">
+        <div className="max-w-360 mx-auto px-6 lg:px-16 flex items-center justify-between gap-6 py-3">
 
           {/* Logo */}
           <Link href={logoHref} className="shrink-0" aria-label="Hurryline - Accueil" suppressHydrationWarning>
@@ -228,7 +228,7 @@ export function PublicNavbar({
                   <Link
                     key={href}
                     href={href as Parameters<typeof Link>[0]['href']}
-                    className={`${linkClass}${pathname.startsWith(href) ? ' !text-[#DDAF3B]' : ''}`}
+                    className={`${linkClass}${pathname.startsWith(href) ? ' text-[#DDAF3B]!' : ''}`}
                   >
                     {label}
                   </Link>
@@ -238,7 +238,7 @@ export function PublicNavbar({
                   <a href={`/${locale}/#how-it-works`} className={linkClass}>{t('how_it_works')}</a>
                   <Link
                     href="/stations"
-                    className={`${linkClass}${pathname.startsWith('/stations') ? ' !text-[#DDAF3B]' : ''}`}
+                    className={`${linkClass}${pathname.startsWith('/stations') ? ' text-[#DDAF3B]!' : ''}`}
                   >
                     {t('stations')}
                   </Link>
@@ -265,7 +265,7 @@ export function PublicNavbar({
                       aria-label={tn('notif_tooltip')}
                       title={tn('notif_tooltip')}
                       onClick={toggleNotifications}
-                      className="flex h-[34px] w-[34px] items-center justify-center rounded-full border border-[rgba(221,175,59,0.25)] text-[var(--foreground)] transition-colors relative hover:border-[#DDAF3B] hover:text-[#DDAF3B] dark:text-[#B0BFB1]"
+                      className="flex h-8.5 w-8.5 items-center justify-center rounded-full border border-[rgba(221,175,59,0.25)] text-foreground transition-colors relative hover:border-[#DDAF3B] hover:text-[#DDAF3B] dark:text-Hurryline-muted"
                     >
                       <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
                         <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9" />

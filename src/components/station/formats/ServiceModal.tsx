@@ -458,7 +458,7 @@ export function ServiceModal({ service, vehicleFormats, availableExtras, onClose
               )}
 
               {!isEdit && showTypeSelector && (
-              <div className="rounded-[10px] border border-[#F0EDE4] bg-[#FAFAF7] p-3 dark:border-[#001A05] dark:bg-[#0F1A0C]">
+              <div className="rounded-[10px] border border-[#F0EDE4] bg-[#FAFAF7] p-3 dark:border-[#001A05] dark:bg-[#001201]">
                 <div className="mb-1 text-[11px] font-black tracking-[.08em] text-[#DDAF3B] uppercase">
                   {category === 'hand_wash' ? t('field_type_handwash') : t('field_type')}
                 </div>
@@ -473,7 +473,7 @@ export function ServiceModal({ service, vehicleFormats, availableExtras, onClose
               )}
 
               {isCreateAutomatic && (
-              <div className="rounded-[10px] border border-[#F0EDE4] bg-[#FAFAF7] p-3 dark:border-[#001A05] dark:bg-[#0F1A0C]">
+              <div className="rounded-[10px] border border-[#F0EDE4] bg-[#FAFAF7] p-3 dark:border-[#001A05] dark:bg-[#001201]">
                 <div className="mb-1 text-[11px] font-black tracking-[.08em] text-[#DDAF3B] uppercase">{t('cat_automatic')}</div>
                 <p className="text-[12px] text-foreground/55 dark:text-[#9A9A8A]">
                   {t('type_hint_exterior')}
@@ -482,7 +482,7 @@ export function ServiceModal({ service, vehicleFormats, availableExtras, onClose
               )}
 
               {isCreateSelfService && (
-              <div className="rounded-[10px] border border-[#F0EDE4] bg-[#FAFAF7] p-3 dark:border-[#001A05] dark:bg-[#0F1A0C]">
+              <div className="rounded-[10px] border border-[#F0EDE4] bg-[#FAFAF7] p-3 dark:border-[#001A05] dark:bg-[#001201]">
                 <div className="mb-1 text-[11px] font-black tracking-[.08em] text-[#DDAF3B] uppercase">{t('cat_self_service')}</div>
                 <p className="text-[12px] text-foreground/55 dark:text-[#9A9A8A]">
                   {t('type_hint_exterior')}
@@ -530,7 +530,7 @@ export function ServiceModal({ service, vehicleFormats, availableExtras, onClose
               )}
 
               {showAutomaticPackagesSection && (
-                <div className="flex flex-col gap-2 rounded-[10px] border border-[#F0EDE4] bg-[#FAFAF7] p-3 dark:border-[#001A05] dark:bg-[#0F1A0C]">
+                <div className="flex flex-col gap-2 rounded-[10px] border border-[#F0EDE4] bg-[#FAFAF7] p-3 dark:border-[#001A05] dark:bg-[#001201]">
                   <div className="flex items-center justify-between gap-2">
                     <span className="text-[11px] font-black tracking-[.08em] text-[#DDAF3B] uppercase">{t('automatic_packages_label')}</span>
                     <button
@@ -660,7 +660,7 @@ export function ServiceModal({ service, vehicleFormats, availableExtras, onClose
               )}
 
               {showExtrasSection && (
-              <div className="flex flex-col gap-2 rounded-[10px] border border-[#F0EDE4] bg-[#FAFAF7] p-3 dark:border-[#001A05] dark:bg-[#0F1A0C]">
+              <div className="flex flex-col gap-2 rounded-[10px] border border-[#F0EDE4] bg-[#FAFAF7] p-3 dark:border-[#001A05] dark:bg-[#001201]">
                 <span className="text-[11px] font-black tracking-[.08em] text-[#DDAF3B] uppercase">
                   {t('extras_label')}
                 </span>

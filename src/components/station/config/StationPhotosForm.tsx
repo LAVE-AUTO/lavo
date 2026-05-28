@@ -114,7 +114,7 @@ export function StationPhotosForm({ locked = false }: Props) {
   }
 
   return (
-    <div className="flex flex-col rounded-2xl bg-white shadow-sm ring-1 ring-black/[0.04] dark:bg-[#1A2416] dark:ring-white/[0.06]">
+    <div className="flex flex-col rounded-2xl bg-white shadow-sm ring-1 ring-black/[0.04] dark:bg-[#001A05] dark:ring-white/[0.06]">
       <div className="border-b border-[#F0EDE0] px-6 py-4 dark:border-[#1E2E18]">
         <p className="text-[13px] font-black uppercase tracking-wider text-[#001201] dark:text-[#FFF9EC]">{t('section_photos')}</p>
         <p className="mt-0.5 text-[12px] text-[#AAAAAA] dark:text-[#4A4A3A]">{t('section_photos_hint')}</p>
@@ -148,7 +148,7 @@ export function StationPhotosForm({ locked = false }: Props) {
                 ) : (
                   <button type="button" disabled={locked || uploadingIdx !== null} onClick={() => triggerUpload(i)}
                     aria-label={t('photos_slot_aria', { n: i + 1 })}
-                    className="flex h-full w-full flex-col items-center justify-center gap-1 rounded-xl border-2 border-dashed border-[#D8D4C8] bg-[#F8F6F2] transition-colors hover:border-[#DDAF3B] hover:bg-[#FFFBF0] disabled:cursor-not-allowed disabled:opacity-50 dark:border-[#001A05] dark:bg-[#0F1A0C] dark:hover:border-[#DDAF3B] dark:hover:bg-[#141E10]">
+                    className="flex h-full w-full flex-col items-center justify-center gap-1 rounded-xl border-2 border-dashed border-[#D8D4C8] bg-[#F8F6F2] transition-colors hover:border-[#DDAF3B] hover:bg-[#FFFBF0] disabled:cursor-not-allowed disabled:opacity-50 dark:border-[#001A05] dark:bg-[#001201] dark:hover:border-[#DDAF3B] dark:hover:bg-[#141E10]">
                     {isUploading ? (
                       <svg className="animate-spin" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#DDAF3B" strokeWidth="2.5" aria-hidden="true">
                         <path d="M21 12a9 9 0 11-6.219-8.56" />

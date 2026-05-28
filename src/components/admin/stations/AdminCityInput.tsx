@@ -103,7 +103,7 @@ export function AdminCityInput({ label, required, value, error, placeholder, onC
       />
       {isOpen && (
         <ul id={listId} role="listbox"
-          className="absolute top-full z-50 mt-1 w-full overflow-hidden rounded-xl border border-[#E8E4DC] bg-white shadow-[0_8px_24px_rgba(0,0,0,0.10)] dark:border-[#1E2E18] dark:bg-[#0F1A0C]">
+          className="absolute top-full z-50 mt-1 w-full overflow-hidden rounded-xl border border-[#E8E4DC] bg-white shadow-[0_8px_24px_rgba(0,0,0,0.10)] dark:border-[#1E2E18] dark:bg-[#001201]">
           {suggestions.map((city, i) => (
             <li key={city} id={`${listId}-opt-${i}`} role="option" aria-selected={i === activeIdx}
               onMouseDown={() => select(city)}

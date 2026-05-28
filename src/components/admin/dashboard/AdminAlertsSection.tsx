@@ -51,14 +51,14 @@ function SectionPanel({
   emptyLabel: string;
 }) {
   return (
-    <div className="flex flex-1 flex-col overflow-hidden rounded-2xl bg-white shadow-sm ring-1 ring-black/[0.04] dark:bg-[#1A2416] dark:ring-white/[0.06]">
+    <div className="flex flex-1 flex-col overflow-hidden rounded-2xl bg-white shadow-sm ring-1 ring-black/[0.04] dark:bg-[#001A05] dark:ring-white/[0.06]">
       {/* Header */}
       <div className="flex items-center justify-between px-5 py-4">
         <div className="flex items-center gap-3">
           <div className="flex h-8 w-8 items-center justify-center rounded-lg" style={{ background: `${color}18` }}>
             {icon}
           </div>
-          <span className="text-[13px] font-black text-[#0F1A0C] dark:text-[#FFF9EC]">{title}</span>
+          <span className="text-[13px] font-black text-[#001201] dark:text-[#FFF9EC]">{title}</span>
           {count > 0 && (
             <span
               className="flex h-5 min-w-[20px] items-center justify-center rounded-full px-1.5 text-[11px] font-black text-white"
@@ -189,7 +189,7 @@ export function AdminAlertsSection() {
               {initials(s.name)}
             </div>
             <div className="min-w-0 flex-1">
-              <div className="truncate text-[13px] font-bold text-[#0F1A0C] dark:text-[#FFF9EC]">{s.name}</div>
+              <div className="truncate text-[13px] font-bold text-[#001201] dark:text-[#FFF9EC]">{s.name}</div>
               <div className="text-[11px] text-[#AAA] dark:text-[#A0A090]">{formatDate(s.created_at)}</div>
             </div>
             <span className="shrink-0 rounded-full bg-[#DDAF3B]/10 px-2 py-0.5 text-[9px] font-black uppercase tracking-wider text-[#DDAF3B]">
@@ -223,7 +223,7 @@ export function AdminAlertsSection() {
               {initials(d.label)}
             </div>
             <div className="min-w-0 flex-1">
-              <div className="truncate text-[13px] font-bold text-[#0F1A0C] dark:text-[#FFF9EC]">{d.label}</div>
+              <div className="truncate text-[13px] font-bold text-[#001201] dark:text-[#FFF9EC]">{d.label}</div>
               <div className="text-[11px] text-[#AAA] dark:text-[#A0A090]">{formatDate(d.date)}</div>
             </div>
             <div className="flex shrink-0 flex-col items-end gap-1">

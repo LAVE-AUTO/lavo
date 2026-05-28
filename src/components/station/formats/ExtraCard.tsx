@@ -99,7 +99,7 @@ export function ExtraCard({ extra, onEdit, onDeleted, onToggled }: Props) {
               onClick={() => setDeleteOpen(true)}
               disabled={deleting}
               aria-label={t('btn_delete')}
-              className="inline-flex items-center justify-center rounded-lg border border-[#E0DCD0] bg-white p-1.5 text-foreground/55 transition-all hover:border-[#FF2525] hover:bg-[#FF2525]/5 hover:text-[#FF2525] disabled:opacity-40 dark:border-[#001A05] dark:bg-[#0F1A0C] dark:text-[#9A9A8A]"
+              className="inline-flex items-center justify-center rounded-lg border border-[#E0DCD0] bg-white p-1.5 text-foreground/55 transition-all hover:border-[#FF2525] hover:bg-[#FF2525]/5 hover:text-[#FF2525] disabled:opacity-40 dark:border-[#001A05] dark:bg-[#001201] dark:text-[#9A9A8A]"
             >
               <CrossIcon />
             </button>
@@ -137,7 +137,7 @@ export function ExtraCard({ extra, onEdit, onDeleted, onToggled }: Props) {
             {entries.map((entry) => (
               <div
                 key={entry.vehicle_format_id}
-                className="rounded-xl bg-[#F7F6F2] px-3 py-3 text-center dark:bg-[#0F1A0C]"
+                className="rounded-xl bg-[#F7F6F2] px-3 py-3 text-center dark:bg-[#001201]"
               >
                 <p className="text-[9px] font-bold uppercase tracking-[1px] text-foreground/55 dark:text-[#9A9A8A]">
                   {entry.vehicle_label}
@@ -150,7 +150,7 @@ export function ExtraCard({ extra, onEdit, onDeleted, onToggled }: Props) {
             ))}
           </div>
         ) : (
-          <div className="rounded-xl bg-[#F7F6F2] px-3 py-3 text-center dark:bg-[#0F1A0C]">
+          <div className="rounded-xl bg-[#F7F6F2] px-3 py-3 text-center dark:bg-[#001201]">
             <p className="text-[9px] font-bold uppercase tracking-[1px] text-foreground/55 dark:text-[#9A9A8A]">
               {t('extras_all_formats')}
             </p>

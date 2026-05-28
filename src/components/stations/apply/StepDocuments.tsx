@@ -99,7 +99,7 @@ export function StepDocuments({ data, errors, isLoading, onChange, onErrors, onS
               data.termsAccepted
                 ? 'bg-gold border-gold'
                 : errors.terms
-                ? 'border-Hurryline-error bg-[#FFF8F7] dark:bg-[#2A1A18]'
+                ? 'border-Hurryline-error bg-[#FFF9EC] dark:bg-[#391C01]'
                 : 'border-[#CCCCCC] dark:border-border bg-white dark:bg-surface group-hover:border-gold',
             ].join(' ')}>
               {data.termsAccepted && (

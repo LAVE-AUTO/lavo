@@ -159,7 +159,7 @@ function FullKpiCard({
         {masked ? '•'.repeat(card.maskWidth) : card.value}
       </div>
       <div className="text-[12px] font-semibold text-foreground/55 dark:text-[#9A9A8A]">{card.label}</div>
-      <div className="mt-3 h-1.5 overflow-hidden rounded-full bg-[#F0EDE0] dark:bg-[#0F1A0C]">
+      <div className="mt-3 h-1.5 overflow-hidden rounded-full bg-[#F0EDE0] dark:bg-[#001201]">
         <div
           className="h-full rounded-full transition-all duration-500"
           style={{

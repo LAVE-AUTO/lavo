@@ -72,7 +72,7 @@ export function AdminDashboard() {
       <div className="border-b border-[#E8E4D8] bg-white px-7 py-5 dark:border-[#1A2A14] dark:bg-[#111A0E]">
         <div className="flex items-center justify-between">
           <div>
-            <h1 className="text-[20px] font-black leading-tight text-[#0F1A0C] dark:text-[#FFF9EC]">
+            <h1 className="text-[20px] font-black leading-tight text-[#001201] dark:text-[#FFF9EC]">
               {t('page_title')}
             </h1>
             <p className="mt-0.5 text-[12px] capitalize text-[#999] dark:text-[#A0A090]">{today}</p>

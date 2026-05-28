@@ -64,7 +64,7 @@ function KpiCard({ icon, value, label, trendValue, trendLabel, trendUp, sparklin
             <div className="truncate text-[11px] font-bold uppercase tracking-[0.22em] text-[#8A8A7C] dark:text-[#A0A090]">
               {label}
             </div>
-            <div className="mt-2 text-[clamp(1.9rem,3vw,2.6rem)] font-black leading-none tracking-tight text-[#0F1A0C] dark:text-[#FFF9EC]">
+            <div className="mt-2 text-[clamp(1.9rem,3vw,2.6rem)] font-black leading-none tracking-tight text-[#001201] dark:text-[#FFF9EC]">
               {masked ? '••••' : value}
             </div>
           </div>
@@ -87,7 +87,7 @@ function KpiCard({ icon, value, label, trendValue, trendLabel, trendUp, sparklin
           <div className="text-[10px] font-bold uppercase tracking-[0.2em] text-[#8A8A7C] dark:text-[#A0A090]">
             {trendLabel}
           </div>
-          <div className="mt-1 text-sm font-black leading-tight text-[#0F1A0C] dark:text-[#FFF9EC]">
+          <div className="mt-1 text-sm font-black leading-tight text-[#001201] dark:text-[#FFF9EC]">
             {trendValue}
           </div>
         </div>

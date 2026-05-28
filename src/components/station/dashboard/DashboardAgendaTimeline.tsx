@@ -60,7 +60,7 @@ function statusToBlockClass(status: string): { bg: string; border: string; chip:
   switch (status) {
     case 'completed':
       return {
-        bg: 'bg-[#F0EDE0] dark:bg-[#0F1A0C]/60',
+        bg: 'bg-[#F0EDE0] dark:bg-[#001201]/60',
         border: 'border-[#D8D4C4] dark:border-[#001A05]',
         chip: 'text-foreground/55 dark:text-[#A0A090]',
         chipBg: 'bg-[#E0DCD0] dark:bg-[#1A2A14]',
@@ -195,7 +195,7 @@ export function DashboardAgendaTimeline({
   return (
     <div className="flex flex-1 min-h-0 flex-col overflow-hidden bg-white dark:bg-[#111A0E]">
       {/* Header strip — sticky bay names */}
-      <div className="flex flex-shrink-0 border-b border-[#E0DCD0] bg-[#F7F6F2] dark:border-[#1A2A14] dark:bg-[#0F1A0C]">
+      <div className="flex flex-shrink-0 border-b border-[#E0DCD0] bg-[#F7F6F2] dark:border-[#1A2A14] dark:bg-[#001201]">
         <div className="w-14 flex-shrink-0 border-r border-[#E0DCD0] dark:border-[#1A2A14]" />
         {visiblePosts.length === 0 ? (
           <div className="flex-1 px-4 py-3 text-center text-[12px] text-foreground/55 dark:text-[#A0A090]">
@@ -266,7 +266,7 @@ export function DashboardAgendaTimeline({
                 {/* Break overlay */}
                 {breakSpan && (
                   <div
-                    className="absolute left-1 right-1 flex items-center justify-center rounded-md bg-[#001201]/[0.06] text-[10px] font-bold uppercase tracking-wider text-foreground/65 dark:bg-[#0F1A0C] dark:text-[#5A5A4A]"
+                    className="absolute left-1 right-1 flex items-center justify-center rounded-md bg-[#001201]/[0.06] text-[10px] font-bold uppercase tracking-wider text-foreground/65 dark:bg-[#001201] dark:text-[#5A5A4A]"
                     style={{ top: breakSpan.top, height: breakSpan.height }}
                     aria-hidden="true"
                   >

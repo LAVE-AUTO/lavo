@@ -88,7 +88,7 @@ function StationCard({ s, locale, t }: { s: ApiStation; locale: string; t: Retur
 
         <div className="min-w-0 flex-1">
           <div className="flex items-center gap-2">
-            <p className="truncate text-[14px] font-black text-[#0F1A0C] dark:text-[#FFF9EC]">{s.name}</p>
+            <p className="truncate text-[14px] font-black text-[#001201] dark:text-[#FFF9EC]">{s.name}</p>
             <span className="shrink-0 rounded-[5px] px-1.5 py-0.5 text-[9px] font-black uppercase tracking-widest"
               style={{ background: style.bg, color: style.dot }}>
               {statusLabel}
@@ -289,7 +289,7 @@ export function PendingStationsList() {
 
           {!loading && !loadError && filtered.length === 0 && (
             <div className="flex flex-1 flex-col items-center justify-center gap-3 py-24 text-center">
-              <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-white shadow-sm ring-1 ring-black/[0.04] dark:bg-[#1A2416] dark:ring-white/[0.06]">
+              <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-white shadow-sm ring-1 ring-black/[0.04] dark:bg-[#001A05] dark:ring-white/[0.06]">
                 <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#DDAF3B" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
                   <path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z" /><polyline points="9 22 9 12 15 12 15 22" />
                 </svg>

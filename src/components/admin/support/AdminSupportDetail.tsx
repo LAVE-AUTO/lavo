@@ -322,7 +322,7 @@ export function AdminSupportDetail({ id }: Props) {
                         'max-w-[78%] rounded-2xl px-4 py-3',
                         isAdmin
                           ? 'rounded-tr-sm bg-[#DDAF3B]/10 dark:bg-[#DDAF3B]/8'
-                          : 'rounded-tl-sm bg-white shadow-sm ring-1 ring-black/4 dark:bg-[#1A2416] dark:ring-white/4',
+                          : 'rounded-tl-sm bg-white shadow-sm ring-1 ring-black/4 dark:bg-[#001A05] dark:ring-white/4',
                       ].join(' ')}>
                         <p className={`mb-1 text-[12px] font-black tracking-wide ${isAdmin ? 'text-[#DDAF3B]/90' : 'text-foreground/55 dark:text-[#9A9A8A]'}`}>
                           {authorName}
@@ -344,7 +344,7 @@ export function AdminSupportDetail({ id }: Props) {
                 </div>
                 <form onSubmit={handleSendReply} className="flex flex-col gap-3 p-5">
                   <textarea id="admin-reply-field" rows={4} maxLength={2000}
-                    className="w-full resize-none rounded-lg border border-[#D8D4C8] bg-[#F7F6F2] px-3 py-2.5 text-[13px] text-[#001201] outline-none placeholder:text-[#BBBBAA] focus:border-[#DDAF3B] focus:bg-white focus:shadow-[0_0_0_3px_rgba(221, 175, 59,0.12)] dark:border-dark-surface dark:bg-[#0F1A0C] dark:text-[#FFF9EC] dark:focus:border-[#DDAF3B]"
+                    className="w-full resize-none rounded-lg border border-[#D8D4C8] bg-[#F7F6F2] px-3 py-2.5 text-[13px] text-[#001201] outline-none placeholder:text-[#BBBBAA] focus:border-[#DDAF3B] focus:bg-white focus:shadow-[0_0_0_3px_rgba(221, 175, 59,0.12)] dark:border-dark-surface dark:bg-[#001201] dark:text-[#FFF9EC] dark:focus:border-[#DDAF3B]"
                     placeholder={t('field_reply_placeholder')}
                     value={reply}
                     onChange={(e) => setReply(e.target.value)}

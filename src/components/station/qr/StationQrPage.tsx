@@ -120,7 +120,7 @@ export function StationQrPage() {
   return (
     <div className="flex flex-1 flex-col items-center px-4 py-8 sm:py-12">
       {/* Branded card */}
-      <div className="relative w-full max-w-md overflow-hidden rounded-3xl bg-gradient-to-br from-white via-white to-[#F7F3E4] p-8 shadow-2xl dark:from-[#1A2218] dark:via-[#161E12] dark:to-[#0F1A0C]">
+      <div className="relative w-full max-w-md overflow-hidden rounded-3xl bg-gradient-to-br from-white via-white to-[#F7F3E4] p-8 shadow-2xl dark:from-[#1A2218] dark:via-[#161E12] dark:to-[#001201]">
         {/* Top gold accent line */}
         <div className="absolute inset-x-0 top-0 h-1 bg-gradient-to-r from-transparent via-[#DDAF3B] to-transparent" />
         {/* Diagonal subtle pattern */}
@@ -174,7 +174,7 @@ export function StationQrPage() {
         </div>
 
         {/* URL preview */}
-        <div className="relative mt-3 rounded-xl border border-[#E8E4DC] bg-[#F7F6F2] px-3 py-2 dark:border-[#001A05] dark:bg-[#0F1A0C]">
+        <div className="relative mt-3 rounded-xl border border-[#E8E4DC] bg-[#F7F6F2] px-3 py-2 dark:border-[#001A05] dark:bg-[#001201]">
           <div className="text-[9px] font-bold uppercase tracking-wider text-[#999] dark:text-[#5A5A4A]">
             {t('station_url_label')}
           </div>

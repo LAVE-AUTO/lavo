@@ -386,7 +386,7 @@ function PendingCard({
 
   return (
     <div
-      className="animate-fade-in-up overflow-hidden rounded-[14px] border border-[#DDD9CC] bg-white shadow-sm transition-all duration-200 hover:-translate-y-0.5 hover:shadow-md dark:border-[#2A3826] dark:bg-[#1A2416]"
+      className="animate-fade-in-up overflow-hidden rounded-[14px] border border-[#DDD9CC] bg-white shadow-sm transition-all duration-200 hover:-translate-y-0.5 hover:shadow-md dark:border-[#001A05] dark:bg-[#001A05]"
       style={{ animationDelay }}
     >
       <div className="h-[3px] w-full bg-gradient-to-r from-[#C09A18] to-[#E8C040]" />
@@ -468,7 +468,7 @@ function HistoryCard({ request, animationDelay, statusLabel, agoLabel }: History
 
   return (
     <div
-      className="animate-fade-in-up flex gap-0 overflow-hidden rounded-[12px] border border-[#DDD9CC]/70 bg-white/70 dark:border-[#2A3826] dark:bg-[#1A2416]/70"
+      className="animate-fade-in-up flex gap-0 overflow-hidden rounded-[12px] border border-[#DDD9CC]/70 bg-white/70 dark:border-[#001A05] dark:bg-[#001A05]/70"
       style={{ animationDelay }}
     >
       <div className="w-1 shrink-0 rounded-l-[12px]" style={{ background: accentColor }} />

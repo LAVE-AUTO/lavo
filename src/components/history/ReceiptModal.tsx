@@ -285,7 +285,7 @@ export function ReceiptModal({ entry: e, locale, onClose }: ReceiptModalProps) {
       font-size: 13px;
       font-weight: 600;
       color: #333;
-      border-bottom: 1px solid #f0f0e8;
+      border-bottom: 1px solid #FFF9EC;
       display: flex;
       align-items: center;
       gap: 8px;
@@ -312,7 +312,7 @@ export function ReceiptModal({ entry: e, locale, onClose }: ReceiptModalProps) {
     .items-table td {
       padding: 12px 14px;
       vertical-align: middle;
-      border-bottom: 1px solid #f0f0e8;
+      border-bottom: 1px solid #FFF9EC;
     }
     .items-table tr:last-child td { border-bottom: none; }
     .item-title {

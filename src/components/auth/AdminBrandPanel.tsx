@@ -10,10 +10,10 @@ import { useTheme } from '@/context/theme-context';
 
 /* Decorative dashboard mockup - all text is intentionally hardcoded as it is purely visual/illustrative. */
 function AdminMockup({ isDark }: { isDark: boolean }) {
-  const cardBg  = isDark ? '#001A05' : '#F5F0E4';
-  const borderC = isDark ? '#2E3E2A' : '#D4C88A';
+  const cardBg  = isDark ? '#001A05' : '#FFF9EC';
+  const borderC = isDark ? '#001A05' : '#DDAF3B';
   const textCol = isDark ? '#FFEECA' : '#001201';
-  const mutedC  = isDark ? '#B0BFB1' : '#6B7A64';
+  const mutedC  = isDark ? '#B0BFB1' : '#B0BFB1';
   const goldC   = '#DDAF3B';
 
   const stats = [

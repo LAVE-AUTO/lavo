@@ -201,7 +201,7 @@ export function HoursExceptions({ exceptions, saving = false, onAdd, onDelete, d
       {showForm && (
         <form
           onSubmit={handleSubmit}
-          className="mb-4 flex flex-col gap-4 rounded-xl border border-[#E0DCD0] bg-[#F7F6F2] p-4 dark:border-dark-surface dark:bg-[#0F1A0C]"
+          className="mb-4 flex flex-col gap-4 rounded-xl border border-[#E0DCD0] bg-[#F7F6F2] p-4 dark:border-dark-surface dark:bg-[#001201]"
         >
           <p className="text-[12px] font-bold text-[#001201] dark:text-[#FFF9EC]">
             {t('hours_exceptions_add_title')}
@@ -281,7 +281,7 @@ export function HoursExceptions({ exceptions, saving = false, onAdd, onDelete, d
       )}
 
       {exceptions.length === 0 ? (
-        <div className="flex flex-col items-center gap-2 rounded-xl border border-dashed border-[#D8D4C8] bg-[#F7F6F2] px-4 py-8 dark:border-dark-surface dark:bg-[#0F1A0C]">
+        <div className="flex flex-col items-center gap-2 rounded-xl border border-dashed border-[#D8D4C8] bg-[#F7F6F2] px-4 py-8 dark:border-dark-surface dark:bg-[#001201]">
           <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#BBBBAA" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
             <rect x="3" y="4" width="18" height="18" rx="2" ry="2" />
             <line x1="16" y1="2" x2="16" y2="6" />

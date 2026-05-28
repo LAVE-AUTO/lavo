@@ -29,7 +29,7 @@ export function RefuseReasonModal({ open, loading, error, onConfirm, onCancel }:
       />
 
       {/* Panel */}
-      <div className="relative w-full max-w-sm animate-fade-in overflow-hidden rounded-[16px] bg-white shadow-2xl dark:bg-[#1A2416]">
+      <div className="relative w-full max-w-sm animate-fade-in overflow-hidden rounded-[16px] bg-white shadow-2xl dark:bg-[#001A05]">
         {/* Top accent */}
         <div className="h-[3px] w-full bg-gradient-to-r from-[#391C01] to-[#FF7A5A]" />
 
@@ -63,7 +63,7 @@ export function RefuseReasonModal({ open, loading, error, onConfirm, onCancel }:
               placeholder={t('refuse_reason_placeholder')}
               aria-invalid={!!error}
               aria-describedby={error ? 'refuse-modal-error' : undefined}
-              className="w-full resize-none rounded-[10px] border border-[#DDD9CC] bg-[#F5F4EE] px-3.5 py-2.5 text-[13px] text-[#001201] outline-none transition-all duration-150 focus:border-[#391C01]/60 focus:ring-2 focus:ring-[#391C01]/10 dark:border-[#2A3826] dark:bg-[#111A0E] dark:text-[#FFF9EC] placeholder:text-foreground/70/30 dark:placeholder:text-[#FFFFF0]/20 disabled:opacity-50"
+              className="w-full resize-none rounded-[10px] border border-[#DDD9CC] bg-[#F5F4EE] px-3.5 py-2.5 text-[13px] text-[#001201] outline-none transition-all duration-150 focus:border-[#391C01]/60 focus:ring-2 focus:ring-[#391C01]/10 dark:border-[#001A05] dark:bg-[#111A0E] dark:text-[#FFF9EC] placeholder:text-foreground/70/30 dark:placeholder:text-[#FFFFF0]/20 disabled:opacity-50"
             />
             <div className="mt-1 flex items-center justify-between">
               <span className="text-[11px] text-foreground/70/30 dark:text-[#FFFFF0]/20">
@@ -88,7 +88,7 @@ export function RefuseReasonModal({ open, loading, error, onConfirm, onCancel }:
               type="button"
               onClick={onCancel}
               disabled={loading}
-              className="flex-1 rounded-[10px] border border-[#DDD9CC] py-2.5 text-[13px] font-bold text-foreground/70/70 transition-colors hover:bg-[#F0EDE0] disabled:opacity-50 dark:border-[#2A3826] dark:text-[#FFFFF0]/50 dark:hover:bg-[#182214]"
+              className="flex-1 rounded-[10px] border border-[#DDD9CC] py-2.5 text-[13px] font-bold text-foreground/70/70 transition-colors hover:bg-[#F0EDE0] disabled:opacity-50 dark:border-[#001A05] dark:text-[#FFFFF0]/50 dark:hover:bg-[#182214]"
             >
               {t('btn_cancel')}
             </button>

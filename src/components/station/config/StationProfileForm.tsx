@@ -225,7 +225,7 @@ export function StationProfileForm({ profile, onSaved, locked = false }: Props) 
 
               <div className="col-span-2">
                 <Field label={t('field_service_scope')}>
-                  <div className="flex gap-1 rounded-xl border border-[#E0DCD0] bg-[#F7F6F2] p-1 dark:border-[#001A05] dark:bg-[#0F1A0C]">
+                  <div className="flex gap-1 rounded-xl border border-[#E0DCD0] bg-[#F7F6F2] p-1 dark:border-[#001A05] dark:bg-[#001201]">
                     <button
                       type="button"
                       onClick={() => setServiceScope('')}

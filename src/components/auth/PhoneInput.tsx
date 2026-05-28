@@ -107,7 +107,7 @@ function CountrySelect({
     'flex items-center gap-1.5 px-3 py-3 bg-white dark:bg-surface border-[1.5px] rounded-lg',
     'outline-none transition-all duration-150 whitespace-nowrap',
     hasError
-      ? 'border-Hurryline-error bg-[#FFF8F7] dark:bg-[#2A1A18]'
+      ? 'border-Hurryline-error bg-[#FFF9EC] dark:bg-[#391C01]'
       : 'border-[#CCCCCC] dark:border-border focus:border-gold dark:focus:border-gold focus:shadow-[0_0_0_3px_rgba(221, 175, 59,0.18)] dark:focus:shadow-[0_0_0_3px_rgba(221, 175, 59,0.15)]',
   ].join(' ');
 
@@ -182,7 +182,7 @@ function CountrySelect({
                     className={[
                       'w-full flex items-center gap-2.5 px-3 py-2 text-left transition-colors',
                       selected
-                        ? 'bg-[#F5F0E0] dark:bg-surface font-semibold'
+                        ? 'bg-[#FFF9EC] dark:bg-surface font-semibold'
                         : 'hover:bg-[#F8F8F6] dark:hover:bg-dark-surface',
                     ].join(' ')}
                   >
@@ -253,10 +253,10 @@ export function PhoneInput({
 
   const inputClasses = [
     'w-full px-4 py-3 bg-white dark:bg-surface border-[1.5px] rounded-lg',
-    'text-[16px] text-[#001201] dark:text-white placeholder-[#AAAAAA] dark:placeholder-[#4A5A46]',
+    'text-[16px] text-[#001201] dark:text-white placeholder-[#AAAAAA] dark:placeholder-[#B0BFB1]',
     'outline-none transition-all duration-150',
     error
-      ? 'border-Hurryline-error bg-[#FFF8F7] dark:bg-[#2A1A18] focus:shadow-[0_0_0_3px_rgba(232,71,42,0.2)]'
+      ? 'border-Hurryline-error bg-[#FFF9EC] dark:bg-[#391C01] focus:shadow-[0_0_0_3px_rgba(232,71,42,0.2)]'
       : 'border-[#CCCCCC] dark:border-border focus:border-gold dark:focus:border-gold focus:shadow-[0_0_0_3px_rgba(221, 175, 59,0.18)] dark:focus:shadow-[0_0_0_3px_rgba(221, 175, 59,0.15)]',
   ].join(' ');
 

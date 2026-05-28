@@ -36,7 +36,7 @@ function ModeCard({ selected, onClick, icon, label, sub }: {
         'flex flex-1 flex-col gap-1 rounded-xl border-[1.5px] px-3 py-3 text-left transition-all duration-150',
         selected
           ? 'border-[#DDAF3B] bg-[#DDAF3B]/8 shadow-sm'
-          : 'border-[#D8D4C8] bg-white hover:border-[#DDAF3B]/50 dark:border-[#001A05] dark:bg-[#0F1A0C]',
+          : 'border-[#D8D4C8] bg-white hover:border-[#DDAF3B]/50 dark:border-[#001A05] dark:bg-[#001201]',
       ].join(' ')}>
       <span className={`mb-0.5 ${selected ? 'text-[#DDAF3B]' : 'text-foreground/55 dark:text-[#9A9A8A]'}`}>{icon}</span>
       <span className={`text-[13px] font-bold ${selected ? 'text-[#001201] dark:text-[#FFF9EC]' : 'text-foreground/70 dark:text-[#9A9A8A]'}`}>{label}</span>

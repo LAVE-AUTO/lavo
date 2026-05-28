@@ -123,7 +123,7 @@ export function StartServiceModal({ open, onClose, clientName, onSubmit }: Props
                 }
               }}
               aria-label={t('start_modal_digit_label', { n: i + 1 })}
-              className={`h-14 w-11 rounded-xl border bg-white text-center text-[24px] font-black uppercase tabular-nums tracking-wider text-[#001201] outline-none transition-all dark:bg-[#0F1A0C] dark:text-[#FFF9EC] ${
+              className={`h-14 w-11 rounded-xl border bg-white text-center text-[24px] font-black uppercase tabular-nums tracking-wider text-[#001201] outline-none transition-all dark:bg-[#001201] dark:text-[#FFF9EC] ${
                 error
                   ? 'border-[#391C01] focus:border-[#391C01] focus:ring-2 focus:ring-[#391C01]/30'
                   : d

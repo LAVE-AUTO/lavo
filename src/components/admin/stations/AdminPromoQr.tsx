@@ -172,7 +172,7 @@ export function AdminPromoQr({
   const inputBase = 'w-full rounded-lg border bg-transparent px-3 py-2 text-[13px] text-[#001201] outline-none transition-all dark:text-[#FFF9EC] border-[#D8D4C8] focus:border-[#DDAF3B] focus:shadow-[0_0_0_3px_rgba(221, 175, 59,0.10)] dark:border-[#001A05] dark:focus:border-[#DDAF3B]';
 
   return (
-    <div className="rounded-2xl bg-white p-6 shadow-sm ring-1 ring-black/4 dark:bg-[#1A2416] dark:ring-white/6">
+    <div className="rounded-2xl bg-white p-6 shadow-sm ring-1 ring-black/4 dark:bg-[#001A05] dark:ring-white/6">
 
       <div className="mb-5 flex items-start gap-2 rounded-xl border border-[#DDAF3B]/20 bg-[#DDAF3B]/8 px-4 py-3">
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#DDAF3B" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="mt-0.5 shrink-0" aria-hidden="true">
@@ -247,7 +247,7 @@ export function AdminPromoQr({
           </div>
 
           {refCode && (
-            <div className="rounded-xl border border-[#E8E4DC] bg-[#F8F6F2] px-3.5 py-3 dark:border-dark-surface dark:bg-[#0F1A0C]">
+            <div className="rounded-xl border border-[#E8E4DC] bg-[#F8F6F2] px-3.5 py-3 dark:border-dark-surface dark:bg-[#001201]">
               <p className="mb-0.5 text-[9px] font-bold uppercase tracking-wider text-[#BBBBAA]">{t('ref_code_label')}</p>
               <p className="break-all text-[11px] font-mono text-foreground/70 dark:text-[#B8B2A2]">{refCode}</p>
             </div>
@@ -262,7 +262,7 @@ export function AdminPromoQr({
             </div>
 
             {/* Referral URL */}
-            <div className="w-full max-w-60 rounded-lg border border-[#E8E4DC] bg-[#F8F6F2] px-3 py-2 dark:border-dark-surface dark:bg-[#0F1A0C]">
+            <div className="w-full max-w-60 rounded-lg border border-[#E8E4DC] bg-[#F8F6F2] px-3 py-2 dark:border-dark-surface dark:bg-[#001201]">
               <p className="mb-0.5 text-[9px] font-bold uppercase tracking-wider text-[#BBBBAA]">{t('referral_url_label')}</p>
               <p className="break-all text-[9px] text-foreground/55 dark:text-[#9A9A8A]">{promoUrl}</p>
             </div>

@@ -185,7 +185,7 @@ export function AdminStationDetail({ id }: Props) {
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="15 18 9 12 15 6" /></svg>
         </Link>
         <div className="min-w-0 flex-1">
-          <h1 className="truncate pb-0.5 text-[16px] font-black text-[#0F1A0C] dark:text-[#FFF9EC]">{station.name}</h1>
+          <h1 className="truncate pb-0.5 text-[16px] font-black text-[#001201] dark:text-[#FFF9EC]">{station.name}</h1>
           <p className="text-[12px] text-[#999] dark:text-[#A0A090]">{station.city}</p>
         </div>
         <span className="shrink-0 rounded-full bg-[#DDAF3B]/10 px-3 py-1 text-[11px] font-black uppercase tracking-wider text-[#DDAF3B]">
@@ -197,7 +197,7 @@ export function AdminStationDetail({ id }: Props) {
       <div className="flex flex-1 flex-col gap-5 overflow-y-auto px-7 py-6">
 
         {/* ── Hero card ── */}
-        <div className="relative rounded-2xl bg-white p-6 shadow-sm ring-1 ring-black/[0.04] dark:bg-[#1A2416] dark:ring-white/[0.06]">
+        <div className="relative rounded-2xl bg-white p-6 shadow-sm ring-1 ring-black/[0.04] dark:bg-[#001A05] dark:ring-white/[0.06]">
           <div className="pointer-events-none absolute inset-0 overflow-hidden rounded-2xl">
             <div className="absolute right-0 top-0 h-full w-64 bg-gradient-to-l from-[#DDAF3B]/6 to-transparent dark:from-[#DDAF3B]/4" />
           </div>
@@ -207,7 +207,7 @@ export function AdminStationDetail({ id }: Props) {
               {stationInit}
             </div>
             <div className="min-w-0 flex-1">
-              <h2 className="text-[19px] font-black text-[#0F1A0C] dark:text-[#FFF9EC]">{station.name}</h2>
+              <h2 className="text-[19px] font-black text-[#001201] dark:text-[#FFF9EC]">{station.name}</h2>
               <p className="mt-0.5 text-[13px] text-foreground/55 dark:text-[#9A9A8A]">
                 {station.city}{station.address ? ` · ${station.address}` : ''}
               </p>
@@ -242,7 +242,7 @@ export function AdminStationDetail({ id }: Props) {
         </div>
 
         {/* ── Info card ── */}
-        <div className="rounded-2xl bg-white p-6 shadow-sm ring-1 ring-black/[0.04] dark:bg-[#1A2416] dark:ring-white/[0.06]">
+        <div className="rounded-2xl bg-white p-6 shadow-sm ring-1 ring-black/[0.04] dark:bg-[#001A05] dark:ring-white/[0.06]">
           <p className="mb-5 text-[11px] font-black uppercase tracking-[0.15em] text-[#DDAF3B]">{t('detail_info')}</p>
           <div className="grid grid-cols-2 gap-x-8 gap-y-4">
             <InfoField label={t('label_name')}       value={station.name} />
@@ -258,7 +258,7 @@ export function AdminStationDetail({ id }: Props) {
 
         {/* ── Documents card ── */}
         {station.documents.length > 0 && (
-          <div className="rounded-2xl bg-white p-6 shadow-sm ring-1 ring-black/[0.04] dark:bg-[#1A2416] dark:ring-white/[0.06]">
+          <div className="rounded-2xl bg-white p-6 shadow-sm ring-1 ring-black/[0.04] dark:bg-[#001A05] dark:ring-white/[0.06]">
             <p className="mb-3 text-[11px] font-black uppercase tracking-[0.15em] text-[#DDAF3B]">{t('detail_docs')}</p>
             <p className="mb-4 rounded-lg border border-[#DDAF3B]/30 bg-[#DDAF3B]/10 px-3 py-2 text-[11px] leading-relaxed text-[#7A5A00] dark:text-[#E0C060]">
               {t('expiry_unsaved_notice')}
@@ -317,7 +317,7 @@ export function AdminStationDetail({ id }: Props) {
         )}
 
         {/* ── History timeline ── */}
-        <div className="rounded-2xl bg-white p-6 shadow-sm ring-1 ring-black/[0.04] dark:bg-[#1A2416] dark:ring-white/[0.06]">
+        <div className="rounded-2xl bg-white p-6 shadow-sm ring-1 ring-black/[0.04] dark:bg-[#001A05] dark:ring-white/[0.06]">
           <p className="mb-5 text-[11px] font-black uppercase tracking-[0.15em] text-[#DDAF3B]">{t('detail_history')}</p>
           <div className="flex flex-col gap-0">
             <TimelineEvent
@@ -379,7 +379,7 @@ export function AdminStationDetail({ id }: Props) {
                 </>
               ) : (
                 <div className="flex flex-1 items-center gap-3 rounded-xl border-2 border-[#00C851]/40 bg-[#00C851]/5 px-4 py-3">
-                  <p className="flex-1 text-[13px] font-semibold text-[#0F1A0C] dark:text-[#FFF9EC]">{t('btn_approve')} ?</p>
+                  <p className="flex-1 text-[13px] font-semibold text-[#001201] dark:text-[#FFF9EC]">{t('btn_approve')} ?</p>
                   <button type="button" onClick={() => setConfirmApprove(false)} disabled={approving}
                     className="rounded-lg px-3 py-1.5 text-[13px] font-semibold text-foreground/55 hover:bg-[#F0EDE0] dark:hover:bg-[#001A05]">
                     {t('btn_cancel')}
@@ -406,7 +406,7 @@ export function AdminStationDetail({ id }: Props) {
                   rows={3}
                   disabled={rejecting}
                   placeholder={t('reject_reason_placeholder')}
-                  className="w-full resize-none rounded-xl border border-[#E8E4D8] bg-[#F8F6F2] px-4 py-3 text-[13px] text-[#0F1A0C] outline-none transition focus:border-[#EF4444]/50 focus:ring-2 focus:ring-[#EF4444]/10 disabled:opacity-50 dark:border-[#001A05] dark:bg-[#0F1A0C] dark:text-[#FFF9EC]"
+                  className="w-full resize-none rounded-xl border border-[#E8E4D8] bg-[#F8F6F2] px-4 py-3 text-[13px] text-[#001201] outline-none transition focus:border-[#EF4444]/50 focus:ring-2 focus:ring-[#EF4444]/10 disabled:opacity-50 dark:border-[#001A05] dark:bg-[#001201] dark:text-[#FFF9EC]"
                 />
                 <div className="mt-1 flex items-center justify-between">
                   <span className={`text-[11px] font-semibold transition-colors ${rejectReason.trim().length > 0 && rejectReason.trim().length < MIN_REASON ? 'text-[#EF4444]' : 'text-transparent'}`}>
@@ -441,7 +441,7 @@ function InfoField({ label, value, full }: { label: string; value: string; full?
   return (
     <div className={full ? 'col-span-2' : ''}>
       <p className="mb-0.5 text-[11px] font-bold uppercase tracking-wider text-[#C8C4B4] dark:text-[#A0A090]">{label}</p>
-      <p className="text-[13px] font-semibold text-[#0F1A0C] dark:text-[#FFF9EC]">{value}</p>
+      <p className="text-[13px] font-semibold text-[#001201] dark:text-[#FFF9EC]">{value}</p>
     </div>
   );
 }
@@ -522,7 +522,7 @@ function DocCard({
   };
 
   return (
-    <div className="flex flex-col gap-3 rounded-xl border border-[#E8E4D8] bg-[#FAFAF6] p-4 transition-all hover:border-[#DDAF3B]/40 hover:bg-white hover:shadow-sm dark:border-[#001A05] dark:bg-[#151E12] dark:hover:border-[#DDAF3B]/30 dark:hover:bg-[#1A2416]">
+    <div className="flex flex-col gap-3 rounded-xl border border-[#E8E4D8] bg-[#FAFAF6] p-4 transition-all hover:border-[#DDAF3B]/40 hover:bg-white hover:shadow-sm dark:border-[#001A05] dark:bg-[#151E12] dark:hover:border-[#DDAF3B]/30 dark:hover:bg-[#001A05]">
       <div className="flex items-start justify-between gap-2">
         {/* Doc icon */}
         <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-[#DDAF3B]/10">
@@ -541,7 +541,7 @@ function DocCard({
         )}
       </div>
 
-      <p className="text-[13px] font-bold leading-snug text-[#0F1A0C] dark:text-[#FFF9EC]">{label}</p>
+      <p className="text-[13px] font-bold leading-snug text-[#001201] dark:text-[#FFF9EC]">{label}</p>
       <p className="text-[11px] font-semibold text-foreground/55 dark:text-[#9A9A8A]">
         {formattedExpiry
           ? `Date d'expiration enregistrée : ${formattedExpiry}`
@@ -574,7 +574,7 @@ function DocCard({
               type="date"
               value={draft}
               onChange={(e) => setDraft(e.target.value)}
-              className="w-full rounded-lg border border-[#E8E4D8] bg-white px-3 py-1.5 text-[12px] text-[#0F1A0C] outline-none transition focus:border-[#DDAF3B]/50 focus:ring-2 focus:ring-[#DDAF3B]/10 dark:border-[#001A05] dark:bg-[#0F1A0C] dark:text-[#FFF9EC] [color-scheme:light] dark:[color-scheme:dark]"
+              className="w-full rounded-lg border border-[#E8E4D8] bg-white px-3 py-1.5 text-[12px] text-[#001201] outline-none transition focus:border-[#DDAF3B]/50 focus:ring-2 focus:ring-[#DDAF3B]/10 dark:border-[#001A05] dark:bg-[#001201] dark:text-[#FFF9EC] [color-scheme:light] dark:[color-scheme:dark]"
             />
             <div className="flex flex-wrap gap-2">
               <button type="button" onClick={handleSave} disabled={!draft}

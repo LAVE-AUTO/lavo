@@ -269,13 +269,13 @@ export function RegisterForm({ promoCode }: RegisterFormProps) {
       {(promoLoading || promoInfo || promoError) && (
         <div className="mb-5 rounded-2xl border border-[#DDAF3B]/20 bg-[#DDAF3B]/8 p-4">
           {promoLoading ? (
-            <p className="text-[13px] font-semibold text-[#8A6A10]">{t('promo_banner_loading')}</p>
+            <p className="text-[13px] font-semibold text-[#DDAF3B]">{t('promo_banner_loading')}</p>
           ) : promoError ? (
-            <p className="text-[13px] font-semibold text-[#B42318]">{promoError}</p>
+            <p className="text-[13px] font-semibold text-[#391C01]">{promoError}</p>
           ) : promoInfo ? (
             <div className="space-y-1.5">
               <p className="text-[11px] font-black uppercase tracking-[0.15em] text-[#DDAF3B]">{t('promo_banner_title')}</p>
-              <p className="text-[13px] font-semibold text-[#0F1A0C] dark:text-[#FFF9EC]">
+              <p className="text-[13px] font-semibold text-[#001201] dark:text-[#FFF9EC]">
                 {t('promo_banner_station', { station: promoInfo.station_name })}
               </p>
               <p className="text-[12px] text-foreground/65 dark:text-[#9A9A8A]">

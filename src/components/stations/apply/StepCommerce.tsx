@@ -357,7 +357,7 @@ export function StepCommerce({ data, errors, isLoading, washTypes, onChange, onE
             value={data.description}
             onChange={(e) => onChange({ ...data, description: e.target.value })}
             maxLength={1000}
-            className="w-full px-4 py-3 pb-7 bg-white dark:bg-surface border-[1.5px] border-[#CCCCCC] dark:border-border rounded-lg text-[15px] text-[#001201] dark:text-white placeholder-[#AAAAAA] dark:placeholder-[#4A5A46] outline-none focus:border-gold dark:focus:border-gold focus:shadow-[0_0_0_3px_rgba(221, 175, 59,0.15)] transition-colors duration-150 resize-none"
+            className="w-full px-4 py-3 pb-7 bg-white dark:bg-surface border-[1.5px] border-[#CCCCCC] dark:border-border rounded-lg text-[15px] text-[#001201] dark:text-white placeholder-[#AAAAAA] dark:placeholder-[#B0BFB1] outline-none focus:border-gold dark:focus:border-gold focus:shadow-[0_0_0_3px_rgba(221, 175, 59,0.15)] transition-colors duration-150 resize-none"
           />
           <span className={`absolute bottom-2.5 right-3 text-[11px] tabular-nums ${charCount >= 900 ? 'text-Hurryline-error' : 'text-[#AAA] dark:text-Hurryline-muted'}`}>
             {charCount}/1000

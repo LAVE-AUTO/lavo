@@ -25,8 +25,8 @@ function NumericField({
       <div className={[
         'flex overflow-hidden rounded-[10px] border-2 transition-all duration-200',
         readOnly
-          ? 'border-[#E8E4D8] bg-[#F5F2EB] dark:border-[#1E2E18] dark:bg-[#0F1A0C]'
-          : 'border-[#D8D4C8] bg-white hover:border-[#C4A830]/60 focus-within:border-[#DDAF3B] focus-within:shadow-[0_0_0_4px_rgba(221, 175, 59,0.12)] dark:border-[#001A05] dark:bg-[#0F1A0C] dark:hover:border-[#3A5030] dark:focus-within:border-[#DDAF3B]',
+          ? 'border-[#E8E4D8] bg-[#F5F2EB] dark:border-[#1E2E18] dark:bg-[#001201]'
+          : 'border-[#D8D4C8] bg-white hover:border-[#C4A830]/60 focus-within:border-[#DDAF3B] focus-within:shadow-[0_0_0_4px_rgba(221, 175, 59,0.12)] dark:border-[#001A05] dark:bg-[#001201] dark:hover:border-[#3A5030] dark:focus-within:border-[#DDAF3B]',
       ].join(' ')}>
         <input
           type="number" min={min} max={max} step={step} readOnly={readOnly} value={value}
@@ -60,7 +60,7 @@ function EmailField({
         type="email" value={value}
         onChange={(e) => onChange(e.target.value)}
         placeholder="email@exemple.com"
-        className="rounded-[10px] border-2 border-[#D8D4C8] bg-white px-4 py-3 text-[14px] font-semibold text-[#001201] outline-none transition-all hover:border-[#C4A830]/60 focus:border-[#DDAF3B] focus:shadow-[0_0_0_4px_rgba(221, 175, 59,0.12)] dark:border-[#001A05] dark:bg-[#0F1A0C] dark:text-[#FFF9EC] dark:hover:border-[#3A5030] dark:focus:border-[#DDAF3B] placeholder:text-[#CCCCBB] dark:placeholder:text-[#505040]"
+        className="rounded-[10px] border-2 border-[#D8D4C8] bg-white px-4 py-3 text-[14px] font-semibold text-[#001201] outline-none transition-all hover:border-[#C4A830]/60 focus:border-[#DDAF3B] focus:shadow-[0_0_0_4px_rgba(221, 175, 59,0.12)] dark:border-[#001A05] dark:bg-[#001201] dark:text-[#FFF9EC] dark:hover:border-[#3A5030] dark:focus:border-[#DDAF3B] placeholder:text-[#CCCCBB] dark:placeholder:text-[#505040]"
       />
       {hint && <p className="text-[12px] leading-relaxed text-[#AAAAAA] dark:text-[#A0A090]">{hint}</p>}
     </div>
@@ -72,7 +72,7 @@ function SectionCard({ icon, title, children, colSpan }: {
 }) {
   return (
     <div className={colSpan}>
-      <div className="flex h-full flex-col rounded-2xl bg-white p-6 shadow-sm ring-1 ring-black/[0.04] transition-shadow duration-200 hover:shadow-md dark:bg-[#1A2416] dark:ring-white/[0.06]">
+      <div className="flex h-full flex-col rounded-2xl bg-white p-6 shadow-sm ring-1 ring-black/[0.04] transition-shadow duration-200 hover:shadow-md dark:bg-[#001A05] dark:ring-white/[0.06]">
         <div className="mb-5 flex items-center gap-3">
           <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-[#DDAF3B]/10 text-[#DDAF3B]">{icon}</div>
           <h2 className="text-[13px] font-black uppercase tracking-wider text-[#001201] dark:text-[#FFF9EC]">{title}</h2>
@@ -350,7 +350,7 @@ export function AdminPlatformSettings() {
               ? <><span className="h-3.5 w-3.5 animate-spin rounded-full border-2 border-[#0C1209] border-t-transparent" />{t('btn_saving')}</>
               : t('btn_save')}
             {isDirty && !saving && (
-              <span className="absolute -right-1 -top-1 h-2.5 w-2.5 animate-pulse rounded-full bg-[#EF4444] ring-2 ring-white dark:ring-[#1A2416]" />
+              <span className="absolute -right-1 -top-1 h-2.5 w-2.5 animate-pulse rounded-full bg-[#EF4444] ring-2 ring-white dark:ring-[#001A05]" />
             )}
           </button>
         </div>

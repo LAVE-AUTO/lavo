@@ -136,7 +136,7 @@ export function StationCard({ station, unavailable = false }: StationCardProps) 
             {forfaitNames.slice(0, 4).map((name) => (
               <span
                 key={name}
-                className="py-1 px-2.5 rounded-full text-[13px] font-bold bg-surface dark:bg-tab-inactive text-[#000000] dark:text-[#F0F0E8] border border-border"
+                className="py-1 px-2.5 rounded-full text-[13px] font-bold bg-surface dark:bg-tab-inactive text-[#000000] dark:text-[#FFF9EC] border border-border"
               >
                 {name}
               </span>
