@@ -604,7 +604,11 @@
             "testimonials": "Témoignages",
             "client_pill": "Version client",
             "partner_cta": "Devenir partenaire",
-            "login_pill": "Se connecter"
+            "login_pill": "Se connecter",
+            "logo_alt": "Hurryline",
+            "user_menu_aria": "Menu utilisateur",
+            "dashboard": "Tableau de bord",
+            "logout": "Se déconnecter"
         },
         "hero": {
             "eyebrow": "Pour les stations de lavage",

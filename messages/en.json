@@ -604,7 +604,11 @@
       "testimonials": "Testimonials",
       "client_pill": "Client version",
       "partner_cta": "Become a partner",
-      "login_pill": "Sign in"
+      "login_pill": "Sign in",
+      "logo_alt": "Hurryline",
+      "user_menu_aria": "User menu",
+      "dashboard": "Dashboard",
+      "logout": "Sign out"
     },
     "hero": {
       "eyebrow": "For car wash stations",
