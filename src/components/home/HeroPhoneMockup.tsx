@@ -71,6 +71,7 @@ export function HeroPhoneMockup() {
             open={t('open')}
             showBook
             bookLabel={t('book')}
+            photoBg="bg-gradient-to-br from-[#1a3a5c] via-[#1e5280] to-[#0f2d4a]"
           />
 
           {/* Station card 2 */}
@@ -85,6 +86,7 @@ export function HeroPhoneMockup() {
             open={t('open')}
             showBook={false}
             bookLabel={t('book')}
+            photoBg="bg-gradient-to-br from-[#1c3a28] via-[#24522e] to-[#152a1c]"
           />
         </div>
       </div>
@@ -103,30 +105,32 @@ interface PhoneStationCardProps {
   open: string;
   showBook: boolean;
   bookLabel: string;
+  photoBg: string;
 }
 
-function PhoneStationCard({ name, rating, reviews, price, distance, wait, tags, showBook, bookLabel }: PhoneStationCardProps) {
+function PhoneStationCard({ name, rating, reviews, price, distance, wait, tags, showBook, bookLabel, photoBg }: PhoneStationCardProps) {
   return (
-    <article className="flex flex-col bg-[#E8E8D8] dark:bg-dark-card rounded-[14px] overflow-hidden border border-[#D0D0C0] dark:border-tab-inactive group hover:border-gold/30 transition-all duration-300">
-      {/* Photo zone — matches StationCard's image area */}
-      <div className="relative h-[56px] bg-[#D0D0C0] dark:bg-tab-inactive flex items-center justify-center overflow-hidden">
-        <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#9A9A8A" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+    /* Force light-mode colors — card lives inside a dark phone frame and must always contrast against it */
+    <article className="flex flex-col bg-[#E8E8D8] rounded-[14px] overflow-hidden border border-[#D0D0C0] group hover:border-gold/30 transition-all duration-300">
+      {/* Photo zone — gradient image with car icon, mirrors StationCard image area */}
+      <div className={`relative h-[64px] ${photoBg} flex items-center justify-center overflow-hidden`}>
+        <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.4)" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
           <path d="M3 17l2-7h14l2 7" />
           <path d="M5 17v2h2v-2M17 17v2h2v-2" />
           <path d="M8 10V7a1 1 0 011-1h6a1 1 0 011 1v3" />
-          <circle cx="7.5" cy="17" r="1.5" fill="#9A9A8A" />
-          <circle cx="16.5" cy="17" r="1.5" fill="#9A9A8A" />
+          <circle cx="7.5" cy="17" r="1.5" fill="rgba(255,255,255,0.4)" />
+          <circle cx="16.5" cy="17" r="1.5" fill="rgba(255,255,255,0.4)" />
         </svg>
 
-        {/* Name overlay at bottom — mirrors StationCard gradient overlay */}
-        <div className="absolute inset-x-0 bottom-0 h-7 bg-gradient-to-t from-black/60 to-transparent flex items-end px-2 pb-1 pointer-events-none">
+        {/* Name overlay at bottom */}
+        <div className="absolute inset-x-0 bottom-0 h-8 bg-gradient-to-t from-black/70 to-transparent flex items-end px-2.5 pb-1.5 pointer-events-none">
           <span className="text-white text-[10px] font-bold leading-tight truncate drop-shadow">
             {name}
           </span>
         </div>
 
         {/* Distance badge top-left */}
-        <span className="absolute top-1 left-1.5 flex items-center gap-0.5 rounded-full bg-black/60 px-1.5 py-0.5 text-[8px] font-bold text-white">
+        <span className="absolute top-1.5 left-1.5 flex items-center gap-0.5 rounded-full bg-black/60 px-1.5 py-0.5 text-[8px] font-bold text-white">
           <svg width="6" height="6" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
             <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z" />
             <circle cx="12" cy="10" r="3" />
@@ -135,7 +139,7 @@ function PhoneStationCard({ name, rating, reviews, price, distance, wait, tags, 
         </span>
       </div>
 
-      {/* Card body — mirrors StationCard's p-4 section */}
+      {/* Card body — mirrors StationCard's p-4 section, always light */}
       <div className="px-2.5 pt-2 pb-2 flex flex-col gap-1.5">
         {/* Name + price */}
         <div className="flex items-start justify-between gap-1">
@@ -150,9 +154,9 @@ function PhoneStationCard({ name, rating, reviews, price, distance, wait, tags, 
           <span className="text-[9px] text-[#c8980a]">{reviews}</span>
         </div>
 
-        {/* Stats grid: distance | wait — mirrors StationCard grid */}
-        <div className="grid grid-cols-2 text-center border-t border-[#C8C8B4] dark:border-tab-inactive pt-1.5">
-          <div className="border-r border-[#C8C8B4] dark:border-tab-inactive pr-1">
+        {/* Stats grid: distance | wait */}
+        <div className="grid grid-cols-2 text-center border-t border-[#C8C8B4] pt-1.5">
+          <div className="border-r border-[#C8C8B4] pr-1">
             <div className="text-[11px] font-black text-[#0A0A14] leading-none">{distance}</div>
             <div className="text-[8px] text-[#555] mt-0.5">Distance</div>
           </div>
@@ -162,13 +166,13 @@ function PhoneStationCard({ name, rating, reviews, price, distance, wait, tags, 
           </div>
         </div>
 
-        {/* Forfait tags — mirrors StationCard tag chips */}
+        {/* Forfait tag chips */}
         {tags.length > 0 && (
           <div className="flex flex-wrap gap-1">
             {tags.map((tag) => (
               <span
                 key={tag}
-                className="px-1.5 py-0.5 rounded-full text-[8px] font-bold bg-[#E8E8D8] dark:bg-tab-inactive text-[#000000] dark:text-[#F0F0E8] border border-[#D0D0C0] dark:border-tab-inactive"
+                className="px-1.5 py-0.5 rounded-full text-[8px] font-bold bg-[#E8E8D8] text-[#000000] border border-[#D0D0C0]"
               >
                 {tag}
               </span>
@@ -176,7 +180,7 @@ function PhoneStationCard({ name, rating, reviews, price, distance, wait, tags, 
           </div>
         )}
 
-        {/* CTA — mirrors StationCard's gold button */}
+        {/* CTA */}
         {showBook && (
           <div className="rounded-[6px] bg-[#c8980a] py-1.5 text-center text-[9px] font-bold uppercase tracking-[1px] text-[#0d1f0f]">
             {bookLabel}
