@@ -107,10 +107,10 @@ interface PhoneStationCardProps {
 
 function PhoneStationCard({ name, rating, reviews, price, distance, wait, tags, showBook, bookLabel }: PhoneStationCardProps) {
   return (
-    <article className="rounded-[10px] overflow-hidden border border-[#D0D0C0] bg-[#E8E8D8]">
+    <article className="flex flex-col bg-[#E8E8D8] dark:bg-dark-card rounded-[14px] overflow-hidden border border-[#D0D0C0] dark:border-tab-inactive group hover:border-gold/30 transition-all duration-300">
       {/* Photo zone — matches StationCard's image area */}
-      <div className="relative h-[56px] bg-[#D0D0C0] flex items-center justify-center overflow-hidden">
-        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#9A9A8A" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      <div className="relative h-[56px] bg-[#D0D0C0] dark:bg-tab-inactive flex items-center justify-center overflow-hidden">
+        <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#9A9A8A" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
           <path d="M3 17l2-7h14l2 7" />
           <path d="M5 17v2h2v-2M17 17v2h2v-2" />
           <path d="M8 10V7a1 1 0 011-1h6a1 1 0 011 1v3" />
@@ -151,8 +151,8 @@ function PhoneStationCard({ name, rating, reviews, price, distance, wait, tags, 
         </div>
 
         {/* Stats grid: distance | wait — mirrors StationCard grid */}
-        <div className="grid grid-cols-2 text-center border-t border-[#C8C8B4] pt-1.5">
-          <div className="border-r border-[#C8C8B4] pr-1">
+        <div className="grid grid-cols-2 text-center border-t border-[#C8C8B4] dark:border-tab-inactive pt-1.5">
+          <div className="border-r border-[#C8C8B4] dark:border-tab-inactive pr-1">
             <div className="text-[11px] font-black text-[#0A0A14] leading-none">{distance}</div>
             <div className="text-[8px] text-[#555] mt-0.5">Distance</div>
           </div>
@@ -168,7 +168,7 @@ function PhoneStationCard({ name, rating, reviews, price, distance, wait, tags, 
             {tags.map((tag) => (
               <span
                 key={tag}
-                className="px-1.5 py-0.5 rounded-full text-[8px] font-bold bg-[#E8E8D8] text-[#000] border border-[#D0D0C0]"
+                className="px-1.5 py-0.5 rounded-full text-[8px] font-bold bg-[#E8E8D8] dark:bg-tab-inactive text-[#000000] dark:text-[#F0F0E8] border border-[#D0D0C0] dark:border-tab-inactive"
               >
                 {tag}
               </span>
