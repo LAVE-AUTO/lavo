@@ -149,7 +149,7 @@ export function CityAutocomplete({ label, required, value, error, onChange }: Ci
             'text-[16px] text-[#001201] dark:text-white placeholder-[#AAAAAA] dark:placeholder-[#B0BFB1]',
             'outline-none transition-all duration-150',
             error
-              ? 'border-Hurryline-error bg-[#FFF9EC] dark:bg-[#391C01]'
+              ? 'border-Hurryline-error bg-[#FFF9EC] dark:bg-[#FF383C]'
               : 'border-[#CCCCCC] dark:border-border focus:border-gold dark:focus:border-gold focus:shadow-[0_0_0_3px_rgba(221, 175, 59,0.18)] dark:focus:shadow-[0_0_0_3px_rgba(221, 175, 59,0.15)]',
           ].join(' ')}
         />

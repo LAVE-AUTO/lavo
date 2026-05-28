@@ -317,7 +317,7 @@ function StatusView({
 }) {
   const iconMap: Record<string, ReactNode> = {
     error: (
-      <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#391C01" strokeWidth="2" strokeLinecap="round" aria-hidden="true">
+      <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#FF383C" strokeWidth="2" strokeLinecap="round" aria-hidden="true">
         <circle cx="12" cy="12" r="10" /><line x1="12" y1="8" x2="12" y2="12" /><line x1="12" y1="16" x2="12.01" y2="16" />
       </svg>
     ),

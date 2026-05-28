@@ -198,7 +198,7 @@ export function AdminTopNav({ onToggleSidebar }: AdminTopNavProps) {
                 </button>
               </div>
               {loading ? <div className="py-4 text-sm" style={{ color: isDark ? '#B0BFB1' : '#B0BFB1' }}>{t('notif_loading')}</div> : null}
-              {!loading && errorLoading ? <div className="py-4 text-sm" style={{ color: isDark ? '#391C01' : '#391C01' }}>{t('notif_error')}</div> : null}
+              {!loading && errorLoading ? <div className="py-4 text-sm" style={{ color: isDark ? '#FF383C' : '#FF383C' }}>{t('notif_error')}</div> : null}
               {!loading && !errorLoading && items.length === 0 ? <div className="py-4 text-sm" style={{ color: isDark ? '#B0BFB1' : '#B0BFB1' }}>{t('notif_empty')}</div> : null}
               {!loading && items.length > 0 ? (
                 <div className="max-h-96 space-y-2 overflow-auto">
@@ -239,7 +239,7 @@ export function AdminTopNav({ onToggleSidebar }: AdminTopNavProps) {
                           type="button"
                           onClick={() => removeOne(item.id)}
                           className="text-xs font-semibold hover:underline"
-                          style={{ color: isDark ? '#391C01' : '#391C01' }}
+                          style={{ color: isDark ? '#FF383C' : '#FF383C' }}
                         >
                           {t('notif_delete')}
                         </button>

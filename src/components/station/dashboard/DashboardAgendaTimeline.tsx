@@ -75,9 +75,9 @@ function statusToBlockClass(status: string): { bg: string; border: string; chip:
     case 'late':
       return {
         bg: 'bg-[#FDECE6] dark:bg-[#291210]',
-        border: 'border-[#391C01]/50',
+        border: 'border-[#FF383C]/50',
         chip: 'text-[#B33B1F] dark:text-[#FF8866]',
-        chipBg: 'bg-[#391C01]/15',
+        chipBg: 'bg-[#FF383C]/15',
       };
     case 'cancelled':
       return {

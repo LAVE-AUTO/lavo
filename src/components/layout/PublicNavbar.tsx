@@ -206,7 +206,7 @@ export function PublicNavbar({
   return (
     <>
       <header className="fixed top-0 left-0 right-0 z-40 bg-[rgba(247,243,236,0.95)] dark:bg-[rgba(13,31,15,0.92)] backdrop-blur-[16px] border-b border-[rgba(221,175,59,0.18)]">
-        <div className="max-w-[1440px] mx-auto px-6 lg:px-16 flex items-center justify-between gap-6 py-3">
+        <div className="max-w-[1440px] mx-auto px-6 lg:px-16 flex items-center justify-between gap-6 py-2">
 
           {/* Logo */}
           <Link href={logoHref} className="shrink-0" aria-label="Hurryline - Accueil" suppressHydrationWarning>
@@ -215,7 +215,7 @@ export function PublicNavbar({
               alt={t('logo_alt')}
               width={130}
               height={34}
-              className="h-9 w-auto object-contain"
+              className="h-12 w-auto object-contain"
               priority
             />
           </Link>
@@ -323,7 +323,7 @@ export function PublicNavbar({
                                     type="button"
                                     onClick={() => deleteNotif(item.id)}
                                     className="text-xs font-semibold hover:underline"
-                                    style={{ color: isDark ? '#391C01' : '#391C01' }}
+                                    style={{ color: isDark ? '#FF383C' : '#FF383C' }}
                                   >
                                     {tn('notif_delete')}
                                   </button>
@@ -397,7 +397,7 @@ export function PublicNavbar({
                       <button
                         type="button"
                         onClick={() => { logout(); setDropdownOpen(false); }}
-                        className="w-full flex items-center gap-3 px-4 py-3 text-[13px] font-semibold text-[#391C01] hover:bg-[rgba(232,71,42,0.07)] transition-colors border-t border-[rgba(221,175,59,0.12)]"
+                        className="w-full flex items-center gap-3 px-4 py-3 text-[13px] font-semibold text-[#FF383C] hover:bg-[rgba(232,71,42,0.07)] transition-colors border-t border-[rgba(221,175,59,0.12)]"
                       >
                         <LogoutIcon />
                         {t('logout')}
@@ -485,7 +485,7 @@ export function PublicNavbar({
                   <button
                     type="button"
                     onClick={() => { logout(); setMenuOpen(false); }}
-                    className="flex items-center justify-center gap-2.5 py-3 text-[14px] font-semibold text-[#391C01] border border-[rgba(232,71,42,0.3)] rounded-md hover:bg-[rgba(232,71,42,0.07)] transition-colors"
+                    className="flex items-center justify-center gap-2.5 py-3 text-[14px] font-semibold text-[#FF383C] border border-[rgba(232,71,42,0.3)] rounded-md hover:bg-[rgba(232,71,42,0.07)] transition-colors"
                   >
                     <LogoutIcon />
                     {t('logout')}

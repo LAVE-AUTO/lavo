@@ -105,7 +105,7 @@ const KycIcon = () => (
   </svg>
 );
 const DisputeIcon = () => (
-  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#391C01" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#FF383C" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
     <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z" />
     <line x1="12" y1="9" x2="12" y2="13" /><line x1="12" y1="17" x2="12.01" y2="17" />
   </svg>
@@ -177,7 +177,7 @@ export function AdminAlertsSection() {
           <div className="px-5 py-4 text-[12px] text-[#AAA] dark:text-[#B0BFB1]">{t('alert_kyc_loading')}</div>
         )}
         {!kycLoading && kycError && (
-          <div className="px-5 py-4 text-[12px] text-[#391C01]">{t('alert_kyc_error')}</div>
+          <div className="px-5 py-4 text-[12px] text-[#FF383C]">{t('alert_kyc_error')}</div>
         )}
         {!kycLoading && stations.map((s, i) => (
           <Link
@@ -204,7 +204,7 @@ export function AdminAlertsSection() {
         icon={<DisputeIcon />}
         title={t('alert_disputes_title')}
         count={disputes.length}
-        color="#391C01"
+        color="#FF383C"
         actionLabel={t('alert_disputes_action')}
         actionHref="/admin/disputes"
         empty={!disputesLoading && disputes.length === 0}
@@ -219,7 +219,7 @@ export function AdminAlertsSection() {
             href={`/admin/disputes/${d.id}` as Parameters<typeof Link>[0]['href']}
             className={`flex items-center gap-3 px-5 py-3 transition-colors hover:bg-[#F8F6EE] dark:hover:bg-[#182214]${i > 0 ? ' border-t border-[#F0EDE0] dark:border-[#001A05]' : ''}`}
           >
-            <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-[#391C01]/10 text-[12px] font-black text-[#391C01]">
+            <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-[#FF383C]/10 text-[12px] font-black text-[#FF383C]">
               {initials(d.label)}
             </div>
             <div className="min-w-0 flex-1">
@@ -227,9 +227,9 @@ export function AdminAlertsSection() {
               <div className="text-[11px] text-[#AAA] dark:text-[#B0BFB1]">{formatDate(d.date)}</div>
             </div>
             <div className="flex shrink-0 flex-col items-end gap-1">
-              <span className="text-[13px] font-black text-[#391C01]">{d.amount}</span>
+              <span className="text-[13px] font-black text-[#FF383C]">{d.amount}</span>
               {d.urgent && (
-                <span className="rounded-full bg-[#FEF2F2] px-1.5 py-0.5 text-[8px] font-black uppercase tracking-wider text-[#391C01] dark:bg-[#2A0A0A]">
+                <span className="rounded-full bg-[#FEF2F2] px-1.5 py-0.5 text-[8px] font-black uppercase tracking-wider text-[#FF383C] dark:bg-[#2A0A0A]">
                   Urgent
                 </span>
               )}

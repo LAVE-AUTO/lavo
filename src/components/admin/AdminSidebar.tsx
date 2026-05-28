@@ -188,12 +188,12 @@ export function AdminSidebar({ open = false, onClose }: AdminSidebarProps) {
           onClick={() => logout()}
           title={collapsed ? t('nav_logout') : undefined}
           aria-label={collapsed ? t('nav_logout') : undefined}
-          className={`group relative flex items-center rounded-lg text-[13px] font-semibold text-foreground/55 transition-colors duration-150 hover:bg-[#FEF2F2] hover:text-[#EF4444] dark:text-[#B0BFB1] dark:hover:bg-[#2A0A0A] dark:hover:text-[#FF8A80] ${collapsed ? 'h-10 w-10 justify-center' : 'w-full gap-2.5 px-3 py-2.5'}`}
+          className={`group relative flex items-center rounded-lg text-[13px] font-semibold text-foreground/55 transition-colors duration-150 hover:bg-[#FEF2F2] hover:text-[#EF4444] dark:text-[#FF383C] dark:hover:bg-[#2A0A0A] dark:hover:text-[#FF383C] ${collapsed ? 'h-10 w-10 justify-center' : 'w-full gap-2.5 px-3 py-2.5'}`}
         >
           <LogoutIcon />
           {!collapsed && <span>{t('nav_logout')}</span>}
           {collapsed && (
-            <span className="pointer-events-none absolute left-full top-1/2 z-30 ml-2 -translate-y-1/2 whitespace-nowrap rounded-lg bg-[#001201] px-2.5 py-1 text-[12px] font-semibold text-[#FFF9EC] opacity-0 shadow-lg transition-opacity duration-150 group-hover:opacity-100">
+            <span className="pointer-events-none absolute left-full top-1/2 z-30 ml-2 -translate-y-1/2 whitespace-nowrap rounded-lg bg-[#001201] px-2.5 py-1 text-[12px] font-semibold text-[#FF383C] opacity-0 shadow-lg transition-opacity duration-150 group-hover:opacity-100">
               {t('nav_logout')}
             </span>
           )}

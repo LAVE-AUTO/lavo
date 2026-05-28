@@ -475,7 +475,7 @@ export function BookingFlow({ station, qrToken, qrVersion, initialServiceId, ini
     return (
       <div className="flex flex-col items-center justify-center text-center px-6 py-12 gap-5">
         <div className="w-20 h-20 rounded-full bg-Hurryline-error/15 flex items-center justify-center">
-          <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="#391C01" strokeWidth="2.5" strokeLinecap="round"><line x1="18" y1="6" x2="6" y2="18" /><line x1="6" y1="6" x2="18" y2="18" /></svg>
+          <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="#FF383C" strokeWidth="2.5" strokeLinecap="round"><line x1="18" y1="6" x2="6" y2="18" /><line x1="6" y1="6" x2="18" y2="18" /></svg>
         </div>
 
         <h3 id="booking-result-title" className="text-[22px] font-black text-foreground">

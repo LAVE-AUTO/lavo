@@ -24,7 +24,7 @@ function statusVisuals(status: string): { dot: string; label: string } {
   switch (status) {
     case 'completed':   return { dot: '#999',    label: 'status_completed' };
     case 'in_progress': return { dot: '#2ECC71', label: 'status_in_progress' };
-    case 'late':        return { dot: '#391C01', label: 'status_late' };
+    case 'late':        return { dot: '#FF383C', label: 'status_late' };
     case 'cancelled':   return { dot: '#999',    label: 'status_cancelled' };
     default:            return { dot: '#1E40AF', label: 'status_confirmed' };
   }
@@ -89,7 +89,7 @@ export function AgendaSlotDetailModal({
             <button
               type="button"
               onClick={() => { onCancel(entry.id); onClose(); }}
-              className="rounded-lg border border-[#391C01]/40 px-4 py-2 text-[13px] font-bold text-[#391C01] transition-colors hover:bg-[#391C01]/10"
+              className="rounded-lg border border-[#FF383C]/40 px-4 py-2 text-[13px] font-bold text-[#FF383C] transition-colors hover:bg-[#FF383C]/10"
             >
               {t('btn_cancel')}
             </button>

@@ -437,7 +437,7 @@ function PendingCard({
           <button
             type="button"
             onClick={onRefuse}
-            className="rounded-[8px] border border-[#391C01]/30 py-2.5 text-[13px] font-bold text-[#391C01] transition-all duration-150 hover:bg-[#391C01]/08 dark:border-[#391C01]/30"
+            className="rounded-[8px] border border-[#FF383C]/30 py-2.5 text-[13px] font-bold text-[#FF383C] transition-all duration-150 hover:bg-[#FF383C]/08 dark:border-[#FF383C]/30"
           >
             {refuseLabel}
           </button>
@@ -463,7 +463,7 @@ interface HistoryCardProps {
 
 function HistoryCard({ request, animationDelay, statusLabel, agoLabel }: HistoryCardProps) {
   const accepted = request.status === 'accepted';
-  const accentColor = accepted ? '#00C851' : '#391C01';
+  const accentColor = accepted ? '#00C851' : '#FF383C';
   const initials = request.client_name.replace('Client #', '');
 
   return (

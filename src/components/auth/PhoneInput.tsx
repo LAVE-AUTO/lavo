@@ -107,7 +107,7 @@ function CountrySelect({
     'flex items-center gap-1.5 px-3 py-3 bg-white dark:bg-surface border-[1.5px] rounded-lg',
     'outline-none transition-all duration-150 whitespace-nowrap',
     hasError
-      ? 'border-Hurryline-error bg-[#FFF9EC] dark:bg-[#391C01]'
+      ? 'border-Hurryline-error bg-[#FFF9EC] dark:bg-[#FF383C]'
       : 'border-[#CCCCCC] dark:border-border focus:border-gold dark:focus:border-gold focus:shadow-[0_0_0_3px_rgba(221, 175, 59,0.18)] dark:focus:shadow-[0_0_0_3px_rgba(221, 175, 59,0.15)]',
   ].join(' ');
 
@@ -256,7 +256,7 @@ export function PhoneInput({
     'text-[16px] text-[#001201] dark:text-white placeholder-[#AAAAAA] dark:placeholder-[#B0BFB1]',
     'outline-none transition-all duration-150',
     error
-      ? 'border-Hurryline-error bg-[#FFF9EC] dark:bg-[#391C01] focus:shadow-[0_0_0_3px_rgba(232,71,42,0.2)]'
+      ? 'border-Hurryline-error bg-[#FFF9EC] dark:bg-[#FF383C] focus:shadow-[0_0_0_3px_rgba(232,71,42,0.2)]'
       : 'border-[#CCCCCC] dark:border-border focus:border-gold dark:focus:border-gold focus:shadow-[0_0_0_3px_rgba(221, 175, 59,0.18)] dark:focus:shadow-[0_0_0_3px_rgba(221, 175, 59,0.15)]',
   ].join(' ');
 

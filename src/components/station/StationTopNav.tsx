@@ -191,7 +191,7 @@ export function StationTopNav({ stationName }: StationTopNavProps) {
                           type="button"
                           onClick={() => removeOne(item.id)}
                           className="text-xs font-semibold hover:underline"
-                          style={{ color: isDark ? '#391C01' : '#391C01' }}
+                          style={{ color: isDark ? '#FF383C' : '#FF383C' }}
                         >
                           {t('notif_delete')}
                         </button>

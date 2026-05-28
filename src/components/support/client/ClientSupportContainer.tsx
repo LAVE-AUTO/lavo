@@ -136,9 +136,9 @@ export function ClientSupportContainer({ sectionLabel }: Props) {
             <div
               role="alert"
               aria-live="assertive"
-              className="flex flex-col items-center gap-3 rounded-[10px] border border-[#391C01]/30 bg-[#391C01]/5 px-4 py-6 text-center dark:border-[#391C01]/40 dark:bg-[#391C01]/10"
+              className="flex flex-col items-center gap-3 rounded-[10px] border border-[#FF383C]/30 bg-[#FF383C]/5 px-4 py-6 text-center dark:border-[#FF383C]/40 dark:bg-[#FF383C]/10"
             >
-              <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#391C01" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+              <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#FF383C" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
                 <circle cx="12" cy="12" r="10" />
                 <line x1="12" y1="8" x2="12" y2="12" />
                 <line x1="12" y1="16" x2="12.01" y2="16" />

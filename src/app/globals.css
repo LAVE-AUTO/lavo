@@ -53,6 +53,8 @@
     --color-gold: #DDAF3B;
     --color-gold-hover: #DDAF3B;
     --color-grey: #C6C1B4;
+    /* Brand 'marron négatif' accent. Reserved for future accent surfaces;
+       it is NOT the danger / alert colour (see --color-Hurryline-error). */
     --color-negative-brown: #391C01;
     --color-blue: #1E40AF;
     --color-orange: #FF9800;
@@ -64,7 +66,11 @@
     --color-dark-card: #001A05;
     --color-dark-surface: #001A05;
     --color-tab-inactive: #1A2916;
-    --color-Hurryline-error: #391C01;
+    /* Hurryline-error = danger / alert / destructive feedback (#FF383C).
+       The brand 'negative brown' (#391C01) is exposed separately via the
+       `negative-brown` token above for accent surfaces; it is NOT the
+       error colour. */
+    --color-Hurryline-error: #FF383C;
     --color-Hurryline-success: #00C853;
     --color-Hurryline-muted: #B0BFB1;
     /* Hurryline fonts */

@@ -263,7 +263,7 @@ export function BottomNav() {
                 <button
                   type="button"
                   onClick={() => { logout(); setMoreOpen(false); }}
-                  className="w-full flex items-center gap-3 px-4 py-3 text-[14px] font-semibold text-[#391C01] hover:bg-[rgba(232,71,42,0.07)] transition-colors border-t border-[#2C3828]"
+                  className="w-full flex items-center gap-3 px-4 py-3 text-[14px] font-semibold text-[#FF383C] hover:bg-[rgba(232,71,42,0.07)] transition-colors border-t border-[#2C3828]"
                 >
                   <LogoutIcon />
                   {t('logout')}

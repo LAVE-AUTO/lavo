@@ -49,7 +49,7 @@ export function FormField({
             'text-[16px] text-[#001201] dark:text-white placeholder-[#AAAAAA] dark:placeholder-[#B0BFB1]',
             'outline-none transition-all duration-150',
             error
-              ? 'border-Hurryline-error bg-[#FFF9EC] dark:bg-[#391C01] focus:shadow-[0_0_0_3px_rgba(232,71,42,0.2)]'
+              ? 'border-Hurryline-error bg-[#FFF9EC] dark:bg-[#FF383C] focus:shadow-[0_0_0_3px_rgba(232,71,42,0.2)]'
               : 'border-[#CCCCCC] dark:border-border focus:border-gold dark:focus:border-gold focus:shadow-[0_0_0_3px_rgba(221, 175, 59,0.18)] dark:focus:shadow-[0_0_0_3px_rgba(221, 175, 59,0.15)]',
             rightIcon ? 'pr-11' : '',
             className ?? '',

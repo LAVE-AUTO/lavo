@@ -144,7 +144,7 @@ export function FileUploadZone({ label, hint, required, value, onChange, error }
             isDragging
               ? 'border-gold bg-gold/5'
               : displayError
-              ? 'border-Hurryline-error bg-[#FFF9EC] dark:bg-[#391C01]'
+              ? 'border-Hurryline-error bg-[#FFF9EC] dark:bg-[#FF383C]'
               : 'border-[#CCCCCC] dark:border-[#001A05] hover:border-gold dark:hover:border-gold bg-white dark:bg-surface',
           ].join(' ')}
         >

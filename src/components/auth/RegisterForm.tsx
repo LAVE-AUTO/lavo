@@ -271,7 +271,7 @@ export function RegisterForm({ promoCode }: RegisterFormProps) {
           {promoLoading ? (
             <p className="text-[13px] font-semibold text-[#DDAF3B]">{t('promo_banner_loading')}</p>
           ) : promoError ? (
-            <p className="text-[13px] font-semibold text-[#391C01]">{promoError}</p>
+            <p className="text-[13px] font-semibold text-[#FF383C]">{promoError}</p>
           ) : promoInfo ? (
             <div className="space-y-1.5">
               <p className="text-[11px] font-black uppercase tracking-[0.15em] text-[#DDAF3B]">{t('promo_banner_title')}</p>

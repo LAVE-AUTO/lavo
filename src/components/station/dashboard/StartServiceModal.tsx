@@ -125,7 +125,7 @@ export function StartServiceModal({ open, onClose, clientName, onSubmit }: Props
               aria-label={t('start_modal_digit_label', { n: i + 1 })}
               className={`h-14 w-11 rounded-xl border bg-white text-center text-[24px] font-black uppercase tabular-nums tracking-wider text-[#001201] outline-none transition-all dark:bg-[#001201] dark:text-[#FFF9EC] ${
                 error
-                  ? 'border-[#391C01] focus:border-[#391C01] focus:ring-2 focus:ring-[#391C01]/30'
+                  ? 'border-[#FF383C] focus:border-[#FF383C] focus:ring-2 focus:ring-[#FF383C]/30'
                   : d
                     ? 'border-[#DDAF3B] focus:border-[#DDAF3B] focus:ring-2 focus:ring-[#DDAF3B]/30'
                     : 'border-[#FFF9EC] focus:border-[#DDAF3B] focus:ring-2 focus:ring-[#DDAF3B]/30 dark:border-[#001A05]'
@@ -135,7 +135,7 @@ export function StartServiceModal({ open, onClose, clientName, onSubmit }: Props
         </div>
 
         {error && (
-          <div role="alert" className="text-center text-[12px] font-bold text-[#391C01]">
+          <div role="alert" className="text-center text-[12px] font-bold text-[#FF383C]">
             {error}
           </div>
         )}

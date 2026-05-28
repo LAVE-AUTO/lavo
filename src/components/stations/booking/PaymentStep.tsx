@@ -83,7 +83,7 @@ function StripeCardForm({ grandTotal, clientSecret, onConfirm, onBack }: StripeC
                     '::placeholder': { color: '#BBBBBB' },
                     fontFamily: 'Rajdhani, sans-serif',
                   },
-                  invalid: { color: '#391C01' },
+                  invalid: { color: '#FF383C' },
                 },
                 hidePostalCode: true,
               }}

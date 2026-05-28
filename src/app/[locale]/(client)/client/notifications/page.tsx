@@ -99,7 +99,7 @@ export default function ClientNotificationsPage() {
                     type="button"
                     onClick={() => removeOne(item.id)}
                     className="text-[14px] font-semibold hover:underline"
-                    style={{ color: isDark ? '#391C01' : '#391C01' }}
+                    style={{ color: isDark ? '#FF383C' : '#FF383C' }}
                   >
                     {t('notif_delete')}
                   </button>
