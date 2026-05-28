@@ -43,6 +43,7 @@ export function MerchantNavbar() {
   }, [pathname]);
 
   const lightLogoSrc = locale === 'fr' ? '/logo/logo2_2.png' : '/logo/logo_anglais_1.png';
+  const darkLogoSrc = locale === 'fr' ? '/logo/logo22_2.png' : '/logo/logo_anglais_2.png';
 
   const linkClass =
     'text-[13px] font-medium tracking-[0.4px] text-[#4a6a4d] dark:text-[#7a9a7d] hover:text-[#c8980a] dark:hover:text-[#c8980a] transition-colors duration-300';
@@ -61,16 +62,7 @@ export function MerchantNavbar() {
       <header className="fixed top-0 left-0 right-0 z-40 bg-[rgba(247,243,236,0.95)] dark:bg-[rgba(13,31,15,0.92)] backdrop-blur-[16px] border-b border-[rgba(200,152,10,0.18)]">
         <div className="max-w-[1440px] mx-auto px-6 lg:px-16 flex items-center justify-between gap-6 py-3">
           <Link href="/" className="shrink-0" aria-label="Hurryline - Accueil">
-            {isDark ? (
-              <div className="flex items-center gap-2">
-                <div className="rounded-lg bg-white/95 p-1 border border-[rgba(200,152,10,0.25)] shadow-sm shrink-0">
-                  <Image src="/logo/frame2.png" alt="" width={28} height={28} className="w-7 h-7 object-contain" aria-hidden="true" />
-                </div>
-                <span className="font-playfair text-[18px] font-black text-[#c8980a] tracking-[3px]">Hurryline</span>
-              </div>
-            ) : (
-              <Image src={lightLogoSrc} alt="Hurryline" width={130} height={34} className="h-20 w-auto object-contain" priority />
-            )}
+            <Image src={isDark ? darkLogoSrc : lightLogoSrc} alt="Hurryline" width={130} height={34} className="h-9 w-auto object-contain" priority />
           </Link>
 
           <nav className="hidden lg:flex items-center gap-8" aria-label="Navigation marchands">
@@ -169,7 +161,6 @@ export function MerchantNavbar() {
       </header>
 
       <div className="h-[60px]" aria-hidden="true" />
-      <div className="sm:hidden h-16" aria-hidden="true" />
     </>
   );
 }
