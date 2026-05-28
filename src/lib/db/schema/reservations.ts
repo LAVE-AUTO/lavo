@@ -18,6 +18,7 @@ import {
   varchar,
 } from "drizzle-orm/pg-core";
 import { stations, stationPosts, vehicleFormats } from "./stations";
+import { stationServices } from "./services";
 import { timeSlots } from "./slots";
 import { users } from "./users";
 
@@ -43,6 +44,16 @@ export const reservations = pgTable(
       .references(() => stations.id, { onDelete: "cascade" }),
     vehicle_format_id: uuid("vehicle_format_id")
       .references(() => vehicleFormats.id),
+    /**
+     * Snapshot of the station_services row picked at booking. Nullable so
+     * legacy entries created before this column shipped keep working; new
+     * entries set it via the booking endpoint. Used by /me/entries and
+     * /history/client to surface the service name + category on cards and
+     * receipts. ON DELETE SET NULL so deleting a service does not remove
+     * historical entries.
+     */
+    service_id: uuid("service_id")
+      .references(() => stationServices.id, { onDelete: "set null" }),
     /**
      * Wash bay assigned to this entry. Filled by the booking flow that
      * picks an available post for a given start_time. Nullable for queue

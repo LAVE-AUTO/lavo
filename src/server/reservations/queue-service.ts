@@ -104,6 +104,7 @@ export async function joinQueue(
       user_id: userId,
       station_id: stationId,
       vehicle_format_id: vehicleFormatId ?? null,
+      service_id: serviceId,
       queue_position: nextPos,
       status: STATUS_PENDING_PAYMENT,
       amount_paid: String(entryPrice.toFixed(2)),

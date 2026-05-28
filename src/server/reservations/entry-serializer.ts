@@ -40,6 +40,7 @@ export function serializeRichEntry(entry: RichEntry) {
     completed_at: entry.completed_at?.toISOString() ?? null,
     station: entry.station,
     vehicle_format: entry.vehicle_format,
+    service: entry.service,
     is_rated: entry.is_rated,
     is_tipped: entry.is_tipped,
     estimated_wait_minutes: entry.estimated_wait_minutes,

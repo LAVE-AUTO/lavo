@@ -4,7 +4,7 @@
  */
 import { and, asc, desc, eq, gte, inArray, isNull, lt, lte, sql } from 'drizzle-orm';
 import { db, type DbTransaction } from '@/lib/db';
-import { reservations, timeSlots, stationConfigs, stations, vehicleFormats, users } from '@/lib/db/schema';
+import { reservations, timeSlots, stationConfigs, stations, vehicleFormats, users, stationServices } from '@/lib/db/schema';
 
 export type Entry = typeof reservations.$inferSelect;
 export type EntryInsert = typeof reservations.$inferInsert;
@@ -21,6 +21,7 @@ const RESERVATION_COLUMNS = {
   time_slot_id: reservations.time_slot_id,
   station_id: reservations.station_id,
   vehicle_format_id: reservations.vehicle_format_id,
+  service_id: reservations.service_id,
   post_id: reservations.post_id,
   status: reservations.status,
   queue_position: reservations.queue_position,
@@ -50,6 +51,7 @@ export type CreateReservationEntryData = {
   user_id: string;
   station_id: string;
   vehicle_format_id?: string | null;
+  service_id?: string | null;
   post_id?: string | null;
   time_slot_id: string;
   booking_source?: 'standard' | 'qr';
@@ -67,6 +69,7 @@ export type CreateQueueEntryData = {
   user_id: string;
   station_id: string;
   vehicle_format_id?: string | null;
+  service_id?: string | null;
   queue_position: number;
   status: string;
   amount_paid: string;
@@ -91,6 +94,7 @@ export async function createReservationEntry(
       user_id: data.user_id,
       station_id: data.station_id,
       vehicle_format_id: data.vehicle_format_id,
+      service_id: data.service_id ?? null,
       post_id: data.post_id ?? null,
       entry_type: 'reservation',
       booking_source: data.booking_source ?? 'standard',
@@ -120,6 +124,7 @@ export async function createQueueEntry(data: CreateQueueEntryData, tx?: DbTransa
       user_id: data.user_id,
       station_id: data.station_id,
       vehicle_format_id: data.vehicle_format_id,
+      service_id: data.service_id ?? null,
       entry_type: 'queue',
       booking_source: 'standard',
       time_slot_id: null,
@@ -852,6 +857,7 @@ export type RichEntry = {
     free_cancellation_minutes: number | null;
   };
   vehicle_format: { id: string; label: string; price: string } | null;
+  service: { id: string; name: string; category: string } | null;
   is_rated: boolean;
   is_tipped: boolean;
   estimated_wait_minutes: number | null;
@@ -878,6 +884,8 @@ function richEntrySelect() {
     slot_end_time: timeSlots.end_time,
     vf_label: vehicleFormats.label,
     vf_price: vehicleFormats.price,
+    svc_name: stationServices.name,
+    svc_category: stationServices.category,
     is_rated: sql<boolean>`EXISTS (SELECT 1 FROM ratings WHERE ratings.reservation_id = ${reservations.id})`,
     is_tipped: sql<boolean>`EXISTS (SELECT 1 FROM reservation_tips WHERE reservation_tips.reservation_id = ${reservations.id})`,
     // Estimated wait: position × wash_duration / wash_posts (queue entries only).
@@ -919,6 +927,13 @@ function mapToRichEntry(r: Record<string, unknown>): RichEntry {
           price: r.vf_price as string,
         }
       : null,
+    service: r.svc_name
+      ? {
+          id: r.service_id as string,
+          name: r.svc_name as string,
+          category: r.svc_category as string,
+        }
+      : null,
     is_rated: Boolean(r.is_rated),
     is_tipped: Boolean(r.is_tipped),
     estimated_wait_minutes: r.estimated_wait_minutes as number | null,
@@ -953,6 +968,7 @@ export async function listRichEntriesByUser(
       .leftJoin(stations, eq(stations.id, reservations.station_id))
       .leftJoin(stationConfigs, eq(stationConfigs.id, reservations.station_id))
       .leftJoin(vehicleFormats, eq(vehicleFormats.id, reservations.vehicle_format_id))
+      .leftJoin(stationServices, eq(stationServices.id, reservations.service_id))
       .leftJoin(timeSlots, eq(timeSlots.id, reservations.time_slot_id))
       .where(where)
       .orderBy(desc(reservations.created_at))

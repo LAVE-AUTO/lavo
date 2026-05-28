@@ -56,6 +56,8 @@ export type ClientHistoryItem = {
     image_url: string | null;
   };
   vehicle_format_label: string | null;
+  service_name: string | null;
+  service_category: string | null;
   amount_paid: string;
   tip_amount: string | null;
   receipt_available: boolean;
@@ -99,7 +101,7 @@ function hasAppReceipt(row: ClientHistoryRepositoryItem): boolean {
 }
 
 function buildTitle(row: ClientHistoryRepositoryItem): string {
-  const left = row.vehicle_format_label ?? 'Service';
+  const left = row.service_name ?? row.vehicle_format_label ?? 'Service';
   const right = row.station_name ?? 'Station';
   return `${left} - ${right}`;
 }
@@ -154,6 +156,8 @@ function mapHistoryItem(row: ClientHistoryRepositoryItem): ClientHistoryItem {
       image_url: row.station_image_url,
     },
     vehicle_format_label: row.vehicle_format_label,
+    service_name: row.service_name,
+    service_category: row.service_category,
     amount_paid: row.amount_paid,
     tip_amount: row.tip_amount,
     receipt_available: receiptAvailable,

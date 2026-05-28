@@ -254,6 +254,7 @@ export async function createReservation(
         user_id: userId,
         station_id: stationId,
         vehicle_format_id: vehicleFormatId ?? null,
+        service_id: serviceId,
         time_slot_id: timeSlotId,
         status: STATUS_PENDING_PAYMENT,
         amount_paid: toDecimal(amountTotal),
@@ -411,6 +412,7 @@ export async function createReservationByStartTime(
         user_id: userId,
         station_id: stationId,
         vehicle_format_id: vehicleFormatId ?? null,
+        service_id: serviceId,
         post_id: fresh.post_id,
         time_slot_id: slot.id,
         status: STATUS_PENDING_PAYMENT,
@@ -793,7 +795,7 @@ export async function upgradeQueueToReservation(
   if (entry.station_id !== stationId) throw new NotFoundError('Entry does not belong to this station');
 
   // Price = original queue amount + optional reservation surcharge.
-  // service_id is not stored on the entry; use amount_paid as the already-validated base price.
+  // The queue's service_id stays attached to the upgraded reservation row.
   const config = await getConfigByStationId(stationId);
   const surcharge = config?.reservation_surcharge ? parseDecimal(String(config.reservation_surcharge)) : 0;
   const amountTotal = parseDecimal(String(entry.amount_paid)) + surcharge;
