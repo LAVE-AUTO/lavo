@@ -216,7 +216,7 @@ export function AdminMerchantsClients() {
 
           <div className="mt-5 rounded-[24px] border border-[#E7E1D5] bg-[#F8F6F1]/90 p-3 shadow-[inset_0_1px_0_rgba(255,255,255,0.75)] backdrop-blur dark:border-[#1E2E18] dark:bg-[#0C150B]/85">
             <div className="flex flex-col gap-4 xl:flex-row xl:items-center xl:justify-between">
-              <div className="inline-flex flex-wrap gap-2 rounded-[18px] bg-white/65 p-1.5 dark:bg-[#111A0E]/80">
+              <div className="inline-flex flex-wrap gap-2 rounded-[18px] bg-white/65 p-1.5 dark:bg-dark-bg/80">
                 {tabs.map(({ id, count }) => (
                   <button
                     key={id}
@@ -224,7 +224,7 @@ export function AdminMerchantsClients() {
                     onClick={() => { setTab(id); setQuery(''); }}
                     className={[
                       'relative flex items-center gap-2 rounded-[14px] px-4 py-2.5 text-[13px] font-bold transition-colors duration-150',
-                      tab === id ? 'bg-[#001201] text-[#FFF9EC] shadow-[0_10px_20px_rgba(26,26,10,0.18)] dark:bg-[#FFF9EC] dark:text-[#001201]' : 'text-[#847E70] hover:bg-[#EFE8D7] hover:text-[#001201] dark:text-[#B0BFB1] dark:hover:bg-[#182214] dark:hover:text-[#FFF9EC]',
+                      tab === id ? 'bg-dark-bg text-[#FFF9EC] shadow-[0_10px_20px_rgba(26,26,10,0.18)] dark:bg-[#FFF9EC] dark:text-[#001201]' : 'text-[#847E70] hover:bg-[#EFE8D7] hover:text-[#001201] dark:text-[#B0BFB1] dark:hover:bg-[#182214] dark:hover:text-[#FFF9EC]',
                     ].join(' ')}
                   >
                     {t(`tab_${id}`)}

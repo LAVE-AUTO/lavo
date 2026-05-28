@@ -136,7 +136,7 @@ export function AdminTransactionsView() {
     { key: 'failed',    label: t('status_failed'),    dot: '#F43F5E' },
   ];
 
-  const dateInputCls = 'rounded-[12px] border border-[#D8D4C8] bg-white px-3 py-2 text-[12.5px] font-semibold text-[#001201] outline-none transition-all focus:border-[#DDAF3B] focus:shadow-[0_0_0_3px_rgba(221, 175, 59,0.10)] dark:border-[#001A05] dark:bg-[#001201] dark:text-[#FFF9EC] dark:focus:border-[#DDAF3B]';
+  const dateInputCls = 'rounded-[12px] border border-[#D8D4C8] bg-white px-3 py-2 text-[12.5px] font-semibold text-[#001201] outline-none transition-all focus:border-[#DDAF3B] focus:shadow-[0_0_0_3px_rgba(221, 175, 59,0.10)] dark:border-[#001A05] dark:bg-dark-bg dark:text-[#FFF9EC] dark:focus:border-[#DDAF3B]';
 
   const metrics = [
     { label: t('chip_volume'),      value: loading ? '…' : fmt(volume),    accent: '#DDAF3B' },
@@ -190,12 +190,12 @@ export function AdminTransactionsView() {
               </div>
 
               <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-                <div className="inline-flex flex-wrap gap-2 rounded-[18px] bg-white/65 p-1.5 dark:bg-[#111A0E]/80">
+                <div className="inline-flex flex-wrap gap-2 rounded-[18px] bg-white/65 p-1.5 dark:bg-dark-bg/80">
                   {FILTERS.map(({ key, label, dot }) => (
                     <button key={key} type="button" onClick={() => setFilter(key)}
                       className={[
                         'relative flex items-center gap-2 rounded-[14px] px-3.5 py-2 text-[12.5px] font-bold transition-colors duration-150',
-                        filter === key ? 'bg-[#001201] text-[#FFF9EC] shadow-[0_10px_20px_rgba(26,26,10,0.18)] dark:bg-[#FFF9EC] dark:text-[#001201]' : 'text-[#847E70] hover:bg-[#EFE8D7] hover:text-[#001201] dark:text-[#B0BFB1] dark:hover:bg-[#182214] dark:hover:text-[#FFF9EC]',
+                        filter === key ? 'bg-dark-bg text-[#FFF9EC] shadow-[0_10px_20px_rgba(26,26,10,0.18)] dark:bg-[#FFF9EC] dark:text-[#001201]' : 'text-[#847E70] hover:bg-[#EFE8D7] hover:text-[#001201] dark:text-[#B0BFB1] dark:hover:bg-[#182214] dark:hover:text-[#FFF9EC]',
                       ].join(' ')}>
                       {dot && <span className="h-1.5 w-1.5 rounded-full" style={{ background: filter === key ? dot : '#CCCCCC' }} />}
                       {label}

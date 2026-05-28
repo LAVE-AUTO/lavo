@@ -152,14 +152,14 @@ export function AdminStationDetail({ id }: Props) {
 
   /* ── Loading ── */
   if (loading) return (
-    <div className="flex flex-1 items-center justify-center bg-[#FFF9EC] dark:bg-[#001201]">
+    <div className="flex flex-1 items-center justify-center bg-[#FFF9EC] dark:bg-dark-bg">
       <div className="h-8 w-8 animate-spin rounded-full border-[3px] border-[#DDAF3B] border-t-transparent" />
     </div>
   );
 
   /* ── Error ── */
   if (loadError || !station) return (
-    <div className="flex flex-1 flex-col items-center justify-center gap-3 bg-[#FFF9EC] dark:bg-[#001201]">
+    <div className="flex flex-1 flex-col items-center justify-center gap-3 bg-[#FFF9EC] dark:bg-dark-bg">
       <p className="text-[14px] font-semibold text-foreground/70">{t('error_load')}</p>
       <button type="button" onClick={loadStation}
         className="rounded-xl border border-[#DDAF3B]/50 px-4 py-2 text-[13px] font-semibold text-[#DDAF3B] hover:bg-[#DDAF3B]/10">
@@ -176,10 +176,10 @@ export function AdminStationDetail({ id }: Props) {
   );
 
   return (
-    <div className="flex flex-1 flex-col overflow-hidden bg-[#FFF9EC] dark:bg-[#001201]">
+    <div className="flex flex-1 flex-col overflow-hidden bg-[#FFF9EC] dark:bg-dark-bg">
 
       {/* ── Sticky sub-header ── */}
-      <div className="flex items-center gap-4 border-b border-[#FFF9EC] bg-white px-7 py-4 dark:border-[#1A2A14] dark:bg-[#111A0E]">
+      <div className="flex items-center gap-4 border-b border-[#FFF9EC] bg-white px-7 py-4 dark:border-[#1A2A14] dark:bg-dark-bg">
         <Link href={'/admin/stations' as Parameters<typeof Link>[0]['href']}
           className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-[#F0EDE0] text-foreground/55 transition-colors hover:bg-[#FFF9EC] dark:bg-[#001A05] dark:text-[#B0BFB1]">
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="15 18 9 12 15 6" /></svg>
@@ -360,7 +360,7 @@ export function AdminStationDetail({ id }: Props) {
 
       {/* ── Sticky action bar ── */}
       {isPending && (
-        <div className="border-t border-[#FFF9EC] bg-white px-7 py-4 dark:border-[#1A2A14] dark:bg-[#111A0E]">
+        <div className="border-t border-[#FFF9EC] bg-white px-7 py-4 dark:border-[#1A2A14] dark:bg-dark-bg">
           {actionError && <p className="mb-3 text-[13px] font-semibold text-[#EF4444]">{actionError}</p>}
 
           {!showReject ? (
@@ -406,7 +406,7 @@ export function AdminStationDetail({ id }: Props) {
                   rows={3}
                   disabled={rejecting}
                   placeholder={t('reject_reason_placeholder')}
-                  className="w-full resize-none rounded-xl border border-[#FFF9EC] bg-[#F8F6F2] px-4 py-3 text-[13px] text-[#001201] outline-none transition focus:border-[#EF4444]/50 focus:ring-2 focus:ring-[#EF4444]/10 disabled:opacity-50 dark:border-[#001A05] dark:bg-[#001201] dark:text-[#FFF9EC]"
+                  className="w-full resize-none rounded-xl border border-[#FFF9EC] bg-[#F8F6F2] px-4 py-3 text-[13px] text-[#001201] outline-none transition focus:border-[#EF4444]/50 focus:ring-2 focus:ring-[#EF4444]/10 disabled:opacity-50 dark:border-[#001A05] dark:bg-dark-bg dark:text-[#FFF9EC]"
                 />
                 <div className="mt-1 flex items-center justify-between">
                   <span className={`text-[11px] font-semibold transition-colors ${rejectReason.trim().length > 0 && rejectReason.trim().length < MIN_REASON ? 'text-[#EF4444]' : 'text-transparent'}`}>
@@ -574,7 +574,7 @@ function DocCard({
               type="date"
               value={draft}
               onChange={(e) => setDraft(e.target.value)}
-              className="w-full rounded-lg border border-[#FFF9EC] bg-white px-3 py-1.5 text-[12px] text-[#001201] outline-none transition focus:border-[#DDAF3B]/50 focus:ring-2 focus:ring-[#DDAF3B]/10 dark:border-[#001A05] dark:bg-[#001201] dark:text-[#FFF9EC] [color-scheme:light] dark:[color-scheme:dark]"
+              className="w-full rounded-lg border border-[#FFF9EC] bg-white px-3 py-1.5 text-[12px] text-[#001201] outline-none transition focus:border-[#DDAF3B]/50 focus:ring-2 focus:ring-[#DDAF3B]/10 dark:border-[#001A05] dark:bg-dark-bg dark:text-[#FFF9EC] [color-scheme:light] dark:[color-scheme:dark]"
             />
             <div className="flex flex-wrap gap-2">
               <button type="button" onClick={handleSave} disabled={!draft}

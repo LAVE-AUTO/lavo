@@ -273,7 +273,7 @@ export function CapacityTab({ config, posts, locked, onSaved }: Props) {
                 className={`group relative flex flex-col items-center gap-2 rounded-xl border p-4 text-center transition-all duration-150 disabled:cursor-not-allowed disabled:opacity-60 ${
                   active
                     ? 'border-[#DDAF3B]/40 bg-[#DDAF3B]/8 hover:border-[#DDAF3B]'
-                    : 'border-[#FFF9EC] bg-[#FFF9EC] hover:border-[#C8C4B4] dark:border-[#001A05] dark:bg-[#001201]'
+                    : 'border-[#FFF9EC] bg-[#FFF9EC] hover:border-[#C8C4B4] dark:border-[#001A05] dark:bg-dark-bg'
                 }`}
               >
                 {isNew && (

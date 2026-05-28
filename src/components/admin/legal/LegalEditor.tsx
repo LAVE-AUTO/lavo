@@ -41,7 +41,7 @@ function ToolbarButton({ onClick, active, disabled, label, children }: ToolbarBu
         'inline-flex h-8 w-8 items-center justify-center rounded-[8px] text-[13px] font-bold transition-colors',
         'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#DDAF3B]/40',
         active
-          ? 'bg-[#001201] text-[#FFF9EC] shadow-[0_6px_12px_rgba(26,26,10,0.18)] dark:bg-[#FFF9EC] dark:text-[#001201]'
+          ? 'bg-dark-bg text-[#FFF9EC] shadow-[0_6px_12px_rgba(26,26,10,0.18)] dark:bg-[#FFF9EC] dark:text-[#001201]'
           : 'text-[#5A554B] hover:bg-[#EFE8D7] hover:text-[#001201] dark:text-[#A6A091] dark:hover:bg-[#1A2410] dark:hover:text-[#F0D98C]',
         'disabled:cursor-not-allowed disabled:opacity-40',
       ].join(' ')}

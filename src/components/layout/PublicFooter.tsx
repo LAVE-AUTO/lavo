@@ -31,7 +31,7 @@ export async function PublicFooter() {
   ];
 
   return (
-    <footer className="bg-[#001201] border-t border-[rgba(221,175,59,0.1)]">
+    <footer className="bg-dark-bg border-t border-[rgba(221,175,59,0.1)]">
       <div className="max-w-[1440px] mx-auto px-6 lg:px-16 py-14">
 
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-[2fr_1fr_1fr_1fr] gap-12 mb-11">

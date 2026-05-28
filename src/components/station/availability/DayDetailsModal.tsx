@@ -74,7 +74,7 @@ export function DayDetailsModal({
             {blocks.map((block) => (
               <div
                 key={block.id}
-                className="rounded-xl bg-[#FFF9EC] p-4 dark:bg-[#001201]"
+                className="rounded-xl bg-[#FFF9EC] p-4 dark:bg-dark-bg"
               >
                 <p className="mb-1 text-[11px] font-semibold text-foreground/70 dark:text-[#B0BFB1]">
                   {formatBays(block.bayIds)}

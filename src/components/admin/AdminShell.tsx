@@ -10,7 +10,7 @@ export function AdminShell({ children }: { children: ReactNode }) {
   const closeSidebar  = useCallback(() => setSidebarOpen(false), []);
 
   return (
-    <div className="app-shell flex h-screen flex-col overflow-hidden bg-[#FFF9EC] dark:bg-[#001201]">
+    <div className="app-shell flex h-screen flex-col overflow-hidden bg-[#FFF9EC] dark:bg-dark-bg">
       <AdminTopNav onToggleSidebar={toggleSidebar} />
       <div className="flex flex-1 overflow-hidden">
         <AdminSidebar open={sidebarOpen} onClose={closeSidebar} />

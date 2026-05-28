@@ -108,7 +108,7 @@ export function ServiceCard({ service, onEdit, onDeleted, onToggled }: Props) {
               type="button"
               onClick={() => setDeleteOpen(true)}
               disabled={deleting}
-              className="inline-flex items-center gap-1.5 rounded-lg border border-[#FFF9EC] bg-white px-2.5 py-1.5 text-[11px] font-bold text-foreground/55 transition-all hover:border-[#FF2525] hover:bg-[#FF2525]/5 hover:text-[#FF2525] disabled:opacity-40 dark:border-[#001A05] dark:bg-[#001201] dark:text-[#B0BFB1]"
+              className="inline-flex items-center gap-1.5 rounded-lg border border-[#FFF9EC] bg-white px-2.5 py-1.5 text-[11px] font-bold text-foreground/55 transition-all hover:border-[#FF2525] hover:bg-[#FF2525]/5 hover:text-[#FF2525] disabled:opacity-40 dark:border-[#001A05] dark:bg-dark-bg dark:text-[#B0BFB1]"
             >
               <CrossIcon />
               {t('btn_delete_short')}
@@ -155,8 +155,12 @@ export function ServiceCard({ service, onEdit, onDeleted, onToggled }: Props) {
           <div className="mb-4 grid grid-cols-3 gap-2">
             {activeEntries.map((entry) => (
               <div
-                key={entry.vehicle_format_id}
-                className="rounded-xl bg-[#FFF9EC] px-3 py-3 text-center dark:bg-[#001201]"
+                /* The serviceVehicleEntries row id is always unique; the
+                 * underlying vehicle_format_id can be null on non-hand_wash
+                 * services (catalogue placeholders), which used to collide
+                 * across siblings and trip React's duplicate-key warning. */
+                key={entry.id}
+                className="rounded-xl bg-[#FFF9EC] px-3 py-3 text-center dark:bg-dark-bg"
               >
                 <p className={`text-[9px] font-bold uppercase tracking-[1px] ${isPackages ? 'text-[#DDAF3B]' : 'text-foreground/55 dark:text-[#B0BFB1]'}`}>
                   {entry.vehicle_label}
@@ -178,7 +182,7 @@ export function ServiceCard({ service, onEdit, onDeleted, onToggled }: Props) {
 
         {/* Extras compatibles - auto/self-service services don't have extras */}
         {!isPackages && service.category !== 'self_service' && (
-          <div className="mt-auto rounded-xl bg-[#FFF9EC] p-3 dark:bg-[#001201]">
+          <div className="mt-auto rounded-xl bg-[#FFF9EC] p-3 dark:bg-dark-bg">
             <p className="mb-2 text-[10px] font-bold uppercase tracking-[1px] text-foreground/55 dark:text-[#B0BFB1]">
               {t('extras_label')}
             </p>

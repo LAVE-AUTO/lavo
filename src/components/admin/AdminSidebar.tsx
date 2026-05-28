@@ -177,7 +177,7 @@ export function AdminSidebar({ open = false, onClose }: AdminSidebarProps) {
           <ProfileIcon />
           {!collapsed && <span className="truncate">{t('nav_profile')}</span>}
           {collapsed && (
-            <span className="pointer-events-none absolute left-full top-1/2 z-30 ml-2 -translate-y-1/2 whitespace-nowrap rounded-lg bg-[#001201] px-2.5 py-1 text-[12px] font-semibold text-[#FFF9EC] opacity-0 shadow-lg transition-opacity duration-150 group-hover:opacity-100">
+            <span className="pointer-events-none absolute left-full top-1/2 z-30 ml-2 -translate-y-1/2 whitespace-nowrap rounded-lg bg-dark-bg px-2.5 py-1 text-[12px] font-semibold text-[#FFF9EC] opacity-0 shadow-lg transition-opacity duration-150 group-hover:opacity-100">
               {t('nav_profile')}
             </span>
           )}
@@ -193,7 +193,7 @@ export function AdminSidebar({ open = false, onClose }: AdminSidebarProps) {
           <LogoutIcon />
           {!collapsed && <span>{t('nav_logout')}</span>}
           {collapsed && (
-            <span className="pointer-events-none absolute left-full top-1/2 z-30 ml-2 -translate-y-1/2 whitespace-nowrap rounded-lg bg-[#001201] px-2.5 py-1 text-[12px] font-semibold text-[#FF383C] opacity-0 shadow-lg transition-opacity duration-150 group-hover:opacity-100">
+            <span className="pointer-events-none absolute left-full top-1/2 z-30 ml-2 -translate-y-1/2 whitespace-nowrap rounded-lg bg-dark-bg px-2.5 py-1 text-[12px] font-semibold text-[#FF383C] opacity-0 shadow-lg transition-opacity duration-150 group-hover:opacity-100">
               {t('nav_logout')}
             </span>
           )}
@@ -205,7 +205,7 @@ export function AdminSidebar({ open = false, onClose }: AdminSidebarProps) {
   return (
     <>
       {/* Desktop sidebar - always visible at lg+ */}
-      <aside className={`hidden lg:flex shrink-0 flex-col border-r border-[#FFF9EC] bg-[#FFF9EC] p-3 transition-all duration-200 dark:border-[#1A2A14] dark:bg-[#111A0E] ${collapsed ? 'w-[72px]' : 'w-[220px]'}`}>
+      <aside className={`hidden lg:flex shrink-0 flex-col border-r border-[#FFF9EC] bg-[#FFF9EC] p-3 transition-all duration-200 dark:border-[#1A2A14] dark:bg-dark-bg ${collapsed ? 'w-[72px]' : 'w-[220px]'}`}>
         {sidebarContent}
       </aside>
 
@@ -217,7 +217,7 @@ export function AdminSidebar({ open = false, onClose }: AdminSidebarProps) {
         >
           <div className="absolute inset-0 bg-black/40" aria-hidden="true" />
           <aside
-            className="relative flex h-full w-[220px] shrink-0 flex-col border-r border-[#FFF9EC] bg-[#FFF9EC] p-3 shadow-xl animate-fade-in dark:border-[#1A2A14] dark:bg-[#111A0E]"
+            className="relative flex h-full w-[220px] shrink-0 flex-col border-r border-[#FFF9EC] bg-[#FFF9EC] p-3 shadow-xl animate-fade-in dark:border-[#1A2A14] dark:bg-dark-bg"
             onClick={(e) => e.stopPropagation()}
           >
             {sidebarContent}

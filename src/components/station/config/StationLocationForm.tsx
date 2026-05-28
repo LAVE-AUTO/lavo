@@ -225,7 +225,7 @@ export function StationLocationForm({ location, onSaved, locked = false }: Props
       <div className="p-5">
         {!isEditing ? (
           <div className="flex flex-col gap-4">
-            <div className="flex items-start gap-4 rounded-xl bg-[#FFF9EC] px-4 py-3.5 dark:bg-[#001201]">
+            <div className="flex items-start gap-4 rounded-xl bg-[#FFF9EC] px-4 py-3.5 dark:bg-dark-bg">
               <div className="mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-[8px] bg-[#DDAF3B]/15 text-[#DDAF3B]">
                 <PinIcon />
               </div>

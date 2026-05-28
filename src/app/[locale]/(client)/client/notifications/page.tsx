@@ -49,7 +49,7 @@ export default function ClientNotificationsPage() {
   }
 
   return (
-    <main className="min-h-screen bg-background px-4 pb-24 pt-6 dark:bg-[#001201] sm:px-6">
+    <main className="min-h-screen bg-background px-4 pb-24 pt-6 dark:bg-dark-bg sm:px-6">
       <div className="mx-auto w-full max-w-3xl">
         <div className="mb-4 flex items-center justify-between">
           <h1 className="text-[22px] font-black text-foreground">{t('notif_title')}</h1>

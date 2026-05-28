@@ -570,7 +570,7 @@ export function ReceiptModal({ entry: e, locale, onClose }: ReceiptModalProps) {
         are never hidden behind it.
       */}
       <div
-        className="w-full sm:max-w-md bg-[#001201] dark:bg-[#001201] rounded-t-3xl sm:rounded-3xl shadow-[0_30px_90px_rgba(0,0,0,0.55)] overflow-hidden animate-fade-in-up mb-14 sm:mb-0 border border-[#001A05]"
+        className="w-full sm:max-w-md bg-dark-bg dark:bg-dark-bg rounded-t-3xl sm:rounded-3xl shadow-[0_30px_90px_rgba(0,0,0,0.55)] overflow-hidden animate-fade-in-up mb-14 sm:mb-0 border border-[#001A05]"
         onClick={(ev) => ev.stopPropagation()}
       >
         {/* Header */}
@@ -661,7 +661,7 @@ export function ReceiptModal({ entry: e, locale, onClose }: ReceiptModalProps) {
             </div>
 
             {/* Subtotal + Total */}
-            <div className="rounded-2xl bg-[#001201] border border-[#001A05] px-4 py-3 space-y-2">
+            <div className="rounded-2xl bg-dark-bg border border-[#001A05] px-4 py-3 space-y-2">
               {tipAmount > 0 && (
                 <div className="flex items-center justify-between">
                   <span className="text-[11px] font-semibold text-[#B0BFB1] uppercase tracking-wider">{t('receipt_subtotal_line')}</span>
@@ -679,7 +679,7 @@ export function ReceiptModal({ entry: e, locale, onClose }: ReceiptModalProps) {
         </div>
 
         {/* Actions */}
-        <div className="px-5 py-4 border-t border-[#001A05] flex gap-3 bg-[#001201]">
+        <div className="px-5 py-4 border-t border-[#001A05] flex gap-3 bg-dark-bg">
           <button
             type="button"
             onClick={onClose}

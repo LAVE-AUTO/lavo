@@ -33,7 +33,7 @@ export function Textarea({
 
   return (
     <div
-      className={`group relative flex flex-col rounded-xl border bg-white transition-all duration-150 dark:bg-[#001201] ${disabledClasses}`}
+      className={`group relative flex flex-col rounded-xl border bg-white transition-all duration-150 dark:bg-dark-bg ${disabledClasses}`}
     >
       <textarea
         value={value}

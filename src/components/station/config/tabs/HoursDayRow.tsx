@@ -16,7 +16,7 @@ interface Props {
 }
 
 const timeInputClass =
-  'w-full rounded-lg border border-[#FFF9EC] bg-white px-2.5 py-1.5 text-center font-mono text-[12px] tabular-nums text-[#001201] outline-none transition-all duration-150 placeholder:text-[#BBBBAA] hover:border-[#D0C8B0] focus:border-[#DDAF3B] focus:shadow-[0_0_0_3px_rgba(221, 175, 59,0.12)] disabled:cursor-not-allowed disabled:opacity-50 dark:border-[#001A05] dark:bg-[#001201] dark:text-[#FFF9EC] dark:placeholder:text-[#4A4A3A] dark:hover:border-[#2E3C2A]';
+  'w-full rounded-lg border border-[#FFF9EC] bg-white px-2.5 py-1.5 text-center font-mono text-[12px] tabular-nums text-[#001201] outline-none transition-all duration-150 placeholder:text-[#BBBBAA] hover:border-[#D0C8B0] focus:border-[#DDAF3B] focus:shadow-[0_0_0_3px_rgba(221, 175, 59,0.12)] disabled:cursor-not-allowed disabled:opacity-50 dark:border-[#001A05] dark:bg-dark-bg dark:text-[#FFF9EC] dark:placeholder:text-[#4A4A3A] dark:hover:border-[#2E3C2A]';
 
 function Toggle({
   checked,

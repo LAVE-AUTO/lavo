@@ -151,7 +151,7 @@ export function VehicleFormatModal({ format, existingFormats, onClose, onSaved }
                   setApiError(null);
                 }}
                 onKeyDown={(e) => e.key === 'Enter' && focusPrice()}
-                className="rounded-[8px] border border-[#D8D4C8] bg-[#FFF9EC] px-3 py-2.5 text-[13px] text-[#001201] outline-none transition-colors focus:border-[#DDAF3B] focus:bg-white focus:shadow-[0_0_0_3px_rgba(221, 175, 59,0.12)] dark:border-[#001A05] dark:bg-[#001201] dark:text-[#FFF9EC] dark:focus:border-[#DDAF3B] dark:focus:bg-[#182214]"
+                className="rounded-[8px] border border-[#D8D4C8] bg-[#FFF9EC] px-3 py-2.5 text-[13px] text-[#001201] outline-none transition-colors focus:border-[#DDAF3B] focus:bg-white focus:shadow-[0_0_0_3px_rgba(221, 175, 59,0.12)] dark:border-[#001A05] dark:bg-dark-bg dark:text-[#FFF9EC] dark:focus:border-[#DDAF3B] dark:focus:bg-[#182214]"
               >
                 <option value="">{t('format_placeholder_label')}</option>
                 <optgroup label="Suggestions">
@@ -174,7 +174,7 @@ export function VehicleFormatModal({ format, existingFormats, onClose, onSaved }
                   }}
                   placeholder="Custom format name"
                   maxLength={100}
-                  className="rounded-[8px] border border-[#D8D4C8] bg-[#FFF9EC] px-3 py-2.5 text-[13px] text-[#001201] outline-none transition-colors focus:border-[#DDAF3B] focus:bg-white focus:shadow-[0_0_0_3px_rgba(221, 175, 59,0.12)] dark:border-[#001A05] dark:bg-[#001201] dark:text-[#FFF9EC] dark:focus:border-[#DDAF3B] dark:focus:bg-[#182214]"
+                  className="rounded-[8px] border border-[#D8D4C8] bg-[#FFF9EC] px-3 py-2.5 text-[13px] text-[#001201] outline-none transition-colors focus:border-[#DDAF3B] focus:bg-white focus:shadow-[0_0_0_3px_rgba(221, 175, 59,0.12)] dark:border-[#001A05] dark:bg-dark-bg dark:text-[#FFF9EC] dark:focus:border-[#DDAF3B] dark:focus:bg-[#182214]"
                 />
               )}
 
@@ -193,7 +193,7 @@ export function VehicleFormatModal({ format, existingFormats, onClose, onSaved }
               <label className="text-[13px] font-semibold text-[#5A5A4A] dark:text-[#B0BFB1]">
                 {t('format_field_price')} <span className="text-[#EF4444]">*</span>
               </label>
-              <div className={`flex items-center gap-2 rounded-[8px] border bg-[#FFF9EC] px-3 py-2.5 transition-all focus-within:shadow-[0_0_0_3px_rgba(221, 175, 59,0.12)] dark:bg-[#001201] ${
+              <div className={`flex items-center gap-2 rounded-[8px] border bg-[#FFF9EC] px-3 py-2.5 transition-all focus-within:shadow-[0_0_0_3px_rgba(221, 175, 59,0.12)] dark:bg-dark-bg ${
                 priceError
                   ? 'border-[#EF4444] focus-within:border-[#EF4444] dark:border-[#6A1A0A]'
                   : 'border-[#D8D4C8] focus-within:border-[#DDAF3B] dark:border-[#001A05] dark:focus-within:border-[#DDAF3B]'

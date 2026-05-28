@@ -138,7 +138,7 @@ export function AdminClientsList({ query, onAction, onCountChange, onEditUser, o
     );
   }
 
-  const actionPrimary   = 'inline-flex items-center gap-1 rounded-[12px] bg-[#001201] px-3 py-1.5 text-[12px] font-bold text-[#FFF9EC] transition-all hover:bg-[#33321E] disabled:opacity-50 dark:bg-[#FFF9EC] dark:text-[#001201] dark:hover:bg-[#E1DBC8]';
+  const actionPrimary   = 'inline-flex items-center gap-1 rounded-[12px] bg-dark-bg px-3 py-1.5 text-[12px] font-bold text-[#FFF9EC] transition-all hover:bg-[#33321E] disabled:opacity-50 dark:bg-[#FFF9EC] dark:text-[#001201] dark:hover:bg-[#E1DBC8]';
   const actionSecondary = 'inline-flex items-center gap-1 rounded-[12px] border border-[#E1DBCF] bg-white px-3 py-1.5 text-[12px] font-semibold text-[#5A554B] transition-all hover:border-[#DDAF3B]/40 hover:bg-[#FCF6E5] hover:text-[#9A7A13] disabled:opacity-50 dark:border-[#1E2E18] dark:bg-[#0E170C] dark:text-[#A6A091] dark:hover:bg-[#1A2410] dark:hover:text-[#F0D98C]';
   const actionDanger    = 'inline-flex items-center gap-1 rounded-[12px] border border-[#F43F5E]/30 bg-[#FFF1F2] px-3 py-1.5 text-[12px] font-bold text-[#9F1239] transition-all hover:bg-[#FCE7EB] disabled:opacity-50 dark:border-[#F43F5E]/20 dark:bg-[#2A0A12] dark:text-[#FDA4AF]';
 
@@ -192,7 +192,7 @@ export function AdminClientsList({ query, onAction, onCountChange, onEditUser, o
             <article key={client.id} className="rounded-[24px] border border-[#E8E3D7] bg-[#FBFAF7] p-4 shadow-[0_12px_30px_rgba(26,26,10,0.05)] dark:border-[#1E2E18] dark:bg-[#111A0D]">
               <div className="flex items-start justify-between gap-3">
                 <div className="flex min-w-0 items-start gap-3">
-                  <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-[14px] bg-[#001201]/5 text-[12px] font-black text-[#001201] ring-1 ring-inset ring-[#001201]/8 dark:bg-[#FFF9EC]/8 dark:text-[#FFF9EC] dark:ring-[#FFF9EC]/10">
+                  <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-[14px] bg-dark-bg/5 text-[12px] font-black text-[#001201] ring-1 ring-inset ring-[#001201]/8 dark:bg-[#FFF9EC]/8 dark:text-[#FFF9EC] dark:ring-[#FFF9EC]/10">
                     {initials(client.first_name, client.last_name)}
                   </div>
                   <div className="min-w-0">
@@ -248,7 +248,7 @@ export function AdminClientsList({ query, onAction, onCountChange, onEditUser, o
                       : 'bg-white hover:bg-[#FCFBF6] dark:border-[#1A2A14] dark:bg-[#111A0D] dark:hover:bg-[#161F12]',
                   ].join(' ')}>
 
-                  <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-[12px] bg-[#001201]/5 text-[12px] font-black text-[#001201] ring-1 ring-inset ring-[#001201]/8 dark:bg-[#FFF9EC]/8 dark:text-[#FFF9EC] dark:ring-[#FFF9EC]/10">
+                  <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-[12px] bg-dark-bg/5 text-[12px] font-black text-[#001201] ring-1 ring-inset ring-[#001201]/8 dark:bg-[#FFF9EC]/8 dark:text-[#FFF9EC] dark:ring-[#FFF9EC]/10">
                     {initials(client.first_name, client.last_name)}
                   </div>
 

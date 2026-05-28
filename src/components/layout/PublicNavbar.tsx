@@ -205,7 +205,7 @@ export function PublicNavbar({
 
   return (
     <>
-      <header className="fixed top-0 left-0 right-0 z-40 bg-[rgba(247,243,236,0.95)] dark:bg-dark-bg backdrop-blur-[16px] border-b border-[rgba(221,175,59,0.18)]">
+      <header className="fixed top-0 left-0 right-0 z-40 bg-[#FFF9EC] dark:bg-dark-bg backdrop-blur-[16px] border-b border-[rgba(221,175,59,0.18)]">
         <div className="max-w-[1440px] mx-auto px-6 lg:px-16 flex items-center justify-between gap-6 py-2">
 
           {/* Logo */}
@@ -264,7 +264,7 @@ export function PublicNavbar({
                       aria-label={tn('notif_tooltip')}
                       title={tn('notif_tooltip')}
                       onClick={toggleNotifications}
-                      className="flex h-[34px] w-[34px] items-center justify-center rounded-full border border-[rgba(221,175,59,0.25)] text-[var(--foreground)] transition-colors relative hover:border-[#DDAF3B] hover:text-[#DDAF3B] dark:text-[#B0BFB1]"
+                      className="flex h-[34px] w-[34px] items-center justify-center rounded-full border border-[#FFF9EC] text-[var(--foreground)] transition-colors relative hover:border-[#DDAF3B] hover:text-[#DDAF3B] dark:text-[#B0BFB1]"
                     >
                       <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
                         <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9" />
@@ -364,7 +364,7 @@ export function PublicNavbar({
 
                   {/* Dropdown panel */}
                   {dropdownOpen && (
-                    <div className="absolute top-[calc(100%+10px)] right-0 z-50 w-[230px] overflow-hidden rounded-[6px] border border-[rgba(221,175,59,0.2)] bg-[#FFEECA] shadow-[0_16px_48px_rgba(0,0,0,0.2)] animate-fade-in dark:bg-[#001201]">
+                    <div className="absolute top-[calc(100%+10px)] right-0 z-50 w-[230px] overflow-hidden rounded-[6px] border border-[rgba(221,175,59,0.2)] bg-[#FFEECA] shadow-[0_16px_48px_rgba(0,0,0,0.2)] animate-fade-in dark:bg-dark-bg">
                       {/* Profile info */}
                       <div className="px-4 py-3.5 border-b border-[rgba(221,175,59,0.12)]">
                         <div className="flex items-center gap-3">

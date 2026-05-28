@@ -17,7 +17,7 @@ interface Props {
 }
 
 const inputClass =
-  'w-full rounded-[8px] border border-[#D8D4C8] bg-[#FFF9EC] px-3 py-2.5 text-[13px] text-[#001201] outline-none transition-colors duration-150 placeholder:text-[#BBBBAA] focus:border-[#DDAF3B] focus:bg-white focus:shadow-[0_0_0_3px_rgba(221, 175, 59,0.12)] dark:border-[#001A05] dark:bg-[#001201] dark:text-[#FFF9EC] dark:placeholder:text-[#4A4A3A] dark:focus:border-[#DDAF3B] dark:focus:bg-[#182214]';
+  'w-full rounded-[8px] border border-[#D8D4C8] bg-[#FFF9EC] px-3 py-2.5 text-[13px] text-[#001201] outline-none transition-colors duration-150 placeholder:text-[#BBBBAA] focus:border-[#DDAF3B] focus:bg-white focus:shadow-[0_0_0_3px_rgba(221, 175, 59,0.12)] dark:border-[#001A05] dark:bg-dark-bg dark:text-[#FFF9EC] dark:placeholder:text-[#4A4A3A] dark:focus:border-[#DDAF3B] dark:focus:bg-[#182214]';
 
 export function SupportCreateForm({ onCreated, onCancel }: Props) {
   const t      = useTranslations('client_support');

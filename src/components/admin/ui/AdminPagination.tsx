@@ -57,7 +57,7 @@ export function AdminPagination({ page, totalPages, total, perPage, onPageChange
     'min-w-[36px] h-9 px-2 rounded-[12px] text-[12.5px] font-bold transition-all duration-150',
     'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#DDAF3B]/40',
     isActive
-      ? 'bg-[#001201] text-[#FFF9EC] shadow-[0_8px_18px_rgba(26,26,10,0.18)] dark:bg-[#FFF9EC] dark:text-[#001201]'
+      ? 'bg-dark-bg text-[#FFF9EC] shadow-[0_8px_18px_rgba(26,26,10,0.18)] dark:bg-[#FFF9EC] dark:text-[#001201]'
       : 'border border-[#E1DBCF] bg-white text-[#5A554B] hover:border-[#DDAF3B]/40 hover:bg-[#FCF6E5] hover:text-[#9A7A13] dark:border-[#1E2E18] dark:bg-[#0E170C] dark:text-[#A6A091] dark:hover:border-[#DDAF3B]/30 dark:hover:bg-[#1A2410] dark:hover:text-[#F0D98C]',
   ].join(' ');
 

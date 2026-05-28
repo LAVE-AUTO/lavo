@@ -135,7 +135,7 @@ export function AdminClientDetail({ id }: Props) {
         <section className="rounded-[28px] border border-[#E1DBCF] bg-white/88 p-5 shadow-[0_24px_80px_rgba(26,26,10,0.08)] backdrop-blur-xl dark:border-[#1E2E18] dark:bg-[#101A0D]/90">
           <div className="flex items-start justify-between gap-4">
             <div className="flex items-center gap-4">
-              <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl bg-[#001201]/5 text-[16px] font-black text-[#001201] ring-1 ring-inset ring-[#001201]/8 dark:bg-[#FFF9EC]/8 dark:text-[#FFF9EC] dark:ring-[#FFF9EC]/10">
+              <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl bg-dark-bg/5 text-[16px] font-black text-[#001201] ring-1 ring-inset ring-[#001201]/8 dark:bg-[#FFF9EC]/8 dark:text-[#FFF9EC] dark:ring-[#FFF9EC]/10">
                 {initials}
               </div>
               <div>

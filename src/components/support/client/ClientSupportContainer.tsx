@@ -82,7 +82,7 @@ export function ClientSupportContainer({ sectionLabel }: Props) {
   return (
     <div className="flex min-h-full flex-col">
       {/* Header */}
-      <div className="shrink-0 border-b border-[#FFF9EC] bg-[#FFF9EC] px-6 pb-4 pt-5 dark:border-[#1A2A14] dark:bg-[#001201]">
+      <div className="shrink-0 border-b border-[#FFF9EC] bg-[#FFF9EC] px-6 pb-4 pt-5 dark:border-[#1A2A14] dark:bg-dark-bg">
         <div className="flex items-start justify-between gap-4">
           <div>
             <h1 className="text-[20px] font-black text-[#001201] dark:text-[#FFF9EC]">{t('page_title')}</h1>
@@ -116,7 +116,7 @@ export function ClientSupportContainer({ sectionLabel }: Props) {
       </div>
 
       {/* Content */}
-      <div className="flex-1 overflow-y-auto bg-[#FFF9EC] p-6 dark:bg-[#001201]">
+      <div className="flex-1 overflow-y-auto bg-[#FFF9EC] p-6 dark:bg-dark-bg">
         <div className="mx-auto flex max-w-2xl flex-col gap-4">
 
           {/* Create form */}

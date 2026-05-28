@@ -174,7 +174,7 @@ export function StationQrPage() {
         </div>
 
         {/* URL preview */}
-        <div className="relative mt-3 rounded-xl border border-[#FFF9EC] bg-[#FFF9EC] px-3 py-2 dark:border-[#001A05] dark:bg-[#001201]">
+        <div className="relative mt-3 rounded-xl border border-[#FFF9EC] bg-[#FFF9EC] px-3 py-2 dark:border-[#001A05] dark:bg-dark-bg">
           <div className="text-[9px] font-bold uppercase tracking-wider text-[#999] dark:text-[#5A5A4A]">
             {t('station_url_label')}
           </div>

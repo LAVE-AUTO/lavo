@@ -158,7 +158,7 @@ export function AdminRatingsView() {
   const pillCls = (active: boolean) => [
     'rounded-[14px] px-3.5 py-2 text-[12.5px] font-bold transition-colors duration-150',
     active
-      ? 'bg-[#001201] text-[#FFF9EC] shadow-[0_10px_20px_rgba(26,26,10,0.18)] dark:bg-[#FFF9EC] dark:text-[#001201]'
+      ? 'bg-dark-bg text-[#FFF9EC] shadow-[0_10px_20px_rgba(26,26,10,0.18)] dark:bg-[#FFF9EC] dark:text-[#001201]'
       : 'text-[#847E70] hover:bg-[#EFE8D7] hover:text-[#001201] dark:text-[#B0BFB1] dark:hover:bg-[#182214] dark:hover:text-[#FFF9EC]',
   ].join(' ');
 
@@ -200,7 +200,7 @@ export function AdminRatingsView() {
           <div className="mt-5 flex flex-col gap-3 rounded-[24px] border border-[#E7E1D5] bg-[#F8F6F1]/90 p-3 shadow-[inset_0_1px_0_rgba(255,255,255,0.75)] backdrop-blur dark:border-[#1E2E18] dark:bg-[#0C150B]/85">
 
             <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-              <div className="inline-flex flex-wrap gap-1.5 rounded-[18px] bg-white/65 p-1.5 dark:bg-[#111A0E]/80">
+              <div className="inline-flex flex-wrap gap-1.5 rounded-[18px] bg-white/65 p-1.5 dark:bg-dark-bg/80">
                 {VIS_FILTERS.map(({ value, label }) => (
                   <button key={value} type="button" onClick={() => setVisibilityFilter(value)} className={pillCls(visibilityFilter === value)}>
                     {label}
@@ -291,7 +291,7 @@ export function AdminRatingsView() {
 
                       {/* Client */}
                       <div className="mt-2 flex items-center gap-2 md:mt-0">
-                        <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-[10px] bg-[#001201]/5 text-[10.5px] font-black text-[#001201] ring-1 ring-inset ring-[#001201]/8 dark:bg-[#FFF9EC]/8 dark:text-[#FFF9EC] dark:ring-[#FFF9EC]/10">
+                        <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-[10px] bg-dark-bg/5 text-[10.5px] font-black text-[#001201] ring-1 ring-inset ring-[#001201]/8 dark:bg-[#FFF9EC]/8 dark:text-[#FFF9EC] dark:ring-[#FFF9EC]/10">
                           {initials(item.user.first_name, item.user.last_name)}
                         </div>
                         <p className="truncate text-[12.5px] text-[#5A554B] dark:text-[#A6A091]">{item.user.first_name} {item.user.last_name}</p>

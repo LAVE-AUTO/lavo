@@ -11,7 +11,7 @@ export default function NotFoundPage() {
   const t = useTranslations('not_found');
 
   return (
-    <section className="relative min-h-screen flex items-center justify-center bg-[#F8F7F2] dark:bg-[#001201] transition-colors overflow-hidden">
+    <section className="relative min-h-screen flex items-center justify-center bg-[#F8F7F2] dark:bg-dark-bg transition-colors overflow-hidden">
 
       {/* ── Animated glow orbs ── */}
       <div

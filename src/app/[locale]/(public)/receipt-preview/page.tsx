@@ -57,7 +57,7 @@ export default function ReceiptPreviewPage() {
         )}
 
         {!bookingOnly && (
-        <section className="relative min-h-[680px] w-full max-w-md rounded-3xl border border-[#001A05] bg-[#001201] overflow-hidden">
+        <section className="relative min-h-[680px] w-full max-w-md rounded-3xl border border-[#001A05] bg-dark-bg overflow-hidden">
           <div className="p-5">
             <h2 className="text-[#DDAF3B] text-xs font-black tracking-[0.22em] uppercase">History Receipt Modal</h2>
             <p className="text-[#B0BFB1] text-sm mt-2">Rendered as client-history user flow modal.</p>

@@ -66,10 +66,10 @@ export function AdminDashboard() {
   });
 
   return (
-    <div className="flex flex-1 flex-col overflow-y-auto bg-[#FFF9EC] dark:bg-[#001201]">
+    <div className="flex flex-1 flex-col overflow-y-auto bg-[#FFF9EC] dark:bg-dark-bg">
 
       {/* ── Page header ─────────────────────────────────────────── */}
-      <div className="border-b border-[#FFF9EC] bg-white px-7 py-5 dark:border-[#1A2A14] dark:bg-[#111A0E]">
+      <div className="border-b border-[#FFF9EC] bg-white px-7 py-5 dark:border-[#1A2A14] dark:bg-dark-bg">
         <div className="flex items-center justify-between">
           <div>
             <h1 className="text-[20px] font-black leading-tight text-[#001201] dark:text-[#FFF9EC]">

@@ -30,7 +30,7 @@ export default async function PrivacyPage({ params }: Props) {
   return (
     <>
       <PublicNavbar />
-      <main className="min-h-screen bg-[#FFEECA] dark:bg-[#001201] transition-colors">
+      <main className="min-h-screen bg-[#FFEECA] dark:bg-dark-bg transition-colors">
         <LegalContentRenderer
           contentKey="politique_confidentialite"
           locale={safeLocale}

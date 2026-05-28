@@ -66,7 +66,7 @@ export function DashboardDateNav({ selectedDate, onDateChange, view, onViewChang
   const monthLabel = MONTH_NAMES_FR[selectedDate.getMonth()];
 
   return (
-    <div className="flex flex-shrink-0 flex-wrap items-center gap-3 border-b border-[#FFF9EC] bg-white px-5 py-3 dark:border-[#1A2A14] dark:bg-[#111A0E]">
+    <div className="flex flex-shrink-0 flex-wrap items-center gap-3 border-b border-[#FFF9EC] bg-white px-5 py-3 dark:border-[#1A2A14] dark:bg-dark-bg">
       {/* Month bubble — shows year too in monthly view */}
       <div className="rounded-full bg-[#EDE9CC] px-4 py-1.5 text-[14px] font-bold text-[#001201] dark:bg-[#001A05] dark:text-[#FFF9EC]">
         {monthLabel}{view === 'monthly' ? ` ${selectedDate.getFullYear()}` : ''}
@@ -103,7 +103,7 @@ export function DashboardDateNav({ selectedDate, onDateChange, view, onViewChang
                 <span className="absolute bottom-1 left-1/2 h-1 w-1 -translate-x-1/2 rounded-full bg-[#DDAF3B]" />
               )}
               {chip.isToday && chip.isActive && (
-                <span className="absolute bottom-1 left-1/2 h-1 w-1 -translate-x-1/2 rounded-full bg-[#001201]/50" />
+                <span className="absolute bottom-1 left-1/2 h-1 w-1 -translate-x-1/2 rounded-full bg-dark-bg/50" />
               )}
             </button>
           ))}

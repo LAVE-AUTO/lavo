@@ -247,7 +247,7 @@ export function AdminPromoQr({
           </div>
 
           {refCode && (
-            <div className="rounded-xl border border-[#FFF9EC] bg-[#F8F6F2] px-3.5 py-3 dark:border-dark-surface dark:bg-[#001201]">
+            <div className="rounded-xl border border-[#FFF9EC] bg-[#F8F6F2] px-3.5 py-3 dark:border-dark-surface dark:bg-dark-bg">
               <p className="mb-0.5 text-[9px] font-bold uppercase tracking-wider text-[#BBBBAA]">{t('ref_code_label')}</p>
               <p className="break-all text-[11px] font-mono text-foreground/70 dark:text-[#B8B2A2]">{refCode}</p>
             </div>
@@ -262,7 +262,7 @@ export function AdminPromoQr({
             </div>
 
             {/* Referral URL */}
-            <div className="w-full max-w-60 rounded-lg border border-[#FFF9EC] bg-[#F8F6F2] px-3 py-2 dark:border-dark-surface dark:bg-[#001201]">
+            <div className="w-full max-w-60 rounded-lg border border-[#FFF9EC] bg-[#F8F6F2] px-3 py-2 dark:border-dark-surface dark:bg-dark-bg">
               <p className="mb-0.5 text-[9px] font-bold uppercase tracking-wider text-[#BBBBAA]">{t('referral_url_label')}</p>
               <p className="break-all text-[9px] text-foreground/55 dark:text-[#B0BFB1]">{promoUrl}</p>
             </div>

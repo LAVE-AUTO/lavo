@@ -57,7 +57,7 @@ export function StatusTabs({ active, counts, onChange }: Props) {
             {count > 0 && (
               <span className={`min-w-[18px] rounded px-1 py-[1px] text-center text-[11px] font-bold leading-tight ${
                 isActive
-                  ? 'bg-[#001201]/15 text-[#001201]'
+                  ? 'bg-dark-bg/15 text-[#001201]'
                   : 'bg-[#000C1F]/8 text-[#000717]/50 dark:bg-[#FFEECA]/10 dark:text-foreground/50'
               }`}>
                 {count}

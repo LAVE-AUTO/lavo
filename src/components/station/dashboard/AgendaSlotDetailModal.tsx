@@ -44,7 +44,7 @@ export function AgendaSlotDetailModal({
     <Modal open={open} onClose={onClose} size="md" title={t('slot_detail_title')}>
       <div className="space-y-4">
         {/* Header */}
-        <div className="flex items-start justify-between gap-3 rounded-xl border border-[#FFF9EC] bg-[#FFF9EC] p-4 dark:border-[#1A2A14] dark:bg-[#001201]">
+        <div className="flex items-start justify-between gap-3 rounded-xl border border-[#FFF9EC] bg-[#FFF9EC] p-4 dark:border-[#1A2A14] dark:bg-dark-bg">
           <div className="min-w-0 flex-1">
             <div className="text-[11px] font-bold uppercase tracking-wider text-foreground/55 dark:text-[#B0BFB1]">
               {t('slot_detail_client')}

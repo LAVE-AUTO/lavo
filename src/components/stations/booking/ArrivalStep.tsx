@@ -351,7 +351,7 @@ export function ArrivalStep({
                 (arrivalMode === 'queue_now' || arrivalMode === 'queue_later') ? 'border-gold bg-gold' : 'border-[#BBB] dark:border-[#555]'
               }`}>
                 {(arrivalMode === 'queue_now' || arrivalMode === 'queue_later') && (
-                  <span className="w-2.5 h-2.5 rounded-full bg-[#001201]" />
+                  <span className="w-2.5 h-2.5 rounded-full bg-dark-bg" />
                 )}
               </div>
               <div>
@@ -418,7 +418,7 @@ export function ArrivalStep({
                     <span className={`w-5 h-5 rounded-full border-2 flex items-center justify-center shrink-0 ${
                       arrivalMode === 'queue_now' ? 'border-gold bg-gold' : 'border-[#BBB] dark:border-[#555]'
                     }`}>
-                      {arrivalMode === 'queue_now' && <span className="w-2.5 h-2.5 rounded-full bg-[#001201]" />}
+                      {arrivalMode === 'queue_now' && <span className="w-2.5 h-2.5 rounded-full bg-dark-bg" />}
                     </span>
                   )}
                 </div>
@@ -448,7 +448,7 @@ export function ArrivalStep({
                     <span className={`w-5 h-5 rounded-full border-2 flex items-center justify-center shrink-0 ${
                       arrivalMode === 'queue_later' ? 'border-gold bg-gold' : 'border-[#BBB] dark:border-[#555]'
                     }`}>
-                      {arrivalMode === 'queue_later' && <span className="w-2.5 h-2.5 rounded-full bg-[#001201]" />}
+                      {arrivalMode === 'queue_later' && <span className="w-2.5 h-2.5 rounded-full bg-dark-bg" />}
                     </span>
                   )}
                 </div>
@@ -527,7 +527,7 @@ export function ArrivalStep({
               <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center shrink-0 transition-colors ${
                 arrivalMode === 'book_slot' ? 'border-gold bg-gold' : 'border-[#BBB] dark:border-[#555]'
               }`}>
-                {arrivalMode === 'book_slot' && <span className="w-2.5 h-2.5 rounded-full bg-[#001201]" />}
+                {arrivalMode === 'book_slot' && <span className="w-2.5 h-2.5 rounded-full bg-dark-bg" />}
               </div>
               <div className="flex items-center gap-2 flex-wrap">
                 <span className="text-[15px] font-bold text-foreground">

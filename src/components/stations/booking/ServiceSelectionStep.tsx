@@ -94,7 +94,7 @@ export function ServiceSelectionStep({
                         <span className={`w-5 h-5 rounded-full border-2 flex items-center justify-center shrink-0 transition-colors ${
                           selected ? 'border-gold bg-gold' : 'border-[#BBB] dark:border-[#555]'
                         }`}>
-                          {selected && <span className="w-2.5 h-2.5 rounded-full bg-[#001201]" />}
+                          {selected && <span className="w-2.5 h-2.5 rounded-full bg-dark-bg" />}
                         </span>
                         <span className="text-[15px] font-bold text-foreground">{svc.name}</span>
                         {svc.isPopular && (

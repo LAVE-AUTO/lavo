@@ -245,13 +245,13 @@ export function AdminLegalContent() {
         className={[
           'group flex w-full items-start gap-3 rounded-[14px] px-3 py-2.5 text-left transition-all duration-150',
           isActive
-            ? 'bg-[#001201] text-[#FFF9EC] shadow-[0_10px_24px_rgba(26,26,10,0.18)] dark:bg-[#FFF9EC] dark:text-[#001201]'
+            ? 'bg-dark-bg text-[#FFF9EC] shadow-[0_10px_24px_rgba(26,26,10,0.18)] dark:bg-[#FFF9EC] dark:text-[#001201]'
             : 'text-[#5A554B] hover:bg-white hover:shadow-[0_4px_10px_rgba(26,26,10,0.05)] dark:text-[#A6A091] dark:hover:bg-[#182214]',
         ].join(' ')}
       >
         <span className={[
           'mt-0.5 flex h-7 w-7 shrink-0 items-center justify-center rounded-[10px]',
-          isActive ? 'bg-[#FFF9EC]/15 text-[#FFF9EC] dark:bg-[#001201]/12 dark:text-[#001201]' : 'bg-[#001201]/5 text-[#5A554B] dark:bg-[#FFF9EC]/8 dark:text-[#A6A091]',
+          isActive ? 'bg-[#FFF9EC]/15 text-[#FFF9EC] dark:bg-dark-bg/12 dark:text-[#001201]' : 'bg-dark-bg/5 text-[#5A554B] dark:bg-[#FFF9EC]/8 dark:text-[#A6A091]',
         ].join(' ')}>
           {p.icon}
         </span>

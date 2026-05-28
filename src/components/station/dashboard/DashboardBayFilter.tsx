@@ -29,7 +29,7 @@ export function DashboardBayFilter({ posts, selectedPostId, onSelect }: Props) {
   function goPrev() { setCursor((c) => Math.max(c - PAGE_SIZE, 0)); }
 
   return (
-    <aside className="hidden w-[180px] flex-shrink-0 flex-col border-r border-[#FFF9EC] bg-[#FFF9EC] px-3 py-4 lg:flex dark:border-[#1A2A14] dark:bg-[#001201]">
+    <aside className="hidden w-[180px] flex-shrink-0 flex-col border-r border-[#FFF9EC] bg-[#FFF9EC] px-3 py-4 lg:flex dark:border-[#1A2A14] dark:bg-dark-bg">
       <div className="mb-2 px-1 text-[10px] font-bold uppercase tracking-[0.12em] text-foreground/55 dark:text-[#B0BFB1]">
         {t('filter_bay_title')}
       </div>
@@ -89,7 +89,7 @@ export function BayFilterMobilePills({ posts, selectedPostId, onSelect }: Props)
   if (active.length === 0) return null;
 
   return (
-    <div className="flex lg:hidden items-center gap-2 overflow-x-auto border-b border-[#FFF9EC] bg-[#FFF9EC] px-4 py-2 scrollbar-hide dark:border-[#1A2A14] dark:bg-[#001201]">
+    <div className="flex lg:hidden items-center gap-2 overflow-x-auto border-b border-[#FFF9EC] bg-[#FFF9EC] px-4 py-2 scrollbar-hide dark:border-[#1A2A14] dark:bg-dark-bg">
       <MobilePill
         active={selectedPostId === 'all'}
         onClick={() => onSelect('all')}

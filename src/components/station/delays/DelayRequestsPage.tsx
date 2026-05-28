@@ -214,7 +214,7 @@ export function DelayRequestsPage() {
   }
 
   return (
-    <div className="flex flex-1 flex-col overflow-hidden bg-[#F0EDE0] dark:bg-[#111A0E]">
+    <div className="flex flex-1 flex-col overflow-hidden bg-[#F0EDE0] dark:bg-dark-bg">
       {/* Header */}
       <div className="border-b border-[#DDD9CC] bg-[#E8E4D4] px-6 pb-0 pt-5 dark:border-[#1A2A14] dark:bg-[#182214]">
         <div className="flex items-end justify-between gap-4">
@@ -414,7 +414,7 @@ function PendingCard({
         </div>
 
         {/* Impact summary */}
-        <dl className="mt-4 grid grid-cols-2 gap-2 rounded-[8px] border border-[#E8E4D4] bg-[#FAF9F2] px-3 py-2.5 text-[11px] dark:border-[#001A05] dark:bg-[#111A0E]">
+        <dl className="mt-4 grid grid-cols-2 gap-2 rounded-[8px] border border-[#E8E4D4] bg-[#FAF9F2] px-3 py-2.5 text-[11px] dark:border-[#001A05] dark:bg-dark-bg">
           <div>
             <dt className="font-bold uppercase tracking-wide text-foreground/70/50 dark:text-[#FFFFF0]/30">
               {impactScheduledLabel}

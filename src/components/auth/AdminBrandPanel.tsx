@@ -141,7 +141,7 @@ export function AdminBrandPanel() {
         <div className="animate-fade-in">
           {isDark ? (
             <div className="flex items-center gap-2.5">
-              <div className="rounded-xl bg-white/95 p-1 border border-[rgba(221,175,59,0.25)] shadow-sm shrink-0">
+              <div className="rounded-xl bg-white/95 p-1 border border-[#FFF9EC] shadow-sm shrink-0">
                 <Image src="/logo/frame2.png" alt="" width={36} height={36} className="w-9 h-9 object-contain" aria-hidden="true" />
               </div>
               <div>

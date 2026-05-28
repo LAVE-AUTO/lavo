@@ -94,7 +94,7 @@ function BarChart({ series, color, groupBy, isCurrency, loading, locale }: {
                 className="absolute bottom-0 w-full rounded-t-sm transition-all duration-300"
                 style={{ height: `${h}%`, background: i === series.length - 1 ? color : `${color}60` }}
               />
-              <div className="pointer-events-none absolute -top-8 left-1/2 z-10 hidden -translate-x-1/2 whitespace-nowrap rounded-md bg-[#001201] px-2 py-1 text-[11px] font-bold text-white shadow-lg group-hover:block dark:bg-[#FFF9EC] dark:text-[#001201]">
+              <div className="pointer-events-none absolute -top-8 left-1/2 z-10 hidden -translate-x-1/2 whitespace-nowrap rounded-md bg-dark-bg px-2 py-1 text-[11px] font-bold text-white shadow-lg group-hover:block dark:bg-[#FFF9EC] dark:text-[#001201]">
                 {formatLabel(p.date, groupBy, locale)}: {formatValue(v, isCurrency)}
               </div>
             </div>

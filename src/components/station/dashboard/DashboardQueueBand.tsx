@@ -25,7 +25,7 @@ export function DashboardQueueBand({ entries, onStartEntry, onCompleteEntry, onO
   const headOfQueueId = waiting[0]?.id ?? null;
 
   return (
-    <section className="flex-shrink-0 border-t border-[#FFF9EC] bg-[#FFF9EC] dark:border-[#1A2A14] dark:bg-[#111A0E]">
+    <section className="flex-shrink-0 border-t border-[#FFF9EC] bg-[#FFF9EC] dark:border-[#1A2A14] dark:bg-dark-bg">
       {/* Header */}
       <div className="flex flex-wrap items-center gap-3 px-5 pt-3">
         <div className="min-w-0">

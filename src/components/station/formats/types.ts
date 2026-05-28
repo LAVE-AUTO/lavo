@@ -9,6 +9,14 @@ export interface VehicleFormat {
 }
 
 export interface ServiceVehicleEntry {
+  /**
+   * Backend row id from service_vehicle_entries. Optional because the
+   * inline editor (ServiceVehicleRows) builds entries from VehicleFormat
+   * objects before they have a DB row. API-sourced entries always carry
+   * a real id and should be keyed on it (vehicle_format_id can be empty
+   * '' on the catalogue placeholders for automatic / self_service services).
+   */
+  id?: string;
   vehicle_format_id: string;
   vehicle_label: string;
   price: string;

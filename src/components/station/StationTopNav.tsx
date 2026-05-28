@@ -130,7 +130,7 @@ export function StationTopNav({ onToggleSidebar, stationName }: StationTopNavPro
   } as const;
 
   return (
-    <header className="flex-shrink-0 bg-[rgba(247,243,236,0.95)] dark:bg-dark-bg backdrop-blur-[16px] border-b border-[rgba(221,175,59,0.18)]">
+    <header className="flex-shrink-0 bg-[#FFF9EC] dark:bg-dark-bg backdrop-blur-[16px] border-b border-[rgba(221,175,59,0.18)]">
       {/* Edge-to-edge: station space spans the full window width with just a
           comfortable lateral padding, matching AdminTopNav. */}
       <div className="px-6 lg:px-8 flex items-center justify-between gap-6 py-2">
@@ -142,7 +142,7 @@ export function StationTopNav({ onToggleSidebar, stationName }: StationTopNavPro
               type="button"
               onClick={onToggleSidebar}
               aria-label="Menu"
-              className="flex h-[34px] w-[34px] items-center justify-center rounded-full border border-[rgba(221,175,59,0.25)] text-[var(--foreground)] transition-colors hover:border-[#DDAF3B] hover:text-[#DDAF3B] dark:text-[#B0BFB1] lg:hidden"
+              className="flex h-[34px] w-[34px] items-center justify-center rounded-full border border-[#FFF9EC] text-[var(--foreground)] transition-colors hover:border-[#DDAF3B] hover:text-[#DDAF3B] dark:text-[#B0BFB1] lg:hidden"
             >
               <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
                 <line x1="3" y1="6" x2="21" y2="6" />
@@ -218,7 +218,7 @@ export function StationTopNav({ onToggleSidebar, stationName }: StationTopNavPro
               aria-label={t('notif_tooltip')}
               title={t('notif_tooltip')}
               onClick={openNotifications}
-              className="relative flex h-[34px] w-[34px] items-center justify-center rounded-full border border-[rgba(221,175,59,0.25)] text-[var(--foreground)] transition-colors hover:border-[#DDAF3B] hover:text-[#DDAF3B] dark:text-[#B0BFB1]"
+              className="relative flex h-[34px] w-[34px] items-center justify-center rounded-full border border-[#FFF9EC] text-[var(--foreground)] transition-colors hover:border-[#DDAF3B] hover:text-[#DDAF3B] dark:text-[#B0BFB1]"
             >
               <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
                 <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9" />
@@ -315,7 +315,7 @@ export function StationTopNav({ onToggleSidebar, stationName }: StationTopNavPro
                       <button
                         type="button"
                         onClick={loadMoreNotifications}
-                        className="w-full rounded-lg border border-[rgba(221,175,59,0.25)] px-3 py-2 text-xs font-semibold text-[#DDAF3B] transition-colors hover:bg-[#FFEECA] dark:hover:bg-[#001A05]"
+                        className="w-full rounded-lg border border-[#FFF9EC] px-3 py-2 text-xs font-semibold text-[#DDAF3B] transition-colors hover:bg-[#FFEECA] dark:hover:bg-[#001A05]"
                       >
                         {t('notif_load_more')}
                       </button>

@@ -299,7 +299,7 @@ function KycMockup({ isDark }: { isDark: boolean }) {
                   {s.done ? (
                     <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="3"><polyline points="20 6 9 17 4 12"/></svg>
                   ) : s.active ? (
-                    <div className="w-2.5 h-2.5 rounded-full bg-[#001201] animate-pulse" />
+                    <div className="w-2.5 h-2.5 rounded-full bg-dark-bg animate-pulse" />
                   ) : (
                     <div className="w-2 h-2 rounded-full" style={{ background: mutedC }} />
                   )}
@@ -449,7 +449,7 @@ export function StationBrandPanel({ step }: StationBrandPanelProps) {
           <div>
             {isDark ? (
               <div className="flex items-center gap-2.5">
-                <div className="rounded-xl bg-white/95 p-1 border border-[rgba(221,175,59,0.25)] shadow-sm shrink-0">
+                <div className="rounded-xl bg-white/95 p-1 border border-[#FFF9EC] shadow-sm shrink-0">
                   <Image src="/logo/frame2.png" alt="" width={36} height={36} className="w-9 h-9 object-contain" aria-hidden="true" />
                 </div>
                 <div>

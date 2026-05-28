@@ -435,7 +435,7 @@ export function AdminProfileView() {
               </p>
 
               <div className="mt-5 inline-flex items-center gap-3 rounded-[18px] border border-[#E7E1D5] bg-[#F8F6F1]/90 px-4 py-2.5 shadow-[inset_0_1px_0_rgba(255,255,255,0.75)] backdrop-blur dark:border-[#1E2E18] dark:bg-[#0C150B]/85">
-                <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-[14px] bg-[#001201]/5 text-[13px] font-black text-[#001201] ring-1 ring-inset ring-[#001201]/8 dark:bg-[#FFF9EC]/8 dark:text-[#FFF9EC] dark:ring-[#FFF9EC]/10">
+                <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-[14px] bg-dark-bg/5 text-[13px] font-black text-[#001201] ring-1 ring-inset ring-[#001201]/8 dark:bg-[#FFF9EC]/8 dark:text-[#FFF9EC] dark:ring-[#FFF9EC]/10">
                   {initials}
                 </div>
                 <div className="min-w-0">

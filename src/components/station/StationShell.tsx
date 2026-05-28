@@ -9,7 +9,7 @@ interface StationShellProps {
 
 export function StationShell({ children, stationName }: StationShellProps) {
   return (
-    <div className="app-shell flex h-screen flex-col overflow-hidden bg-[#FFF9EC] dark:bg-[#001201]">
+    <div className="app-shell flex h-screen flex-col overflow-hidden bg-[#FFF9EC] dark:bg-dark-bg">
       <StationTopNav stationName={stationName} />
       <div className="flex flex-1 min-h-0 overflow-hidden">
         <StationSidebar />

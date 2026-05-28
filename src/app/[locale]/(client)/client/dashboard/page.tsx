@@ -172,7 +172,7 @@ function SummaryCard({
   helper: string;
 }) {
   return (
-    <div className="rounded-2xl border border-[rgba(221,175,59,0.12)] bg-[#FFF9EC] px-4 py-4 dark:bg-[#111A0E]">
+    <div className="rounded-2xl border border-[rgba(221,175,59,0.12)] bg-[#FFF9EC] px-4 py-4 dark:bg-dark-bg">
       <p className="text-[11px] font-black uppercase tracking-[0.18em] text-foreground/55 dark:text-foreground/65">{label}</p>
       <p className="mt-2 text-[22px] font-black text-[#001201] dark:text-white">{value}</p>
       <p className="mt-1 text-[12px] text-foreground/65 dark:text-[#B0BFB1]">{helper}</p>
@@ -192,7 +192,7 @@ function ShortcutLink({
   return (
     <Link
       href={href}
-      className="group rounded-2xl border border-[#E0E0D0] bg-[#FFF9EC] px-4 py-4 transition-colors hover:border-gold/30 hover:bg-gold/5 dark:border-border dark:bg-[#111A0E]"
+      className="group rounded-2xl border border-[#E0E0D0] bg-[#FFF9EC] px-4 py-4 transition-colors hover:border-gold/30 hover:bg-gold/5 dark:border-border dark:bg-dark-bg"
     >
       <p className="text-[14px] font-black text-[#001201] transition-colors group-hover:text-gold dark:text-white">{label}</p>
       <p className="mt-1 text-[12px] text-foreground/65 dark:text-[#B0BFB1]">{desc}</p>
@@ -202,7 +202,7 @@ function ShortcutLink({
 
 function InfoRow({ label, value }: { label: string; value: string }) {
   return (
-    <div className="flex items-center justify-between gap-4 rounded-2xl bg-[#FFF9EC] px-4 py-3 text-[13px] dark:bg-[#111A0E]">
+    <div className="flex items-center justify-between gap-4 rounded-2xl bg-[#FFF9EC] px-4 py-3 text-[13px] dark:bg-dark-bg">
       <span className="font-semibold text-foreground/65 dark:text-[#B0BFB1]">{label}</span>
       <span className="font-bold text-[#001201] dark:text-white">{value}</span>
     </div>

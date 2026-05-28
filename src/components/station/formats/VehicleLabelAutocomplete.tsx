@@ -88,7 +88,7 @@ export function VehicleLabelAutocomplete({
 
   return (
     <div className="relative">
-      <div className="flex items-center gap-2 rounded-[8px] border border-[#D8D4C8] bg-[#FFF9EC] px-3 py-2.5 transition-all focus-within:border-[#DDAF3B] focus-within:bg-white focus-within:shadow-[0_0_0_3px_rgba(221, 175, 59,0.12)] dark:border-[#001A05] dark:bg-[#001201] dark:focus-within:border-[#DDAF3B] dark:focus-within:bg-[#182214]">
+      <div className="flex items-center gap-2 rounded-[8px] border border-[#D8D4C8] bg-[#FFF9EC] px-3 py-2.5 transition-all focus-within:border-[#DDAF3B] focus-within:bg-white focus-within:shadow-[0_0_0_3px_rgba(221, 175, 59,0.12)] dark:border-[#001A05] dark:bg-dark-bg dark:focus-within:border-[#DDAF3B] dark:focus-within:bg-[#182214]">
         {/* Car icon */}
         <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.8} className="shrink-0 text-[#BBBBAA] dark:text-[#4A4A3A]">
           <path strokeLinecap="round" strokeLinejoin="round" d="M5 17H3a1 1 0 01-1-1v-5l2.5-6h13L20 11v5a1 1 0 01-1 1h-2M5 17a2 2 0 104 0m6 0a2 2 0 104 0M5 17h10" />
@@ -125,7 +125,7 @@ export function VehicleLabelAutocomplete({
               <button type="button" onMouseDown={() => pick(s)}
                 className={`flex w-full items-center justify-between px-3.5 py-2.5 text-left text-[13px] transition-colors ${
                   highlighted === i ? 'bg-[#FDF8EC] text-[#DDAF3B] dark:bg-[#1A1A08]' : 'text-[#001201] dark:text-[#FFF9EC]'
-                } ${isUsed(s) ? 'opacity-40' : 'hover:bg-[#F7F6F0] dark:hover:bg-[#001201]'}`}
+                } ${isUsed(s) ? 'opacity-40' : 'hover:bg-[#F7F6F0] dark:hover:bg-dark-bg'}`}
               >
                 <span className="font-medium">{s}</span>
                 {isUsed(s) && (

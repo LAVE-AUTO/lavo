@@ -25,8 +25,8 @@ function NumericField({
       <div className={[
         'flex overflow-hidden rounded-[10px] border-2 transition-all duration-200',
         readOnly
-          ? 'border-[#FFF9EC] bg-[#F5F2EB] dark:border-[#1E2E18] dark:bg-[#001201]'
-          : 'border-[#D8D4C8] bg-white hover:border-[#C4A830]/60 focus-within:border-[#DDAF3B] focus-within:shadow-[0_0_0_4px_rgba(221, 175, 59,0.12)] dark:border-[#001A05] dark:bg-[#001201] dark:hover:border-[#3A5030] dark:focus-within:border-[#DDAF3B]',
+          ? 'border-[#FFF9EC] bg-[#F5F2EB] dark:border-[#1E2E18] dark:bg-dark-bg'
+          : 'border-[#D8D4C8] bg-white hover:border-[#C4A830]/60 focus-within:border-[#DDAF3B] focus-within:shadow-[0_0_0_4px_rgba(221, 175, 59,0.12)] dark:border-[#001A05] dark:bg-dark-bg dark:hover:border-[#3A5030] dark:focus-within:border-[#DDAF3B]',
       ].join(' ')}>
         <input
           type="number" min={min} max={max} step={step} readOnly={readOnly} value={value}
@@ -60,7 +60,7 @@ function EmailField({
         type="email" value={value}
         onChange={(e) => onChange(e.target.value)}
         placeholder="email@exemple.com"
-        className="rounded-[10px] border-2 border-[#D8D4C8] bg-white px-4 py-3 text-[14px] font-semibold text-[#001201] outline-none transition-all hover:border-[#C4A830]/60 focus:border-[#DDAF3B] focus:shadow-[0_0_0_4px_rgba(221, 175, 59,0.12)] dark:border-[#001A05] dark:bg-[#001201] dark:text-[#FFF9EC] dark:hover:border-[#3A5030] dark:focus:border-[#DDAF3B] placeholder:text-[#CCCCBB] dark:placeholder:text-[#505040]"
+        className="rounded-[10px] border-2 border-[#D8D4C8] bg-white px-4 py-3 text-[14px] font-semibold text-[#001201] outline-none transition-all hover:border-[#C4A830]/60 focus:border-[#DDAF3B] focus:shadow-[0_0_0_4px_rgba(221, 175, 59,0.12)] dark:border-[#001A05] dark:bg-dark-bg dark:text-[#FFF9EC] dark:hover:border-[#3A5030] dark:focus:border-[#DDAF3B] placeholder:text-[#CCCCBB] dark:placeholder:text-[#505040]"
       />
       {hint && <p className="text-[12px] leading-relaxed text-[#AAAAAA] dark:text-[#B0BFB1]">{hint}</p>}
     </div>
@@ -335,7 +335,7 @@ export function AdminPlatformSettings() {
     <form onSubmit={handleSave} className="flex min-h-full flex-col">
 
       {/* Header */}
-      <div className="shrink-0 flex items-center justify-between border-b border-[#FFF9EC] bg-[#FFF9EC] px-6 py-4 dark:border-[#1A2A14] dark:bg-[#001201]">
+      <div className="shrink-0 flex items-center justify-between border-b border-[#FFF9EC] bg-[#FFF9EC] px-6 py-4 dark:border-[#1A2A14] dark:bg-dark-bg">
         <div>
           <h1 className="text-[18px] font-black text-[#001201] dark:text-[#FFF9EC]">{t('page_title')}</h1>
           <p className="text-[13px] text-foreground/55 dark:text-[#B0BFB1]">{t('page_subtitle')}</p>
@@ -356,7 +356,7 @@ export function AdminPlatformSettings() {
         </div>
       </div>
 
-      <div className="flex-1 overflow-y-auto bg-[#FFF9EC] dark:bg-[#001201]">
+      <div className="flex-1 overflow-y-auto bg-[#FFF9EC] dark:bg-dark-bg">
       <div className="grid auto-rows-min gap-5 p-6 md:grid-cols-2 xl:grid-cols-3">
 
         {/* ── Groupe A — Annulation ── */}

@@ -82,7 +82,7 @@ export function AdminDeleteUserModal({ open, user, onClose, onDeleted }: Props) 
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
       <div className="absolute inset-0 bg-black/40 backdrop-blur-[2px]" onClick={() => !busy && onClose()} />
 
-      <div className="relative z-10 w-full max-w-[440px] animate-fade-in-up overflow-hidden rounded-2xl border border-[#FFF9EC] bg-white shadow-2xl dark:border-[#1E2E18] dark:bg-[#001201]">
+      <div className="relative z-10 w-full max-w-[440px] animate-fade-in-up overflow-hidden rounded-2xl border border-[#FFF9EC] bg-white shadow-2xl dark:border-[#1E2E18] dark:bg-dark-bg">
 
         {/* Header */}
         <div className="flex items-center justify-between border-b border-[#F0EDE6] px-6 py-4 dark:border-[#1A2A14]">
@@ -98,7 +98,7 @@ export function AdminDeleteUserModal({ open, user, onClose, onDeleted }: Props) 
 
           {/* Target user info */}
           <div className="flex items-center gap-3 rounded-xl bg-[#F5F3EE] px-4 py-3 dark:bg-[#131E10]">
-            <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-[#001201]/8 text-[12px] font-black text-[#001201] dark:bg-[#FFF9EC]/8 dark:text-[#FFF9EC]">
+            <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-dark-bg/8 text-[12px] font-black text-[#001201] dark:bg-[#FFF9EC]/8 dark:text-[#FFF9EC]">
               {`${user.first_name?.[0] ?? ''}${user.last_name?.[0] ?? ''}`.toUpperCase() || '?'}
             </div>
             <div className="min-w-0">
@@ -121,7 +121,7 @@ export function AdminDeleteUserModal({ open, user, onClose, onDeleted }: Props) 
                 'flex items-start gap-3 rounded-xl border-[1.5px] px-4 py-3 text-left transition-all',
                 mode === 'soft'
                   ? 'border-[#F97316] bg-orange-50 dark:bg-orange-950/20'
-                  : 'border-[#FFF9EC] bg-white hover:border-[#F97316]/50 dark:border-[#1E2E18] dark:bg-[#001201]',
+                  : 'border-[#FFF9EC] bg-white hover:border-[#F97316]/50 dark:border-[#1E2E18] dark:bg-dark-bg',
               ].join(' ')}>
               <div className="mt-0.5 flex h-4 w-4 shrink-0 items-center justify-center rounded-full border-2 border-[#F97316]">
                 {mode === 'soft' && <div className="h-2 w-2 rounded-full bg-[#F97316]" />}
@@ -138,7 +138,7 @@ export function AdminDeleteUserModal({ open, user, onClose, onDeleted }: Props) 
                 'flex items-start gap-3 rounded-xl border-[1.5px] px-4 py-3 text-left transition-all',
                 mode === 'hard'
                   ? 'border-red-500 bg-red-50 dark:bg-red-950/20'
-                  : 'border-[#FFF9EC] bg-white hover:border-red-300 dark:border-[#1E2E18] dark:bg-[#001201]',
+                  : 'border-[#FFF9EC] bg-white hover:border-red-300 dark:border-[#1E2E18] dark:bg-dark-bg',
               ].join(' ')}>
               <div className="mt-0.5 flex h-4 w-4 shrink-0 items-center justify-center rounded-full border-2 border-red-500">
                 {mode === 'hard' && <div className="h-2 w-2 rounded-full bg-red-500" />}

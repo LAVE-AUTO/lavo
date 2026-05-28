@@ -84,7 +84,7 @@ export function AdminSupportList({ tickets, query, loading, filter }: Props) {
             <div className={`w-1 shrink-0 ${s.bar}`} />
 
             <div className="flex min-w-0 flex-1 items-center gap-4 px-5 py-3.5">
-              <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-[12px] bg-[#001201]/5 text-[12px] font-black text-[#001201] ring-1 ring-inset ring-[#001201]/8 dark:bg-[#FFF9EC]/8 dark:text-[#FFF9EC] dark:ring-[#FFF9EC]/10">
+              <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-[12px] bg-dark-bg/5 text-[12px] font-black text-[#001201] ring-1 ring-inset ring-[#001201]/8 dark:bg-[#FFF9EC]/8 dark:text-[#FFF9EC] dark:ring-[#FFF9EC]/10">
                 {initials(creatorName)}
               </div>
 

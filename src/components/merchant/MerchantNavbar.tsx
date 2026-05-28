@@ -94,7 +94,7 @@ export function MerchantNavbar() {
 
   return (
     <>
-      <header className="fixed top-0 left-0 right-0 z-40 bg-[rgba(247,243,236,0.95)] dark:bg-dark-bg backdrop-blur-[16px] border-b border-[rgba(221,175,59,0.18)]">
+      <header className="fixed top-0 left-0 right-0 z-40 bg-[#FFF9EC] dark:bg-dark-bg backdrop-blur-[16px] border-b border-[rgba(221,175,59,0.18)]">
         {/* Same centered 1440 container as PublicNavbar: merchant landing
             is a marketing page that follows the client landing rhythm. */}
         <div className="max-w-[1440px] mx-auto px-6 lg:px-16 flex items-center justify-between gap-6 py-2">
@@ -155,7 +155,7 @@ export function MerchantNavbar() {
                   </button>
 
                   {dropdownOpen && (
-                    <div className="absolute top-[calc(100%+10px)] right-0 z-50 w-[230px] overflow-hidden rounded-[6px] border border-[rgba(221,175,59,0.2)] bg-[#FFEECA] shadow-[0_16px_48px_rgba(0,0,0,0.2)] animate-fade-in dark:bg-[#001201]">
+                    <div className="absolute top-[calc(100%+10px)] right-0 z-50 w-[230px] overflow-hidden rounded-[6px] border border-[rgba(221,175,59,0.2)] bg-[#FFEECA] shadow-[0_16px_48px_rgba(0,0,0,0.2)] animate-fade-in dark:bg-dark-bg">
                       <div className="px-4 py-3.5 border-b border-[rgba(221,175,59,0.12)]">
                         <div className="flex items-center gap-3">
                           <div className="w-9 h-9 rounded-full bg-[rgba(221,175,59,0.2)] border border-[rgba(221,175,59,0.4)] flex items-center justify-center shrink-0">

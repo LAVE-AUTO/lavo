@@ -66,7 +66,7 @@ export function AdminCommissionView() {
   return (
     <div className="flex min-h-full flex-col">
       {/* Header */}
-      <div className="shrink-0 border-b border-[#FFF9EC] bg-[#FFF9EC] px-6 py-5 dark:border-[#1A2A14] dark:bg-[#001201]">
+      <div className="shrink-0 border-b border-[#FFF9EC] bg-[#FFF9EC] px-6 py-5 dark:border-[#1A2A14] dark:bg-dark-bg">
         <div className="flex flex-wrap items-start justify-between gap-4">
           <div>
             <h1 className="text-[22px] font-black text-[#001201] dark:text-[#FFF9EC]">{t('page_title')}</h1>
@@ -80,7 +80,7 @@ export function AdminCommissionView() {
         </div>
       </div>
 
-      <div className="flex-1 overflow-y-auto bg-[#FFF9EC] p-6 dark:bg-[#001201]">
+      <div className="flex-1 overflow-y-auto bg-[#FFF9EC] p-6 dark:bg-dark-bg">
         <div className="mb-5 grid gap-3 sm:grid-cols-3">
           <div className="rounded-2xl border border-[#FFF9EC] bg-white px-5 py-4 shadow-sm dark:border-[#1E2E18] dark:bg-[#131E10]">
             <p className="text-[11px] font-black uppercase tracking-widest text-[#AAAAAA] dark:text-[#B0BFB1]">{t('label_rate')}</p>
@@ -110,7 +110,7 @@ export function AdminCommissionView() {
               <div className="p-5">
                 <p className="mb-3 text-[12px] font-bold uppercase tracking-wider text-[#B0BFB1] dark:text-[#B0BFB1]">{t('label_rate')}</p>
                 {/* Big rate input */}
-                <div className="flex overflow-hidden rounded-xl border-2 border-[#D8D4C8] bg-white transition-all focus-within:border-[#DDAF3B] focus-within:shadow-[0_0_0_4px_rgba(221, 175, 59,0.12)] dark:border-[#001A05] dark:bg-[#001201] dark:focus-within:border-[#DDAF3B]">
+                <div className="flex overflow-hidden rounded-xl border-2 border-[#D8D4C8] bg-white transition-all focus-within:border-[#DDAF3B] focus-within:shadow-[0_0_0_4px_rgba(221, 175, 59,0.12)] dark:border-[#001A05] dark:bg-dark-bg dark:focus-within:border-[#DDAF3B]">
                   <input type="number" min={0} max={100} step={0.5} value={rate}
                     onChange={(e) => { const v = parseFloat(e.target.value); if (!isNaN(v)) setRate(Math.min(100, Math.max(0, v))); }}
                     className="flex-1 bg-transparent px-5 py-4 text-[32px] font-black text-[#001201] outline-none [appearance:textfield] dark:text-[#FFF9EC]" />
@@ -138,7 +138,7 @@ export function AdminCommissionView() {
 
                 <button type="button" disabled={saving || !isDirty} onClick={handleSave}
                   className="mt-5 flex w-full items-center justify-center gap-2 rounded-xl bg-[#DDAF3B] px-4 py-3 text-[13px] font-bold text-[#001201] shadow-sm transition-all hover:-translate-y-0.5 hover:bg-[#B08A14] hover:shadow-md disabled:translate-y-0 disabled:cursor-not-allowed disabled:opacity-50">
-                  {isDirty && !saving && <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-[#001201]" />}
+                  {isDirty && !saving && <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-dark-bg" />}
                   {saving ? t('btn_saving') : t('btn_save')}
                 </button>
                 {isDirty && !saving && (

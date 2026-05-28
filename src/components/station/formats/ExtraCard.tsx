@@ -99,7 +99,7 @@ export function ExtraCard({ extra, onEdit, onDeleted, onToggled }: Props) {
               onClick={() => setDeleteOpen(true)}
               disabled={deleting}
               aria-label={t('btn_delete')}
-              className="inline-flex items-center justify-center rounded-lg border border-[#FFF9EC] bg-white p-1.5 text-foreground/55 transition-all hover:border-[#FF2525] hover:bg-[#FF2525]/5 hover:text-[#FF2525] disabled:opacity-40 dark:border-[#001A05] dark:bg-[#001201] dark:text-[#B0BFB1]"
+              className="inline-flex items-center justify-center rounded-lg border border-[#FFF9EC] bg-white p-1.5 text-foreground/55 transition-all hover:border-[#FF2525] hover:bg-[#FF2525]/5 hover:text-[#FF2525] disabled:opacity-40 dark:border-[#001A05] dark:bg-dark-bg dark:text-[#B0BFB1]"
             >
               <CrossIcon />
             </button>
@@ -134,10 +134,15 @@ export function ExtraCard({ extra, onEdit, onDeleted, onToggled }: Props) {
         {/* Tarifs */}
         {entries.length > 0 ? (
           <div className="grid grid-cols-3 gap-2">
-            {entries.map((entry) => (
+            {entries.map((entry, idx) => (
               <div
-                key={entry.vehicle_format_id}
-                className="rounded-xl bg-[#FFF9EC] px-3 py-3 text-center dark:bg-[#001201]"
+                /* Prefer the backend row id; fall back to format id or index
+                 * so the editor (which has neither yet on a fresh row) stays
+                 * stable. Avoids React duplicate-key warnings when the
+                 * vehicle_format_id is empty / shared across catalogue
+                 * placeholders. */
+                key={entry.id ?? entry.vehicle_format_id ?? `entry-${idx}`}
+                className="rounded-xl bg-[#FFF9EC] px-3 py-3 text-center dark:bg-dark-bg"
               >
                 <p className="text-[9px] font-bold uppercase tracking-[1px] text-foreground/55 dark:text-[#B0BFB1]">
                   {entry.vehicle_label}
@@ -150,7 +155,7 @@ export function ExtraCard({ extra, onEdit, onDeleted, onToggled }: Props) {
             ))}
           </div>
         ) : (
-          <div className="rounded-xl bg-[#FFF9EC] px-3 py-3 text-center dark:bg-[#001201]">
+          <div className="rounded-xl bg-[#FFF9EC] px-3 py-3 text-center dark:bg-dark-bg">
             <p className="text-[9px] font-bold uppercase tracking-[1px] text-foreground/55 dark:text-[#B0BFB1]">
               {t('extras_all_formats')}
             </p>

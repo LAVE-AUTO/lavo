@@ -74,7 +74,7 @@ function Skeleton() {
   return (
     <div className="animate-pulse rounded-2xl border border-[#FFF9EC] bg-white p-6 dark:border-[#1A2A14] dark:bg-[#182214]">
       <div className="h-4 w-32 rounded bg-[#FFF9EC] dark:bg-[#001A05] mb-4" />
-      <div className="h-10 w-full rounded-xl bg-[#F0EDE4] dark:bg-[#001201]" />
+      <div className="h-10 w-full rounded-xl bg-[#F0EDE4] dark:bg-dark-bg" />
     </div>
   );
 }

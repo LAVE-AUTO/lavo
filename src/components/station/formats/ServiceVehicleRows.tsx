@@ -48,10 +48,14 @@ export function ServiceVehicleRows({
 
   return (
     <div className="flex flex-col gap-2">
-      {visibleEntries.map((entry) => (
+      {visibleEntries.map((entry, idx) => (
         <div
-          key={entry.vehicle_format_id}
-          className="flex flex-wrap items-end gap-3 rounded-xl bg-[#FFF9EC] px-3 py-3 dark:bg-[#001201]"
+          /* The inline editor builds rows from VehicleFormat ids, so
+           * vehicle_format_id is normally a real UUID. Falling back to id /
+           * index keeps the key stable when the row is a placeholder for
+           * an automatic / self_service service that has no format binding. */
+          key={entry.id ?? entry.vehicle_format_id ?? `row-${idx}`}
+          className="flex flex-wrap items-end gap-3 rounded-xl bg-[#FFF9EC] px-3 py-3 dark:bg-dark-bg"
         >
           {/* Format label */}
           <span className="w-[80px] shrink-0 self-center text-[11px] font-black uppercase tracking-[0.6px] text-[#DDAF3B]">

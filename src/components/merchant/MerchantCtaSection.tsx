@@ -32,11 +32,11 @@ export function MerchantCtaSection() {
               type="email"
               required
               placeholder={t('placeholder')}
-              className="flex-1 px-[18px] py-[15px] text-[14px] bg-[#001201] text-[#FFEECA] border-none outline-none placeholder:text-[#B0BFB1]"
+              className="flex-1 px-[18px] py-[15px] text-[14px] bg-dark-bg text-[#FFEECA] border-none outline-none placeholder:text-[#B0BFB1]"
             />
             <button
               type="submit"
-              className="bg-[#001201] text-[#DDAF3B] px-[26px] py-[15px] text-[12px] font-bold uppercase tracking-[1px] cursor-pointer whitespace-nowrap transition-colors duration-300 hover:bg-[#1a2f1a]"
+              className="bg-dark-bg text-[#DDAF3B] px-[26px] py-[15px] text-[12px] font-bold uppercase tracking-[1px] cursor-pointer whitespace-nowrap transition-colors duration-300 hover:bg-[#1a2f1a]"
             >
               {t('btn')}
             </button>

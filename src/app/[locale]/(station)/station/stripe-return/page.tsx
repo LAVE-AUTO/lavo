@@ -18,7 +18,7 @@ export default function StripeReturnPage() {
   }, [router, locale]);
 
   return (
-    <div className="flex min-h-screen flex-col items-center justify-center gap-4 bg-[#FFF9EC] px-4 dark:bg-[#001201]">
+    <div className="flex min-h-screen flex-col items-center justify-center gap-4 bg-[#FFF9EC] px-4 dark:bg-dark-bg">
       <div className="flex flex-col items-center gap-3 rounded-2xl border border-[#FFF9EC] bg-white p-8 shadow-sm dark:border-[#1A2A14] dark:bg-[#182214]">
         <div className="flex h-12 w-12 items-center justify-center rounded-full bg-[#E6F9EF] dark:bg-[#0A2010]">
           <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#2ECC71" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">

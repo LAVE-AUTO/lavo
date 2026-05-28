@@ -80,16 +80,28 @@ export function ManualQueueAddModal({
     (async () => {
       const [ok, data] = await getFromApi<ServicesEnvelope>('/station/services?limit=100');
       if (cancelled) return;
-      if (ok && data && typeof data === 'object' && 'data' in data) {
-        const items = (data as ServicesEnvelope).data?.items ?? [];
-        /* Only show active services with at least one active vehicle entry. */
-        const usable = items.filter(
-          (s) => s.is_active && s.vehicle_entries.some((e) => e.is_active),
-        );
-        setServices(usable);
-      } else {
+      if (!ok) {
+        if (process.env.NODE_ENV !== 'production') {
+          console.error('[ManualQueueAddModal] /station/services failed', data);
+        }
         setServicesError(true);
+        setServicesLoading(false);
+        return;
       }
+      /* The endpoint returns { data: { items, next_cursor, has_more } }.
+       * Read defensively so a one-off payload shape change does not
+       * blank the modal. */
+      const envelope = data as ServicesEnvelope | { items?: StationService[] } | null;
+      const rawItems =
+        (envelope && typeof envelope === 'object' && 'data' in envelope
+          ? envelope.data?.items
+          : (envelope as { items?: StationService[] } | null)?.items) ?? [];
+
+      /* Only show active services with at least one active vehicle entry. */
+      const usable = rawItems.filter(
+        (s) => s && s.is_active && Array.isArray(s.vehicle_entries) && s.vehicle_entries.some((e) => e.is_active),
+      );
+      setServices(usable);
       setServicesLoading(false);
     })();
     return () => { cancelled = true; };

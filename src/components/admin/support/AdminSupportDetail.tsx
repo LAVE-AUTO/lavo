@@ -241,7 +241,7 @@ export function AdminSupportDetail({ id }: Props) {
 
       <div className="flex min-h-full flex-col">
         {/* Header */}
-        <div className="shrink-0 border-b border-[#FFF9EC] bg-[#FFF9EC] px-6 pb-5 pt-5 dark:border-[#1A2A14] dark:bg-[#001201]">
+        <div className="shrink-0 border-b border-[#FFF9EC] bg-[#FFF9EC] px-6 pb-5 pt-5 dark:border-[#1A2A14] dark:bg-dark-bg">
           <Link href="/admin/support" className="mb-4 flex w-fit items-center gap-1.5 text-[13px] font-semibold text-foreground/55 transition-colors hover:text-[#DDAF3B] dark:text-[#B0BFB1]">
             <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" aria-hidden="true"><polyline points="15 18 9 12 15 6" /></svg>
             {t('btn_back')}
@@ -296,7 +296,7 @@ export function AdminSupportDetail({ id }: Props) {
         </div>
 
         {/* Thread + reply */}
-        <div className="flex-1 overflow-y-auto bg-[#FFF9EC] p-6 dark:bg-[#001201]">
+        <div className="flex-1 overflow-y-auto bg-[#FFF9EC] p-6 dark:bg-dark-bg">
           <div className="mx-auto flex max-w-2xl flex-col gap-5">
 
             {/* Thread */}
@@ -344,7 +344,7 @@ export function AdminSupportDetail({ id }: Props) {
                 </div>
                 <form onSubmit={handleSendReply} className="flex flex-col gap-3 p-5">
                   <textarea id="admin-reply-field" rows={4} maxLength={2000}
-                    className="w-full resize-none rounded-lg border border-[#D8D4C8] bg-[#FFF9EC] px-3 py-2.5 text-[13px] text-[#001201] outline-none placeholder:text-[#BBBBAA] focus:border-[#DDAF3B] focus:bg-white focus:shadow-[0_0_0_3px_rgba(221, 175, 59,0.12)] dark:border-dark-surface dark:bg-[#001201] dark:text-[#FFF9EC] dark:focus:border-[#DDAF3B]"
+                    className="w-full resize-none rounded-lg border border-[#D8D4C8] bg-[#FFF9EC] px-3 py-2.5 text-[13px] text-[#001201] outline-none placeholder:text-[#BBBBAA] focus:border-[#DDAF3B] focus:bg-white focus:shadow-[0_0_0_3px_rgba(221, 175, 59,0.12)] dark:border-dark-surface dark:bg-dark-bg dark:text-[#FFF9EC] dark:focus:border-[#DDAF3B]"
                     placeholder={t('field_reply_placeholder')}
                     value={reply}
                     onChange={(e) => setReply(e.target.value)}

@@ -140,7 +140,7 @@ export function VehicleFormatsTab({ formats, onAdd, onUpdate, onDelete }: Props)
                   className={`shrink-0 rounded-[6px] px-2.5 py-1 text-[12px] font-semibold transition-all disabled:opacity-50 ${
                     format.is_active
                       ? 'bg-[#E8F8EE] text-[#009A3A] dark:bg-[#0A2A14] dark:text-[#00C851]'
-                      : 'bg-[#F0EDE4] text-foreground/55 dark:bg-[#001201] dark:text-[#B0BFB1]'
+                      : 'bg-[#F0EDE4] text-foreground/55 dark:bg-dark-bg dark:text-[#B0BFB1]'
                   }`}
                 >
                   {format.is_active ? t('badge_active') : t('badge_inactive')}

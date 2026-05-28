@@ -63,7 +63,7 @@ export function RefuseReasonModal({ open, loading, error, onConfirm, onCancel }:
               placeholder={t('refuse_reason_placeholder')}
               aria-invalid={!!error}
               aria-describedby={error ? 'refuse-modal-error' : undefined}
-              className="w-full resize-none rounded-[10px] border border-[#DDD9CC] bg-[#F5F4EE] px-3.5 py-2.5 text-[13px] text-[#001201] outline-none transition-all duration-150 focus:border-[#FF383C]/60 focus:ring-2 focus:ring-[#FF383C]/10 dark:border-[#001A05] dark:bg-[#111A0E] dark:text-[#FFF9EC] placeholder:text-foreground/70/30 dark:placeholder:text-[#FFFFF0]/20 disabled:opacity-50"
+              className="w-full resize-none rounded-[10px] border border-[#DDD9CC] bg-[#F5F4EE] px-3.5 py-2.5 text-[13px] text-[#001201] outline-none transition-all duration-150 focus:border-[#FF383C]/60 focus:ring-2 focus:ring-[#FF383C]/10 dark:border-[#001A05] dark:bg-dark-bg dark:text-[#FFF9EC] placeholder:text-foreground/70/30 dark:placeholder:text-[#FFFFF0]/20 disabled:opacity-50"
             />
             <div className="mt-1 flex items-center justify-between">
               <span className="text-[11px] text-foreground/70/30 dark:text-[#FFFFF0]/20">

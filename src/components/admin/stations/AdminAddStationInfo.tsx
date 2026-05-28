@@ -63,7 +63,7 @@ function ToggleCard({ selected, onClick, icon, label, sub }: {
         'flex flex-col items-center gap-1.5 rounded-xl border-[1.5px] px-2 py-3 text-center transition-all duration-150 w-full',
         selected
           ? 'border-[#DDAF3B] bg-[#DDAF3B]/8 shadow-sm'
-          : 'border-[#D8D4C8] bg-white hover:border-[#DDAF3B]/50 dark:border-[#001A05] dark:bg-[#001201]',
+          : 'border-[#D8D4C8] bg-white hover:border-[#DDAF3B]/50 dark:border-[#001A05] dark:bg-dark-bg',
       ].join(' ')}>
       <span className={selected ? 'text-[#DDAF3B]' : 'text-foreground/55 dark:text-[#B0BFB1]'}>{icon}</span>
       <span className={`text-[12px] font-bold leading-tight ${selected ? 'text-[#001201] dark:text-[#FFF9EC]' : 'text-foreground/70 dark:text-[#B0BFB1]'}`}>{label}</span>

@@ -35,7 +35,7 @@ const VARIANT_CLASSES: Record<BadgeVariant, string> = {
   'status-suspended':
     'bg-orange-400/15 text-orange-600 dark:text-orange-400 text-[11px] font-semibold px-2.5 py-0.5 rounded-full',
   distance:
-    'bg-[#001201]/60 text-white text-[11px] font-medium px-2 py-0.5 rounded-md',
+    'bg-dark-bg/60 text-white text-[11px] font-medium px-2 py-0.5 rounded-md',
   verified:
     'bg-gold/15 text-gold text-[11px] font-semibold px-2.5 py-0.5 rounded-full',
   pill:
