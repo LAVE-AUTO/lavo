@@ -162,9 +162,8 @@ export function StationListView({ washTypes, vehicleFormats }: StationListViewPr
     setLoading(true);
 
     const params: Record<string, string> = {};
-    /* Unified search: send as both q (name match) and city (location text match). */
+    /* Unified search: q does ILIKE on name/address/city/description server-side. */
     if (debouncedSearch)                       params.q = debouncedSearch;
-    if (debouncedSearch)                       params.city = debouncedSearch;
     if (debouncedNameSearch)                   params.q = debouncedNameSearch; // filter-panel name overrides
     if (sort === 'best_rated')                 params.sort = 'rating_desc';
     if (sort === 'nearest' && (geocodedCoords || userLocation)) params.sort = 'distance_asc';
