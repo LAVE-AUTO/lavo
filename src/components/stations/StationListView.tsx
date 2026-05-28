@@ -105,10 +105,10 @@ export function StationListView({ washTypes, vehicleFormats }: StationListViewPr
     return () => mq.removeEventListener('change', handler);
   }, []);
 
-  /* Debounce the unified search query (name + city text search). */
+  /* Debounce the unified search query — client-side only, so 150ms is snappy. */
   const [debouncedSearch, setDebouncedSearch] = useState('');
   useEffect(() => {
-    const id = setTimeout(() => setDebouncedSearch(searchQuery.trim()), 350);
+    const id = setTimeout(() => setDebouncedSearch(searchQuery.trim()), 150);
     return () => clearTimeout(id);
   }, [searchQuery]);
 
@@ -130,6 +130,9 @@ export function StationListView({ washTypes, vehicleFormats }: StationListViewPr
     }
     let cancelled = false;
     setGeocoding(true);
+    /* 600ms before hitting Nominatim — this effect already runs after the 150ms
+       search debounce, so total latency before geocoding starts is ~750ms. */
+    const geoDelay = setTimeout(() => {
     fetch(
       `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(debouncedSearch)}&format=json&limit=1`,
       { headers: { 'Accept-Language': 'fr' } },
@@ -146,7 +149,8 @@ export function StationListView({ washTypes, vehicleFormats }: StationListViewPr
       })
       .catch(() => { if (!cancelled) setGeocodedCoords(null); })
       .finally(() => { if (!cancelled) setGeocoding(false); });
-    return () => { cancelled = true; };
+    }, 600);
+    return () => { cancelled = true; clearTimeout(geoDelay); };
   }, [debouncedSearch, geocodeDismissedFor]);
 
   /* API state */
@@ -162,10 +166,9 @@ export function StationListView({ washTypes, vehicleFormats }: StationListViewPr
     setLoading(true);
 
     const params: Record<string, string> = {};
-    /* Unified search: q does ILIKE on name/address/city/description server-side. */
-    if (debouncedSearch)                       params.q = debouncedSearch;
-    if (debouncedNameSearch)                   params.q = debouncedNameSearch; // filter-panel name overrides
-    if (sort === 'best_rated')                 params.sort = 'rating_desc';
+    /* Text search is handled client-side — no API call per keystroke. */
+    if (debouncedNameSearch)                   params.q = debouncedNameSearch; // filter-panel name still server-side
+    /* best_rated sort is done client-side; nearest needs server-side distance calc. */
     if (sort === 'nearest' && (geocodedCoords || userLocation)) params.sort = 'distance_asc';
     if (filters.selectedWashTypes.length > 0)  params.wash_type_ids = filters.selectedWashTypes.join(',');
     if (filters.serviceScope)                  params.service_scope = filters.serviceScope;
@@ -190,7 +193,7 @@ export function StationListView({ washTypes, vehicleFormats }: StationListViewPr
     }).catch(() => { if (!cancelled) setLoading(false); });
 
     return () => { cancelled = true; };
-  }, [debouncedSearch, debouncedNameSearch, sort, filters.selectedWashTypes, filters.serviceScope, filters.formatId, filters.distanceMinKm, filters.distanceMaxKm, filters.date, userLocation, geocodedCoords]);
+  }, [debouncedNameSearch, sort, filters.selectedWashTypes, filters.serviceScope, filters.formatId, filters.distanceMinKm, filters.distanceMaxKm, filters.date, userLocation, geocodedCoords]);
 
   /* Hydrate unified search from URL ?q= */
   useEffect(() => {
@@ -208,6 +211,16 @@ export function StationListView({ washTypes, vehicleFormats }: StationListViewPr
 
   const applyClientFilters = (list: StationDetailData[]) => {
     let out = list;
+    /* Text search — mirrors backend ILIKE on name/address/city/description. */
+    if (debouncedSearch) {
+      const term = debouncedSearch.toLowerCase();
+      out = out.filter((s) =>
+        s.name.toLowerCase().includes(term) ||
+        (s.address ?? '').toLowerCase().includes(term) ||
+        (s.city ?? '').toLowerCase().includes(term) ||
+        (s.description ?? '').toLowerCase().includes(term),
+      );
+    }
     if (filters.onlyAvail) out = out.filter((s) => s.availableSlots > 0);
     if (priceMinNum != null && Number.isFinite(priceMinNum)) {
       out = out.filter((s) => s.priceFrom != null && s.priceFrom >= priceMinNum);
@@ -234,6 +247,9 @@ export function StationListView({ washTypes, vehicleFormats }: StationListViewPr
         return true;
       });
     }
+    if (sort === 'best_rated') {
+      out = [...out].sort((a, b) => (b.rating ?? 0) - (a.rating ?? 0));
+    }
     if (sort === 'price_asc') {
       out = [...out].sort((a, b) => {
         const ap = a.priceFrom ?? Number.POSITIVE_INFINITY;
@@ -252,10 +268,10 @@ export function StationListView({ washTypes, vehicleFormats }: StationListViewPr
     filters.date !== '' || geocodedCoords != null ||
     sort !== 'default';
 
-  const flatResults   = useMemo(() => applyClientFilters(allStations),                                                 [allStations, filters, sort, userLocation]);
-  const availableNow  = useMemo(() => applyClientFilters(apiGroups.available_now.filter((s) => s.availableSlots > 0)), [apiGroups, filters, sort, userLocation]);
-  const topRated      = useMemo(() => applyClientFilters(apiGroups.most_appreciated.filter((s) => s.reviewCount > 0)), [apiGroups, filters, sort, userLocation]);
-  const mostRevisited = useMemo(() => applyClientFilters(apiGroups.most_visited.filter((s) => s.completedCount > 0)),  [apiGroups, filters, sort, userLocation]);
+  const flatResults   = useMemo(() => applyClientFilters(allStations),                                                 [allStations, filters, sort, userLocation, debouncedSearch]);
+  const availableNow  = useMemo(() => applyClientFilters(apiGroups.available_now.filter((s) => s.availableSlots > 0)), [apiGroups, filters, sort, userLocation, debouncedSearch]);
+  const topRated      = useMemo(() => applyClientFilters(apiGroups.most_appreciated.filter((s) => s.reviewCount > 0)), [apiGroups, filters, sort, userLocation, debouncedSearch]);
+  const mostRevisited = useMemo(() => applyClientFilters(apiGroups.most_visited.filter((s) => s.completedCount > 0)),  [apiGroups, filters, sort, userLocation, debouncedSearch]);
 
   const [expandedSections, setExpandedSections] = useState<Record<string, boolean>>({});
 
