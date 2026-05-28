@@ -1280,7 +1280,7 @@
         "detail_close": "Fermer",
         "kpi_completed_x": "{count, plural, one {# service terminé} other {# services terminés}}",
         "amount_paid": "Montant",
-        "includes_tip": "dont {amount} de pourboire"
+        "includes_tip": "{amount} de pourboire"
     },
     "faq_page": {
         "meta_title": "Foire aux questions - Hurryline",

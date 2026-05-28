@@ -217,11 +217,6 @@ export function StepCommerce({ data, errors, isLoading, washTypes, onChange, onE
     self_service: { icon: <SelfServiceIcon />, sub: t('wash_type_self_service_sub') },
   };
 
-  const SERVICE_SCOPES: { value: Step2Data['serviceScope']; label: string; sub: string; icon: ReactNode }[] = [
-    { value: 'exterior', label: t('service_scope_exterior'), sub: t('service_scope_exterior_sub'), icon: <ExteriorIcon /> },
-    { value: 'interior', label: t('service_scope_interior'), sub: t('service_scope_interior_sub'), icon: <InteriorIcon /> },
-    { value: 'both',     label: t('service_scope_both'),     sub: t('service_scope_both_sub'),     icon: <BothIcon /> },
-  ];
 
   const charCount = data.description.length;
 
@@ -342,29 +337,6 @@ export function StepCommerce({ data, errors, isLoading, washTypes, onChange, onE
             {errors.washTypeIds}
           </p>
         )}
-      </div>
-
-      {/* Service scope */}
-      <div className="mb-1">
-        <p className="text-[14px] font-semibold text-[#1A1A1A] dark:text-white mb-2.5">
-          {t('service_scope')}
-        </p>
-        <div className="grid grid-cols-3 gap-2">
-          {SERVICE_SCOPES.map((s) => {
-            const selected = data.serviceScope === s.value;
-            return (
-              <ToggleCard
-                key={s.value}
-                selected={selected}
-                onClick={() => onChange({ ...data, serviceScope: selected ? '' : s.value })}
-                ariaPressed={selected}
-                icon={s.icon}
-                label={s.label}
-                sub={s.sub}
-              />
-            );
-          })}
-        </div>
       </div>
 
       {/* ── Description ── */}
