@@ -95,10 +95,11 @@ export function MerchantNavbar() {
   return (
     <>
       <header className="fixed top-0 left-0 right-0 z-40 bg-[rgba(247,243,236,0.95)] dark:bg-[rgba(13,31,15,0.92)] backdrop-blur-[16px] border-b border-[rgba(221,175,59,0.18)]">
-        {/* Edge-to-edge: merchant nav spans the full window width with just a
-            comfortable lateral padding. The client landing nav keeps the
-            centered 1440 container; merchant + admin drop it. */}
-        <div className="px-6 lg:px-8 flex items-center justify-between gap-6 py-2">
+        {/* Same centered 1440 container as PublicNavbar: merchant landing
+            is a marketing page that follows the client landing rhythm. */}
+        <div className="max-w-[1440px] mx-auto px-6 lg:px-16 flex items-center justify-between gap-6 py-2">
+
+          {/* Logo */}
           <Link href="/" className="shrink-0" aria-label="Hurryline - Accueil" suppressHydrationWarning>
             <Image
               src={isDark ? darkLogoSrc : lightLogoSrc}

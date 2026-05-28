@@ -1672,6 +1672,10 @@
         "welcome_subtitle": "Espace réservé à l'équipe d'administration de la plateforme."
     },
     "station_dashboard": {
+        "logo_alt": "Hurryline",
+        "notif_error": "Impossible de charger les notifications",
+        "notif_load_more": "Charger plus",
+        "notif_open_cta": "Ouvrir",
         "nav_home": "Accueil",
         "nav_availability": "Disponibilité",
         "nav_reservations": "Réservations",

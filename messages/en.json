@@ -1672,6 +1672,10 @@
     "welcome_subtitle": "Restricted area for the platform administration team."
   },
   "station_dashboard": {
+    "logo_alt": "Hurryline",
+    "notif_error": "Couldn't load notifications",
+    "notif_load_more": "Load more",
+    "notif_open_cta": "Open",
     "nav_home": "Home",
     "nav_availability": "Availability",
     "nav_reservations": "Reservations",
