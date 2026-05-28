@@ -16,12 +16,18 @@ interface CustomSelectProps {
   value: string;
   onChange: (value: string) => void;
   placeholder: string;
+  disabled?: boolean;
 }
 
-export function CustomSelect({ options, value, onChange, placeholder }: CustomSelectProps) {
+export function CustomSelect({ options, value, onChange, placeholder, disabled = false }: CustomSelectProps) {
   const [open, setOpen] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
   const listboxId = useId();
+
+  /* Force-close the dropdown whenever disabled becomes true. */
+  useEffect(() => {
+    if (disabled) setOpen(false);
+  }, [disabled]);
 
   useEffect(() => {
     if (!open) return;
@@ -47,15 +53,18 @@ export function CustomSelect({ options, value, onChange, placeholder }: CustomSe
     <div ref={ref} className="relative">
       <button
         type="button"
-        onClick={() => setOpen((v) => !v)}
+        onClick={() => { if (!disabled) setOpen((v) => !v); }}
         aria-haspopup="listbox"
         aria-expanded={open}
         aria-controls={listboxId}
+        aria-disabled={disabled}
         className={[
-          'w-full flex items-center justify-between px-3 sm:px-3.5 py-2.5 rounded-xl border text-[13.5px] sm:text-[14px] font-semibold transition-all duration-150 select-none cursor-pointer',
-          isActive
-            ? 'border-gold bg-gold/5 dark:bg-gold/10 text-[#1A1A1A] dark:text-white'
-            : 'border-[#E0E0D0] dark:border-tab-inactive bg-[#F5F5EE] dark:bg-tab-inactive text-[#555] dark:text-[#C0C0B0]',
+          'w-full flex items-center justify-between px-3 sm:px-3.5 py-2.5 rounded-xl border text-[13.5px] sm:text-[14px] font-semibold transition-all duration-150 select-none',
+          disabled
+            ? 'border-[#E0E0D0] dark:border-tab-inactive bg-[#F5F5EE]/50 dark:bg-tab-inactive/50 text-[#AAA] dark:text-[#666] cursor-not-allowed opacity-60'
+            : isActive
+              ? 'border-gold bg-gold/5 dark:bg-gold/10 text-[#1A1A1A] dark:text-white cursor-pointer'
+              : 'border-[#E0E0D0] dark:border-tab-inactive bg-[#F5F5EE] dark:bg-tab-inactive text-[#555] dark:text-[#C0C0B0] cursor-pointer',
         ].join(' ')}
       >
         <span className={`truncate ${value ? 'text-[#1A1A1A] dark:text-white' : ''}`}>{triggerLabel}</span>
