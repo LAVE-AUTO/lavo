@@ -346,8 +346,11 @@ export async function changePassword(
 export async function forgotPassword(email: string, locale: 'fr' | 'en' = 'fr'): Promise<void> {
   const user = await findByEmail(email);
 
-  // Always return silently to prevent email enumeration
-  if (!user || user.status !== 'active') return;
+  // Allow verified accounts and accounts pending email verification.
+  // Blocked/deleted/suspended accounts are excluded.
+  // Silently return to prevent email enumeration.
+  const resetableStatuses = new Set(['active', 'pending_verification']);
+  if (!user || !resetableStatuses.has(user.status)) return;
 
   const token = await createToken({
     user_id: user.id,
@@ -383,6 +386,12 @@ export async function resetPassword(token: string, newPassword: string): Promise
   const password_hash = await bcrypt.hash(newPassword, BCRYPT_ROUNDS);
   await updatePassword(record.user_id, password_hash);
   await markTokenUsed(record.id);
+
+  // Receiving the reset link proves email ownership — verify the account if still pending.
+  const user = await findByIdWithPassword(record.user_id);
+  if (user?.status === 'pending_verification') {
+    await updateEmailVerified(record.user_id);
+  }
 }
 
 // --- Session refresh ---
