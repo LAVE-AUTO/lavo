@@ -39,6 +39,7 @@ const DEFAULT_FILTERS: StationFiltersState = {
   timeTo:            '',
   distanceMinKm:     '',
   distanceMaxKm:     '',
+  date:              '',
 };
 
 /** Convert "HHhMM - HHhMM" or "HH:MM - HH:MM" into [openMinutes, closeMinutes]. */
@@ -84,7 +85,12 @@ export function StationListView({ washTypes, vehicleFormats }: StationListViewPr
 
   const userLocation = useUserLocation();
 
-  const [cityQuery, setCityQuery] = useState('');
+  const [searchQuery, setSearchQuery] = useState('');
+  const [geocodedCoords, setGeocodedCoords] = useState<{ lat: number; lng: number; label: string } | null>(null);
+  const [geocoding, setGeocoding] = useState(false);
+  /* Stores the debounced query for which the user explicitly dismissed the geocoded result,
+     so we don't immediately re-geocode the same term. Resets when the query changes. */
+  const [geocodeDismissedFor, setGeocodeDismissedFor] = useState('');
   const [filters, setFilters] = useState<StationFiltersState>(DEFAULT_FILTERS);
   const [sort, setSort] = useState<SortKey>('default');
   const [panelOpen, setPanelOpen] = useState(false);
@@ -99,15 +105,49 @@ export function StationListView({ washTypes, vehicleFormats }: StationListViewPr
     return () => mq.removeEventListener('change', handler);
   }, []);
 
-  /* Debounced text inputs */
-  const [debouncedText, setDebouncedText] = useState({ city: '', q: '' });
+  /* Debounce the unified search query (name + city text search). */
+  const [debouncedSearch, setDebouncedSearch] = useState('');
   useEffect(() => {
-    const id = setTimeout(
-      () => setDebouncedText({ city: cityQuery.trim(), q: filters.nameSearch.trim() }),
-      350,
-    );
+    const id = setTimeout(() => setDebouncedSearch(searchQuery.trim()), 350);
     return () => clearTimeout(id);
-  }, [cityQuery, filters.nameSearch]);
+  }, [searchQuery]);
+
+  /* Debounce the filter panel name search separately. */
+  const [debouncedNameSearch, setDebouncedNameSearch] = useState('');
+  useEffect(() => {
+    const id = setTimeout(() => setDebouncedNameSearch(filters.nameSearch.trim()), 350);
+    return () => clearTimeout(id);
+  }, [filters.nameSearch]);
+
+  /* Silent background geocoding — runs after text debounce.
+     Tries to resolve the search query to GPS coords for distance sorting.
+     Fails silently: a station-name query like "AutoSpa" simply won't resolve. */
+  useEffect(() => {
+    if (!debouncedSearch || debouncedSearch === geocodeDismissedFor) {
+      if (!debouncedSearch) setGeocodedCoords(null);
+      setGeocoding(false);
+      return;
+    }
+    let cancelled = false;
+    setGeocoding(true);
+    fetch(
+      `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(debouncedSearch)}&format=json&limit=1`,
+      { headers: { 'Accept-Language': 'fr' } },
+    )
+      .then((res) => res.ok ? res.json() : Promise.reject())
+      .then((data: unknown) => {
+        if (cancelled) return;
+        const results = Array.isArray(data) ? data as Array<{ lat: string; lon: string }> : [];
+        if (results.length > 0) {
+          setGeocodedCoords({ lat: parseFloat(results[0].lat), lng: parseFloat(results[0].lon), label: debouncedSearch });
+        } else {
+          setGeocodedCoords(null);
+        }
+      })
+      .catch(() => { if (!cancelled) setGeocodedCoords(null); })
+      .finally(() => { if (!cancelled) setGeocoding(false); });
+    return () => { cancelled = true; };
+  }, [debouncedSearch, geocodeDismissedFor]);
 
   /* API state */
   const [allStations, setAllStations] = useState<StationDetailData[]>([]);
@@ -122,16 +162,23 @@ export function StationListView({ washTypes, vehicleFormats }: StationListViewPr
     setLoading(true);
 
     const params: Record<string, string> = {};
-    if (debouncedText.q)                       params.q = debouncedText.q;
-    if (debouncedText.city)                    params.city = debouncedText.city;
+    /* Unified search: send as both q (name match) and city (location text match). */
+    if (debouncedSearch)                       params.q = debouncedSearch;
+    if (debouncedSearch)                       params.city = debouncedSearch;
+    if (debouncedNameSearch)                   params.q = debouncedNameSearch; // filter-panel name overrides
     if (sort === 'best_rated')                 params.sort = 'rating_desc';
-    if (sort === 'nearest' && userLocation)    params.sort = 'distance_asc';
+    if (sort === 'nearest' && (geocodedCoords || userLocation)) params.sort = 'distance_asc';
     if (filters.selectedWashTypes.length > 0)  params.wash_type_ids = filters.selectedWashTypes.join(',');
     if (filters.serviceScope)                  params.service_scope = filters.serviceScope;
     if (filters.formatId)                      params.format_id = filters.formatId;
-    if (userLocation) {
-      params.near_lat = String(userLocation.latitude);
-      params.near_lng = String(userLocation.longitude);
+    if (filters.date && /^\d{4}-\d{2}-\d{2}$/.test(filters.date)) params.date = filters.date;
+    /* Geocoded address takes precedence over GPS for near_lat/near_lng. */
+    const locationSource = geocodedCoords
+      ? { latitude: geocodedCoords.lat, longitude: geocodedCoords.lng }
+      : userLocation;
+    if (locationSource) {
+      params.near_lat = String(locationSource.latitude);
+      params.near_lng = String(locationSource.longitude);
     }
     if (filters.distanceMinKm !== '') params.distance_min_km = filters.distanceMinKm;
     if (filters.distanceMaxKm !== '') params.distance_max_km = filters.distanceMaxKm;
@@ -144,13 +191,13 @@ export function StationListView({ washTypes, vehicleFormats }: StationListViewPr
     }).catch(() => { if (!cancelled) setLoading(false); });
 
     return () => { cancelled = true; };
-  }, [debouncedText, sort, filters.selectedWashTypes, filters.serviceScope, filters.formatId, filters.distanceMinKm, filters.distanceMaxKm, userLocation]);
+  }, [debouncedSearch, debouncedNameSearch, sort, filters.selectedWashTypes, filters.serviceScope, filters.formatId, filters.distanceMinKm, filters.distanceMaxKm, filters.date, userLocation, geocodedCoords]);
 
-  /* Hydrate cityQuery from URL ?q= */
+  /* Hydrate unified search from URL ?q= */
   useEffect(() => {
     const q = searchParams.get('q');
     if (q == null) return;
-    const id = setTimeout(() => setCityQuery(q), 0);
+    const id = setTimeout(() => setSearchQuery(q), 0);
     return () => clearTimeout(id);
   }, [searchParams]);
 
@@ -199,16 +246,17 @@ export function StationListView({ washTypes, vehicleFormats }: StationListViewPr
   };
 
   const hasActiveSearch =
-    debouncedText.q !== '' || debouncedText.city !== '' ||
+    debouncedSearch !== '' ||
     filters.selectedWashTypes.length > 0 || filters.serviceScope !== '' || filters.formatId !== '' ||
     priceMinNum != null || priceMaxNum != null ||
     timeFromMin != null || timeToMin != null ||
+    filters.date !== '' || geocodedCoords != null ||
     sort !== 'default';
 
-  const flatResults   = useMemo(() => applyClientFilters(allStations),                                                 [allStations, filters, sort]);
-  const availableNow  = useMemo(() => applyClientFilters(apiGroups.available_now.filter((s) => s.availableSlots > 0)), [apiGroups, filters, sort]);
-  const topRated      = useMemo(() => applyClientFilters(apiGroups.most_appreciated.filter((s) => s.reviewCount > 0)), [apiGroups, filters, sort]);
-  const mostRevisited = useMemo(() => applyClientFilters(apiGroups.most_visited.filter((s) => s.completedCount > 0)),  [apiGroups, filters, sort]);
+  const flatResults   = useMemo(() => applyClientFilters(allStations),                                                 [allStations, filters, sort, userLocation]);
+  const availableNow  = useMemo(() => applyClientFilters(apiGroups.available_now.filter((s) => s.availableSlots > 0)), [apiGroups, filters, sort, userLocation]);
+  const topRated      = useMemo(() => applyClientFilters(apiGroups.most_appreciated.filter((s) => s.reviewCount > 0)), [apiGroups, filters, sort, userLocation]);
+  const mostRevisited = useMemo(() => applyClientFilters(apiGroups.most_visited.filter((s) => s.completedCount > 0)),  [apiGroups, filters, sort, userLocation]);
 
   const [expandedSections, setExpandedSections] = useState<Record<string, boolean>>({});
 
@@ -220,11 +268,15 @@ export function StationListView({ washTypes, vehicleFormats }: StationListViewPr
     (filters.formatId ? 1 : 0) +
     (priceMinNum != null || priceMaxNum != null ? 1 : 0) +
     (timeFromMin != null || timeToMin != null ? 1 : 0) +
-    (filters.distanceMinKm !== '' || filters.distanceMaxKm !== '' ? 1 : 0);
+    (filters.distanceMinKm !== '' || filters.distanceMaxKm !== '' ? 1 : 0) +
+    (filters.date !== '' ? 1 : 0);
 
   const handleReset = () => {
     setFilters(DEFAULT_FILTERS);
     setSort('default');
+    setSearchQuery('');
+    setGeocodedCoords(null);
+    setGeocodeDismissedFor('');
     setPanelOpen(false);
   };
 
@@ -240,9 +292,14 @@ export function StationListView({ washTypes, vehicleFormats }: StationListViewPr
 
       {/* Sticky controls */}
       <div className="sticky top-[58px] z-30 bg-[#EDEDED] dark:bg-dark-bg pb-3 -mx-4 px-4 sm:-mx-6 sm:px-6 pt-3 space-y-3">
+        {/* Unified search row + filter button */}
         <div className="flex gap-2">
           <div className="flex-1">
-            <SearchBar value={cityQuery} onChange={setCityQuery} placeholder={t('search_city_placeholder')} />
+            <SearchBar
+              value={searchQuery}
+              onChange={(v) => { setSearchQuery(v); setGeocodeDismissedFor(''); }}
+              placeholder={t('search_unified_placeholder')}
+            />
           </div>
 
           <button
@@ -271,6 +328,36 @@ export function StationListView({ washTypes, vehicleFormats }: StationListViewPr
           </button>
         </div>
 
+        {/* Geocoded location pill — shown when background geocoding resolves */}
+        {(geocoding && searchQuery) || geocodedCoords ? (
+          <div className="flex items-center gap-2">
+            <span className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-gold/15 border border-gold/30 text-[12.5px] font-semibold text-[#1A1A1A] dark:text-white max-w-[calc(100%-5rem)] overflow-hidden">
+              {geocoding ? (
+                <svg className="animate-spin shrink-0" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" aria-hidden="true">
+                  <path d="M12 2a10 10 0 0 1 10 10" strokeLinecap="round" />
+                  <circle cx="12" cy="12" r="10" strokeOpacity="0.2" />
+                </svg>
+              ) : (
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" aria-hidden="true">
+                  <path d="M21 10c0 7-9 13-9 13S3 17 3 10a9 9 0 0 1 18 0z" /><circle cx="12" cy="10" r="3" />
+                </svg>
+              )}
+              <span className="truncate">
+                {geocoding ? t('search_geocoding') : `${t('search_address_near_label')} : ${geocodedCoords?.label}`}
+              </span>
+            </span>
+            {geocodedCoords && !geocoding && (
+              <button
+                type="button"
+                onClick={() => { setGeocodedCoords(null); setGeocodeDismissedFor(debouncedSearch); }}
+                className="text-[12px] font-bold text-gold hover:text-gold-hover transition-colors cursor-pointer shrink-0"
+              >
+                {t('search_address_clear')}
+              </button>
+            )}
+          </div>
+        ) : null}
+
         {/* Desktop: inline filter panel inside sticky bar */}
         {isDesktop && panelOpen && (
           <StationFilters
@@ -294,14 +381,15 @@ export function StationListView({ washTypes, vehicleFormats }: StationListViewPr
               key={key}
               type="button"
               onClick={async () => {
-                if (key === 'nearest' && !userLocation) {
+                const next = sort === key ? 'default' : key;
+                if (next === 'nearest' && !userLocation) {
                   await requestUserLocation();
                 }
-                setSort(key);
+                setSort(next);
               }}
               className={[
                 'py-1.5 px-3.5 rounded-full text-[13.5px] font-bold whitespace-nowrap transition-colors duration-150 shrink-0 flex items-center gap-1.5',
-                sort === key
+                sort === key && !(key === 'default' && filters.onlyAvail)
                   ? 'bg-gold text-dark-bg'
                   : 'bg-[#E0E0D0] dark:bg-dark-card text-[#222] dark:text-[#D0D0C0] hover:bg-[#D0D0C0] dark:hover:bg-tab-inactive',
               ].join(' ')}
