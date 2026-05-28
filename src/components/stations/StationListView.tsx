@@ -381,6 +381,11 @@ export function StationListView({ washTypes, vehicleFormats }: StationListViewPr
               key={key}
               type="button"
               onClick={async () => {
+                if (key === 'default') {
+                  setSort('default');
+                  setFilters((f) => ({ ...f, onlyAvail: false }));
+                  return;
+                }
                 const next = sort === key ? 'default' : key;
                 if (next === 'nearest' && !userLocation) {
                   await requestUserLocation();
