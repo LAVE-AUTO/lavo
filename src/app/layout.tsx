@@ -20,7 +20,7 @@ const APP_URL = process.env.NEXT_PUBLIC_APP_URL ?? 'https://Hurryline.cm';
 
 export const metadata: Metadata = {
   title: {
-    default: 'Hurryline - Réservation de lavage auto',
+    default: 'Hurryline | L\'anticipation en mieux',
     template: '%s | Hurryline',
   },
   description:
@@ -29,7 +29,7 @@ export const metadata: Metadata = {
   openGraph: {
     type: 'website',
     siteName: 'Hurryline',
-    title: 'Hurryline - Réservation de lavage auto',
+    title: 'Hurryline | L\'anticipation en mieux',
     description:
       'Réservez facilement un créneau dans une station de lavage auto près de chez vous.',
     url: APP_URL,
@@ -44,7 +44,7 @@ export const metadata: Metadata = {
   },
   twitter: {
     card: 'summary_large_image',
-    title: 'Hurryline - Réservation de lavage auto',
+    title: 'Hurryline | L\'anticipation en mieux',
     description:
       'Réservez facilement un créneau dans une station de lavage auto près de chez vous.',
     images: ['/og-image.png'],

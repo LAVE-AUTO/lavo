@@ -6,7 +6,7 @@
 @custom-variant dark (&:is(.dark *));
 :root {
     --background: #ffffff;
-    --foreground: #171717;
+    --foreground: #001201;
 }
 
 @theme inline {
@@ -22,14 +22,14 @@
     --font-size-md: 19px;
     --font-size-lg: 22px;
     /* Hurryline brand colors */
-    --color-gold: #af8408;
-    --color-gold-hover: #D4A820;
-    --color-dark-bg: #1A2116;
-    --color-dark-card: #1E2A1A;
-    --color-dark-surface: #243020;
+    --color-gold: #DDAF3B;
+    --color-gold-hover: #DDAF3B;
+    --color-dark-bg: #001201;
+    --color-dark-card: #001201;
+    --color-dark-surface: #001201;
     --color-tab-inactive: #2C3828;
-    --color-Hurryline-error: #E8472A;
-    --color-Hurryline-success: #00C851;
+    --color-Hurryline-error: #FF383C;
+    --color-Hurryline-success: #00C853;
     --color-Hurryline-muted: #A0A0A0;
     /* Hurryline fonts */
     --font-rajdhani: 'Rajdhani', sans-serif;
@@ -529,9 +529,12 @@ button,
     transform: translateY(0);
 }
 
+
 /* Scrollbar appears only on hover/focus for dense modal panes. */
+
 .hover-scrollbar {
-    scrollbar-width: none; /* Firefox */
+    scrollbar-width: none;
+    /* Firefox */
 }
 
 .hover-scrollbar::-webkit-scrollbar {
@@ -541,7 +544,8 @@ button,
 
 .hover-scrollbar:hover,
 .hover-scrollbar:focus-within {
-    scrollbar-width: thin; /* Firefox */
+    scrollbar-width: thin;
+    /* Firefox */
 }
 
 .hover-scrollbar:hover::-webkit-scrollbar,
@@ -568,15 +572,31 @@ button,
    At >=1024px bump small text by 1px; at >=1280px bump by 2px. */
 
 @media (min-width: 1024px) {
-    .app-shell .text-\[10px\] { font-size: 11px; }
-    .app-shell .text-\[11px\] { font-size: 12px; }
-    .app-shell .text-\[12px\] { font-size: 13px; }
-    .app-shell .text-\[13px\] { font-size: 14px; }
+    .app-shell .text-\[10px\] {
+        font-size: 11px;
+    }
+    .app-shell .text-\[11px\] {
+        font-size: 12px;
+    }
+    .app-shell .text-\[12px\] {
+        font-size: 13px;
+    }
+    .app-shell .text-\[13px\] {
+        font-size: 14px;
+    }
 }
 
 @media (min-width: 1280px) {
-    .app-shell .text-\[10px\] { font-size: 12px; }
-    .app-shell .text-\[11px\] { font-size: 13px; }
-    .app-shell .text-\[12px\] { font-size: 14px; }
-    .app-shell .text-\[13px\] { font-size: 15px; }
+    .app-shell .text-\[10px\] {
+        font-size: 12px;
+    }
+    .app-shell .text-\[11px\] {
+        font-size: 13px;
+    }
+    .app-shell .text-\[12px\] {
+        font-size: 14px;
+    }
+    .app-shell .text-\[13px\] {
+        font-size: 15px;
+    }
 }
