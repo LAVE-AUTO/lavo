@@ -53,7 +53,8 @@ export function HeroPhoneMockup() {
           {/* Search bar */}
           <div className="flex items-center gap-2 rounded-[8px] border border-[rgba(200,152,10,0.2)] bg-[rgba(245,237,214,0.06)] px-3 py-2">
             <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#7a9a7d" strokeWidth="2">
-              <circle cx="11" cy="11" r="8" /><path d="M21 21l-4.35-4.35" />
+              <circle cx="11" cy="11" r="8" />
+              <path d="M21 21l-4.35-4.35" />
             </svg>
             <span className="text-[10px] text-[#7a9a7d]">{t('phone_search')}</span>
           </div>
@@ -61,9 +62,12 @@ export function HeroPhoneMockup() {
           {/* Station card 1 */}
           <PhoneStationCard
             name={t('station_1_name')}
-            addr={t('station_1_addr')}
             rating={t('station_1_rating')}
+            reviews={t('station_1_reviews')}
             price={t('station_1_price')}
+            distance={t('station_1_distance')}
+            wait={t('station_1_wait')}
+            tags={['Extérieur', 'Intérieur']}
             open={t('open')}
             showBook
             bookLabel={t('book')}
@@ -72,9 +76,12 @@ export function HeroPhoneMockup() {
           {/* Station card 2 */}
           <PhoneStationCard
             name={t('station_2_name')}
-            addr={t('station_2_addr')}
             rating={t('station_2_rating')}
+            reviews={t('station_2_reviews')}
             price={t('station_2_price')}
+            distance={t('station_2_distance')}
+            wait={t('station_2_wait')}
+            tags={['Extérieur']}
             open={t('open')}
             showBook={false}
             bookLabel={t('book')}
@@ -87,40 +94,95 @@ export function HeroPhoneMockup() {
 
 interface PhoneStationCardProps {
   name: string;
-  addr: string;
   rating: string;
+  reviews: string;
   price: string;
+  distance: string;
+  wait: string;
+  tags: string[];
   open: string;
   showBook: boolean;
   bookLabel: string;
 }
 
-function PhoneStationCard({ name, addr, rating, price, open, showBook, bookLabel }: PhoneStationCardProps) {
+function PhoneStationCard({ name, rating, reviews, price, distance, wait, tags, showBook, bookLabel }: PhoneStationCardProps) {
   return (
-    <div className="rounded-[10px] bg-[#f5edd6] p-3">
-      <div className="mb-1.5 flex items-start justify-between">
-        <span className="text-[12px] font-bold text-[#3d2a10]">{name}</span>
-        <span className="rounded-full border border-[#16a34a44] bg-[#22c55e20] px-1.5 py-0.5 text-[8px] font-bold text-[#16a34a]">
-          {open}
+    <article className="rounded-[10px] overflow-hidden border border-[#D0D0C0] bg-[#E8E8D8]">
+      {/* Photo zone — matches StationCard's image area */}
+      <div className="relative h-[56px] bg-[#D0D0C0] flex items-center justify-center overflow-hidden">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#9A9A8A" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+          <path d="M3 17l2-7h14l2 7" />
+          <path d="M5 17v2h2v-2M17 17v2h2v-2" />
+          <path d="M8 10V7a1 1 0 011-1h6a1 1 0 011 1v3" />
+          <circle cx="7.5" cy="17" r="1.5" fill="#9A9A8A" />
+          <circle cx="16.5" cy="17" r="1.5" fill="#9A9A8A" />
+        </svg>
+
+        {/* Name overlay at bottom — mirrors StationCard gradient overlay */}
+        <div className="absolute inset-x-0 bottom-0 h-7 bg-gradient-to-t from-black/60 to-transparent flex items-end px-2 pb-1 pointer-events-none">
+          <span className="text-white text-[10px] font-bold leading-tight truncate drop-shadow">
+            {name}
+          </span>
+        </div>
+
+        {/* Distance badge top-left */}
+        <span className="absolute top-1 left-1.5 flex items-center gap-0.5 rounded-full bg-black/60 px-1.5 py-0.5 text-[8px] font-bold text-white">
+          <svg width="6" height="6" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+            <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z" />
+            <circle cx="12" cy="10" r="3" />
+          </svg>
+          {distance}
         </span>
       </div>
-      <div className="mb-0.5 flex items-center gap-1 text-[9px] text-[rgba(61,42,16,0.55)]">
-        <svg width="8" height="8" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-          <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z" />
-          <circle cx="12" cy="10" r="3" />
-        </svg>
-        {addr}
-      </div>
-      <div className="mb-1 text-[9px]">
-        <span className="text-[#c8980a]">{'★'.repeat(5)}</span>
-        <span className="ml-1 text-[rgba(61,42,16,0.55)]">{rating}</span>
-      </div>
-      <div className="font-rajdhani text-[14px] font-bold text-[#3d2a10]">{price}</div>
-      {showBook && (
-        <div className="mt-1.5 rounded-[6px] bg-[#c8980a] py-1.5 text-center text-[9px] font-bold uppercase tracking-[1px] text-[#0d1f0f]">
-          {bookLabel}
+
+      {/* Card body — mirrors StationCard's p-4 section */}
+      <div className="px-2.5 pt-2 pb-2 flex flex-col gap-1.5">
+        {/* Name + price */}
+        <div className="flex items-start justify-between gap-1">
+          <span className="text-[11px] font-bold text-[#0A0A14] leading-tight line-clamp-1">{name}</span>
+          <span className="text-[10px] font-bold text-[#c8980a] shrink-0">{price}</span>
         </div>
-      )}
-    </div>
+
+        {/* Rating + review count */}
+        <div className="flex items-center gap-1">
+          <span className="text-[#c8980a] text-[11px]">&#9733;</span>
+          <span className="text-[9px] font-semibold text-[#0A0A14]">{rating}</span>
+          <span className="text-[9px] text-[#c8980a]">{reviews}</span>
+        </div>
+
+        {/* Stats grid: distance | wait — mirrors StationCard grid */}
+        <div className="grid grid-cols-2 text-center border-t border-[#C8C8B4] pt-1.5">
+          <div className="border-r border-[#C8C8B4] pr-1">
+            <div className="text-[11px] font-black text-[#0A0A14] leading-none">{distance}</div>
+            <div className="text-[8px] text-[#555] mt-0.5">Distance</div>
+          </div>
+          <div className="pl-1">
+            <div className="text-[11px] font-black text-[#0A0A14] leading-none">{wait}</div>
+            <div className="text-[8px] text-[#555] mt-0.5">Attente</div>
+          </div>
+        </div>
+
+        {/* Forfait tags — mirrors StationCard tag chips */}
+        {tags.length > 0 && (
+          <div className="flex flex-wrap gap-1">
+            {tags.map((tag) => (
+              <span
+                key={tag}
+                className="px-1.5 py-0.5 rounded-full text-[8px] font-bold bg-[#E8E8D8] text-[#000] border border-[#D0D0C0]"
+              >
+                {tag}
+              </span>
+            ))}
+          </div>
+        )}
+
+        {/* CTA — mirrors StationCard's gold button */}
+        {showBook && (
+          <div className="rounded-[6px] bg-[#c8980a] py-1.5 text-center text-[9px] font-bold uppercase tracking-[1px] text-[#0d1f0f]">
+            {bookLabel}
+          </div>
+        )}
+      </div>
+    </article>
   );
 }
