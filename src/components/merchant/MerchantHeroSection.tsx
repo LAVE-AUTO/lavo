@@ -16,7 +16,7 @@ export function MerchantHeroSection() {
 
       <div className="mx-auto grid max-w-[1280px] min-h-screen grid-cols-1 lg:grid-cols-[55%_45%] px-6 lg:px-16">
         {/* Left column */}
-        <div className="relative z-10 flex flex-col justify-center pb-12 pt-16 lg:pb-20 lg:pt-[120px] lg:pr-14">
+        <div className="relative z-10 flex flex-col justify-center pb-12 pt-6 lg:pb-20 lg:pt-[120px] lg:pr-14">
           <div className="font-dm-mono mb-5 flex animate-fade-in-up items-center gap-2.5 text-[11px] uppercase tracking-[3px] text-[#c8980a]">
             <span className="h-px w-7 bg-[#c8980a]" />
             {t('eyebrow')}
