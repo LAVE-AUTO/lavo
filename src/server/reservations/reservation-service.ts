@@ -19,7 +19,7 @@ import { NotFoundError, ConflictError, ActiveReservationExistsError, SlotFullErr
 import { getPlatformSettingWithFallback, getCancellationPolicy } from '@/server/admin/platform-settings-service';
 import { db } from '@/lib/db';
 import { getConfigByStationId } from '@/server/station/config-repository';
-import { findServiceVehicleEntryForBooking, findServiceByIdAndStation } from '@/server/station/service-repository';
+import { findServiceVehicleEntryForBooking, findServiceByIdAndStation, findEnrichedService } from '@/server/station/service-repository';
 import { findFormatById } from '@/server/station/format-repository';
 import {
   lockSlotForUpdate,
@@ -29,11 +29,13 @@ import {
 } from '@/server/station/slot-repository';
 import { createPaymentIntent, cancelPaymentIntent, capturePaymentIntent, refundPaymentIntent, distributePenalty, updatePaymentIntentMetadata } from '@/server/payments/payment-service';
 import { cancelReservation } from '@/server/reservations/cancellation-service';
-import { findById } from '@/server/auth/user-repository';
+import { findById, findByEmail } from '@/server/auth/user-repository';
 import { notifyEntry } from '@/server/notifications/notification-service';
 import { notifyStationFeed } from '@/server/notifications/station-feed-notifications';
 import { notifyClientFeed } from '@/server/notifications/client-feed-notifications';
 import { sendEscrowReleasedNotificationsForEntry } from '@/server/notifications/escrow-released-notifications';
+import { sendWalkInReceiptEmail } from '@/lib/email';
+import { findStationById } from '@/server/station/station-repository';
 import { findMatchingAvailabilitySlot } from '@/server/station/post-availability-service';
 import { generateTicketCode } from './ticket-code';
 import { sql as sqlInline } from 'drizzle-orm';
@@ -1136,16 +1138,57 @@ export async function setEntryStatusByStation(
     });
   }
 
-  // Notify the client of service status changes (best-effort, never block the station UI).
-  if (status === 'in_progress') {
+  /* Notify the client of service status changes (best-effort, never block the station UI).
+   * Walk-ins to an unregistered client (entry.walk_in_client_email set,
+   * entry.user_id = station owner placeholder) skip the in-app notifications
+   * since there is no client account to receive them; the receipt email
+   * fires below on completion instead. */
+  const isUnregisteredWalkIn =
+    Boolean(entry.walk_in_client_email) && entry.user_id === entry.station_id /* not actual check */;
+  const hasRealClient = !entry.walk_in_client_email; /* matched walk-ins clear walk_in_client_* */
+  if (status === 'in_progress' && hasRealClient) {
     notifyEntry({ entryId, userId: entry.user_id, stationId, type: 'service_started' }).catch(() => {});
     notifyClientFeed({ userId: entry.user_id, entryId, stationId, kind: 'service_started', body: 'Votre lavage a commencé. Vous serez notifié quand il sera terminé.' }).catch(() => {});
   } else if (status === 'completed') {
-    notifyEntry({ entryId, userId: entry.user_id, stationId, type: 'service_completed' }).catch(() => {});
-    notifyClientFeed({ userId: entry.user_id, entryId, stationId, kind: 'service_completed', body: 'Votre lavage est terminé ! Venez récupérer votre véhicule.' }).catch(() => {});
+    if (hasRealClient) {
+      notifyEntry({ entryId, userId: entry.user_id, stationId, type: 'service_completed' }).catch(() => {});
+      notifyClientFeed({ userId: entry.user_id, entryId, stationId, kind: 'service_completed', body: 'Votre lavage est terminé ! Venez récupérer votre véhicule.' }).catch(() => {});
+    } else if (entry.walk_in_client_email && !entry.walk_in_receipt_sent_at) {
+      /* Unregistered walk-in client: send the off-platform receipt email
+       * with a CTA to create an account. Mark the entry as 'sent' so we
+       * never double-send if the merchant toggles statuses. */
+      void sendWalkInReceiptEmailForEntry(updated).catch((err) => {
+        console.error('[WALK_IN_RECEIPT] Failed to send completion email', {
+          entryId,
+          error: err instanceof Error ? err.message : String(err),
+        });
+      });
+    }
   }
+  void isUnregisteredWalkIn; /* kept for readability */
 
   return updated;
+}
+
+/** Fires the walk-in receipt email and marks the entry as 'sent'. */
+async function sendWalkInReceiptEmailForEntry(entry: Entry): Promise<void> {
+  if (!entry.walk_in_client_email) return;
+  const stationRow = await findStationById(entry.station_id);
+  const serviceRow = entry.service_id
+    ? await findEnrichedService(entry.service_id)
+    : null;
+  const vehicleFormatLabel = entry.vehicle_format_id
+    ? (await findFormatById(entry.vehicle_format_id))?.label
+    : undefined;
+  await sendWalkInReceiptEmail({
+    to: entry.walk_in_client_email,
+    clientName: entry.walk_in_client_name ?? undefined,
+    stationName: stationRow?.name,
+    serviceName: serviceRow?.name,
+    vehicleFormatLabel,
+    completedAt: entry.completed_at ?? new Date(),
+  });
+  await updateEntry(entry.id, { walk_in_receipt_sent_at: new Date() });
 }
 
 
@@ -1191,50 +1234,122 @@ export async function startEntryByStation(
  * Filtering walk-ins out of "my entries" listings is done via station.user_id ownership
  * checks where applicable.
  */
-export async function createWalkInEntry(
-  stationId: string,
-  stationOwnerUserId: string,
-  vehicleFormatId: string,
-  timeSlotId?: string,
-  /* Snapshot the picked station service so the entry knows what was
-   * actually performed. Optional for backward compatibility with
-   * callers that did not yet adopt the service picker. */
-  serviceId?: string,
-): Promise<Entry> {
-  const format = await findFormatById(vehicleFormatId);
-  if (!format) throw new NotFoundError('Vehicle format not found');
+export interface CreateWalkInOptions {
+  stationId: string;
+  stationOwnerUserId: string;
+  /** Optional: services without configured formats can still be enqueued. */
+  vehicleFormatId?: string;
+  timeSlotId?: string;
+  serviceId?: string;
+  /** Walk-in client identity. If clientEmail matches a registered
+   *  client account, the entry is tied to that user (so they see it
+   *  in /me/entries and /client/history). Otherwise the email + name
+   *  are stored on the entry and the receipt email fires on completion. */
+  clientEmail?: string;
+  clientName?: string;
+}
+
+export async function createWalkInEntry(opts: CreateWalkInOptions): Promise<Entry> {
+  const {
+    stationId,
+    stationOwnerUserId,
+    vehicleFormatId,
+    timeSlotId,
+    serviceId,
+    clientEmail,
+    clientName,
+  } = opts;
+
+  /* Format is now optional: services with no vehicle_format configured
+   * still need to support walk-ins. When absent, amount_paid is derived
+   * from the picked service's cheapest active entry, or 0 if neither is
+   * available (in which case the station collects payment off-platform). */
+  const format = vehicleFormatId
+    ? (await findFormatById(vehicleFormatId)) ?? null
+    : null;
+  if (vehicleFormatId && !format) throw new NotFoundError('Vehicle format not found');
+
+  const amount = await resolveWalkInAmount({
+    format,
+    serviceId: serviceId ?? null,
+    stationId,
+  });
+
+  /* Try to match the walk-in client to a registered account. Matched
+   * clients get the entry attached to their user_id so it shows up in
+   * their /me/entries; unmatched clients keep the owner placeholder
+   * and carry their identity in walk_in_client_* columns. */
+  const matchedUser = clientEmail
+    ? await findByEmail(clientEmail)
+    : null;
+  const isClient =
+    matchedUser && matchedUser.role === 'client' && matchedUser.status !== 'deleted';
+  const entryUserId = isClient ? matchedUser.id : stationOwnerUserId;
+  const walkInEmail = isClient ? null : clientEmail ?? null;
+  const walkInName = isClient ? null : clientName ?? null;
 
   if (timeSlotId) {
     return createReservationEntry({
-      user_id: stationOwnerUserId, // walk-in placeholder: station owner's user_id (real users row)
+      user_id: entryUserId,
       station_id: stationId,
-      vehicle_format_id: vehicleFormatId,
+      vehicle_format_id: vehicleFormatId ?? null,
       service_id: serviceId,
       time_slot_id: timeSlotId,
       booking_source: 'standard',
       status: STATUS_CONFIRMED,
-      amount_paid: toDecimal(String(format.price)),
+      amount_paid: toDecimal(String(amount)),
       commission_rate: '0',
       commission_amount: '0',
-      station_payout: toDecimal(String(format.price)),
+      station_payout: toDecimal(String(amount)),
       ticket_code: generateTicketCode(),
+      walk_in_client_email: walkInEmail,
+      walk_in_client_name: walkInName,
     });
   }
 
   const queuePosition = await getNextQueuePosition(stationId);
   return createQueueEntry({
-    user_id: stationOwnerUserId,
+    user_id: entryUserId,
     station_id: stationId,
-    vehicle_format_id: vehicleFormatId,
+    vehicle_format_id: vehicleFormatId ?? null,
     service_id: serviceId,
     queue_position: queuePosition,
     status: STATUS_CONFIRMED,
-    amount_paid: toDecimal(String(format.price)),
+    amount_paid: toDecimal(String(amount)),
     commission_rate: '0',
     commission_amount: '0',
-    station_payout: toDecimal(String(format.price)),
+    station_payout: toDecimal(String(amount)),
     ticket_code: generateTicketCode(),
+    walk_in_client_email: walkInEmail,
+    walk_in_client_name: walkInName,
   });
+}
+
+/** Resolves the price snapshooted on a walk-in: picks the vehicle format
+ *  price when one is provided, falls back to the service's cheapest
+ *  active vehicle entry, and finally to 0 (off-platform payment). */
+async function resolveWalkInAmount(args: {
+  format: { price: string | number } | null;
+  serviceId: string | null;
+  stationId: string;
+}): Promise<number | string> {
+  if (args.format) return args.format.price;
+  if (args.serviceId) {
+    /* Enriched fetch so we can read the service's vehicle_entries.
+     * findServiceByIdAndStation returns only the bare service row. */
+    const ownerService = await findServiceByIdAndStation(args.serviceId, args.stationId);
+    if (ownerService) {
+      const enriched = await findEnrichedService(args.serviceId);
+      if (enriched) {
+        const prices = enriched.vehicle_entries
+          .filter((e) => e.is_active)
+          .map((e) => parseDecimal(String(e.price)))
+          .filter((n) => !Number.isNaN(n) && n > 0);
+        if (prices.length > 0) return Math.min(...prices);
+      }
+    }
+  }
+  return 0;
 }
 
 

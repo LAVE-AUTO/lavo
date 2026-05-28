@@ -42,6 +42,9 @@ const RESERVATION_COLUMNS = {
   penalty_amount: reservations.penalty_amount,
   confirmed_at: reservations.confirmed_at,
   completed_at: reservations.completed_at,
+  walk_in_client_email: reservations.walk_in_client_email,
+  walk_in_client_name: reservations.walk_in_client_name,
+  walk_in_receipt_sent_at: reservations.walk_in_receipt_sent_at,
   created_at: reservations.created_at,
   updated_at: reservations.updated_at,
 } as const;
@@ -62,6 +65,8 @@ export type CreateReservationEntryData = {
   station_payout?: string;
   stripe_payment_id?: string | null;
   ticket_code?: string | null;
+  walk_in_client_email?: string | null;
+  walk_in_client_name?: string | null;
 };
 
 /** Payload for creating a queue entry: queue_position required. */
@@ -78,6 +83,8 @@ export type CreateQueueEntryData = {
   station_payout?: string;
   stripe_payment_id?: string | null;
   ticket_code?: string | null;
+  walk_in_client_email?: string | null;
+  walk_in_client_name?: string | null;
 };
 
 /**
@@ -107,6 +114,8 @@ export async function createReservationEntry(
       station_payout: data.station_payout ?? '0.00',
       stripe_payment_id: data.stripe_payment_id ?? null,
       ticket_code: data.ticket_code ?? null,
+      walk_in_client_email: data.walk_in_client_email ?? null,
+      walk_in_client_name: data.walk_in_client_name ?? null,
     })
     .returning();
   if (!row) throw new Error('Insert reservation entry failed');
@@ -136,6 +145,8 @@ export async function createQueueEntry(data: CreateQueueEntryData, tx?: DbTransa
       station_payout: data.station_payout ?? '0.00',
       stripe_payment_id: data.stripe_payment_id ?? null,
       ticket_code: data.ticket_code ?? null,
+      walk_in_client_email: data.walk_in_client_email ?? null,
+      walk_in_client_name: data.walk_in_client_name ?? null,
     })
     .returning();
   if (!row) throw new Error('Insert queue entry failed');
@@ -553,6 +564,7 @@ export async function updateEntry(
     stripe_payment_id: string | null;
     stripe_charge_id: string | null;
     stripe_refund_id: string | null;
+    walk_in_receipt_sent_at: Date | null;
     updated_at: Date;
   }>,
   tx?: DbTransaction

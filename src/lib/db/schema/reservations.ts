@@ -55,6 +55,22 @@ export const reservations = pgTable(
     service_id: uuid("service_id")
       .references(() => stationServices.id, { onDelete: "set null" }),
     /**
+     * Walk-in client capture (manual add by the merchant). Filled only
+     * when the entered email does NOT match any registered users row —
+     * in that case user_id keeps the station owner placeholder and these
+     * columns carry the actual end-customer identity so the completion
+     * email can fire. Matched walk-ins set user_id to the real account
+     * and leave these columns NULL.
+     */
+    walk_in_client_email: varchar("walk_in_client_email", { length: 320 }),
+    walk_in_client_name: varchar("walk_in_client_name", { length: 200 }),
+    /** Timestamp of the 'service done + register CTA' email sent to an
+     *  unregistered walk-in client. Used to avoid double-sending. */
+    walk_in_receipt_sent_at: timestamp("walk_in_receipt_sent_at", {
+      mode: "date",
+      withTimezone: true,
+    }),
+    /**
      * Wash bay assigned to this entry. Filled by the booking flow that
      * picks an available post for a given start_time. Nullable for queue
      * entries (no fixed time → no fixed bay) and legacy reservations
