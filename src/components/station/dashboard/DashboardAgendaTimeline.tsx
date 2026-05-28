@@ -61,7 +61,7 @@ function statusToBlockClass(status: string): { bg: string; border: string; chip:
     case 'completed':
       return {
         bg: 'bg-[#F0EDE0] dark:bg-[#0F1A0C]/60',
-        border: 'border-[#D8D4C4] dark:border-[#243020]',
+        border: 'border-[#D8D4C4] dark:border-[#001A05]',
         chip: 'text-foreground/55 dark:text-[#A0A090]',
         chipBg: 'bg-[#E0DCD0] dark:bg-[#1A2A14]',
       };
@@ -75,9 +75,9 @@ function statusToBlockClass(status: string): { bg: string; border: string; chip:
     case 'late':
       return {
         bg: 'bg-[#FDECE6] dark:bg-[#291210]',
-        border: 'border-[#E8472A]/50',
+        border: 'border-[#391C01]/50',
         chip: 'text-[#B33B1F] dark:text-[#FF8866]',
-        chipBg: 'bg-[#E8472A]/15',
+        chipBg: 'bg-[#391C01]/15',
       };
     case 'cancelled':
       return {
@@ -210,7 +210,7 @@ export function DashboardAgendaTimeline({
                 key={post.id}
                 className="min-w-[200px] flex-1 border-l border-[#E0DCD0] px-3 py-2 dark:border-[#1A2A14]"
               >
-                <div className="text-[13px] font-bold text-[#1A1A0A] dark:text-[#F0EDD4]">
+                <div className="text-[13px] font-bold text-[#001201] dark:text-[#FFF9EC]">
                   {t('filter_post', { n: post.position })}
                 </div>
                 <div className={`mt-0.5 text-[11px] font-bold ${inProgress ? 'text-[#0E8C45] dark:text-[#65E69A]' : 'text-[#3B82F6] dark:text-[#8AB4FF]'}`}>
@@ -266,7 +266,7 @@ export function DashboardAgendaTimeline({
                 {/* Break overlay */}
                 {breakSpan && (
                   <div
-                    className="absolute left-1 right-1 flex items-center justify-center rounded-md bg-[#1A1A0A]/[0.06] text-[10px] font-bold uppercase tracking-wider text-foreground/65 dark:bg-[#0F1A0C] dark:text-[#5A5A4A]"
+                    className="absolute left-1 right-1 flex items-center justify-center rounded-md bg-[#001201]/[0.06] text-[10px] font-bold uppercase tracking-wider text-foreground/65 dark:bg-[#0F1A0C] dark:text-[#5A5A4A]"
                     style={{ top: breakSpan.top, height: breakSpan.height }}
                     aria-hidden="true"
                   >
@@ -277,10 +277,10 @@ export function DashboardAgendaTimeline({
                 {/* Now line */}
                 {nowLineTop !== null && (
                   <div
-                    className="pointer-events-none absolute left-0 right-0 z-20 h-px bg-[#C49A1E]"
+                    className="pointer-events-none absolute left-0 right-0 z-20 h-px bg-[#DDAF3B]"
                     style={{ top: nowLineTop }}
                   >
-                    <span className="absolute -left-1 -top-[3px] block h-1.5 w-1.5 rounded-full bg-[#C49A1E]" />
+                    <span className="absolute -left-1 -top-[3px] block h-1.5 w-1.5 rounded-full bg-[#DDAF3B]" />
                   </div>
                 )}
 
@@ -339,18 +339,18 @@ function SlotBlock({ entry, openMinutes, closeMinutes, onSelect }: SlotBlockProp
       type="button"
       onClick={() => onSelect(entry)}
       aria-label={t('slot_block_aria', { name: entry.clientName, time: `${formatTime(start)}–${formatTime(end)}` })}
-      className={`group absolute left-1.5 right-1.5 flex flex-col overflow-hidden rounded-lg border text-left ${styles.bg} ${styles.border} px-2 py-1.5 shadow-sm transition-all hover:-translate-y-px hover:shadow-md focus:outline-none focus:ring-2 focus:ring-[#C49A1E]/40`}
+      className={`group absolute left-1.5 right-1.5 flex flex-col overflow-hidden rounded-lg border text-left ${styles.bg} ${styles.border} px-2 py-1.5 shadow-sm transition-all hover:-translate-y-px hover:shadow-md focus:outline-none focus:ring-2 focus:ring-[#DDAF3B]/40`}
       style={{ top, height }}
     >
       <div className="flex items-start gap-1.5">
-        <span className="text-[10px] font-bold tabular-nums text-[#1A1A0A] dark:text-[#F0EDD4]">
+        <span className="text-[10px] font-bold tabular-nums text-[#001201] dark:text-[#FFF9EC]">
           {formatTime(start)}–{formatTime(end)}
         </span>
         <span className={`ml-auto rounded-full px-1.5 py-0.5 text-[9px] font-black uppercase tracking-wide ${styles.chip} ${styles.chipBg}`}>
           {statusLbl}
         </span>
       </div>
-      <div className="mt-0.5 truncate text-[11px] font-semibold text-[#1A1A0A] dark:text-[#F0EDD4]">
+      <div className="mt-0.5 truncate text-[11px] font-semibold text-[#001201] dark:text-[#FFF9EC]">
         {entry.clientName}
       </div>
       <div className="mt-auto flex items-end justify-between gap-1.5 pt-1">
@@ -358,7 +358,7 @@ function SlotBlock({ entry, openMinutes, closeMinutes, onSelect }: SlotBlockProp
           {entry.vehicleFormat ?? ''}
           {entry.vehicleFormat && entry.amountPaid !== null ? ' · ' : ''}
           {entry.amountPaid !== null ? (
-            <span className="font-black text-[#1A1A0A] dark:text-[#F0EDD4]">{entry.amountPaid}$</span>
+            <span className="font-black text-[#001201] dark:text-[#FFF9EC]">{entry.amountPaid}$</span>
           ) : null}
         </div>
         {showPrimary && (

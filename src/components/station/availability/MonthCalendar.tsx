@@ -98,16 +98,16 @@ export function MonthCalendar({
           type="button"
           onClick={prevMonth}
           aria-label={t('availability_prev_month')}
-          className="flex h-8 w-8 cursor-pointer items-center justify-center rounded-full bg-[#C49A1E]/10 text-[#C49A1E] transition-colors hover:bg-[#C49A1E]/20"
+          className="flex h-8 w-8 cursor-pointer items-center justify-center rounded-full bg-[#DDAF3B]/10 text-[#DDAF3B] transition-colors hover:bg-[#DDAF3B]/20"
         >
           <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" aria-hidden="true"><path d="M15 18l-6-6 6-6" /></svg>
         </button>
-        <h2 className="text-lg font-black tracking-wide text-[#C49A1E]">{monthLabel}</h2>
+        <h2 className="text-lg font-black tracking-wide text-[#DDAF3B]">{monthLabel}</h2>
         <button
           type="button"
           onClick={nextMonth}
           aria-label={t('availability_next_month')}
-          className="flex h-8 w-8 cursor-pointer items-center justify-center rounded-full bg-[#C49A1E]/10 text-[#C49A1E] transition-colors hover:bg-[#C49A1E]/20"
+          className="flex h-8 w-8 cursor-pointer items-center justify-center rounded-full bg-[#DDAF3B]/10 text-[#DDAF3B] transition-colors hover:bg-[#DDAF3B]/20"
         >
           <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" aria-hidden="true"><path d="M9 18l6-6-6-6" /></svg>
         </button>
@@ -115,7 +115,7 @@ export function MonthCalendar({
         {/* Legend */}
         <div className="ml-auto flex flex-wrap items-center gap-4 text-[11px] text-foreground/65 dark:text-[#A0A090]">
           <span className="flex items-center gap-1.5">
-            <span className="inline-block h-3.5 w-3.5 rounded-sm border-2 border-[#C49A1E] bg-[#F0EDE0] dark:bg-[#1E2A1A]" aria-hidden="true" />
+            <span className="inline-block h-3.5 w-3.5 rounded-sm border-2 border-[#DDAF3B] bg-[#F0EDE0] dark:bg-[#001A05]" aria-hidden="true" />
             {t('availability_legend_today')}
           </span>
           <span className="flex items-center gap-1.5">
@@ -153,18 +153,18 @@ export function MonthCalendar({
               onClick={() => !isDisabled && onDayClick(iso)}
               disabled={isDisabled}
               className={[
-                'min-h-[70px] rounded-xl p-1.5 text-left transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#C49A1E]',
+                'min-h-[70px] rounded-xl p-1.5 text-left transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#DDAF3B]',
                 isDisabled ? 'cursor-default opacity-40' : 'cursor-pointer',
                 isSelected
                   ? 'border-2 border-[#4A3418] bg-[#4A3418]'
                   : isPast
                   ? 'border border-[#D7D2BF] bg-[#E9E4D2] dark:border-[#2A3424] dark:bg-[#141C10]'
                   : isToday
-                  ? 'border-2 border-[#C49A1E] bg-[#F0EDE0] dark:bg-[#1E2A1A]'
+                  ? 'border-2 border-[#DDAF3B] bg-[#F0EDE0] dark:bg-[#001A05]'
                   : hasBloc
                   ? 'border-2 border-[#4A3418] bg-[#4A3418]/20 hover:bg-[#4A3418]/30'
                   : isCurrentMonth
-                  ? 'bg-[#F0EDE0] hover:bg-[#E8E4D2] dark:bg-[#1E2A1A] dark:hover:bg-[#243220]'
+                  ? 'bg-[#F0EDE0] hover:bg-[#E8E4D2] dark:bg-[#001A05] dark:hover:bg-[#243220]'
                   : 'bg-[#E8E4D2] dark:bg-[#161E10]',
               ].join(' ')}
               aria-label={`${dayNum} - ${t('availability_blocks_count_aria', { count: dayBlocks.length })}`}
@@ -172,20 +172,20 @@ export function MonthCalendar({
               <span
                 className={`block text-[13px] font-bold ${
                   isSelected
-                    ? 'text-[#F0EDD4]'
+                    ? 'text-[#FFF9EC]'
                     : isPast
                     ? 'text-[#8E8A78] dark:text-[#55624C]'
                     : isToday
-                    ? 'text-[#C49A1E]'
+                    ? 'text-[#DDAF3B]'
                     : isCurrentMonth
-                    ? 'text-[#1A1A0A] dark:text-[#F0EDD4]'
+                    ? 'text-[#001201] dark:text-[#FFF9EC]'
                     : 'text-[#A0A090]'
                 }`}
               >
                 {dayNum}
               </span>
               {blocTag && !isPast && (
-                <span className="mt-1 block rounded px-1 py-0.5 text-[9px] font-bold text-[#C49A1E]" style={{ background: '#4A3418' }}>
+                <span className="mt-1 block rounded px-1 py-0.5 text-[9px] font-bold text-[#DDAF3B]" style={{ background: '#4A3418' }}>
                   {blocTag}
                 </span>
               )}

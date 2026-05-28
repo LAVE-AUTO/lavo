@@ -68,7 +68,7 @@ function MiniCalendar({
   const capitalized = monthLabel.charAt(0).toUpperCase() + monthLabel.slice(1);
 
   const navBtn =
-    'flex h-7 w-7 items-center justify-center rounded-lg text-foreground/55 transition-colors hover:bg-[#F0EDE4] hover:text-[#1A1A0A] dark:hover:bg-[#243020] dark:hover:text-[#F0EDD4]';
+    'flex h-7 w-7 items-center justify-center rounded-lg text-foreground/55 transition-colors hover:bg-[#F0EDE4] hover:text-[#001201] dark:hover:bg-[#001A05] dark:hover:text-[#FFF9EC]';
 
   return (
     <div className="w-full select-none">
@@ -79,7 +79,7 @@ function MiniCalendar({
             <polyline points="15 18 9 12 15 6" />
           </svg>
         </button>
-        <span className="text-[13px] font-bold text-[#1A1A0A] dark:text-[#F0EDD4]">{capitalized}</span>
+        <span className="text-[13px] font-bold text-[#001201] dark:text-[#FFF9EC]">{capitalized}</span>
         <button type="button" onClick={nextMonth} className={navBtn} aria-label="Mois suivant">
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
             <polyline points="9 18 15 12 9 6" />
@@ -115,10 +115,10 @@ function MiniCalendar({
               className={[
                 'flex h-8 w-full items-center justify-center rounded-lg text-[12px] font-semibold transition-colors',
                 isSelected
-                  ? 'bg-[#C49A1E] text-[#0C1209]'
+                  ? 'bg-[#DDAF3B] text-[#0C1209]'
                   : isToday
-                    ? 'ring-1 ring-[#C49A1E] text-[#C49A1E] hover:bg-[#C49A1E]/10'
-                    : 'text-[#1A1A0A] hover:bg-[#F0EDE4] dark:text-[#F0EDD4] dark:hover:bg-dark-surface',
+                    ? 'ring-1 ring-[#DDAF3B] text-[#DDAF3B] hover:bg-[#DDAF3B]/10'
+                    : 'text-[#001201] hover:bg-[#F0EDE4] dark:text-[#FFF9EC] dark:hover:bg-dark-surface',
               ].join(' ')}
               aria-pressed={isSelected}
               aria-label={iso}
@@ -174,7 +174,7 @@ export function HoursExceptions({ exceptions, saving = false, onAdd, onDelete, d
   return (
     <section className="rounded-2xl border border-[#E8E4DC] bg-white p-6 shadow-sm dark:border-[#1A2A14] dark:bg-[#182214]">
       <div className="mb-4 flex items-center justify-between gap-3">
-        <h3 className="text-[11px] font-bold uppercase tracking-[1.5px] text-[#C49A1E]">
+        <h3 className="text-[11px] font-bold uppercase tracking-[1.5px] text-[#DDAF3B]">
           {t('hours_exceptions_title')}
         </h3>
         {!showForm && (
@@ -183,7 +183,7 @@ export function HoursExceptions({ exceptions, saving = false, onAdd, onDelete, d
             disabled={disabled || saving}
             onClick={() => setShowForm(true)}
             aria-label={t('hours_exceptions_add')}
-            className="flex items-center gap-1.5 rounded-[8px] border border-[#C49A1E]/40 px-3 py-1.5 text-[12px] font-semibold text-[#C49A1E] transition-colors hover:bg-[#C49A1E]/8 disabled:cursor-not-allowed disabled:opacity-50"
+            className="flex items-center gap-1.5 rounded-[8px] border border-[#DDAF3B]/40 px-3 py-1.5 text-[12px] font-semibold text-[#DDAF3B] transition-colors hover:bg-[#DDAF3B]/8 disabled:cursor-not-allowed disabled:opacity-50"
           >
             <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
               <line x1="12" y1="5" x2="12" y2="19" />
@@ -203,7 +203,7 @@ export function HoursExceptions({ exceptions, saving = false, onAdd, onDelete, d
           onSubmit={handleSubmit}
           className="mb-4 flex flex-col gap-4 rounded-xl border border-[#E0DCD0] bg-[#F7F6F2] p-4 dark:border-dark-surface dark:bg-[#0F1A0C]"
         >
-          <p className="text-[12px] font-bold text-[#1A1A0A] dark:text-[#F0EDD4]">
+          <p className="text-[12px] font-bold text-[#001201] dark:text-[#FFF9EC]">
             {t('hours_exceptions_add_title')}
           </p>
 
@@ -219,7 +219,7 @@ export function HoursExceptions({ exceptions, saving = false, onAdd, onDelete, d
                   dateError
                     ? 'border-red-400 dark:border-red-700'
                     : date
-                      ? 'border-[#C49A1E]'
+                      ? 'border-[#DDAF3B]'
                       : 'border-[#E0DCD0] dark:border-dark-surface',
                 ].join(' ')}
               >
@@ -228,7 +228,7 @@ export function HoursExceptions({ exceptions, saving = false, onAdd, onDelete, d
                   onSelect={(iso) => { setDate(iso); if (dateError) setDateError(false); }}
                 />
                 {date && (
-                  <p className="mt-2 text-center text-[11px] font-semibold text-[#C49A1E]">
+                  <p className="mt-2 text-center text-[11px] font-semibold text-[#DDAF3B]">
                     {new Intl.DateTimeFormat(undefined, { dateStyle: 'long' }).format(
                       new Date(date + 'T00:00:00')
                     )}
@@ -270,7 +270,7 @@ export function HoursExceptions({ exceptions, saving = false, onAdd, onDelete, d
                 <button
                   type="submit"
                   disabled={submitting}
-                  className="rounded-xl bg-[#C49A1E] px-4 py-2 text-[12px] font-bold text-[#0C1209] transition-opacity hover:opacity-85 disabled:opacity-50"
+                  className="rounded-xl bg-[#DDAF3B] px-4 py-2 text-[12px] font-bold text-[#0C1209] transition-opacity hover:opacity-85 disabled:opacity-50"
                 >
                   {submitting ? '…' : t('hours_exceptions_add_submit')}
                 </button>
@@ -297,7 +297,7 @@ export function HoursExceptions({ exceptions, saving = false, onAdd, onDelete, d
           {exceptions.map((ex) => (
             <div key={ex.id} className="flex items-center justify-between gap-3 py-3">
               <div className="flex flex-col gap-0.5">
-                <span className="font-mono text-[13px] font-bold text-[#1A1A0A] dark:text-[#F0EDD4]">
+                <span className="font-mono text-[13px] font-bold text-[#001201] dark:text-[#FFF9EC]">
                   {ex.exception_date}
                 </span>
                 <span className="text-[12px] text-foreground/55 dark:text-[#9A9A8A]">{ex.reason}</span>

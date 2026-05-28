@@ -79,7 +79,7 @@ export function StationFilters({
       ? value.selectedWashTypes.filter((x) => x !== id)
       : [...value.selectedWashTypes, id] });
 
-  const inputBase = 'w-full rounded-lg border border-[#E0E0D0] dark:border-border bg-[#F5F5EE] dark:bg-tab-inactive text-[13px] text-[#1A1A1A] dark:text-white placeholder-[#9A9A8A] outline-none focus:border-gold transition-colors';
+  const inputBase = 'w-full rounded-lg border border-[#E0E0D0] dark:border-border bg-[#F5F5EE] dark:bg-tab-inactive text-[13px] text-[#001201] dark:text-white placeholder-[#9A9A8A] outline-none focus:border-gold transition-colors';
   const labelBase = 'block text-[11px] font-black text-foreground/70 dark:text-[#A0A090] uppercase tracking-[0.12em] mb-1.5';
 
   /* ── Inline desktop panel (main-branch style, dev-branch fields) ── */
@@ -90,7 +90,7 @@ export function StationFilters({
         {/* Header */}
         <div className="flex items-center justify-between mb-4">
           <div className="flex items-center gap-2">
-            <span className="text-[12px] sm:text-[13px] font-black text-[#1A1A1A] dark:text-white uppercase tracking-wider">
+            <span className="text-[12px] sm:text-[13px] font-black text-[#001201] dark:text-white uppercase tracking-wider">
               {t('filter_panel_title')}
             </span>
             {activeCount > 0 && (
@@ -198,7 +198,7 @@ export function StationFilters({
         {/* Header */}
         <div className="flex items-center justify-between px-5 sm:px-6 pt-2 sm:pt-5 pb-3 sm:pb-4 border-b border-[#E0E0D0] dark:border-border shrink-0">
           <div className="flex items-center gap-2">
-            <h2 id="filters-title" className="text-[16px] font-black text-[#1A1A1A] dark:text-white tracking-wider uppercase">
+            <h2 id="filters-title" className="text-[16px] font-black text-[#001201] dark:text-white tracking-wider uppercase">
               {t('filter_panel_title')}
             </h2>
             {activeCount > 0 && (
@@ -223,7 +223,7 @@ export function StationFilters({
         {/* Body */}
         <div className="scrollbar-hover flex-1 overflow-y-auto px-5 sm:px-6 py-5 space-y-5">
           <FilterRow label={t('filter_name_label')}>
-            <input type="text" value={value.nameSearch} onChange={(e) => patch({ nameSearch: e.target.value })} placeholder={t('filter_name_placeholder')} className="w-full px-3.5 py-2.5 rounded-xl bg-[#F5F5EE] dark:bg-tab-inactive border border-[#E0E0D0] dark:border-border text-[14px] text-[#1A1A1A] dark:text-white placeholder-[#9A9A8A] outline-none focus:border-gold transition-colors" />
+            <input type="text" value={value.nameSearch} onChange={(e) => patch({ nameSearch: e.target.value })} placeholder={t('filter_name_placeholder')} className="w-full px-3.5 py-2.5 rounded-xl bg-[#F5F5EE] dark:bg-tab-inactive border border-[#E0E0D0] dark:border-border text-[14px] text-[#001201] dark:text-white placeholder-[#9A9A8A] outline-none focus:border-gold transition-colors" />
           </FilterRow>
           <FilterRow label={t('filter_available_only')}>
             <div className="h-[44px] flex items-center px-3.5 rounded-xl border border-[#E0E0D0] dark:border-border bg-[#F5F5EE] dark:bg-tab-inactive">
@@ -255,8 +255,8 @@ export function StationFilters({
           </FilterRow>
           <FilterRow label={t('filter_time_label')}>
             <div className="grid grid-cols-2 gap-2.5">
-              <input type="time" value={value.timeFrom} onChange={(e) => patch({ timeFrom: e.target.value })} aria-label={t('filter_time_from')} className="w-full rounded-xl border border-[#E0E0D0] bg-[#F5F5EE] px-3 py-2.5 text-center font-mono text-[14px] text-[#1A1A1A] outline-none focus:border-gold dark:border-border dark:bg-tab-inactive dark:text-white transition-colors" />
-              <input type="time" value={value.timeTo} onChange={(e) => patch({ timeTo: e.target.value })} aria-label={t('filter_time_to')} className="w-full rounded-xl border border-[#E0E0D0] bg-[#F5F5EE] px-3 py-2.5 text-center font-mono text-[14px] text-[#1A1A1A] outline-none focus:border-gold dark:border-border dark:bg-tab-inactive dark:text-white transition-colors" />
+              <input type="time" value={value.timeFrom} onChange={(e) => patch({ timeFrom: e.target.value })} aria-label={t('filter_time_from')} className="w-full rounded-xl border border-[#E0E0D0] bg-[#F5F5EE] px-3 py-2.5 text-center font-mono text-[14px] text-[#001201] outline-none focus:border-gold dark:border-border dark:bg-tab-inactive dark:text-white transition-colors" />
+              <input type="time" value={value.timeTo} onChange={(e) => patch({ timeTo: e.target.value })} aria-label={t('filter_time_to')} className="w-full rounded-xl border border-[#E0E0D0] bg-[#F5F5EE] px-3 py-2.5 text-center font-mono text-[14px] text-[#001201] outline-none focus:border-gold dark:border-border dark:bg-tab-inactive dark:text-white transition-colors" />
             </div>
           </FilterRow>
         </div>
@@ -307,7 +307,7 @@ function DistanceInput({ value, onChange, placeholder }: {
         value={value}
         onChange={handleChange}
         placeholder={placeholder}
-        className="w-full rounded-xl border border-[#E0E0D0] bg-[#F5F5EE] py-2.5 pl-3.5 pr-10 text-[14px] text-[#1A1A1A] placeholder-[#9A9A8A] outline-none focus:border-gold dark:border-border dark:bg-tab-inactive dark:text-white transition-colors"
+        className="w-full rounded-xl border border-[#E0E0D0] bg-[#F5F5EE] py-2.5 pl-3.5 pr-10 text-[14px] text-[#001201] placeholder-[#9A9A8A] outline-none focus:border-gold dark:border-border dark:bg-tab-inactive dark:text-white transition-colors"
       />
       <span className="pointer-events-none absolute right-3.5 top-1/2 -translate-y-1/2 text-[12px] font-bold text-foreground/55">
         km
@@ -334,7 +334,7 @@ function PriceInput({ value, onChange, placeholder, unit }: {
         value={value}
         onChange={(e) => onChange(e.target.value)}
         placeholder={placeholder}
-        className="w-full rounded-xl border border-[#E0E0D0] bg-[#F5F5EE] py-2.5 pl-8 pr-3 text-[14px] text-[#1A1A1A] placeholder-[#9A9A8A] outline-none focus:border-gold dark:border-border dark:bg-tab-inactive dark:text-white transition-colors"
+        className="w-full rounded-xl border border-[#E0E0D0] bg-[#F5F5EE] py-2.5 pl-8 pr-3 text-[14px] text-[#001201] placeholder-[#9A9A8A] outline-none focus:border-gold dark:border-border dark:bg-tab-inactive dark:text-white transition-colors"
       />
     </div>
   );

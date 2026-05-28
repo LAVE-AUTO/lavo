@@ -86,7 +86,7 @@ export function AdminDeleteUserModal({ open, user, onClose, onDeleted }: Props) 
 
         {/* Header */}
         <div className="flex items-center justify-between border-b border-[#F0EDE6] px-6 py-4 dark:border-[#1A2A14]">
-          <h2 className="text-[15px] font-black text-[#1A1A0A] dark:text-[#F0EDD4]">{t('modal_title')}</h2>
+          <h2 className="text-[15px] font-black text-[#001201] dark:text-[#FFF9EC]">{t('modal_title')}</h2>
           <button type="button" onClick={onClose} disabled={busy} aria-label={t('btn_cancel')}
             className="flex h-7 w-7 items-center justify-center rounded-lg text-[#BBBBAA] transition-colors hover:bg-[#F0EDE6] hover:text-foreground/70 disabled:opacity-40 dark:hover:bg-[#1A2A14]">
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" aria-hidden="true"><line x1="18" y1="6" x2="6" y2="18" /><line x1="6" y1="6" x2="18" y2="18" /></svg>
@@ -98,11 +98,11 @@ export function AdminDeleteUserModal({ open, user, onClose, onDeleted }: Props) 
 
           {/* Target user info */}
           <div className="flex items-center gap-3 rounded-xl bg-[#F5F3EE] px-4 py-3 dark:bg-[#131E10]">
-            <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-[#1A1A0A]/8 text-[12px] font-black text-[#1A1A0A] dark:bg-[#F0EDD4]/8 dark:text-[#F0EDD4]">
+            <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-[#001201]/8 text-[12px] font-black text-[#001201] dark:bg-[#FFF9EC]/8 dark:text-[#FFF9EC]">
               {`${user.first_name?.[0] ?? ''}${user.last_name?.[0] ?? ''}`.toUpperCase() || '?'}
             </div>
             <div className="min-w-0">
-              <p className="truncate text-[13px] font-bold text-[#1A1A0A] dark:text-[#F0EDD4]">{displayName}</p>
+              <p className="truncate text-[13px] font-bold text-[#001201] dark:text-[#FFF9EC]">{displayName}</p>
               <p className="truncate text-[12px] text-foreground/55 dark:text-[#9A9A8A]">{user.email}</p>
             </div>
           </div>
@@ -173,7 +173,7 @@ export function AdminDeleteUserModal({ open, user, onClose, onDeleted }: Props) 
         {/* Footer */}
         <div className="flex justify-end gap-2 border-t border-[#F0EDE6] px-6 py-4 dark:border-[#1A2A14]">
           <button type="button" onClick={onClose} disabled={busy}
-            className="rounded-lg border border-[#D8D4C8] px-4 py-2 text-[13px] font-semibold text-foreground/65 transition-colors hover:bg-[#F5F3EE] disabled:opacity-50 dark:border-[#243020] dark:text-[#9A9A8A]">
+            className="rounded-lg border border-[#D8D4C8] px-4 py-2 text-[13px] font-semibold text-foreground/65 transition-colors hover:bg-[#F5F3EE] disabled:opacity-50 dark:border-[#001A05] dark:text-[#9A9A8A]">
             {t('btn_cancel')}
           </button>
           {mode === 'soft' ? (

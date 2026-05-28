@@ -160,9 +160,9 @@ export function StationQueuePage() {
   const totalWaiting = waitingEntries.length;
 
   return (
-    <div className="flex flex-1 flex-col overflow-hidden bg-[#EDEDED] dark:bg-[#1A2116]">
+    <div className="flex flex-1 flex-col overflow-hidden bg-[#EDEDED] dark:bg-[#001201]">
       {/* = Header */}
-      <div className="border-b border-[#CCCCCC] bg-surface px-6 pb-4 pt-5 dark:border-[#3A4A36] dark:bg-[#243020]">
+      <div className="border-b border-[#CCCCCC] bg-surface px-6 pb-4 pt-5 dark:border-[#3A4A36] dark:bg-[#001A05]">
         <div className="flex items-center justify-between gap-4">
           <div>
             <h1 className="text-[20px] font-bold text-foreground">{t('page_title')}</h1>
@@ -177,7 +177,7 @@ export function StationQueuePage() {
             {reservedCount > 0 && <StatChip count={reservedCount} color="#00C851" label={t('stat_reserved')} />}
             {walkInCount > 0   && <StatChip count={walkInCount}   color="#0044FF" label={t('stat_walkin')} />}
             <button type="button" onClick={() => loadData()}
-              className="flex items-center gap-1.5 rounded-[8px] border border-[#C0C0B0] bg-[#C8C8B4] px-3 py-1.5 text-[12px] font-semibold text-[#000717]/60 transition-colors hover:border-[#C09A18]/50 hover:text-[#C09A18] dark:border-[#3A4A36] dark:bg-[#1E2A1A] dark:text-[#FFFFF0]/50">
+              className="flex items-center gap-1.5 rounded-[8px] border border-[#C0C0B0] bg-[#C8C8B4] px-3 py-1.5 text-[12px] font-semibold text-[#000717]/60 transition-colors hover:border-[#C09A18]/50 hover:text-[#C09A18] dark:border-[#3A4A36] dark:bg-[#001A05] dark:text-[#FFFFF0]/50">
               <RefreshIcon />
               {t('btn_refresh')}
             </button>
@@ -277,7 +277,7 @@ export function StationQueuePage() {
 
 function StatChip({ count, color, label }: { count: number; color: string; label: string }) {
   return (
-    <div className="hidden items-center gap-1.5 rounded-[8px] bg-[#C8C8B4] px-3 py-1.5 sm:flex dark:bg-[#1E2A1A]">
+    <div className="hidden items-center gap-1.5 rounded-[8px] bg-[#C8C8B4] px-3 py-1.5 sm:flex dark:bg-[#001A05]">
       <span className="inline-block h-2 w-2 rounded-full" style={{ background: color }} />
       <span className="font-mono text-[14px] font-bold text-foreground">{count}</span>
       <span className="text-[11px] font-semibold text-[#000717]/50 dark:text-[#FFFFF0]/50">{label}</span>

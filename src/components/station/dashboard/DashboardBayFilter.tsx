@@ -56,7 +56,7 @@ export function DashboardBayFilter({ posts, selectedPostId, onSelect }: Props) {
             type="button"
             disabled={!hasPrev}
             onClick={goPrev}
-            className="flex h-6 w-6 items-center justify-center rounded text-foreground/55 transition-colors hover:bg-[#E8E4D0] disabled:opacity-30 dark:text-[#9A9A8A] dark:hover:bg-[#243020]"
+            className="flex h-6 w-6 items-center justify-center rounded text-foreground/55 transition-colors hover:bg-[#E8E4D0] disabled:opacity-30 dark:text-[#9A9A8A] dark:hover:bg-[#001A05]"
             aria-label={t('filter_page_prev')}
           >
             <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
@@ -70,7 +70,7 @@ export function DashboardBayFilter({ posts, selectedPostId, onSelect }: Props) {
             type="button"
             disabled={!hasNext}
             onClick={goNext}
-            className="flex h-6 w-6 items-center justify-center rounded text-foreground/55 transition-colors hover:bg-[#E8E4D0] disabled:opacity-30 dark:text-[#9A9A8A] dark:hover:bg-[#243020]"
+            className="flex h-6 w-6 items-center justify-center rounded text-foreground/55 transition-colors hover:bg-[#E8E4D0] disabled:opacity-30 dark:text-[#9A9A8A] dark:hover:bg-[#001A05]"
             aria-label={t('filter_page_next')}
           >
             <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
@@ -121,8 +121,8 @@ function BayItem({ active, onClick, label }: ItemProps) {
       className={[
         'rounded-lg px-3 py-2 text-left text-[12px] font-bold transition-all',
         active
-          ? 'border border-[#C49A1E] bg-[#C49A1E]/10 text-[#C49A1E]'
-          : 'border border-transparent bg-[#EFECDE] text-foreground/65 hover:bg-[#E8E4D0] dark:bg-[#1A2A14] dark:text-[#A0A090] dark:hover:bg-[#243020]',
+          ? 'border border-[#DDAF3B] bg-[#DDAF3B]/10 text-[#DDAF3B]'
+          : 'border border-transparent bg-[#EFECDE] text-foreground/65 hover:bg-[#E8E4D0] dark:bg-[#1A2A14] dark:text-[#A0A090] dark:hover:bg-[#001A05]',
       ].join(' ')}
     >
       {label}
@@ -138,8 +138,8 @@ function MobilePill({ active, onClick, label }: ItemProps) {
       className={[
         'flex-shrink-0 rounded-full px-3 py-1.5 text-[11px] font-bold transition-all whitespace-nowrap',
         active
-          ? 'border border-[#C49A1E] bg-[#C49A1E]/10 text-[#C49A1E]'
-          : 'border border-[#E0DCD0] bg-[#EFECDE] text-foreground/65 hover:bg-[#E8E4D0] dark:border-[#1A2A14] dark:bg-[#1A2A14] dark:text-[#A0A090] dark:hover:bg-[#243020]',
+          ? 'border border-[#DDAF3B] bg-[#DDAF3B]/10 text-[#DDAF3B]'
+          : 'border border-[#E0DCD0] bg-[#EFECDE] text-foreground/65 hover:bg-[#E8E4D0] dark:border-[#1A2A14] dark:bg-[#1A2A14] dark:text-[#A0A090] dark:hover:bg-[#001A05]',
       ].join(' ')}
     >
       {label}

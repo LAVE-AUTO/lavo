@@ -85,7 +85,7 @@ export function AdminStationsManagement({ stations, loading, error, query, onAct
             {isBusy ? '…' : t('btn_confirm')}
           </button>
           <button type="button" onClick={() => { setConfirmId(null); setConfirmAction(null); }}
-            className="rounded-[14px] border border-[#D8D4C8] px-4 py-2 text-[12px] font-semibold text-foreground/65 transition-colors hover:bg-[#F5F3EE] dark:border-[#243020] dark:text-[#9A9A8A] dark:hover:bg-[#182214]">
+            className="rounded-[14px] border border-[#D8D4C8] px-4 py-2 text-[12px] font-semibold text-foreground/65 transition-colors hover:bg-[#F5F3EE] dark:border-[#001A05] dark:text-[#9A9A8A] dark:hover:bg-[#182214]">
             {t('btn_cancel')}
           </button>
         </div>
@@ -112,7 +112,7 @@ export function AdminStationsManagement({ stations, loading, error, query, onAct
   if (!filtered.length) return (
     <div className="flex flex-col items-center gap-3 py-20 text-center">
       <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-[#F5F3EE] dark:bg-[#131E10]">
-        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#C49A1E" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z" /><polyline points="9 22 9 12 15 12 15 22" /></svg>
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#DDAF3B" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z" /><polyline points="9 22 9 12 15 12 15 22" /></svg>
       </div>
       <p className="text-[13px] font-semibold text-[#999]">{q ? t('empty_search') : t('empty_stations')}</p>
     </div>
@@ -130,12 +130,12 @@ export function AdminStationsManagement({ stations, loading, error, query, onAct
             <article key={station.id} className="rounded-[24px] border border-[#E8E3D7] bg-[#FBFAF7] p-4 shadow-[0_12px_30px_rgba(26,26,10,0.05)] dark:border-[#1E2E18] dark:bg-[#111A0D]">
               <div className="flex items-start justify-between gap-3">
                 <div className="flex min-w-0 items-start gap-3">
-                  <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-[14px] bg-[#C49A1E]/12 text-[12px] font-black text-[#C49A1E]">
+                  <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-[14px] bg-[#DDAF3B]/12 text-[12px] font-black text-[#DDAF3B]">
                     {initials(station.name)}
                   </div>
                   <div className="min-w-0">
                     <Link href={`/admin/stations/${station.id}` as Parameters<typeof Link>[0]['href']}
-                      className="block truncate text-[14px] font-black text-[#1A1A0A] underline-offset-2 hover:text-[#C49A1E] hover:underline dark:text-[#F0EDD4]">
+                      className="block truncate text-[14px] font-black text-[#001201] underline-offset-2 hover:text-[#DDAF3B] hover:underline dark:text-[#FFF9EC]">
                       {station.name}
                     </Link>
                     <p className="mt-0.5 text-[12px] text-[#979083] dark:text-[#A0A090]">{formatDate(station.created_at)}</p>
@@ -151,7 +151,7 @@ export function AdminStationsManagement({ stations, loading, error, query, onAct
               <div className="mt-4 flex flex-wrap gap-2">
                 {renderActionButton(station, true)}
                 <button type="button" onClick={() => onEdit(station)} title={t('btn_edit')}
-                  className="flex h-8 w-8 items-center justify-center rounded-[12px] border border-[#E1DBCF] bg-white text-foreground/55 transition-colors hover:border-[#C49A1E]/40 hover:bg-[#FCF6E5] hover:text-[#9A7A13] dark:border-[#1E2E18] dark:bg-[#0E170C] dark:text-[#A0A090]">
+                  className="flex h-8 w-8 items-center justify-center rounded-[12px] border border-[#E1DBCF] bg-white text-foreground/55 transition-colors hover:border-[#DDAF3B]/40 hover:bg-[#FCF6E5] hover:text-[#9A7A13] dark:border-[#1E2E18] dark:bg-[#0E170C] dark:text-[#A0A090]">
                   <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7" /><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z" /></svg>
                 </button>
                 <button type="button" onClick={() => onDelete(station)} title={t('btn_delete')}
@@ -188,13 +188,13 @@ export function AdminStationsManagement({ stations, loading, error, query, onAct
                       : 'border-[#F2EFE8] bg-[#FAFAF7] hover:bg-[#FEFCF5] dark:border-[#1A2A14] dark:bg-[#0F180B] dark:hover:bg-[#182416]',
                 ].join(' ')}>
 
-                <div className="flex h-9 w-9 items-center justify-center rounded-[14px] bg-[#C49A1E]/12 text-[12px] font-black text-[#C49A1E]">
+                <div className="flex h-9 w-9 items-center justify-center rounded-[14px] bg-[#DDAF3B]/12 text-[12px] font-black text-[#DDAF3B]">
                   {initials(station.name)}
                 </div>
 
                 <div className="min-w-0">
                   <Link href={`/admin/stations/${station.id}` as Parameters<typeof Link>[0]['href']}
-                    className="block truncate text-[13px] font-bold text-[#1A1A0A] underline-offset-2 hover:text-[#C49A1E] hover:underline dark:text-[#F0EDD4]">
+                    className="block truncate text-[13px] font-bold text-[#001201] underline-offset-2 hover:text-[#DDAF3B] hover:underline dark:text-[#FFF9EC]">
                     {station.name}
                   </Link>
                   <p className="truncate text-[12px] text-[#BBBBAA] dark:text-[#A0A090]">{formatDate(station.created_at)}</p>
@@ -207,7 +207,7 @@ export function AdminStationsManagement({ stations, loading, error, query, onAct
                 <div className="flex items-center justify-end gap-1.5">
                   {renderActionButton(station)}
                   <button type="button" onClick={() => onEdit(station)} title={t('btn_edit')}
-                    className="flex h-8 w-8 items-center justify-center rounded-[12px] border border-[#E1DBCF] bg-white text-foreground/55 transition-colors hover:border-[#C49A1E]/40 hover:bg-[#FCF6E5] hover:text-[#9A7A13] dark:border-[#1E2E18] dark:bg-[#0E170C] dark:text-[#A0A090] dark:hover:bg-[#1A2410] dark:hover:text-[#F0D98C]">
+                    className="flex h-8 w-8 items-center justify-center rounded-[12px] border border-[#E1DBCF] bg-white text-foreground/55 transition-colors hover:border-[#DDAF3B]/40 hover:bg-[#FCF6E5] hover:text-[#9A7A13] dark:border-[#1E2E18] dark:bg-[#0E170C] dark:text-[#A0A090] dark:hover:bg-[#1A2410] dark:hover:text-[#F0D98C]">
                     <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7" /><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z" /></svg>
                   </button>
                   <button type="button" onClick={() => onDelete(station)} title={t('btn_delete')}

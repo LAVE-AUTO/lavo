@@ -17,7 +17,7 @@ function MailSentIcon() {
       height="40"
       viewBox="0 0 24 24"
       fill="none"
-      stroke="#C49A1E"
+      stroke="#DDAF3B"
       strokeWidth="1.75"
       strokeLinecap="round"
       strokeLinejoin="round"

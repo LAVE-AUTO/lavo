@@ -97,7 +97,7 @@ export function AdminAddUserModal({ open, onClose }: Props) {
       <div className="relative z-10 w-full max-w-[480px] animate-fade-in-up overflow-hidden rounded-2xl border border-[#E8E4DC] bg-white shadow-2xl dark:border-[#1E2E18] dark:bg-[#0F1A0C]">
         {/* Header */}
         <div className="flex items-center justify-between border-b border-[#F0EDE6] px-6 py-4 dark:border-[#1A2A14]">
-          <h2 className="text-[15px] font-black text-[#1A1A0A] dark:text-[#F0EDD4]">
+          <h2 className="text-[15px] font-black text-[#001201] dark:text-[#FFF9EC]">
             {step === 'form' ? t('modal_title') : t('modal_success_title')}
           </h2>
           <button type="button" onClick={onClose} disabled={busy} aria-label={t('btn_close')}

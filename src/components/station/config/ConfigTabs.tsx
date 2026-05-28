@@ -36,13 +36,13 @@ export function ConfigTabs({ tabs, active, onChange }: Props) {
             onClick={() => onChange(tab.id)}
             className={`relative flex shrink-0 items-center gap-2 px-4 py-3 text-[13px] font-semibold transition-colors duration-150 ${
               isActive
-                ? 'text-[#C49A1E]'
-                : 'text-foreground/55 hover:text-[#1A1A0A] dark:text-[#9A9A8A] dark:hover:text-[#F0EDD4]'
+                ? 'text-[#DDAF3B]'
+                : 'text-foreground/55 hover:text-[#001201] dark:text-[#9A9A8A] dark:hover:text-[#FFF9EC]'
             }`}
           >
             <span
               className={`transition-colors ${
-                isActive ? 'text-[#C49A1E]' : 'text-[#AAAAAA] dark:text-[#5A5A4A]'
+                isActive ? 'text-[#DDAF3B]' : 'text-[#AAAAAA] dark:text-[#5A5A4A]'
               }`}
               aria-hidden="true"
             >
@@ -50,7 +50,7 @@ export function ConfigTabs({ tabs, active, onChange }: Props) {
             </span>
             <span>{tab.label}</span>
             {isActive && (
-              <span className="absolute inset-x-2 -bottom-px h-0.5 rounded-t-full bg-[#C49A1E]" />
+              <span className="absolute inset-x-2 -bottom-px h-0.5 rounded-t-full bg-[#DDAF3B]" />
             )}
           </button>
         );

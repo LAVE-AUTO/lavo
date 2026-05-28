@@ -31,18 +31,18 @@ export function RefuseReasonModal({ open, loading, error, onConfirm, onCancel }:
       {/* Panel */}
       <div className="relative w-full max-w-sm animate-fade-in overflow-hidden rounded-[16px] bg-white shadow-2xl dark:bg-[#1A2416]">
         {/* Top accent */}
-        <div className="h-[3px] w-full bg-gradient-to-r from-[#E8472A] to-[#FF7A5A]" />
+        <div className="h-[3px] w-full bg-gradient-to-r from-[#391C01] to-[#FF7A5A]" />
 
         <div className="p-6">
           {/* Icon + title */}
           <div className="mb-4 flex items-start gap-3">
-            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-[#E8472A]/10">
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#E8472A" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-[#391C01]/10">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#391C01" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
                 <circle cx="12" cy="12" r="10" /><line x1="15" y1="9" x2="9" y2="15" /><line x1="9" y1="9" x2="15" y2="15" />
               </svg>
             </div>
             <div>
-              <h2 id="refuse-modal-title" className="text-[15px] font-black text-[#1A1A0A] dark:text-[#F0EDD4]">{t('refuse_title')}</h2>
+              <h2 id="refuse-modal-title" className="text-[15px] font-black text-[#001201] dark:text-[#FFF9EC]">{t('refuse_title')}</h2>
               <p className="mt-0.5 text-[12px] text-foreground/70/60 dark:text-[#FFFFF0]/45">{t('refuse_message')}</p>
             </div>
           </div>
@@ -63,7 +63,7 @@ export function RefuseReasonModal({ open, loading, error, onConfirm, onCancel }:
               placeholder={t('refuse_reason_placeholder')}
               aria-invalid={!!error}
               aria-describedby={error ? 'refuse-modal-error' : undefined}
-              className="w-full resize-none rounded-[10px] border border-[#DDD9CC] bg-[#F5F4EE] px-3.5 py-2.5 text-[13px] text-[#1A1A0A] outline-none transition-all duration-150 focus:border-[#E8472A]/60 focus:ring-2 focus:ring-[#E8472A]/10 dark:border-[#2A3826] dark:bg-[#111A0E] dark:text-[#F0EDD4] placeholder:text-foreground/70/30 dark:placeholder:text-[#FFFFF0]/20 disabled:opacity-50"
+              className="w-full resize-none rounded-[10px] border border-[#DDD9CC] bg-[#F5F4EE] px-3.5 py-2.5 text-[13px] text-[#001201] outline-none transition-all duration-150 focus:border-[#391C01]/60 focus:ring-2 focus:ring-[#391C01]/10 dark:border-[#2A3826] dark:bg-[#111A0E] dark:text-[#FFF9EC] placeholder:text-foreground/70/30 dark:placeholder:text-[#FFFFF0]/20 disabled:opacity-50"
             />
             <div className="mt-1 flex items-center justify-between">
               <span className="text-[11px] text-foreground/70/30 dark:text-[#FFFFF0]/20">
@@ -77,7 +77,7 @@ export function RefuseReasonModal({ open, loading, error, onConfirm, onCancel }:
 
           {/* Error */}
           {error && (
-            <div id="refuse-modal-error" role="alert" className="mt-3 rounded-[8px] bg-[#FEF2F2] px-3 py-2 text-[12px] font-medium text-[#E8472A] dark:bg-[#2A0A0A]">
+            <div id="refuse-modal-error" role="alert" className="mt-3 rounded-[8px] bg-[#FEF2F2] px-3 py-2 text-[12px] font-medium text-[#391C01] dark:bg-[#2A0A0A]">
               {error}
             </div>
           )}
@@ -96,7 +96,7 @@ export function RefuseReasonModal({ open, loading, error, onConfirm, onCancel }:
               type="button"
               onClick={() => onConfirm(reason)}
               disabled={loading}
-              className="flex-1 rounded-[10px] bg-[#E8472A] py-2.5 text-[13px] font-bold text-white shadow-sm transition-all duration-150 hover:bg-[#D43D22] hover:shadow-md disabled:opacity-60"
+              className="flex-1 rounded-[10px] bg-[#391C01] py-2.5 text-[13px] font-bold text-white shadow-sm transition-all duration-150 hover:bg-[#D43D22] hover:shadow-md disabled:opacity-60"
             >
               {loading ? (
                 <span className="flex items-center justify-center gap-2">

@@ -22,7 +22,7 @@ export function PageLoader({ label }: Props) {
         height="28"
         viewBox="0 0 24 24"
         fill="none"
-        stroke="#C49A1E"
+        stroke="#DDAF3B"
         strokeWidth="2.5"
         strokeLinecap="round"
         aria-hidden="true"

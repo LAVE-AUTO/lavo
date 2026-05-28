@@ -108,7 +108,7 @@ export function FileUploadZone({ label, hint, required, value, onChange, error }
 
   return (
     <div className="mb-5">
-      <p className="text-[15px] font-semibold text-[#1A1A1A] dark:text-white mb-1.5 tracking-wide">
+      <p className="text-[15px] font-semibold text-[#001201] dark:text-white mb-1.5 tracking-wide">
         {label}
         {required && <span className="text-gold ml-0.5">*</span>}
       </p>
@@ -120,7 +120,7 @@ export function FileUploadZone({ label, hint, required, value, onChange, error }
             <path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z" />
             <polyline points="14 2 14 8 20 8" />
           </svg>
-          <span className="flex-1 text-[14px] text-[#1A1A1A] dark:text-white truncate">{value.name}</span>
+          <span className="flex-1 text-[14px] text-[#001201] dark:text-white truncate">{value.name}</span>
           <button
             type="button"
             onClick={() => onChange(null)}

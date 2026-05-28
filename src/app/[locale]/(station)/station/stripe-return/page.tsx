@@ -25,7 +25,7 @@ export default function StripeReturnPage() {
             <polyline points="20 6 9 17 4 12" />
           </svg>
         </div>
-        <h1 className="text-[16px] font-black text-[#1A1A0A] dark:text-[#F0EDD4]">
+        <h1 className="text-[16px] font-black text-[#001201] dark:text-[#FFF9EC]">
           {t('stripe_return_title')}
         </h1>
         <p className="text-center text-[13px] text-foreground/65 dark:text-[#9A9A8A]">

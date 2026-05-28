@@ -123,19 +123,19 @@ export function StartServiceModal({ open, onClose, clientName, onSubmit }: Props
                 }
               }}
               aria-label={t('start_modal_digit_label', { n: i + 1 })}
-              className={`h-14 w-11 rounded-xl border bg-white text-center text-[24px] font-black uppercase tabular-nums tracking-wider text-[#1A1A0A] outline-none transition-all dark:bg-[#0F1A0C] dark:text-[#F0EDD4] ${
+              className={`h-14 w-11 rounded-xl border bg-white text-center text-[24px] font-black uppercase tabular-nums tracking-wider text-[#001201] outline-none transition-all dark:bg-[#0F1A0C] dark:text-[#FFF9EC] ${
                 error
-                  ? 'border-[#E8472A] focus:border-[#E8472A] focus:ring-2 focus:ring-[#E8472A]/30'
+                  ? 'border-[#391C01] focus:border-[#391C01] focus:ring-2 focus:ring-[#391C01]/30'
                   : d
-                    ? 'border-[#C49A1E] focus:border-[#C49A1E] focus:ring-2 focus:ring-[#C49A1E]/30'
-                    : 'border-[#E0DCD0] focus:border-[#C49A1E] focus:ring-2 focus:ring-[#C49A1E]/30 dark:border-[#243020]'
+                    ? 'border-[#DDAF3B] focus:border-[#DDAF3B] focus:ring-2 focus:ring-[#DDAF3B]/30'
+                    : 'border-[#E0DCD0] focus:border-[#DDAF3B] focus:ring-2 focus:ring-[#DDAF3B]/30 dark:border-[#001A05]'
               }`}
             />
           ))}
         </div>
 
         {error && (
-          <div role="alert" className="text-center text-[12px] font-bold text-[#E8472A]">
+          <div role="alert" className="text-center text-[12px] font-bold text-[#391C01]">
             {error}
           </div>
         )}
@@ -149,7 +149,7 @@ export function StartServiceModal({ open, onClose, clientName, onSubmit }: Props
           type="button"
           onClick={onClose}
           disabled={submitting}
-          className="rounded-lg border border-[#E0DCD0] px-4 py-2 text-[13px] font-bold text-foreground/65 transition-colors hover:bg-[#F0EDE0] disabled:opacity-50 dark:border-[#243020] dark:text-[#A0A090] dark:hover:bg-[#1A2A14]"
+          className="rounded-lg border border-[#E0DCD0] px-4 py-2 text-[13px] font-bold text-foreground/65 transition-colors hover:bg-[#F0EDE0] disabled:opacity-50 dark:border-[#001A05] dark:text-[#A0A090] dark:hover:bg-[#1A2A14]"
         >
           {t('btn_cancel')}
         </button>
@@ -157,7 +157,7 @@ export function StartServiceModal({ open, onClose, clientName, onSubmit }: Props
           type="button"
           onClick={() => void submit()}
           disabled={submitting || digits.join('').length !== CODE_LENGTH}
-          className="rounded-lg bg-[#C49A1E] px-5 py-2 text-[13px] font-black text-[#0C1209] transition-opacity hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-40"
+          className="rounded-lg bg-[#DDAF3B] px-5 py-2 text-[13px] font-black text-[#0C1209] transition-opacity hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-40"
         >
           {submitting ? t('start_modal_submitting') : t('start_modal_confirm')}
         </button>

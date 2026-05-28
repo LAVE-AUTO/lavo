@@ -59,13 +59,13 @@ export function LocationPermissionToast({ duration = 10_000 }: LocationPermissio
     >
       {/* Row 1 — icon + title */}
       <div className="flex items-center gap-3 px-4 pt-4 pb-1.5">
-        <span className="shrink-0 w-8 h-8 rounded-xl bg-gold/15 flex items-center justify-center text-[#c8980a]" aria-hidden="true">
+        <span className="shrink-0 w-8 h-8 rounded-xl bg-gold/15 flex items-center justify-center text-[#DDAF3B]" aria-hidden="true">
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
             <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z"/>
             <circle cx="12" cy="10" r="3"/>
           </svg>
         </span>
-        <p className="text-[14px] sm:text-[17px] font-black text-[#1a1a1a] dark:text-white leading-tight">
+        <p className="text-[14px] sm:text-[17px] font-black text-[#001201] dark:text-white leading-tight">
           {t('title')}
         </p>
       </div>
@@ -80,7 +80,7 @@ export function LocationPermissionToast({ duration = 10_000 }: LocationPermissio
         <button
           type="button"
           onClick={dismiss}
-          className="flex-1 py-2 rounded-xl border border-gold/55 text-[12.5px] font-bold text-[#c8980a] hover:bg-gold/8 transition-colors cursor-pointer"
+          className="flex-1 py-2 rounded-xl border border-gold/55 text-[12.5px] font-bold text-[#DDAF3B] hover:bg-gold/8 transition-colors cursor-pointer"
         >
           {t('btn_close')}
         </button>

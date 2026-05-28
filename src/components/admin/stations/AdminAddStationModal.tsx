@@ -145,7 +145,7 @@ export function AdminAddStationModal({ open, onClose, onCreated }: Props) {
         {/* Header */}
         <div className="flex items-center justify-between border-b border-[#F0EDE6] px-6 py-4 dark:border-[#1A2A14]">
           <div>
-            <h2 className="text-[15px] font-black text-[#1A1A0A] dark:text-[#F0EDD4]">
+            <h2 className="text-[15px] font-black text-[#001201] dark:text-[#FFF9EC]">
               {step === 'success' ? t('modal_success_title') : t('modal_title')}
             </h2>
             {step !== 'success' && (
@@ -154,9 +154,9 @@ export function AdminAddStationModal({ open, onClose, onCreated }: Props) {
                   <div key={s} className="flex items-center gap-1.5">
                     <div className={[
                       'flex h-4 w-4 items-center justify-center rounded-full text-[9px] font-black',
-                      step === s ? 'bg-[#C49A1E] text-[#0C1209]' : (step as number) > s ? 'bg-[#00C851]/20 text-[#00C851]' : 'bg-[#F0EDE6] text-[#999] dark:bg-[#1A2A14] dark:text-[#A0A090]',
+                      step === s ? 'bg-[#DDAF3B] text-[#0C1209]' : (step as number) > s ? 'bg-[#00C851]/20 text-[#00C851]' : 'bg-[#F0EDE6] text-[#999] dark:bg-[#1A2A14] dark:text-[#A0A090]',
                     ].join(' ')}>{(step as number) > s ? '✓' : s}</div>
-                    <span className={`text-[11px] font-semibold ${step === s ? 'text-[#1A1A0A] dark:text-[#F0EDD4]' : 'text-[#999] dark:text-[#A0A090]'}`}>{STEP_LABELS[s]}</span>
+                    <span className={`text-[11px] font-semibold ${step === s ? 'text-[#001201] dark:text-[#FFF9EC]' : 'text-[#999] dark:text-[#A0A090]'}`}>{STEP_LABELS[s]}</span>
                     {s < 3 && <div className="h-px w-3 bg-[#E0DCD0] dark:bg-[#1A2A14]" />}
                   </div>
                 ))}

@@ -338,7 +338,7 @@ export function StationDetail({ id }: StationDetailProps) {
             className="absolute top-4 right-4 w-10 h-10 rounded-full bg-black/55 backdrop-blur-sm flex items-center justify-center hover:bg-black/75 transition-colors cursor-pointer"
             aria-label={isFavorite(id) ? t('detail_remove_favorite') : t('detail_add_favorite')}
           >
-            <svg width="18" height="18" viewBox="0 0 24 24" fill={isFavorite(id) ? '#C49A1E' : 'none'} stroke={isFavorite(id) ? '#C49A1E' : '#fff'} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill={isFavorite(id) ? '#DDAF3B' : 'none'} stroke={isFavorite(id) ? '#DDAF3B' : '#fff'} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
               <path d="M20.84 4.61a5.5 5.5 0 00-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 00-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 000-7.78z" />
             </svg>
           </button>
@@ -407,7 +407,7 @@ export function StationDetail({ id }: StationDetailProps) {
                   role="status"
                   className="flex gap-3 rounded-2xl border border-Hurryline-error/30 bg-Hurryline-error/10 px-4 py-3.5"
                 >
-                  <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#E8472A" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true" className="shrink-0 mt-0.5">
+                  <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#391C01" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true" className="shrink-0 mt-0.5">
                     <path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z" />
                     <line x1="12" y1="9" x2="12" y2="13" />
                     <line x1="12" y1="17" x2="12.01" y2="17" />
@@ -452,7 +452,7 @@ export function StationDetail({ id }: StationDetailProps) {
                 className="flex w-full items-center gap-4 bg-surface rounded-2xl px-5 py-4 transition-colors hover:border-gold/40 border border-border group/loc text-left cursor-pointer disabled:opacity-60"
               >
                 <div className="w-11 h-11 rounded-full bg-gold/15 flex items-center justify-center shrink-0">
-                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#C49A1E" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#DDAF3B" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                     <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z" />
                     <circle cx="12" cy="10" r="3" />
                   </svg>
@@ -461,7 +461,7 @@ export function StationDetail({ id }: StationDetailProps) {
                   <p className="text-[15px] font-semibold text-foreground truncate">{station.address}</p>
                   <p className="text-[13px] text-foreground/70">{station.city}</p>
                 </div>
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#C49A1E" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="shrink-0 group-hover/loc:translate-x-0.5 transition-transform">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#DDAF3B" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="shrink-0 group-hover/loc:translate-x-0.5 transition-transform">
                   <polyline points="9 18 15 12 9 6" />
                 </svg>
               </button>

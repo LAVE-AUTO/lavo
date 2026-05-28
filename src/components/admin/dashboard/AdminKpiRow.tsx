@@ -64,7 +64,7 @@ function KpiCard({ icon, value, label, trendValue, trendLabel, trendUp, sparklin
             <div className="truncate text-[11px] font-bold uppercase tracking-[0.22em] text-[#8A8A7C] dark:text-[#A0A090]">
               {label}
             </div>
-            <div className="mt-2 text-[clamp(1.9rem,3vw,2.6rem)] font-black leading-none tracking-tight text-[#0F1A0C] dark:text-[#F0EDD4]">
+            <div className="mt-2 text-[clamp(1.9rem,3vw,2.6rem)] font-black leading-none tracking-tight text-[#0F1A0C] dark:text-[#FFF9EC]">
               {masked ? '••••' : value}
             </div>
           </div>
@@ -87,7 +87,7 @@ function KpiCard({ icon, value, label, trendValue, trendLabel, trendUp, sparklin
           <div className="text-[10px] font-bold uppercase tracking-[0.2em] text-[#8A8A7C] dark:text-[#A0A090]">
             {trendLabel}
           </div>
-          <div className="mt-1 text-sm font-black leading-tight text-[#0F1A0C] dark:text-[#F0EDD4]">
+          <div className="mt-1 text-sm font-black leading-tight text-[#0F1A0C] dark:text-[#FFF9EC]">
             {trendValue}
           </div>
         </div>
@@ -103,7 +103,7 @@ function KpiCard({ icon, value, label, trendValue, trendLabel, trendUp, sparklin
   );
 }
 
-const GOLD = '#C49A1E';
+const GOLD = '#DDAF3B';
 
 const TransactionsIcon = () => (
   <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke={GOLD} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -167,7 +167,7 @@ export function AdminKpiRow({ masked = false }: { masked?: boolean }) {
   if (loading) {
     return (
       <div className="flex items-center justify-center py-12">
-        <div className="h-6 w-6 animate-spin rounded-full border-[3px] border-[#C49A1E] border-t-transparent" />
+        <div className="h-6 w-6 animate-spin rounded-full border-[3px] border-[#DDAF3B] border-t-transparent" />
       </div>
     );
   }

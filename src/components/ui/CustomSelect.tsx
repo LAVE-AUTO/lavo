@@ -54,11 +54,11 @@ export function CustomSelect({ options, value, onChange, placeholder }: CustomSe
         className={[
           'w-full flex items-center justify-between px-3 sm:px-3.5 py-2.5 rounded-xl border text-[13.5px] sm:text-[14px] font-semibold transition-all duration-150 select-none cursor-pointer',
           isActive
-            ? 'border-gold bg-gold/5 dark:bg-gold/10 text-[#1A1A1A] dark:text-white'
+            ? 'border-gold bg-gold/5 dark:bg-gold/10 text-[#001201] dark:text-white'
             : 'border-[#E0E0D0] dark:border-border bg-[#F5F5EE] dark:bg-tab-inactive text-foreground/70',
         ].join(' ')}
       >
-        <span className={`truncate ${value ? 'text-[#1A1A1A] dark:text-white' : ''}`}>{triggerLabel}</span>
+        <span className={`truncate ${value ? 'text-[#001201] dark:text-white' : ''}`}>{triggerLabel}</span>
         <svg
           width="14" height="14" viewBox="0 0 24 24" fill="none"
           stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"
@@ -88,7 +88,7 @@ export function CustomSelect({ options, value, onChange, placeholder }: CustomSe
                   'w-full flex items-center justify-between px-3.5 py-2.5 text-[14px] font-semibold text-left transition-colors duration-100 cursor-pointer',
                   isSel
                     ? 'text-gold bg-gold/5 dark:bg-gold/10'
-                    : 'text-[#1A1A1A] dark:text-white hover:bg-[#F5F5EE] dark:hover:bg-tab-inactive',
+                    : 'text-[#001201] dark:text-white hover:bg-[#F5F5EE] dark:hover:bg-tab-inactive',
                 ].join(' ')}
               >
                 <span>{opt.label}</span>
@@ -157,11 +157,11 @@ export function CustomMultiSelect({ options, selected, onToggle, placeholder }: 
         className={[
           'w-full flex items-center justify-between px-3 sm:px-3.5 py-2.5 rounded-xl border text-[13.5px] sm:text-[14px] font-semibold transition-all duration-150 select-none cursor-pointer',
           isActive
-            ? 'border-gold bg-gold/5 dark:bg-gold/10 text-[#1A1A1A] dark:text-white'
+            ? 'border-gold bg-gold/5 dark:bg-gold/10 text-[#001201] dark:text-white'
             : 'border-[#E0E0D0] dark:border-border bg-[#F5F5EE] dark:bg-tab-inactive text-foreground/70',
         ].join(' ')}
       >
-        <span className={`truncate ${selected.length > 0 ? 'text-[#1A1A1A] dark:text-white' : ''}`}>{triggerLabel}</span>
+        <span className={`truncate ${selected.length > 0 ? 'text-[#001201] dark:text-white' : ''}`}>{triggerLabel}</span>
         <svg
           width="14" height="14" viewBox="0 0 24 24" fill="none"
           stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"
@@ -201,7 +201,7 @@ export function CustomMultiSelect({ options, selected, onToggle, placeholder }: 
                   'w-full flex items-center justify-between px-3.5 py-2.5 text-[14px] font-semibold text-left transition-colors duration-100 cursor-pointer',
                   isSel
                     ? 'text-gold bg-gold/5 dark:bg-gold/10'
-                    : 'text-[#1A1A1A] dark:text-white hover:bg-[#F5F5EE] dark:hover:bg-tab-inactive',
+                    : 'text-[#001201] dark:text-white hover:bg-[#F5F5EE] dark:hover:bg-tab-inactive',
                 ].join(' ')}
               >
                 <span>{opt.label}</span>

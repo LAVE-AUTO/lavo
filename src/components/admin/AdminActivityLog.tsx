@@ -55,8 +55,8 @@ const ACTION_VARIANT: Record<string, ActionBadgeVariant> = {
 const BADGE_CLASSES: Record<ActionBadgeVariant, string> = {
   success: 'bg-[#F4F1E8] text-[#166534] ring-1 ring-inset ring-[#22C55E]/15 dark:bg-[#171F12] dark:text-[#86EFAC] dark:ring-[#22C55E]/15',
   danger:  'bg-[#FBF1F2] text-[#9F1239] ring-1 ring-inset ring-[#F43F5E]/15 dark:bg-[#1F1414] dark:text-[#FDA4AF] dark:ring-[#F43F5E]/15',
-  warning: 'bg-[#FBF6E8] text-[#7A5E0A] ring-1 ring-inset ring-[#C49A1E]/20 dark:bg-[#1F1A0E] dark:text-[#F0D98C] dark:ring-[#C49A1E]/20',
-  neutral: 'bg-[#F4F2EC] text-[#5A554B] ring-1 ring-inset ring-[#1A1A0A]/8  dark:bg-[#171F12] dark:text-[#A6A091] dark:ring-[#F0EDD4]/10',
+  warning: 'bg-[#FBF6E8] text-[#7A5E0A] ring-1 ring-inset ring-[#DDAF3B]/20 dark:bg-[#1F1A0E] dark:text-[#F0D98C] dark:ring-[#DDAF3B]/20',
+  neutral: 'bg-[#FFEECA] text-[#5A554B] ring-1 ring-inset ring-[#001201]/8  dark:bg-[#171F12] dark:text-[#A6A091] dark:ring-[#FFF9EC]/10',
 };
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
@@ -274,7 +274,7 @@ function DetailExpander({ action, details, t }: { action: string; details: Recor
       <button
         type="button"
         onClick={() => setOpen((v) => !v)}
-        className="flex items-center gap-1 text-[11px] font-bold text-[#9B9588] hover:text-[#C49A1E] dark:text-[#7E8A75] dark:hover:text-[#F0D98C]"
+        className="flex items-center gap-1 text-[11px] font-bold text-[#9B9588] hover:text-[#DDAF3B] dark:text-[#7E8A75] dark:hover:text-[#F0D98C]"
       >
         <svg width="10" height="10" viewBox="0 0 10 10" fill="currentColor" aria-hidden="true"
           style={{ transform: open ? 'rotate(90deg)' : undefined, transition: 'transform 0.15s' }}>
@@ -343,7 +343,7 @@ export function AdminActivityLog() {
   const distinctAdmins  = new Set(items.map((i) => i.admin_id)).size;
 
   const metrics = [
-    { label: t('metric_total'),          value: loading ? '…' : String(meta?.total ?? 0), accent: '#C49A1E' },
+    { label: t('metric_total'),          value: loading ? '…' : String(meta?.total ?? 0), accent: '#DDAF3B' },
     { label: t('metric_today'),          value: loading ? '…' : String(today),            accent: '#22C55E' },
     { label: t('metric_active_actions'), value: loading ? '…' : String(distinctActions),  accent: '#3B82F6' },
     { label: t('metric_active_admins'),  value: loading ? '…' : String(distinctAdmins),   accent: '#94A3B8' },
@@ -352,12 +352,12 @@ export function AdminActivityLog() {
   const filterPill = (active: boolean) => [
     'shrink-0 rounded-[14px] px-3.5 py-2 text-[12.5px] font-bold transition-colors duration-150',
     active
-      ? 'bg-[#1A1A0A] text-[#F0EDD4] shadow-[0_10px_20px_rgba(26,26,10,0.18)] dark:bg-[#F0EDD4] dark:text-[#1A1A0A]'
-      : 'text-[#847E70] hover:bg-[#EFE8D7] hover:text-[#1A1A0A] dark:text-[#A0A090] dark:hover:bg-[#182214] dark:hover:text-[#F0EDD4]',
+      ? 'bg-[#001201] text-[#FFF9EC] shadow-[0_10px_20px_rgba(26,26,10,0.18)] dark:bg-[#FFF9EC] dark:text-[#001201]'
+      : 'text-[#847E70] hover:bg-[#EFE8D7] hover:text-[#001201] dark:text-[#A0A090] dark:hover:bg-[#182214] dark:hover:text-[#FFF9EC]',
   ].join(' ');
 
   return (
-    <div className="relative flex h-full min-h-0 flex-col overflow-hidden bg-[radial-gradient(circle_at_top,_rgba(196,154,30,0.12),_transparent_36%),linear-gradient(180deg,#faf8f2_0%,#f2efe7_100%)] dark:bg-[radial-gradient(circle_at_top,_rgba(196,154,30,0.12),_transparent_32%),linear-gradient(180deg,#0C1209_0%,#091009_100%)]">
+    <div className="relative flex h-full min-h-0 flex-col overflow-hidden bg-[radial-gradient(circle_at_top,_rgba(221, 175, 59,0.12),_transparent_36%),linear-gradient(180deg,#faf8f2_0%,#f2efe7_100%)] dark:bg-[radial-gradient(circle_at_top,_rgba(221, 175, 59,0.12),_transparent_32%),linear-gradient(180deg,#0C1209_0%,#091009_100%)]">
       <div className="pointer-events-none absolute inset-0 bg-[linear-gradient(135deg,rgba(255,255,255,0.55),transparent_42%)] dark:bg-[linear-gradient(135deg,rgba(255,255,255,0.04),transparent_42%)]" />
 
       <div className="relative mx-auto flex h-full min-h-0 w-full max-w-none flex-1 flex-col gap-5 overflow-y-auto scrollbar-none px-3 py-4 sm:px-4 lg:px-6 lg:py-6">
@@ -365,10 +365,10 @@ export function AdminActivityLog() {
         <section className="rounded-[28px] border border-[#E1DBCF] bg-white/88 p-5 shadow-[0_24px_80px_rgba(26,26,10,0.08)] backdrop-blur-xl dark:border-[#1E2E18] dark:bg-[#101A0D]/90 dark:shadow-[0_24px_80px_rgba(0,0,0,0.35)]">
           <div className="flex flex-col gap-6 xl:flex-row xl:items-end xl:justify-between">
             <div className="max-w-3xl">
-              <span className="inline-flex rounded-full border border-[#C49A1E]/18 bg-[#C49A1E]/10 px-3 py-1 text-[11px] font-black uppercase tracking-[0.22em] text-[#9A7A13] dark:border-[#C49A1E]/25 dark:bg-[#C49A1E]/12 dark:text-[#F0D98C]">
+              <span className="inline-flex rounded-full border border-[#DDAF3B]/18 bg-[#DDAF3B]/10 px-3 py-1 text-[11px] font-black uppercase tracking-[0.22em] text-[#9A7A13] dark:border-[#DDAF3B]/25 dark:bg-[#DDAF3B]/12 dark:text-[#F0D98C]">
                 {t('badge_audit')}
               </span>
-              <h1 className="mt-4 text-[clamp(28px,3vw,42px)] font-black leading-[1.04] text-[#1A1A0A] dark:text-[#F0EDD4]">
+              <h1 className="mt-4 text-[clamp(28px,3vw,42px)] font-black leading-[1.04] text-[#001201] dark:text-[#FFF9EC]">
                 {t('page_title')}
               </h1>
               <p className="mt-3 max-w-2xl text-[14px] leading-6 text-[#6F6B5F] dark:text-[#A6A091]">
@@ -383,7 +383,7 @@ export function AdminActivityLog() {
                   <div className="pointer-events-none absolute -right-8 -top-8 h-20 w-20 rounded-full blur-3xl opacity-15 transition-opacity duration-200 group-hover:opacity-25" style={{ background: metric.accent }} />
                   <div className="min-w-0">
                     <div className="truncate text-[11px] font-bold uppercase tracking-[0.18em] text-[#9B9588] dark:text-[#7E8A75]">{metric.label}</div>
-                    <div className="mt-3 text-[28px] font-black leading-none text-[#1A1A0A] dark:text-[#F0EDD4]">{metric.value}</div>
+                    <div className="mt-3 text-[28px] font-black leading-none text-[#001201] dark:text-[#FFF9EC]">{metric.value}</div>
                   </div>
                 </div>
               ))}
@@ -410,7 +410,7 @@ export function AdminActivityLog() {
         <section className="flex flex-col gap-4 rounded-[28px] border border-[#E1DBCF] bg-white/88 p-5 shadow-[0_24px_80px_rgba(26,26,10,0.07)] backdrop-blur-xl dark:border-[#1E2E18] dark:bg-[#101A0D]/90 dark:shadow-[0_24px_80px_rgba(0,0,0,0.35)]">
           {loading ? (
             <div className="flex items-center justify-center py-24">
-              <div className="h-8 w-8 animate-spin rounded-full border-[3px] border-[#C49A1E] border-t-transparent" />
+              <div className="h-8 w-8 animate-spin rounded-full border-[3px] border-[#DDAF3B] border-t-transparent" />
             </div>
           ) : isEmpty ? (
             <div className="flex flex-col items-center justify-center gap-3 py-24 text-center">

@@ -24,7 +24,7 @@ function statusVisuals(status: string): { dot: string; label: string } {
   switch (status) {
     case 'completed':   return { dot: '#999',    label: 'status_completed' };
     case 'in_progress': return { dot: '#2ECC71', label: 'status_in_progress' };
-    case 'late':        return { dot: '#E8472A', label: 'status_late' };
+    case 'late':        return { dot: '#391C01', label: 'status_late' };
     case 'cancelled':   return { dot: '#999',    label: 'status_cancelled' };
     default:            return { dot: '#3B82F6', label: 'status_confirmed' };
   }
@@ -49,13 +49,13 @@ export function AgendaSlotDetailModal({
             <div className="text-[11px] font-bold uppercase tracking-wider text-foreground/55 dark:text-[#9A9A8A]">
               {t('slot_detail_client')}
             </div>
-            <div className="mt-0.5 truncate text-[18px] font-black text-[#1A1A0A] dark:text-[#F0EDD4]">
+            <div className="mt-0.5 truncate text-[18px] font-black text-[#001201] dark:text-[#FFF9EC]">
               {entry.clientName}
             </div>
           </div>
           <span className="inline-flex shrink-0 items-center gap-1.5 rounded-full bg-white px-2.5 py-1 text-[11px] font-black uppercase tracking-wide shadow-sm dark:bg-[#182214]">
             <span className="h-2 w-2 rounded-full" style={{ background: visuals.dot }} aria-hidden="true" />
-            <span className="text-[#1A1A0A] dark:text-[#F0EDD4]">{t(visuals.label)}</span>
+            <span className="text-[#001201] dark:text-[#FFF9EC]">{t(visuals.label)}</span>
           </span>
         </div>
 
@@ -80,7 +80,7 @@ export function AgendaSlotDetailModal({
         <button
           type="button"
           onClick={onClose}
-          className="rounded-lg border border-[#E0DCD0] px-4 py-2 text-[13px] font-bold text-foreground/65 transition-colors hover:bg-[#F0EDE0] dark:border-[#243020] dark:text-[#A0A090] dark:hover:bg-[#1A2A14]"
+          className="rounded-lg border border-[#E0DCD0] px-4 py-2 text-[13px] font-bold text-foreground/65 transition-colors hover:bg-[#F0EDE0] dark:border-[#001A05] dark:text-[#A0A090] dark:hover:bg-[#1A2A14]"
         >
           {t('btn_close')}
         </button>
@@ -89,7 +89,7 @@ export function AgendaSlotDetailModal({
             <button
               type="button"
               onClick={() => { onCancel(entry.id); onClose(); }}
-              className="rounded-lg border border-[#E8472A]/40 px-4 py-2 text-[13px] font-bold text-[#E8472A] transition-colors hover:bg-[#E8472A]/10"
+              className="rounded-lg border border-[#391C01]/40 px-4 py-2 text-[13px] font-bold text-[#391C01] transition-colors hover:bg-[#391C01]/10"
             >
               {t('btn_cancel')}
             </button>
@@ -107,7 +107,7 @@ export function AgendaSlotDetailModal({
             <button
               type="button"
               onClick={() => { onExtraTime(entry.id, 15); onClose(); }}
-              className="rounded-lg border border-[#C49A1E]/50 px-4 py-2 text-[13px] font-bold text-[#C49A1E] transition-colors hover:bg-[#C49A1E]/10"
+              className="rounded-lg border border-[#DDAF3B]/50 px-4 py-2 text-[13px] font-bold text-[#DDAF3B] transition-colors hover:bg-[#DDAF3B]/10"
             >
               {t('btn_extra_time')}
             </button>
@@ -131,7 +131,7 @@ function InfoCell({ label, value, span2 }: { label: string; value: string; span2
       <div className="text-[10px] font-bold uppercase tracking-wider text-foreground/55 dark:text-[#9A9A8A]">
         {label}
       </div>
-      <div className="mt-0.5 truncate text-[14px] font-bold text-[#1A1A0A] dark:text-[#F0EDD4]">
+      <div className="mt-0.5 truncate text-[14px] font-bold text-[#001201] dark:text-[#FFF9EC]">
         {value}
       </div>
     </div>

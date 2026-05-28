@@ -26,10 +26,10 @@ interface HistoryCardProps {
 /* Stable colored monogram for the station avatar - hash of the name. */
 function stationGradient(name: string): string {
   const palette = [
-    'from-[#af8408] to-[#d4a820]',
-    'from-[#2e6125] to-[#4a8b3e]',
-    'from-[#0f1a0e] to-[#1f3a1e]',
-    'from-[#8B6914] to-[#C49A1E]',
+    'from-[#DDAF3B] to-[#DDAF3B]',
+    'from-[#001A05] to-[#4a8b3e]',
+    'from-[#001201] to-[#001A05]',
+    'from-[#DDAF3B] to-[#DDAF3B]',
     'from-[#4A3818] to-[#7A5A2E]',
   ];
   let h = 0;

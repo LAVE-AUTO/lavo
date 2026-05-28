@@ -42,9 +42,9 @@ export function QueueCard({ entry, onCall, onPick, onMoveUp, onMoveDown, callLab
 
   if (entry.isNext) {
     return (
-      <div className="overflow-hidden rounded-2xl border-2 border-[#C49A1E] bg-[#C8C8B4] shadow-md dark:bg-[#1E2A1A]">
+      <div className="overflow-hidden rounded-2xl border-2 border-[#DDAF3B] bg-[#C8C8B4] shadow-md dark:bg-[#001A05]">
         {/* Gold top accent */}
-        <div className="h-1 bg-[#C49A1E]" />
+        <div className="h-1 bg-[#DDAF3B]" />
 
         <div className="p-5">
           {/* Header */}
@@ -75,7 +75,7 @@ export function QueueCard({ entry, onCall, onPick, onMoveUp, onMoveDown, callLab
               )}
               {entry.serviceLabel && <span>{entry.serviceLabel}</span>}
               {entry.price !== undefined && (
-                <span className="font-mono font-bold text-[#C49A1E]">{entry.price}$</span>
+                <span className="font-mono font-bold text-[#DDAF3B]">{entry.price}$</span>
               )}
             </div>
           )}
@@ -98,7 +98,7 @@ export function QueueCard({ entry, onCall, onPick, onMoveUp, onMoveDown, callLab
           <button
             type="button"
             onClick={() => onCall(entry.id)}
-            className="flex w-full items-center justify-center gap-2 rounded-xl bg-[#C49A1E] py-3 text-[13px] font-bold text-[#1A2116] transition-all hover:bg-[#D4A820] active:scale-[0.98]"
+            className="flex w-full items-center justify-center gap-2 rounded-xl bg-[#DDAF3B] py-3 text-[13px] font-bold text-[#001201] transition-all hover:bg-[#DDAF3B] active:scale-[0.98]"
           >
             <PlayTriangle />
             {callLabel ?? t('queue_call_now')}
@@ -110,14 +110,14 @@ export function QueueCard({ entry, onCall, onPick, onMoveUp, onMoveDown, callLab
 
   /* Regular queue entry */
   return (
-    <div className="overflow-hidden rounded-2xl bg-[#C8C8B4] transition-shadow hover:shadow-sm dark:bg-[#1E2A1A]">
+    <div className="overflow-hidden rounded-2xl bg-[#C8C8B4] transition-shadow hover:shadow-sm dark:bg-[#001A05]">
       <button
         type="button"
         onClick={() => setExpanded(!expanded)}
         className="flex w-full items-center gap-3 p-4 text-left"
       >
         {/* Position badge */}
-        <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-white/60 dark:bg-[#243020]">
+        <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-white/60 dark:bg-[#001A05]">
           <span className="font-mono text-[14px] font-bold text-foreground">
             {entry.position}
           </span>
@@ -137,7 +137,7 @@ export function QueueCard({ entry, onCall, onPick, onMoveUp, onMoveDown, callLab
             {entry.time && <span className="font-mono font-semibold text-foreground">{entry.time}</span>}
             {entry.serviceLabel && <span>{entry.serviceLabel}</span>}
             {entry.price !== undefined && (
-              <span className="font-mono font-semibold text-[#C49A1E]">{entry.price}$</span>
+              <span className="font-mono font-semibold text-[#DDAF3B]">{entry.price}$</span>
             )}
           </div>
         </div>
@@ -168,7 +168,7 @@ export function QueueCard({ entry, onCall, onPick, onMoveUp, onMoveDown, callLab
                       disabled={!onMoveUp}
                       onClick={onMoveUp}
                       title={t('queue_move_up')}
-                      className="flex h-7 w-7 items-center justify-center rounded-lg border border-[#B8B8A4] text-[#000717]/50 transition-colors hover:border-[#C49A1E] hover:text-[#C49A1E] disabled:opacity-30 disabled:cursor-not-allowed dark:border-[#3A4A36] dark:text-[#FFFFF0]/50"
+                      className="flex h-7 w-7 items-center justify-center rounded-lg border border-[#B8B8A4] text-[#000717]/50 transition-colors hover:border-[#DDAF3B] hover:text-[#DDAF3B] disabled:opacity-30 disabled:cursor-not-allowed dark:border-[#3A4A36] dark:text-[#FFFFF0]/50"
                     >
                       <ArrowUpIcon />
                     </button>
@@ -177,7 +177,7 @@ export function QueueCard({ entry, onCall, onPick, onMoveUp, onMoveDown, callLab
                       disabled={!onMoveDown}
                       onClick={onMoveDown}
                       title={t('queue_move_down')}
-                      className="flex h-7 w-7 items-center justify-center rounded-lg border border-[#B8B8A4] text-[#000717]/50 transition-colors hover:border-[#C49A1E] hover:text-[#C49A1E] disabled:opacity-30 disabled:cursor-not-allowed dark:border-[#3A4A36] dark:text-[#FFFFF0]/50"
+                      className="flex h-7 w-7 items-center justify-center rounded-lg border border-[#B8B8A4] text-[#000717]/50 transition-colors hover:border-[#DDAF3B] hover:text-[#DDAF3B] disabled:opacity-30 disabled:cursor-not-allowed dark:border-[#3A4A36] dark:text-[#FFFFF0]/50"
                     >
                       <ArrowDownIcon />
                     </button>
@@ -187,7 +187,7 @@ export function QueueCard({ entry, onCall, onPick, onMoveUp, onMoveDown, callLab
                   <button
                     type="button"
                     onClick={() => onPick(entry.id)}
-                    className="rounded-lg bg-[#C49A1E] px-3 py-1.5 text-[12px] font-bold text-[#1A2116] transition-opacity hover:opacity-80"
+                    className="rounded-lg bg-[#DDAF3B] px-3 py-1.5 text-[12px] font-bold text-[#001201] transition-opacity hover:opacity-80"
                   >
                     {t('queue_pick_now')}
                   </button>
@@ -205,7 +205,7 @@ function DetailRow({ label, value, gold }: { label: string; value: string; gold?
   return (
     <div className="flex items-baseline justify-between gap-2">
       <span className="text-[#000717]/50 dark:text-[#FFFFF0]/50">{label}</span>
-      <span className={`text-right font-semibold ${gold ? 'text-[#C49A1E]' : 'text-foreground'}`}>
+      <span className={`text-right font-semibold ${gold ? 'text-[#DDAF3B]' : 'text-foreground'}`}>
         {value}
       </span>
     </div>

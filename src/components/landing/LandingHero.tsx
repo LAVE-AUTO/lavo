@@ -18,7 +18,7 @@ export function LandingHero() {
   return (
     <section className="relative overflow-hidden min-h-[80vh] lg:min-h-[92vh] flex items-center">
       {/* Gradient background */}
-      <div className="absolute inset-0 bg-gradient-to-br from-[#F8F7F2] via-[#F2F0E8] to-[#EBE8DC] dark:from-dark-bg dark:via-[#1E2A1A] dark:to-dark-bg transition-colors" />
+      <div className="absolute inset-0 bg-gradient-to-br from-[#F8F7F2] via-[#F2F0E8] to-[#EBE8DC] dark:from-dark-bg dark:via-[#001A05] dark:to-dark-bg transition-colors" />
 
       {/* Decorative orbs */}
       <div className="absolute top-20 -left-32 w-96 h-96 rounded-full bg-gold/8 blur-3xl animate-float-orb" />
@@ -139,7 +139,7 @@ export function LandingHero() {
               </Link>
               <Link
                 href="/merchant"
-                className="inline-flex items-center justify-center gap-2 px-8 py-3.5 rounded-xl border-2 border-border text-[16px] font-bold text-[#1A1A1A] dark:text-white hover:border-gold hover:text-gold dark:hover:border-gold dark:hover:text-gold transition-colors"
+                className="inline-flex items-center justify-center gap-2 px-8 py-3.5 rounded-xl border-2 border-border text-[16px] font-bold text-[#001201] dark:text-white hover:border-gold hover:text-gold dark:hover:border-gold dark:hover:text-gold transition-colors"
               >
                 {t('cta_merchant')}
               </Link>

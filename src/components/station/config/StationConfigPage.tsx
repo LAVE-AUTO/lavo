@@ -140,7 +140,7 @@ export function StationConfigPage() {
   return (
     <div className="flex flex-1 flex-col overflow-hidden">
       <div className="border-b border-[#E0DCD0] bg-white px-6 py-4 dark:border-[#1A2A14] dark:bg-[#111A0E]">
-        <div className="text-[16px] font-black text-[#1A1A0A] dark:text-[#F0EDD4]">
+        <div className="text-[16px] font-black text-[#001201] dark:text-[#FFF9EC]">
           {t('page_title')}
         </div>
       </div>
@@ -151,17 +151,17 @@ export function StationConfigPage() {
         <div className="mx-auto flex max-w-5xl flex-col gap-5 p-6">
           {/* Pending approval banner */}
           {isPendingApproval && (
-            <div className="flex items-start gap-4 rounded-xl border border-[#C49A1E]/25 bg-[#C49A1E]/8 px-5 py-4 dark:border-[#C49A1E]/20 dark:bg-[#C49A1E]/5">
-              <div className="mt-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-[#C49A1E]/15">
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#C49A1E" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+            <div className="flex items-start gap-4 rounded-xl border border-[#DDAF3B]/25 bg-[#DDAF3B]/8 px-5 py-4 dark:border-[#DDAF3B]/20 dark:bg-[#DDAF3B]/5">
+              <div className="mt-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-[#DDAF3B]/15">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#DDAF3B" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
                   <circle cx="12" cy="12" r="10" />
                   <line x1="12" y1="8" x2="12" y2="12" />
                   <line x1="12" y1="16" x2="12.01" y2="16" />
                 </svg>
               </div>
               <div>
-                <p className="text-[13px] font-bold text-[#8A6A00] dark:text-[#C49A1E]">{t('pending_banner_title')}</p>
-                <p className="mt-0.5 text-[13px] text-[#8A6A00]/80 dark:text-[#C49A1E]/70">{t('pending_banner_desc')}</p>
+                <p className="text-[13px] font-bold text-[#8A6A00] dark:text-[#DDAF3B]">{t('pending_banner_title')}</p>
+                <p className="mt-0.5 text-[13px] text-[#8A6A00]/80 dark:text-[#DDAF3B]/70">{t('pending_banner_desc')}</p>
               </div>
             </div>
           )}

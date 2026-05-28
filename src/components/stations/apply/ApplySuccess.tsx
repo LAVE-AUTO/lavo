@@ -47,7 +47,7 @@ export function ApplySuccess() {
         </Link>
         <Link
           href="/"
-          className="inline-flex items-center justify-center py-3.5 px-6 border border-[#CCCCCC] dark:border-border rounded-[10px] text-[16px] font-semibold text-[#1A1A1A] dark:text-white hover:border-gold transition-colors duration-150"
+          className="inline-flex items-center justify-center py-3.5 px-6 border border-[#CCCCCC] dark:border-border rounded-[10px] text-[16px] font-semibold text-[#001201] dark:text-white hover:border-gold transition-colors duration-150"
         >
           {t('success_cta_home')}
         </Link>

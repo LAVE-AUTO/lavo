@@ -82,7 +82,7 @@ export function AdminSidebar({ open = false, onClose }: AdminSidebarProps) {
   ];
 
   const base = 'group relative flex items-center rounded-lg text-[13px] font-semibold transition-colors duration-150';
-  const active = 'bg-[#C49A1E] text-[#0C1209] shadow-sm';
+  const active = 'bg-[#DDAF3B] text-[#0C1209] shadow-sm';
   const idle = 'text-[#5A5A4A] hover:bg-[#E8E4D8] dark:text-[#A0A090] dark:hover:bg-[#182214]';
   const layoutClass = collapsed ? 'h-10 w-10 justify-center' : 'gap-2.5 px-3 py-2.5';
 
@@ -102,7 +102,7 @@ export function AdminSidebar({ open = false, onClose }: AdminSidebarProps) {
           aria-label={collapsed ? t('nav_expand') : t('nav_collapse')}
           aria-pressed={collapsed}
           onClick={toggleCollapsed}
-          className="flex h-7 w-7 items-center justify-center rounded-lg text-foreground/55 transition-colors hover:bg-[#E8E4D8] hover:text-[#1A1A0A] dark:text-[#9A9A8A] dark:hover:bg-[#182214] dark:hover:text-[#F0EDD4]"
+          className="flex h-7 w-7 items-center justify-center rounded-lg text-foreground/55 transition-colors hover:bg-[#E8E4D8] hover:text-[#001201] dark:text-[#9A9A8A] dark:hover:bg-[#182214] dark:hover:text-[#FFF9EC]"
         >
           <CollapseIcon collapsed={collapsed} />
         </button>
@@ -110,7 +110,7 @@ export function AdminSidebar({ open = false, onClose }: AdminSidebarProps) {
 
       {/* Brand */}
       <div className="mb-4 px-3 pt-1">
-        <span className="text-[11px] font-black uppercase tracking-[0.2em] text-[#C49A1E]">Administration</span>
+        <span className="text-[11px] font-black uppercase tracking-[0.2em] text-[#DDAF3B]">Administration</span>
       </div>
 
       <nav className={`flex flex-col ${collapsed ? 'gap-2' : 'gap-3'}`}>
@@ -177,7 +177,7 @@ export function AdminSidebar({ open = false, onClose }: AdminSidebarProps) {
           <ProfileIcon />
           {!collapsed && <span className="truncate">{t('nav_profile')}</span>}
           {collapsed && (
-            <span className="pointer-events-none absolute left-full top-1/2 z-30 ml-2 -translate-y-1/2 whitespace-nowrap rounded-lg bg-[#0C1209] px-2.5 py-1 text-[12px] font-semibold text-[#F0EDD4] opacity-0 shadow-lg transition-opacity duration-150 group-hover:opacity-100">
+            <span className="pointer-events-none absolute left-full top-1/2 z-30 ml-2 -translate-y-1/2 whitespace-nowrap rounded-lg bg-[#0C1209] px-2.5 py-1 text-[12px] font-semibold text-[#FFF9EC] opacity-0 shadow-lg transition-opacity duration-150 group-hover:opacity-100">
               {t('nav_profile')}
             </span>
           )}
@@ -193,7 +193,7 @@ export function AdminSidebar({ open = false, onClose }: AdminSidebarProps) {
           <LogoutIcon />
           {!collapsed && <span>{t('nav_logout')}</span>}
           {collapsed && (
-            <span className="pointer-events-none absolute left-full top-1/2 z-30 ml-2 -translate-y-1/2 whitespace-nowrap rounded-lg bg-[#0C1209] px-2.5 py-1 text-[12px] font-semibold text-[#F0EDD4] opacity-0 shadow-lg transition-opacity duration-150 group-hover:opacity-100">
+            <span className="pointer-events-none absolute left-full top-1/2 z-30 ml-2 -translate-y-1/2 whitespace-nowrap rounded-lg bg-[#0C1209] px-2.5 py-1 text-[12px] font-semibold text-[#FFF9EC] opacity-0 shadow-lg transition-opacity duration-150 group-hover:opacity-100">
               {t('nav_logout')}
             </span>
           )}

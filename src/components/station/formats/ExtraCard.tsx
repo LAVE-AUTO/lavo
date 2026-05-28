@@ -79,16 +79,16 @@ export function ExtraCard({ extra, onEdit, onDeleted, onToggled }: Props) {
   return (
     <>
       <article
-        className={`group flex flex-col rounded-2xl border border-[#E8E4DC] bg-white p-5 transition-all duration-200 hover:border-[#C49A1E]/30 hover:shadow-sm dark:border-[#1A2A14] dark:bg-[#182214] dark:hover:border-[#C49A1E]/30 ${opacityClass}`}
+        className={`group flex flex-col rounded-2xl border border-[#E8E4DC] bg-white p-5 transition-all duration-200 hover:border-[#DDAF3B]/30 hover:shadow-sm dark:border-[#1A2A14] dark:bg-[#182214] dark:hover:border-[#DDAF3B]/30 ${opacityClass}`}
       >
         {/* Header */}
         <header className="mb-3 flex items-start justify-between gap-3">
           <div className="min-w-0 flex-1">
-            <h3 className="text-[16px] font-black leading-tight text-[#1A1A0A] dark:text-[#F0EDD4]">
+            <h3 className="text-[16px] font-black leading-tight text-[#001201] dark:text-[#FFF9EC]">
               {extra.label}
             </h3>
             {durationLabel && (
-              <p className="mt-1 font-mono text-[12px] font-black tracking-[2px] text-[#C49A1E]">
+              <p className="mt-1 font-mono text-[12px] font-black tracking-[2px] text-[#DDAF3B]">
                 {durationLabel}
               </p>
             )}
@@ -99,14 +99,14 @@ export function ExtraCard({ extra, onEdit, onDeleted, onToggled }: Props) {
               onClick={() => setDeleteOpen(true)}
               disabled={deleting}
               aria-label={t('btn_delete')}
-              className="inline-flex items-center justify-center rounded-lg border border-[#E0DCD0] bg-white p-1.5 text-foreground/55 transition-all hover:border-[#FF2525] hover:bg-[#FF2525]/5 hover:text-[#FF2525] disabled:opacity-40 dark:border-[#243020] dark:bg-[#0F1A0C] dark:text-[#9A9A8A]"
+              className="inline-flex items-center justify-center rounded-lg border border-[#E0DCD0] bg-white p-1.5 text-foreground/55 transition-all hover:border-[#FF2525] hover:bg-[#FF2525]/5 hover:text-[#FF2525] disabled:opacity-40 dark:border-[#001A05] dark:bg-[#0F1A0C] dark:text-[#9A9A8A]"
             >
               <CrossIcon />
             </button>
             <button
               type="button"
               onClick={() => onEdit(extra)}
-              className="inline-flex items-center gap-1.5 rounded-lg bg-[#C49A1E] px-2.5 py-1.5 text-[11px] font-bold text-[#0C1209] transition-opacity hover:opacity-85"
+              className="inline-flex items-center gap-1.5 rounded-lg bg-[#DDAF3B] px-2.5 py-1.5 text-[11px] font-bold text-[#0C1209] transition-opacity hover:opacity-85"
             >
               <PencilIcon />
               {t('btn_edit')}
@@ -142,7 +142,7 @@ export function ExtraCard({ extra, onEdit, onDeleted, onToggled }: Props) {
                 <p className="text-[9px] font-bold uppercase tracking-[1px] text-foreground/55 dark:text-[#9A9A8A]">
                   {entry.vehicle_label}
                 </p>
-                <p className="mt-1 font-mono text-[20px] font-black tabular-nums leading-none text-[#C49A1E]">
+                <p className="mt-1 font-mono text-[20px] font-black tabular-nums leading-none text-[#DDAF3B]">
                   {parseFloat(entry.price || '0').toFixed(0)} $
                 </p>
                 <p className="mt-1 text-[11px] text-foreground/55 dark:text-[#9A9A8A]">{entry.duration_min} min</p>
@@ -154,7 +154,7 @@ export function ExtraCard({ extra, onEdit, onDeleted, onToggled }: Props) {
             <p className="text-[9px] font-bold uppercase tracking-[1px] text-foreground/55 dark:text-[#9A9A8A]">
               {t('extras_all_formats')}
             </p>
-            <p className="mt-1 font-mono text-[22px] font-black tabular-nums leading-none text-[#C49A1E]">
+            <p className="mt-1 font-mono text-[22px] font-black tabular-nums leading-none text-[#DDAF3B]">
               +{parseFloat(extra.price || '0').toFixed(0)} $
             </p>
           </div>

@@ -45,28 +45,28 @@ export function MerchantNavbar() {
   const lightLogoSrc = locale === 'fr' ? '/logo/logo2_2.png' : '/logo/logo_anglais_1.png';
 
   const linkClass =
-    'text-[13px] font-medium tracking-[0.4px] text-[#4a6a4d] dark:text-[#7a9a7d] hover:text-[#c8980a] dark:hover:text-[#c8980a] transition-colors duration-300';
+    'text-[13px] font-medium tracking-[0.4px] text-[var(--foreground)] dark:text-[#B0BFB1] hover:text-[#DDAF3B] dark:hover:text-[#DDAF3B] transition-colors duration-300';
 
   const pillClass =
-    'inline-block border border-[rgba(200,152,10,0.45)] text-[#c8980a] px-[22px] py-[9px] rounded-md text-[13px] font-semibold tracking-[0.8px] uppercase transition-all duration-300 hover:bg-[#c8980a] hover:text-[#0d1f0f]';
+    'inline-block border border-[rgba(221,175,59,0.45)] text-[#DDAF3B] px-[22px] py-[9px] rounded-md text-[13px] font-semibold tracking-[0.8px] uppercase transition-all duration-300 hover:bg-[#DDAF3B] hover:text-[#001201]';
 
   const ctaClass =
-    'btn-shine inline-block bg-[#c8980a] text-[#0d1f0f] px-[26px] py-[10px] rounded-md text-[13px] font-bold tracking-[1px] uppercase transition-all duration-300 hover:bg-[#e8b520] hover:-translate-y-px hover:shadow-[0_6px_24px_rgba(200,152,10,0.4)]';
+    'btn-shine inline-block bg-[#DDAF3B] text-[#001201] px-[26px] py-[10px] rounded-md text-[13px] font-bold tracking-[1px] uppercase transition-all duration-300 hover:bg-[#DDAF3B] hover:-translate-y-px hover:shadow-[0_6px_24px_rgba(221, 175, 59,0.4)]';
 
   const drawerLinkClass =
-    'flex items-center px-4 py-3 text-[15px] font-medium text-[#4a6a4d] dark:text-[#7a9a7d] hover:text-[#c8980a] dark:hover:text-[#c8980a] transition-colors';
+    'flex items-center px-4 py-3 text-[15px] font-medium text-[var(--foreground)] dark:text-[#B0BFB1] hover:text-[#DDAF3B] dark:hover:text-[#DDAF3B] transition-colors';
 
   return (
     <>
-      <header className="fixed top-0 left-0 right-0 z-40 bg-[rgba(247,243,236,0.95)] dark:bg-[rgba(13,31,15,0.92)] backdrop-blur-[16px] border-b border-[rgba(200,152,10,0.18)]">
+      <header className="fixed top-0 left-0 right-0 z-40 bg-[rgba(247,243,236,0.95)] dark:bg-[rgba(13,31,15,0.92)] backdrop-blur-[16px] border-b border-[rgba(221,175,59,0.18)]">
         <div className="max-w-[1440px] mx-auto px-6 lg:px-16 flex items-center justify-between gap-6 py-3">
           <Link href="/" className="shrink-0" aria-label="Hurryline - Accueil">
             {isDark ? (
               <div className="flex items-center gap-2">
-                <div className="rounded-lg bg-white/95 p-1 border border-[rgba(200,152,10,0.25)] shadow-sm shrink-0">
+                <div className="rounded-lg bg-white/95 p-1 border border-[rgba(221,175,59,0.25)] shadow-sm shrink-0">
                   <Image src="/logo/frame2.png" alt="" width={28} height={28} className="w-7 h-7 object-contain" aria-hidden="true" />
                 </div>
-                <span className="font-playfair text-[18px] font-black text-[#c8980a] tracking-[3px]">Hurryline</span>
+                <span className="font-playfair text-[18px] font-black text-[#DDAF3B] tracking-[3px]">Hurryline</span>
               </div>
             ) : (
               <Image src={lightLogoSrc} alt="Hurryline" width={130} height={34} className="h-20 w-auto object-contain" priority />
@@ -86,8 +86,8 @@ export function MerchantNavbar() {
 
             <div className="hidden lg:flex items-center gap-2.5 ml-1">
               {isAuthenticated && user ? (
-                <div className="w-[34px] h-[34px] rounded-full bg-[rgba(200,152,10,0.2)] border border-[rgba(200,152,10,0.4)] flex items-center justify-center shrink-0">
-                  <span className="text-[13px] font-black text-[#c8980a] leading-none">
+                <div className="w-[34px] h-[34px] rounded-full bg-[rgba(221,175,59,0.2)] border border-[rgba(221,175,59,0.4)] flex items-center justify-center shrink-0">
+                  <span className="text-[13px] font-black text-[#DDAF3B] leading-none">
                     {(user.first_name?.[0] ?? user.email[0]).toUpperCase()}
                   </span>
                 </div>
@@ -98,7 +98,7 @@ export function MerchantNavbar() {
                   </Link>
                   <Link
                     href="/station/login"
-                    className="text-[13px] font-medium tracking-[0.4px] text-[#4a6a4d] dark:text-[#7a9a7d] hover:text-[#c8980a] dark:hover:text-[#c8980a] transition-colors px-2"
+                    className="text-[13px] font-medium tracking-[0.4px] text-[var(--foreground)] dark:text-[#B0BFB1] hover:text-[#DDAF3B] dark:hover:text-[#DDAF3B] transition-colors px-2"
                   >
                     {t('login_pill')}
                   </Link>
@@ -114,7 +114,7 @@ export function MerchantNavbar() {
             <button
               type="button"
               onClick={() => setMenuOpen((v) => !v)}
-              className="flex lg:hidden w-9 h-9 items-center justify-center text-[#4a6a4d] dark:text-[#7a9a7d] hover:text-[#c8980a] dark:hover:text-[#c8980a] transition-colors"
+              className="flex lg:hidden w-9 h-9 items-center justify-center text-[var(--foreground)] dark:text-[#B0BFB1] hover:text-[#DDAF3B] dark:hover:text-[#DDAF3B] transition-colors"
               aria-label={menuOpen ? 'Fermer le menu' : 'Ouvrir le menu'}
               aria-expanded={menuOpen}
             >
@@ -124,20 +124,20 @@ export function MerchantNavbar() {
         </div>
 
         {menuOpen && (
-          <div className="lg:hidden bg-[rgba(247,243,236,0.98)] dark:bg-[rgba(13,31,15,0.98)] border-t border-[rgba(200,152,10,0.18)] px-6 py-5 space-y-1 animate-fade-in">
+          <div className="lg:hidden bg-[rgba(247,243,236,0.98)] dark:bg-[rgba(13,31,15,0.98)] border-t border-[rgba(221,175,59,0.18)] px-6 py-5 space-y-1 animate-fade-in">
             <a href="#how-it-works" className={drawerLinkClass}>{t('how_it_works')}</a>
             <a href="#features" className={drawerLinkClass}>{t('features')}</a>
             <a href="#qr" className={drawerLinkClass}>{t('qr')}</a>
             <a href="#testimonials" className={drawerLinkClass}>{t('testimonials')}</a>
-            <div className="pt-4 border-t border-[rgba(200,152,10,0.18)] flex flex-col gap-2.5">
+            <div className="pt-4 border-t border-[rgba(221,175,59,0.18)] flex flex-col gap-2.5">
               {isAuthenticated && user ? (
                 <div className="flex items-center gap-3 px-2 py-2">
-                  <div className="w-9 h-9 rounded-full bg-[rgba(200,152,10,0.2)] border border-[rgba(200,152,10,0.4)] flex items-center justify-center shrink-0">
-                    <span className="text-[14px] font-black text-[#c8980a] leading-none">
+                  <div className="w-9 h-9 rounded-full bg-[rgba(221,175,59,0.2)] border border-[rgba(221,175,59,0.4)] flex items-center justify-center shrink-0">
+                    <span className="text-[14px] font-black text-[#DDAF3B] leading-none">
                       {(user.first_name?.[0] ?? user.email[0]).toUpperCase()}
                     </span>
                   </div>
-                  <p className="text-[15px] font-semibold text-[#1a1a1a] dark:text-[#fef9e7]">
+                  <p className="text-[15px] font-semibold text-[#001201] dark:text-[#FFEECA]">
                     {user.first_name ? `${user.first_name} ${user.last_name ?? ''}`.trim() : user.email}
                   </p>
                 </div>
@@ -145,19 +145,19 @@ export function MerchantNavbar() {
                 <>
                   <Link
                     href="/"
-                    className="flex items-center justify-center py-3 border border-[rgba(200,152,10,0.45)] text-[14px] font-semibold tracking-[0.8px] uppercase text-[#c8980a] hover:bg-[#c8980a] hover:text-[#0d1f0f] transition-all rounded-md"
+                    className="flex items-center justify-center py-3 border border-[rgba(221,175,59,0.45)] text-[14px] font-semibold tracking-[0.8px] uppercase text-[#DDAF3B] hover:bg-[#DDAF3B] hover:text-[#001201] transition-all rounded-md"
                   >
                     {t('client_pill')}
                   </Link>
                   <Link
                     href="/station/login"
-                    className="flex items-center justify-center py-3 text-[14px] font-medium text-[#4a6a4d] dark:text-[#7a9a7d] hover:text-[#c8980a] dark:hover:text-[#c8980a] transition-colors"
+                    className="flex items-center justify-center py-3 text-[14px] font-medium text-[var(--foreground)] dark:text-[#B0BFB1] hover:text-[#DDAF3B] dark:hover:text-[#DDAF3B] transition-colors"
                   >
                     {t('login_pill')}
                   </Link>
                   <Link
                     href="/station/apply"
-                    className="btn-shine flex items-center justify-center py-3 bg-[#c8980a] text-[#0d1f0f] text-[14px] font-bold tracking-[1px] uppercase rounded-md transition-all hover:bg-[#e8b520]"
+                    className="btn-shine flex items-center justify-center py-3 bg-[#DDAF3B] text-[#001201] text-[14px] font-bold tracking-[1px] uppercase rounded-md transition-all hover:bg-[#DDAF3B]"
                   >
                     {t('partner_cta')}
                   </Link>

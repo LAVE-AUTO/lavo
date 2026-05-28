@@ -171,7 +171,7 @@ export function ReceiptModal({ entry: e, locale, onClose }: ReceiptModalProps) {
 
     /* ── Header ── */
     .header {
-      background: #0f1a0e;
+      background: #001201;
       padding: 32px 36px 28px;
       display: flex;
       align-items: flex-start;
@@ -181,19 +181,19 @@ export function ReceiptModal({ entry: e, locale, onClose }: ReceiptModalProps) {
     .brand-name {
       font-size: 26px;
       font-weight: 900;
-      color: #af8408;
+      color: #DDAF3B;
       letter-spacing: 3px;
       text-transform: uppercase;
     }
     .brand-sub {
       font-size: 11px;
-      color: #7a9a7d;
+      color: #B0BFB1;
       margin-top: 4px;
       letter-spacing: .5px;
     }
     .receipt-badge {
-      background: #af8408;
-      color: #0f1a0e;
+      background: #DDAF3B;
+      color: #001201;
       font-size: 10px;
       font-weight: 900;
       letter-spacing: 1.5px;
@@ -232,7 +232,7 @@ export function ReceiptModal({ entry: e, locale, onClose }: ReceiptModalProps) {
     .section-title {
       font-size: 10px;
       font-weight: 900;
-      color: #af8408;
+      color: #DDAF3B;
       text-transform: uppercase;
       letter-spacing: 1.5px;
       margin-bottom: 10px;
@@ -296,7 +296,7 @@ export function ReceiptModal({ entry: e, locale, onClose }: ReceiptModalProps) {
       display: inline-block;
       width: 6px;
       height: 6px;
-      background: #af8408;
+      background: #DDAF3B;
       border-radius: 50%;
       flex-shrink: 0;
     }
@@ -348,7 +348,7 @@ export function ReceiptModal({ entry: e, locale, onClose }: ReceiptModalProps) {
     /* ── Total ── */
     .total-block {
       margin-top: 24px;
-      background: #0f1a0e;
+      background: #001201;
       border-radius: 10px;
       padding: 18px 22px;
     }
@@ -363,7 +363,7 @@ export function ReceiptModal({ entry: e, locale, onClose }: ReceiptModalProps) {
     .subtotal-label {
       font-size: 11px;
       font-weight: 700;
-      color: #7a9a7d;
+      color: #B0BFB1;
       text-transform: uppercase;
       letter-spacing: 1px;
     }
@@ -381,14 +381,14 @@ export function ReceiptModal({ entry: e, locale, onClose }: ReceiptModalProps) {
     .total-label {
       font-size: 13px;
       font-weight: 700;
-      color: #7a9a7d;
+      color: #B0BFB1;
       text-transform: uppercase;
       letter-spacing: 1px;
     }
     .total-amount {
       font-size: 28px;
       font-weight: 900;
-      color: #af8408;
+      color: #DDAF3B;
       letter-spacing: -0.5px;
     }
 
@@ -569,14 +569,14 @@ export function ReceiptModal({ entry: e, locale, onClose }: ReceiptModalProps) {
         are never hidden behind it.
       */}
       <div
-        className="w-full sm:max-w-md bg-[#111713] dark:bg-[#111713] rounded-t-3xl sm:rounded-3xl shadow-[0_30px_90px_rgba(0,0,0,0.55)] overflow-hidden animate-fade-in-up mb-14 sm:mb-0 border border-[#2a3128]"
+        className="w-full sm:max-w-md bg-[#001201] dark:bg-[#001201] rounded-t-3xl sm:rounded-3xl shadow-[0_30px_90px_rgba(0,0,0,0.55)] overflow-hidden animate-fade-in-up mb-14 sm:mb-0 border border-[#001A05]"
         onClick={(ev) => ev.stopPropagation()}
       >
         {/* Header */}
-        <div className="flex items-center justify-between px-5 py-4 border-b border-[#2a3128]">
+        <div className="flex items-center justify-between px-5 py-4 border-b border-[#001A05]">
           <div>
-            <h2 className="text-[17px] font-black text-[#F4EFE1]">{t('receipt_title')}</h2>
-            <p className="text-[12px] text-[#8a927f] mt-0.5 font-semibold tracking-wide">
+            <h2 className="text-[17px] font-black text-[#FFEECA]">{t('receipt_title')}</h2>
+            <p className="text-[12px] text-[#B0BFB1] mt-0.5 font-semibold tracking-wide">
               Hurryline &mdash; #{shortRef}
             </p>
           </div>
@@ -596,26 +596,26 @@ export function ReceiptModal({ entry: e, locale, onClose }: ReceiptModalProps) {
         <div className="overflow-y-auto max-h-[55vh] sm:max-h-[60vh]">
 
           {/* Brand strip */}
-          <div className="bg-gradient-to-r from-[#171e19] to-[#111713] px-5 py-4 flex items-center justify-between border-b border-[#2a3128]">
+          <div className="bg-gradient-to-r from-[#001A05] to-[#001201] px-5 py-4 flex items-center justify-between border-b border-[#001A05]">
             <div>
-              <div className="text-[18px] font-black text-[#E4C06A] tracking-widest uppercase">Hurryline</div>
-              <div className="text-[11px] text-[#8a927f] mt-0.5">Hurryline.app</div>
+              <div className="text-[18px] font-black text-[#DDAF3B] tracking-widest uppercase">Hurryline</div>
+              <div className="text-[11px] text-[#B0BFB1] mt-0.5">Hurryline.app</div>
             </div>
-            <span className="text-[10px] font-black text-[#111713] bg-[#E4C06A] px-3 py-1 rounded-full tracking-wider uppercase">
+            <span className="text-[10px] font-black text-[#001201] bg-[#DDAF3B] px-3 py-1 rounded-full tracking-wider uppercase">
               {t('receipt_title')}
             </span>
           </div>
 
           {/* Meta row */}
-          <div className="grid grid-cols-3 border-b border-[#2a3128] bg-[#141b16]">
+          <div className="grid grid-cols-3 border-b border-[#001A05] bg-[#001A05]">
             {[
               { label: t('receipt_ref'),  value: `#${shortRef}` },
               { label: t('receipt_date'), value: new Date(e.createdAt).toLocaleDateString(locale === 'en' ? 'en-CA' : 'fr-CA', { day: 'numeric', month: 'short', year: 'numeric' }) },
               { label: t('receipt_entry_type'), value: typeLabel },
             ].map(({ label, value }) => (
-              <div key={label} className="px-4 py-3 border-r border-[#2a3128] last:border-r-0">
-                <div className="text-[10px] font-bold text-[#8a927f] uppercase tracking-wider mb-1">{label}</div>
-                <div className="text-[12px] font-bold text-[#F4EFE1] truncate">{value}</div>
+              <div key={label} className="px-4 py-3 border-r border-[#001A05] last:border-r-0">
+                <div className="text-[10px] font-bold text-[#B0BFB1] uppercase tracking-wider mb-1">{label}</div>
+                <div className="text-[12px] font-bold text-[#FFEECA] truncate">{value}</div>
               </div>
             ))}
           </div>
@@ -623,8 +623,8 @@ export function ReceiptModal({ entry: e, locale, onClose }: ReceiptModalProps) {
           <div className="px-5 py-4 space-y-4">
             {/* Station */}
             <div>
-              <p className="text-[10px] font-black text-[#E4C06A] uppercase tracking-widest mb-2">{t('receipt_station')}</p>
-              <div className="rounded-xl border border-[#2a3128] overflow-hidden bg-[#141b16]">
+              <p className="text-[10px] font-black text-[#DDAF3B] uppercase tracking-widest mb-2">{t('receipt_station')}</p>
+              <div className="rounded-xl border border-[#001A05] overflow-hidden bg-[#001A05]">
                 <ReceiptRow label={t('receipt_station')} value={e.stationName}  />
                 <ReceiptRow label={t('receipt_address')} value={e.stationAddress} noBorder />
               </div>
@@ -632,26 +632,26 @@ export function ReceiptModal({ entry: e, locale, onClose }: ReceiptModalProps) {
 
             {/* Items breakdown */}
             <div>
-              <p className="text-[10px] font-black text-[#E4C06A] uppercase tracking-widest mb-2">{t('receipt_items')}</p>
-              <div className="rounded-xl border border-[#2a3128] overflow-hidden bg-[#141b16]">
+              <p className="text-[10px] font-black text-[#DDAF3B] uppercase tracking-widest mb-2">{t('receipt_items')}</p>
+              <div className="rounded-xl border border-[#001A05] overflow-hidden bg-[#001A05]">
                 {/* Service line */}
-                <div className="flex items-start justify-between gap-4 px-3.5 py-3 border-b border-[#2a3128]">
+                <div className="flex items-start justify-between gap-4 px-3.5 py-3 border-b border-[#001A05]">
                   <div className="min-w-0">
-                    <div className="text-[13px] font-bold text-[#F4EFE1] truncate">{serviceLabel}</div>
-                    <div className="text-[11px] text-[#9ea48f] mt-0.5">{vehicleLine} · {typeLabel}</div>
+                    <div className="text-[13px] font-bold text-[#FFEECA] truncate">{serviceLabel}</div>
+                    <div className="text-[11px] text-[#B0BFB1] mt-0.5">{vehicleLine} · {typeLabel}</div>
                   </div>
-                  <span className="text-[13px] font-mono font-bold text-[#F4EFE1] whitespace-nowrap">${subtotal.toFixed(2)}</span>
+                  <span className="text-[13px] font-mono font-bold text-[#FFEECA] whitespace-nowrap">${subtotal.toFixed(2)}</span>
                 </div>
                 {/* Tip line (only when present) */}
                 {tipAmount > 0 && (
-                  <div className="flex items-start justify-between gap-4 px-3.5 py-3 border-b border-[#2a3128]">
-                    <div className="text-[13px] font-semibold text-[#c7cdb8]">{t('receipt_tip')}</div>
-                    <span className="text-[13px] font-mono font-semibold text-[#c7cdb8] whitespace-nowrap">${tipAmount.toFixed(2)}</span>
+                  <div className="flex items-start justify-between gap-4 px-3.5 py-3 border-b border-[#001A05]">
+                    <div className="text-[13px] font-semibold text-[#FFEECA]">{t('receipt_tip')}</div>
+                    <span className="text-[13px] font-mono font-semibold text-[#FFEECA] whitespace-nowrap">${tipAmount.toFixed(2)}</span>
                   </div>
                 )}
                 {/* Status row */}
                 <div className="flex items-center justify-between gap-4 px-3.5 py-2.5">
-                  <span className="text-[11px] font-bold text-[#8a927f] uppercase tracking-wide">{t('receipt_status')}</span>
+                  <span className="text-[11px] font-bold text-[#B0BFB1] uppercase tracking-wide">{t('receipt_status')}</span>
                   <span className={`text-[11px] font-bold px-2 py-0.5 rounded-full ${e.status === 'completed' ? 'bg-Hurryline-success/15 text-Hurryline-success' : 'bg-Hurryline-error/15 text-Hurryline-error'}`}>
                     {t(`status_${e.status}`)}
                   </span>
@@ -660,29 +660,29 @@ export function ReceiptModal({ entry: e, locale, onClose }: ReceiptModalProps) {
             </div>
 
             {/* Subtotal + Total */}
-            <div className="rounded-2xl bg-[#0c100d] border border-[#2a3128] px-4 py-3 space-y-2">
+            <div className="rounded-2xl bg-[#001201] border border-[#001A05] px-4 py-3 space-y-2">
               {tipAmount > 0 && (
                 <div className="flex items-center justify-between">
-                  <span className="text-[11px] font-semibold text-[#9ea48f] uppercase tracking-wider">{t('receipt_subtotal_line')}</span>
+                  <span className="text-[11px] font-semibold text-[#B0BFB1] uppercase tracking-wider">{t('receipt_subtotal_line')}</span>
                   <span className="text-[13px] font-mono text-[#C0C0B0] whitespace-nowrap">${subtotal.toFixed(2)}</span>
                 </div>
               )}
               <div className="flex items-center justify-between">
-                <span className="text-[12px] font-bold text-[#9ea48f] uppercase tracking-widest">{t('receipt_total')}</span>
-                <span className="text-[26px] font-black text-[#E4C06A] leading-none whitespace-nowrap">${e.amountPaid.toFixed(2)}</span>
+                <span className="text-[12px] font-bold text-[#B0BFB1] uppercase tracking-widest">{t('receipt_total')}</span>
+                <span className="text-[26px] font-black text-[#DDAF3B] leading-none whitespace-nowrap">${e.amountPaid.toFixed(2)}</span>
               </div>
             </div>
 
-            <p className="text-[11px] text-[#8a927f] text-center pb-1">{t('receipt_footer')}</p>
+            <p className="text-[11px] text-[#B0BFB1] text-center pb-1">{t('receipt_footer')}</p>
           </div>
         </div>
 
         {/* Actions */}
-        <div className="px-5 py-4 border-t border-[#2a3128] flex gap-3 bg-[#111713]">
+        <div className="px-5 py-4 border-t border-[#001A05] flex gap-3 bg-[#001201]">
           <button
             type="button"
             onClick={onClose}
-            className="flex-1 py-3 rounded-2xl text-[14px] font-bold border border-[#3a4338] text-[#c7cdb8] hover:bg-[#1a211c] transition-colors cursor-pointer"
+            className="flex-1 py-3 rounded-2xl text-[14px] font-bold border border-[#3a4338] text-[#FFEECA] hover:bg-[#1a211c] transition-colors cursor-pointer"
           >
             {t('detail_close')}
           </button>
@@ -691,7 +691,7 @@ export function ReceiptModal({ entry: e, locale, onClose }: ReceiptModalProps) {
               type="button"
               onClick={handleDownload}
               disabled={downloading}
-              className="flex-1 py-3 bg-[#E4C06A] hover:bg-[#d8b35d] rounded-2xl text-[14px] font-black text-[#111713] transition-colors btn-shine flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50"
+              className="flex-1 py-3 bg-[#DDAF3B] hover:bg-[#d8b35d] rounded-2xl text-[14px] font-black text-[#001201] transition-colors btn-shine flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50"
             >
               {downloading ? (
                 <svg className="animate-spin" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" aria-hidden="true">
@@ -719,9 +719,9 @@ export function ReceiptModal({ entry: e, locale, onClose }: ReceiptModalProps) {
 
 function ReceiptRow({ label, value, noBorder }: { label: string; value: string; noBorder?: boolean }) {
   return (
-    <div className={`flex items-start justify-between gap-4 px-3.5 py-2.5 ${noBorder ? '' : 'border-b border-[#2a3128]'}`}>
-      <span className="text-[11px] font-bold text-[#8a927f] uppercase tracking-wide whitespace-nowrap">{label}</span>
-      <span className="text-[13px] font-bold text-[#F4EFE1] text-right">{value}</span>
+    <div className={`flex items-start justify-between gap-4 px-3.5 py-2.5 ${noBorder ? '' : 'border-b border-[#001A05]'}`}>
+      <span className="text-[11px] font-bold text-[#B0BFB1] uppercase tracking-wide whitespace-nowrap">{label}</span>
+      <span className="text-[13px] font-bold text-[#FFEECA] text-right">{value}</span>
     </div>
   );
 }

@@ -121,7 +121,7 @@ export function CityAutocomplete({ label, required, value, error, onChange }: Ci
     <div className="mb-4 relative" ref={containerRef}>
       <label
         htmlFor={inputId}
-        className="block text-[15px] font-semibold text-[#1A1A1A] dark:text-white mb-1.5 tracking-wide"
+        className="block text-[15px] font-semibold text-[#001201] dark:text-white mb-1.5 tracking-wide"
       >
         {label}
         {required && <span className="text-gold ml-0.5">*</span>}
@@ -146,11 +146,11 @@ export function CityAutocomplete({ label, required, value, error, onChange }: Ci
           onFocus={() => { if (suggestions.length > 0) setIsOpen(true); }}
           className={[
             'w-full pl-4 pr-10 py-3 bg-white dark:bg-surface border-[1.5px] rounded-lg',
-            'text-[16px] text-[#1A1A1A] dark:text-white placeholder-[#AAAAAA] dark:placeholder-[#4A5A46]',
+            'text-[16px] text-[#001201] dark:text-white placeholder-[#AAAAAA] dark:placeholder-[#4A5A46]',
             'outline-none transition-all duration-150',
             error
               ? 'border-Hurryline-error bg-[#FFF8F7] dark:bg-[#2A1A18]'
-              : 'border-[#CCCCCC] dark:border-border focus:border-gold dark:focus:border-gold focus:shadow-[0_0_0_3px_rgba(196,154,30,0.18)] dark:focus:shadow-[0_0_0_3px_rgba(196,154,30,0.15)]',
+              : 'border-[#CCCCCC] dark:border-border focus:border-gold dark:focus:border-gold focus:shadow-[0_0_0_3px_rgba(221, 175, 59,0.18)] dark:focus:shadow-[0_0_0_3px_rgba(221, 175, 59,0.15)]',
           ].join(' ')}
         />
         <span className="absolute right-3.5 top-1/2 -translate-y-1/2 pointer-events-none text-[#CCCCCC] dark:text-[#4A5A46]">
@@ -175,7 +175,7 @@ export function CityAutocomplete({ label, required, value, error, onChange }: Ci
                 'flex items-center gap-3 px-4 py-2.5 text-[15px] cursor-pointer transition-colors duration-100',
                 i === activeIdx
                   ? 'bg-gold/10 text-gold'
-                  : 'text-[#1A1A1A] dark:text-white hover:bg-[#F8F8F8] dark:hover:bg-dark-surface',
+                  : 'text-[#001201] dark:text-white hover:bg-[#F8F8F8] dark:hover:bg-dark-surface',
               ].join(' ')}
             >
               <span className={i === activeIdx ? 'text-gold' : 'text-[#CCCCCC] dark:text-[#4A5A46]'}>

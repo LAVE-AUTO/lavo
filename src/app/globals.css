@@ -228,7 +228,7 @@ button,
 }
 
 .hero-title-gradient {
-    background: linear-gradient(120deg, #C49A1E 10%, #F2C94C 50%, #C49A1E 90%);
+    background: linear-gradient(120deg, #DDAF3B 10%, #DDAF3B 50%, #DDAF3B 90%);
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
     background-clip: text;
@@ -436,11 +436,11 @@ button,
 
 .scrollbar-hover:hover {
     scrollbar-width: thin;
-    scrollbar-color: #C8980A33 transparent;
+    scrollbar-color: #DDAF3B33 transparent;
 }
 
 .scrollbar-hover:hover::-webkit-scrollbar-thumb {
-    background: #C8980A55;
+    background: #DDAF3B55;
 }
 
 
@@ -453,13 +453,13 @@ button,
 /* ------------------------------------------------------------------ */
 
 .auth-form-bg {
-    background-image: radial-gradient(ellipse at 50% 0%, rgba(196, 154, 30, 0.09) 0%, transparent 55%), linear-gradient(rgba(244, 241, 234, 0.93), rgba(238, 234, 224, 0.93)), url('https://images.unsplash.com/photo-1492144534655-ae79c964c9d7?w=1920&q=80');
+    background-image: radial-gradient(ellipse at 50% 0%, rgba(221, 175, 59, 0.09) 0%, transparent 55%), linear-gradient(rgba(244, 241, 234, 0.93), rgba(238, 234, 224, 0.93)), url('https://images.unsplash.com/photo-1492144534655-ae79c964c9d7?w=1920&q=80');
     background-size: auto, auto, cover;
     background-position: center, center, center;
 }
 
 .dark .auth-form-bg {
-    background-image: radial-gradient(ellipse at 50% 0%, rgba(196, 154, 30, 0.09) 0%, transparent 55%), linear-gradient(rgba(26, 33, 22, 0.94), rgba(26, 33, 22, 0.94)), url('https://images.unsplash.com/photo-1492144534655-ae79c964c9d7?w=1920&q=80');
+    background-image: radial-gradient(ellipse at 50% 0%, rgba(221, 175, 59, 0.09) 0%, transparent 55%), linear-gradient(rgba(26, 33, 22, 0.94), rgba(26, 33, 22, 0.94)), url('https://images.unsplash.com/photo-1492144534655-ae79c964c9d7?w=1920&q=80');
     background-size: auto, auto, cover;
     background-position: center, center, center;
 }
@@ -474,13 +474,13 @@ button,
 /* ------------------------------------------------------------------ */
 
 .stations-hero-bg {
-    background-image: radial-gradient(ellipse at 60% 40%, rgba(196, 154, 30, 0.12) 0%, transparent 60%), linear-gradient(160deg, rgba(75, 65, 55, 0.96) 0%, rgba(100, 85, 70, 0.94) 50%, rgba(75, 65, 55, 0.96) 100%), url('https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=1600&q=80');
+    background-image: radial-gradient(ellipse at 60% 40%, rgba(221, 175, 59, 0.12) 0%, transparent 60%), linear-gradient(160deg, rgba(75, 65, 55, 0.96) 0%, rgba(100, 85, 70, 0.94) 50%, rgba(75, 65, 55, 0.96) 100%), url('https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=1600&q=80');
     background-size: auto, auto, cover;
     background-position: center, center, center;
 }
 
 .dark .stations-hero-bg {
-    background-image: radial-gradient(ellipse at 60% 40%, rgba(196, 154, 30, 0.18) 0%, transparent 60%), linear-gradient(160deg, rgba(26, 33, 22, 0.97) 0%, rgba(36, 48, 32, 0.95) 50%, rgba(26, 33, 22, 0.97) 100%), url('https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=1600&q=80');
+    background-image: radial-gradient(ellipse at 60% 40%, rgba(221, 175, 59, 0.18) 0%, transparent 60%), linear-gradient(160deg, rgba(26, 33, 22, 0.97) 0%, rgba(36, 48, 32, 0.95) 50%, rgba(26, 33, 22, 0.97) 100%), url('https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=1600&q=80');
     background-size: auto, auto, cover;
     background-position: center, center, center;
 }

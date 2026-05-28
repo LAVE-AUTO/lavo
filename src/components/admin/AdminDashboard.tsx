@@ -72,7 +72,7 @@ export function AdminDashboard() {
       <div className="border-b border-[#E8E4D8] bg-white px-7 py-5 dark:border-[#1A2A14] dark:bg-[#111A0E]">
         <div className="flex items-center justify-between">
           <div>
-            <h1 className="text-[20px] font-black leading-tight text-[#0F1A0C] dark:text-[#F0EDD4]">
+            <h1 className="text-[20px] font-black leading-tight text-[#0F1A0C] dark:text-[#FFF9EC]">
               {t('page_title')}
             </h1>
             <p className="mt-0.5 text-[12px] capitalize text-[#999] dark:text-[#A0A090]">{today}</p>
@@ -87,11 +87,11 @@ export function AdminDashboard() {
         {/* KPI section */}
         <section>
           <div className="mb-3 flex items-center gap-2">
-            <span className="text-[11px] font-black uppercase tracking-[0.15em] text-[#C49A1E]">
+            <span className="text-[11px] font-black uppercase tracking-[0.15em] text-[#DDAF3B]">
               {t('section_performance')}
             </span>
             <span className="h-px flex-1 bg-[#E8E4D8] dark:bg-[#1A2A14]" />
-            <span className="rounded-full bg-[#C49A1E]/10 px-3 py-0.5 text-[11px] font-bold text-[#C49A1E]">
+            <span className="rounded-full bg-[#DDAF3B]/10 px-3 py-0.5 text-[11px] font-bold text-[#DDAF3B]">
               {t('kpi_period')}
             </span>
             <button
@@ -100,7 +100,7 @@ export function AdminDashboard() {
               aria-pressed={masked}
               aria-label={masked ? t('kpi_reveal') : t('kpi_hide_aria')}
               title={masked ? t('kpi_reveal') : t('kpi_hide_aria')}
-              className="inline-flex h-7 w-7 items-center justify-center rounded-full bg-[#E8E4D8] text-foreground/65 transition-colors hover:bg-[#DDD8C4] hover:text-[#1A1A0A] dark:bg-[#1A2A14] dark:text-[#A0A090] dark:hover:bg-[#243020] dark:hover:text-[#F0EDD4]"
+              className="inline-flex h-7 w-7 items-center justify-center rounded-full bg-[#E8E4D8] text-foreground/65 transition-colors hover:bg-[#DDD8C4] hover:text-[#001201] dark:bg-[#1A2A14] dark:text-[#A0A090] dark:hover:bg-[#001A05] dark:hover:text-[#FFF9EC]"
             >
               {masked ? <EyeOffIcon /> : <EyeIcon />}
             </button>
@@ -121,7 +121,7 @@ export function AdminDashboard() {
         {/* Alerts section */}
         <section className="flex flex-1 flex-col">
           <div className="mb-3 flex items-center gap-2">
-            <span className="text-[11px] font-black uppercase tracking-[0.15em] text-[#C49A1E]">
+            <span className="text-[11px] font-black uppercase tracking-[0.15em] text-[#DDAF3B]">
               {t('alerts_title')}
             </span>
             <span className="h-px flex-1 bg-[#E8E4D8] dark:bg-[#1A2A14]" />

@@ -108,7 +108,7 @@ export function DashboardOverviewSection({ data }: Props) {
           aria-pressed={masked}
           aria-label={masked ? t('overview_reveal') : t('overview_hide_aria')}
           title={masked ? t('overview_reveal') : t('overview_hide_aria')}
-          className="inline-flex h-7 w-7 items-center justify-center rounded-full bg-[#E8E4D8] text-foreground/65 transition-colors hover:bg-[#DDD8C4] hover:text-[#1A1A0A] dark:bg-[#1A2A14] dark:text-[#A0A090] dark:hover:bg-[#243020] dark:hover:text-[#F0EDD4]"
+          className="inline-flex h-7 w-7 items-center justify-center rounded-full bg-[#E8E4D8] text-foreground/65 transition-colors hover:bg-[#DDD8C4] hover:text-[#001201] dark:bg-[#1A2A14] dark:text-[#A0A090] dark:hover:bg-[#001A05] dark:hover:text-[#FFF9EC]"
         >
           {masked ? <EyeOffIcon /> : <EyeIcon />}
         </button>
@@ -152,7 +152,7 @@ function FullKpiCard({
         <Icon />
       </div>
       <div
-        className={`mb-0.5 text-[28px] font-black leading-none text-[#1A1A0A] dark:text-[#F0EDD4] tabular-nums ${
+        className={`mb-0.5 text-[28px] font-black leading-none text-[#001201] dark:text-[#FFF9EC] tabular-nums ${
           masked ? 'tracking-[0.08em]' : ''
         }`}
       >
@@ -177,30 +177,30 @@ function FullKpiCard({
 function fillColorVar(c: 'gold' | 'green' | 'red'): string {
   if (c === 'green') return '#2ECC71';
   if (c === 'red') return '#EF4444';
-  return '#C49A1E';
+  return '#DDAF3B';
 }
 
 const MoneyIcon = () => (
-  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#C49A1E" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#DDAF3B" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
     <line x1="12" y1="1" x2="12" y2="23" /><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6" />
   </svg>
 );
 
 const UsersIcon = () => (
-  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#C49A1E" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#DDAF3B" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
     <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" /><circle cx="9" cy="7" r="4" />
     <path d="M23 21v-2a4 4 0 0 0-3-3.87" /><path d="M16 3.13a4 4 0 0 1 0 7.75" />
   </svg>
 );
 
 const ClockIcon = () => (
-  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#C49A1E" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#DDAF3B" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
     <circle cx="12" cy="12" r="10" /><polyline points="12 6 12 12 16 14" />
   </svg>
 );
 
 const ChartIcon = () => (
-  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#C49A1E" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#DDAF3B" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
     <line x1="18" y1="20" x2="18" y2="10" /><line x1="12" y1="20" x2="12" y2="4" />
     <line x1="6" y1="20" x2="6" y2="14" /><line x1="2" y1="20" x2="22" y2="20" />
   </svg>

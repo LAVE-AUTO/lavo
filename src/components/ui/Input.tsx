@@ -43,7 +43,7 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(function Input(
           ref={ref}
           id={inputId}
           className={[
-            'w-full rounded-[10px] border bg-white dark:bg-surface text-[#1A1A1A] dark:text-white',
+            'w-full rounded-[10px] border bg-white dark:bg-surface text-[#001201] dark:text-white',
             'px-3 py-2.5 text-[15px] placeholder:text-Hurryline-muted',
             'outline-none focus:ring-2 focus:ring-gold/40 focus:border-gold transition-colors',
             error

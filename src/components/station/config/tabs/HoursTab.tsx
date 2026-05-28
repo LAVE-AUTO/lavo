@@ -44,7 +44,7 @@ function buildDefaultDays(): HourDay[] {
 }
 
 const timeInputClass =
-  'w-full rounded-lg border border-[#E0DCD0] bg-white px-2.5 py-1.5 text-center font-mono text-[12px] tabular-nums text-[#1A1A0A] outline-none transition-all duration-150 placeholder:text-[#BBBBAA] hover:border-[#D0C8B0] focus:border-[#C49A1E] focus:shadow-[0_0_0_3px_rgba(196,154,30,0.12)] disabled:cursor-not-allowed disabled:opacity-50 dark:border-[#243020] dark:bg-[#0F1A0C] dark:text-[#F0EDD4] dark:placeholder:text-[#4A4A3A] dark:hover:border-[#2E3C2A]';
+  'w-full rounded-lg border border-[#E0DCD0] bg-white px-2.5 py-1.5 text-center font-mono text-[12px] tabular-nums text-[#001201] outline-none transition-all duration-150 placeholder:text-[#BBBBAA] hover:border-[#D0C8B0] focus:border-[#DDAF3B] focus:shadow-[0_0_0_3px_rgba(221, 175, 59,0.12)] disabled:cursor-not-allowed disabled:opacity-50 dark:border-[#001A05] dark:bg-[#0F1A0C] dark:text-[#FFF9EC] dark:placeholder:text-[#4A4A3A] dark:hover:border-[#2E3C2A]';
 
 export function HoursTab({ config, locked }: Props) {
   const t = useTranslations('station_config');
@@ -166,7 +166,7 @@ export function HoursTab({ config, locked }: Props) {
     <div className="flex flex-col gap-5">
       {/* Global template — defines default hours applied to all days */}
       <section className="rounded-2xl border border-[#E8E4DC] bg-white p-6 shadow-sm dark:border-[#1A2A14] dark:bg-[#182214]">
-        <h3 className="mb-2 text-[11px] font-bold uppercase tracking-[1.5px] text-[#C49A1E]">
+        <h3 className="mb-2 text-[11px] font-bold uppercase tracking-[1.5px] text-[#DDAF3B]">
           {t('hours_template_title')}
         </h3>
         <p className="mb-4 text-[12px] leading-snug text-foreground/55 dark:text-[#9A9A8A]">
@@ -188,7 +188,7 @@ export function HoursTab({ config, locked }: Props) {
                 onChange={(e) => setTemplate((p) => ({ ...p, morning_start: e.target.value }))}
                 aria-label={t('hours_morning_start')}
               />
-              <span className="shrink-0 text-[12px] font-bold text-[#C49A1E]" aria-hidden="true">→</span>
+              <span className="shrink-0 text-[12px] font-bold text-[#DDAF3B]" aria-hidden="true">→</span>
               <input
                 className={timeInputClass}
                 type="time"
@@ -214,7 +214,7 @@ export function HoursTab({ config, locked }: Props) {
                 onChange={(e) => setTemplate((p) => ({ ...p, afternoon_start: e.target.value }))}
                 aria-label={t('hours_afternoon_start')}
               />
-              <span className="shrink-0 text-[12px] font-bold text-[#C49A1E]" aria-hidden="true">→</span>
+              <span className="shrink-0 text-[12px] font-bold text-[#DDAF3B]" aria-hidden="true">→</span>
               <input
                 className={timeInputClass}
                 type="time"
@@ -232,7 +232,7 @@ export function HoursTab({ config, locked }: Props) {
             type="button"
             onClick={applyTemplateToAllDays}
             disabled={locked || saving}
-            className="rounded-xl border border-[#C49A1E] px-4 py-2 text-[12px] font-bold text-[#C49A1E] transition-colors hover:bg-[#C49A1E]/10 disabled:cursor-not-allowed disabled:opacity-40"
+            className="rounded-xl border border-[#DDAF3B] px-4 py-2 text-[12px] font-bold text-[#DDAF3B] transition-colors hover:bg-[#DDAF3B]/10 disabled:cursor-not-allowed disabled:opacity-40"
           >
             {t('hours_apply_to_all')}
           </button>
@@ -241,13 +241,13 @@ export function HoursTab({ config, locked }: Props) {
 
       {/* Per-day schedule */}
       <section className="rounded-2xl border border-[#E8E4DC] bg-white p-6 shadow-sm dark:border-[#1A2A14] dark:bg-[#182214]">
-        <h3 className="mb-2 text-[11px] font-bold uppercase tracking-[1.5px] text-[#C49A1E]">
+        <h3 className="mb-2 text-[11px] font-bold uppercase tracking-[1.5px] text-[#DDAF3B]">
           {t('hours_per_day_title')}
         </h3>
         <p className="mb-4 text-[12px] leading-snug text-foreground/55 dark:text-[#9A9A8A]">
           {t('hours_per_day_hint')}
         </p>
-        <div className="grid grid-cols-[100px_44px_1fr] gap-3 border-b border-[#E0DCD0] pb-2 text-[10px] font-bold uppercase tracking-[0.5px] text-[#AAAAAA] dark:border-[#243020] dark:text-[#5A5A4A]">
+        <div className="grid grid-cols-[100px_44px_1fr] gap-3 border-b border-[#E0DCD0] pb-2 text-[10px] font-bold uppercase tracking-[0.5px] text-[#AAAAAA] dark:border-[#001A05] dark:text-[#5A5A4A]">
           <span />
           <span />
           <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
@@ -292,7 +292,7 @@ export function HoursTab({ config, locked }: Props) {
           type="button"
           onClick={handleSave}
           disabled={locked || saving}
-          className="flex items-center gap-2 rounded-xl bg-[#C49A1E] px-6 py-2.5 text-[13px] font-bold text-[#0C1209] transition-opacity hover:opacity-85 disabled:cursor-not-allowed disabled:opacity-40"
+          className="flex items-center gap-2 rounded-xl bg-[#DDAF3B] px-6 py-2.5 text-[13px] font-bold text-[#0C1209] transition-opacity hover:opacity-85 disabled:cursor-not-allowed disabled:opacity-40"
         >
           {saving ? (
             <svg className="animate-spin" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" aria-hidden="true">

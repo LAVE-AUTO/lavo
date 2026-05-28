@@ -40,7 +40,7 @@ export function PhoneMockup() {
           </div>
 
           {/* Search bar mockup */}
-          <div className="mx-4 mb-4 flex items-center gap-2 px-3 py-2.5 bg-[#F4F3EE] dark:bg-[#243020] rounded-xl">
+          <div className="mx-4 mb-4 flex items-center gap-2 px-3 py-2.5 bg-[#F4F3EE] dark:bg-[#001A05] rounded-xl">
             <svg
               width="14"
               height="14"
@@ -59,7 +59,7 @@ export function PhoneMockup() {
           </div>
 
           {/* Station card 1 */}
-          <div className="mx-4 mb-3 rounded-xl border border-[#E8E8D8] dark:border-[#2C3828] bg-white dark:bg-[#1E2A1A] p-3 shadow-sm">
+          <div className="mx-4 mb-3 rounded-xl border border-[#E8E8D8] dark:border-[#2C3828] bg-white dark:bg-[#001A05] p-3 shadow-sm">
             <div className="flex gap-3">
               <div className="w-14 h-14 rounded-lg bg-gradient-to-br from-gold/20 to-gold/5 flex items-center justify-center flex-shrink-0">
                 <svg
@@ -67,7 +67,7 @@ export function PhoneMockup() {
                   height="22"
                   viewBox="0 0 24 24"
                   fill="none"
-                  stroke="#af8408"
+                  stroke="#DDAF3B"
                   strokeWidth="1.5"
                   strokeLinecap="round"
                   strokeLinejoin="round"
@@ -96,7 +96,7 @@ export function PhoneMockup() {
           </div>
 
           {/* Station card 2 */}
-          <div className="mx-4 mb-3 rounded-xl border border-[#E8E8D8] dark:border-[#2C3828] bg-white dark:bg-[#1E2A1A] p-3 shadow-sm">
+          <div className="mx-4 mb-3 rounded-xl border border-[#E8E8D8] dark:border-[#2C3828] bg-white dark:bg-[#001A05] p-3 shadow-sm">
             <div className="flex gap-3">
               <div className="w-14 h-14 rounded-lg bg-gradient-to-br from-gold/20 to-gold/5 flex items-center justify-center flex-shrink-0">
                 <svg
@@ -104,7 +104,7 @@ export function PhoneMockup() {
                   height="22"
                   viewBox="0 0 24 24"
                   fill="none"
-                  stroke="#af8408"
+                  stroke="#DDAF3B"
                   strokeWidth="1.5"
                   strokeLinecap="round"
                   strokeLinejoin="round"

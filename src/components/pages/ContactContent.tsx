@@ -40,8 +40,8 @@ export function ContactContent({ html, eyebrow, title }: Props) {
   const inputClass = (hasVal: boolean) => [
     'w-full px-4 py-3 rounded-xl border text-[14px] outline-none transition-all',
     hasVal
-      ? 'border-gold bg-gold/5 dark:bg-gold/8 text-[#1a1a1a] dark:text-white'
-      : 'border-[#E0E0D0] dark:border-border bg-white dark:bg-surface text-[#1a1a1a] dark:text-white placeholder:text-[#999]',
+      ? 'border-gold bg-gold/5 dark:bg-gold/8 text-[#001201] dark:text-white'
+      : 'border-[#E0E0D0] dark:border-border bg-white dark:bg-surface text-[#001201] dark:text-white placeholder:text-[#999]',
   ].join(' ');
 
   return (
@@ -50,20 +50,20 @@ export function ContactContent({ html, eyebrow, title }: Props) {
 
         {/* Left - admin-editable intro + coordinates */}
         <div className="mb-10 lg:mb-0">
-          <p className="text-[12px] font-bold tracking-[3px] uppercase text-[#c8980a] mb-3">{eyebrow}</p>
-          <h1 className="font-playfair text-[36px] sm:text-[48px] font-black text-[#1a1a1a] dark:text-white leading-tight mb-6">
+          <p className="text-[12px] font-bold tracking-[3px] uppercase text-[#DDAF3B] mb-3">{eyebrow}</p>
+          <h1 className="font-playfair text-[36px] sm:text-[48px] font-black text-[#001201] dark:text-white leading-tight mb-6">
             {title}
           </h1>
           <div
             className={[
               'text-[14px] sm:text-[15px] text-foreground/70 dark:text-[#A0A090] leading-[1.85]',
-              '[&_h2]:font-playfair [&_h2]:text-[20px] sm:[&_h2]:text-[22px] [&_h2]:font-black [&_h2]:text-[#1a1a1a] dark:[&_h2]:text-white [&_h2]:mt-8 [&_h2]:mb-3',
-              '[&_h3]:text-[16px] [&_h3]:font-bold [&_h3]:text-[#1a1a1a] dark:[&_h3]:text-white [&_h3]:mt-5 [&_h3]:mb-2',
+              '[&_h2]:font-playfair [&_h2]:text-[20px] sm:[&_h2]:text-[22px] [&_h2]:font-black [&_h2]:text-[#001201] dark:[&_h2]:text-white [&_h2]:mt-8 [&_h2]:mb-3',
+              '[&_h3]:text-[16px] [&_h3]:font-bold [&_h3]:text-[#001201] dark:[&_h3]:text-white [&_h3]:mt-5 [&_h3]:mb-2',
               '[&_p]:mb-4',
               '[&_ul]:list-disc [&_ul]:pl-6 [&_ul]:mb-4 [&_ul]:space-y-1.5',
               '[&_ol]:list-decimal [&_ol]:pl-6 [&_ol]:mb-4 [&_ol]:space-y-1.5',
-              '[&_strong]:text-[#1a1a1a] dark:[&_strong]:text-white [&_strong]:font-bold',
-              '[&_a]:text-[#c8980a] [&_a]:font-semibold [&_a]:underline [&_a]:underline-offset-2',
+              '[&_strong]:text-[#001201] dark:[&_strong]:text-white [&_strong]:font-bold',
+              '[&_a]:text-[#DDAF3B] [&_a]:font-semibold [&_a]:underline [&_a]:underline-offset-2',
             ].join(' ')}
             // Sanitized server-side via DOMPurify before persistence.
             // eslint-disable-next-line react/no-danger
@@ -72,21 +72,21 @@ export function ContactContent({ html, eyebrow, title }: Props) {
         </div>
 
         {/* Right - form */}
-        <div className="bg-surface rounded-2xl p-6 sm:p-8 border border-[rgba(200,152,10,0.12)] shadow-sm">
+        <div className="bg-surface rounded-2xl p-6 sm:p-8 border border-[rgba(221,175,59,0.12)] shadow-sm">
           {status === 'sent' ? (
             <div className="flex flex-col items-center justify-center text-center py-10 gap-4">
               <div className="w-14 h-14 rounded-full bg-Hurryline-success/15 flex items-center justify-center">
                 <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#00C851" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><polyline points="20 6 9 17 4 12" /></svg>
               </div>
-              <h2 className="text-[20px] font-black text-[#1a1a1a] dark:text-white">{t('success_title')}</h2>
+              <h2 className="text-[20px] font-black text-[#001201] dark:text-white">{t('success_title')}</h2>
               <p className="text-[14px] text-foreground/70 dark:text-[#A0A090]">{t('success_desc')}</p>
-              <button type="button" onClick={() => { setName(''); setEmail(''); setSubject(''); setMessage(''); setStatus('idle'); }} className="mt-2 text-[13px] font-bold text-[#c8980a] hover:text-gold-hover transition-colors cursor-pointer">
+              <button type="button" onClick={() => { setName(''); setEmail(''); setSubject(''); setMessage(''); setStatus('idle'); }} className="mt-2 text-[13px] font-bold text-[#DDAF3B] hover:text-gold-hover transition-colors cursor-pointer">
                 {t('new_message')}
               </button>
             </div>
           ) : (
             <form onSubmit={handleSubmit} className="space-y-4">
-              <h2 className="text-[18px] font-black text-[#1a1a1a] dark:text-white mb-5">{t('form_title')}</h2>
+              <h2 className="text-[18px] font-black text-[#001201] dark:text-white mb-5">{t('form_title')}</h2>
 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>

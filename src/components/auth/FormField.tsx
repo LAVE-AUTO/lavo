@@ -33,7 +33,7 @@ export function FormField({
     <div className="mb-4">
       <label
         htmlFor={inputId}
-        className="block text-[15px] font-semibold text-[#1A1A1A] dark:text-white mb-1.5 tracking-wide"
+        className="block text-[15px] font-semibold text-[#001201] dark:text-white mb-1.5 tracking-wide"
       >
         {label}
         {required && <span className="text-gold ml-0.5">*</span>}
@@ -46,11 +46,11 @@ export function FormField({
           aria-describedby={error ? errorId : undefined}
           className={[
             'w-full px-4 py-3 bg-white dark:bg-surface border-[1.5px] rounded-lg',
-            'text-[16px] text-[#1A1A1A] dark:text-white placeholder-[#AAAAAA] dark:placeholder-[#4A5A46]',
+            'text-[16px] text-[#001201] dark:text-white placeholder-[#AAAAAA] dark:placeholder-[#4A5A46]',
             'outline-none transition-all duration-150',
             error
               ? 'border-Hurryline-error bg-[#FFF8F7] dark:bg-[#2A1A18] focus:shadow-[0_0_0_3px_rgba(232,71,42,0.2)]'
-              : 'border-[#CCCCCC] dark:border-border focus:border-gold dark:focus:border-gold focus:shadow-[0_0_0_3px_rgba(196,154,30,0.18)] dark:focus:shadow-[0_0_0_3px_rgba(196,154,30,0.15)]',
+              : 'border-[#CCCCCC] dark:border-border focus:border-gold dark:focus:border-gold focus:shadow-[0_0_0_3px_rgba(221, 175, 59,0.18)] dark:focus:shadow-[0_0_0_3px_rgba(221, 175, 59,0.15)]',
             rightIcon ? 'pr-11' : '',
             className ?? '',
           ]

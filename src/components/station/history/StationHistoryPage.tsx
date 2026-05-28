@@ -120,7 +120,7 @@ export function StationHistoryPage() {
 
   if (loading) {
     return (
-      <div className="flex flex-1 items-center justify-center bg-[#EDEDED] dark:bg-[#1A2116]">
+      <div className="flex flex-1 items-center justify-center bg-[#EDEDED] dark:bg-[#001201]">
         <div className="h-8 w-8 animate-spin rounded-full border-[3px] border-[#C09A18] border-t-transparent" />
       </div>
     );
@@ -142,9 +142,9 @@ export function StationHistoryPage() {
   }
 
   return (
-    <div className="flex flex-1 flex-col overflow-hidden bg-[#EDEDED] dark:bg-[#1A2116]">
+    <div className="flex flex-1 flex-col overflow-hidden bg-[#EDEDED] dark:bg-[#001201]">
       {/* Header */}
-      <div className="border-b border-[#CCCCCC] bg-surface px-6 pb-5 pt-5 dark:border-[#3A4A36] dark:bg-[#243020]">
+      <div className="border-b border-[#CCCCCC] bg-surface px-6 pb-5 pt-5 dark:border-[#3A4A36] dark:bg-[#001A05]">
         <div className="flex items-center justify-between gap-4">
           <div className="min-w-0">
             <h1 className="text-[20px] font-bold text-foreground">
@@ -193,8 +193,8 @@ export function StationHistoryPage() {
                   onClick={() => setStatus(key)}
                   className={`flex items-center gap-1.5 rounded-[8px] px-3 py-1.5 text-[13px] font-bold transition-all active:scale-[0.97] ${
                     status === key
-                      ? color ? 'text-white shadow-sm' : 'bg-[#C09A18] text-[#1A2116] shadow-sm'
-                      : 'bg-[#C8C8B4] text-[#000717]/60 hover:bg-[#BDBDA8] dark:bg-[#1E2A1A] dark:text-[#FFFFF0]/60 dark:hover:bg-[#2A3626]'
+                      ? color ? 'text-white shadow-sm' : 'bg-[#C09A18] text-[#001201] shadow-sm'
+                      : 'bg-[#C8C8B4] text-[#000717]/60 hover:bg-[#BDBDA8] dark:bg-[#001A05] dark:text-[#FFFFF0]/60 dark:hover:bg-[#2A3626]'
                   }`}
                   style={status === key && color ? { background: color } : undefined}
                 >
@@ -231,7 +231,7 @@ export function StationHistoryPage() {
                   type="button"
                   disabled={page <= 1}
                   onClick={() => setPage((p) => Math.max(1, p - 1))}
-                  className="flex h-9 items-center gap-1.5 rounded-[10px] bg-[#C8C8B4] px-4 text-[13px] font-bold text-foreground transition-all hover:bg-[#BDBDA8] active:scale-[0.98] disabled:opacity-30 dark:bg-[#1E2A1A] dark:text-foreground dark:hover:bg-[#2A3626]"
+                  className="flex h-9 items-center gap-1.5 rounded-[10px] bg-[#C8C8B4] px-4 text-[13px] font-bold text-foreground transition-all hover:bg-[#BDBDA8] active:scale-[0.98] disabled:opacity-30 dark:bg-[#001A05] dark:text-foreground dark:hover:bg-[#2A3626]"
                 >
                   <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.5} strokeLinecap="round" strokeLinejoin="round"><polyline points="15 18 9 12 15 6" /></svg>
                   {t('pagination_prev')}
@@ -245,8 +245,8 @@ export function StationHistoryPage() {
                       onClick={() => setPage(p)}
                       className={`flex h-8 w-8 items-center justify-center rounded-lg text-[13px] font-bold transition-all active:scale-[0.95] ${
                         p === page
-                          ? 'bg-[#C09A18] text-[#1A2116] shadow-sm'
-                          : 'text-[#000717]/50 hover:bg-[#C8C8B4] dark:text-[#FFFFF0]/50 dark:hover:bg-[#1E2A1A]'
+                          ? 'bg-[#C09A18] text-[#001201] shadow-sm'
+                          : 'text-[#000717]/50 hover:bg-[#C8C8B4] dark:text-[#FFFFF0]/50 dark:hover:bg-[#001A05]'
                       }`}
                     >
                       {p}
@@ -258,7 +258,7 @@ export function StationHistoryPage() {
                   type="button"
                   disabled={page >= meta.total_pages}
                   onClick={() => setPage((p) => p + 1)}
-                  className="flex h-9 items-center gap-1.5 rounded-[10px] bg-[#C8C8B4] px-4 text-[13px] font-bold text-foreground transition-all hover:bg-[#BDBDA8] active:scale-[0.98] disabled:opacity-30 dark:bg-[#1E2A1A] dark:text-foreground dark:hover:bg-[#2A3626]"
+                  className="flex h-9 items-center gap-1.5 rounded-[10px] bg-[#C8C8B4] px-4 text-[13px] font-bold text-foreground transition-all hover:bg-[#BDBDA8] active:scale-[0.98] disabled:opacity-30 dark:bg-[#001A05] dark:text-foreground dark:hover:bg-[#2A3626]"
                 >
                   {t('pagination_next')}
                   <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.5} strokeLinecap="round" strokeLinejoin="round"><polyline points="9 18 15 12 9 6" /></svg>
@@ -274,7 +274,7 @@ export function StationHistoryPage() {
 
 function KpiChip({ value, color, label }: { value: string; color: string; label: string }) {
   return (
-    <div className="flex items-center gap-1.5 rounded-[8px] bg-[#C8C8B4] px-3 py-1.5 dark:bg-[#1E2A1A]">
+    <div className="flex items-center gap-1.5 rounded-[8px] bg-[#C8C8B4] px-3 py-1.5 dark:bg-[#001A05]">
       <span className="inline-block h-2 w-2 rounded-full" style={{ background: color }} />
       <span className="font-mono text-[14px] font-bold text-foreground">{value}</span>
       <span className="text-[11px] font-semibold text-[#000717]/50 dark:text-[#FFFFF0]/50">{label}</span>
@@ -284,7 +284,7 @@ function KpiChip({ value, color, label }: { value: string; color: string; label:
 
 function StatCard({ label, value, gold }: { label: string; value: string; gold?: boolean }) {
   return (
-    <div className="rounded-2xl bg-[#C8C8B4] p-3 dark:bg-[#1E2A1A]">
+    <div className="rounded-2xl bg-[#C8C8B4] p-3 dark:bg-[#001A05]">
       <div className={`text-[18px] font-bold leading-tight ${gold ? 'text-[#C09A18]' : 'text-foreground'}`}>
         {value}
       </div>
@@ -298,7 +298,7 @@ function StatCard({ label, value, gold }: { label: string; value: string; gold?:
 function EmptyState({ t }: { t: ReturnType<typeof useTranslations> }) {
   return (
     <div className="flex flex-col items-center justify-center gap-4 py-20 text-center">
-      <div className="flex h-16 w-16 items-center justify-center rounded-full bg-[#C8C8B4] dark:bg-[#243020]">
+      <div className="flex h-16 w-16 items-center justify-center rounded-full bg-[#C8C8B4] dark:bg-[#001A05]">
         <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.5} strokeLinecap="round" strokeLinejoin="round" className="text-[#000717]/25 dark:text-[#FFFFF0]/25">
           <path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z" />
           <polyline points="14 2 14 8 20 8" />

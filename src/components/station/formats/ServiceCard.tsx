@@ -86,7 +86,7 @@ export function ServiceCard({ service, onEdit, onDeleted, onToggled }: Props) {
   return (
     <>
       <article
-        className="group flex flex-col rounded-2xl border border-[#E8E4DC] bg-white p-6 transition-all duration-200 hover:border-[#C49A1E]/30 hover:shadow-sm dark:border-[#1A2A14] dark:bg-[#182214] dark:hover:border-[#C49A1E]/30"
+        className="group flex flex-col rounded-2xl border border-[#E8E4DC] bg-white p-6 transition-all duration-200 hover:border-[#DDAF3B]/30 hover:shadow-sm dark:border-[#1A2A14] dark:bg-[#182214] dark:hover:border-[#DDAF3B]/30"
       >
         {/* Header */}
         <header className="mb-4 flex items-start justify-between gap-3">
@@ -94,11 +94,11 @@ export function ServiceCard({ service, onEdit, onDeleted, onToggled }: Props) {
             <p className="text-[11px] font-bold uppercase tracking-[0.5px] text-foreground/55 dark:text-[#9A9A8A]">
               {t(`cat_${service.category}`)}
             </p>
-            <h3 className="mt-0.5 text-[20px] font-black leading-tight text-[#1A1A0A] dark:text-[#F0EDD4]">
+            <h3 className="mt-0.5 text-[20px] font-black leading-tight text-[#001201] dark:text-[#FFF9EC]">
               {service.name}
             </h3>
             {durationLabel && (
-              <p className="mt-1.5 font-mono text-[13px] font-black tracking-[2px] text-[#C49A1E]">
+              <p className="mt-1.5 font-mono text-[13px] font-black tracking-[2px] text-[#DDAF3B]">
                 {durationLabel}
               </p>
             )}
@@ -108,7 +108,7 @@ export function ServiceCard({ service, onEdit, onDeleted, onToggled }: Props) {
               type="button"
               onClick={() => setDeleteOpen(true)}
               disabled={deleting}
-              className="inline-flex items-center gap-1.5 rounded-lg border border-[#E0DCD0] bg-white px-2.5 py-1.5 text-[11px] font-bold text-foreground/55 transition-all hover:border-[#FF2525] hover:bg-[#FF2525]/5 hover:text-[#FF2525] disabled:opacity-40 dark:border-[#243020] dark:bg-[#0F1A0C] dark:text-[#9A9A8A]"
+              className="inline-flex items-center gap-1.5 rounded-lg border border-[#E0DCD0] bg-white px-2.5 py-1.5 text-[11px] font-bold text-foreground/55 transition-all hover:border-[#FF2525] hover:bg-[#FF2525]/5 hover:text-[#FF2525] disabled:opacity-40 dark:border-[#001A05] dark:bg-[#0F1A0C] dark:text-[#9A9A8A]"
             >
               <CrossIcon />
               {t('btn_delete_short')}
@@ -116,7 +116,7 @@ export function ServiceCard({ service, onEdit, onDeleted, onToggled }: Props) {
             <button
               type="button"
               onClick={() => onEdit(service)}
-              className="inline-flex items-center gap-1.5 rounded-lg bg-[#C49A1E] px-2.5 py-1.5 text-[11px] font-bold text-[#0C1209] transition-opacity hover:opacity-85"
+              className="inline-flex items-center gap-1.5 rounded-lg bg-[#DDAF3B] px-2.5 py-1.5 text-[11px] font-bold text-[#0C1209] transition-opacity hover:opacity-85"
             >
               <PencilIcon />
               {t('btn_edit')}
@@ -158,10 +158,10 @@ export function ServiceCard({ service, onEdit, onDeleted, onToggled }: Props) {
                 key={entry.vehicle_format_id}
                 className="rounded-xl bg-[#F7F6F2] px-3 py-3 text-center dark:bg-[#0F1A0C]"
               >
-                <p className={`text-[9px] font-bold uppercase tracking-[1px] ${isPackages ? 'text-[#C49A1E]' : 'text-foreground/55 dark:text-[#9A9A8A]'}`}>
+                <p className={`text-[9px] font-bold uppercase tracking-[1px] ${isPackages ? 'text-[#DDAF3B]' : 'text-foreground/55 dark:text-[#9A9A8A]'}`}>
                   {entry.vehicle_label}
                 </p>
-                <p className="mt-1 font-mono text-[22px] font-black tabular-nums leading-none text-[#C49A1E]">
+                <p className="mt-1 font-mono text-[22px] font-black tabular-nums leading-none text-[#DDAF3B]">
                   {parseFloat(entry.price || '0').toFixed(0)} $
                 </p>
                 <p className="mt-1 text-[11px] text-foreground/55 dark:text-[#9A9A8A]">
@@ -171,7 +171,7 @@ export function ServiceCard({ service, onEdit, onDeleted, onToggled }: Props) {
             ))}
           </div>
         ) : (
-          <div className="mb-4 rounded-xl border border-dashed border-[#E0DCD0] py-4 text-center text-[12px] text-[#BBBBAA] dark:border-[#243020] dark:text-[#5A5A4A]">
+          <div className="mb-4 rounded-xl border border-dashed border-[#E0DCD0] py-4 text-center text-[12px] text-[#BBBBAA] dark:border-[#001A05] dark:text-[#5A5A4A]">
             {t('no_vehicle_entries')}
           </div>
         )}

@@ -50,7 +50,7 @@ export function Tabs({ tabs, activeTabId, onTabChange, className = '' }: TabsPro
               'transition-colors border-b-2 -mb-px',
               isActive
                 ? 'border-gold text-gold'
-                : 'border-transparent text-Hurryline-muted hover:text-[#1A1A1A] dark:hover:text-white',
+                : 'border-transparent text-Hurryline-muted hover:text-[#001201] dark:hover:text-white',
             ].join(' ')}
           >
             {tab.icon && (

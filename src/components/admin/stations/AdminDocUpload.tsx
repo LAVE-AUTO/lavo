@@ -71,7 +71,7 @@ export function AdminDocUpload({ label, hint, required, value, onChange, error }
     <div className="mb-4">
       <p className="mb-1.5 text-[13px] font-bold text-foreground/70 dark:text-[#9A9A8A]">
         {label}
-        {required && <span className="ml-0.5 text-[#C49A1E]">*</span>}
+        {required && <span className="ml-0.5 text-[#DDAF3B]">*</span>}
         {hint && <span className="ml-1 font-normal text-foreground/55 dark:text-[#9A9A8A]">- {hint}</span>}
       </p>
 
@@ -81,7 +81,7 @@ export function AdminDocUpload({ label, hint, required, value, onChange, error }
             <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#00C851" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
               <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" /><polyline points="14 2 14 8 20 8" />
             </svg>
-            <span className="truncate text-[12px] font-semibold text-[#1A1A0A] dark:text-[#F0EDD4]">{value.name}</span>
+            <span className="truncate text-[12px] font-semibold text-[#001201] dark:text-[#FFF9EC]">{value.name}</span>
           </div>
           <button type="button" onClick={() => { onChange(null); setLocalError(null); }} disabled={isUploading}
             className="ml-2 shrink-0 text-[12px] font-bold text-foreground/55 transition-colors hover:text-red-500 disabled:opacity-40">
@@ -97,9 +97,9 @@ export function AdminDocUpload({ label, hint, required, value, onChange, error }
           className={[
             'flex flex-col items-center justify-center gap-1.5 rounded-lg border-[1.5px] border-dashed px-4 py-4 transition-all',
             isUploading ? 'cursor-default' : 'cursor-pointer',
-            isDragging          ? 'border-[#C49A1E] bg-[#C49A1E]/6' : '',
+            isDragging          ? 'border-[#DDAF3B] bg-[#DDAF3B]/6' : '',
             displayError        ? 'border-red-400' : '',
-            !isDragging && !displayError ? 'border-[#D8D4C8] hover:border-[#C49A1E]/60 dark:border-[#243020]' : '',
+            !isDragging && !displayError ? 'border-[#D8D4C8] hover:border-[#DDAF3B]/60 dark:border-[#001A05]' : '',
           ].join(' ')}
         >
           {isUploading ? (

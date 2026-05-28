@@ -68,7 +68,7 @@ export function ExtrasStep({
                           checked ? 'bg-gold border-gold' : 'border-[#BBB] dark:border-[#555]'
                         }`}>
                           {checked && (
-                            <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="#1a1a1a" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12" /></svg>
+                            <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="#001201" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12" /></svg>
                           )}
                         </span>
                         <span className="text-[15px] font-bold text-foreground">{extra.name}</span>

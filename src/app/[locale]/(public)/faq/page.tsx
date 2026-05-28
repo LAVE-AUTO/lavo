@@ -23,7 +23,7 @@ export default async function FaqPage({ params }: Props) {
   return (
     <>
       <PublicNavbar />
-      <main className="min-h-screen bg-[#F7F3EC] dark:bg-[#0d1f0f] transition-colors">
+      <main className="min-h-screen bg-[#FFEECA] dark:bg-[#001201] transition-colors">
         <FaqPageContent
           html={html}
           eyebrow={t('eyebrow')}

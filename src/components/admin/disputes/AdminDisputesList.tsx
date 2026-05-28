@@ -66,7 +66,7 @@ export function AdminDisputesList({ disputes, query, filter, onFilterChange }: P
               className={[
                 'flex items-center gap-2 rounded-xl px-3.5 py-1.5 text-[13px] font-bold transition-all duration-150',
                 isActive
-                  ? 'bg-white text-[#1A1A0A] shadow-[0_2px_8px_rgba(0,0,0,0.10)] ring-1 ring-[#E0DCD0] dark:bg-[#1E2E18] dark:text-[#F0EDD4] dark:ring-[#2A3820]'
+                  ? 'bg-white text-[#001201] shadow-[0_2px_8px_rgba(0,0,0,0.10)] ring-1 ring-[#E0DCD0] dark:bg-[#1E2E18] dark:text-[#FFF9EC] dark:ring-[#2A3820]'
                   : 'text-[#999] hover:text-foreground/70 hover:bg-white/60 dark:text-[#A0A090] dark:hover:text-[#9A9A8A] dark:hover:bg-[#1A2A14]/60',
               ].join(' ')}>
               {color && (
@@ -75,7 +75,7 @@ export function AdminDisputesList({ disputes, query, filter, onFilterChange }: P
               {label}
               <span className={[
                 'min-w-[18px] rounded-full px-1.5 py-0.5 text-center text-[11px] font-black transition-colors',
-                isActive ? 'bg-[#C49A1E] text-[#0C1209]' : 'bg-[#E8E4DC] text-[#AAAAAA] dark:bg-[#1E2E18] dark:text-[#A0A090]',
+                isActive ? 'bg-[#DDAF3B] text-[#0C1209]' : 'bg-[#E8E4DC] text-[#AAAAAA] dark:bg-[#1E2E18] dark:text-[#A0A090]',
               ].join(' ')}>{count}</span>
             </button>
           );
@@ -86,7 +86,7 @@ export function AdminDisputesList({ disputes, query, filter, onFilterChange }: P
       {!filtered.length ? (
         <div className="flex flex-col items-center gap-3 py-24 text-center">
           <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-white shadow-sm ring-1 ring-[#E8E4DC] dark:bg-[#131E10] dark:ring-[#1E2E18]">
-            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#C49A1E" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z" /><line x1="12" y1="9" x2="12" y2="13" /><line x1="12" y1="17" x2="12.01" y2="17" /></svg>
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#DDAF3B" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z" /><line x1="12" y1="9" x2="12" y2="13" /><line x1="12" y1="17" x2="12.01" y2="17" /></svg>
           </div>
           <p className="text-[13px] font-semibold text-[#999]">{q ? t('empty_search') : t('empty_disputes')}</p>
         </div>
@@ -113,7 +113,7 @@ export function AdminDisputesList({ disputes, query, filter, onFilterChange }: P
                   {/* Main info */}
                   <div className="min-w-0 flex-1">
                     <div className="flex items-center gap-2">
-                      <p className="truncate text-[14px] font-bold text-[#1A1A0A] dark:text-[#F0EDD4]">{stationName}</p>
+                      <p className="truncate text-[14px] font-bold text-[#001201] dark:text-[#FFF9EC]">{stationName}</p>
                       <span className={`shrink-0 inline-flex items-center gap-1.5 rounded-full px-2.5 py-0.5 text-[12px] font-bold ${s.badge}`}>
                         <span className={`h-1.5 w-1.5 rounded-full ${s.dot}`} />{t(s.label)}
                       </span>
@@ -129,7 +129,7 @@ export function AdminDisputesList({ disputes, query, filter, onFilterChange }: P
                     {amount > 0 && (
                       <p className={`text-[18px] font-black ${s.amount}`}>{formatAmount(amount)}</p>
                     )}
-                    <div className="flex items-center gap-1 text-[12px] font-bold text-[#BBBBAA] transition-colors group-hover:text-[#C49A1E] dark:text-[#A0A090]">
+                    <div className="flex items-center gap-1 text-[12px] font-bold text-[#BBBBAA] transition-colors group-hover:text-[#DDAF3B] dark:text-[#A0A090]">
                       {t('btn_detail')}
                       <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" aria-hidden="true"><polyline points="9 18 15 12 9 6" /></svg>
                     </div>

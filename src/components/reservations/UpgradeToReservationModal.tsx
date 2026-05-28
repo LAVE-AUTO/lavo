@@ -85,7 +85,7 @@ function UpgradeCardForm({
                 '::placeholder': { color: '#BBBBBB' },
                 fontFamily: 'Rajdhani, sans-serif',
               },
-              invalid: { color: '#E8472A' },
+              invalid: { color: '#391C01' },
             },
             hidePostalCode: true,
           }}
@@ -316,7 +316,7 @@ export default function UpgradeToReservationModal({ entryId, stationId, onClose,
         {/* = Header */}
         <div className="px-6 pt-6 pb-4 text-center shrink-0">
           <div className="w-12 h-12 rounded-full bg-gold/15 border border-gold/30 flex items-center justify-center mx-auto mb-3">
-            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#af8408" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#DDAF3B" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
               <polyline points="17 1 21 5 17 9" /><path d="M3 11V9a4 4 0 014-4h14" />
               <polyline points="7 23 3 19 7 15" /><path d="M21 13v2a4 4 0 01-4 4H3" />
             </svg>

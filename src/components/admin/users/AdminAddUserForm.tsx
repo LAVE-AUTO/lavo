@@ -20,9 +20,9 @@ interface Props {
 }
 
 const inputBase =
-  'w-full rounded-lg border bg-transparent px-3 py-2 text-[13px] text-[#1A1A0A] outline-none transition-all dark:text-[#F0EDD4]';
+  'w-full rounded-lg border bg-transparent px-3 py-2 text-[13px] text-[#001201] outline-none transition-all dark:text-[#FFF9EC]';
 const inputIdle =
-  'border-[#D8D4C8] focus:border-[#C49A1E] focus:shadow-[0_0_0_3px_rgba(196,154,30,0.10)] dark:border-[#243020] dark:focus:border-[#C49A1E]';
+  'border-[#D8D4C8] focus:border-[#DDAF3B] focus:shadow-[0_0_0_3px_rgba(221, 175, 59,0.10)] dark:border-[#001A05] dark:focus:border-[#DDAF3B]';
 const inputError = 'border-red-400 focus:border-red-400';
 
 export function AdminAddUserForm({
@@ -39,13 +39,13 @@ export function AdminAddUserForm({
         {/* Role toggle */}
         <div className="flex flex-col gap-1.5">
           <span className="text-[13px] font-bold text-foreground/70 dark:text-[#9A9A8A]">{t('field_role')}</span>
-          <div className="flex overflow-hidden rounded-[10px] border border-[#D8D4C8] bg-[#F5F3EE] p-0.5 dark:border-[#243020] dark:bg-[#0F1A0C]">
+          <div className="flex overflow-hidden rounded-[10px] border border-[#D8D4C8] bg-[#F5F3EE] p-0.5 dark:border-[#001A05] dark:bg-[#0F1A0C]">
             {(['client', 'admin'] as Role[]).map((r) => (
               <button key={r} type="button" onClick={() => onRoleChange(r)}
                 className={[
                   'flex-1 rounded-[8px] py-2 text-[13px] font-bold transition-all duration-150',
                   role === r
-                    ? 'bg-[#C49A1E] text-[#0C1209] shadow-sm'
+                    ? 'bg-[#DDAF3B] text-[#0C1209] shadow-sm'
                     : 'text-foreground/55 hover:text-foreground/70 dark:text-[#9A9A8A] dark:hover:text-[#9A9A8A]',
                 ].join(' ')}>
                 {t(`role_${r}`)}
@@ -83,7 +83,7 @@ export function AdminAddUserForm({
 
         {/* Info notice */}
         <div className="flex items-start gap-2 rounded-lg bg-[#F5F3EE] px-3 py-2.5 dark:bg-[#131E10]">
-          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#C49A1E" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="mt-0.5 shrink-0" aria-hidden="true">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#DDAF3B" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="mt-0.5 shrink-0" aria-hidden="true">
             <circle cx="12" cy="12" r="10" /><line x1="12" y1="8" x2="12" y2="12" /><line x1="12" y1="16" x2="12.01" y2="16" />
           </svg>
           <p className="text-[12px] leading-snug text-foreground/65 dark:text-[#A0A090]">{t('form_password_notice')}</p>
@@ -94,11 +94,11 @@ export function AdminAddUserForm({
       {/* Footer */}
       <div className="flex justify-end gap-2 border-t border-[#F0EDE6] px-6 py-4 dark:border-[#1A2A14]">
         <button type="button" onClick={onClose} disabled={busy}
-          className="rounded-lg border border-[#D8D4C8] px-4 py-2 text-[13px] font-semibold text-foreground/65 transition-colors hover:bg-[#F5F3EE] disabled:opacity-50 dark:border-[#243020] dark:text-[#9A9A8A]">
+          className="rounded-lg border border-[#D8D4C8] px-4 py-2 text-[13px] font-semibold text-foreground/65 transition-colors hover:bg-[#F5F3EE] disabled:opacity-50 dark:border-[#001A05] dark:text-[#9A9A8A]">
           {t('btn_cancel')}
         </button>
         <button type="button" onClick={onSubmit} disabled={busy}
-          className="rounded-lg bg-[#C49A1E] px-4 py-2 text-[13px] font-bold text-[#0C1209] transition-colors hover:bg-[#B08A14] disabled:opacity-50 disabled:cursor-not-allowed">
+          className="rounded-lg bg-[#DDAF3B] px-4 py-2 text-[13px] font-bold text-[#0C1209] transition-colors hover:bg-[#B08A14] disabled:opacity-50 disabled:cursor-not-allowed">
           {busy ? t('btn_creating') : t('btn_create')}
         </button>
       </div>

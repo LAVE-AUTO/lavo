@@ -27,9 +27,9 @@ const CANADIAN_CITIES = [
 ];
 
 const inputBase =
-  'w-full rounded-lg border bg-transparent px-3 py-2 text-[13px] text-[#1A1A0A] outline-none transition-all dark:text-[#F0EDD4]';
+  'w-full rounded-lg border bg-transparent px-3 py-2 text-[13px] text-[#001201] outline-none transition-all dark:text-[#FFF9EC]';
 const inputIdle =
-  'border-[#D8D4C8] focus:border-[#C49A1E] focus:shadow-[0_0_0_3px_rgba(196,154,30,0.10)] dark:border-[#243020] dark:focus:border-[#C49A1E]';
+  'border-[#D8D4C8] focus:border-[#DDAF3B] focus:shadow-[0_0_0_3px_rgba(221, 175, 59,0.10)] dark:border-[#001A05] dark:focus:border-[#DDAF3B]';
 const inputError = 'border-red-400 focus:border-red-400';
 
 interface Props {
@@ -90,7 +90,7 @@ export function AdminCityInput({ label, required, value, error, placeholder, onC
   return (
     <div className="relative flex flex-col gap-1.5" ref={containerRef}>
       <label htmlFor={inputId} className="text-[13px] font-bold text-foreground/70 dark:text-[#9A9A8A]">
-        {label}{required && <span className="ml-0.5 text-[#C49A1E]">*</span>}
+        {label}{required && <span className="ml-0.5 text-[#DDAF3B]">*</span>}
       </label>
       <input
         id={inputId} type="text" autoComplete="off" value={value} placeholder={placeholder}
@@ -109,7 +109,7 @@ export function AdminCityInput({ label, required, value, error, placeholder, onC
               onMouseDown={() => select(city)}
               className={[
                 'cursor-pointer px-3 py-2 text-[13px] transition-colors',
-                i === activeIdx ? 'bg-[#C49A1E]/12 text-[#C49A1E]' : 'text-[#1A1A0A] hover:bg-[#F5F3EE] dark:text-[#F0EDD4] dark:hover:bg-[#1A2A14]',
+                i === activeIdx ? 'bg-[#DDAF3B]/12 text-[#DDAF3B]' : 'text-[#001201] hover:bg-[#F5F3EE] dark:text-[#FFF9EC] dark:hover:bg-[#1A2A14]',
               ].join(' ')}>
               {city}
             </li>

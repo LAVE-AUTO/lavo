@@ -212,8 +212,8 @@ export default function RateReservationPage() {
                 <svg width="40" height="40" viewBox="0 0 24 24" aria-hidden="true">
                   <path
                     d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"
-                    fill={n <= display ? '#af8408' : 'none'}
-                    stroke="#af8408"
+                    fill={n <= display ? '#DDAF3B' : 'none'}
+                    stroke="#DDAF3B"
                     strokeWidth="1.5"
                     strokeLinecap="round"
                     strokeLinejoin="round"
@@ -317,7 +317,7 @@ function StatusView({
 }) {
   const iconMap: Record<string, ReactNode> = {
     error: (
-      <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#E8472A" strokeWidth="2" strokeLinecap="round" aria-hidden="true">
+      <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#391C01" strokeWidth="2" strokeLinecap="round" aria-hidden="true">
         <circle cx="12" cy="12" r="10" /><line x1="12" y1="8" x2="12" y2="12" /><line x1="12" y1="16" x2="12.01" y2="16" />
       </svg>
     ),

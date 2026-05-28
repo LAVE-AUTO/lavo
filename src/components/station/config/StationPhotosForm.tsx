@@ -116,7 +116,7 @@ export function StationPhotosForm({ locked = false }: Props) {
   return (
     <div className="flex flex-col rounded-2xl bg-white shadow-sm ring-1 ring-black/[0.04] dark:bg-[#1A2416] dark:ring-white/[0.06]">
       <div className="border-b border-[#F0EDE0] px-6 py-4 dark:border-[#1E2E18]">
-        <p className="text-[13px] font-black uppercase tracking-wider text-[#1A1A0A] dark:text-[#F0EDD4]">{t('section_photos')}</p>
+        <p className="text-[13px] font-black uppercase tracking-wider text-[#001201] dark:text-[#FFF9EC]">{t('section_photos')}</p>
         <p className="mt-0.5 text-[12px] text-[#AAAAAA] dark:text-[#4A4A3A]">{t('section_photos_hint')}</p>
       </div>
 
@@ -148,14 +148,14 @@ export function StationPhotosForm({ locked = false }: Props) {
                 ) : (
                   <button type="button" disabled={locked || uploadingIdx !== null} onClick={() => triggerUpload(i)}
                     aria-label={t('photos_slot_aria', { n: i + 1 })}
-                    className="flex h-full w-full flex-col items-center justify-center gap-1 rounded-xl border-2 border-dashed border-[#D8D4C8] bg-[#F8F6F2] transition-colors hover:border-[#C49A1E] hover:bg-[#FFFBF0] disabled:cursor-not-allowed disabled:opacity-50 dark:border-[#243020] dark:bg-[#0F1A0C] dark:hover:border-[#C49A1E] dark:hover:bg-[#141E10]">
+                    className="flex h-full w-full flex-col items-center justify-center gap-1 rounded-xl border-2 border-dashed border-[#D8D4C8] bg-[#F8F6F2] transition-colors hover:border-[#DDAF3B] hover:bg-[#FFFBF0] disabled:cursor-not-allowed disabled:opacity-50 dark:border-[#001A05] dark:bg-[#0F1A0C] dark:hover:border-[#DDAF3B] dark:hover:bg-[#141E10]">
                     {isUploading ? (
-                      <svg className="animate-spin" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#C49A1E" strokeWidth="2.5" aria-hidden="true">
+                      <svg className="animate-spin" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#DDAF3B" strokeWidth="2.5" aria-hidden="true">
                         <path d="M21 12a9 9 0 11-6.219-8.56" />
                       </svg>
                     ) : (
                       <>
-                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke={isEmpty ? '#C8C4B4' : '#C49A1E'} strokeWidth="1.5" strokeLinecap="round" aria-hidden="true">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke={isEmpty ? '#C8C4B4' : '#DDAF3B'} strokeWidth="1.5" strokeLinecap="round" aria-hidden="true">
                           <rect x="3" y="3" width="18" height="18" rx="2" /><circle cx="8.5" cy="8.5" r="1.5" /><polyline points="21 15 16 10 5 21" />
                         </svg>
                         <span className="text-[9px] font-semibold text-[#BBBBAA] dark:text-[#3A3A2A]">{t('photos_add')}</span>
@@ -172,7 +172,7 @@ export function StationPhotosForm({ locked = false }: Props) {
           <div className="mt-4 flex items-center justify-between">
             <p className="text-[12px] text-[#FF8800]">{t('photos_unsaved')}</p>
             <button type="button" onClick={handleSave} disabled={locked || uploadingIdx !== null}
-              className="flex items-center gap-2 rounded-xl bg-[#C49A1E] px-5 py-2.5 text-[13px] font-bold text-[#0C1209] transition-opacity hover:opacity-80 disabled:opacity-40 disabled:cursor-not-allowed">
+              className="flex items-center gap-2 rounded-xl bg-[#DDAF3B] px-5 py-2.5 text-[13px] font-bold text-[#0C1209] transition-opacity hover:opacity-80 disabled:opacity-40 disabled:cursor-not-allowed">
               {t('btn_save')}
             </button>
           </div>

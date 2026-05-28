@@ -69,11 +69,11 @@ export function AdminCommissionView() {
       <div className="shrink-0 border-b border-[#E0DCD0] bg-[#F5F5EE] px-6 py-5 dark:border-[#1A2A14] dark:bg-[#0C1209]">
         <div className="flex flex-wrap items-start justify-between gap-4">
           <div>
-            <h1 className="text-[22px] font-black text-[#1A1A0A] dark:text-[#F0EDD4]">{t('page_title')}</h1>
+            <h1 className="text-[22px] font-black text-[#001201] dark:text-[#FFF9EC]">{t('page_title')}</h1>
             <p className="mt-1 text-[13px] text-foreground/55 dark:text-[#9A9A8A]">{t('page_subtitle')}</p>
           </div>
-          <div className="flex items-center gap-2 rounded-full border border-[#C49A1E]/30 bg-[#C49A1E]/10 px-3 py-1 text-[12px] font-black text-[#7A5E0A] dark:border-[#C49A1E]/20 dark:text-[#C49A1E]">
-            <span className="h-1.5 w-1.5 rounded-full bg-[#C49A1E]" />
+          <div className="flex items-center gap-2 rounded-full border border-[#DDAF3B]/30 bg-[#DDAF3B]/10 px-3 py-1 text-[12px] font-black text-[#7A5E0A] dark:border-[#DDAF3B]/20 dark:text-[#DDAF3B]">
+            <span className="h-1.5 w-1.5 rounded-full bg-[#DDAF3B]" />
             <span>{savedRate}%</span>
             <span className="font-semibold uppercase tracking-[0.12em] opacity-80">{t('chip_current')}</span>
           </div>
@@ -84,12 +84,12 @@ export function AdminCommissionView() {
         <div className="mb-5 grid gap-3 sm:grid-cols-3">
           <div className="rounded-2xl border border-[#E8E4DC] bg-white px-5 py-4 shadow-sm dark:border-[#1E2E18] dark:bg-[#131E10]">
             <p className="text-[11px] font-black uppercase tracking-widest text-[#AAAAAA] dark:text-[#A0A090]">{t('label_rate')}</p>
-            <p className="mt-2 text-[28px] font-black leading-none text-[#1A1A0A] dark:text-[#F0EDD4]">{savedRate}%</p>
+            <p className="mt-2 text-[28px] font-black leading-none text-[#001201] dark:text-[#FFF9EC]">{savedRate}%</p>
             <p className="mt-2 text-[12px] text-foreground/55 dark:text-[#9A9A8A]">{t('hint_rate')}</p>
           </div>
           <div className="rounded-2xl border border-[#E8E4DC] bg-white px-5 py-4 shadow-sm dark:border-[#1E2E18] dark:bg-[#131E10]">
             <p className="text-[11px] font-black uppercase tracking-widest text-[#AAAAAA] dark:text-[#A0A090]">{t('platform_share')}</p>
-            <p className="mt-2 text-[28px] font-black leading-none text-[#C49A1E]">{savedRate}%</p>
+            <p className="mt-2 text-[28px] font-black leading-none text-[#DDAF3B]">{savedRate}%</p>
             <p className="mt-2 text-[12px] text-foreground/55 dark:text-[#9A9A8A]">{t('preview_title')}</p>
           </div>
           <div className="rounded-2xl border border-[#E8E4DC] bg-white px-5 py-4 shadow-sm dark:border-[#1E2E18] dark:bg-[#131E10]">
@@ -110,11 +110,11 @@ export function AdminCommissionView() {
               <div className="p-5">
                 <p className="mb-3 text-[12px] font-bold uppercase tracking-wider text-[#A0A090] dark:text-[#A0A090]">{t('label_rate')}</p>
                 {/* Big rate input */}
-                <div className="flex overflow-hidden rounded-xl border-2 border-[#D8D4C8] bg-white transition-all focus-within:border-[#C49A1E] focus-within:shadow-[0_0_0_4px_rgba(196,154,30,0.12)] dark:border-[#243020] dark:bg-[#0F1A0C] dark:focus-within:border-[#C49A1E]">
+                <div className="flex overflow-hidden rounded-xl border-2 border-[#D8D4C8] bg-white transition-all focus-within:border-[#DDAF3B] focus-within:shadow-[0_0_0_4px_rgba(221, 175, 59,0.12)] dark:border-[#001A05] dark:bg-[#0F1A0C] dark:focus-within:border-[#DDAF3B]">
                   <input type="number" min={0} max={100} step={0.5} value={rate}
                     onChange={(e) => { const v = parseFloat(e.target.value); if (!isNaN(v)) setRate(Math.min(100, Math.max(0, v))); }}
-                    className="flex-1 bg-transparent px-5 py-4 text-[32px] font-black text-[#1A1A0A] outline-none [appearance:textfield] dark:text-[#F0EDD4]" />
-                  <span className="flex items-center border-l border-[#E8E4D8] bg-[#F5F2EC] px-5 text-[20px] font-black text-[#AAAAAA] dark:border-[#243020] dark:bg-[#0E1A0C]">%</span>
+                    className="flex-1 bg-transparent px-5 py-4 text-[32px] font-black text-[#001201] outline-none [appearance:textfield] dark:text-[#FFF9EC]" />
+                  <span className="flex items-center border-l border-[#E8E4D8] bg-[#F5F2EC] px-5 text-[20px] font-black text-[#AAAAAA] dark:border-[#001A05] dark:bg-[#0E1A0C]">%</span>
                 </div>
                 <p className="mt-2 text-[12px] leading-relaxed text-[#AAAAAA] dark:text-[#A0A090]">{t('hint_rate')}</p>
 
@@ -122,7 +122,7 @@ export function AdminCommissionView() {
                 <div className="mt-5">
                   <p className="mb-2 text-[11px] font-black uppercase tracking-widest text-[#AAAAAA] dark:text-[#A0A090]">{t('preview_title')}</p>
                   <div className="flex h-9 overflow-hidden rounded-xl bg-[#F0EDE6] dark:bg-[#1A2A14]">
-                    <div className="flex items-center justify-center bg-[#C49A1E] text-[11px] font-black text-[#0C1209] transition-all duration-500"
+                    <div className="flex items-center justify-center bg-[#DDAF3B] text-[11px] font-black text-[#0C1209] transition-all duration-500"
                       style={{ width: `${barWidth}%` }}>
                       {rate > 8 && `${rate}%`}
                     </div>
@@ -131,18 +131,18 @@ export function AdminCommissionView() {
                     </div>
                   </div>
                   <div className="mt-2 flex justify-between text-[12px] font-bold">
-                    <span className="text-[#C49A1E]">{t('platform_share')}</span>
+                    <span className="text-[#DDAF3B]">{t('platform_share')}</span>
                     <span className="text-foreground/55 dark:text-[#A0A090]">{t('station_share')}</span>
                   </div>
                 </div>
 
                 <button type="button" disabled={saving || !isDirty} onClick={handleSave}
-                  className="mt-5 flex w-full items-center justify-center gap-2 rounded-xl bg-[#C49A1E] px-4 py-3 text-[13px] font-bold text-[#0C1209] shadow-sm transition-all hover:-translate-y-0.5 hover:bg-[#B08A14] hover:shadow-md disabled:translate-y-0 disabled:cursor-not-allowed disabled:opacity-50">
+                  className="mt-5 flex w-full items-center justify-center gap-2 rounded-xl bg-[#DDAF3B] px-4 py-3 text-[13px] font-bold text-[#0C1209] shadow-sm transition-all hover:-translate-y-0.5 hover:bg-[#B08A14] hover:shadow-md disabled:translate-y-0 disabled:cursor-not-allowed disabled:opacity-50">
                   {isDirty && !saving && <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-[#0C1209]" />}
                   {saving ? t('btn_saving') : t('btn_save')}
                 </button>
                 {isDirty && !saving && (
-                  <p className="mt-2 text-center text-[12px] font-semibold text-[#C49A1E]">{t('unsaved_dot')}</p>
+                  <p className="mt-2 text-center text-[12px] font-semibold text-[#DDAF3B]">{t('unsaved_dot')}</p>
                 )}
               </div>
             </div>
@@ -155,7 +155,7 @@ export function AdminCommissionView() {
             </div>
             {historyLoading ? (
               <div className="flex items-center justify-center py-12">
-                <div className="h-6 w-6 animate-spin rounded-full border-[3px] border-[#C49A1E] border-t-transparent" />
+                <div className="h-6 w-6 animate-spin rounded-full border-[3px] border-[#DDAF3B] border-t-transparent" />
               </div>
             ) : history.length === 0 ? (
               <p className="p-8 text-center text-[13px] text-[#999]">{t('empty_history')}</p>
@@ -175,9 +175,9 @@ export function AdminCommissionView() {
                     <div key={h.id}
                       className={`grid grid-cols-[80px_1fr_100px] items-center gap-4 border-b px-5 py-3.5 last:border-0 transition-colors ${isCurrent ? 'border-[#F0EDE6] bg-[#FEFCF5] dark:border-[#1A2A14] dark:bg-[#182416]' : 'border-[#F5F2ED] bg-white hover:bg-[#FAFAF7] dark:border-[#1A2A14] dark:bg-[#131E10] dark:hover:bg-[#182416]'}`}>
                       <div className="flex items-center gap-2">
-                        <span className={`text-[18px] font-black ${isCurrent ? 'text-[#C49A1E]' : 'text-[#1A1A0A] dark:text-[#F0EDD4]'}`}>{h.rate}%</span>
+                        <span className={`text-[18px] font-black ${isCurrent ? 'text-[#DDAF3B]' : 'text-[#001201] dark:text-[#FFF9EC]'}`}>{h.rate}%</span>
                         {!same && <span className={`text-[11px] font-black ${up ? 'text-[#F97316]' : 'text-[#22C55E]'}`}>{up ? '▲' : '▼'}</span>}
-                        {isCurrent && <span className="rounded-full bg-[#C49A1E]/15 px-1.5 py-0.5 text-[9px] font-black text-[#7A5E0A] dark:text-[#C49A1E]">live</span>}
+                        {isCurrent && <span className="rounded-full bg-[#DDAF3B]/15 px-1.5 py-0.5 text-[9px] font-black text-[#7A5E0A] dark:text-[#DDAF3B]">live</span>}
                       </div>
                       <div className="min-w-0">
                         <p className="truncate text-[13px] text-foreground/65 dark:text-[#9A9A8A]">{resolveSetBy(h.set_by)}</p>

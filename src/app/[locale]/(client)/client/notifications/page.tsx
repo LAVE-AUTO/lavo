@@ -49,7 +49,7 @@ export default function ClientNotificationsPage() {
   }
 
   return (
-    <main className="min-h-screen bg-background px-4 pb-24 pt-6 dark:bg-[#0F0F0D] sm:px-6">
+    <main className="min-h-screen bg-background px-4 pb-24 pt-6 dark:bg-[#001201] sm:px-6">
       <div className="mx-auto w-full max-w-3xl">
         <div className="mb-4 flex items-center justify-between">
           <h1 className="text-[22px] font-black text-foreground">{t('notif_title')}</h1>
@@ -90,7 +90,7 @@ export default function ClientNotificationsPage() {
                       type="button"
                       onClick={() => markOneRead(item.id)}
                       className="text-[14px] font-semibold hover:underline"
-                      style={{ color: isDark ? '#8ED17C' : '#2E6125' }}
+                      style={{ color: isDark ? '#8ED17C' : '#001A05' }}
                     >
                       {t('notif_mark_read')}
                     </button>

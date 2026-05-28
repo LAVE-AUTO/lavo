@@ -55,7 +55,7 @@ export function AdminSupportList({ tickets, query, loading, filter }: Props) {
     return (
       <div className="flex flex-col items-center gap-3 py-24 text-center">
         <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-white shadow-sm ring-1 ring-[#E8E4DC] dark:bg-[#131E10] dark:ring-[#1E2E18]">
-          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#C49A1E" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#DDAF3B" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
             <path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z" />
           </svg>
         </div>
@@ -84,17 +84,17 @@ export function AdminSupportList({ tickets, query, loading, filter }: Props) {
             <div className={`w-1 shrink-0 ${s.bar}`} />
 
             <div className="flex min-w-0 flex-1 items-center gap-4 px-5 py-3.5">
-              <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-[12px] bg-[#1A1A0A]/5 text-[12px] font-black text-[#1A1A0A] ring-1 ring-inset ring-[#1A1A0A]/8 dark:bg-[#F0EDD4]/8 dark:text-[#F0EDD4] dark:ring-[#F0EDD4]/10">
+              <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-[12px] bg-[#001201]/5 text-[12px] font-black text-[#001201] ring-1 ring-inset ring-[#001201]/8 dark:bg-[#FFF9EC]/8 dark:text-[#FFF9EC] dark:ring-[#FFF9EC]/10">
                 {initials(creatorName)}
               </div>
 
               <div className="min-w-0 flex-1">
                 <div className="flex flex-wrap items-center gap-2">
-                  <p className="truncate text-[13.5px] font-bold text-[#1A1A0A] dark:text-[#F0EDD4]">{tk.subject}</p>
+                  <p className="truncate text-[13.5px] font-bold text-[#001201] dark:text-[#FFF9EC]">{tk.subject}</p>
                   <span className={`shrink-0 inline-flex items-center gap-1.5 rounded-full bg-[#F4F1E8] px-2.5 py-0.5 text-[11.5px] font-bold dark:bg-[#171F12] ${s.text}`}>
                     <span className={`h-1.5 w-1.5 rounded-full ${s.dot}`} />{t(s.label)}
                   </span>
-                  <span className="shrink-0 rounded-full bg-[#F4F2EC] px-2.5 py-0.5 text-[11px] font-bold text-[#5A554B] dark:bg-[#171F12] dark:text-[#A6A091]">
+                  <span className="shrink-0 rounded-full bg-[#FFEECA] px-2.5 py-0.5 text-[11px] font-bold text-[#5A554B] dark:bg-[#171F12] dark:text-[#A6A091]">
                     {ROLE_LABEL[role] ?? role}
                   </span>
                 </div>

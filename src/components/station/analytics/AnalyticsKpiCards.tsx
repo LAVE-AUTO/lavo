@@ -31,8 +31,8 @@ export function AnalyticsKpiCards({ kpi }: AnalyticsKpiCardsProps) {
       id: 'total_revenue',
       label: t('kpi_total_revenue'),
       value: formatCurrency(kpi.totalRevenue),
-      icon: <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true" style={{ color: '#C49A1E' }}><path d="M12 1v2"/><path d="M20 7v2"/><path d="M4 7v2"/><path d="M12 21v2"/><circle cx="12" cy="12" r="6"/><path d="M10 9h4v6h-4z"/></svg>,
-      borderColor: '#C49A1E',
+      icon: <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true" style={{ color: '#DDAF3B' }}><path d="M12 1v2"/><path d="M20 7v2"/><path d="M4 7v2"/><path d="M12 21v2"/><circle cx="12" cy="12" r="6"/><path d="M10 9h4v6h-4z"/></svg>,
+      borderColor: '#DDAF3B',
     },
     {
       id: 'avg_revenue',
@@ -80,7 +80,7 @@ export function AnalyticsKpiCards({ kpi }: AnalyticsKpiCardsProps) {
           style={{ borderLeft: `4px solid ${card.borderColor}` }}
         >
           <div className="mb-3 leading-none">{card.icon}</div>
-          <p className="mb-1 text-[28px] font-black leading-none tabular-nums text-[#1A1A0A] dark:text-[#F0EDD4]">
+          <p className="mb-1 text-[28px] font-black leading-none tabular-nums text-[#001201] dark:text-[#FFF9EC]">
             {card.value}
           </p>
           <p className="text-[12px] font-semibold text-foreground/55 dark:text-[#9A9A8A]">{card.label}</p>

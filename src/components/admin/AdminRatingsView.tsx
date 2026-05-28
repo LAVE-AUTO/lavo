@@ -46,8 +46,8 @@ function StarRow({ score, ariaLabel }: { score: number; ariaLabel: string }) {
         <svg key={n} width="13" height="13" viewBox="0 0 24 24" aria-hidden="true">
           <path
             d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"
-            fill={n <= score ? '#C49A1E' : 'none'}
-            stroke="#C49A1E"
+            fill={n <= score ? '#DDAF3B' : 'none'}
+            stroke="#DDAF3B"
             strokeWidth="1.5"
             strokeLinecap="round"
             strokeLinejoin="round"
@@ -149,7 +149,7 @@ export function AdminRatingsView() {
   }, [items]);
 
   const metrics = [
-    { label: t('metric_total'),  value: loading ? '…' : String(meta?.total ?? 0),               accent: '#C49A1E' },
+    { label: t('metric_total'),  value: loading ? '…' : String(meta?.total ?? 0),               accent: '#DDAF3B' },
     { label: t('metric_avg'),    value: loading || items.length === 0 ? '…' : `${stats.avg.toFixed(1)}/5`, accent: '#22C55E' },
     { label: t('metric_visible'),value: loading ? '…' : String(stats.visibleCount),             accent: '#3B82F6' },
     { label: t('metric_hidden'), value: loading ? '…' : String(stats.hiddenCount),              accent: '#94A3B8' },
@@ -158,12 +158,12 @@ export function AdminRatingsView() {
   const pillCls = (active: boolean) => [
     'rounded-[14px] px-3.5 py-2 text-[12.5px] font-bold transition-colors duration-150',
     active
-      ? 'bg-[#1A1A0A] text-[#F0EDD4] shadow-[0_10px_20px_rgba(26,26,10,0.18)] dark:bg-[#F0EDD4] dark:text-[#1A1A0A]'
-      : 'text-[#847E70] hover:bg-[#EFE8D7] hover:text-[#1A1A0A] dark:text-[#A0A090] dark:hover:bg-[#182214] dark:hover:text-[#F0EDD4]',
+      ? 'bg-[#001201] text-[#FFF9EC] shadow-[0_10px_20px_rgba(26,26,10,0.18)] dark:bg-[#FFF9EC] dark:text-[#001201]'
+      : 'text-[#847E70] hover:bg-[#EFE8D7] hover:text-[#001201] dark:text-[#A0A090] dark:hover:bg-[#182214] dark:hover:text-[#FFF9EC]',
   ].join(' ');
 
   return (
-    <div className="relative flex h-full min-h-0 flex-col overflow-hidden bg-[radial-gradient(circle_at_top,_rgba(196,154,30,0.12),_transparent_36%),linear-gradient(180deg,#faf8f2_0%,#f2efe7_100%)] dark:bg-[radial-gradient(circle_at_top,_rgba(196,154,30,0.12),_transparent_32%),linear-gradient(180deg,#0C1209_0%,#091009_100%)]">
+    <div className="relative flex h-full min-h-0 flex-col overflow-hidden bg-[radial-gradient(circle_at_top,_rgba(221, 175, 59,0.12),_transparent_36%),linear-gradient(180deg,#faf8f2_0%,#f2efe7_100%)] dark:bg-[radial-gradient(circle_at_top,_rgba(221, 175, 59,0.12),_transparent_32%),linear-gradient(180deg,#0C1209_0%,#091009_100%)]">
       <div className="pointer-events-none absolute inset-0 bg-[linear-gradient(135deg,rgba(255,255,255,0.55),transparent_42%)] dark:bg-[linear-gradient(135deg,rgba(255,255,255,0.04),transparent_42%)]" />
 
       <div className="relative mx-auto flex h-full min-h-0 w-full max-w-none flex-1 flex-col gap-5 overflow-y-auto scrollbar-none px-3 py-4 sm:px-4 lg:px-6 lg:py-6">
@@ -171,10 +171,10 @@ export function AdminRatingsView() {
         <section className="rounded-[28px] border border-[#E1DBCF] bg-white/88 p-5 shadow-[0_24px_80px_rgba(26,26,10,0.08)] backdrop-blur-xl dark:border-[#1E2E18] dark:bg-[#101A0D]/90 dark:shadow-[0_24px_80px_rgba(0,0,0,0.35)]">
           <div className="flex flex-col gap-6 xl:flex-row xl:items-end xl:justify-between">
             <div className="max-w-3xl">
-              <span className="inline-flex rounded-full border border-[#C49A1E]/18 bg-[#C49A1E]/10 px-3 py-1 text-[11px] font-black uppercase tracking-[0.22em] text-[#9A7A13] dark:border-[#C49A1E]/25 dark:bg-[#C49A1E]/12 dark:text-[#F0D98C]">
+              <span className="inline-flex rounded-full border border-[#DDAF3B]/18 bg-[#DDAF3B]/10 px-3 py-1 text-[11px] font-black uppercase tracking-[0.22em] text-[#9A7A13] dark:border-[#DDAF3B]/25 dark:bg-[#DDAF3B]/12 dark:text-[#F0D98C]">
                 {t('badge_moderation')}
               </span>
-              <h1 className="mt-4 text-[clamp(28px,3vw,42px)] font-black leading-[1.04] text-[#1A1A0A] dark:text-[#F0EDD4]">
+              <h1 className="mt-4 text-[clamp(28px,3vw,42px)] font-black leading-[1.04] text-[#001201] dark:text-[#FFF9EC]">
                 {t('page_title')}
               </h1>
               <p className="mt-3 max-w-2xl text-[14px] leading-6 text-[#6F6B5F] dark:text-[#A6A091]">
@@ -189,7 +189,7 @@ export function AdminRatingsView() {
                   <div className="pointer-events-none absolute -right-8 -top-8 h-20 w-20 rounded-full blur-3xl opacity-15 transition-opacity duration-200 group-hover:opacity-25" style={{ background: metric.accent }} />
                   <div className="min-w-0">
                     <div className="truncate text-[11px] font-bold uppercase tracking-[0.18em] text-[#9B9588] dark:text-[#7E8A75]">{metric.label}</div>
-                    <div className="mt-3 text-[28px] font-black leading-none text-[#1A1A0A] dark:text-[#F0EDD4]">{metric.value}</div>
+                    <div className="mt-3 text-[28px] font-black leading-none text-[#001201] dark:text-[#FFF9EC]">{metric.value}</div>
                   </div>
                 </div>
               ))}
@@ -215,7 +215,7 @@ export function AdminRatingsView() {
                   value={stationSearch}
                   onChange={(e) => setStationSearch(e.target.value)}
                   placeholder={t('search_station_placeholder')}
-                  className="w-full rounded-[16px] border border-[#D8D4C8] bg-white/95 py-2.5 pl-9 pr-9 text-[13px] font-medium text-[#1A1A0A] outline-none transition-all focus:border-[#C49A1E] focus:shadow-[0_0_0_3px_rgba(196,154,30,0.12)] focus:ring-0 dark:border-[#243020] dark:bg-[#0D170B] dark:text-[#F0EDD4] dark:focus:border-[#C49A1E]"
+                  className="w-full rounded-[16px] border border-[#D8D4C8] bg-white/95 py-2.5 pl-9 pr-9 text-[13px] font-medium text-[#001201] outline-none transition-all focus:border-[#DDAF3B] focus:shadow-[0_0_0_3px_rgba(221, 175, 59,0.12)] focus:ring-0 dark:border-[#001A05] dark:bg-[#0D170B] dark:text-[#FFF9EC] dark:focus:border-[#DDAF3B]"
                 />
                 {stationSearch && (
                   <button type="button" onClick={() => setStationSearch('')}
@@ -241,7 +241,7 @@ export function AdminRatingsView() {
 
           {loading && (
             <div className="flex flex-1 items-center justify-center py-16">
-              <div className="h-8 w-8 animate-spin rounded-full border-[3px] border-[#C49A1E] border-t-transparent" />
+              <div className="h-8 w-8 animate-spin rounded-full border-[3px] border-[#DDAF3B] border-t-transparent" />
             </div>
           )}
 
@@ -251,7 +251,7 @@ export function AdminRatingsView() {
               <button
                 type="button"
                 onClick={() => loadData(page, visibilityFilter, scoreFilter, stationDebounced)}
-                className="rounded-xl border border-[#C49A1E]/40 px-4 py-2 text-[13px] font-bold text-[#C49A1E] hover:bg-[#C49A1E]/8 transition-colors"
+                className="rounded-xl border border-[#DDAF3B]/40 px-4 py-2 text-[13px] font-bold text-[#DDAF3B] hover:bg-[#DDAF3B]/8 transition-colors"
               >
                 {t('btn_retry')}
               </button>
@@ -261,7 +261,7 @@ export function AdminRatingsView() {
           {!loading && !loadError && items.length === 0 && (
             <div className="flex flex-1 flex-col items-center justify-center gap-3 py-16 text-center">
               <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-[#F0EDE6] dark:bg-[#1A2A14]">
-                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#C49A1E" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#DDAF3B" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
                   <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z" />
                 </svg>
               </div>
@@ -285,13 +285,13 @@ export function AdminRatingsView() {
 
                       {/* Station */}
                       <div className="min-w-0">
-                        <p className="truncate text-[13px] font-bold text-[#1A1A0A] dark:text-[#F0EDD4]">{item.station.name}</p>
+                        <p className="truncate text-[13px] font-bold text-[#001201] dark:text-[#FFF9EC]">{item.station.name}</p>
                         <p className="mt-0.5 text-[11px] text-[#A8A293] dark:text-[#7E8A75] md:hidden">{formatDate(item.created_at)}</p>
                       </div>
 
                       {/* Client */}
                       <div className="mt-2 flex items-center gap-2 md:mt-0">
-                        <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-[10px] bg-[#1A1A0A]/5 text-[10.5px] font-black text-[#1A1A0A] ring-1 ring-inset ring-[#1A1A0A]/8 dark:bg-[#F0EDD4]/8 dark:text-[#F0EDD4] dark:ring-[#F0EDD4]/10">
+                        <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-[10px] bg-[#001201]/5 text-[10.5px] font-black text-[#001201] ring-1 ring-inset ring-[#001201]/8 dark:bg-[#FFF9EC]/8 dark:text-[#FFF9EC] dark:ring-[#FFF9EC]/10">
                           {initials(item.user.first_name, item.user.last_name)}
                         </div>
                         <p className="truncate text-[12.5px] text-[#5A554B] dark:text-[#A6A091]">{item.user.first_name} {item.user.last_name}</p>
@@ -331,7 +331,7 @@ export function AdminRatingsView() {
                           type="button"
                           disabled={isToggling}
                           onClick={() => handleToggle(item)}
-                          className="inline-flex items-center gap-1 rounded-[12px] border border-[#E1DBCF] bg-white px-3 py-1.5 text-[12px] font-semibold text-[#5A554B] transition-all hover:border-[#C49A1E]/40 hover:bg-[#FCF6E5] hover:text-[#9A7A13] disabled:cursor-wait disabled:opacity-50 dark:border-[#1E2E18] dark:bg-[#0E170C] dark:text-[#A6A091] dark:hover:bg-[#1A2410] dark:hover:text-[#F0D98C]"
+                          className="inline-flex items-center gap-1 rounded-[12px] border border-[#E1DBCF] bg-white px-3 py-1.5 text-[12px] font-semibold text-[#5A554B] transition-all hover:border-[#DDAF3B]/40 hover:bg-[#FCF6E5] hover:text-[#9A7A13] disabled:cursor-wait disabled:opacity-50 dark:border-[#1E2E18] dark:bg-[#0E170C] dark:text-[#A6A091] dark:hover:bg-[#1A2410] dark:hover:text-[#F0D98C]"
                         >
                           {isToggling
                             ? t('toggling')

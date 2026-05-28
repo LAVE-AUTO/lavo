@@ -37,7 +37,7 @@ export function SectionHeader({
         .join(' ')}
     >
       <div className="flex items-center gap-2">
-        <h2 className="text-[16px] font-bold text-[#1A1A1A] dark:text-white leading-none">
+        <h2 className="text-[16px] font-bold text-[#001201] dark:text-white leading-none">
           {title}
         </h2>
         {count !== undefined && (

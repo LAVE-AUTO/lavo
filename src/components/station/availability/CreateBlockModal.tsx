@@ -208,7 +208,7 @@ export function CreateBlockModal({
         <div className="space-y-5 p-5">
           {/* Dates */}
           <div>
-            <p className="mb-1 text-[10px] font-black uppercase tracking-widest text-[#C49A1E]">
+            <p className="mb-1 text-[10px] font-black uppercase tracking-widest text-[#DDAF3B]">
               {t('availability_modal_section_dates')}
             </p>
             <p className="mb-3 text-xs text-foreground/65 dark:text-[#A0A090]">
@@ -221,7 +221,7 @@ export function CreateBlockModal({
                 {dates.map((d) => (
                   <span
                     key={d}
-                    className="flex items-center gap-1.5 rounded-full border border-[#C49A1E]/30 bg-[#C49A1E]/10 px-3 py-1 text-[11px] font-semibold text-[#1A1A0A] dark:bg-[#C49A1E]/15 dark:text-[#F0EDD4]"
+                    className="flex items-center gap-1.5 rounded-full border border-[#DDAF3B]/30 bg-[#DDAF3B]/10 px-3 py-1 text-[11px] font-semibold text-[#001201] dark:bg-[#DDAF3B]/15 dark:text-[#FFF9EC]"
                   >
                     {isoToDisplay(d)}
                     <button
@@ -262,7 +262,7 @@ export function CreateBlockModal({
                     e.target.value = '';
                   }
                 }}
-                className="rounded-xl border border-[#C49A1E]/30 bg-[#F0EDE0] px-3 py-2 text-sm text-[#1A1A0A] focus:border-[#C49A1E] focus:outline-none dark:bg-[#1E2A1A] dark:text-[#F0EDD4]"
+                className="rounded-xl border border-[#DDAF3B]/30 bg-[#F0EDE0] px-3 py-2 text-sm text-[#001201] focus:border-[#DDAF3B] focus:outline-none dark:bg-[#001A05] dark:text-[#FFF9EC]"
               />
               <span className="text-xs text-foreground/65 dark:text-[#A0A090]">
                 {t('availability_modal_add_date')}
@@ -275,7 +275,7 @@ export function CreateBlockModal({
 
           {/* Hours */}
           <div>
-            <p className="mb-3 text-[10px] font-black uppercase tracking-widest text-[#C49A1E]">
+            <p className="mb-3 text-[10px] font-black uppercase tracking-widest text-[#DDAF3B]">
               {t('availability_modal_section_hours')}
             </p>
             <div className="grid grid-cols-2 gap-3">
@@ -287,7 +287,7 @@ export function CreateBlockModal({
                   type="time"
                   value={startTime}
                   onChange={(e) => setStartTime(e.target.value)}
-                  className="w-full rounded-xl border border-[#C49A1E]/30 bg-[#F0EDE0] px-3 py-2 text-sm text-[#1A1A0A] focus:border-[#C49A1E] focus:outline-none dark:bg-[#1E2A1A] dark:text-[#F0EDD4]"
+                  className="w-full rounded-xl border border-[#DDAF3B]/30 bg-[#F0EDE0] px-3 py-2 text-sm text-[#001201] focus:border-[#DDAF3B] focus:outline-none dark:bg-[#001A05] dark:text-[#FFF9EC]"
                 />
               </div>
               <div>
@@ -298,7 +298,7 @@ export function CreateBlockModal({
                   type="time"
                   value={endTime}
                   onChange={(e) => setEndTime(e.target.value)}
-                  className="w-full rounded-xl border border-[#C49A1E]/30 bg-[#F0EDE0] px-3 py-2 text-sm text-[#1A1A0A] focus:border-[#C49A1E] focus:outline-none dark:bg-[#1E2A1A] dark:text-[#F0EDD4]"
+                  className="w-full rounded-xl border border-[#DDAF3B]/30 bg-[#F0EDE0] px-3 py-2 text-sm text-[#001201] focus:border-[#DDAF3B] focus:outline-none dark:bg-[#001A05] dark:text-[#FFF9EC]"
                 />
               </div>
             </div>
@@ -309,19 +309,19 @@ export function CreateBlockModal({
 
           {/* Postes */}
           <div>
-            <p className="mb-3 text-[10px] font-black uppercase tracking-widest text-[#C49A1E]">
+            <p className="mb-3 text-[10px] font-black uppercase tracking-widest text-[#DDAF3B]">
               {t('availability_modal_section_postes')}
             </p>
             <div className="grid grid-cols-2 gap-2">
               {/* All bays option */}
-              <label className={`flex cursor-pointer items-center gap-2 rounded-xl border-2 p-3 transition-colors ${allBays ? 'border-[#C49A1E] bg-[#C49A1E]/10' : 'border-[#C49A1E]/20 bg-[#F0EDE0] dark:bg-[#1E2A1A]'}`}>
+              <label className={`flex cursor-pointer items-center gap-2 rounded-xl border-2 p-3 transition-colors ${allBays ? 'border-[#DDAF3B] bg-[#DDAF3B]/10' : 'border-[#DDAF3B]/20 bg-[#F0EDE0] dark:bg-[#001A05]'}`}>
                 <input
                   type="checkbox"
                   checked={allBays}
                   onChange={handleAllBays}
-                  className="accent-[#C49A1E]"
+                  className="accent-[#DDAF3B]"
                 />
-                <span className={`text-[13px] font-semibold ${allBays ? 'text-[#C49A1E]' : 'text-[#1A1A0A] dark:text-[#F0EDD4]'}`}>
+                <span className={`text-[13px] font-semibold ${allBays ? 'text-[#DDAF3B]' : 'text-[#001201] dark:text-[#FFF9EC]'}`}>
                   {t('availability_block_all_postes')}
                 </span>
               </label>
@@ -330,20 +330,20 @@ export function CreateBlockModal({
                   key={bay}
                   className={`flex cursor-pointer items-center gap-2 rounded-xl border-2 p-3 transition-colors ${
                     allBays || selectedBays.includes(bay)
-                      ? 'border-[#C49A1E] bg-[#C49A1E]/10'
-                      : 'border-[#C49A1E]/20 bg-[#F0EDE0] dark:bg-[#1E2A1A]'
+                      ? 'border-[#DDAF3B] bg-[#DDAF3B]/10'
+                      : 'border-[#DDAF3B]/20 bg-[#F0EDE0] dark:bg-[#001A05]'
                   }`}
                 >
                   <input
                     type="checkbox"
                     checked={allBays || selectedBays.includes(bay)}
                     onChange={() => toggleBay(bay)}
-                    className="accent-[#C49A1E]"
+                    className="accent-[#DDAF3B]"
                   />
                   <span
                     className={`text-[13px] font-semibold ${
                       allBays || selectedBays.includes(bay)
-                        ? 'text-[#C49A1E]'
+                        ? 'text-[#DDAF3B]'
                         : 'text-foreground/65 dark:text-[#A0A090]'
                     }`}
                   >
@@ -359,29 +359,29 @@ export function CreateBlockModal({
         </div>
 
         {/* Right: quick dates + mini-calendar */}
-        <div className="border-t border-[#C49A1E]/20 p-5 md:border-t-0 md:border-l dark:border-[#C49A1E]/10">
-          <p className="mb-3 text-[10px] font-black uppercase tracking-widest text-[#C49A1E]">
+        <div className="border-t border-[#DDAF3B]/20 p-5 md:border-t-0 md:border-l dark:border-[#DDAF3B]/10">
+          <p className="mb-3 text-[10px] font-black uppercase tracking-widest text-[#DDAF3B]">
             {t('availability_modal_quick_dates')}
           </p>
           <div className="mb-5 flex flex-col gap-2">
             <button
               type="button"
               onClick={() => addDate(todayISO())}
-              className="cursor-pointer rounded-xl bg-[#F0EDE0] px-3 py-2.5 text-left text-[12px] font-semibold text-[#1A1A0A] transition-colors hover:bg-[#C49A1E]/15 dark:bg-[#1E2A1A] dark:text-[#F0EDD4]"
+              className="cursor-pointer rounded-xl bg-[#F0EDE0] px-3 py-2.5 text-left text-[12px] font-semibold text-[#001201] transition-colors hover:bg-[#DDAF3B]/15 dark:bg-[#001A05] dark:text-[#FFF9EC]"
             >
               {t('availability_modal_today')}
             </button>
             <button
               type="button"
               onClick={() => addDate(tomorrowISO())}
-              className="cursor-pointer rounded-xl bg-[#F0EDE0] px-3 py-2.5 text-left text-[12px] font-semibold text-[#1A1A0A] transition-colors hover:bg-[#C49A1E]/15 dark:bg-[#1E2A1A] dark:text-[#F0EDD4]"
+              className="cursor-pointer rounded-xl bg-[#F0EDE0] px-3 py-2.5 text-left text-[12px] font-semibold text-[#001201] transition-colors hover:bg-[#DDAF3B]/15 dark:bg-[#001A05] dark:text-[#FFF9EC]"
             >
               {t('availability_modal_tomorrow')}
             </button>
             <button
               type="button"
               onClick={() => addDates(thisWeek)}
-              className="cursor-pointer rounded-xl bg-[#F0EDE0] px-3 py-2.5 text-left text-[12px] font-semibold text-[#1A1A0A] transition-colors hover:bg-[#C49A1E]/15 dark:bg-[#1E2A1A] dark:text-[#F0EDD4]"
+              className="cursor-pointer rounded-xl bg-[#F0EDE0] px-3 py-2.5 text-left text-[12px] font-semibold text-[#001201] transition-colors hover:bg-[#DDAF3B]/15 dark:bg-[#001A05] dark:text-[#FFF9EC]"
             >
               {t('availability_modal_this_week')}
               <span className="mt-0.5 block text-[10px] text-foreground/65 dark:text-[#A0A090]">
@@ -391,7 +391,7 @@ export function CreateBlockModal({
             <button
               type="button"
               onClick={() => addDates(nextWeek)}
-              className="cursor-pointer rounded-xl bg-[#F0EDE0] px-3 py-2.5 text-left text-[12px] font-semibold text-[#1A1A0A] transition-colors hover:bg-[#C49A1E]/15 dark:bg-[#1E2A1A] dark:text-[#F0EDD4]"
+              className="cursor-pointer rounded-xl bg-[#F0EDE0] px-3 py-2.5 text-left text-[12px] font-semibold text-[#001201] transition-colors hover:bg-[#DDAF3B]/15 dark:bg-[#001A05] dark:text-[#FFF9EC]"
             >
               {t('availability_modal_next_week')}
               <span className="mt-0.5 block text-[10px] text-foreground/65 dark:text-[#A0A090]">
@@ -406,18 +406,18 @@ export function CreateBlockModal({
               type="button"
               onClick={() => setMiniCalMonth(new Date(miniYear, miniMonthIdx - 1, 1))}
               aria-label="Mois précédent"
-              className="flex h-[22px] w-[22px] cursor-pointer items-center justify-center rounded-full bg-[#C49A1E]/15 text-[#C49A1E] text-[10px] hover:bg-[#C49A1E]/25"
+              className="flex h-[22px] w-[22px] cursor-pointer items-center justify-center rounded-full bg-[#DDAF3B]/15 text-[#DDAF3B] text-[10px] hover:bg-[#DDAF3B]/25"
             >
               ◀
             </button>
-            <p className="flex-1 text-center text-[11px] font-black tracking-wide text-[#C49A1E]">
+            <p className="flex-1 text-center text-[11px] font-black tracking-wide text-[#DDAF3B]">
               {miniMonthLabel}
             </p>
             <button
               type="button"
               onClick={() => setMiniCalMonth(new Date(miniYear, miniMonthIdx + 1, 1))}
               aria-label="Mois suivant"
-              className="flex h-[22px] w-[22px] cursor-pointer items-center justify-center rounded-full bg-[#C49A1E]/15 text-[#C49A1E] text-[10px] hover:bg-[#C49A1E]/25"
+              className="flex h-[22px] w-[22px] cursor-pointer items-center justify-center rounded-full bg-[#DDAF3B]/15 text-[#DDAF3B] text-[10px] hover:bg-[#DDAF3B]/25"
             >
               ▶
             </button>
@@ -449,9 +449,9 @@ export function CreateBlockModal({
                   className={[
                     'rounded-[3px] py-[3px] text-center text-[9px] font-bold transition-colors',
                     isDisabled ? 'cursor-default opacity-30' : 'cursor-pointer',
-                    !isDisabled && isSelected ? 'bg-[#C49A1E] text-[#1A1A0A]' :
-                    !isDisabled && isToday ? 'border border-[#C49A1E] bg-[#EDE9CC] text-[#1A1A0A] dark:bg-[#1E2A1A] dark:text-[#F0EDD4]' :
-                    !isDisabled ? 'bg-[#F0EDE0] text-[#1A1A0A] hover:bg-[#C49A1E]/20 dark:bg-[#1E2A1A] dark:text-[#F0EDD4]' : '',
+                    !isDisabled && isSelected ? 'bg-[#DDAF3B] text-[#001201]' :
+                    !isDisabled && isToday ? 'border border-[#DDAF3B] bg-[#EDE9CC] text-[#001201] dark:bg-[#001A05] dark:text-[#FFF9EC]' :
+                    !isDisabled ? 'bg-[#F0EDE0] text-[#001201] hover:bg-[#DDAF3B]/20 dark:bg-[#001A05] dark:text-[#FFF9EC]' : '',
                   ].join(' ')}
                 >
                   {dayNum}
@@ -462,11 +462,11 @@ export function CreateBlockModal({
           {/* Mini-cal legend */}
           <div className="mt-2 flex flex-wrap gap-3 text-[9px] text-foreground/65 dark:text-[#A0A090]">
             <span className="flex items-center gap-1">
-              <span className="inline-block h-2.5 w-2.5 rounded-[2px] border border-[#C49A1E] bg-[#EDE9CC] dark:bg-[#1E2A1A]" />
+              <span className="inline-block h-2.5 w-2.5 rounded-[2px] border border-[#DDAF3B] bg-[#EDE9CC] dark:bg-[#001A05]" />
               Aujourd'hui
             </span>
             <span className="flex items-center gap-1">
-              <span className="inline-block h-2.5 w-2.5 rounded-[2px] bg-[#C49A1E]" />
+              <span className="inline-block h-2.5 w-2.5 rounded-[2px] bg-[#DDAF3B]" />
               Sélectionné
             </span>
           </div>
@@ -474,18 +474,18 @@ export function CreateBlockModal({
       </div>
 
       {/* Footer */}
-      <div className="flex justify-end gap-3 border-t border-[#C49A1E]/20 px-5 py-4 dark:border-[#C49A1E]/10">
+      <div className="flex justify-end gap-3 border-t border-[#DDAF3B]/20 px-5 py-4 dark:border-[#DDAF3B]/10">
         <button
           type="button"
           onClick={onClose}
-          className="cursor-pointer rounded-xl border border-[#C49A1E]/30 bg-transparent px-5 py-2.5 text-sm font-bold text-foreground/65 transition-colors hover:bg-[#C49A1E]/10 dark:text-[#A0A090]"
+          className="cursor-pointer rounded-xl border border-[#DDAF3B]/30 bg-transparent px-5 py-2.5 text-sm font-bold text-foreground/65 transition-colors hover:bg-[#DDAF3B]/10 dark:text-[#A0A090]"
         >
           {t('btn_cancel')}
         </button>
         <button
           type="button"
           onClick={handleSubmit}
-          className="cursor-pointer rounded-xl bg-[#C49A1E] px-5 py-2.5 text-sm font-black text-[#1A1A0A] transition-colors hover:bg-[#A07818] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#C49A1E] focus-visible:ring-offset-2"
+          className="cursor-pointer rounded-xl bg-[#DDAF3B] px-5 py-2.5 text-sm font-black text-[#001201] transition-colors hover:bg-[#A07818] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#DDAF3B] focus-visible:ring-offset-2"
         >
           {t(editingBlock ? 'availability_block_edit' : 'availability_create_block')}
         </button>

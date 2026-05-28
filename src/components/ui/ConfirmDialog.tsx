@@ -22,7 +22,7 @@ interface Props {
 const CONFIRM_COLORS: Record<ConfirmDialogVariant, string> = {
   danger:  'bg-[#EF4444] text-white hover:bg-[#DC2626]',
   warning: 'bg-[#FF8800] text-white hover:bg-[#E07700]',
-  default: 'bg-[#C49A1E] text-[#0C1209] hover:opacity-90',
+  default: 'bg-[#DDAF3B] text-[#0C1209] hover:opacity-90',
 };
 
 const ICON: Record<ConfirmDialogVariant, { path: string; color: string }> = {
@@ -36,7 +36,7 @@ const ICON: Record<ConfirmDialogVariant, { path: string; color: string }> = {
   },
   default: {
     path: 'M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z',
-    color: 'text-[#C49A1E]',
+    color: 'text-[#DDAF3B]',
   },
 };
 
@@ -99,7 +99,7 @@ export function ConfirmDialog({
 
           {/* Text */}
           <div>
-            <div className="text-[15px] font-bold text-[#1A1A0A] dark:text-[#F0EDD4]">{title}</div>
+            <div className="text-[15px] font-bold text-[#001201] dark:text-[#FFF9EC]">{title}</div>
             <div className="mt-1 text-[13px] leading-snug text-foreground/55 dark:text-[#6A6A5A]">{message}</div>
           </div>
         </div>
@@ -110,7 +110,7 @@ export function ConfirmDialog({
             type="button"
             onClick={onCancel}
             disabled={loading}
-            className="flex-1 rounded-[10px] border border-[#D8D4C8] py-2.5 text-[13px] font-medium text-[#5A5A4A] transition-opacity hover:opacity-70 disabled:opacity-40 dark:border-[#243020] dark:text-[#9A9A8A]"
+            className="flex-1 rounded-[10px] border border-[#D8D4C8] py-2.5 text-[13px] font-medium text-[#5A5A4A] transition-opacity hover:opacity-70 disabled:opacity-40 dark:border-[#001A05] dark:text-[#9A9A8A]"
           >
             {cancelLabel}
           </button>

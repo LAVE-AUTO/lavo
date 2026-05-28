@@ -58,7 +58,7 @@ function SectionPanel({
           <div className="flex h-8 w-8 items-center justify-center rounded-lg" style={{ background: `${color}18` }}>
             {icon}
           </div>
-          <span className="text-[13px] font-black text-[#0F1A0C] dark:text-[#F0EDD4]">{title}</span>
+          <span className="text-[13px] font-black text-[#0F1A0C] dark:text-[#FFF9EC]">{title}</span>
           {count > 0 && (
             <span
               className="flex h-5 min-w-[20px] items-center justify-center rounded-full px-1.5 text-[11px] font-black text-white"
@@ -68,7 +68,7 @@ function SectionPanel({
             </span>
           )}
           {mockBadge && (
-            <span className="rounded-full bg-[#F5E6BB] px-2 py-0.5 text-[9px] font-bold uppercase tracking-wider text-[#8A6A00] dark:bg-[#2A2210] dark:text-[#C49A1E]">
+            <span className="rounded-full bg-[#F5E6BB] px-2 py-0.5 text-[9px] font-bold uppercase tracking-wider text-[#8A6A00] dark:bg-[#2A2210] dark:text-[#DDAF3B]">
               {mockBadge}
             </span>
           )}
@@ -83,7 +83,7 @@ function SectionPanel({
       </div>
 
       {/* Divider */}
-      <div className="mx-5 h-px bg-[#F0EDE0] dark:bg-[#1E2A1A]" />
+      <div className="mx-5 h-px bg-[#F0EDE0] dark:bg-[#001A05]" />
 
       {/* Content */}
       <div className="flex flex-col gap-0 overflow-y-auto">
@@ -99,13 +99,13 @@ function SectionPanel({
 }
 
 const KycIcon = () => (
-  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#C49A1E" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#DDAF3B" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
     <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
     <polyline points="14 2 14 8 20 8" /><line x1="16" y1="13" x2="8" y2="13" /><line x1="16" y1="17" x2="8" y2="17" />
   </svg>
 );
 const DisputeIcon = () => (
-  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#E8472A" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#391C01" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
     <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z" />
     <line x1="12" y1="9" x2="12" y2="13" /><line x1="12" y1="17" x2="12.01" y2="17" />
   </svg>
@@ -167,7 +167,7 @@ export function AdminAlertsSection() {
         icon={<KycIcon />}
         title={t('alert_kyc_title')}
         count={stations.length}
-        color="#C49A1E"
+        color="#DDAF3B"
         actionLabel={t('alert_kyc_action')}
         actionHref="/admin/stations"
         empty={!kycLoading && !kycError && stations.length === 0}
@@ -177,22 +177,22 @@ export function AdminAlertsSection() {
           <div className="px-5 py-4 text-[12px] text-[#AAA] dark:text-[#A0A090]">{t('alert_kyc_loading')}</div>
         )}
         {!kycLoading && kycError && (
-          <div className="px-5 py-4 text-[12px] text-[#E8472A]">{t('alert_kyc_error')}</div>
+          <div className="px-5 py-4 text-[12px] text-[#391C01]">{t('alert_kyc_error')}</div>
         )}
         {!kycLoading && stations.map((s, i) => (
           <Link
             key={s.id}
             href={`/admin/stations/${s.id}` as Parameters<typeof Link>[0]['href']}
-            className={`flex items-center gap-3 px-5 py-3 transition-colors hover:bg-[#F8F6EE] dark:hover:bg-[#182214]${i > 0 ? ' border-t border-[#F0EDE0] dark:border-[#1E2A1A]' : ''}`}
+            className={`flex items-center gap-3 px-5 py-3 transition-colors hover:bg-[#F8F6EE] dark:hover:bg-[#182214]${i > 0 ? ' border-t border-[#F0EDE0] dark:border-[#001A05]' : ''}`}
           >
-            <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-[#C49A1E]/10 text-[12px] font-black text-[#C49A1E]">
+            <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-[#DDAF3B]/10 text-[12px] font-black text-[#DDAF3B]">
               {initials(s.name)}
             </div>
             <div className="min-w-0 flex-1">
-              <div className="truncate text-[13px] font-bold text-[#0F1A0C] dark:text-[#F0EDD4]">{s.name}</div>
+              <div className="truncate text-[13px] font-bold text-[#0F1A0C] dark:text-[#FFF9EC]">{s.name}</div>
               <div className="text-[11px] text-[#AAA] dark:text-[#A0A090]">{formatDate(s.created_at)}</div>
             </div>
-            <span className="shrink-0 rounded-full bg-[#C49A1E]/10 px-2 py-0.5 text-[9px] font-black uppercase tracking-wider text-[#C49A1E]">
+            <span className="shrink-0 rounded-full bg-[#DDAF3B]/10 px-2 py-0.5 text-[9px] font-black uppercase tracking-wider text-[#DDAF3B]">
               KYC
             </span>
           </Link>
@@ -204,7 +204,7 @@ export function AdminAlertsSection() {
         icon={<DisputeIcon />}
         title={t('alert_disputes_title')}
         count={disputes.length}
-        color="#E8472A"
+        color="#391C01"
         actionLabel={t('alert_disputes_action')}
         actionHref="/admin/disputes"
         empty={!disputesLoading && disputes.length === 0}
@@ -217,19 +217,19 @@ export function AdminAlertsSection() {
           <Link
             key={d.id}
             href={`/admin/disputes/${d.id}` as Parameters<typeof Link>[0]['href']}
-            className={`flex items-center gap-3 px-5 py-3 transition-colors hover:bg-[#F8F6EE] dark:hover:bg-[#182214]${i > 0 ? ' border-t border-[#F0EDE0] dark:border-[#1E2A1A]' : ''}`}
+            className={`flex items-center gap-3 px-5 py-3 transition-colors hover:bg-[#F8F6EE] dark:hover:bg-[#182214]${i > 0 ? ' border-t border-[#F0EDE0] dark:border-[#001A05]' : ''}`}
           >
-            <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-[#E8472A]/10 text-[12px] font-black text-[#E8472A]">
+            <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-[#391C01]/10 text-[12px] font-black text-[#391C01]">
               {initials(d.label)}
             </div>
             <div className="min-w-0 flex-1">
-              <div className="truncate text-[13px] font-bold text-[#0F1A0C] dark:text-[#F0EDD4]">{d.label}</div>
+              <div className="truncate text-[13px] font-bold text-[#0F1A0C] dark:text-[#FFF9EC]">{d.label}</div>
               <div className="text-[11px] text-[#AAA] dark:text-[#A0A090]">{formatDate(d.date)}</div>
             </div>
             <div className="flex shrink-0 flex-col items-end gap-1">
-              <span className="text-[13px] font-black text-[#E8472A]">{d.amount}</span>
+              <span className="text-[13px] font-black text-[#391C01]">{d.amount}</span>
               {d.urgent && (
-                <span className="rounded-full bg-[#FEF2F2] px-1.5 py-0.5 text-[8px] font-black uppercase tracking-wider text-[#E8472A] dark:bg-[#2A0A0A]">
+                <span className="rounded-full bg-[#FEF2F2] px-1.5 py-0.5 text-[8px] font-black uppercase tracking-wider text-[#391C01] dark:bg-[#2A0A0A]">
                   Urgent
                 </span>
               )}

@@ -92,7 +92,7 @@ export async function renderQrWithLogoToDataUrl(
 /** Wide wordmark used in the poster header. Sits well above the QR. */
 const WORDMARK_SRC = '/logo/logo_2.png';
 
-const POSTER_BRAND_GOLD = '#C49A1E';
+const POSTER_BRAND_GOLD = '#DDAF3B';
 const POSTER_TEXT       = '#0C1209';
 const POSTER_MUTED      = '#7A6F4A';
 const POSTER_BG         = '#FFFFFF';
@@ -179,7 +179,7 @@ export async function renderBrandedQrPosterToDataUrl(
   const frameInset = 36;
   const frameRadius = 32;
   ctx.lineWidth = 2;
-  ctx.strokeStyle = 'rgba(196, 154, 30, 0.18)';
+  ctx.strokeStyle = 'rgba(221, 175, 59, 0.18)';
   roundRectPath(ctx, frameInset, accentH + frameInset, W - frameInset * 2, H - accentH - frameInset * 2, frameRadius);
   ctx.stroke();
 

@@ -21,7 +21,7 @@ type TimelineActor = 'client' | 'station' | 'admin';
 const ACTOR_STYLE: Record<TimelineActor, { bg: string; text: string; label: string; dot: string }> = {
   client:  { bg: 'bg-[#EFF6FF] dark:bg-[#0A1A2E]', text: 'text-[#1D4ED8] dark:text-[#93C5FD]', label: 'timeline_by_client',  dot: 'bg-[#3B82F6]' },
   station: { bg: 'bg-[#FFF4EC] dark:bg-[#2A1408]', text: 'text-[#C2410C] dark:text-[#FDBA74]', label: 'timeline_by_station', dot: 'bg-[#F97316]' },
-  admin:   { bg: 'bg-[#C49A1E]/10 dark:bg-[#2A2008]', text: 'text-[#7A5E0A] dark:text-[#C49A1E]', label: 'timeline_by_admin',   dot: 'bg-[#C49A1E]' },
+  admin:   { bg: 'bg-[#DDAF3B]/10 dark:bg-[#2A2008]', text: 'text-[#7A5E0A] dark:text-[#DDAF3B]', label: 'timeline_by_admin',   dot: 'bg-[#DDAF3B]' },
 };
 
 interface TimelineEvent {
@@ -138,17 +138,17 @@ export function AdminDisputeDetail({ id }: Props) {
 
   if (loading) return (
     <div className="flex items-center justify-center py-32">
-      <div className="h-8 w-8 animate-spin rounded-full border-[3px] border-[#C49A1E] border-t-transparent" />
+      <div className="h-8 w-8 animate-spin rounded-full border-[3px] border-[#DDAF3B] border-t-transparent" />
     </div>
   );
 
   if (fetchError || !dispute) return (
     <div className="flex flex-col items-center gap-4 py-32">
       <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-white shadow-sm ring-1 ring-[#E8E4DC] dark:bg-[#131E10] dark:ring-[#1E2E18]">
-        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#C49A1E" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10" /><line x1="12" y1="8" x2="12" y2="12" /><line x1="12" y1="16" x2="12.01" y2="16" /></svg>
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#DDAF3B" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10" /><line x1="12" y1="8" x2="12" y2="12" /><line x1="12" y1="16" x2="12.01" y2="16" /></svg>
       </div>
       <p className="text-[14px] font-semibold text-foreground/65 dark:text-[#9A9A8A]">{fetchError ? t('fetch_error') : t('not_found')}</p>
-      <Link href="/admin/disputes" className="rounded-xl bg-[#C49A1E] px-4 py-2 text-[13px] font-bold text-[#0C1209] transition-colors hover:bg-[#B08A14]">
+      <Link href="/admin/disputes" className="rounded-xl bg-[#DDAF3B] px-4 py-2 text-[13px] font-bold text-[#0C1209] transition-colors hover:bg-[#B08A14]">
         {t('back_link')}
       </Link>
     </div>
@@ -225,7 +225,7 @@ export function AdminDisputeDetail({ id }: Props) {
       <div className="flex min-h-full flex-col">
         {/* Header */}
         <div className="shrink-0 border-b border-[#E0DCD0] bg-[#F5F5EE] px-6 py-4 dark:border-[#1A2A14] dark:bg-[#0C1209]">
-          <Link href="/admin/disputes" className="mb-4 inline-flex items-center gap-1.5 text-[12px] font-bold text-[#AAAAAA] transition-colors hover:text-[#C49A1E]">
+          <Link href="/admin/disputes" className="mb-4 inline-flex items-center gap-1.5 text-[12px] font-bold text-[#AAAAAA] transition-colors hover:text-[#DDAF3B]">
             <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" aria-hidden="true"><polyline points="15 18 9 12 15 6" /></svg>
             {t('back_link')}
           </Link>
@@ -237,7 +237,7 @@ export function AdminDisputeDetail({ id }: Props) {
               </div>
               <div>
                 <div className="flex items-center gap-3">
-                  <h1 className="text-[20px] font-black text-[#1A1A0A] dark:text-[#F0EDD4]">{clientName || t('label_unknown_client')}</h1>
+                  <h1 className="text-[20px] font-black text-[#001201] dark:text-[#FFF9EC]">{clientName || t('label_unknown_client')}</h1>
                   <span className={`inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-[12px] font-bold ${s.badge}`}>
                     <span className={`h-1.5 w-1.5 rounded-full ${s.dot}`} />{t(s.label)}
                   </span>
@@ -249,7 +249,7 @@ export function AdminDisputeDetail({ id }: Props) {
             </div>
             <div className="shrink-0 text-right">
               <p className="text-[12px] font-bold uppercase tracking-wider text-[#AAAAAA] dark:text-[#A0A090]">{t('label_amount_paid')}</p>
-              <p className="text-[26px] font-black text-[#1A1A0A] dark:text-[#F0EDD4]">{formatAmount(amountPaid)}</p>
+              <p className="text-[26px] font-black text-[#001201] dark:text-[#FFF9EC]">{formatAmount(amountPaid)}</p>
               {refunded > 0 && (
                 <p className="mt-1 text-[12px] font-semibold text-[#15803D]">{t('label_refunded', { amount: formatAmount(refunded) })}</p>
               )}
@@ -308,7 +308,7 @@ export function AdminDisputeDetail({ id }: Props) {
                   ].map(({ label, value, sub }) => (
                     <div key={label} className="flex flex-col items-center gap-1 px-5 py-4 text-center">
                       <p className="text-[11px] font-black uppercase tracking-widest text-[#AAAAAA] dark:text-[#A0A090]">{label}</p>
-                      <p className="text-[15px] font-black text-[#1A1A0A] dark:text-[#F0EDD4]">{value}</p>
+                      <p className="text-[15px] font-black text-[#001201] dark:text-[#FFF9EC]">{value}</p>
                       {sub && <p className="text-[11px] text-[#BBBBAA] dark:text-[#A0A090]">{sub}</p>}
                     </div>
                   ))}
@@ -367,7 +367,7 @@ export function AdminDisputeDetail({ id }: Props) {
                   ) : (
                     <>
                       <button type="button" onClick={() => setModal('refund_full')}
-                        className="flex w-full items-center gap-3 rounded-xl bg-[#C49A1E] px-4 py-3 text-[13px] font-bold text-[#0C1209] shadow-sm transition-all hover:-translate-y-0.5 hover:bg-[#B08A14] hover:shadow-md active:translate-y-0">
+                        className="flex w-full items-center gap-3 rounded-xl bg-[#DDAF3B] px-4 py-3 text-[13px] font-bold text-[#0C1209] shadow-sm transition-all hover:-translate-y-0.5 hover:bg-[#B08A14] hover:shadow-md active:translate-y-0">
                         <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-white/20">
                           <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" aria-hidden="true"><polyline points="1 4 1 10 7 10" /><path d="M3.51 15a9 9 0 102.13-9.36L1 10" /></svg>
                         </div>
@@ -404,21 +404,21 @@ export function AdminDisputeDetail({ id }: Props) {
                       {initials(clientName)}
                     </div>
                     <div className="min-w-0">
-                      <p className="truncate text-[13px] font-bold text-[#1A1A0A] dark:text-[#F0EDD4]">{clientName || t('label_unknown_client')}</p>
+                      <p className="truncate text-[13px] font-bold text-[#001201] dark:text-[#FFF9EC]">{clientName || t('label_unknown_client')}</p>
                     </div>
                   </div>
                   <div className="mt-3 flex flex-col gap-1.5">
                     {clientContactPhone && (
                       <a href={`tel:${clientContactPhone}`}
                         className="flex items-center gap-2 rounded-xl bg-[#F5F5EE] px-3 py-2 text-[12px] font-semibold text-[#444] transition-colors hover:bg-[#EDEAE0] dark:bg-[#0E1A0C] dark:text-[#C0C0B0] dark:hover:bg-[#152010]">
-                        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#C49A1E" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M22 16.92v3a2 2 0 01-2.18 2 19.79 19.79 0 01-8.63-3.07A19.5 19.5 0 013.07 10.8 19.79 19.79 0 01.03 2.18 2 2 0 012 0h3a2 2 0 012 1.72c.127.96.361 1.903.7 2.81a2 2 0 01-.45 2.11L6.91 7.91a16 16 0 006.72 6.72l1.28-1.27a2 2 0 012.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0122 16.92z" /></svg>
+                        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#DDAF3B" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M22 16.92v3a2 2 0 01-2.18 2 19.79 19.79 0 01-8.63-3.07A19.5 19.5 0 013.07 10.8 19.79 19.79 0 01.03 2.18 2 2 0 012 0h3a2 2 0 012 1.72c.127.96.361 1.903.7 2.81a2 2 0 01-.45 2.11L6.91 7.91a16 16 0 006.72 6.72l1.28-1.27a2 2 0 012.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0122 16.92z" /></svg>
                         <span className="truncate">{clientContactPhone}</span>
                       </a>
                     )}
                     {clientContactEmail && (
                       <a href={`mailto:${clientContactEmail}`}
                         className="flex items-center gap-2 rounded-xl bg-[#F5F5EE] px-3 py-2 text-[12px] font-semibold text-[#444] transition-colors hover:bg-[#EDEAE0] dark:bg-[#0E1A0C] dark:text-[#C0C0B0] dark:hover:bg-[#152010]">
-                        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#C49A1E" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z" /><polyline points="22,6 12,13 2,6" /></svg>
+                        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#DDAF3B" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z" /><polyline points="22,6 12,13 2,6" /></svg>
                         <span className="truncate">{clientContactEmail}</span>
                       </a>
                     )}
@@ -437,10 +437,10 @@ export function AdminDisputeDetail({ id }: Props) {
                 <div className="p-4">
                   <div className="flex items-center gap-3">
                     <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-[#F0EDE6] dark:bg-[#1A2A14]">
-                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#C49A1E" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z" /></svg>
+                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#DDAF3B" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z" /></svg>
                     </div>
                     <div className="min-w-0">
-                      <p className="truncate text-[13px] font-bold text-[#1A1A0A] dark:text-[#F0EDD4]">{stationName}</p>
+                      <p className="truncate text-[13px] font-bold text-[#001201] dark:text-[#FFF9EC]">{stationName}</p>
                       <p className="truncate text-[12px] text-[#BBBBAA] dark:text-[#A0A090]">{stationCity}</p>
                     </div>
                   </div>
@@ -449,14 +449,14 @@ export function AdminDisputeDetail({ id }: Props) {
                       {stationPhone && (
                         <a href={`tel:${stationPhone}`}
                           className="flex items-center gap-2 rounded-xl bg-[#F5F5EE] px-3 py-2 text-[12px] font-semibold text-[#444] transition-colors hover:bg-[#EDEAE0] dark:bg-[#0E1A0C] dark:text-[#C0C0B0] dark:hover:bg-[#152010]">
-                          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#C49A1E" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M22 16.92v3a2 2 0 01-2.18 2 19.79 19.79 0 01-8.63-3.07A19.5 19.5 0 013.07 10.8 19.79 19.79 0 01.03 2.18 2 2 0 012 0h3a2 2 0 012 1.72c.127.96.361 1.903.7 2.81a2 2 0 01-.45 2.11L6.91 7.91a16 16 0 006.72 6.72l1.28-1.27a2 2 0 012.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0122 16.92z" /></svg>
+                          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#DDAF3B" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M22 16.92v3a2 2 0 01-2.18 2 19.79 19.79 0 01-8.63-3.07A19.5 19.5 0 013.07 10.8 19.79 19.79 0 01.03 2.18 2 2 0 012 0h3a2 2 0 012 1.72c.127.96.361 1.903.7 2.81a2 2 0 01-.45 2.11L6.91 7.91a16 16 0 006.72 6.72l1.28-1.27a2 2 0 012.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0122 16.92z" /></svg>
                           <span className="truncate">{stationPhone}</span>
                         </a>
                       )}
                       {stationEmail && (
                         <a href={`mailto:${stationEmail}`}
                           className="flex items-center gap-2 rounded-xl bg-[#F5F5EE] px-3 py-2 text-[12px] font-semibold text-[#444] transition-colors hover:bg-[#EDEAE0] dark:bg-[#0E1A0C] dark:text-[#C0C0B0] dark:hover:bg-[#152010]">
-                          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#C49A1E" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z" /><polyline points="22,6 12,13 2,6" /></svg>
+                          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#DDAF3B" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z" /><polyline points="22,6 12,13 2,6" /></svg>
                           <span className="truncate">{stationEmail}</span>
                         </a>
                       )}

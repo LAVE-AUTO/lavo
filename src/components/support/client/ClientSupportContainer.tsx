@@ -85,14 +85,14 @@ export function ClientSupportContainer({ sectionLabel }: Props) {
       <div className="shrink-0 border-b border-[#E0DCD0] bg-[#F5F5EE] px-6 pb-4 pt-5 dark:border-[#1A2A14] dark:bg-[#0C1209]">
         <div className="flex items-start justify-between gap-4">
           <div>
-            <h1 className="text-[20px] font-black text-[#1A1A0A] dark:text-[#F0EDD4]">{t('page_title')}</h1>
+            <h1 className="text-[20px] font-black text-[#001201] dark:text-[#FFF9EC]">{t('page_title')}</h1>
             <p className="mt-0.5 text-[12px] text-foreground/55 dark:text-[#6A6A5A]">{t('page_subtitle')}</p>
           </div>
           {!showForm && (
             <button
               type="button"
               onClick={() => setShowForm(true)}
-              className="flex shrink-0 items-center gap-2 rounded-[10px] bg-[#C49A1E] px-4 py-2.5 text-[13px] font-bold text-[#0C1209] shadow-sm transition-all hover:bg-[#D4A830] hover:shadow-md active:scale-[0.98]"
+              className="flex shrink-0 items-center gap-2 rounded-[10px] bg-[#DDAF3B] px-4 py-2.5 text-[13px] font-bold text-[#0C1209] shadow-sm transition-all hover:bg-[#D4A830] hover:shadow-md active:scale-[0.98]"
             >
               <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" aria-hidden="true">
                 <line x1="12" y1="5" x2="12" y2="19" /><line x1="5" y1="12" x2="19" y2="12" />
@@ -127,7 +127,7 @@ export function ClientSupportContainer({ sectionLabel }: Props) {
           {/* Loading state */}
           {loading && (
             <div className="flex items-center justify-center py-16">
-              <div className="h-8 w-8 animate-spin rounded-full border-[3px] border-[#C49A1E] border-t-transparent" />
+              <div className="h-8 w-8 animate-spin rounded-full border-[3px] border-[#DDAF3B] border-t-transparent" />
             </div>
           )}
 
@@ -136,9 +136,9 @@ export function ClientSupportContainer({ sectionLabel }: Props) {
             <div
               role="alert"
               aria-live="assertive"
-              className="flex flex-col items-center gap-3 rounded-[10px] border border-[#E8472A]/30 bg-[#E8472A]/5 px-4 py-6 text-center dark:border-[#E8472A]/40 dark:bg-[#E8472A]/10"
+              className="flex flex-col items-center gap-3 rounded-[10px] border border-[#391C01]/30 bg-[#391C01]/5 px-4 py-6 text-center dark:border-[#391C01]/40 dark:bg-[#391C01]/10"
             >
-              <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#E8472A" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+              <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#391C01" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
                 <circle cx="12" cy="12" r="10" />
                 <line x1="12" y1="8" x2="12" y2="12" />
                 <line x1="12" y1="16" x2="12.01" y2="16" />
@@ -150,7 +150,7 @@ export function ClientSupportContainer({ sectionLabel }: Props) {
                 type="button"
                 onClick={loadTickets}
                 aria-label={t('btn_retry_aria')}
-                className="rounded-[10px] border border-[#C49A1E]/50 px-4 py-2 text-[13px] font-semibold text-[#C49A1E] transition-colors hover:bg-[#C49A1E]/10 focus:outline-none focus-visible:ring-2 focus-visible:ring-[#C49A1E]"
+                className="rounded-[10px] border border-[#DDAF3B]/50 px-4 py-2 text-[13px] font-semibold text-[#DDAF3B] transition-colors hover:bg-[#DDAF3B]/10 focus:outline-none focus-visible:ring-2 focus-visible:ring-[#DDAF3B]"
               >
                 {t('btn_retry')}
               </button>
@@ -168,7 +168,7 @@ export function ClientSupportContainer({ sectionLabel }: Props) {
               {tickets.length === 0 ? (
                 <div className="flex flex-col items-center gap-3 py-20 text-center">
                   <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-white shadow-sm ring-1 ring-[#E8E4DC] dark:bg-[#131E10] dark:ring-[#1E2E18]">
-                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#C49A1E" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#DDAF3B" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
                       <path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z" />
                     </svg>
                   </div>

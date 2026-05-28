@@ -8,7 +8,7 @@ import { ThemeToggle } from '@/components/auth/ThemeToggle';
 import { LangToggle } from '@/components/auth/LangToggle';
 
 function HomeIcon({ active }: { active: boolean }) {
-  const c = active ? '#C49A1E' : '#9A9A8A';
+  const c = active ? '#DDAF3B' : '#9A9A8A';
   return (
     <svg width="22" height="22" viewBox="0 0 24 24" fill="none" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
       <path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z" stroke={c} strokeWidth="2" />
@@ -18,7 +18,7 @@ function HomeIcon({ active }: { active: boolean }) {
 }
 
 function CouponsIcon({ active }: { active: boolean }) {
-  const c = active ? '#C49A1E' : '#9A9A8A';
+  const c = active ? '#DDAF3B' : '#9A9A8A';
   return (
     <svg width="22" height="22" viewBox="0 0 24 24" fill="none" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
       <path d="M2 9a2 2 0 012-2h16a2 2 0 012 2v1a2 2 0 010 4v1a2 2 0 01-2 2H4a2 2 0 01-2-2v-1a2 2 0 010-4V9z" stroke={c} strokeWidth="2" />
@@ -28,16 +28,16 @@ function CouponsIcon({ active }: { active: boolean }) {
 }
 
 function FavoritesIcon({ active }: { active: boolean }) {
-  const c = active ? '#C49A1E' : '#9A9A8A';
+  const c = active ? '#DDAF3B' : '#9A9A8A';
   return (
-    <svg width="22" height="22" viewBox="0 0 24 24" fill={active ? '#C49A1E' : 'none'} strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+    <svg width="22" height="22" viewBox="0 0 24 24" fill={active ? '#DDAF3B' : 'none'} strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
       <path d="M20.84 4.61a5.5 5.5 0 00-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 00-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 000-7.78z" stroke={c} strokeWidth="2" />
     </svg>
   );
 }
 
 function HowItWorksIcon({ active }: { active: boolean }) {
-  const c = active ? '#C49A1E' : '#9A9A8A';
+  const c = active ? '#DDAF3B' : '#9A9A8A';
   return (
     <svg width="22" height="22" viewBox="0 0 24 24" fill="none" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
       <circle cx="12" cy="12" r="10" stroke={c} strokeWidth="2" />
@@ -48,7 +48,7 @@ function HowItWorksIcon({ active }: { active: boolean }) {
 }
 
 function SearchIcon({ active }: { active: boolean }) {
-  const c = active ? '#C49A1E' : '#9A9A8A';
+  const c = active ? '#DDAF3B' : '#9A9A8A';
   return (
     <svg width="22" height="22" viewBox="0 0 24 24" fill="none" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
       <circle cx="11" cy="11" r="8" stroke={c} strokeWidth="2" />
@@ -58,7 +58,7 @@ function SearchIcon({ active }: { active: boolean }) {
 }
 
 function MoreIcon({ active }: { active: boolean }) {
-  const c = active ? '#C49A1E' : '#9A9A8A';
+  const c = active ? '#DDAF3B' : '#9A9A8A';
   return (
     <svg width="22" height="22" viewBox="0 0 24 24" fill="none" aria-hidden="true">
       <circle cx="12" cy="5" r="1.5" fill={c} />
@@ -174,7 +174,7 @@ export function BottomNav() {
       )}
 
       <nav
-        className="sm:hidden fixed bottom-0 left-0 right-0 z-50 flex bg-[#1E2A1A] border-t border-[#2C3828]"
+        className="sm:hidden fixed bottom-0 left-0 right-0 z-50 flex bg-[#001A05] border-t border-[#2C3828]"
         aria-label={t('bottom_nav_aria')}
         style={{ paddingBottom: 'env(safe-area-inset-bottom)' }}
       >
@@ -214,7 +214,7 @@ export function BottomNav() {
 
             {/* Popup menu */}
             {moreOpen && (
-              <div className="absolute bottom-full right-2 mb-2 w-[220px] bg-[#1E2A1A] border border-[#2C3828] rounded-xl shadow-[0_-8px_32px_rgba(0,0,0,0.4)] overflow-hidden animate-fade-in-up z-50">
+              <div className="absolute bottom-full right-2 mb-2 w-[220px] bg-[#001A05] border border-[#2C3828] rounded-xl shadow-[0_-8px_32px_rgba(0,0,0,0.4)] overflow-hidden animate-fade-in-up z-50">
                 {/* User info */}
                 <div className="px-4 py-3 border-b border-[#2C3828]">
                   <div className="flex items-center gap-3">
@@ -223,7 +223,7 @@ export function BottomNav() {
                     </div>
                     <div className="overflow-hidden">
                       <p className="text-[13px] font-bold text-white truncate leading-tight">{displayName}</p>
-                      <p className="text-[11px] text-[#7a9a7d] truncate">{user?.email}</p>
+                      <p className="text-[11px] text-[#B0BFB1] truncate">{user?.email}</p>
                     </div>
                   </div>
                 </div>
@@ -252,7 +252,7 @@ export function BottomNav() {
 
                 {/* Theme + Lang row */}
                 <div className="flex items-center justify-between px-4 py-3 border-t border-[#2C3828]">
-                  <span className="text-[12px] font-semibold text-[#7a9a7d]">{t('appearance_aria')}</span>
+                  <span className="text-[12px] font-semibold text-[#B0BFB1]">{t('appearance_aria')}</span>
                   <div className="flex items-center gap-2">
                     <ThemeToggle />
                     <LangToggle />
@@ -263,7 +263,7 @@ export function BottomNav() {
                 <button
                   type="button"
                   onClick={() => { logout(); setMoreOpen(false); }}
-                  className="w-full flex items-center gap-3 px-4 py-3 text-[14px] font-semibold text-[#e8472a] hover:bg-[rgba(232,71,42,0.07)] transition-colors border-t border-[#2C3828]"
+                  className="w-full flex items-center gap-3 px-4 py-3 text-[14px] font-semibold text-[#391C01] hover:bg-[rgba(232,71,42,0.07)] transition-colors border-t border-[#2C3828]"
                 >
                   <LogoutIcon />
                   {t('logout')}

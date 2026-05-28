@@ -36,8 +36,8 @@ export function AnalyticsChartsSection({ data, period }: AnalyticsChartsSectionP
   return (
     <div className="space-y-6">
       {/* Revenue Chart */}
-      <div className="rounded-xl bg-[#F0EDE0] p-6 shadow-sm transition-all duration-200 hover:shadow-md dark:bg-[#1E2A1A]">
-        <h2 className="mb-4 text-lg font-bold text-[#1A1A0A] dark:text-[#F0EDD4]">{t('chart_revenue_title')}</h2>
+      <div className="rounded-xl bg-[#F0EDE0] p-6 shadow-sm transition-all duration-200 hover:shadow-md dark:bg-[#001A05]">
+        <h2 className="mb-4 text-lg font-bold text-[#001201] dark:text-[#FFF9EC]">{t('chart_revenue_title')}</h2>
         {revenueData.length > 0 ? (
           <ResponsiveContainer width="100%" height={300}>
             <LineChart data={revenueData}>
@@ -71,8 +71,8 @@ export function AnalyticsChartsSection({ data, period }: AnalyticsChartsSectionP
       </div>
 
       {/* Clients Chart */}
-      <div className="rounded-xl bg-[#F0EDE0] p-6 shadow-sm transition-all duration-200 hover:shadow-md dark:bg-[#1E2A1A]">
-        <h2 className="mb-4 text-lg font-bold text-[#1A1A0A] dark:text-[#F0EDD4]">{t('chart_clients_title')}</h2>
+      <div className="rounded-xl bg-[#F0EDE0] p-6 shadow-sm transition-all duration-200 hover:shadow-md dark:bg-[#001A05]">
+        <h2 className="mb-4 text-lg font-bold text-[#001201] dark:text-[#FFF9EC]">{t('chart_clients_title')}</h2>
         {clientsData.length > 0 ? (
           <ResponsiveContainer width="100%" height={300}>
             <BarChart data={clientsData}>
@@ -98,8 +98,8 @@ export function AnalyticsChartsSection({ data, period }: AnalyticsChartsSectionP
       </div>
 
       {/* Completed Services Chart */}
-      <div className="rounded-xl bg-[#F0EDE0] p-6 shadow-sm transition-all duration-200 hover:shadow-md dark:bg-[#1E2A1A]">
-        <h2 className="mb-4 text-lg font-bold text-[#1A1A0A] dark:text-[#F0EDD4]">{t('chart_completed_title')}</h2>
+      <div className="rounded-xl bg-[#F0EDE0] p-6 shadow-sm transition-all duration-200 hover:shadow-md dark:bg-[#001A05]">
+        <h2 className="mb-4 text-lg font-bold text-[#001201] dark:text-[#FFF9EC]">{t('chart_completed_title')}</h2>
         {completedData.length > 0 ? (
           <ResponsiveContainer width="100%" height={300}>
             <BarChart data={completedData}>

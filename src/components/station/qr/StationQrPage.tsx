@@ -94,7 +94,7 @@ export function StationQrPage() {
   if (loading) {
     return (
       <div className="flex flex-1 items-center justify-center">
-        <div className="h-8 w-8 animate-spin rounded-full border-[3px] border-[#C49A1E] border-t-transparent" />
+        <div className="h-8 w-8 animate-spin rounded-full border-[3px] border-[#DDAF3B] border-t-transparent" />
       </div>
     );
   }
@@ -109,7 +109,7 @@ export function StationQrPage() {
         <button
           type="button"
           onClick={loadStation}
-          className="rounded-[10px] border border-[#C49A1E]/50 px-4 py-2 text-[13px] font-semibold text-[#C49A1E] transition-colors hover:bg-[#C49A1E]/10"
+          className="rounded-[10px] border border-[#DDAF3B]/50 px-4 py-2 text-[13px] font-semibold text-[#DDAF3B] transition-colors hover:bg-[#DDAF3B]/10"
         >
           {t('btn_retry')}
         </button>
@@ -122,13 +122,13 @@ export function StationQrPage() {
       {/* Branded card */}
       <div className="relative w-full max-w-md overflow-hidden rounded-3xl bg-gradient-to-br from-white via-white to-[#F7F3E4] p-8 shadow-2xl dark:from-[#1A2218] dark:via-[#161E12] dark:to-[#0F1A0C]">
         {/* Top gold accent line */}
-        <div className="absolute inset-x-0 top-0 h-1 bg-gradient-to-r from-transparent via-[#C49A1E] to-transparent" />
+        <div className="absolute inset-x-0 top-0 h-1 bg-gradient-to-r from-transparent via-[#DDAF3B] to-transparent" />
         {/* Diagonal subtle pattern */}
         <div
           className="pointer-events-none absolute inset-0 opacity-[0.04]"
           style={{
             backgroundImage:
-              'repeating-linear-gradient(135deg, #C49A1E 0 1px, transparent 1px 14px)',
+              'repeating-linear-gradient(135deg, #DDAF3B 0 1px, transparent 1px 14px)',
           }}
           aria-hidden="true"
         />
@@ -147,10 +147,10 @@ export function StationQrPage() {
 
         {/* Station name */}
         <div className="relative mt-6 text-center">
-          <div className="text-[10px] font-bold uppercase tracking-[0.18em] text-[#C49A1E]">
+          <div className="text-[10px] font-bold uppercase tracking-[0.18em] text-[#DDAF3B]">
             {t('station_name_label')}
           </div>
-          <h1 className="mt-1 text-[22px] font-black leading-tight text-[#1A1A0A] dark:text-[#F0EDD4]">
+          <h1 className="mt-1 text-[22px] font-black leading-tight text-[#001201] dark:text-[#FFF9EC]">
             {stationName}
           </h1>
           {stationCity && (
@@ -168,13 +168,13 @@ export function StationQrPage() {
         {/* Scan instruction */}
         <div className="relative mt-8 flex items-center justify-center gap-2">
           <ScanIcon />
-          <span className="text-[13px] font-bold uppercase tracking-wider text-[#1A1A0A] dark:text-[#F0EDD4]">
+          <span className="text-[13px] font-bold uppercase tracking-wider text-[#001201] dark:text-[#FFF9EC]">
             {t('scan_label')}
           </span>
         </div>
 
         {/* URL preview */}
-        <div className="relative mt-3 rounded-xl border border-[#E8E4DC] bg-[#F7F6F2] px-3 py-2 dark:border-[#243020] dark:bg-[#0F1A0C]">
+        <div className="relative mt-3 rounded-xl border border-[#E8E4DC] bg-[#F7F6F2] px-3 py-2 dark:border-[#001A05] dark:bg-[#0F1A0C]">
           <div className="text-[9px] font-bold uppercase tracking-wider text-[#999] dark:text-[#5A5A4A]">
             {t('station_url_label')}
           </div>
@@ -198,7 +198,7 @@ export function StationQrPage() {
 }
 
 const ScanIcon = () => (
-  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#C49A1E" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#DDAF3B" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
     <path d="M3 7V5a2 2 0 0 1 2-2h2" />
     <path d="M17 3h2a2 2 0 0 1 2 2v2" />
     <path d="M21 17v2a2 2 0 0 1-2 2h-2" />

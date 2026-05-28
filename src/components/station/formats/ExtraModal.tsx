@@ -120,14 +120,14 @@ export function ExtraModal({ extra, onClose, onSaved }: Props) {
       >
         {/* Header */}
         <div className="flex items-center border-b border-[#F0EDE4] px-5 py-4 dark:border-[#1A2A14]">
-          <span className="w-full text-center text-[16px] font-black text-[#1A1A0A] dark:text-[#F0EDD4]">
+          <span className="w-full text-center text-[16px] font-black text-[#001201] dark:text-[#FFF9EC]">
             {isEdit ? 'Modifier extra' : 'Créer un extra'}
           </span>
           {isEdit && (
             <button
               type="button"
               onClick={onClose}
-              className="ml-auto flex h-8 w-8 items-center justify-center rounded-full text-[#999] transition-colors hover:bg-[#F0EDE4] hover:text-[#333] dark:text-[#5A5A4A] dark:hover:bg-[#243020] dark:hover:text-[#F0EDD4]"
+              className="ml-auto flex h-8 w-8 items-center justify-center rounded-full text-[#999] transition-colors hover:bg-[#F0EDE4] hover:text-[#333] dark:text-[#5A5A4A] dark:hover:bg-[#001A05] dark:hover:text-[#FFF9EC]"
               aria-label="Fermer"
             >
               <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.5}>
@@ -163,7 +163,7 @@ export function ExtraModal({ extra, onClose, onSaved }: Props) {
                       onClick={() => setScope(s)}
                       className={`rounded-lg px-3 py-2 text-[12px] font-bold transition-all ${
                         scope === s
-                          ? 'bg-[#C49A1E] text-[#0C1209]'
+                          ? 'bg-[#DDAF3B] text-[#0C1209]'
                           : 'bg-[#F7F6F2] text-[#5A5A4A] hover:bg-[#F0EDE4] dark:bg-[#1E2A18] dark:text-[#9A9A8A]'
                       }`}
                     >
@@ -186,10 +186,10 @@ export function ExtraModal({ extra, onClose, onSaved }: Props) {
               </div>
 
               {/* Preview */}
-              <div className="rounded-xl border border-[#C49A1E]/20 bg-[#FFFDF5] p-4 dark:border-[#C49A1E]/20 dark:bg-[#1A1808]">
-                <div className="mb-2 text-[11px] font-bold uppercase tracking-[0.5px] text-[#C49A1E]">Aperçu</div>
+              <div className="rounded-xl border border-[#DDAF3B]/20 bg-[#FFFDF5] p-4 dark:border-[#DDAF3B]/20 dark:bg-[#1A1808]">
+                <div className="mb-2 text-[11px] font-bold uppercase tracking-[0.5px] text-[#DDAF3B]">Aperçu</div>
                 <div className="text-[13px] text-[#5A5A4A] dark:text-[#9A9A8A]">
-                  <span className="font-bold text-[#1A1A0A] dark:text-[#F0EDD4]">{previewName}</span>
+                  <span className="font-bold text-[#001201] dark:text-[#FFF9EC]">{previewName}</span>
                   {' : '}+{previewPrice} $ · +{previewDuration} min
                 </div>
               </div>
@@ -207,7 +207,7 @@ export function ExtraModal({ extra, onClose, onSaved }: Props) {
             <button
               type="submit"
               disabled={saving}
-              className="w-full rounded-xl bg-[#C49A1E] py-2.5 text-[13px] font-bold text-[#0C1209] transition-opacity hover:opacity-85 disabled:opacity-50"
+              className="w-full rounded-xl bg-[#DDAF3B] py-2.5 text-[13px] font-bold text-[#0C1209] transition-opacity hover:opacity-85 disabled:opacity-50"
             >
               {saving
                 ? isEdit ? 'Enregistrement…' : 'Création…'
@@ -216,7 +216,7 @@ export function ExtraModal({ extra, onClose, onSaved }: Props) {
             <button
               type="button"
               onClick={onClose}
-              className="w-full rounded-xl border border-[#E0DCD0] py-2.5 text-[13px] font-semibold text-foreground/65 transition-colors hover:bg-[#F0EDE0] dark:border-[#243020] dark:text-[#9A9A8A]"
+              className="w-full rounded-xl border border-[#E0DCD0] py-2.5 text-[13px] font-semibold text-foreground/65 transition-colors hover:bg-[#F0EDE0] dark:border-[#001A05] dark:text-[#9A9A8A]"
             >
               Annuler
             </button>

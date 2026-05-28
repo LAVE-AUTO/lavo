@@ -37,7 +37,7 @@ export function DashboardDelaysPanel({ items, totalPending }: Props) {
       <div className="border-b border-[#E0DCD0] px-4 py-3.5 dark:border-[#1A2A14]">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
-            <div className="text-[14px] font-black text-[#1A1A0A] dark:text-[#F0EDD4]">
+            <div className="text-[14px] font-black text-[#001201] dark:text-[#FFF9EC]">
               {t('delays_title')}
             </div>
             {totalPending > 0 && (
@@ -48,7 +48,7 @@ export function DashboardDelaysPanel({ items, totalPending }: Props) {
           </div>
           <Link
             href={`/${locale}/station/delays`}
-            className="text-[11px] font-bold text-[#C49A1E] transition-colors hover:text-[#D4A820]"
+            className="text-[11px] font-bold text-[#DDAF3B] transition-colors hover:text-[#DDAF3B]"
           >
             {t('delays_see_all')} →
           </Link>
@@ -83,10 +83,10 @@ export function DashboardDelaysPanel({ items, totalPending }: Props) {
             <Link
               key={item.id}
               href={`/${locale}/station/delays`}
-              className="group flex flex-col gap-1 rounded-xl border border-[#E8E4DC] bg-white p-3 transition-all duration-150 hover:border-[#C49A1E]/40 hover:shadow-sm dark:border-[#1A2A14] dark:bg-[#0F1A0C]"
+              className="group flex flex-col gap-1 rounded-xl border border-[#E8E4DC] bg-white p-3 transition-all duration-150 hover:border-[#DDAF3B]/40 hover:shadow-sm dark:border-[#1A2A14] dark:bg-[#0F1A0C]"
             >
               <div className="flex items-center justify-between gap-2">
-                <span className="truncate text-[12px] font-bold text-[#1A1A0A] dark:text-[#F0EDD4]">
+                <span className="truncate text-[12px] font-bold text-[#001201] dark:text-[#FFF9EC]">
                   {item.clientName}
                 </span>
                 <span className="shrink-0 text-[10px] font-semibold text-foreground/55 dark:text-[#9A9A8A]">

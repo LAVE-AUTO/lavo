@@ -98,7 +98,7 @@ export function AdminSupportDetail({ id }: Props) {
   if (loading) {
     return (
       <div className="flex flex-1 items-center justify-center p-6">
-        <div className="h-6 w-6 animate-spin rounded-full border-2 border-[#C49A1E] border-t-transparent" />
+        <div className="h-6 w-6 animate-spin rounded-full border-2 border-[#DDAF3B] border-t-transparent" />
       </div>
     );
   }
@@ -242,7 +242,7 @@ export function AdminSupportDetail({ id }: Props) {
       <div className="flex min-h-full flex-col">
         {/* Header */}
         <div className="shrink-0 border-b border-[#E0DCD0] bg-[#F5F5EE] px-6 pb-5 pt-5 dark:border-[#1A2A14] dark:bg-[#0C1209]">
-          <Link href="/admin/support" className="mb-4 flex w-fit items-center gap-1.5 text-[13px] font-semibold text-foreground/55 transition-colors hover:text-[#C49A1E] dark:text-[#9A9A8A]">
+          <Link href="/admin/support" className="mb-4 flex w-fit items-center gap-1.5 text-[13px] font-semibold text-foreground/55 transition-colors hover:text-[#DDAF3B] dark:text-[#9A9A8A]">
             <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" aria-hidden="true"><polyline points="15 18 9 12 15 6" /></svg>
             {t('btn_back')}
           </Link>
@@ -250,7 +250,7 @@ export function AdminSupportDetail({ id }: Props) {
           <div className="flex flex-wrap items-start justify-between gap-4">
             <div className="min-w-0">
               <div className="flex flex-wrap items-center gap-2">
-                <h1 className="text-[18px] font-black text-[#1A1A0A] dark:text-[#F0EDD4]">{ticket.subject}</h1>
+                <h1 className="text-[18px] font-black text-[#001201] dark:text-[#FFF9EC]">{ticket.subject}</h1>
                 <span className={`shrink-0 inline-flex items-center gap-1.5 rounded-full px-2.5 py-0.5 text-[12px] font-bold ${s.badge}`}>
                   <span className={`h-1.5 w-1.5 rounded-full ${s.dot}`} />{t(s.label)}
                 </span>
@@ -269,7 +269,7 @@ export function AdminSupportDetail({ id }: Props) {
             <div className="flex shrink-0 flex-wrap items-center gap-2">
               {!isClosed && (
                 <button type="button" onClick={handleAssignMe} disabled={actionBusy}
-                  className="rounded-[10px] border border-[#C49A1E]/40 px-3 py-2 text-[13px] font-semibold text-[#C49A1E] transition-colors hover:bg-[#C49A1E]/8 disabled:opacity-50">
+                  className="rounded-[10px] border border-[#DDAF3B]/40 px-3 py-2 text-[13px] font-semibold text-[#DDAF3B] transition-colors hover:bg-[#DDAF3B]/8 disabled:opacity-50">
                   {assignedDisplayName ? t('detail_reassign_me') : t('detail_assign_me')}
                 </button>
               )}
@@ -314,20 +314,20 @@ export function AdminSupportDetail({ id }: Props) {
                     <div key={msg.id} className={`flex gap-3 ${isAdmin ? 'flex-row-reverse' : ''}`}>
                       <div className={[
                         'flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-[12px] font-black leading-none',
-                        isAdmin ? 'bg-[#C49A1E] text-[#0C1209]' : 'bg-[#E8E4DC] text-foreground/65 dark:bg-[#1E2E18] dark:text-[#A0A090]',
+                        isAdmin ? 'bg-[#DDAF3B] text-[#0C1209]' : 'bg-[#E8E4DC] text-foreground/65 dark:bg-[#1E2E18] dark:text-[#A0A090]',
                       ].join(' ')}>
                         {nameInitials(authorName)}
                       </div>
                       <div className={[
                         'max-w-[78%] rounded-2xl px-4 py-3',
                         isAdmin
-                          ? 'rounded-tr-sm bg-[#C49A1E]/10 dark:bg-[#C49A1E]/8'
+                          ? 'rounded-tr-sm bg-[#DDAF3B]/10 dark:bg-[#DDAF3B]/8'
                           : 'rounded-tl-sm bg-white shadow-sm ring-1 ring-black/4 dark:bg-[#1A2416] dark:ring-white/4',
                       ].join(' ')}>
-                        <p className={`mb-1 text-[12px] font-black tracking-wide ${isAdmin ? 'text-[#C49A1E]/90' : 'text-foreground/55 dark:text-[#9A9A8A]'}`}>
+                        <p className={`mb-1 text-[12px] font-black tracking-wide ${isAdmin ? 'text-[#DDAF3B]/90' : 'text-foreground/55 dark:text-[#9A9A8A]'}`}>
                           {authorName}
                         </p>
-                        <p className="text-[13px] leading-relaxed text-[#1A1A0A] dark:text-[#F0EDD4]">{msg.content}</p>
+                        <p className="text-[13px] leading-relaxed text-[#001201] dark:text-[#FFF9EC]">{msg.content}</p>
                         <p className="mt-1.5 text-[11px] text-[#BBBBAA] dark:text-[#A0A090]">{formatDateTime(typeof msg.created_at === 'string' ? msg.created_at : new Date(msg.created_at).toISOString())}</p>
                       </div>
                     </div>
@@ -344,7 +344,7 @@ export function AdminSupportDetail({ id }: Props) {
                 </div>
                 <form onSubmit={handleSendReply} className="flex flex-col gap-3 p-5">
                   <textarea id="admin-reply-field" rows={4} maxLength={2000}
-                    className="w-full resize-none rounded-lg border border-[#D8D4C8] bg-[#F7F6F2] px-3 py-2.5 text-[13px] text-[#1A1A0A] outline-none placeholder:text-[#BBBBAA] focus:border-[#C49A1E] focus:bg-white focus:shadow-[0_0_0_3px_rgba(196,154,30,0.12)] dark:border-dark-surface dark:bg-[#0F1A0C] dark:text-[#F0EDD4] dark:focus:border-[#C49A1E]"
+                    className="w-full resize-none rounded-lg border border-[#D8D4C8] bg-[#F7F6F2] px-3 py-2.5 text-[13px] text-[#001201] outline-none placeholder:text-[#BBBBAA] focus:border-[#DDAF3B] focus:bg-white focus:shadow-[0_0_0_3px_rgba(221, 175, 59,0.12)] dark:border-dark-surface dark:bg-[#0F1A0C] dark:text-[#FFF9EC] dark:focus:border-[#DDAF3B]"
                     placeholder={t('field_reply_placeholder')}
                     value={reply}
                     onChange={(e) => setReply(e.target.value)}
@@ -352,7 +352,7 @@ export function AdminSupportDetail({ id }: Props) {
                   <div className="flex items-center justify-between">
                     <span className="text-[12px] text-[#BBBBAA] dark:text-[#A0A090]">{reply.length}/2000</span>
                     <button type="submit" disabled={replySaving || !reply.trim()}
-                      className="rounded-[10px] bg-[#C49A1E] px-6 py-2.5 text-[13px] font-bold text-[#0C1209] transition-opacity hover:opacity-80 disabled:opacity-50">
+                      className="rounded-[10px] bg-[#DDAF3B] px-6 py-2.5 text-[13px] font-bold text-[#0C1209] transition-opacity hover:opacity-80 disabled:opacity-50">
                       {replySaving ? t('btn_sending') : t('btn_send_reply')}
                     </button>
                   </div>

@@ -9,53 +9,53 @@ export function HeroPhoneMockup() {
     <div className="relative">
       {/* Bubble 1 - top left */}
       <div
-        className="absolute top-[-20px] left-[-64px] z-10 min-w-[160px] rounded-[10px] border border-[rgba(200,152,10,0.25)] bg-[#e8e2d4] dark:bg-[#111f0f] px-4 py-3 shadow-[0_16px_40px_rgba(0,0,0,0.25)] dark:shadow-[0_16px_40px_rgba(0,0,0,0.5)] animate-float hidden lg:block"
+        className="absolute top-[-20px] left-[-64px] z-10 min-w-[160px] rounded-[10px] border border-[rgba(221,175,59,0.25)] bg-[#e8e2d4] dark:bg-[#111f0f] px-4 py-3 shadow-[0_16px_40px_rgba(0,0,0,0.25)] dark:shadow-[0_16px_40px_rgba(0,0,0,0.5)] animate-float hidden lg:block"
         style={{ animationDelay: '0s' }}
       >
-        <div className="font-dm-mono mb-1 text-[9px] uppercase tracking-[1px] text-[#4a6a4d] dark:text-[#7a9a7d]">
+        <div className="font-dm-mono mb-1 text-[9px] uppercase tracking-[1px] text-[var(--foreground)] dark:text-[#B0BFB1]">
           {t('bubble_1_label')}
         </div>
-        <div className="font-playfair text-[20px] font-bold leading-none text-[#c8980a]">
+        <div className="font-playfair text-[20px] font-bold leading-none text-[#DDAF3B]">
           {t('bubble_1_val')}
         </div>
-        <div className="mt-1 text-[9px] text-[#4a6a4d] dark:text-[#7a9a7d]">{t('bubble_1_sub')}</div>
+        <div className="mt-1 text-[9px] text-[var(--foreground)] dark:text-[#B0BFB1]">{t('bubble_1_sub')}</div>
       </div>
 
       {/* Bubble 2 - bottom right */}
       <div
-        className="absolute bottom-[120px] right-[-56px] z-10 min-w-[160px] rounded-[10px] border border-[rgba(200,152,10,0.25)] bg-[#e8e2d4] dark:bg-[#111f0f] px-4 py-3 shadow-[0_16px_40px_rgba(0,0,0,0.25)] dark:shadow-[0_16px_40px_rgba(0,0,0,0.5)] animate-float hidden lg:block"
+        className="absolute bottom-[120px] right-[-56px] z-10 min-w-[160px] rounded-[10px] border border-[rgba(221,175,59,0.25)] bg-[#e8e2d4] dark:bg-[#111f0f] px-4 py-3 shadow-[0_16px_40px_rgba(0,0,0,0.25)] dark:shadow-[0_16px_40px_rgba(0,0,0,0.5)] animate-float hidden lg:block"
         style={{ animationDelay: '0.8s' }}
       >
-        <div className="font-dm-mono mb-1 text-[9px] uppercase tracking-[1px] text-[#4a6a4d] dark:text-[#7a9a7d]">
+        <div className="font-dm-mono mb-1 text-[9px] uppercase tracking-[1px] text-[var(--foreground)] dark:text-[#B0BFB1]">
           {t('bubble_2_label')}
         </div>
-        <div className="font-playfair text-[20px] font-bold leading-none text-[#c8980a]">
+        <div className="font-playfair text-[20px] font-bold leading-none text-[#DDAF3B]">
           {t('bubble_2_val')}
         </div>
-        <div className="mt-1 text-[9px] text-[#4a6a4d] dark:text-[#7a9a7d]">{t('bubble_2_sub')}</div>
+        <div className="mt-1 text-[9px] text-[var(--foreground)] dark:text-[#B0BFB1]">{t('bubble_2_sub')}</div>
       </div>
 
       {/* Phone frame */}
-      <div className="relative w-[264px] h-[540px] rounded-[36px] border-2 border-[rgba(200,152,10,0.28)] bg-[#0d1f0f] dark:bg-[#111f0f] overflow-hidden shadow-[0_0_0_8px_rgba(200,152,10,0.05),0_40px_90px_rgba(0,0,0,0.6)] animate-float">
+      <div className="relative w-[264px] h-[540px] rounded-[36px] border-2 border-[rgba(221,175,59,0.28)] bg-[#001201] dark:bg-[#111f0f] overflow-hidden shadow-[0_0_0_8px_rgba(221, 175, 59,0.05),0_40px_90px_rgba(0,0,0,0.6)] animate-float">
         {/* Notch */}
-        <div className="absolute top-0 left-1/2 -translate-x-1/2 z-10 h-5 w-[72px] rounded-b-[12px] bg-[#0d1f0f] dark:bg-[#0d1f0f]" />
+        <div className="absolute top-0 left-1/2 -translate-x-1/2 z-10 h-5 w-[72px] rounded-b-[12px] bg-[#001201] dark:bg-[#001201]" />
 
         {/* Screen content */}
         <div className="flex h-full flex-col gap-2.5 px-3.5 pt-8 pb-3.5">
           {/* Header */}
           <div className="flex items-center justify-between">
-            <span className="font-playfair text-[17px] font-black tracking-[3px] text-[#c8980a]">
+            <span className="font-playfair text-[17px] font-black tracking-[3px] text-[#DDAF3B]">
               Hurryline
             </span>
-            <div className="h-[26px] w-[26px] rounded-full border border-[rgba(200,152,10,0.35)] bg-[#162218]" />
+            <div className="h-[26px] w-[26px] rounded-full border border-[rgba(221,175,59,0.35)] bg-[#162218]" />
           </div>
 
           {/* Search bar */}
-          <div className="flex items-center gap-2 rounded-[8px] border border-[rgba(200,152,10,0.2)] bg-[rgba(245,237,214,0.06)] px-3 py-2">
-            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#7a9a7d" strokeWidth="2">
+          <div className="flex items-center gap-2 rounded-[8px] border border-[rgba(221,175,59,0.2)] bg-[rgba(245,237,214,0.06)] px-3 py-2">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#B0BFB1" strokeWidth="2">
               <circle cx="11" cy="11" r="8" /><path d="M21 21l-4.35-4.35" />
             </svg>
-            <span className="text-[10px] text-[#7a9a7d]">{t('phone_search')}</span>
+            <span className="text-[10px] text-[#B0BFB1]">{t('phone_search')}</span>
           </div>
 
           {/* Station card 1 */}
@@ -112,12 +112,12 @@ function PhoneStationCard({ name, addr, rating, price, open, showBook, bookLabel
         {addr}
       </div>
       <div className="mb-1 text-[9px]">
-        <span className="text-[#c8980a]">{'★'.repeat(5)}</span>
+        <span className="text-[#DDAF3B]">{'★'.repeat(5)}</span>
         <span className="ml-1 text-[rgba(61,42,16,0.55)]">{rating}</span>
       </div>
       <div className="font-rajdhani text-[14px] font-bold text-[#3d2a10]">{price}</div>
       {showBook && (
-        <div className="mt-1.5 rounded-[6px] bg-[#c8980a] py-1.5 text-center text-[9px] font-bold uppercase tracking-[1px] text-[#0d1f0f]">
+        <div className="mt-1.5 rounded-[6px] bg-[#DDAF3B] py-1.5 text-center text-[9px] font-bold uppercase tracking-[1px] text-[#001201]">
           {bookLabel}
         </div>
       )}

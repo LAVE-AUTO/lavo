@@ -11,7 +11,7 @@ export default function NotFoundPage() {
   const t = useTranslations('not_found');
 
   return (
-    <section className="relative min-h-screen flex items-center justify-center bg-[#F8F7F2] dark:bg-[#0d1f0f] transition-colors overflow-hidden">
+    <section className="relative min-h-screen flex items-center justify-center bg-[#F8F7F2] dark:bg-[#001201] transition-colors overflow-hidden">
 
       {/* ── Animated glow orbs ── */}
       <div
@@ -39,10 +39,10 @@ export default function NotFoundPage() {
       <div className="relative z-10 w-full max-w-2xl mx-auto px-6 sm:px-8 py-16 text-center animate-fade-in-up">
 
         {/* Eyebrow */}
-        <div className="font-dm-mono mb-7 inline-flex items-center gap-2.5 text-[11px] uppercase tracking-[3px] text-[#c8980a]">
-          <span className="h-px w-7 bg-[#c8980a]" />
+        <div className="font-dm-mono mb-7 inline-flex items-center gap-2.5 text-[11px] uppercase tracking-[3px] text-[#DDAF3B]">
+          <span className="h-px w-7 bg-[#DDAF3B]" />
           {t('eyebrow')}
-          <span className="h-px w-7 bg-[#c8980a]" />
+          <span className="h-px w-7 bg-[#DDAF3B]" />
         </div>
 
         {/* 404 numerals - gradient + soft glow */}
@@ -50,7 +50,7 @@ export default function NotFoundPage() {
           <p
             className="font-playfair text-[140px] sm:text-[200px] font-black leading-none select-none bg-clip-text text-transparent"
             style={{
-              backgroundImage: 'linear-gradient(180deg, rgba(200,152,10,0.85) 0%, rgba(200,152,10,0.25) 100%)',
+              backgroundImage: 'linear-gradient(180deg, rgba(221, 175, 59,0.85) 0%, rgba(221, 175, 59,0.25) 100%)',
             }}
           >
             {t('title')}
@@ -62,13 +62,13 @@ export default function NotFoundPage() {
         </div>
 
         {/* Heading */}
-        <h1 className="font-playfair text-[32px] sm:text-[44px] font-black leading-[1.1] text-[#1a1a1a] dark:text-[#fef9e7] -mt-4">
+        <h1 className="font-playfair text-[32px] sm:text-[44px] font-black leading-[1.1] text-[#001201] dark:text-[#FFEECA] -mt-4">
           {t('heading')}{' '}
-          <em className="italic text-[#c8980a]">{t('heading_accent')}</em>
+          <em className="italic text-[#DDAF3B]">{t('heading_accent')}</em>
         </h1>
 
         {/* Description */}
-        <p className="mt-5 text-[16px] sm:text-[17px] text-[#4a6a4d] dark:text-[#a0c0a3] leading-[1.75] max-w-xl mx-auto">
+        <p className="mt-5 text-[16px] sm:text-[17px] text-[var(--foreground)] dark:text-[#a0c0a3] leading-[1.75] max-w-xl mx-auto">
           {t('description')}
         </p>
 
@@ -76,7 +76,7 @@ export default function NotFoundPage() {
         <div className="mt-10 flex flex-wrap items-center justify-center gap-3">
           <Link
             href="/"
-            className="btn-shine inline-flex items-center gap-2 px-7 py-3.5 bg-[#c8980a] hover:bg-[#e8b520] rounded-md text-[14px] font-bold uppercase tracking-[1px] text-[#0d1f0f] transition-all duration-300 hover:-translate-y-0.5 hover:shadow-[0_10px_32px_rgba(200,152,10,0.45)]"
+            className="btn-shine inline-flex items-center gap-2 px-7 py-3.5 bg-[#DDAF3B] hover:bg-[#DDAF3B] rounded-md text-[14px] font-bold uppercase tracking-[1px] text-[#001201] transition-all duration-300 hover:-translate-y-0.5 hover:shadow-[0_10px_32px_rgba(221, 175, 59,0.45)]"
           >
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
               <path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z" />
@@ -87,7 +87,7 @@ export default function NotFoundPage() {
 
           <Link
             href="/stations"
-            className="inline-flex items-center gap-2 px-7 py-3.5 border border-[rgba(200,152,10,0.4)] hover:border-[#c8980a] hover:bg-[rgba(200,152,10,0.08)] rounded-md text-[14px] font-semibold uppercase tracking-[0.8px] text-[#c8980a] transition-all duration-300"
+            className="inline-flex items-center gap-2 px-7 py-3.5 border border-[rgba(221,175,59,0.4)] hover:border-[#DDAF3B] hover:bg-[rgba(221,175,59,0.08)] rounded-md text-[14px] font-semibold uppercase tracking-[0.8px] text-[#DDAF3B] transition-all duration-300"
           >
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
               <circle cx="11" cy="11" r="8" />
@@ -98,9 +98,9 @@ export default function NotFoundPage() {
         </div>
 
         {/* Support hint */}
-        <p className="mt-10 pt-7 border-t border-[rgba(200,152,10,0.18)] text-[13px] text-[#4a6a4d] dark:text-[#7a9a7d]">
+        <p className="mt-10 pt-7 border-t border-[rgba(221,175,59,0.18)] text-[13px] text-[var(--foreground)] dark:text-[#B0BFB1]">
           {t('support_hint')}{' '}
-          <Link href="/nous-contacter" className="font-semibold text-[#c8980a] hover:text-[#e8b520] transition-colors">
+          <Link href="/nous-contacter" className="font-semibold text-[#DDAF3B] hover:text-[#DDAF3B] transition-colors">
             {t('support_link')}
           </Link>
         </p>

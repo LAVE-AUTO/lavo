@@ -274,9 +274,9 @@ export default function StationAvailabilityPage() {
   return (
     <div className="flex h-full flex-col">
       {/* Page header */}
-      <div className="flex flex-col gap-3 border-b border-[#C49A1E]/20 px-6 py-4 dark:border-[#C49A1E]/10 md:flex-row md:items-center md:justify-between">
+      <div className="flex flex-col gap-3 border-b border-[#DDAF3B]/20 px-6 py-4 dark:border-[#DDAF3B]/10 md:flex-row md:items-center md:justify-between">
         <div className="min-w-0">
-          <h1 className="text-2xl font-black text-[#1A1A0A] dark:text-[#F0EDD4]">
+          <h1 className="text-2xl font-black text-[#001201] dark:text-[#FFF9EC]">
             {t('availability_title')}
           </h1>
           <p className="mt-0.5 text-sm text-foreground/65 dark:text-[#A0A090]">
@@ -288,7 +288,7 @@ export default function StationAvailabilityPage() {
         <div className="flex shrink-0 flex-wrap items-center gap-2">
           <Link
             href={`/${locale}/station/config?tab=hours`}
-            className="inline-flex items-center gap-1.5 rounded-xl border border-[#E0DCD0] bg-white px-3 py-2 text-[12px] font-bold text-[#5A5A4A] transition-colors hover:border-[#C49A1E]/40 hover:text-[#C49A1E] dark:border-[#243020] dark:bg-[#182214] dark:text-[#9A9A8A]"
+            className="inline-flex items-center gap-1.5 rounded-xl border border-[#E0DCD0] bg-white px-3 py-2 text-[12px] font-bold text-[#5A5A4A] transition-colors hover:border-[#DDAF3B]/40 hover:text-[#DDAF3B] dark:border-[#001A05] dark:bg-[#182214] dark:text-[#9A9A8A]"
           >
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
               <circle cx="12" cy="12" r="9" />
@@ -298,7 +298,7 @@ export default function StationAvailabilityPage() {
           </Link>
           <Link
             href={`/${locale}/station/config?tab=capacity`}
-            className="inline-flex items-center gap-1.5 rounded-xl border border-[#E0DCD0] bg-white px-3 py-2 text-[12px] font-bold text-[#5A5A4A] transition-colors hover:border-[#C49A1E]/40 hover:text-[#C49A1E] dark:border-[#243020] dark:bg-[#182214] dark:text-[#9A9A8A]"
+            className="inline-flex items-center gap-1.5 rounded-xl border border-[#E0DCD0] bg-white px-3 py-2 text-[12px] font-bold text-[#5A5A4A] transition-colors hover:border-[#DDAF3B]/40 hover:text-[#DDAF3B] dark:border-[#001A05] dark:bg-[#182214] dark:text-[#9A9A8A]"
           >
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
               <path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z" />

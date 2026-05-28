@@ -137,10 +137,10 @@ export function AdminTopNav({ onToggleSidebar }: AdminTopNavProps) {
           <Link href="/" aria-label="Hurryline - Accueil">
             {isDark ? (
               <div className="flex items-center gap-2">
-                <div className="shrink-0 rounded-lg border border-[rgba(200,152,10,0.25)] bg-white/95 p-0.5 shadow-sm">
+                <div className="shrink-0 rounded-lg border border-[rgba(221,175,59,0.25)] bg-white/95 p-0.5 shadow-sm">
                   <Image src="/logo/frame2.png" alt="" width={24} height={24} className="h-6 w-6 object-contain" aria-hidden="true" />
                 </div>
-                <span className="font-playfair text-[18px] font-black leading-none tracking-[3px] text-[#C49A1E]">
+                <span className="font-playfair text-[18px] font-black leading-none tracking-[3px] text-[#DDAF3B]">
                   Hurryline
                 </span>
               </div>
@@ -171,7 +171,7 @@ export function AdminTopNav({ onToggleSidebar }: AdminTopNavProps) {
             onClick={openNotifications}
             className="relative flex h-9 w-9 items-center justify-center rounded-full bg-[#EEE9D8] transition-opacity hover:opacity-80 dark:bg-[#182214]"
           >
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#C49A1E" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#DDAF3B" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
               <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9" />
               <path d="M13.73 21a2 2 0 0 1-3.46 0" />
             </svg>
@@ -230,7 +230,7 @@ export function AdminTopNav({ onToggleSidebar }: AdminTopNavProps) {
                             type="button"
                             onClick={() => markOneRead(item.id)}
                             className="text-xs font-semibold hover:underline"
-                            style={{ color: isDark ? '#8ED17C' : '#2E6125' }}
+                            style={{ color: isDark ? '#8ED17C' : '#001A05' }}
                           >
                             {t('notif_mark_read')}
                           </button>
@@ -250,7 +250,7 @@ export function AdminTopNav({ onToggleSidebar }: AdminTopNavProps) {
                     <button
                       type="button"
                       onClick={loadMoreNotifications}
-                      className="w-full rounded-lg border border-[#D8D4C8] px-3 py-2 text-xs font-semibold text-[#6B5A23] transition-colors hover:bg-[#F5F3EE] dark:border-[#243020] dark:text-[#E4C56A] dark:hover:bg-[#1A2318]"
+                      className="w-full rounded-lg border border-[#D8D4C8] px-3 py-2 text-xs font-semibold text-[#6B5A23] transition-colors hover:bg-[#F5F3EE] dark:border-[#001A05] dark:text-[#E4C56A] dark:hover:bg-[#1A2318]"
                     >
                       {t('notif_load_more')}
                     </button>

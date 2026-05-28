@@ -56,7 +56,7 @@ export function HistoryCard({ entry }: Props) {
   const statusKey = `status_${entry.status}` as const;
 
   return (
-    <div className="relative overflow-hidden rounded-2xl bg-[#C8C8B4] transition-shadow hover:shadow-md dark:bg-[#1E2A1A]">
+    <div className="relative overflow-hidden rounded-2xl bg-[#C8C8B4] transition-shadow hover:shadow-md dark:bg-[#001A05]">
       <div className="absolute inset-y-0 left-0 w-1" style={{ background: accent }} />
 
       {/* Clickable row */}
@@ -66,7 +66,7 @@ export function HistoryCard({ entry }: Props) {
         className="flex w-full items-center gap-3 p-4 pl-5 text-left sm:gap-4"
       >
         {/* Date block */}
-        <div className="flex h-11 w-14 shrink-0 flex-col items-center justify-center rounded-lg bg-white/60 dark:bg-[#243020]">
+        <div className="flex h-11 w-14 shrink-0 flex-col items-center justify-center rounded-lg bg-white/60 dark:bg-[#001A05]">
           <span className="text-[9px] font-bold tracking-wide text-[#000717]/40 dark:text-[#FFFFF0]/40">{monthShort}</span>
           <span className="font-mono text-[16px] font-bold leading-none text-foreground">{dayNum}</span>
         </div>
@@ -133,7 +133,7 @@ export function HistoryCard({ entry }: Props) {
             </div>
 
             {/* Financial section */}
-            <div className="mt-3 rounded-xl bg-white/40 p-3 dark:bg-[#243020]/60">
+            <div className="mt-3 rounded-xl bg-white/40 p-3 dark:bg-[#001A05]/60">
               <p className="mb-2 text-[11px] font-bold uppercase tracking-wider text-[#000717]/35 dark:text-[#FFFFF0]/30">
                 {t('col_amount')}
               </p>

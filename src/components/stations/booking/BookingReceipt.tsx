@@ -121,13 +121,13 @@ export function BookingReceipt({
     .meta-value{font-family:"JetBrains Mono","Fira Code",monospace;font-size:12px;color:#2f3b31}
     .section{padding:18px 22px;border-bottom:1px solid #eef2ea}
     .label{font-size:10px;letter-spacing:.1em;text-transform:uppercase;color:#6b7668;font-weight:800;margin-bottom:6px}
-    .value{font-size:15px;font-weight:700;color:#111713}
+    .value{font-size:15px;font-weight:700;color:#001201}
     .muted{font-size:13px;color:#5f6b5d}
     .items{border:1px solid #e1e7dd;border-radius:12px;overflow:hidden}
     .row{display:flex;justify-content:space-between;gap:18px;padding:10px 12px;border-bottom:1px solid #edf2eb}
     .row:last-child{border-bottom:none}
     .row-l{min-width:0}
-    .row-t{font-size:13px;font-weight:700;color:#111713}
+    .row-t{font-size:13px;font-weight:700;color:#001201}
     .row-s{font-size:11px;color:#6b7668;margin-top:2px}
     .row-v{font-family:"JetBrains Mono","Fira Code",monospace;font-size:13px;font-weight:700;color:#1b261f;white-space:nowrap}
     .total{margin-top:14px;background:#f7faf4;border:1px solid #dfe6d9;border-radius:12px;padding:12px 14px;display:flex;justify-content:space-between;align-items:center}
@@ -192,20 +192,20 @@ export function BookingReceipt({
     <div className="w-full max-w-md mx-auto flex flex-col gap-4">
       {/* Receipt panel */}
       <div
-        className="Hurryline-receipt-print bg-[#131914] text-[#F4EFE1] rounded-3xl border border-[#3a4437] shadow-[0_24px_90px_rgba(0,0,0,0.55)] overflow-hidden ring-1 ring-[#55604d]/35"
+        className="Hurryline-receipt-print bg-[#131914] text-[#FFEECA] rounded-3xl border border-[#3a4437] shadow-[0_24px_90px_rgba(0,0,0,0.55)] overflow-hidden ring-1 ring-[#55604d]/35"
       >
         {/* Header band */}
         <div className="bg-gradient-to-r from-[#1b241d] to-[#141c16] px-5 py-4 flex items-center justify-between border-b border-[#323b30]">
           <div>
-            <div className="text-[11px] font-black uppercase tracking-[2px] text-[#8a927f]">
+            <div className="text-[11px] font-black uppercase tracking-[2px] text-[#B0BFB1]">
               Hurryline
             </div>
-            <div className="text-[18px] font-black text-[#F4EFE1] leading-tight">
+            <div className="text-[18px] font-black text-[#FFEECA] leading-tight">
               {t('receipt_title')}
             </div>
           </div>
           <div className="text-right">
-            <div className="text-[10px] font-bold uppercase tracking-wider text-[#8a927f]">
+            <div className="text-[10px] font-bold uppercase tracking-wider text-[#B0BFB1]">
               {t('receipt_issued_at')}
             </div>
             <div className="text-[12px] font-mono text-[#e7dec4]">{issuedAt}</div>
@@ -216,22 +216,22 @@ export function BookingReceipt({
         <div className="px-5 py-4 space-y-4">
           {/* Station */}
           <div>
-            <div className="text-[11px] font-black uppercase tracking-wider text-[#9ea48f] mb-1">
+            <div className="text-[11px] font-black uppercase tracking-wider text-[#B0BFB1] mb-1">
               {t('receipt_station')}
             </div>
-            <div className="text-[15px] font-bold text-[#F4EFE1]">{station.name}</div>
-            <div className="text-[13px] text-[#c7cdb8]">{station.address}, {station.city}</div>
+            <div className="text-[15px] font-bold text-[#FFEECA]">{station.name}</div>
+            <div className="text-[13px] text-[#FFEECA]">{station.address}, {station.city}</div>
           </div>
 
           {/* Arrival */}
           <div>
-            <div className="text-[11px] font-black uppercase tracking-wider text-[#9ea48f] mb-1">
+            <div className="text-[11px] font-black uppercase tracking-wider text-[#B0BFB1] mb-1">
               {t('receipt_arrival')}
             </div>
-            <div className="text-[14px] font-semibold text-[#F4EFE1]">{arrivalLabel}</div>
+            <div className="text-[14px] font-semibold text-[#FFEECA]">{arrivalLabel}</div>
             {arrivalMode === 'queue_later' && queuePosition != null && (
-              <div className="text-[13px] text-[#c7cdb8] mt-0.5">
-                {t('result_queue_position_label')} <span className="font-bold text-[#E4C06A]">#{queuePosition}</span>
+              <div className="text-[13px] text-[#FFEECA] mt-0.5">
+                {t('result_queue_position_label')} <span className="font-bold text-[#DDAF3B]">#{queuePosition}</span>
               </div>
             )}
           </div>
@@ -240,28 +240,28 @@ export function BookingReceipt({
           <div className="border-t border-dashed border-[#394236] pt-3 space-y-1.5">
             <div className="flex items-baseline justify-between gap-3">
               <div className="flex-1 min-w-0">
-                <div className="text-[14px] font-bold truncate text-[#F4EFE1]">{serviceName}</div>
-                {formatLabel && <div className="text-[12px] text-[#9ea48f]">{formatLabel}</div>}
+                <div className="text-[14px] font-bold truncate text-[#FFEECA]">{serviceName}</div>
+                {formatLabel && <div className="text-[12px] text-[#B0BFB1]">{formatLabel}</div>}
               </div>
-              <div className="text-[14px] font-mono shrink-0 text-[#F4EFE1]">${servicePrice.toLocaleString()}</div>
+              <div className="text-[14px] font-mono shrink-0 text-[#FFEECA]">${servicePrice.toLocaleString()}</div>
             </div>
 
             {extras.map((ex) => (
-              <div key={ex.id} className="flex items-baseline justify-between gap-3 text-[13px] text-[#c7cdb8]">
+              <div key={ex.id} className="flex items-baseline justify-between gap-3 text-[13px] text-[#FFEECA]">
                 <span className="truncate">+ {ex.name}</span>
                 <span className="font-mono shrink-0">${ex.price.toLocaleString()}</span>
               </div>
             ))}
 
             {surchargeAmount > 0 && (
-              <div className="flex items-baseline justify-between gap-3 text-[13px] text-[#c7cdb8]">
+              <div className="flex items-baseline justify-between gap-3 text-[13px] text-[#FFEECA]">
                 <span>{t('receipt_reservation_surcharge')}</span>
                 <span className="font-mono shrink-0">${surchargeAmount.toLocaleString()}</span>
               </div>
             )}
 
             {extrasTotal > 0 || surchargeAmount > 0 ? (
-              <div className="flex items-baseline justify-between gap-3 text-[12px] text-[#9ea48f] pt-1">
+              <div className="flex items-baseline justify-between gap-3 text-[12px] text-[#B0BFB1] pt-1">
                 <span>{t('receipt_subtotal')}</span>
                 <span className="font-mono">${(servicePrice + extrasTotal + surchargeAmount).toLocaleString()}</span>
               </div>
@@ -273,12 +273,12 @@ export function BookingReceipt({
             <span className="text-[13px] font-black uppercase tracking-wider text-[#a7ad98]">
               {t('receipt_total')}
             </span>
-            <span className="text-[20px] font-black text-[#E4C06A]">${grandTotal.toLocaleString()}</span>
+            <span className="text-[20px] font-black text-[#DDAF3B]">${grandTotal.toLocaleString()}</span>
           </div>
 
           {/* Ticket code */}
           <div className="bg-[#0e130f] border border-[#384133] text-white rounded-2xl px-4 py-4 shadow-[inset_0_1px_0_rgba(255,255,255,0.04)]">
-            <div className="text-[10px] font-black uppercase tracking-[2px] text-[#E4C06A] mb-1.5">
+            <div className="text-[10px] font-black uppercase tracking-[2px] text-[#DDAF3B] mb-1.5">
               {t('receipt_ticket_label')}
             </div>
             <div className="text-[34px] font-black font-mono tracking-[0.35em] text-white leading-none mb-2">
@@ -291,7 +291,7 @@ export function BookingReceipt({
         </div>
 
         {/* Footer */}
-        <div className="px-5 py-3 bg-[#0d120f] border-t border-[#2a3128] text-[11px] text-[#8a927f] text-center">
+        <div className="px-5 py-3 bg-[#0d120f] border-t border-[#001A05] text-[11px] text-[#B0BFB1] text-center">
           {t('receipt_footer')}
         </div>
       </div>
@@ -301,7 +301,7 @@ export function BookingReceipt({
         <button
           type="button"
           onClick={handleDownload}
-          className="flex-1 inline-flex items-center justify-center gap-2 py-3 bg-[#E4C06A] hover:bg-[#d8b35d] rounded-2xl text-[14px] font-black text-[#111713] transition-colors cursor-pointer"
+          className="flex-1 inline-flex items-center justify-center gap-2 py-3 bg-[#DDAF3B] hover:bg-[#d8b35d] rounded-2xl text-[14px] font-black text-[#001201] transition-colors cursor-pointer"
         >
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
             <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4" />
@@ -313,7 +313,7 @@ export function BookingReceipt({
         <button
           type="button"
           onClick={handleCopyCode}
-          className="flex-1 inline-flex items-center justify-center gap-2 py-3 border border-[#404a3d] rounded-2xl text-[14px] font-bold text-[#E4C06A] hover:bg-[#181f1a] transition-colors cursor-pointer"
+          className="flex-1 inline-flex items-center justify-center gap-2 py-3 border border-[#404a3d] rounded-2xl text-[14px] font-bold text-[#DDAF3B] hover:bg-[#181f1a] transition-colors cursor-pointer"
         >
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
             <rect x="9" y="9" width="13" height="13" rx="2" ry="2" />

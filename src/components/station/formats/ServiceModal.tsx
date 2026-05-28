@@ -376,13 +376,13 @@ export function ServiceModal({ service, vehicleFormats, availableExtras, onClose
       >
         {/* Header */}
         <div className="flex items-center justify-between border-b border-[#F0EDE4] px-5 py-4 dark:border-[#1A2A14]">
-          <span className="text-[16px] font-black text-[#1A1A0A] dark:text-[#F0EDD4]">
+          <span className="text-[16px] font-black text-[#001201] dark:text-[#FFF9EC]">
             {isEdit ? t('modal_title_edit') : t('modal_title_new')}
           </span>
           <button
             type="button"
             onClick={onClose}
-            className="flex h-8 w-8 items-center justify-center rounded-full text-[#999] transition-colors hover:bg-[#F0EDE4] hover:text-[#333] dark:text-[#5A5A4A] dark:hover:bg-[#243020] dark:hover:text-[#F0EDD4]"
+            className="flex h-8 w-8 items-center justify-center rounded-full text-[#999] transition-colors hover:bg-[#F0EDE4] hover:text-[#333] dark:text-[#5A5A4A] dark:hover:bg-[#001A05] dark:hover:text-[#FFF9EC]"
             aria-label={t('aria_close')}
           >
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.5}>
@@ -397,7 +397,7 @@ export function ServiceModal({ service, vehicleFormats, availableExtras, onClose
             <div className="space-y-4">
               {isEdit && (
                 <div className="rounded-[10px] border border-[#2A3A20] bg-[#1E2A18] px-3 py-2">
-                  <div className="text-[14px] font-black text-[#F0EDD4]">{name || t('placeholder_name')}</div>
+                  <div className="text-[14px] font-black text-[#FFF9EC]">{name || t('placeholder_name')}</div>
                   <div className="text-[11px] text-[#9A9A8A]">{t('preview_category')}: {t(`cat_${category}`)}</div>
                 </div>
               )}
@@ -425,8 +425,8 @@ export function ServiceModal({ service, vehicleFormats, availableExtras, onClose
                       onClick={() => setCategory(key)}
                       className={`rounded-[8px] px-3.5 py-2 text-[12px] font-bold transition-all ${
                         category === key
-                          ? 'bg-[#C49A1E] text-[#0C1209]'
-                          : 'bg-[#1E2A18] text-[#9A9A8A] hover:text-[#F0EDD4] dark:bg-[#1E2A18] dark:text-[#9A9A8A]'
+                          ? 'bg-[#DDAF3B] text-[#0C1209]'
+                          : 'bg-[#1E2A18] text-[#9A9A8A] hover:text-[#FFF9EC] dark:bg-[#1E2A18] dark:text-[#9A9A8A]'
                       }`}
                     >
                       {t(`cat_${key}`)}
@@ -446,8 +446,8 @@ export function ServiceModal({ service, vehicleFormats, availableExtras, onClose
                         onClick={() => setServiceType(key)}
                         className={`rounded-[8px] px-3.5 py-2 text-[12px] font-bold transition-all ${
                           serviceType === key
-                            ? 'bg-[#C49A1E] text-[#0C1209]'
-                            : 'bg-[#1E2A18] text-[#9A9A8A] hover:text-[#F0EDD4] dark:bg-[#1E2A18] dark:text-[#9A9A8A]'
+                            ? 'bg-[#DDAF3B] text-[#0C1209]'
+                            : 'bg-[#1E2A18] text-[#9A9A8A] hover:text-[#FFF9EC] dark:bg-[#1E2A18] dark:text-[#9A9A8A]'
                         }`}
                       >
                         {t(`type_${key}`)}
@@ -458,8 +458,8 @@ export function ServiceModal({ service, vehicleFormats, availableExtras, onClose
               )}
 
               {!isEdit && showTypeSelector && (
-              <div className="rounded-[10px] border border-[#F0EDE4] bg-[#FAFAF7] p-3 dark:border-[#243020] dark:bg-[#0F1A0C]">
-                <div className="mb-1 text-[11px] font-black tracking-[.08em] text-[#C49A1E] uppercase">
+              <div className="rounded-[10px] border border-[#F0EDE4] bg-[#FAFAF7] p-3 dark:border-[#001A05] dark:bg-[#0F1A0C]">
+                <div className="mb-1 text-[11px] font-black tracking-[.08em] text-[#DDAF3B] uppercase">
                   {category === 'hand_wash' ? t('field_type_handwash') : t('field_type')}
                 </div>
                 <p className="text-[12px] text-foreground/55 dark:text-[#9A9A8A]">
@@ -473,8 +473,8 @@ export function ServiceModal({ service, vehicleFormats, availableExtras, onClose
               )}
 
               {isCreateAutomatic && (
-              <div className="rounded-[10px] border border-[#F0EDE4] bg-[#FAFAF7] p-3 dark:border-[#243020] dark:bg-[#0F1A0C]">
-                <div className="mb-1 text-[11px] font-black tracking-[.08em] text-[#C49A1E] uppercase">{t('cat_automatic')}</div>
+              <div className="rounded-[10px] border border-[#F0EDE4] bg-[#FAFAF7] p-3 dark:border-[#001A05] dark:bg-[#0F1A0C]">
+                <div className="mb-1 text-[11px] font-black tracking-[.08em] text-[#DDAF3B] uppercase">{t('cat_automatic')}</div>
                 <p className="text-[12px] text-foreground/55 dark:text-[#9A9A8A]">
                   {t('type_hint_exterior')}
                 </p>
@@ -482,8 +482,8 @@ export function ServiceModal({ service, vehicleFormats, availableExtras, onClose
               )}
 
               {isCreateSelfService && (
-              <div className="rounded-[10px] border border-[#F0EDE4] bg-[#FAFAF7] p-3 dark:border-[#243020] dark:bg-[#0F1A0C]">
-                <div className="mb-1 text-[11px] font-black tracking-[.08em] text-[#C49A1E] uppercase">{t('cat_self_service')}</div>
+              <div className="rounded-[10px] border border-[#F0EDE4] bg-[#FAFAF7] p-3 dark:border-[#001A05] dark:bg-[#0F1A0C]">
+                <div className="mb-1 text-[11px] font-black tracking-[.08em] text-[#DDAF3B] uppercase">{t('cat_self_service')}</div>
                 <p className="text-[12px] text-foreground/55 dark:text-[#9A9A8A]">
                   {t('type_hint_exterior')}
                 </p>
@@ -530,13 +530,13 @@ export function ServiceModal({ service, vehicleFormats, availableExtras, onClose
               )}
 
               {showAutomaticPackagesSection && (
-                <div className="flex flex-col gap-2 rounded-[10px] border border-[#F0EDE4] bg-[#FAFAF7] p-3 dark:border-[#243020] dark:bg-[#0F1A0C]">
+                <div className="flex flex-col gap-2 rounded-[10px] border border-[#F0EDE4] bg-[#FAFAF7] p-3 dark:border-[#001A05] dark:bg-[#0F1A0C]">
                   <div className="flex items-center justify-between gap-2">
-                    <span className="text-[11px] font-black tracking-[.08em] text-[#C49A1E] uppercase">{t('automatic_packages_label')}</span>
+                    <span className="text-[11px] font-black tracking-[.08em] text-[#DDAF3B] uppercase">{t('automatic_packages_label')}</span>
                     <button
                       type="button"
                       onClick={addAutomaticPackage}
-                      className="rounded-[8px] border border-[#C49A1E]/50 px-2.5 py-1 text-[11px] font-bold text-[#C49A1E] transition-colors hover:bg-[#FDF3D8] dark:hover:bg-[#2A1E08]"
+                      className="rounded-[8px] border border-[#DDAF3B]/50 px-2.5 py-1 text-[11px] font-bold text-[#DDAF3B] transition-colors hover:bg-[#FDF3D8] dark:hover:bg-[#2A1E08]"
                     >
                       {t('automatic_add_package')}
                     </button>
@@ -546,7 +546,7 @@ export function ServiceModal({ service, vehicleFormats, availableExtras, onClose
                   ) : (
                     <div className="space-y-2">
                       {automaticPackages.map((pkg) => (
-                        <div key={pkg.id} className="rounded-xl border border-[#E8E4DC] bg-white p-3 dark:border-[#243020] dark:bg-[#182214]">
+                        <div key={pkg.id} className="rounded-xl border border-[#E8E4DC] bg-white p-3 dark:border-[#001A05] dark:bg-[#182214]">
                           <div className="mb-3 grid grid-cols-1 gap-2 sm:grid-cols-3">
                             <TextField
                               value={pkg.name}
@@ -605,7 +605,7 @@ export function ServiceModal({ service, vehicleFormats, availableExtras, onClose
 
               {showFormatSection && (
               <div className="flex flex-col gap-1.5">
-                <label className="text-[11px] font-black uppercase tracking-[1.5px] text-[#C49A1E]">
+                <label className="text-[11px] font-black uppercase tracking-[1.5px] text-[#DDAF3B]">
                   {t('field_vehicle_formats')}
                 </label>
                 {vehicleFormats.length === 0 ? (
@@ -623,12 +623,12 @@ export function ServiceModal({ service, vehicleFormats, availableExtras, onClose
                           onClick={() => toggleFormat(format.id)}
                           className={`flex items-center gap-2 rounded-[8px] border px-3 py-2.5 text-left text-[12px] font-semibold transition-all ${
                             selected
-                              ? 'border-[#C49A1E] bg-[#FDF3D8] text-[#C49A1E] dark:bg-[#2A1E08]'
-                              : 'border-[#D8D4C8] bg-[#F7F6F2] text-[#5A5A4A] dark:border-[#243020] dark:bg-[#182214] dark:text-[#9A9A8A]'
+                              ? 'border-[#DDAF3B] bg-[#FDF3D8] text-[#DDAF3B] dark:bg-[#2A1E08]'
+                              : 'border-[#D8D4C8] bg-[#F7F6F2] text-[#5A5A4A] dark:border-[#001A05] dark:bg-[#182214] dark:text-[#9A9A8A]'
                           }`}
                         >
                           <span
-                            className={`h-3.5 w-3.5 shrink-0 rounded border ${selected ? 'border-[#C49A1E] bg-[#C49A1E]' : 'border-[#AAA] bg-transparent'}`}
+                            className={`h-3.5 w-3.5 shrink-0 rounded border ${selected ? 'border-[#DDAF3B] bg-[#DDAF3B]' : 'border-[#AAA] bg-transparent'}`}
                             aria-hidden="true"
                           />
                           <span>{format.label}</span>
@@ -642,7 +642,7 @@ export function ServiceModal({ service, vehicleFormats, availableExtras, onClose
 
               {isEdit && showFormatSection && (
               <div className="flex flex-col gap-2">
-                <span className="text-[11px] font-black tracking-[.08em] text-[#C49A1E] uppercase">
+                <span className="text-[11px] font-black tracking-[.08em] text-[#DDAF3B] uppercase">
                   {t('section_vehicle_pricing')}
                 </span>
                 <ServiceVehicleRows
@@ -660,8 +660,8 @@ export function ServiceModal({ service, vehicleFormats, availableExtras, onClose
               )}
 
               {showExtrasSection && (
-              <div className="flex flex-col gap-2 rounded-[10px] border border-[#F0EDE4] bg-[#FAFAF7] p-3 dark:border-[#243020] dark:bg-[#0F1A0C]">
-                <span className="text-[11px] font-black tracking-[.08em] text-[#C49A1E] uppercase">
+              <div className="flex flex-col gap-2 rounded-[10px] border border-[#F0EDE4] bg-[#FAFAF7] p-3 dark:border-[#001A05] dark:bg-[#0F1A0C]">
+                <span className="text-[11px] font-black tracking-[.08em] text-[#DDAF3B] uppercase">
                   {t('extras_label')}
                 </span>
                 {extrasByType.length === 0 ? (
@@ -677,12 +677,12 @@ export function ServiceModal({ service, vehicleFormats, availableExtras, onClose
                           onClick={() => toggleExtra(extra.id)}
                           className={`flex items-center justify-between rounded-[8px] border px-3 py-2 text-left text-[12px] transition-all ${
                             selected
-                              ? 'border-[#C49A1E] bg-[#FDF3D8] dark:bg-[#2A1E08]'
-                              : 'border-[#D8D4C8] bg-[#F7F6F2] dark:border-[#243020] dark:bg-[#182214]'
+                              ? 'border-[#DDAF3B] bg-[#FDF3D8] dark:bg-[#2A1E08]'
+                              : 'border-[#D8D4C8] bg-[#F7F6F2] dark:border-[#001A05] dark:bg-[#182214]'
                           }`}
                         >
-                          <span className="font-semibold text-[#1A1A0A] dark:text-[#F0EDD4]">{extra.label}</span>
-                          <span className="font-mono text-[11px] font-bold text-[#C49A1E]">+{extra.price}$</span>
+                          <span className="font-semibold text-[#001201] dark:text-[#FFF9EC]">{extra.label}</span>
+                          <span className="font-mono text-[11px] font-bold text-[#DDAF3B]">+{extra.price}$</span>
                         </button>
                       );
                     })}
@@ -692,7 +692,7 @@ export function ServiceModal({ service, vehicleFormats, availableExtras, onClose
               )}
 
               <div className="flex items-center justify-between rounded-[10px] border border-[#2A3A20] bg-[#1E2A18] px-4 py-3">
-                <span className="text-[13px] font-semibold text-[#F0EDD4]">{t('toggle_active')}</span>
+                <span className="text-[13px] font-semibold text-[#FFF9EC]">{t('toggle_active')}</span>
                 <button
                   type="button"
                   onClick={() => setIsActive(!isActive)}
@@ -710,7 +710,7 @@ export function ServiceModal({ service, vehicleFormats, availableExtras, onClose
             </div>
 
             {/* Right preview */}
-            <aside className="rounded-[12px] bg-[#3A2A12] p-4 text-[#F0EDD4]">
+            <aside className="rounded-[12px] bg-[#3A2A12] p-4 text-[#FFF9EC]">
               <div className="mb-3 text-[13px] font-black">{t('preview_title')}</div>
               <div className="rounded-[10px] bg-[#4A3418] p-3">
                 <div className="text-[15px] font-black">{isEdit ? (name || t('placeholder_name')) : computedCreateName}</div>
@@ -718,7 +718,7 @@ export function ServiceModal({ service, vehicleFormats, availableExtras, onClose
                 <div className="mt-3 space-y-2 text-[12px]">
                   <div className="flex items-center justify-between border-b border-[#5A4630] pb-1">
                     <span className="text-[#B7AE8A]">{t('preview_price')}</span>
-                    <span className="font-bold text-[#C49A1E]">
+                    <span className="font-bold text-[#DDAF3B]">
                       {!isEdit ? `${basePrice || '--'}$` : (minPrice !== null ? (minPrice === maxPrice ? `${minPrice}$` : `${minPrice}$ - ${maxPrice}$`) : '--')}
                     </span>
                   </div>
@@ -761,14 +761,14 @@ export function ServiceModal({ service, vehicleFormats, availableExtras, onClose
             <button
               type="button"
               onClick={onClose}
-              className="rounded-[10px] border border-[#D8D4C8] px-4 py-2 text-[13px] font-medium text-[#5A5A4A] transition-opacity hover:opacity-70 dark:border-[#243020] dark:text-[#9A9A8A]"
+              className="rounded-[10px] border border-[#D8D4C8] px-4 py-2 text-[13px] font-medium text-[#5A5A4A] transition-opacity hover:opacity-70 dark:border-[#001A05] dark:text-[#9A9A8A]"
             >
               {t('btn_cancel')}
             </button>
             <button
               type="submit"
               disabled={saving || (isEdit && !name.trim())}
-              className="rounded-[10px] bg-[#C49A1E] px-5 py-2 text-[13px] font-bold text-[#0C1209] transition-opacity hover:opacity-80 disabled:opacity-50"
+              className="rounded-[10px] bg-[#DDAF3B] px-5 py-2 text-[13px] font-bold text-[#0C1209] transition-opacity hover:opacity-80 disabled:opacity-50"
             >
               {saving ? t('btn_saving') : t('btn_save')}
             </button>

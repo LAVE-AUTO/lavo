@@ -32,7 +32,7 @@ export function TextField({
   const inputProps = type === 'number' ? { ...rest, step: undefined } : rest;
   const borderColor = invalid
     ? 'border-[#EF4444]/60 focus-within:border-[#EF4444] focus-within:shadow-[0_0_0_3px_rgba(239,68,68,0.15)]'
-    : 'border-[#E0DCD0] hover:border-[#D0C8B0] focus-within:border-[#C49A1E] focus-within:shadow-[0_0_0_3px_rgba(196,154,30,0.12)] dark:border-[#243020] dark:hover:border-[#2E3C2A]';
+    : 'border-[#E0DCD0] hover:border-[#D0C8B0] focus-within:border-[#DDAF3B] focus-within:shadow-[0_0_0_3px_rgba(221, 175, 59,0.12)] dark:border-[#001A05] dark:hover:border-[#2E3C2A]';
 
   const disabledClasses = disabled
     ? 'cursor-not-allowed border-[#E8E4DC] opacity-60 dark:border-[#1A2A14]'
@@ -44,7 +44,7 @@ export function TextField({
     >
       {prefixIcon && (
         <span
-          className="flex shrink-0 items-center pl-3 text-[#AAAAAA] transition-colors group-focus-within:text-[#C49A1E] dark:text-[#5A5A4A]"
+          className="flex shrink-0 items-center pl-3 text-[#AAAAAA] transition-colors group-focus-within:text-[#DDAF3B] dark:text-[#5A5A4A]"
           aria-hidden="true"
         >
           {prefixIcon}
@@ -60,7 +60,7 @@ export function TextField({
         value={value}
         onChange={(e) => onChange(e.target.value)}
         disabled={disabled}
-        className={`flex-1 bg-transparent px-3 py-2.5 text-[13px] text-[#1A1A0A] outline-none placeholder:text-[#BBBBAA] disabled:cursor-not-allowed dark:text-[#F0EDD4] dark:placeholder:text-[#4A4A3A] ${inputClassName}`}
+        className={`flex-1 bg-transparent px-3 py-2.5 text-[13px] text-[#001201] outline-none placeholder:text-[#BBBBAA] disabled:cursor-not-allowed dark:text-[#FFF9EC] dark:placeholder:text-[#4A4A3A] ${inputClassName}`}
         {...inputProps}
       />
       {suffix && (
