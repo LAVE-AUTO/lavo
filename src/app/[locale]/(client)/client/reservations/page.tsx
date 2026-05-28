@@ -13,21 +13,19 @@ type Tab = 'reservations' | 'queue';
 type ReservationStatus = 'confirmed' | 'in_progress' | 'completed' | 'cancelled' | 'pending_payment' | 'pending';
 type QueueStatus = 'waiting' | 'in_progress' | 'completed' | 'cancelled';
 
-/* Service category → localized display label. Mirrors the labels used on
- * the station detail page so users see the same wording end-to-end. */
+/* Service category → localized display label. The three values mirror the
+ * DB enum on station_services.category and match the tab strip on
+ * /stations/[id] so users see the exact same wording end-to-end. */
 const SERVICE_CATEGORY_LABELS: Record<string, { fr: string; en: string }> = {
-  hand_wash:      { fr: 'Lavage à la main',  en: 'Hand wash' },
-  automatic_wash: { fr: 'Lavage automatique', en: 'Auto wash' },
-  automatic:      { fr: 'Lavage automatique', en: 'Auto wash' },
-  self_service:   { fr: 'Self-service',      en: 'Self-service' },
-  exterior_wash:  { fr: 'Lavage extérieur',  en: 'Exterior wash' },
-  detailing:      { fr: 'Détailing',         en: 'Detailing' },
+  hand_wash:    { fr: 'Lavage à la main',  en: 'Hand wash' },
+  automatic:    { fr: 'Lavage automatique', en: 'Automatic wash' },
+  self_service: { fr: 'Self-service',      en: 'Self-service' },
 };
 
 function serviceCategoryLabel(category: string | null, locale: string): string | null {
   if (!category) return null;
   const entry = SERVICE_CATEGORY_LABELS[category];
-  if (!entry) return category;
+  if (!entry) return null;
   return locale === 'en' ? entry.en : entry.fr;
 }
 
@@ -732,7 +730,7 @@ function ReservationCard({
           <div className="flex-1 min-w-0">
             <div className="flex items-start justify-between gap-2">
               <h3 className="text-[15px] font-bold text-foreground leading-tight truncate">
-                {r.serviceName ?? serviceCategoryLabel(r.serviceCategory, locale) ?? t('service_unknown')}
+                {serviceCategoryLabel(r.serviceCategory, locale) ?? r.serviceName ?? t('service_unknown')}
               </h3>
               <span className={`shrink-0 px-2 py-0.5 rounded-full text-[11px] font-bold ${statusColors[displayStatus(r.status)] || 'bg-gray-200 text-gray-600'}`}>
                 {t(`status_${displayStatus(r.status)}`)}
@@ -1038,7 +1036,7 @@ function QueueCard({
           <div className="flex-1 min-w-0">
             <div className="flex items-start justify-between gap-2">
               <h3 className="text-[15px] font-bold text-foreground leading-tight truncate">
-                {q.serviceName ?? serviceCategoryLabel(q.serviceCategory, locale) ?? t('service_unknown')}
+                {serviceCategoryLabel(q.serviceCategory, locale) ?? q.serviceName ?? t('service_unknown')}
               </h3>
               <span className={`shrink-0 px-2 py-0.5 rounded-full text-[11px] font-bold ${statusBadgeClass}`}>
                 {statusLabel}

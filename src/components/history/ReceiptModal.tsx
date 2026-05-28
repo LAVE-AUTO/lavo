@@ -19,21 +19,19 @@ interface HistoryReservation {
   createdAt: string;
 }
 
-/* Mirrors the labels used on station detail + /client/reservations so the
- * client sees consistent wording across screens. */
+/* The three DB enum values for station_services.category. Matches the
+ * tab strip on /stations/[id] and the labels used on /client/reservations
+ * so the client sees the same wording everywhere. */
 const RECEIPT_CATEGORY_LABELS: Record<string, { fr: string; en: string }> = {
-  hand_wash:      { fr: 'Lavage à la main',  en: 'Hand wash' },
-  automatic_wash: { fr: 'Lavage automatique', en: 'Auto wash' },
-  automatic:      { fr: 'Lavage automatique', en: 'Auto wash' },
-  self_service:   { fr: 'Self-service',      en: 'Self-service' },
-  exterior_wash:  { fr: 'Lavage extérieur',  en: 'Exterior wash' },
-  detailing:      { fr: 'Détailing',         en: 'Detailing' },
+  hand_wash:    { fr: 'Lavage à la main',  en: 'Hand wash' },
+  automatic:    { fr: 'Lavage automatique', en: 'Automatic wash' },
+  self_service: { fr: 'Self-service',      en: 'Self-service' },
 };
 
 function receiptCategoryLabel(category: string | null, locale: string): string | null {
   if (!category) return null;
   const entry = RECEIPT_CATEGORY_LABELS[category];
-  if (!entry) return category;
+  if (!entry) return null;
   return locale === 'en' ? entry.en : entry.fr;
 }
 
@@ -90,14 +88,15 @@ export function ReceiptModal({ entry: e, locale, onClose }: ReceiptModalProps) {
    * trace a record from the prefix shown here. */
   const shortRef = e.id.slice(0, 8).toUpperCase();
   const typeLabel = e.entryType === 'queue' ? t('receipt_entry_type_queue') : t('receipt_entry_type_reservation');
-  /* Service line shows the merchant's free-form service name first
-   * (e.g. "Lavage Premium"). Legacy entries with no service_id fall
-   * back to the category label, then to a generic placeholder. The
+  /* Service line shows the category (Lavage à la main / Lavage
+   * automatique / Self-service), matching the tab strip on the station
+   * detail screen. Falls back to the merchant-set service name when
+   * the category enum is missing, then to a generic placeholder. The
    * vehicle format stays on a secondary line so the receipt still
-   * carries both pieces of context without burying the service. */
+   * carries both pieces of context. */
   const serviceLabel =
-    e.serviceName
-    ?? receiptCategoryLabel(e.serviceCategory, locale)
+    receiptCategoryLabel(e.serviceCategory, locale)
+    ?? e.serviceName
     ?? t('receipt_service_generic');
   const vehicleLine = e.vehicleFormatLabel ?? t('receipt_service_unknown');
 

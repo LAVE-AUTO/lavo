@@ -17,12 +17,11 @@ interface StationServicesSectionProps {
   disabledBook?: boolean;
 }
 
+/* Aligned on the DB enum (station_services.category): three values only. */
 const CATEGORY_LABELS: Record<string, { fr: string; en: string }> = {
-  hand_wash:      { fr: 'Lavage à la main',  en: 'Hand wash' },
-  automatic_wash: { fr: 'Lavage automatique', en: 'Auto wash' },
-  self_service:   { fr: 'Self-service',      en: 'Self-service' },
-  exterior_wash:  { fr: 'Lavage extérieur',  en: 'Exterior wash' },
-  detailing:      { fr: 'Détailing',         en: 'Detailing' },
+  hand_wash:    { fr: 'Lavage à la main',  en: 'Hand wash' },
+  automatic:    { fr: 'Lavage automatique', en: 'Automatic wash' },
+  self_service: { fr: 'Self-service',      en: 'Self-service' },
 };
 
 function categoryLabel(cat: string, locale: 'fr' | 'en'): string {
