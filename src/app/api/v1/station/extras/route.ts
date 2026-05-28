@@ -34,7 +34,9 @@ export async function GET(request: Request) {
     const auth = await requireRole(request, 'station');
     if (auth instanceof Response) return auth;
     const { searchParams } = new URL(request.url);
-    const parsed = querySchema.parse(Object.fromEntries(searchParams));
+    const parsedQuery = querySchema.safeParse(Object.fromEntries(searchParams));
+    if (!parsedQuery.success) return Response.json({ error: 'Validation failed' }, { status: 400 });
+    const parsed = parsedQuery.data;
     const extras = await getExtrasByStationUser(auth.sub);
     const sorted = [...extras].sort((a, b) => {
       const ts = new Date(b.created_at).getTime() - new Date(a.created_at).getTime();
