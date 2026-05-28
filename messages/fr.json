@@ -977,6 +977,7 @@
         "queue_waiting": "En attente",
         "queue_in_progress": "En cours",
         "queue_position": "Position : {position}",
+        "service_unknown": "Service",
         "not_found": "Réservation introuvable",
         "back_to_coupons": "Retour aux réservations",
         "detail_summary": "Récapitulatif",

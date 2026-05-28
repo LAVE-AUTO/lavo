@@ -696,7 +696,7 @@ function ReservationCard({
           <div className="flex-1 min-w-0">
             <div className="flex items-start justify-between gap-2">
               <h3 className="text-[15px] font-bold text-[#0A0A14] dark:text-white leading-tight truncate">
-                {r.stationName}
+                {r.forfaitName !== '-' ? r.forfaitName : t('service_unknown')}
               </h3>
               <span className={`shrink-0 px-2 py-0.5 rounded-full text-[11px] font-bold ${statusColors[displayStatus(r.status)] || 'bg-gray-200 text-gray-600'}`}>
                 {t(`status_${displayStatus(r.status)}`)}
@@ -704,7 +704,7 @@ function ReservationCard({
             </div>
 
             <p className="text-[13px] text-[#666] dark:text-[#B0B0A0] mt-0.5 truncate">
-              {r.forfaitName}
+              {r.stationName}
             </p>
 
             <div className="flex items-center gap-3 mt-2 text-[13px]">
@@ -1002,14 +1002,14 @@ function QueueCard({
           <div className="flex-1 min-w-0">
             <div className="flex items-start justify-between gap-2">
               <h3 className="text-[15px] font-bold text-[#0A0A14] dark:text-white leading-tight truncate">
-                {q.stationName}
+                {q.forfaitName !== '-' ? q.forfaitName : t('service_unknown')}
               </h3>
               <span className={`shrink-0 px-2 py-0.5 rounded-full text-[11px] font-bold ${statusBadgeClass}`}>
                 {statusLabel}
               </span>
             </div>
 
-            <p className="text-[13px] text-[#666] dark:text-[#B0B0A0] mt-0.5 truncate">{q.forfaitName}</p>
+            <p className="text-[13px] text-[#666] dark:text-[#B0B0A0] mt-0.5 truncate">{q.stationName}</p>
 
             <div className="flex items-center gap-3 mt-2 text-[13px]">
               {variant === 'past' && completedLabel ? (
