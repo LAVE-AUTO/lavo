@@ -68,22 +68,26 @@ export function MerchantNavbar() {
     return () => clearTimeout(id);
   }, [pathname]);
 
-  const initial = (user?.first_name?.[0] ?? user?.email?.[0] ?? '?').toUpperCase();
-  const displayName = user?.first_name
-    ? `${user.first_name} ${user.last_name ?? ''}`.trim()
-    : user?.email ?? '';
+  /* Derivations aligned on PublicNavbar so the same value lands in both
+   * navbars for the same user. */
+  const displayName = user
+    ? (user.first_name ? `${user.first_name} ${user.last_name ?? ''}`.trim() : user.email.split('@')[0])
+    : '';
+  const initial = user ? (user.first_name?.[0] ?? user.email[0]).toUpperCase() : '';
 
   const lightLogoSrc = locale === 'fr' ? '/logo/logo2_2.png' : '/logo/logo_anglais_1.png';
-  const darkLogoSrc = locale === 'fr' ? '/logo/logo22_2.png' : '/logo/logo_anglais_2.png';
+  const darkLogoSrc  = locale === 'fr' ? '/logo/logo22_2.png' : '/logo/logo_anglais_2.png';
 
+  /* Class strings copied verbatim from PublicNavbar so the visual rhythm
+   * (rounded-md placement, padding scale, hover shadow) is identical. */
   const linkClass =
     'text-[13px] font-medium tracking-[0.4px] text-[var(--foreground)] dark:text-[#B0BFB1] hover:text-[#DDAF3B] dark:hover:text-[#DDAF3B] transition-colors duration-300';
 
   const pillClass =
-    'inline-block border border-[rgba(221,175,59,0.45)] text-[#DDAF3B] px-[22px] py-[9px] rounded-md text-[13px] font-semibold tracking-[0.8px] uppercase transition-all duration-300 hover:bg-[#DDAF3B] hover:text-[#001201]';
+    'inline-block border rounded-md border-[rgba(221,175,59,0.45)] text-[#DDAF3B] px-[22px] py-[9px] text-[13px] font-semibold tracking-[0.8px] uppercase transition-all duration-300 hover:bg-[#DDAF3B] hover:text-[#001201]';
 
   const ctaClass =
-    'btn-shine inline-block bg-[#DDAF3B] text-[#001201] px-[26px] py-[10px] rounded-md text-[13px] font-bold tracking-[1px] uppercase transition-all duration-300 hover:bg-[#DDAF3B] hover:-translate-y-px hover:shadow-[0_6px_24px_rgba(221,175,59,0.4)]';
+    'btn-shine inline-block bg-[#DDAF3B] rounded-md text-[#001201] px-[26px] py-[10px] text-[13px] font-bold tracking-[1px] uppercase transition-all duration-300 hover:bg-[#DDAF3B] hover:-translate-y-px hover:shadow-[0_6px_24px_rgba(221,175,59,0.4)]';
 
   const drawerLinkClass =
     'flex items-center px-4 py-3 text-[15px] font-medium text-[var(--foreground)] dark:text-[#B0BFB1] hover:text-[#DDAF3B] dark:hover:text-[#DDAF3B] transition-colors';

@@ -160,7 +160,7 @@ export function AdminTopNav({ onToggleSidebar }: AdminTopNavProps) {
           <Link href="/" className="shrink-0" aria-label="Hurryline - Accueil" suppressHydrationWarning>
             <Image
               src={isDark ? darkLogoSrc : lightLogoSrc}
-              alt="Hurryline"
+              alt={t('logo_alt')}
               width={130}
               height={34}
               className="h-12 w-auto object-contain"

@@ -2987,6 +2987,9 @@
         "search_station_placeholder": "Rechercher une station…"
     },
     "admin_dashboard": {
+        "logo_alt": "Hurryline",
+        "user_menu_aria": "Menu utilisateur",
+        "logout": "Se déconnecter",
         "nav_dashboard": "Tableau de bord",
         "nav_kyc": "Validation KYC",
         "nav_clients": "Comptes",
