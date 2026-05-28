@@ -88,15 +88,15 @@ export function ReceiptModal({ entry: e, locale, onClose }: ReceiptModalProps) {
    * trace a record from the prefix shown here. */
   const shortRef = e.id.slice(0, 8).toUpperCase();
   const typeLabel = e.entryType === 'queue' ? t('receipt_entry_type_queue') : t('receipt_entry_type_reservation');
-  /* Service line shows the category (Lavage à la main / Lavage
-   * automatique / Self-service), matching the tab strip on the station
-   * detail screen. Falls back to the merchant-set service name when
-   * the category enum is missing, then to a generic placeholder. The
-   * vehicle format stays on a secondary line so the receipt still
-   * carries both pieces of context. */
+  /* Service line shows the merchant-set service name from
+   * station_services.name first (e.g. "Lavage Premium Extérieur").
+   * Legacy entries with no service_id fall back to the localised
+   * category bucket, then to a generic placeholder. The vehicle
+   * format keeps its secondary line so the receipt still carries
+   * both pieces of context. */
   const serviceLabel =
-    receiptCategoryLabel(e.serviceCategory, locale)
-    ?? e.serviceName
+    e.serviceName
+    ?? receiptCategoryLabel(e.serviceCategory, locale)
     ?? t('receipt_service_generic');
   const vehicleLine = e.vehicleFormatLabel ?? t('receipt_service_unknown');
 

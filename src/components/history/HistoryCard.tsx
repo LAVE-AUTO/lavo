@@ -7,7 +7,6 @@ export interface HistoryReservation {
   stationName: string;
   stationAddress: string;
   vehicleFormatLabel: string | null;
-  stationServicesName: string | null;
   serviceName: string | null;
   serviceCategory: string | null;
   entryType: 'reservation' | 'queue';
@@ -127,10 +126,10 @@ export function HistoryCard({ entry: e, locale, onSelect }: HistoryCardProps) {
               </svg>
               {timeLabel}
             </span>
-            {e.stationServicesName && (
+            {e.serviceName && (
               <>
                 <span className="opacity-50">·</span>
-                <span className="font-semibold">{e.stationServicesName}</span>
+                <span className="font-semibold">{e.serviceName}</span>
               </>
             )}
             <span className="opacity-50">·</span>

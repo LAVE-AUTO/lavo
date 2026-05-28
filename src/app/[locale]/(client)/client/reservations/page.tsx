@@ -730,7 +730,7 @@ function ReservationCard({
           <div className="flex-1 min-w-0">
             <div className="flex items-start justify-between gap-2">
               <h3 className="text-[15px] font-bold text-foreground leading-tight truncate">
-                {serviceCategoryLabel(r.serviceCategory, locale) ?? r.serviceName ?? t('service_unknown')}
+                {r.serviceName ?? serviceCategoryLabel(r.serviceCategory, locale) ?? t('service_unknown')}
               </h3>
               <span className={`shrink-0 px-2 py-0.5 rounded-full text-[11px] font-bold ${statusColors[displayStatus(r.status)] || 'bg-gray-200 text-gray-600'}`}>
                 {t(`status_${displayStatus(r.status)}`)}
@@ -1036,7 +1036,7 @@ function QueueCard({
           <div className="flex-1 min-w-0">
             <div className="flex items-start justify-between gap-2">
               <h3 className="text-[15px] font-bold text-foreground leading-tight truncate">
-                {serviceCategoryLabel(q.serviceCategory, locale) ?? q.serviceName ?? t('service_unknown')}
+                {q.serviceName ?? serviceCategoryLabel(q.serviceCategory, locale) ?? t('service_unknown')}
               </h3>
               <span className={`shrink-0 px-2 py-0.5 rounded-full text-[11px] font-bold ${statusBadgeClass}`}>
                 {statusLabel}
