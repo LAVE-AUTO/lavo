@@ -13,6 +13,24 @@ type Tab = 'reservations' | 'queue';
 type ReservationStatus = 'confirmed' | 'in_progress' | 'completed' | 'cancelled' | 'pending_payment' | 'pending';
 type QueueStatus = 'waiting' | 'in_progress' | 'completed' | 'cancelled';
 
+/* Service category → localized display label. Mirrors the labels used on
+ * the station detail page so users see the same wording end-to-end. */
+const SERVICE_CATEGORY_LABELS: Record<string, { fr: string; en: string }> = {
+  hand_wash:      { fr: 'Lavage à la main',  en: 'Hand wash' },
+  automatic_wash: { fr: 'Lavage automatique', en: 'Auto wash' },
+  automatic:      { fr: 'Lavage automatique', en: 'Auto wash' },
+  self_service:   { fr: 'Self-service',      en: 'Self-service' },
+  exterior_wash:  { fr: 'Lavage extérieur',  en: 'Exterior wash' },
+  detailing:      { fr: 'Détailing',         en: 'Detailing' },
+};
+
+function serviceCategoryLabel(category: string | null, locale: string): string | null {
+  if (!category) return null;
+  const entry = SERVICE_CATEGORY_LABELS[category];
+  if (!entry) return category;
+  return locale === 'en' ? entry.en : entry.fr;
+}
+
 /* ------------------------------------------------------------------ */
 /* API shapes (rich entry returned by GET /me/entries)                  */
 /* ------------------------------------------------------------------ */
@@ -43,6 +61,7 @@ interface ApiRichEntry {
   completed_at: string | null;
   station: ApiRichStation;
   vehicle_format: { id: string; label: string; price: string } | null;
+  service: { id: string; name: string; category: string } | null;
   estimated_wait_minutes: number | null;
   slot_start_time: string | null;
   slot_end_time: string | null;
@@ -66,6 +85,7 @@ interface ClientReservation {
   stationLatitude: number;
   stationLongitude: number;
   forfaitName: string;
+  serviceCategory: string | null;
   categoryLabel: string;
   extras: string[];
   date: string;
@@ -91,6 +111,7 @@ interface ClientQueueEntry {
   stationLatitude: number;
   stationLongitude: number;
   forfaitName: string;
+  serviceCategory: string | null;
   categoryLabel: string;
   extras: string[];
   position: number;
@@ -180,7 +201,8 @@ function enrichEntry(entry: ApiRichEntry): ClientReservation | ClientQueueEntry 
   const stationLatitude = entry.station?.latitude ? parseFloat(entry.station.latitude) : 0;
   const stationLongitude = entry.station?.longitude ? parseFloat(entry.station.longitude) : 0;
   const stationImageUrl = entry.station?.image_url ?? '';
-  const forfaitName = entry.vehicle_format?.label ?? '-';
+  const forfaitName = entry.service?.name ?? entry.vehicle_format?.label ?? '-';
+  const serviceCategory = entry.service?.category ?? null;
   const totalPrice = parseFloat(entry.amount_paid ?? '0');
 
   const base = {
@@ -191,6 +213,7 @@ function enrichEntry(entry: ApiRichEntry): ClientReservation | ClientQueueEntry 
     stationLatitude,
     stationLongitude,
     forfaitName,
+    serviceCategory,
     categoryLabel: '',
     extras: [] as string[],
     ticketCode: entry.ticket_code,
@@ -696,7 +719,7 @@ function ReservationCard({
           <div className="flex-1 min-w-0">
             <div className="flex items-start justify-between gap-2">
               <h3 className="text-[15px] font-bold text-[#0A0A14] dark:text-white leading-tight truncate">
-                {r.forfaitName !== '-' ? r.forfaitName : t('service_unknown')}
+                {serviceCategoryLabel(r.serviceCategory, locale) ?? (r.forfaitName !== '-' ? r.forfaitName : t('service_unknown'))}
               </h3>
               <span className={`shrink-0 px-2 py-0.5 rounded-full text-[11px] font-bold ${statusColors[displayStatus(r.status)] || 'bg-gray-200 text-gray-600'}`}>
                 {t(`status_${displayStatus(r.status)}`)}
@@ -1002,7 +1025,7 @@ function QueueCard({
           <div className="flex-1 min-w-0">
             <div className="flex items-start justify-between gap-2">
               <h3 className="text-[15px] font-bold text-[#0A0A14] dark:text-white leading-tight truncate">
-                {q.forfaitName !== '-' ? q.forfaitName : t('service_unknown')}
+                {serviceCategoryLabel(q.serviceCategory, locale) ?? (q.forfaitName !== '-' ? q.forfaitName : t('service_unknown'))}
               </h3>
               <span className={`shrink-0 px-2 py-0.5 rounded-full text-[11px] font-bold ${statusBadgeClass}`}>
                 {statusLabel}

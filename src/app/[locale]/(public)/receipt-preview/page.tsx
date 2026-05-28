@@ -69,6 +69,8 @@ export default function ReceiptPreviewPage() {
                 stationName: 'Hurryline Downtown',
                 stationAddress: '245 Sainte-Catherine St W, Montreal',
                 vehicleFormatLabel: 'SUV',
+                serviceName: 'Premium hand wash',
+                serviceCategory: 'hand_wash',
                 entryType: 'reservation',
                 amountPaid: 70,
                 tipAmount: 6,

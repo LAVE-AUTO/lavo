@@ -9,12 +9,32 @@ interface HistoryReservation {
   stationName: string;
   stationAddress: string;
   vehicleFormatLabel: string | null;
+  serviceName: string | null;
+  serviceCategory: string | null;
   entryType: 'reservation' | 'queue';
   amountPaid: number;
   /** Tip portion of amountPaid, surfaced as a separate line. Optional. */
   tipAmount?: number | null;
   status: 'completed' | 'cancelled';
   createdAt: string;
+}
+
+/* Mirrors the labels used on station detail + /client/reservations so the
+ * client sees consistent wording across screens. */
+const RECEIPT_CATEGORY_LABELS: Record<string, { fr: string; en: string }> = {
+  hand_wash:      { fr: 'Lavage à la main',  en: 'Hand wash' },
+  automatic_wash: { fr: 'Lavage automatique', en: 'Auto wash' },
+  automatic:      { fr: 'Lavage automatique', en: 'Auto wash' },
+  self_service:   { fr: 'Self-service',      en: 'Self-service' },
+  exterior_wash:  { fr: 'Lavage extérieur',  en: 'Exterior wash' },
+  detailing:      { fr: 'Détailing',         en: 'Detailing' },
+};
+
+function receiptCategoryLabel(category: string | null, locale: string): string | null {
+  if (!category) return null;
+  const entry = RECEIPT_CATEGORY_LABELS[category];
+  if (!entry) return category;
+  return locale === 'en' ? entry.en : entry.fr;
 }
 
 /**
@@ -70,10 +90,13 @@ export function ReceiptModal({ entry: e, locale, onClose }: ReceiptModalProps) {
    * trace a record from the prefix shown here. */
   const shortRef = e.id.slice(0, 8).toUpperCase();
   const typeLabel = e.entryType === 'queue' ? t('receipt_entry_type_queue') : t('receipt_entry_type_reservation');
-  /* TODO: connect to API once endpoint exposes service name on history entries.
-   * Until then we lead with a generic service label and surface the booked
-   * vehicle format as the secondary line. */
-  const serviceLabel = t('receipt_service_generic');
+  /* Service line favours the category (Lavage à la main / Auto / Self-service…),
+   * falling back to the service name and finally a generic label for legacy
+   * entries created before service_id was persisted on the row. */
+  const serviceLabel =
+    receiptCategoryLabel(e.serviceCategory, locale)
+    ?? e.serviceName
+    ?? t('receipt_service_generic');
   const vehicleLine = e.vehicleFormatLabel ?? t('receipt_service_unknown');
 
   const isCompleted = e.status === 'completed';

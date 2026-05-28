@@ -19,6 +19,8 @@ type HistoryApiEntry = {
   created_at: string;
   station: { name: string | null; address: string | null; city: string | null };
   vehicle_format_label: string | null;
+  service_name: string | null;
+  service_category: string | null;
   amount_paid: string;
   tip_amount?: string | null;
 };
@@ -69,6 +71,8 @@ export function ClientHistoryView() {
             stationName: entry.station.name ?? entry.title,
             stationAddress: [entry.station.address, entry.station.city].filter(Boolean).join(', '),
             vehicleFormatLabel: entry.vehicle_format_label,
+            serviceName: entry.service_name,
+            serviceCategory: entry.service_category,
             entryType: entry.entry_type,
             amountPaid: Number.parseFloat(entry.amount_paid) || 0,
             tipAmount: entry.tip_amount != null ? Number.parseFloat(entry.tip_amount) || 0 : null,

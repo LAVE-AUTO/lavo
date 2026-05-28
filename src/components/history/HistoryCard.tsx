@@ -7,6 +7,8 @@ export interface HistoryReservation {
   stationName: string;
   stationAddress: string;
   vehicleFormatLabel: string | null;
+  serviceName: string | null;
+  serviceCategory: string | null;
   entryType: 'reservation' | 'queue';
   amountPaid: number;
   /** Tip portion of amountPaid; surfaced separately in the receipt. */
