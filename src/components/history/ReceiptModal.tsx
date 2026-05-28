@@ -65,8 +65,16 @@ export function ReceiptModal({ entry: e, locale, onClose }: ReceiptModalProps) {
     { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' },
   );
 
+  /* Public reference: short and clean for screen + print. The full UUID is
+   * still embedded in the downloaded PDF metadata, so support can always
+   * trace a record from the prefix shown here. */
+  const shortRef = e.id.slice(0, 8).toUpperCase();
   const typeLabel = e.entryType === 'queue' ? t('receipt_entry_type_queue') : t('receipt_entry_type_reservation');
-  const serviceLabel = e.vehicleFormatLabel ?? t('receipt_service_unknown');
+  /* TODO: connect to API once endpoint exposes service name on history entries.
+   * Until then we lead with a generic service label and surface the booked
+   * vehicle format as the secondary line. */
+  const serviceLabel = t('receipt_service_generic');
+  const vehicleLine = e.vehicleFormatLabel ?? t('receipt_service_unknown');
 
   const isCompleted = e.status === 'completed';
 
@@ -117,7 +125,7 @@ export function ReceiptModal({ entry: e, locale, onClose }: ReceiptModalProps) {
 <html lang="${escapeHtml(locale)}">
 <head>
   <meta charset="utf-8">
-  <title>Hurryline - ${t('receipt_title')} ${escapeHtml(e.id.toUpperCase())}</title>
+  <title>Hurryline - ${t('receipt_title')} ${escapeHtml(shortRef)}</title>
   <style>
 
     * { box-sizing: border-box; margin: 0; padding: 0; }
@@ -453,7 +461,7 @@ export function ReceiptModal({ entry: e, locale, onClose }: ReceiptModalProps) {
     <div class="meta-bar">
       <div class="meta-item">
         <div class="meta-label">${t('receipt_ref')}</div>
-        <div class="meta-value">#${escapeHtml(e.id.toUpperCase())}</div>
+        <div class="meta-value">#${escapeHtml(shortRef)}</div>
       </div>
       <div class="meta-item">
         <div class="meta-label">${t('receipt_date')}</div>
@@ -485,7 +493,7 @@ export function ReceiptModal({ entry: e, locale, onClose }: ReceiptModalProps) {
           <tr>
             <td>
               <div class="item-title">${escapeHtml(serviceLabel)}</div>
-              <div class="item-sub">${escapeHtml(typeLabel)}</div>
+              <div class="item-sub">${escapeHtml(vehicleLine)} &middot; ${escapeHtml(typeLabel)}</div>
             </td>
             <td class="amount-cell">$${subtotal.toFixed(2)}</td>
           </tr>
@@ -546,7 +554,7 @@ export function ReceiptModal({ entry: e, locale, onClose }: ReceiptModalProps) {
           <div>
             <h2 className="text-[17px] font-black text-[#F4EFE1]">{t('receipt_title')}</h2>
             <p className="text-[12px] text-[#8a927f] mt-0.5 font-semibold tracking-wide">
-              Hurryline &mdash; #{e.id.toUpperCase()}
+              Hurryline &mdash; #{shortRef}
             </p>
           </div>
           <button
@@ -578,7 +586,7 @@ export function ReceiptModal({ entry: e, locale, onClose }: ReceiptModalProps) {
           {/* Meta row */}
           <div className="grid grid-cols-3 border-b border-[#2a3128] bg-[#141b16]">
             {[
-              { label: t('receipt_ref'),  value: `#${e.id.toUpperCase()}` },
+              { label: t('receipt_ref'),  value: `#${shortRef}` },
               { label: t('receipt_date'), value: new Date(e.createdAt).toLocaleDateString(locale === 'en' ? 'en-CA' : 'fr-CA', { day: 'numeric', month: 'short', year: 'numeric' }) },
               { label: t('receipt_entry_type'), value: typeLabel },
             ].map(({ label, value }) => (
@@ -607,7 +615,7 @@ export function ReceiptModal({ entry: e, locale, onClose }: ReceiptModalProps) {
                 <div className="flex items-start justify-between gap-4 px-3.5 py-3 border-b border-[#2a3128]">
                   <div className="min-w-0">
                     <div className="text-[13px] font-bold text-[#F4EFE1] truncate">{serviceLabel}</div>
-                    <div className="text-[11px] text-[#9ea48f] mt-0.5">{typeLabel}</div>
+                    <div className="text-[11px] text-[#9ea48f] mt-0.5">{vehicleLine} · {typeLabel}</div>
                   </div>
                   <span className="text-[13px] font-mono font-bold text-[#F4EFE1] whitespace-nowrap">${subtotal.toFixed(2)}</span>
                 </div>

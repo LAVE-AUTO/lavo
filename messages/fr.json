@@ -1278,6 +1278,7 @@
         "receipt_entry_type_reservation": "Réservation",
         "receipt_entry_type_queue": "File d'attente",
         "receipt_service_unknown": "Service non précisé",
+        "receipt_service_generic": "Service de lavage Hurryline",
         "receipt_tip": "Pourboire",
         "receipt_items": "Détails",
         "receipt_subtotal_line": "Sous-total",
