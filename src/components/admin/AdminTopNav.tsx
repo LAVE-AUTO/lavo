@@ -22,13 +22,30 @@ type UserNotification = {
   created_at?: string;
 };
 
+/**
+ * Admin top navigation bar.
+ *
+ * Visually aligned with PublicNavbar and MerchantNavbar so the brand
+ * identity stays consistent across spaces: same translucent backdrop,
+ * same gold-tinted border, same inner max-width container, same
+ * logo treatment (locale + theme switch), same 34×34 bordered round
+ * notif button and same anchored notification panel.
+ *
+ * Admin-specific bits kept: the sidebar toggle (visible < lg), and
+ * the notifications panel itself is identical to the public one
+ * apart from the data source.
+ */
 export function AdminTopNav({ onToggleSidebar }: AdminTopNavProps) {
   const t = useTranslations('admin_dashboard');
   const { resolvedTheme } = useTheme();
   const locale = useLocale();
 
   const isDark = resolvedTheme === 'dark';
+  /* Same logo set as Public/Merchant: locale picks the asset, theme picks
+   * the colour variant. Falls back to the FR pair to match the rest of the
+   * platform's behaviour when locale is anything else. */
   const lightLogoSrc = locale === 'fr' ? '/logo/logo2_2.png' : '/logo/logo_anglais_1.png';
+  const darkLogoSrc  = locale === 'fr' ? '/logo/logo22_2.png' : '/logo/logo_anglais_2.png';
 
   const [isOpen, setIsOpen] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -115,150 +132,158 @@ export function AdminTopNav({ onToggleSidebar }: AdminTopNavProps) {
   } as const;
 
   return (
-    <header className="flex h-14 flex-shrink-0 items-center justify-between border-b border-[#FFF9EC] bg-white px-6 dark:border-[#1A2A14] dark:bg-[#111A0E]">
+    <header className="flex-shrink-0 bg-[rgba(247,243,236,0.95)] dark:bg-[rgba(13,31,15,0.92)] backdrop-blur-[16px] border-b border-[rgba(221,175,59,0.18)]">
+      <div className="max-w-[1440px] mx-auto px-6 lg:px-16 flex items-center justify-between gap-6 py-2">
 
-      <div className="flex items-center gap-3">
-        {/* Sidebar toggle - visible below lg */}
-        {onToggleSidebar && (
-          <button
-            type="button"
-            onClick={onToggleSidebar}
-            className="flex h-9 w-9 items-center justify-center rounded-full bg-[#EEE9D8] transition-opacity hover:opacity-80 dark:bg-[#182214] lg:hidden"
-            aria-label="Menu"
-          >
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-foreground/65 dark:text-[#B0BFB1]">
-              <line x1="3" y1="6" x2="21" y2="6" /><line x1="3" y1="12" x2="21" y2="12" /><line x1="3" y1="18" x2="21" y2="18" />
-            </svg>
-          </button>
-        )}
+        {/* Left cluster: sidebar toggle (admin-only) + logo */}
+        <div className="flex items-center gap-3">
+          {onToggleSidebar && (
+            <button
+              type="button"
+              onClick={onToggleSidebar}
+              aria-label="Menu"
+              className="flex h-[34px] w-[34px] items-center justify-center rounded-full border border-[rgba(221,175,59,0.25)] text-[var(--foreground)] transition-colors hover:border-[#DDAF3B] hover:text-[#DDAF3B] dark:text-[#B0BFB1] lg:hidden"
+            >
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                <line x1="3" y1="6" x2="21" y2="6" />
+                <line x1="3" y1="12" x2="21" y2="12" />
+                <line x1="3" y1="18" x2="21" y2="18" />
+              </svg>
+            </button>
+          )}
 
-        {/* Logo - always links to landing page */}
-        <div className="flex flex-col justify-center">
-          <Link href="/" aria-label="Hurryline - Accueil">
-            {isDark ? (
-              <div className="flex items-center gap-2">
-                <div className="shrink-0 rounded-lg border border-[rgba(221,175,59,0.25)] bg-white/95 p-0.5 shadow-sm">
-                  <Image src="/logo/frame2.png" alt="" width={24} height={24} className="h-6 w-6 object-contain" aria-hidden="true" />
-                </div>
-                <span className="font-playfair text-[18px] font-black leading-none tracking-[3px] text-[#DDAF3B]">
-                  Hurryline
-                </span>
-              </div>
-            ) : (
-              <Image
-                src={lightLogoSrc}
-                alt="Hurryline"
-                width={200}
-                height={80}
-                className="h-20 w-auto object-contain"
-                priority
-              />
-            )}
+          {/* Logo - same treatment as PublicNavbar / MerchantNavbar, always
+              links to the landing page (NAV-1 rule). */}
+          <Link href="/" className="shrink-0" aria-label="Hurryline - Accueil" suppressHydrationWarning>
+            <Image
+              src={isDark ? darkLogoSrc : lightLogoSrc}
+              alt="Hurryline"
+              width={130}
+              height={34}
+              className="h-12 w-auto object-contain"
+              priority
+            />
           </Link>
         </div>
-      </div>
 
-      {/* Right controls */}
-      <div className="flex items-center gap-2">
-        <ThemeToggle />
-        <LangToggle />
+        {/* Right controls - mirror Public/Merchant: theme, lang, notifs */}
+        <div className="flex items-center gap-2.5">
+          <ThemeToggle />
+          <LangToggle />
 
-        <div className="relative" ref={panelRef}>
-          <button
-            type="button"
-            aria-label={t('notif_tooltip')}
-            title={t('notif_tooltip')}
-            onClick={openNotifications}
-            className="relative flex h-9 w-9 items-center justify-center rounded-full bg-[#EEE9D8] transition-opacity hover:opacity-80 dark:bg-[#182214]"
-          >
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#DDAF3B" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-              <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9" />
-              <path d="M13.73 21a2 2 0 0 1-3.46 0" />
-            </svg>
-            {unreadCount > 0 && (
-              <span className="absolute -right-1 -top-1 min-w-[18px] h-[18px] rounded-full bg-Hurryline-error px-1 text-center text-[10px] font-black leading-[18px] text-white shadow-sm ring-2 ring-[#EEE9D8] dark:ring-[#182214]">
-                {unreadCount > 99 ? '99+' : unreadCount}
-              </span>
-            )}
-          </button>
-          {isOpen && (
-            <div
-              className="absolute right-0 top-11 z-50 w-96 rounded-2xl border border-[#E1DBCF] p-3 shadow-xl opacity-100 backdrop-blur-0 dark:border-[#1E2E18]"
-              style={notifPanelStyle}
+          <div className="relative" ref={panelRef}>
+            <button
+              type="button"
+              aria-label={t('notif_tooltip')}
+              title={t('notif_tooltip')}
+              onClick={openNotifications}
+              className="relative flex h-[34px] w-[34px] items-center justify-center rounded-full border border-[rgba(221,175,59,0.25)] text-[var(--foreground)] transition-colors hover:border-[#DDAF3B] hover:text-[#DDAF3B] dark:text-[#B0BFB1]"
             >
-              <div className="mb-2 flex items-center justify-between">
-                <div className="text-sm font-semibold" style={{ color: isDark ? '#FFF9EC' : '#001A05' }}>{t('notif_title')}</div>
-                <button
-                  type="button"
-                  onClick={markAllRead}
-                  className="text-xs font-semibold hover:underline"
-                  style={{ color: isDark ? '#DDAF3B' : '#DDAF3B' }}
-                >
-                  {t('notif_mark_all_read')}
-                </button>
-              </div>
-              {loading ? <div className="py-4 text-sm" style={{ color: isDark ? '#B0BFB1' : '#B0BFB1' }}>{t('notif_loading')}</div> : null}
-              {!loading && errorLoading ? <div className="py-4 text-sm" style={{ color: isDark ? '#FF383C' : '#FF383C' }}>{t('notif_error')}</div> : null}
-              {!loading && !errorLoading && items.length === 0 ? <div className="py-4 text-sm" style={{ color: isDark ? '#B0BFB1' : '#B0BFB1' }}>{t('notif_empty')}</div> : null}
-              {!loading && items.length > 0 ? (
-                <div className="max-h-96 space-y-2 overflow-auto">
-                  {items.map((item) => (
-                    <div
-                      key={item.id}
-                      className="rounded-lg p-2"
-                      style={{
-                        backgroundColor: isDark
-                          ? (item.is_read ? '#001A05' : '#001A05')
-                          : (item.is_read ? '#FFF9EC' : '#FFEECA'),
-                      }}
-                    >
-                      <div className="text-xs font-semibold" style={{ color: isDark ? '#FFF9EC' : '#001A05' }}>{item.title ?? t('notif_default_title')}</div>
-                      <div className="mt-0.5 text-xs" style={{ color: isDark ? '#B0BFB1' : '#B0BFB1' }}>{item.body ?? '-'}</div>
-                      {item.created_at && (
-                        <div className="mt-1 text-[11px]" style={{ color: isDark ? '#A9A38F' : '#7A7668' }}>
-                          {new Date(item.created_at).toLocaleString(locale === 'en' ? 'en-CA' : 'fr-CA')}
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9" />
+                <path d="M13.73 21a2 2 0 0 1-3.46 0" />
+              </svg>
+              {unreadCount > 0 && (
+                <span className="absolute -right-1 -top-1 min-w-[18px] h-[18px] rounded-full bg-Hurryline-error px-1 text-center text-[10px] font-black leading-[18px] text-white shadow-sm ring-2 ring-white dark:ring-dark-bg">
+                  {unreadCount > 99 ? '99+' : unreadCount}
+                </span>
+              )}
+            </button>
+
+            {isOpen && (
+              <div
+                className="absolute right-0 top-[calc(100%+10px)] z-50 w-96 rounded-xl p-3 shadow-xl opacity-100 backdrop-blur-0"
+                style={notifPanelStyle}
+              >
+                <div className="mb-2 flex items-center justify-between">
+                  <div className="text-sm font-semibold" style={{ color: isDark ? '#FFF9EC' : '#001A05' }}>
+                    {t('notif_title')}
+                  </div>
+                  <button
+                    type="button"
+                    onClick={markAllRead}
+                    className="text-xs font-semibold hover:underline"
+                    style={{ color: '#DDAF3B' }}
+                  >
+                    {t('notif_mark_all_read')}
+                  </button>
+                </div>
+
+                {loading ? (
+                  <div className="py-4 text-sm" style={{ color: '#B0BFB1' }}>{t('notif_loading')}</div>
+                ) : null}
+                {!loading && errorLoading ? (
+                  <div className="py-4 text-sm" style={{ color: '#FF383C' }}>{t('notif_error')}</div>
+                ) : null}
+                {!loading && !errorLoading && items.length === 0 ? (
+                  <div className="py-4 text-sm" style={{ color: '#B0BFB1' }}>{t('notif_empty')}</div>
+                ) : null}
+                {!loading && items.length > 0 ? (
+                  <div className="max-h-96 space-y-2 overflow-auto">
+                    {items.map((item) => (
+                      <div
+                        key={item.id}
+                        className="rounded-lg p-2"
+                        style={{
+                          backgroundColor: isDark ? '#001A05' : (item.is_read ? '#FFF9EC' : '#FFEECA'),
+                        }}
+                      >
+                        <div className="text-xs font-semibold" style={{ color: isDark ? '#FFF9EC' : '#001A05' }}>
+                          {item.title ?? t('notif_default_title')}
                         </div>
-                      )}
-                      <div className="mt-2 flex items-center gap-3">
-                        {item.action_url && (
-                          <Link href={item.action_url} className="text-xs font-semibold hover:underline" style={{ color: isDark ? '#DDAF3B' : '#DDAF3B' }}>
-                            {t('notif_open_cta')}
-                          </Link>
+                        <div className="mt-0.5 text-xs" style={{ color: '#B0BFB1' }}>
+                          {item.body ?? '-'}
+                        </div>
+                        {item.created_at && (
+                          <div className="mt-1 text-[11px]" style={{ color: isDark ? '#A9A38F' : '#7A7668' }}>
+                            {new Date(item.created_at).toLocaleString(locale === 'en' ? 'en-CA' : 'fr-CA')}
+                          </div>
                         )}
-                        {!item.is_read && (
+                        <div className="mt-2 flex items-center gap-3">
+                          {item.action_url && (
+                            <Link
+                              href={item.action_url}
+                              className="text-xs font-semibold hover:underline"
+                              style={{ color: '#DDAF3B' }}
+                            >
+                              {t('notif_open_cta')}
+                            </Link>
+                          )}
+                          {!item.is_read && (
+                            <button
+                              type="button"
+                              onClick={() => markOneRead(item.id)}
+                              className="text-xs font-semibold hover:underline"
+                              style={{ color: isDark ? '#8ED17C' : '#001A05' }}
+                            >
+                              {t('notif_mark_read')}
+                            </button>
+                          )}
                           <button
                             type="button"
-                            onClick={() => markOneRead(item.id)}
+                            onClick={() => removeOne(item.id)}
                             className="text-xs font-semibold hover:underline"
-                            style={{ color: isDark ? '#8ED17C' : '#001A05' }}
+                            style={{ color: '#FF383C' }}
                           >
-                            {t('notif_mark_read')}
+                            {t('notif_delete')}
                           </button>
-                        )}
-                        <button
-                          type="button"
-                          onClick={() => removeOne(item.id)}
-                          className="text-xs font-semibold hover:underline"
-                          style={{ color: isDark ? '#FF383C' : '#FF383C' }}
-                        >
-                          {t('notif_delete')}
-                        </button>
+                        </div>
                       </div>
-                    </div>
-                  ))}
-                  {nextCursor && (
-                    <button
-                      type="button"
-                      onClick={loadMoreNotifications}
-                      className="w-full rounded-lg border border-[#D8D4C8] px-3 py-2 text-xs font-semibold text-[#DDAF3B] transition-colors hover:bg-[#F5F3EE] dark:border-[#001A05] dark:text-[#DDAF3B] dark:hover:bg-[#001A05]"
-                    >
-                      {t('notif_load_more')}
-                    </button>
-                  )}
-                </div>
-              ) : null}
-            </div>
-          )}
+                    ))}
+                    {nextCursor && (
+                      <button
+                        type="button"
+                        onClick={loadMoreNotifications}
+                        className="w-full rounded-lg border border-[rgba(221,175,59,0.25)] px-3 py-2 text-xs font-semibold text-[#DDAF3B] transition-colors hover:bg-[#FFEECA] dark:hover:bg-[#001A05]"
+                      >
+                        {t('notif_load_more')}
+                      </button>
+                    )}
+                  </div>
+                ) : null}
+              </div>
+            )}
+          </div>
         </div>
       </div>
     </header>
