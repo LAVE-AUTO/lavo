@@ -272,7 +272,7 @@ export function PublicNavbar({
                         <path d="M13.73 21a2 2 0 0 1-3.46 0" />
                       </svg>
                       {notifUnreadCount > 0 && (
-                        <span className="absolute -right-1 -top-1 min-w-[18px] h-[18px] rounded-full bg-Hurryline-error px-1 text-center text-[10px] font-black leading-[18px] text-white shadow-sm ring-2 ring-white dark:ring-dark-bg">
+                        <span className="absolute -right-1 -top-1 min-w-4.5 h-4.5 rounded-full bg-Hurryline-error px-1 text-center text-[10px] font-black leading-4.5 text-white shadow-sm ring-2 ring-white dark:ring-dark-bg">
                           {notifUnreadCount > 99 ? '99+' : notifUnreadCount}
                         </span>
                       )}

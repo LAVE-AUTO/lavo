@@ -90,12 +90,14 @@ export function ReceiptModal({ entry: e, locale, onClose }: ReceiptModalProps) {
    * trace a record from the prefix shown here. */
   const shortRef = e.id.slice(0, 8).toUpperCase();
   const typeLabel = e.entryType === 'queue' ? t('receipt_entry_type_queue') : t('receipt_entry_type_reservation');
-  /* Service line favours the category (Lavage à la main / Auto / Self-service…),
-   * falling back to the service name and finally a generic label for legacy
-   * entries created before service_id was persisted on the row. */
+  /* Service line shows the merchant's free-form service name first
+   * (e.g. "Lavage Premium"). Legacy entries with no service_id fall
+   * back to the category label, then to a generic placeholder. The
+   * vehicle format stays on a secondary line so the receipt still
+   * carries both pieces of context without burying the service. */
   const serviceLabel =
-    receiptCategoryLabel(e.serviceCategory, locale)
-    ?? e.serviceName
+    e.serviceName
+    ?? receiptCategoryLabel(e.serviceCategory, locale)
     ?? t('receipt_service_generic');
   const vehicleLine = e.vehicleFormatLabel ?? t('receipt_service_unknown');
 

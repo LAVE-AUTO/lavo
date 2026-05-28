@@ -84,8 +84,15 @@ interface ClientReservation {
   stationImageUrl: string;
   stationLatitude: number;
   stationLongitude: number;
-  forfaitName: string;
+  /** Free-form service name as set by the merchant (e.g. "Lavage Premium").
+   *  Null for legacy entries created before service_id was persisted. */
+  serviceName: string | null;
+  /** Service category enum (hand_wash / automatic / self_service…). */
   serviceCategory: string | null;
+  /** Vehicle format label kept as the secondary descriptor below the title. */
+  vehicleFormatLabel: string | null;
+  /** Legacy: kept for the cancel modal summary. Pre-resolves the best label. */
+  forfaitName: string;
   categoryLabel: string;
   extras: string[];
   date: string;
@@ -110,8 +117,10 @@ interface ClientQueueEntry {
   stationImageUrl: string;
   stationLatitude: number;
   stationLongitude: number;
-  forfaitName: string;
+  serviceName: string | null;
   serviceCategory: string | null;
+  vehicleFormatLabel: string | null;
+  forfaitName: string;
   categoryLabel: string;
   extras: string[];
   position: number;
@@ -201,8 +210,10 @@ function enrichEntry(entry: ApiRichEntry): ClientReservation | ClientQueueEntry 
   const stationLatitude = entry.station?.latitude ? parseFloat(entry.station.latitude) : 0;
   const stationLongitude = entry.station?.longitude ? parseFloat(entry.station.longitude) : 0;
   const stationImageUrl = entry.station?.image_url ?? '';
-  const forfaitName = entry.service?.name ?? entry.vehicle_format?.label ?? '-';
+  const serviceName = entry.service?.name ?? null;
   const serviceCategory = entry.service?.category ?? null;
+  const vehicleFormatLabel = entry.vehicle_format?.label ?? null;
+  const forfaitName = serviceName ?? vehicleFormatLabel ?? '-';
   const totalPrice = parseFloat(entry.amount_paid ?? '0');
 
   const base = {
@@ -212,8 +223,10 @@ function enrichEntry(entry: ApiRichEntry): ClientReservation | ClientQueueEntry 
     stationImageUrl,
     stationLatitude,
     stationLongitude,
-    forfaitName,
+    serviceName,
     serviceCategory,
+    vehicleFormatLabel,
+    forfaitName,
     categoryLabel: '',
     extras: [] as string[],
     ticketCode: entry.ticket_code,
@@ -719,7 +732,7 @@ function ReservationCard({
           <div className="flex-1 min-w-0">
             <div className="flex items-start justify-between gap-2">
               <h3 className="text-[15px] font-bold text-foreground leading-tight truncate">
-                {serviceCategoryLabel(r.serviceCategory, locale) ?? (r.forfaitName !== '-' ? r.forfaitName : t('service_unknown'))}
+                {r.serviceName ?? serviceCategoryLabel(r.serviceCategory, locale) ?? t('service_unknown')}
               </h3>
               <span className={`shrink-0 px-2 py-0.5 rounded-full text-[11px] font-bold ${statusColors[displayStatus(r.status)] || 'bg-gray-200 text-gray-600'}`}>
                 {t(`status_${displayStatus(r.status)}`)}
@@ -1025,7 +1038,7 @@ function QueueCard({
           <div className="flex-1 min-w-0">
             <div className="flex items-start justify-between gap-2">
               <h3 className="text-[15px] font-bold text-foreground leading-tight truncate">
-                {serviceCategoryLabel(q.serviceCategory, locale) ?? (q.forfaitName !== '-' ? q.forfaitName : t('service_unknown'))}
+                {q.serviceName ?? serviceCategoryLabel(q.serviceCategory, locale) ?? t('service_unknown')}
               </h3>
               <span className={`shrink-0 px-2 py-0.5 rounded-full text-[11px] font-bold ${statusBadgeClass}`}>
                 {statusLabel}
