@@ -1,8 +1,10 @@
 'use client';
 
-import { useState, useMemo } from 'react';
-import { useTranslations } from 'next-intl';
+import { useState, useMemo, useEffect } from 'react';
+import { useLocale, useTranslations } from 'next-intl';
 import type { StationServicePublic } from '@/types/station';
+
+
 
 interface StationServicesSectionProps {
   services: StationServicePublic[];
@@ -23,7 +25,7 @@ const CATEGORY_LABELS: Record<string, { fr: string; en: string }> = {
   detailing:      { fr: 'Détailing',         en: 'Detailing' },
 };
 
-function categoryLabel(cat: string, locale: string): string {
+function categoryLabel(cat: string, locale: 'fr' | 'en'): string {
   const entry = CATEGORY_LABELS[cat];
   if (!entry) return cat;
   return locale === 'en' ? entry.en : entry.fr;
@@ -47,11 +49,10 @@ function minDuration(svc: StationServicePublic): number | null {
 }
 
 /**
- * Rich services section for the station detail screen.
- * Shows one "featured" service in a hero card and the remaining services
- * as compact action cards. Selecting any service updates the highlight and
- * also surfaces it through `onSelectService` so the parent can sync price
- * and pre-select it in the booking flow.
+ * Services section grouped by category.
+ * Renders a tab strip when the station offers more than one category, then a
+ * featured card for the selected service plus the rest of that category as
+ * compact items. With a single category the tab strip is hidden.
  */
 export function StationServicesSection({
   services,
@@ -65,23 +66,45 @@ export function StationServicesSection({
 }: StationServicesSectionProps) {
   const t = useTranslations('stations');
   const tb = useTranslations('booking');
+  const rawLocale = useLocale();
+  const locale: 'fr' | 'en' = rawLocale === 'en' ? 'en' : 'fr';
+
+  const categories = useMemo(() => {
+    const order: string[] = [];
+    const grouped = new Map<string, StationServicePublic[]>();
+    for (const svc of services) {
+      if (!grouped.has(svc.category)) {
+        order.push(svc.category);
+        grouped.set(svc.category, []);
+      }
+      grouped.get(svc.category)!.push(svc);
+    }
+    return order.map((cat) => ({ category: cat, services: grouped.get(cat)! }));
+  }, [services]);
 
   const featuredDefault = useMemo(() => pickFeatured(services), [services]);
-  const [featuredOverride, setFeaturedOverride] = useState<string | null>(null);
 
-  const featured = useMemo(() => {
-    if (featuredOverride) return services.find((s) => s.id === featuredOverride) ?? featuredDefault;
-    if (selectedServiceId) return services.find((s) => s.id === selectedServiceId) ?? featuredDefault;
-    return featuredDefault;
-  }, [services, featuredOverride, selectedServiceId, featuredDefault]);
-
-  const others = useMemo(
-    () => services.filter((s) => s.id !== featured?.id),
-    [services, featured],
+  const [activeCategory, setActiveCategory] = useState<string | null>(
+    () => featuredDefault?.category ?? categories[0]?.category ?? null,
   );
 
-  /* Locale-aware category label without pulling another hook. */
-  const locale = (typeof document !== 'undefined' ? document.documentElement.lang : 'fr').toLowerCase().startsWith('en') ? 'en' : 'fr';
+  useEffect(() => {
+    if (!activeCategory && categories.length > 0) {
+      setActiveCategory(categories[0].category);
+      return;
+    }
+    if (activeCategory && !categories.find((c) => c.category === activeCategory)) {
+      setActiveCategory(categories[0]?.category ?? null);
+    }
+  }, [categories, activeCategory]);
+
+  /* Whenever the user switches the selected service, jump to the matching tab
+   * so the highlight stays in sync with the right-column summary. */
+  useEffect(() => {
+    if (!selectedServiceId) return;
+    const svc = services.find((s) => s.id === selectedServiceId);
+    if (svc && svc.category !== activeCategory) setActiveCategory(svc.category);
+  }, [selectedServiceId, services, activeCategory]);
 
   if (services.length === 0) {
     return (
@@ -91,9 +114,65 @@ export function StationServicesSection({
     );
   }
 
+  const visibleServices = activeCategory
+    ? categories.find((c) => c.category === activeCategory)?.services ?? []
+    : services;
+
+  const featured = (() => {
+    if (selectedServiceId) {
+      const match = visibleServices.find((s) => s.id === selectedServiceId);
+      if (match) return match;
+    }
+    const popular = visibleServices.find((s) => s.isPopular);
+    return popular ?? visibleServices[0] ?? null;
+  })();
+
+  const others = featured
+    ? visibleServices.filter((s) => s.id !== featured.id)
+    : [];
+
   return (
     <div className="space-y-5">
-      <h2 className="text-[17px] font-black text-[#000C1F] dark:text-[#FFF8EC]">{t('detail_services')}</h2>
+      <div>
+        <h2 className="text-[17px] font-black text-[#000C1F] dark:text-[#FFF8EC]">{t('detail_services')}</h2>
+        <p className="text-[12.5px] text-[#666] dark:text-[#B0B0A0] mt-1">
+          {t('detail_services_subtitle')}
+        </p>
+      </div>
+
+      {categories.length > 1 && (
+        <div
+          role="tablist"
+          aria-label={t('detail_services')}
+          className="flex flex-wrap gap-2"
+        >
+          {categories.map((cat) => {
+            const isActive = cat.category === activeCategory;
+            return (
+              <button
+                key={cat.category}
+                type="button"
+                role="tab"
+                aria-selected={isActive}
+                onClick={() => {
+                  setActiveCategory(cat.category);
+                  const next = cat.services.find((s) => s.isPopular) ?? cat.services[0];
+                  if (next) onSelectService(next.id);
+                }}
+                className={[
+                  'px-3.5 py-1.5 rounded-full text-[12.5px] font-bold transition-colors cursor-pointer border',
+                  isActive
+                    ? 'bg-gold text-dark-bg border-gold shadow-sm'
+                    : 'bg-[#F0F0E2] dark:bg-dark-bg/40 text-[#555] dark:text-[#C0C0B0] border-[#D0D0C0] dark:border-tab-inactive hover:border-gold/40 hover:text-gold',
+                ].join(' ')}
+              >
+                {categoryLabel(cat.category, locale)}
+                <span className="ml-1.5 opacity-70 font-semibold">({cat.services.length})</span>
+              </button>
+            );
+          })}
+        </div>
+      )}
 
       {featured && (
         <FeaturedServiceCard
@@ -118,10 +197,7 @@ export function StationServicesSection({
               key={svc.id}
               service={svc}
               locale={locale}
-              onSelect={() => {
-                setFeaturedOverride(svc.id);
-                onSelectService(svc.id);
-              }}
+              onSelect={() => onSelectService(svc.id)}
             />
           ))}
         </div>
