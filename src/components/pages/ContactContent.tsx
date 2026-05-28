@@ -41,7 +41,7 @@ export function ContactContent({ html, eyebrow, title }: Props) {
     'w-full px-4 py-3 rounded-xl border text-[14px] outline-none transition-all',
     hasVal
       ? 'border-gold bg-gold/5 dark:bg-gold/8 text-[#1a1a1a] dark:text-white'
-      : 'border-[#E0E0D0] dark:border-tab-inactive bg-white dark:bg-dark-card text-[#1a1a1a] dark:text-white placeholder:text-[#999]',
+      : 'border-[#E0E0D0] dark:border-border bg-white dark:bg-surface text-[#1a1a1a] dark:text-white placeholder:text-[#999]',
   ].join(' ');
 
   return (
@@ -56,7 +56,7 @@ export function ContactContent({ html, eyebrow, title }: Props) {
           </h1>
           <div
             className={[
-              'text-[14px] sm:text-[15px] text-[#555] dark:text-[#A0A090] leading-[1.85]',
+              'text-[14px] sm:text-[15px] text-foreground/70 dark:text-[#A0A090] leading-[1.85]',
               '[&_h2]:font-playfair [&_h2]:text-[20px] sm:[&_h2]:text-[22px] [&_h2]:font-black [&_h2]:text-[#1a1a1a] dark:[&_h2]:text-white [&_h2]:mt-8 [&_h2]:mb-3',
               '[&_h3]:text-[16px] [&_h3]:font-bold [&_h3]:text-[#1a1a1a] dark:[&_h3]:text-white [&_h3]:mt-5 [&_h3]:mb-2',
               '[&_p]:mb-4',
@@ -72,14 +72,14 @@ export function ContactContent({ html, eyebrow, title }: Props) {
         </div>
 
         {/* Right - form */}
-        <div className="bg-[#E8E8D8] dark:bg-dark-card rounded-2xl p-6 sm:p-8 border border-[rgba(200,152,10,0.12)] shadow-sm">
+        <div className="bg-surface rounded-2xl p-6 sm:p-8 border border-[rgba(200,152,10,0.12)] shadow-sm">
           {status === 'sent' ? (
             <div className="flex flex-col items-center justify-center text-center py-10 gap-4">
               <div className="w-14 h-14 rounded-full bg-Hurryline-success/15 flex items-center justify-center">
                 <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#00C851" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><polyline points="20 6 9 17 4 12" /></svg>
               </div>
               <h2 className="text-[20px] font-black text-[#1a1a1a] dark:text-white">{t('success_title')}</h2>
-              <p className="text-[14px] text-[#555] dark:text-[#A0A090]">{t('success_desc')}</p>
+              <p className="text-[14px] text-foreground/70 dark:text-[#A0A090]">{t('success_desc')}</p>
               <button type="button" onClick={() => { setName(''); setEmail(''); setSubject(''); setMessage(''); setStatus('idle'); }} className="mt-2 text-[13px] font-bold text-[#c8980a] hover:text-gold-hover transition-colors cursor-pointer">
                 {t('new_message')}
               </button>
@@ -90,22 +90,22 @@ export function ContactContent({ html, eyebrow, title }: Props) {
 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-[12px] font-bold uppercase tracking-wider text-[#555] dark:text-[#888] mb-1.5">{t('field_name')}</label>
+                  <label className="block text-[12px] font-bold uppercase tracking-wider text-foreground/70 dark:text-foreground/55 mb-1.5">{t('field_name')}</label>
                   <input type="text" value={name} onChange={(e) => setName(e.target.value)} placeholder={t('field_name_placeholder')} required className={inputClass(!!name)} />
                 </div>
                 <div>
-                  <label className="block text-[12px] font-bold uppercase tracking-wider text-[#555] dark:text-[#888] mb-1.5">{t('field_email')}</label>
+                  <label className="block text-[12px] font-bold uppercase tracking-wider text-foreground/70 dark:text-foreground/55 mb-1.5">{t('field_email')}</label>
                   <input type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="vous@exemple.com" required className={inputClass(!!email)} />
                 </div>
               </div>
 
               <div>
-                <label className="block text-[12px] font-bold uppercase tracking-wider text-[#555] dark:text-[#888] mb-1.5">{t('field_subject')}</label>
+                <label className="block text-[12px] font-bold uppercase tracking-wider text-foreground/70 dark:text-foreground/55 mb-1.5">{t('field_subject')}</label>
                 <input type="text" value={subject} onChange={(e) => setSubject(e.target.value)} placeholder={t('field_subject_placeholder')} className={inputClass(!!subject)} />
               </div>
 
               <div>
-                <label className="block text-[12px] font-bold uppercase tracking-wider text-[#555] dark:text-[#888] mb-1.5">{t('field_message')}</label>
+                <label className="block text-[12px] font-bold uppercase tracking-wider text-foreground/70 dark:text-foreground/55 mb-1.5">{t('field_message')}</label>
                 <textarea
                   value={message}
                   onChange={(e) => setMessage(e.target.value)}

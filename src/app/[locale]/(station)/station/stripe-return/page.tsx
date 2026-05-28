@@ -28,7 +28,7 @@ export default function StripeReturnPage() {
         <h1 className="text-[16px] font-black text-[#1A1A0A] dark:text-[#F0EDD4]">
           {t('stripe_return_title')}
         </h1>
-        <p className="text-center text-[13px] text-[#666] dark:text-[#9A9A8A]">
+        <p className="text-center text-[13px] text-foreground/65 dark:text-[#9A9A8A]">
           {t('stripe_return_desc')}
         </p>
         <p className="text-[11px] text-[#AAAAAA] dark:text-[#4A4A3A]">

@@ -93,7 +93,7 @@ export default async function StationDetailPage({ params }: Props) {
   const jsonLd = await buildLocalBusinessJsonLd(id, locale);
 
   return (
-    <main className="min-h-screen bg-[#EDEDED] dark:bg-dark-bg transition-colors">
+    <main className="min-h-screen bg-[#EDEDED] dark:bg-background transition-colors">
       {jsonLd && (
         <script
           type="application/ld+json"

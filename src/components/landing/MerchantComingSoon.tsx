@@ -7,7 +7,7 @@ export function MerchantComingSoon() {
   const t = useTranslations('merchant');
 
   return (
-    <section className="relative min-h-[85vh] flex items-center justify-center bg-[#F8F7F2] dark:bg-dark-bg transition-colors overflow-hidden">
+    <section className="relative min-h-[85vh] flex items-center justify-center bg-[#F8F7F2] dark:bg-background transition-colors overflow-hidden">
       {/* Decorative background */}
       <div className="absolute top-20 -left-20 w-72 h-72 rounded-full bg-gold/8 blur-3xl animate-float-orb" />
       <div className="absolute bottom-20 -right-20 w-64 h-64 rounded-full bg-gold/6 blur-3xl animate-float-orb" style={{ animationDelay: '3s' }} />
@@ -28,12 +28,12 @@ export function MerchantComingSoon() {
         </div>
 
         {/* Title */}
-        <h1 className="text-[32px] sm:text-[42px] font-black text-[#0A0A14] dark:text-white leading-tight">
+        <h1 className="text-[32px] sm:text-[42px] font-black text-foreground leading-tight">
           {t('title')}
         </h1>
 
         {/* Description */}
-        <p className="mt-4 text-[17px] text-[#666] dark:text-[#C0C0B0] leading-relaxed mx-auto max-w-md">
+        <p className="mt-4 text-[17px] text-foreground/65 dark:text-[#C0C0B0] leading-relaxed mx-auto max-w-md">
           {t('description')}
         </p>
 
@@ -41,7 +41,7 @@ export function MerchantComingSoon() {
         <div className="mt-10">
           <Link
             href="/"
-            className="inline-flex items-center gap-2 px-6 py-3 rounded-xl border-2 border-[#D0D0C0] dark:border-tab-inactive text-[15px] font-bold text-[#1A1A1A] dark:text-white hover:border-gold hover:text-gold dark:hover:border-gold dark:hover:text-gold transition-colors"
+            className="inline-flex items-center gap-2 px-6 py-3 rounded-xl border-2 border-border text-[15px] font-bold text-[#1A1A1A] dark:text-white hover:border-gold hover:text-gold dark:hover:border-gold dark:hover:text-gold transition-colors"
           >
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
               <path d="M19 12H5" />

@@ -101,7 +101,7 @@ export function AdminAddUserModal({ open, onClose }: Props) {
             {step === 'form' ? t('modal_title') : t('modal_success_title')}
           </h2>
           <button type="button" onClick={onClose} disabled={busy} aria-label={t('btn_close')}
-            className="flex h-7 w-7 items-center justify-center rounded-lg text-[#BBBBAA] transition-colors hover:bg-[#F0EDE6] hover:text-[#555] disabled:opacity-40 dark:hover:bg-[#1A2A14]">
+            className="flex h-7 w-7 items-center justify-center rounded-lg text-[#BBBBAA] transition-colors hover:bg-[#F0EDE6] hover:text-foreground/70 disabled:opacity-40 dark:hover:bg-[#1A2A14]">
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" aria-hidden="true"><line x1="18" y1="6" x2="6" y2="18" /><line x1="6" y1="6" x2="18" y2="18" /></svg>
           </button>
         </div>

@@ -57,12 +57,12 @@ export function DayDetailsModal({
             <p className="mb-1 text-sm font-black text-[#1A1A0A] dark:text-[#F0EDD4]">
               {t('availability_day_no_blocks')}
             </p>
-            <p className="mb-4 text-[11px] text-[#666] dark:text-[#A0A090]">
+            <p className="mb-4 text-[11px] text-foreground/65 dark:text-[#A0A090]">
               {t('availability_all_postes_closed')}
             </p>
             {/* Tip card - matches prototype gold-border callout */}
             <div className="mb-5 w-full rounded-xl border-l-4 border-[#C49A1E] bg-[#C49A1E]/10 p-3 text-left dark:bg-[#C49A1E]/8">
-              <p className="text-[11px] text-[#666] dark:text-[#A0A090]">
+              <p className="text-[11px] text-foreground/65 dark:text-[#A0A090]">
                 <strong className="text-[#C49A1E]">{t('availability_tip_label')}</strong>{' '}
                 {t('availability_day_no_blocks_tip')}
               </p>
@@ -76,7 +76,7 @@ export function DayDetailsModal({
                 key={block.id}
                 className="rounded-xl bg-[#F7F6F2] p-4 dark:bg-[#0F1A0C]"
               >
-                <p className="mb-1 text-[11px] font-semibold text-[#555] dark:text-[#A0A090]">
+                <p className="mb-1 text-[11px] font-semibold text-foreground/70 dark:text-[#A0A090]">
                   {formatBays(block.bayIds)}
                 </p>
                 <p className="mb-0.5 text-[12px] font-bold text-[#1A1A0A] dark:text-[#F0EDD4]">
@@ -117,7 +117,7 @@ export function DayDetailsModal({
             <button
               type="button"
               onClick={onClose}
-              className="rounded-xl border border-[#E0DCD0] px-4 py-2.5 text-sm font-bold text-[#666] transition-colors hover:bg-[#F0EDE0] dark:border-[#243020] dark:text-[#A0A090] dark:hover:bg-[#182214]"
+              className="rounded-xl border border-[#E0DCD0] px-4 py-2.5 text-sm font-bold text-foreground/65 transition-colors hover:bg-[#F0EDE0] dark:border-[#243020] dark:text-[#A0A090] dark:hover:bg-[#182214]"
             >
               {t('availability_btn_close')}
             </button>

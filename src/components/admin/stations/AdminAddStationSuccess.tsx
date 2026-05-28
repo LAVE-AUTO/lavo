@@ -45,7 +45,7 @@ export function AdminAddStationSuccess({ data, onClose }: Props) {
                 {t('role_station')}
               </span>
             </p>
-            <p className="text-[13px] text-[#888] dark:text-[#9A9A8A]">{t('success_account_created')}</p>
+            <p className="text-[13px] text-foreground/55 dark:text-[#9A9A8A]">{t('success_account_created')}</p>
           </div>
         </div>
 
@@ -57,7 +57,7 @@ export function AdminAddStationSuccess({ data, onClose }: Props) {
           </svg>
           <div className="flex flex-col gap-0.5">
             <p className="text-[13px] font-bold text-[#1A1A0A] dark:text-[#F0EDD4]">{t('success_email_sent_title')}</p>
-            <p className="text-[12px] leading-relaxed text-[#555] dark:text-[#A0A090]">
+            <p className="text-[12px] leading-relaxed text-foreground/70 dark:text-[#A0A090]">
               {t('success_email_sent_body', { email: data.email })}
             </p>
           </div>
@@ -70,7 +70,7 @@ export function AdminAddStationSuccess({ data, onClose }: Props) {
           </svg>
           <div className="flex flex-col gap-0.5">
             <p className="text-[13px] font-bold text-[#1A1A0A] dark:text-[#F0EDD4]">{t('success_kyc_notice_title')}</p>
-            <p className="text-[12px] leading-relaxed text-[#555] dark:text-[#A0A090]">
+            <p className="text-[12px] leading-relaxed text-foreground/70 dark:text-[#A0A090]">
               {data.docsMode === 'now' ? t('success_docs_uploaded_notice') : t('success_kyc_notice_body')}
             </p>
           </div>

@@ -21,7 +21,7 @@ const MIN_BAYS = 1;
 function Field({ label, hint, children }: { label: string; hint?: string; children: React.ReactNode }) {
   return (
     <div className="flex flex-col gap-1.5">
-      <label className="text-[11px] font-bold uppercase tracking-[0.5px] text-[#888] dark:text-[#9A9A8A]">
+      <label className="text-[11px] font-bold uppercase tracking-[0.5px] text-foreground/55 dark:text-[#9A9A8A]">
         {label}
       </label>
       {children}
@@ -254,7 +254,7 @@ export function CapacityTab({ config, posts, locked, onSaved }: Props) {
 
       <Card title={t('capacity_card_bay_status')}>
         <div className="mb-3 flex items-baseline justify-between">
-          <p className="text-[12px] text-[#888] dark:text-[#9A9A8A]">{t('capacity_bay_status_hint')}</p>
+          <p className="text-[12px] text-foreground/55 dark:text-[#9A9A8A]">{t('capacity_bay_status_hint')}</p>
           <p className="text-[12px] font-semibold text-[#C49A1E]">
             {t('capacity_bays_active', { active: activeCount, total: totalBays })}
           </p>

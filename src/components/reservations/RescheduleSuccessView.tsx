@@ -11,7 +11,7 @@ export default function RescheduleSuccessView() {
   const t = useTranslations('reschedule');
 
   return (
-    <main className="min-h-screen bg-[#F5F5E6] dark:bg-[#0F0F0D] flex items-center justify-center px-4 pb-24 sm:pb-8">
+    <main className="min-h-screen bg-background flex items-center justify-center px-4 pb-24 sm:pb-8">
       <div className="w-full max-w-sm text-center space-y-6">
         {/* Icône de validation */}
         <div className="w-20 h-20 rounded-full bg-Hurryline-success/15 flex items-center justify-center mx-auto">
@@ -32,10 +32,10 @@ export default function RescheduleSuccessView() {
         </div>
 
         <div className="space-y-2">
-          <h1 className="text-[22px] font-black text-[#0A0A14] dark:text-white">
+          <h1 className="text-[22px] font-black text-foreground">
             {t('success_title')}
           </h1>
-          <p className="text-[14px] text-[#666] dark:text-[#B0B0A0] leading-relaxed">
+          <p className="text-[14px] text-foreground/65 leading-relaxed">
             {t('success_desc')}
           </p>
         </div>

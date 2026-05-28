@@ -37,7 +37,7 @@ export function AnalyticsPeriodToggle({ value, onChange }: AnalyticsPeriodToggle
             className={`rounded-lg px-3 py-1.5 text-[12px] font-bold transition-all duration-150 ${
               active
                 ? 'bg-[#C49A1E] text-[#0C1209] shadow-sm'
-                : 'text-[#888] hover:bg-[#F7F6F2] hover:text-[#1A1A0A] dark:text-[#9A9A8A] dark:hover:bg-[#182214] dark:hover:text-[#F0EDD4]'
+                : 'text-foreground/55 hover:bg-[#F7F6F2] hover:text-[#1A1A0A] dark:text-[#9A9A8A] dark:hover:bg-[#182214] dark:hover:text-[#F0EDD4]'
             }`}
           >
             {t(period.label as 'period_7d')}

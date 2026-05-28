@@ -46,7 +46,7 @@ function CloseModal({ open, onConfirm, onCancel, busy }: CloseModalProps) {
       footer={
         <div className="flex items-center justify-end gap-2">
           <button type="button" onClick={onCancel} disabled={busy}
-            className="rounded-[10px] border border-[#E0DCD0] px-4 py-2 text-[13px] font-semibold text-[#666] transition-colors hover:bg-[#F0EDE0] disabled:opacity-50 dark:border-dark-surface dark:text-[#9A9A8A]">
+            className="rounded-[10px] border border-[#E0DCD0] px-4 py-2 text-[13px] font-semibold text-foreground/65 transition-colors hover:bg-[#F0EDE0] disabled:opacity-50 dark:border-dark-surface dark:text-[#9A9A8A]">
             {t('close_modal_cancel')}
           </button>
           <button type="button" onClick={onConfirm} disabled={busy}
@@ -242,7 +242,7 @@ export function AdminSupportDetail({ id }: Props) {
       <div className="flex min-h-full flex-col">
         {/* Header */}
         <div className="shrink-0 border-b border-[#E0DCD0] bg-[#F5F5EE] px-6 pb-5 pt-5 dark:border-[#1A2A14] dark:bg-[#0C1209]">
-          <Link href="/admin/support" className="mb-4 flex w-fit items-center gap-1.5 text-[13px] font-semibold text-[#888] transition-colors hover:text-[#C49A1E] dark:text-[#9A9A8A]">
+          <Link href="/admin/support" className="mb-4 flex w-fit items-center gap-1.5 text-[13px] font-semibold text-foreground/55 transition-colors hover:text-[#C49A1E] dark:text-[#9A9A8A]">
             <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" aria-hidden="true"><polyline points="15 18 9 12 15 6" /></svg>
             {t('btn_back')}
           </Link>
@@ -254,11 +254,11 @@ export function AdminSupportDetail({ id }: Props) {
                 <span className={`shrink-0 inline-flex items-center gap-1.5 rounded-full px-2.5 py-0.5 text-[12px] font-bold ${s.badge}`}>
                   <span className={`h-1.5 w-1.5 rounded-full ${s.dot}`} />{t(s.label)}
                 </span>
-                <span className={`shrink-0 rounded-full px-2.5 py-0.5 text-[12px] font-bold ${ROLE_COLOR[ticket.createdByUser.role] ?? 'bg-[#F0EDE0] text-[#888]'}`}>
+                <span className={`shrink-0 rounded-full px-2.5 py-0.5 text-[12px] font-bold ${ROLE_COLOR[ticket.createdByUser.role] ?? 'bg-[#F0EDE0] text-foreground/55'}`}>
                   {t(ticket.createdByUser.role === 'client' ? 'role_client' : 'role_station')}
                 </span>
               </div>
-              <p className="mt-1.5 text-[13px] text-[#888] dark:text-[#9A9A8A]">
+              <p className="mt-1.5 text-[13px] text-foreground/55 dark:text-[#9A9A8A]">
                 {t('detail_from')} <span className="font-semibold text-[#444] dark:text-[#AAA]">{creatorName}</span>
                 <span className="mx-2 text-[#CCC] dark:text-[#A0A090]" aria-hidden="true">·</span>
                 {t('detail_assigned')}: <span className="font-semibold text-[#444] dark:text-[#AAA]">{assignedDisplayName ?? t('detail_unassigned')}</span>
@@ -314,7 +314,7 @@ export function AdminSupportDetail({ id }: Props) {
                     <div key={msg.id} className={`flex gap-3 ${isAdmin ? 'flex-row-reverse' : ''}`}>
                       <div className={[
                         'flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-[12px] font-black leading-none',
-                        isAdmin ? 'bg-[#C49A1E] text-[#0C1209]' : 'bg-[#E8E4DC] text-[#666] dark:bg-[#1E2E18] dark:text-[#A0A090]',
+                        isAdmin ? 'bg-[#C49A1E] text-[#0C1209]' : 'bg-[#E8E4DC] text-foreground/65 dark:bg-[#1E2E18] dark:text-[#A0A090]',
                       ].join(' ')}>
                         {nameInitials(authorName)}
                       </div>
@@ -324,7 +324,7 @@ export function AdminSupportDetail({ id }: Props) {
                           ? 'rounded-tr-sm bg-[#C49A1E]/10 dark:bg-[#C49A1E]/8'
                           : 'rounded-tl-sm bg-white shadow-sm ring-1 ring-black/4 dark:bg-[#1A2416] dark:ring-white/4',
                       ].join(' ')}>
-                        <p className={`mb-1 text-[12px] font-black tracking-wide ${isAdmin ? 'text-[#C49A1E]/90' : 'text-[#888] dark:text-[#9A9A8A]'}`}>
+                        <p className={`mb-1 text-[12px] font-black tracking-wide ${isAdmin ? 'text-[#C49A1E]/90' : 'text-foreground/55 dark:text-[#9A9A8A]'}`}>
                           {authorName}
                         </p>
                         <p className="text-[13px] leading-relaxed text-[#1A1A0A] dark:text-[#F0EDD4]">{msg.content}</p>

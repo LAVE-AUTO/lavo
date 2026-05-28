@@ -28,7 +28,7 @@ function Toggle({ checked, onChange }: { checked: boolean; onChange: () => void 
 /* ─── Section wrapper ─── */
 function Section({ children, className = '' }: { children: React.ReactNode; className?: string }) {
   return (
-    <div className={`bg-[#E8E8D8] dark:bg-dark-card rounded-2xl border border-[rgba(200,152,10,0.12)] overflow-hidden ${className}`}>
+    <div className={`bg-surface rounded-2xl border border-[rgba(200,152,10,0.12)] overflow-hidden ${className}`}>
       {children}
     </div>
   );
@@ -38,7 +38,7 @@ function Section({ children, className = '' }: { children: React.ReactNode; clas
 function SectionHeader({ title, action }: { title: string; action?: React.ReactNode }) {
   return (
     <div className="flex items-center justify-between px-5 py-4 border-b border-[rgba(200,152,10,0.1)]">
-      <h2 className="text-[14px] font-black uppercase tracking-wider text-[#888] dark:text-[#666]">{title}</h2>
+      <h2 className="text-[14px] font-black uppercase tracking-wider text-foreground/55 dark:text-foreground/65">{title}</h2>
       {action}
     </div>
   );
@@ -47,7 +47,7 @@ function SectionHeader({ title, action }: { title: string; action?: React.ReactN
 /* ─── "Coming soon" pill - paints disabled actions so users know the wiring is in flight. */
 function ComingSoonBadge({ label }: { label: string }) {
   return (
-    <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-[#E0E0D0] dark:bg-[#2C2C28] text-[10px] font-bold uppercase tracking-wider text-[#888] dark:text-[#666] whitespace-nowrap">
+    <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-surface dark:bg-[#2C2C28] text-[10px] font-bold uppercase tracking-wider text-foreground/55 dark:text-foreground/65 whitespace-nowrap">
       <span className="w-1.5 h-1.5 rounded-full bg-[#c8980a]/60" />
       {label}
     </span>
@@ -362,15 +362,15 @@ export default function ProfilePage() {
         <span className="w-5 h-5 rounded-full bg-[#f79e1b] opacity-90 inline-block -ml-2" />
       </span>
     );
-    return <span className="text-[12px] font-bold text-[#888]">{brand}</span>;
+    return <span className="text-[12px] font-bold text-foreground/55">{brand}</span>;
   };
 
   return (
-    <main className="min-h-screen bg-[#F5F5E6] dark:bg-[#0F0F0D] pb-28 sm:pb-10">
+    <main className="min-h-screen bg-background pb-28 sm:pb-10">
       <div className="max-w-2xl mx-auto px-4 pt-8 space-y-5">
 
         {/* ── Header card ── */}
-        <div className="bg-[#E8E8D8] dark:bg-dark-card rounded-2xl border border-[rgba(200,152,10,0.12)] p-6">
+        <div className="bg-surface rounded-2xl border border-[rgba(200,152,10,0.12)] p-6">
           <div className="flex items-center gap-5">
 
             {/* Avatar - disabled until POST /me/avatar (or PATCH /me { avatar_url }) ships */}
@@ -400,7 +400,7 @@ export default function ProfilePage() {
             {/* Name + email */}
             <div className="min-w-0 flex-1">
               <p className="text-[19px] font-black text-[#1a1a1a] dark:text-white truncate leading-tight">{fullName}</p>
-              <p className="text-[13px] text-[#888] dark:text-[#666] truncate mt-0.5">{user?.email}</p>
+              <p className="text-[13px] text-foreground/55 dark:text-foreground/65 truncate mt-0.5">{user?.email}</p>
               {isVerified ? (
                 <span className="inline-flex items-center gap-1 mt-2 text-[11px] font-bold text-Hurryline-success bg-Hurryline-success/10 px-2.5 py-0.5 rounded-full">
                   <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round"><polyline points="20 6 9 17 4 12"/></svg>
@@ -434,7 +434,7 @@ export default function ProfilePage() {
             </span>
             <div className="flex-1 min-w-0">
               <p className="text-[14px] font-black text-[#1a1a1a] dark:text-white leading-tight">{t('statements_invoices')}</p>
-              <p className="text-[12px] text-[#888] dark:text-[#666] mt-0.5">{t('statements_invoices_desc')}</p>
+              <p className="text-[12px] text-foreground/55 dark:text-foreground/65 mt-0.5">{t('statements_invoices_desc')}</p>
             </div>
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#c8980a" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="shrink-0 group-hover:translate-x-0.5 transition-transform" aria-hidden="true">
               <polyline points="9 18 15 12 9 6" />
@@ -451,7 +451,7 @@ export default function ProfilePage() {
                 <p className="text-[15px] sm:text-[17px] font-black text-[#1a1a1a] dark:text-white leading-none">
                   {statsLoading ? <span className="inline-block w-8 h-4 bg-gold/10 rounded animate-pulse" /> : value}
                 </p>
-                <p className="text-[11px] text-[#888] dark:text-[#666]">{label}</p>
+                <p className="text-[11px] text-foreground/55 dark:text-foreground/65">{label}</p>
               </div>
             ))}
           </div>
@@ -477,7 +477,7 @@ export default function ProfilePage() {
               </span>
               <div className="min-w-0">
                 <p className="text-[14px] font-semibold text-[#1a1a1a] dark:text-white">{t('location_label')}</p>
-                <p className="text-[12px] text-[#888] dark:text-[#666] mt-0.5">{t('location_desc')}</p>
+                <p className="text-[12px] text-foreground/55 dark:text-foreground/65 mt-0.5">{t('location_desc')}</p>
               </div>
             </div>
             <button
@@ -512,7 +512,7 @@ export default function ProfilePage() {
                     type="button"
                     onClick={() => setEditingInfo(false)}
                     disabled={savingInfo}
-                    className="text-[12px] font-bold text-[#888] hover:text-[#1a1a1a] dark:hover:text-white transition-colors cursor-pointer disabled:opacity-50"
+                    className="text-[12px] font-bold text-foreground/55 hover:text-[#1a1a1a] dark:hover:text-white transition-colors cursor-pointer disabled:opacity-50"
                   >
                     {t('cancel')}
                   </button>
@@ -554,20 +554,20 @@ export default function ProfilePage() {
                   { key: 'phone',      label: t('phone')      },
                 ].map(({ key, label }) => (
                   <div key={key} className="flex items-center justify-between gap-4 px-5 py-3">
-                    <span className="text-[12px] font-bold uppercase tracking-wider text-[#888] dark:text-[#666] w-28 shrink-0">{label}</span>
+                    <span className="text-[12px] font-bold uppercase tracking-wider text-foreground/55 dark:text-foreground/65 w-28 shrink-0">{label}</span>
                     <input
                       type={key === 'phone' ? 'tel' : 'text'}
                       value={infoForm[key as keyof typeof infoForm]}
                       onChange={(e) => setInfoForm((f) => ({ ...f, [key]: e.target.value }))}
                       disabled={savingInfo}
-                      className="flex-1 min-w-0 bg-white dark:bg-[#1E1E1A] border border-[#D0D0C0] dark:border-[#3A3A36] rounded-xl px-3 py-2 text-[14px] text-[#1a1a1a] dark:text-white text-right outline-none focus:border-gold focus:ring-1 focus:ring-gold/30 transition disabled:opacity-50"
+                      className="flex-1 min-w-0 bg-white dark:bg-[#1E1E1A] border border-border dark:border-[#3A3A36] rounded-xl px-3 py-2 text-[14px] text-[#1a1a1a] dark:text-white text-right outline-none focus:border-gold focus:ring-1 focus:ring-gold/30 transition disabled:opacity-50"
                     />
                   </div>
                 ))}
                 {/* Email is never editable */}
                 <div className="flex items-center justify-between px-5 py-3.5">
-                  <span className="text-[12px] font-bold uppercase tracking-wider text-[#888] dark:text-[#666] w-28 shrink-0">{t('email')}</span>
-                  <span className="text-[14px] text-[#888] dark:text-[#666] text-right truncate">{user?.email || '-'}</span>
+                  <span className="text-[12px] font-bold uppercase tracking-wider text-foreground/55 dark:text-foreground/65 w-28 shrink-0">{t('email')}</span>
+                  <span className="text-[14px] text-foreground/55 dark:text-foreground/65 text-right truncate">{user?.email || '-'}</span>
                 </div>
               </>
             ) : (
@@ -579,7 +579,7 @@ export default function ProfilePage() {
                   { label: t('email'),      value: user?.email      || '-' },
                 ].map(({ label, value }) => (
                   <div key={label} className="flex items-center justify-between px-5 py-3.5">
-                    <span className="text-[12px] font-bold uppercase tracking-wider text-[#888] dark:text-[#666] w-28 shrink-0">{label}</span>
+                    <span className="text-[12px] font-bold uppercase tracking-wider text-foreground/55 dark:text-foreground/65 w-28 shrink-0">{label}</span>
                     <span className="text-[14px] text-[#1a1a1a] dark:text-white text-right truncate">{value}</span>
                   </div>
                 ))}
@@ -594,7 +594,7 @@ export default function ProfilePage() {
           <div className="flex items-center justify-between px-5 py-4">
             <div>
               <p className="text-[14px] font-semibold text-[#1a1a1a] dark:text-white">{t('change_password')}</p>
-              <p className="text-[12px] text-[#888] dark:text-[#666] mt-0.5">{t('password_desc')}</p>
+              <p className="text-[12px] text-foreground/55 dark:text-foreground/65 mt-0.5">{t('password_desc')}</p>
             </div>
             <button
               type="button"
@@ -622,7 +622,7 @@ export default function ProfilePage() {
                   <rect x="1" y="4" width="22" height="16" rx="2"/><line x1="1" y1="10" x2="23" y2="10"/>
                 </svg>
               </div>
-              <p className="text-[13px] text-[#888] dark:text-[#666]">{t('no_cards')}</p>
+              <p className="text-[13px] text-foreground/55 dark:text-foreground/65">{t('no_cards')}</p>
             </div>
           ) : (
             <div className="divide-y divide-[rgba(200,152,10,0.08)]">
@@ -633,7 +633,7 @@ export default function ProfilePage() {
                     <p className="text-[14px] font-semibold text-[#1a1a1a] dark:text-white">
                       {card.brand} •••• {card.last4}
                     </p>
-                    <p className="text-[12px] text-[#888] dark:text-[#666]">{t('card_expires')} {card.expiry}</p>
+                    <p className="text-[12px] text-foreground/55 dark:text-foreground/65">{t('card_expires')} {card.expiry}</p>
                   </div>
                   <button
                     type="button"
@@ -662,7 +662,7 @@ export default function ProfilePage() {
               <div key={key} className="flex items-center justify-between gap-4 px-5 py-3.5">
                 <div className="min-w-0">
                   <p className="text-[14px] font-semibold text-[#1a1a1a] dark:text-white leading-snug">{label}</p>
-                  <p className="text-[12px] text-[#888] dark:text-[#666] mt-0.5 leading-snug">{desc}</p>
+                  <p className="text-[12px] text-foreground/55 dark:text-foreground/65 mt-0.5 leading-snug">{desc}</p>
                 </div>
                 <Toggle checked={checked} onChange={() => {
                   if (savingNotif) return;
@@ -710,7 +710,7 @@ export default function ProfilePage() {
           <div className="flex items-center justify-between px-5 py-4">
             <div>
               <p className="text-[14px] font-semibold text-[#1a1a1a] dark:text-white">{t('delete_account')}</p>
-              <p className="text-[12px] text-[#888] dark:text-[#666] mt-0.5 max-w-[260px] leading-snug">{t('danger_desc')}</p>
+              <p className="text-[12px] text-foreground/55 dark:text-foreground/65 mt-0.5 max-w-[260px] leading-snug">{t('danger_desc')}</p>
             </div>
             <button
               type="button"
@@ -790,7 +790,7 @@ function PasswordModal({ onClose, onSuccess }: { onClose: () => void; onSuccess:
     onSuccess();
   };
 
-  const inputClass = 'w-full px-4 py-2.5 bg-[#F5F5E6] dark:bg-[#0F0F0D] border border-[#D0D0C0] dark:border-tab-inactive rounded-xl text-[14px] text-[#1a1a1a] dark:text-white focus:outline-none focus:border-gold transition-colors';
+  const inputClass = 'w-full px-4 py-2.5 bg-background border border-border rounded-xl text-[14px] text-[#1a1a1a] dark:text-white focus:outline-none focus:border-gold transition-colors';
 
   return (
     <Modal onClose={onClose}>
@@ -807,21 +807,21 @@ function PasswordModal({ onClose, onSuccess }: { onClose: () => void; onSuccess:
           <h3 className="text-[18px] font-black text-[#1a1a1a] dark:text-white mb-5">{t('change_password')}</h3>
           <div className="space-y-4">
             <div>
-              <label className="block text-[12px] font-bold uppercase tracking-wider text-[#555] dark:text-[#888] mb-1.5">{t('old_password')}</label>
+              <label className="block text-[12px] font-bold uppercase tracking-wider text-foreground/70 dark:text-foreground/55 mb-1.5">{t('old_password')}</label>
               <input type="password" value={oldPwd} onChange={(e) => setOldPwd(e.target.value)} className={inputClass} />
             </div>
             <div>
-              <label className="block text-[12px] font-bold uppercase tracking-wider text-[#555] dark:text-[#888] mb-1.5">{t('new_password')}</label>
+              <label className="block text-[12px] font-bold uppercase tracking-wider text-foreground/70 dark:text-foreground/55 mb-1.5">{t('new_password')}</label>
               <input type="password" value={newPwd} onChange={(e) => setNewPwd(e.target.value)} className={inputClass} />
             </div>
             <div>
-              <label className="block text-[12px] font-bold uppercase tracking-wider text-[#555] dark:text-[#888] mb-1.5">{t('confirm_password')}</label>
+              <label className="block text-[12px] font-bold uppercase tracking-wider text-foreground/70 dark:text-foreground/55 mb-1.5">{t('confirm_password')}</label>
               <input type="password" value={confirmPwd} onChange={(e) => setConfirmPwd(e.target.value)} className={inputClass} />
             </div>
             {error && <p className="text-[13px] text-Hurryline-error font-semibold">{error}</p>}
           </div>
           <div className="flex gap-3 mt-6">
-            <button type="button" onClick={onClose} disabled={submitting} className="flex-1 py-3 border-2 border-[#D0D0C0] dark:border-tab-inactive rounded-xl text-[14px] font-bold text-[#555] dark:text-[#B0B0A0] hover:bg-[#E0E0D0] dark:hover:bg-[#1A1A18] transition-colors cursor-pointer disabled:opacity-50">{t('cancel')}</button>
+            <button type="button" onClick={onClose} disabled={submitting} className="flex-1 py-3 border-2 border-border rounded-xl text-[14px] font-bold text-foreground/70 hover:bg-surface dark:hover:bg-[#1A1A18] transition-colors cursor-pointer disabled:opacity-50">{t('cancel')}</button>
             <button type="button" onClick={handleSubmit} disabled={submitting} className="flex-1 py-3 bg-gold hover:bg-gold-hover rounded-xl text-[14px] font-black text-dark-bg transition-colors cursor-pointer disabled:opacity-60 flex items-center justify-center gap-2">
               {submitting && (
                 <svg className="animate-spin" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" aria-hidden="true">
@@ -846,7 +846,7 @@ function DeleteAccountModal({ onClose, onDeleted }: { onClose: () => void; onDel
   const mountedRef = useRef(true);
   useEffect(() => { mountedRef.current = true; return () => { mountedRef.current = false; }; }, []);
 
-  const inputClass = 'w-full px-4 py-2.5 bg-[#F5F5E6] dark:bg-[#0F0F0D] border border-[#D0D0C0] dark:border-tab-inactive rounded-xl text-[14px] text-[#1a1a1a] dark:text-white focus:outline-none focus:border-Hurryline-error transition-colors';
+  const inputClass = 'w-full px-4 py-2.5 bg-background border border-border rounded-xl text-[14px] text-[#1a1a1a] dark:text-white focus:outline-none focus:border-Hurryline-error transition-colors';
 
   const handleDelete = async () => {
     setError('');
@@ -876,7 +876,7 @@ function DeleteAccountModal({ onClose, onDeleted }: { onClose: () => void; onDel
       <p className="text-[13px] text-Hurryline-error mb-4">{t('delete_warning')}</p>
       <div className="space-y-4">
         <div>
-          <label className="block text-[12px] font-bold uppercase tracking-wider text-[#555] dark:text-[#888] mb-1.5">{t('confirm_with_password')}</label>
+          <label className="block text-[12px] font-bold uppercase tracking-wider text-foreground/70 dark:text-foreground/55 mb-1.5">{t('confirm_with_password')}</label>
           <input
             type="password"
             value={password}
@@ -892,7 +892,7 @@ function DeleteAccountModal({ onClose, onDeleted }: { onClose: () => void; onDel
           type="button"
           onClick={onClose}
           disabled={submitting}
-          className="flex-1 py-3 border-2 border-[#D0D0C0] dark:border-tab-inactive rounded-xl text-[14px] font-bold text-[#555] dark:text-[#B0B0A0] hover:bg-[#E0E0D0] dark:hover:bg-[#1A1A18] transition-colors cursor-pointer disabled:opacity-50"
+          className="flex-1 py-3 border-2 border-border rounded-xl text-[14px] font-bold text-foreground/70 hover:bg-surface dark:hover:bg-[#1A1A18] transition-colors cursor-pointer disabled:opacity-50"
         >
           {t('cancel')}
         </button>
@@ -928,13 +928,13 @@ function Modal({ children, onClose }: { children: React.ReactNode; onClose: () =
     >
       <div
         onClick={(e) => e.stopPropagation()}
-        className="relative bg-[#F5F5E6] dark:bg-[#1A1A18] rounded-t-3xl sm:rounded-2xl shadow-2xl w-full sm:max-w-sm p-6 animate-fade-in-up"
+        className="relative bg-background dark:bg-[#1A1A18] rounded-t-3xl sm:rounded-2xl shadow-2xl w-full sm:max-w-sm p-6 animate-fade-in-up"
       >
         <button
           type="button"
           onClick={onClose}
           aria-label="Close"
-          className="absolute top-3 right-3 z-10 w-9 h-9 rounded-full hover:bg-black/5 dark:hover:bg-white/10 flex items-center justify-center text-[#666] dark:text-[#B0B0A0] hover:text-gold transition-colors cursor-pointer"
+          className="absolute top-3 right-3 z-10 w-9 h-9 rounded-full hover:bg-black/5 dark:hover:bg-white/10 flex items-center justify-center text-foreground/65 hover:text-gold transition-colors cursor-pointer"
         >
           <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" aria-hidden="true">
             <line x1="18" y1="6" x2="6" y2="18" />

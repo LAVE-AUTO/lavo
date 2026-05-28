@@ -187,7 +187,7 @@ export function AdminPromoQr({
       <div className="mb-5 flex items-center justify-between">
         <div>
           <p className="text-[11px] font-black uppercase tracking-[0.15em] text-[#C49A1E]">{t('section_title')}</p>
-          <p className="mt-0.5 text-[12px] text-[#888] dark:text-[#9A9A8A]">{t('section_subtitle')}</p>
+          <p className="mt-0.5 text-[12px] text-foreground/55 dark:text-[#9A9A8A]">{t('section_subtitle')}</p>
         </div>
         {appliedRate && (
           <span className="rounded-full border border-[#C49A1E]/30 bg-[#C49A1E]/10 px-3 py-1 text-[11px] font-black text-[#C49A1E]">
@@ -203,7 +203,7 @@ export function AdminPromoQr({
 
           {/* Commission input */}
           <div className="flex flex-col gap-1.5">
-            <label htmlFor="promo-commission" className="text-[13px] font-bold text-[#555] dark:text-[#9A9A8A]">
+            <label htmlFor="promo-commission" className="text-[13px] font-bold text-foreground/70 dark:text-[#9A9A8A]">
               {t('field_commission')}<span className="ml-0.5 text-[#C49A1E]">*</span>
             </label>
             <div className="flex items-center gap-2">
@@ -215,7 +215,7 @@ export function AdminPromoQr({
                 onChange={(e) => { setCommission(e.target.value); setCommissionError(null); }}
                 className={`w-32 ${inputBase} ${commissionError ? 'border-red-400 focus:border-red-400' : ''}`}
               />
-              <span className="text-[13px] font-bold text-[#888] dark:text-[#9A9A8A]">%</span>
+              <span className="text-[13px] font-bold text-foreground/55 dark:text-[#9A9A8A]">%</span>
             </div>
             <p className="text-[12px] text-[#999] dark:text-[#A0A090]">{t('field_commission_hint')}</p>
             {commissionError && <p className="text-[12px] font-semibold text-red-500">{commissionError}</p>}
@@ -242,14 +242,14 @@ export function AdminPromoQr({
             </svg>
             <div>
               <p className="text-[12px] font-bold text-[#1A1A0A] dark:text-[#F0EDD4]">{t('qr_notice_title')}</p>
-              <p className="mt-0.5 text-[12px] leading-relaxed text-[#666] dark:text-[#A0A090]">{t('qr_notice_body')}</p>
+              <p className="mt-0.5 text-[12px] leading-relaxed text-foreground/65 dark:text-[#A0A090]">{t('qr_notice_body')}</p>
             </div>
           </div>
 
           {refCode && (
             <div className="rounded-xl border border-[#E8E4DC] bg-[#F8F6F2] px-3.5 py-3 dark:border-dark-surface dark:bg-[#0F1A0C]">
               <p className="mb-0.5 text-[9px] font-bold uppercase tracking-wider text-[#BBBBAA]">{t('ref_code_label')}</p>
-              <p className="break-all text-[11px] font-mono text-[#555] dark:text-[#B8B2A2]">{refCode}</p>
+              <p className="break-all text-[11px] font-mono text-foreground/70 dark:text-[#B8B2A2]">{refCode}</p>
             </div>
           )}
         </div>
@@ -264,7 +264,7 @@ export function AdminPromoQr({
             {/* Referral URL */}
             <div className="w-full max-w-60 rounded-lg border border-[#E8E4DC] bg-[#F8F6F2] px-3 py-2 dark:border-dark-surface dark:bg-[#0F1A0C]">
               <p className="mb-0.5 text-[9px] font-bold uppercase tracking-wider text-[#BBBBAA]">{t('referral_url_label')}</p>
-              <p className="break-all text-[9px] text-[#888] dark:text-[#9A9A8A]">{promoUrl}</p>
+              <p className="break-all text-[9px] text-foreground/55 dark:text-[#9A9A8A]">{promoUrl}</p>
             </div>
 
             {/* Download + Print */}
@@ -277,7 +277,7 @@ export function AdminPromoQr({
                 {t('btn_download_png')}
               </button>
               <button type="button" onClick={printPdf}
-                className="flex flex-1 items-center justify-center gap-1.5 rounded-lg border border-[#D8D4C8] px-3 py-2 text-[12px] font-semibold text-[#555] hover:bg-[#F5F3EE] dark:border-dark-surface dark:text-[#9A9A8A] dark:hover:bg-[#1A2A14]">
+                className="flex flex-1 items-center justify-center gap-1.5 rounded-lg border border-[#D8D4C8] px-3 py-2 text-[12px] font-semibold text-foreground/70 hover:bg-[#F5F3EE] dark:border-dark-surface dark:text-[#9A9A8A] dark:hover:bg-[#1A2A14]">
                 <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" aria-hidden="true">
                   <polyline points="6 9 6 2 18 2 18 9" /><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2" /><rect x="6" y="14" width="12" height="8" />
                 </svg>

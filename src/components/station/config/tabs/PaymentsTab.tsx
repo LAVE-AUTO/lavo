@@ -141,7 +141,7 @@ export function PaymentsTab({ locked }: Props) {
 
         {!isConnected && (
           <div className="flex flex-col gap-4">
-            <p className="text-[13px] leading-relaxed text-[#666] dark:text-[#9A9A8A]">
+            <p className="text-[13px] leading-relaxed text-foreground/65 dark:text-[#9A9A8A]">
               {t('payments_stripe_not_connected_desc')}
             </p>
             <button
@@ -158,7 +158,7 @@ export function PaymentsTab({ locked }: Props) {
 
         {isPending && (
           <div className="flex flex-col gap-4">
-            <p className="text-[13px] leading-relaxed text-[#666] dark:text-[#9A9A8A]">
+            <p className="text-[13px] leading-relaxed text-foreground/65 dark:text-[#9A9A8A]">
               {t('payments_stripe_pending_desc')}
             </p>
             <button

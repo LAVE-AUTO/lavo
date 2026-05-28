@@ -68,7 +68,7 @@ function MiniCalendar({
   const capitalized = monthLabel.charAt(0).toUpperCase() + monthLabel.slice(1);
 
   const navBtn =
-    'flex h-7 w-7 items-center justify-center rounded-lg text-[#888] transition-colors hover:bg-[#F0EDE4] hover:text-[#1A1A0A] dark:hover:bg-[#243020] dark:hover:text-[#F0EDD4]';
+    'flex h-7 w-7 items-center justify-center rounded-lg text-foreground/55 transition-colors hover:bg-[#F0EDE4] hover:text-[#1A1A0A] dark:hover:bg-[#243020] dark:hover:text-[#F0EDD4]';
 
   return (
     <div className="w-full select-none">
@@ -194,7 +194,7 @@ export function HoursExceptions({ exceptions, saving = false, onAdd, onDelete, d
         )}
       </div>
 
-      <p className="mb-4 text-[12px] leading-snug text-[#888] dark:text-[#9A9A8A]">
+      <p className="mb-4 text-[12px] leading-snug text-foreground/55 dark:text-[#9A9A8A]">
         {t('hours_exceptions_hint')}
       </p>
 
@@ -210,7 +210,7 @@ export function HoursExceptions({ exceptions, saving = false, onAdd, onDelete, d
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-[1fr_1fr]">
             {/* Calendar picker */}
             <div className="flex flex-col gap-1.5">
-              <label className="text-[11px] font-bold uppercase tracking-[0.5px] text-[#888] dark:text-[#9A9A8A]">
+              <label className="text-[11px] font-bold uppercase tracking-[0.5px] text-foreground/55 dark:text-[#9A9A8A]">
                 {t('hours_exceptions_date_label')}
               </label>
               <div
@@ -245,7 +245,7 @@ export function HoursExceptions({ exceptions, saving = false, onAdd, onDelete, d
             {/* Reason + actions */}
             <div className="flex flex-col justify-between gap-3">
               <div className="flex flex-col gap-1.5">
-                <label className="text-[11px] font-bold uppercase tracking-[0.5px] text-[#888] dark:text-[#9A9A8A]">
+                <label className="text-[11px] font-bold uppercase tracking-[0.5px] text-foreground/55 dark:text-[#9A9A8A]">
                   {t('hours_exceptions_reason_label')}
                 </label>
                 <TextField
@@ -263,7 +263,7 @@ export function HoursExceptions({ exceptions, saving = false, onAdd, onDelete, d
                   type="button"
                   onClick={handleCancel}
                   disabled={submitting}
-                  className="rounded-xl border border-[#E0DCD0] px-4 py-2 text-[12px] font-semibold text-[#666] transition-colors hover:bg-[#F0EDE0] disabled:opacity-50 dark:border-dark-surface dark:text-[#9A9A8A]"
+                  className="rounded-xl border border-[#E0DCD0] px-4 py-2 text-[12px] font-semibold text-foreground/65 transition-colors hover:bg-[#F0EDE0] disabled:opacity-50 dark:border-dark-surface dark:text-[#9A9A8A]"
                 >
                   {t('hours_exceptions_add_cancel')}
                 </button>
@@ -288,7 +288,7 @@ export function HoursExceptions({ exceptions, saving = false, onAdd, onDelete, d
             <line x1="8" y1="2" x2="8" y2="6" />
             <line x1="3" y1="10" x2="21" y2="10" />
           </svg>
-          <p className="text-[12px] font-semibold text-[#888] dark:text-[#9A9A8A]">
+          <p className="text-[12px] font-semibold text-foreground/55 dark:text-[#9A9A8A]">
             {t('hours_exceptions_empty')}
           </p>
         </div>
@@ -300,7 +300,7 @@ export function HoursExceptions({ exceptions, saving = false, onAdd, onDelete, d
                 <span className="font-mono text-[13px] font-bold text-[#1A1A0A] dark:text-[#F0EDD4]">
                   {ex.exception_date}
                 </span>
-                <span className="text-[12px] text-[#888] dark:text-[#9A9A8A]">{ex.reason}</span>
+                <span className="text-[12px] text-foreground/55 dark:text-[#9A9A8A]">{ex.reason}</span>
               </div>
               <button
                 type="button"

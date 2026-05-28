@@ -48,7 +48,7 @@ function ToggleRow({
     <div className="flex items-start justify-between gap-4 border-b border-[#F0EDE4] py-3 last:border-b-0 dark:border-[#1A2A14]">
       <div className="flex flex-col gap-0.5">
         <span className="text-[13px] font-semibold text-[#1A1A0A] dark:text-[#F0EDD4]">{label}</span>
-        <span className="text-[12px] leading-snug text-[#888] dark:text-[#9A9A8A]">{hint}</span>
+        <span className="text-[12px] leading-snug text-foreground/55 dark:text-[#9A9A8A]">{hint}</span>
       </div>
       <label className="relative inline-flex h-6 w-11 shrink-0">
         <input
@@ -130,7 +130,7 @@ export function NotificationsTab({ locked }: Props) {
         <h3 className="mb-2 text-[11px] font-bold uppercase tracking-[1.5px] text-[#C49A1E]">
           {t('notifications_card_title')}
         </h3>
-        <p className="mb-4 text-[12px] leading-snug text-[#888] dark:text-[#9A9A8A]">
+        <p className="mb-4 text-[12px] leading-snug text-foreground/55 dark:text-[#9A9A8A]">
           {t('notifications_card_hint')}
         </p>
         <div className="flex flex-col">

@@ -145,10 +145,10 @@ function ToggleCard({ selected, onClick, icon, label, sub, ariaPressed }: Toggle
         'flex flex-col items-center gap-2 py-4 px-2 rounded-xl border-[1.5px] text-center transition-all duration-150 w-full',
         selected
           ? 'bg-gold/10 border-gold shadow-[0_2px_10px_rgba(175,132,8,0.12)]'
-          : 'bg-white dark:bg-dark-card border-[#CCCCCC] dark:border-tab-inactive hover:border-gold/50 dark:hover:border-gold/40',
+          : 'bg-white dark:bg-surface border-[#CCCCCC] dark:border-border hover:border-gold/50 dark:hover:border-gold/40',
       ].join(' ')}
     >
-      <span className={selected ? 'text-gold' : 'text-[#888] dark:text-Hurryline-muted'}>
+      <span className={selected ? 'text-gold' : 'text-foreground/55 dark:text-Hurryline-muted'}>
         {icon}
       </span>
       <span className={`text-[13px] font-semibold leading-tight ${selected ? 'text-dark-bg dark:text-white' : 'text-[#444] dark:text-white'}`}>
@@ -357,7 +357,7 @@ export function StepCommerce({ data, errors, isLoading, washTypes, onChange, onE
             value={data.description}
             onChange={(e) => onChange({ ...data, description: e.target.value })}
             maxLength={1000}
-            className="w-full px-4 py-3 pb-7 bg-white dark:bg-dark-card border-[1.5px] border-[#CCCCCC] dark:border-tab-inactive rounded-lg text-[15px] text-[#1A1A1A] dark:text-white placeholder-[#AAAAAA] dark:placeholder-[#4A5A46] outline-none focus:border-gold dark:focus:border-gold focus:shadow-[0_0_0_3px_rgba(196,154,30,0.15)] transition-colors duration-150 resize-none"
+            className="w-full px-4 py-3 pb-7 bg-white dark:bg-surface border-[1.5px] border-[#CCCCCC] dark:border-border rounded-lg text-[15px] text-[#1A1A1A] dark:text-white placeholder-[#AAAAAA] dark:placeholder-[#4A5A46] outline-none focus:border-gold dark:focus:border-gold focus:shadow-[0_0_0_3px_rgba(196,154,30,0.15)] transition-colors duration-150 resize-none"
           />
           <span className={`absolute bottom-2.5 right-3 text-[11px] tabular-nums ${charCount >= 900 ? 'text-Hurryline-error' : 'text-[#AAA] dark:text-Hurryline-muted'}`}>
             {charCount}/1000

@@ -480,7 +480,7 @@ function LogRow({ entry, t }: { entry: LogEntry; t: LogsT }) {
             {targetName && <span className="text-[#5A554B] dark:text-[#A6A091]"> — {targetName}</span>}
           </p>
         )}
-        <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-[12px] text-[#666] dark:text-[#9A9A8A]">
+        <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-[12px] text-foreground/65 dark:text-[#9A9A8A]">
           {targetTypeLabel && (
             <span className="flex items-center gap-1">
               <span className="h-1.5 w-1.5 rounded-full bg-[#CCCCBB]" aria-hidden="true" />

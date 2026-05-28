@@ -43,15 +43,15 @@ export function RefuseReasonModal({ open, loading, error, onConfirm, onCancel }:
             </div>
             <div>
               <h2 id="refuse-modal-title" className="text-[15px] font-black text-[#1A1A0A] dark:text-[#F0EDD4]">{t('refuse_title')}</h2>
-              <p className="mt-0.5 text-[12px] text-[#555]/60 dark:text-[#FFFFF0]/45">{t('refuse_message')}</p>
+              <p className="mt-0.5 text-[12px] text-foreground/70/60 dark:text-[#FFFFF0]/45">{t('refuse_message')}</p>
             </div>
           </div>
 
           {/* Reason textarea */}
           <div>
-            <label htmlFor="refusal-reason" className="mb-1.5 block text-[12px] font-bold uppercase tracking-wider text-[#555]/50 dark:text-[#FFFFF0]/40">
+            <label htmlFor="refusal-reason" className="mb-1.5 block text-[12px] font-bold uppercase tracking-wider text-foreground/70/50 dark:text-[#FFFFF0]/40">
               {t('refuse_reason_label')}
-              <span className="ml-1 normal-case font-normal text-[#555]/30 dark:text-[#FFFFF0]/25">({t('optional')})</span>
+              <span className="ml-1 normal-case font-normal text-foreground/70/30 dark:text-[#FFFFF0]/25">({t('optional')})</span>
             </label>
             <textarea
               id="refusal-reason"
@@ -63,13 +63,13 @@ export function RefuseReasonModal({ open, loading, error, onConfirm, onCancel }:
               placeholder={t('refuse_reason_placeholder')}
               aria-invalid={!!error}
               aria-describedby={error ? 'refuse-modal-error' : undefined}
-              className="w-full resize-none rounded-[10px] border border-[#DDD9CC] bg-[#F5F4EE] px-3.5 py-2.5 text-[13px] text-[#1A1A0A] outline-none transition-all duration-150 focus:border-[#E8472A]/60 focus:ring-2 focus:ring-[#E8472A]/10 dark:border-[#2A3826] dark:bg-[#111A0E] dark:text-[#F0EDD4] placeholder:text-[#555]/30 dark:placeholder:text-[#FFFFF0]/20 disabled:opacity-50"
+              className="w-full resize-none rounded-[10px] border border-[#DDD9CC] bg-[#F5F4EE] px-3.5 py-2.5 text-[13px] text-[#1A1A0A] outline-none transition-all duration-150 focus:border-[#E8472A]/60 focus:ring-2 focus:ring-[#E8472A]/10 dark:border-[#2A3826] dark:bg-[#111A0E] dark:text-[#F0EDD4] placeholder:text-foreground/70/30 dark:placeholder:text-[#FFFFF0]/20 disabled:opacity-50"
             />
             <div className="mt-1 flex items-center justify-between">
-              <span className="text-[11px] text-[#555]/30 dark:text-[#FFFFF0]/20">
+              <span className="text-[11px] text-foreground/70/30 dark:text-[#FFFFF0]/20">
                 {reason.length === 0 ? t('refuse_reason_hint') : ''}
               </span>
-              <span className="text-[11px] text-[#555]/30 dark:text-[#FFFFF0]/20">
+              <span className="text-[11px] text-foreground/70/30 dark:text-[#FFFFF0]/20">
                 {reason.length}/{MAX_REASON}
               </span>
             </div>
@@ -88,7 +88,7 @@ export function RefuseReasonModal({ open, loading, error, onConfirm, onCancel }:
               type="button"
               onClick={onCancel}
               disabled={loading}
-              className="flex-1 rounded-[10px] border border-[#DDD9CC] py-2.5 text-[13px] font-bold text-[#555]/70 transition-colors hover:bg-[#F0EDE0] disabled:opacity-50 dark:border-[#2A3826] dark:text-[#FFFFF0]/50 dark:hover:bg-[#182214]"
+              className="flex-1 rounded-[10px] border border-[#DDD9CC] py-2.5 text-[13px] font-bold text-foreground/70/70 transition-colors hover:bg-[#F0EDE0] disabled:opacity-50 dark:border-[#2A3826] dark:text-[#FFFFF0]/50 dark:hover:bg-[#182214]"
             >
               {t('btn_cancel')}
             </button>

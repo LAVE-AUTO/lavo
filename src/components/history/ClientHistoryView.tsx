@@ -175,14 +175,14 @@ export function ClientHistoryView() {
 
       {/* Filters - period + status grouped in one card for cohesion */}
       {entries.length > 0 && (
-        <div className="bg-[#E8E8D8] dark:bg-dark-card rounded-2xl border border-[#D0D0C0] dark:border-tab-inactive overflow-hidden">
+        <div className="bg-surface rounded-2xl border border-border overflow-hidden">
           <FilterStrip
             label={t('filter_period')}
             items={PERIODS}
             value={period}
             onChange={setPeriod}
           />
-          <div className="border-t border-[#D0D0C0]/60 dark:border-tab-inactive">
+          <div className="border-t border-border/60 dark:border-border">
             <FilterStrip
               label={t('filter_status')}
               items={STATUSES}
@@ -231,18 +231,18 @@ function KpiCard({
   highlight?: boolean;
 }) {
   return (
-    <div className="bg-[#E8E8D8] dark:bg-dark-card rounded-2xl p-4 border border-[#D0D0C0] dark:border-tab-inactive">
+    <div className="bg-surface rounded-2xl p-4 border border-border">
       <div className="flex items-center gap-2">
         <span className="w-8 h-8 rounded-xl bg-gold/15 text-gold flex items-center justify-center shrink-0">
           {icon}
         </span>
-        <span className="text-[10.5px] font-black text-[#666] dark:text-[#A0A090] uppercase tracking-[0.15em]">{label}</span>
+        <span className="text-[10.5px] font-black text-foreground/65 dark:text-[#A0A090] uppercase tracking-[0.15em]">{label}</span>
       </div>
-      <p className={`mt-3 text-[24px] sm:text-[26px] font-black leading-none ${highlight ? 'text-gold' : 'text-[#0A0A14] dark:text-white'}`}>
+      <p className={`mt-3 text-[24px] sm:text-[26px] font-black leading-none ${highlight ? 'text-gold' : 'text-foreground'}`}>
         {value}
       </p>
       {sub && (
-        <p className="mt-1.5 text-[11px] font-semibold text-[#888] dark:text-[#8A8A82]">{sub}</p>
+        <p className="mt-1.5 text-[11px] font-semibold text-foreground/55 dark:text-[#8A8A82]">{sub}</p>
       )}
     </div>
   );
@@ -263,7 +263,7 @@ interface FilterStripProps<T extends string> {
 function FilterStrip<T extends string>({ label, items, value, onChange, variantByKey }: FilterStripProps<T>) {
   return (
     <div className="px-4 py-3.5">
-      <p className="text-[10.5px] font-black text-[#666] dark:text-[#A0A090] uppercase tracking-[0.15em] mb-2.5">{label}</p>
+      <p className="text-[10.5px] font-black text-foreground/65 dark:text-[#A0A090] uppercase tracking-[0.15em] mb-2.5">{label}</p>
       <div className="flex gap-1.5 overflow-x-auto scrollbar-none -mx-1 px-1 pb-0.5">
         {items.map(({ key, label: l }) => {
           const isActive = value === key;
@@ -281,7 +281,7 @@ function FilterStrip<T extends string>({ label, items, value, onChange, variantB
                 'shrink-0 px-3.5 py-1.5 rounded-full text-[13px] font-bold whitespace-nowrap transition-colors cursor-pointer',
                 isActive
                   ? activeClass
-                  : 'bg-white/70 dark:bg-tab-inactive text-[#555] dark:text-[#C0C0B0] hover:bg-[#F0F0E2] dark:hover:bg-tab-inactive',
+                  : 'bg-white/70 dark:bg-tab-inactive text-foreground/70 hover:bg-surface/60 dark:hover:bg-tab-inactive',
               ].join(' ')}
             >
               {l}
@@ -299,7 +299,7 @@ function FilterStrip<T extends string>({ label, items, value, onChange, variantB
 
 function HistoryEmpty({ t }: { t: ReturnType<typeof useTranslations> }) {
   return (
-    <div className="flex flex-col items-center justify-center py-16 gap-4 text-center bg-[#E8E8D8] dark:bg-dark-card rounded-2xl border border-[#D0D0C0] dark:border-tab-inactive">
+    <div className="flex flex-col items-center justify-center py-16 gap-4 text-center bg-surface rounded-2xl border border-border">
       <div className="w-16 h-16 rounded-full bg-gold/10 flex items-center justify-center">
         <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#c8980a" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
           <path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z" />
@@ -309,8 +309,8 @@ function HistoryEmpty({ t }: { t: ReturnType<typeof useTranslations> }) {
         </svg>
       </div>
       <div className="px-6">
-        <p className="text-[16px] font-black text-[#0A0A14] dark:text-white">{t('empty_title')}</p>
-        <p className="text-[13.5px] text-[#666] dark:text-[#B0B0A0] mt-1 max-w-xs mx-auto leading-snug">{t('empty_desc')}</p>
+        <p className="text-[16px] font-black text-foreground">{t('empty_title')}</p>
+        <p className="text-[13.5px] text-foreground/65 mt-1 max-w-xs mx-auto leading-snug">{t('empty_desc')}</p>
       </div>
       <Link
         href="/stations"

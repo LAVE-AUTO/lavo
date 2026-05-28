@@ -30,7 +30,7 @@ export function Tabs({ tabs, activeTabId, onTabChange, className = '' }: TabsPro
     <div
       role="tablist"
       className={[
-        'flex gap-1 overflow-x-auto scrollbar-none border-b border-[#CCCCCC] dark:border-tab-inactive',
+        'flex gap-1 overflow-x-auto scrollbar-none border-b border-[#CCCCCC] dark:border-border',
         className,
       ]
         .filter(Boolean)

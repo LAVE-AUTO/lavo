@@ -228,7 +228,7 @@ export function LoginForm({
             onMouseDown={(e) => e.preventDefault()}
             aria-label={showPassword ? 'Hide password' : 'Show password'}
             aria-pressed={showPassword}
-            className="text-[#888] hover:text-[#555] dark:hover:text-[#ccc] transition-colors"
+            className="text-foreground/55 hover:text-foreground/70 dark:hover:text-[#ccc] transition-colors"
           >
             <EyeIcon open={showPassword} />
           </button>
@@ -242,9 +242,9 @@ export function LoginForm({
             id="remember-me"
             checked={rememberMe}
             onChange={(e) => setRememberMe(e.target.checked)}
-            className="w-4 h-4 rounded border-[#CCCCCC] dark:border-tab-inactive accent-gold cursor-pointer"
+            className="w-4 h-4 rounded border-[#CCCCCC] dark:border-border accent-gold cursor-pointer"
           />
-          <span className="text-[14px] text-[#555] dark:text-Hurryline-muted">
+          <span className="text-[14px] text-foreground/70 dark:text-Hurryline-muted">
             {t('remember_me')}
           </span>
         </label>
@@ -264,7 +264,7 @@ export function LoginForm({
       {/* Wrong space banner - shown when user logs in with the wrong account type */}
       {wrongSpaceHref && (
         <div className="mt-4 flex items-center justify-between gap-3 px-4 py-3 rounded-xl border border-gold/30 bg-gold/5 animate-fade-in">
-          <p className="text-[13px] text-[#555] dark:text-Hurryline-muted leading-snug">
+          <p className="text-[13px] text-foreground/70 dark:text-Hurryline-muted leading-snug">
             {t('error_wrong_space')}
           </p>
           <Link

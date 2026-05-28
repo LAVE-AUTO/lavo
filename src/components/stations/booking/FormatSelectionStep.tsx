@@ -25,16 +25,16 @@ export function FormatSelectionStep({
   return (
     <div className="flex flex-col h-full">
       <div className="flex-1 overflow-y-auto px-1 space-y-4 pb-4">
-        <p className="text-[14px] text-[#555] dark:text-[#B0B0A0]">{t('format_selection_subtitle')}</p>
+        <p className="text-[14px] text-foreground/70">{t('format_selection_subtitle')}</p>
 
         {/* Service name reminder */}
         <div className="flex items-center gap-2 px-1">
           <div className="w-2 h-2 rounded-full bg-gold shrink-0" />
-          <span className="text-[14px] font-bold text-[#000C1F] dark:text-[#FFF8EC]">{service.name}</span>
+          <span className="text-[14px] font-bold text-foreground">{service.name}</span>
         </div>
 
         {activeEntries.length === 0 ? (
-          <div className="rounded-xl border border-[#D0D0C0] dark:border-tab-inactive bg-[#F0F0E2] dark:bg-dark-bg/50 px-5 py-8 text-center text-[14px] text-[#555] dark:text-[#B0B0A0]">
+          <div className="rounded-xl border border-border bg-surface/60 dark:bg-background/50 px-5 py-8 text-center text-[14px] text-foreground/70">
             Aucun format de véhicule configuré pour ce service.
           </div>
         ) : (
@@ -49,7 +49,7 @@ export function FormatSelectionStep({
                   className={`w-full text-left p-4 rounded-xl border-2 transition-all cursor-pointer ${
                     selected
                       ? 'border-gold bg-gold/10 dark:bg-gold/5'
-                      : 'border-[#D0D0C0] dark:border-tab-inactive bg-white/40 dark:bg-dark-bg/40 hover:border-gold/30'
+                      : 'border-border bg-white/40 dark:bg-background/40 hover:border-gold/30'
                   }`}
                 >
                   {/* Selected indicator */}
@@ -63,12 +63,12 @@ export function FormatSelectionStep({
                   </div>
 
                   {/* Format name */}
-                  <div className="text-[15px] font-bold text-[#000C1F] dark:text-[#FFF8EC] leading-tight mb-1">
+                  <div className="text-[15px] font-bold text-foreground leading-tight mb-1">
                     {entry.formatLabel}
                   </div>
 
                   {/* Duration */}
-                  <div className="flex items-center gap-1 text-[12px] text-[#888] dark:text-[#888]">
+                  <div className="flex items-center gap-1 text-[12px] text-foreground/55">
                     <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
                       <circle cx="12" cy="12" r="10" />
                       <polyline points="12 6 12 12 16 14" />
@@ -82,13 +82,13 @@ export function FormatSelectionStep({
         )}
 
         {/* Note */}
-        <p className="text-[12px] text-[#888] dark:text-[#777] px-1">
+        <p className="text-[12px] text-foreground/55 dark:text-[#777] px-1">
           {t('format_selection_note')}
         </p>
       </div>
 
       {/* Actions */}
-      <div className="border-t border-[#D0D0C0] dark:border-tab-inactive pt-4 flex gap-3">
+      <div className="border-t border-border pt-4 flex gap-3">
         <button
           type="button"
           onClick={onBack}
@@ -103,7 +103,7 @@ export function FormatSelectionStep({
           className={`flex-1 py-3 rounded-xl text-[15px] font-black transition-colors cursor-pointer ${
             selectedEntry
               ? 'bg-gold hover:bg-gold-hover text-dark-bg'
-              : 'bg-[#D0D0C0] dark:bg-tab-inactive text-[#888] cursor-not-allowed'
+              : 'bg-[#D0D0C0] dark:bg-tab-inactive text-foreground/55 cursor-not-allowed'
           }`}
         >
           {t('continue')}

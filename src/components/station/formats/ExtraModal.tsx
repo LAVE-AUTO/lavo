@@ -23,7 +23,7 @@ const SCOPE_LABELS: Record<Scope, string> = {
 
 function FieldLabel({ children }: { children: React.ReactNode }) {
   return (
-    <label className="block text-[11px] font-bold uppercase tracking-[0.5px] text-[#888] dark:text-[#9A9A8A]">
+    <label className="block text-[11px] font-bold uppercase tracking-[0.5px] text-foreground/55 dark:text-[#9A9A8A]">
       {children}
     </label>
   );
@@ -216,7 +216,7 @@ export function ExtraModal({ extra, onClose, onSaved }: Props) {
             <button
               type="button"
               onClick={onClose}
-              className="w-full rounded-xl border border-[#E0DCD0] py-2.5 text-[13px] font-semibold text-[#666] transition-colors hover:bg-[#F0EDE0] dark:border-[#243020] dark:text-[#9A9A8A]"
+              className="w-full rounded-xl border border-[#E0DCD0] py-2.5 text-[13px] font-semibold text-foreground/65 transition-colors hover:bg-[#F0EDE0] dark:border-[#243020] dark:text-[#9A9A8A]"
             >
               Annuler
             </button>

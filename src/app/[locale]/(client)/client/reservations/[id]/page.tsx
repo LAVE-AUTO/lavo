@@ -211,7 +211,7 @@ export default function ReservationDetailPage() {
   /* Loading */
   if (loading) {
     return (
-      <main className="min-h-screen bg-[#F5F5E6] dark:bg-[#0F0F0D] flex items-center justify-center pb-20">
+      <main className="min-h-screen bg-background flex items-center justify-center pb-20">
         <div className="h-8 w-8 animate-spin rounded-full border-[3px] border-gold border-t-transparent" />
       </main>
     );
@@ -220,9 +220,9 @@ export default function ReservationDetailPage() {
   /* Not found */
   if (notFound || !reservation) {
     return (
-      <main className="min-h-screen bg-[#F5F5E6] dark:bg-[#0F0F0D] flex items-center justify-center pb-20">
+      <main className="min-h-screen bg-background flex items-center justify-center pb-20">
         <div className="text-center">
-          <p className="text-[18px] font-bold text-[#555] dark:text-[#B0B0A0]">{t('not_found')}</p>
+          <p className="text-[18px] font-bold text-foreground/70">{t('not_found')}</p>
           <Link href="/client/reservations" className="mt-4 inline-block text-gold font-bold">{t('back_to_coupons')}</Link>
         </div>
       </main>
@@ -254,7 +254,7 @@ export default function ReservationDetailPage() {
   const statusColors: Record<string, string> = {
     confirmed:       'bg-Hurryline-success/15 text-Hurryline-success',
     in_progress:     'bg-gold/15 text-gold',
-    completed:       'bg-[#999]/15 text-[#666]',
+    completed:       'bg-[#999]/15 text-foreground/65',
     cancelled:       'bg-Hurryline-error/15 text-Hurryline-error',
   };
   /* Hide the internal `pending_payment` / `pending` lifecycle from the UI:
@@ -349,7 +349,7 @@ export default function ReservationDetailPage() {
   };
 
   return (
-    <main className="min-h-screen bg-[#F5F5E6] dark:bg-[#0F0F0D] pb-24 sm:pb-8">
+    <main className="min-h-screen bg-background pb-24 sm:pb-8">
       {/* Back header */}
       <div className="px-4 pt-4 pb-2 max-w-2xl mx-auto">
         <Link
@@ -378,8 +378,8 @@ export default function ReservationDetailPage() {
         </div>
 
         {/* Details card */}
-        <div className="bg-[#E8E8D8] dark:bg-[#1A1A18] rounded-xl border border-[#D0D0C0] dark:border-tab-inactive p-5 space-y-4">
-          <h2 className="text-[16px] font-black text-[#0A0A14] dark:text-white">{t('detail_summary')}</h2>
+        <div className="bg-surface dark:bg-[#1A1A18] rounded-xl border border-border p-5 space-y-4">
+          <h2 className="text-[16px] font-black text-foreground">{t('detail_summary')}</h2>
 
           <div className="space-y-3">
             <DetailRow icon="calendar" label={t('detail_date')} value={dateLabel} />
@@ -387,8 +387,8 @@ export default function ReservationDetailPage() {
             <DetailRow icon="tag" label={t('detail_forfait')} value={reservation.forfaitName} />
             <DetailRow icon="timer" label={t('detail_duration')} value={`${reservation.duration} min`} />
 
-            <div className="pt-3 border-t border-[#D0D0C0] dark:border-tab-inactive flex items-center justify-between">
-              <span className="text-[15px] font-bold text-[#0A0A14] dark:text-white">{t('detail_total')}</span>
+            <div className="pt-3 border-t border-border flex items-center justify-between">
+              <span className="text-[15px] font-bold text-foreground">{t('detail_total')}</span>
               <span className="text-[20px] font-black text-gold">{reservation.totalPrice.toFixed(2)}$</span>
             </div>
           </div>
@@ -433,7 +433,7 @@ export default function ReservationDetailPage() {
                 'w-full py-3.5 rounded-xl text-[15px] font-black text-center transition-all flex items-center justify-center gap-2',
                 canStart
                   ? 'bg-gold hover:bg-gold-hover text-dark-bg cursor-pointer'
-                  : 'bg-[#D0D0C0] dark:bg-[#2A2A28] text-[#999] dark:text-[#666] cursor-not-allowed',
+                  : 'bg-[#D0D0C0] dark:bg-[#2A2A28] text-[#999] dark:text-foreground/65 cursor-not-allowed',
               ].join(' ')}
             >
               <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polygon points="3 11 22 2 13 21 11 13 3 11" /></svg>
@@ -450,14 +450,14 @@ export default function ReservationDetailPage() {
 
             <Link
               href={`/client/reservations/${id}/reschedule`}
-              className="block w-full py-3.5 rounded-xl text-[15px] font-bold text-center text-[#0A0A14] dark:text-white border-2 border-[#D0D0C0] dark:border-tab-inactive hover:border-gold/50 hover:bg-[#E8E8D8] dark:hover:bg-dark-card transition-colors"
+              className="block w-full py-3.5 rounded-xl text-[15px] font-bold text-center text-foreground border-2 border-border hover:border-gold/50 hover:bg-surface dark:hover:bg-dark-card transition-colors"
             >
               {t('reschedule_btn')}
             </Link>
 
             <Link
               href={`/client/reservations/${id}/signal-delay`}
-              className="block w-full py-3.5 rounded-xl text-[15px] font-bold text-center text-[#555] dark:text-[#B0B0A0] border-2 border-[#D0D0C0] dark:border-tab-inactive hover:border-Hurryline-error/40 hover:text-Hurryline-error transition-colors"
+              className="block w-full py-3.5 rounded-xl text-[15px] font-bold text-center text-foreground/70 border-2 border-border hover:border-Hurryline-error/40 hover:text-Hurryline-error transition-colors"
             >
               {t('signal_delay_btn')}
             </Link>
@@ -473,8 +473,8 @@ export default function ReservationDetailPage() {
         )}
 
         {isPast && (
-          <div className="bg-[#E8E8D8] dark:bg-[#1A1A18] rounded-xl border border-[#D0D0C0] dark:border-tab-inactive p-4 space-y-3">
-            <p className="text-[14px] text-[#666] dark:text-[#B0B0A0] text-center">
+          <div className="bg-surface dark:bg-[#1A1A18] rounded-xl border border-border p-4 space-y-3">
+            <p className="text-[14px] text-foreground/65 text-center">
               {reservation.status === 'completed' ? t('past_completed') : t('past_cancelled')}
             </p>
             {reservation.status === 'completed' && (
@@ -496,7 +496,7 @@ export default function ReservationDetailPage() {
                 {!reservation.isTipped && (
                   <Link
                     href={`/client/reservations/${id}/tip`}
-                    className="flex items-center justify-center gap-2 w-full py-3 rounded-xl border-2 border-[#D0D0C0] dark:border-tab-inactive text-[14px] font-bold text-[#555] dark:text-[#B0B0A0] hover:border-gold/30 hover:text-gold transition-colors"
+                    className="flex items-center justify-center gap-2 w-full py-3 rounded-xl border-2 border-border text-[14px] font-bold text-foreground/70 hover:border-gold/30 hover:text-gold transition-colors"
                   >
                     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
                       <line x1="12" y1="1" x2="12" y2="23" /><path d="M17 5H9.5a3.5 3.5 0 000 7h5a3.5 3.5 0 010 7H6" />
@@ -534,7 +534,7 @@ export default function ReservationDetailPage() {
               role="dialog"
               aria-modal="true"
               aria-labelledby="dispute-modal-title"
-              className="bg-[#F5F5E6] dark:bg-[#1A1A18] rounded-2xl shadow-2xl w-full max-w-md p-6 space-y-4 max-h-[90vh] overflow-y-auto"
+              className="bg-background dark:bg-[#1A1A18] rounded-2xl shadow-2xl w-full max-w-md p-6 space-y-4 max-h-[90vh] overflow-y-auto"
             >
               <div className="w-14 h-14 rounded-full bg-Hurryline-error/15 flex items-center justify-center mx-auto">
                 <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#E8472A" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
@@ -545,18 +545,18 @@ export default function ReservationDetailPage() {
 
               <h3
                 id="dispute-modal-title"
-                className="text-[18px] font-black text-[#0A0A14] dark:text-white text-center"
+                className="text-[18px] font-black text-foreground text-center"
               >
                 {t('dispute_modal_title')}
               </h3>
-              <p className="text-[13px] text-[#666] dark:text-[#B0B0A0] text-center leading-relaxed">
+              <p className="text-[13px] text-foreground/65 text-center leading-relaxed">
                 {t('dispute_modal_desc')}
               </p>
 
               <form onSubmit={handleSubmitDispute} className="space-y-4">
                 {/* Reason (required) */}
                 <div>
-                  <label htmlFor="dispute-reason" className="block text-[13px] font-bold text-[#0A0A14] dark:text-white mb-1.5">
+                  <label htmlFor="dispute-reason" className="block text-[13px] font-bold text-foreground mb-1.5">
                     {t('dispute_field_reason')} <span className="text-Hurryline-error">*</span>
                   </label>
                   <textarea
@@ -567,14 +567,14 @@ export default function ReservationDetailPage() {
                     maxLength={500}
                     rows={3}
                     required
-                    className="w-full rounded-xl border border-[#D0D0C0] dark:border-tab-inactive bg-white dark:bg-[#131310] px-3.5 py-2.5 text-[13px] text-[#0A0A14] dark:text-white outline-none transition-colors placeholder:text-[#BBBBAA] dark:placeholder:text-[#555] focus:border-gold resize-none"
+                    className="w-full rounded-xl border border-border bg-white dark:bg-[#131310] px-3.5 py-2.5 text-[13px] text-foreground outline-none transition-colors placeholder:text-[#BBBBAA] dark:placeholder:text-foreground/70 focus:border-gold resize-none"
                   />
-                  <p className="mt-1 text-[11px] text-[#999] dark:text-[#666] text-right">{disputeReason.length}/500</p>
+                  <p className="mt-1 text-[11px] text-[#999] dark:text-foreground/65 text-right">{disputeReason.length}/500</p>
                 </div>
 
                 {/* Description (optional) */}
                 <div>
-                  <label htmlFor="dispute-description" className="block text-[13px] font-bold text-[#0A0A14] dark:text-white mb-1.5">
+                  <label htmlFor="dispute-description" className="block text-[13px] font-bold text-foreground mb-1.5">
                     {t('dispute_field_description')}
                   </label>
                   <textarea
@@ -584,14 +584,14 @@ export default function ReservationDetailPage() {
                     placeholder={t('dispute_field_description_placeholder')}
                     maxLength={2000}
                     rows={4}
-                    className="w-full rounded-xl border border-[#D0D0C0] dark:border-tab-inactive bg-white dark:bg-[#131310] px-3.5 py-2.5 text-[13px] text-[#0A0A14] dark:text-white outline-none transition-colors placeholder:text-[#BBBBAA] dark:placeholder:text-[#555] focus:border-gold resize-none"
+                    className="w-full rounded-xl border border-border bg-white dark:bg-[#131310] px-3.5 py-2.5 text-[13px] text-foreground outline-none transition-colors placeholder:text-[#BBBBAA] dark:placeholder:text-foreground/70 focus:border-gold resize-none"
                   />
-                  <p className="mt-1 text-[11px] text-[#999] dark:text-[#666] text-right">{disputeDescription.length}/2000</p>
+                  <p className="mt-1 text-[11px] text-[#999] dark:text-foreground/65 text-right">{disputeDescription.length}/2000</p>
                 </div>
 
                 {/* Requested amount (optional) */}
                 <div>
-                  <label htmlFor="dispute-amount" className="block text-[13px] font-bold text-[#0A0A14] dark:text-white mb-1.5">
+                  <label htmlFor="dispute-amount" className="block text-[13px] font-bold text-foreground mb-1.5">
                     {t('dispute_field_amount')}
                   </label>
                   <div className="relative">
@@ -604,9 +604,9 @@ export default function ReservationDetailPage() {
                       value={disputeAmount}
                       onChange={(e) => setDisputeAmount(e.target.value)}
                       placeholder={t('dispute_field_amount_placeholder')}
-                      className="w-full rounded-xl border border-[#D0D0C0] dark:border-tab-inactive bg-white dark:bg-[#131310] px-3.5 py-2.5 pr-10 text-[13px] text-[#0A0A14] dark:text-white outline-none transition-colors placeholder:text-[#BBBBAA] dark:placeholder:text-[#555] focus:border-gold"
+                      className="w-full rounded-xl border border-border bg-white dark:bg-[#131310] px-3.5 py-2.5 pr-10 text-[13px] text-foreground outline-none transition-colors placeholder:text-[#BBBBAA] dark:placeholder:text-foreground/70 focus:border-gold"
                     />
-                    <span className="absolute right-3.5 top-1/2 -translate-y-1/2 text-[13px] font-bold text-[#999] dark:text-[#666]">$</span>
+                    <span className="absolute right-3.5 top-1/2 -translate-y-1/2 text-[13px] font-bold text-[#999] dark:text-foreground/65">$</span>
                   </div>
                 </div>
 
@@ -616,7 +616,7 @@ export default function ReservationDetailPage() {
                     type="button"
                     onClick={() => setShowDisputeModal(false)}
                     disabled={disputeLoading}
-                    className="flex-1 py-3 border-2 border-[#D0D0C0] dark:border-tab-inactive rounded-xl text-[14px] font-bold text-[#555] dark:text-[#B0B0A0] hover:bg-[#E0E0D0] dark:hover:bg-[#222220] transition-colors cursor-pointer disabled:opacity-50"
+                    className="flex-1 py-3 border-2 border-border rounded-xl text-[14px] font-bold text-foreground/70 hover:bg-surface dark:hover:bg-[#222220] transition-colors cursor-pointer disabled:opacity-50"
                   >
                     {t('dispute_btn_cancel')}
                   </button>
@@ -651,7 +651,7 @@ export default function ReservationDetailPage() {
               role="dialog"
               aria-modal="true"
               aria-labelledby="cancel-reservation-title"
-              className="bg-[#F5F5E6] dark:bg-[#1A1A18] rounded-2xl shadow-2xl w-full max-w-sm p-6 space-y-4"
+              className="bg-background dark:bg-[#1A1A18] rounded-2xl shadow-2xl w-full max-w-sm p-6 space-y-4"
             >
               <div className="w-14 h-14 rounded-full bg-Hurryline-error/15 flex items-center justify-center mx-auto">
                 <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#EF4444" strokeWidth="2" strokeLinecap="round"><circle cx="12" cy="12" r="10" /><line x1="12" y1="8" x2="12" y2="12" /><line x1="12" y1="16" x2="12.01" y2="16" /></svg>
@@ -659,11 +659,11 @@ export default function ReservationDetailPage() {
 
               <h3
                 id="cancel-reservation-title"
-                className="text-[18px] font-black text-[#0A0A14] dark:text-white text-center"
+                className="text-[18px] font-black text-foreground text-center"
               >
                 {t('cancel_modal_title')}
               </h3>
-              <p className="text-[14px] text-[#555] dark:text-[#B0B0A0] text-center leading-relaxed">
+              <p className="text-[14px] text-foreground/70 text-center leading-relaxed">
                 {t('cancel_modal_desc')}
               </p>
 
@@ -684,7 +684,7 @@ export default function ReservationDetailPage() {
                   type="button"
                   onClick={() => setShowCancelModal(false)}
                   disabled={cancelLoading}
-                  className="flex-1 py-3 border-2 border-[#D0D0C0] dark:border-tab-inactive rounded-xl text-[14px] font-bold text-[#555] dark:text-[#B0B0A0] hover:bg-[#E0E0D0] transition-colors cursor-pointer disabled:opacity-50"
+                  className="flex-1 py-3 border-2 border-border rounded-xl text-[14px] font-bold text-foreground/70 hover:bg-surface transition-colors cursor-pointer disabled:opacity-50"
                 >
                   {t('cancel_modal_keep')}
                 </button>
@@ -723,8 +723,8 @@ function DetailRow({ icon, label, value }: { icon: string; label: string; value:
     <div className="flex items-start gap-3">
       <span className="mt-0.5 shrink-0">{icons[icon]}</span>
       <div>
-        <p className="text-[13px] text-[#999] dark:text-[#888]">{label}</p>
-        <p className="text-[14px] font-semibold text-[#0A0A14] dark:text-white">{value}</p>
+        <p className="text-[13px] text-[#999] dark:text-foreground/55">{label}</p>
+        <p className="text-[14px] font-semibold text-foreground">{value}</p>
       </div>
     </div>
   );

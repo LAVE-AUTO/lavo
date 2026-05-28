@@ -79,13 +79,13 @@ export function StationFilters({
       ? value.selectedWashTypes.filter((x) => x !== id)
       : [...value.selectedWashTypes, id] });
 
-  const inputBase = 'w-full rounded-lg border border-[#E0E0D0] dark:border-tab-inactive bg-[#F5F5EE] dark:bg-tab-inactive text-[13px] text-[#1A1A1A] dark:text-white placeholder-[#9A9A8A] outline-none focus:border-gold transition-colors';
-  const labelBase = 'block text-[11px] font-black text-[#555] dark:text-[#A0A090] uppercase tracking-[0.12em] mb-1.5';
+  const inputBase = 'w-full rounded-lg border border-[#E0E0D0] dark:border-border bg-[#F5F5EE] dark:bg-tab-inactive text-[13px] text-[#1A1A1A] dark:text-white placeholder-[#9A9A8A] outline-none focus:border-gold transition-colors';
+  const labelBase = 'block text-[11px] font-black text-foreground/70 dark:text-[#A0A090] uppercase tracking-[0.12em] mb-1.5';
 
   /* ── Inline desktop panel (main-branch style, dev-branch fields) ── */
   if (inline) {
     return (
-      <div className="bg-white dark:bg-dark-card rounded-xl p-4 border border-[#E0E0D0] dark:border-tab-inactive shadow-sm animate-fade-in">
+      <div className="bg-white dark:bg-surface rounded-xl p-4 border border-[#E0E0D0] dark:border-border shadow-sm animate-fade-in">
 
         {/* Header */}
         <div className="flex items-center justify-between mb-4">
@@ -112,9 +112,9 @@ export function StationFilters({
           </div>
           <div>
             <p className={labelBase}>{t('filter_available_only')}</p>
-            <div className="h-[34px] flex items-center px-2.5 rounded-lg border border-[#E0E0D0] dark:border-tab-inactive bg-[#F5F5EE] dark:bg-tab-inactive">
+            <div className="h-[34px] flex items-center px-2.5 rounded-lg border border-[#E0E0D0] dark:border-border bg-[#F5F5EE] dark:bg-tab-inactive">
               <Toggle checked={value.onlyAvail} onChange={(v) => patch({ onlyAvail: v })} />
-              <span className="ml-auto text-[12px] font-semibold text-[#555] dark:text-[#B0B0A0]">
+              <span className="ml-auto text-[12px] font-semibold text-foreground/70">
                 {value.onlyAvail ? t('filter_on') : t('filter_off')}
               </span>
             </div>
@@ -143,7 +143,7 @@ export function StationFilters({
             <p className={labelBase}>{t('filter_price_label')}</p>
             <div className="flex gap-2 items-center">
               <PriceInput value={value.priceMin} onChange={(v) => patch({ priceMin: v })} placeholder={t('filter_price_min_placeholder')} unit={t('filter_currency_unit')} />
-              <span className="text-[#999] dark:text-[#555] text-[12px] font-bold shrink-0">—</span>
+              <span className="text-[#999] dark:text-foreground/70 text-[12px] font-bold shrink-0">—</span>
               <PriceInput value={value.priceMax} onChange={(v) => patch({ priceMax: v })} placeholder={t('filter_price_max_placeholder')} unit={t('filter_currency_unit')} />
             </div>
           </div>
@@ -165,10 +165,10 @@ export function StationFilters({
         <div>
           <p className={labelBase}>{t('filter_time_label')}</p>
           <div className="flex items-center gap-2">
-            <span className="text-[11px] font-semibold text-[#555] dark:text-[#B0B0A0] shrink-0">{t('filter_time_from')}</span>
+            <span className="text-[11px] font-semibold text-foreground/70 shrink-0">{t('filter_time_from')}</span>
             <input type="time" value={value.timeFrom} onChange={(e) => patch({ timeFrom: e.target.value })} aria-label={t('filter_time_from')} className={`flex-1 ${inputBase} px-2 py-1.5 text-center font-mono`} />
-            <span className="text-[#AAA] dark:text-[#555] text-[12px] font-bold shrink-0">—</span>
-            <span className="text-[11px] font-semibold text-[#555] dark:text-[#B0B0A0] shrink-0">{t('filter_time_to')}</span>
+            <span className="text-[#AAA] dark:text-foreground/70 text-[12px] font-bold shrink-0">—</span>
+            <span className="text-[11px] font-semibold text-foreground/70 shrink-0">{t('filter_time_to')}</span>
             <input type="time" value={value.timeTo} onChange={(e) => patch({ timeTo: e.target.value })} aria-label={t('filter_time_to')} className={`flex-1 ${inputBase} px-2 py-1.5 text-center font-mono`} />
           </div>
         </div>
@@ -187,7 +187,7 @@ export function StationFilters({
         role="dialog"
         aria-modal="true"
         aria-labelledby="filters-title"
-        className="relative w-full sm:max-w-xl bg-white dark:bg-dark-card rounded-t-3xl sm:rounded-2xl shadow-[0_-12px_48px_rgba(0,0,0,0.25)] sm:shadow-2xl flex flex-col max-h-[88vh] sm:max-h-[80vh] animate-fade-in-up"
+        className="relative w-full sm:max-w-xl bg-white dark:bg-surface rounded-t-3xl sm:rounded-2xl shadow-[0_-12px_48px_rgba(0,0,0,0.25)] sm:shadow-2xl flex flex-col max-h-[88vh] sm:max-h-[80vh] animate-fade-in-up"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Sheet handle - mobile */}
@@ -196,7 +196,7 @@ export function StationFilters({
         </div>
 
         {/* Header */}
-        <div className="flex items-center justify-between px-5 sm:px-6 pt-2 sm:pt-5 pb-3 sm:pb-4 border-b border-[#E0E0D0] dark:border-tab-inactive shrink-0">
+        <div className="flex items-center justify-between px-5 sm:px-6 pt-2 sm:pt-5 pb-3 sm:pb-4 border-b border-[#E0E0D0] dark:border-border shrink-0">
           <div className="flex items-center gap-2">
             <h2 id="filters-title" className="text-[16px] font-black text-[#1A1A1A] dark:text-white tracking-wider uppercase">
               {t('filter_panel_title')}
@@ -211,7 +211,7 @@ export function StationFilters({
             type="button"
             onClick={onClose}
             aria-label={t('filter_close')}
-            className="w-9 h-9 rounded-full flex items-center justify-center text-[#555] dark:text-[#B0B0A0] hover:bg-[#F0F0E2] dark:hover:bg-tab-inactive transition-colors cursor-pointer"
+            className="w-9 h-9 rounded-full flex items-center justify-center text-foreground/70 hover:bg-surface/60 dark:hover:bg-tab-inactive transition-colors cursor-pointer"
           >
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" aria-hidden="true">
               <line x1="18" y1="6" x2="6" y2="18" />
@@ -223,12 +223,12 @@ export function StationFilters({
         {/* Body */}
         <div className="scrollbar-hover flex-1 overflow-y-auto px-5 sm:px-6 py-5 space-y-5">
           <FilterRow label={t('filter_name_label')}>
-            <input type="text" value={value.nameSearch} onChange={(e) => patch({ nameSearch: e.target.value })} placeholder={t('filter_name_placeholder')} className="w-full px-3.5 py-2.5 rounded-xl bg-[#F5F5EE] dark:bg-tab-inactive border border-[#E0E0D0] dark:border-tab-inactive text-[14px] text-[#1A1A1A] dark:text-white placeholder-[#9A9A8A] outline-none focus:border-gold transition-colors" />
+            <input type="text" value={value.nameSearch} onChange={(e) => patch({ nameSearch: e.target.value })} placeholder={t('filter_name_placeholder')} className="w-full px-3.5 py-2.5 rounded-xl bg-[#F5F5EE] dark:bg-tab-inactive border border-[#E0E0D0] dark:border-border text-[14px] text-[#1A1A1A] dark:text-white placeholder-[#9A9A8A] outline-none focus:border-gold transition-colors" />
           </FilterRow>
           <FilterRow label={t('filter_available_only')}>
-            <div className="h-[44px] flex items-center px-3.5 rounded-xl border border-[#E0E0D0] dark:border-tab-inactive bg-[#F5F5EE] dark:bg-tab-inactive">
+            <div className="h-[44px] flex items-center px-3.5 rounded-xl border border-[#E0E0D0] dark:border-border bg-[#F5F5EE] dark:bg-tab-inactive">
               <Toggle checked={value.onlyAvail} onChange={(v) => patch({ onlyAvail: v })} />
-              <span className="ml-auto text-[12.5px] font-semibold text-[#555] dark:text-[#B0B0A0]">{value.onlyAvail ? t('filter_on') : t('filter_off')}</span>
+              <span className="ml-auto text-[12.5px] font-semibold text-foreground/70">{value.onlyAvail ? t('filter_on') : t('filter_off')}</span>
             </div>
           </FilterRow>
           <FilterRow label={t('filter_wash_type_label')}>
@@ -255,15 +255,15 @@ export function StationFilters({
           </FilterRow>
           <FilterRow label={t('filter_time_label')}>
             <div className="grid grid-cols-2 gap-2.5">
-              <input type="time" value={value.timeFrom} onChange={(e) => patch({ timeFrom: e.target.value })} aria-label={t('filter_time_from')} className="w-full rounded-xl border border-[#E0E0D0] bg-[#F5F5EE] px-3 py-2.5 text-center font-mono text-[14px] text-[#1A1A1A] outline-none focus:border-gold dark:border-tab-inactive dark:bg-tab-inactive dark:text-white transition-colors" />
-              <input type="time" value={value.timeTo} onChange={(e) => patch({ timeTo: e.target.value })} aria-label={t('filter_time_to')} className="w-full rounded-xl border border-[#E0E0D0] bg-[#F5F5EE] px-3 py-2.5 text-center font-mono text-[14px] text-[#1A1A1A] outline-none focus:border-gold dark:border-tab-inactive dark:bg-tab-inactive dark:text-white transition-colors" />
+              <input type="time" value={value.timeFrom} onChange={(e) => patch({ timeFrom: e.target.value })} aria-label={t('filter_time_from')} className="w-full rounded-xl border border-[#E0E0D0] bg-[#F5F5EE] px-3 py-2.5 text-center font-mono text-[14px] text-[#1A1A1A] outline-none focus:border-gold dark:border-border dark:bg-tab-inactive dark:text-white transition-colors" />
+              <input type="time" value={value.timeTo} onChange={(e) => patch({ timeTo: e.target.value })} aria-label={t('filter_time_to')} className="w-full rounded-xl border border-[#E0E0D0] bg-[#F5F5EE] px-3 py-2.5 text-center font-mono text-[14px] text-[#1A1A1A] outline-none focus:border-gold dark:border-border dark:bg-tab-inactive dark:text-white transition-colors" />
             </div>
           </FilterRow>
         </div>
 
         {/* Footer */}
-        <div className="px-5 sm:px-6 py-4 border-t border-[#E0E0D0] dark:border-tab-inactive shrink-0 flex items-center gap-3">
-          <button type="button" onClick={onReset} disabled={activeCount === 0} className="px-4 py-2.5 rounded-xl border border-[#D0D0C0] dark:border-tab-inactive text-[13.5px] font-bold text-[#555] dark:text-[#B0B0A0] hover:bg-[#F0F0E2] dark:hover:bg-tab-inactive transition-colors cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed">
+        <div className="px-5 sm:px-6 py-4 border-t border-[#E0E0D0] dark:border-border shrink-0 flex items-center gap-3">
+          <button type="button" onClick={onReset} disabled={activeCount === 0} className="px-4 py-2.5 rounded-xl border border-border text-[13.5px] font-bold text-foreground/70 hover:bg-surface/60 dark:hover:bg-tab-inactive transition-colors cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed">
             {t('filter_reset')}
           </button>
           <button type="button" onClick={onClose} className="flex-1 py-2.5 bg-gold hover:bg-gold-hover rounded-xl text-[14px] font-black text-dark-bg transition-colors cursor-pointer">
@@ -282,7 +282,7 @@ export function StationFilters({
 function FilterRow({ label, children }: { label: string; children: React.ReactNode }) {
   return (
     <div>
-      <p className="text-[11px] sm:text-[12px] font-black text-[#555] dark:text-[#A0A090] uppercase tracking-[0.15em] mb-2">
+      <p className="text-[11px] sm:text-[12px] font-black text-foreground/70 dark:text-[#A0A090] uppercase tracking-[0.15em] mb-2">
         {label}
       </p>
       {children}
@@ -307,9 +307,9 @@ function DistanceInput({ value, onChange, placeholder }: {
         value={value}
         onChange={handleChange}
         placeholder={placeholder}
-        className="w-full rounded-xl border border-[#E0E0D0] bg-[#F5F5EE] py-2.5 pl-3.5 pr-10 text-[14px] text-[#1A1A1A] placeholder-[#9A9A8A] outline-none focus:border-gold dark:border-tab-inactive dark:bg-tab-inactive dark:text-white transition-colors"
+        className="w-full rounded-xl border border-[#E0E0D0] bg-[#F5F5EE] py-2.5 pl-3.5 pr-10 text-[14px] text-[#1A1A1A] placeholder-[#9A9A8A] outline-none focus:border-gold dark:border-border dark:bg-tab-inactive dark:text-white transition-colors"
       />
-      <span className="pointer-events-none absolute right-3.5 top-1/2 -translate-y-1/2 text-[12px] font-bold text-[#888]">
+      <span className="pointer-events-none absolute right-3.5 top-1/2 -translate-y-1/2 text-[12px] font-bold text-foreground/55">
         km
       </span>
     </div>
@@ -324,7 +324,7 @@ function PriceInput({ value, onChange, placeholder, unit }: {
 }) {
   return (
     <div className="relative">
-      <span className="pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2 text-[13px] font-bold text-[#888]">
+      <span className="pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2 text-[13px] font-bold text-foreground/55">
         {unit}
       </span>
       <input
@@ -334,7 +334,7 @@ function PriceInput({ value, onChange, placeholder, unit }: {
         value={value}
         onChange={(e) => onChange(e.target.value)}
         placeholder={placeholder}
-        className="w-full rounded-xl border border-[#E0E0D0] bg-[#F5F5EE] py-2.5 pl-8 pr-3 text-[14px] text-[#1A1A1A] placeholder-[#9A9A8A] outline-none focus:border-gold dark:border-tab-inactive dark:bg-tab-inactive dark:text-white transition-colors"
+        className="w-full rounded-xl border border-[#E0E0D0] bg-[#F5F5EE] py-2.5 pl-8 pr-3 text-[14px] text-[#1A1A1A] placeholder-[#9A9A8A] outline-none focus:border-gold dark:border-border dark:bg-tab-inactive dark:text-white transition-colors"
       />
     </div>
   );

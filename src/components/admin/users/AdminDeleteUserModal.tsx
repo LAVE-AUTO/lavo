@@ -88,7 +88,7 @@ export function AdminDeleteUserModal({ open, user, onClose, onDeleted }: Props) 
         <div className="flex items-center justify-between border-b border-[#F0EDE6] px-6 py-4 dark:border-[#1A2A14]">
           <h2 className="text-[15px] font-black text-[#1A1A0A] dark:text-[#F0EDD4]">{t('modal_title')}</h2>
           <button type="button" onClick={onClose} disabled={busy} aria-label={t('btn_cancel')}
-            className="flex h-7 w-7 items-center justify-center rounded-lg text-[#BBBBAA] transition-colors hover:bg-[#F0EDE6] hover:text-[#555] disabled:opacity-40 dark:hover:bg-[#1A2A14]">
+            className="flex h-7 w-7 items-center justify-center rounded-lg text-[#BBBBAA] transition-colors hover:bg-[#F0EDE6] hover:text-foreground/70 disabled:opacity-40 dark:hover:bg-[#1A2A14]">
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" aria-hidden="true"><line x1="18" y1="6" x2="6" y2="18" /><line x1="6" y1="6" x2="18" y2="18" /></svg>
           </button>
         </div>
@@ -103,7 +103,7 @@ export function AdminDeleteUserModal({ open, user, onClose, onDeleted }: Props) 
             </div>
             <div className="min-w-0">
               <p className="truncate text-[13px] font-bold text-[#1A1A0A] dark:text-[#F0EDD4]">{displayName}</p>
-              <p className="truncate text-[12px] text-[#888] dark:text-[#9A9A8A]">{user.email}</p>
+              <p className="truncate text-[12px] text-foreground/55 dark:text-[#9A9A8A]">{user.email}</p>
             </div>
           </div>
 
@@ -128,7 +128,7 @@ export function AdminDeleteUserModal({ open, user, onClose, onDeleted }: Props) 
               </div>
               <div>
                 <p className="text-[13px] font-bold text-[#F97316]">{t('soft_title')}</p>
-                <p className="mt-0.5 text-[12px] leading-snug text-[#666] dark:text-[#A0A090]">{t('soft_description')}</p>
+                <p className="mt-0.5 text-[12px] leading-snug text-foreground/65 dark:text-[#A0A090]">{t('soft_description')}</p>
               </div>
             </button>
 
@@ -145,7 +145,7 @@ export function AdminDeleteUserModal({ open, user, onClose, onDeleted }: Props) 
               </div>
               <div>
                 <p className="text-[13px] font-bold text-red-600">{t('hard_title')}</p>
-                <p className="mt-0.5 text-[12px] leading-snug text-[#666] dark:text-[#A0A090]">{t('hard_description')}</p>
+                <p className="mt-0.5 text-[12px] leading-snug text-foreground/65 dark:text-[#A0A090]">{t('hard_description')}</p>
               </div>
             </button>
           </div>
@@ -173,7 +173,7 @@ export function AdminDeleteUserModal({ open, user, onClose, onDeleted }: Props) 
         {/* Footer */}
         <div className="flex justify-end gap-2 border-t border-[#F0EDE6] px-6 py-4 dark:border-[#1A2A14]">
           <button type="button" onClick={onClose} disabled={busy}
-            className="rounded-lg border border-[#D8D4C8] px-4 py-2 text-[13px] font-semibold text-[#666] transition-colors hover:bg-[#F5F3EE] disabled:opacity-50 dark:border-[#243020] dark:text-[#9A9A8A]">
+            className="rounded-lg border border-[#D8D4C8] px-4 py-2 text-[13px] font-semibold text-foreground/65 transition-colors hover:bg-[#F5F3EE] disabled:opacity-50 dark:border-[#243020] dark:text-[#9A9A8A]">
             {t('btn_cancel')}
           </button>
           {mode === 'soft' ? (

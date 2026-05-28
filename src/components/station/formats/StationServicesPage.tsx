@@ -190,7 +190,7 @@ export function StationServicesPage() {
           <h1 className="text-[22px] font-black tracking-tight text-[#1A1A0A] dark:text-[#F0EDD4]">
             {t('page_title')}
           </h1>
-          <p className="mt-0.5 text-[13px] text-[#888] dark:text-[#9A9A8A]">{t('page_subtitle')}</p>
+          <p className="mt-0.5 text-[13px] text-foreground/55 dark:text-[#9A9A8A]">{t('page_subtitle')}</p>
         </div>
         <div className="flex items-center gap-2">
           <Link
@@ -219,7 +219,7 @@ export function StationServicesPage() {
             <h2 className="text-[11px] font-black uppercase tracking-[1.5px] text-[#C49A1E]">
               {t('section_base')}
             </h2>
-            <span className="text-[12px] font-semibold text-[#888] dark:text-[#9A9A8A]">
+            <span className="text-[12px] font-semibold text-foreground/55 dark:text-[#9A9A8A]">
               {t('services_active_count', { count: activeServiceCount })}
             </span>
           </div>
@@ -255,7 +255,7 @@ export function StationServicesPage() {
               <h2 className="text-[11px] font-black uppercase tracking-[1.5px] text-[#C49A1E]">
                 {t('section_extras_available')}
               </h2>
-              <span className="text-[12px] font-semibold text-[#888] dark:text-[#9A9A8A]">
+              <span className="text-[12px] font-semibold text-foreground/55 dark:text-[#9A9A8A]">
                 {t('extras_active_count', { active: activeExtraCount, total: allExtras.length })}
               </span>
             </div>

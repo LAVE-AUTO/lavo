@@ -24,7 +24,7 @@ function Field({ label, hint, children }: { label: string; hint?: string; childr
   return (
     <div className="flex flex-col gap-1.5">
       <div className="flex items-baseline gap-2">
-        <label className="text-[11px] font-bold uppercase tracking-[0.5px] text-[#888] dark:text-[#9A9A8A]">
+        <label className="text-[11px] font-bold uppercase tracking-[0.5px] text-foreground/55 dark:text-[#9A9A8A]">
           {label}
         </label>
         {hint && <span className="text-[12px] text-[#BBBBAA] dark:text-[#4A4A3A]">{hint}</span>}
@@ -232,7 +232,7 @@ export function StationProfileForm({ profile, onSaved, locked = false }: Props) 
                       className={`rounded-[10px] px-3 py-1.5 text-[13px] font-semibold transition-all duration-150 ${
                         !serviceScope
                           ? 'bg-white text-[#5A5A4A] shadow-sm dark:bg-[#182214] dark:text-[#9A9A8A]'
-                          : 'text-[#BBBBAA] hover:text-[#888] dark:text-[#3A3A2A] dark:hover:text-[#9A9A8A]'
+                          : 'text-[#BBBBAA] hover:text-foreground/55 dark:text-[#3A3A2A] dark:hover:text-[#9A9A8A]'
                       }`}
                     >
                       -
@@ -273,7 +273,7 @@ export function StationProfileForm({ profile, onSaved, locked = false }: Props) 
                 type="button"
                 onClick={handleCancel}
                 disabled={saving}
-                className="rounded-xl border border-[#E0DCD0] px-4 py-2.5 text-[13px] font-semibold text-[#666] transition-colors hover:bg-[#F0EDE0] disabled:opacity-50 dark:border-[#243020] dark:text-[#9A9A8A]"
+                className="rounded-xl border border-[#E0DCD0] px-4 py-2.5 text-[13px] font-semibold text-foreground/65 transition-colors hover:bg-[#F0EDE0] disabled:opacity-50 dark:border-[#243020] dark:text-[#9A9A8A]"
               >
                 {t('btn_cancel_edit')}
               </button>

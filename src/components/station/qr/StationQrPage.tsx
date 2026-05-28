@@ -154,7 +154,7 @@ export function StationQrPage() {
             {stationName}
           </h1>
           {stationCity && (
-            <div className="mt-0.5 text-[12px] font-semibold text-[#888] dark:text-[#9A9A8A]">
+            <div className="mt-0.5 text-[12px] font-semibold text-foreground/55 dark:text-[#9A9A8A]">
               {stationCity}
             </div>
           )}
@@ -178,7 +178,7 @@ export function StationQrPage() {
           <div className="text-[9px] font-bold uppercase tracking-wider text-[#999] dark:text-[#5A5A4A]">
             {t('station_url_label')}
           </div>
-          <p className="mt-0.5 break-all font-mono text-[11px] text-[#666] dark:text-[#A0A090]">
+          <p className="mt-0.5 break-all font-mono text-[11px] text-foreground/65 dark:text-[#A0A090]">
             {publicUrl}
           </p>
         </div>
@@ -190,7 +190,7 @@ export function StationQrPage() {
       </div>
 
       {/* Print hint */}
-      <p className="mt-6 max-w-sm text-center text-[12px] text-[#888] dark:text-[#5A5A4A]">
+      <p className="mt-6 max-w-sm text-center text-[12px] text-foreground/55 dark:text-[#5A5A4A]">
         {t('print_hint')}
       </p>
     </div>

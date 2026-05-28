@@ -67,7 +67,7 @@ export function AdminDisputesList({ disputes, query, filter, onFilterChange }: P
                 'flex items-center gap-2 rounded-xl px-3.5 py-1.5 text-[13px] font-bold transition-all duration-150',
                 isActive
                   ? 'bg-white text-[#1A1A0A] shadow-[0_2px_8px_rgba(0,0,0,0.10)] ring-1 ring-[#E0DCD0] dark:bg-[#1E2E18] dark:text-[#F0EDD4] dark:ring-[#2A3820]'
-                  : 'text-[#999] hover:text-[#555] hover:bg-white/60 dark:text-[#A0A090] dark:hover:text-[#9A9A8A] dark:hover:bg-[#1A2A14]/60',
+                  : 'text-[#999] hover:text-foreground/70 hover:bg-white/60 dark:text-[#A0A090] dark:hover:text-[#9A9A8A] dark:hover:bg-[#1A2A14]/60',
               ].join(' ')}>
               {color && (
                 <span className="h-2 w-2 rounded-full" style={{ background: isActive ? color : '#CCCCCC' }} />
@@ -121,7 +121,7 @@ export function AdminDisputesList({ disputes, query, filter, onFilterChange }: P
                     <p className="mt-0.5 truncate text-[13px] text-[#AAAAAA] dark:text-[#A0A090]">
                       {d.station?.city ?? '—'} · {formatDate(d.created_at)}
                     </p>
-                    <p className="mt-1.5 line-clamp-1 text-[13px] text-[#666] dark:text-[#7A7A6A]">{d.reason}</p>
+                    <p className="mt-1.5 line-clamp-1 text-[13px] text-foreground/65 dark:text-[#7A7A6A]">{d.reason}</p>
                   </div>
 
                   {/* Amount + arrow */}

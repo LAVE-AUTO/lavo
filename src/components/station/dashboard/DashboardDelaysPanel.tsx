@@ -53,7 +53,7 @@ export function DashboardDelaysPanel({ items, totalPending }: Props) {
             {t('delays_see_all')} →
           </Link>
         </div>
-        <div className="mt-0.5 text-[12px] text-[#666] dark:text-[#A0A090]">
+        <div className="mt-0.5 text-[12px] text-foreground/65 dark:text-[#A0A090]">
           {totalPending > 0 ? t('delays_pending', { n: totalPending }) : t('delays_empty')}
         </div>
       </div>
@@ -76,7 +76,7 @@ export function DashboardDelaysPanel({ items, totalPending }: Props) {
               <circle cx="12" cy="12" r="10" />
               <polyline points="12 6 12 12 16 14" />
             </svg>
-            <p className="text-[12px] text-[#888] dark:text-[#9A9A8A]">{t('delays_empty')}</p>
+            <p className="text-[12px] text-foreground/55 dark:text-[#9A9A8A]">{t('delays_empty')}</p>
           </div>
         ) : (
           items.map((item) => (
@@ -89,11 +89,11 @@ export function DashboardDelaysPanel({ items, totalPending }: Props) {
                 <span className="truncate text-[12px] font-bold text-[#1A1A0A] dark:text-[#F0EDD4]">
                   {item.clientName}
                 </span>
-                <span className="shrink-0 text-[10px] font-semibold text-[#888] dark:text-[#9A9A8A]">
+                <span className="shrink-0 text-[10px] font-semibold text-foreground/55 dark:text-[#9A9A8A]">
                   {timeAgo(item.requestedAt, locale)}
                 </span>
               </div>
-              <p className="line-clamp-2 text-[11px] leading-snug text-[#666] dark:text-[#A0A090]">
+              <p className="line-clamp-2 text-[11px] leading-snug text-foreground/65 dark:text-[#A0A090]">
                 {item.message || t('delays_no_message')}
               </p>
               <div className="mt-1 inline-flex w-fit items-center gap-1 rounded-full bg-[#EF4444]/10 px-2 py-0.5 text-[9px] font-bold uppercase tracking-wider text-[#EF4444]">

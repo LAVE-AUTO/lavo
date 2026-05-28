@@ -129,7 +129,7 @@ export function StationHistoryPage() {
   if (loadError) {
     return (
       <div className="flex flex-1 flex-col items-center justify-center gap-3 text-center">
-        <span className="text-[14px] font-semibold text-[#000C1F]/50 dark:text-[#FFF8EC]/40">{t('error_load')}</span>
+        <span className="text-[14px] font-semibold text-foreground/50 dark:text-foreground/40">{t('error_load')}</span>
         <button
           type="button"
           onClick={() => fetchHistory(page)}
@@ -144,10 +144,10 @@ export function StationHistoryPage() {
   return (
     <div className="flex flex-1 flex-col overflow-hidden bg-[#EDEDED] dark:bg-[#1A2116]">
       {/* Header */}
-      <div className="border-b border-[#CCCCCC] bg-[#E0E0D0] px-6 pb-5 pt-5 dark:border-[#3A4A36] dark:bg-[#243020]">
+      <div className="border-b border-[#CCCCCC] bg-surface px-6 pb-5 pt-5 dark:border-[#3A4A36] dark:bg-[#243020]">
         <div className="flex items-center justify-between gap-4">
           <div className="min-w-0">
-            <h1 className="text-[20px] font-bold text-[#000C1F] dark:text-[#FFF8EC]">
+            <h1 className="text-[20px] font-bold text-foreground">
               {t('page_title')}
             </h1>
             <p className="mt-0.5 text-[13px] text-[#000717]/50 dark:text-[#FFFFF0]/50">
@@ -231,7 +231,7 @@ export function StationHistoryPage() {
                   type="button"
                   disabled={page <= 1}
                   onClick={() => setPage((p) => Math.max(1, p - 1))}
-                  className="flex h-9 items-center gap-1.5 rounded-[10px] bg-[#C8C8B4] px-4 text-[13px] font-bold text-[#000C1F] transition-all hover:bg-[#BDBDA8] active:scale-[0.98] disabled:opacity-30 dark:bg-[#1E2A1A] dark:text-[#FFF8EC] dark:hover:bg-[#2A3626]"
+                  className="flex h-9 items-center gap-1.5 rounded-[10px] bg-[#C8C8B4] px-4 text-[13px] font-bold text-foreground transition-all hover:bg-[#BDBDA8] active:scale-[0.98] disabled:opacity-30 dark:bg-[#1E2A1A] dark:text-foreground dark:hover:bg-[#2A3626]"
                 >
                   <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.5} strokeLinecap="round" strokeLinejoin="round"><polyline points="15 18 9 12 15 6" /></svg>
                   {t('pagination_prev')}
@@ -258,7 +258,7 @@ export function StationHistoryPage() {
                   type="button"
                   disabled={page >= meta.total_pages}
                   onClick={() => setPage((p) => p + 1)}
-                  className="flex h-9 items-center gap-1.5 rounded-[10px] bg-[#C8C8B4] px-4 text-[13px] font-bold text-[#000C1F] transition-all hover:bg-[#BDBDA8] active:scale-[0.98] disabled:opacity-30 dark:bg-[#1E2A1A] dark:text-[#FFF8EC] dark:hover:bg-[#2A3626]"
+                  className="flex h-9 items-center gap-1.5 rounded-[10px] bg-[#C8C8B4] px-4 text-[13px] font-bold text-foreground transition-all hover:bg-[#BDBDA8] active:scale-[0.98] disabled:opacity-30 dark:bg-[#1E2A1A] dark:text-foreground dark:hover:bg-[#2A3626]"
                 >
                   {t('pagination_next')}
                   <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.5} strokeLinecap="round" strokeLinejoin="round"><polyline points="9 18 15 12 9 6" /></svg>
@@ -276,7 +276,7 @@ function KpiChip({ value, color, label }: { value: string; color: string; label:
   return (
     <div className="flex items-center gap-1.5 rounded-[8px] bg-[#C8C8B4] px-3 py-1.5 dark:bg-[#1E2A1A]">
       <span className="inline-block h-2 w-2 rounded-full" style={{ background: color }} />
-      <span className="font-mono text-[14px] font-bold text-[#000C1F] dark:text-[#FFF8EC]">{value}</span>
+      <span className="font-mono text-[14px] font-bold text-foreground">{value}</span>
       <span className="text-[11px] font-semibold text-[#000717]/50 dark:text-[#FFFFF0]/50">{label}</span>
     </div>
   );
@@ -285,7 +285,7 @@ function KpiChip({ value, color, label }: { value: string; color: string; label:
 function StatCard({ label, value, gold }: { label: string; value: string; gold?: boolean }) {
   return (
     <div className="rounded-2xl bg-[#C8C8B4] p-3 dark:bg-[#1E2A1A]">
-      <div className={`text-[18px] font-bold leading-tight ${gold ? 'text-[#C09A18]' : 'text-[#000C1F] dark:text-[#FFF8EC]'}`}>
+      <div className={`text-[18px] font-bold leading-tight ${gold ? 'text-[#C09A18]' : 'text-foreground'}`}>
         {value}
       </div>
       <div className="mt-0.5 text-[11px] font-bold uppercase tracking-wider text-[#000717]/40 dark:text-[#FFFFF0]/35">
@@ -307,7 +307,7 @@ function EmptyState({ t }: { t: ReturnType<typeof useTranslations> }) {
         </svg>
       </div>
       <div>
-        <p className="text-[15px] font-bold text-[#000C1F] dark:text-[#FFF8EC]">{t('empty_title')}</p>
+        <p className="text-[15px] font-bold text-foreground">{t('empty_title')}</p>
         <p className="mt-1 max-w-xs text-[13px] text-[#000717]/50 dark:text-[#FFFFF0]/40">{t('empty_desc')}</p>
       </div>
     </div>

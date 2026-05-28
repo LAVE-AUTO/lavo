@@ -51,7 +51,7 @@ export function TextField({
         </span>
       )}
       {prefixBadge && (
-        <span className="flex shrink-0 select-none items-center border-r border-[#F0EDE0] bg-[#FAF8F2] px-3 font-mono text-[10px] font-bold uppercase tracking-wider text-[#888] dark:border-[#1A2A14] dark:bg-[#0A1208] dark:text-[#9A9A8A]">
+        <span className="flex shrink-0 select-none items-center border-r border-[#F0EDE0] bg-[#FAF8F2] px-3 font-mono text-[10px] font-bold uppercase tracking-wider text-foreground/55 dark:border-[#1A2A14] dark:bg-[#0A1208] dark:text-[#9A9A8A]">
           {prefixBadge}
         </span>
       )}

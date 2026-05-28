@@ -46,7 +46,7 @@ export function AgendaSlotDetailModal({
         {/* Header */}
         <div className="flex items-start justify-between gap-3 rounded-xl border border-[#E8E4DC] bg-[#F7F6F2] p-4 dark:border-[#1A2A14] dark:bg-[#0F1A0C]">
           <div className="min-w-0 flex-1">
-            <div className="text-[11px] font-bold uppercase tracking-wider text-[#888] dark:text-[#9A9A8A]">
+            <div className="text-[11px] font-bold uppercase tracking-wider text-foreground/55 dark:text-[#9A9A8A]">
               {t('slot_detail_client')}
             </div>
             <div className="mt-0.5 truncate text-[18px] font-black text-[#1A1A0A] dark:text-[#F0EDD4]">
@@ -80,7 +80,7 @@ export function AgendaSlotDetailModal({
         <button
           type="button"
           onClick={onClose}
-          className="rounded-lg border border-[#E0DCD0] px-4 py-2 text-[13px] font-bold text-[#666] transition-colors hover:bg-[#F0EDE0] dark:border-[#243020] dark:text-[#A0A090] dark:hover:bg-[#1A2A14]"
+          className="rounded-lg border border-[#E0DCD0] px-4 py-2 text-[13px] font-bold text-foreground/65 transition-colors hover:bg-[#F0EDE0] dark:border-[#243020] dark:text-[#A0A090] dark:hover:bg-[#1A2A14]"
         >
           {t('btn_close')}
         </button>
@@ -128,7 +128,7 @@ export function AgendaSlotDetailModal({
 function InfoCell({ label, value, span2 }: { label: string; value: string; span2?: boolean }) {
   return (
     <div className={`rounded-xl border border-[#E8E4DC] bg-white px-3 py-2 dark:border-[#1A2A14] dark:bg-[#182214] ${span2 ? 'col-span-2' : ''}`}>
-      <div className="text-[10px] font-bold uppercase tracking-wider text-[#888] dark:text-[#9A9A8A]">
+      <div className="text-[10px] font-bold uppercase tracking-wider text-foreground/55 dark:text-[#9A9A8A]">
         {label}
       </div>
       <div className="mt-0.5 truncate text-[14px] font-bold text-[#1A1A0A] dark:text-[#F0EDD4]">

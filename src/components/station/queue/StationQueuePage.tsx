@@ -148,7 +148,7 @@ export function StationQueuePage() {
   if (loadError) {
     return (
       <div className="flex flex-1 flex-col items-center justify-center gap-3 text-center">
-        <span className="text-[14px] font-semibold text-[#000C1F]/50 dark:text-[#FFF8EC]/40">{t('error_load')}</span>
+        <span className="text-[14px] font-semibold text-foreground/50 dark:text-foreground/40">{t('error_load')}</span>
         <button type="button" onClick={() => loadData()}
           className="rounded-[10px] border-[1.5px] border-[#C09A18]/50 px-4 py-2 text-[13px] font-semibold text-[#C09A18] transition-colors hover:bg-[#C09A18]/10">
           {t('btn_retry')}
@@ -162,10 +162,10 @@ export function StationQueuePage() {
   return (
     <div className="flex flex-1 flex-col overflow-hidden bg-[#EDEDED] dark:bg-[#1A2116]">
       {/* = Header */}
-      <div className="border-b border-[#CCCCCC] bg-[#E0E0D0] px-6 pb-4 pt-5 dark:border-[#3A4A36] dark:bg-[#243020]">
+      <div className="border-b border-[#CCCCCC] bg-surface px-6 pb-4 pt-5 dark:border-[#3A4A36] dark:bg-[#243020]">
         <div className="flex items-center justify-between gap-4">
           <div>
-            <h1 className="text-[20px] font-bold text-[#000C1F] dark:text-[#FFF8EC]">{t('page_title')}</h1>
+            <h1 className="text-[20px] font-bold text-foreground">{t('page_title')}</h1>
             <p className="mt-0.5 text-[13px] text-[#000717]/50 dark:text-[#FFFFF0]/50">
               {totalWaiting > 0 ? t('waiting_n', { n: totalWaiting }) : t('queue_empty_short')}
             </p>
@@ -279,7 +279,7 @@ function StatChip({ count, color, label }: { count: number; color: string; label
   return (
     <div className="hidden items-center gap-1.5 rounded-[8px] bg-[#C8C8B4] px-3 py-1.5 sm:flex dark:bg-[#1E2A1A]">
       <span className="inline-block h-2 w-2 rounded-full" style={{ background: color }} />
-      <span className="font-mono text-[14px] font-bold text-[#000C1F] dark:text-[#FFF8EC]">{count}</span>
+      <span className="font-mono text-[14px] font-bold text-foreground">{count}</span>
       <span className="text-[11px] font-semibold text-[#000717]/50 dark:text-[#FFFFF0]/50">{label}</span>
     </div>
   );
@@ -297,12 +297,12 @@ function SectionLabel({ label, color }: { label: string; color?: string }) {
 function EmptyState({ label }: { label: string }) {
   return (
     <div className="flex flex-col items-center justify-center gap-3 py-16 text-center">
-      <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1} strokeLinecap="round" strokeLinejoin="round" className="text-[#000C1F]/15 dark:text-[#FFF8EC]/15" aria-hidden="true">
+      <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1} strokeLinecap="round" strokeLinejoin="round" className="text-foreground/15 dark:text-foreground/15" aria-hidden="true">
         <circle cx="12" cy="12" r="10" />
         <polyline points="12 6 12 12 16 14" />
         <path d="M8 18h.01M12 18h.01M16 18h.01" />
       </svg>
-      <span className="text-[13px] font-semibold text-[#000C1F]/40 dark:text-[#FFF8EC]/30">{label}</span>
+      <span className="text-[13px] font-semibold text-foreground/40 dark:text-foreground/30">{label}</span>
     </div>
   );
 }

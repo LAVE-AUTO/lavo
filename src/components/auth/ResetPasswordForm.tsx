@@ -95,7 +95,7 @@ export function ResetPasswordForm({ token }: ResetPasswordFormProps) {
         <h2 className="text-[22px] font-bold text-dark-bg dark:text-white mb-3">
           {t('success_title')}
         </h2>
-        <p className="text-[15px] text-[#555] dark:text-Hurryline-muted leading-relaxed mb-8">
+        <p className="text-[15px] text-foreground/70 dark:text-Hurryline-muted leading-relaxed mb-8">
           {t('success_message')}
         </p>
         <Link
@@ -165,7 +165,7 @@ export function ResetPasswordForm({ token }: ResetPasswordFormProps) {
       type="button"
       onClick={toggle}
       aria-label={label}
-      className="text-[#888] hover:text-[#555] dark:hover:text-[#ccc] transition-colors"
+      className="text-foreground/55 hover:text-foreground/70 dark:hover:text-[#ccc] transition-colors"
     >
       <EyeIcon open={visible} />
     </button>

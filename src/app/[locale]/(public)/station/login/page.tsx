@@ -58,14 +58,14 @@ export default async function StationLoginPage({ params }: Props) {
               <h1 className="text-[26px] sm:text-[30px] font-bold text-dark-bg dark:text-white mb-2">
                 {t('welcome_title')}
               </h1>
-              <p className="text-[15px] text-[#555] dark:text-Hurryline-muted">
+              <p className="text-[15px] text-foreground/70 dark:text-Hurryline-muted">
                 {t('welcome_subtitle')}
               </p>
             </div>
 
             <AuthModeSwitcher mode="merchant" />
 
-            <div className="bg-white dark:bg-dark-card rounded-2xl shadow-[0_4px_24px_rgba(0,0,0,0.08),_0_1px_2px_rgba(0,0,0,0.04)] dark:shadow-[0_8px_40px_rgba(0,0,0,0.5)] dark:ring-1 dark:ring-gold/10 overflow-hidden animate-fade-in-up">
+            <div className="bg-white dark:bg-surface rounded-2xl shadow-[0_4px_24px_rgba(0,0,0,0.08),_0_1px_2px_rgba(0,0,0,0.04)] dark:shadow-[0_8px_40px_rgba(0,0,0,0.5)] dark:ring-1 dark:ring-gold/10 overflow-hidden animate-fade-in-up">
               <div className="px-8 pt-6 pb-2">
                 <TabSwitcher
                   activeTab="login"

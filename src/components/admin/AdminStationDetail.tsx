@@ -160,7 +160,7 @@ export function AdminStationDetail({ id }: Props) {
   /* ── Error ── */
   if (loadError || !station) return (
     <div className="flex flex-1 flex-col items-center justify-center gap-3 bg-[#F5F5EE] dark:bg-[#0C1209]">
-      <p className="text-[14px] font-semibold text-[#555] dark:text-[#B0B0A0]">{t('error_load')}</p>
+      <p className="text-[14px] font-semibold text-foreground/70">{t('error_load')}</p>
       <button type="button" onClick={loadStation}
         className="rounded-xl border border-[#C49A1E]/50 px-4 py-2 text-[13px] font-semibold text-[#C49A1E] hover:bg-[#C49A1E]/10">
         {t('btn_retry')}
@@ -181,7 +181,7 @@ export function AdminStationDetail({ id }: Props) {
       {/* ── Sticky sub-header ── */}
       <div className="flex items-center gap-4 border-b border-[#E8E4D8] bg-white px-7 py-4 dark:border-[#1A2A14] dark:bg-[#111A0E]">
         <Link href={'/admin/stations' as Parameters<typeof Link>[0]['href']}
-          className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-[#F0EDE0] text-[#888] transition-colors hover:bg-[#E8E4D8] dark:bg-[#1E2A1A] dark:text-[#9A9A8A]">
+          className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-[#F0EDE0] text-foreground/55 transition-colors hover:bg-[#E8E4D8] dark:bg-[#1E2A1A] dark:text-[#9A9A8A]">
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="15 18 9 12 15 6" /></svg>
         </Link>
         <div className="min-w-0 flex-1">
@@ -208,7 +208,7 @@ export function AdminStationDetail({ id }: Props) {
             </div>
             <div className="min-w-0 flex-1">
               <h2 className="text-[19px] font-black text-[#0F1A0C] dark:text-[#F0EDD4]">{station.name}</h2>
-              <p className="mt-0.5 text-[13px] text-[#888] dark:text-[#9A9A8A]">
+              <p className="mt-0.5 text-[13px] text-foreground/55 dark:text-[#9A9A8A]">
                 {station.city}{station.address ? ` · ${station.address}` : ''}
               </p>
               <div className="mt-3 flex flex-wrap items-center gap-2">
@@ -381,7 +381,7 @@ export function AdminStationDetail({ id }: Props) {
                 <div className="flex flex-1 items-center gap-3 rounded-xl border-2 border-[#00C851]/40 bg-[#00C851]/5 px-4 py-3">
                   <p className="flex-1 text-[13px] font-semibold text-[#0F1A0C] dark:text-[#F0EDD4]">{t('btn_approve')} ?</p>
                   <button type="button" onClick={() => setConfirmApprove(false)} disabled={approving}
-                    className="rounded-lg px-3 py-1.5 text-[13px] font-semibold text-[#888] hover:bg-[#F0EDE0] dark:hover:bg-[#1E2A1A]">
+                    className="rounded-lg px-3 py-1.5 text-[13px] font-semibold text-foreground/55 hover:bg-[#F0EDE0] dark:hover:bg-[#1E2A1A]">
                     {t('btn_cancel')}
                   </button>
                   <button type="button" onClick={handleApprove} disabled={approving}
@@ -395,7 +395,7 @@ export function AdminStationDetail({ id }: Props) {
           ) : (
             <div className="space-y-3">
               <div>
-                <label htmlFor="reject-reason" className="mb-1.5 block text-[12px] font-bold uppercase tracking-wider text-[#888] dark:text-[#9A9A8A]">
+                <label htmlFor="reject-reason" className="mb-1.5 block text-[12px] font-bold uppercase tracking-wider text-foreground/55 dark:text-[#9A9A8A]">
                   {t('reject_reason_label')}
                 </label>
                 <textarea
@@ -418,7 +418,7 @@ export function AdminStationDetail({ id }: Props) {
               <div className="flex gap-3">
                 <button type="button" onClick={() => { setShowReject(false); setRejectReason(''); setActionError(null); }}
                   disabled={rejecting}
-                  className="flex-1 rounded-xl border border-[#E0DCD0] py-2.5 text-[13px] font-semibold text-[#666] hover:bg-[#F0EDE0] disabled:opacity-50 dark:border-[#243020] dark:text-[#9A9A8A]">
+                  className="flex-1 rounded-xl border border-[#E0DCD0] py-2.5 text-[13px] font-semibold text-foreground/65 hover:bg-[#F0EDE0] disabled:opacity-50 dark:border-[#243020] dark:text-[#9A9A8A]">
                   {t('btn_cancel')}
                 </button>
                 <button type="button" onClick={handleReject} disabled={rejecting || rejectReason.trim().length < MIN_REASON}
@@ -542,7 +542,7 @@ function DocCard({
       </div>
 
       <p className="text-[13px] font-bold leading-snug text-[#0F1A0C] dark:text-[#F0EDD4]">{label}</p>
-      <p className="text-[11px] font-semibold text-[#888] dark:text-[#9A9A8A]">
+      <p className="text-[11px] font-semibold text-foreground/55 dark:text-[#9A9A8A]">
         {formattedExpiry
           ? `Date d'expiration enregistrée : ${formattedExpiry}`
           : 'Aucune date d\'expiration enregistrée'}
@@ -552,7 +552,7 @@ function DocCard({
       <div className="flex flex-col gap-1.5">
         {!editing ? (
           <div className="flex items-center justify-between gap-2">
-            <span className="text-[11px] text-[#888] dark:text-[#9A9A8A]">
+            <span className="text-[11px] text-foreground/55 dark:text-[#9A9A8A]">
               {formattedExpiry ?? labels.noExpiry}
             </span>
             <button
@@ -566,7 +566,7 @@ function DocCard({
           </div>
         ) : (
           <div className="flex flex-col gap-2">
-            <label htmlFor={inputId} className="text-[11px] font-bold uppercase tracking-wider text-[#888] dark:text-[#9A9A8A]">
+            <label htmlFor={inputId} className="text-[11px] font-bold uppercase tracking-wider text-foreground/55 dark:text-[#9A9A8A]">
               {labels.fieldLabel}
             </label>
             <input
@@ -582,7 +582,7 @@ function DocCard({
                 {labels.save}
               </button>
               <button type="button" onClick={handleCancel}
-                className="rounded-lg border border-[#E0DCD0] px-3 py-1.5 text-[11px] font-semibold text-[#666] transition-colors hover:bg-[#F0EDE0] focus:outline-none focus-visible:ring-2 focus-visible:ring-[#C49A1E] dark:border-[#243020] dark:text-[#9A9A8A] dark:hover:bg-[#1E2A1A]">
+                className="rounded-lg border border-[#E0DCD0] px-3 py-1.5 text-[11px] font-semibold text-foreground/65 transition-colors hover:bg-[#F0EDE0] focus:outline-none focus-visible:ring-2 focus-visible:ring-[#C49A1E] dark:border-[#243020] dark:text-[#9A9A8A] dark:hover:bg-[#1E2A1A]">
                 {labels.cancel}
               </button>
               {expiry && (
@@ -722,7 +722,7 @@ function TimelineEvent({
         )}
         {note && (
           <div className="mt-2 rounded-[8px] border border-[#EF4444]/20 bg-[#FEF2F2] px-3 py-2 dark:border-[#3A1A1A] dark:bg-[#200D0D]">
-            <p className="text-[13px] leading-relaxed text-[#555] dark:text-[#E0B0B0]">{note}</p>
+            <p className="text-[13px] leading-relaxed text-foreground/70 dark:text-[#E0B0B0]">{note}</p>
           </div>
         )}
       </div>

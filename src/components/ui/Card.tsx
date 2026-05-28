@@ -16,13 +16,13 @@ export interface CardProps extends HTMLAttributes<HTMLDivElement> {
 
 const VARIANT_CLASSES: Record<CardVariant, string> = {
   default:
-    'bg-white dark:bg-dark-card shadow-sm rounded-[10px]',
+    'bg-white dark:bg-surface shadow-sm rounded-[10px]',
   elevated:
-    'bg-white dark:bg-dark-card shadow-md rounded-[10px]',
+    'bg-white dark:bg-surface shadow-md rounded-[10px]',
   flat:
-    'bg-white dark:bg-dark-card border border-[#CCCCCC] dark:border-tab-inactive rounded-[10px]',
+    'bg-white dark:bg-surface border border-[#CCCCCC] dark:border-border rounded-[10px]',
   station:
-    'bg-[#E0E0D0] dark:bg-dark-surface rounded-[10px] shadow-sm',
+    'bg-surface dark:bg-surface rounded-[10px] shadow-sm',
 };
 
 /**

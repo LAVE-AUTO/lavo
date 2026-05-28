@@ -85,7 +85,7 @@ export function BookingMarkupCard({
         <div className="flex items-start gap-3">
           <div
             className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-xl ${
-              enabled ? 'bg-[#C49A1E]/15 text-[#C49A1E]' : 'bg-[#F0EDE0] text-[#888] dark:bg-[#1A2A14] dark:text-[#9A9A8A]'
+              enabled ? 'bg-[#C49A1E]/15 text-[#C49A1E]' : 'bg-[#F0EDE0] text-foreground/55 dark:bg-[#1A2A14] dark:text-[#9A9A8A]'
             }`}
             aria-hidden="true"
           >
@@ -98,7 +98,7 @@ export function BookingMarkupCard({
             <h3 className="text-[14px] font-black text-[#1A1A0A] dark:text-[#F0EDD4]">
               {t('surcharge_title')}
             </h3>
-            <p className="mt-1 max-w-md text-[12px] leading-snug text-[#888] dark:text-[#9A9A8A]">
+            <p className="mt-1 max-w-md text-[12px] leading-snug text-foreground/55 dark:text-[#9A9A8A]">
               {t('surcharge_hint')}
             </p>
           </div>
@@ -114,7 +114,7 @@ export function BookingMarkupCard({
       {enabled && (
         <div className="mt-5 grid gap-4 md:grid-cols-[minmax(0,260px)_minmax(0,1fr)]">
           <div className="flex flex-col gap-1.5">
-            <label className="text-[11px] font-bold uppercase tracking-[0.5px] text-[#888] dark:text-[#9A9A8A]">
+            <label className="text-[11px] font-bold uppercase tracking-[0.5px] text-foreground/55 dark:text-[#9A9A8A]">
               {t('surcharge_amount_label')}
             </label>
             <NumberStepper
@@ -133,7 +133,7 @@ export function BookingMarkupCard({
             aria-live="polite"
           >
             <div className="flex flex-col items-center gap-0.5">
-              <span className="text-[10px] font-bold uppercase tracking-[0.6px] text-[#888] dark:text-[#9A9A8A]">
+              <span className="text-[10px] font-bold uppercase tracking-[0.6px] text-foreground/55 dark:text-[#9A9A8A]">
                 {t('surcharge_preview_queue')}
               </span>
               <span className="font-mono text-[18px] font-black tabular-nums text-[#1A1A0A] dark:text-[#F0EDD4]">
@@ -149,7 +149,7 @@ export function BookingMarkupCard({
             </div>
 
             <div className="flex flex-col items-center gap-0.5">
-              <span className="text-[10px] font-bold uppercase tracking-[0.6px] text-[#888] dark:text-[#9A9A8A]">
+              <span className="text-[10px] font-bold uppercase tracking-[0.6px] text-foreground/55 dark:text-[#9A9A8A]">
                 {t('surcharge_preview_online')}
               </span>
               <span className="font-mono text-[18px] font-black tabular-nums text-[#C49A1E]">

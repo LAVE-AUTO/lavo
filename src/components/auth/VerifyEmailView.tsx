@@ -118,7 +118,7 @@ export function VerifyEmailView({ token }: VerifyEmailViewProps) {
     return (
       <div className="px-8 pb-8 pt-4 flex flex-col items-center gap-4 text-center animate-fade-in">
         <Spinner size="md" />
-        <p className="text-[15px] text-[#555] dark:text-Hurryline-muted">{t('loading')}</p>
+        <p className="text-[15px] text-foreground/70 dark:text-Hurryline-muted">{t('loading')}</p>
       </div>
     );
   }
@@ -132,7 +132,7 @@ export function VerifyEmailView({ token }: VerifyEmailViewProps) {
         <h2 className="text-[22px] font-bold text-dark-bg dark:text-white mb-3">
           {t('success_title')}
         </h2>
-        <p className="text-[15px] text-[#555] dark:text-Hurryline-muted leading-relaxed mb-8">
+        <p className="text-[15px] text-foreground/70 dark:text-Hurryline-muted leading-relaxed mb-8">
           {t('success_message')}
         </p>
         <Link
@@ -154,7 +154,7 @@ export function VerifyEmailView({ token }: VerifyEmailViewProps) {
         <h2 className="text-[22px] font-bold text-dark-bg dark:text-white mb-3">
           {t('resend_success_title')}
         </h2>
-        <p className="text-[15px] text-[#555] dark:text-Hurryline-muted leading-relaxed mb-8">
+        <p className="text-[15px] text-foreground/70 dark:text-Hurryline-muted leading-relaxed mb-8">
           {t('resend_success_message')}
         </p>
         <Link
@@ -177,7 +177,7 @@ export function VerifyEmailView({ token }: VerifyEmailViewProps) {
         <h2 className="text-[20px] font-bold text-dark-bg dark:text-white mb-2">
           {t('error_title')}
         </h2>
-        <p className="text-[14px] text-[#555] dark:text-Hurryline-muted leading-relaxed">
+        <p className="text-[14px] text-foreground/70 dark:text-Hurryline-muted leading-relaxed">
           {t('error_message')}
         </p>
       </div>

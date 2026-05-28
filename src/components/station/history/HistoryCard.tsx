@@ -68,13 +68,13 @@ export function HistoryCard({ entry }: Props) {
         {/* Date block */}
         <div className="flex h-11 w-14 shrink-0 flex-col items-center justify-center rounded-lg bg-white/60 dark:bg-[#243020]">
           <span className="text-[9px] font-bold tracking-wide text-[#000717]/40 dark:text-[#FFFFF0]/40">{monthShort}</span>
-          <span className="font-mono text-[16px] font-bold leading-none text-[#000C1F] dark:text-[#FFF8EC]">{dayNum}</span>
+          <span className="font-mono text-[16px] font-bold leading-none text-foreground">{dayNum}</span>
         </div>
 
         {/* Client + service */}
         <div className="min-w-0 flex-1">
           <div className="flex items-center gap-2">
-            <span className="truncate text-[14px] font-semibold text-[#000C1F] dark:text-[#FFF8EC]">
+            <span className="truncate text-[14px] font-semibold text-foreground">
               {clientName}
             </span>
             <span className={`shrink-0 rounded px-1.5 py-[1px] text-[9px] font-bold uppercase tracking-wide ${
@@ -170,7 +170,7 @@ function DetailRow({ label, value, mono, gold, danger }: {
       <span className={`text-right font-semibold ${
         gold ? 'text-[#C09A18]' :
         danger ? 'text-[#FF2525]' :
-        'text-[#000C1F] dark:text-[#FFF8EC]'
+        'text-foreground'
       } ${mono ? 'font-mono' : ''}`}>
         {value}
       </span>
@@ -181,7 +181,7 @@ function DetailRow({ label, value, mono, gold, danger }: {
 const ChevronIcon = ({ expanded }: { expanded: boolean }) => (
   <svg
     width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round"
-    className={`shrink-0 text-[#000C1F]/30 transition-transform duration-200 dark:text-[#FFF8EC]/30 ${expanded ? 'rotate-180' : ''}`}
+    className={`shrink-0 text-foreground/30 transition-transform duration-200 dark:text-foreground/30 ${expanded ? 'rotate-180' : ''}`}
   >
     <polyline points="6 9 12 15 18 9" />
   </svg>

@@ -166,7 +166,7 @@ export function AdminAnalyticsCharts() {
                 'rounded-lg px-2.5 py-1 text-[11px] font-bold transition-all',
                 groupBy === key
                   ? 'bg-[#C49A1E]/10 text-[#C49A1E]'
-                  : 'text-[#AAA] hover:text-[#666] dark:text-[#A0A090] dark:hover:text-[#A0A090]',
+                  : 'text-[#AAA] hover:text-foreground/65 dark:text-[#A0A090] dark:hover:text-[#A0A090]',
               ].join(' ')}
             >
               {t(labelKey)}

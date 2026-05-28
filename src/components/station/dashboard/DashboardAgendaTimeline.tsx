@@ -62,7 +62,7 @@ function statusToBlockClass(status: string): { bg: string; border: string; chip:
       return {
         bg: 'bg-[#F0EDE0] dark:bg-[#0F1A0C]/60',
         border: 'border-[#D8D4C4] dark:border-[#243020]',
-        chip: 'text-[#888] dark:text-[#A0A090]',
+        chip: 'text-foreground/55 dark:text-[#A0A090]',
         chipBg: 'bg-[#E0DCD0] dark:bg-[#1A2A14]',
       };
     case 'in_progress':
@@ -83,7 +83,7 @@ function statusToBlockClass(status: string): { bg: string; border: string; chip:
       return {
         bg: 'bg-[#F0EDE0]/70',
         border: 'border-[#D8D4C4]',
-        chip: 'text-[#888]',
+        chip: 'text-foreground/55',
         chipBg: 'bg-[#E0DCD0]',
       };
     default:
@@ -198,7 +198,7 @@ export function DashboardAgendaTimeline({
       <div className="flex flex-shrink-0 border-b border-[#E0DCD0] bg-[#F7F6F2] dark:border-[#1A2A14] dark:bg-[#0F1A0C]">
         <div className="w-14 flex-shrink-0 border-r border-[#E0DCD0] dark:border-[#1A2A14]" />
         {visiblePosts.length === 0 ? (
-          <div className="flex-1 px-4 py-3 text-center text-[12px] text-[#888] dark:text-[#A0A090]">
+          <div className="flex-1 px-4 py-3 text-center text-[12px] text-foreground/55 dark:text-[#A0A090]">
             {t('agenda_no_posts')}
           </div>
         ) : (
@@ -266,7 +266,7 @@ export function DashboardAgendaTimeline({
                 {/* Break overlay */}
                 {breakSpan && (
                   <div
-                    className="absolute left-1 right-1 flex items-center justify-center rounded-md bg-[#1A1A0A]/[0.06] text-[10px] font-bold uppercase tracking-wider text-[#666] dark:bg-[#0F1A0C] dark:text-[#5A5A4A]"
+                    className="absolute left-1 right-1 flex items-center justify-center rounded-md bg-[#1A1A0A]/[0.06] text-[10px] font-bold uppercase tracking-wider text-foreground/65 dark:bg-[#0F1A0C] dark:text-[#5A5A4A]"
                     style={{ top: breakSpan.top, height: breakSpan.height }}
                     aria-hidden="true"
                   >
@@ -354,7 +354,7 @@ function SlotBlock({ entry, openMinutes, closeMinutes, onSelect }: SlotBlockProp
         {entry.clientName}
       </div>
       <div className="mt-auto flex items-end justify-between gap-1.5 pt-1">
-        <div className="min-w-0 truncate text-[10px] text-[#666] dark:text-[#A0A090]">
+        <div className="min-w-0 truncate text-[10px] text-foreground/65 dark:text-[#A0A090]">
           {entry.vehicleFormat ?? ''}
           {entry.vehicleFormat && entry.amountPaid !== null ? ' · ' : ''}
           {entry.amountPaid !== null ? (

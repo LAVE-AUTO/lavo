@@ -34,7 +34,7 @@ export function PhoneMockup() {
             <p className="text-[11px] font-bold text-gold tracking-wider uppercase">
               Hurryline
             </p>
-            <p className="text-[16px] font-black text-[#0A0A14] dark:text-white mt-1 leading-tight">
+            <p className="text-[16px] font-black text-foreground mt-1 leading-tight">
               {t('step_1_title')}
             </p>
           </div>
@@ -78,10 +78,10 @@ export function PhoneMockup() {
                 </svg>
               </div>
               <div className="flex-1 min-w-0">
-                <p className="text-[13px] font-bold text-[#0A0A14] dark:text-white truncate">
+                <p className="text-[13px] font-bold text-foreground truncate">
                   Clean Express
                 </p>
-                <p className="text-[11px] text-[#888] dark:text-[#999] mt-0.5">
+                <p className="text-[11px] text-foreground/55 dark:text-[#999] mt-0.5">
                   Paris 11e &middot; 0.8 km
                 </p>
                 <div className="flex items-center gap-1 mt-1.5">
@@ -115,10 +115,10 @@ export function PhoneMockup() {
                 </svg>
               </div>
               <div className="flex-1 min-w-0">
-                <p className="text-[13px] font-bold text-[#0A0A14] dark:text-white truncate">
+                <p className="text-[13px] font-bold text-foreground truncate">
                   Aqua Wash Pro
                 </p>
-                <p className="text-[11px] text-[#888] dark:text-[#999] mt-0.5">
+                <p className="text-[11px] text-foreground/55 dark:text-[#999] mt-0.5">
                   Paris 15e &middot; 1.2 km
                 </p>
                 <div className="flex items-center gap-1 mt-1.5">

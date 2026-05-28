@@ -119,7 +119,7 @@ export function StationDetail({ id }: StationDetailProps) {
   if (!station) {
     return (
       <div className="flex flex-col items-center justify-center py-32 gap-4 text-center">
-        <p className="text-[16px] font-semibold text-[#000C1F] dark:text-[#FFF8EC]">{t('error_load')}</p>
+        <p className="text-[16px] font-semibold text-foreground">{t('error_load')}</p>
         <Link href="/stations" className="text-[15px] font-semibold text-gold hover:text-gold-hover transition-colors">
           {t('back_to_list')}
         </Link>
@@ -191,27 +191,27 @@ export function StationDetail({ id }: StationDetailProps) {
 
   /* Live queue stats block. */
   const QueueBlock = (
-    <div className="rounded-2xl border border-[#D8D8C8] dark:border-tab-inactive bg-[#F0F0E2] dark:bg-dark-bg/40 overflow-hidden">
+    <div className="rounded-2xl border border-border bg-surface/60 overflow-hidden">
       <div className="flex items-center gap-2 px-5 pt-4">
         <span className="w-2 h-2 rounded-full bg-Hurryline-success animate-pulse" />
-        <p className="text-[11px] font-black text-[#555] dark:text-[#A0A090] uppercase tracking-[0.15em] flex-1">
+        <p className="text-[11px] font-black text-foreground/70 dark:text-[#A0A090] uppercase tracking-[0.15em] flex-1">
           {t('detail_queue')}
         </p>
       </div>
       <div className="grid grid-cols-2 gap-2 px-5 pt-3 pb-3 text-center">
         <div>
-          <p className="text-[22px] font-black text-[#000C1F] dark:text-[#FFF8EC] leading-none">{station.queueCount}</p>
-          <p className="text-[10.5px] text-[#666] dark:text-[#B0B0A0] mt-1.5 uppercase tracking-wider font-bold">{t('queue_waiting')}</p>
+          <p className="text-[22px] font-black text-foreground leading-none">{station.queueCount}</p>
+          <p className="text-[10.5px] text-foreground/65 mt-1.5 uppercase tracking-wider font-bold">{t('queue_waiting')}</p>
         </div>
         <div>
-          <p className="text-[22px] font-black text-[#000C1F] dark:text-[#FFF8EC] leading-none">
+          <p className="text-[22px] font-black text-foreground leading-none">
             {distanceLabel ?? '--'}
           </p>
-          <p className="text-[10.5px] text-[#666] dark:text-[#B0B0A0] mt-1.5 uppercase tracking-wider font-bold">{t('queue_distance')}</p>
+          <p className="text-[10.5px] text-foreground/65 mt-1.5 uppercase tracking-wider font-bold">{t('queue_distance')}</p>
         </div>
       </div>
       {station.queueCount > 0 && distanceLabel && (
-        <p className="px-5 pb-4 text-[12.5px] text-[#555] dark:text-[#B0B0A0] leading-snug">
+        <p className="px-5 pb-4 text-[12.5px] text-foreground/70 leading-snug">
           {t('detail_leave_now')} <strong className="text-gold font-black">{t('detail_perfect_timing')}</strong>
         </p>
       )}
@@ -223,11 +223,11 @@ export function StationDetail({ id }: StationDetailProps) {
     <div className="space-y-4">
       <div className="flex items-end justify-between">
         <div>
-          <p className="text-[11px] text-[#888] dark:text-[#888] uppercase tracking-wider font-bold">{t('detail_price_from')}</p>
-          <p className="text-[32px] font-black text-[#000C1F] dark:text-[#FFF8EC] leading-none mt-1">
+          <p className="text-[11px] text-foreground/55 uppercase tracking-wider font-bold">{t('detail_price_from')}</p>
+          <p className="text-[32px] font-black text-foreground leading-none mt-1">
             {currentPrice != null ? (
               <>
-                <span className="text-[16px] font-bold mr-1 text-[#555] dark:text-[#C0C0B0]">{t('price_unit')}</span>
+                <span className="text-[16px] font-bold mr-1 text-foreground/70">{t('price_unit')}</span>
                 {currentPrice.toLocaleString()}
               </>
             ) : '--'}
@@ -242,7 +242,7 @@ export function StationDetail({ id }: StationDetailProps) {
       {selectedService && (
         <div className="rounded-xl bg-gold/10 border border-gold/30 px-4 py-3">
           <p className="text-[11px] font-bold uppercase tracking-wider text-gold">{t('detail_selected_service')}</p>
-          <p className="text-[14.5px] font-bold text-[#000C1F] dark:text-[#FFF8EC] truncate mt-0.5">{selectedService.name}</p>
+          <p className="text-[14.5px] font-bold text-foreground truncate mt-0.5">{selectedService.name}</p>
         </div>
       )}
 
@@ -271,14 +271,14 @@ export function StationDetail({ id }: StationDetailProps) {
           disabled
           aria-disabled="true"
           title={t('detail_unavailable_banner_title')}
-          className="w-full py-3.5 bg-[#E0E0D0] dark:bg-tab-inactive rounded-xl text-[15px] font-bold text-[#666] dark:text-[#C0C0B0] text-center cursor-not-allowed"
+          className="w-full py-3.5 bg-surface dark:bg-tab-inactive rounded-xl text-[15px] font-bold text-foreground/65 dark:text-[#C0C0B0] text-center cursor-not-allowed"
         >
           {t('detail_book_service')}
         </button>
       )}
 
       {!isOpen && !hasServices && (
-        <p className="text-[12.5px] text-[#555] dark:text-[#B0B0A0] leading-relaxed text-center">
+        <p className="text-[12.5px] text-foreground/70 leading-relaxed text-center">
           {t('detail_unavailable_notice')}
         </p>
       )}
@@ -287,7 +287,7 @@ export function StationDetail({ id }: StationDetailProps) {
 
   return (
     <>
-      <div className="min-h-screen bg-[#F5F5E6] dark:bg-dark-bg transition-colors animate-fade-in">
+      <div className="min-h-screen bg-background transition-colors animate-fade-in">
 
         {/* ── Hero ── */}
         <div className="relative h-[260px] sm:h-[340px] lg:h-[440px] bg-linear-to-br from-[#D5D5C5] to-[#EDEDED] dark:from-tab-inactive dark:to-dark-bg overflow-hidden">
@@ -371,7 +371,7 @@ export function StationDetail({ id }: StationDetailProps) {
               {station.openingHours && (
                 <>
                   <span className="w-px h-3.5 bg-white/40" aria-hidden="true" />
-                  <span className="font-semibold">{station.openingHours}</span>
+                  <span className="font-bebas tracking-wider text-[14px]">{station.openingHours}</span>
                 </>
               )}
             </div>
@@ -398,7 +398,7 @@ export function StationDetail({ id }: StationDetailProps) {
             <div className="space-y-7">
 
               {/* Mobile summary panel */}
-              <div className="lg:hidden bg-[#E8E8D8] dark:bg-dark-card rounded-2xl p-5 border border-[#D0D0C0] dark:border-tab-inactive">
+              <div className="lg:hidden bg-surface rounded-2xl p-5 border border-border">
                 {SummaryPanel}
               </div>
 
@@ -434,8 +434,8 @@ export function StationDetail({ id }: StationDetailProps) {
               {/* Description */}
               {station.description && (
                 <div>
-                  <h2 className="text-[17px] font-black text-[#000C1F] dark:text-[#FFF8EC] mb-2">{t('detail_description')}</h2>
-                  <p className="text-[14.5px] text-[#555] dark:text-[#C0C0B0] leading-[1.75]">{station.description}</p>
+                  <h2 className="text-[17px] font-black text-foreground mb-2">{t('detail_description')}</h2>
+                  <p className="text-[14.5px] text-foreground/70 leading-[1.75]">{station.description}</p>
                 </div>
               )}
 
@@ -449,7 +449,7 @@ export function StationDetail({ id }: StationDetailProps) {
                 type="button"
                 onClick={() => setNavConfirmOpen(true)}
                 disabled={navigating}
-                className="flex w-full items-center gap-4 bg-[#E8E8D8] dark:bg-dark-card rounded-2xl px-5 py-4 transition-colors hover:border-gold/40 border border-[#D0D0C0] dark:border-tab-inactive group/loc text-left cursor-pointer disabled:opacity-60"
+                className="flex w-full items-center gap-4 bg-surface rounded-2xl px-5 py-4 transition-colors hover:border-gold/40 border border-border group/loc text-left cursor-pointer disabled:opacity-60"
               >
                 <div className="w-11 h-11 rounded-full bg-gold/15 flex items-center justify-center shrink-0">
                   <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#C49A1E" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -458,8 +458,8 @@ export function StationDetail({ id }: StationDetailProps) {
                   </svg>
                 </div>
                 <div className="flex-1 min-w-0">
-                  <p className="text-[15px] font-semibold text-[#000C1F] dark:text-[#FFF8EC] truncate">{station.address}</p>
-                  <p className="text-[13px] text-[#555] dark:text-[#C0C0B0]">{station.city}</p>
+                  <p className="text-[15px] font-semibold text-foreground truncate">{station.address}</p>
+                  <p className="text-[13px] text-foreground/70">{station.city}</p>
                 </div>
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#C49A1E" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="shrink-0 group-hover/loc:translate-x-0.5 transition-transform">
                   <polyline points="9 18 15 12 9 6" />
@@ -468,8 +468,8 @@ export function StationDetail({ id }: StationDetailProps) {
 
               {/* Reviews */}
               <div>
-                <h2 className="text-[17px] font-black text-[#000C1F] dark:text-[#FFF8EC] mb-4">
-                  {t('detail_reviews')} <span className="text-[#888] font-semibold text-[15px]">({station.reviewCount})</span>
+                <h2 className="text-[17px] font-black text-foreground mb-4">
+                  {t('detail_reviews')} <span className="text-foreground/55 font-semibold text-[15px]">({station.reviewCount})</span>
                 </h2>
                 <StationReviews reviews={station.reviews} />
               </div>
@@ -477,7 +477,7 @@ export function StationDetail({ id }: StationDetailProps) {
 
             {/* ── Desktop sticky summary ── */}
             <aside className="hidden lg:block lg:sticky lg:top-[84px] self-start">
-              <div className="bg-[#E8E8D8] dark:bg-dark-card rounded-2xl p-6 border border-[#D0D0C0] dark:border-tab-inactive shadow-sm">
+              <div className="bg-surface rounded-2xl p-6 border border-border shadow-sm">
                 {SummaryPanel}
               </div>
             </aside>
@@ -485,15 +485,15 @@ export function StationDetail({ id }: StationDetailProps) {
         </div>
 
         {/* ── Mobile sticky footer CTA ── */}
-        <div className="lg:hidden fixed bottom-16 sm:bottom-0 left-0 right-0 bg-[#F5F5E6]/97 dark:bg-dark-bg/97 backdrop-blur-md border-t border-[#D0D0C0] dark:border-tab-inactive py-3 z-40 transition-colors">
+        <div className="lg:hidden fixed bottom-16 sm:bottom-0 left-0 right-0 bg-background/97 dark:bg-background/97 backdrop-blur-md border-t border-border py-3 z-40 transition-colors">
           <div className="max-w-[1440px] mx-auto px-4 sm:px-6 flex items-center gap-3">
             <div className="min-w-0">
-              <p className="text-[20px] font-black text-[#000C1F] dark:text-[#FFF8EC] leading-none">
+              <p className="text-[20px] font-black text-foreground leading-none">
                 {currentPrice != null ? (
-                  <><span className="text-[14px] font-semibold text-[#555] dark:text-[#C0C0B0] mr-1">{t('price_unit')}</span>{currentPrice.toLocaleString()}</>
+                  <><span className="text-[14px] font-semibold text-foreground/70 mr-1">{t('price_unit')}</span>{currentPrice.toLocaleString()}</>
                 ) : '--'}
               </p>
-              <p className="text-[11px] text-[#555] dark:text-[#C0C0B0] mt-1 truncate">
+              <p className="text-[11px] text-foreground/70 mt-1 truncate">
                 {selectedService ? selectedService.name : t('detail_price_from')}
               </p>
             </div>
@@ -520,7 +520,7 @@ export function StationDetail({ id }: StationDetailProps) {
                 disabled
                 aria-disabled="true"
                 title={hasNoAvailability ? t('detail_unavailable_banner_title') : undefined}
-                className="flex-1 py-3 bg-[#E0E0D0] dark:bg-tab-inactive rounded-xl text-[15px] font-bold text-[#666] dark:text-[#C0C0B0] text-center cursor-not-allowed"
+                className="flex-1 py-3 bg-surface dark:bg-tab-inactive rounded-xl text-[15px] font-bold text-foreground/65 dark:text-[#C0C0B0] text-center cursor-not-allowed"
               >
                 {t('detail_book_service')}
               </button>

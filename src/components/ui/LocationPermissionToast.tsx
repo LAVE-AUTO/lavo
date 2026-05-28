@@ -55,7 +55,7 @@ export function LocationPermissionToast({ duration = 10_000 }: LocationPermissio
     <div
       role="alert"
       aria-live="polite"
-      className="fixed bottom-20 right-4 sm:bottom-6 z-[200] w-[300px] sm:w-[340px] max-w-[calc(100vw-2rem)] bg-white dark:bg-dark-card rounded-2xl shadow-[0_8px_40px_rgba(0,0,0,0.16)] dark:shadow-[0_8px_40px_rgba(0,0,0,0.55)] border border-[#E0E0D0] dark:border-tab-inactive overflow-hidden animate-fade-in-up"
+      className="fixed bottom-20 right-4 sm:bottom-6 z-[200] w-[300px] sm:w-[340px] max-w-[calc(100vw-2rem)] bg-white dark:bg-surface rounded-2xl shadow-[0_8px_40px_rgba(0,0,0,0.16)] dark:shadow-[0_8px_40px_rgba(0,0,0,0.55)] border border-[#E0E0D0] dark:border-border overflow-hidden animate-fade-in-up"
     >
       {/* Row 1 — icon + title */}
       <div className="flex items-center gap-3 px-4 pt-4 pb-1.5">
@@ -71,7 +71,7 @@ export function LocationPermissionToast({ duration = 10_000 }: LocationPermissio
       </div>
 
       {/* Row 2 — description spanning full width */}
-      <p className="px-4 pb-3 text-[11.5px] sm:text-[12.5px] text-[#666] dark:text-[#A0A090] leading-snug">
+      <p className="px-4 pb-3 text-[11.5px] sm:text-[12.5px] text-foreground/65 dark:text-[#A0A090] leading-snug">
         {t('desc')}
       </p>
 
@@ -94,7 +94,7 @@ export function LocationPermissionToast({ duration = 10_000 }: LocationPermissio
       </div>
 
       {/* Progress bar */}
-      <div className="h-[3px] bg-[#E8E8D8] dark:bg-tab-inactive">
+      <div className="h-[3px] bg-surface dark:bg-tab-inactive">
         <div
           className="h-full bg-gold"
           style={{ width: `${progress}%`, transition: 'none' }}

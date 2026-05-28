@@ -64,86 +64,86 @@ export function SummaryStep({
   return (
     <div className="flex flex-col h-full">
       <div className="flex-1 overflow-y-auto px-1 space-y-4 pb-4">
-        <p className="text-[14px] text-[#555] dark:text-[#B0B0A0]">{t('summary_subtitle')}</p>
+        <p className="text-[14px] text-foreground/70">{t('summary_subtitle')}</p>
 
         {/* Station */}
-        <div className="bg-[#E8E8D8] dark:bg-dark-bg/60 rounded-xl p-4 space-y-3">
+        <div className="bg-surface dark:bg-background/60 rounded-xl p-4 space-y-3">
           <div className="flex items-center gap-3">
             {station.imageUrl && (
               <img src={station.imageUrl} alt={station.name} className="w-12 h-12 rounded-lg object-cover" />
             )}
             <div>
-              <h4 className="text-[15px] font-bold text-[#000C1F] dark:text-[#FFF8EC]">{station.name}</h4>
-              <p className="text-[13px] text-[#555] dark:text-[#B0B0A0]">{station.address}</p>
+              <h4 className="text-[15px] font-bold text-foreground">{station.name}</h4>
+              <p className="text-[13px] text-foreground/70">{station.address}</p>
             </div>
           </div>
         </div>
 
         {/* Service details */}
-        <div className="bg-[#E8E8D8] dark:bg-dark-bg/60 rounded-xl p-4 space-y-2">
-          <h4 className="text-[13px] font-bold text-[#555] dark:text-[#A0A090] uppercase tracking-wider mb-2">
+        <div className="bg-surface dark:bg-background/60 rounded-xl p-4 space-y-2">
+          <h4 className="text-[13px] font-bold text-foreground/70 dark:text-[#A0A090] uppercase tracking-wider mb-2">
             {t('summary_service')}
           </h4>
 
           <div className="flex justify-between text-[14px]">
-            <span className="text-[#000C1F] dark:text-[#FFF8EC] font-semibold">{selectedService.name}</span>
+            <span className="text-foreground font-semibold">{selectedService.name}</span>
           </div>
 
           {/* Format line (hand_wash only — when entry has a vehicleFormatId) */}
           {selectedEntry?.vehicleFormatId && (
             <div className="flex justify-between text-[14px]">
-              <span className="text-[#555] dark:text-[#B0B0A0]">{entryLabel}</span>
-              <span className="text-[#000C1F] dark:text-[#FFF8EC] font-bold">${entryPrice.toLocaleString()}</span>
+              <span className="text-foreground/70">{entryLabel}</span>
+              <span className="text-foreground font-bold">${entryPrice.toLocaleString()}</span>
             </div>
           )}
 
           {/* Price for non-hand_wash (no format label) */}
           {!selectedEntry?.vehicleFormatId && entryPrice > 0 && (
             <div className="flex justify-between text-[14px]">
-              <span className="text-[#555] dark:text-[#B0B0A0]">{t('summary_base_price')}</span>
-              <span className="text-[#000C1F] dark:text-[#FFF8EC] font-bold">${entryPrice.toLocaleString()}</span>
+              <span className="text-foreground/70">{t('summary_base_price')}</span>
+              <span className="text-foreground font-bold">${entryPrice.toLocaleString()}</span>
             </div>
           )}
 
           {selectedExtras.map((extra) => (
             <div key={extra.id} className="flex justify-between text-[13px]">
-              <span className="text-[#555] dark:text-[#B0B0A0]">+ {extra.name}</span>
-              <span className="text-[#555] dark:text-[#B0B0A0]">${extra.price.toLocaleString()}</span>
+              <span className="text-foreground/70">+ {extra.name}</span>
+              <span className="text-foreground/70">${extra.price.toLocaleString()}</span>
             </div>
           ))}
 
           {/* Reservation surcharge — only for book_slot mode */}
           {arrivalMode === 'book_slot' && reservationSurcharge != null && reservationSurcharge > 0 && (
-            <div className="flex justify-between text-[13px] border-t border-[#D0D0C0] dark:border-tab-inactive pt-2 mt-1">
-              <span className="text-[#555] dark:text-[#B0B0A0]">{t('summary_reservation_surcharge')}</span>
+            <div className="flex justify-between text-[13px] border-t border-border pt-2 mt-1">
+              <span className="text-foreground/70">{t('summary_reservation_surcharge')}</span>
               <span className="text-gold font-bold">+${reservationSurcharge.toLocaleString()}</span>
             </div>
           )}
         </div>
 
         {/* Arrival */}
-        <div className="bg-[#E8E8D8] dark:bg-dark-bg/60 rounded-xl p-4">
-          <h4 className="text-[13px] font-bold text-[#555] dark:text-[#A0A090] uppercase tracking-wider mb-2">
+        <div className="bg-surface dark:bg-background/60 rounded-xl p-4">
+          <h4 className="text-[13px] font-bold text-foreground/70 dark:text-[#A0A090] uppercase tracking-wider mb-2">
             {t('summary_arrival')}
           </h4>
-          <p className="text-[14px] font-semibold text-[#000C1F] dark:text-[#FFF8EC]">{arrivalLabel}</p>
+          <p className="text-[14px] font-semibold text-foreground">{arrivalLabel}</p>
         </div>
 
         {/* Totals */}
         <div className="bg-gold/10 dark:bg-gold/5 border-2 border-gold rounded-xl p-4 space-y-2">
           <div className="flex justify-between text-[14px]">
-            <span className="text-[#555] dark:text-[#B0B0A0]">{t('ticket_duration')}</span>
-            <span className="font-bold text-[#000C1F] dark:text-[#FFF8EC]">{totalDuration} min</span>
+            <span className="text-foreground/70">{t('ticket_duration')}</span>
+            <span className="font-bold text-foreground">{totalDuration} min</span>
           </div>
           <div className="flex justify-between text-[18px]">
-            <span className="font-black text-[#000C1F] dark:text-[#FFF8EC]">{t('ticket_total')}</span>
+            <span className="font-black text-foreground">{t('ticket_total')}</span>
             <span className="font-black text-gold">${grandTotal.toLocaleString()}</span>
           </div>
         </div>
       </div>
 
       {/* Actions */}
-      <div className="border-t border-[#D0D0C0] dark:border-tab-inactive pt-4 space-y-3">
+      <div className="border-t border-border pt-4 space-y-3">
         {error && (
           <p className="text-[13px] text-Hurryline-error text-center">{error}</p>
         )}
@@ -162,7 +162,7 @@ export function SummaryStep({
             disabled={loading}
             className={`flex-1 py-3 rounded-xl text-[15px] font-black transition-colors cursor-pointer ${
               loading
-                ? 'bg-[#D0D0C0] dark:bg-tab-inactive text-[#888] cursor-not-allowed'
+                ? 'bg-[#D0D0C0] dark:bg-tab-inactive text-foreground/55 cursor-not-allowed'
                 : 'bg-gold hover:bg-gold-hover text-dark-bg'
             }`}
           >

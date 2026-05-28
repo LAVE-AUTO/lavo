@@ -45,12 +45,12 @@ export function FormField({
           aria-invalid={error ? 'true' : undefined}
           aria-describedby={error ? errorId : undefined}
           className={[
-            'w-full px-4 py-3 bg-white dark:bg-dark-card border-[1.5px] rounded-lg',
+            'w-full px-4 py-3 bg-white dark:bg-surface border-[1.5px] rounded-lg',
             'text-[16px] text-[#1A1A1A] dark:text-white placeholder-[#AAAAAA] dark:placeholder-[#4A5A46]',
             'outline-none transition-all duration-150',
             error
               ? 'border-Hurryline-error bg-[#FFF8F7] dark:bg-[#2A1A18] focus:shadow-[0_0_0_3px_rgba(232,71,42,0.2)]'
-              : 'border-[#CCCCCC] dark:border-tab-inactive focus:border-gold dark:focus:border-gold focus:shadow-[0_0_0_3px_rgba(196,154,30,0.18)] dark:focus:shadow-[0_0_0_3px_rgba(196,154,30,0.15)]',
+              : 'border-[#CCCCCC] dark:border-border focus:border-gold dark:focus:border-gold focus:shadow-[0_0_0_3px_rgba(196,154,30,0.18)] dark:focus:shadow-[0_0_0_3px_rgba(196,154,30,0.15)]',
             rightIcon ? 'pr-11' : '',
             className ?? '',
           ]
@@ -59,7 +59,7 @@ export function FormField({
           {...inputProps}
         />
         {rightIcon && (
-          <span className="absolute right-3.5 top-1/2 -translate-y-1/2 text-[#888]">
+          <span className="absolute right-3.5 top-1/2 -translate-y-1/2 text-foreground/55">
             {rightIcon}
           </span>
         )}

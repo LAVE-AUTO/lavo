@@ -239,7 +239,7 @@ export function StationListView({ washTypes, vehicleFormats }: StationListViewPr
     <div className="animate-fade-in">
 
       {/* Sticky controls */}
-      <div className="sticky top-[58px] z-30 bg-[#EDEDED] dark:bg-dark-bg pb-3 -mx-4 px-4 sm:-mx-6 sm:px-6 pt-3 space-y-3">
+      <div className="sticky top-[58px] z-30 bg-[#EDEDED] dark:bg-background pb-3 -mx-4 px-4 sm:-mx-6 sm:px-6 pt-3 space-y-3">
         <div className="flex gap-2">
           <div className="flex-1">
             <SearchBar value={cityQuery} onChange={setCityQuery} placeholder={t('search_city_placeholder')} />
@@ -253,7 +253,7 @@ export function StationListView({ washTypes, vehicleFormats }: StationListViewPr
               'relative flex items-center gap-1.5 px-4 py-2.5 rounded-xl text-[14px] font-bold transition-colors cursor-pointer',
               panelOpen || activeCount > 0
                 ? 'bg-gold text-dark-bg'
-                : 'bg-[#E0E0D0] dark:bg-tab-inactive text-[#222] dark:text-[#D0D0C0] hover:bg-[#D0D0C0] dark:hover:bg-tab-inactive',
+                : 'bg-surface dark:bg-tab-inactive text-[#222] dark:text-[#D0D0C0] hover:bg-[#D0D0C0] dark:hover:bg-tab-inactive',
             ].join(' ')}
             aria-label={t('filter_panel_title')}
           >
@@ -303,7 +303,7 @@ export function StationListView({ washTypes, vehicleFormats }: StationListViewPr
                 'py-1.5 px-3.5 rounded-full text-[13.5px] font-bold whitespace-nowrap transition-colors duration-150 shrink-0 flex items-center gap-1.5',
                 sort === key
                   ? 'bg-gold text-dark-bg'
-                  : 'bg-[#E0E0D0] dark:bg-dark-card text-[#222] dark:text-[#D0D0C0] hover:bg-[#D0D0C0] dark:hover:bg-tab-inactive',
+                  : 'bg-surface text-[#222] dark:text-[#D0D0C0] hover:bg-[#D0D0C0] dark:hover:bg-tab-inactive',
               ].join(' ')}
             >
               {icon && <span aria-hidden="true">{icon}</span>}
@@ -318,7 +318,7 @@ export function StationListView({ washTypes, vehicleFormats }: StationListViewPr
               'py-1.5 px-3.5 rounded-full text-[13.5px] font-bold whitespace-nowrap transition-colors duration-150 shrink-0',
               filters.onlyAvail
                 ? 'bg-gold text-dark-bg'
-                : 'bg-[#E0E0D0] dark:bg-dark-card text-[#222] dark:text-[#D0D0C0] hover:bg-[#D0D0C0] dark:hover:bg-tab-inactive',
+                : 'bg-surface text-[#222] dark:text-[#D0D0C0] hover:bg-[#D0D0C0] dark:hover:bg-tab-inactive',
             ].join(' ')}
           >
             {t('filter_available')}

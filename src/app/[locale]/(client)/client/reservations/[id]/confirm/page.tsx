@@ -142,7 +142,7 @@ export default function ClientReservationConfirmPage() {
 
   if (screen === 'loading' || authLoading) {
     return (
-      <main className="min-h-screen bg-[#F5F5E6] dark:bg-dark-bg flex items-center justify-center pb-24">
+      <main className="min-h-screen bg-background flex items-center justify-center pb-24">
         <div className="h-8 w-8 animate-spin rounded-full border-[3px] border-gold border-t-transparent" />
       </main>
     );
@@ -150,8 +150,8 @@ export default function ClientReservationConfirmPage() {
 
   if (screen === 'missing') {
     return (
-      <main className="min-h-screen bg-[#F5F5E6] dark:bg-dark-bg flex flex-col items-center justify-center gap-4 px-4 pb-24 text-center">
-        <p className="text-[14px] font-semibold text-[#555] dark:text-[#B0B0A0]">
+      <main className="min-h-screen bg-background flex flex-col items-center justify-center gap-4 px-4 pb-24 text-center">
+        <p className="text-[14px] font-semibold text-foreground/70">
           {t('confirm_error_load')}
         </p>
         <Link
@@ -166,7 +166,7 @@ export default function ClientReservationConfirmPage() {
 
   if (screen === 'failed') {
     return (
-      <main className="min-h-screen bg-[#F5F5E6] dark:bg-dark-bg px-4 pb-24 sm:pb-8">
+      <main className="min-h-screen bg-background px-4 pb-24 sm:pb-8">
         <div className="mx-auto flex min-h-[60vh] max-w-xl flex-col items-center justify-center text-center">
           <div className="mb-6 flex h-16 w-16 items-center justify-center rounded-full bg-Hurryline-error/15 text-Hurryline-error">
             <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
@@ -174,10 +174,10 @@ export default function ClientReservationConfirmPage() {
               <line x1="6" y1="6" x2="18" y2="18" />
             </svg>
           </div>
-          <h1 className="text-[22px] font-black text-[#0A0A14] dark:text-white">
+          <h1 className="text-[22px] font-black text-foreground">
             {t('confirm_failed_title')}
           </h1>
-          <p className="mt-3 max-w-md text-[14px] leading-relaxed text-[#555] dark:text-[#B0B0A0]">
+          <p className="mt-3 max-w-md text-[14px] leading-relaxed text-foreground/70">
             {t('confirm_failed_desc')}
           </p>
           <div className="mt-8 flex w-full max-w-sm flex-col gap-3">
@@ -201,13 +201,13 @@ export default function ClientReservationConfirmPage() {
 
   if (screen === 'pending' || !entry) {
     return (
-      <main className="min-h-screen bg-[#F5F5E6] dark:bg-dark-bg px-4 pb-24 sm:pb-8">
+      <main className="min-h-screen bg-background px-4 pb-24 sm:pb-8">
         <div className="mx-auto flex min-h-[60vh] max-w-xl flex-col items-center justify-center text-center">
           <div className="mb-6 h-12 w-12 animate-spin rounded-full border-[3px] border-gold border-t-transparent" />
-          <h1 className="text-[22px] font-black text-[#0A0A14] dark:text-white">
+          <h1 className="text-[22px] font-black text-foreground">
             {t('confirm_pending_title')}
           </h1>
-          <p className="mt-3 max-w-md text-[14px] leading-relaxed text-[#555] dark:text-[#B0B0A0]">
+          <p className="mt-3 max-w-md text-[14px] leading-relaxed text-foreground/70">
             {t('confirm_pending_desc')}
           </p>
         </div>
@@ -220,7 +220,7 @@ export default function ClientReservationConfirmPage() {
     : `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(`${entry.stationName}, ${entry.stationAddress}`)}`;
 
   return (
-    <main className="min-h-screen bg-[#F5F5E6] dark:bg-dark-bg px-4 pb-24 pt-10 sm:pb-8">
+    <main className="min-h-screen bg-background px-4 pb-24 pt-10 sm:pb-8">
       <div className="mx-auto max-w-xl space-y-5">
         <div className="flex flex-col items-center text-center">
           <div className="mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-Hurryline-success/15 text-Hurryline-success">
@@ -228,26 +228,26 @@ export default function ClientReservationConfirmPage() {
               <polyline points="20 6 9 17 4 12" />
             </svg>
           </div>
-          <h1 className="text-[22px] font-black text-[#0A0A14] dark:text-white">
+          <h1 className="text-[22px] font-black text-foreground">
             {t('confirm_title')}
           </h1>
-          <p className="mt-2 text-[14px] font-semibold text-[#555] dark:text-[#B0B0A0]">
+          <p className="mt-2 text-[14px] font-semibold text-foreground/70">
             {t('confirm_subtitle')}
           </p>
         </div>
 
-        <div className="rounded-xl border border-[#D0D0C0] bg-[#E8E8D8] p-4 dark:border-tab-inactive dark:bg-dark-card">
-          <div className="text-[11px] font-bold uppercase tracking-wider text-[#555] dark:text-[#A0A090]">
+        <div className="rounded-xl border border-border bg-surface p-4 dark:border-border dark:bg-surface">
+          <div className="text-[11px] font-bold uppercase tracking-wider text-foreground/70 dark:text-[#A0A090]">
             {t('confirm_reservation_code')}
           </div>
           <div className="mt-1 font-mono text-[20px] font-black text-gold">{entry.shortCode}</div>
         </div>
 
-        <div className="space-y-3 rounded-xl border border-[#D0D0C0] bg-[#E8E8D8] p-4 dark:border-tab-inactive dark:bg-dark-card">
+        <div className="space-y-3 rounded-xl border border-border bg-surface p-4 dark:border-border dark:bg-surface">
           <Row label={t('confirm_station')} value={entry.stationName} secondary={entry.stationAddress} />
           <Row label={t('confirm_service')} value={entry.forfaitName} />
-          <div className="flex items-center justify-between border-t border-[#D0D0C0] pt-3 dark:border-tab-inactive">
-            <span className="text-[13px] font-semibold text-[#555] dark:text-[#B0B0A0]">
+          <div className="flex items-center justify-between border-t border-border pt-3 dark:border-border">
+            <span className="text-[13px] font-semibold text-foreground/70">
               {t('confirm_amount')}
             </span>
             <span className="text-[18px] font-black text-gold">{entry.amountPaid.toFixed(2)}$</span>
@@ -282,12 +282,12 @@ export default function ClientReservationConfirmPage() {
 function Row({ label, value, secondary }: { label: string; value: string; secondary?: string }) {
   return (
     <div>
-      <div className="text-[11px] font-bold uppercase tracking-wider text-[#555] dark:text-[#A0A090]">
+      <div className="text-[11px] font-bold uppercase tracking-wider text-foreground/70 dark:text-[#A0A090]">
         {label}
       </div>
-      <div className="mt-0.5 text-[15px] font-bold text-[#0A0A14] dark:text-white">{value}</div>
+      <div className="mt-0.5 text-[15px] font-bold text-foreground">{value}</div>
       {secondary && (
-        <div className="text-[12px] text-[#666] dark:text-[#B0B0A0]">{secondary}</div>
+        <div className="text-[12px] text-foreground/65">{secondary}</div>
       )}
     </div>
   );

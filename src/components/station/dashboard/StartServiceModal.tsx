@@ -99,7 +99,7 @@ export function StartServiceModal({ open, onClose, clientName, onSubmit }: Props
   return (
     <Modal open={open} onClose={onClose} size="md" title={t('start_modal_title')}>
       <div className="space-y-4 pb-2">
-        <p className="text-[13px] text-[#666] dark:text-[#A0A090]">
+        <p className="text-[13px] text-foreground/65 dark:text-[#A0A090]">
           {t('start_modal_subtitle', { name: clientName })}
         </p>
 
@@ -149,7 +149,7 @@ export function StartServiceModal({ open, onClose, clientName, onSubmit }: Props
           type="button"
           onClick={onClose}
           disabled={submitting}
-          className="rounded-lg border border-[#E0DCD0] px-4 py-2 text-[13px] font-bold text-[#666] transition-colors hover:bg-[#F0EDE0] disabled:opacity-50 dark:border-[#243020] dark:text-[#A0A090] dark:hover:bg-[#1A2A14]"
+          className="rounded-lg border border-[#E0DCD0] px-4 py-2 text-[13px] font-bold text-foreground/65 transition-colors hover:bg-[#F0EDE0] disabled:opacity-50 dark:border-[#243020] dark:text-[#A0A090] dark:hover:bg-[#1A2A14]"
         >
           {t('btn_cancel')}
         </button>

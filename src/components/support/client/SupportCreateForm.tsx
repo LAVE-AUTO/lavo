@@ -136,7 +136,7 @@ export function SupportCreateForm({ onCreated, onCancel }: Props) {
 
         <div className="flex items-center justify-end gap-2">
           <button type="button" onClick={onCancel} disabled={saving}
-            className="rounded-[10px] border border-[#E0DCD0] px-4 py-2.5 text-[13px] font-semibold text-[#666] transition-colors hover:bg-[#F0EDE0] disabled:opacity-50 dark:border-[#243020] dark:text-[#9A9A8A]">
+            className="rounded-[10px] border border-[#E0DCD0] px-4 py-2.5 text-[13px] font-semibold text-foreground/65 transition-colors hover:bg-[#F0EDE0] disabled:opacity-50 dark:border-[#243020] dark:text-[#9A9A8A]">
             {t('btn_cancel')}
           </button>
           <button type="submit" disabled={saving || !canSubmit}

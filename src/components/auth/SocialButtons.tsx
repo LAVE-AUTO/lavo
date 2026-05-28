@@ -57,7 +57,7 @@ export function SocialButtons({ namespace = 'register' }: SocialButtonsProps) {
   const btnClass = [
     'flex items-center gap-2.5 px-5 py-2.5 rounded-xl',
     'bg-[#F0F0E8] dark:bg-tab-inactive',
-    'border border-[#CCCCCC] dark:border-tab-inactive',
+    'border border-[#CCCCCC] dark:border-border',
     'hover:bg-[#E8E8E0] dark:hover:bg-tab-inactive',
     'transition-colors duration-150 text-[14px] font-semibold',
     'text-[#333] dark:text-white',
@@ -67,7 +67,7 @@ export function SocialButtons({ namespace = 'register' }: SocialButtonsProps) {
     <div>
       <div className="flex items-center gap-3 my-5">
         <div className="flex-1 h-px bg-[#E0E0E0] dark:bg-[#444]" />
-        <span className="text-[12px] font-medium text-[#888] dark:text-Hurryline-muted tracking-wider uppercase">
+        <span className="text-[12px] font-medium text-foreground/55 dark:text-Hurryline-muted tracking-wider uppercase">
           {t('or_continue_with')}
         </span>
         <div className="flex-1 h-px bg-[#E0E0E0] dark:bg-[#444]" />

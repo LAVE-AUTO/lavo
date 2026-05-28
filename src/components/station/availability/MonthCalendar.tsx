@@ -113,7 +113,7 @@ export function MonthCalendar({
         </button>
 
         {/* Legend */}
-        <div className="ml-auto flex flex-wrap items-center gap-4 text-[11px] text-[#666] dark:text-[#A0A090]">
+        <div className="ml-auto flex flex-wrap items-center gap-4 text-[11px] text-foreground/65 dark:text-[#A0A090]">
           <span className="flex items-center gap-1.5">
             <span className="inline-block h-3.5 w-3.5 rounded-sm border-2 border-[#C49A1E] bg-[#F0EDE0] dark:bg-[#1E2A1A]" aria-hidden="true" />
             {t('availability_legend_today')}
@@ -129,7 +129,7 @@ export function MonthCalendar({
       {/* Day headers */}
       <div className="mb-1 grid grid-cols-7 gap-1.5">
         {DAYS_FR.map((d) => (
-          <div key={d} className="py-1 text-center text-[10px] font-black uppercase tracking-wider text-[#666] dark:text-[#A0A090]">
+          <div key={d} className="py-1 text-center text-[10px] font-black uppercase tracking-wider text-foreground/65 dark:text-[#A0A090]">
             {d}
           </div>
         ))}

@@ -100,7 +100,7 @@ export function ConfirmDialog({
           {/* Text */}
           <div>
             <div className="text-[15px] font-bold text-[#1A1A0A] dark:text-[#F0EDD4]">{title}</div>
-            <div className="mt-1 text-[13px] leading-snug text-[#888] dark:text-[#6A6A5A]">{message}</div>
+            <div className="mt-1 text-[13px] leading-snug text-foreground/55 dark:text-[#6A6A5A]">{message}</div>
           </div>
         </div>
 

@@ -55,7 +55,7 @@ export function CustomSelect({ options, value, onChange, placeholder }: CustomSe
           'w-full flex items-center justify-between px-3 sm:px-3.5 py-2.5 rounded-xl border text-[13.5px] sm:text-[14px] font-semibold transition-all duration-150 select-none cursor-pointer',
           isActive
             ? 'border-gold bg-gold/5 dark:bg-gold/10 text-[#1A1A1A] dark:text-white'
-            : 'border-[#E0E0D0] dark:border-tab-inactive bg-[#F5F5EE] dark:bg-tab-inactive text-[#555] dark:text-[#C0C0B0]',
+            : 'border-[#E0E0D0] dark:border-border bg-[#F5F5EE] dark:bg-tab-inactive text-foreground/70',
         ].join(' ')}
       >
         <span className={`truncate ${value ? 'text-[#1A1A1A] dark:text-white' : ''}`}>{triggerLabel}</span>
@@ -73,7 +73,7 @@ export function CustomSelect({ options, value, onChange, placeholder }: CustomSe
         <div
           id={listboxId}
           role="listbox"
-          className="absolute top-[calc(100%+6px)] left-0 right-0 bg-white dark:bg-dark-surface border border-[#E0E0D0] dark:border-tab-inactive rounded-xl shadow-[0_8px_32px_rgba(0,0,0,0.12)] dark:shadow-[0_8px_32px_rgba(0,0,0,0.4)] z-50 max-h-60 overflow-y-auto animate-fade-in"
+          className="absolute top-[calc(100%+6px)] left-0 right-0 bg-white dark:bg-surface border border-[#E0E0D0] dark:border-border rounded-xl shadow-[0_8px_32px_rgba(0,0,0,0.12)] dark:shadow-[0_8px_32px_rgba(0,0,0,0.4)] z-50 max-h-60 overflow-y-auto animate-fade-in"
         >
           {options.map((opt) => {
             const isSel = opt.value === value;
@@ -158,7 +158,7 @@ export function CustomMultiSelect({ options, selected, onToggle, placeholder }: 
           'w-full flex items-center justify-between px-3 sm:px-3.5 py-2.5 rounded-xl border text-[13.5px] sm:text-[14px] font-semibold transition-all duration-150 select-none cursor-pointer',
           isActive
             ? 'border-gold bg-gold/5 dark:bg-gold/10 text-[#1A1A1A] dark:text-white'
-            : 'border-[#E0E0D0] dark:border-tab-inactive bg-[#F5F5EE] dark:bg-tab-inactive text-[#555] dark:text-[#C0C0B0]',
+            : 'border-[#E0E0D0] dark:border-border bg-[#F5F5EE] dark:bg-tab-inactive text-foreground/70',
         ].join(' ')}
       >
         <span className={`truncate ${selected.length > 0 ? 'text-[#1A1A1A] dark:text-white' : ''}`}>{triggerLabel}</span>
@@ -175,7 +175,7 @@ export function CustomMultiSelect({ options, selected, onToggle, placeholder }: 
       {open && options.length === 0 && (
         <div
           id={listboxId}
-          className="absolute top-[calc(100%+6px)] left-0 right-0 bg-white dark:bg-dark-surface border border-[#E0E0D0] dark:border-tab-inactive rounded-xl shadow-[0_8px_32px_rgba(0,0,0,0.12)] dark:shadow-[0_8px_32px_rgba(0,0,0,0.4)] z-50 px-3.5 py-3 text-[13px] text-[#555] dark:text-[#B0B0A0] animate-fade-in"
+          className="absolute top-[calc(100%+6px)] left-0 right-0 bg-white dark:bg-surface border border-[#E0E0D0] dark:border-border rounded-xl shadow-[0_8px_32px_rgba(0,0,0,0.12)] dark:shadow-[0_8px_32px_rgba(0,0,0,0.4)] z-50 px-3.5 py-3 text-[13px] text-foreground/70 animate-fade-in"
         >
           -
         </div>
@@ -186,7 +186,7 @@ export function CustomMultiSelect({ options, selected, onToggle, placeholder }: 
           id={listboxId}
           role="listbox"
           aria-multiselectable="true"
-          className="absolute top-[calc(100%+6px)] left-0 right-0 bg-white dark:bg-dark-surface border border-[#E0E0D0] dark:border-tab-inactive rounded-xl shadow-[0_8px_32px_rgba(0,0,0,0.12)] dark:shadow-[0_8px_32px_rgba(0,0,0,0.4)] z-50 max-h-52 overflow-y-auto animate-fade-in"
+          className="absolute top-[calc(100%+6px)] left-0 right-0 bg-white dark:bg-surface border border-[#E0E0D0] dark:border-border rounded-xl shadow-[0_8px_32px_rgba(0,0,0,0.12)] dark:shadow-[0_8px_32px_rgba(0,0,0,0.4)] z-50 max-h-52 overflow-y-auto animate-fade-in"
         >
           {options.map((opt) => {
             const isSel = selected.includes(opt.value);

@@ -70,7 +70,7 @@ export function AdminCommissionView() {
         <div className="flex flex-wrap items-start justify-between gap-4">
           <div>
             <h1 className="text-[22px] font-black text-[#1A1A0A] dark:text-[#F0EDD4]">{t('page_title')}</h1>
-            <p className="mt-1 text-[13px] text-[#888] dark:text-[#9A9A8A]">{t('page_subtitle')}</p>
+            <p className="mt-1 text-[13px] text-foreground/55 dark:text-[#9A9A8A]">{t('page_subtitle')}</p>
           </div>
           <div className="flex items-center gap-2 rounded-full border border-[#C49A1E]/30 bg-[#C49A1E]/10 px-3 py-1 text-[12px] font-black text-[#7A5E0A] dark:border-[#C49A1E]/20 dark:text-[#C49A1E]">
             <span className="h-1.5 w-1.5 rounded-full bg-[#C49A1E]" />
@@ -85,17 +85,17 @@ export function AdminCommissionView() {
           <div className="rounded-2xl border border-[#E8E4DC] bg-white px-5 py-4 shadow-sm dark:border-[#1E2E18] dark:bg-[#131E10]">
             <p className="text-[11px] font-black uppercase tracking-widest text-[#AAAAAA] dark:text-[#A0A090]">{t('label_rate')}</p>
             <p className="mt-2 text-[28px] font-black leading-none text-[#1A1A0A] dark:text-[#F0EDD4]">{savedRate}%</p>
-            <p className="mt-2 text-[12px] text-[#888] dark:text-[#9A9A8A]">{t('hint_rate')}</p>
+            <p className="mt-2 text-[12px] text-foreground/55 dark:text-[#9A9A8A]">{t('hint_rate')}</p>
           </div>
           <div className="rounded-2xl border border-[#E8E4DC] bg-white px-5 py-4 shadow-sm dark:border-[#1E2E18] dark:bg-[#131E10]">
             <p className="text-[11px] font-black uppercase tracking-widest text-[#AAAAAA] dark:text-[#A0A090]">{t('platform_share')}</p>
             <p className="mt-2 text-[28px] font-black leading-none text-[#C49A1E]">{savedRate}%</p>
-            <p className="mt-2 text-[12px] text-[#888] dark:text-[#9A9A8A]">{t('preview_title')}</p>
+            <p className="mt-2 text-[12px] text-foreground/55 dark:text-[#9A9A8A]">{t('preview_title')}</p>
           </div>
           <div className="rounded-2xl border border-[#E8E4DC] bg-white px-5 py-4 shadow-sm dark:border-[#1E2E18] dark:bg-[#131E10]">
             <p className="text-[11px] font-black uppercase tracking-widest text-[#AAAAAA] dark:text-[#A0A090]">{t('station_share')}</p>
             <p className="mt-2 text-[28px] font-black leading-none text-[#5A8A50]">{100 - savedRate}%</p>
-            <p className="mt-2 text-[12px] text-[#888] dark:text-[#9A9A8A]">{t('preview_title')}</p>
+            <p className="mt-2 text-[12px] text-foreground/55 dark:text-[#9A9A8A]">{t('preview_title')}</p>
           </div>
         </div>
 
@@ -126,13 +126,13 @@ export function AdminCommissionView() {
                       style={{ width: `${barWidth}%` }}>
                       {rate > 8 && `${rate}%`}
                     </div>
-                    <div className="flex flex-1 items-center justify-center text-[11px] font-bold text-[#888] dark:text-[#A0A090]">
+                    <div className="flex flex-1 items-center justify-center text-[11px] font-bold text-foreground/55 dark:text-[#A0A090]">
                       {stationShare > 8 && `${stationShare}%`}
                     </div>
                   </div>
                   <div className="mt-2 flex justify-between text-[12px] font-bold">
                     <span className="text-[#C49A1E]">{t('platform_share')}</span>
-                    <span className="text-[#888] dark:text-[#A0A090]">{t('station_share')}</span>
+                    <span className="text-foreground/55 dark:text-[#A0A090]">{t('station_share')}</span>
                   </div>
                 </div>
 
@@ -180,7 +180,7 @@ export function AdminCommissionView() {
                         {isCurrent && <span className="rounded-full bg-[#C49A1E]/15 px-1.5 py-0.5 text-[9px] font-black text-[#7A5E0A] dark:text-[#C49A1E]">live</span>}
                       </div>
                       <div className="min-w-0">
-                        <p className="truncate text-[13px] text-[#666] dark:text-[#9A9A8A]">{resolveSetBy(h.set_by)}</p>
+                        <p className="truncate text-[13px] text-foreground/65 dark:text-[#9A9A8A]">{resolveSetBy(h.set_by)}</p>
                         {h.set_by && /^[0-9a-f]{8}-/i.test(h.set_by) && (
                           <p className="mt-0.5 text-[11px] text-[#BBBBAA] dark:text-[#A0A090]">{t('set_by_admin')}</p>
                         )}

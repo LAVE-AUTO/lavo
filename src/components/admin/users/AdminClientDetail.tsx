@@ -122,7 +122,7 @@ export function AdminClientDetail({ id }: Props) {
       <div className="relative mx-auto flex h-full min-h-0 w-full max-w-[720px] flex-1 flex-col gap-5 overflow-y-auto scrollbar-none px-3 py-4 sm:px-4 lg:px-6 lg:py-6">
 
         {/* Breadcrumb */}
-        <div className="flex items-center gap-2 text-[12px] text-[#888] dark:text-[#9A9A8A]">
+        <div className="flex items-center gap-2 text-[12px] text-foreground/55 dark:text-[#9A9A8A]">
           <Link href={'/admin/clients' as Parameters<typeof Link>[0]['href']}
             className="transition-colors hover:text-[#C49A1E]">
             {t('back_to_list')}
@@ -140,7 +140,7 @@ export function AdminClientDetail({ id }: Props) {
               </div>
               <div>
                 <h1 className="text-[18px] font-black text-[#1A1A0A] dark:text-[#F0EDD4]">{displayName}</h1>
-                <p className="mt-0.5 text-[13px] text-[#888] dark:text-[#9A9A8A]">{client.email}</p>
+                <p className="mt-0.5 text-[13px] text-foreground/55 dark:text-[#9A9A8A]">{client.email}</p>
                 <div className="mt-2">
                   <span className={`inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-[12px] font-semibold ring-1 ring-inset ${statusStyle.bg} ${statusStyle.text}`}>
                     <span className={`h-1.5 w-1.5 rounded-full ${statusStyle.dot}`} />

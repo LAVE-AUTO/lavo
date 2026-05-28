@@ -99,7 +99,7 @@ export function DashboardOverviewSection({ data }: Props) {
   return (
     <section className="flex flex-shrink-0 flex-col border-b border-[#E0DCD0] bg-[#F7F6F2] dark:border-[#1A2A14] dark:bg-[#111A0E]">
       <div className="flex items-center gap-2 px-5 py-2.5">
-        <span className="text-[11px] font-bold uppercase tracking-[0.12em] text-[#888] dark:text-[#9A9A8A]">
+        <span className="text-[11px] font-bold uppercase tracking-[0.12em] text-foreground/55 dark:text-[#9A9A8A]">
           {t('overview_title')}
         </span>
         <button
@@ -108,7 +108,7 @@ export function DashboardOverviewSection({ data }: Props) {
           aria-pressed={masked}
           aria-label={masked ? t('overview_reveal') : t('overview_hide_aria')}
           title={masked ? t('overview_reveal') : t('overview_hide_aria')}
-          className="inline-flex h-7 w-7 items-center justify-center rounded-full bg-[#E8E4D8] text-[#666] transition-colors hover:bg-[#DDD8C4] hover:text-[#1A1A0A] dark:bg-[#1A2A14] dark:text-[#A0A090] dark:hover:bg-[#243020] dark:hover:text-[#F0EDD4]"
+          className="inline-flex h-7 w-7 items-center justify-center rounded-full bg-[#E8E4D8] text-foreground/65 transition-colors hover:bg-[#DDD8C4] hover:text-[#1A1A0A] dark:bg-[#1A2A14] dark:text-[#A0A090] dark:hover:bg-[#243020] dark:hover:text-[#F0EDD4]"
         >
           {masked ? <EyeOffIcon /> : <EyeIcon />}
         </button>
@@ -158,7 +158,7 @@ function FullKpiCard({
       >
         {masked ? '•'.repeat(card.maskWidth) : card.value}
       </div>
-      <div className="text-[12px] font-semibold text-[#888] dark:text-[#9A9A8A]">{card.label}</div>
+      <div className="text-[12px] font-semibold text-foreground/55 dark:text-[#9A9A8A]">{card.label}</div>
       <div className="mt-3 h-1.5 overflow-hidden rounded-full bg-[#F0EDE0] dark:bg-[#0F1A0C]">
         <div
           className="h-full rounded-full transition-all duration-500"

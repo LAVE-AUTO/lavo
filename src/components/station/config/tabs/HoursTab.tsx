@@ -169,7 +169,7 @@ export function HoursTab({ config, locked }: Props) {
         <h3 className="mb-2 text-[11px] font-bold uppercase tracking-[1.5px] text-[#C49A1E]">
           {t('hours_template_title')}
         </h3>
-        <p className="mb-4 text-[12px] leading-snug text-[#888] dark:text-[#9A9A8A]">
+        <p className="mb-4 text-[12px] leading-snug text-foreground/55 dark:text-[#9A9A8A]">
           {t('hours_template_hint')}
         </p>
 
@@ -244,7 +244,7 @@ export function HoursTab({ config, locked }: Props) {
         <h3 className="mb-2 text-[11px] font-bold uppercase tracking-[1.5px] text-[#C49A1E]">
           {t('hours_per_day_title')}
         </h3>
-        <p className="mb-4 text-[12px] leading-snug text-[#888] dark:text-[#9A9A8A]">
+        <p className="mb-4 text-[12px] leading-snug text-foreground/55 dark:text-[#9A9A8A]">
           {t('hours_per_day_hint')}
         </p>
         <div className="grid grid-cols-[100px_44px_1fr] gap-3 border-b border-[#E0DCD0] pb-2 text-[10px] font-bold uppercase tracking-[0.5px] text-[#AAAAAA] dark:border-[#243020] dark:text-[#5A5A4A]">

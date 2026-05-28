@@ -27,7 +27,7 @@ const VARIANT_CLASSES: Record<ButtonVariant, string> = {
     'btn-shine bg-gold hover:bg-gold-hover active:scale-[0.98] disabled:opacity-70 ' +
     'text-dark-bg font-bold tracking-wide rounded-[10px] transition-all duration-150',
   secondary:
-    'border border-[#CCCCCC] dark:border-tab-inactive bg-transparent hover:border-gold ' +
+    'border border-[#CCCCCC] dark:border-border bg-transparent hover:border-gold ' +
     'text-[#1A1A1A] dark:text-white font-semibold rounded-[10px] transition-colors disabled:opacity-50',
   ghost:
     'bg-transparent text-gold hover:text-gold-hover font-semibold transition-colors disabled:opacity-50',

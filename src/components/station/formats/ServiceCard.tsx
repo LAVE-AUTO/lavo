@@ -91,7 +91,7 @@ export function ServiceCard({ service, onEdit, onDeleted, onToggled }: Props) {
         {/* Header */}
         <header className="mb-4 flex items-start justify-between gap-3">
           <div className="min-w-0 flex-1">
-            <p className="text-[11px] font-bold uppercase tracking-[0.5px] text-[#888] dark:text-[#9A9A8A]">
+            <p className="text-[11px] font-bold uppercase tracking-[0.5px] text-foreground/55 dark:text-[#9A9A8A]">
               {t(`cat_${service.category}`)}
             </p>
             <h3 className="mt-0.5 text-[20px] font-black leading-tight text-[#1A1A0A] dark:text-[#F0EDD4]">
@@ -108,7 +108,7 @@ export function ServiceCard({ service, onEdit, onDeleted, onToggled }: Props) {
               type="button"
               onClick={() => setDeleteOpen(true)}
               disabled={deleting}
-              className="inline-flex items-center gap-1.5 rounded-lg border border-[#E0DCD0] bg-white px-2.5 py-1.5 text-[11px] font-bold text-[#888] transition-all hover:border-[#FF2525] hover:bg-[#FF2525]/5 hover:text-[#FF2525] disabled:opacity-40 dark:border-[#243020] dark:bg-[#0F1A0C] dark:text-[#9A9A8A]"
+              className="inline-flex items-center gap-1.5 rounded-lg border border-[#E0DCD0] bg-white px-2.5 py-1.5 text-[11px] font-bold text-foreground/55 transition-all hover:border-[#FF2525] hover:bg-[#FF2525]/5 hover:text-[#FF2525] disabled:opacity-40 dark:border-[#243020] dark:bg-[#0F1A0C] dark:text-[#9A9A8A]"
             >
               <CrossIcon />
               {t('btn_delete_short')}
@@ -132,7 +132,7 @@ export function ServiceCard({ service, onEdit, onDeleted, onToggled }: Props) {
             className={`inline-flex items-center gap-1 rounded-full border px-2.5 py-0.5 text-[10px] font-bold tracking-wide transition-colors ${
               service.is_active
                 ? 'border-[#22C47A]/40 bg-[#22C47A]/12 text-[#16A964] hover:bg-[#22C47A]/20'
-                : 'border-[#888]/30 bg-[#888]/10 text-[#888] hover:bg-[#888]/15 dark:text-[#9A9A8A]'
+                : 'border-[#888]/30 bg-[#888]/10 text-foreground/55 hover:bg-[#888]/15 dark:text-[#9A9A8A]'
             }`}
             aria-label={service.is_active ? t('badge_active') : t('badge_inactive')}
           >
@@ -148,7 +148,7 @@ export function ServiceCard({ service, onEdit, onDeleted, onToggled }: Props) {
         </div>
 
         {/* Tarifs */}
-        <p className="mb-3 text-[10px] font-bold uppercase tracking-[1px] text-[#888] dark:text-[#9A9A8A]">
+        <p className="mb-3 text-[10px] font-bold uppercase tracking-[1px] text-foreground/55 dark:text-[#9A9A8A]">
           {isPackages ? t('automatic_packages_label') : t('tarifs_label')}
         </p>
         {activeEntries.length > 0 ? (
@@ -158,13 +158,13 @@ export function ServiceCard({ service, onEdit, onDeleted, onToggled }: Props) {
                 key={entry.vehicle_format_id}
                 className="rounded-xl bg-[#F7F6F2] px-3 py-3 text-center dark:bg-[#0F1A0C]"
               >
-                <p className={`text-[9px] font-bold uppercase tracking-[1px] ${isPackages ? 'text-[#C49A1E]' : 'text-[#888] dark:text-[#9A9A8A]'}`}>
+                <p className={`text-[9px] font-bold uppercase tracking-[1px] ${isPackages ? 'text-[#C49A1E]' : 'text-foreground/55 dark:text-[#9A9A8A]'}`}>
                   {entry.vehicle_label}
                 </p>
                 <p className="mt-1 font-mono text-[22px] font-black tabular-nums leading-none text-[#C49A1E]">
                   {parseFloat(entry.price || '0').toFixed(0)} $
                 </p>
-                <p className="mt-1 text-[11px] text-[#888] dark:text-[#9A9A8A]">
+                <p className="mt-1 text-[11px] text-foreground/55 dark:text-[#9A9A8A]">
                   {entry.duration_min} min
                 </p>
               </div>
@@ -179,7 +179,7 @@ export function ServiceCard({ service, onEdit, onDeleted, onToggled }: Props) {
         {/* Extras compatibles - auto/self-service services don't have extras */}
         {!isPackages && service.category !== 'self_service' && (
           <div className="mt-auto rounded-xl bg-[#F7F6F2] p-3 dark:bg-[#0F1A0C]">
-            <p className="mb-2 text-[10px] font-bold uppercase tracking-[1px] text-[#888] dark:text-[#9A9A8A]">
+            <p className="mb-2 text-[10px] font-bold uppercase tracking-[1px] text-foreground/55 dark:text-[#9A9A8A]">
               {t('extras_label')}
             </p>
             {extras.length > 0 ? (

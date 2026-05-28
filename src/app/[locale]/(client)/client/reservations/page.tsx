@@ -433,7 +433,7 @@ export default function ClientReservationsPage() {
   /* Loading state */
   if (loading) {
     return (
-      <main className="min-h-screen bg-[#F5F5E6] dark:bg-[#0F0F0D] flex items-center justify-center pb-24 sm:pb-8">
+      <main className="min-h-screen bg-background flex items-center justify-center pb-24 sm:pb-8">
         <div className="h-8 w-8 animate-spin rounded-full border-[3px] border-gold border-t-transparent" />
       </main>
     );
@@ -442,8 +442,8 @@ export default function ClientReservationsPage() {
   /* Error state */
   if (loadError) {
     return (
-      <main className="min-h-screen bg-[#F5F5E6] dark:bg-[#0F0F0D] flex flex-col items-center justify-center gap-3 pb-24 sm:pb-8 text-center">
-        <p className="text-[15px] font-semibold text-[#555] dark:text-[#B0B0A0]">{t('error_load')}</p>
+      <main className="min-h-screen bg-background flex flex-col items-center justify-center gap-3 pb-24 sm:pb-8 text-center">
+        <p className="text-[15px] font-semibold text-foreground/70">{t('error_load')}</p>
         <button
           type="button"
           onClick={loadEntries}
@@ -456,15 +456,15 @@ export default function ClientReservationsPage() {
   }
 
   return (
-    <main className="min-h-screen bg-[#F5F5E6] dark:bg-[#0F0F0D] pb-24 sm:pb-8">
+    <main className="min-h-screen bg-background pb-24 sm:pb-8">
       {/* Header */}
       <div className="px-4 sm:px-6 lg:px-8 pt-6 pb-4 max-w-6xl mx-auto">
-        <h1 className="text-[22px] sm:text-[26px] font-black text-[#0A0A14] dark:text-white">{t('title')}</h1>
+        <h1 className="text-[22px] sm:text-[26px] font-black text-foreground">{t('title')}</h1>
       </div>
 
       {/* Tabs */}
       <div className="px-4 sm:px-6 lg:px-8 max-w-6xl mx-auto">
-        <div className="flex bg-[#E0E0D0] dark:bg-dark-card rounded-xl p-1 mb-6 sm:max-w-md">
+        <div className="flex bg-surface rounded-xl p-1 mb-6 sm:max-w-md">
           {(['reservations', 'queue'] as const).map((key) => (
             <button
               key={key}
@@ -474,7 +474,7 @@ export default function ClientReservationsPage() {
                 'flex-1 py-2.5 rounded-lg text-[14px] font-bold transition-all cursor-pointer',
                 tab === key
                   ? 'bg-gold text-dark-bg shadow-sm'
-                  : 'text-[#555] dark:text-[#B0B0A0] hover:text-[#0A0A14] dark:hover:text-white',
+                  : 'text-foreground/70 hover:text-foreground dark:hover:text-white',
               ].join(' ')}
             >
               {t(`tab_${key}`)}
@@ -492,7 +492,7 @@ export default function ClientReservationsPage() {
           <div className="space-y-6">
             {upcoming.length > 0 && (
               <section>
-                <h2 className="text-[15px] font-black text-[#555] dark:text-[#B0B0A0] uppercase tracking-widest mb-3">
+                <h2 className="text-[15px] font-black text-foreground/70 uppercase tracking-widest mb-3">
                   {t('upcoming')}
                   <span className="ml-2 text-[12px] font-semibold opacity-70">({upcoming.length})</span>
                 </h2>
@@ -517,7 +517,7 @@ export default function ClientReservationsPage() {
 
             {past.length > 0 && (
               <section>
-                <h2 className="text-[15px] font-black text-[#555] dark:text-[#B0B0A0] uppercase tracking-widest mb-3">
+                <h2 className="text-[15px] font-black text-foreground/70 uppercase tracking-widest mb-3">
                   {t('past')}
                   <span className="ml-2 text-[12px] font-semibold opacity-70">({past.length})</span>
                 </h2>
@@ -549,7 +549,7 @@ export default function ClientReservationsPage() {
           <div className="space-y-6">
             {upcomingQueue.length > 0 && (
               <section>
-                <h2 className="text-[15px] font-black text-[#555] dark:text-[#B0B0A0] uppercase tracking-widest mb-3">
+                <h2 className="text-[15px] font-black text-foreground/70 uppercase tracking-widest mb-3">
                   {t('upcoming')}
                   <span className="ml-2 text-[12px] font-semibold opacity-70">({upcomingQueue.length})</span>
                 </h2>
@@ -571,7 +571,7 @@ export default function ClientReservationsPage() {
 
             {pastQueue.length > 0 && (
               <section>
-                <h2 className="text-[15px] font-black text-[#555] dark:text-[#B0B0A0] uppercase tracking-widest mb-3">
+                <h2 className="text-[15px] font-black text-foreground/70 uppercase tracking-widest mb-3">
                   {t('past')}
                   <span className="ml-2 text-[12px] font-semibold opacity-70">({pastQueue.length})</span>
                 </h2>
@@ -668,10 +668,10 @@ function ReservationCard({
   const statusColors: Record<string, string> = {
     confirmed:       'bg-Hurryline-success/15 text-Hurryline-success',
     in_progress:     'bg-gold/15 text-gold',
-    completed:       'bg-[#999]/15 text-[#666]',
+    completed:       'bg-[#999]/15 text-foreground/65',
     cancelled:       'bg-Hurryline-error/15 text-Hurryline-error',
     pending:         'bg-blue-500/15 text-blue-500',
-    pending_payment: 'bg-[#999]/15 text-[#888]',
+    pending_payment: 'bg-[#999]/15 text-foreground/55',
   };
 
   /* Upcoming actions are hidden once the entry is in_progress (only the
@@ -703,7 +703,7 @@ function ReservationCard({
       : showRateAction || showTipAction;
 
   return (
-    <div className="bg-[#E8E8D8] dark:bg-dark-card rounded-xl border border-[#D0D0C0] dark:border-tab-inactive overflow-hidden hover:border-gold/30 transition-colors">
+    <div className="bg-surface rounded-xl border border-border overflow-hidden hover:border-gold/30 transition-colors">
       <Link href={`/client/reservations/${r.id}`} className="block p-4">
         <div className="flex gap-3">
           <div className="w-16 h-16 rounded-lg overflow-hidden shrink-0 bg-[#D0D0C0] dark:bg-tab-inactive flex items-center justify-center">
@@ -718,7 +718,7 @@ function ReservationCard({
 
           <div className="flex-1 min-w-0">
             <div className="flex items-start justify-between gap-2">
-              <h3 className="text-[15px] font-bold text-[#0A0A14] dark:text-white leading-tight truncate">
+              <h3 className="text-[15px] font-bold text-foreground leading-tight truncate">
                 {serviceCategoryLabel(r.serviceCategory, locale) ?? (r.forfaitName !== '-' ? r.forfaitName : t('service_unknown'))}
               </h3>
               <span className={`shrink-0 px-2 py-0.5 rounded-full text-[11px] font-bold ${statusColors[displayStatus(r.status)] || 'bg-gray-200 text-gray-600'}`}>
@@ -726,16 +726,16 @@ function ReservationCard({
               </span>
             </div>
 
-            <p className="text-[13px] text-[#666] dark:text-[#B0B0A0] mt-0.5 truncate">
+            <p className="text-[13px] text-foreground/65 mt-0.5 truncate">
               {r.stationName}
             </p>
 
             <div className="flex items-center gap-3 mt-2 text-[13px]">
-              <span className="flex items-center gap-1 text-[#555] dark:text-[#C0C0B0]">
+              <span className="flex items-center gap-1 text-foreground/70 font-bebas tracking-wider text-[14px]">
                 <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><rect x="3" y="4" width="18" height="18" rx="2" /><line x1="16" y1="2" x2="16" y2="6" /><line x1="8" y1="2" x2="8" y2="6" /><line x1="3" y1="10" x2="21" y2="10" /></svg>
                 {dateLabel}
               </span>
-              <span className="flex items-center gap-1 text-[#555] dark:text-[#C0C0B0]">
+              <span className="flex items-center gap-1 text-foreground/70 font-bebas tracking-wider text-[14px]">
                 <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10" /><polyline points="12 6 12 12 16 14" /></svg>
                 {r.timeSlot}
               </span>
@@ -766,7 +766,7 @@ function ReservationCard({
       </Link>
 
       {showActions && (
-        <div className="px-4 pb-3 pt-2 border-t border-[#D0D0C0] dark:border-tab-inactive flex flex-wrap items-center gap-x-4 gap-y-1.5">
+        <div className="px-4 pb-3 pt-2 border-t border-border flex flex-wrap items-center gap-x-4 gap-y-1.5">
           {canReschedule && (
             <Link
               href={`/client/reservations/${r.id}/reschedule`}
@@ -779,13 +779,13 @@ function ReservationCard({
             signalDelayEnabled ? (
               <Link
                 href={`/client/reservations/${r.id}/signal-delay`}
-                className="text-[13px] font-semibold text-[#666] dark:text-[#B0B0A0] hover:text-gold transition-colors"
+                className="text-[13px] font-semibold text-foreground/65 hover:text-gold transition-colors"
               >
                 {t('signal_delay_btn')}
               </Link>
             ) : (
               <span
-                className="text-[13px] font-semibold text-[#999] dark:text-[#666] cursor-not-allowed"
+                className="text-[13px] font-semibold text-[#999] dark:text-foreground/65 cursor-not-allowed"
                 title={t('signal_delay_btn_disabled_tooltip')}
                 aria-disabled="true"
               >
@@ -813,7 +813,7 @@ function ReservationCard({
           {showTipAction && (
             <Link
               href={`/client/reservations/${r.id}/tip`}
-              className="text-[13px] font-semibold text-[#666] dark:text-[#B0B0A0] hover:text-gold transition-colors"
+              className="text-[13px] font-semibold text-foreground/65 hover:text-gold transition-colors"
             >
               {t('tip_btn')}
             </Link>
@@ -891,24 +891,24 @@ function CancelModal({
         role="dialog"
         aria-modal="true"
         aria-labelledby="cancel-modal-title"
-        className="w-full sm:max-w-sm bg-[#F5F5E6] dark:bg-dark-surface rounded-t-2xl sm:rounded-2xl shadow-2xl overflow-hidden animate-fade-in-up mb-14 sm:mb-0"
+        className="w-full sm:max-w-sm bg-background dark:bg-surface rounded-t-2xl sm:rounded-2xl shadow-2xl overflow-hidden animate-fade-in-up mb-14 sm:mb-0"
       >
         {/* Header */}
-        <div className="px-5 py-4 border-b border-[#D0D0C0] dark:border-tab-inactive">
-          <h2 id="cancel-modal-title" className="text-[17px] font-black text-[#0A0A14] dark:text-white">{t('cancel_modal_title')}</h2>
+        <div className="px-5 py-4 border-b border-border">
+          <h2 id="cancel-modal-title" className="text-[17px] font-black text-foreground">{t('cancel_modal_title')}</h2>
         </div>
 
         {/* Body */}
         <div className="px-5 py-4 space-y-3">
-          <div className="rounded-xl bg-[#E8E8D8] dark:bg-dark-card border border-[#D0D0C0] dark:border-tab-inactive p-3.5">
-            <p className="text-[14px] font-bold text-[#0A0A14] dark:text-white">{r.stationName}</p>
-            <p className="text-[13px] text-[#666] dark:text-[#B0B0A0] mt-0.5">
+          <div className="rounded-xl bg-surface border border-border p-3.5">
+            <p className="text-[14px] font-bold text-foreground">{r.stationName}</p>
+            <p className="text-[13px] text-foreground/65 mt-0.5">
               {r.forfaitName} &mdash; {dateLabel} {r.timeSlot}
             </p>
             <p className="text-[15px] font-black text-gold mt-1">{r.totalPrice.toFixed(2)}$</p>
           </div>
 
-          <p className="text-[13px] text-[#555] dark:text-[#C0C0B0]">{t('cancel_modal_desc')}</p>
+          <p className="text-[13px] text-foreground/70">{t('cancel_modal_desc')}</p>
 
           {showFeesWarning && (
             <div className="flex gap-2.5 bg-Hurryline-error/10 border border-Hurryline-error/20 rounded-xl px-3.5 py-3">
@@ -924,12 +924,12 @@ function CancelModal({
         </div>
 
         {/* Actions */}
-        <div className="px-5 py-4 border-t border-[#D0D0C0] dark:border-tab-inactive flex gap-3">
+        <div className="px-5 py-4 border-t border-border flex gap-3">
           <button
             type="button"
             onClick={onClose}
             disabled={loading}
-            className="flex-1 py-3 rounded-xl text-[14px] font-bold border-2 border-[#D0D0C0] dark:border-tab-inactive text-[#555] dark:text-[#B0B0A0] hover:bg-[#E0E0D0] dark:hover:bg-tab-inactive transition-colors cursor-pointer disabled:opacity-50"
+            className="flex-1 py-3 rounded-xl text-[14px] font-bold border-2 border-border text-foreground/70 hover:bg-surface dark:hover:bg-tab-inactive transition-colors cursor-pointer disabled:opacity-50"
           >
             {t('cancel_modal_keep')}
           </button>
@@ -993,7 +993,7 @@ function QueueCard({
         ? t('queue_in_progress')
         : t('queue_waiting');
   const statusBadgeClass = isCompleted
-    ? 'bg-[#999]/15 text-[#666]'
+    ? 'bg-[#999]/15 text-foreground/65'
     : isCancelled
       ? 'bg-Hurryline-error/15 text-Hurryline-error'
       : isInProgress
@@ -1009,7 +1009,7 @@ function QueueCard({
     : null;
 
   return (
-    <div className="bg-[#E8E8D8] dark:bg-dark-card rounded-xl border border-[#D0D0C0] dark:border-tab-inactive overflow-hidden hover:border-gold/30 transition-colors">
+    <div className="bg-surface rounded-xl border border-border overflow-hidden hover:border-gold/30 transition-colors">
       <Link href={`/client/reservations/queue/${q.id}`} className="block p-4">
         <div className="flex gap-3">
           <div className="w-16 h-16 rounded-lg overflow-hidden shrink-0 bg-[#D0D0C0] dark:bg-tab-inactive flex items-center justify-center">
@@ -1024,7 +1024,7 @@ function QueueCard({
 
           <div className="flex-1 min-w-0">
             <div className="flex items-start justify-between gap-2">
-              <h3 className="text-[15px] font-bold text-[#0A0A14] dark:text-white leading-tight truncate">
+              <h3 className="text-[15px] font-bold text-foreground leading-tight truncate">
                 {serviceCategoryLabel(q.serviceCategory, locale) ?? (q.forfaitName !== '-' ? q.forfaitName : t('service_unknown'))}
               </h3>
               <span className={`shrink-0 px-2 py-0.5 rounded-full text-[11px] font-bold ${statusBadgeClass}`}>
@@ -1032,16 +1032,16 @@ function QueueCard({
               </span>
             </div>
 
-            <p className="text-[13px] text-[#666] dark:text-[#B0B0A0] mt-0.5 truncate">{q.stationName}</p>
+            <p className="text-[13px] text-foreground/65 mt-0.5 truncate">{q.stationName}</p>
 
             <div className="flex items-center gap-3 mt-2 text-[13px]">
               {variant === 'past' && completedLabel ? (
-                <span className="flex items-center gap-1 text-[#555] dark:text-[#C0C0B0]">
+                <span className="flex items-center gap-1 text-foreground/70">
                   <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><rect x="3" y="4" width="18" height="18" rx="2" /><line x1="16" y1="2" x2="16" y2="6" /><line x1="8" y1="2" x2="8" y2="6" /><line x1="3" y1="10" x2="21" y2="10" /></svg>
                   {completedLabel}
                 </span>
               ) : (
-                <span className="flex items-center gap-1 text-[#555] dark:text-[#C0C0B0]">
+                <span className="flex items-center gap-1 text-foreground/70">
                   <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
                     <path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2" /><circle cx="9" cy="7" r="4" />
                     <path d="M23 21v-2a4 4 0 00-3-3.87" /><path d="M16 3.13a4 4 0 010 7.75" />
@@ -1074,7 +1074,7 @@ function QueueCard({
       </Link>
 
       {showActions && (
-        <div className="px-4 pb-3 pt-2 border-t border-[#D0D0C0] dark:border-tab-inactive flex flex-wrap items-center gap-x-4 gap-y-1.5">
+        <div className="px-4 pb-3 pt-2 border-t border-border flex flex-wrap items-center gap-x-4 gap-y-1.5">
           {showActiveActions && onLeaveAndBook && (
             <button
               type="button"
@@ -1104,7 +1104,7 @@ function QueueCard({
           {showTipAction && (
             <Link
               href={`/client/reservations/${q.id}/tip`}
-              className="text-[13px] font-semibold text-[#666] dark:text-[#B0B0A0] hover:text-gold transition-colors"
+              className="text-[13px] font-semibold text-foreground/65 hover:text-gold transition-colors"
             >
               {t('tip_btn')}
             </Link>
@@ -1141,8 +1141,8 @@ function EmptyState({
         </svg>
       </div>
       <div className="max-w-sm">
-        <h2 className="text-[17px] sm:text-[19px] font-black text-[#0A0A14] dark:text-white">{title}</h2>
-        <p className="mt-2 text-[14px] text-[#666] dark:text-[#B0B0A0] leading-relaxed">{description}</p>
+        <h2 className="text-[17px] sm:text-[19px] font-black text-foreground">{title}</h2>
+        <p className="mt-2 text-[14px] text-foreground/65 leading-relaxed">{description}</p>
       </div>
       <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 w-full sm:w-auto pt-2">
         <Link
@@ -1157,7 +1157,7 @@ function EmptyState({
         </Link>
         <Link
           href="/client/history"
-          className="inline-flex items-center justify-center gap-2 px-5 py-3 border border-[#D0D0C0] dark:border-tab-inactive hover:border-gold/50 rounded-md text-[14px] font-semibold text-[#555] dark:text-[#B0B0A0] hover:text-gold transition-colors"
+          className="inline-flex items-center justify-center gap-2 px-5 py-3 border border-border hover:border-gold/50 rounded-md text-[14px] font-semibold text-foreground/70 hover:text-gold transition-colors"
         >
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
             <path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z" />

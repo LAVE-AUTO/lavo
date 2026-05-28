@@ -208,7 +208,7 @@ export function StationSidebar() {
           aria-label={collapsed ? t('nav_expand') : t('nav_collapse')}
           aria-pressed={collapsed}
           onClick={toggleCollapsed}
-          className="flex h-7 w-7 items-center justify-center rounded-lg text-[#888] transition-colors hover:bg-[#E8E4D8] hover:text-[#1A1A0A] dark:text-[#9A9A8A] dark:hover:bg-[#182214] dark:hover:text-[#F0EDD4]"
+          className="flex h-7 w-7 items-center justify-center rounded-lg text-foreground/55 transition-colors hover:bg-[#E8E4D8] hover:text-[#1A1A0A] dark:text-[#9A9A8A] dark:hover:bg-[#182214] dark:hover:text-[#F0EDD4]"
         >
           <CollapseIcon collapsed={collapsed} />
         </button>
@@ -246,7 +246,7 @@ export function StationSidebar() {
           onClick={() => logout()}
           title={collapsed ? t('nav_logout') : undefined}
           aria-label={collapsed ? t('nav_logout') : undefined}
-          className={`group relative flex items-center rounded-lg text-[13px] font-semibold text-[#888] transition-colors duration-150 hover:bg-[#FEF2F2] hover:text-[#EF4444] dark:text-[#9A9A8A] dark:hover:bg-[#2A0A0A] dark:hover:text-[#FF8A80] ${
+          className={`group relative flex items-center rounded-lg text-[13px] font-semibold text-foreground/55 transition-colors duration-150 hover:bg-[#FEF2F2] hover:text-[#EF4444] dark:text-[#9A9A8A] dark:hover:bg-[#2A0A0A] dark:hover:text-[#FF8A80] ${
             collapsed ? 'h-10 w-10 justify-center' : 'w-full gap-2.5 px-3 py-2.5'
           }`}
         >

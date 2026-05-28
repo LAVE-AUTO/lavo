@@ -216,12 +216,12 @@ export function StationReservationsPage() {
   const confirm = getConfirmProps();
 
   return (
-    <div className="flex flex-1 flex-col overflow-hidden bg-[#EDEDED] dark:bg-dark-bg">
+    <div className="flex flex-1 flex-col overflow-hidden bg-[#EDEDED] dark:bg-background">
       {/* Header */}
-      <div className="border-b border-[#CCCCCC] bg-[#E0E0D0] px-6 pb-4 pt-5 dark:border-[#3A4A36] dark:bg-dark-surface">
+      <div className="border-b border-[#CCCCCC] bg-surface px-6 pb-4 pt-5 dark:border-[#3A4A36] dark:bg-surface">
         <div className="flex flex-wrap items-start justify-between gap-4">
           <div className="min-w-0">
-            <h1 className="text-[20px] font-bold text-[#000C1F] dark:text-[#FFF8EC]">
+            <h1 className="text-[20px] font-bold text-foreground">
               {t('page_title')}
             </h1>
             <p className="mt-0.5 text-[13px] text-[#000717]/50 dark:text-[#FFFFF0]/50">
@@ -240,15 +240,15 @@ export function StationReservationsPage() {
           <button
             type="button"
             onClick={() => setSelectedDate((d) => { const p = new Date(d); p.setDate(p.getDate() - 1); return p; })}
-            className="flex h-8 w-8 items-center justify-center rounded-lg border border-[#CCCCCC] bg-white text-[#555] transition-colors hover:border-[#C09A18] hover:text-[#C09A18] dark:border-[#3A4A36] dark:bg-dark-bg dark:text-[#9A9A8A]"
+            className="flex h-8 w-8 items-center justify-center rounded-lg border border-[#CCCCCC] bg-white text-foreground/70 transition-colors hover:border-[#C09A18] hover:text-[#C09A18] dark:border-[#3A4A36] dark:bg-background dark:text-[#9A9A8A]"
             aria-label={t('date_prev')}
           >
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
               <polyline points="15 18 9 12 15 6" />
             </svg>
           </button>
-          <div className="flex min-w-50 flex-col items-center rounded-xl border border-[#CCCCCC] bg-white px-4 py-1.5 dark:border-[#3A4A36] dark:bg-dark-bg">
-            <span className="text-[13px] font-bold text-[#000C1F] dark:text-[#FFF8EC]">{dateLabel}</span>
+          <div className="flex min-w-50 flex-col items-center rounded-xl border border-[#CCCCCC] bg-white px-4 py-1.5 dark:border-[#3A4A36] dark:bg-background">
+            <span className="text-[13px] font-bold text-foreground">{dateLabel}</span>
             {today && (
               <span className="text-[10px] font-bold uppercase tracking-wider text-[#C09A18]">{t('date_today')}</span>
             )}
@@ -256,7 +256,7 @@ export function StationReservationsPage() {
           <button
             type="button"
             onClick={() => setSelectedDate((d) => { const n = new Date(d); n.setDate(n.getDate() + 1); return n; })}
-            className="flex h-8 w-8 items-center justify-center rounded-lg border border-[#CCCCCC] bg-white text-[#555] transition-colors hover:border-[#C09A18] hover:text-[#C09A18] dark:border-[#3A4A36] dark:bg-dark-bg dark:text-[#9A9A8A]"
+            className="flex h-8 w-8 items-center justify-center rounded-lg border border-[#CCCCCC] bg-white text-foreground/70 transition-colors hover:border-[#C09A18] hover:text-[#C09A18] dark:border-[#3A4A36] dark:bg-background dark:text-[#9A9A8A]"
             aria-label={t('date_next')}
           >
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
@@ -284,7 +284,7 @@ export function StationReservationsPage() {
               className={`rounded-lg px-3 py-1.5 text-[11px] font-bold transition-colors ${
                 entryTypeFilter === f
                   ? 'bg-[#C09A18] text-[#0C1209]'
-                  : 'border border-[#CCCCCC] bg-white text-[#555] hover:border-[#C09A18] hover:text-[#C09A18] dark:border-[#3A4A36] dark:bg-dark-bg dark:text-[#9A9A8A]'
+                  : 'border border-[#CCCCCC] bg-white text-foreground/70 hover:border-[#C09A18] hover:text-[#C09A18] dark:border-[#3A4A36] dark:bg-background dark:text-[#9A9A8A]'
               }`}
             >
               {t(`filter_type_${f}`)}
@@ -305,7 +305,7 @@ export function StationReservationsPage() {
           </div>
         ) : loadError ? (
           <div className="flex flex-col items-center justify-center gap-3 py-16 text-center">
-            <span className="text-[14px] font-semibold text-[#000C1F]/50 dark:text-[#FFF8EC]/40">{t('error_load')}</span>
+            <span className="text-[14px] font-semibold text-foreground/50 dark:text-foreground/40">{t('error_load')}</span>
             <button type="button" onClick={loadData} className="rounded-[10px] border-[1.5px] border-[#C09A18]/50 px-4 py-2 text-[13px] font-semibold text-[#C09A18] transition-colors hover:bg-[#C09A18]/10">
               {t('btn_retry')}
             </button>
@@ -313,7 +313,7 @@ export function StationReservationsPage() {
         ) : filtered.length === 0 ? (
           <div className="flex flex-col items-center justify-center gap-3 py-16 text-center">
             <EmptyIcon />
-            <span className="text-[13px] font-semibold text-[#000C1F]/40 dark:text-[#FFF8EC]/30">
+            <span className="text-[13px] font-semibold text-foreground/40 dark:text-foreground/30">
               {activeTab === 'all' ? t('empty_state') : t('empty_filtered')}
             </span>
           </div>
@@ -351,16 +351,16 @@ export function StationReservationsPage() {
 
 function KpiChip({ value, color, label }: { value: string | number; color: string; label: string }) {
   return (
-    <div className="flex items-center gap-1.5 rounded-lg bg-[#C8C8B4] px-3 py-1.5 dark:bg-dark-card">
+    <div className="flex items-center gap-1.5 rounded-lg bg-[#C8C8B4] px-3 py-1.5 dark:bg-surface">
       <span className="inline-block h-2 w-2 rounded-full" style={{ background: color }} />
-      <span className="font-mono text-[14px] font-bold text-[#000C1F] dark:text-[#FFF8EC]">{value}</span>
+      <span className="font-mono text-[14px] font-bold text-foreground">{value}</span>
       <span className="text-[11px] font-semibold text-[#000717]/50 dark:text-[#FFFFF0]/50">{label}</span>
     </div>
   );
 }
 
 const EmptyIcon = () => (
-  <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1} strokeLinecap="round" strokeLinejoin="round" className="text-[#000C1F]/15 dark:text-[#FFF8EC]/15">
+  <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1} strokeLinecap="round" strokeLinejoin="round" className="text-foreground/15 dark:text-foreground/15">
     <rect x="3" y="4" width="18" height="18" rx="2" />
     <line x1="16" y1="2" x2="16" y2="6" /><line x1="8" y1="2" x2="8" y2="6" />
     <line x1="3" y1="10" x2="21" y2="10" />

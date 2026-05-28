@@ -89,7 +89,7 @@ export function AdminCityInput({ label, required, value, error, placeholder, onC
 
   return (
     <div className="relative flex flex-col gap-1.5" ref={containerRef}>
-      <label htmlFor={inputId} className="text-[13px] font-bold text-[#555] dark:text-[#9A9A8A]">
+      <label htmlFor={inputId} className="text-[13px] font-bold text-foreground/70 dark:text-[#9A9A8A]">
         {label}{required && <span className="ml-0.5 text-[#C49A1E]">*</span>}
       </label>
       <input

@@ -15,12 +15,12 @@ function MiniAccordion({ item }: { item: FaqItem }) {
     <div className={`rounded-xl border transition-all duration-150 ${open ? 'border-gold/30' : 'border-[rgba(200,152,10,0.1)] hover:border-gold/20'}`}>
       <button type="button" onClick={() => setOpen((v) => !v)} className="w-full flex items-center justify-between px-5 py-4 text-left cursor-pointer" aria-expanded={open}>
         <span className={`text-[14px] font-semibold pr-4 ${open ? 'text-[#c8980a]' : 'text-[#1a1a1a] dark:text-[#d0d0c0]'}`}>{item.q}</span>
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" className={`shrink-0 text-[#888] transition-transform duration-150 ${open ? 'rotate-180 text-gold' : ''}`} aria-hidden="true">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" className={`shrink-0 text-foreground/55 transition-transform duration-150 ${open ? 'rotate-180 text-gold' : ''}`} aria-hidden="true">
           <polyline points="6 9 12 15 18 9" />
         </svg>
       </button>
       {open && (
-        <div className="px-5 pb-4 text-[13px] text-[#555] dark:text-[#A0A090] leading-[1.7]">{item.a}</div>
+        <div className="px-5 pb-4 text-[13px] text-foreground/70 dark:text-[#A0A090] leading-[1.7]">{item.a}</div>
       )}
     </div>
   );
@@ -84,7 +84,7 @@ export function SupportContent() {
         <h1 className="font-playfair text-[36px] sm:text-[44px] font-black text-[#1a1a1a] dark:text-white leading-tight mb-4">
           {t('title')}
         </h1>
-        <p className="text-[15px] text-[#555] dark:text-[#A0A090] leading-relaxed">{t('subtitle')}</p>
+        <p className="text-[15px] text-foreground/70 dark:text-[#A0A090] leading-relaxed">{t('subtitle')}</p>
       </div>
 
       {/* Support channels */}
@@ -96,7 +96,7 @@ export function SupportContent() {
             className={`flex flex-col gap-3 p-6 rounded-2xl border transition-all hover:shadow-md hover:-translate-y-0.5 ${
               highlight
                 ? 'bg-gold text-dark-bg border-gold hover:bg-gold-hover'
-                : 'bg-[#E8E8D8] dark:bg-dark-card border-[rgba(200,152,10,0.15)] hover:border-gold/30'
+                : 'bg-surface border-[rgba(200,152,10,0.15)] hover:border-gold/30'
             }`}
           >
             <div className={`w-11 h-11 rounded-xl flex items-center justify-center ${highlight ? 'bg-dark-bg/20' : 'bg-gold/10 text-[#c8980a]'}`}>
@@ -104,7 +104,7 @@ export function SupportContent() {
             </div>
             <div>
               <div className={`text-[15px] font-black mb-1 ${highlight ? 'text-dark-bg' : 'text-[#1a1a1a] dark:text-white'}`}>{label}</div>
-              <div className={`text-[13px] ${highlight ? 'text-dark-bg/70' : 'text-[#555] dark:text-[#A0A090]'}`}>{desc}</div>
+              <div className={`text-[13px] ${highlight ? 'text-dark-bg/70' : 'text-foreground/70 dark:text-[#A0A090]'}`}>{desc}</div>
             </div>
             <span className={`text-[12px] font-bold mt-auto flex items-center gap-1 ${highlight ? 'text-dark-bg' : 'text-[#c8980a]'}`}>
               {cta}

@@ -219,7 +219,7 @@ export function AdminRatingsView() {
                 />
                 {stationSearch && (
                   <button type="button" onClick={() => setStationSearch('')}
-                    className="absolute right-3 top-1/2 -translate-y-1/2 text-[#BBBBAA] hover:text-[#666] dark:hover:text-[#CCC]"
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-[#BBBBAA] hover:text-foreground/65 dark:hover:text-[#CCC]"
                     aria-label={t('search_clear')}>
                     <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" aria-hidden="true"><line x1="18" y1="6" x2="6" y2="18" /><line x1="6" y1="6" x2="18" y2="18" /></svg>
                   </button>
@@ -247,7 +247,7 @@ export function AdminRatingsView() {
 
           {!loading && loadError && (
             <div className="flex flex-1 flex-col items-center justify-center gap-3 py-16 text-center">
-              <p className="text-[14px] font-semibold text-[#888] dark:text-[#A0A090]">{t('error_load')}</p>
+              <p className="text-[14px] font-semibold text-foreground/55 dark:text-[#A0A090]">{t('error_load')}</p>
               <button
                 type="button"
                 onClick={() => loadData(page, visibilityFilter, scoreFilter, stationDebounced)}

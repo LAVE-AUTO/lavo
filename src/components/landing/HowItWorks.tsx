@@ -44,14 +44,14 @@ export function HowItWorks() {
   const t = useTranslations('landing');
 
   return (
-    <section className="py-16 sm:py-28 bg-white dark:bg-dark-bg transition-colors">
+    <section className="py-16 sm:py-28 bg-white dark:bg-background transition-colors">
       <div className="max-w-6xl mx-auto px-4 sm:px-6">
         {/* Header */}
         <ScrollReveal className="text-center mb-12 sm:mb-16">
-          <h2 className="text-[32px] sm:text-[40px] font-black text-[#0A0A14] dark:text-white leading-tight">
+          <h2 className="text-[32px] sm:text-[40px] font-black text-foreground leading-tight">
             {t('how_title')}
           </h2>
-          <p className="mt-3 text-[17px] text-[#666] dark:text-[#C0C0B0] max-w-md mx-auto">
+          <p className="mt-3 text-[17px] text-foreground/65 dark:text-[#C0C0B0] max-w-md mx-auto">
             {t('how_subtitle')}
           </p>
         </ScrollReveal>
@@ -74,10 +74,10 @@ export function HowItWorks() {
                   </span>
                 </div>
 
-                <h3 className="text-[18px] sm:text-[19px] font-bold text-[#0A0A14] dark:text-white mb-2">
+                <h3 className="text-[18px] sm:text-[19px] font-bold text-foreground mb-2">
                   {t(`${step.key}_title`)}
                 </h3>
-                <p className="text-[14px] sm:text-[15px] text-[#666] dark:text-[#C0C0B0] leading-relaxed max-w-xs mx-auto">
+                <p className="text-[14px] sm:text-[15px] text-foreground/65 dark:text-[#C0C0B0] leading-relaxed max-w-xs mx-auto">
                   {t(`${step.key}_desc`)}
                 </p>
 

@@ -37,7 +37,7 @@ export function DashboardQueueBand({ entries, onStartEntry, onCompleteEntry, onO
               {totalWaiting}
             </span>
           </div>
-          <div className="mt-0.5 text-[11px] font-semibold text-[#666] dark:text-[#A0A090]">
+          <div className="mt-0.5 text-[11px] font-semibold text-foreground/65 dark:text-[#A0A090]">
             {totalWaiting === 0 ? t('queue_empty') : t('queue_waiting', { n: totalWaiting })}
           </div>
         </div>
@@ -103,7 +103,7 @@ export function DashboardQueueBand({ entries, onStartEntry, onCompleteEntry, onO
         ))}
 
         {entries.length === 0 && (
-          <div className="flex h-[140px] flex-1 min-w-[160px] items-center justify-center rounded-2xl border border-dashed border-[#D8D4C4] px-4 text-center text-[12px] text-[#888] dark:border-[#243020] dark:text-[#A0A090]">
+          <div className="flex h-[140px] flex-1 min-w-[160px] items-center justify-center rounded-2xl border border-dashed border-[#D8D4C4] px-4 text-center text-[12px] text-foreground/55 dark:border-[#243020] dark:text-[#A0A090]">
             {t('queue_empty')}
           </div>
         )}
@@ -160,7 +160,7 @@ function QueueBandCard({ entry, position, isNext, onPrimary, primaryLabel, prima
         </span>
       </div>
 
-      <div className="mt-1.5 text-[11px] font-semibold text-[#666] dark:text-[#A0A090]">
+      <div className="mt-1.5 text-[11px] font-semibold text-foreground/65 dark:text-[#A0A090]">
         {entry.serviceLabel ?? '—'}
         {entry.price !== undefined ? ` · ${entry.price}$` : ''}
       </div>

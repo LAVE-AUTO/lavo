@@ -338,7 +338,7 @@ export function AdminPlatformSettings() {
       <div className="shrink-0 flex items-center justify-between border-b border-[#E0DCD0] bg-[#F5F5EE] px-6 py-4 dark:border-[#1A2A14] dark:bg-[#0C1209]">
         <div>
           <h1 className="text-[18px] font-black text-[#1A1A0A] dark:text-[#F0EDD4]">{t('page_title')}</h1>
-          <p className="text-[13px] text-[#888] dark:text-[#9A9A8A]">{t('page_subtitle')}</p>
+          <p className="text-[13px] text-foreground/55 dark:text-[#9A9A8A]">{t('page_subtitle')}</p>
         </div>
         <div className="flex items-center gap-3">
           {isDirty && !saving && (

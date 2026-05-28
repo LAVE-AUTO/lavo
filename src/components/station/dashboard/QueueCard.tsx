@@ -62,13 +62,13 @@ export function QueueCard({ entry, onCall, onPick, onMoveUp, onMoveDown, callLab
           </div>
 
           {/* Client */}
-          <div className="mb-1 text-[16px] font-bold text-[#000C1F] dark:text-[#FFF8EC]">
+          <div className="mb-1 text-[16px] font-bold text-foreground">
             {entry.clientName}
           </div>
           {(entry.time || entry.serviceLabel) && (
             <div className="mb-4 flex flex-wrap items-center gap-2 text-[13px] text-[#000717]/60 dark:text-[#FFFFF0]/60">
               {entry.time && (
-                <span className="flex items-center gap-1 font-mono font-semibold text-[#000C1F] dark:text-[#FFF8EC]">
+                <span className="flex items-center gap-1 font-mono font-semibold text-foreground">
                   <ClockMini />
                   {entry.time}
                 </span>
@@ -118,7 +118,7 @@ export function QueueCard({ entry, onCall, onPick, onMoveUp, onMoveDown, callLab
       >
         {/* Position badge */}
         <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-white/60 dark:bg-[#243020]">
-          <span className="font-mono text-[14px] font-bold text-[#000C1F] dark:text-[#FFF8EC]">
+          <span className="font-mono text-[14px] font-bold text-foreground">
             {entry.position}
           </span>
         </div>
@@ -126,7 +126,7 @@ export function QueueCard({ entry, onCall, onPick, onMoveUp, onMoveDown, callLab
         {/* Info */}
         <div className="min-w-0 flex-1">
           <div className="flex items-center gap-2">
-            <span className="truncate text-[13px] font-semibold text-[#000C1F] dark:text-[#FFF8EC]">
+            <span className="truncate text-[13px] font-semibold text-foreground">
               {entry.clientName}
             </span>
             <span className="shrink-0 rounded-lg px-2 py-[2px] text-[10px] font-bold uppercase tracking-wide text-white" style={{ background: tagBg }}>
@@ -134,7 +134,7 @@ export function QueueCard({ entry, onCall, onPick, onMoveUp, onMoveDown, callLab
             </span>
           </div>
           <div className="mt-0.5 flex items-center gap-2 text-[12px] text-[#000717]/50 dark:text-[#FFFFF0]/50">
-            {entry.time && <span className="font-mono font-semibold text-[#000C1F] dark:text-[#FFF8EC]">{entry.time}</span>}
+            {entry.time && <span className="font-mono font-semibold text-foreground">{entry.time}</span>}
             {entry.serviceLabel && <span>{entry.serviceLabel}</span>}
             {entry.price !== undefined && (
               <span className="font-mono font-semibold text-[#C49A1E]">{entry.price}$</span>
@@ -205,7 +205,7 @@ function DetailRow({ label, value, gold }: { label: string; value: string; gold?
   return (
     <div className="flex items-baseline justify-between gap-2">
       <span className="text-[#000717]/50 dark:text-[#FFFFF0]/50">{label}</span>
-      <span className={`text-right font-semibold ${gold ? 'text-[#C49A1E]' : 'text-[#000C1F] dark:text-[#FFF8EC]'}`}>
+      <span className={`text-right font-semibold ${gold ? 'text-[#C49A1E]' : 'text-foreground'}`}>
         {value}
       </span>
     </div>
@@ -215,7 +215,7 @@ function DetailRow({ label, value, gold }: { label: string; value: string; gold?
 const ChevronIcon = ({ expanded }: { expanded: boolean }) => (
   <svg
     width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round"
-    className={`shrink-0 text-[#000C1F]/25 transition-transform duration-200 dark:text-[#FFF8EC]/25 ${expanded ? 'rotate-180' : ''}`}
+    className={`shrink-0 text-foreground/25 transition-transform duration-200 dark:text-foreground/25 ${expanded ? 'rotate-180' : ''}`}
   >
     <polyline points="6 9 12 15 18 9" />
   </svg>

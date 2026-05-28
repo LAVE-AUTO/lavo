@@ -41,7 +41,7 @@ export function BlocksPanel({ blocks, onDelete, onEdit, onCreateClick }: Props) 
     <div className="flex w-full max-h-72 shrink-0 flex-col border-b border-[#C49A1E]/20 bg-[#F0EDE0] dark:border-[#C49A1E]/10 dark:bg-[#1A2210] md:max-h-none md:w-72 md:border-b-0 md:border-r">
       {/* Title */}
       <div className="px-4 pt-5 pb-3">
-        <p className="text-[10px] font-black uppercase tracking-widest text-[#666] dark:text-[#A0A090]">
+        <p className="text-[10px] font-black uppercase tracking-widest text-foreground/65 dark:text-[#A0A090]">
           {t('availability_blocks_title')}
         </p>
       </div>
@@ -65,7 +65,7 @@ export function BlocksPanel({ blocks, onDelete, onEdit, onCreateClick }: Props) 
               <rect x="3" y="4" width="18" height="18" rx="2" />
               <path d="M16 2v4M8 2v4M3 10h18" />
             </svg>
-            <p className="text-xs text-[#666] dark:text-[#A0A090]">
+            <p className="text-xs text-foreground/65 dark:text-[#A0A090]">
               {t('availability_block_no_blocks')}
             </p>
           </div>
@@ -76,7 +76,7 @@ export function BlocksPanel({ blocks, onDelete, onEdit, onCreateClick }: Props) 
                 key={block.id}
                 className="rounded-xl bg-white p-3 shadow-sm dark:bg-[#1E2A1A]"
               >
-                <p className="mb-1 text-[11px] font-semibold text-[#666] dark:text-[#A0A090]">
+                <p className="mb-1 text-[11px] font-semibold text-foreground/65 dark:text-[#A0A090]">
                   {t('availability_block_postes')} {formatBays(block.bayIds)}
                 </p>
                 <p className="mb-0.5 text-[12px] font-bold text-[#1A1A0A] dark:text-[#F0EDD4]">

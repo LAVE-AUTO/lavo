@@ -403,7 +403,7 @@ export function ServiceModal({ service, vehicleFormats, availableExtras, onClose
               )}
               {isEdit && (
               <div className="flex flex-col gap-1.5">
-                <label className="text-[11px] font-bold uppercase tracking-[0.5px] text-[#888] dark:text-[#9A9A8A]">{t('field_name')}</label>
+                <label className="text-[11px] font-bold uppercase tracking-[0.5px] text-foreground/55 dark:text-[#9A9A8A]">{t('field_name')}</label>
                 <TextField
                   value={name}
                   onChange={setName}
@@ -462,7 +462,7 @@ export function ServiceModal({ service, vehicleFormats, availableExtras, onClose
                 <div className="mb-1 text-[11px] font-black tracking-[.08em] text-[#C49A1E] uppercase">
                   {category === 'hand_wash' ? t('field_type_handwash') : t('field_type')}
                 </div>
-                <p className="text-[12px] text-[#888] dark:text-[#9A9A8A]">
+                <p className="text-[12px] text-foreground/55 dark:text-[#9A9A8A]">
                   {effectiveServiceType === 'exterior'
                     ? t('type_hint_exterior')
                     : effectiveServiceType === 'interior'
@@ -475,7 +475,7 @@ export function ServiceModal({ service, vehicleFormats, availableExtras, onClose
               {isCreateAutomatic && (
               <div className="rounded-[10px] border border-[#F0EDE4] bg-[#FAFAF7] p-3 dark:border-[#243020] dark:bg-[#0F1A0C]">
                 <div className="mb-1 text-[11px] font-black tracking-[.08em] text-[#C49A1E] uppercase">{t('cat_automatic')}</div>
-                <p className="text-[12px] text-[#888] dark:text-[#9A9A8A]">
+                <p className="text-[12px] text-foreground/55 dark:text-[#9A9A8A]">
                   {t('type_hint_exterior')}
                 </p>
               </div>
@@ -484,14 +484,14 @@ export function ServiceModal({ service, vehicleFormats, availableExtras, onClose
               {isCreateSelfService && (
               <div className="rounded-[10px] border border-[#F0EDE4] bg-[#FAFAF7] p-3 dark:border-[#243020] dark:bg-[#0F1A0C]">
                 <div className="mb-1 text-[11px] font-black tracking-[.08em] text-[#C49A1E] uppercase">{t('cat_self_service')}</div>
-                <p className="text-[12px] text-[#888] dark:text-[#9A9A8A]">
+                <p className="text-[12px] text-foreground/55 dark:text-[#9A9A8A]">
                   {t('type_hint_exterior')}
                 </p>
               </div>
               )}
 
               <div className="flex flex-col gap-1.5">
-                <label className="text-[11px] font-bold uppercase tracking-[0.5px] text-[#888] dark:text-[#9A9A8A]">{t('field_description')}</label>
+                <label className="text-[11px] font-bold uppercase tracking-[0.5px] text-foreground/55 dark:text-[#9A9A8A]">{t('field_description')}</label>
                 <Textarea
                   value={description}
                   onChange={setDescription}
@@ -505,7 +505,7 @@ export function ServiceModal({ service, vehicleFormats, availableExtras, onClose
               {(category === 'hand_wash' || category === 'self_service') && (
                 <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
                   <div className="flex flex-col gap-1.5">
-                    <label className="text-[11px] font-bold uppercase tracking-[0.5px] text-[#888] dark:text-[#9A9A8A]">{t('format_field_price')}</label>
+                    <label className="text-[11px] font-bold uppercase tracking-[0.5px] text-foreground/55 dark:text-[#9A9A8A]">{t('format_field_price')}</label>
                     <NumberStepper
                       value={basePrice}
                       onChange={setBasePrice}
@@ -516,7 +516,7 @@ export function ServiceModal({ service, vehicleFormats, availableExtras, onClose
                   </div>
                   {showDurationField && (
                   <div className="flex flex-col gap-1.5">
-                    <label className="text-[11px] font-bold uppercase tracking-[0.5px] text-[#888] dark:text-[#9A9A8A]">{t('vehicle_col_duration')}</label>
+                    <label className="text-[11px] font-bold uppercase tracking-[0.5px] text-foreground/55 dark:text-[#9A9A8A]">{t('vehicle_col_duration')}</label>
                     <NumberStepper
                       value={baseDuration}
                       onChange={setBaseDuration}
@@ -542,7 +542,7 @@ export function ServiceModal({ service, vehicleFormats, availableExtras, onClose
                     </button>
                   </div>
                   {automaticPackages.length === 0 ? (
-                    <p className="text-[12px] text-[#888] dark:text-[#9A9A8A]">{t('automatic_empty_packages')}</p>
+                    <p className="text-[12px] text-foreground/55 dark:text-[#9A9A8A]">{t('automatic_empty_packages')}</p>
                   ) : (
                     <div className="space-y-2">
                       {automaticPackages.map((pkg) => (
@@ -589,7 +589,7 @@ export function ServiceModal({ service, vehicleFormats, availableExtras, onClose
                               className={`inline-flex items-center gap-1 rounded-full border px-2.5 py-0.5 text-[10px] font-bold tracking-wide transition-colors ${
                                 pkg.is_active
                                   ? 'border-[#22C47A]/40 bg-[#22C47A]/12 text-[#16A964] hover:bg-[#22C47A]/20'
-                                  : 'border-[#888]/30 bg-[#888]/10 text-[#888] hover:bg-[#888]/15 dark:text-[#9A9A8A]'
+                                  : 'border-[#888]/30 bg-[#888]/10 text-foreground/55 hover:bg-[#888]/15 dark:text-[#9A9A8A]'
                               }`}
                             >
                               <span className={`h-1.5 w-1.5 rounded-full ${pkg.is_active ? 'bg-[#22C47A]' : 'bg-[#888]'}`} aria-hidden="true" />
@@ -665,7 +665,7 @@ export function ServiceModal({ service, vehicleFormats, availableExtras, onClose
                   {t('extras_label')}
                 </span>
                 {extrasByType.length === 0 ? (
-                  <p className="text-[12px] text-[#888] dark:text-[#9A9A8A]">{t('extras_empty_modal')}</p>
+                  <p className="text-[12px] text-foreground/55 dark:text-[#9A9A8A]">{t('extras_empty_modal')}</p>
                 ) : (
                   <div className="flex flex-col gap-1.5">
                     {extrasByType.map((extra) => {
@@ -699,7 +699,7 @@ export function ServiceModal({ service, vehicleFormats, availableExtras, onClose
                   className={`rounded-full border px-3 py-1 text-[11px] font-bold transition-all ${
                     isActive
                       ? 'border-[#2ecc71] bg-[rgba(46,204,113,.12)] text-[#2ecc71]'
-                      : 'border-[#888] bg-[rgba(136,136,136,.12)] text-[#888]'
+                      : 'border-[#888] bg-[rgba(136,136,136,.12)] text-foreground/55'
                   }`}
                 >
                   {isActive ? t('badge_active') : t('badge_inactive')}

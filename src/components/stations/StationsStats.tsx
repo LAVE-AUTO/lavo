@@ -36,7 +36,7 @@ export async function StationsStats({ metrics }: StationsStatsProps) {
   const isFr   = locale === 'fr';
 
   return (
-    <div className="bg-[#C8C8B4] dark:bg-dark-card border-b border-[#CCCCCC] dark:border-tab-inactive transition-colors" id="stations-list">
+    <div className="bg-[#C8C8B4] dark:bg-surface border-b border-[#CCCCCC] dark:border-border transition-colors" id="stations-list">
       <div className="max-w-6xl mx-auto px-4 sm:px-6">
         <div className="grid grid-cols-2 sm:grid-cols-4 divide-x divide-[#CCCCCC] dark:divide-[#2C3828]">
           <StatItem

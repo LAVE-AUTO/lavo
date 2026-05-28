@@ -38,14 +38,14 @@ export function SearchBar({ value, onChange, placeholder }: SearchBarProps) {
   };
 
   return (
-    <div className="flex items-center gap-2 px-3.5 py-2.5 bg-[#E0E0D0] dark:bg-tab-inactive rounded-[10px] transition-colors">
+    <div className="flex items-center gap-2 px-3.5 py-2.5 bg-surface dark:bg-tab-inactive rounded-[10px] transition-colors">
       <SearchIcon />
       <input
         type="search"
         value={value}
         onChange={handleChange}
         placeholder={placeholder}
-        className="flex-1 bg-transparent text-[13px] text-[#000C1F] dark:text-[#FFF8EC] placeholder-[#9A9A8A] outline-none"
+        className="flex-1 bg-transparent text-[13px] text-foreground placeholder-[#9A9A8A] outline-none"
         aria-label={placeholder}
       />
       {value && (

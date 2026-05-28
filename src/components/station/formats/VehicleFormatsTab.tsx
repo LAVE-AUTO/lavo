@@ -92,7 +92,7 @@ export function VehicleFormatsTab({ formats, onAdd, onUpdate, onDelete }: Props)
     <>
       {/* Section header */}
       <div className="mb-4 flex items-center justify-between">
-        <p className="text-[13px] text-[#888] dark:text-[#9A9A8A]">{t('formats_hint')}</p>
+        <p className="text-[13px] text-foreground/55 dark:text-[#9A9A8A]">{t('formats_hint')}</p>
         <button
           type="button"
           onClick={() => setModal('new')}
@@ -140,7 +140,7 @@ export function VehicleFormatsTab({ formats, onAdd, onUpdate, onDelete }: Props)
                   className={`shrink-0 rounded-[6px] px-2.5 py-1 text-[12px] font-semibold transition-all disabled:opacity-50 ${
                     format.is_active
                       ? 'bg-[#E8F8EE] text-[#009A3A] dark:bg-[#0A2A14] dark:text-[#00C851]'
-                      : 'bg-[#F0EDE4] text-[#888] dark:bg-[#1A1A0A] dark:text-[#9A9A8A]'
+                      : 'bg-[#F0EDE4] text-foreground/55 dark:bg-[#1A1A0A] dark:text-[#9A9A8A]'
                   }`}
                 >
                   {format.is_active ? t('badge_active') : t('badge_inactive')}
@@ -151,7 +151,7 @@ export function VehicleFormatsTab({ formats, onAdd, onUpdate, onDelete }: Props)
                   type="button"
                   onClick={() => setModal(format)}
                   disabled={busy}
-                  className="shrink-0 rounded-[8px] border border-[#D8D4C8] p-1.5 text-[#888] transition-colors hover:border-[#C49A1E] hover:text-[#C49A1E] disabled:opacity-40 dark:border-[#243020] dark:text-[#9A9A8A]"
+                  className="shrink-0 rounded-[8px] border border-[#D8D4C8] p-1.5 text-foreground/55 transition-colors hover:border-[#C49A1E] hover:text-[#C49A1E] disabled:opacity-40 dark:border-[#243020] dark:text-[#9A9A8A]"
                   aria-label={t('aria_edit')}
                 >
                   <PencilIcon />
@@ -162,7 +162,7 @@ export function VehicleFormatsTab({ formats, onAdd, onUpdate, onDelete }: Props)
                   type="button"
                   onClick={() => setDeleteState({ format, loading: false })}
                   disabled={busy}
-                  className="shrink-0 rounded-[8px] border border-[#D8D4C8] p-1.5 text-[#888] transition-colors hover:border-[#EF4444] hover:text-[#EF4444] disabled:opacity-40 dark:border-[#243020] dark:text-[#9A9A8A]"
+                  className="shrink-0 rounded-[8px] border border-[#D8D4C8] p-1.5 text-foreground/55 transition-colors hover:border-[#EF4444] hover:text-[#EF4444] disabled:opacity-40 dark:border-[#243020] dark:text-[#9A9A8A]"
                   aria-label={t('aria_delete')}
                 >
                   {deleteState?.format.id === format.id && deleteState.loading ? (

@@ -279,7 +279,7 @@ export default function StationAvailabilityPage() {
           <h1 className="text-2xl font-black text-[#1A1A0A] dark:text-[#F0EDD4]">
             {t('availability_title')}
           </h1>
-          <p className="mt-0.5 text-sm text-[#666] dark:text-[#A0A090]">
+          <p className="mt-0.5 text-sm text-foreground/65 dark:text-[#A0A090]">
             {t('availability_subtitle')}
           </p>
         </div>

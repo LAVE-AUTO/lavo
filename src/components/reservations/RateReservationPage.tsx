@@ -110,7 +110,7 @@ export default function RateReservationPage() {
   /* ---- Non-form states ---- */
   if (pageState === 'loading') {
     return (
-      <main className="min-h-screen bg-[#F5F5E6] dark:bg-[#0F0F0D] flex items-center justify-center pb-20">
+      <main className="min-h-screen bg-background flex items-center justify-center pb-20">
         <div className="h-8 w-8 animate-spin rounded-full border-[3px] border-gold border-t-transparent" />
       </main>
     );
@@ -163,7 +163,7 @@ export default function RateReservationPage() {
 
   /* ---- Form ---- */
   return (
-    <main className="min-h-screen bg-[#F5F5E6] dark:bg-[#0F0F0D] pb-24 sm:pb-8">
+    <main className="min-h-screen bg-background pb-24 sm:pb-8">
       {/* Header */}
       <div className="px-4 pt-4 pb-2 max-w-2xl mx-auto">
         <Link
@@ -175,24 +175,24 @@ export default function RateReservationPage() {
           </svg>
           {t('btn_back')}
         </Link>
-        <h1 className="text-[22px] font-black text-[#0A0A14] dark:text-white mt-3">{t('page_title')}</h1>
-        <p className="text-[14px] text-[#666] dark:text-[#B0B0A0] mt-1">{t('subtitle')}</p>
+        <h1 className="text-[22px] font-black text-foreground mt-3">{t('page_title')}</h1>
+        <p className="text-[14px] text-foreground/65 mt-1">{t('subtitle')}</p>
       </div>
 
       <div className="px-4 max-w-2xl mx-auto space-y-4">
         {/* Reservation recap */}
         {res && (
-          <div className="bg-[#E8E8D8] dark:bg-dark-card rounded-xl border border-[#D0D0C0] dark:border-tab-inactive p-4 space-y-1">
-            <p className="text-[15px] font-black text-[#0A0A14] dark:text-white">{res.stationName}</p>
-            <p className="text-[13px] text-[#666] dark:text-[#B0B0A0]">{res.forfaitName}</p>
-            <p className="text-[13px] text-[#999] dark:text-[#888]">{res.dateLabel}</p>
+          <div className="bg-surface rounded-xl border border-border p-4 space-y-1">
+            <p className="text-[15px] font-black text-foreground">{res.stationName}</p>
+            <p className="text-[13px] text-foreground/65">{res.forfaitName}</p>
+            <p className="text-[13px] text-[#999] dark:text-foreground/55">{res.dateLabel}</p>
           </div>
         )}
 
         {/* Star selector */}
-        <div className="bg-[#E8E8D8] dark:bg-dark-card rounded-xl border border-[#D0D0C0] dark:border-tab-inactive p-5">
-          <p className="text-[15px] font-black text-[#0A0A14] dark:text-white mb-1">{t('score_label')}</p>
-          <p className="text-[13px] text-[#999] dark:text-[#888] mb-5">{t('score_hint')}</p>
+        <div className="bg-surface rounded-xl border border-border p-5">
+          <p className="text-[15px] font-black text-foreground mb-1">{t('score_label')}</p>
+          <p className="text-[13px] text-[#999] dark:text-foreground/55 mb-5">{t('score_hint')}</p>
           <div
             className="flex items-center gap-2 justify-center"
             role="group"
@@ -229,10 +229,10 @@ export default function RateReservationPage() {
         </div>
 
         {/* Comment */}
-        <div className="bg-[#E8E8D8] dark:bg-dark-card rounded-xl border border-[#D0D0C0] dark:border-tab-inactive p-5">
+        <div className="bg-surface rounded-xl border border-border p-5">
           <label
             htmlFor="rating-comment"
-            className="block text-[15px] font-black text-[#0A0A14] dark:text-white mb-3"
+            className="block text-[15px] font-black text-foreground mb-3"
           >
             {t('comment_label')}
           </label>
@@ -242,9 +242,9 @@ export default function RateReservationPage() {
             onChange={(e) => setComment(e.target.value.slice(0, MAX_COMMENT))}
             placeholder={t('comment_placeholder')}
             rows={4}
-            className="w-full bg-white/60 dark:bg-dark-bg/50 border border-[#D0D0C0] dark:border-tab-inactive rounded-[10px] px-4 py-3 text-[14px] text-[#0A0A14] dark:text-white placeholder-[#AAA] dark:placeholder-[#666] resize-none focus:outline-none focus:border-gold/60 transition-colors"
+            className="w-full bg-white/60 dark:bg-background/50 border border-border rounded-[10px] px-4 py-3 text-[14px] text-foreground placeholder-[#AAA] dark:placeholder-[#666] resize-none focus:outline-none focus:border-gold/60 transition-colors"
           />
-          <p className="text-[12px] text-[#999] dark:text-[#888] text-right mt-1">
+          <p className="text-[12px] text-[#999] dark:text-foreground/55 text-right mt-1">
             {t('comment_max', { count: comment.length })}
           </p>
         </div>
@@ -275,15 +275,15 @@ export default function RateReservationPage() {
 function SuccessView({ stationId }: { stationId: string }) {
   const t = useTranslations('rating');
   return (
-    <main className="min-h-screen bg-[#F5F5E6] dark:bg-[#0F0F0D] flex items-center justify-center p-6 pb-20">
+    <main className="min-h-screen bg-background flex items-center justify-center p-6 pb-20">
       <div className="flex flex-col items-center text-center gap-5 max-w-xs w-full">
         <div className="w-20 h-20 rounded-full bg-Hurryline-success/15 flex items-center justify-center">
           <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="#00C851" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
             <polyline points="20 6 9 17 4 12" />
           </svg>
         </div>
-        <h2 className="text-[22px] font-black text-[#0A0A14] dark:text-white">{t('success_title')}</h2>
-        <p className="text-[15px] text-[#555] dark:text-[#B0B0A0] leading-relaxed">{t('success_desc')}</p>
+        <h2 className="text-[22px] font-black text-foreground">{t('success_title')}</h2>
+        <p className="text-[15px] text-foreground/70 leading-relaxed">{t('success_desc')}</p>
         <div className="flex flex-col gap-3 w-full mt-2">
           {stationId && (
             <Link
@@ -339,13 +339,13 @@ function StatusView({
   };
 
   return (
-    <main className="min-h-screen bg-[#F5F5E6] dark:bg-[#0F0F0D] flex items-center justify-center p-6 pb-20">
+    <main className="min-h-screen bg-background flex items-center justify-center p-6 pb-20">
       <div className="flex flex-col items-center text-center gap-4 max-w-xs w-full">
         <div className={`w-16 h-16 rounded-full flex items-center justify-center ${bgMap[icon]}`}>
           {iconMap[icon]}
         </div>
-        <h2 className="text-[20px] font-black text-[#0A0A14] dark:text-white">{title}</h2>
-        {desc && <p className="text-[14px] text-[#555] dark:text-[#B0B0A0] leading-relaxed">{desc}</p>}
+        <h2 className="text-[20px] font-black text-foreground">{title}</h2>
+        {desc && <p className="text-[14px] text-foreground/70 leading-relaxed">{desc}</p>}
         {action}
         {backHref && backLabel && (
           <Link href={backHref} className="text-[14px] font-bold text-gold hover:text-gold-hover transition-colors mt-1">

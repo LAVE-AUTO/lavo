@@ -99,7 +99,7 @@ export function ExtraCard({ extra, onEdit, onDeleted, onToggled }: Props) {
               onClick={() => setDeleteOpen(true)}
               disabled={deleting}
               aria-label={t('btn_delete')}
-              className="inline-flex items-center justify-center rounded-lg border border-[#E0DCD0] bg-white p-1.5 text-[#888] transition-all hover:border-[#FF2525] hover:bg-[#FF2525]/5 hover:text-[#FF2525] disabled:opacity-40 dark:border-[#243020] dark:bg-[#0F1A0C] dark:text-[#9A9A8A]"
+              className="inline-flex items-center justify-center rounded-lg border border-[#E0DCD0] bg-white p-1.5 text-foreground/55 transition-all hover:border-[#FF2525] hover:bg-[#FF2525]/5 hover:text-[#FF2525] disabled:opacity-40 dark:border-[#243020] dark:bg-[#0F1A0C] dark:text-[#9A9A8A]"
             >
               <CrossIcon />
             </button>
@@ -122,7 +122,7 @@ export function ExtraCard({ extra, onEdit, onDeleted, onToggled }: Props) {
             className={`inline-flex items-center gap-1 rounded-full border px-2.5 py-0.5 text-[10px] font-bold tracking-wide transition-colors ${
               extra.is_active
                 ? 'border-[#22C47A]/40 bg-[#22C47A]/12 text-[#16A964] hover:bg-[#22C47A]/20'
-                : 'border-[#888]/30 bg-[#888]/10 text-[#888] hover:bg-[#888]/15 dark:text-[#9A9A8A]'
+                : 'border-[#888]/30 bg-[#888]/10 text-foreground/55 hover:bg-[#888]/15 dark:text-[#9A9A8A]'
             }`}
             aria-label={extra.is_active ? t('badge_active') : t('badge_inactive')}
           >
@@ -139,19 +139,19 @@ export function ExtraCard({ extra, onEdit, onDeleted, onToggled }: Props) {
                 key={entry.vehicle_format_id}
                 className="rounded-xl bg-[#F7F6F2] px-3 py-3 text-center dark:bg-[#0F1A0C]"
               >
-                <p className="text-[9px] font-bold uppercase tracking-[1px] text-[#888] dark:text-[#9A9A8A]">
+                <p className="text-[9px] font-bold uppercase tracking-[1px] text-foreground/55 dark:text-[#9A9A8A]">
                   {entry.vehicle_label}
                 </p>
                 <p className="mt-1 font-mono text-[20px] font-black tabular-nums leading-none text-[#C49A1E]">
                   {parseFloat(entry.price || '0').toFixed(0)} $
                 </p>
-                <p className="mt-1 text-[11px] text-[#888] dark:text-[#9A9A8A]">{entry.duration_min} min</p>
+                <p className="mt-1 text-[11px] text-foreground/55 dark:text-[#9A9A8A]">{entry.duration_min} min</p>
               </div>
             ))}
           </div>
         ) : (
           <div className="rounded-xl bg-[#F7F6F2] px-3 py-3 text-center dark:bg-[#0F1A0C]">
-            <p className="text-[9px] font-bold uppercase tracking-[1px] text-[#888] dark:text-[#9A9A8A]">
+            <p className="text-[9px] font-bold uppercase tracking-[1px] text-foreground/55 dark:text-[#9A9A8A]">
               {t('extras_all_formats')}
             </p>
             <p className="mt-1 font-mono text-[22px] font-black tabular-nums leading-none text-[#C49A1E]">

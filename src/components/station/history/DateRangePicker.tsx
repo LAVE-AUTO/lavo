@@ -113,7 +113,7 @@ export function DateRangePicker({ value, onChange }: Props) {
 
       {/* Dropdown */}
       {open && (
-        <div className="absolute left-0 top-full z-50 mt-2 w-[340px] animate-fade-in rounded-2xl border border-[#CCCCCC] bg-[#E8E8D8] p-4 shadow-xl dark:border-[#3A4A36] dark:bg-[#1E2A1A]">
+        <div className="absolute left-0 top-full z-50 mt-2 w-[340px] animate-fade-in rounded-2xl border border-[#CCCCCC] bg-surface p-4 shadow-xl dark:border-[#3A4A36] dark:bg-[#1E2A1A]">
           {/* Presets */}
           <div className="mb-3 flex flex-wrap gap-1.5">
             <button
@@ -224,11 +224,11 @@ function CalendarGrid({ locale, range, onChange }: CalendarGridProps) {
       {/* Month nav */}
       <div className="mb-3 flex items-center justify-between">
         <button type="button" onClick={prevMonth} className="flex h-8 w-8 items-center justify-center rounded-lg transition-colors hover:bg-[#C8C8B4] active:scale-95 dark:hover:bg-[#243020]">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.5} strokeLinecap="round" strokeLinejoin="round" className="text-[#000C1F]/60 dark:text-[#FFF8EC]/60"><polyline points="15 18 9 12 15 6" /></svg>
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.5} strokeLinecap="round" strokeLinejoin="round" className="text-foreground/60 dark:text-foreground/60"><polyline points="15 18 9 12 15 6" /></svg>
         </button>
-        <span className="text-[14px] font-bold capitalize text-[#000C1F] dark:text-[#FFF8EC]">{monthLabel}</span>
+        <span className="text-[14px] font-bold capitalize text-foreground">{monthLabel}</span>
         <button type="button" onClick={nextMonth} disabled={!canGoNext} className="flex h-8 w-8 items-center justify-center rounded-lg transition-colors hover:bg-[#C8C8B4] active:scale-95 disabled:opacity-20 dark:hover:bg-[#243020]">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.5} strokeLinecap="round" strokeLinejoin="round" className="text-[#000C1F]/60 dark:text-[#FFF8EC]/60"><polyline points="9 18 15 12 9 6" /></svg>
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.5} strokeLinecap="round" strokeLinejoin="round" className="text-foreground/60 dark:text-foreground/60"><polyline points="9 18 15 12 9 6" /></svg>
         </button>
       </div>
 
@@ -270,10 +270,10 @@ function CalendarGrid({ locale, range, onChange }: CalendarGridProps) {
                   : isSelected
                     ? 'z-10 rounded-lg bg-[#C09A18] font-bold text-[#1A2116] shadow-sm'
                     : inRange
-                      ? 'bg-[#C09A18]/15 text-[#000C1F] dark:bg-[#C09A18]/20 dark:text-[#FFF8EC]'
+                      ? 'bg-[#C09A18]/15 text-foreground dark:bg-[#C09A18]/20 dark:text-foreground'
                       : isToday
                         ? 'font-bold text-[#C09A18]'
-                        : 'text-[#000C1F]/70 hover:bg-[#C8C8B4] dark:text-[#FFF8EC]/70 dark:hover:bg-[#243020]'
+                        : 'text-foreground/70 hover:bg-[#C8C8B4] dark:text-foreground/70 dark:hover:bg-[#243020]'
               }`}
             >
               {day}

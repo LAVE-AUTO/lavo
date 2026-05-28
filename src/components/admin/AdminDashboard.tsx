@@ -100,7 +100,7 @@ export function AdminDashboard() {
               aria-pressed={masked}
               aria-label={masked ? t('kpi_reveal') : t('kpi_hide_aria')}
               title={masked ? t('kpi_reveal') : t('kpi_hide_aria')}
-              className="inline-flex h-7 w-7 items-center justify-center rounded-full bg-[#E8E4D8] text-[#666] transition-colors hover:bg-[#DDD8C4] hover:text-[#1A1A0A] dark:bg-[#1A2A14] dark:text-[#A0A090] dark:hover:bg-[#243020] dark:hover:text-[#F0EDD4]"
+              className="inline-flex h-7 w-7 items-center justify-center rounded-full bg-[#E8E4D8] text-foreground/65 transition-colors hover:bg-[#DDD8C4] hover:text-[#1A1A0A] dark:bg-[#1A2A14] dark:text-[#A0A090] dark:hover:bg-[#243020] dark:hover:text-[#F0EDD4]"
             >
               {masked ? <EyeOffIcon /> : <EyeIcon />}
             </button>

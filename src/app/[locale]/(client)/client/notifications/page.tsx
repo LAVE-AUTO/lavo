@@ -49,10 +49,10 @@ export default function ClientNotificationsPage() {
   }
 
   return (
-    <main className="min-h-screen bg-[#F5F5E6] px-4 pb-24 pt-6 dark:bg-[#0F0F0D] sm:px-6">
+    <main className="min-h-screen bg-background px-4 pb-24 pt-6 dark:bg-[#0F0F0D] sm:px-6">
       <div className="mx-auto w-full max-w-3xl">
         <div className="mb-4 flex items-center justify-between">
-          <h1 className="text-[22px] font-black text-[#0A0A14] dark:text-white">{t('notif_title')}</h1>
+          <h1 className="text-[22px] font-black text-foreground">{t('notif_title')}</h1>
           <button
             type="button"
             onClick={markAllRead}

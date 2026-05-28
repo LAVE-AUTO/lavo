@@ -95,7 +95,7 @@ function StationCard({ s, locale, t }: { s: ApiStation; locale: string; t: Retur
             </span>
           </div>
 
-          <p className="mt-0.5 truncate text-[12px] text-[#AAA] dark:text-[#555]">
+          <p className="mt-0.5 truncate text-[12px] text-[#AAA] dark:text-foreground/70">
             {[s.city, s.address].filter(Boolean).join(' · ')}
           </p>
 
@@ -279,7 +279,7 @@ export function PendingStationsList() {
 
           {!loading && loadError && (
             <div className="flex flex-1 flex-col items-center justify-center gap-3 py-24 text-center">
-              <p className="text-[13px] font-semibold text-[#888] dark:text-[#9A9A8A]">{t('error_load')}</p>
+              <p className="text-[13px] font-semibold text-foreground/55 dark:text-[#9A9A8A]">{t('error_load')}</p>
               <button type="button" onClick={loadStations}
                 className="rounded-xl border border-[#C49A1E]/40 px-4 py-2 text-[13px] font-bold text-[#C49A1E] transition-colors hover:bg-[#C49A1E]/8">
                 {t('btn_retry')}

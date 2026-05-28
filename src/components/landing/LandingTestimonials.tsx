@@ -19,7 +19,7 @@ function TestimonialCard({
   t: ReturnType<typeof useTranslations<'landing'>>;
 }) {
   return (
-    <div className="rounded-2xl bg-[#FAFAF6] dark:bg-dark-card border border-[#E8E8D8] dark:border-tab-inactive p-6 sm:p-7 h-full flex flex-col hover:shadow-md transition-shadow">
+    <div className="rounded-2xl bg-[#FAFAF6] dark:bg-surface border border-[#E8E8D8] dark:border-border p-6 sm:p-7 h-full flex flex-col hover:shadow-md transition-shadow">
       {/* Stars */}
       <div className="flex gap-0.5 mb-4">
         {Array.from({ length: 5 }).map((_, s) => (
@@ -42,17 +42,17 @@ function TestimonialCard({
       </p>
 
       {/* Author */}
-      <div className="flex items-center gap-3 mt-5 pt-4 sm:mt-6 sm:pt-5 border-t border-[#E8E8D8] dark:border-tab-inactive">
+      <div className="flex items-center gap-3 mt-5 pt-4 sm:mt-6 sm:pt-5 border-t border-[#E8E8D8] dark:border-border">
         <div
           className={`w-10 h-10 rounded-full ${item.color} flex items-center justify-center text-[13px] font-bold text-white`}
         >
           {item.initials}
         </div>
         <div>
-          <p className="text-[14px] font-bold text-[#0A0A14] dark:text-white leading-tight">
+          <p className="text-[14px] font-bold text-foreground leading-tight">
             {t(`testimonial_${item.key}_name`)}
           </p>
-          <p className="text-[12px] text-[#888] dark:text-[#999]">
+          <p className="text-[12px] text-foreground/55 dark:text-[#999]">
             {t(`testimonial_${item.key}_role`)}
           </p>
         </div>
@@ -65,10 +65,10 @@ export function LandingTestimonials() {
   const t = useTranslations('landing');
 
   return (
-    <section className="py-16 sm:py-28 bg-white dark:bg-dark-bg transition-colors">
+    <section className="py-16 sm:py-28 bg-white dark:bg-background transition-colors">
       <div className="max-w-6xl mx-auto px-4 sm:px-6">
         <ScrollReveal className="text-center mb-10 sm:mb-14">
-          <h2 className="text-[28px] sm:text-[40px] font-black text-[#0A0A14] dark:text-white leading-tight">
+          <h2 className="text-[28px] sm:text-[40px] font-black text-foreground leading-tight">
             {t('testimonials_title')}
           </h2>
         </ScrollReveal>

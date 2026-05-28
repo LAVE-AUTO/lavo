@@ -85,7 +85,7 @@ export function AdminStationsManagement({ stations, loading, error, query, onAct
             {isBusy ? '…' : t('btn_confirm')}
           </button>
           <button type="button" onClick={() => { setConfirmId(null); setConfirmAction(null); }}
-            className="rounded-[14px] border border-[#D8D4C8] px-4 py-2 text-[12px] font-semibold text-[#666] transition-colors hover:bg-[#F5F3EE] dark:border-[#243020] dark:text-[#9A9A8A] dark:hover:bg-[#182214]">
+            className="rounded-[14px] border border-[#D8D4C8] px-4 py-2 text-[12px] font-semibold text-foreground/65 transition-colors hover:bg-[#F5F3EE] dark:border-[#243020] dark:text-[#9A9A8A] dark:hover:bg-[#182214]">
             {t('btn_cancel')}
           </button>
         </div>
@@ -144,14 +144,14 @@ export function AdminStationsManagement({ stations, loading, error, query, onAct
                 {renderStatus(station)}
               </div>
 
-              <div className="mt-4 rounded-[16px] bg-white px-3 py-2.5 text-[13px] text-[#555] shadow-[0_1px_0_rgba(26,26,10,0.04)] dark:bg-[#0C150B] dark:text-[#C8C2B3]">
+              <div className="mt-4 rounded-[16px] bg-white px-3 py-2.5 text-[13px] text-foreground/70 shadow-[0_1px_0_rgba(26,26,10,0.04)] dark:bg-[#0C150B] dark:text-[#C8C2B3]">
                 {station.city ?? '-'}
               </div>
 
               <div className="mt-4 flex flex-wrap gap-2">
                 {renderActionButton(station, true)}
                 <button type="button" onClick={() => onEdit(station)} title={t('btn_edit')}
-                  className="flex h-8 w-8 items-center justify-center rounded-[12px] border border-[#E1DBCF] bg-white text-[#888] transition-colors hover:border-[#C49A1E]/40 hover:bg-[#FCF6E5] hover:text-[#9A7A13] dark:border-[#1E2E18] dark:bg-[#0E170C] dark:text-[#A0A090]">
+                  className="flex h-8 w-8 items-center justify-center rounded-[12px] border border-[#E1DBCF] bg-white text-foreground/55 transition-colors hover:border-[#C49A1E]/40 hover:bg-[#FCF6E5] hover:text-[#9A7A13] dark:border-[#1E2E18] dark:bg-[#0E170C] dark:text-[#A0A090]">
                   <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7" /><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z" /></svg>
                 </button>
                 <button type="button" onClick={() => onDelete(station)} title={t('btn_delete')}
@@ -207,7 +207,7 @@ export function AdminStationsManagement({ stations, loading, error, query, onAct
                 <div className="flex items-center justify-end gap-1.5">
                   {renderActionButton(station)}
                   <button type="button" onClick={() => onEdit(station)} title={t('btn_edit')}
-                    className="flex h-8 w-8 items-center justify-center rounded-[12px] border border-[#E1DBCF] bg-white text-[#888] transition-colors hover:border-[#C49A1E]/40 hover:bg-[#FCF6E5] hover:text-[#9A7A13] dark:border-[#1E2E18] dark:bg-[#0E170C] dark:text-[#A0A090] dark:hover:bg-[#1A2410] dark:hover:text-[#F0D98C]">
+                    className="flex h-8 w-8 items-center justify-center rounded-[12px] border border-[#E1DBCF] bg-white text-foreground/55 transition-colors hover:border-[#C49A1E]/40 hover:bg-[#FCF6E5] hover:text-[#9A7A13] dark:border-[#1E2E18] dark:bg-[#0E170C] dark:text-[#A0A090] dark:hover:bg-[#1A2410] dark:hover:text-[#F0D98C]">
                     <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7" /><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z" /></svg>
                   </button>
                   <button type="button" onClick={() => onDelete(station)} title={t('btn_delete')}

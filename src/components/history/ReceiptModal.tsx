@@ -744,14 +744,14 @@ function ReceiptRowGrid({
   return (
     <div className={[
       'px-3.5 py-2.5',
-      borderRight ? 'border-r border-[#E0E0D0] dark:border-tab-inactive' : '',
-      borderTop   ? 'border-t border-[#E0E0D0] dark:border-tab-inactive' : '',
+      borderRight ? 'border-r border-[#E0E0D0] dark:border-border' : '',
+      borderTop   ? 'border-t border-[#E0E0D0] dark:border-border' : '',
     ].join(' ')}>
       <div className="text-[10px] font-bold text-[#999] uppercase tracking-wide mb-1">{label}</div>
       {chip ? (
         <span className={`text-[11px] font-bold px-2 py-0.5 rounded-full ${chipClass}`}>{value}</span>
       ) : (
-        <div className="text-[13px] font-bold text-[#0A0A14] dark:text-white">{value}</div>
+        <div className="text-[13px] font-bold text-foreground">{value}</div>
       )}
     </div>
   );

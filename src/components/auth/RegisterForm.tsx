@@ -258,7 +258,7 @@ export function RegisterForm({ promoCode }: RegisterFormProps) {
       type="button"
       onClick={toggle}
       aria-label={label}
-      className="text-[#888] hover:text-[#555] dark:hover:text-[#ccc] transition-colors"
+      className="text-foreground/55 hover:text-foreground/70 dark:hover:text-[#ccc] transition-colors"
     >
       <EyeIcon open={visible} />
     </button>
@@ -278,7 +278,7 @@ export function RegisterForm({ promoCode }: RegisterFormProps) {
               <p className="text-[13px] font-semibold text-[#0F1A0C] dark:text-[#F0EDD4]">
                 {t('promo_banner_station', { station: promoInfo.station_name })}
               </p>
-              <p className="text-[12px] text-[#666] dark:text-[#9A9A8A]">
+              <p className="text-[12px] text-foreground/65 dark:text-[#9A9A8A]">
                 {promoInfo.city} · {t('promo_banner_rate', { rate: promoInfo.promo_commission_rate_percent ?? 0 })}
               </p>
             </div>

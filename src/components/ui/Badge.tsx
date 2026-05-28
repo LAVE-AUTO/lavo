@@ -20,7 +20,7 @@ export interface BadgeProps {
 
 const VARIANT_CLASSES: Record<BadgeVariant, string> = {
   tag:
-    'bg-[#E8E8D8] dark:bg-dark-surface text-[#444] dark:text-Hurryline-muted ' +
+    'bg-surface dark:bg-surface text-[#444] dark:text-Hurryline-muted ' +
     'text-[11px] font-medium px-2.5 py-0.5 rounded-full',
   'status-open':
     'bg-Hurryline-success/15 text-Hurryline-success text-[11px] font-semibold px-2.5 py-0.5 rounded-full',

@@ -22,7 +22,7 @@ interface Props {
 function Field({ label, children }: { label: string; children: React.ReactNode }) {
   return (
     <div className="flex flex-col gap-1.5">
-      <label className="text-[11px] font-bold uppercase tracking-[0.5px] text-[#888] dark:text-[#9A9A8A]">
+      <label className="text-[11px] font-bold uppercase tracking-[0.5px] text-foreground/55 dark:text-[#9A9A8A]">
         {label}
       </label>
       {children}
@@ -232,14 +232,14 @@ export function StationLocationForm({ location, onSaved, locked = false }: Props
               <div className="flex flex-col gap-0.5">
                 <p className="text-[11px] font-semibold uppercase tracking-wider text-[#AAAAAA] dark:text-[#4A4A3A]">{t('field_address')}</p>
                 <p className="text-[14px] font-bold text-[#1A1A0A] dark:text-[#F0EDD4]">{location.address || '-'}</p>
-                <p className="text-[13px] font-semibold text-[#888] dark:text-[#9A9A8A]">{location.city || '-'}</p>
+                <p className="text-[13px] font-semibold text-foreground/55 dark:text-[#9A9A8A]">{location.city || '-'}</p>
               </div>
             </div>
             {(location.latitude || location.longitude) && (
               <div className="flex items-center gap-3">
                 <div className="flex flex-col gap-0.5">
                   <p className="text-[11px] font-semibold uppercase tracking-wider text-[#C8C4B4] dark:text-[#2E3C2A]">{t('field_latitude')} / {t('field_longitude')}</p>
-                  <p className="font-mono text-[13px] font-semibold text-[#888] dark:text-[#9A9A8A]">
+                  <p className="font-mono text-[13px] font-semibold text-foreground/55 dark:text-[#9A9A8A]">
                     {[location.latitude, location.longitude].filter(Boolean).join(', ')}
                   </p>
                 </div>
@@ -329,7 +329,7 @@ export function StationLocationForm({ location, onSaved, locked = false }: Props
                 type="button"
                 onClick={handleCancel}
                 disabled={saving}
-                className="rounded-xl border border-[#E0DCD0] px-4 py-2.5 text-[13px] font-semibold text-[#666] transition-colors hover:bg-[#F0EDE0] disabled:opacity-50 dark:border-[#243020] dark:text-[#9A9A8A]"
+                className="rounded-xl border border-[#E0DCD0] px-4 py-2.5 text-[13px] font-semibold text-foreground/65 transition-colors hover:bg-[#F0EDE0] disabled:opacity-50 dark:border-[#243020] dark:text-[#9A9A8A]"
               >
                 {t('btn_cancel_edit')}
               </button>

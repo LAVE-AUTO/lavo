@@ -43,13 +43,13 @@ export async function LegalContentRenderer({
           {title}
         </h1>
         {updated && (
-          <p className="text-[13px] text-[#888] dark:text-[#666] mb-10">{updated}</p>
+          <p className="text-[13px] text-foreground/55 dark:text-foreground/65 mb-10">{updated}</p>
         )}
 
         {/* Body — admin-editable HTML */}
         <div
           className={[
-            'text-[14px] sm:text-[15px] text-[#555] dark:text-[#A0A090] leading-[1.85]',
+            'text-[14px] sm:text-[15px] text-foreground/70 dark:text-[#A0A090] leading-[1.85]',
             '[&_h2]:font-playfair [&_h2]:text-[20px] sm:[&_h2]:text-[22px] [&_h2]:font-black [&_h2]:text-[#1a1a1a] dark:[&_h2]:text-white [&_h2]:mt-10 [&_h2]:mb-3',
             '[&_h3]:text-[17px] [&_h3]:font-bold [&_h3]:text-[#1a1a1a] dark:[&_h3]:text-white [&_h3]:mt-6 [&_h3]:mb-2',
             '[&_p]:mb-4',
@@ -58,7 +58,7 @@ export async function LegalContentRenderer({
             '[&_li]:leading-relaxed',
             '[&_strong]:text-[#1a1a1a] dark:[&_strong]:text-white [&_strong]:font-bold',
             '[&_a]:text-[#c8980a] [&_a]:font-semibold [&_a]:underline [&_a]:underline-offset-2 hover:[&_a]:opacity-80',
-            '[&_blockquote]:border-l-4 [&_blockquote]:border-[rgba(200,152,10,0.4)] [&_blockquote]:pl-4 [&_blockquote]:italic [&_blockquote]:my-5 [&_blockquote]:text-[#666] dark:[&_blockquote]:text-[#A0A090]',
+            '[&_blockquote]:border-l-4 [&_blockquote]:border-[rgba(200,152,10,0.4)] [&_blockquote]:pl-4 [&_blockquote]:italic [&_blockquote]:my-5 [&_blockquote]:text-foreground/65 dark:[&_blockquote]:text-[#A0A090]',
             '[&_code]:bg-[rgba(200,152,10,0.08)] [&_code]:px-1.5 [&_code]:py-0.5 [&_code]:rounded [&_code]:text-[13px] [&_code]:font-mono dark:[&_code]:bg-[rgba(200,152,10,0.12)]',
             '[&_hr]:border-0 [&_hr]:border-t [&_hr]:border-[rgba(200,152,10,0.2)] [&_hr]:my-8',
           ].join(' ')}
@@ -72,7 +72,7 @@ export async function LegalContentRenderer({
         {(questions || contactBtn) && (
           <div className="mt-12 pt-8 border-t border-[rgba(200,152,10,0.15)] flex flex-col sm:flex-row items-start sm:items-center gap-4">
             {questions && (
-              <p className="text-[14px] text-[#555] dark:text-[#A0A090]">{questions}</p>
+              <p className="text-[14px] text-foreground/70 dark:text-[#A0A090]">{questions}</p>
             )}
             {contactBtn && (
               <Link

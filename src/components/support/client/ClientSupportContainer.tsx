@@ -86,7 +86,7 @@ export function ClientSupportContainer({ sectionLabel }: Props) {
         <div className="flex items-start justify-between gap-4">
           <div>
             <h1 className="text-[20px] font-black text-[#1A1A0A] dark:text-[#F0EDD4]">{t('page_title')}</h1>
-            <p className="mt-0.5 text-[12px] text-[#888] dark:text-[#6A6A5A]">{t('page_subtitle')}</p>
+            <p className="mt-0.5 text-[12px] text-foreground/55 dark:text-[#6A6A5A]">{t('page_subtitle')}</p>
           </div>
           {!showForm && (
             <button
@@ -106,7 +106,7 @@ export function ClientSupportContainer({ sectionLabel }: Props) {
         {tickets.length > 0 && (
           <div className="mt-4 flex flex-wrap gap-2">
             {STATS.map(({ key, label, dot }) => counts[key] > 0 && (
-              <span key={key} className="flex items-center gap-1.5 rounded-full bg-white px-3 py-1 text-[11px] font-bold text-[#555] shadow-sm ring-1 ring-[#E8E4DC] dark:bg-[#131E10] dark:text-[#9A9A8A] dark:ring-[#1E2E18]">
+              <span key={key} className="flex items-center gap-1.5 rounded-full bg-white px-3 py-1 text-[11px] font-bold text-foreground/70 shadow-sm ring-1 ring-[#E8E4DC] dark:bg-[#131E10] dark:text-[#9A9A8A] dark:ring-[#1E2E18]">
                 <span className={`h-2 w-2 rounded-full ${dot}`} />
                 {counts[key]} {t(label)}
               </span>

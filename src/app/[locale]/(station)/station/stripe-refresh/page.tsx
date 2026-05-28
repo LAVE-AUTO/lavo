@@ -36,7 +36,7 @@ export default function StripeRefreshPage() {
           <h1 className="text-[16px] font-black text-[#1A1A0A] dark:text-[#F0EDD4]">
             {t('stripe_refresh_error_title')}
           </h1>
-          <p className="text-center text-[13px] text-[#666] dark:text-[#9A9A8A]">
+          <p className="text-center text-[13px] text-foreground/65 dark:text-[#9A9A8A]">
             {t('stripe_refresh_error_desc')}
           </p>
           <a
@@ -54,7 +54,7 @@ export default function StripeRefreshPage() {
     <div className="flex min-h-screen flex-col items-center justify-center gap-4 bg-[#F7F6F2] px-4 dark:bg-[#0C1209]">
       <div className="flex flex-col items-center gap-3 rounded-2xl border border-[#E8E4DC] bg-white p-8 shadow-sm dark:border-[#1A2A14] dark:bg-[#182214]">
         <div className="h-8 w-8 animate-spin rounded-full border-2 border-[#E8E4DC] border-t-[#C49A1E] dark:border-[#243020] dark:border-t-[#C49A1E]" aria-hidden="true" />
-        <p className="text-[13px] text-[#666] dark:text-[#9A9A8A]">
+        <p className="text-[13px] text-foreground/65 dark:text-[#9A9A8A]">
           {t('stripe_refresh_loading')}
         </p>
       </div>

@@ -147,7 +147,7 @@ export function AdminDisputeDetail({ id }: Props) {
       <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-white shadow-sm ring-1 ring-[#E8E4DC] dark:bg-[#131E10] dark:ring-[#1E2E18]">
         <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#C49A1E" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10" /><line x1="12" y1="8" x2="12" y2="12" /><line x1="12" y1="16" x2="12.01" y2="16" /></svg>
       </div>
-      <p className="text-[14px] font-semibold text-[#666] dark:text-[#9A9A8A]">{fetchError ? t('fetch_error') : t('not_found')}</p>
+      <p className="text-[14px] font-semibold text-foreground/65 dark:text-[#9A9A8A]">{fetchError ? t('fetch_error') : t('not_found')}</p>
       <Link href="/admin/disputes" className="rounded-xl bg-[#C49A1E] px-4 py-2 text-[13px] font-bold text-[#0C1209] transition-colors hover:bg-[#B08A14]">
         {t('back_link')}
       </Link>
@@ -273,7 +273,7 @@ export function AdminDisputeDetail({ id }: Props) {
                   <p className="mb-1 text-[11px] font-black uppercase tracking-widest text-[#AAAAAA] dark:text-[#A0A090]">{t('label_reason')}</p>
                   <p className="text-[14px] leading-relaxed text-[#333] dark:text-[#C0C0B0]">{dispute.reason}</p>
                   {dispute.description && (
-                    <p className="mt-2 text-[13px] leading-relaxed text-[#666] dark:text-[#9A9A8A]">{dispute.description}</p>
+                    <p className="mt-2 text-[13px] leading-relaxed text-foreground/65 dark:text-[#9A9A8A]">{dispute.description}</p>
                   )}
                 </div>
               </div>

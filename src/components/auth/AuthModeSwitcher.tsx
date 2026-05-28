@@ -21,7 +21,7 @@ export function AuthModeSwitcher({ mode }: AuthModeSwitcherProps) {
 
   return (
     <div className="w-full flex items-center justify-between gap-3 px-4 py-3 rounded-[10px] bg-[#F5F5F0] dark:bg-[#1A2416] border border-[#E0E0D0] dark:border-[#2A3826] mb-5">
-      <span className="text-[13px] text-[#555] dark:text-Hurryline-muted font-medium leading-snug">
+      <span className="text-[13px] text-foreground/70 dark:text-Hurryline-muted font-medium leading-snug">
         {isMerchantPrompt ? t('merchant_label') : t('client_label')}
       </span>
       <Link

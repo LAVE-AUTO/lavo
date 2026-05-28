@@ -116,7 +116,7 @@ export function StationTopNav({ stationName }: StationTopNavProps) {
             />
           )}
         </Link>
-        <div className="mt-0.5 text-[11px] font-medium text-[#666] dark:text-[#A0A090]">
+        <div className="mt-0.5 text-[11px] font-medium text-foreground/65 dark:text-[#A0A090]">
           {displayName}
         </div>
       </div>

@@ -83,7 +83,7 @@ export function AnalyticsKpiCards({ kpi }: AnalyticsKpiCardsProps) {
           <p className="mb-1 text-[28px] font-black leading-none tabular-nums text-[#1A1A0A] dark:text-[#F0EDD4]">
             {card.value}
           </p>
-          <p className="text-[12px] font-semibold text-[#888] dark:text-[#9A9A8A]">{card.label}</p>
+          <p className="text-[12px] font-semibold text-foreground/55 dark:text-[#9A9A8A]">{card.label}</p>
         </div>
       ))}
     </div>

@@ -32,7 +32,7 @@ export function ServiceVehicleRows({
 
   if (formats.length === 0) {
     return (
-      <p className="rounded-xl border border-dashed border-[#E0DCD0] p-3 text-[13px] text-[#888] dark:border-[#243020] dark:text-[#5A5A4A]">
+      <p className="rounded-xl border border-dashed border-[#E0DCD0] p-3 text-[13px] text-foreground/55 dark:border-[#243020] dark:text-[#5A5A4A]">
         {t('no_formats')}
       </p>
     );
@@ -40,7 +40,7 @@ export function ServiceVehicleRows({
 
   if (visibleEntries.length === 0) {
     return (
-      <p className="rounded-xl border border-dashed border-[#E0DCD0] p-3 text-[13px] text-[#888] dark:border-[#243020] dark:text-[#5A5A4A]">
+      <p className="rounded-xl border border-dashed border-[#E0DCD0] p-3 text-[13px] text-foreground/55 dark:border-[#243020] dark:text-[#5A5A4A]">
         {unavailableMessage || t('format_not_in_list')}
       </p>
     );
@@ -60,7 +60,7 @@ export function ServiceVehicleRows({
 
           {/* Price */}
           <div className="min-w-[110px] flex-1">
-            <p className="mb-1 text-[9px] font-bold uppercase tracking-[0.6px] text-[#888] dark:text-[#5A5A4A]">
+            <p className="mb-1 text-[9px] font-bold uppercase tracking-[0.6px] text-foreground/55 dark:text-[#5A5A4A]">
               {t('vehicle_col_price')}
             </p>
             <TextField
@@ -77,7 +77,7 @@ export function ServiceVehicleRows({
 
           {/* Duration */}
           <div className="min-w-[110px] flex-1">
-            <p className="mb-1 text-[9px] font-bold uppercase tracking-[0.6px] text-[#888] dark:text-[#5A5A4A]">
+            <p className="mb-1 text-[9px] font-bold uppercase tracking-[0.6px] text-foreground/55 dark:text-[#5A5A4A]">
               {t('vehicle_col_duration')}
             </p>
             <TextField

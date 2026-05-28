@@ -66,14 +66,14 @@ function StripeCardForm({ grandTotal, clientSecret, onConfirm, onBack }: StripeC
   return (
     <div className="flex flex-col h-full">
       <div className="flex-1 overflow-y-auto px-1 space-y-5 pb-4">
-        <p className="text-[14px] text-[#555] dark:text-[#B0B0A0]">{t('payment_subtitle')}</p>
+        <p className="text-[14px] text-foreground/70">{t('payment_subtitle')}</p>
 
-        <div className="bg-[#E8E8D8] dark:bg-dark-bg/60 rounded-xl p-5 space-y-4">
+        <div className="bg-surface dark:bg-background/60 rounded-xl p-5 space-y-4">
           <div className="flex items-center gap-2 mb-2">
             <svg width="28" height="18" viewBox="0 0 28 18" fill="none" aria-hidden="true"><rect width="28" height="18" rx="3" fill="#635BFF" /><text x="5" y="13" fontSize="10" fill="white" fontWeight="bold">S</text></svg>
-            <span className="text-[13px] font-bold text-[#555] dark:text-[#A0A090]">{t('payment_secured')}</span>
+            <span className="text-[13px] font-bold text-foreground/70 dark:text-[#A0A090]">{t('payment_secured')}</span>
           </div>
-          <div className="rounded-lg border-2 border-[#D0D0C0] dark:border-tab-inactive bg-white dark:bg-dark-bg px-4 py-3">
+          <div className="rounded-lg border-2 border-border bg-white dark:bg-background px-4 py-3">
             <CardElement
               options={{
                 style: {
@@ -95,12 +95,12 @@ function StripeCardForm({ grandTotal, clientSecret, onConfirm, onBack }: StripeC
         </div>
 
         <div className="bg-gold/10 dark:bg-gold/5 border-2 border-gold rounded-xl p-4 flex justify-between items-center">
-          <span className="text-[15px] font-bold text-[#000C1F] dark:text-[#FFF8EC]">{t('ticket_total')}</span>
+          <span className="text-[15px] font-bold text-foreground">{t('ticket_total')}</span>
           <span className="text-[20px] font-black text-gold">${grandTotal}</span>
         </div>
       </div>
 
-      <div className="border-t border-[#D0D0C0] dark:border-tab-inactive pt-4 flex gap-3">
+      <div className="border-t border-border pt-4 flex gap-3">
         <button
           type="button"
           onClick={onBack}
@@ -114,7 +114,7 @@ function StripeCardForm({ grandTotal, clientSecret, onConfirm, onBack }: StripeC
           disabled={!stripe || processing}
           onClick={handlePay}
           aria-busy={processing}
-          className={`flex-1 py-3 rounded-xl text-[15px] font-black transition-colors cursor-pointer ${stripe && !processing ? 'bg-gold hover:bg-gold-hover text-dark-bg' : 'bg-[#D0D0C0] dark:bg-tab-inactive text-[#888] cursor-not-allowed'}`}
+          className={`flex-1 py-3 rounded-xl text-[15px] font-black transition-colors cursor-pointer ${stripe && !processing ? 'bg-gold hover:bg-gold-hover text-dark-bg' : 'bg-[#D0D0C0] dark:bg-tab-inactive text-foreground/55 cursor-not-allowed'}`}
         >
           {processing ? (
             <span className="flex items-center justify-center gap-2">
@@ -151,14 +151,14 @@ function QueueConfirmForm({ grandTotal, onConfirm, onBack }: { grandTotal: numbe
   return (
     <div className="flex flex-col h-full">
       <div className="flex-1 overflow-y-auto px-1 space-y-5 pb-4">
-        <p className="text-[14px] text-[#555] dark:text-[#B0B0A0]">{t('payment_queue_subtitle')}</p>
+        <p className="text-[14px] text-foreground/70">{t('payment_queue_subtitle')}</p>
         <div className="bg-gold/10 dark:bg-gold/5 border-2 border-gold rounded-xl p-4 flex justify-between items-center">
-          <span className="text-[15px] font-bold text-[#000C1F] dark:text-[#FFF8EC]">{t('ticket_total')}</span>
+          <span className="text-[15px] font-bold text-foreground">{t('ticket_total')}</span>
           <span className="text-[20px] font-black text-gold">${grandTotal}</span>
         </div>
       </div>
 
-      <div className="border-t border-[#D0D0C0] dark:border-tab-inactive pt-4 flex gap-3">
+      <div className="border-t border-border pt-4 flex gap-3">
         <button
           type="button"
           onClick={onBack}
@@ -172,7 +172,7 @@ function QueueConfirmForm({ grandTotal, onConfirm, onBack }: { grandTotal: numbe
           disabled={processing}
           onClick={handleConfirm}
           aria-busy={processing}
-          className={`flex-1 py-3 rounded-xl text-[15px] font-black transition-colors cursor-pointer ${!processing ? 'bg-gold hover:bg-gold-hover text-dark-bg' : 'bg-[#D0D0C0] dark:bg-tab-inactive text-[#888] cursor-not-allowed'}`}
+          className={`flex-1 py-3 rounded-xl text-[15px] font-black transition-colors cursor-pointer ${!processing ? 'bg-gold hover:bg-gold-hover text-dark-bg' : 'bg-[#D0D0C0] dark:bg-tab-inactive text-foreground/55 cursor-not-allowed'}`}
         >
           {processing ? (
             <span className="flex items-center justify-center gap-2">
@@ -205,7 +205,7 @@ export function PaymentStep({ grandTotal, clientSecret, onConfirm, onBack }: Pay
         <div className="flex-1 flex items-center justify-center py-8 text-center">
           <p className="text-[14px] text-Hurryline-error">{t('error_stripe_unavailable')}</p>
         </div>
-        <div className="border-t border-[#D0D0C0] dark:border-tab-inactive pt-4">
+        <div className="border-t border-border pt-4">
           <button
             type="button"
             onClick={onBack}
