@@ -1,5 +1,6 @@
 'use client';
 
+import { useState } from 'react';
 import { useTranslations } from 'next-intl';
 
 export function HeroPhoneMockup() {
@@ -67,11 +68,10 @@ export function HeroPhoneMockup() {
             price={t('station_1_price')}
             distance={t('station_1_distance')}
             wait={t('station_1_wait')}
-            tags={['Extérieur', 'Intérieur']}
-            open={t('open')}
+            tags={['Pack Premium', 'Lavage Complet']}
             showBook
             bookLabel={t('book')}
-            photoBg="bg-gradient-to-br from-[#1a3a5c] via-[#1e5280] to-[#0f2d4a]"
+            imgSrc="https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=264&h=80&fit=crop&auto=format&q=80"
           />
 
           {/* Station card 2 */}
@@ -82,11 +82,10 @@ export function HeroPhoneMockup() {
             price={t('station_2_price')}
             distance={t('station_2_distance')}
             wait={t('station_2_wait')}
-            tags={['Extérieur']}
-            open={t('open')}
+            tags={['Mini-Lavage']}
             showBook={false}
             bookLabel={t('book')}
-            photoBg="bg-gradient-to-br from-[#1c3a28] via-[#24522e] to-[#152a1c]"
+            imgSrc="https://images.unsplash.com/photo-1600880292203-757bb62b4baf?w=264&h=80&fit=crop&auto=format&q=80"
           />
         </div>
       </div>
@@ -102,41 +101,42 @@ interface PhoneStationCardProps {
   distance: string;
   wait: string;
   tags: string[];
-  open: string;
   showBook: boolean;
   bookLabel: string;
-  photoBg: string;
+  imgSrc: string;
 }
 
-function PhoneStationCard({ name, rating, reviews, price, distance, wait, tags, showBook, bookLabel, photoBg }: PhoneStationCardProps) {
+function PhoneStationCard({ name, rating, reviews, price, distance, wait, tags, showBook, bookLabel, imgSrc }: PhoneStationCardProps) {
+  const [imgFailed, setImgFailed] = useState(false);
+
   return (
     /* Force light-mode colors — card lives inside a dark phone frame and must always contrast against it */
     <article className="flex flex-col bg-[#E8E8D8] rounded-[14px] overflow-hidden border border-[#D0D0C0] group hover:border-gold/30 transition-all duration-300">
-      {/* Photo zone — gradient image with car icon, mirrors StationCard image area */}
-      <div className={`relative h-[64px] ${photoBg} flex items-center justify-center overflow-hidden`}>
-        <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.4)" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-          <path d="M3 17l2-7h14l2 7" />
-          <path d="M5 17v2h2v-2M17 17v2h2v-2" />
-          <path d="M8 10V7a1 1 0 011-1h6a1 1 0 011 1v3" />
-          <circle cx="7.5" cy="17" r="1.5" fill="rgba(255,255,255,0.4)" />
-          <circle cx="16.5" cy="17" r="1.5" fill="rgba(255,255,255,0.4)" />
-        </svg>
+      {/* Photo zone — mirrors StationCard image area */}
+      <div className="relative h-[80px] bg-[#D0D0C0] flex items-center justify-center overflow-hidden">
+        {!imgFailed ? (
+          <img
+            src={imgSrc}
+            alt={name}
+            onError={() => setImgFailed(true)}
+            className="w-full h-full object-cover group-hover:scale-[1.01] transition-transform duration-300"
+          />
+        ) : (
+          <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#9A9A8A" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+            <path d="M3 17l2-7h14l2 7" />
+            <path d="M5 17v2h2v-2M17 17v2h2v-2" />
+            <path d="M8 10V7a1 1 0 011-1h6a1 1 0 011 1v3" />
+            <circle cx="7.5" cy="17" r="1.5" fill="#9A9A8A" />
+            <circle cx="16.5" cy="17" r="1.5" fill="#9A9A8A" />
+          </svg>
+        )}
 
         {/* Name overlay at bottom */}
-        <div className="absolute inset-x-0 bottom-0 h-8 bg-gradient-to-t from-black/70 to-transparent flex items-end px-2.5 pb-1.5 pointer-events-none">
+        <div className="absolute inset-x-0 bottom-0 h-8 bg-gradient-to-t from-black/60 to-transparent flex items-end px-2.5 pb-1.5 pointer-events-none">
           <span className="text-white text-[10px] font-bold leading-tight truncate drop-shadow">
             {name}
           </span>
         </div>
-
-        {/* Distance badge top-left */}
-        <span className="absolute top-1.5 left-1.5 flex items-center gap-0.5 rounded-full bg-black/60 px-1.5 py-0.5 text-[8px] font-bold text-white">
-          <svg width="6" height="6" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-            <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z" />
-            <circle cx="12" cy="10" r="3" />
-          </svg>
-          {distance}
-        </span>
       </div>
 
       {/* Card body — mirrors StationCard's p-4 section, always light */}
