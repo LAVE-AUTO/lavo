@@ -11,7 +11,7 @@ export function BayFilter({ bays, selectedBay, onBayChange }: BayFilterProps) {
 
   return (
     <div>
-      <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-foreground/65 dark:text-[#A0A090]">{t('filter_all_posts')}</p>
+      <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-foreground/65 dark:text-[#B0BFB1]">{t('filter_all_posts')}</p>
       <div className="flex flex-wrap gap-2">
         <button
           type="button"

@@ -115,7 +115,7 @@ function MiniCalendar({
               className={[
                 'flex h-8 w-full items-center justify-center rounded-lg text-[12px] font-semibold transition-colors',
                 isSelected
-                  ? 'bg-[#DDAF3B] text-[#0C1209]'
+                  ? 'bg-[#DDAF3B] text-[#001201]'
                   : isToday
                     ? 'ring-1 ring-[#DDAF3B] text-[#DDAF3B] hover:bg-[#DDAF3B]/10'
                     : 'text-[#001201] hover:bg-[#F0EDE4] dark:text-[#FFF9EC] dark:hover:bg-dark-surface',
@@ -172,7 +172,7 @@ export function HoursExceptions({ exceptions, saving = false, onAdd, onDelete, d
   }
 
   return (
-    <section className="rounded-2xl border border-[#E8E4DC] bg-white p-6 shadow-sm dark:border-[#1A2A14] dark:bg-[#182214]">
+    <section className="rounded-2xl border border-[#FFF9EC] bg-white p-6 shadow-sm dark:border-[#1A2A14] dark:bg-[#182214]">
       <div className="mb-4 flex items-center justify-between gap-3">
         <h3 className="text-[11px] font-bold uppercase tracking-[1.5px] text-[#DDAF3B]">
           {t('hours_exceptions_title')}
@@ -194,14 +194,14 @@ export function HoursExceptions({ exceptions, saving = false, onAdd, onDelete, d
         )}
       </div>
 
-      <p className="mb-4 text-[12px] leading-snug text-foreground/55 dark:text-[#9A9A8A]">
+      <p className="mb-4 text-[12px] leading-snug text-foreground/55 dark:text-[#B0BFB1]">
         {t('hours_exceptions_hint')}
       </p>
 
       {showForm && (
         <form
           onSubmit={handleSubmit}
-          className="mb-4 flex flex-col gap-4 rounded-xl border border-[#E0DCD0] bg-[#F7F6F2] p-4 dark:border-dark-surface dark:bg-[#001201]"
+          className="mb-4 flex flex-col gap-4 rounded-xl border border-[#FFF9EC] bg-[#FFF9EC] p-4 dark:border-dark-surface dark:bg-[#001201]"
         >
           <p className="text-[12px] font-bold text-[#001201] dark:text-[#FFF9EC]">
             {t('hours_exceptions_add_title')}
@@ -210,7 +210,7 @@ export function HoursExceptions({ exceptions, saving = false, onAdd, onDelete, d
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-[1fr_1fr]">
             {/* Calendar picker */}
             <div className="flex flex-col gap-1.5">
-              <label className="text-[11px] font-bold uppercase tracking-[0.5px] text-foreground/55 dark:text-[#9A9A8A]">
+              <label className="text-[11px] font-bold uppercase tracking-[0.5px] text-foreground/55 dark:text-[#B0BFB1]">
                 {t('hours_exceptions_date_label')}
               </label>
               <div
@@ -220,7 +220,7 @@ export function HoursExceptions({ exceptions, saving = false, onAdd, onDelete, d
                     ? 'border-red-400 dark:border-red-700'
                     : date
                       ? 'border-[#DDAF3B]'
-                      : 'border-[#E0DCD0] dark:border-dark-surface',
+                      : 'border-[#FFF9EC] dark:border-dark-surface',
                 ].join(' ')}
               >
                 <MiniCalendar
@@ -245,7 +245,7 @@ export function HoursExceptions({ exceptions, saving = false, onAdd, onDelete, d
             {/* Reason + actions */}
             <div className="flex flex-col justify-between gap-3">
               <div className="flex flex-col gap-1.5">
-                <label className="text-[11px] font-bold uppercase tracking-[0.5px] text-foreground/55 dark:text-[#9A9A8A]">
+                <label className="text-[11px] font-bold uppercase tracking-[0.5px] text-foreground/55 dark:text-[#B0BFB1]">
                   {t('hours_exceptions_reason_label')}
                 </label>
                 <TextField
@@ -263,14 +263,14 @@ export function HoursExceptions({ exceptions, saving = false, onAdd, onDelete, d
                   type="button"
                   onClick={handleCancel}
                   disabled={submitting}
-                  className="rounded-xl border border-[#E0DCD0] px-4 py-2 text-[12px] font-semibold text-foreground/65 transition-colors hover:bg-[#F0EDE0] disabled:opacity-50 dark:border-dark-surface dark:text-[#9A9A8A]"
+                  className="rounded-xl border border-[#FFF9EC] px-4 py-2 text-[12px] font-semibold text-foreground/65 transition-colors hover:bg-[#F0EDE0] disabled:opacity-50 dark:border-dark-surface dark:text-[#B0BFB1]"
                 >
                   {t('hours_exceptions_add_cancel')}
                 </button>
                 <button
                   type="submit"
                   disabled={submitting}
-                  className="rounded-xl bg-[#DDAF3B] px-4 py-2 text-[12px] font-bold text-[#0C1209] transition-opacity hover:opacity-85 disabled:opacity-50"
+                  className="rounded-xl bg-[#DDAF3B] px-4 py-2 text-[12px] font-bold text-[#001201] transition-opacity hover:opacity-85 disabled:opacity-50"
                 >
                   {submitting ? '…' : t('hours_exceptions_add_submit')}
                 </button>
@@ -281,14 +281,14 @@ export function HoursExceptions({ exceptions, saving = false, onAdd, onDelete, d
       )}
 
       {exceptions.length === 0 ? (
-        <div className="flex flex-col items-center gap-2 rounded-xl border border-dashed border-[#D8D4C8] bg-[#F7F6F2] px-4 py-8 dark:border-dark-surface dark:bg-[#001201]">
+        <div className="flex flex-col items-center gap-2 rounded-xl border border-dashed border-[#D8D4C8] bg-[#FFF9EC] px-4 py-8 dark:border-dark-surface dark:bg-[#001201]">
           <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#BBBBAA" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
             <rect x="3" y="4" width="18" height="18" rx="2" ry="2" />
             <line x1="16" y1="2" x2="16" y2="6" />
             <line x1="8" y1="2" x2="8" y2="6" />
             <line x1="3" y1="10" x2="21" y2="10" />
           </svg>
-          <p className="text-[12px] font-semibold text-foreground/55 dark:text-[#9A9A8A]">
+          <p className="text-[12px] font-semibold text-foreground/55 dark:text-[#B0BFB1]">
             {t('hours_exceptions_empty')}
           </p>
         </div>
@@ -300,14 +300,14 @@ export function HoursExceptions({ exceptions, saving = false, onAdd, onDelete, d
                 <span className="font-mono text-[13px] font-bold text-[#001201] dark:text-[#FFF9EC]">
                   {ex.exception_date}
                 </span>
-                <span className="text-[12px] text-foreground/55 dark:text-[#9A9A8A]">{ex.reason}</span>
+                <span className="text-[12px] text-foreground/55 dark:text-[#B0BFB1]">{ex.reason}</span>
               </div>
               <button
                 type="button"
                 onClick={() => handleDelete(ex.id)}
                 disabled={disabled || deletingId === ex.id}
                 aria-label={t('hours_exceptions_delete_aria')}
-                className="flex h-7 w-7 shrink-0 items-center justify-center rounded-[8px] border border-[#E0DCD0] text-[#AAAAAA] transition-colors hover:border-red-300 hover:bg-red-50 hover:text-red-500 disabled:cursor-not-allowed disabled:opacity-50 dark:border-dark-surface dark:hover:border-red-800/50 dark:hover:bg-red-950/20 dark:hover:text-red-400"
+                className="flex h-7 w-7 shrink-0 items-center justify-center rounded-[8px] border border-[#FFF9EC] text-[#AAAAAA] transition-colors hover:border-red-300 hover:bg-red-50 hover:text-red-500 disabled:cursor-not-allowed disabled:opacity-50 dark:border-dark-surface dark:hover:border-red-800/50 dark:hover:bg-red-950/20 dark:hover:text-red-400"
               >
                 {deletingId === ex.id ? (
                   <svg className="animate-spin" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" aria-hidden="true">

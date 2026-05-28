@@ -110,12 +110,12 @@ export function AdminTopNav({ onToggleSidebar }: AdminTopNavProps) {
   }
 
   const notifPanelStyle = {
-    backgroundColor: isDark ? '#121A10' : '#FFFDF8',
-    color: isDark ? '#F3F1E8' : '#1B1B18',
+    backgroundColor: isDark ? '#001201' : '#FFF9EC',
+    color: isDark ? '#FFF9EC' : '#001A05',
   } as const;
 
   return (
-    <header className="flex h-14 flex-shrink-0 items-center justify-between border-b border-[#E0DCD0] bg-white px-6 dark:border-[#1A2A14] dark:bg-[#111A0E]">
+    <header className="flex h-14 flex-shrink-0 items-center justify-between border-b border-[#FFF9EC] bg-white px-6 dark:border-[#1A2A14] dark:bg-[#111A0E]">
 
       <div className="flex items-center gap-3">
         {/* Sidebar toggle - visible below lg */}
@@ -126,7 +126,7 @@ export function AdminTopNav({ onToggleSidebar }: AdminTopNavProps) {
             className="flex h-9 w-9 items-center justify-center rounded-full bg-[#EEE9D8] transition-opacity hover:opacity-80 dark:bg-[#182214] lg:hidden"
             aria-label="Menu"
           >
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-foreground/65 dark:text-[#A0A090]">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-foreground/65 dark:text-[#B0BFB1]">
               <line x1="3" y1="6" x2="21" y2="6" /><line x1="3" y1="12" x2="21" y2="12" /><line x1="3" y1="18" x2="21" y2="18" />
             </svg>
           </button>
@@ -187,19 +187,19 @@ export function AdminTopNav({ onToggleSidebar }: AdminTopNavProps) {
               style={notifPanelStyle}
             >
               <div className="mb-2 flex items-center justify-between">
-                <div className="text-sm font-semibold" style={{ color: isDark ? '#F3F1E8' : '#1B1B18' }}>{t('notif_title')}</div>
+                <div className="text-sm font-semibold" style={{ color: isDark ? '#FFF9EC' : '#001A05' }}>{t('notif_title')}</div>
                 <button
                   type="button"
                   onClick={markAllRead}
                   className="text-xs font-semibold hover:underline"
-                  style={{ color: isDark ? '#E4C56A' : '#6B5A23' }}
+                  style={{ color: isDark ? '#DDAF3B' : '#DDAF3B' }}
                 >
                   {t('notif_mark_all_read')}
                 </button>
               </div>
-              {loading ? <div className="py-4 text-sm" style={{ color: isDark ? '#C9C4B2' : '#5E5A4D' }}>{t('notif_loading')}</div> : null}
-              {!loading && errorLoading ? <div className="py-4 text-sm" style={{ color: isDark ? '#FF9E8D' : '#8C3A2B' }}>{t('notif_error')}</div> : null}
-              {!loading && !errorLoading && items.length === 0 ? <div className="py-4 text-sm" style={{ color: isDark ? '#C9C4B2' : '#5E5A4D' }}>{t('notif_empty')}</div> : null}
+              {loading ? <div className="py-4 text-sm" style={{ color: isDark ? '#B0BFB1' : '#B0BFB1' }}>{t('notif_loading')}</div> : null}
+              {!loading && errorLoading ? <div className="py-4 text-sm" style={{ color: isDark ? '#391C01' : '#391C01' }}>{t('notif_error')}</div> : null}
+              {!loading && !errorLoading && items.length === 0 ? <div className="py-4 text-sm" style={{ color: isDark ? '#B0BFB1' : '#B0BFB1' }}>{t('notif_empty')}</div> : null}
               {!loading && items.length > 0 ? (
                 <div className="max-h-96 space-y-2 overflow-auto">
                   {items.map((item) => (
@@ -208,12 +208,12 @@ export function AdminTopNav({ onToggleSidebar }: AdminTopNavProps) {
                       className="rounded-lg p-2"
                       style={{
                         backgroundColor: isDark
-                          ? (item.is_read ? '#1A2318' : '#242113')
-                          : (item.is_read ? '#F4F1E8' : '#EEE7D2'),
+                          ? (item.is_read ? '#001A05' : '#001A05')
+                          : (item.is_read ? '#FFF9EC' : '#FFEECA'),
                       }}
                     >
-                      <div className="text-xs font-semibold" style={{ color: isDark ? '#F3F1E8' : '#1F1E19' }}>{item.title ?? t('notif_default_title')}</div>
-                      <div className="mt-0.5 text-xs" style={{ color: isDark ? '#D2CEBE' : '#4F4C40' }}>{item.body ?? '-'}</div>
+                      <div className="text-xs font-semibold" style={{ color: isDark ? '#FFF9EC' : '#001A05' }}>{item.title ?? t('notif_default_title')}</div>
+                      <div className="mt-0.5 text-xs" style={{ color: isDark ? '#B0BFB1' : '#B0BFB1' }}>{item.body ?? '-'}</div>
                       {item.created_at && (
                         <div className="mt-1 text-[11px]" style={{ color: isDark ? '#A9A38F' : '#7A7668' }}>
                           {new Date(item.created_at).toLocaleString(locale === 'en' ? 'en-CA' : 'fr-CA')}
@@ -221,7 +221,7 @@ export function AdminTopNav({ onToggleSidebar }: AdminTopNavProps) {
                       )}
                       <div className="mt-2 flex items-center gap-3">
                         {item.action_url && (
-                          <Link href={item.action_url} className="text-xs font-semibold hover:underline" style={{ color: isDark ? '#E4C56A' : '#6B5A23' }}>
+                          <Link href={item.action_url} className="text-xs font-semibold hover:underline" style={{ color: isDark ? '#DDAF3B' : '#DDAF3B' }}>
                             {t('notif_open_cta')}
                           </Link>
                         )}
@@ -239,7 +239,7 @@ export function AdminTopNav({ onToggleSidebar }: AdminTopNavProps) {
                           type="button"
                           onClick={() => removeOne(item.id)}
                           className="text-xs font-semibold hover:underline"
-                          style={{ color: isDark ? '#FF9E8D' : '#8C3A2B' }}
+                          style={{ color: isDark ? '#391C01' : '#391C01' }}
                         >
                           {t('notif_delete')}
                         </button>
@@ -250,7 +250,7 @@ export function AdminTopNav({ onToggleSidebar }: AdminTopNavProps) {
                     <button
                       type="button"
                       onClick={loadMoreNotifications}
-                      className="w-full rounded-lg border border-[#D8D4C8] px-3 py-2 text-xs font-semibold text-[#6B5A23] transition-colors hover:bg-[#F5F3EE] dark:border-[#001A05] dark:text-[#E4C56A] dark:hover:bg-[#1A2318]"
+                      className="w-full rounded-lg border border-[#D8D4C8] px-3 py-2 text-xs font-semibold text-[#DDAF3B] transition-colors hover:bg-[#F5F3EE] dark:border-[#001A05] dark:text-[#DDAF3B] dark:hover:bg-[#001A05]"
                     >
                       {t('notif_load_more')}
                     </button>

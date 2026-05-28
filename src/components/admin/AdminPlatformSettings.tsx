@@ -21,11 +21,11 @@ function NumericField({
 }) {
   return (
     <div className="flex flex-col gap-2">
-      <label className="text-[12px] font-black uppercase tracking-wider text-[#A0A090] dark:text-[#9A9A8A]">{label}</label>
+      <label className="text-[12px] font-black uppercase tracking-wider text-[#B0BFB1] dark:text-[#B0BFB1]">{label}</label>
       <div className={[
         'flex overflow-hidden rounded-[10px] border-2 transition-all duration-200',
         readOnly
-          ? 'border-[#E8E4D8] bg-[#F5F2EB] dark:border-[#1E2E18] dark:bg-[#001201]'
+          ? 'border-[#FFF9EC] bg-[#F5F2EB] dark:border-[#1E2E18] dark:bg-[#001201]'
           : 'border-[#D8D4C8] bg-white hover:border-[#C4A830]/60 focus-within:border-[#DDAF3B] focus-within:shadow-[0_0_0_4px_rgba(221, 175, 59,0.12)] dark:border-[#001A05] dark:bg-[#001201] dark:hover:border-[#3A5030] dark:focus-within:border-[#DDAF3B]',
       ].join(' ')}>
         <input
@@ -36,14 +36,14 @@ function NumericField({
           className={[
             'flex-1 bg-transparent px-4 py-3 text-[18px] font-bold outline-none',
             '[appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none',
-            readOnly ? 'cursor-not-allowed text-[#9A9A8A] dark:text-[#A0A090]' : 'text-[#001201] dark:text-[#FFF9EC]',
+            readOnly ? 'cursor-not-allowed text-[#B0BFB1] dark:text-[#B0BFB1]' : 'text-[#001201] dark:text-[#FFF9EC]',
           ].join(' ')}
         />
-        <span className="flex items-center border-l border-[#E8E4D8] bg-[#F0EDE0] px-3.5 text-[13px] font-black text-[#8A8A6A] dark:border-[#001A05] dark:bg-[#141E10] dark:text-[#A0A090]">
+        <span className="flex items-center border-l border-[#FFF9EC] bg-[#F0EDE0] px-3.5 text-[13px] font-black text-[#8A8A6A] dark:border-[#001A05] dark:bg-[#141E10] dark:text-[#B0BFB1]">
           {unit}
         </span>
       </div>
-      {hint && <p className="text-[12px] leading-relaxed text-[#AAAAAA] dark:text-[#A0A090]">{hint}</p>}
+      {hint && <p className="text-[12px] leading-relaxed text-[#AAAAAA] dark:text-[#B0BFB1]">{hint}</p>}
     </div>
   );
 }
@@ -55,14 +55,14 @@ function EmailField({
 }) {
   return (
     <div className="flex flex-col gap-2">
-      <label className="text-[12px] font-black uppercase tracking-wider text-[#A0A090] dark:text-[#9A9A8A]">{label}</label>
+      <label className="text-[12px] font-black uppercase tracking-wider text-[#B0BFB1] dark:text-[#B0BFB1]">{label}</label>
       <input
         type="email" value={value}
         onChange={(e) => onChange(e.target.value)}
         placeholder="email@exemple.com"
         className="rounded-[10px] border-2 border-[#D8D4C8] bg-white px-4 py-3 text-[14px] font-semibold text-[#001201] outline-none transition-all hover:border-[#C4A830]/60 focus:border-[#DDAF3B] focus:shadow-[0_0_0_4px_rgba(221, 175, 59,0.12)] dark:border-[#001A05] dark:bg-[#001201] dark:text-[#FFF9EC] dark:hover:border-[#3A5030] dark:focus:border-[#DDAF3B] placeholder:text-[#CCCCBB] dark:placeholder:text-[#505040]"
       />
-      {hint && <p className="text-[12px] leading-relaxed text-[#AAAAAA] dark:text-[#A0A090]">{hint}</p>}
+      {hint && <p className="text-[12px] leading-relaxed text-[#AAAAAA] dark:text-[#B0BFB1]">{hint}</p>}
     </div>
   );
 }
@@ -335,19 +335,19 @@ export function AdminPlatformSettings() {
     <form onSubmit={handleSave} className="flex min-h-full flex-col">
 
       {/* Header */}
-      <div className="shrink-0 flex items-center justify-between border-b border-[#E0DCD0] bg-[#F5F5EE] px-6 py-4 dark:border-[#1A2A14] dark:bg-[#0C1209]">
+      <div className="shrink-0 flex items-center justify-between border-b border-[#FFF9EC] bg-[#FFF9EC] px-6 py-4 dark:border-[#1A2A14] dark:bg-[#001201]">
         <div>
           <h1 className="text-[18px] font-black text-[#001201] dark:text-[#FFF9EC]">{t('page_title')}</h1>
-          <p className="text-[13px] text-foreground/55 dark:text-[#9A9A8A]">{t('page_subtitle')}</p>
+          <p className="text-[13px] text-foreground/55 dark:text-[#B0BFB1]">{t('page_subtitle')}</p>
         </div>
         <div className="flex items-center gap-3">
           {isDirty && !saving && (
-            <span className="text-[12px] font-semibold text-[#AAAAAA] dark:text-[#A0A090]">{t('label_unsaved')}</span>
+            <span className="text-[12px] font-semibold text-[#AAAAAA] dark:text-[#B0BFB1]">{t('label_unsaved')}</span>
           )}
           <button type="submit" disabled={saving || !isDirty}
-            className="relative flex items-center gap-2 rounded-[10px] bg-[#DDAF3B] px-6 py-2.5 text-[13px] font-bold text-[#0C1209] shadow-sm transition-all duration-200 hover:bg-[#D4A830] hover:shadow-md active:scale-[0.98] disabled:opacity-50">
+            className="relative flex items-center gap-2 rounded-[10px] bg-[#DDAF3B] px-6 py-2.5 text-[13px] font-bold text-[#001201] shadow-sm transition-all duration-200 hover:bg-[#D4A830] hover:shadow-md active:scale-[0.98] disabled:opacity-50">
             {saving
-              ? <><span className="h-3.5 w-3.5 animate-spin rounded-full border-2 border-[#0C1209] border-t-transparent" />{t('btn_saving')}</>
+              ? <><span className="h-3.5 w-3.5 animate-spin rounded-full border-2 border-[#001201] border-t-transparent" />{t('btn_saving')}</>
               : t('btn_save')}
             {isDirty && !saving && (
               <span className="absolute -right-1 -top-1 h-2.5 w-2.5 animate-pulse rounded-full bg-[#EF4444] ring-2 ring-white dark:ring-[#001A05]" />
@@ -356,7 +356,7 @@ export function AdminPlatformSettings() {
         </div>
       </div>
 
-      <div className="flex-1 overflow-y-auto bg-[#F5F5EE] dark:bg-[#0C1209]">
+      <div className="flex-1 overflow-y-auto bg-[#FFF9EC] dark:bg-[#001201]">
       <div className="grid auto-rows-min gap-5 p-6 md:grid-cols-2 xl:grid-cols-3">
 
         {/* ── Groupe A — Annulation ── */}
@@ -402,7 +402,7 @@ export function AdminPlatformSettings() {
               <span className="text-[#DDAF3B]">{t('label_platform')} · {platformPct}%</span>
               <span className="text-[#5A8A50] dark:text-[#7AAA6A]">{t('label_station')} · {stationPct}%</span>
             </div>
-            <p className="mt-1 text-[11px] text-[#AAAAAA] dark:text-[#A0A090]">{t('hint_penalty_split_note')}</p>
+            <p className="mt-1 text-[11px] text-[#AAAAAA] dark:text-[#B0BFB1]">{t('hint_penalty_split_note')}</p>
           </div>
         </SectionCard>
 

@@ -22,7 +22,7 @@ interface Props {
 const CONFIRM_COLORS: Record<ConfirmDialogVariant, string> = {
   danger:  'bg-[#EF4444] text-white hover:bg-[#DC2626]',
   warning: 'bg-[#FF8800] text-white hover:bg-[#E07700]',
-  default: 'bg-[#DDAF3B] text-[#0C1209] hover:opacity-90',
+  default: 'bg-[#DDAF3B] text-[#001201] hover:opacity-90',
 };
 
 const ICON: Record<ConfirmDialogVariant, { path: string; color: string }> = {
@@ -84,7 +84,7 @@ export function ConfirmDialog({
       role="alertdialog"
       onClick={(e) => { if (!blocking && e.target === e.currentTarget) onCancel(); }}
     >
-      <div className="w-full max-w-[340px] rounded-xl border border-[#E8E4DC] bg-white shadow-2xl dark:border-[#1A2A14] dark:bg-[#182214] animate-fade-in-up">
+      <div className="w-full max-w-[340px] rounded-xl border border-[#FFF9EC] bg-white shadow-2xl dark:border-[#1A2A14] dark:bg-[#182214] animate-fade-in-up">
         <div className="flex flex-col items-center gap-3 px-6 pb-5 pt-6 text-center">
           {/* Icon */}
           <div className={`flex h-11 w-11 items-center justify-center rounded-full ${
@@ -110,7 +110,7 @@ export function ConfirmDialog({
             type="button"
             onClick={onCancel}
             disabled={loading}
-            className="flex-1 rounded-[10px] border border-[#D8D4C8] py-2.5 text-[13px] font-medium text-[#5A5A4A] transition-opacity hover:opacity-70 disabled:opacity-40 dark:border-[#001A05] dark:text-[#9A9A8A]"
+            className="flex-1 rounded-[10px] border border-[#D8D4C8] py-2.5 text-[13px] font-medium text-[#5A5A4A] transition-opacity hover:opacity-70 disabled:opacity-40 dark:border-[#001A05] dark:text-[#B0BFB1]"
           >
             {cancelLabel}
           </button>

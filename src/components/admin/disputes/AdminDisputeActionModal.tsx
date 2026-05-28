@@ -57,7 +57,7 @@ export function AdminDisputeActionModal({ mode, maxAmount, busy, onConfirm, onCl
       <div className="absolute inset-0 bg-black/40 backdrop-blur-[2px]" onClick={() => !busy && onClose()} />
 
       {/* Panel */}
-      <div className="relative z-10 w-full max-w-[420px] animate-fade-in-up overflow-hidden rounded-2xl border border-[#E8E4DC] bg-white shadow-2xl dark:border-[#1E2E18] dark:bg-[#001201]">
+      <div className="relative z-10 w-full max-w-[420px] animate-fade-in-up overflow-hidden rounded-2xl border border-[#FFF9EC] bg-white shadow-2xl dark:border-[#1E2E18] dark:bg-[#001201]">
         {/* Header */}
         <div className="flex items-center justify-between border-b border-[#F0EDE6] px-6 py-4 dark:border-[#1A2A14]">
           <h2 className="text-[15px] font-black text-[#001201] dark:text-[#FFF9EC]">{title}</h2>
@@ -70,27 +70,27 @@ export function AdminDisputeActionModal({ mode, maxAmount, busy, onConfirm, onCl
         {/* Body */}
         <div className="px-6 py-5">
           {mode === 'refund_full' && (
-            <p className="text-[13px] leading-relaxed text-foreground/65 dark:text-[#9A9A8A]">{t('modal_refund_full_hint')}</p>
+            <p className="text-[13px] leading-relaxed text-foreground/65 dark:text-[#B0BFB1]">{t('modal_refund_full_hint')}</p>
           )}
 
           {mode === 'refund_partial' && (
             <div className="flex flex-col gap-2">
-              <label className="text-[13px] font-bold text-foreground/70 dark:text-[#9A9A8A]">{t('modal_amount_label')}</label>
+              <label className="text-[13px] font-bold text-foreground/70 dark:text-[#B0BFB1]">{t('modal_amount_label')}</label>
               <div className={`flex items-center overflow-hidden rounded-lg border transition-all ${error ? 'border-red-400' : 'border-[#D8D4C8] focus-within:border-[#DDAF3B] focus-within:shadow-[0_0_0_3px_rgba(221, 175, 59,0.10)] dark:border-[#001A05] dark:focus-within:border-[#DDAF3B]'}`}>
                 <input ref={inputRef as React.RefObject<HTMLInputElement>} type="number" min="0.01" step="0.01" max={maxAmount}
                   value={amount} onChange={(e) => setAmount(e.target.value)} placeholder={t('modal_amount_placeholder')}
                   className="flex-1 bg-transparent px-3 py-2 text-[13px] text-[#001201] outline-none [appearance:textfield] dark:text-[#FFF9EC]" />
-                <span className="shrink-0 border-l border-[#E8E4DC] bg-[#F9F8F5] px-3 py-2 text-[12px] font-bold text-foreground/55 dark:border-[#1E2E18] dark:bg-[#131E10]">CAD</span>
+                <span className="shrink-0 border-l border-[#FFF9EC] bg-[#F9F8F5] px-3 py-2 text-[12px] font-bold text-foreground/55 dark:border-[#1E2E18] dark:bg-[#131E10]">CAD</span>
               </div>
               {maxAmount !== undefined && (
-                <p className="text-[12px] text-[#BBBBAA] dark:text-[#A0A090]">Max : {maxAmount.toLocaleString('fr-CA', { style: 'currency', currency: 'CAD' })}</p>
+                <p className="text-[12px] text-[#BBBBAA] dark:text-[#B0BFB1]">Max : {maxAmount.toLocaleString('fr-CA', { style: 'currency', currency: 'CAD' })}</p>
               )}
             </div>
           )}
 
           {mode === 'close_dispute' && (
             <div className="flex flex-col gap-2">
-              <label className="text-[13px] font-bold text-foreground/70 dark:text-[#9A9A8A]">{t('modal_reason_label')}</label>
+              <label className="text-[13px] font-bold text-foreground/70 dark:text-[#B0BFB1]">{t('modal_reason_label')}</label>
               <textarea ref={inputRef as React.RefObject<HTMLTextAreaElement>}
                 value={reason} onChange={(e) => setReason(e.target.value)} rows={4} maxLength={500}
                 placeholder={t('modal_reason_placeholder')}
@@ -104,7 +104,7 @@ export function AdminDisputeActionModal({ mode, maxAmount, busy, onConfirm, onCl
         {/* Footer */}
         <div className="flex justify-end gap-2 border-t border-[#F0EDE6] px-6 py-4 dark:border-[#1A2A14]">
           <button type="button" onClick={onClose} disabled={busy}
-            className="rounded-lg border border-[#D8D4C8] px-4 py-2 text-[13px] font-semibold text-foreground/65 transition-colors hover:bg-[#F5F3EE] disabled:opacity-50 dark:border-[#001A05] dark:text-[#9A9A8A]">
+            className="rounded-lg border border-[#D8D4C8] px-4 py-2 text-[13px] font-semibold text-foreground/65 transition-colors hover:bg-[#F5F3EE] disabled:opacity-50 dark:border-[#001A05] dark:text-[#B0BFB1]">
             {t('btn_cancel')}
           </button>
           <button type="button" onClick={handleSubmit} disabled={busy}

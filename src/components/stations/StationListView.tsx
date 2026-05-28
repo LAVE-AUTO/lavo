@@ -306,7 +306,7 @@ export function StationListView({ washTypes, vehicleFormats }: StationListViewPr
     <div className="animate-fade-in">
 
       {/* Sticky controls */}
-      <div className="sticky top-[58px] z-30 bg-[#EDEDED] dark:bg-background pb-3 -mx-4 px-4 sm:-mx-6 sm:px-6 pt-3 space-y-3">
+      <div className="sticky top-[58px] z-30 bg-[#FFF9EC] dark:bg-background pb-3 -mx-4 px-4 sm:-mx-6 sm:px-6 pt-3 space-y-3">
         {/* Unified search row + filter button */}
         <div className="flex gap-2">
           <div className="flex-1">

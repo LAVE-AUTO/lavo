@@ -57,14 +57,14 @@ export default function ClientNotificationsPage() {
             type="button"
             onClick={markAllRead}
             className="text-[13px] font-semibold hover:underline"
-            style={{ color: isDark ? '#E4C56A' : '#6B5A23' }}
+            style={{ color: isDark ? '#DDAF3B' : '#DDAF3B' }}
           >
             {t('notif_mark_all_read')}
           </button>
         </div>
 
-        {loading ? <p className="text-sm" style={{ color: isDark ? '#C9C4B2' : '#5E5A4D' }}>{t('notif_loading')}</p> : null}
-        {!loading && items.length === 0 ? <p className="text-sm" style={{ color: isDark ? '#C9C4B2' : '#5E5A4D' }}>{t('notif_empty')}</p> : null}
+        {loading ? <p className="text-sm" style={{ color: isDark ? '#B0BFB1' : '#B0BFB1' }}>{t('notif_loading')}</p> : null}
+        {!loading && items.length === 0 ? <p className="text-sm" style={{ color: isDark ? '#B0BFB1' : '#B0BFB1' }}>{t('notif_empty')}</p> : null}
 
         {!loading && items.length > 0 ? (
           <div className="space-y-2">
@@ -74,14 +74,14 @@ export default function ClientNotificationsPage() {
                 className="rounded-lg p-3"
                 style={{
                   backgroundColor: isDark
-                    ? (item.is_read ? '#1A2318' : '#242113')
-                    : (item.is_read ? '#F4F1E8' : '#EEE7D2'),
+                    ? (item.is_read ? '#001A05' : '#001A05')
+                    : (item.is_read ? '#FFF9EC' : '#FFEECA'),
                 }}
               >
-                <div className="text-[15px] font-bold" style={{ color: isDark ? '#F3F1E8' : '#1F1E19' }}>
+                <div className="text-[15px] font-bold" style={{ color: isDark ? '#FFF9EC' : '#001A05' }}>
                   {item.title ?? t('notif_default_title')}
                 </div>
-                <div className="mt-1 text-[14px]" style={{ color: isDark ? '#D2CEBE' : '#4F4C40' }}>
+                <div className="mt-1 text-[14px]" style={{ color: isDark ? '#B0BFB1' : '#B0BFB1' }}>
                   {item.body ?? '-'}
                 </div>
                 <div className="mt-2 flex items-center gap-4">
@@ -99,7 +99,7 @@ export default function ClientNotificationsPage() {
                     type="button"
                     onClick={() => removeOne(item.id)}
                     className="text-[14px] font-semibold hover:underline"
-                    style={{ color: isDark ? '#FF9E8D' : '#8C3A2B' }}
+                    style={{ color: isDark ? '#391C01' : '#391C01' }}
                   >
                     {t('notif_delete')}
                   </button>

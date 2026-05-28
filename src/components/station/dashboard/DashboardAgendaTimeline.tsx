@@ -62,8 +62,8 @@ function statusToBlockClass(status: string): { bg: string; border: string; chip:
       return {
         bg: 'bg-[#F0EDE0] dark:bg-[#001201]/60',
         border: 'border-[#D8D4C4] dark:border-[#001A05]',
-        chip: 'text-foreground/55 dark:text-[#A0A090]',
-        chipBg: 'bg-[#E0DCD0] dark:bg-[#1A2A14]',
+        chip: 'text-foreground/55 dark:text-[#B0BFB1]',
+        chipBg: 'bg-[#FFF9EC] dark:bg-[#1A2A14]',
       };
     case 'in_progress':
       return {
@@ -84,15 +84,15 @@ function statusToBlockClass(status: string): { bg: string; border: string; chip:
         bg: 'bg-[#F0EDE0]/70',
         border: 'border-[#D8D4C4]',
         chip: 'text-foreground/55',
-        chipBg: 'bg-[#E0DCD0]',
+        chipBg: 'bg-[#FFF9EC]',
       };
     default:
       // confirmed / pending / pending_payment
       return {
         bg: 'bg-[#E6EEFD] dark:bg-[#10182B]',
-        border: 'border-[#3B82F6]/50',
+        border: 'border-[#1E40AF]/50',
         chip: 'text-[#1E40AF] dark:text-[#8AB4FF]',
-        chipBg: 'bg-[#3B82F6]/15',
+        chipBg: 'bg-[#1E40AF]/15',
       };
   }
 }
@@ -195,10 +195,10 @@ export function DashboardAgendaTimeline({
   return (
     <div className="flex flex-1 min-h-0 flex-col overflow-hidden bg-white dark:bg-[#111A0E]">
       {/* Header strip — sticky bay names */}
-      <div className="flex flex-shrink-0 border-b border-[#E0DCD0] bg-[#F7F6F2] dark:border-[#1A2A14] dark:bg-[#001201]">
-        <div className="w-14 flex-shrink-0 border-r border-[#E0DCD0] dark:border-[#1A2A14]" />
+      <div className="flex flex-shrink-0 border-b border-[#FFF9EC] bg-[#FFF9EC] dark:border-[#1A2A14] dark:bg-[#001201]">
+        <div className="w-14 flex-shrink-0 border-r border-[#FFF9EC] dark:border-[#1A2A14]" />
         {visiblePosts.length === 0 ? (
-          <div className="flex-1 px-4 py-3 text-center text-[12px] text-foreground/55 dark:text-[#A0A090]">
+          <div className="flex-1 px-4 py-3 text-center text-[12px] text-foreground/55 dark:text-[#B0BFB1]">
             {t('agenda_no_posts')}
           </div>
         ) : (
@@ -208,12 +208,12 @@ export function DashboardAgendaTimeline({
             return (
               <div
                 key={post.id}
-                className="min-w-[200px] flex-1 border-l border-[#E0DCD0] px-3 py-2 dark:border-[#1A2A14]"
+                className="min-w-[200px] flex-1 border-l border-[#FFF9EC] px-3 py-2 dark:border-[#1A2A14]"
               >
                 <div className="text-[13px] font-bold text-[#001201] dark:text-[#FFF9EC]">
                   {t('filter_post', { n: post.position })}
                 </div>
-                <div className={`mt-0.5 text-[11px] font-bold ${inProgress ? 'text-[#0E8C45] dark:text-[#65E69A]' : 'text-[#3B82F6] dark:text-[#8AB4FF]'}`}>
+                <div className={`mt-0.5 text-[11px] font-bold ${inProgress ? 'text-[#0E8C45] dark:text-[#65E69A]' : 'text-[#1E40AF] dark:text-[#8AB4FF]'}`}>
                   {inProgress ? `● ${t('post_in_service')}` : `● ${t('post_available')}`}
                 </div>
               </div>
@@ -225,7 +225,7 @@ export function DashboardAgendaTimeline({
       {/* Scrollable body */}
       <div className="flex flex-1 overflow-auto">
         {/* Hour gutter */}
-        <div className="sticky left-0 z-10 w-14 flex-shrink-0 border-r border-[#E0DCD0] bg-white dark:border-[#1A2A14] dark:bg-[#111A0E]">
+        <div className="sticky left-0 z-10 w-14 flex-shrink-0 border-r border-[#FFF9EC] bg-white dark:border-[#1A2A14] dark:bg-[#111A0E]">
           <div className="relative" style={{ height: totalHeight }}>
             {hours.map((h) => {
               const top = (parseHHMM(h, '00:00').h * 60 + parseHHMM(h, '00:00').m - openMinutes) * PX_PER_MINUTE;
@@ -248,7 +248,7 @@ export function DashboardAgendaTimeline({
           return (
             <div
               key={post.id}
-              className="relative min-w-[200px] flex-1 border-l border-[#E0DCD0] dark:border-[#1A2A14]"
+              className="relative min-w-[200px] flex-1 border-l border-[#FFF9EC] dark:border-[#1A2A14]"
             >
               <div className="relative" style={{ height: totalHeight }}>
                 {/* Hour grid lines */}
@@ -257,7 +257,7 @@ export function DashboardAgendaTimeline({
                   return (
                     <div
                       key={h}
-                      className="absolute left-0 right-0 h-px bg-[#E8E4D8] dark:bg-[#1A2A14]"
+                      className="absolute left-0 right-0 h-px bg-[#FFF9EC] dark:bg-[#1A2A14]"
                       style={{ top }}
                     />
                   );
@@ -332,7 +332,7 @@ function SlotBlock({ entry, openMinutes, closeMinutes, onSelect }: SlotBlockProp
   const primaryLabel = entry.status === 'in_progress' ? t('btn_complete') : t('btn_start');
   const primaryClass = entry.status === 'in_progress'
     ? 'bg-[#2ECC71] text-white'
-    : 'bg-[#3B82F6] text-white';
+    : 'bg-[#1E40AF] text-white';
 
   return (
     <button
@@ -354,7 +354,7 @@ function SlotBlock({ entry, openMinutes, closeMinutes, onSelect }: SlotBlockProp
         {entry.clientName}
       </div>
       <div className="mt-auto flex items-end justify-between gap-1.5 pt-1">
-        <div className="min-w-0 truncate text-[10px] text-foreground/65 dark:text-[#A0A090]">
+        <div className="min-w-0 truncate text-[10px] text-foreground/65 dark:text-[#B0BFB1]">
           {entry.vehicleFormat ?? ''}
           {entry.vehicleFormat && entry.amountPaid !== null ? ' · ' : ''}
           {entry.amountPaid !== null ? (

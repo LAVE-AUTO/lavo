@@ -35,7 +35,7 @@ export function QrDisplay({ url, size = DEFAULT_QR_SIZE }: Props) {
       <CornerBracket position="bottom-right" />
 
       <div
-        className={`relative rounded-2xl border border-[#E8E4DC] bg-white p-4 shadow-lg dark:border-[#001A05] ${
+        className={`relative rounded-2xl border border-[#FFF9EC] bg-white p-4 shadow-lg dark:border-[#001A05] ${
           ready ? '' : 'animate-pulse'
         }`}
         style={{ width: size + 32, height: size + 32 }}

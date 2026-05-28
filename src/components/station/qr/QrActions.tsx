@@ -136,7 +136,7 @@ export function QrActions({ url, stationName }: Props) {
       <button
         type="button"
         onClick={downloadPng}
-        className={`${btnBase} bg-[#DDAF3B] text-[#0C1209] hover:opacity-90`}
+        className={`${btnBase} bg-[#DDAF3B] text-[#001201] hover:opacity-90`}
       >
         <DownloadIcon />
         {t('download_png')}
@@ -147,7 +147,7 @@ export function QrActions({ url, stationName }: Props) {
         <button
           type="button"
           onClick={downloadSvg}
-          className={`${btnBase} flex-1 border border-[#D8D4C8] text-[#5A5A4A] hover:bg-[#F0EDE4] dark:border-[#001A05] dark:text-[#9A9A8A] dark:hover:bg-[#1A2A14]`}
+          className={`${btnBase} flex-1 border border-[#D8D4C8] text-[#5A5A4A] hover:bg-[#F0EDE4] dark:border-[#001A05] dark:text-[#B0BFB1] dark:hover:bg-[#1A2A14]`}
         >
           <SvgIcon />
           {t('download_svg')}
@@ -155,7 +155,7 @@ export function QrActions({ url, stationName }: Props) {
         <button
           type="button"
           onClick={copyLink}
-          className={`${btnBase} flex-1 border border-[#D8D4C8] text-[#5A5A4A] hover:bg-[#F0EDE4] dark:border-[#001A05] dark:text-[#9A9A8A] dark:hover:bg-[#1A2A14]`}
+          className={`${btnBase} flex-1 border border-[#D8D4C8] text-[#5A5A4A] hover:bg-[#F0EDE4] dark:border-[#001A05] dark:text-[#B0BFB1] dark:hover:bg-[#1A2A14]`}
         >
           {copied ? <CheckIcon /> : <CopyIcon />}
           {copied ? t('link_copied') : copyError ? t('copy_error') : t('copy_link')}

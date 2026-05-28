@@ -94,7 +94,7 @@ export function ExtrasStep({
       {/* Ticket summary */}
       <div className="border-t border-border pt-4 space-y-3 px-1">
         <div className="bg-surface dark:bg-background/60 rounded-xl p-4 space-y-2">
-          <h4 className="text-[13px] font-bold text-foreground/70 dark:text-[#A0A090] uppercase tracking-wider mb-2">{t('ticket_title')}</h4>
+          <h4 className="text-[13px] font-bold text-foreground/70 dark:text-[#B0BFB1] uppercase tracking-wider mb-2">{t('ticket_title')}</h4>
 
           <div className="flex justify-between text-[14px]">
             <span className="text-foreground font-semibold">{serviceName}</span>

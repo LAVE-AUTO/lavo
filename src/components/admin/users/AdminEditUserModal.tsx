@@ -100,7 +100,7 @@ export function AdminEditUserModal({ open, user, onClose, onSaved }: Props) {
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
       <div className="absolute inset-0 bg-black/40 backdrop-blur-[2px]" onClick={() => !busy && onClose()} />
 
-      <div className="relative z-10 w-full max-w-[480px] animate-fade-in-up overflow-hidden rounded-2xl border border-[#E8E4DC] bg-white shadow-2xl dark:border-[#1E2E18] dark:bg-[#001201]">
+      <div className="relative z-10 w-full max-w-[480px] animate-fade-in-up overflow-hidden rounded-2xl border border-[#FFF9EC] bg-white shadow-2xl dark:border-[#1E2E18] dark:bg-[#001201]">
 
         {/* Header */}
         <div className="flex items-center justify-between border-b border-[#F0EDE6] px-6 py-4 dark:border-[#1A2A14]">
@@ -123,14 +123,14 @@ export function AdminEditUserModal({ open, user, onClose, onSaved }: Props) {
           {/* Name */}
           <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
             <div className="flex flex-col gap-1.5">
-              <label htmlFor="edit-user-firstname" className="text-[13px] font-bold text-foreground/70 dark:text-[#9A9A8A]">{t('field_firstname')}</label>
+              <label htmlFor="edit-user-firstname" className="text-[13px] font-bold text-foreground/70 dark:text-[#B0BFB1]">{t('field_firstname')}</label>
               <input id="edit-user-firstname" type="text" value={firstName} maxLength={100}
                 onChange={(e) => setFirstName(e.target.value)}
                 className={`${inputBase} ${errors.first_name ? inputError : inputIdle}`} />
               {errors.first_name && <p className="text-[12px] font-semibold text-red-500">{errors.first_name}</p>}
             </div>
             <div className="flex flex-col gap-1.5">
-              <label htmlFor="edit-user-lastname" className="text-[13px] font-bold text-foreground/70 dark:text-[#9A9A8A]">{t('field_lastname')}</label>
+              <label htmlFor="edit-user-lastname" className="text-[13px] font-bold text-foreground/70 dark:text-[#B0BFB1]">{t('field_lastname')}</label>
               <input id="edit-user-lastname" type="text" value={lastName} maxLength={100}
                 onChange={(e) => setLastName(e.target.value)}
                 className={`${inputBase} ${errors.last_name ? inputError : inputIdle}`} />
@@ -140,7 +140,7 @@ export function AdminEditUserModal({ open, user, onClose, onSaved }: Props) {
 
           {/* Phone */}
           <div className="flex flex-col gap-1.5">
-            <label htmlFor="edit-user-phone" className="text-[13px] font-bold text-foreground/70 dark:text-[#9A9A8A]">{t('field_phone')}</label>
+            <label htmlFor="edit-user-phone" className="text-[13px] font-bold text-foreground/70 dark:text-[#B0BFB1]">{t('field_phone')}</label>
             <input id="edit-user-phone" type="tel" value={phone} maxLength={30}
               placeholder={t('field_phone_placeholder')}
               onChange={(e) => setPhone(e.target.value)}
@@ -149,7 +149,7 @@ export function AdminEditUserModal({ open, user, onClose, onSaved }: Props) {
 
           {/* Status */}
           <div className="flex flex-col gap-1.5">
-            <label htmlFor="edit-user-status" className="text-[13px] font-bold text-foreground/70 dark:text-[#9A9A8A]">{t('field_status')}</label>
+            <label htmlFor="edit-user-status" className="text-[13px] font-bold text-foreground/70 dark:text-[#B0BFB1]">{t('field_status')}</label>
             <select id="edit-user-status" value={status} onChange={(e) => setStatus(e.target.value)}
               className={`${inputBase} ${inputIdle} cursor-pointer`}>
               {STATUS_VALUES.map((s) => (
@@ -162,11 +162,11 @@ export function AdminEditUserModal({ open, user, onClose, onSaved }: Props) {
         {/* Footer */}
         <div className="flex justify-end gap-2 border-t border-[#F0EDE6] px-6 py-4 dark:border-[#1A2A14]">
           <button type="button" onClick={onClose} disabled={busy}
-            className="rounded-lg border border-[#D8D4C8] px-4 py-2 text-[13px] font-semibold text-foreground/65 transition-colors hover:bg-[#F5F3EE] disabled:opacity-50 dark:border-[#001A05] dark:text-[#9A9A8A]">
+            className="rounded-lg border border-[#D8D4C8] px-4 py-2 text-[13px] font-semibold text-foreground/65 transition-colors hover:bg-[#F5F3EE] disabled:opacity-50 dark:border-[#001A05] dark:text-[#B0BFB1]">
             {t('btn_cancel')}
           </button>
           <button type="button" onClick={handleSubmit} disabled={busy}
-            className="rounded-lg bg-[#DDAF3B] px-4 py-2 text-[13px] font-bold text-[#0C1209] transition-colors hover:bg-[#B08A14] disabled:opacity-50 disabled:cursor-not-allowed">
+            className="rounded-lg bg-[#DDAF3B] px-4 py-2 text-[13px] font-bold text-[#001201] transition-colors hover:bg-[#B08A14] disabled:opacity-50 disabled:cursor-not-allowed">
             {busy ? t('btn_saving') : t('btn_save')}
           </button>
         </div>

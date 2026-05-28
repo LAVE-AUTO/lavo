@@ -45,14 +45,14 @@ export function SearchBar({ value, onChange, placeholder }: SearchBarProps) {
         value={value}
         onChange={handleChange}
         placeholder={placeholder}
-        className="flex-1 bg-transparent text-[13px] text-foreground placeholder-[#9A9A8A] outline-none"
+        className="flex-1 bg-transparent text-[13px] text-foreground placeholder-[#B0BFB1] outline-none"
         aria-label={placeholder}
       />
       {value && (
         <button
           type="button"
           onClick={() => onChange('')}
-          className="text-[#9A9A8A] hover:text-white transition-colors"
+          className="text-[#B0BFB1] hover:text-white transition-colors"
           aria-label="Effacer la recherche"
         >
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" aria-hidden="true">

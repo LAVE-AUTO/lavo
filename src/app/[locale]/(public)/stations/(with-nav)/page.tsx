@@ -65,7 +65,7 @@ export default async function PublicStationsPage({ params }: Props) {
   }
 
   return (
-    <main className="min-h-screen bg-[#EDEDED] dark:bg-background transition-colors">
+    <main className="min-h-screen bg-[#FFF9EC] dark:bg-background transition-colors">
       <AuthAwareHero>
         <StationsHero metrics={heroMetrics} />
         <StationsStats metrics={heroMetrics} />

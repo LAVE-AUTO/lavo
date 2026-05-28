@@ -601,7 +601,7 @@ export function BookingFlow({ station, qrToken, qrVersion, initialServiceId, ini
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="15 18 9 12 15 6" /></svg>
               {stepIndex === 0 ? t('close') : t('back')}
             </button>
-            <span className="text-[13px] font-bold text-foreground/70 dark:text-[#A0A090]">
+            <span className="text-[13px] font-bold text-foreground/70 dark:text-[#B0BFB1]">
               {stepIndex + 1}/{activeSteps.length}
             </span>
           </div>

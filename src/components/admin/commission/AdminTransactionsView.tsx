@@ -28,7 +28,7 @@ function mapStatus(s: string): TxStatus {
 
 const STATUS_META: Record<TxStatus, { dot: string; text: string; bar: string; label: string }> = {
   succeeded: { dot: 'bg-[#22C55E]', text: 'text-[#166534] dark:text-[#86EFAC]', bar: 'bg-[#22C55E]', label: 'status_succeeded' },
-  refunded:  { dot: 'bg-[#3B82F6]', text: 'text-[#1D4ED8] dark:text-[#93C5FD]', bar: 'bg-[#3B82F6]', label: 'status_refunded' },
+  refunded:  { dot: 'bg-[#1E40AF]', text: 'text-[#1D4ED8] dark:text-[#93C5FD]', bar: 'bg-[#1E40AF]', label: 'status_refunded' },
   failed:    { dot: 'bg-[#F43F5E]', text: 'text-[#9F1239] dark:text-[#FDA4AF]', bar: 'bg-[#F43F5E]', label: 'status_failed' },
 };
 
@@ -132,7 +132,7 @@ export function AdminTransactionsView() {
   const FILTERS: Array<{ key: TxStatus | 'all'; label: string; dot?: string }> = [
     { key: 'all',       label: t('filter_all') },
     { key: 'succeeded', label: t('status_succeeded'), dot: '#22C55E' },
-    { key: 'refunded',  label: t('status_refunded'),  dot: '#3B82F6' },
+    { key: 'refunded',  label: t('status_refunded'),  dot: '#1E40AF' },
     { key: 'failed',    label: t('status_failed'),    dot: '#F43F5E' },
   ];
 
@@ -141,12 +141,12 @@ export function AdminTransactionsView() {
   const metrics = [
     { label: t('chip_volume'),      value: loading ? '…' : fmt(volume),    accent: '#DDAF3B' },
     { label: t('chip_commissions'), value: loading ? '…' : fmt(commTotal), accent: '#22C55E' },
-    { label: t('chip_count'),       value: loading ? '…' : String(meta?.total ?? 0), accent: '#3B82F6' },
+    { label: t('chip_count'),       value: loading ? '…' : String(meta?.total ?? 0), accent: '#1E40AF' },
     { label: t('metric_avg_tx'),    value: loading || succeeded.length === 0 ? '…' : fmt(volume / succeeded.length), accent: '#94A3B8' },
   ];
 
   return (
-    <div className="relative flex h-full min-h-0 flex-col overflow-hidden bg-[radial-gradient(circle_at_top,_rgba(221, 175, 59,0.12),_transparent_36%),linear-gradient(180deg,#faf8f2_0%,#f2efe7_100%)] dark:bg-[radial-gradient(circle_at_top,_rgba(221, 175, 59,0.12),_transparent_32%),linear-gradient(180deg,#0C1209_0%,#091009_100%)]">
+    <div className="relative flex h-full min-h-0 flex-col overflow-hidden bg-[radial-gradient(circle_at_top,_rgba(221, 175, 59,0.12),_transparent_36%),linear-gradient(180deg,#faf8f2_0%,#f2efe7_100%)] dark:bg-[radial-gradient(circle_at_top,_rgba(221, 175, 59,0.12),_transparent_32%),linear-gradient(180deg,#001201_0%,#091009_100%)]">
       <div className="pointer-events-none absolute inset-0 bg-[linear-gradient(135deg,rgba(255,255,255,0.55),transparent_42%)] dark:bg-[linear-gradient(135deg,rgba(255,255,255,0.04),transparent_42%)]" />
 
       <div className="relative mx-auto flex h-full min-h-0 w-full max-w-none flex-1 flex-col gap-5 overflow-y-auto scrollbar-none px-3 py-4 sm:px-4 lg:px-6 lg:py-6">
@@ -195,13 +195,13 @@ export function AdminTransactionsView() {
                     <button key={key} type="button" onClick={() => setFilter(key)}
                       className={[
                         'relative flex items-center gap-2 rounded-[14px] px-3.5 py-2 text-[12.5px] font-bold transition-colors duration-150',
-                        filter === key ? 'bg-[#001201] text-[#FFF9EC] shadow-[0_10px_20px_rgba(26,26,10,0.18)] dark:bg-[#FFF9EC] dark:text-[#001201]' : 'text-[#847E70] hover:bg-[#EFE8D7] hover:text-[#001201] dark:text-[#A0A090] dark:hover:bg-[#182214] dark:hover:text-[#FFF9EC]',
+                        filter === key ? 'bg-[#001201] text-[#FFF9EC] shadow-[0_10px_20px_rgba(26,26,10,0.18)] dark:bg-[#FFF9EC] dark:text-[#001201]' : 'text-[#847E70] hover:bg-[#EFE8D7] hover:text-[#001201] dark:text-[#B0BFB1] dark:hover:bg-[#182214] dark:hover:text-[#FFF9EC]',
                       ].join(' ')}>
                       {dot && <span className="h-1.5 w-1.5 rounded-full" style={{ background: filter === key ? dot : '#CCCCCC' }} />}
                       {label}
                       <span className={[
                         'min-w-[20px] rounded-full px-1.5 py-0.5 text-center text-[11px] font-black',
-                        filter === key ? 'bg-[#DDAF3B] text-[#0C1209]' : 'bg-[#E1DBCF] text-[#7E796B] dark:bg-[#1E2E18] dark:text-[#9A9A8A]',
+                        filter === key ? 'bg-[#DDAF3B] text-[#001201]' : 'bg-[#E1DBCF] text-[#7E796B] dark:bg-[#1E2E18] dark:text-[#B0BFB1]',
                       ].join(' ')}>{counts[key] ?? 0}</span>
                     </button>
                   ))}
@@ -230,14 +230,14 @@ export function AdminTransactionsView() {
             </div>
           ) : fetchError ? (
             <div className="flex flex-col items-center gap-3 py-24 text-center">
-              <p className="text-[13px] font-semibold text-[#999] dark:text-[#9A9A8A]">{t('fetch_error')}</p>
-              <button type="button" onClick={() => fetchPage(page)} className="rounded-xl bg-[#DDAF3B] px-4 py-2 text-[13px] font-bold text-[#0C1209] transition-colors hover:bg-[#B08A14]">
+              <p className="text-[13px] font-semibold text-[#999] dark:text-[#B0BFB1]">{t('fetch_error')}</p>
+              <button type="button" onClick={() => fetchPage(page)} className="rounded-xl bg-[#DDAF3B] px-4 py-2 text-[13px] font-bold text-[#001201] transition-colors hover:bg-[#B08A14]">
                 {t('btn_retry')}
               </button>
             </div>
           ) : !filtered.length ? (
             <div className="flex flex-col items-center gap-3 py-24 text-center">
-              <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-white shadow-sm ring-1 ring-[#E8E4DC] dark:bg-[#131E10] dark:ring-[#1E2E18]">
+              <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-white shadow-sm ring-1 ring-[#FFF9EC] dark:bg-[#131E10] dark:ring-[#1E2E18]">
                 <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#DDAF3B" strokeWidth="1.5" strokeLinecap="round" aria-hidden="true"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12" /></svg>
               </div>
               <p className="text-[13px] font-semibold text-[#999]">{q ? t('empty_search') : t('empty_transactions')}</p>
@@ -249,7 +249,7 @@ export function AdminTransactionsView() {
                 return (
                   <div key={tx.id} role="button" tabIndex={0} onClick={() => setSelected(tx)}
                     onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); setSelected(tx); } }}
-                    className="group flex w-full cursor-pointer items-center gap-4 overflow-hidden rounded-[18px] border border-[#E8E4DC] bg-white text-left shadow-[0_4px_12px_rgba(26,26,10,0.04)] transition-all duration-150 hover:-translate-y-0.5 hover:shadow-[0_12px_30px_rgba(26,26,10,0.08)] dark:border-[#1E2E18] dark:bg-[#131E10]">
+                    className="group flex w-full cursor-pointer items-center gap-4 overflow-hidden rounded-[18px] border border-[#FFF9EC] bg-white text-left shadow-[0_4px_12px_rgba(26,26,10,0.04)] transition-all duration-150 hover:-translate-y-0.5 hover:shadow-[0_12px_30px_rgba(26,26,10,0.08)] dark:border-[#1E2E18] dark:bg-[#131E10]">
 
                     {/* Status accent bar */}
                     <div className={`h-full w-1 self-stretch shrink-0 ${s.bar}`} />
@@ -258,18 +258,18 @@ export function AdminTransactionsView() {
                     <div className="flex min-w-0 flex-1 flex-col gap-1 py-3.5 pr-0">
                       <div className="flex items-center gap-2">
                         <button type="button" onClick={(e) => copyId(e, tx.stripe_id)}
-                          className="flex items-center gap-1.5 rounded-[10px] border border-[#E8E4DC] bg-[#F5F2EC] px-2 py-0.5 transition-colors hover:border-[#DDAF3B]/40 hover:bg-[#FFF8E8] dark:border-[#1E2E18] dark:bg-[#0E1A0C] dark:hover:border-[#DDAF3B]/30">
-                          <span className="font-mono text-[11px] font-bold text-[#5A554B] dark:text-[#9A9A8A]">{shortId(tx.stripe_id)}</span>
+                          className="flex items-center gap-1.5 rounded-[10px] border border-[#FFF9EC] bg-[#F5F2EC] px-2 py-0.5 transition-colors hover:border-[#DDAF3B]/40 hover:bg-[#FFF8E8] dark:border-[#1E2E18] dark:bg-[#0E1A0C] dark:hover:border-[#DDAF3B]/30">
+                          <span className="font-mono text-[11px] font-bold text-[#5A554B] dark:text-[#B0BFB1]">{shortId(tx.stripe_id)}</span>
                           {copied === tx.stripe_id
                             ? <span className="text-[10.5px] font-bold text-[#22C55E]">{t('copied')}</span>
                             : <svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" className="text-[#BBBBAA]" aria-hidden="true"><rect x="9" y="9" width="13" height="13" rx="2" /><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1" /></svg>
                           }
                         </button>
-                        <span className={`inline-flex items-center gap-1.5 rounded-full bg-[#F4F1E8] px-2.5 py-0.5 text-[11px] font-bold dark:bg-[#171F12] ${s.text}`}>
+                        <span className={`inline-flex items-center gap-1.5 rounded-full bg-[#FFF9EC] px-2.5 py-0.5 text-[11px] font-bold dark:bg-[#171F12] ${s.text}`}>
                           <span className={`h-1.5 w-1.5 rounded-full ${s.dot}`} />{t(s.label)}
                         </span>
                       </div>
-                      <p className="truncate text-[13px] text-[#5A554B] dark:text-[#9A9A8A]">
+                      <p className="truncate text-[13px] text-[#5A554B] dark:text-[#B0BFB1]">
                         <span className="font-bold text-[#001201] dark:text-[#FFF9EC]">{tx.station}</span>
                         <span className="mx-1.5 text-[#CCCCCC] dark:text-[#3A4A33]">·</span>
                         <span className="text-[#9B9588] dark:text-[#7E8A75]">{tx.client}</span>
@@ -288,9 +288,9 @@ export function AdminTransactionsView() {
 
                     {/* Date + arrow */}
                     <div className="flex shrink-0 flex-col items-end gap-0.5 py-3.5 pr-4 pl-2">
-                      <span className="text-[12.5px] font-bold text-[#5A554B] dark:text-[#A0A090]">{formatDate(tx.date)}</span>
+                      <span className="text-[12.5px] font-bold text-[#5A554B] dark:text-[#B0BFB1]">{formatDate(tx.date)}</span>
                       <span className="text-[11px] text-[#A8A293] dark:text-[#7E8A75]">{formatTime(tx.date)}</span>
-                      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="mt-1 text-[#CCCCCC] transition-colors group-hover:text-[#DDAF3B] dark:text-[#A0A090]" aria-hidden="true"><path d="m9 18 6-6-6-6" /></svg>
+                      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="mt-1 text-[#CCCCCC] transition-colors group-hover:text-[#DDAF3B] dark:text-[#B0BFB1]" aria-hidden="true"><path d="m9 18 6-6-6-6" /></svg>
                     </div>
                   </div>
                 );

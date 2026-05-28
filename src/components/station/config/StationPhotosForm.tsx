@@ -172,7 +172,7 @@ export function StationPhotosForm({ locked = false }: Props) {
           <div className="mt-4 flex items-center justify-between">
             <p className="text-[12px] text-[#FF8800]">{t('photos_unsaved')}</p>
             <button type="button" onClick={handleSave} disabled={locked || uploadingIdx !== null}
-              className="flex items-center gap-2 rounded-xl bg-[#DDAF3B] px-5 py-2.5 text-[13px] font-bold text-[#0C1209] transition-opacity hover:opacity-80 disabled:opacity-40 disabled:cursor-not-allowed">
+              className="flex items-center gap-2 rounded-xl bg-[#DDAF3B] px-5 py-2.5 text-[13px] font-bold text-[#001201] transition-opacity hover:opacity-80 disabled:opacity-40 disabled:cursor-not-allowed">
               {t('btn_save')}
             </button>
           </div>

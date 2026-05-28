@@ -73,7 +73,7 @@ export default async function LandingPage({ params }: Props) {
       />
       <HomeRedirectGuard />
       <PublicNavbar />
-      <main className="min-h-screen bg-[#EDEDED] dark:bg-[#001201] transition-colors">
+      <main className="min-h-screen bg-[#FFF9EC] dark:bg-[#001201] transition-colors">
         <HeroSection />
         <MarqueeBanner />
         <FeaturesSection />

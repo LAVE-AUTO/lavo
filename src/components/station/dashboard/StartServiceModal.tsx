@@ -99,7 +99,7 @@ export function StartServiceModal({ open, onClose, clientName, onSubmit }: Props
   return (
     <Modal open={open} onClose={onClose} size="md" title={t('start_modal_title')}>
       <div className="space-y-4 pb-2">
-        <p className="text-[13px] text-foreground/65 dark:text-[#A0A090]">
+        <p className="text-[13px] text-foreground/65 dark:text-[#B0BFB1]">
           {t('start_modal_subtitle', { name: clientName })}
         </p>
 
@@ -128,7 +128,7 @@ export function StartServiceModal({ open, onClose, clientName, onSubmit }: Props
                   ? 'border-[#391C01] focus:border-[#391C01] focus:ring-2 focus:ring-[#391C01]/30'
                   : d
                     ? 'border-[#DDAF3B] focus:border-[#DDAF3B] focus:ring-2 focus:ring-[#DDAF3B]/30'
-                    : 'border-[#E0DCD0] focus:border-[#DDAF3B] focus:ring-2 focus:ring-[#DDAF3B]/30 dark:border-[#001A05]'
+                    : 'border-[#FFF9EC] focus:border-[#DDAF3B] focus:ring-2 focus:ring-[#DDAF3B]/30 dark:border-[#001A05]'
               }`}
             />
           ))}
@@ -144,12 +144,12 @@ export function StartServiceModal({ open, onClose, clientName, onSubmit }: Props
           {t('start_modal_hint')}
         </p>
       </div>
-      <div className="flex justify-end gap-2 border-t border-[#E0DCD0] pt-3 dark:border-[#1A2A14]">
+      <div className="flex justify-end gap-2 border-t border-[#FFF9EC] pt-3 dark:border-[#1A2A14]">
         <button
           type="button"
           onClick={onClose}
           disabled={submitting}
-          className="rounded-lg border border-[#E0DCD0] px-4 py-2 text-[13px] font-bold text-foreground/65 transition-colors hover:bg-[#F0EDE0] disabled:opacity-50 dark:border-[#001A05] dark:text-[#A0A090] dark:hover:bg-[#1A2A14]"
+          className="rounded-lg border border-[#FFF9EC] px-4 py-2 text-[13px] font-bold text-foreground/65 transition-colors hover:bg-[#F0EDE0] disabled:opacity-50 dark:border-[#001A05] dark:text-[#B0BFB1] dark:hover:bg-[#1A2A14]"
         >
           {t('btn_cancel')}
         </button>
@@ -157,7 +157,7 @@ export function StartServiceModal({ open, onClose, clientName, onSubmit }: Props
           type="button"
           onClick={() => void submit()}
           disabled={submitting || digits.join('').length !== CODE_LENGTH}
-          className="rounded-lg bg-[#DDAF3B] px-5 py-2 text-[13px] font-black text-[#0C1209] transition-opacity hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-40"
+          className="rounded-lg bg-[#DDAF3B] px-5 py-2 text-[13px] font-black text-[#001201] transition-opacity hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-40"
         >
           {submitting ? t('start_modal_submitting') : t('start_modal_confirm')}
         </button>

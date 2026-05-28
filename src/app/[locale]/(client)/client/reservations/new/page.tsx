@@ -32,7 +32,7 @@ export default function ClientNewReservationPage() {
         <p className="mt-2 text-[14px] font-semibold text-foreground/70">
           {t('new_subtitle')}
         </p>
-        <p className="mt-4 max-w-md text-[13px] leading-relaxed text-foreground/65 dark:text-[#A0A090]">
+        <p className="mt-4 max-w-md text-[13px] leading-relaxed text-foreground/65 dark:text-[#B0BFB1]">
           {t('new_help')}
         </p>
 

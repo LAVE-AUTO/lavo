@@ -154,8 +154,8 @@ export function PublicNavbar({
   }
 
   const notifPanelStyle = {
-    backgroundColor: isDark ? '#121A10' : '#FFFDF8',
-    color: isDark ? '#F3F1E8' : '#1B1B18',
+    backgroundColor: isDark ? '#001201' : '#FFF9EC',
+    color: isDark ? '#FFF9EC' : '#001A05',
   } as const;
 
   const lightLogoSrc = locale === 'fr' ? '/logo/logo2_2.png' : '/logo/logo_anglais_1.png';
@@ -282,18 +282,18 @@ export function PublicNavbar({
                         style={notifPanelStyle}
                       >
                         <div className="mb-2 flex items-center justify-between">
-                          <div className="text-sm font-semibold" style={{ color: isDark ? '#F3F1E8' : '#1B1B18' }}>{tn('notif_title')}</div>
+                          <div className="text-sm font-semibold" style={{ color: isDark ? '#FFF9EC' : '#001A05' }}>{tn('notif_title')}</div>
                           <button
                             type="button"
                             onClick={markAllNotifRead}
                             className="text-xs font-semibold hover:underline"
-                            style={{ color: isDark ? '#E4C56A' : '#6B5A23' }}
+                            style={{ color: isDark ? '#DDAF3B' : '#DDAF3B' }}
                           >
                             {tn('notif_mark_all_read')}
                           </button>
                         </div>
-                        {notifLoading ? <div className="py-4 text-sm" style={{ color: isDark ? '#C9C4B2' : '#5E5A4D' }}>{tn('notif_loading')}</div> : null}
-                        {!notifLoading && notifItems.length === 0 ? <div className="py-4 text-sm" style={{ color: isDark ? '#C9C4B2' : '#5E5A4D' }}>{tn('notif_empty')}</div> : null}
+                        {notifLoading ? <div className="py-4 text-sm" style={{ color: isDark ? '#B0BFB1' : '#B0BFB1' }}>{tn('notif_loading')}</div> : null}
+                        {!notifLoading && notifItems.length === 0 ? <div className="py-4 text-sm" style={{ color: isDark ? '#B0BFB1' : '#B0BFB1' }}>{tn('notif_empty')}</div> : null}
                         {!notifLoading && notifItems.length > 0 ? (
                           <div className="max-h-96 space-y-2 overflow-auto">
                             {notifItems.map((item) => (
@@ -302,12 +302,12 @@ export function PublicNavbar({
                                 className="rounded-lg p-2"
                                 style={{
                                   backgroundColor: isDark
-                                    ? (item.is_read ? '#1A2318' : '#242113')
-                                    : (item.is_read ? '#F4F1E8' : '#EEE7D2'),
+                                    ? (item.is_read ? '#001A05' : '#001A05')
+                                    : (item.is_read ? '#FFF9EC' : '#FFEECA'),
                                 }}
                               >
-                                <div className="text-xs font-semibold" style={{ color: isDark ? '#F3F1E8' : '#1F1E19' }}>{item.title ?? tn('notif_default_title')}</div>
-                                <div className="mt-0.5 text-xs" style={{ color: isDark ? '#D2CEBE' : '#4F4C40' }}>{item.body ?? '-'}</div>
+                                <div className="text-xs font-semibold" style={{ color: isDark ? '#FFF9EC' : '#001A05' }}>{item.title ?? tn('notif_default_title')}</div>
+                                <div className="mt-0.5 text-xs" style={{ color: isDark ? '#B0BFB1' : '#B0BFB1' }}>{item.body ?? '-'}</div>
                                 <div className="mt-2 flex items-center gap-3">
                                   {!item.is_read && (
                                     <button
@@ -323,7 +323,7 @@ export function PublicNavbar({
                                     type="button"
                                     onClick={() => deleteNotif(item.id)}
                                     className="text-xs font-semibold hover:underline"
-                                    style={{ color: isDark ? '#FF9E8D' : '#8C3A2B' }}
+                                    style={{ color: isDark ? '#391C01' : '#391C01' }}
                                   >
                                     {tn('notif_delete')}
                                   </button>

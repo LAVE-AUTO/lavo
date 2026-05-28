@@ -80,7 +80,7 @@ export function AdminDeleteStationModal({ open, station, onClose, onDeleted }: P
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
       <div className="absolute inset-0 bg-black/40 backdrop-blur-[2px]" onClick={() => !busy && onClose()} />
 
-      <div className="relative z-10 w-full max-w-[440px] animate-fade-in-up overflow-hidden rounded-2xl border border-[#E8E4DC] bg-white shadow-2xl dark:border-[#1E2E18] dark:bg-[#001201]">
+      <div className="relative z-10 w-full max-w-[440px] animate-fade-in-up overflow-hidden rounded-2xl border border-[#FFF9EC] bg-white shadow-2xl dark:border-[#1E2E18] dark:bg-[#001201]">
 
         {/* Header */}
         <div className="flex items-center justify-between border-b border-[#F0EDE6] px-6 py-4 dark:border-[#1A2A14]">
@@ -101,7 +101,7 @@ export function AdminDeleteStationModal({ open, station, onClose, onDeleted }: P
             </div>
             <div className="min-w-0">
               <p className="truncate text-[13px] font-bold text-[#001201] dark:text-[#FFF9EC]">{station.name}</p>
-              {station.city && <p className="truncate text-[12px] text-foreground/55 dark:text-[#9A9A8A]">{station.city}</p>}
+              {station.city && <p className="truncate text-[12px] text-foreground/55 dark:text-[#B0BFB1]">{station.city}</p>}
             </div>
           </div>
 
@@ -119,14 +119,14 @@ export function AdminDeleteStationModal({ open, station, onClose, onDeleted }: P
                 'flex items-start gap-3 rounded-xl border-[1.5px] px-4 py-3 text-left transition-all',
                 mode === 'soft'
                   ? 'border-[#F97316] bg-orange-50 dark:bg-orange-950/20'
-                  : 'border-[#E8E4DC] bg-white hover:border-[#F97316]/50 dark:border-[#1E2E18] dark:bg-[#001201]',
+                  : 'border-[#FFF9EC] bg-white hover:border-[#F97316]/50 dark:border-[#1E2E18] dark:bg-[#001201]',
               ].join(' ')}>
               <div className="mt-0.5 flex h-4 w-4 shrink-0 items-center justify-center rounded-full border-2 border-[#F97316]">
                 {mode === 'soft' && <div className="h-2 w-2 rounded-full bg-[#F97316]" />}
               </div>
               <div>
                 <p className="text-[13px] font-bold text-[#F97316]">{t('soft_title')}</p>
-                <p className="mt-0.5 text-[12px] leading-snug text-foreground/65 dark:text-[#A0A090]">{t('soft_description')}</p>
+                <p className="mt-0.5 text-[12px] leading-snug text-foreground/65 dark:text-[#B0BFB1]">{t('soft_description')}</p>
               </div>
             </button>
 
@@ -136,14 +136,14 @@ export function AdminDeleteStationModal({ open, station, onClose, onDeleted }: P
                 'flex items-start gap-3 rounded-xl border-[1.5px] px-4 py-3 text-left transition-all',
                 mode === 'hard'
                   ? 'border-red-500 bg-red-50 dark:bg-red-950/20'
-                  : 'border-[#E8E4DC] bg-white hover:border-red-300 dark:border-[#1E2E18] dark:bg-[#001201]',
+                  : 'border-[#FFF9EC] bg-white hover:border-red-300 dark:border-[#1E2E18] dark:bg-[#001201]',
               ].join(' ')}>
               <div className="mt-0.5 flex h-4 w-4 shrink-0 items-center justify-center rounded-full border-2 border-red-500">
                 {mode === 'hard' && <div className="h-2 w-2 rounded-full bg-red-500" />}
               </div>
               <div>
                 <p className="text-[13px] font-bold text-red-600">{t('hard_title')}</p>
-                <p className="mt-0.5 text-[12px] leading-snug text-foreground/65 dark:text-[#A0A090]">{t('hard_description')}</p>
+                <p className="mt-0.5 text-[12px] leading-snug text-foreground/65 dark:text-[#B0BFB1]">{t('hard_description')}</p>
               </div>
             </button>
           </div>
@@ -171,7 +171,7 @@ export function AdminDeleteStationModal({ open, station, onClose, onDeleted }: P
         {/* Footer */}
         <div className="flex justify-end gap-2 border-t border-[#F0EDE6] px-6 py-4 dark:border-[#1A2A14]">
           <button type="button" onClick={onClose} disabled={busy}
-            className="rounded-lg border border-[#D8D4C8] px-4 py-2 text-[13px] font-semibold text-foreground/65 transition-colors hover:bg-[#F5F3EE] disabled:opacity-50 dark:border-[#001A05] dark:text-[#9A9A8A]">
+            className="rounded-lg border border-[#D8D4C8] px-4 py-2 text-[13px] font-semibold text-foreground/65 transition-colors hover:bg-[#F5F3EE] disabled:opacity-50 dark:border-[#001A05] dark:text-[#B0BFB1]">
             {t('btn_cancel')}
           </button>
           {mode === 'soft' ? (

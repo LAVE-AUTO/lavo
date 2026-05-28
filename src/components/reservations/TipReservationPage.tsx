@@ -476,7 +476,7 @@ function TipPayStep({
               <rect width="28" height="18" rx="3" fill="#635BFF" />
               <text x="5" y="13" fontSize="10" fill="white" fontWeight="bold">S</text>
             </svg>
-            <span className="text-[13px] font-bold text-foreground/70 dark:text-[#A0A090]">{t('payment_secured')}</span>
+            <span className="text-[13px] font-bold text-foreground/70 dark:text-[#B0BFB1]">{t('payment_secured')}</span>
           </div>
           <div className="rounded-lg border-2 border-border bg-white dark:bg-background/40 px-4 py-3">
             <CardElement

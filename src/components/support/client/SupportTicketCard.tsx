@@ -11,7 +11,7 @@ const STATUS: Record<TicketStatus, {
   bar: string; badge: string; dot: string; label: string; iconColor: string; iconBg: string;
 }> = {
   open:        { bar: 'bg-[#F97316]', badge: 'bg-[#FFF4EC] text-[#C2410C] ring-1 ring-[#F97316]/20',  dot: 'bg-[#F97316]', label: 'status_open',        iconColor: '#F97316', iconBg: 'bg-[#FFF4EC] dark:bg-[#F97316]/10' },
-  in_progress: { bar: 'bg-[#3B82F6]', badge: 'bg-[#EFF6FF] text-[#1D4ED8] ring-1 ring-[#3B82F6]/20',  dot: 'bg-[#3B82F6]', label: 'status_in_progress', iconColor: '#3B82F6', iconBg: 'bg-[#EFF6FF] dark:bg-[#3B82F6]/10' },
+  in_progress: { bar: 'bg-[#1E40AF]', badge: 'bg-[#EFF6FF] text-[#1D4ED8] ring-1 ring-[#1E40AF]/20',  dot: 'bg-[#1E40AF]', label: 'status_in_progress', iconColor: '#1E40AF', iconBg: 'bg-[#EFF6FF] dark:bg-[#1E40AF]/10' },
   resolved:    { bar: 'bg-[#22C55E]', badge: 'bg-[#F0FDF4] text-[#15803D] ring-1 ring-[#22C55E]/20',  dot: 'bg-[#22C55E]', label: 'status_resolved',    iconColor: '#22C55E', iconBg: 'bg-[#F0FDF4] dark:bg-[#22C55E]/10' },
   closed:      { bar: 'bg-[#94A3B8]', badge: 'bg-[#F8FAFC] text-[#64748B] ring-1 ring-[#CBD5E1]/60',  dot: 'bg-[#94A3B8]', label: 'status_closed',      iconColor: '#94A3B8', iconBg: 'bg-[#F8FAFC] dark:bg-[#94A3B8]/10' },
 };
@@ -103,7 +103,7 @@ export function SupportTicketCard({ ticket, onMessageSent }: Props) {
       'overflow-hidden rounded-2xl border transition-all duration-200',
       open
         ? 'border-[#DDAF3B]/30 shadow-[0_4px_20px_rgba(221, 175, 59,0.10)] dark:border-[#DDAF3B]/20'
-        : 'border-[#E8E4DC] shadow-sm hover:border-[#D0CCC4] dark:border-[#1E2E18] dark:hover:border-[#2A3820]',
+        : 'border-[#FFF9EC] shadow-sm hover:border-[#D0CCC4] dark:border-[#1E2E18] dark:hover:border-[#2A3820]',
       'bg-white dark:bg-[#131E10]',
     ].join(' ')}>
 
@@ -175,8 +175,8 @@ export function SupportTicketCard({ ticket, onMessageSent }: Props) {
                     <div className={[
                       'flex h-7 w-7 shrink-0 items-center justify-center rounded-full text-[10px] font-black leading-none',
                       isAdmin
-                        ? 'bg-[#DDAF3B] text-[#0C1209]'
-                        : 'bg-[#E8E4DC] text-foreground/65 dark:bg-[#1E2E18] dark:text-[#A0A090]',
+                        ? 'bg-[#DDAF3B] text-[#001201]'
+                        : 'bg-[#FFF9EC] text-foreground/65 dark:bg-[#1E2E18] dark:text-[#B0BFB1]',
                     ].join(' ')}>
                       {isAdmin ? 'AD' : 'ME'}
                     </div>
@@ -184,7 +184,7 @@ export function SupportTicketCard({ ticket, onMessageSent }: Props) {
                       'max-w-[82%] rounded-2xl px-4 py-2.5',
                       isAdmin
                         ? 'rounded-tr-sm bg-[#DDAF3B]/10 dark:bg-[#DDAF3B]/8'
-                        : 'rounded-tl-sm bg-[#F5F5EE] ring-1 ring-black/[0.04] dark:bg-[#001201] dark:ring-white/[0.04]',
+                        : 'rounded-tl-sm bg-[#FFF9EC] ring-1 ring-black/[0.04] dark:bg-[#001201] dark:ring-white/[0.04]',
                     ].join(' ')}>
                       {isAdmin && (
                         <p className="mb-1 text-[10px] font-black tracking-wide text-[#DDAF3B]/90">{t('thread_admin_label')}</p>
@@ -208,12 +208,12 @@ export function SupportTicketCard({ ticket, onMessageSent }: Props) {
                   onChange={(e) => setReplyContent(e.target.value)}
                   placeholder={t('reply_placeholder')}
                   maxLength={5000}
-                  className="flex-1 resize-none rounded-[8px] border border-[#D8D4C8] bg-[#F7F6F2] px-3 py-2 text-[13px] text-[#001201] outline-none transition-colors placeholder:text-[#BBBBAA] focus:border-[#DDAF3B] dark:border-[#001A05] dark:bg-[#001201] dark:text-[#FFF9EC] dark:placeholder:text-[#4A4A3A]"
+                  className="flex-1 resize-none rounded-[8px] border border-[#D8D4C8] bg-[#FFF9EC] px-3 py-2 text-[13px] text-[#001201] outline-none transition-colors placeholder:text-[#BBBBAA] focus:border-[#DDAF3B] dark:border-[#001A05] dark:bg-[#001201] dark:text-[#FFF9EC] dark:placeholder:text-[#4A4A3A]"
                 />
                 <button
                   type="submit"
                   disabled={sending || !replyContent.trim()}
-                  className="shrink-0 rounded-[8px] bg-[#DDAF3B] px-4 py-2 text-[12px] font-bold text-[#0C1209] transition-opacity hover:opacity-80 disabled:opacity-50"
+                  className="shrink-0 rounded-[8px] bg-[#DDAF3B] px-4 py-2 text-[12px] font-bold text-[#001201] transition-opacity hover:opacity-80 disabled:opacity-50"
                 >
                   {sending ? '...' : t('btn_send')}
                 </button>

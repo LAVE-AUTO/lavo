@@ -104,7 +104,7 @@ export default function ClientDashboardPage() {
             <h1 className="mt-2 text-[24px] font-black text-[#001201] dark:text-white sm:text-[30px]">
               {t('title', { name: user?.first_name ?? user?.email ?? '' })}
             </h1>
-            <p className="mt-2 max-w-2xl text-[14px] text-foreground/65 dark:text-[#A0A090]">{t('subtitle')}</p>
+            <p className="mt-2 max-w-2xl text-[14px] text-foreground/65 dark:text-[#B0BFB1]">{t('subtitle')}</p>
           </div>
 
           <div className="grid gap-3 px-5 py-5 sm:grid-cols-2 lg:grid-cols-4 sm:px-6">
@@ -172,10 +172,10 @@ function SummaryCard({
   helper: string;
 }) {
   return (
-    <div className="rounded-2xl border border-[rgba(221,175,59,0.12)] bg-[#F7F6F2] px-4 py-4 dark:bg-[#111A0E]">
+    <div className="rounded-2xl border border-[rgba(221,175,59,0.12)] bg-[#FFF9EC] px-4 py-4 dark:bg-[#111A0E]">
       <p className="text-[11px] font-black uppercase tracking-[0.18em] text-foreground/55 dark:text-foreground/65">{label}</p>
       <p className="mt-2 text-[22px] font-black text-[#001201] dark:text-white">{value}</p>
-      <p className="mt-1 text-[12px] text-foreground/65 dark:text-[#A0A090]">{helper}</p>
+      <p className="mt-1 text-[12px] text-foreground/65 dark:text-[#B0BFB1]">{helper}</p>
     </div>
   );
 }
@@ -192,18 +192,18 @@ function ShortcutLink({
   return (
     <Link
       href={href}
-      className="group rounded-2xl border border-[#E0E0D0] bg-[#F7F6F2] px-4 py-4 transition-colors hover:border-gold/30 hover:bg-gold/5 dark:border-border dark:bg-[#111A0E]"
+      className="group rounded-2xl border border-[#E0E0D0] bg-[#FFF9EC] px-4 py-4 transition-colors hover:border-gold/30 hover:bg-gold/5 dark:border-border dark:bg-[#111A0E]"
     >
       <p className="text-[14px] font-black text-[#001201] transition-colors group-hover:text-gold dark:text-white">{label}</p>
-      <p className="mt-1 text-[12px] text-foreground/65 dark:text-[#A0A090]">{desc}</p>
+      <p className="mt-1 text-[12px] text-foreground/65 dark:text-[#B0BFB1]">{desc}</p>
     </Link>
   );
 }
 
 function InfoRow({ label, value }: { label: string; value: string }) {
   return (
-    <div className="flex items-center justify-between gap-4 rounded-2xl bg-[#F7F6F2] px-4 py-3 text-[13px] dark:bg-[#111A0E]">
-      <span className="font-semibold text-foreground/65 dark:text-[#A0A090]">{label}</span>
+    <div className="flex items-center justify-between gap-4 rounded-2xl bg-[#FFF9EC] px-4 py-3 text-[13px] dark:bg-[#111A0E]">
+      <span className="font-semibold text-foreground/65 dark:text-[#B0BFB1]">{label}</span>
       <span className="font-bold text-[#001201] dark:text-white">{value}</span>
     </div>
   );

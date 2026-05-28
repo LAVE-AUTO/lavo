@@ -20,7 +20,7 @@ function MiniAccordion({ item }: { item: FaqItem }) {
         </svg>
       </button>
       {open && (
-        <div className="px-5 pb-4 text-[13px] text-foreground/70 dark:text-[#A0A090] leading-[1.7]">{item.a}</div>
+        <div className="px-5 pb-4 text-[13px] text-foreground/70 dark:text-[#B0BFB1] leading-[1.7]">{item.a}</div>
       )}
     </div>
   );
@@ -84,7 +84,7 @@ export function SupportContent() {
         <h1 className="font-playfair text-[36px] sm:text-[44px] font-black text-[#001201] dark:text-white leading-tight mb-4">
           {t('title')}
         </h1>
-        <p className="text-[15px] text-foreground/70 dark:text-[#A0A090] leading-relaxed">{t('subtitle')}</p>
+        <p className="text-[15px] text-foreground/70 dark:text-[#B0BFB1] leading-relaxed">{t('subtitle')}</p>
       </div>
 
       {/* Support channels */}
@@ -104,7 +104,7 @@ export function SupportContent() {
             </div>
             <div>
               <div className={`text-[15px] font-black mb-1 ${highlight ? 'text-dark-bg' : 'text-[#001201] dark:text-white'}`}>{label}</div>
-              <div className={`text-[13px] ${highlight ? 'text-dark-bg/70' : 'text-foreground/70 dark:text-[#A0A090]'}`}>{desc}</div>
+              <div className={`text-[13px] ${highlight ? 'text-dark-bg/70' : 'text-foreground/70 dark:text-[#B0BFB1]'}`}>{desc}</div>
             </div>
             <span className={`text-[12px] font-bold mt-auto flex items-center gap-1 ${highlight ? 'text-dark-bg' : 'text-[#DDAF3B]'}`}>
               {cta}

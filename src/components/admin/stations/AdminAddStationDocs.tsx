@@ -38,9 +38,9 @@ function ModeCard({ selected, onClick, icon, label, sub }: {
           ? 'border-[#DDAF3B] bg-[#DDAF3B]/8 shadow-sm'
           : 'border-[#D8D4C8] bg-white hover:border-[#DDAF3B]/50 dark:border-[#001A05] dark:bg-[#001201]',
       ].join(' ')}>
-      <span className={`mb-0.5 ${selected ? 'text-[#DDAF3B]' : 'text-foreground/55 dark:text-[#9A9A8A]'}`}>{icon}</span>
-      <span className={`text-[13px] font-bold ${selected ? 'text-[#001201] dark:text-[#FFF9EC]' : 'text-foreground/70 dark:text-[#9A9A8A]'}`}>{label}</span>
-      <span className={`text-[11px] leading-snug ${selected ? 'text-[#DDAF3B]/70' : 'text-[#999] dark:text-[#A0A090]'}`}>{sub}</span>
+      <span className={`mb-0.5 ${selected ? 'text-[#DDAF3B]' : 'text-foreground/55 dark:text-[#B0BFB1]'}`}>{icon}</span>
+      <span className={`text-[13px] font-bold ${selected ? 'text-[#001201] dark:text-[#FFF9EC]' : 'text-foreground/70 dark:text-[#B0BFB1]'}`}>{label}</span>
+      <span className={`text-[11px] leading-snug ${selected ? 'text-[#DDAF3B]/70' : 'text-[#999] dark:text-[#B0BFB1]'}`}>{sub}</span>
     </button>
   );
 }
@@ -93,11 +93,11 @@ export function AdminAddStationDocs({ data, errors, busy, onChange, onErrors, on
 
       <div className="flex justify-end gap-2 border-t border-[#F0EDE6] px-6 py-4 dark:border-[#1A2A14]">
         <button type="button" onClick={onPrev} disabled={busy}
-          className="rounded-lg border border-[#D8D4C8] px-4 py-2 text-[13px] font-semibold text-foreground/65 transition-colors hover:bg-[#F5F3EE] disabled:opacity-50 dark:border-[#001A05] dark:text-[#9A9A8A]">
+          className="rounded-lg border border-[#D8D4C8] px-4 py-2 text-[13px] font-semibold text-foreground/65 transition-colors hover:bg-[#F5F3EE] disabled:opacity-50 dark:border-[#001A05] dark:text-[#B0BFB1]">
           {t('btn_prev')}
         </button>
         <button type="button" onClick={onSubmit} disabled={busy}
-          className="rounded-lg bg-[#DDAF3B] px-4 py-2 text-[13px] font-bold text-[#0C1209] transition-colors hover:bg-[#B08A14] disabled:opacity-50 disabled:cursor-not-allowed">
+          className="rounded-lg bg-[#DDAF3B] px-4 py-2 text-[13px] font-bold text-[#001201] transition-colors hover:bg-[#B08A14] disabled:opacity-50 disabled:cursor-not-allowed">
           {busy ? t('btn_creating') : t('btn_create')}
         </button>
       </div>

@@ -227,7 +227,7 @@ export function AdminLegalContent() {
   const metrics = [
     { label: t('metric_pages'),    value: String(totalPages),                  accent: '#DDAF3B' },
     { label: t('metric_dirty'),    value: String(dirtyCount),                  accent: dirtyCount > 0 ? '#F97316' : '#94A3B8' },
-    { label: t('metric_words'),    value: text ? String(wordCount) : '—',       accent: '#3B82F6' },
+    { label: t('metric_words'),    value: text ? String(wordCount) : '—',       accent: '#1E40AF' },
     { label: t('metric_chars'),    value: text ? String(charCount) : '—',       accent: '#22C55E' },
   ];
 
@@ -277,7 +277,7 @@ export function AdminLegalContent() {
   }
 
   return (
-    <div className="relative flex h-full min-h-0 flex-col overflow-hidden bg-[radial-gradient(circle_at_top,_rgba(221, 175, 59,0.12),_transparent_36%),linear-gradient(180deg,#faf8f2_0%,#f2efe7_100%)] dark:bg-[radial-gradient(circle_at_top,_rgba(221, 175, 59,0.12),_transparent_32%),linear-gradient(180deg,#0C1209_0%,#091009_100%)]">
+    <div className="relative flex h-full min-h-0 flex-col overflow-hidden bg-[radial-gradient(circle_at_top,_rgba(221, 175, 59,0.12),_transparent_36%),linear-gradient(180deg,#faf8f2_0%,#f2efe7_100%)] dark:bg-[radial-gradient(circle_at_top,_rgba(221, 175, 59,0.12),_transparent_32%),linear-gradient(180deg,#001201_0%,#091009_100%)]">
       <div className="pointer-events-none absolute inset-0 bg-[linear-gradient(135deg,rgba(255,255,255,0.55),transparent_42%)] dark:bg-[linear-gradient(135deg,rgba(255,255,255,0.04),transparent_42%)]" />
 
       <div className="relative mx-auto flex h-full min-h-0 w-full max-w-none flex-1 flex-col gap-5 overflow-y-auto scrollbar-none px-3 py-4 sm:px-4 lg:px-6 lg:py-6">
@@ -373,7 +373,7 @@ export function AdminLegalContent() {
                   type="button"
                   onClick={handleSave}
                   disabled={saving || !isActiveDirty}
-                  className="inline-flex items-center gap-2 rounded-[12px] bg-[#DDAF3B] px-5 py-2 text-[12.5px] font-black text-[#0C1209] transition-all hover:bg-[#B08A14] hover:shadow-[0_10px_20px_rgba(221, 175, 59,0.25)] disabled:cursor-not-allowed disabled:opacity-50 dark:disabled:opacity-40"
+                  className="inline-flex items-center gap-2 rounded-[12px] bg-[#DDAF3B] px-5 py-2 text-[12.5px] font-black text-[#001201] transition-all hover:bg-[#B08A14] hover:shadow-[0_10px_20px_rgba(221, 175, 59,0.25)] disabled:cursor-not-allowed disabled:opacity-50 dark:disabled:opacity-40"
                 >
                   {saving && (
                     <svg className="animate-spin" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" aria-hidden="true">

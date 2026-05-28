@@ -40,7 +40,7 @@ function ReviewCard({ review }: { review: Review }) {
     <div className="bg-[#C8C8B4] dark:bg-surface rounded-xl px-5 py-4 transition-colors">
       <div className="flex items-center gap-3 mb-2">
         <div className="w-9 h-9 rounded-full bg-[#B0B0A0] dark:bg-tab-inactive flex items-center justify-center shrink-0">
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true" className="text-foreground/65 dark:text-[#9A9A8A]">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true" className="text-foreground/65 dark:text-[#B0BFB1]">
             <path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2" />
             <circle cx="12" cy="7" r="4" />
           </svg>

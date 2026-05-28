@@ -456,7 +456,7 @@ function SlotStepPicker({ slots, selectedSlotId, onSelect, locale, pickDateLabel
     <div className="space-y-5 pb-2">
       {/* = Date selection strip */}
       <div>
-        <p className="text-[11px] font-bold text-foreground/70 dark:text-[#A0A090] uppercase tracking-wider mb-2">
+        <p className="text-[11px] font-bold text-foreground/70 dark:text-[#B0BFB1] uppercase tracking-wider mb-2">
           {pickDateLabel}
         </p>
         <div className="flex gap-2 overflow-x-auto pb-1 scrollbar-none -mx-1 px-1">
@@ -486,7 +486,7 @@ function SlotStepPicker({ slots, selectedSlotId, onSelect, locale, pickDateLabel
 
       {/* = Time slot selection for the picked day */}
       <div>
-        <p className="text-[11px] font-bold text-foreground/70 dark:text-[#A0A090] uppercase tracking-wider mb-2">
+        <p className="text-[11px] font-bold text-foreground/70 dark:text-[#B0BFB1] uppercase tracking-wider mb-2">
           {pickTimeLabel}
         </p>
         {activeGroup && activeGroup.slots.length > 0 ? (

@@ -160,7 +160,7 @@ export function StationQueuePage() {
   const totalWaiting = waitingEntries.length;
 
   return (
-    <div className="flex flex-1 flex-col overflow-hidden bg-[#EDEDED] dark:bg-[#001201]">
+    <div className="flex flex-1 flex-col overflow-hidden bg-[#FFF9EC] dark:bg-[#001201]">
       {/* = Header */}
       <div className="border-b border-[#CCCCCC] bg-surface px-6 pb-4 pt-5 dark:border-[#3A4A36] dark:bg-[#001A05]">
         <div className="flex items-center justify-between gap-4">

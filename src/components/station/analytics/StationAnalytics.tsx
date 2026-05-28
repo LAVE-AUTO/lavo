@@ -119,12 +119,12 @@ export function StationAnalytics() {
 
   if (error || !data) {
     return (
-      <div className="flex h-96 items-center justify-center bg-[#EDEDED] px-6 dark:bg-[#002001]">
+      <div className="flex h-96 items-center justify-center bg-[#FFF9EC] px-6 dark:bg-[#002001]">
         <div className="text-center">
-          <p className="mb-4 text-sm text-foreground/65 dark:text-[#A0A090]">{error || t('no_data')}</p>
+          <p className="mb-4 text-sm text-foreground/65 dark:text-[#B0BFB1]">{error || t('no_data')}</p>
           <button
             onClick={() => router.refresh()}
-            className="rounded-lg bg-[#DDAF3B] px-4 py-2 text-[#0C1209] font-black transition-opacity hover:opacity-90"
+            className="rounded-lg bg-[#DDAF3B] px-4 py-2 text-[#001201] font-black transition-opacity hover:opacity-90"
           >
             {t('retry')}
           </button>
@@ -134,12 +134,12 @@ export function StationAnalytics() {
   }
 
   return (
-    <div className="space-y-6 p-6 bg-[#EDEDED] dark:bg-[#002001]">
+    <div className="space-y-6 p-6 bg-[#FFF9EC] dark:bg-[#002001]">
       {/* Header */}
       <div className="flex flex-col items-start justify-between gap-4 sm:flex-row sm:items-center">
         <div>
           <h1 className="text-2xl font-bold text-[#001201] dark:text-[#FFF9EC]">{t('title')}</h1>
-          <p className="mt-1 text-sm text-foreground/65 dark:text-[#A0A090]">{t('subtitle')}</p>
+          <p className="mt-1 text-sm text-foreground/65 dark:text-[#B0BFB1]">{t('subtitle')}</p>
         </div>
         <div className="flex gap-3">
           <AnalyticsPeriodToggle value={period} onChange={setPeriod} />

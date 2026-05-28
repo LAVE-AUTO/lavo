@@ -278,7 +278,7 @@ export function RegisterForm({ promoCode }: RegisterFormProps) {
               <p className="text-[13px] font-semibold text-[#001201] dark:text-[#FFF9EC]">
                 {t('promo_banner_station', { station: promoInfo.station_name })}
               </p>
-              <p className="text-[12px] text-foreground/65 dark:text-[#9A9A8A]">
+              <p className="text-[12px] text-foreground/65 dark:text-[#B0BFB1]">
                 {promoInfo.city} · {t('promo_banner_rate', { rate: promoInfo.promo_commission_rate_percent ?? 0 })}
               </p>
             </div>

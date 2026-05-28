@@ -30,7 +30,7 @@ export function PageLoader({ label }: Props) {
         <path d="M21 12a9 9 0 11-6.219-8.56" />
       </svg>
       {label && (
-        <span className="text-[13px] font-semibold text-foreground/65 dark:text-[#A0A090]">
+        <span className="text-[13px] font-semibold text-foreground/65 dark:text-[#B0BFB1]">
           {label}
         </span>
       )}

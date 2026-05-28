@@ -24,7 +24,7 @@ function Field({ label, hint, children }: { label: string; hint?: string; childr
   return (
     <div className="flex flex-col gap-1.5">
       <div className="flex items-baseline gap-2">
-        <label className="text-[11px] font-bold uppercase tracking-[0.5px] text-foreground/55 dark:text-[#9A9A8A]">
+        <label className="text-[11px] font-bold uppercase tracking-[0.5px] text-foreground/55 dark:text-[#B0BFB1]">
           {label}
         </label>
         {hint && <span className="text-[12px] text-[#BBBBAA] dark:text-[#4A4A3A]">{hint}</span>}
@@ -131,7 +131,7 @@ export function StationProfileForm({ profile, onSaved, locked = false }: Props) 
   }
 
   return (
-    <section className="rounded-2xl border border-[#E8E4DC] bg-white shadow-sm dark:border-[#1A2A14] dark:bg-[#182214]">
+    <section className="rounded-2xl border border-[#FFF9EC] bg-white shadow-sm dark:border-[#1A2A14] dark:bg-[#182214]">
       <div className="flex items-center gap-2.5 border-b border-[#F0EDE4] px-5 py-3.5 dark:border-[#1A2A14]">
         <span className="h-4 w-[3px] rounded-full bg-[#DDAF3B]" />
         <span className="flex-1 text-[13px] font-bold text-[#001201] dark:text-[#FFF9EC]">{t('section_profile')}</span>
@@ -174,7 +174,7 @@ export function StationProfileForm({ profile, onSaved, locked = false }: Props) 
                   <p className="mb-0.5 text-[11px] font-bold uppercase tracking-wider text-[#C8C4B4] dark:text-[#2E3C2A]">{t('field_email')}</p>
                   <div className="flex items-center gap-2">
                     <span className="text-[13px] font-semibold text-[#001201] dark:text-[#FFF9EC]">{user.email}</span>
-                    <span className="rounded-full bg-[#E8E4DC] px-2 py-0.5 text-[11px] font-semibold text-[#AAAAAA] dark:bg-[#1A2A14] dark:text-[#4A4A3A]">
+                    <span className="rounded-full bg-[#FFF9EC] px-2 py-0.5 text-[11px] font-semibold text-[#AAAAAA] dark:bg-[#1A2A14] dark:text-[#4A4A3A]">
                       {t('field_email_readonly')}
                     </span>
                   </div>
@@ -194,10 +194,10 @@ export function StationProfileForm({ profile, onSaved, locked = false }: Props) 
               {user?.email && (
                 <div className="col-span-2">
                   <Field label={t('field_email')}>
-                    <div className="flex items-center gap-2.5 rounded-xl border border-[#E0DCD0] bg-[#F0EFEB] px-3 py-2.5 dark:border-[#001A05] dark:bg-[#0A1208]">
+                    <div className="flex items-center gap-2.5 rounded-xl border border-[#FFF9EC] bg-[#F0EFEB] px-3 py-2.5 dark:border-[#001A05] dark:bg-[#0A1208]">
                       <MailIcon />
                       <span className="text-[13px] text-[#999] dark:text-[#5A5A4A]">{user.email}</span>
-                      <span className="ml-auto rounded-full bg-[#E8E4DC] px-2 py-0.5 text-[11px] font-semibold text-[#AAAAAA] dark:bg-[#1A2A14] dark:text-[#4A4A3A]">
+                      <span className="ml-auto rounded-full bg-[#FFF9EC] px-2 py-0.5 text-[11px] font-semibold text-[#AAAAAA] dark:bg-[#1A2A14] dark:text-[#4A4A3A]">
                         {t('field_email_readonly')}
                       </span>
                     </div>
@@ -225,14 +225,14 @@ export function StationProfileForm({ profile, onSaved, locked = false }: Props) 
 
               <div className="col-span-2">
                 <Field label={t('field_service_scope')}>
-                  <div className="flex gap-1 rounded-xl border border-[#E0DCD0] bg-[#F7F6F2] p-1 dark:border-[#001A05] dark:bg-[#001201]">
+                  <div className="flex gap-1 rounded-xl border border-[#FFF9EC] bg-[#FFF9EC] p-1 dark:border-[#001A05] dark:bg-[#001201]">
                     <button
                       type="button"
                       onClick={() => setServiceScope('')}
                       className={`rounded-[10px] px-3 py-1.5 text-[13px] font-semibold transition-all duration-150 ${
                         !serviceScope
-                          ? 'bg-white text-[#5A5A4A] shadow-sm dark:bg-[#182214] dark:text-[#9A9A8A]'
-                          : 'text-[#BBBBAA] hover:text-foreground/55 dark:text-[#3A3A2A] dark:hover:text-[#9A9A8A]'
+                          ? 'bg-white text-[#5A5A4A] shadow-sm dark:bg-[#182214] dark:text-[#B0BFB1]'
+                          : 'text-[#BBBBAA] hover:text-foreground/55 dark:text-[#3A3A2A] dark:hover:text-[#B0BFB1]'
                       }`}
                     >
                       -
@@ -244,8 +244,8 @@ export function StationProfileForm({ profile, onSaved, locked = false }: Props) 
                         onClick={() => setServiceScope(v)}
                         className={`flex-1 rounded-[10px] py-1.5 text-[13px] font-semibold transition-all duration-150 ${
                           serviceScope === v
-                            ? 'bg-[#DDAF3B] text-[#0C1209] shadow-sm'
-                            : 'text-[#AAAAAA] hover:text-[#5A5A4A] dark:text-[#4A4A3A] dark:hover:text-[#9A9A8A]'
+                            ? 'bg-[#DDAF3B] text-[#001201] shadow-sm'
+                            : 'text-[#AAAAAA] hover:text-[#5A5A4A] dark:text-[#4A4A3A] dark:hover:text-[#B0BFB1]'
                         }`}
                       >
                         {scopeLabels[v]}
@@ -273,14 +273,14 @@ export function StationProfileForm({ profile, onSaved, locked = false }: Props) 
                 type="button"
                 onClick={handleCancel}
                 disabled={saving}
-                className="rounded-xl border border-[#E0DCD0] px-4 py-2.5 text-[13px] font-semibold text-foreground/65 transition-colors hover:bg-[#F0EDE0] disabled:opacity-50 dark:border-[#001A05] dark:text-[#9A9A8A]"
+                className="rounded-xl border border-[#FFF9EC] px-4 py-2.5 text-[13px] font-semibold text-foreground/65 transition-colors hover:bg-[#F0EDE0] disabled:opacity-50 dark:border-[#001A05] dark:text-[#B0BFB1]"
               >
                 {t('btn_cancel_edit')}
               </button>
               <button
                 type="submit"
                 disabled={saving}
-                className="rounded-xl bg-[#DDAF3B] px-6 py-2.5 text-[13px] font-bold text-[#0C1209] transition-opacity hover:opacity-85 disabled:opacity-50"
+                className="rounded-xl bg-[#DDAF3B] px-6 py-2.5 text-[13px] font-bold text-[#001201] transition-opacity hover:opacity-85 disabled:opacity-50"
               >
                 {saving ? t('btn_saving') : t('btn_save')}
               </button>

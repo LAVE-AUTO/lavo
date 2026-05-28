@@ -26,7 +26,7 @@ const inputErr =
   'border-red-400 focus:border-red-400 focus:shadow-[0_0_0_3px_rgba(248,113,113,0.15)]';
 
 const primaryBtn =
-  'inline-flex items-center justify-center gap-2 rounded-[12px] bg-[#DDAF3B] px-4 py-2.5 text-[12.5px] font-black text-[#0C1209] transition-all hover:bg-[#B08A14] hover:shadow-[0_10px_20px_rgba(221, 175, 59,0.25)] disabled:cursor-not-allowed disabled:opacity-50 dark:disabled:opacity-40';
+  'inline-flex items-center justify-center gap-2 rounded-[12px] bg-[#DDAF3B] px-4 py-2.5 text-[12.5px] font-black text-[#001201] transition-all hover:bg-[#B08A14] hover:shadow-[0_10px_20px_rgba(221, 175, 59,0.25)] disabled:cursor-not-allowed disabled:opacity-50 dark:disabled:opacity-40';
 const secondaryBtn =
   'inline-flex items-center gap-1.5 rounded-[12px] border border-[#E1DBCF] bg-white px-3.5 py-2 text-[12.5px] font-bold text-[#5A554B] transition-all hover:border-[#DDAF3B]/40 hover:bg-[#FCF6E5] hover:text-[#9A7A13] disabled:cursor-not-allowed disabled:opacity-40 dark:border-[#1E2E18] dark:bg-[#0E170C] dark:text-[#A6A091] dark:hover:bg-[#1A2410] dark:hover:text-[#F0D98C]';
 
@@ -405,7 +405,7 @@ export function AdminProfileView() {
 
   const metrics = [
     { label: t('metric_status'),   value: t.has(statusKey) ? t(statusKey) : profile.status, accent: '#22C55E' },
-    { label: t('metric_security'), value: t('metric_security_value'),                       accent: '#3B82F6' },
+    { label: t('metric_security'), value: t('metric_security_value'),                       accent: '#1E40AF' },
     {
       label: t('metric_phone'),
       value: profile.phone ? t('metric_phone_set') : t('metric_phone_missing'),
@@ -415,7 +415,7 @@ export function AdminProfileView() {
   ];
 
   return (
-    <div className="relative flex h-full min-h-0 flex-col overflow-hidden bg-[radial-gradient(circle_at_top,_rgba(221, 175, 59,0.12),_transparent_36%),linear-gradient(180deg,#faf8f2_0%,#f2efe7_100%)] dark:bg-[radial-gradient(circle_at_top,_rgba(221, 175, 59,0.12),_transparent_32%),linear-gradient(180deg,#0C1209_0%,#091009_100%)]">
+    <div className="relative flex h-full min-h-0 flex-col overflow-hidden bg-[radial-gradient(circle_at_top,_rgba(221, 175, 59,0.12),_transparent_36%),linear-gradient(180deg,#faf8f2_0%,#f2efe7_100%)] dark:bg-[radial-gradient(circle_at_top,_rgba(221, 175, 59,0.12),_transparent_32%),linear-gradient(180deg,#001201_0%,#091009_100%)]">
       <div className="pointer-events-none absolute inset-0 bg-[linear-gradient(135deg,rgba(255,255,255,0.55),transparent_42%)] dark:bg-[linear-gradient(135deg,rgba(255,255,255,0.04),transparent_42%)]" />
 
       <div className="relative mx-auto flex h-full min-h-0 w-full max-w-[1280px] flex-1 flex-col gap-5 overflow-y-auto scrollbar-none px-3 py-4 sm:px-4 lg:px-6 lg:py-6">
@@ -700,7 +700,7 @@ export function AdminProfileView() {
                       onChange={(e) => toggleNotif(key, channel, e.target.checked)}
                       className="h-4 w-4 accent-[#DDAF3B]"
                     />
-                    <span className="font-semibold text-[#4F4C40] dark:text-[#D2CEBE]">{channelLabel}</span>
+                    <span className="font-semibold text-[#B0BFB1] dark:text-[#B0BFB1]">{channelLabel}</span>
                   </label>
                 ))}
               </div>
@@ -711,7 +711,7 @@ export function AdminProfileView() {
               type="button"
               onClick={handleSaveNotificationPrefs}
               disabled={savingNotif}
-              className="rounded-lg bg-[#DDAF3B] px-4 py-2 text-[13px] font-bold text-[#0C1209] transition-colors hover:bg-[#B08A14] disabled:cursor-not-allowed disabled:opacity-50"
+              className="rounded-lg bg-[#DDAF3B] px-4 py-2 text-[13px] font-bold text-[#001201] transition-colors hover:bg-[#B08A14] disabled:cursor-not-allowed disabled:opacity-50"
             >
               {savingNotif ? t('btn_saving') : t('btn_save_notifications')}
             </button>

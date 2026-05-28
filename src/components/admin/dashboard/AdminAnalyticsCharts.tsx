@@ -29,7 +29,7 @@ interface ChartConfig {
 
 const CHARTS: ChartConfig[] = [
   { metric: 'revenue',        labelKey: 'chart_revenue',        color: '#DDAF3B', isCurrency: true },
-  { metric: 'transactions',   labelKey: 'chart_transactions',   color: '#3B82F6' },
+  { metric: 'transactions',   labelKey: 'chart_transactions',   color: '#1E40AF' },
   { metric: 'registrations',  labelKey: 'chart_registrations',  color: '#10B981' },
   { metric: 'reservations',   labelKey: 'chart_reservations',   color: '#8B5CF6' },
 ];
@@ -72,7 +72,7 @@ function BarChart({ series, color, groupBy, isCurrency, loading, locale }: {
   }
 
   if (series.length === 0) {
-    return <p className="py-8 text-center text-[12px] text-[#AAA] dark:text-[#A0A090]">-</p>;
+    return <p className="py-8 text-center text-[12px] text-[#AAA] dark:text-[#B0BFB1]">-</p>;
   }
 
   const values = series.map((p) => typeof p.value === 'string' ? parseFloat(p.value) : p.value);
@@ -94,14 +94,14 @@ function BarChart({ series, color, groupBy, isCurrency, loading, locale }: {
                 className="absolute bottom-0 w-full rounded-t-sm transition-all duration-300"
                 style={{ height: `${h}%`, background: i === series.length - 1 ? color : `${color}60` }}
               />
-              <div className="pointer-events-none absolute -top-8 left-1/2 z-10 hidden -translate-x-1/2 whitespace-nowrap rounded-md bg-[#001201] px-2 py-1 text-[11px] font-bold text-white shadow-lg group-hover:block dark:bg-[#FFF9EC] dark:text-[#0C1209]">
+              <div className="pointer-events-none absolute -top-8 left-1/2 z-10 hidden -translate-x-1/2 whitespace-nowrap rounded-md bg-[#001201] px-2 py-1 text-[11px] font-bold text-white shadow-lg group-hover:block dark:bg-[#FFF9EC] dark:text-[#001201]">
                 {formatLabel(p.date, groupBy, locale)}: {formatValue(v, isCurrency)}
               </div>
             </div>
           );
         })}
       </div>
-      <div className="mt-1.5 flex justify-between text-[9px] text-[#BBBBAA] dark:text-[#A0A090]">
+      <div className="mt-1.5 flex justify-between text-[9px] text-[#BBBBAA] dark:text-[#B0BFB1]">
         <span>{formatLabel(series[0].date, groupBy, locale)}</span>
         <span>{formatLabel(series[series.length - 1].date, groupBy, locale)}</span>
       </div>
@@ -155,7 +155,7 @@ export function AdminAnalyticsCharts() {
         <span className="text-[11px] font-black uppercase tracking-[0.15em] text-[#DDAF3B]">
           {t('section_analytics')}
         </span>
-        <span className="h-px flex-1 bg-[#E8E4D8] dark:bg-[#1A2A14]" />
+        <span className="h-px flex-1 bg-[#FFF9EC] dark:bg-[#1A2A14]" />
         <div className="flex gap-1">
           {GROUP_OPTIONS.map(({ key, labelKey }) => (
             <button
@@ -166,7 +166,7 @@ export function AdminAnalyticsCharts() {
                 'rounded-lg px-2.5 py-1 text-[11px] font-bold transition-all',
                 groupBy === key
                   ? 'bg-[#DDAF3B]/10 text-[#DDAF3B]'
-                  : 'text-[#AAA] hover:text-foreground/65 dark:text-[#A0A090] dark:hover:text-[#A0A090]',
+                  : 'text-[#AAA] hover:text-foreground/65 dark:text-[#B0BFB1] dark:hover:text-[#B0BFB1]',
               ].join(' ')}
             >
               {t(labelKey)}
@@ -181,7 +181,7 @@ export function AdminAnalyticsCharts() {
           <div key={metric} className="overflow-hidden rounded-2xl bg-white p-5 shadow-sm ring-1 ring-black/[0.04] dark:bg-[#001A05] dark:ring-white/[0.06]">
             <div className="mb-3 flex items-center gap-2">
               <span className="h-2 w-2 rounded-full" style={{ background: color }} />
-              <span className="text-[12px] font-black uppercase tracking-wider text-[#A0A090] dark:text-[#A0A090]">{t(labelKey)}</span>
+              <span className="text-[12px] font-black uppercase tracking-wider text-[#B0BFB1] dark:text-[#B0BFB1]">{t(labelKey)}</span>
             </div>
             <BarChart
               series={seriesMap[metric] ?? []}

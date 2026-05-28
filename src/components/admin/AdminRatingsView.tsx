@@ -151,7 +151,7 @@ export function AdminRatingsView() {
   const metrics = [
     { label: t('metric_total'),  value: loading ? '…' : String(meta?.total ?? 0),               accent: '#DDAF3B' },
     { label: t('metric_avg'),    value: loading || items.length === 0 ? '…' : `${stats.avg.toFixed(1)}/5`, accent: '#22C55E' },
-    { label: t('metric_visible'),value: loading ? '…' : String(stats.visibleCount),             accent: '#3B82F6' },
+    { label: t('metric_visible'),value: loading ? '…' : String(stats.visibleCount),             accent: '#1E40AF' },
     { label: t('metric_hidden'), value: loading ? '…' : String(stats.hiddenCount),              accent: '#94A3B8' },
   ];
 
@@ -159,11 +159,11 @@ export function AdminRatingsView() {
     'rounded-[14px] px-3.5 py-2 text-[12.5px] font-bold transition-colors duration-150',
     active
       ? 'bg-[#001201] text-[#FFF9EC] shadow-[0_10px_20px_rgba(26,26,10,0.18)] dark:bg-[#FFF9EC] dark:text-[#001201]'
-      : 'text-[#847E70] hover:bg-[#EFE8D7] hover:text-[#001201] dark:text-[#A0A090] dark:hover:bg-[#182214] dark:hover:text-[#FFF9EC]',
+      : 'text-[#847E70] hover:bg-[#EFE8D7] hover:text-[#001201] dark:text-[#B0BFB1] dark:hover:bg-[#182214] dark:hover:text-[#FFF9EC]',
   ].join(' ');
 
   return (
-    <div className="relative flex h-full min-h-0 flex-col overflow-hidden bg-[radial-gradient(circle_at_top,_rgba(221, 175, 59,0.12),_transparent_36%),linear-gradient(180deg,#faf8f2_0%,#f2efe7_100%)] dark:bg-[radial-gradient(circle_at_top,_rgba(221, 175, 59,0.12),_transparent_32%),linear-gradient(180deg,#0C1209_0%,#091009_100%)]">
+    <div className="relative flex h-full min-h-0 flex-col overflow-hidden bg-[radial-gradient(circle_at_top,_rgba(221, 175, 59,0.12),_transparent_36%),linear-gradient(180deg,#faf8f2_0%,#f2efe7_100%)] dark:bg-[radial-gradient(circle_at_top,_rgba(221, 175, 59,0.12),_transparent_32%),linear-gradient(180deg,#001201_0%,#091009_100%)]">
       <div className="pointer-events-none absolute inset-0 bg-[linear-gradient(135deg,rgba(255,255,255,0.55),transparent_42%)] dark:bg-[linear-gradient(135deg,rgba(255,255,255,0.04),transparent_42%)]" />
 
       <div className="relative mx-auto flex h-full min-h-0 w-full max-w-none flex-1 flex-col gap-5 overflow-y-auto scrollbar-none px-3 py-4 sm:px-4 lg:px-6 lg:py-6">
@@ -247,7 +247,7 @@ export function AdminRatingsView() {
 
           {!loading && loadError && (
             <div className="flex flex-1 flex-col items-center justify-center gap-3 py-16 text-center">
-              <p className="text-[14px] font-semibold text-foreground/55 dark:text-[#A0A090]">{t('error_load')}</p>
+              <p className="text-[14px] font-semibold text-foreground/55 dark:text-[#B0BFB1]">{t('error_load')}</p>
               <button
                 type="button"
                 onClick={() => loadData(page, visibilityFilter, scoreFilter, stationDebounced)}
@@ -310,12 +310,12 @@ export function AdminRatingsView() {
                       </div>
 
                       {/* Date (desktop) */}
-                      <p className="hidden whitespace-nowrap text-[12.5px] text-[#A8A293] dark:text-[#A0A090] md:block">{formatDate(item.created_at)}</p>
+                      <p className="hidden whitespace-nowrap text-[12.5px] text-[#A8A293] dark:text-[#B0BFB1] md:block">{formatDate(item.created_at)}</p>
 
                       {/* Visibility */}
                       <div className="mt-2 md:mt-0">
                         <span className={[
-                          'inline-flex items-center gap-1.5 rounded-full bg-[#F4F1E8] px-2.5 py-1 text-[11.5px] font-bold dark:bg-[#171F12]',
+                          'inline-flex items-center gap-1.5 rounded-full bg-[#FFF9EC] px-2.5 py-1 text-[11.5px] font-bold dark:bg-[#171F12]',
                           item.is_visible
                             ? 'text-[#166534] dark:text-[#86EFAC]'
                             : 'text-[#9F1239] dark:text-[#FDA4AF]',

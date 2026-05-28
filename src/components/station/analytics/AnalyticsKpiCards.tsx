@@ -76,14 +76,14 @@ export function AnalyticsKpiCards({ kpi }: AnalyticsKpiCardsProps) {
       {kpiCards.map((card) => (
         <div
           key={card.id}
-          className="group animate-fade-in-up rounded-2xl border border-[#E8E4DC] bg-white p-5 shadow-sm transition-all duration-200 hover:-translate-y-0.5 hover:shadow-md dark:border-[#1A2A14] dark:bg-[#182214]"
+          className="group animate-fade-in-up rounded-2xl border border-[#FFF9EC] bg-white p-5 shadow-sm transition-all duration-200 hover:-translate-y-0.5 hover:shadow-md dark:border-[#1A2A14] dark:bg-[#182214]"
           style={{ borderLeft: `4px solid ${card.borderColor}` }}
         >
           <div className="mb-3 leading-none">{card.icon}</div>
           <p className="mb-1 text-[28px] font-black leading-none tabular-nums text-[#001201] dark:text-[#FFF9EC]">
             {card.value}
           </p>
-          <p className="text-[12px] font-semibold text-foreground/55 dark:text-[#9A9A8A]">{card.label}</p>
+          <p className="text-[12px] font-semibold text-foreground/55 dark:text-[#B0BFB1]">{card.label}</p>
         </div>
       ))}
     </div>

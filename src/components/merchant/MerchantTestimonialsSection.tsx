@@ -35,7 +35,7 @@ export function MerchantTestimonialsSection() {
                   &ldquo;{item.quote}&rdquo;
                 </p>
                 <div className="flex items-center gap-2.5">
-                  <div className="flex h-[38px] w-[38px] flex-shrink-0 items-center justify-center rounded-full border border-[rgba(221,175,59,0.3)] bg-[#162218] text-[13px] font-bold text-[#DDAF3B]">
+                  <div className="flex h-[38px] w-[38px] flex-shrink-0 items-center justify-center rounded-full border border-[rgba(221,175,59,0.3)] bg-[#001A05] text-[13px] font-bold text-[#DDAF3B]">
                     {item.initials}
                   </div>
                   <div>

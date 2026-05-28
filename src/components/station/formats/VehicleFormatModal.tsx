@@ -110,7 +110,7 @@ export function VehicleFormatModal({ format, existingFormats, onClose, onSaved }
         className="fixed inset-0 z-50 flex items-end justify-center bg-black/50 p-4 sm:items-center"
         onClick={(e) => { if (e.target === e.currentTarget) onClose(); }}
       >
-        <div className="w-full max-w-sm rounded-xl border border-[#E8E4DC] bg-white shadow-xl animate-fade-in-up dark:border-[#1A2A14] dark:bg-[#182214]">
+        <div className="w-full max-w-sm rounded-xl border border-[#FFF9EC] bg-white shadow-xl animate-fade-in-up dark:border-[#1A2A14] dark:bg-[#182214]">
 
           {/* Header */}
           <div className="flex items-center justify-between border-b border-[#F0EDE4] px-5 py-4 dark:border-[#1A2A14]">
@@ -139,7 +139,7 @@ export function VehicleFormatModal({ format, existingFormats, onClose, onSaved }
           <form onSubmit={handleSaveClick} className="flex flex-col gap-4 p-5">
             {/* Label field - Dropdown select */}
             <div className="flex flex-col gap-1.5">
-              <label className="text-[13px] font-semibold text-[#5A5A4A] dark:text-[#9A9A8A]">
+              <label className="text-[13px] font-semibold text-[#5A5A4A] dark:text-[#B0BFB1]">
                 {t('format_field_label')} <span className="text-[#EF4444]">*</span>
               </label>
               
@@ -151,7 +151,7 @@ export function VehicleFormatModal({ format, existingFormats, onClose, onSaved }
                   setApiError(null);
                 }}
                 onKeyDown={(e) => e.key === 'Enter' && focusPrice()}
-                className="rounded-[8px] border border-[#D8D4C8] bg-[#F7F6F2] px-3 py-2.5 text-[13px] text-[#001201] outline-none transition-colors focus:border-[#DDAF3B] focus:bg-white focus:shadow-[0_0_0_3px_rgba(221, 175, 59,0.12)] dark:border-[#001A05] dark:bg-[#001201] dark:text-[#FFF9EC] dark:focus:border-[#DDAF3B] dark:focus:bg-[#182214]"
+                className="rounded-[8px] border border-[#D8D4C8] bg-[#FFF9EC] px-3 py-2.5 text-[13px] text-[#001201] outline-none transition-colors focus:border-[#DDAF3B] focus:bg-white focus:shadow-[0_0_0_3px_rgba(221, 175, 59,0.12)] dark:border-[#001A05] dark:bg-[#001201] dark:text-[#FFF9EC] dark:focus:border-[#DDAF3B] dark:focus:bg-[#182214]"
               >
                 <option value="">{t('format_placeholder_label')}</option>
                 <optgroup label="Suggestions">
@@ -174,7 +174,7 @@ export function VehicleFormatModal({ format, existingFormats, onClose, onSaved }
                   }}
                   placeholder="Custom format name"
                   maxLength={100}
-                  className="rounded-[8px] border border-[#D8D4C8] bg-[#F7F6F2] px-3 py-2.5 text-[13px] text-[#001201] outline-none transition-colors focus:border-[#DDAF3B] focus:bg-white focus:shadow-[0_0_0_3px_rgba(221, 175, 59,0.12)] dark:border-[#001A05] dark:bg-[#001201] dark:text-[#FFF9EC] dark:focus:border-[#DDAF3B] dark:focus:bg-[#182214]"
+                  className="rounded-[8px] border border-[#D8D4C8] bg-[#FFF9EC] px-3 py-2.5 text-[13px] text-[#001201] outline-none transition-colors focus:border-[#DDAF3B] focus:bg-white focus:shadow-[0_0_0_3px_rgba(221, 175, 59,0.12)] dark:border-[#001A05] dark:bg-[#001201] dark:text-[#FFF9EC] dark:focus:border-[#DDAF3B] dark:focus:bg-[#182214]"
                 />
               )}
 
@@ -190,10 +190,10 @@ export function VehicleFormatModal({ format, existingFormats, onClose, onSaved }
 
             {/* Price field */}
             <div className="flex flex-col gap-1.5">
-              <label className="text-[13px] font-semibold text-[#5A5A4A] dark:text-[#9A9A8A]">
+              <label className="text-[13px] font-semibold text-[#5A5A4A] dark:text-[#B0BFB1]">
                 {t('format_field_price')} <span className="text-[#EF4444]">*</span>
               </label>
-              <div className={`flex items-center gap-2 rounded-[8px] border bg-[#F7F6F2] px-3 py-2.5 transition-all focus-within:shadow-[0_0_0_3px_rgba(221, 175, 59,0.12)] dark:bg-[#001201] ${
+              <div className={`flex items-center gap-2 rounded-[8px] border bg-[#FFF9EC] px-3 py-2.5 transition-all focus-within:shadow-[0_0_0_3px_rgba(221, 175, 59,0.12)] dark:bg-[#001201] ${
                 priceError
                   ? 'border-[#EF4444] focus-within:border-[#EF4444] dark:border-[#6A1A0A]'
                   : 'border-[#D8D4C8] focus-within:border-[#DDAF3B] dark:border-[#001A05] dark:focus-within:border-[#DDAF3B]'
@@ -239,14 +239,14 @@ export function VehicleFormatModal({ format, existingFormats, onClose, onSaved }
               <button
                 type="button"
                 onClick={onClose}
-                className="rounded-[10px] border border-[#D8D4C8] px-4 py-2 text-[13px] font-medium text-[#5A5A4A] transition-opacity hover:opacity-70 dark:border-[#001A05] dark:text-[#9A9A8A]"
+                className="rounded-[10px] border border-[#D8D4C8] px-4 py-2 text-[13px] font-medium text-[#5A5A4A] transition-opacity hover:opacity-70 dark:border-[#001A05] dark:text-[#B0BFB1]"
               >
                 {t('btn_cancel')}
               </button>
               <button
                 type="submit"
                 disabled={!canSubmit}
-                className="rounded-[10px] bg-[#DDAF3B] px-5 py-2 text-[13px] font-bold text-[#0C1209] transition-all hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-40"
+                className="rounded-[10px] bg-[#DDAF3B] px-5 py-2 text-[13px] font-bold text-[#001201] transition-all hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-40"
               >
                 {saving ? (
                   <span className="flex items-center gap-2">

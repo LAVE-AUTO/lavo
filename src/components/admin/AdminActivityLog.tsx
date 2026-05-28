@@ -53,7 +53,7 @@ const ACTION_VARIANT: Record<string, ActionBadgeVariant> = {
 };
 
 const BADGE_CLASSES: Record<ActionBadgeVariant, string> = {
-  success: 'bg-[#F4F1E8] text-[#166534] ring-1 ring-inset ring-[#22C55E]/15 dark:bg-[#171F12] dark:text-[#86EFAC] dark:ring-[#22C55E]/15',
+  success: 'bg-[#FFF9EC] text-[#166534] ring-1 ring-inset ring-[#22C55E]/15 dark:bg-[#171F12] dark:text-[#86EFAC] dark:ring-[#22C55E]/15',
   danger:  'bg-[#FBF1F2] text-[#9F1239] ring-1 ring-inset ring-[#F43F5E]/15 dark:bg-[#1F1414] dark:text-[#FDA4AF] dark:ring-[#F43F5E]/15',
   warning: 'bg-[#FBF6E8] text-[#7A5E0A] ring-1 ring-inset ring-[#DDAF3B]/20 dark:bg-[#1F1A0E] dark:text-[#F0D98C] dark:ring-[#DDAF3B]/20',
   neutral: 'bg-[#FFEECA] text-[#5A554B] ring-1 ring-inset ring-[#001201]/8  dark:bg-[#171F12] dark:text-[#A6A091] dark:ring-[#FFF9EC]/10',
@@ -345,7 +345,7 @@ export function AdminActivityLog() {
   const metrics = [
     { label: t('metric_total'),          value: loading ? '…' : String(meta?.total ?? 0), accent: '#DDAF3B' },
     { label: t('metric_today'),          value: loading ? '…' : String(today),            accent: '#22C55E' },
-    { label: t('metric_active_actions'), value: loading ? '…' : String(distinctActions),  accent: '#3B82F6' },
+    { label: t('metric_active_actions'), value: loading ? '…' : String(distinctActions),  accent: '#1E40AF' },
     { label: t('metric_active_admins'),  value: loading ? '…' : String(distinctAdmins),   accent: '#94A3B8' },
   ];
 
@@ -353,11 +353,11 @@ export function AdminActivityLog() {
     'shrink-0 rounded-[14px] px-3.5 py-2 text-[12.5px] font-bold transition-colors duration-150',
     active
       ? 'bg-[#001201] text-[#FFF9EC] shadow-[0_10px_20px_rgba(26,26,10,0.18)] dark:bg-[#FFF9EC] dark:text-[#001201]'
-      : 'text-[#847E70] hover:bg-[#EFE8D7] hover:text-[#001201] dark:text-[#A0A090] dark:hover:bg-[#182214] dark:hover:text-[#FFF9EC]',
+      : 'text-[#847E70] hover:bg-[#EFE8D7] hover:text-[#001201] dark:text-[#B0BFB1] dark:hover:bg-[#182214] dark:hover:text-[#FFF9EC]',
   ].join(' ');
 
   return (
-    <div className="relative flex h-full min-h-0 flex-col overflow-hidden bg-[radial-gradient(circle_at_top,_rgba(221, 175, 59,0.12),_transparent_36%),linear-gradient(180deg,#faf8f2_0%,#f2efe7_100%)] dark:bg-[radial-gradient(circle_at_top,_rgba(221, 175, 59,0.12),_transparent_32%),linear-gradient(180deg,#0C1209_0%,#091009_100%)]">
+    <div className="relative flex h-full min-h-0 flex-col overflow-hidden bg-[radial-gradient(circle_at_top,_rgba(221, 175, 59,0.12),_transparent_36%),linear-gradient(180deg,#faf8f2_0%,#f2efe7_100%)] dark:bg-[radial-gradient(circle_at_top,_rgba(221, 175, 59,0.12),_transparent_32%),linear-gradient(180deg,#001201_0%,#091009_100%)]">
       <div className="pointer-events-none absolute inset-0 bg-[linear-gradient(135deg,rgba(255,255,255,0.55),transparent_42%)] dark:bg-[linear-gradient(135deg,rgba(255,255,255,0.04),transparent_42%)]" />
 
       <div className="relative mx-auto flex h-full min-h-0 w-full max-w-none flex-1 flex-col gap-5 overflow-y-auto scrollbar-none px-3 py-4 sm:px-4 lg:px-6 lg:py-6">
@@ -470,7 +470,7 @@ function LogRow({ entry, t }: { entry: LogEntry; t: LogsT }) {
       <div className="flex flex-col gap-2 sm:hidden">
         <div className="flex items-start justify-between gap-2">
           <ActionBadge action={entry.action} label={actionLabel} />
-          <time className="shrink-0 text-[11px] text-[#BBBBAA] dark:text-[#A0A090]">
+          <time className="shrink-0 text-[11px] text-[#BBBBAA] dark:text-[#B0BFB1]">
             {formatDateTime(entry.created_at)}
           </time>
         </div>
@@ -480,7 +480,7 @@ function LogRow({ entry, t }: { entry: LogEntry; t: LogsT }) {
             {targetName && <span className="text-[#5A554B] dark:text-[#A6A091]"> — {targetName}</span>}
           </p>
         )}
-        <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-[12px] text-foreground/65 dark:text-[#9A9A8A]">
+        <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-[12px] text-foreground/65 dark:text-[#B0BFB1]">
           {targetTypeLabel && (
             <span className="flex items-center gap-1">
               <span className="h-1.5 w-1.5 rounded-full bg-[#CCCCBB]" aria-hidden="true" />
@@ -538,7 +538,7 @@ function LogRow({ entry, t }: { entry: LogEntry; t: LogsT }) {
 
         {/* Date */}
         <div className="pt-0.5 text-right">
-          <time className="text-[12px] text-[#BBBBAA] dark:text-[#A0A090]">
+          <time className="text-[12px] text-[#BBBBAA] dark:text-[#B0BFB1]">
             {formatDateTime(entry.created_at)}
           </time>
         </div>

@@ -86,12 +86,12 @@ export function ServiceCard({ service, onEdit, onDeleted, onToggled }: Props) {
   return (
     <>
       <article
-        className="group flex flex-col rounded-2xl border border-[#E8E4DC] bg-white p-6 transition-all duration-200 hover:border-[#DDAF3B]/30 hover:shadow-sm dark:border-[#1A2A14] dark:bg-[#182214] dark:hover:border-[#DDAF3B]/30"
+        className="group flex flex-col rounded-2xl border border-[#FFF9EC] bg-white p-6 transition-all duration-200 hover:border-[#DDAF3B]/30 hover:shadow-sm dark:border-[#1A2A14] dark:bg-[#182214] dark:hover:border-[#DDAF3B]/30"
       >
         {/* Header */}
         <header className="mb-4 flex items-start justify-between gap-3">
           <div className="min-w-0 flex-1">
-            <p className="text-[11px] font-bold uppercase tracking-[0.5px] text-foreground/55 dark:text-[#9A9A8A]">
+            <p className="text-[11px] font-bold uppercase tracking-[0.5px] text-foreground/55 dark:text-[#B0BFB1]">
               {t(`cat_${service.category}`)}
             </p>
             <h3 className="mt-0.5 text-[20px] font-black leading-tight text-[#001201] dark:text-[#FFF9EC]">
@@ -108,7 +108,7 @@ export function ServiceCard({ service, onEdit, onDeleted, onToggled }: Props) {
               type="button"
               onClick={() => setDeleteOpen(true)}
               disabled={deleting}
-              className="inline-flex items-center gap-1.5 rounded-lg border border-[#E0DCD0] bg-white px-2.5 py-1.5 text-[11px] font-bold text-foreground/55 transition-all hover:border-[#FF2525] hover:bg-[#FF2525]/5 hover:text-[#FF2525] disabled:opacity-40 dark:border-[#001A05] dark:bg-[#001201] dark:text-[#9A9A8A]"
+              className="inline-flex items-center gap-1.5 rounded-lg border border-[#FFF9EC] bg-white px-2.5 py-1.5 text-[11px] font-bold text-foreground/55 transition-all hover:border-[#FF2525] hover:bg-[#FF2525]/5 hover:text-[#FF2525] disabled:opacity-40 dark:border-[#001A05] dark:bg-[#001201] dark:text-[#B0BFB1]"
             >
               <CrossIcon />
               {t('btn_delete_short')}
@@ -116,7 +116,7 @@ export function ServiceCard({ service, onEdit, onDeleted, onToggled }: Props) {
             <button
               type="button"
               onClick={() => onEdit(service)}
-              className="inline-flex items-center gap-1.5 rounded-lg bg-[#DDAF3B] px-2.5 py-1.5 text-[11px] font-bold text-[#0C1209] transition-opacity hover:opacity-85"
+              className="inline-flex items-center gap-1.5 rounded-lg bg-[#DDAF3B] px-2.5 py-1.5 text-[11px] font-bold text-[#001201] transition-opacity hover:opacity-85"
             >
               <PencilIcon />
               {t('btn_edit')}
@@ -132,7 +132,7 @@ export function ServiceCard({ service, onEdit, onDeleted, onToggled }: Props) {
             className={`inline-flex items-center gap-1 rounded-full border px-2.5 py-0.5 text-[10px] font-bold tracking-wide transition-colors ${
               service.is_active
                 ? 'border-[#22C47A]/40 bg-[#22C47A]/12 text-[#16A964] hover:bg-[#22C47A]/20'
-                : 'border-[#888]/30 bg-[#888]/10 text-foreground/55 hover:bg-[#888]/15 dark:text-[#9A9A8A]'
+                : 'border-[#888]/30 bg-[#888]/10 text-foreground/55 hover:bg-[#888]/15 dark:text-[#B0BFB1]'
             }`}
             aria-label={service.is_active ? t('badge_active') : t('badge_inactive')}
           >
@@ -148,7 +148,7 @@ export function ServiceCard({ service, onEdit, onDeleted, onToggled }: Props) {
         </div>
 
         {/* Tarifs */}
-        <p className="mb-3 text-[10px] font-bold uppercase tracking-[1px] text-foreground/55 dark:text-[#9A9A8A]">
+        <p className="mb-3 text-[10px] font-bold uppercase tracking-[1px] text-foreground/55 dark:text-[#B0BFB1]">
           {isPackages ? t('automatic_packages_label') : t('tarifs_label')}
         </p>
         {activeEntries.length > 0 ? (
@@ -156,30 +156,30 @@ export function ServiceCard({ service, onEdit, onDeleted, onToggled }: Props) {
             {activeEntries.map((entry) => (
               <div
                 key={entry.vehicle_format_id}
-                className="rounded-xl bg-[#F7F6F2] px-3 py-3 text-center dark:bg-[#001201]"
+                className="rounded-xl bg-[#FFF9EC] px-3 py-3 text-center dark:bg-[#001201]"
               >
-                <p className={`text-[9px] font-bold uppercase tracking-[1px] ${isPackages ? 'text-[#DDAF3B]' : 'text-foreground/55 dark:text-[#9A9A8A]'}`}>
+                <p className={`text-[9px] font-bold uppercase tracking-[1px] ${isPackages ? 'text-[#DDAF3B]' : 'text-foreground/55 dark:text-[#B0BFB1]'}`}>
                   {entry.vehicle_label}
                 </p>
                 <p className="mt-1 font-mono text-[22px] font-black tabular-nums leading-none text-[#DDAF3B]">
                   {parseFloat(entry.price || '0').toFixed(0)} $
                 </p>
-                <p className="mt-1 text-[11px] text-foreground/55 dark:text-[#9A9A8A]">
+                <p className="mt-1 text-[11px] text-foreground/55 dark:text-[#B0BFB1]">
                   {entry.duration_min} min
                 </p>
               </div>
             ))}
           </div>
         ) : (
-          <div className="mb-4 rounded-xl border border-dashed border-[#E0DCD0] py-4 text-center text-[12px] text-[#BBBBAA] dark:border-[#001A05] dark:text-[#5A5A4A]">
+          <div className="mb-4 rounded-xl border border-dashed border-[#FFF9EC] py-4 text-center text-[12px] text-[#BBBBAA] dark:border-[#001A05] dark:text-[#5A5A4A]">
             {t('no_vehicle_entries')}
           </div>
         )}
 
         {/* Extras compatibles - auto/self-service services don't have extras */}
         {!isPackages && service.category !== 'self_service' && (
-          <div className="mt-auto rounded-xl bg-[#F7F6F2] p-3 dark:bg-[#001201]">
-            <p className="mb-2 text-[10px] font-bold uppercase tracking-[1px] text-foreground/55 dark:text-[#9A9A8A]">
+          <div className="mt-auto rounded-xl bg-[#FFF9EC] p-3 dark:bg-[#001201]">
+            <p className="mb-2 text-[10px] font-bold uppercase tracking-[1px] text-foreground/55 dark:text-[#B0BFB1]">
               {t('extras_label')}
             </p>
             {extras.length > 0 ? (

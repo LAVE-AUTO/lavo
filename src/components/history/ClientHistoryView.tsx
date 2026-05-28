@@ -236,7 +236,7 @@ function KpiCard({
         <span className="w-8 h-8 rounded-xl bg-gold/15 text-gold flex items-center justify-center shrink-0">
           {icon}
         </span>
-        <span className="text-[10.5px] font-black text-foreground/65 dark:text-[#A0A090] uppercase tracking-[0.15em]">{label}</span>
+        <span className="text-[10.5px] font-black text-foreground/65 dark:text-[#B0BFB1] uppercase tracking-[0.15em]">{label}</span>
       </div>
       <p className={`mt-3 text-[24px] sm:text-[26px] font-black leading-none ${highlight ? 'text-gold' : 'text-foreground'}`}>
         {value}
@@ -263,7 +263,7 @@ interface FilterStripProps<T extends string> {
 function FilterStrip<T extends string>({ label, items, value, onChange, variantByKey }: FilterStripProps<T>) {
   return (
     <div className="px-4 py-3.5">
-      <p className="text-[10.5px] font-black text-foreground/65 dark:text-[#A0A090] uppercase tracking-[0.15em] mb-2.5">{label}</p>
+      <p className="text-[10.5px] font-black text-foreground/65 dark:text-[#B0BFB1] uppercase tracking-[0.15em] mb-2.5">{label}</p>
       <div className="flex gap-1.5 overflow-x-auto scrollbar-none -mx-1 px-1 pb-0.5">
         {items.map(({ key, label: l }) => {
           const isActive = value === key;

@@ -45,7 +45,7 @@ export function AdminSupportContainer() {
 
   const metrics = [
     { label: t('status_open'),        value: loading ? '…' : String(counts.open),        accent: '#F97316' },
-    { label: t('status_in_progress'), value: loading ? '…' : String(counts.in_progress), accent: '#3B82F6' },
+    { label: t('status_in_progress'), value: loading ? '…' : String(counts.in_progress), accent: '#1E40AF' },
     { label: t('status_resolved'),    value: loading ? '…' : String(counts.resolved),    accent: '#22C55E' },
     { label: t('status_closed'),      value: loading ? '…' : String(counts.closed),      accent: '#94A3B8' },
   ];
@@ -53,7 +53,7 @@ export function AdminSupportContainer() {
   const FILTERS: Array<{ key: FilterKey; label: string; color?: string }> = [
     { key: 'all',         label: t('filter_all') },
     { key: 'open',        label: t('status_open'),        color: '#F97316' },
-    { key: 'in_progress', label: t('status_in_progress'), color: '#3B82F6' },
+    { key: 'in_progress', label: t('status_in_progress'), color: '#1E40AF' },
     { key: 'resolved',    label: t('status_resolved'),    color: '#22C55E' },
     { key: 'closed',      label: t('status_closed'),      color: '#94A3B8' },
   ];
@@ -62,11 +62,11 @@ export function AdminSupportContainer() {
     'relative flex items-center gap-2 rounded-[14px] px-3.5 py-2 text-[12.5px] font-bold transition-colors duration-150',
     active
       ? 'bg-[#001201] text-[#FFF9EC] shadow-[0_10px_20px_rgba(26,26,10,0.18)] dark:bg-[#FFF9EC] dark:text-[#001201]'
-      : 'text-[#847E70] hover:bg-[#EFE8D7] hover:text-[#001201] dark:text-[#A0A090] dark:hover:bg-[#182214] dark:hover:text-[#FFF9EC]',
+      : 'text-[#847E70] hover:bg-[#EFE8D7] hover:text-[#001201] dark:text-[#B0BFB1] dark:hover:bg-[#182214] dark:hover:text-[#FFF9EC]',
   ].join(' ');
 
   return (
-    <div className="relative flex h-full min-h-0 flex-col overflow-hidden bg-[radial-gradient(circle_at_top,_rgba(221, 175, 59,0.12),_transparent_36%),linear-gradient(180deg,#faf8f2_0%,#f2efe7_100%)] dark:bg-[radial-gradient(circle_at_top,_rgba(221, 175, 59,0.12),_transparent_32%),linear-gradient(180deg,#0C1209_0%,#091009_100%)]">
+    <div className="relative flex h-full min-h-0 flex-col overflow-hidden bg-[radial-gradient(circle_at_top,_rgba(221, 175, 59,0.12),_transparent_36%),linear-gradient(180deg,#faf8f2_0%,#f2efe7_100%)] dark:bg-[radial-gradient(circle_at_top,_rgba(221, 175, 59,0.12),_transparent_32%),linear-gradient(180deg,#001201_0%,#091009_100%)]">
       <div className="pointer-events-none absolute inset-0 bg-[linear-gradient(135deg,rgba(255,255,255,0.55),transparent_42%)] dark:bg-[linear-gradient(135deg,rgba(255,255,255,0.04),transparent_42%)]" />
 
       <div className="relative mx-auto flex h-full min-h-0 w-full max-w-none flex-1 flex-col gap-5 overflow-y-auto scrollbar-none px-3 py-4 sm:px-4 lg:px-6 lg:py-6">
@@ -110,7 +110,7 @@ export function AdminSupportContainer() {
                     {label}
                     <span className={[
                       'min-w-[20px] rounded-full px-1.5 py-0.5 text-center text-[11px] font-black',
-                      filter === key ? 'bg-[#DDAF3B] text-[#0C1209]' : 'bg-[#E1DBCF] text-[#7E796B] dark:bg-[#1E2E18] dark:text-[#9A9A8A]',
+                      filter === key ? 'bg-[#DDAF3B] text-[#001201]' : 'bg-[#E1DBCF] text-[#7E796B] dark:bg-[#1E2E18] dark:text-[#B0BFB1]',
                     ].join(' ')}>{counts[key as keyof typeof counts]}</span>
                   </button>
                 ))}

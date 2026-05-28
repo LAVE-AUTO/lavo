@@ -103,7 +103,7 @@ export function StationQrPage() {
   if (error || !stationId) {
     return (
       <div className="flex flex-1 flex-col items-center justify-center gap-3 text-center">
-        <span className="text-[14px] font-semibold text-[#999] dark:text-[#9A9A8A]">
+        <span className="text-[14px] font-semibold text-[#999] dark:text-[#B0BFB1]">
           {t('error_load')}
         </span>
         <button
@@ -154,7 +154,7 @@ export function StationQrPage() {
             {stationName}
           </h1>
           {stationCity && (
-            <div className="mt-0.5 text-[12px] font-semibold text-foreground/55 dark:text-[#9A9A8A]">
+            <div className="mt-0.5 text-[12px] font-semibold text-foreground/55 dark:text-[#B0BFB1]">
               {stationCity}
             </div>
           )}
@@ -174,11 +174,11 @@ export function StationQrPage() {
         </div>
 
         {/* URL preview */}
-        <div className="relative mt-3 rounded-xl border border-[#E8E4DC] bg-[#F7F6F2] px-3 py-2 dark:border-[#001A05] dark:bg-[#001201]">
+        <div className="relative mt-3 rounded-xl border border-[#FFF9EC] bg-[#FFF9EC] px-3 py-2 dark:border-[#001A05] dark:bg-[#001201]">
           <div className="text-[9px] font-bold uppercase tracking-wider text-[#999] dark:text-[#5A5A4A]">
             {t('station_url_label')}
           </div>
-          <p className="mt-0.5 break-all font-mono text-[11px] text-foreground/65 dark:text-[#A0A090]">
+          <p className="mt-0.5 break-all font-mono text-[11px] text-foreground/65 dark:text-[#B0BFB1]">
             {publicUrl}
           </p>
         </div>

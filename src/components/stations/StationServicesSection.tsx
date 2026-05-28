@@ -188,7 +188,7 @@ export function StationServicesSection({
 
       {others.length > 0 && (
         <div className="space-y-2.5">
-          <p className="text-[11px] font-black text-foreground/70 dark:text-[#A0A090] uppercase tracking-[0.15em]">
+          <p className="text-[11px] font-black text-foreground/70 dark:text-[#B0BFB1] uppercase tracking-[0.15em]">
             {t('services_other')}
           </p>
           {others.map((svc) => (
@@ -289,7 +289,7 @@ function FeaturedServiceCard({
 
       {service.extras.length > 0 && (
         <div className="px-5 mt-4">
-          <p className="text-[11px] font-black text-foreground/70 dark:text-[#A0A090] uppercase tracking-[0.15em] mb-2.5">
+          <p className="text-[11px] font-black text-foreground/70 dark:text-[#B0BFB1] uppercase tracking-[0.15em] mb-2.5">
             {t('services_extras_label')}
           </p>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
@@ -312,7 +312,7 @@ function FeaturedServiceCard({
 
       {isHandWash && formatEntries.length > 0 && (
         <div className="px-5 mt-4">
-          <p className="text-[11px] font-black text-foreground/70 dark:text-[#A0A090] uppercase tracking-[0.15em] mb-2.5">
+          <p className="text-[11px] font-black text-foreground/70 dark:text-[#B0BFB1] uppercase tracking-[0.15em] mb-2.5">
             {t('services_format_label')}
           </p>
           <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">

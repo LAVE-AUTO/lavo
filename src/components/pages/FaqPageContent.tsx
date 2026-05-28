@@ -31,14 +31,14 @@ export function FaqPageContent({
         <h1 className="font-playfair text-[36px] sm:text-[48px] font-black text-[#001201] dark:text-white leading-tight mb-4">
           {title} <span className="text-[#DDAF3B]">{titleAccent}</span>
         </h1>
-        <p className="text-[15px] sm:text-[16px] text-foreground/70 dark:text-[#A0A090] leading-relaxed">{subtitle}</p>
+        <p className="text-[15px] sm:text-[16px] text-foreground/70 dark:text-[#B0BFB1] leading-relaxed">{subtitle}</p>
       </div>
 
       {/* Admin-editable Q&A body */}
       <div className="mb-14 max-w-3xl">
         <div
           className={[
-            'text-[14px] sm:text-[15px] text-foreground/70 dark:text-[#A0A090] leading-[1.85]',
+            'text-[14px] sm:text-[15px] text-foreground/70 dark:text-[#B0BFB1] leading-[1.85]',
             '[&_h2]:font-playfair [&_h2]:text-[22px] [&_h2]:font-black [&_h2]:text-[#001201] dark:[&_h2]:text-white [&_h2]:mt-10 [&_h2]:mb-3',
             '[&_h3]:relative [&_h3]:pl-5 [&_h3]:text-[16px] sm:[&_h3]:text-[17px] [&_h3]:font-bold [&_h3]:text-[#001201] dark:[&_h3]:text-white [&_h3]:mt-8 [&_h3]:mb-2',
             '[&_h3]:before:content-[""] [&_h3]:before:absolute [&_h3]:before:left-0 [&_h3]:before:top-1/2 [&_h3]:before:-translate-y-1/2 [&_h3]:before:h-4 [&_h3]:before:w-1 [&_h3]:before:rounded-full [&_h3]:before:bg-[#DDAF3B]',
@@ -62,7 +62,7 @@ export function FaqPageContent({
           </svg>
         </div>
         <h2 className="text-[20px] font-black text-[#001201] dark:text-white mb-2">{ctaTitle}</h2>
-        <p className="text-[14px] text-foreground/70 dark:text-[#A0A090] mb-5">{ctaDesc}</p>
+        <p className="text-[14px] text-foreground/70 dark:text-[#B0BFB1] mb-5">{ctaDesc}</p>
         <Link
           href={`/nous-contacter` as Parameters<typeof Link>[0]['href']}
           className="inline-block px-6 py-3 bg-gold hover:bg-gold-hover text-dark-bg text-[14px] font-bold rounded-xl transition-colors btn-shine"

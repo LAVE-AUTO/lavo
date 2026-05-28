@@ -237,7 +237,7 @@ export default function ClientReservationConfirmPage() {
         </div>
 
         <div className="rounded-xl border border-border bg-surface p-4 dark:border-border dark:bg-surface">
-          <div className="text-[11px] font-bold uppercase tracking-wider text-foreground/70 dark:text-[#A0A090]">
+          <div className="text-[11px] font-bold uppercase tracking-wider text-foreground/70 dark:text-[#B0BFB1]">
             {t('confirm_reservation_code')}
           </div>
           <div className="mt-1 font-mono text-[20px] font-black text-gold">{entry.shortCode}</div>
@@ -282,7 +282,7 @@ export default function ClientReservationConfirmPage() {
 function Row({ label, value, secondary }: { label: string; value: string; secondary?: string }) {
   return (
     <div>
-      <div className="text-[11px] font-bold uppercase tracking-wider text-foreground/70 dark:text-[#A0A090]">
+      <div className="text-[11px] font-bold uppercase tracking-wider text-foreground/70 dark:text-[#B0BFB1]">
         {label}
       </div>
       <div className="mt-0.5 text-[15px] font-bold text-foreground">{value}</div>

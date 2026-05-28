@@ -66,7 +66,7 @@ export function DashboardDateNav({ selectedDate, onDateChange, view, onViewChang
   const monthLabel = MONTH_NAMES_FR[selectedDate.getMonth()];
 
   return (
-    <div className="flex flex-shrink-0 flex-wrap items-center gap-3 border-b border-[#E0DCD0] bg-white px-5 py-3 dark:border-[#1A2A14] dark:bg-[#111A0E]">
+    <div className="flex flex-shrink-0 flex-wrap items-center gap-3 border-b border-[#FFF9EC] bg-white px-5 py-3 dark:border-[#1A2A14] dark:bg-[#111A0E]">
       {/* Month bubble — shows year too in monthly view */}
       <div className="rounded-full bg-[#EDE9CC] px-4 py-1.5 text-[14px] font-bold text-[#001201] dark:bg-[#001A05] dark:text-[#FFF9EC]">
         {monthLabel}{view === 'monthly' ? ` ${selectedDate.getFullYear()}` : ''}
@@ -76,7 +76,7 @@ export function DashboardDateNav({ selectedDate, onDateChange, view, onViewChang
       <button
         type="button"
         onClick={() => shiftDate(-1)}
-        className="flex h-7 w-7 flex-shrink-0 items-center justify-center rounded-full bg-[#E8E4D8] text-[14px] text-[#001201] transition-opacity hover:opacity-70 dark:bg-[#1A2A14] dark:text-[#FFF9EC]"
+        className="flex h-7 w-7 flex-shrink-0 items-center justify-center rounded-full bg-[#FFF9EC] text-[14px] text-[#001201] transition-opacity hover:opacity-70 dark:bg-[#1A2A14] dark:text-[#FFF9EC]"
         aria-label={view === 'monthly' ? 'Mois précédent' : view === 'daily' ? 'Jour précédent' : 'Semaine précédente'}
       >
         &#8249;
@@ -93,8 +93,8 @@ export function DashboardDateNav({ selectedDate, onDateChange, view, onViewChang
               className={[
                 'relative min-w-[52px] rounded-lg px-3 py-2 text-center transition-all duration-150',
                 chip.isActive
-                  ? 'bg-[#DDAF3B] text-[#0C1209]'
-                  : 'bg-[#E8E4D8] text-[#001201] hover:bg-[#DDD8C4] dark:bg-[#1E2A18] dark:text-[#FFF9EC] dark:hover:bg-[#001A05]',
+                  ? 'bg-[#DDAF3B] text-[#001201]'
+                  : 'bg-[#FFF9EC] text-[#001201] hover:bg-[#DDD8C4] dark:bg-[#1E2A18] dark:text-[#FFF9EC] dark:hover:bg-[#001A05]',
               ].join(' ')}
             >
               <div className="text-[10px] font-bold tracking-[0.06em]">{chip.name}</div>
@@ -103,7 +103,7 @@ export function DashboardDateNav({ selectedDate, onDateChange, view, onViewChang
                 <span className="absolute bottom-1 left-1/2 h-1 w-1 -translate-x-1/2 rounded-full bg-[#DDAF3B]" />
               )}
               {chip.isToday && chip.isActive && (
-                <span className="absolute bottom-1 left-1/2 h-1 w-1 -translate-x-1/2 rounded-full bg-[#0C1209]/50" />
+                <span className="absolute bottom-1 left-1/2 h-1 w-1 -translate-x-1/2 rounded-full bg-[#001201]/50" />
               )}
             </button>
           ))}
@@ -114,14 +114,14 @@ export function DashboardDateNav({ selectedDate, onDateChange, view, onViewChang
       <button
         type="button"
         onClick={() => shiftDate(1)}
-        className="flex h-7 w-7 flex-shrink-0 items-center justify-center rounded-full bg-[#E8E4D8] text-[14px] text-[#001201] transition-opacity hover:opacity-70 dark:bg-[#1A2A14] dark:text-[#FFF9EC]"
+        className="flex h-7 w-7 flex-shrink-0 items-center justify-center rounded-full bg-[#FFF9EC] text-[14px] text-[#001201] transition-opacity hover:opacity-70 dark:bg-[#1A2A14] dark:text-[#FFF9EC]"
         aria-label={view === 'monthly' ? 'Mois suivant' : view === 'daily' ? 'Jour suivant' : 'Semaine suivante'}
       >
         &#8250;
       </button>
 
       {/* View toggle — 3 options: Jour / Semaine / Mois */}
-      <div className="ml-auto flex gap-[3px] rounded-lg bg-[#E8E4D8] p-[3px] dark:bg-[#1A2A14]">
+      <div className="ml-auto flex gap-[3px] rounded-lg bg-[#FFF9EC] p-[3px] dark:bg-[#1A2A14]">
         {(['daily', 'weekly', 'monthly'] as const).map((v) => (
           <button
             key={v}
@@ -129,8 +129,8 @@ export function DashboardDateNav({ selectedDate, onDateChange, view, onViewChang
             onClick={() => onViewChange(v)}
             className={
               view === v
-                ? 'rounded-lg px-3.5 py-1.5 text-[13px] font-bold bg-[#DDAF3B] text-[#0C1209] transition-all duration-150'
-                : 'rounded-lg px-3.5 py-1.5 text-[13px] font-bold text-foreground/65 transition-all duration-150 dark:text-[#A0A090]'
+                ? 'rounded-lg px-3.5 py-1.5 text-[13px] font-bold bg-[#DDAF3B] text-[#001201] transition-all duration-150'
+                : 'rounded-lg px-3.5 py-1.5 text-[13px] font-bold text-foreground/65 transition-all duration-150 dark:text-[#B0BFB1]'
             }
           >
             {t(v === 'daily' ? 'view_daily' : v === 'weekly' ? 'view_weekly' : 'view_monthly')}

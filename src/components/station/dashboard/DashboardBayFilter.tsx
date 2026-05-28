@@ -29,8 +29,8 @@ export function DashboardBayFilter({ posts, selectedPostId, onSelect }: Props) {
   function goPrev() { setCursor((c) => Math.max(c - PAGE_SIZE, 0)); }
 
   return (
-    <aside className="hidden w-[180px] flex-shrink-0 flex-col border-r border-[#E0DCD0] bg-[#F7F6F2] px-3 py-4 lg:flex dark:border-[#1A2A14] dark:bg-[#001201]">
-      <div className="mb-2 px-1 text-[10px] font-bold uppercase tracking-[0.12em] text-foreground/55 dark:text-[#9A9A8A]">
+    <aside className="hidden w-[180px] flex-shrink-0 flex-col border-r border-[#FFF9EC] bg-[#FFF9EC] px-3 py-4 lg:flex dark:border-[#1A2A14] dark:bg-[#001201]">
+      <div className="mb-2 px-1 text-[10px] font-bold uppercase tracking-[0.12em] text-foreground/55 dark:text-[#B0BFB1]">
         {t('filter_bay_title')}
       </div>
 
@@ -56,7 +56,7 @@ export function DashboardBayFilter({ posts, selectedPostId, onSelect }: Props) {
             type="button"
             disabled={!hasPrev}
             onClick={goPrev}
-            className="flex h-6 w-6 items-center justify-center rounded text-foreground/55 transition-colors hover:bg-[#E8E4D0] disabled:opacity-30 dark:text-[#9A9A8A] dark:hover:bg-[#001A05]"
+            className="flex h-6 w-6 items-center justify-center rounded text-foreground/55 transition-colors hover:bg-[#E8E4D0] disabled:opacity-30 dark:text-[#B0BFB1] dark:hover:bg-[#001A05]"
             aria-label={t('filter_page_prev')}
           >
             <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
@@ -70,7 +70,7 @@ export function DashboardBayFilter({ posts, selectedPostId, onSelect }: Props) {
             type="button"
             disabled={!hasNext}
             onClick={goNext}
-            className="flex h-6 w-6 items-center justify-center rounded text-foreground/55 transition-colors hover:bg-[#E8E4D0] disabled:opacity-30 dark:text-[#9A9A8A] dark:hover:bg-[#001A05]"
+            className="flex h-6 w-6 items-center justify-center rounded text-foreground/55 transition-colors hover:bg-[#E8E4D0] disabled:opacity-30 dark:text-[#B0BFB1] dark:hover:bg-[#001A05]"
             aria-label={t('filter_page_next')}
           >
             <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
@@ -89,7 +89,7 @@ export function BayFilterMobilePills({ posts, selectedPostId, onSelect }: Props)
   if (active.length === 0) return null;
 
   return (
-    <div className="flex lg:hidden items-center gap-2 overflow-x-auto border-b border-[#E0DCD0] bg-[#F7F6F2] px-4 py-2 scrollbar-hide dark:border-[#1A2A14] dark:bg-[#001201]">
+    <div className="flex lg:hidden items-center gap-2 overflow-x-auto border-b border-[#FFF9EC] bg-[#FFF9EC] px-4 py-2 scrollbar-hide dark:border-[#1A2A14] dark:bg-[#001201]">
       <MobilePill
         active={selectedPostId === 'all'}
         onClick={() => onSelect('all')}
@@ -122,7 +122,7 @@ function BayItem({ active, onClick, label }: ItemProps) {
         'rounded-lg px-3 py-2 text-left text-[12px] font-bold transition-all',
         active
           ? 'border border-[#DDAF3B] bg-[#DDAF3B]/10 text-[#DDAF3B]'
-          : 'border border-transparent bg-[#EFECDE] text-foreground/65 hover:bg-[#E8E4D0] dark:bg-[#1A2A14] dark:text-[#A0A090] dark:hover:bg-[#001A05]',
+          : 'border border-transparent bg-[#EFECDE] text-foreground/65 hover:bg-[#E8E4D0] dark:bg-[#1A2A14] dark:text-[#B0BFB1] dark:hover:bg-[#001A05]',
       ].join(' ')}
     >
       {label}
@@ -139,7 +139,7 @@ function MobilePill({ active, onClick, label }: ItemProps) {
         'flex-shrink-0 rounded-full px-3 py-1.5 text-[11px] font-bold transition-all whitespace-nowrap',
         active
           ? 'border border-[#DDAF3B] bg-[#DDAF3B]/10 text-[#DDAF3B]'
-          : 'border border-[#E0DCD0] bg-[#EFECDE] text-foreground/65 hover:bg-[#E8E4D0] dark:border-[#1A2A14] dark:bg-[#1A2A14] dark:text-[#A0A090] dark:hover:bg-[#001A05]',
+          : 'border border-[#FFF9EC] bg-[#EFECDE] text-foreground/65 hover:bg-[#E8E4D0] dark:border-[#1A2A14] dark:bg-[#1A2A14] dark:text-[#B0BFB1] dark:hover:bg-[#001A05]',
       ].join(' ')}
     >
       {label}

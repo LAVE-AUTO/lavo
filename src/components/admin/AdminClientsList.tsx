@@ -132,7 +132,7 @@ export function AdminClientsList({ query, onAction, onCountChange, onEditUser, o
     const s = STATUS[client.status];
     if (!s) return null;
     return (
-      <span className={`inline-flex w-fit items-center gap-1.5 rounded-full bg-[#F4F1E8] px-2.5 py-1 text-[11.5px] font-bold dark:bg-[#171F12] ${s.text}`}>
+      <span className={`inline-flex w-fit items-center gap-1.5 rounded-full bg-[#FFF9EC] px-2.5 py-1 text-[11.5px] font-bold dark:bg-[#171F12] ${s.text}`}>
         <span className={`h-1.5 w-1.5 rounded-full ${s.dot}`} />{t(s.label)}
       </span>
     );
@@ -197,7 +197,7 @@ export function AdminClientsList({ query, onAction, onCountChange, onEditUser, o
                   </div>
                   <div className="min-w-0">
                     <p className="truncate text-[14px] font-black text-[#001201] dark:text-[#FFF9EC]">{client.first_name ?? ''} {client.last_name ?? ''}</p>
-                    <p className="mt-0.5 text-[12px] text-[#979083] dark:text-[#A0A090]">{formatDate(client.created_at)}</p>
+                    <p className="mt-0.5 text-[12px] text-[#979083] dark:text-[#B0BFB1]">{formatDate(client.created_at)}</p>
                   </div>
                 </div>
                 {renderStatus(client)}
@@ -212,7 +212,7 @@ export function AdminClientsList({ query, onAction, onCountChange, onEditUser, o
                 {renderActions(client, true)}
                 {onEditUser && (
                   <button type="button" onClick={() => onEditUser(client)} title={t('btn_edit')}
-                    className="flex h-8 w-8 items-center justify-center rounded-[12px] border border-[#E1DBCF] bg-white text-foreground/55 transition-colors hover:border-[#DDAF3B]/40 hover:bg-[#FCF6E5] hover:text-[#9A7A13] dark:border-[#1E2E18] dark:bg-[#0E170C] dark:text-[#A0A090]">
+                    className="flex h-8 w-8 items-center justify-center rounded-[12px] border border-[#E1DBCF] bg-white text-foreground/55 transition-colors hover:border-[#DDAF3B]/40 hover:bg-[#FCF6E5] hover:text-[#9A7A13] dark:border-[#1E2E18] dark:bg-[#0E170C] dark:text-[#B0BFB1]">
                     <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7" /><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z" /></svg>
                   </button>
                 )}
@@ -256,12 +256,12 @@ export function AdminClientsList({ query, onAction, onCountChange, onEditUser, o
                     <p className="block truncate text-[13px] font-bold text-[#001201] dark:text-[#FFF9EC]">
                       {client.first_name ?? ''} {client.last_name ?? ''}
                     </p>
-                    <p className="truncate text-[12px] text-[#979083] dark:text-[#A0A090]">{formatDate(client.created_at)}</p>
+                    <p className="truncate text-[12px] text-[#979083] dark:text-[#B0BFB1]">{formatDate(client.created_at)}</p>
                   </div>
 
                   <div className="min-w-0">
                     <p className="truncate text-[13px] text-[#5A554B] dark:text-[#C8C2B3]">{client.email}</p>
-                    <p className="truncate text-[12px] text-[#A8A293] dark:text-[#A0A090]">{client.phone ?? '—'}</p>
+                    <p className="truncate text-[12px] text-[#A8A293] dark:text-[#B0BFB1]">{client.phone ?? '—'}</p>
                   </div>
 
                   <div>{renderStatus(client)}</div>
@@ -270,7 +270,7 @@ export function AdminClientsList({ query, onAction, onCountChange, onEditUser, o
                     {renderActions(client)}
                     {onEditUser && (
                       <button type="button" onClick={() => onEditUser(client)} title={t('btn_edit')}
-                        className="flex h-8 w-8 items-center justify-center rounded-[12px] border border-[#E1DBCF] bg-white text-foreground/55 transition-colors hover:border-[#DDAF3B]/40 hover:bg-[#FCF6E5] hover:text-[#9A7A13] dark:border-[#1E2E18] dark:bg-[#0E170C] dark:text-[#A0A090] dark:hover:bg-[#1A2410] dark:hover:text-[#F0D98C]">
+                        className="flex h-8 w-8 items-center justify-center rounded-[12px] border border-[#E1DBCF] bg-white text-foreground/55 transition-colors hover:border-[#DDAF3B]/40 hover:bg-[#FCF6E5] hover:text-[#9A7A13] dark:border-[#1E2E18] dark:bg-[#0E170C] dark:text-[#B0BFB1] dark:hover:bg-[#1A2410] dark:hover:text-[#F0D98C]">
                         <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7" /><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z" /></svg>
                       </button>
                     )}

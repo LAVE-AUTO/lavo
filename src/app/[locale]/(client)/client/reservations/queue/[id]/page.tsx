@@ -252,7 +252,7 @@ export default function QueueDetailPage({ params }: PageProps) {
         >
           <div className="flex items-center gap-2 mb-4">
             <span className={`w-2.5 h-2.5 rounded-full shrink-0 animate-pulse ${isActive ? 'bg-gold' : 'bg-Hurryline-success'}`} />
-            <span className="text-[12px] font-bold text-foreground/70 dark:text-[#A0A090] uppercase tracking-wider">
+            <span className="text-[12px] font-bold text-foreground/70 dark:text-[#B0BFB1] uppercase tracking-wider">
               {isActive ? t('status_in_progress') : t('status_waiting')}
             </span>
           </div>
@@ -277,7 +277,7 @@ export default function QueueDetailPage({ params }: PageProps) {
 
         {/* Service summary */}
         <div className="bg-surface rounded-xl border border-border p-4 space-y-2">
-          <h3 className="text-[14px] font-black text-foreground/70 dark:text-[#A0A090] uppercase tracking-wider mb-3">{t('summary')}</h3>
+          <h3 className="text-[14px] font-black text-foreground/70 dark:text-[#B0BFB1] uppercase tracking-wider mb-3">{t('summary')}</h3>
           <div className="flex justify-between text-[14px]">
             <span className="text-foreground/70">{t('service')}</span>
             <span className="font-bold text-foreground">{q.forfaitName}</span>

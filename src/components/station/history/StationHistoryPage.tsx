@@ -120,7 +120,7 @@ export function StationHistoryPage() {
 
   if (loading) {
     return (
-      <div className="flex flex-1 items-center justify-center bg-[#EDEDED] dark:bg-[#001201]">
+      <div className="flex flex-1 items-center justify-center bg-[#FFF9EC] dark:bg-[#001201]">
         <div className="h-8 w-8 animate-spin rounded-full border-[3px] border-[#C09A18] border-t-transparent" />
       </div>
     );
@@ -142,7 +142,7 @@ export function StationHistoryPage() {
   }
 
   return (
-    <div className="flex flex-1 flex-col overflow-hidden bg-[#EDEDED] dark:bg-[#001201]">
+    <div className="flex flex-1 flex-col overflow-hidden bg-[#FFF9EC] dark:bg-[#001201]">
       {/* Header */}
       <div className="border-b border-[#CCCCCC] bg-surface px-6 pb-5 pt-5 dark:border-[#3A4A36] dark:bg-[#001A05]">
         <div className="flex items-center justify-between gap-4">

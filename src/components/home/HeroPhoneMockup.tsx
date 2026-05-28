@@ -10,7 +10,7 @@ export function HeroPhoneMockup() {
     <div className="relative">
       {/* Bubble 1 - top left */}
       <div
-        className="absolute top-[-20px] left-[-64px] z-10 min-w-[160px] rounded-[10px] border border-[rgba(221,175,59,0.25)] bg-[#e8e2d4] dark:bg-[#111f0f] px-4 py-3 shadow-[0_16px_40px_rgba(0,0,0,0.25)] dark:shadow-[0_16px_40px_rgba(0,0,0,0.5)] animate-float hidden lg:block"
+        className="absolute top-[-20px] left-[-64px] z-10 min-w-[160px] rounded-[10px] border border-[rgba(221,175,59,0.25)] bg-[#FFF9EC] dark:bg-[#001201] px-4 py-3 shadow-[0_16px_40px_rgba(0,0,0,0.25)] dark:shadow-[0_16px_40px_rgba(0,0,0,0.5)] animate-float hidden lg:block"
         style={{ animationDelay: '0s' }}
       >
         <div className="font-dm-mono mb-1 text-[9px] uppercase tracking-[1px] text-[var(--foreground)] dark:text-[#B0BFB1]">
@@ -24,7 +24,7 @@ export function HeroPhoneMockup() {
 
       {/* Bubble 2 - bottom right */}
       <div
-        className="absolute bottom-[120px] right-[-56px] z-10 min-w-[160px] rounded-[10px] border border-[rgba(221,175,59,0.25)] bg-[#e8e2d4] dark:bg-[#111f0f] px-4 py-3 shadow-[0_16px_40px_rgba(0,0,0,0.25)] dark:shadow-[0_16px_40px_rgba(0,0,0,0.5)] animate-float hidden lg:block"
+        className="absolute bottom-[120px] right-[-56px] z-10 min-w-[160px] rounded-[10px] border border-[rgba(221,175,59,0.25)] bg-[#FFF9EC] dark:bg-[#001201] px-4 py-3 shadow-[0_16px_40px_rgba(0,0,0,0.25)] dark:shadow-[0_16px_40px_rgba(0,0,0,0.5)] animate-float hidden lg:block"
         style={{ animationDelay: '0.8s' }}
       >
         <div className="font-dm-mono mb-1 text-[9px] uppercase tracking-[1px] text-[var(--foreground)] dark:text-[#B0BFB1]">
@@ -37,7 +37,7 @@ export function HeroPhoneMockup() {
       </div>
 
       {/* Phone frame */}
-      <div className="relative w-[264px] h-[540px] rounded-[36px] border-2 border-[rgba(221,175,59,0.28)] bg-[#001201] dark:bg-[#111f0f] overflow-hidden shadow-[0_0_0_8px_rgba(221,175,59,0.05),0_40px_90px_rgba(0,0,0,0.6)] animate-float">
+      <div className="relative w-[264px] h-[540px] rounded-[36px] border-2 border-[rgba(221,175,59,0.28)] bg-[#001201] dark:bg-[#001201] overflow-hidden shadow-[0_0_0_8px_rgba(221,175,59,0.05),0_40px_90px_rgba(0,0,0,0.6)] animate-float">
         {/* Notch */}
         <div className="absolute top-0 left-1/2 -translate-x-1/2 z-10 h-5 w-[72px] rounded-b-[12px] bg-[#001201] dark:bg-[#001201]" />
 
@@ -48,7 +48,7 @@ export function HeroPhoneMockup() {
             <span className="font-playfair text-[17px] font-black tracking-[3px] text-[#DDAF3B]">
               Hurryline
             </span>
-            <div className="h-[26px] w-[26px] rounded-full border border-[rgba(221,175,59,0.35)] bg-[#162218]" />
+            <div className="h-[26px] w-[26px] rounded-full border border-[rgba(221,175,59,0.35)] bg-[#001A05]" />
           </div>
 
           {/* Search bar */}
@@ -122,12 +122,12 @@ function PhoneStationCard({ name, rating, reviews, price, distance, wait, tags, 
             className="w-full h-full object-cover group-hover:scale-[1.01] transition-transform duration-300"
           />
         ) : (
-          <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#9A9A8A" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+          <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#B0BFB1" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
             <path d="M3 17l2-7h14l2 7" />
             <path d="M5 17v2h2v-2M17 17v2h2v-2" />
             <path d="M8 10V7a1 1 0 011-1h6a1 1 0 011 1v3" />
-            <circle cx="7.5" cy="17" r="1.5" fill="#9A9A8A" />
-            <circle cx="16.5" cy="17" r="1.5" fill="#9A9A8A" />
+            <circle cx="7.5" cy="17" r="1.5" fill="#B0BFB1" />
+            <circle cx="16.5" cy="17" r="1.5" fill="#B0BFB1" />
           </svg>
         )}
 

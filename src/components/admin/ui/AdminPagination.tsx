@@ -66,7 +66,7 @@ export function AdminPagination({ page, totalPages, total, perPage, onPageChange
       className="flex flex-col gap-3 rounded-[18px] border border-[#E7E1D5] bg-[#FCFBF8]/85 px-4 py-3 shadow-[inset_0_1px_0_rgba(255,255,255,0.65)] backdrop-blur sm:flex-row sm:items-center sm:justify-between dark:border-[#1E2E18] dark:bg-[#0C150B]/80"
       aria-label={t('aria_label')}
     >
-      <p className="text-[12px] font-semibold text-[#7E796B] dark:text-[#A0A090]">
+      <p className="text-[12px] font-semibold text-[#7E796B] dark:text-[#B0BFB1]">
         {t('range', { from, to, total })}
       </p>
 

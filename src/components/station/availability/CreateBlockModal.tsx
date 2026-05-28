@@ -211,7 +211,7 @@ export function CreateBlockModal({
             <p className="mb-1 text-[10px] font-black uppercase tracking-widest text-[#DDAF3B]">
               {t('availability_modal_section_dates')}
             </p>
-            <p className="mb-3 text-xs text-foreground/65 dark:text-[#A0A090]">
+            <p className="mb-3 text-xs text-foreground/65 dark:text-[#B0BFB1]">
               {t('availability_modal_dates_hint')}
             </p>
 
@@ -241,7 +241,7 @@ export function CreateBlockModal({
               <button
                 type="button"
                 onClick={() => setDates([])}
-                className="mb-3 cursor-pointer text-xs font-semibold text-foreground/65 underline decoration-dotted underline-offset-2 transition-colors hover:text-[#FF2525] dark:text-[#A0A090]"
+                className="mb-3 cursor-pointer text-xs font-semibold text-foreground/65 underline decoration-dotted underline-offset-2 transition-colors hover:text-[#FF2525] dark:text-[#B0BFB1]"
               >
                 {t('availability_modal_clear_dates')}
               </button>
@@ -264,7 +264,7 @@ export function CreateBlockModal({
                 }}
                 className="rounded-xl border border-[#DDAF3B]/30 bg-[#F0EDE0] px-3 py-2 text-sm text-[#001201] focus:border-[#DDAF3B] focus:outline-none dark:bg-[#001A05] dark:text-[#FFF9EC]"
               />
-              <span className="text-xs text-foreground/65 dark:text-[#A0A090]">
+              <span className="text-xs text-foreground/65 dark:text-[#B0BFB1]">
                 {t('availability_modal_add_date')}
               </span>
             </div>
@@ -280,7 +280,7 @@ export function CreateBlockModal({
             </p>
             <div className="grid grid-cols-2 gap-3">
               <div>
-                <label className="mb-1 block text-xs font-semibold text-foreground/65 dark:text-[#A0A090]">
+                <label className="mb-1 block text-xs font-semibold text-foreground/65 dark:text-[#B0BFB1]">
                   {t('availability_modal_from')}
                 </label>
                 <input
@@ -291,7 +291,7 @@ export function CreateBlockModal({
                 />
               </div>
               <div>
-                <label className="mb-1 block text-xs font-semibold text-foreground/65 dark:text-[#A0A090]">
+                <label className="mb-1 block text-xs font-semibold text-foreground/65 dark:text-[#B0BFB1]">
                   {t('availability_modal_to')}
                 </label>
                 <input
@@ -344,7 +344,7 @@ export function CreateBlockModal({
                     className={`text-[13px] font-semibold ${
                       allBays || selectedBays.includes(bay)
                         ? 'text-[#DDAF3B]'
-                        : 'text-foreground/65 dark:text-[#A0A090]'
+                        : 'text-foreground/65 dark:text-[#B0BFB1]'
                     }`}
                   >
                     {t('availability_modal_poste')} {bay}
@@ -384,7 +384,7 @@ export function CreateBlockModal({
               className="cursor-pointer rounded-xl bg-[#F0EDE0] px-3 py-2.5 text-left text-[12px] font-semibold text-[#001201] transition-colors hover:bg-[#DDAF3B]/15 dark:bg-[#001A05] dark:text-[#FFF9EC]"
             >
               {t('availability_modal_this_week')}
-              <span className="mt-0.5 block text-[10px] text-foreground/65 dark:text-[#A0A090]">
+              <span className="mt-0.5 block text-[10px] text-foreground/65 dark:text-[#B0BFB1]">
                 {formatWeekLabel(thisWeek)}
               </span>
             </button>
@@ -394,7 +394,7 @@ export function CreateBlockModal({
               className="cursor-pointer rounded-xl bg-[#F0EDE0] px-3 py-2.5 text-left text-[12px] font-semibold text-[#001201] transition-colors hover:bg-[#DDAF3B]/15 dark:bg-[#001A05] dark:text-[#FFF9EC]"
             >
               {t('availability_modal_next_week')}
-              <span className="mt-0.5 block text-[10px] text-foreground/65 dark:text-[#A0A090]">
+              <span className="mt-0.5 block text-[10px] text-foreground/65 dark:text-[#B0BFB1]">
                 {formatWeekLabel(nextWeek)}
               </span>
             </button>
@@ -424,7 +424,7 @@ export function CreateBlockModal({
           </div>
           <div className="grid grid-cols-7 gap-[2px] mb-1">
             {['L','M','M','J','V','S','D'].map((d, i) => (
-              <div key={i} className="text-center text-[8px] font-bold text-foreground/65 dark:text-[#A0A090] py-[2px]">{d}</div>
+              <div key={i} className="text-center text-[8px] font-bold text-foreground/65 dark:text-[#B0BFB1] py-[2px]">{d}</div>
             ))}
           </div>
           <div className="grid grid-cols-7 gap-[2px]">
@@ -460,7 +460,7 @@ export function CreateBlockModal({
             })}
           </div>
           {/* Mini-cal legend */}
-          <div className="mt-2 flex flex-wrap gap-3 text-[9px] text-foreground/65 dark:text-[#A0A090]">
+          <div className="mt-2 flex flex-wrap gap-3 text-[9px] text-foreground/65 dark:text-[#B0BFB1]">
             <span className="flex items-center gap-1">
               <span className="inline-block h-2.5 w-2.5 rounded-[2px] border border-[#DDAF3B] bg-[#EDE9CC] dark:bg-[#001A05]" />
               Aujourd'hui
@@ -478,7 +478,7 @@ export function CreateBlockModal({
         <button
           type="button"
           onClick={onClose}
-          className="cursor-pointer rounded-xl border border-[#DDAF3B]/30 bg-transparent px-5 py-2.5 text-sm font-bold text-foreground/65 transition-colors hover:bg-[#DDAF3B]/10 dark:text-[#A0A090]"
+          className="cursor-pointer rounded-xl border border-[#DDAF3B]/30 bg-transparent px-5 py-2.5 text-sm font-bold text-foreground/65 transition-colors hover:bg-[#DDAF3B]/10 dark:text-[#B0BFB1]"
         >
           {t('btn_cancel')}
         </button>

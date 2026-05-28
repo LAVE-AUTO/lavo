@@ -71,7 +71,7 @@ export function LocationPermissionToast({ duration = 10_000 }: LocationPermissio
       </div>
 
       {/* Row 2 — description spanning full width */}
-      <p className="px-4 pb-3 text-[11.5px] sm:text-[12.5px] text-foreground/65 dark:text-[#A0A090] leading-snug">
+      <p className="px-4 pb-3 text-[11.5px] sm:text-[12.5px] text-foreground/65 dark:text-[#B0BFB1] leading-snug">
         {t('desc')}
       </p>
 

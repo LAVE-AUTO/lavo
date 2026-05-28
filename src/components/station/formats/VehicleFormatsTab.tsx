@@ -92,7 +92,7 @@ export function VehicleFormatsTab({ formats, onAdd, onUpdate, onDelete }: Props)
     <>
       {/* Section header */}
       <div className="mb-4 flex items-center justify-between">
-        <p className="text-[13px] text-foreground/55 dark:text-[#9A9A8A]">{t('formats_hint')}</p>
+        <p className="text-[13px] text-foreground/55 dark:text-[#B0BFB1]">{t('formats_hint')}</p>
         <button
           type="button"
           onClick={() => setModal('new')}
@@ -105,7 +105,7 @@ export function VehicleFormatsTab({ formats, onAdd, onUpdate, onDelete }: Props)
 
       {formats.length === 0 ? (
         <div className="flex flex-col items-center justify-center gap-2 py-12 text-center">
-          <span className="text-[14px] font-semibold text-[#999] dark:text-[#9A9A8A]">{t('formats_empty')}</span>
+          <span className="text-[14px] font-semibold text-[#999] dark:text-[#B0BFB1]">{t('formats_empty')}</span>
           <span className="text-[13px] text-[#BBBBAA] dark:text-[#4A4A3A]">{t('formats_empty_hint')}</span>
         </div>
       ) : (
@@ -117,7 +117,7 @@ export function VehicleFormatsTab({ formats, onAdd, onUpdate, onDelete }: Props)
             return (
               <div
                 key={format.id}
-                className="flex items-center gap-3 rounded-xl border border-[#E8E4DC] bg-white px-4 py-3.5 shadow-sm transition-opacity dark:border-[#1A2A14] dark:bg-[#182214]"
+                className="flex items-center gap-3 rounded-xl border border-[#FFF9EC] bg-white px-4 py-3.5 shadow-sm transition-opacity dark:border-[#1A2A14] dark:bg-[#182214]"
                 style={{ opacity: busy ? 0.6 : 1 }}
               >
                 <span className={`h-2 w-2 shrink-0 rounded-full ${
@@ -140,7 +140,7 @@ export function VehicleFormatsTab({ formats, onAdd, onUpdate, onDelete }: Props)
                   className={`shrink-0 rounded-[6px] px-2.5 py-1 text-[12px] font-semibold transition-all disabled:opacity-50 ${
                     format.is_active
                       ? 'bg-[#E8F8EE] text-[#009A3A] dark:bg-[#0A2A14] dark:text-[#00C851]'
-                      : 'bg-[#F0EDE4] text-foreground/55 dark:bg-[#001201] dark:text-[#9A9A8A]'
+                      : 'bg-[#F0EDE4] text-foreground/55 dark:bg-[#001201] dark:text-[#B0BFB1]'
                   }`}
                 >
                   {format.is_active ? t('badge_active') : t('badge_inactive')}
@@ -151,7 +151,7 @@ export function VehicleFormatsTab({ formats, onAdd, onUpdate, onDelete }: Props)
                   type="button"
                   onClick={() => setModal(format)}
                   disabled={busy}
-                  className="shrink-0 rounded-[8px] border border-[#D8D4C8] p-1.5 text-foreground/55 transition-colors hover:border-[#DDAF3B] hover:text-[#DDAF3B] disabled:opacity-40 dark:border-[#001A05] dark:text-[#9A9A8A]"
+                  className="shrink-0 rounded-[8px] border border-[#D8D4C8] p-1.5 text-foreground/55 transition-colors hover:border-[#DDAF3B] hover:text-[#DDAF3B] disabled:opacity-40 dark:border-[#001A05] dark:text-[#B0BFB1]"
                   aria-label={t('aria_edit')}
                 >
                   <PencilIcon />
@@ -162,7 +162,7 @@ export function VehicleFormatsTab({ formats, onAdd, onUpdate, onDelete }: Props)
                   type="button"
                   onClick={() => setDeleteState({ format, loading: false })}
                   disabled={busy}
-                  className="shrink-0 rounded-[8px] border border-[#D8D4C8] p-1.5 text-foreground/55 transition-colors hover:border-[#EF4444] hover:text-[#EF4444] disabled:opacity-40 dark:border-[#001A05] dark:text-[#9A9A8A]"
+                  className="shrink-0 rounded-[8px] border border-[#D8D4C8] p-1.5 text-foreground/55 transition-colors hover:border-[#EF4444] hover:text-[#EF4444] disabled:opacity-40 dark:border-[#001A05] dark:text-[#B0BFB1]"
                   aria-label={t('aria_delete')}
                 >
                   {deleteState?.format.id === format.id && deleteState.loading ? (

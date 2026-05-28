@@ -194,7 +194,7 @@ export function StationDetail({ id }: StationDetailProps) {
     <div className="rounded-2xl border border-border bg-surface/60 overflow-hidden">
       <div className="flex items-center gap-2 px-5 pt-4">
         <span className="w-2 h-2 rounded-full bg-Hurryline-success animate-pulse" />
-        <p className="text-[11px] font-black text-foreground/70 dark:text-[#A0A090] uppercase tracking-[0.15em] flex-1">
+        <p className="text-[11px] font-black text-foreground/70 dark:text-[#B0BFB1] uppercase tracking-[0.15em] flex-1">
           {t('detail_queue')}
         </p>
       </div>
@@ -290,7 +290,7 @@ export function StationDetail({ id }: StationDetailProps) {
       <div className="min-h-screen bg-background transition-colors animate-fade-in">
 
         {/* ── Hero ── */}
-        <div className="relative h-[260px] sm:h-[340px] lg:h-[440px] bg-linear-to-br from-[#D5D5C5] to-[#EDEDED] dark:from-tab-inactive dark:to-dark-bg overflow-hidden">
+        <div className="relative h-[260px] sm:h-[340px] lg:h-[440px] bg-linear-to-br from-[#D5D5C5] to-[#FFF9EC] dark:from-tab-inactive dark:to-dark-bg overflow-hidden">
           {(station.photos?.length ?? 0) > 0 ? (
             station.photos!.map((url, i) => (
               <img

@@ -69,10 +69,10 @@ export function AdminDocUpload({ label, hint, required, value, onChange, error }
 
   return (
     <div className="mb-4">
-      <p className="mb-1.5 text-[13px] font-bold text-foreground/70 dark:text-[#9A9A8A]">
+      <p className="mb-1.5 text-[13px] font-bold text-foreground/70 dark:text-[#B0BFB1]">
         {label}
         {required && <span className="ml-0.5 text-[#DDAF3B]">*</span>}
-        {hint && <span className="ml-1 font-normal text-foreground/55 dark:text-[#9A9A8A]">- {hint}</span>}
+        {hint && <span className="ml-1 font-normal text-foreground/55 dark:text-[#B0BFB1]">- {hint}</span>}
       </p>
 
       {value ? (
@@ -103,13 +103,13 @@ export function AdminDocUpload({ label, hint, required, value, onChange, error }
           ].join(' ')}
         >
           {isUploading ? (
-            <p className="text-[13px] text-foreground/55 dark:text-[#9A9A8A]">{t('doc_uploading')}</p>
+            <p className="text-[13px] text-foreground/55 dark:text-[#B0BFB1]">{t('doc_uploading')}</p>
           ) : (
             <>
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#BBBBAA" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
                 <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" /><polyline points="17 8 12 3 7 8" /><line x1="12" y1="3" x2="12" y2="15" />
               </svg>
-              <p className="text-[12px] text-foreground/55 dark:text-[#9A9A8A]">{t('doc_drop_or_click')}</p>
+              <p className="text-[12px] text-foreground/55 dark:text-[#B0BFB1]">{t('doc_drop_or_click')}</p>
             </>
           )}
           <input ref={inputRef} type="file" className="sr-only" accept=".pdf,.jpg,.jpeg,.png,.webp"

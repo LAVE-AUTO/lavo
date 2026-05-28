@@ -216,7 +216,7 @@ export function StationReservationsPage() {
   const confirm = getConfirmProps();
 
   return (
-    <div className="flex flex-1 flex-col overflow-hidden bg-[#EDEDED] dark:bg-background">
+    <div className="flex flex-1 flex-col overflow-hidden bg-[#FFF9EC] dark:bg-background">
       {/* Header */}
       <div className="border-b border-[#CCCCCC] bg-surface px-6 pb-4 pt-5 dark:border-[#3A4A36] dark:bg-surface">
         <div className="flex flex-wrap items-start justify-between gap-4">
@@ -240,7 +240,7 @@ export function StationReservationsPage() {
           <button
             type="button"
             onClick={() => setSelectedDate((d) => { const p = new Date(d); p.setDate(p.getDate() - 1); return p; })}
-            className="flex h-8 w-8 items-center justify-center rounded-lg border border-[#CCCCCC] bg-white text-foreground/70 transition-colors hover:border-[#C09A18] hover:text-[#C09A18] dark:border-[#3A4A36] dark:bg-background dark:text-[#9A9A8A]"
+            className="flex h-8 w-8 items-center justify-center rounded-lg border border-[#CCCCCC] bg-white text-foreground/70 transition-colors hover:border-[#C09A18] hover:text-[#C09A18] dark:border-[#3A4A36] dark:bg-background dark:text-[#B0BFB1]"
             aria-label={t('date_prev')}
           >
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
@@ -256,7 +256,7 @@ export function StationReservationsPage() {
           <button
             type="button"
             onClick={() => setSelectedDate((d) => { const n = new Date(d); n.setDate(n.getDate() + 1); return n; })}
-            className="flex h-8 w-8 items-center justify-center rounded-lg border border-[#CCCCCC] bg-white text-foreground/70 transition-colors hover:border-[#C09A18] hover:text-[#C09A18] dark:border-[#3A4A36] dark:bg-background dark:text-[#9A9A8A]"
+            className="flex h-8 w-8 items-center justify-center rounded-lg border border-[#CCCCCC] bg-white text-foreground/70 transition-colors hover:border-[#C09A18] hover:text-[#C09A18] dark:border-[#3A4A36] dark:bg-background dark:text-[#B0BFB1]"
             aria-label={t('date_next')}
           >
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
@@ -283,8 +283,8 @@ export function StationReservationsPage() {
               onClick={() => setEntryTypeFilter(f)}
               className={`rounded-lg px-3 py-1.5 text-[11px] font-bold transition-colors ${
                 entryTypeFilter === f
-                  ? 'bg-[#C09A18] text-[#0C1209]'
-                  : 'border border-[#CCCCCC] bg-white text-foreground/70 hover:border-[#C09A18] hover:text-[#C09A18] dark:border-[#3A4A36] dark:bg-background dark:text-[#9A9A8A]'
+                  ? 'bg-[#C09A18] text-[#001201]'
+                  : 'border border-[#CCCCCC] bg-white text-foreground/70 hover:border-[#C09A18] hover:text-[#C09A18] dark:border-[#3A4A36] dark:bg-background dark:text-[#B0BFB1]'
               }`}
             >
               {t(`filter_type_${f}`)}

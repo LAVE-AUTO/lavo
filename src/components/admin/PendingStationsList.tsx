@@ -100,7 +100,7 @@ function StationCard({ s, locale, t }: { s: ApiStation; locale: string; t: Retur
           </p>
 
           <div className="mt-2 flex flex-wrap items-center gap-2">
-            <span className="flex items-center gap-1 text-[11px] font-semibold text-[#999] dark:text-[#A0A090]">
+            <span className="flex items-center gap-1 text-[11px] font-semibold text-[#999] dark:text-[#B0BFB1]">
               <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
                 <rect x="3" y="4" width="18" height="18" rx="2" /><line x1="16" y1="2" x2="16" y2="6" /><line x1="8" y1="2" x2="8" y2="6" /><line x1="3" y1="10" x2="21" y2="10" />
               </svg>
@@ -111,7 +111,7 @@ function StationCard({ s, locale, t }: { s: ApiStation; locale: string; t: Retur
             {isPending && docCount > 0 && <span className="text-[#DDD] dark:text-[#3A4A33]">·</span>}
 
             {isPending && docCount > 0 && (
-              <span className="flex items-center gap-1 text-[11px] font-semibold text-[#999] dark:text-[#A0A090]">
+              <span className="flex items-center gap-1 text-[11px] font-semibold text-[#999] dark:text-[#B0BFB1]">
                 <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
                   <path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z" /><polyline points="14 2 14 8 20 8" />
                 </svg>
@@ -212,7 +212,7 @@ export function PendingStationsList() {
   ];
 
   return (
-    <div className="relative flex h-full min-h-0 flex-col overflow-hidden bg-[radial-gradient(circle_at_top,_rgba(221, 175, 59,0.12),_transparent_36%),linear-gradient(180deg,#faf8f2_0%,#f2efe7_100%)] dark:bg-[radial-gradient(circle_at_top,_rgba(221, 175, 59,0.12),_transparent_32%),linear-gradient(180deg,#0C1209_0%,#091009_100%)]">
+    <div className="relative flex h-full min-h-0 flex-col overflow-hidden bg-[radial-gradient(circle_at_top,_rgba(221, 175, 59,0.12),_transparent_36%),linear-gradient(180deg,#faf8f2_0%,#f2efe7_100%)] dark:bg-[radial-gradient(circle_at_top,_rgba(221, 175, 59,0.12),_transparent_32%),linear-gradient(180deg,#001201_0%,#091009_100%)]">
       <div className="pointer-events-none absolute inset-0 bg-[linear-gradient(135deg,rgba(255,255,255,0.55),transparent_42%)] dark:bg-[linear-gradient(135deg,rgba(255,255,255,0.04),transparent_42%)]" />
 
       <div className="relative mx-auto flex h-full min-h-0 w-full max-w-none flex-1 flex-col gap-5 overflow-y-auto scrollbar-none px-3 py-4 sm:px-4 lg:px-6 lg:py-6">
@@ -254,13 +254,13 @@ export function PendingStationsList() {
                   <button key={key} type="button" onClick={() => setActiveTab(key)}
                     className={[
                       'relative flex items-center gap-2 rounded-[14px] px-4 py-2.5 text-[13px] font-bold transition-colors duration-150',
-                      isActive ? 'bg-[#001201] text-[#FFF9EC] shadow-[0_10px_20px_rgba(26,26,10,0.18)] dark:bg-[#FFF9EC] dark:text-[#001201]' : 'text-[#847E70] hover:bg-[#EFE8D7] hover:text-[#001201] dark:text-[#A0A090] dark:hover:bg-[#182214] dark:hover:text-[#FFF9EC]',
+                      isActive ? 'bg-[#001201] text-[#FFF9EC] shadow-[0_10px_20px_rgba(26,26,10,0.18)] dark:bg-[#FFF9EC] dark:text-[#001201]' : 'text-[#847E70] hover:bg-[#EFE8D7] hover:text-[#001201] dark:text-[#B0BFB1] dark:hover:bg-[#182214] dark:hover:text-[#FFF9EC]',
                     ].join(' ')}>
                     <span className="h-2 w-2 rounded-full" style={{ background: isActive ? color : '#CCCCCC' }} />
                     {label}
                     <span className={[
                       'min-w-[22px] rounded-full px-1.5 py-0.5 text-center text-[11px] font-black',
-                      isActive ? 'bg-[#DDAF3B] text-[#0C1209]' : 'bg-[#E1DBCF] text-[#7E796B] dark:bg-[#1E2E18] dark:text-[#9A9A8A]',
+                      isActive ? 'bg-[#DDAF3B] text-[#001201]' : 'bg-[#E1DBCF] text-[#7E796B] dark:bg-[#1E2E18] dark:text-[#B0BFB1]',
                     ].join(' ')}>{counts[key]}</span>
                   </button>
                 );
@@ -279,7 +279,7 @@ export function PendingStationsList() {
 
           {!loading && loadError && (
             <div className="flex flex-1 flex-col items-center justify-center gap-3 py-24 text-center">
-              <p className="text-[13px] font-semibold text-foreground/55 dark:text-[#9A9A8A]">{t('error_load')}</p>
+              <p className="text-[13px] font-semibold text-foreground/55 dark:text-[#B0BFB1]">{t('error_load')}</p>
               <button type="button" onClick={loadStations}
                 className="rounded-xl border border-[#DDAF3B]/40 px-4 py-2 text-[13px] font-bold text-[#DDAF3B] transition-colors hover:bg-[#DDAF3B]/8">
                 {t('btn_retry')}

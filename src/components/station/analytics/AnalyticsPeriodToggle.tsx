@@ -23,7 +23,7 @@ export function AnalyticsPeriodToggle({ value, onChange }: AnalyticsPeriodToggle
     <div
       role="tablist"
       aria-label={t('period_label')}
-      className="inline-flex gap-1 rounded-xl border border-[#E0DCD0] bg-white p-1 dark:border-[#001A05] dark:bg-[#001201]"
+      className="inline-flex gap-1 rounded-xl border border-[#FFF9EC] bg-white p-1 dark:border-[#001A05] dark:bg-[#001201]"
     >
       {PERIODS.map((period) => {
         const active = value === period.id;
@@ -36,8 +36,8 @@ export function AnalyticsPeriodToggle({ value, onChange }: AnalyticsPeriodToggle
             onClick={() => onChange(period.id)}
             className={`rounded-lg px-3 py-1.5 text-[12px] font-bold transition-all duration-150 ${
               active
-                ? 'bg-[#DDAF3B] text-[#0C1209] shadow-sm'
-                : 'text-foreground/55 hover:bg-[#F7F6F2] hover:text-[#001201] dark:text-[#9A9A8A] dark:hover:bg-[#182214] dark:hover:text-[#FFF9EC]'
+                ? 'bg-[#DDAF3B] text-[#001201] shadow-sm'
+                : 'text-foreground/55 hover:bg-[#FFF9EC] hover:text-[#001201] dark:text-[#B0BFB1] dark:hover:bg-[#182214] dark:hover:text-[#FFF9EC]'
             }`}
           >
             {t(period.label as 'period_7d')}

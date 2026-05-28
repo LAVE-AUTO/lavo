@@ -116,13 +116,13 @@ export function AdminClientDetail({ id }: Props) {
   const initials    = `${client.first_name?.[0] ?? ''}${client.last_name?.[0] ?? ''}`.toUpperCase() || '?';
 
   return (
-    <div className="relative flex h-full min-h-0 flex-col overflow-hidden bg-[radial-gradient(circle_at_top,_rgba(221, 175, 59,0.12),_transparent_36%),linear-gradient(180deg,#faf8f2_0%,#f2efe7_100%)] dark:bg-[radial-gradient(circle_at_top,_rgba(221, 175, 59,0.12),_transparent_32%),linear-gradient(180deg,#0C1209_0%,#091009_100%)]">
+    <div className="relative flex h-full min-h-0 flex-col overflow-hidden bg-[radial-gradient(circle_at_top,_rgba(221, 175, 59,0.12),_transparent_36%),linear-gradient(180deg,#faf8f2_0%,#f2efe7_100%)] dark:bg-[radial-gradient(circle_at_top,_rgba(221, 175, 59,0.12),_transparent_32%),linear-gradient(180deg,#001201_0%,#091009_100%)]">
       <div className="pointer-events-none absolute inset-0 bg-[linear-gradient(135deg,rgba(255,255,255,0.55),transparent_42%)] dark:bg-[linear-gradient(135deg,rgba(255,255,255,0.04),transparent_42%)]" />
 
       <div className="relative mx-auto flex h-full min-h-0 w-full max-w-[720px] flex-1 flex-col gap-5 overflow-y-auto scrollbar-none px-3 py-4 sm:px-4 lg:px-6 lg:py-6">
 
         {/* Breadcrumb */}
-        <div className="flex items-center gap-2 text-[12px] text-foreground/55 dark:text-[#9A9A8A]">
+        <div className="flex items-center gap-2 text-[12px] text-foreground/55 dark:text-[#B0BFB1]">
           <Link href={'/admin/clients' as Parameters<typeof Link>[0]['href']}
             className="transition-colors hover:text-[#DDAF3B]">
             {t('back_to_list')}
@@ -140,7 +140,7 @@ export function AdminClientDetail({ id }: Props) {
               </div>
               <div>
                 <h1 className="text-[18px] font-black text-[#001201] dark:text-[#FFF9EC]">{displayName}</h1>
-                <p className="mt-0.5 text-[13px] text-foreground/55 dark:text-[#9A9A8A]">{client.email}</p>
+                <p className="mt-0.5 text-[13px] text-foreground/55 dark:text-[#B0BFB1]">{client.email}</p>
                 <div className="mt-2">
                   <span className={`inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-[12px] font-semibold ring-1 ring-inset ${statusStyle.bg} ${statusStyle.text}`}>
                     <span className={`h-1.5 w-1.5 rounded-full ${statusStyle.dot}`} />

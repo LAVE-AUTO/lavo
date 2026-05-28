@@ -56,7 +56,7 @@ export function ContactContent({ html, eyebrow, title }: Props) {
           </h1>
           <div
             className={[
-              'text-[14px] sm:text-[15px] text-foreground/70 dark:text-[#A0A090] leading-[1.85]',
+              'text-[14px] sm:text-[15px] text-foreground/70 dark:text-[#B0BFB1] leading-[1.85]',
               '[&_h2]:font-playfair [&_h2]:text-[20px] sm:[&_h2]:text-[22px] [&_h2]:font-black [&_h2]:text-[#001201] dark:[&_h2]:text-white [&_h2]:mt-8 [&_h2]:mb-3',
               '[&_h3]:text-[16px] [&_h3]:font-bold [&_h3]:text-[#001201] dark:[&_h3]:text-white [&_h3]:mt-5 [&_h3]:mb-2',
               '[&_p]:mb-4',
@@ -79,7 +79,7 @@ export function ContactContent({ html, eyebrow, title }: Props) {
                 <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#00C851" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><polyline points="20 6 9 17 4 12" /></svg>
               </div>
               <h2 className="text-[20px] font-black text-[#001201] dark:text-white">{t('success_title')}</h2>
-              <p className="text-[14px] text-foreground/70 dark:text-[#A0A090]">{t('success_desc')}</p>
+              <p className="text-[14px] text-foreground/70 dark:text-[#B0BFB1]">{t('success_desc')}</p>
               <button type="button" onClick={() => { setName(''); setEmail(''); setSubject(''); setMessage(''); setStatus('idle'); }} className="mt-2 text-[13px] font-bold text-[#DDAF3B] hover:text-gold-hover transition-colors cursor-pointer">
                 {t('new_message')}
               </button>

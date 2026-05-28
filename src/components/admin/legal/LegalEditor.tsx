@@ -247,7 +247,7 @@ export function LegalEditor({ pageKey, html, onChange, disabled = false, placeho
           '[&_li]:mb-1',
           '[&_blockquote]:border-l-4 [&_blockquote]:border-[#DDAF3B] [&_blockquote]:pl-4 [&_blockquote]:italic [&_blockquote]:text-[#5A554B] dark:[&_blockquote]:text-[#A6A091] [&_blockquote]:my-4',
           '[&_a]:text-[#9A7A13] [&_a]:underline [&_a]:underline-offset-2',
-          '[&_code]:bg-[#F4F1E8] [&_code]:px-1.5 [&_code]:py-0.5 [&_code]:rounded [&_code]:text-[12.5px] [&_code]:font-mono dark:[&_code]:bg-[#171F12]',
+          '[&_code]:bg-[#FFF9EC] [&_code]:px-1.5 [&_code]:py-0.5 [&_code]:rounded [&_code]:text-[12.5px] [&_code]:font-mono dark:[&_code]:bg-[#171F12]',
           '[&_hr]:border-0 [&_hr]:border-t [&_hr]:border-[#E1DBCF] [&_hr]:my-6 dark:[&_hr]:border-[#001A05]',
           '[&_.is-editor-empty:first-child]:before:content-[attr(data-placeholder)] [&_.is-editor-empty:first-child]:before:float-left [&_.is-editor-empty:first-child]:before:text-[#BBB6A7] [&_.is-editor-empty:first-child]:before:pointer-events-none [&_.is-editor-empty:first-child]:before:h-0',
         ].join(' '),

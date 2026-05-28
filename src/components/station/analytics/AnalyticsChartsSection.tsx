@@ -66,7 +66,7 @@ export function AnalyticsChartsSection({ data, period }: AnalyticsChartsSectionP
             </LineChart>
           </ResponsiveContainer>
         ) : (
-          <div className="flex h-80 items-center justify-center text-foreground/65 dark:text-[#A0A090]">{t('no_data')}</div>
+          <div className="flex h-80 items-center justify-center text-foreground/65 dark:text-[#B0BFB1]">{t('no_data')}</div>
         )}
       </div>
 
@@ -93,7 +93,7 @@ export function AnalyticsChartsSection({ data, period }: AnalyticsChartsSectionP
             </BarChart>
           </ResponsiveContainer>
         ) : (
-          <div className="flex h-80 items-center justify-center text-foreground/65 dark:text-[#A0A090]">{t('no_data')}</div>
+          <div className="flex h-80 items-center justify-center text-foreground/65 dark:text-[#B0BFB1]">{t('no_data')}</div>
         )}
       </div>
 
@@ -120,7 +120,7 @@ export function AnalyticsChartsSection({ data, period }: AnalyticsChartsSectionP
             </BarChart>
           </ResponsiveContainer>
         ) : (
-          <div className="flex h-80 items-center justify-center text-foreground/65 dark:text-[#A0A090]">{t('no_data')}</div>
+          <div className="flex h-80 items-center justify-center text-foreground/65 dark:text-[#B0BFB1]">{t('no_data')}</div>
         )}
       </div>
     </div>

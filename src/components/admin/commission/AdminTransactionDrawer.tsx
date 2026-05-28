@@ -15,7 +15,7 @@ export interface TxRow {
 
 const STATUS_STYLE: Record<TxStatus, { badge: string; dot: string; bar: string }> = {
   succeeded: { badge: 'bg-[#F0FDF4] text-[#15803D] ring-1 ring-[#22C55E]/20', dot: 'bg-[#22C55E]', bar: 'bg-[#22C55E]' },
-  refunded:  { badge: 'bg-[#EFF6FF] text-[#1D4ED8] ring-1 ring-[#3B82F6]/20', dot: 'bg-[#3B82F6]', bar: 'bg-[#3B82F6]' },
+  refunded:  { badge: 'bg-[#EFF6FF] text-[#1D4ED8] ring-1 ring-[#1E40AF]/20', dot: 'bg-[#1E40AF]', bar: 'bg-[#1E40AF]' },
   failed:    { badge: 'bg-[#FFF1F2] text-[#BE123C] ring-1 ring-[#FB7185]/20', dot: 'bg-[#F43F5E]', bar: 'bg-[#F43F5E]' },
 };
 
@@ -90,7 +90,7 @@ export function AdminTransactionDrawer({ tx, onClose }: Props) {
       <div className="fixed inset-y-0 right-0 z-50 flex w-full max-w-[420px] flex-col bg-white shadow-2xl ring-1 ring-black/[0.06] animate-fade-in-up dark:bg-[#131E10] dark:ring-white/[0.06]">
 
         {/* Header */}
-        <div className="flex items-center justify-between border-b border-[#E8E4DC] bg-[#F9F8F5] px-6 py-4 dark:border-[#1E2E18] dark:bg-[#0E1A0C]">
+        <div className="flex items-center justify-between border-b border-[#FFF9EC] bg-[#F9F8F5] px-6 py-4 dark:border-[#1E2E18] dark:bg-[#0E1A0C]">
           <h2 className="text-[14px] font-black text-[#001201] dark:text-[#FFF9EC]">{t('drawer_title')}</h2>
           <button ref={closeBtnRef} type="button" onClick={onClose}
             className="flex h-8 w-8 items-center justify-center rounded-lg text-foreground/55 transition-colors hover:bg-[#F0EDE6] hover:text-[#001201] dark:hover:bg-[#1E2E18] dark:hover:text-[#FFF9EC]">
@@ -109,22 +109,22 @@ export function AdminTransactionDrawer({ tx, onClose }: Props) {
             <span className={`inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-[13px] font-bold ${s.badge}`}>
               <span className={`h-2 w-2 rounded-full ${s.dot}`} />{STATUS_LABELS[tx.status]}
             </span>
-            <p className="text-[13px] text-foreground/55 dark:text-[#A0A090]">{formatDateTime(tx.date)}</p>
+            <p className="text-[13px] text-foreground/55 dark:text-[#B0BFB1]">{formatDateTime(tx.date)}</p>
           </div>
 
           {/* Amounts */}
-          <div className="rounded-2xl border border-[#E8E4DC] bg-[#F9F8F5] p-5 dark:border-[#1E2E18] dark:bg-[#0E1A0C]">
-            <p className="mb-4 text-[11px] font-black uppercase tracking-widest text-[#AAAAAA] dark:text-[#A0A090]">{t('section_amounts')}</p>
+          <div className="rounded-2xl border border-[#FFF9EC] bg-[#F9F8F5] p-5 dark:border-[#1E2E18] dark:bg-[#0E1A0C]">
+            <p className="mb-4 text-[11px] font-black uppercase tracking-widest text-[#AAAAAA] dark:text-[#B0BFB1]">{t('section_amounts')}</p>
             <div className="flex flex-col gap-3">
               <div className="flex justify-between">
-                <span className="text-[13px] text-foreground/65 dark:text-[#9A9A8A]">{t('drawer_gross')}</span>
+                <span className="text-[13px] text-foreground/65 dark:text-[#B0BFB1]">{t('drawer_gross')}</span>
                 <span className="text-[15px] font-black text-[#001201] dark:text-[#FFF9EC]">{fmt(tx.gross)}</span>
               </div>
               <div className="flex justify-between">
-                <span className="text-[13px] text-foreground/65 dark:text-[#9A9A8A]">{t('drawer_commission')}</span>
+                <span className="text-[13px] text-foreground/65 dark:text-[#B0BFB1]">{t('drawer_commission')}</span>
                 <span className="text-[15px] font-black text-[#DDAF3B]">−{fmt(tx.commission)}</span>
               </div>
-              <div className="h-px bg-[#E8E4DC] dark:bg-[#1E2E18]" />
+              <div className="h-px bg-[#FFF9EC] dark:bg-[#1E2E18]" />
               <div className="flex justify-between">
                 <span className="text-[13px] font-bold text-[#001201] dark:text-[#FFF9EC]">{t('drawer_payout')}</span>
                 <span className="text-[17px] font-black text-[#5A8A50] dark:text-[#7AAA6A]">{fmt(tx.payout)}</span>
@@ -133,33 +133,33 @@ export function AdminTransactionDrawer({ tx, onClose }: Props) {
           </div>
 
           {/* Parties */}
-          <div className="rounded-2xl border border-[#E8E4DC] bg-[#F9F8F5] p-5 dark:border-[#1E2E18] dark:bg-[#0E1A0C]">
-            <p className="mb-4 text-[11px] font-black uppercase tracking-widest text-[#AAAAAA] dark:text-[#A0A090]">{t('section_parties')}</p>
+          <div className="rounded-2xl border border-[#FFF9EC] bg-[#F9F8F5] p-5 dark:border-[#1E2E18] dark:bg-[#0E1A0C]">
+            <p className="mb-4 text-[11px] font-black uppercase tracking-widest text-[#AAAAAA] dark:text-[#B0BFB1]">{t('section_parties')}</p>
             <div className="flex flex-col gap-3">
               <div className="flex items-center justify-between gap-3">
-                <span className="text-[13px] text-foreground/65 dark:text-[#9A9A8A]">{t('drawer_station')}</span>
+                <span className="text-[13px] text-foreground/65 dark:text-[#B0BFB1]">{t('drawer_station')}</span>
                 <span className="text-right text-[13px] font-bold text-[#001201] dark:text-[#FFF9EC]">{tx.station}</span>
               </div>
               <div className="flex items-center justify-between gap-3">
-                <span className="text-[13px] text-foreground/65 dark:text-[#9A9A8A]">{t('drawer_client')}</span>
+                <span className="text-[13px] text-foreground/65 dark:text-[#B0BFB1]">{t('drawer_client')}</span>
                 <span className="text-right text-[13px] font-bold text-[#001201] dark:text-[#FFF9EC]">{tx.client}</span>
               </div>
             </div>
           </div>
 
           {/* Stripe ID */}
-          <div className="rounded-2xl border border-[#E8E4DC] bg-[#F9F8F5] p-5 dark:border-[#1E2E18] dark:bg-[#0E1A0C]">
-            <p className="mb-3 text-[11px] font-black uppercase tracking-widest text-[#AAAAAA] dark:text-[#A0A090]">{t('drawer_stripe_id')}</p>
-            <p className="break-all font-mono text-[12px] leading-relaxed text-foreground/70 dark:text-[#9A9A8A]">{tx.stripe_id}</p>
+          <div className="rounded-2xl border border-[#FFF9EC] bg-[#F9F8F5] p-5 dark:border-[#1E2E18] dark:bg-[#0E1A0C]">
+            <p className="mb-3 text-[11px] font-black uppercase tracking-widest text-[#AAAAAA] dark:text-[#B0BFB1]">{t('drawer_stripe_id')}</p>
+            <p className="break-all font-mono text-[12px] leading-relaxed text-foreground/70 dark:text-[#B0BFB1]">{tx.stripe_id}</p>
           </div>
         </div>
 
         {/* Footer */}
-        <div className="border-t border-[#E8E4DC] p-5 dark:border-[#1E2E18]">
+        <div className="border-t border-[#FFF9EC] p-5 dark:border-[#1E2E18]">
           <button type="button" onClick={handleDownload} disabled={exporting}
-            className="flex w-full items-center justify-center gap-2 rounded-xl bg-[#DDAF3B] px-5 py-3 text-[13px] font-bold text-[#0C1209] shadow-sm transition-all hover:-translate-y-0.5 hover:bg-[#D4A830] hover:shadow-md active:translate-y-0 disabled:opacity-60 disabled:translate-y-0">
+            className="flex w-full items-center justify-center gap-2 rounded-xl bg-[#DDAF3B] px-5 py-3 text-[13px] font-bold text-[#001201] shadow-sm transition-all hover:-translate-y-0.5 hover:bg-[#D4A830] hover:shadow-md active:translate-y-0 disabled:opacity-60 disabled:translate-y-0">
             {exporting
-              ? <span className="h-3.5 w-3.5 animate-spin rounded-full border-2 border-[#0C1209] border-t-transparent" />
+              ? <span className="h-3.5 w-3.5 animate-spin rounded-full border-2 border-[#001201] border-t-transparent" />
               : <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4" /><polyline points="7 10 12 15 17 10" /><line x1="12" y1="15" x2="12" y2="3" /></svg>
             }
             {t('btn_download')}

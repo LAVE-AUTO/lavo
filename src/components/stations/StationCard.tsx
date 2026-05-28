@@ -57,12 +57,12 @@ export function StationCard({ station, unavailable = false }: StationCardProps) 
             className="w-full h-full object-cover group-hover:scale-[1.01] transition-transform duration-300"
           />
         ) : (
-          <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#9A9A8A" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+          <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#B0BFB1" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
             <path d="M3 17l2-7h14l2 7" />
             <path d="M5 17v2h2v-2M17 17v2h2v-2" />
             <path d="M8 10V7a1 1 0 011-1h6a1 1 0 011 1v3" />
-            <circle cx="7.5" cy="17" r="1.5" fill="#9A9A8A" />
-            <circle cx="16.5" cy="17" r="1.5" fill="#9A9A8A" />
+            <circle cx="7.5" cy="17" r="1.5" fill="#B0BFB1" />
+            <circle cx="16.5" cy="17" r="1.5" fill="#B0BFB1" />
           </svg>
         )}
 

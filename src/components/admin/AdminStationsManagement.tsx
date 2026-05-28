@@ -42,12 +42,12 @@ export function AdminStationsManagement({ stations, loading, error, query, onAct
   }
 
   if (loading) return (
-    <div className="overflow-hidden rounded-xl border border-[#E8E4DC] dark:border-[#1E2E18]">
+    <div className="overflow-hidden rounded-xl border border-[#FFF9EC] dark:border-[#1E2E18]">
       {[...Array(5)].map((_, i) => (
         <div key={i} className={`flex items-center gap-4 border-b border-[#F2EFE8] px-5 py-4 last:border-0 dark:border-[#1A2A14] ${i === 0 ? 'bg-[#F9F8F5] dark:bg-[#0E1A0C]' : 'bg-white dark:bg-[#131E10]'}`}>
-          <div className="h-9 w-9 animate-pulse rounded-xl bg-[#E8E4DC] dark:bg-[#1E2E18]" style={{ opacity: 1 - i * 0.15 }} />
+          <div className="h-9 w-9 animate-pulse rounded-xl bg-[#FFF9EC] dark:bg-[#1E2E18]" style={{ opacity: 1 - i * 0.15 }} />
           <div className="flex flex-1 flex-col gap-2">
-            <div className="h-3 w-36 animate-pulse rounded bg-[#E8E4DC] dark:bg-[#1E2E18]" />
+            <div className="h-3 w-36 animate-pulse rounded bg-[#FFF9EC] dark:bg-[#1E2E18]" />
             <div className="h-2.5 w-24 animate-pulse rounded bg-[#F0EDE6] dark:bg-[#162010]" />
           </div>
         </div>
@@ -85,7 +85,7 @@ export function AdminStationsManagement({ stations, loading, error, query, onAct
             {isBusy ? '…' : t('btn_confirm')}
           </button>
           <button type="button" onClick={() => { setConfirmId(null); setConfirmAction(null); }}
-            className="rounded-[14px] border border-[#D8D4C8] px-4 py-2 text-[12px] font-semibold text-foreground/65 transition-colors hover:bg-[#F5F3EE] dark:border-[#001A05] dark:text-[#9A9A8A] dark:hover:bg-[#182214]">
+            className="rounded-[14px] border border-[#D8D4C8] px-4 py-2 text-[12px] font-semibold text-foreground/65 transition-colors hover:bg-[#F5F3EE] dark:border-[#001A05] dark:text-[#B0BFB1] dark:hover:bg-[#182214]">
             {t('btn_cancel')}
           </button>
         </div>
@@ -138,7 +138,7 @@ export function AdminStationsManagement({ stations, loading, error, query, onAct
                       className="block truncate text-[14px] font-black text-[#001201] underline-offset-2 hover:text-[#DDAF3B] hover:underline dark:text-[#FFF9EC]">
                       {station.name}
                     </Link>
-                    <p className="mt-0.5 text-[12px] text-[#979083] dark:text-[#A0A090]">{formatDate(station.created_at)}</p>
+                    <p className="mt-0.5 text-[12px] text-[#979083] dark:text-[#B0BFB1]">{formatDate(station.created_at)}</p>
                   </div>
                 </div>
                 {renderStatus(station)}
@@ -151,7 +151,7 @@ export function AdminStationsManagement({ stations, loading, error, query, onAct
               <div className="mt-4 flex flex-wrap gap-2">
                 {renderActionButton(station, true)}
                 <button type="button" onClick={() => onEdit(station)} title={t('btn_edit')}
-                  className="flex h-8 w-8 items-center justify-center rounded-[12px] border border-[#E1DBCF] bg-white text-foreground/55 transition-colors hover:border-[#DDAF3B]/40 hover:bg-[#FCF6E5] hover:text-[#9A7A13] dark:border-[#1E2E18] dark:bg-[#0E170C] dark:text-[#A0A090]">
+                  className="flex h-8 w-8 items-center justify-center rounded-[12px] border border-[#E1DBCF] bg-white text-foreground/55 transition-colors hover:border-[#DDAF3B]/40 hover:bg-[#FCF6E5] hover:text-[#9A7A13] dark:border-[#1E2E18] dark:bg-[#0E170C] dark:text-[#B0BFB1]">
                   <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7" /><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z" /></svg>
                 </button>
                 <button type="button" onClick={() => onDelete(station)} title={t('btn_delete')}
@@ -197,7 +197,7 @@ export function AdminStationsManagement({ stations, loading, error, query, onAct
                     className="block truncate text-[13px] font-bold text-[#001201] underline-offset-2 hover:text-[#DDAF3B] hover:underline dark:text-[#FFF9EC]">
                     {station.name}
                   </Link>
-                  <p className="truncate text-[12px] text-[#BBBBAA] dark:text-[#A0A090]">{formatDate(station.created_at)}</p>
+                  <p className="truncate text-[12px] text-[#BBBBAA] dark:text-[#B0BFB1]">{formatDate(station.created_at)}</p>
                 </div>
 
                 <p className="truncate text-[13px] text-[#777] dark:text-[#C8C2B3]">{station.city ?? '-'}</p>
@@ -207,7 +207,7 @@ export function AdminStationsManagement({ stations, loading, error, query, onAct
                 <div className="flex items-center justify-end gap-1.5">
                   {renderActionButton(station)}
                   <button type="button" onClick={() => onEdit(station)} title={t('btn_edit')}
-                    className="flex h-8 w-8 items-center justify-center rounded-[12px] border border-[#E1DBCF] bg-white text-foreground/55 transition-colors hover:border-[#DDAF3B]/40 hover:bg-[#FCF6E5] hover:text-[#9A7A13] dark:border-[#1E2E18] dark:bg-[#0E170C] dark:text-[#A0A090] dark:hover:bg-[#1A2410] dark:hover:text-[#F0D98C]">
+                    className="flex h-8 w-8 items-center justify-center rounded-[12px] border border-[#E1DBCF] bg-white text-foreground/55 transition-colors hover:border-[#DDAF3B]/40 hover:bg-[#FCF6E5] hover:text-[#9A7A13] dark:border-[#1E2E18] dark:bg-[#0E170C] dark:text-[#B0BFB1] dark:hover:bg-[#1A2410] dark:hover:text-[#F0D98C]">
                     <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7" /><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z" /></svg>
                   </button>
                   <button type="button" onClick={() => onDelete(station)} title={t('btn_delete')}

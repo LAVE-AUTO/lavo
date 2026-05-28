@@ -376,7 +376,7 @@ export function ArrivalStep({
               <div className="rounded-xl bg-surface border border-border p-4">
                 <div className="flex items-center gap-2 mb-3">
                   <span className="w-2 h-2 rounded-full bg-Hurryline-success animate-pulse shrink-0" />
-                  <span className="text-[12px] font-bold text-foreground/70 dark:text-[#A0A090] uppercase tracking-wider">
+                  <span className="text-[12px] font-bold text-foreground/70 dark:text-[#B0BFB1] uppercase tracking-wider">
                     {t('arrival_queue_status')}
                   </span>
                 </div>
@@ -476,7 +476,7 @@ export function ArrivalStep({
 
                   {/* Custom time entry */}
                   <div className="rounded-xl border border-dashed border-border bg-white/40 dark:bg-background/30 px-3 py-2.5">
-                    <label className="block text-[11px] font-black uppercase tracking-wider text-foreground/70 dark:text-[#A0A090] mb-1.5">
+                    <label className="block text-[11px] font-black uppercase tracking-wider text-foreground/70 dark:text-[#B0BFB1] mb-1.5">
                       {t('arrival_custom_time_label')}
                     </label>
                     <div className="flex items-center gap-2">

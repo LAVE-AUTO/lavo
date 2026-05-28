@@ -170,7 +170,7 @@ export function StationServicesPage() {
   if (loadError) {
     return (
       <div className="flex flex-1 flex-col items-center justify-center gap-3 text-center">
-        <span className="text-[14px] font-semibold text-[#999] dark:text-[#9A9A8A]">{t('load_error')}</span>
+        <span className="text-[14px] font-semibold text-[#999] dark:text-[#B0BFB1]">{t('load_error')}</span>
         <button
           type="button"
           onClick={loadData}
@@ -185,17 +185,17 @@ export function StationServicesPage() {
   return (
     <div className="flex flex-1 flex-col overflow-hidden">
       {/* Topbar */}
-      <header className="flex flex-wrap items-center justify-between gap-4 border-b border-[#E0DCD0] bg-white px-6 py-5 dark:border-[#1A2A14] dark:bg-[#111A0E]">
+      <header className="flex flex-wrap items-center justify-between gap-4 border-b border-[#FFF9EC] bg-white px-6 py-5 dark:border-[#1A2A14] dark:bg-[#111A0E]">
         <div className="min-w-0">
           <h1 className="text-[22px] font-black tracking-tight text-[#001201] dark:text-[#FFF9EC]">
             {t('page_title')}
           </h1>
-          <p className="mt-0.5 text-[13px] text-foreground/55 dark:text-[#9A9A8A]">{t('page_subtitle')}</p>
+          <p className="mt-0.5 text-[13px] text-foreground/55 dark:text-[#B0BFB1]">{t('page_subtitle')}</p>
         </div>
         <div className="flex items-center gap-2">
           <Link
             href={`/${locale}/station/analytics`}
-            className="inline-flex items-center gap-1.5 rounded-xl border border-[#E0DCD0] bg-white px-4 py-2 text-[12px] font-bold text-[#5A5A4A] transition-colors hover:border-[#DDAF3B]/40 hover:text-[#DDAF3B] dark:border-[#001A05] dark:bg-[#182214] dark:text-[#9A9A8A]"
+            className="inline-flex items-center gap-1.5 rounded-xl border border-[#FFF9EC] bg-white px-4 py-2 text-[12px] font-bold text-[#5A5A4A] transition-colors hover:border-[#DDAF3B]/40 hover:text-[#DDAF3B] dark:border-[#001A05] dark:bg-[#182214] dark:text-[#B0BFB1]"
           >
             <StatsIcon />
             {t('btn_stats')}
@@ -203,7 +203,7 @@ export function StationServicesPage() {
           <button
             type="button"
             onClick={() => setServiceModal('new')}
-            className="inline-flex items-center gap-1.5 rounded-xl bg-[#DDAF3B] px-4 py-2 text-[12px] font-bold text-[#0C1209] transition-opacity hover:opacity-85"
+            className="inline-flex items-center gap-1.5 rounded-xl bg-[#DDAF3B] px-4 py-2 text-[12px] font-bold text-[#001201] transition-opacity hover:opacity-85"
           >
             <PlusIcon />
             {t('btn_new_service')}
@@ -219,14 +219,14 @@ export function StationServicesPage() {
             <h2 className="text-[11px] font-black uppercase tracking-[1.5px] text-[#DDAF3B]">
               {t('section_base')}
             </h2>
-            <span className="text-[12px] font-semibold text-foreground/55 dark:text-[#9A9A8A]">
+            <span className="text-[12px] font-semibold text-foreground/55 dark:text-[#B0BFB1]">
               {t('services_active_count', { count: activeServiceCount })}
             </span>
           </div>
 
           {services.length === 0 ? (
-            <div className="flex flex-col items-center justify-center gap-2 rounded-2xl border border-dashed border-[#E0DCD0] py-16 text-center dark:border-[#001A05]">
-              <span className="text-[14px] font-semibold text-[#999] dark:text-[#9A9A8A]">{t('empty')}</span>
+            <div className="flex flex-col items-center justify-center gap-2 rounded-2xl border border-dashed border-[#FFF9EC] py-16 text-center dark:border-[#001A05]">
+              <span className="text-[14px] font-semibold text-[#999] dark:text-[#B0BFB1]">{t('empty')}</span>
               <span className="text-[13px] text-[#BBBBAA] dark:text-[#5A5A4A]">{t('empty_hint')}</span>
             </div>
           ) : (
@@ -255,14 +255,14 @@ export function StationServicesPage() {
               <h2 className="text-[11px] font-black uppercase tracking-[1.5px] text-[#DDAF3B]">
                 {t('section_extras_available')}
               </h2>
-              <span className="text-[12px] font-semibold text-foreground/55 dark:text-[#9A9A8A]">
+              <span className="text-[12px] font-semibold text-foreground/55 dark:text-[#B0BFB1]">
                 {t('extras_active_count', { active: activeExtraCount, total: allExtras.length })}
               </span>
             </div>
             <button
               type="button"
               onClick={() => setExtraModal('new')}
-              className="inline-flex items-center gap-1.5 rounded-xl bg-[#DDAF3B] px-3 py-1.5 text-[11px] font-bold text-[#0C1209] transition-opacity hover:opacity-85"
+              className="inline-flex items-center gap-1.5 rounded-xl bg-[#DDAF3B] px-3 py-1.5 text-[11px] font-bold text-[#001201] transition-opacity hover:opacity-85"
             >
               <PlusIcon />
               {t('btn_new_extra')}
@@ -270,7 +270,7 @@ export function StationServicesPage() {
           </div>
 
           {allExtras.length === 0 ? (
-            <div className="flex flex-col items-center justify-center gap-2 rounded-2xl border border-dashed border-[#E0DCD0] py-12 text-center dark:border-[#001A05]">
+            <div className="flex flex-col items-center justify-center gap-2 rounded-2xl border border-dashed border-[#FFF9EC] py-12 text-center dark:border-[#001A05]">
               <span className="text-[13px] text-[#BBBBAA] dark:text-[#4A4A3A]">{t('extras_none')}</span>
             </div>
           ) : (

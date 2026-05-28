@@ -23,7 +23,7 @@ const SCOPE_LABELS: Record<Scope, string> = {
 
 function FieldLabel({ children }: { children: React.ReactNode }) {
   return (
-    <label className="block text-[11px] font-bold uppercase tracking-[0.5px] text-foreground/55 dark:text-[#9A9A8A]">
+    <label className="block text-[11px] font-bold uppercase tracking-[0.5px] text-foreground/55 dark:text-[#B0BFB1]">
       {children}
     </label>
   );
@@ -115,7 +115,7 @@ export function ExtraModal({ extra, onClose, onSaved }: Props) {
       }}
     >
       <div
-        className="flex max-h-[92vh] w-full max-w-[640px] xl:max-w-[760px] flex-col rounded-2xl border border-[#E8E4DC] bg-white shadow-xl dark:border-[#1A2A14] dark:bg-[#182214]"
+        className="flex max-h-[92vh] w-full max-w-[640px] xl:max-w-[760px] flex-col rounded-2xl border border-[#FFF9EC] bg-white shadow-xl dark:border-[#1A2A14] dark:bg-[#182214]"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Header */}
@@ -163,8 +163,8 @@ export function ExtraModal({ extra, onClose, onSaved }: Props) {
                       onClick={() => setScope(s)}
                       className={`rounded-lg px-3 py-2 text-[12px] font-bold transition-all ${
                         scope === s
-                          ? 'bg-[#DDAF3B] text-[#0C1209]'
-                          : 'bg-[#F7F6F2] text-[#5A5A4A] hover:bg-[#F0EDE4] dark:bg-[#1E2A18] dark:text-[#9A9A8A]'
+                          ? 'bg-[#DDAF3B] text-[#001201]'
+                          : 'bg-[#FFF9EC] text-[#5A5A4A] hover:bg-[#F0EDE4] dark:bg-[#1E2A18] dark:text-[#B0BFB1]'
                       }`}
                     >
                       {SCOPE_LABELS[s]}
@@ -188,7 +188,7 @@ export function ExtraModal({ extra, onClose, onSaved }: Props) {
               {/* Preview */}
               <div className="rounded-xl border border-[#DDAF3B]/20 bg-[#FFFDF5] p-4 dark:border-[#DDAF3B]/20 dark:bg-[#1A1808]">
                 <div className="mb-2 text-[11px] font-bold uppercase tracking-[0.5px] text-[#DDAF3B]">Aperçu</div>
-                <div className="text-[13px] text-[#5A5A4A] dark:text-[#9A9A8A]">
+                <div className="text-[13px] text-[#5A5A4A] dark:text-[#B0BFB1]">
                   <span className="font-bold text-[#001201] dark:text-[#FFF9EC]">{previewName}</span>
                   {' : '}+{previewPrice} $ · +{previewDuration} min
                 </div>
@@ -207,7 +207,7 @@ export function ExtraModal({ extra, onClose, onSaved }: Props) {
             <button
               type="submit"
               disabled={saving}
-              className="w-full rounded-xl bg-[#DDAF3B] py-2.5 text-[13px] font-bold text-[#0C1209] transition-opacity hover:opacity-85 disabled:opacity-50"
+              className="w-full rounded-xl bg-[#DDAF3B] py-2.5 text-[13px] font-bold text-[#001201] transition-opacity hover:opacity-85 disabled:opacity-50"
             >
               {saving
                 ? isEdit ? 'Enregistrement…' : 'Création…'
@@ -216,7 +216,7 @@ export function ExtraModal({ extra, onClose, onSaved }: Props) {
             <button
               type="button"
               onClick={onClose}
-              className="w-full rounded-xl border border-[#E0DCD0] py-2.5 text-[13px] font-semibold text-foreground/65 transition-colors hover:bg-[#F0EDE0] dark:border-[#001A05] dark:text-[#9A9A8A]"
+              className="w-full rounded-xl border border-[#FFF9EC] py-2.5 text-[13px] font-semibold text-foreground/65 transition-colors hover:bg-[#F0EDE0] dark:border-[#001A05] dark:text-[#B0BFB1]"
             >
               Annuler
             </button>

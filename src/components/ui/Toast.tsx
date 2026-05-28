@@ -39,10 +39,10 @@ function WarningIcon() {
 function InfoIcon() {
   return (
     <svg width="20" height="20" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-      <circle cx="12" cy="12" r="10" fill="#3B82F6" opacity="0.15" />
-      <circle cx="12" cy="12" r="10" stroke="#3B82F6" strokeWidth="1.5" fill="none" />
-      <line x1="12" y1="11" x2="12" y2="16" stroke="#3B82F6" strokeWidth="2" strokeLinecap="round" />
-      <circle cx="12" cy="8" r="1" fill="#3B82F6" />
+      <circle cx="12" cy="12" r="10" fill="#1E40AF" opacity="0.15" />
+      <circle cx="12" cy="12" r="10" stroke="#1E40AF" strokeWidth="1.5" fill="none" />
+      <line x1="12" y1="11" x2="12" y2="16" stroke="#1E40AF" strokeWidth="2" strokeLinecap="round" />
+      <circle cx="12" cy="8" r="1" fill="#1E40AF" />
     </svg>
   );
 }
@@ -66,7 +66,7 @@ const ACCENT_COLORS: Record<ToastType, string> = {
   success: '#00C851',
   error:   '#391C01',
   warning: '#F59E0B',
-  info:    '#3B82F6',
+  info:    '#1E40AF',
 };
 
 /**

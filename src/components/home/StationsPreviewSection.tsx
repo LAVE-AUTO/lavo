@@ -11,7 +11,7 @@ function StationRow({
   bookLabel: string; joinLabel: string; dimmed?: boolean;
 }) {
   return (
-    <div className={`rounded-[12px] p-5 transition-all duration-300 hover:translate-x-1.5 hover:shadow-[0_16px_40px_rgba(0,0,0,0.18)] dark:hover:shadow-[0_16px_40px_rgba(0,0,0,0.35)] bg-[#e8e2d4] dark:bg-[#f5edd6] ${dimmed ? 'opacity-50' : ''}`}>
+    <div className={`rounded-[12px] p-5 transition-all duration-300 hover:translate-x-1.5 hover:shadow-[0_16px_40px_rgba(0,0,0,0.18)] dark:hover:shadow-[0_16px_40px_rgba(0,0,0,0.35)] bg-[#FFF9EC] dark:bg-[#f5edd6] ${dimmed ? 'opacity-50' : ''}`}>
       <div className="mb-2.5 flex items-start justify-between">
         <span className="text-[15px] font-bold text-[#3d2a10]">{name}</span>
         <span className={`rounded-full px-2 py-0.5 text-[9px] font-bold ${
@@ -86,7 +86,7 @@ export function StationsPreviewSection() {
               </p>
 
               {/* Pricing card */}
-              <div className="rounded-[12px] border border-[rgba(221,175,59,0.15)] bg-[#1a1a0f] dark:bg-[#162218] p-6">
+              <div className="rounded-[12px] border border-[rgba(221,175,59,0.15)] bg-[#1a1a0f] dark:bg-[#001A05] p-6">
                 <div className="font-dm-mono mb-3.5 text-[10px] uppercase tracking-[2px] text-[#DDAF3B]">
                   {t('pricing_label')}
                 </div>

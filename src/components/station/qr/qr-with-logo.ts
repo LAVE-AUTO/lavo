@@ -1,6 +1,6 @@
 import QRCode from 'qrcode';
 
-export const QR_COLOR_DARK = '#0C1209';
+export const QR_COLOR_DARK = '#001201';
 export const QR_COLOR_LIGHT = '#FFFFFF';
 /* The square hourglass icon reads better at small sizes than the full
  * wordmark, and stays balanced inside the centered white badge. */
@@ -93,7 +93,7 @@ export async function renderQrWithLogoToDataUrl(
 const WORDMARK_SRC = '/logo/logo_2.png';
 
 const POSTER_BRAND_GOLD = '#DDAF3B';
-const POSTER_TEXT       = '#0C1209';
+const POSTER_TEXT       = '#001201';
 const POSTER_MUTED      = '#7A6F4A';
 const POSTER_BG         = '#FFFFFF';
 const POSTER_ACCENT_BG  = '#FBF6E8';

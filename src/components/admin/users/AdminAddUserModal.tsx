@@ -94,7 +94,7 @@ export function AdminAddUserModal({ open, onClose }: Props) {
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
       <div className="absolute inset-0 bg-black/40 backdrop-blur-[2px]" onClick={() => !busy && onClose()} />
 
-      <div className="relative z-10 w-full max-w-[480px] animate-fade-in-up overflow-hidden rounded-2xl border border-[#E8E4DC] bg-white shadow-2xl dark:border-[#1E2E18] dark:bg-[#001201]">
+      <div className="relative z-10 w-full max-w-[480px] animate-fade-in-up overflow-hidden rounded-2xl border border-[#FFF9EC] bg-white shadow-2xl dark:border-[#1E2E18] dark:bg-[#001201]">
         {/* Header */}
         <div className="flex items-center justify-between border-b border-[#F0EDE6] px-6 py-4 dark:border-[#1A2A14]">
           <h2 className="text-[15px] font-black text-[#001201] dark:text-[#FFF9EC]">

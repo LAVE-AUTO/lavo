@@ -79,7 +79,7 @@ export function ExtraCard({ extra, onEdit, onDeleted, onToggled }: Props) {
   return (
     <>
       <article
-        className={`group flex flex-col rounded-2xl border border-[#E8E4DC] bg-white p-5 transition-all duration-200 hover:border-[#DDAF3B]/30 hover:shadow-sm dark:border-[#1A2A14] dark:bg-[#182214] dark:hover:border-[#DDAF3B]/30 ${opacityClass}`}
+        className={`group flex flex-col rounded-2xl border border-[#FFF9EC] bg-white p-5 transition-all duration-200 hover:border-[#DDAF3B]/30 hover:shadow-sm dark:border-[#1A2A14] dark:bg-[#182214] dark:hover:border-[#DDAF3B]/30 ${opacityClass}`}
       >
         {/* Header */}
         <header className="mb-3 flex items-start justify-between gap-3">
@@ -99,14 +99,14 @@ export function ExtraCard({ extra, onEdit, onDeleted, onToggled }: Props) {
               onClick={() => setDeleteOpen(true)}
               disabled={deleting}
               aria-label={t('btn_delete')}
-              className="inline-flex items-center justify-center rounded-lg border border-[#E0DCD0] bg-white p-1.5 text-foreground/55 transition-all hover:border-[#FF2525] hover:bg-[#FF2525]/5 hover:text-[#FF2525] disabled:opacity-40 dark:border-[#001A05] dark:bg-[#001201] dark:text-[#9A9A8A]"
+              className="inline-flex items-center justify-center rounded-lg border border-[#FFF9EC] bg-white p-1.5 text-foreground/55 transition-all hover:border-[#FF2525] hover:bg-[#FF2525]/5 hover:text-[#FF2525] disabled:opacity-40 dark:border-[#001A05] dark:bg-[#001201] dark:text-[#B0BFB1]"
             >
               <CrossIcon />
             </button>
             <button
               type="button"
               onClick={() => onEdit(extra)}
-              className="inline-flex items-center gap-1.5 rounded-lg bg-[#DDAF3B] px-2.5 py-1.5 text-[11px] font-bold text-[#0C1209] transition-opacity hover:opacity-85"
+              className="inline-flex items-center gap-1.5 rounded-lg bg-[#DDAF3B] px-2.5 py-1.5 text-[11px] font-bold text-[#001201] transition-opacity hover:opacity-85"
             >
               <PencilIcon />
               {t('btn_edit')}
@@ -122,7 +122,7 @@ export function ExtraCard({ extra, onEdit, onDeleted, onToggled }: Props) {
             className={`inline-flex items-center gap-1 rounded-full border px-2.5 py-0.5 text-[10px] font-bold tracking-wide transition-colors ${
               extra.is_active
                 ? 'border-[#22C47A]/40 bg-[#22C47A]/12 text-[#16A964] hover:bg-[#22C47A]/20'
-                : 'border-[#888]/30 bg-[#888]/10 text-foreground/55 hover:bg-[#888]/15 dark:text-[#9A9A8A]'
+                : 'border-[#888]/30 bg-[#888]/10 text-foreground/55 hover:bg-[#888]/15 dark:text-[#B0BFB1]'
             }`}
             aria-label={extra.is_active ? t('badge_active') : t('badge_inactive')}
           >
@@ -137,21 +137,21 @@ export function ExtraCard({ extra, onEdit, onDeleted, onToggled }: Props) {
             {entries.map((entry) => (
               <div
                 key={entry.vehicle_format_id}
-                className="rounded-xl bg-[#F7F6F2] px-3 py-3 text-center dark:bg-[#001201]"
+                className="rounded-xl bg-[#FFF9EC] px-3 py-3 text-center dark:bg-[#001201]"
               >
-                <p className="text-[9px] font-bold uppercase tracking-[1px] text-foreground/55 dark:text-[#9A9A8A]">
+                <p className="text-[9px] font-bold uppercase tracking-[1px] text-foreground/55 dark:text-[#B0BFB1]">
                   {entry.vehicle_label}
                 </p>
                 <p className="mt-1 font-mono text-[20px] font-black tabular-nums leading-none text-[#DDAF3B]">
                   {parseFloat(entry.price || '0').toFixed(0)} $
                 </p>
-                <p className="mt-1 text-[11px] text-foreground/55 dark:text-[#9A9A8A]">{entry.duration_min} min</p>
+                <p className="mt-1 text-[11px] text-foreground/55 dark:text-[#B0BFB1]">{entry.duration_min} min</p>
               </div>
             ))}
           </div>
         ) : (
-          <div className="rounded-xl bg-[#F7F6F2] px-3 py-3 text-center dark:bg-[#001201]">
-            <p className="text-[9px] font-bold uppercase tracking-[1px] text-foreground/55 dark:text-[#9A9A8A]">
+          <div className="rounded-xl bg-[#FFF9EC] px-3 py-3 text-center dark:bg-[#001201]">
+            <p className="text-[9px] font-bold uppercase tracking-[1px] text-foreground/55 dark:text-[#B0BFB1]">
               {t('extras_all_formats')}
             </p>
             <p className="mt-1 font-mono text-[22px] font-black tabular-nums leading-none text-[#DDAF3B]">

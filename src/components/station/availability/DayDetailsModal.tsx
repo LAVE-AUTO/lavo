@@ -57,12 +57,12 @@ export function DayDetailsModal({
             <p className="mb-1 text-sm font-black text-[#001201] dark:text-[#FFF9EC]">
               {t('availability_day_no_blocks')}
             </p>
-            <p className="mb-4 text-[11px] text-foreground/65 dark:text-[#A0A090]">
+            <p className="mb-4 text-[11px] text-foreground/65 dark:text-[#B0BFB1]">
               {t('availability_all_postes_closed')}
             </p>
             {/* Tip card - matches prototype gold-border callout */}
             <div className="mb-5 w-full rounded-xl border-l-4 border-[#DDAF3B] bg-[#DDAF3B]/10 p-3 text-left dark:bg-[#DDAF3B]/8">
-              <p className="text-[11px] text-foreground/65 dark:text-[#A0A090]">
+              <p className="text-[11px] text-foreground/65 dark:text-[#B0BFB1]">
                 <strong className="text-[#DDAF3B]">{t('availability_tip_label')}</strong>{' '}
                 {t('availability_day_no_blocks_tip')}
               </p>
@@ -74,9 +74,9 @@ export function DayDetailsModal({
             {blocks.map((block) => (
               <div
                 key={block.id}
-                className="rounded-xl bg-[#F7F6F2] p-4 dark:bg-[#001201]"
+                className="rounded-xl bg-[#FFF9EC] p-4 dark:bg-[#001201]"
               >
-                <p className="mb-1 text-[11px] font-semibold text-foreground/70 dark:text-[#A0A090]">
+                <p className="mb-1 text-[11px] font-semibold text-foreground/70 dark:text-[#B0BFB1]">
                   {formatBays(block.bayIds)}
                 </p>
                 <p className="mb-0.5 text-[12px] font-bold text-[#001201] dark:text-[#FFF9EC]">
@@ -117,7 +117,7 @@ export function DayDetailsModal({
             <button
               type="button"
               onClick={onClose}
-              className="rounded-xl border border-[#E0DCD0] px-4 py-2.5 text-sm font-bold text-foreground/65 transition-colors hover:bg-[#F0EDE0] dark:border-[#001A05] dark:text-[#A0A090] dark:hover:bg-[#182214]"
+              className="rounded-xl border border-[#FFF9EC] px-4 py-2.5 text-sm font-bold text-foreground/65 transition-colors hover:bg-[#F0EDE0] dark:border-[#001A05] dark:text-[#B0BFB1] dark:hover:bg-[#182214]"
             >
               {t('availability_btn_close')}
             </button>
@@ -127,7 +127,7 @@ export function DayDetailsModal({
                 onClose();
                 onCreateForDay(date);
               }}
-              className="rounded-xl bg-[#DDAF3B] px-4 py-2.5 text-sm font-black text-[#0C1209] transition-opacity hover:opacity-85"
+              className="rounded-xl bg-[#DDAF3B] px-4 py-2.5 text-sm font-black text-[#001201] transition-opacity hover:opacity-85"
             >
               + {t('availability_day_create_for_day')}
             </button>

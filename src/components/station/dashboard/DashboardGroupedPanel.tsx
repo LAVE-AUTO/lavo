@@ -11,7 +11,7 @@ interface Props {
 }
 
 const STATUS_DOT: Record<string, string> = {
-  confirmed:       '#3B82F6',
+  confirmed:       '#1E40AF',
   pending:         '#F59E0B',
   pending_payment: '#888',
   in_progress:     '#10B981',
@@ -56,12 +56,12 @@ function ReservationRow({ item, locale }: { item: ReservationItem; locale: strin
           {item.clientName}
         </span>
         {item.vehicleFormat && (
-          <span className="shrink-0 text-[11px] text-foreground/55 dark:text-[#A0A090]">{item.vehicleFormat}</span>
+          <span className="shrink-0 text-[11px] text-foreground/55 dark:text-[#B0BFB1]">{item.vehicleFormat}</span>
         )}
       </div>
       <div className="flex items-center gap-3 shrink-0 text-[12px]">
         {item.slotStart && (
-          <span className="font-mono text-foreground/65 dark:text-[#A0A090]">{formatTime(item.slotStart, locale)}</span>
+          <span className="font-mono text-foreground/65 dark:text-[#B0BFB1]">{formatTime(item.slotStart, locale)}</span>
         )}
         {item.amountPaid !== null && (
           <span className="font-bold text-[#DDAF3B]">{item.amountPaid.toFixed(2)} $</span>
@@ -75,14 +75,14 @@ function DaySection({ label, items, locale }: { label: string; items: Reservatio
   return (
     <div className="mb-4">
       <div className="flex items-center gap-2 px-4 py-2">
-        <span className="text-[11px] font-black uppercase tracking-wider text-foreground/55 dark:text-[#A0A090]">{label}</span>
+        <span className="text-[11px] font-black uppercase tracking-wider text-foreground/55 dark:text-[#B0BFB1]">{label}</span>
         {items.length > 0 && (
           <span className="rounded-full bg-[#DDAF3B]/20 px-2 py-0.5 text-[10px] font-black text-[#DDAF3B]">
             {items.length}
           </span>
         )}
       </div>
-      <div className="rounded-xl border border-[#E0DCD0] bg-white dark:border-[#1A2A14] dark:bg-[#111A0E] divide-y divide-[#F0EDE0] dark:divide-[#1A2A14]">
+      <div className="rounded-xl border border-[#FFF9EC] bg-white dark:border-[#1A2A14] dark:bg-[#111A0E] divide-y divide-[#F0EDE0] dark:divide-[#1A2A14]">
         {items.length === 0 ? (
           <p className="px-4 py-3 text-[12px] text-[#B0B0A0] dark:text-foreground/65">—</p>
         ) : (

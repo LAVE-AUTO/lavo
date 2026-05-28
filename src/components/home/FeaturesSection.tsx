@@ -71,7 +71,7 @@ export function FeaturesSection() {
         <div className="mt-10 grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3">
           {features.map((feat, i) => (
             <RevealOnScroll key={feat.title}>
-              <div className="group rounded-[12px] p-7 transition-all duration-300 cursor-default hover:-translate-y-1.5 hover:shadow-[0_24px_48px_rgba(0,0,0,0.18)] dark:hover:shadow-[0_24px_48px_rgba(0,0,0,0.35)] bg-[#e8e2d4] dark:bg-[#f5edd6]">
+              <div className="group rounded-[12px] p-7 transition-all duration-300 cursor-default hover:-translate-y-1.5 hover:shadow-[0_24px_48px_rgba(0,0,0,0.18)] dark:hover:shadow-[0_24px_48px_rgba(0,0,0,0.35)] bg-[#FFF9EC] dark:bg-[#f5edd6]">
                 <div className="mb-3.5">{FEATURE_ICONS[i]}</div>
                 <div className="mb-2 text-[16px] font-bold text-[#3d2a10]">{feat.title}</div>
                 <div className="text-[13px] leading-[1.7] text-[rgba(61,42,16,0.65)]">{feat.desc}</div>

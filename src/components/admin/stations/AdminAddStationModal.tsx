@@ -140,7 +140,7 @@ export function AdminAddStationModal({ open, onClose, onCreated }: Props) {
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
       <div className="absolute inset-0 bg-black/40 backdrop-blur-[2px]" onClick={() => !busy && onClose()} />
 
-      <div className="relative z-10 w-full max-w-[520px] animate-fade-in-up overflow-hidden rounded-2xl border border-[#E8E4DC] bg-white shadow-2xl dark:border-[#1E2E18] dark:bg-[#001201]">
+      <div className="relative z-10 w-full max-w-[520px] animate-fade-in-up overflow-hidden rounded-2xl border border-[#FFF9EC] bg-white shadow-2xl dark:border-[#1E2E18] dark:bg-[#001201]">
 
         {/* Header */}
         <div className="flex items-center justify-between border-b border-[#F0EDE6] px-6 py-4 dark:border-[#1A2A14]">
@@ -154,10 +154,10 @@ export function AdminAddStationModal({ open, onClose, onCreated }: Props) {
                   <div key={s} className="flex items-center gap-1.5">
                     <div className={[
                       'flex h-4 w-4 items-center justify-center rounded-full text-[9px] font-black',
-                      step === s ? 'bg-[#DDAF3B] text-[#0C1209]' : (step as number) > s ? 'bg-[#00C851]/20 text-[#00C851]' : 'bg-[#F0EDE6] text-[#999] dark:bg-[#1A2A14] dark:text-[#A0A090]',
+                      step === s ? 'bg-[#DDAF3B] text-[#001201]' : (step as number) > s ? 'bg-[#00C851]/20 text-[#00C851]' : 'bg-[#F0EDE6] text-[#999] dark:bg-[#1A2A14] dark:text-[#B0BFB1]',
                     ].join(' ')}>{(step as number) > s ? '✓' : s}</div>
-                    <span className={`text-[11px] font-semibold ${step === s ? 'text-[#001201] dark:text-[#FFF9EC]' : 'text-[#999] dark:text-[#A0A090]'}`}>{STEP_LABELS[s]}</span>
-                    {s < 3 && <div className="h-px w-3 bg-[#E0DCD0] dark:bg-[#1A2A14]" />}
+                    <span className={`text-[11px] font-semibold ${step === s ? 'text-[#001201] dark:text-[#FFF9EC]' : 'text-[#999] dark:text-[#B0BFB1]'}`}>{STEP_LABELS[s]}</span>
+                    {s < 3 && <div className="h-px w-3 bg-[#FFF9EC] dark:bg-[#1A2A14]" />}
                   </div>
                 ))}
               </div>

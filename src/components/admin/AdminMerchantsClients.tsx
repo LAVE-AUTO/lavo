@@ -172,13 +172,13 @@ export function AdminMerchantsClients() {
 
   const metrics = [
     { label: t('tab_stations'),  value: loading ? '…' : String(stationTotal), hint: `${actives} ${t('chip_active')}`, accent: '#DDAF3B' },
-    { label: t('tab_clients'),   value: String(clientCount),                  hint: t('chip_active'),                 accent: '#3B82F6' },
+    { label: t('tab_clients'),   value: String(clientCount),                  hint: t('chip_active'),                 accent: '#1E40AF' },
     { label: t('chip_active'),   value: String(actives),                      hint: t('btn_activate'),                accent: '#16A34A' },
     { label: t('chip_suspended'),value: String(suspended),                    hint: t('btn_suspend'),                 accent: '#EA580C' },
   ];
 
   return (
-    <div className="relative flex h-full min-h-0 flex-col overflow-hidden bg-[radial-gradient(circle_at_top,_rgba(221, 175, 59,0.12),_transparent_36%),linear-gradient(180deg,#faf8f2_0%,#f2efe7_100%)] dark:bg-[radial-gradient(circle_at_top,_rgba(221, 175, 59,0.12),_transparent_32%),linear-gradient(180deg,#0C1209_0%,#091009_100%)]">
+    <div className="relative flex h-full min-h-0 flex-col overflow-hidden bg-[radial-gradient(circle_at_top,_rgba(221, 175, 59,0.12),_transparent_36%),linear-gradient(180deg,#faf8f2_0%,#f2efe7_100%)] dark:bg-[radial-gradient(circle_at_top,_rgba(221, 175, 59,0.12),_transparent_32%),linear-gradient(180deg,#001201_0%,#091009_100%)]">
       <div className="pointer-events-none absolute inset-0 bg-[linear-gradient(135deg,rgba(255,255,255,0.55),transparent_42%)] dark:bg-[linear-gradient(135deg,rgba(255,255,255,0.04),transparent_42%)]" />
 
       <div className="relative mx-auto flex h-full min-h-0 w-full max-w-none flex-1 flex-col gap-5 overflow-y-auto scrollbar-none px-3 py-4 sm:px-4 lg:px-6 lg:py-6">
@@ -224,13 +224,13 @@ export function AdminMerchantsClients() {
                     onClick={() => { setTab(id); setQuery(''); }}
                     className={[
                       'relative flex items-center gap-2 rounded-[14px] px-4 py-2.5 text-[13px] font-bold transition-colors duration-150',
-                      tab === id ? 'bg-[#001201] text-[#FFF9EC] shadow-[0_10px_20px_rgba(26,26,10,0.18)] dark:bg-[#FFF9EC] dark:text-[#001201]' : 'text-[#847E70] hover:bg-[#EFE8D7] hover:text-[#001201] dark:text-[#A0A090] dark:hover:bg-[#182214] dark:hover:text-[#FFF9EC]',
+                      tab === id ? 'bg-[#001201] text-[#FFF9EC] shadow-[0_10px_20px_rgba(26,26,10,0.18)] dark:bg-[#FFF9EC] dark:text-[#001201]' : 'text-[#847E70] hover:bg-[#EFE8D7] hover:text-[#001201] dark:text-[#B0BFB1] dark:hover:bg-[#182214] dark:hover:text-[#FFF9EC]',
                     ].join(' ')}
                   >
                     {t(`tab_${id}`)}
                     <span className={[
                       'min-w-[22px] rounded-full px-1.5 py-0.5 text-center text-[11px] font-black',
-                      tab === id ? 'bg-[#DDAF3B] text-[#0C1209]' : 'bg-[#E1DBCF] text-[#7E796B] dark:bg-[#1E2E18] dark:text-[#9A9A8A]',
+                      tab === id ? 'bg-[#DDAF3B] text-[#001201]' : 'bg-[#E1DBCF] text-[#7E796B] dark:bg-[#1E2E18] dark:text-[#B0BFB1]',
                     ].join(' ')}>{count}</span>
                   </button>
                 ))}
@@ -251,7 +251,7 @@ export function AdminMerchantsClients() {
                 <button
                   type="button"
                   onClick={() => tab === 'stations' ? setAddStationOpen(true) : setAddUserOpen(true)}
-                  className="inline-flex items-center justify-center gap-2 rounded-[16px] bg-[#DDAF3B] px-4 py-2.5 text-[13px] font-black text-[#0C1209] transition-colors hover:bg-[#B08A14] focus:outline-none focus:ring-2 focus:ring-[#DDAF3B]/40"
+                  className="inline-flex items-center justify-center gap-2 rounded-[16px] bg-[#DDAF3B] px-4 py-2.5 text-[13px] font-black text-[#001201] transition-colors hover:bg-[#B08A14] focus:outline-none focus:ring-2 focus:ring-[#DDAF3B]/40"
                 >
                   <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.8" strokeLinecap="round" aria-hidden="true"><line x1="12" y1="5" x2="12" y2="19" /><line x1="5" y1="12" x2="19" y2="12" /></svg>
                   {t('btn_add_user')}

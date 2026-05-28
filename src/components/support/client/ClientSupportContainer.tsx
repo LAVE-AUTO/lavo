@@ -33,7 +33,7 @@ function resolveErrorKind(code: unknown): LoadErrorKind {
 
 const STATS: Array<{ key: 'open' | 'in_progress' | 'resolved' | 'closed'; label: string; dot: string }> = [
   { key: 'open',        label: 'status_open',        dot: 'bg-[#F97316]' },
-  { key: 'in_progress', label: 'status_in_progress', dot: 'bg-[#3B82F6]' },
+  { key: 'in_progress', label: 'status_in_progress', dot: 'bg-[#1E40AF]' },
   { key: 'resolved',    label: 'status_resolved',    dot: 'bg-[#22C55E]' },
   { key: 'closed',      label: 'status_closed',      dot: 'bg-[#94A3B8]' },
 ];
@@ -82,7 +82,7 @@ export function ClientSupportContainer({ sectionLabel }: Props) {
   return (
     <div className="flex min-h-full flex-col">
       {/* Header */}
-      <div className="shrink-0 border-b border-[#E0DCD0] bg-[#F5F5EE] px-6 pb-4 pt-5 dark:border-[#1A2A14] dark:bg-[#0C1209]">
+      <div className="shrink-0 border-b border-[#FFF9EC] bg-[#FFF9EC] px-6 pb-4 pt-5 dark:border-[#1A2A14] dark:bg-[#001201]">
         <div className="flex items-start justify-between gap-4">
           <div>
             <h1 className="text-[20px] font-black text-[#001201] dark:text-[#FFF9EC]">{t('page_title')}</h1>
@@ -92,7 +92,7 @@ export function ClientSupportContainer({ sectionLabel }: Props) {
             <button
               type="button"
               onClick={() => setShowForm(true)}
-              className="flex shrink-0 items-center gap-2 rounded-[10px] bg-[#DDAF3B] px-4 py-2.5 text-[13px] font-bold text-[#0C1209] shadow-sm transition-all hover:bg-[#D4A830] hover:shadow-md active:scale-[0.98]"
+              className="flex shrink-0 items-center gap-2 rounded-[10px] bg-[#DDAF3B] px-4 py-2.5 text-[13px] font-bold text-[#001201] shadow-sm transition-all hover:bg-[#D4A830] hover:shadow-md active:scale-[0.98]"
             >
               <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" aria-hidden="true">
                 <line x1="12" y1="5" x2="12" y2="19" /><line x1="5" y1="12" x2="19" y2="12" />
@@ -106,7 +106,7 @@ export function ClientSupportContainer({ sectionLabel }: Props) {
         {tickets.length > 0 && (
           <div className="mt-4 flex flex-wrap gap-2">
             {STATS.map(({ key, label, dot }) => counts[key] > 0 && (
-              <span key={key} className="flex items-center gap-1.5 rounded-full bg-white px-3 py-1 text-[11px] font-bold text-foreground/70 shadow-sm ring-1 ring-[#E8E4DC] dark:bg-[#131E10] dark:text-[#9A9A8A] dark:ring-[#1E2E18]">
+              <span key={key} className="flex items-center gap-1.5 rounded-full bg-white px-3 py-1 text-[11px] font-bold text-foreground/70 shadow-sm ring-1 ring-[#FFF9EC] dark:bg-[#131E10] dark:text-[#B0BFB1] dark:ring-[#1E2E18]">
                 <span className={`h-2 w-2 rounded-full ${dot}`} />
                 {counts[key]} {t(label)}
               </span>
@@ -116,7 +116,7 @@ export function ClientSupportContainer({ sectionLabel }: Props) {
       </div>
 
       {/* Content */}
-      <div className="flex-1 overflow-y-auto bg-[#F5F5EE] p-6 dark:bg-[#0C1209]">
+      <div className="flex-1 overflow-y-auto bg-[#FFF9EC] p-6 dark:bg-[#001201]">
         <div className="mx-auto flex max-w-2xl flex-col gap-4">
 
           {/* Create form */}
@@ -167,7 +167,7 @@ export function ClientSupportContainer({ sectionLabel }: Props) {
               )}
               {tickets.length === 0 ? (
                 <div className="flex flex-col items-center gap-3 py-20 text-center">
-                  <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-white shadow-sm ring-1 ring-[#E8E4DC] dark:bg-[#131E10] dark:ring-[#1E2E18]">
+                  <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-white shadow-sm ring-1 ring-[#FFF9EC] dark:bg-[#131E10] dark:ring-[#1E2E18]">
                     <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#DDAF3B" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
                       <path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z" />
                     </svg>

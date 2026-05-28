@@ -71,7 +71,7 @@ function StripeCardForm({ grandTotal, clientSecret, onConfirm, onBack }: StripeC
         <div className="bg-surface dark:bg-background/60 rounded-xl p-5 space-y-4">
           <div className="flex items-center gap-2 mb-2">
             <svg width="28" height="18" viewBox="0 0 28 18" fill="none" aria-hidden="true"><rect width="28" height="18" rx="3" fill="#635BFF" /><text x="5" y="13" fontSize="10" fill="white" fontWeight="bold">S</text></svg>
-            <span className="text-[13px] font-bold text-foreground/70 dark:text-[#A0A090]">{t('payment_secured')}</span>
+            <span className="text-[13px] font-bold text-foreground/70 dark:text-[#B0BFB1]">{t('payment_secured')}</span>
           </div>
           <div className="rounded-lg border-2 border-border bg-white dark:bg-background px-4 py-3">
             <CardElement

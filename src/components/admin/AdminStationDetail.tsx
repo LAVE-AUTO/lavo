@@ -152,14 +152,14 @@ export function AdminStationDetail({ id }: Props) {
 
   /* ── Loading ── */
   if (loading) return (
-    <div className="flex flex-1 items-center justify-center bg-[#F5F5EE] dark:bg-[#0C1209]">
+    <div className="flex flex-1 items-center justify-center bg-[#FFF9EC] dark:bg-[#001201]">
       <div className="h-8 w-8 animate-spin rounded-full border-[3px] border-[#DDAF3B] border-t-transparent" />
     </div>
   );
 
   /* ── Error ── */
   if (loadError || !station) return (
-    <div className="flex flex-1 flex-col items-center justify-center gap-3 bg-[#F5F5EE] dark:bg-[#0C1209]">
+    <div className="flex flex-1 flex-col items-center justify-center gap-3 bg-[#FFF9EC] dark:bg-[#001201]">
       <p className="text-[14px] font-semibold text-foreground/70">{t('error_load')}</p>
       <button type="button" onClick={loadStation}
         className="rounded-xl border border-[#DDAF3B]/50 px-4 py-2 text-[13px] font-semibold text-[#DDAF3B] hover:bg-[#DDAF3B]/10">
@@ -176,17 +176,17 @@ export function AdminStationDetail({ id }: Props) {
   );
 
   return (
-    <div className="flex flex-1 flex-col overflow-hidden bg-[#F5F5EE] dark:bg-[#0C1209]">
+    <div className="flex flex-1 flex-col overflow-hidden bg-[#FFF9EC] dark:bg-[#001201]">
 
       {/* ── Sticky sub-header ── */}
-      <div className="flex items-center gap-4 border-b border-[#E8E4D8] bg-white px-7 py-4 dark:border-[#1A2A14] dark:bg-[#111A0E]">
+      <div className="flex items-center gap-4 border-b border-[#FFF9EC] bg-white px-7 py-4 dark:border-[#1A2A14] dark:bg-[#111A0E]">
         <Link href={'/admin/stations' as Parameters<typeof Link>[0]['href']}
-          className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-[#F0EDE0] text-foreground/55 transition-colors hover:bg-[#E8E4D8] dark:bg-[#001A05] dark:text-[#9A9A8A]">
+          className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-[#F0EDE0] text-foreground/55 transition-colors hover:bg-[#FFF9EC] dark:bg-[#001A05] dark:text-[#B0BFB1]">
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="15 18 9 12 15 6" /></svg>
         </Link>
         <div className="min-w-0 flex-1">
           <h1 className="truncate pb-0.5 text-[16px] font-black text-[#001201] dark:text-[#FFF9EC]">{station.name}</h1>
-          <p className="text-[12px] text-[#999] dark:text-[#A0A090]">{station.city}</p>
+          <p className="text-[12px] text-[#999] dark:text-[#B0BFB1]">{station.city}</p>
         </div>
         <span className="shrink-0 rounded-full bg-[#DDAF3B]/10 px-3 py-1 text-[11px] font-black uppercase tracking-wider text-[#DDAF3B]">
           KYC
@@ -208,12 +208,12 @@ export function AdminStationDetail({ id }: Props) {
             </div>
             <div className="min-w-0 flex-1">
               <h2 className="text-[19px] font-black text-[#001201] dark:text-[#FFF9EC]">{station.name}</h2>
-              <p className="mt-0.5 text-[13px] text-foreground/55 dark:text-[#9A9A8A]">
+              <p className="mt-0.5 text-[13px] text-foreground/55 dark:text-[#B0BFB1]">
                 {station.city}{station.address ? ` · ${station.address}` : ''}
               </p>
               <div className="mt-3 flex flex-wrap items-center gap-2">
                 {/* Date badge */}
-                <span className="flex items-center gap-1.5 rounded-lg bg-[#F5F3ED] px-2.5 py-1 text-[12px] font-semibold text-[#777] dark:bg-[#001A05] dark:text-[#9A9A8A]">
+                <span className="flex items-center gap-1.5 rounded-lg bg-[#F5F3ED] px-2.5 py-1 text-[12px] font-semibold text-[#777] dark:bg-[#001A05] dark:text-[#B0BFB1]">
                   <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
                     <rect x="3" y="4" width="18" height="18" rx="2" ry="2" /><line x1="16" y1="2" x2="16" y2="6" /><line x1="8" y1="2" x2="8" y2="6" /><line x1="3" y1="10" x2="21" y2="10" />
                   </svg>
@@ -221,7 +221,7 @@ export function AdminStationDetail({ id }: Props) {
                 </span>
                 {/* Doc count badge */}
                 {station.documents.length > 0 && (
-                  <span className="flex items-center gap-1.5 rounded-lg bg-[#F5F3ED] px-2.5 py-1 text-[12px] font-semibold text-[#777] dark:bg-[#001A05] dark:text-[#9A9A8A]">
+                  <span className="flex items-center gap-1.5 rounded-lg bg-[#F5F3ED] px-2.5 py-1 text-[12px] font-semibold text-[#777] dark:bg-[#001A05] dark:text-[#B0BFB1]">
                     <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
                       <path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z" /><polyline points="14 2 14 8 20 8" />
                     </svg>
@@ -360,7 +360,7 @@ export function AdminStationDetail({ id }: Props) {
 
       {/* ── Sticky action bar ── */}
       {isPending && (
-        <div className="border-t border-[#E8E4D8] bg-white px-7 py-4 dark:border-[#1A2A14] dark:bg-[#111A0E]">
+        <div className="border-t border-[#FFF9EC] bg-white px-7 py-4 dark:border-[#1A2A14] dark:bg-[#111A0E]">
           {actionError && <p className="mb-3 text-[13px] font-semibold text-[#EF4444]">{actionError}</p>}
 
           {!showReject ? (
@@ -395,7 +395,7 @@ export function AdminStationDetail({ id }: Props) {
           ) : (
             <div className="space-y-3">
               <div>
-                <label htmlFor="reject-reason" className="mb-1.5 block text-[12px] font-bold uppercase tracking-wider text-foreground/55 dark:text-[#9A9A8A]">
+                <label htmlFor="reject-reason" className="mb-1.5 block text-[12px] font-bold uppercase tracking-wider text-foreground/55 dark:text-[#B0BFB1]">
                   {t('reject_reason_label')}
                 </label>
                 <textarea
@@ -406,19 +406,19 @@ export function AdminStationDetail({ id }: Props) {
                   rows={3}
                   disabled={rejecting}
                   placeholder={t('reject_reason_placeholder')}
-                  className="w-full resize-none rounded-xl border border-[#E8E4D8] bg-[#F8F6F2] px-4 py-3 text-[13px] text-[#001201] outline-none transition focus:border-[#EF4444]/50 focus:ring-2 focus:ring-[#EF4444]/10 disabled:opacity-50 dark:border-[#001A05] dark:bg-[#001201] dark:text-[#FFF9EC]"
+                  className="w-full resize-none rounded-xl border border-[#FFF9EC] bg-[#F8F6F2] px-4 py-3 text-[13px] text-[#001201] outline-none transition focus:border-[#EF4444]/50 focus:ring-2 focus:ring-[#EF4444]/10 disabled:opacity-50 dark:border-[#001A05] dark:bg-[#001201] dark:text-[#FFF9EC]"
                 />
                 <div className="mt-1 flex items-center justify-between">
                   <span className={`text-[11px] font-semibold transition-colors ${rejectReason.trim().length > 0 && rejectReason.trim().length < MIN_REASON ? 'text-[#EF4444]' : 'text-transparent'}`}>
                     {t('reject_reason_min', { n: MIN_REASON })}
                   </span>
-                  <span className="text-[11px] text-[#CCC] dark:text-[#A0A090]">{rejectReason.length}/{MAX_REASON}</span>
+                  <span className="text-[11px] text-[#CCC] dark:text-[#B0BFB1]">{rejectReason.length}/{MAX_REASON}</span>
                 </div>
               </div>
               <div className="flex gap-3">
                 <button type="button" onClick={() => { setShowReject(false); setRejectReason(''); setActionError(null); }}
                   disabled={rejecting}
-                  className="flex-1 rounded-xl border border-[#E0DCD0] py-2.5 text-[13px] font-semibold text-foreground/65 hover:bg-[#F0EDE0] disabled:opacity-50 dark:border-[#001A05] dark:text-[#9A9A8A]">
+                  className="flex-1 rounded-xl border border-[#FFF9EC] py-2.5 text-[13px] font-semibold text-foreground/65 hover:bg-[#F0EDE0] disabled:opacity-50 dark:border-[#001A05] dark:text-[#B0BFB1]">
                   {t('btn_cancel')}
                 </button>
                 <button type="button" onClick={handleReject} disabled={rejecting || rejectReason.trim().length < MIN_REASON}
@@ -440,7 +440,7 @@ export function AdminStationDetail({ id }: Props) {
 function InfoField({ label, value, full }: { label: string; value: string; full?: boolean }) {
   return (
     <div className={full ? 'col-span-2' : ''}>
-      <p className="mb-0.5 text-[11px] font-bold uppercase tracking-wider text-[#C8C4B4] dark:text-[#A0A090]">{label}</p>
+      <p className="mb-0.5 text-[11px] font-bold uppercase tracking-wider text-[#C8C4B4] dark:text-[#B0BFB1]">{label}</p>
       <p className="text-[13px] font-semibold text-[#001201] dark:text-[#FFF9EC]">{value}</p>
     </div>
   );
@@ -522,7 +522,7 @@ function DocCard({
   };
 
   return (
-    <div className="flex flex-col gap-3 rounded-xl border border-[#E8E4D8] bg-[#FAFAF6] p-4 transition-all hover:border-[#DDAF3B]/40 hover:bg-white hover:shadow-sm dark:border-[#001A05] dark:bg-[#151E12] dark:hover:border-[#DDAF3B]/30 dark:hover:bg-[#001A05]">
+    <div className="flex flex-col gap-3 rounded-xl border border-[#FFF9EC] bg-[#FAFAF6] p-4 transition-all hover:border-[#DDAF3B]/40 hover:bg-white hover:shadow-sm dark:border-[#001A05] dark:bg-[#151E12] dark:hover:border-[#DDAF3B]/30 dark:hover:bg-[#001A05]">
       <div className="flex items-start justify-between gap-2">
         {/* Doc icon */}
         <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-[#DDAF3B]/10">
@@ -542,7 +542,7 @@ function DocCard({
       </div>
 
       <p className="text-[13px] font-bold leading-snug text-[#001201] dark:text-[#FFF9EC]">{label}</p>
-      <p className="text-[11px] font-semibold text-foreground/55 dark:text-[#9A9A8A]">
+      <p className="text-[11px] font-semibold text-foreground/55 dark:text-[#B0BFB1]">
         {formattedExpiry
           ? `Date d'expiration enregistrée : ${formattedExpiry}`
           : 'Aucune date d\'expiration enregistrée'}
@@ -552,7 +552,7 @@ function DocCard({
       <div className="flex flex-col gap-1.5">
         {!editing ? (
           <div className="flex items-center justify-between gap-2">
-            <span className="text-[11px] text-foreground/55 dark:text-[#9A9A8A]">
+            <span className="text-[11px] text-foreground/55 dark:text-[#B0BFB1]">
               {formattedExpiry ?? labels.noExpiry}
             </span>
             <button
@@ -566,7 +566,7 @@ function DocCard({
           </div>
         ) : (
           <div className="flex flex-col gap-2">
-            <label htmlFor={inputId} className="text-[11px] font-bold uppercase tracking-wider text-foreground/55 dark:text-[#9A9A8A]">
+            <label htmlFor={inputId} className="text-[11px] font-bold uppercase tracking-wider text-foreground/55 dark:text-[#B0BFB1]">
               {labels.fieldLabel}
             </label>
             <input
@@ -574,15 +574,15 @@ function DocCard({
               type="date"
               value={draft}
               onChange={(e) => setDraft(e.target.value)}
-              className="w-full rounded-lg border border-[#E8E4D8] bg-white px-3 py-1.5 text-[12px] text-[#001201] outline-none transition focus:border-[#DDAF3B]/50 focus:ring-2 focus:ring-[#DDAF3B]/10 dark:border-[#001A05] dark:bg-[#001201] dark:text-[#FFF9EC] [color-scheme:light] dark:[color-scheme:dark]"
+              className="w-full rounded-lg border border-[#FFF9EC] bg-white px-3 py-1.5 text-[12px] text-[#001201] outline-none transition focus:border-[#DDAF3B]/50 focus:ring-2 focus:ring-[#DDAF3B]/10 dark:border-[#001A05] dark:bg-[#001201] dark:text-[#FFF9EC] [color-scheme:light] dark:[color-scheme:dark]"
             />
             <div className="flex flex-wrap gap-2">
               <button type="button" onClick={handleSave} disabled={!draft}
-                className="flex-1 rounded-lg bg-[#DDAF3B] px-3 py-1.5 text-[11px] font-bold text-[#0C1209] transition-opacity hover:opacity-90 focus:outline-none focus-visible:ring-2 focus-visible:ring-[#DDAF3B] focus-visible:ring-offset-1 disabled:cursor-not-allowed disabled:opacity-50">
+                className="flex-1 rounded-lg bg-[#DDAF3B] px-3 py-1.5 text-[11px] font-bold text-[#001201] transition-opacity hover:opacity-90 focus:outline-none focus-visible:ring-2 focus-visible:ring-[#DDAF3B] focus-visible:ring-offset-1 disabled:cursor-not-allowed disabled:opacity-50">
                 {labels.save}
               </button>
               <button type="button" onClick={handleCancel}
-                className="rounded-lg border border-[#E0DCD0] px-3 py-1.5 text-[11px] font-semibold text-foreground/65 transition-colors hover:bg-[#F0EDE0] focus:outline-none focus-visible:ring-2 focus-visible:ring-[#DDAF3B] dark:border-[#001A05] dark:text-[#9A9A8A] dark:hover:bg-[#001A05]">
+                className="rounded-lg border border-[#FFF9EC] px-3 py-1.5 text-[11px] font-semibold text-foreground/65 transition-colors hover:bg-[#F0EDE0] focus:outline-none focus-visible:ring-2 focus-visible:ring-[#DDAF3B] dark:border-[#001A05] dark:text-[#B0BFB1] dark:hover:bg-[#001A05]">
                 {labels.cancel}
               </button>
               {expiry && (
@@ -702,7 +702,7 @@ function TimelineEvent({
   return (
     <div className="group relative flex gap-4 pb-6 last:pb-0">
       {/* Connector line */}
-      <div className="absolute left-[15px] top-8 bottom-0 w-px bg-[#E8E4DC] group-last:hidden dark:bg-[#1A2A14]" />
+      <div className="absolute left-[15px] top-8 bottom-0 w-px bg-[#FFF9EC] group-last:hidden dark:bg-[#1A2A14]" />
 
       {/* Icon */}
       <div className="relative z-10 flex h-8 w-8 shrink-0 items-center justify-center rounded-full" style={{ background: c.bg }}>
@@ -718,7 +718,7 @@ function TimelineEvent({
       <div className="flex flex-1 flex-col gap-0.5 pt-1">
         <p className="text-[13px] font-bold" style={{ color: c.text }}>{label}</p>
         {formattedDate && (
-          <p className="text-[12px] text-[#999] dark:text-[#A0A090]">{formattedDate}</p>
+          <p className="text-[12px] text-[#999] dark:text-[#B0BFB1]">{formattedDate}</p>
         )}
         {note && (
           <div className="mt-2 rounded-[8px] border border-[#EF4444]/20 bg-[#FEF2F2] px-3 py-2 dark:border-[#3A1A1A] dark:bg-[#200D0D]">

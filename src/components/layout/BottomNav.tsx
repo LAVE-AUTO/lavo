@@ -8,7 +8,7 @@ import { ThemeToggle } from '@/components/auth/ThemeToggle';
 import { LangToggle } from '@/components/auth/LangToggle';
 
 function HomeIcon({ active }: { active: boolean }) {
-  const c = active ? '#DDAF3B' : '#9A9A8A';
+  const c = active ? '#DDAF3B' : '#B0BFB1';
   return (
     <svg width="22" height="22" viewBox="0 0 24 24" fill="none" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
       <path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z" stroke={c} strokeWidth="2" />
@@ -18,7 +18,7 @@ function HomeIcon({ active }: { active: boolean }) {
 }
 
 function CouponsIcon({ active }: { active: boolean }) {
-  const c = active ? '#DDAF3B' : '#9A9A8A';
+  const c = active ? '#DDAF3B' : '#B0BFB1';
   return (
     <svg width="22" height="22" viewBox="0 0 24 24" fill="none" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
       <path d="M2 9a2 2 0 012-2h16a2 2 0 012 2v1a2 2 0 010 4v1a2 2 0 01-2 2H4a2 2 0 01-2-2v-1a2 2 0 010-4V9z" stroke={c} strokeWidth="2" />
@@ -28,7 +28,7 @@ function CouponsIcon({ active }: { active: boolean }) {
 }
 
 function FavoritesIcon({ active }: { active: boolean }) {
-  const c = active ? '#DDAF3B' : '#9A9A8A';
+  const c = active ? '#DDAF3B' : '#B0BFB1';
   return (
     <svg width="22" height="22" viewBox="0 0 24 24" fill={active ? '#DDAF3B' : 'none'} strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
       <path d="M20.84 4.61a5.5 5.5 0 00-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 00-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 000-7.78z" stroke={c} strokeWidth="2" />
@@ -37,7 +37,7 @@ function FavoritesIcon({ active }: { active: boolean }) {
 }
 
 function HowItWorksIcon({ active }: { active: boolean }) {
-  const c = active ? '#DDAF3B' : '#9A9A8A';
+  const c = active ? '#DDAF3B' : '#B0BFB1';
   return (
     <svg width="22" height="22" viewBox="0 0 24 24" fill="none" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
       <circle cx="12" cy="12" r="10" stroke={c} strokeWidth="2" />
@@ -48,7 +48,7 @@ function HowItWorksIcon({ active }: { active: boolean }) {
 }
 
 function SearchIcon({ active }: { active: boolean }) {
-  const c = active ? '#DDAF3B' : '#9A9A8A';
+  const c = active ? '#DDAF3B' : '#B0BFB1';
   return (
     <svg width="22" height="22" viewBox="0 0 24 24" fill="none" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
       <circle cx="11" cy="11" r="8" stroke={c} strokeWidth="2" />
@@ -58,7 +58,7 @@ function SearchIcon({ active }: { active: boolean }) {
 }
 
 function MoreIcon({ active }: { active: boolean }) {
-  const c = active ? '#DDAF3B' : '#9A9A8A';
+  const c = active ? '#DDAF3B' : '#B0BFB1';
   return (
     <svg width="22" height="22" viewBox="0 0 24 24" fill="none" aria-hidden="true">
       <circle cx="12" cy="5" r="1.5" fill={c} />
@@ -188,7 +188,7 @@ export function BottomNav() {
               aria-current={active ? 'page' : undefined}
             >
               {icon(active)}
-              <span className={`text-[11px] font-bold tracking-wide whitespace-nowrap ${active ? 'text-gold' : 'text-[#9A9A8A]'}`}>
+              <span className={`text-[11px] font-bold tracking-wide whitespace-nowrap ${active ? 'text-gold' : 'text-[#B0BFB1]'}`}>
                 {label}
               </span>
             </Link>
@@ -207,7 +207,7 @@ export function BottomNav() {
               aria-haspopup="true"
             >
               <MoreIcon active={moreOpen} />
-              <span className={`text-[11px] font-bold tracking-wide ${moreOpen ? 'text-gold' : 'text-[#9A9A8A]'}`}>
+              <span className={`text-[11px] font-bold tracking-wide ${moreOpen ? 'text-gold' : 'text-[#B0BFB1]'}`}>
                 {t('more')}
               </span>
             </button>

@@ -171,8 +171,8 @@ export function StationSidebar() {
     const label = t(item.labelKey);
     const baseClass =
       'group relative flex items-center rounded-lg text-[13px] font-semibold transition-colors duration-150';
-    const activeClass = 'bg-[#DDAF3B] text-[#0C1209] shadow-sm';
-    const idleClass = 'text-[#5A5A4A] hover:bg-[#E8E4D8] dark:text-[#A0A090] dark:hover:bg-[#182214]';
+    const activeClass = 'bg-[#DDAF3B] text-[#001201] shadow-sm';
+    const idleClass = 'text-[#5A5A4A] hover:bg-[#FFF9EC] dark:text-[#B0BFB1] dark:hover:bg-[#182214]';
     const layoutClass = collapsed
       ? 'h-10 w-10 justify-center'
       : 'gap-2.5 px-3 py-2.5';
@@ -187,7 +187,7 @@ export function StationSidebar() {
         {item.icon}
         {!collapsed && <span className="truncate">{label}</span>}
         {collapsed && (
-          <span className="pointer-events-none absolute left-full top-1/2 z-30 ml-2 -translate-y-1/2 whitespace-nowrap rounded-lg bg-[#0C1209] px-2.5 py-1 text-[12px] font-semibold text-[#FFF9EC] opacity-0 shadow-lg transition-opacity duration-150 group-hover:opacity-100">
+          <span className="pointer-events-none absolute left-full top-1/2 z-30 ml-2 -translate-y-1/2 whitespace-nowrap rounded-lg bg-[#001201] px-2.5 py-1 text-[12px] font-semibold text-[#FFF9EC] opacity-0 shadow-lg transition-opacity duration-150 group-hover:opacity-100">
             {label}
           </span>
         )}
@@ -197,7 +197,7 @@ export function StationSidebar() {
 
   return (
     <aside
-      className={`flex shrink-0 flex-col border-r border-[#E0DCD0] bg-[#F7F6F2] p-3 transition-all duration-200 dark:border-[#1A2A14] dark:bg-[#111A0E] ${
+      className={`flex shrink-0 flex-col border-r border-[#FFF9EC] bg-[#FFF9EC] p-3 transition-all duration-200 dark:border-[#1A2A14] dark:bg-[#111A0E] ${
         collapsed ? 'w-[72px]' : 'w-[220px]'
       }`}
     >
@@ -208,7 +208,7 @@ export function StationSidebar() {
           aria-label={collapsed ? t('nav_expand') : t('nav_collapse')}
           aria-pressed={collapsed}
           onClick={toggleCollapsed}
-          className="flex h-7 w-7 items-center justify-center rounded-lg text-foreground/55 transition-colors hover:bg-[#E8E4D8] hover:text-[#001201] dark:text-[#9A9A8A] dark:hover:bg-[#182214] dark:hover:text-[#FFF9EC]"
+          className="flex h-7 w-7 items-center justify-center rounded-lg text-foreground/55 transition-colors hover:bg-[#FFF9EC] hover:text-[#001201] dark:text-[#B0BFB1] dark:hover:bg-[#182214] dark:hover:text-[#FFF9EC]"
         >
           <CollapseIcon collapsed={collapsed} />
         </button>
@@ -240,20 +240,20 @@ export function StationSidebar() {
 
       {/* Logout */}
       <div className="mt-auto pt-3">
-        <div className="mb-3 h-px bg-[#E0DCD0] dark:bg-[#1A2A14]" />
+        <div className="mb-3 h-px bg-[#FFF9EC] dark:bg-[#1A2A14]" />
         <button
           type="button"
           onClick={() => logout()}
           title={collapsed ? t('nav_logout') : undefined}
           aria-label={collapsed ? t('nav_logout') : undefined}
-          className={`group relative flex items-center rounded-lg text-[13px] font-semibold text-foreground/55 transition-colors duration-150 hover:bg-[#FEF2F2] hover:text-[#EF4444] dark:text-[#9A9A8A] dark:hover:bg-[#2A0A0A] dark:hover:text-[#FF8A80] ${
+          className={`group relative flex items-center rounded-lg text-[13px] font-semibold text-foreground/55 transition-colors duration-150 hover:bg-[#FEF2F2] hover:text-[#EF4444] dark:text-[#B0BFB1] dark:hover:bg-[#2A0A0A] dark:hover:text-[#FF8A80] ${
             collapsed ? 'h-10 w-10 justify-center' : 'w-full gap-2.5 px-3 py-2.5'
           }`}
         >
           <LogoutIcon />
           {!collapsed && <span>{t('nav_logout')}</span>}
           {collapsed && (
-            <span className="pointer-events-none absolute left-full top-1/2 z-30 ml-2 -translate-y-1/2 whitespace-nowrap rounded-lg bg-[#0C1209] px-2.5 py-1 text-[12px] font-semibold text-[#FFF9EC] opacity-0 shadow-lg transition-opacity duration-150 group-hover:opacity-100">
+            <span className="pointer-events-none absolute left-full top-1/2 z-30 ml-2 -translate-y-1/2 whitespace-nowrap rounded-lg bg-[#001201] px-2.5 py-1 text-[12px] font-semibold text-[#FFF9EC] opacity-0 shadow-lg transition-opacity duration-150 group-hover:opacity-100">
               {t('nav_logout')}
             </span>
           )}

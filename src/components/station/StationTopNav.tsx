@@ -86,12 +86,12 @@ export function StationTopNav({ stationName }: StationTopNavProps) {
   }
 
   const notifPanelStyle = {
-    backgroundColor: isDark ? '#121A10' : '#FFFDF8',
-    color: isDark ? '#F3F1E8' : '#1B1B18',
+    backgroundColor: isDark ? '#001201' : '#FFF9EC',
+    color: isDark ? '#FFF9EC' : '#001A05',
   } as const;
 
   return (
-    <header className="flex h-14 flex-shrink-0 items-center justify-between border-b border-[#E0DCD0] bg-white px-6 dark:border-[#1A2A14] dark:bg-[#111A0E]">
+    <header className="flex h-14 flex-shrink-0 items-center justify-between border-b border-[#FFF9EC] bg-white px-6 dark:border-[#1A2A14] dark:bg-[#111A0E]">
 
       {/* Logo - always links to landing page */}
       <div className="flex flex-col justify-center">
@@ -116,7 +116,7 @@ export function StationTopNav({ stationName }: StationTopNavProps) {
             />
           )}
         </Link>
-        <div className="mt-0.5 text-[11px] font-medium text-foreground/65 dark:text-[#A0A090]">
+        <div className="mt-0.5 text-[11px] font-medium text-foreground/65 dark:text-[#B0BFB1]">
           {displayName}
         </div>
       </div>
@@ -150,18 +150,18 @@ export function StationTopNav({ stationName }: StationTopNavProps) {
               style={notifPanelStyle}
             >
               <div className="mb-2 flex items-center justify-between">
-                <div className="text-sm font-semibold" style={{ color: isDark ? '#F3F1E8' : '#1B1B18' }}>{t('notif_title')}</div>
+                <div className="text-sm font-semibold" style={{ color: isDark ? '#FFF9EC' : '#001A05' }}>{t('notif_title')}</div>
                 <button
                   type="button"
                   onClick={markAllRead}
                   className="text-xs font-semibold hover:underline"
-                  style={{ color: isDark ? '#E4C56A' : '#6B5A23' }}
+                  style={{ color: isDark ? '#DDAF3B' : '#DDAF3B' }}
                 >
                   {t('notif_mark_all_read')}
                 </button>
               </div>
-              {loading ? <div className="py-4 text-sm" style={{ color: isDark ? '#C9C4B2' : '#5E5A4D' }}>{t('notif_loading')}</div> : null}
-              {!loading && items.length === 0 ? <div className="py-4 text-sm" style={{ color: isDark ? '#C9C4B2' : '#5E5A4D' }}>{t('notif_empty')}</div> : null}
+              {loading ? <div className="py-4 text-sm" style={{ color: isDark ? '#B0BFB1' : '#B0BFB1' }}>{t('notif_loading')}</div> : null}
+              {!loading && items.length === 0 ? <div className="py-4 text-sm" style={{ color: isDark ? '#B0BFB1' : '#B0BFB1' }}>{t('notif_empty')}</div> : null}
               {!loading && items.length > 0 ? (
                 <div className="max-h-96 space-y-2 overflow-auto">
                   {items.map((item) => (
@@ -170,12 +170,12 @@ export function StationTopNav({ stationName }: StationTopNavProps) {
                       className="rounded-lg p-2"
                       style={{
                         backgroundColor: isDark
-                          ? (item.is_read ? '#1A2318' : '#242113')
-                          : (item.is_read ? '#F4F1E8' : '#EEE7D2'),
+                          ? (item.is_read ? '#001A05' : '#001A05')
+                          : (item.is_read ? '#FFF9EC' : '#FFEECA'),
                       }}
                     >
-                      <div className="text-xs font-semibold" style={{ color: isDark ? '#F3F1E8' : '#1F1E19' }}>{item.title ?? t('notif_default_title')}</div>
-                      <div className="mt-0.5 text-xs" style={{ color: isDark ? '#D2CEBE' : '#4F4C40' }}>{item.body ?? '-'}</div>
+                      <div className="text-xs font-semibold" style={{ color: isDark ? '#FFF9EC' : '#001A05' }}>{item.title ?? t('notif_default_title')}</div>
+                      <div className="mt-0.5 text-xs" style={{ color: isDark ? '#B0BFB1' : '#B0BFB1' }}>{item.body ?? '-'}</div>
                       <div className="mt-2 flex items-center gap-3">
                         {!item.is_read && (
                           <button
@@ -191,7 +191,7 @@ export function StationTopNav({ stationName }: StationTopNavProps) {
                           type="button"
                           onClick={() => removeOne(item.id)}
                           className="text-xs font-semibold hover:underline"
-                          style={{ color: isDark ? '#FF9E8D' : '#8C3A2B' }}
+                          style={{ color: isDark ? '#391C01' : '#391C01' }}
                         >
                           {t('notif_delete')}
                         </button>

@@ -187,7 +187,7 @@ export function AdminPromoQr({
       <div className="mb-5 flex items-center justify-between">
         <div>
           <p className="text-[11px] font-black uppercase tracking-[0.15em] text-[#DDAF3B]">{t('section_title')}</p>
-          <p className="mt-0.5 text-[12px] text-foreground/55 dark:text-[#9A9A8A]">{t('section_subtitle')}</p>
+          <p className="mt-0.5 text-[12px] text-foreground/55 dark:text-[#B0BFB1]">{t('section_subtitle')}</p>
         </div>
         {appliedRate && (
           <span className="rounded-full border border-[#DDAF3B]/30 bg-[#DDAF3B]/10 px-3 py-1 text-[11px] font-black text-[#DDAF3B]">
@@ -203,7 +203,7 @@ export function AdminPromoQr({
 
           {/* Commission input */}
           <div className="flex flex-col gap-1.5">
-            <label htmlFor="promo-commission" className="text-[13px] font-bold text-foreground/70 dark:text-[#9A9A8A]">
+            <label htmlFor="promo-commission" className="text-[13px] font-bold text-foreground/70 dark:text-[#B0BFB1]">
               {t('field_commission')}<span className="ml-0.5 text-[#DDAF3B]">*</span>
             </label>
             <div className="flex items-center gap-2">
@@ -215,15 +215,15 @@ export function AdminPromoQr({
                 onChange={(e) => { setCommission(e.target.value); setCommissionError(null); }}
                 className={`w-32 ${inputBase} ${commissionError ? 'border-red-400 focus:border-red-400' : ''}`}
               />
-              <span className="text-[13px] font-bold text-foreground/55 dark:text-[#9A9A8A]">%</span>
+              <span className="text-[13px] font-bold text-foreground/55 dark:text-[#B0BFB1]">%</span>
             </div>
-            <p className="text-[12px] text-[#999] dark:text-[#A0A090]">{t('field_commission_hint')}</p>
+            <p className="text-[12px] text-[#999] dark:text-[#B0BFB1]">{t('field_commission_hint')}</p>
             {commissionError && <p className="text-[12px] font-semibold text-red-500">{commissionError}</p>}
           </div>
 
           {/* Generate button */}
           <button type="button" onClick={handleGenerate} disabled={generating}
-            className="flex w-full items-center justify-center gap-2 rounded-xl bg-[#DDAF3B] px-4 py-2.5 text-[13px] font-bold text-[#0C1209] transition-colors hover:bg-[#B08A14] disabled:opacity-50 sm:w-auto">
+            className="flex w-full items-center justify-center gap-2 rounded-xl bg-[#DDAF3B] px-4 py-2.5 text-[13px] font-bold text-[#001201] transition-colors hover:bg-[#B08A14] disabled:opacity-50 sm:w-auto">
             {generating ? (
               <svg className="animate-spin" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" aria-hidden="true"><path d="M21 12a9 9 0 11-6.219-8.56" /></svg>
             ) : (
@@ -242,12 +242,12 @@ export function AdminPromoQr({
             </svg>
             <div>
               <p className="text-[12px] font-bold text-[#001201] dark:text-[#FFF9EC]">{t('qr_notice_title')}</p>
-              <p className="mt-0.5 text-[12px] leading-relaxed text-foreground/65 dark:text-[#A0A090]">{t('qr_notice_body')}</p>
+              <p className="mt-0.5 text-[12px] leading-relaxed text-foreground/65 dark:text-[#B0BFB1]">{t('qr_notice_body')}</p>
             </div>
           </div>
 
           {refCode && (
-            <div className="rounded-xl border border-[#E8E4DC] bg-[#F8F6F2] px-3.5 py-3 dark:border-dark-surface dark:bg-[#001201]">
+            <div className="rounded-xl border border-[#FFF9EC] bg-[#F8F6F2] px-3.5 py-3 dark:border-dark-surface dark:bg-[#001201]">
               <p className="mb-0.5 text-[9px] font-bold uppercase tracking-wider text-[#BBBBAA]">{t('ref_code_label')}</p>
               <p className="break-all text-[11px] font-mono text-foreground/70 dark:text-[#B8B2A2]">{refCode}</p>
             </div>
@@ -257,27 +257,27 @@ export function AdminPromoQr({
         {/* Right: QR display + actions */}
         {promoUrl && (
           <div className="flex flex-col items-center gap-3">
-            <div className={`rounded-xl border border-[#E8E4DC] bg-white p-3 dark:border-dark-surface ${qrReady ? '' : 'animate-pulse'}`}>
+            <div className={`rounded-xl border border-[#FFF9EC] bg-white p-3 dark:border-dark-surface ${qrReady ? '' : 'animate-pulse'}`}>
               <canvas ref={canvasRef} className="block" />
             </div>
 
             {/* Referral URL */}
-            <div className="w-full max-w-60 rounded-lg border border-[#E8E4DC] bg-[#F8F6F2] px-3 py-2 dark:border-dark-surface dark:bg-[#001201]">
+            <div className="w-full max-w-60 rounded-lg border border-[#FFF9EC] bg-[#F8F6F2] px-3 py-2 dark:border-dark-surface dark:bg-[#001201]">
               <p className="mb-0.5 text-[9px] font-bold uppercase tracking-wider text-[#BBBBAA]">{t('referral_url_label')}</p>
-              <p className="break-all text-[9px] text-foreground/55 dark:text-[#9A9A8A]">{promoUrl}</p>
+              <p className="break-all text-[9px] text-foreground/55 dark:text-[#B0BFB1]">{promoUrl}</p>
             </div>
 
             {/* Download + Print */}
             <div className="flex w-full max-w-60 gap-2">
               <button type="button" onClick={downloadPng}
-                className="flex flex-1 items-center justify-center gap-1.5 rounded-lg bg-[#DDAF3B] px-3 py-2 text-[12px] font-bold text-[#0C1209] hover:bg-[#B08A14]">
+                className="flex flex-1 items-center justify-center gap-1.5 rounded-lg bg-[#DDAF3B] px-3 py-2 text-[12px] font-bold text-[#001201] hover:bg-[#B08A14]">
                 <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" aria-hidden="true">
                   <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" /><polyline points="7 10 12 15 17 10" /><line x1="12" y1="15" x2="12" y2="3" />
                 </svg>
                 {t('btn_download_png')}
               </button>
               <button type="button" onClick={printPdf}
-                className="flex flex-1 items-center justify-center gap-1.5 rounded-lg border border-[#D8D4C8] px-3 py-2 text-[12px] font-semibold text-foreground/70 hover:bg-[#F5F3EE] dark:border-dark-surface dark:text-[#9A9A8A] dark:hover:bg-[#1A2A14]">
+                className="flex flex-1 items-center justify-center gap-1.5 rounded-lg border border-[#D8D4C8] px-3 py-2 text-[12px] font-semibold text-foreground/70 hover:bg-[#F5F3EE] dark:border-dark-surface dark:text-[#B0BFB1] dark:hover:bg-[#1A2A14]">
                 <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" aria-hidden="true">
                   <polyline points="6 9 6 2 18 2 18 9" /><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2" /><rect x="6" y="14" width="12" height="8" />
                 </svg>

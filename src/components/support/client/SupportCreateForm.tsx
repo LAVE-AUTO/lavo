@@ -17,7 +17,7 @@ interface Props {
 }
 
 const inputClass =
-  'w-full rounded-[8px] border border-[#D8D4C8] bg-[#F7F6F2] px-3 py-2.5 text-[13px] text-[#001201] outline-none transition-colors duration-150 placeholder:text-[#BBBBAA] focus:border-[#DDAF3B] focus:bg-white focus:shadow-[0_0_0_3px_rgba(221, 175, 59,0.12)] dark:border-[#001A05] dark:bg-[#001201] dark:text-[#FFF9EC] dark:placeholder:text-[#4A4A3A] dark:focus:border-[#DDAF3B] dark:focus:bg-[#182214]';
+  'w-full rounded-[8px] border border-[#D8D4C8] bg-[#FFF9EC] px-3 py-2.5 text-[13px] text-[#001201] outline-none transition-colors duration-150 placeholder:text-[#BBBBAA] focus:border-[#DDAF3B] focus:bg-white focus:shadow-[0_0_0_3px_rgba(221, 175, 59,0.12)] dark:border-[#001A05] dark:bg-[#001201] dark:text-[#FFF9EC] dark:placeholder:text-[#4A4A3A] dark:focus:border-[#DDAF3B] dark:focus:bg-[#182214]';
 
 export function SupportCreateForm({ onCreated, onCancel }: Props) {
   const t      = useTranslations('client_support');
@@ -75,7 +75,7 @@ export function SupportCreateForm({ onCreated, onCancel }: Props) {
   }
 
   return (
-    <div className="rounded-2xl border border-[#E8E4DC] bg-white shadow-sm dark:border-[#1E2E18] dark:bg-[#131E10]">
+    <div className="rounded-2xl border border-[#FFF9EC] bg-white shadow-sm dark:border-[#1E2E18] dark:bg-[#131E10]">
       <div className="flex items-center gap-2.5 border-b border-[#F0EDE4] px-5 py-3.5 dark:border-[#1A2A14]">
         <span className="h-4 w-[3px] rounded-full bg-[#DDAF3B]" />
         <span className="text-[13px] font-bold text-[#001201] dark:text-[#FFF9EC]">{t('section_create')}</span>
@@ -83,7 +83,7 @@ export function SupportCreateForm({ onCreated, onCancel }: Props) {
 
       <form onSubmit={handleSubmit} className="flex flex-col gap-4 p-5" noValidate>
         <div className="flex flex-col gap-1.5">
-          <label htmlFor="support-subject" className="text-[12px] font-medium text-[#5A5A4A] dark:text-[#9A9A8A]">{t('field_subject')}</label>
+          <label htmlFor="support-subject" className="text-[12px] font-medium text-[#5A5A4A] dark:text-[#B0BFB1]">{t('field_subject')}</label>
           <input
             id="support-subject"
             type="text"
@@ -109,7 +109,7 @@ export function SupportCreateForm({ onCreated, onCancel }: Props) {
         </div>
 
         <div className="flex flex-col gap-1.5">
-          <label htmlFor="support-message" className="text-[12px] font-medium text-[#5A5A4A] dark:text-[#9A9A8A]">{t('field_message')}</label>
+          <label htmlFor="support-message" className="text-[12px] font-medium text-[#5A5A4A] dark:text-[#B0BFB1]">{t('field_message')}</label>
           <textarea
             id="support-message"
             rows={5}
@@ -136,11 +136,11 @@ export function SupportCreateForm({ onCreated, onCancel }: Props) {
 
         <div className="flex items-center justify-end gap-2">
           <button type="button" onClick={onCancel} disabled={saving}
-            className="rounded-[10px] border border-[#E0DCD0] px-4 py-2.5 text-[13px] font-semibold text-foreground/65 transition-colors hover:bg-[#F0EDE0] disabled:opacity-50 dark:border-[#001A05] dark:text-[#9A9A8A]">
+            className="rounded-[10px] border border-[#FFF9EC] px-4 py-2.5 text-[13px] font-semibold text-foreground/65 transition-colors hover:bg-[#F0EDE0] disabled:opacity-50 dark:border-[#001A05] dark:text-[#B0BFB1]">
             {t('btn_cancel')}
           </button>
           <button type="submit" disabled={saving || !canSubmit}
-            className="rounded-[10px] bg-[#DDAF3B] px-6 py-2.5 text-[13px] font-bold text-[#0C1209] transition-opacity hover:opacity-80 disabled:cursor-not-allowed disabled:opacity-50">
+            className="rounded-[10px] bg-[#DDAF3B] px-6 py-2.5 text-[13px] font-bold text-[#001201] transition-opacity hover:opacity-80 disabled:cursor-not-allowed disabled:opacity-50">
             {saving ? t('btn_submitting') : t('btn_submit')}
           </button>
         </div>

@@ -7,6 +7,7 @@ export interface HistoryReservation {
   stationName: string;
   stationAddress: string;
   vehicleFormatLabel: string | null;
+  stationServicesName: string | null;
   serviceName: string | null;
   serviceCategory: string | null;
   entryType: 'reservation' | 'queue';
@@ -93,7 +94,7 @@ export function HistoryCard({ entry: e, locale, onSelect }: HistoryCardProps) {
             <div className="min-w-0 flex-1">
               <p className="text-[14.5px] font-black text-foreground truncate leading-tight">{e.stationName}</p>
               {e.stationAddress && (
-                <p className="text-[11.5px] text-foreground/55 dark:text-[#9A9A8A] mt-0.5 truncate">{e.stationAddress}</p>
+                <p className="text-[11.5px] text-foreground/55 dark:text-[#B0BFB1] mt-0.5 truncate">{e.stationAddress}</p>
               )}
             </div>
             <span className={[
@@ -108,7 +109,7 @@ export function HistoryCard({ entry: e, locale, onSelect }: HistoryCardProps) {
           </div>
 
           {/* Meta row - date / type / vehicle */}
-          <div className="flex flex-wrap items-center gap-x-2 gap-y-1 mt-2 text-[11.5px] text-foreground/65 dark:text-[#A0A090]">
+          <div className="flex flex-wrap items-center gap-x-2 gap-y-1 mt-2 text-[11.5px] text-foreground/65 dark:text-[#B0BFB1]">
             <span className="inline-flex items-center gap-1 font-bebas tracking-wider text-[12.5px]">
               <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
                 <rect x="3" y="4" width="18" height="18" rx="2" />
@@ -126,10 +127,10 @@ export function HistoryCard({ entry: e, locale, onSelect }: HistoryCardProps) {
               </svg>
               {timeLabel}
             </span>
-            {e.vehicleFormatLabel && (
+            {e.stationServicesName && (
               <>
                 <span className="opacity-50">·</span>
-                <span className="font-semibold">{e.vehicleFormatLabel}</span>
+                <span className="font-semibold">{e.stationServicesName}</span>
               </>
             )}
             <span className="opacity-50">·</span>
@@ -146,7 +147,7 @@ export function HistoryCard({ entry: e, locale, onSelect }: HistoryCardProps) {
                 {formatAmount(e.amountPaid, locale)}
               </p>
               {e.tipAmount != null && e.tipAmount > 0 && (
-                <p className="text-[10.5px] font-semibold text-foreground/55 dark:text-[#9A9A8A] mt-0.5">
+                <p className="text-[10.5px] font-semibold text-foreground/55 dark:text-[#B0BFB1] mt-0.5">
                   {t('includes_tip', { amount: formatAmount(e.tipAmount, locale) })}
                 </p>
               )}
