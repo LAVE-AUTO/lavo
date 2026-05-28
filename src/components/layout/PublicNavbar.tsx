@@ -159,6 +159,7 @@ export function PublicNavbar({
   } as const;
 
   const lightLogoSrc = locale === 'fr' ? '/logo/logo2_2.png' : '/logo/logo_anglais_1.png';
+  const darkLogoSrc = locale === 'fr' ? '/logo/logo22_2.png' : '/logo/logo_anglais_2.png';
 
   const displayName = user
     ? (user.first_name ? `${user.first_name} ${user.last_name ?? ''}`.trim() : user.email.split('@')[0])
@@ -209,16 +210,14 @@ export function PublicNavbar({
 
           {/* Logo */}
           <Link href={logoHref} className="shrink-0" aria-label="Hurryline - Accueil" suppressHydrationWarning>
-            {isDark ? (
-              <div className="flex items-center gap-2">
-                <div className="rounded-lg bg-white/95 p-1 border border-[rgba(200,152,10,0.25)] shadow-sm shrink-0">
-                  <Image src="/logo/frame2.png" alt="" width={28} height={28} className="w-7 h-7 object-contain" aria-hidden="true" />
-                </div>
-                <span className="font-playfair text-[18px] font-black text-[#c8980a] tracking-[3px]">Hurryline</span>
-              </div>
-            ) : (
-              <Image src={lightLogoSrc} alt={t('logo_alt')} width={130} height={34} className="h-20 w-auto object-contain" priority />
-            )}
+            <Image
+              src={isDark ? darkLogoSrc : lightLogoSrc}
+              alt={t('logo_alt')}
+              width={130}
+              height={34}
+              className="h-9 w-auto object-contain"
+              priority
+            />
           </Link>
 
           {/* Desktop nav links */}
