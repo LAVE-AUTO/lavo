@@ -11,12 +11,12 @@ export function MerchantHeroSection() {
     <section className="landing-hero-bg relative min-h-screen overflow-hidden">
       <div
         className="absolute top-0 bottom-0 left-[52%] hidden w-px lg:block"
-        style={{ background: 'linear-gradient(to bottom, transparent, rgba(221, 175, 59,0.25) 30%, rgba(221, 175, 59,0.25) 70%, transparent)' }}
+        style={{ background: 'linear-gradient(to bottom, transparent, rgba(221,175,59,0.25) 30%, rgba(221,175,59,0.25) 70%, transparent)' }}
       />
 
       <div className="mx-auto grid max-w-[1280px] min-h-screen grid-cols-1 lg:grid-cols-[55%_45%] px-6 lg:px-16">
         {/* Left column */}
-        <div className="relative z-10 flex flex-col justify-center pb-12 pt-24 lg:pb-20 lg:pt-[120px] lg:pr-14">
+        <div className="relative z-10 flex flex-col justify-center pb-12 pt-6 lg:pb-20 lg:pt-[120px] lg:pr-14">
           <div className="font-dm-mono mb-5 flex animate-fade-in-up items-center gap-2.5 text-[11px] uppercase tracking-[3px] text-[#DDAF3B]">
             <span className="h-px w-7 bg-[#DDAF3B]" />
             {t('eyebrow')}
@@ -37,7 +37,7 @@ export function MerchantHeroSection() {
           <div className="animate-fade-in-up animation-delay-400 mb-10 flex flex-wrap gap-3.5">
             <Link
               href="/station/apply"
-              className="btn-shine inline-block rounded-md bg-[#DDAF3B] px-9 py-[15px] text-[13px] font-bold uppercase tracking-[1.5px] text-[#001201] transition-all duration-300 hover:-translate-y-0.5 hover:shadow-[0_10px_32px_rgba(221, 175, 59,0.45)]"
+              className="btn-shine inline-block rounded-md bg-[#DDAF3B] px-9 py-[15px] text-[13px] font-bold uppercase tracking-[1.5px] text-[#001201] transition-all duration-300 hover:-translate-y-0.5 hover:shadow-[0_10px_32px_rgba(221,175,59,0.45)]"
             >
               {t('btn_primary')}
             </Link>

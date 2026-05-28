@@ -22,6 +22,7 @@ export interface StationFiltersState {
   timeTo: string;
   distanceMinKm: string;
   distanceMaxKm: string;
+  date: string;
 }
 
 interface StationFiltersProps {
@@ -58,6 +59,17 @@ export function StationFilters({
   inline = false,
 }: StationFiltersProps) {
   const t = useTranslations('stations');
+
+  const hasManualWash = washTypes.some(
+    (wt) => wt.code === 'hand_wash' && value.selectedWashTypes.includes(wt.id),
+  );
+
+  /* Auto-reset serviceScope when manual wash is no longer selected. */
+  useEffect(() => {
+    if (!hasManualWash && value.serviceScope !== '') {
+      onChange({ ...value, serviceScope: '' });
+    }
+  }, [hasManualWash, onChange, value]);
 
   /* Lock body scroll only for the modal sheet, not the inline panel. */
   useEffect(() => {
@@ -129,7 +141,7 @@ export function StationFilters({
           </div>
           <div>
             <p className={labelBase}>{t('filter_scope_label')}</p>
-            <CustomSelect value={value.serviceScope} onChange={(v) => patch({ serviceScope: v as ServiceScope })} placeholder={t('filter_scope_all')} options={[{ value: '', label: t('filter_scope_all') }, { value: 'exterior', label: t('filter_scope_exterior') }, { value: 'interior', label: t('filter_scope_interior') }, { value: 'both', label: t('filter_scope_both') }]} />
+            <CustomSelect value={value.serviceScope} onChange={(v) => patch({ serviceScope: v as ServiceScope })} placeholder={t('filter_scope_all')} options={[{ value: '', label: t('filter_scope_all') }, { value: 'exterior', label: t('filter_scope_exterior') }, { value: 'interior', label: t('filter_scope_interior') }, { value: 'both', label: t('filter_scope_both') }]} disabled={!hasManualWash} />
           </div>
         </div>
 
@@ -161,15 +173,25 @@ export function StationFilters({
           )}
         </div>
 
-        {/* Row 5: Time range */}
-        <div>
-          <p className={labelBase}>{t('filter_time_label')}</p>
-          <div className="flex items-center gap-2">
-            <span className="text-[11px] font-semibold text-foreground/70 shrink-0">{t('filter_time_from')}</span>
-            <input type="time" value={value.timeFrom} onChange={(e) => patch({ timeFrom: e.target.value })} aria-label={t('filter_time_from')} className={`flex-1 ${inputBase} px-2 py-1.5 text-center font-mono`} />
-            <span className="text-[#AAA] dark:text-foreground/70 text-[12px] font-bold shrink-0">—</span>
-            <span className="text-[11px] font-semibold text-foreground/70 shrink-0">{t('filter_time_to')}</span>
-            <input type="time" value={value.timeTo} onChange={(e) => patch({ timeTo: e.target.value })} aria-label={t('filter_time_to')} className={`flex-1 ${inputBase} px-2 py-1.5 text-center font-mono`} />
+        {/* Row 5: Date + Time range */}
+        <div className="grid grid-cols-2 gap-3 mb-3">
+          <div>
+            <p className={labelBase}>{t('filter_date_label')}</p>
+            <input
+              type="date"
+              value={value.date}
+              onChange={(e) => patch({ date: e.target.value })}
+              aria-label={t('filter_date_label')}
+              className={`${inputBase} px-2.5 py-2 font-mono`}
+            />
+          </div>
+          <div>
+            <p className={labelBase}>{t('filter_time_label')}</p>
+            <div className="flex items-center gap-1">
+              <input type="time" value={value.timeFrom} onChange={(e) => patch({ timeFrom: e.target.value })} aria-label={t('filter_time_from')} className={`flex-1 ${inputBase} px-2 py-2 text-center font-mono`} />
+              <span className="text-[#AAA] dark:text-foreground/70 text-[12px] font-bold shrink-0">—</span>
+              <input type="time" value={value.timeTo} onChange={(e) => patch({ timeTo: e.target.value })} aria-label={t('filter_time_to')} className={`flex-1 ${inputBase} px-2 py-2 text-center font-mono`} />
+            </div>
           </div>
         </div>
       </div>
@@ -235,7 +257,7 @@ export function StationFilters({
             <CustomMultiSelect options={washTypes.map((w) => ({ value: w.id, label: w.label }))} selected={value.selectedWashTypes} onToggle={toggleWashType} placeholder={t('filter_wash_type_placeholder')} />
           </FilterRow>
           <FilterRow label={t('filter_scope_label')}>
-            <CustomSelect value={value.serviceScope} onChange={(v) => patch({ serviceScope: v as ServiceScope })} placeholder={t('filter_scope_all')} options={[{ value: '', label: t('filter_scope_all') }, { value: 'exterior', label: t('filter_scope_exterior') }, { value: 'interior', label: t('filter_scope_interior') }, { value: 'both', label: t('filter_scope_both') }]} />
+            <CustomSelect value={value.serviceScope} onChange={(v) => patch({ serviceScope: v as ServiceScope })} placeholder={t('filter_scope_all')} options={[{ value: '', label: t('filter_scope_all') }, { value: 'exterior', label: t('filter_scope_exterior') }, { value: 'interior', label: t('filter_scope_interior') }, { value: 'both', label: t('filter_scope_both') }]} disabled={!hasManualWash} />
           </FilterRow>
           <FilterRow label={t('filter_vehicle_label')}>
             <CustomSelect value={value.formatId} onChange={(v) => patch({ formatId: v })} placeholder={t('filter_vehicle_placeholder')} options={[{ value: '', label: t('filter_vehicle_placeholder') }, ...vehicleFormats.map((f) => ({ value: f.id, label: f.label }))]} />
@@ -252,6 +274,15 @@ export function StationFilters({
               <DistanceInput value={value.distanceMaxKm} onChange={(v) => patch({ distanceMaxKm: v })} placeholder={t('filter_distance_max_placeholder')} />
             </div>
             {!hasLocation && <p className="mt-2 text-[12px] text-[#9A9A8A] dark:text-[#707068] italic">{t('filter_distance_no_location')}</p>}
+          </FilterRow>
+          <FilterRow label={t('filter_date_label')}>
+            <input
+              type="date"
+              value={value.date}
+              onChange={(e) => patch({ date: e.target.value })}
+              aria-label={t('filter_date_label')}
+              className="w-full rounded-xl border border-[#E0E0D0] bg-[#F5F5EE] px-3 py-2.5 font-mono text-[14px] text-[#001201] outline-none focus:border-gold dark:border-border dark:bg-tab-inactive dark:text-white transition-colors"
+            />
           </FilterRow>
           <FilterRow label={t('filter_time_label')}>
             <div className="grid grid-cols-2 gap-2.5">

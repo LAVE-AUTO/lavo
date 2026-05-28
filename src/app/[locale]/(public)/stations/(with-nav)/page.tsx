@@ -52,7 +52,9 @@ export default async function PublicStationsPage({ params }: Props) {
       .orderBy(washTypes.sort_order),
     getAllFormats(),
   ]);
-  const vehicleFormats = formats.map((f) => ({ id: f.id, label: f.label }));
+  const vehicleFormats = formats
+    .filter((f, i, arr) => arr.findIndex((x) => x.label === f.label) === i)
+    .map((f) => ({ id: f.id, label: f.label }));
 
   let heroMetrics: StationsHeroMetrics = EMPTY_METRICS;
   try {

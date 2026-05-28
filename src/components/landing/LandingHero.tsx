@@ -14,6 +14,8 @@ export function LandingHero() {
 
   const lightLogoSrc =
     locale === 'fr' ? '/logo/logo2_2.png' : '/logo/logo_anglais_1.png';
+  const darkLogoSrc =
+    locale === 'fr' ? '/logo/logo22_2.png' : '/logo/logo_anglais_2.png';
 
   return (
     <section className="relative overflow-hidden min-h-[80vh] lg:min-h-[92vh] flex items-center">
@@ -44,32 +46,14 @@ export function LandingHero() {
           <div className="space-y-7 animate-fade-in-up text-center lg:text-left">
             {/* Logo */}
             <div className="mb-2 flex justify-center lg:justify-start">
-              {isDark ? (
-                <div className="flex items-center gap-3">
-                  <div className="rounded-xl bg-white/95 p-1 border border-gold/25 shadow-sm">
-                    <Image
-                      src="/logo/frame2.png"
-                      alt=""
-                      width={36}
-                      height={36}
-                      className="w-9 h-9 object-contain"
-                      aria-hidden="true"
-                    />
-                  </div>
-                  <span className="text-[22px] font-bold text-white tracking-wide">
-                    Hurryline
-                  </span>
-                </div>
-              ) : (
-                <Image
-                  src={lightLogoSrc}
-                  alt="Hurryline"
-                  width={150}
-                  height={40}
-                  className="h-10 w-auto object-contain"
-                  priority
-                />
-              )}
+              <Image
+                src={isDark ? darkLogoSrc : lightLogoSrc}
+                alt="Hurryline"
+                width={150}
+                height={40}
+                className="h-10 w-auto object-contain"
+                priority
+              />
             </div>
 
             {/* Badge */}

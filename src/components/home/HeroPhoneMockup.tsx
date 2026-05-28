@@ -1,5 +1,6 @@
 'use client';
 
+import { useState } from 'react';
 import { useTranslations } from 'next-intl';
 
 export function HeroPhoneMockup() {
@@ -36,7 +37,7 @@ export function HeroPhoneMockup() {
       </div>
 
       {/* Phone frame */}
-      <div className="relative w-[264px] h-[540px] rounded-[36px] border-2 border-[rgba(221,175,59,0.28)] bg-[#001201] dark:bg-[#111f0f] overflow-hidden shadow-[0_0_0_8px_rgba(221, 175, 59,0.05),0_40px_90px_rgba(0,0,0,0.6)] animate-float">
+      <div className="relative w-[264px] h-[540px] rounded-[36px] border-2 border-[rgba(221,175,59,0.28)] bg-[#001201] dark:bg-[#111f0f] overflow-hidden shadow-[0_0_0_8px_rgba(221,175,59,0.05),0_40px_90px_rgba(0,0,0,0.6)] animate-float">
         {/* Notch */}
         <div className="absolute top-0 left-1/2 -translate-x-1/2 z-10 h-5 w-[72px] rounded-b-[12px] bg-[#001201] dark:bg-[#001201]" />
 
@@ -53,7 +54,8 @@ export function HeroPhoneMockup() {
           {/* Search bar */}
           <div className="flex items-center gap-2 rounded-[8px] border border-[rgba(221,175,59,0.2)] bg-[rgba(245,237,214,0.06)] px-3 py-2">
             <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#B0BFB1" strokeWidth="2">
-              <circle cx="11" cy="11" r="8" /><path d="M21 21l-4.35-4.35" />
+              <circle cx="11" cy="11" r="8" />
+              <path d="M21 21l-4.35-4.35" />
             </svg>
             <span className="text-[10px] text-[#B0BFB1]">{t('phone_search')}</span>
           </div>
@@ -61,23 +63,29 @@ export function HeroPhoneMockup() {
           {/* Station card 1 */}
           <PhoneStationCard
             name={t('station_1_name')}
-            addr={t('station_1_addr')}
             rating={t('station_1_rating')}
+            reviews={t('station_1_reviews')}
             price={t('station_1_price')}
-            open={t('open')}
+            distance={t('station_1_distance')}
+            wait={t('station_1_wait')}
+            tags={['Pack Premium', 'Lavage Complet']}
             showBook
             bookLabel={t('book')}
+            imgSrc="https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=264&h=80&fit=crop&auto=format&q=80"
           />
 
           {/* Station card 2 */}
           <PhoneStationCard
             name={t('station_2_name')}
-            addr={t('station_2_addr')}
             rating={t('station_2_rating')}
+            reviews={t('station_2_reviews')}
             price={t('station_2_price')}
-            open={t('open')}
+            distance={t('station_2_distance')}
+            wait={t('station_2_wait')}
+            tags={['Mini-Lavage']}
             showBook={false}
             bookLabel={t('book')}
+            imgSrc="https://images.unsplash.com/photo-1600880292203-757bb62b4baf?w=264&h=80&fit=crop&auto=format&q=80"
           />
         </div>
       </div>
@@ -87,40 +95,98 @@ export function HeroPhoneMockup() {
 
 interface PhoneStationCardProps {
   name: string;
-  addr: string;
   rating: string;
+  reviews: string;
   price: string;
-  open: string;
+  distance: string;
+  wait: string;
+  tags: string[];
   showBook: boolean;
   bookLabel: string;
+  imgSrc: string;
 }
 
-function PhoneStationCard({ name, addr, rating, price, open, showBook, bookLabel }: PhoneStationCardProps) {
+function PhoneStationCard({ name, rating, reviews, price, distance, wait, tags, showBook, bookLabel, imgSrc }: PhoneStationCardProps) {
+  const [imgFailed, setImgFailed] = useState(false);
+
   return (
-    <div className="rounded-[10px] bg-[#f5edd6] p-3">
-      <div className="mb-1.5 flex items-start justify-between">
-        <span className="text-[12px] font-bold text-[#3d2a10]">{name}</span>
-        <span className="rounded-full border border-[#16a34a44] bg-[#22c55e20] px-1.5 py-0.5 text-[8px] font-bold text-[#16a34a]">
-          {open}
-        </span>
-      </div>
-      <div className="mb-0.5 flex items-center gap-1 text-[9px] text-[rgba(61,42,16,0.55)]">
-        <svg width="8" height="8" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-          <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z" />
-          <circle cx="12" cy="10" r="3" />
-        </svg>
-        {addr}
-      </div>
-      <div className="mb-1 text-[9px]">
-        <span className="text-[#DDAF3B]">{'★'.repeat(5)}</span>
-        <span className="ml-1 text-[rgba(61,42,16,0.55)]">{rating}</span>
-      </div>
-      <div className="font-rajdhani text-[14px] font-bold text-[#3d2a10]">{price}</div>
-      {showBook && (
-        <div className="mt-1.5 rounded-[6px] bg-[#DDAF3B] py-1.5 text-center text-[9px] font-bold uppercase tracking-[1px] text-[#001201]">
-          {bookLabel}
+    /* Force light-mode colors — card lives inside a dark phone frame and must always contrast against it */
+    <article className="flex flex-col bg-surface rounded-[14px] overflow-hidden border border-border group hover:border-gold/30 transition-all duration-300">
+      {/* Photo zone — mirrors StationCard image area */}
+      <div className="relative h-[80px] bg-[#D0D0C0] flex items-center justify-center overflow-hidden">
+        {!imgFailed ? (
+          <img
+            src={imgSrc}
+            alt={name}
+            onError={() => setImgFailed(true)}
+            className="w-full h-full object-cover group-hover:scale-[1.01] transition-transform duration-300"
+          />
+        ) : (
+          <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#9A9A8A" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+            <path d="M3 17l2-7h14l2 7" />
+            <path d="M5 17v2h2v-2M17 17v2h2v-2" />
+            <path d="M8 10V7a1 1 0 011-1h6a1 1 0 011 1v3" />
+            <circle cx="7.5" cy="17" r="1.5" fill="#9A9A8A" />
+            <circle cx="16.5" cy="17" r="1.5" fill="#9A9A8A" />
+          </svg>
+        )}
+
+        {/* Name overlay at bottom */}
+        <div className="absolute inset-x-0 bottom-0 h-8 bg-gradient-to-t from-black/60 to-transparent flex items-end px-2.5 pb-1.5 pointer-events-none">
+          <span className="text-white text-[10px] font-bold leading-tight truncate drop-shadow">
+            {name}
+          </span>
         </div>
-      )}
-    </div>
+      </div>
+
+      {/* Card body — mirrors StationCard's p-4 section, always light */}
+      <div className="px-2.5 pt-2 pb-2 flex flex-col gap-1.5">
+        {/* Name + price */}
+        <div className="flex items-start justify-between gap-1">
+          <span className="text-[11px] font-bold text-foreground leading-tight line-clamp-1">{name}</span>
+          <span className="text-[10px] font-bold text-[#DDAF3B] shrink-0">{price}</span>
+        </div>
+
+        {/* Rating + review count */}
+        <div className="flex items-center gap-1">
+          <span className="text-[#DDAF3B] text-[11px]">&#9733;</span>
+          <span className="text-[9px] font-semibold text-foreground">{rating}</span>
+          <span className="text-[9px] text-[#DDAF3B]">{reviews}</span>
+        </div>
+
+        {/* Stats grid: distance | wait */}
+        <div className="grid grid-cols-2 text-center border-t border-border pt-1.5">
+          <div className="border-r border-border pr-1">
+            <div className="text-[11px] font-black text-foreground leading-none">{distance}</div>
+            <div className="text-[8px] text-foreground/70 mt-0.5">Distance</div>
+          </div>
+          <div className="pl-1">
+            <div className="text-[11px] font-black text-foreground leading-none">{wait}</div>
+            <div className="text-[8px] text-foreground/70 mt-0.5">Attente</div>
+          </div>
+        </div>
+
+        {/* Forfait tag chips */}
+        {tags.length > 0 && (
+          <div className="flex flex-wrap gap-1">
+            {tags.map((tag) => (
+              <span
+                key={tag}
+                className="px-1.5 py-0.5 rounded-full text-[8px] font-bold bg-surface text-[#000000] border border-border"
+              >
+                {tag}
+              </span>
+            ))}
+          </div>
+        )}
+
+        {/* CTA */}
+        {showBook && (
+          <div className="rounded-[6px] bg-[#DDAF3B] py-1.5 text-center text-[9px] font-bold uppercase tracking-[1px] text-[#001201]">
+            {bookLabel}
+          </div>
+        )}
+      </div>
+    </article>
   );
 }
