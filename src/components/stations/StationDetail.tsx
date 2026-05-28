@@ -129,6 +129,7 @@ export function StationDetail({ id }: StationDetailProps) {
 
   const isOpen = station.isOpen !== false;
   const hasServices = station.stationServices.length > 0;
+  const hasNoAvailability = (station.availableSlots ?? 0) <= 0;
 
   const selectedFormatEntry = selectedService && selectedFormatEntryId
     ? selectedService.vehicleEntries.find((e) => e.id === selectedFormatEntryId) ?? null
@@ -197,16 +198,10 @@ export function StationDetail({ id }: StationDetailProps) {
           {t('detail_queue')}
         </p>
       </div>
-      <div className="grid grid-cols-3 gap-2 px-5 pt-3 pb-3 text-center">
+      <div className="grid grid-cols-2 gap-2 px-5 pt-3 pb-3 text-center">
         <div>
           <p className="text-[22px] font-black text-[#000C1F] dark:text-[#FFF8EC] leading-none">{station.queueCount}</p>
           <p className="text-[10.5px] text-[#666] dark:text-[#B0B0A0] mt-1.5 uppercase tracking-wider font-bold">{t('queue_waiting')}</p>
-        </div>
-        <div>
-          <p className="text-[22px] font-black text-[#000C1F] dark:text-[#FFF8EC] leading-none">
-            {station.estimatedWaitMinutes > 0 ? `~${station.estimatedWaitMinutes}` : '--'}
-          </p>
-          <p className="text-[10.5px] text-[#666] dark:text-[#B0B0A0] mt-1.5 uppercase tracking-wider font-bold">{t('min_attente')}</p>
         </div>
         <div>
           <p className="text-[22px] font-black text-[#000C1F] dark:text-[#FFF8EC] leading-none">
@@ -253,7 +248,7 @@ export function StationDetail({ id }: StationDetailProps) {
 
       {QueueBlock}
 
-      {(isOpen || hasServices) ? (
+      {(isOpen || hasServices) && !hasNoAvailability ? (
         <button
           type="button"
           onClick={handleOpenBooking}
@@ -271,9 +266,15 @@ export function StationDetail({ id }: StationDetailProps) {
           ) : t('detail_book_service')}
         </button>
       ) : (
-        <div className="w-full py-3.5 bg-[#E0E0D0] dark:bg-tab-inactive rounded-xl text-[15px] font-bold text-[#444] dark:text-[#C0C0B0] text-center">
-          {t('no_slots')}
-        </div>
+        <button
+          type="button"
+          disabled
+          aria-disabled="true"
+          title={t('detail_unavailable_banner_title')}
+          className="w-full py-3.5 bg-[#E0E0D0] dark:bg-tab-inactive rounded-xl text-[15px] font-bold text-[#666] dark:text-[#C0C0B0] text-center cursor-not-allowed"
+        >
+          {t('detail_book_service')}
+        </button>
       )}
 
       {!isOpen && !hasServices && (
@@ -401,6 +402,23 @@ export function StationDetail({ id }: StationDetailProps) {
                 {SummaryPanel}
               </div>
 
+              {hasNoAvailability && (
+                <div
+                  role="status"
+                  className="flex gap-3 rounded-2xl border border-Hurryline-error/30 bg-Hurryline-error/10 px-4 py-3.5"
+                >
+                  <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#E8472A" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true" className="shrink-0 mt-0.5">
+                    <path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z" />
+                    <line x1="12" y1="9" x2="12" y2="13" />
+                    <line x1="12" y1="17" x2="12.01" y2="17" />
+                  </svg>
+                  <div className="min-w-0">
+                    <p className="text-[14px] font-black text-[#B2351F] dark:text-[#F0A090]">{t('detail_unavailable_banner_title')}</p>
+                    <p className="text-[12.5px] text-[#7A2A18] dark:text-[#EFC2B5] mt-0.5 leading-snug">{t('detail_unavailable_banner_message')}</p>
+                  </div>
+                </div>
+              )}
+
               {/* Services */}
               <StationServicesSection
                 services={station.stationServices}
@@ -410,7 +428,7 @@ export function StationDetail({ id }: StationDetailProps) {
                 onSelectFormatEntry={handleSelectFormatEntry}
                 onBook={handleOpenBooking}
                 bookingLoading={bookingRefreshing}
-                disabledBook={(!isOpen && !hasServices) || needsFormatChoice}
+                disabledBook={(!isOpen && !hasServices) || hasNoAvailability || needsFormatChoice}
               />
 
               {/* Description */}
@@ -479,7 +497,7 @@ export function StationDetail({ id }: StationDetailProps) {
                 {selectedService ? selectedService.name : t('detail_price_from')}
               </p>
             </div>
-            {(isOpen || hasServices) ? (
+            {(isOpen || hasServices) && !hasNoAvailability ? (
               <button
                 type="button"
                 onClick={handleOpenBooking}
@@ -497,9 +515,15 @@ export function StationDetail({ id }: StationDetailProps) {
                 ) : t('detail_book_service')}
               </button>
             ) : (
-              <div className="flex-1 py-3 bg-[#E0E0D0] dark:bg-tab-inactive rounded-xl text-[15px] font-bold text-[#444] dark:text-[#C0C0B0] text-center">
-                {t('no_slots')}
-              </div>
+              <button
+                type="button"
+                disabled
+                aria-disabled="true"
+                title={hasNoAvailability ? t('detail_unavailable_banner_title') : undefined}
+                className="flex-1 py-3 bg-[#E0E0D0] dark:bg-tab-inactive rounded-xl text-[15px] font-bold text-[#666] dark:text-[#C0C0B0] text-center cursor-not-allowed"
+              >
+                {t('detail_book_service')}
+              </button>
             )}
           </div>
         </div>

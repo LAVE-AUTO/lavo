@@ -40,13 +40,15 @@ export function StationCard({ station, unavailable = false }: StationCardProps) 
 
   return (
     <article
-      className={[
-        'h-full flex flex-col bg-[#E8E8D8] dark:bg-dark-card rounded-[14px] overflow-hidden border border-[#D0D0C0] dark:border-tab-inactive group hover:border-gold/30 transition-all duration-300',
-        unavailable ? 'opacity-50 grayscale pointer-events-none' : '',
-      ].join(' ')}
+      className="h-full flex flex-col bg-[#E8E8D8] dark:bg-dark-card rounded-[14px] overflow-hidden border border-[#D0D0C0] dark:border-tab-inactive group hover:border-gold/30 transition-all duration-300"
     >
       {/* Photo */}
-      <div className="relative h-[140px] sm:h-[160px] bg-[#D0D0C0] dark:bg-tab-inactive flex items-center justify-center overflow-hidden">
+      <div
+        className={[
+          'relative h-[140px] sm:h-[160px] bg-[#D0D0C0] dark:bg-tab-inactive flex items-center justify-center overflow-hidden',
+          unavailable ? 'grayscale' : '',
+        ].join(' ')}
+      >
         {station.imageUrl && !imgFailed ? (
           <img
             src={station.imageUrl}
