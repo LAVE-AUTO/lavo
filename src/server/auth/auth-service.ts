@@ -54,7 +54,7 @@ export type RegisterDto = {
   first_name: string;
   last_name: string;
   email: string;
-  phone: string;
+  phone?: string;
   password: string;
   remember_me: boolean;
 };
