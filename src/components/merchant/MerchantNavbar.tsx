@@ -60,7 +60,10 @@ export function MerchantNavbar() {
   return (
     <>
       <header className="fixed top-0 left-0 right-0 z-40 bg-[rgba(247,243,236,0.95)] dark:bg-[rgba(13,31,15,0.92)] backdrop-blur-[16px] border-b border-[rgba(221,175,59,0.18)]">
-        <div className="max-w-[1440px] mx-auto px-6 lg:px-16 flex items-center justify-between gap-6 py-2">
+        {/* Edge-to-edge: merchant nav spans the full window width with just a
+            comfortable lateral padding. The client landing nav keeps the
+            centered 1440 container; merchant + admin drop it. */}
+        <div className="px-6 lg:px-8 flex items-center justify-between gap-6 py-2">
           <Link href="/" className="shrink-0" aria-label="Hurryline - Accueil">
             <Image src={isDark ? darkLogoSrc : lightLogoSrc} alt="Hurryline" width={130} height={34} className="h-12 w-auto object-contain" priority />
           </Link>

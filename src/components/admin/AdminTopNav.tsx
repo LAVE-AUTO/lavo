@@ -133,7 +133,10 @@ export function AdminTopNav({ onToggleSidebar }: AdminTopNavProps) {
 
   return (
     <header className="flex-shrink-0 bg-[rgba(247,243,236,0.95)] dark:bg-[rgba(13,31,15,0.92)] backdrop-blur-[16px] border-b border-[rgba(221,175,59,0.18)]">
-      <div className="max-w-[1440px] mx-auto px-6 lg:px-16 flex items-center justify-between gap-6 py-2">
+      {/* Edge-to-edge: admin space spans the full window width with just a
+          comfortable lateral padding. Public landing keeps its centered
+          1440 container; admin and merchant nav drop it. */}
+      <div className="px-6 lg:px-8 flex items-center justify-between gap-6 py-2">
 
         {/* Left cluster: sidebar toggle (admin-only) + logo */}
         <div className="flex items-center gap-3">
