@@ -89,7 +89,7 @@ export function ReservationCard({ entry, onValidate, onStart, onCancel, onExtraT
           </div>
           <div className="mt-0.5 flex items-center gap-2">
             <span className="truncate text-[12px] font-semibold text-foreground/70 dark:text-foreground/70">
-              {entry.vehicle_format?.label ?? t('label_no_service')}
+              {entry.service?.name ?? entry.vehicle_format?.label ?? t('label_no_service')}
             </span>
             {entry.amount_paid && (
               <span className="font-mono text-[13px] font-bold text-[#C09A18]">
@@ -120,9 +120,15 @@ export function ReservationCard({ entry, onValidate, onStart, onCancel, onExtraT
             <div className="mb-3 grid grid-cols-2 gap-x-6 gap-y-2 text-[13px]">
               <DetailRow
                 label={t('detail_service')}
-                value={entry.vehicle_format?.label ?? t('label_no_service')}
-                muted={!entry.vehicle_format?.label}
+                value={entry.service?.name ?? entry.vehicle_format?.label ?? t('label_no_service')}
+                muted={!entry.service?.name && !entry.vehicle_format?.label}
               />
+              {entry.vehicle_format?.label && entry.service?.name && (
+                <DetailRow
+                  label={t('detail_vehicle_format')}
+                  value={entry.vehicle_format.label}
+                />
+              )}
               <DetailRow label={t('detail_entry_type')} value={isReservation ? t('type_reservation') : t('type_queue')} />
               <DetailRow label={t('detail_entry_id')} value={`#${entry.id.slice(0, 8)}`} mono />
               <DetailRow label={t('detail_created_at')} value={formatTime(entry.created_at)} />

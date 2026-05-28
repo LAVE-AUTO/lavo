@@ -92,5 +92,6 @@ export function serializeRichStationEntry(entry: RichStationEntry) {
     slot_end_time: entry.slot_end_time?.toISOString() ?? null,
     user: { first_name: entry.user_first_name, last_name: entry.user_last_name },
     vehicle_format: entry.vehicle_format,
+    service: entry.service,
   };
 }

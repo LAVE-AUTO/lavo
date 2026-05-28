@@ -1012,6 +1012,7 @@ export type RichStationEntry = Entry & {
   user_first_name: string | null;
   user_last_name: string | null;
   vehicle_format: { id: string; label: string } | null;
+  service: { id: string; name: string; category: string } | null;
   slot_start_time: Date | null;
   slot_end_time: Date | null;
 };
@@ -1050,6 +1051,9 @@ export async function listRichStationEntriesPaginated(
         user_last_name: users.last_name,
         vf_id: vehicleFormats.id,
         vf_label: vehicleFormats.label,
+        svc_id: stationServices.id,
+        svc_name: stationServices.name,
+        svc_category: stationServices.category,
         slot_start_time: timeSlots.start_time,
         slot_end_time: timeSlots.end_time,
       })
@@ -1057,6 +1061,7 @@ export async function listRichStationEntriesPaginated(
       .leftJoin(timeSlots, eq(reservations.time_slot_id, timeSlots.id))
       .leftJoin(users, eq(reservations.user_id, users.id))
       .leftJoin(vehicleFormats, eq(reservations.vehicle_format_id, vehicleFormats.id))
+      .leftJoin(stationServices, eq(reservations.service_id, stationServices.id))
       .where(where)
       .orderBy(desc(reservations.entry_type), asc(timeSlots.start_time), asc(reservations.queue_position))
       .limit(limit)
@@ -1068,6 +1073,7 @@ export async function listRichStationEntriesPaginated(
     user_first_name: r.user_first_name,
     user_last_name: r.user_last_name,
     vehicle_format: r.vf_id ? { id: r.vf_id, label: r.vf_label ?? '' } : null,
+    service: r.svc_id ? { id: r.svc_id, name: r.svc_name ?? '', category: r.svc_category ?? '' } : null,
     slot_start_time: r.slot_start_time ?? null,
     slot_end_time: r.slot_end_time ?? null,
   }));

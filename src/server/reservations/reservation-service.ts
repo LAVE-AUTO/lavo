@@ -1195,7 +1195,11 @@ export async function createWalkInEntry(
   stationId: string,
   stationOwnerUserId: string,
   vehicleFormatId: string,
-  timeSlotId?: string
+  timeSlotId?: string,
+  /* Snapshot the picked station service so the entry knows what was
+   * actually performed. Optional for backward compatibility with
+   * callers that did not yet adopt the service picker. */
+  serviceId?: string,
 ): Promise<Entry> {
   const format = await findFormatById(vehicleFormatId);
   if (!format) throw new NotFoundError('Vehicle format not found');
@@ -1205,6 +1209,7 @@ export async function createWalkInEntry(
       user_id: stationOwnerUserId, // walk-in placeholder: station owner's user_id (real users row)
       station_id: stationId,
       vehicle_format_id: vehicleFormatId,
+      service_id: serviceId,
       time_slot_id: timeSlotId,
       booking_source: 'standard',
       status: STATUS_CONFIRMED,
@@ -1221,6 +1226,7 @@ export async function createWalkInEntry(
     user_id: stationOwnerUserId,
     station_id: stationId,
     vehicle_format_id: vehicleFormatId,
+    service_id: serviceId,
     queue_position: queuePosition,
     status: STATUS_CONFIRMED,
     amount_paid: toDecimal(String(format.price)),

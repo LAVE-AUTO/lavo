@@ -3,7 +3,7 @@
  * POST /api/v1/station/entries - create a walk-in entry (no Stripe payment). Auth: station.
  *
  * GET query params: status, from (ISO date), to (ISO date), page, per_page
- * POST body: { vehicle_format_id: UUID, time_slot_id?: UUID }
+ * POST body: { vehicle_format_id: UUID, service_id?: UUID, time_slot_id?: UUID }
  */
 import { requireRole } from '@/lib/require-role';
 import { successResponse, error400, error404, error500, fromAppError } from '@/lib/responses';
@@ -19,6 +19,10 @@ import type { NextResponse } from 'next/server';
 
 const walkInBodySchema = z.object({
   vehicle_format_id: z.string().uuid('Invalid vehicle_format_id'),
+  /* Optional: when provided, the entry is snapshooted with the picked
+   * station service so card titles can show the merchant-set name
+   * (Lavage Premium…) instead of the bare vehicle format. */
+  service_id: z.string().uuid('Invalid service_id').optional(),
   time_slot_id: z.string().uuid('Invalid time_slot_id').optional(),
 });
 
@@ -85,7 +89,8 @@ export async function POST(request: Request): Promise<NextResponse> {
       station.id,
       auth.sub, // station owner's user_id - used as walk-in placeholder for the FK-constrained user_id column
       parsed.data.vehicle_format_id,
-      parsed.data.time_slot_id
+      parsed.data.time_slot_id,
+      parsed.data.service_id
     );
     return applyNoStoreHeaders(successResponse(serializeEntry(entry)));
   } catch (e) {

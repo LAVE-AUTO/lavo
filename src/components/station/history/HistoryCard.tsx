@@ -87,10 +87,10 @@ export function HistoryCard({ entry }: Props) {
           </div>
           <div className="mt-0.5 flex items-center gap-2 text-[12px] text-[#000717]/50 dark:text-[#FFFFF0]/50">
             <span className="font-mono font-semibold">{timeLabel}</span>
-            {entry.vehicle_format_label && (
+            {(entry.service_name ?? entry.vehicle_format_label) && (
               <>
                 <span className="text-[#000717]/20 dark:text-[#FFFFF0]/20">|</span>
-                <span>{entry.vehicle_format_label}</span>
+                <span>{entry.service_name ?? entry.vehicle_format_label}</span>
               </>
             )}
           </div>
@@ -124,8 +124,14 @@ export function HistoryCard({ entry }: Props) {
               <DetailRow label={t('detail_entry_id')} value={`#${entry.id.slice(0, 8)}`} mono />
               <DetailRow label={t('col_date')} value={dateLabel} />
               <DetailRow label={t('col_type')} value={isReservation ? t('type_reservation') : t('type_queue')} />
-              {entry.vehicle_format_label && (
-                <DetailRow label={t('col_service')} value={entry.vehicle_format_label} />
+              {(entry.service_name ?? entry.vehicle_format_label) && (
+                <DetailRow
+                  label={t('col_service')}
+                  value={entry.service_name ?? entry.vehicle_format_label ?? ''}
+                />
+              )}
+              {entry.vehicle_format_label && entry.service_name && (
+                <DetailRow label={t('detail_vehicle_format')} value={entry.vehicle_format_label} />
               )}
               {entry.reservation_ref && (
                 <DetailRow label={t('col_ref')} value={`#${entry.reservation_ref.slice(0, 12)}`} mono />

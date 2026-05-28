@@ -4,7 +4,7 @@
  */
 import { and, desc, eq, gte, lte, sql } from 'drizzle-orm';
 import { db } from '@/lib/db';
-import { reservations, users, vehicleFormats } from '@/lib/db/schema';
+import { reservations, users, vehicleFormats, stationServices } from '@/lib/db/schema';
 
 export type StationHistoryFilters = {
   stationId: string;
@@ -25,8 +25,10 @@ export type StationHistoryItem = {
   // Client info
   client_first_name: string | null;
   client_last_name: string | null;
-  // Service info
+  // Service info (service_name is the merchant-set label from station_services.name)
   vehicle_format_label: string | null;
+  service_name: string | null;
+  service_category: string | null;
   // Financial data
   amount_paid: string;
   station_payout: string | null;
@@ -86,6 +88,8 @@ export async function listStationHistory(
         client_first_name: users.first_name,
         client_last_name: users.last_name,
         vehicle_format_label: vehicleFormats.label,
+        service_name: stationServices.name,
+        service_category: stationServices.category,
         amount_paid: reservations.amount_paid,
         station_payout: reservations.station_payout,
         commission_rate: reservations.commission_rate,
@@ -97,6 +101,7 @@ export async function listStationHistory(
       .from(reservations)
       .leftJoin(users, eq(reservations.user_id, users.id))
       .leftJoin(vehicleFormats, eq(reservations.vehicle_format_id, vehicleFormats.id))
+      .leftJoin(stationServices, eq(reservations.service_id, stationServices.id))
       .where(where)
       .orderBy(desc(reservations.created_at))
       .limit(limit)

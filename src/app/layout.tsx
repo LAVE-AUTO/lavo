@@ -5,7 +5,7 @@ import { GoogleAnalytics } from "@/components/layout/GoogleAnalytics";
 import { PageSense } from "@/components/layout/PageSense";
 import "./globals.css";
 
-const APP_URL = process.env.NEXT_PUBLIC_APP_URL ?? 'https://Hurryline.cm';
+const APP_URL = process.env.NEXT_PUBLIC_APP_URL ?? 'https://Hurryline.com';
 
 export const metadata: Metadata = {
   title: {
@@ -27,7 +27,7 @@ export const metadata: Metadata = {
         url: '/og-image.png',
         width: 1200,
         height: 630,
-        alt: 'Hurryline - Plateforme de lavage auto',
+        alt: 'Hurryline - Plateforme de réservation',
       },
     ],
   },

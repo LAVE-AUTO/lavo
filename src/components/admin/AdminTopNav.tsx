@@ -132,7 +132,7 @@ export function AdminTopNav({ onToggleSidebar }: AdminTopNavProps) {
   } as const;
 
   return (
-    <header className="flex-shrink-0 bg-[rgba(247,243,236,0.95)] dark:bg-[rgba(13,31,15,0.92)] backdrop-blur-[16px] border-b border-[rgba(221,175,59,0.18)]">
+    <header className="flex-shrink-0 bg-[rgba(247,243,236,0.95)] dark:bg-dark-bg backdrop-blur-[16px] border-b border-[rgba(221,175,59,0.18)]">
       {/* Edge-to-edge: admin space spans the full window width with just a
           comfortable lateral padding. Public landing keeps its centered
           1440 container; admin and merchant nav drop it. */}

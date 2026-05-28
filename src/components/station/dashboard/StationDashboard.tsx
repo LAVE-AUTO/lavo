@@ -17,6 +17,7 @@ import { DashboardDelaysPanel, type DashboardDelayItem } from './DashboardDelays
 import { DashboardBayFilter, BayFilterMobilePills } from './DashboardBayFilter';
 import { AgendaSlotDetailModal } from './AgendaSlotDetailModal';
 import { StartServiceModal } from './StartServiceModal';
+import { ManualQueueAddModal } from '../queue/ManualQueueAddModal';
 import type { KpiData, ReservationItem } from './types';
 import type { QueueEntry } from './QueueCard';
 
@@ -52,6 +53,7 @@ interface RawEntry {
   completed_at: string | null;
   user?: { first_name: string | null } | null;
   vehicle_format?: { id: string; label: string } | null;
+  service?: { id: string; name: string; category: string } | null;
 }
 
 interface RawDashboard {
@@ -125,7 +127,7 @@ function buildQueueEntries(raw: RawEntry[]): QueueEntry[] {
       position: 0,
       clientName: clientNameOf(e),
       entryType: e.entry_type,
-      serviceLabel: e.vehicle_format?.label ?? undefined,
+      serviceLabel: e.service?.name ?? e.vehicle_format?.label ?? undefined,
       price: e.amount_paid ? parseFloat(e.amount_paid) : undefined,
       isNext: false,
       status: e.status,
@@ -138,7 +140,7 @@ function buildQueueEntries(raw: RawEntry[]): QueueEntry[] {
       position: e.queue_position ?? idx + 1,
       clientName: clientNameOf(e),
       entryType: e.entry_type,
-      serviceLabel: e.vehicle_format?.label ?? undefined,
+      serviceLabel: e.service?.name ?? e.vehicle_format?.label ?? undefined,
       price: e.amount_paid ? parseFloat(e.amount_paid) : undefined,
       isNext: inProgress.length === 0 && idx === 0,
       status: e.status,
@@ -150,7 +152,9 @@ function buildAgendaEntries(raw: RawEntry[]): AgendaEntry[] {
   return raw.map((e): AgendaEntry => ({
     id: e.id,
     clientName: clientNameOf(e),
-    vehicleFormat: e.vehicle_format?.label ?? null,
+    /* Prefer the merchant-set service name; the vehicle format becomes
+     * a secondary descriptor surfaced in the agenda detail modal. */
+    vehicleFormat: e.service?.name ?? e.vehicle_format?.label ?? null,
     status: e.status,
     slotStart: e.slot_start_time,
     slotEnd: e.slot_end_time,
@@ -169,6 +173,7 @@ function buildReservationItems(raw: RawEntry[]): ReservationItem[] {
     .map((e): ReservationItem => ({
       id: e.id,
       clientName: clientNameOf(e),
+      serviceName: e.service?.name ?? null,
       vehicleFormat: e.vehicle_format?.label ?? null,
       status: e.status,
       slotStart: e.slot_start_time ?? null,
@@ -200,7 +205,7 @@ const CONFIRM_DIALOG_LABELS: Record<DashboardAction, { title: string; message: s
 
 export function StationDashboard() {
   const { isLoading: authLoading } = useAuth();
-  const { error: showError, info: showInfo } = useToast();
+  const { error: showError, info: showInfo, success: showSuccess } = useToast();
   const t = useTranslations('station_dashboard');
   const mountedRef = useRef(true);
   useEffect(() => { mountedRef.current = true; return () => { mountedRef.current = false; }; }, []);
@@ -228,6 +233,7 @@ export function StationDashboard() {
    * pure presentational component. */
   const [detailEntry, setDetailEntry] = useState<AgendaEntry | null>(null);
   const [startEntry, setStartEntry] = useState<AgendaEntry | null>(null);
+  const [manualAddOpen, setManualAddOpen] = useState(false);
 
   const loadData = useCallback(async () => {
     const { from: queueFrom, to: queueTo } = dayRange(selectedDate);
@@ -321,9 +327,18 @@ export function StationDashboard() {
   }
 
   function handleOpenManualAdd() {
-    /* Manual queue add modal requires vehicleFormats + availableSlots wiring
-     * which lives on the queue page. For now we direct the merchant there. */
-    showInfo(t('queue_manual_add_redirect'));
+    /* Open the dedicated walk-in modal. The modal fetches services + their
+     * vehicle entries on its own and posts to /station/entries on confirm. */
+    setManualAddOpen(true);
+  }
+
+  async function handleManualAddSuccess(_entryId: string) {
+    void _entryId;
+    setManualAddOpen(false);
+    /* Refresh the dashboard data so the new walk-in shows up immediately
+     * in the queue band / agenda. */
+    await loadData();
+    showSuccess(t('manual_queue_success'));
   }
 
   function requestStart(id: string) {
@@ -486,6 +501,12 @@ export function StationDashboard() {
         clientName={startEntry?.clientName ?? ''}
         onClose={() => setStartEntry(null)}
         onSubmit={submitStartCode}
+      />
+
+      <ManualQueueAddModal
+        isOpen={manualAddOpen}
+        onClose={() => setManualAddOpen(false)}
+        onSuccess={handleManualAddSuccess}
       />
     </div>
   );
