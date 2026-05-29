@@ -12,6 +12,7 @@
         "test:coverage": "jest --coverage",
         "db:generate": "drizzle-kit generate",
         "db:migrate": "drizzle-kit migrate",
+        "db:migrate-all": "node scripts/apply-all-migrations.mjs",
         "db:push": "drizzle-kit push",
         "db:seed": "ts-node --compiler-options '{\"module\":\"CommonJS\",\"moduleResolution\":\"node\"}' scripts/seed-production.ts",
         "db:seed-production": "ts-node --compiler-options '{\"module\":\"CommonJS\",\"moduleResolution\":\"node\"}' scripts/seed-production.ts",
