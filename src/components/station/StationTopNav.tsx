@@ -130,7 +130,7 @@ export function StationTopNav({ onToggleSidebar, stationName }: StationTopNavPro
   } as const;
 
   return (
-    <header className="flex-shrink-0 bg-[#FFF9EC] dark:bg-dark-bg backdrop-blur-[16px] border-b border-[rgba(221,175,59,0.18)]">
+    <header className="relative z-40 flex-shrink-0 bg-[#FFF9EC] dark:bg-dark-bg backdrop-blur-[16px] border-b border-[rgba(221,175,59,0.18)]">
       {/* Edge-to-edge: station space spans the full window width with just a
           comfortable lateral padding, matching AdminTopNav. */}
       <div className="px-6 lg:px-8 flex items-center justify-between gap-6 py-2">
