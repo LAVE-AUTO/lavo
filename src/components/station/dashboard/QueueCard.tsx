@@ -16,6 +16,9 @@ export interface QueueEntry {
   marginMax?: number;
   isNext: boolean;
   status?: string;
+  /** True for walk-in entries added manually by the merchant. The
+   *  start-service flow skips the ticket code prompt for these. */
+  isWalkIn?: boolean;
 }
 
 interface QueueCardProps {

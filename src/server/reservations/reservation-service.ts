@@ -1210,6 +1210,16 @@ export async function startEntryByStation(
   const entry = await findEntryByIdAndStation(entryId, stationId);
   if (!entry) throw new NotFoundError('Entry not found');
 
+  /* Walk-in entries (no Stripe PI) skip the code prompt entirely:
+   * the off-platform client never received a ticket code so the
+   * merchant should be able to start the service without one. The
+   * frontend already routes walk-ins to PATCH /station/entries/:id
+   * directly, this branch is defence in depth for direct API calls
+   * to the legacy /start endpoint. */
+  if (!entry.stripe_payment_id) {
+    return setEntryStatusByStation(entryId, stationId, 'in_progress');
+  }
+
   // Compare with constant-time-ish equality on uppercased trimmed strings.
   // ticket_code is null on legacy entries (pre-migration) - reject those too.
   const normalizedInput = (rawCode ?? '').replace(/\s+/g, '').toUpperCase();

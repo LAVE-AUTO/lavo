@@ -12,6 +12,9 @@ export interface AgendaEntry {
   slotEnd: string | null;
   amountPaid: number | null;
   postId: string | null;
+  /** True for walk-in entries added manually by the merchant. The
+   *  start-service flow skips the ticket code prompt for these. */
+  isWalkIn?: boolean;
 }
 
 export interface AgendaPost {

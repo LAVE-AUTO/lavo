@@ -31,6 +31,11 @@ export interface ReservationEntry {
   service?: { id: string; name: string; category: string } | null;
   slot_start_time?: string | null;
   slot_end_time?: string | null;
+  /* Walk-in identity. Filled only when the merchant added the client
+   * manually with an email that does not match a registered account. */
+  walk_in_client_email?: string | null;
+  walk_in_client_name?: string | null;
+  is_walk_in?: boolean;
 }
 
 export type StatusTab = 'all' | 'confirmed' | 'in_progress' | 'completed' | 'cancelled' | 'late';

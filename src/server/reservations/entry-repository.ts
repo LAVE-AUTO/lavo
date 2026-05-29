@@ -1027,6 +1027,11 @@ export type RichStationEntry = Entry & {
   service: { id: string; name: string; category: string } | null;
   slot_start_time: Date | null;
   slot_end_time: Date | null;
+  /* Walk-in client identity, mirrored from the reservations row so the
+   * station UI can label the card with the actual merchant-set name
+   * (or fall back to the email) instead of a placeholder. */
+  walk_in_client_email: string | null;
+  walk_in_client_name: string | null;
 };
 
 /**

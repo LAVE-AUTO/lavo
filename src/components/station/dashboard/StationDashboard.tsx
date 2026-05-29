@@ -54,6 +54,9 @@ interface RawEntry {
   user?: { first_name: string | null } | null;
   vehicle_format?: { id: string; label: string } | null;
   service?: { id: string; name: string; category: string } | null;
+  walk_in_client_email?: string | null;
+  walk_in_client_name?: string | null;
+  is_walk_in?: boolean;
 }
 
 interface RawDashboard {
@@ -88,6 +91,16 @@ interface PendingAction {
 }
 
 function clientNameOf(entry: RawEntry): string {
+  /* Walk-in (off-platform) clients added manually by the merchant:
+   *   1. Display the name typed in the modal if any.
+   *   2. Otherwise fall back to the typed email.
+   * Registered clients (matched walk-ins included) use their account
+   * first_name, and only as a last resort do we surface a placeholder
+   * from the user_id. */
+  const walkInName = entry.walk_in_client_name?.trim();
+  if (walkInName) return walkInName;
+  const walkInEmail = entry.walk_in_client_email?.trim();
+  if (walkInEmail) return walkInEmail;
   const first = entry.user?.first_name?.trim();
   if (first) return first;
   return `Client #${entry.user_id.slice(0, 4).toUpperCase()}`;
@@ -131,6 +144,7 @@ function buildQueueEntries(raw: RawEntry[]): QueueEntry[] {
       price: e.amount_paid ? parseFloat(e.amount_paid) : undefined,
       isNext: false,
       status: e.status,
+      isWalkIn: Boolean(e.is_walk_in),
     }));
   const waiting = raw
     .filter((e) => (ACTIVE_QUEUE_STATUSES as readonly string[]).includes(e.status))
@@ -144,6 +158,7 @@ function buildQueueEntries(raw: RawEntry[]): QueueEntry[] {
       price: e.amount_paid ? parseFloat(e.amount_paid) : undefined,
       isNext: inProgress.length === 0 && idx === 0,
       status: e.status,
+      isWalkIn: Boolean(e.is_walk_in),
     }));
   return [...inProgress, ...waiting];
 }
@@ -160,6 +175,7 @@ function buildAgendaEntries(raw: RawEntry[]): AgendaEntry[] {
     slotEnd: e.slot_end_time,
     amountPaid: e.amount_paid ? parseFloat(e.amount_paid) : null,
     postId: e.post_id,
+    isWalkIn: Boolean(e.is_walk_in),
   }));
 }
 
@@ -341,17 +357,44 @@ export function StationDashboard() {
     showSuccess(t('manual_queue_success'));
   }
 
+  /** Starts a walk-in entry directly via PATCH (no code required) — the
+   *  off-platform client never received a ticket. Used by both the
+   *  agenda and queue start buttons. Returns true on success. */
+  async function startWalkInDirectly(entryId: string): Promise<boolean> {
+    const [ok, data] = await patchWithApi(`/station/entries/${entryId}`, { status: 'in_progress' });
+    if (!mountedRef.current) return false;
+    if (ok) {
+      await loadData();
+      return true;
+    }
+    const raw = (data as { message?: string })?.message ?? '';
+    showError(raw.includes('Cannot transition') ? t('error_invalid_transition') : t('action_error_generic'));
+    return false;
+  }
+
   function requestStart(id: string) {
     /* Resolve the agenda entry so the modal can show client name + verify. */
     const entry = agendaEntries.find((e) => e.id === id);
-    if (entry) setStartEntry(entry);
+    if (!entry) return;
+    if (entry.isWalkIn) {
+      /* Walk-in clients (matched or off-platform) never received a
+       * 6-char ticket code, so the merchant starts the service straight
+       * away without the verification modal. */
+      void startWalkInDirectly(entry.id);
+      return;
+    }
+    setStartEntry(entry);
   }
 
   function requestQueueStart(id: string) {
-    /* Queue entries live in a different slice but share the start-with-code
-     * flow: we synthesize a minimal AgendaEntry for the modal. */
     const q = queueEntries.find((e) => e.id === id);
     if (!q) return;
+    if (q.isWalkIn) {
+      void startWalkInDirectly(q.id);
+      return;
+    }
+    /* Real queue entries (client booked through the app) keep the
+     * code-verification flow: synthesize an AgendaEntry for the modal. */
     setStartEntry({
       id: q.id,
       clientName: q.clientName,

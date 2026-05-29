@@ -52,7 +52,18 @@ export function ReservationCard({ entry, onValidate, onStart, onCancel, onExtraT
   const firstName = entry.user?.first_name?.trim();
   const lastName = entry.user?.last_name?.trim();
   const fullName = [firstName, lastName].filter((part): part is string => Boolean(part && part.length > 0)).join(' ');
-  const clientIdentity = fullName.length > 0 ? fullName : `#${entry.user_id.slice(0, 8)}`;
+  /* Off-platform walk-ins: prefer the merchant-typed name, fall back to
+   * the email so the merchant card stays readable even without a name. */
+  const walkInName = entry.walk_in_client_name?.trim();
+  const walkInEmail = entry.walk_in_client_email?.trim();
+  const clientIdentity =
+    walkInName && walkInName.length > 0
+      ? walkInName
+      : walkInEmail && walkInEmail.length > 0
+        ? walkInEmail
+        : fullName.length > 0
+          ? fullName
+          : `#${entry.user_id.slice(0, 8)}`;
   const time = formatHourMinute(entry.created_at);
   const isReservation = entry.entry_type === 'reservation';
   const verificationCode = entry.id.slice(0, 8).toUpperCase();
