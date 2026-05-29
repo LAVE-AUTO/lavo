@@ -63,7 +63,8 @@ export const DEFAULT_COMMISSION_RATE = process.env.PLATFORM_COMMISSION_RATE ?? '
 /**
  * Default platform currency for all Stripe operations (PaymentIntents and tips).
  * Stripe currency codes are 3-letter ISO 4217 strings, lowercase.
- * Overridable per deployment via PLATFORM_CURRENCY; defaults to EUR to match the rest of
- * the codebase (reservations were hard-coded to 'eur' in payment-service.ts).
+ * Overridable per deployment via PLATFORM_CURRENCY; defaults to CAD (Canadian Dollar),
+ * the actual operating currency for Hurryline. Every connected station's Stripe Connect
+ * account must accept this currency.
  */
-export const DEFAULT_PLATFORM_CURRENCY = (process.env.PLATFORM_CURRENCY ?? 'eur').trim().toLowerCase();
+export const DEFAULT_PLATFORM_CURRENCY = (process.env.PLATFORM_CURRENCY ?? 'cad').trim().toLowerCase();
