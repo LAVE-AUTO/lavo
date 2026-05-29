@@ -1,6 +1,6 @@
 'use client';
 
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useTranslations } from 'next-intl';
 import { getFromApi, postWithApi } from '@/services';
 import { Modal } from '@/components/ui/Modal';
@@ -27,6 +27,14 @@ interface ServicesEnvelope {
   data?: { items?: StationService[] };
 }
 
+interface LookupResponse {
+  data?: {
+    matched: boolean;
+    first_name?: string | null;
+    last_name?: string | null;
+  };
+}
+
 interface ManualQueueAddModalProps {
   isOpen: boolean;
   onClose: () => void;
@@ -42,16 +50,26 @@ const CATEGORY_LABELS: Record<string, string> = {
   self_service: 'Self-service',
 };
 
+const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
 /**
  * Walk-in entry creation for the station merchant.
  *
- * The form is service-first: the merchant picks a station service
- * (Lavage Premium, Forfait Complet…), then the vehicle format select
- * is scoped to the service's own vehicle entries, then optionally a
- * time slot for a same-day reservation. Submitting calls POST
- * /station/entries with service_id + vehicle_format_id + optional
- * time_slot_id so the new entry is snapshooted with the right service
- * and reads correctly on the dashboard / history cards.
+ * The flow is:
+ *   1. Client identity (email REQUIRED, name optional). The email is
+ *      probed against the platform — if it belongs to a registered
+ *      client account, the entry is tied to that user (they will see
+ *      it in /me/entries + /client/history and get an in-app notif).
+ *      Unregistered emails get the off-platform receipt email on
+ *      completion, with a CTA to create an account.
+ *   2. Pick a station service (Lavage Premium, Forfait Complet…).
+ *   3. Pick a vehicle format scoped to the service. When the service
+ *      has no configured format we surface a notice but still allow
+ *      submission — the entry is created without a format and the
+ *      merchant collects payment off-platform.
+ *
+ * On confirm we POST /station/entries with the picked identity +
+ * service + format so the entry is snapshooted correctly.
  */
 export function ManualQueueAddModal({
   isOpen,
@@ -60,18 +78,26 @@ export function ManualQueueAddModal({
 }: ManualQueueAddModalProps) {
   const t = useTranslations('station_dashboard');
 
+  /* Client step ---------------------------------------------------- */
+  const [email, setEmail] = useState('');
+  const [name, setName] = useState('');
+  const [lookupStatus, setLookupStatus] = useState<'idle' | 'loading' | 'matched' | 'unmatched' | 'invalid'>('idle');
+  const [matchedFirstName, setMatchedFirstName] = useState<string | null>(null);
+  const [matchedLastName, setMatchedLastName] = useState<string | null>(null);
+  const lookupReqIdRef = useRef(0);
+
+  /* Service / format step ----------------------------------------- */
   const [services, setServices] = useState<StationService[]>([]);
   const [servicesLoading, setServicesLoading] = useState(false);
   const [servicesError, setServicesError] = useState(false);
-
   const [serviceId, setServiceId] = useState('');
   const [formatId, setFormatId] = useState('');
+
+  /* Submit state -------------------------------------------------- */
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
 
-  /* Fetch services once when the modal opens. We re-fetch on every
-   * reopen so the merchant always sees the latest list, even if they
-   * just edited their catalogue from another tab. */
+  /* Fetch services + reset every time the modal opens / closes. */
   useEffect(() => {
     if (!isOpen) return;
     let cancelled = false;
@@ -88,18 +114,13 @@ export function ManualQueueAddModal({
         setServicesLoading(false);
         return;
       }
-      /* The endpoint returns { data: { items, next_cursor, has_more } }.
-       * Read defensively so a one-off payload shape change does not
-       * blank the modal. */
       const envelope = data as ServicesEnvelope | { items?: StationService[] } | null;
       const rawItems =
         (envelope && typeof envelope === 'object' && 'data' in envelope
           ? envelope.data?.items
           : (envelope as { items?: StationService[] } | null)?.items) ?? [];
-
-      /* Only show active services with at least one active vehicle entry. */
       const usable = rawItems.filter(
-        (s) => s && s.is_active && Array.isArray(s.vehicle_entries) && s.vehicle_entries.some((e) => e.is_active),
+        (s) => s && s.is_active,
       );
       setServices(usable);
       setServicesLoading(false);
@@ -107,45 +128,110 @@ export function ManualQueueAddModal({
     return () => { cancelled = true; };
   }, [isOpen]);
 
-  /* Reset form state every time the modal closes so the next open
-   * starts clean. */
   useEffect(() => {
     if (isOpen) return;
+    setEmail('');
+    setName('');
+    setLookupStatus('idle');
+    setMatchedFirstName(null);
+    setMatchedLastName(null);
     setServiceId('');
     setFormatId('');
     setSubmitError(null);
     setIsSubmitting(false);
   }, [isOpen]);
 
+  /* Debounced email lookup: only fires when the email passes a basic
+   * regex so we do not spam the endpoint while the user types. */
+  useEffect(() => {
+    const trimmed = email.trim().toLowerCase();
+    if (!trimmed) {
+      setLookupStatus('idle');
+      setMatchedFirstName(null);
+      setMatchedLastName(null);
+      return;
+    }
+    if (!EMAIL_RE.test(trimmed)) {
+      setLookupStatus('invalid');
+      setMatchedFirstName(null);
+      setMatchedLastName(null);
+      return;
+    }
+    lookupReqIdRef.current += 1;
+    const reqId = lookupReqIdRef.current;
+    setLookupStatus('loading');
+    const timer = window.setTimeout(async () => {
+      const [ok, data] = await getFromApi<LookupResponse>(
+        `/station/clients/lookup?email=${encodeURIComponent(trimmed)}`
+      );
+      if (reqId !== lookupReqIdRef.current) return;
+      if (!ok) {
+        setLookupStatus('idle');
+        return;
+      }
+      const result = (data as LookupResponse)?.data;
+      if (result?.matched) {
+        setLookupStatus('matched');
+        setMatchedFirstName(result.first_name ?? null);
+        setMatchedLastName(result.last_name ?? null);
+      } else {
+        setLookupStatus('unmatched');
+        setMatchedFirstName(null);
+        setMatchedLastName(null);
+      }
+    }, 400);
+    return () => window.clearTimeout(timer);
+  }, [email]);
+
   const selectedService = useMemo(
     () => services.find((s) => s.id === serviceId) ?? null,
     [services, serviceId],
   );
 
-  /* Auto-select the first active entry when a service is picked. */
+  const bookableEntries = useMemo(
+    () =>
+      selectedService?.vehicle_entries.filter(
+        (e) => e.is_active && e.vehicle_format_id,
+      ) ?? [],
+    [selectedService],
+  );
+
+  /* Auto-select the first active entry when a service is picked,
+   * but only when the service actually exposes one — otherwise clear
+   * the format selection so the merchant can still proceed. */
   useEffect(() => {
     if (!selectedService) {
       setFormatId('');
       return;
     }
-    const firstActive = selectedService.vehicle_entries.find(
-      (e) => e.is_active && e.vehicle_format_id,
-    );
-    setFormatId(firstActive?.vehicle_format_id ?? '');
-  }, [selectedService]);
+    const first = bookableEntries[0];
+    setFormatId(first?.vehicle_format_id ?? '');
+  }, [selectedService, bookableEntries]);
 
-  const canSubmit = serviceId && formatId && !isSubmitting;
+  const trimmedEmail = email.trim().toLowerCase();
+  const emailValid = EMAIL_RE.test(trimmedEmail);
+  const hasService = Boolean(serviceId);
+  const hasFormat = Boolean(formatId);
+  const allowsNoFormat = selectedService !== null && bookableEntries.length === 0;
+  const canSubmit =
+    emailValid && hasService && (hasFormat || allowsNoFormat) && !isSubmitting;
 
   const handleSubmit = useCallback(async () => {
     if (!canSubmit) return;
     setIsSubmitting(true);
     setSubmitError(null);
-    const [ok, data] = await postWithApi('/station/entries', {
+    const payload: Record<string, string> = {
       service_id: serviceId,
-      vehicle_format_id: formatId,
-    });
+      client_email: trimmedEmail,
+    };
+    if (name.trim()) payload.client_name = name.trim();
+    if (formatId) payload.vehicle_format_id = formatId;
+    const [ok, data] = await postWithApi('/station/entries', payload);
     if (!ok) {
       setIsSubmitting(false);
+      if (process.env.NODE_ENV !== 'production') {
+        console.error('[ManualQueueAddModal] POST /station/entries failed', data);
+      }
       const code = (data as { code?: string } | null)?.code;
       setSubmitError(
         code === 'VALIDATION_FAILED'
@@ -158,16 +244,28 @@ export function ManualQueueAddModal({
     setIsSubmitting(false);
     onSuccess(entryId ?? '');
     onClose();
-  }, [canSubmit, formatId, onClose, onSuccess, serviceId, t]);
+  }, [canSubmit, formatId, name, onClose, onSuccess, serviceId, t, trimmedEmail]);
 
   return (
-    <Modal open={isOpen} onClose={onClose} title={t('manual_queue_title')}>
+    <Modal open={isOpen} onClose={onClose} title={t('manual_queue_title')} size="lg">
       <div className="space-y-5 px-5 py-5">
         <p className="text-[13px] leading-relaxed text-foreground/65">
           {t('manual_queue_subtitle')}
         </p>
 
-        {/* Service picker */}
+        {/* Step 1 — Client identity */}
+        <ClientStep
+          email={email}
+          onEmailChange={setEmail}
+          name={name}
+          onNameChange={setName}
+          lookupStatus={lookupStatus}
+          matchedFirstName={matchedFirstName}
+          matchedLastName={matchedLastName}
+          t={t}
+        />
+
+        {/* Step 2 — Service */}
         <ServicePickerBlock
           services={services}
           servicesLoading={servicesLoading}
@@ -177,10 +275,11 @@ export function ManualQueueAddModal({
           t={t}
         />
 
-        {/* Vehicle format picker — locked to the chosen service entries */}
+        {/* Step 3 — Vehicle format (optional when the service has none) */}
         {selectedService && (
           <FormatPickerBlock
             service={selectedService}
+            bookable={bookableEntries}
             selectedFormatId={formatId}
             onSelect={setFormatId}
             t={t}
@@ -224,6 +323,123 @@ export function ManualQueueAddModal({
 /* ------------------------------------------------------------------ */
 /* Sub-blocks                                                          */
 /* ------------------------------------------------------------------ */
+
+interface ClientStepProps {
+  email: string;
+  onEmailChange: (v: string) => void;
+  name: string;
+  onNameChange: (v: string) => void;
+  lookupStatus: 'idle' | 'loading' | 'matched' | 'unmatched' | 'invalid';
+  matchedFirstName: string | null;
+  matchedLastName: string | null;
+  t: ReturnType<typeof useTranslations>;
+}
+
+function ClientStep({
+  email,
+  onEmailChange,
+  name,
+  onNameChange,
+  lookupStatus,
+  matchedFirstName,
+  matchedLastName,
+  t,
+}: ClientStepProps) {
+  const matchedDisplay = [matchedFirstName, matchedLastName].filter(Boolean).join(' ').trim();
+  const showHint = lookupStatus === 'matched' || lookupStatus === 'unmatched' || lookupStatus === 'loading';
+
+  return (
+    <div className="space-y-3 rounded-2xl border border-border bg-surface/60 p-4">
+      <p className="text-[11px] font-black uppercase tracking-[0.15em] text-foreground/65">
+        {t('manual_queue_client_label')}
+      </p>
+
+      {/* Email — required */}
+      <div>
+        <label htmlFor="manual-queue-email" className="block text-[12px] font-semibold text-foreground/70 mb-1.5">
+          {t('manual_queue_email_label')}
+          <span className="text-Hurryline-error ml-1">*</span>
+        </label>
+        <input
+          id="manual-queue-email"
+          type="email"
+          autoComplete="off"
+          value={email}
+          onChange={(e) => onEmailChange(e.target.value)}
+          placeholder={t('manual_queue_email_placeholder')}
+          className="w-full rounded-xl border border-border bg-background px-3.5 py-2.5 text-[14px] font-medium text-foreground placeholder:text-foreground/35 focus:outline-none focus:border-gold focus:ring-1 focus:ring-gold/40 transition-colors"
+        />
+      </div>
+
+      {/* Name — optional */}
+      <div>
+        <label htmlFor="manual-queue-name" className="block text-[12px] font-semibold text-foreground/70 mb-1.5">
+          {t('manual_queue_name_label')}
+          <span className="text-foreground/45 ml-1.5 text-[11px] font-normal">
+            {t('manual_queue_name_optional')}
+          </span>
+        </label>
+        <input
+          id="manual-queue-name"
+          type="text"
+          autoComplete="off"
+          value={name}
+          onChange={(e) => onNameChange(e.target.value)}
+          placeholder={t('manual_queue_name_placeholder')}
+          maxLength={200}
+          className="w-full rounded-xl border border-border bg-background px-3.5 py-2.5 text-[14px] font-medium text-foreground placeholder:text-foreground/35 focus:outline-none focus:border-gold focus:ring-1 focus:ring-gold/40 transition-colors"
+        />
+      </div>
+
+      {/* Lookup hint — premium glow that surfaces the match status */}
+      {showHint && (
+        <div
+          role="status"
+          aria-live="polite"
+          className={[
+            'flex items-center gap-2.5 rounded-xl px-3 py-2 text-[12.5px] font-semibold transition-colors',
+            lookupStatus === 'matched'
+              ? 'bg-gold/10 border border-gold/30 text-foreground'
+              : lookupStatus === 'unmatched'
+                ? 'bg-foreground/5 border border-border text-foreground/70'
+                : 'bg-foreground/5 border border-border text-foreground/55',
+          ].join(' ')}
+        >
+          {lookupStatus === 'loading' ? (
+            <>
+              <svg className="animate-spin" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" aria-hidden="true">
+                <path d="M21 12a9 9 0 11-6.219-8.56" />
+              </svg>
+              {t('manual_queue_lookup_loading')}
+            </>
+          ) : lookupStatus === 'matched' ? (
+            <>
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#DDAF3B" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                <path d="M22 11.08V12a10 10 0 11-5.93-9.14" />
+                <polyline points="22 4 12 14.01 9 11.01" />
+              </svg>
+              <span>
+                {t('manual_queue_lookup_matched')}{' '}
+                <strong className="text-gold">
+                  {matchedDisplay || t('manual_queue_lookup_matched_no_name')}
+                </strong>
+              </span>
+            </>
+          ) : (
+            <>
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                <circle cx="12" cy="12" r="10" />
+                <line x1="12" y1="8" x2="12" y2="12" />
+                <line x1="12" y1="16" x2="12.01" y2="16" />
+              </svg>
+              {t('manual_queue_lookup_unmatched')}
+            </>
+          )}
+        </div>
+      )}
+    </div>
+  );
+}
 
 interface ServicePickerBlockProps {
   services: StationService[];
@@ -323,27 +539,39 @@ function ServicePickerBlock({
 
 interface FormatPickerBlockProps {
   service: StationService;
+  bookable: ServiceVehicleEntry[];
   selectedFormatId: string;
   onSelect: (id: string) => void;
   t: ReturnType<typeof useTranslations>;
 }
 
 function FormatPickerBlock({
-  service,
+  bookable,
   selectedFormatId,
   onSelect,
   t,
 }: FormatPickerBlockProps) {
-  /* Only the entries with a real vehicle_format_id can be booked through
-   * the walk-in endpoint (others are catalogue placeholders). */
-  const bookable = service.vehicle_entries.filter(
-    (e) => e.is_active && e.vehicle_format_id,
-  );
-
+  /* No format on this service — surface a friendly notice but allow
+   * the merchant to keep going. The walk-in will be queued without a
+   * vehicle format and the off-platform payment is the merchant's
+   * responsibility. */
   if (bookable.length === 0) {
     return (
-      <div className="rounded-2xl border border-border bg-surface/60 px-4 py-4 text-[13px] font-semibold text-foreground/70">
-        {t('manual_queue_no_format')}
+      <div
+        role="note"
+        className="rounded-2xl border border-gold/30 bg-gold/10 px-4 py-3.5 text-[13px] font-semibold text-foreground"
+      >
+        <p className="flex items-center gap-2 text-[12px] font-black uppercase tracking-[0.15em] text-gold">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+            <circle cx="12" cy="12" r="10" />
+            <line x1="12" y1="8" x2="12" y2="12" />
+            <line x1="12" y1="16" x2="12.01" y2="16" />
+          </svg>
+          {t('manual_queue_no_format_title')}
+        </p>
+        <p className="mt-1.5 text-[12.5px] font-normal text-foreground/75 leading-relaxed">
+          {t('manual_queue_no_format')}
+        </p>
       </div>
     );
   }
