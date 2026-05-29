@@ -14,13 +14,15 @@ function hashToken(raw: string): string {
 export async function createRefreshToken(
   userId: string,
   rawToken: string,
-  expiresAt: Date
+  expiresAt: Date,
+  rememberMe = false
 ) {
   const [record] = await db
     .insert(refreshTokens)
     .values({
       user_id: userId,
       token_hash: hashToken(rawToken),
+      remember_me: rememberMe,
       expires_at: expiresAt,
     })
     .returning();

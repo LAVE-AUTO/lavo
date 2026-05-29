@@ -108,7 +108,9 @@ async function issueTokenPair(
     Date.now() + (rememberMe ? JWT_REMEMBER_MAX_AGE : JWT_DEFAULT_MAX_AGE) * 1000
   );
 
-  await createRefreshToken(user.id, rawRefreshToken, expiresAt);
+  // Persist rememberMe alongside the token so rotation can re-emit a long-lived session
+  // without falling back to TTL-based heuristics (bug #11).
+  await createRefreshToken(user.id, rawRefreshToken, expiresAt, rememberMe);
 
   return { accessJwt, rawRefreshToken, expiresIn: ACCESS_TOKEN_MAX_AGE };
 }
@@ -399,9 +401,10 @@ export async function resetPassword(token: string, newPassword: string): Promise
 /**
  * Rotate a refresh token and issue a new token pair.
  *
- * The consumed token is revoked immediately (rotation). The `rememberMe` flag
- * is inferred from the remaining TTL of the old token: if more than
- * JWT_DEFAULT_MAX_AGE seconds remain, the session is considered a long-lived one.
+ * The consumed token is revoked immediately (rotation). The `rememberMe` flag is read straight
+ * from the refresh_tokens row (column added in migration 0050, bug #11). For legacy rows that
+ * predate the column the default is false — falling back to the TTL-based heuristic only when
+ * we can clearly tell the row was originally remember-me-sized.
  *
  * @param rawRefreshToken Raw refresh token from the httpOnly cookie.
  * @throws {UnauthorizedError} Token is invalid, expired, or the associated user no longer exists.
@@ -416,9 +419,15 @@ export async function refreshSession(rawRefreshToken: string): Promise<AuthResul
   // Rotate: revoke the used token immediately
   await revokeRefreshToken(record.id);
 
-  // Determine rememberMe from remaining time: if > 1 day remaining → rememberMe
-  const remainingMs = record.expires_at.getTime() - Date.now();
-  const rememberMe = remainingMs > JWT_DEFAULT_MAX_AGE * 1000;
+  // Prefer the persisted column; for legacy rows (column added in migration 0050) the
+  // column defaults to false but the original lifetime is still a reliable signal —
+  // sessions issued with REMEMBER TTL keep that lifetime even after the migration.
+  let rememberMe = record.remember_me;
+  if (!rememberMe) {
+    const originalTtlMs = record.expires_at.getTime() - record.created_at.getTime();
+    const midpointMs = ((JWT_DEFAULT_MAX_AGE + JWT_REMEMBER_MAX_AGE) / 2) * 1000;
+    if (originalTtlMs >= midpointMs) rememberMe = true;
+  }
 
   const tokens = await issueTokenPair(user, rememberMe);
   return { user, tokens, rememberMe };

@@ -108,6 +108,24 @@ export const reservations = pgTable(
     client_confirmed: boolean("client_confirmed").notNull().default(false),
     cancellation_reason: text("cancellation_reason"),
     penalty_amount: decimal("penalty_amount", { precision: 10, scale: 2 }),
+    /**
+     * Set when cancelPaymentIntent() threw — the card hold may persist until the
+     * Stripe-side authorization auto-expires (bug #12). The reconciliation cron
+     * retries the cancel; on success this column is cleared back to NULL.
+     */
+    pi_cancel_failed_at: timestamp("pi_cancel_failed_at", {
+      mode: "date",
+      withTimezone: true,
+    }),
+    /**
+     * Set when Stripe.refunds.create() succeeded but persisting stripe_refund_id on the row
+     * failed (bug #26). The reconciliation cron looks up Stripe refunds by PI and writes the
+     * id back; this column is cleared on success.
+     */
+    refund_persist_failed_at: timestamp("refund_persist_failed_at", {
+      mode: "date",
+      withTimezone: true,
+    }),
     confirmed_at: timestamp("confirmed_at", {
       mode: "date",
       withTimezone: true,

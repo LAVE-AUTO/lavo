@@ -1,4 +1,5 @@
 import NextAuth from 'next-auth';
+import type { Provider } from 'next-auth/providers';
 import Google from 'next-auth/providers/google';
 import Facebook from 'next-auth/providers/facebook';
 
@@ -18,21 +19,58 @@ function getNextAuthSecret(): string {
   return secret;
 }
 
+/**
+ * Build the OAuth provider list, skipping any provider whose credentials are missing rather
+ * than crashing later with a cryptic "Invalid client_id" error from the provider (bug #24).
+ * A warning is logged at boot so misconfigured deployments are diagnosable without an OAuth
+ * round-trip.
+ */
+function buildOAuthProviders(): Provider[] {
+  const providers: Provider[] = [];
+  const googleId = process.env.GOOGLE_CLIENT_ID?.trim();
+  const googleSecret = process.env.GOOGLE_CLIENT_SECRET?.trim();
+  if (googleId && googleSecret) {
+    providers.push(Google({ clientId: googleId, clientSecret: googleSecret }));
+  } else {
+    console.warn('[NextAuth] Google OAuth disabled — GOOGLE_CLIENT_ID / GOOGLE_CLIENT_SECRET not set');
+  }
+  const fbId = process.env.FACEBOOK_APP_ID?.trim();
+  const fbSecret = process.env.FACEBOOK_APP_SECRET?.trim();
+  if (fbId && fbSecret) {
+    providers.push(Facebook({ clientId: fbId, clientSecret: fbSecret }));
+  } else {
+    console.warn('[NextAuth] Facebook OAuth disabled — FACEBOOK_APP_ID / FACEBOOK_APP_SECRET not set');
+  }
+  return providers;
+}
+
 export const { handlers, auth, signIn, signOut } = NextAuth({
-  providers: [
-    Google({
-      clientId: process.env.GOOGLE_CLIENT_ID!,
-      clientSecret: process.env.GOOGLE_CLIENT_SECRET!,
-    }),
-    Facebook({
-      clientId: process.env.FACEBOOK_APP_ID!,
-      clientSecret: process.env.FACEBOOK_APP_SECRET!,
-    }),
-  ],
+  providers: buildOAuthProviders(),
   secret: getNextAuthSecret(),
   callbacks: {
-    async redirect() {
-      const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? 'http://localhost:3000';
+    /**
+     * Honour NextAuth's standard `callbackUrl` query parameter when it is same-origin.
+     * Otherwise fall back to the OAuth finalize bridge, which then issues our own JWT and
+     * redirects to the locale-aware /auth/callback page (handled by the finalize route).
+     *
+     * Same-origin enforcement is critical: a permissive redirect would turn this callback
+     * into an open-redirect gadget that attackers can abuse to bounce victims off the
+     * site's domain right after a successful OAuth login.
+     */
+    async redirect({ url, baseUrl }) {
+      const appUrl = process.env.NEXT_PUBLIC_APP_URL?.trim() || baseUrl;
+      const expectedOrigin = (() => {
+        try { return new URL(appUrl).origin; } catch { return null; }
+      })();
+      if (expectedOrigin) {
+        // Accept relative URLs ("/something") by resolving against the expected origin.
+        try {
+          const resolved = new URL(url, expectedOrigin);
+          if (resolved.origin === expectedOrigin) return resolved.toString();
+        } catch {
+          /* fall through to the default finalize bridge */
+        }
+      }
       return `${appUrl}/api/v1/auth/oauth/finalize`;
     },
     async jwt({ token, account, profile }) {
