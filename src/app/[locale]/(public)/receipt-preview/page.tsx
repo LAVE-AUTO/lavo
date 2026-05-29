@@ -36,7 +36,7 @@ export default function ReceiptPreviewPage() {
       <div className={`max-w-5xl mx-auto ${bookingOnly || historyOnly ? 'grid gap-8 grid-cols-1 items-start justify-items-center' : 'grid gap-8 lg:grid-cols-2 items-start'}`}>
         {!historyOnly && (
         <section>
-          <h1 className="text-[#E4C06A] text-xs font-black tracking-[0.22em] uppercase mb-3">Booking Success Receipt</h1>
+          <h1 className="text-[#DDAF3B] text-xs font-black tracking-[0.22em] uppercase mb-3">Booking Success Receipt</h1>
           <BookingReceipt
             station={station}
             service={service}
@@ -57,10 +57,10 @@ export default function ReceiptPreviewPage() {
         )}
 
         {!bookingOnly && (
-        <section className="relative min-h-[680px] w-full max-w-md rounded-3xl border border-[#2a3128] bg-[#0c100d] overflow-hidden">
+        <section className="relative min-h-[680px] w-full max-w-md rounded-3xl border border-[#001A05] bg-dark-bg overflow-hidden">
           <div className="p-5">
-            <h2 className="text-[#E4C06A] text-xs font-black tracking-[0.22em] uppercase">History Receipt Modal</h2>
-            <p className="text-[#8a927f] text-sm mt-2">Rendered as client-history user flow modal.</p>
+            <h2 className="text-[#DDAF3B] text-xs font-black tracking-[0.22em] uppercase">History Receipt Modal</h2>
+            <p className="text-[#B0BFB1] text-sm mt-2">Rendered as client-history user flow modal.</p>
           </div>
           {showModal && (
             <ReceiptModal
@@ -69,6 +69,8 @@ export default function ReceiptPreviewPage() {
                 stationName: 'Hurryline Downtown',
                 stationAddress: '245 Sainte-Catherine St W, Montreal',
                 vehicleFormatLabel: 'SUV',
+                serviceName: 'Premium hand wash',
+                serviceCategory: 'hand_wash',
                 entryType: 'reservation',
                 amountPaid: 70,
                 tipAmount: 6,

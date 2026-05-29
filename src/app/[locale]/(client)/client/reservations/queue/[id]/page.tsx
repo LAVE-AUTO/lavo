@@ -193,7 +193,7 @@ export default function QueueDetailPage({ params }: PageProps) {
 
   if (loading) {
     return (
-      <main className="min-h-screen bg-[#F5F5E6] dark:bg-dark-bg flex items-center justify-center pb-24">
+      <main className="min-h-screen bg-background flex items-center justify-center pb-24">
         <div className="h-8 w-8 animate-spin rounded-full border-[3px] border-gold border-t-transparent" />
       </main>
     );
@@ -201,8 +201,8 @@ export default function QueueDetailPage({ params }: PageProps) {
 
   if (missing || !entry) {
     return (
-      <main className="min-h-screen bg-[#F5F5E6] dark:bg-dark-bg flex flex-col items-center justify-center gap-4 pb-24">
-        <p className="text-[14px] font-semibold text-[#555] dark:text-[#B0B0A0]">{t('error_not_found')}</p>
+      <main className="min-h-screen bg-background flex flex-col items-center justify-center gap-4 pb-24">
+        <p className="text-[14px] font-semibold text-foreground/70">{t('error_not_found')}</p>
         <Link
           href="/client/reservations"
           className="rounded-[10px] border-[1.5px] border-gold/50 px-4 py-2 text-[13px] font-semibold text-gold hover:bg-gold/10 transition-colors"
@@ -222,49 +222,49 @@ export default function QueueDetailPage({ params }: PageProps) {
     : `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(`${q.stationName}, ${q.stationAddress}`)}`;
 
   return (
-    <main className="min-h-screen bg-[#F5F5E6] dark:bg-dark-bg pb-24 sm:pb-8">
+    <main className="min-h-screen bg-background pb-24 sm:pb-8">
       {/* Header */}
       <div className="px-4 pt-6 pb-4 max-w-2xl mx-auto flex items-center gap-3">
         <Link
           href="/client/reservations"
-          className="w-9 h-9 rounded-full bg-[#E8E8D8] dark:bg-dark-card flex items-center justify-center hover:bg-[#D0D0C0] dark:hover:bg-tab-inactive transition-colors"
+          className="w-9 h-9 rounded-full bg-surface flex items-center justify-center hover:bg-[#D0D0C0] dark:hover:bg-tab-inactive transition-colors"
           aria-label={t('back')}
         >
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="15 18 9 12 15 6" /></svg>
         </Link>
-        <h1 className="text-[20px] font-black text-[#0A0A14] dark:text-white">{t('title')}</h1>
+        <h1 className="text-[20px] font-black text-foreground">{t('title')}</h1>
       </div>
 
       <div className="px-4 max-w-2xl mx-auto space-y-4">
 
         {/* Station card */}
-        <div className="bg-[#E8E8D8] dark:bg-dark-card rounded-xl border border-[#D0D0C0] dark:border-tab-inactive p-4">
-          <h2 className="text-[17px] font-black text-[#0A0A14] dark:text-white">{q.stationName}</h2>
-          <p className="text-[13px] text-[#666] dark:text-[#B0B0A0] mt-0.5">{q.stationAddress}</p>
-          <p className="text-[13px] text-[#666] dark:text-[#B0B0A0] mt-1">{q.forfaitName}</p>
+        <div className="bg-surface rounded-xl border border-border p-4">
+          <h2 className="text-[17px] font-black text-foreground">{q.stationName}</h2>
+          <p className="text-[13px] text-foreground/65 mt-0.5">{q.stationAddress}</p>
+          <p className="text-[13px] text-foreground/65 mt-1">{q.forfaitName}</p>
         </div>
 
         {/* Live position panel */}
         <div
-          className="bg-[#E8E8D8] dark:bg-dark-card rounded-xl border border-[#D0D0C0] dark:border-tab-inactive p-5"
+          className="bg-surface rounded-xl border border-border p-5"
           aria-live="polite"
           aria-atomic="false"
         >
           <div className="flex items-center gap-2 mb-4">
             <span className={`w-2.5 h-2.5 rounded-full shrink-0 animate-pulse ${isActive ? 'bg-gold' : 'bg-Hurryline-success'}`} />
-            <span className="text-[12px] font-bold text-[#555] dark:text-[#A0A090] uppercase tracking-wider">
+            <span className="text-[12px] font-bold text-foreground/70 dark:text-[#B0BFB1] uppercase tracking-wider">
               {isActive ? t('status_in_progress') : t('status_waiting')}
             </span>
           </div>
 
           <div className="grid grid-cols-2 gap-4 text-center">
-            <div className="bg-white/50 dark:bg-dark-bg/40 rounded-xl py-5">
+            <div className="bg-white/50 dark:bg-background/40 rounded-xl py-5">
               <div className="text-[44px] font-black text-gold leading-none">#{q.position}</div>
-              <div className="text-[13px] text-[#555] dark:text-[#B0B0A0] mt-2 font-semibold">{t('your_position')}</div>
+              <div className="text-[13px] text-foreground/70 mt-2 font-semibold">{t('your_position')}</div>
             </div>
-            <div className="bg-white/50 dark:bg-dark-bg/40 rounded-xl py-5">
-              <div className="text-[44px] font-black text-[#0A0A14] dark:text-white leading-none">{waitMinutes}</div>
-              <div className="text-[13px] text-[#555] dark:text-[#B0B0A0] mt-2 font-semibold">{t('wait_minutes')}</div>
+            <div className="bg-white/50 dark:bg-background/40 rounded-xl py-5">
+              <div className="text-[44px] font-black text-foreground leading-none">{waitMinutes}</div>
+              <div className="text-[13px] text-foreground/70 mt-2 font-semibold">{t('wait_minutes')}</div>
             </div>
           </div>
 
@@ -276,14 +276,14 @@ export default function QueueDetailPage({ params }: PageProps) {
         </div>
 
         {/* Service summary */}
-        <div className="bg-[#E8E8D8] dark:bg-dark-card rounded-xl border border-[#D0D0C0] dark:border-tab-inactive p-4 space-y-2">
-          <h3 className="text-[14px] font-black text-[#555] dark:text-[#A0A090] uppercase tracking-wider mb-3">{t('summary')}</h3>
+        <div className="bg-surface rounded-xl border border-border p-4 space-y-2">
+          <h3 className="text-[14px] font-black text-foreground/70 dark:text-[#B0BFB1] uppercase tracking-wider mb-3">{t('summary')}</h3>
           <div className="flex justify-between text-[14px]">
-            <span className="text-[#555] dark:text-[#B0B0A0]">{t('service')}</span>
-            <span className="font-bold text-[#0A0A14] dark:text-white">{q.forfaitName}</span>
+            <span className="text-foreground/70">{t('service')}</span>
+            <span className="font-bold text-foreground">{q.forfaitName}</span>
           </div>
-          <div className="flex justify-between text-[14px] pt-2 border-t border-[#D0D0C0] dark:border-tab-inactive">
-            <span className="font-bold text-[#0A0A14] dark:text-white">{t('total')}</span>
+          <div className="flex justify-between text-[14px] pt-2 border-t border-border">
+            <span className="font-bold text-foreground">{t('total')}</span>
             <span className="text-[17px] font-black text-gold">{q.totalPrice.toFixed(2)}$</span>
           </div>
         </div>

@@ -38,21 +38,21 @@ export function SearchBar({ value, onChange, placeholder }: SearchBarProps) {
   };
 
   return (
-    <div className="flex items-center gap-2 px-3.5 py-2.5 bg-[#E0E0D0] dark:bg-tab-inactive rounded-[10px] transition-colors">
+    <div className="flex items-center gap-2 px-3.5 py-2.5 bg-surface dark:bg-tab-inactive rounded-[10px] transition-colors">
       <SearchIcon />
       <input
         type="search"
         value={value}
         onChange={handleChange}
         placeholder={placeholder}
-        className="flex-1 bg-transparent text-[13px] text-[#000C1F] dark:text-[#FFF8EC] placeholder-[#9A9A8A] outline-none"
+        className="flex-1 bg-transparent text-[13px] text-foreground placeholder-[#B0BFB1] outline-none"
         aria-label={placeholder}
       />
       {value && (
         <button
           type="button"
           onClick={() => onChange('')}
-          className="text-[#9A9A8A] hover:text-white transition-colors"
+          className="text-[#B0BFB1] hover:text-white transition-colors"
           aria-label="Effacer la recherche"
         >
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" aria-hidden="true">

@@ -24,9 +24,9 @@ function statusVisuals(status: string): { dot: string; label: string } {
   switch (status) {
     case 'completed':   return { dot: '#999',    label: 'status_completed' };
     case 'in_progress': return { dot: '#2ECC71', label: 'status_in_progress' };
-    case 'late':        return { dot: '#E8472A', label: 'status_late' };
+    case 'late':        return { dot: '#FF383C', label: 'status_late' };
     case 'cancelled':   return { dot: '#999',    label: 'status_cancelled' };
-    default:            return { dot: '#3B82F6', label: 'status_confirmed' };
+    default:            return { dot: '#1E40AF', label: 'status_confirmed' };
   }
 }
 
@@ -44,18 +44,18 @@ export function AgendaSlotDetailModal({
     <Modal open={open} onClose={onClose} size="md" title={t('slot_detail_title')}>
       <div className="space-y-4">
         {/* Header */}
-        <div className="flex items-start justify-between gap-3 rounded-xl border border-[#E8E4DC] bg-[#F7F6F2] p-4 dark:border-[#1A2A14] dark:bg-[#0F1A0C]">
+        <div className="flex items-start justify-between gap-3 rounded-xl border border-[#FFF9EC] bg-[#FFF9EC] p-4 dark:border-[#1A2A14] dark:bg-dark-bg">
           <div className="min-w-0 flex-1">
-            <div className="text-[11px] font-bold uppercase tracking-wider text-[#888] dark:text-[#9A9A8A]">
+            <div className="text-[11px] font-bold uppercase tracking-wider text-foreground/55 dark:text-[#B0BFB1]">
               {t('slot_detail_client')}
             </div>
-            <div className="mt-0.5 truncate text-[18px] font-black text-[#1A1A0A] dark:text-[#F0EDD4]">
+            <div className="mt-0.5 truncate text-[18px] font-black text-[#001201] dark:text-[#FFF9EC]">
               {entry.clientName}
             </div>
           </div>
           <span className="inline-flex shrink-0 items-center gap-1.5 rounded-full bg-white px-2.5 py-1 text-[11px] font-black uppercase tracking-wide shadow-sm dark:bg-[#182214]">
             <span className="h-2 w-2 rounded-full" style={{ background: visuals.dot }} aria-hidden="true" />
-            <span className="text-[#1A1A0A] dark:text-[#F0EDD4]">{t(visuals.label)}</span>
+            <span className="text-[#001201] dark:text-[#FFF9EC]">{t(visuals.label)}</span>
           </span>
         </div>
 
@@ -71,16 +71,16 @@ export function AgendaSlotDetailModal({
         </div>
 
         {/* Payment notice — clarifies that funds clear at completion */}
-        <div className="rounded-xl border border-[#3B82F6]/25 bg-[#E6EEFD] px-3 py-2 text-[11px] text-[#1E40AF] dark:bg-[#10182B] dark:text-[#8AB4FF]">
+        <div className="rounded-xl border border-[#1E40AF]/25 bg-[#E6EEFD] px-3 py-2 text-[11px] text-[#1E40AF] dark:bg-[#10182B] dark:text-[#8AB4FF]">
           {t('slot_detail_payment_notice')}
         </div>
       </div>
 
-      <div className="mt-5 flex flex-wrap items-center justify-end gap-2 border-t border-[#E0DCD0] pt-3 dark:border-[#1A2A14]">
+      <div className="mt-5 flex flex-wrap items-center justify-end gap-2 border-t border-[#FFF9EC] pt-3 dark:border-[#1A2A14]">
         <button
           type="button"
           onClick={onClose}
-          className="rounded-lg border border-[#E0DCD0] px-4 py-2 text-[13px] font-bold text-[#666] transition-colors hover:bg-[#F0EDE0] dark:border-[#243020] dark:text-[#A0A090] dark:hover:bg-[#1A2A14]"
+          className="rounded-lg border border-[#FFF9EC] px-4 py-2 text-[13px] font-bold text-foreground/65 transition-colors hover:bg-[#F0EDE0] dark:border-[#001A05] dark:text-[#B0BFB1] dark:hover:bg-[#1A2A14]"
         >
           {t('btn_close')}
         </button>
@@ -89,14 +89,14 @@ export function AgendaSlotDetailModal({
             <button
               type="button"
               onClick={() => { onCancel(entry.id); onClose(); }}
-              className="rounded-lg border border-[#E8472A]/40 px-4 py-2 text-[13px] font-bold text-[#E8472A] transition-colors hover:bg-[#E8472A]/10"
+              className="rounded-lg border border-[#FF383C]/40 px-4 py-2 text-[13px] font-bold text-[#FF383C] transition-colors hover:bg-[#FF383C]/10"
             >
               {t('btn_cancel')}
             </button>
             <button
               type="button"
               onClick={() => { onStart(entry.id); onClose(); }}
-              className="rounded-lg bg-[#3B82F6] px-5 py-2 text-[13px] font-black text-white transition-opacity hover:opacity-90"
+              className="rounded-lg bg-[#1E40AF] px-5 py-2 text-[13px] font-black text-white transition-opacity hover:opacity-90"
             >
               {t('btn_start')}
             </button>
@@ -107,7 +107,7 @@ export function AgendaSlotDetailModal({
             <button
               type="button"
               onClick={() => { onExtraTime(entry.id, 15); onClose(); }}
-              className="rounded-lg border border-[#C49A1E]/50 px-4 py-2 text-[13px] font-bold text-[#C49A1E] transition-colors hover:bg-[#C49A1E]/10"
+              className="rounded-lg border border-[#DDAF3B]/50 px-4 py-2 text-[13px] font-bold text-[#DDAF3B] transition-colors hover:bg-[#DDAF3B]/10"
             >
               {t('btn_extra_time')}
             </button>
@@ -127,11 +127,11 @@ export function AgendaSlotDetailModal({
 
 function InfoCell({ label, value, span2 }: { label: string; value: string; span2?: boolean }) {
   return (
-    <div className={`rounded-xl border border-[#E8E4DC] bg-white px-3 py-2 dark:border-[#1A2A14] dark:bg-[#182214] ${span2 ? 'col-span-2' : ''}`}>
-      <div className="text-[10px] font-bold uppercase tracking-wider text-[#888] dark:text-[#9A9A8A]">
+    <div className={`rounded-xl border border-[#FFF9EC] bg-white px-3 py-2 dark:border-[#1A2A14] dark:bg-[#182214] ${span2 ? 'col-span-2' : ''}`}>
+      <div className="text-[10px] font-bold uppercase tracking-wider text-foreground/55 dark:text-[#B0BFB1]">
         {label}
       </div>
-      <div className="mt-0.5 truncate text-[14px] font-bold text-[#1A1A0A] dark:text-[#F0EDD4]">
+      <div className="mt-0.5 truncate text-[14px] font-bold text-[#001201] dark:text-[#FFF9EC]">
         {value}
       </div>
     </div>

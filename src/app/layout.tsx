@@ -1,26 +1,15 @@
 import type { Metadata } from "next";
-import { Geist, Geist_Mono } from "next/font/google";
 import { headers } from "next/headers";
 import { PwaRegister } from "@/components/layout/PwaRegister";
 import { GoogleAnalytics } from "@/components/layout/GoogleAnalytics";
 import { PageSense } from "@/components/layout/PageSense";
 import "./globals.css";
 
-const geistSans = Geist({
-  variable: "--font-geist-sans",
-  subsets: ["latin"],
-});
-
-const geistMono = Geist_Mono({
-  variable: "--font-geist-mono",
-  subsets: ["latin"],
-});
-
-const APP_URL = process.env.NEXT_PUBLIC_APP_URL ?? 'https://Hurryline.cm';
+const APP_URL = process.env.NEXT_PUBLIC_APP_URL ?? 'https://Hurryline.com';
 
 export const metadata: Metadata = {
   title: {
-    default: 'Hurryline - Réservation de lavage auto',
+    default: 'Hurryline | L\'anticipation en mieux',
     template: '%s | Hurryline',
   },
   description:
@@ -29,7 +18,7 @@ export const metadata: Metadata = {
   openGraph: {
     type: 'website',
     siteName: 'Hurryline',
-    title: 'Hurryline - Réservation de lavage auto',
+    title: 'Hurryline | L\'anticipation en mieux',
     description:
       'Réservez facilement un créneau dans une station de lavage auto près de chez vous.',
     url: APP_URL,
@@ -38,13 +27,13 @@ export const metadata: Metadata = {
         url: '/og-image.png',
         width: 1200,
         height: 630,
-        alt: 'Hurryline - Plateforme de lavage auto',
+        alt: 'Hurryline - Plateforme de réservation',
       },
     ],
   },
   twitter: {
     card: 'summary_large_image',
-    title: 'Hurryline - Réservation de lavage auto',
+    title: 'Hurryline | L\'anticipation en mieux',
     description:
       'Réservez facilement un créneau dans une station de lavage auto près de chez vous.',
     images: ['/og-image.png'],
@@ -65,7 +54,7 @@ export default async function RootLayout({
   return (
     <html lang="fr" suppressHydrationWarning>
       <body
-        className={`${geistSans.variable} ${geistMono.variable} antialiased`}
+        className="font-rajdhani antialiased"
         suppressHydrationWarning
       >
         <GoogleAnalytics nonce={nonce} />

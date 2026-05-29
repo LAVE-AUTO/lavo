@@ -1,5 +1,7 @@
 /** Per-vehicle pricing entry, mirrors ServiceVehicleEntry shape from formats/types.ts. */
 export interface ExtraVehicleEntry {
+  /** Backend row id from extra_vehicle_entries — used as a stable React key. */
+  id?: string;
   vehicle_format_id: string;
   vehicle_label: string;
   price: string;

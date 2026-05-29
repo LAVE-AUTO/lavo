@@ -47,8 +47,8 @@ function ToggleRow({
   return (
     <div className="flex items-start justify-between gap-4 border-b border-[#F0EDE4] py-3 last:border-b-0 dark:border-[#1A2A14]">
       <div className="flex flex-col gap-0.5">
-        <span className="text-[13px] font-semibold text-[#1A1A0A] dark:text-[#F0EDD4]">{label}</span>
-        <span className="text-[12px] leading-snug text-[#888] dark:text-[#9A9A8A]">{hint}</span>
+        <span className="text-[13px] font-semibold text-[#001201] dark:text-[#FFF9EC]">{label}</span>
+        <span className="text-[12px] leading-snug text-foreground/55 dark:text-[#B0BFB1]">{hint}</span>
       </div>
       <label className="relative inline-flex h-6 w-11 shrink-0">
         <input
@@ -61,7 +61,7 @@ function ToggleRow({
         <span
           className={`absolute inset-0 rounded-full transition-colors ${
             disabled ? 'cursor-not-allowed opacity-60' : 'cursor-pointer'
-          } ${checked ? 'bg-[#C49A1E]' : 'bg-[#D8D4C8] dark:bg-[#243020]'}`}
+          } ${checked ? 'bg-[#DDAF3B]' : 'bg-[#D8D4C8] dark:bg-[#001A05]'}`}
           aria-hidden="true"
         >
           <span
@@ -126,11 +126,11 @@ export function NotificationsTab({ locked }: Props) {
 
   return (
     <div className="flex flex-col gap-5">
-      <section className="rounded-2xl border border-[#E8E4DC] bg-white p-6 shadow-sm dark:border-[#1A2A14] dark:bg-[#182214]">
-        <h3 className="mb-2 text-[11px] font-bold uppercase tracking-[1.5px] text-[#C49A1E]">
+      <section className="rounded-2xl border border-[#FFF9EC] bg-white p-6 shadow-sm dark:border-[#1A2A14] dark:bg-[#182214]">
+        <h3 className="mb-2 text-[11px] font-bold uppercase tracking-[1.5px] text-[#DDAF3B]">
           {t('notifications_card_title')}
         </h3>
-        <p className="mb-4 text-[12px] leading-snug text-[#888] dark:text-[#9A9A8A]">
+        <p className="mb-4 text-[12px] leading-snug text-foreground/55 dark:text-[#B0BFB1]">
           {t('notifications_card_hint')}
         </p>
         <div className="flex flex-col">
@@ -159,7 +159,7 @@ export function NotificationsTab({ locked }: Props) {
           type="button"
           onClick={handleSave}
           disabled={locked || saving}
-          className="flex items-center gap-2 rounded-xl bg-[#C49A1E] px-6 py-2.5 text-[13px] font-bold text-[#0C1209] transition-opacity hover:opacity-85 disabled:cursor-not-allowed disabled:opacity-40"
+          className="flex items-center gap-2 rounded-xl bg-[#DDAF3B] px-6 py-2.5 text-[13px] font-bold text-[#001201] transition-opacity hover:opacity-85 disabled:cursor-not-allowed disabled:opacity-40"
         >
           {saving ? (
             <svg className="animate-spin" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" aria-hidden="true">

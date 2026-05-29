@@ -108,11 +108,11 @@ const STEP_HEADLINE_KEYS = [
 /* ------------------------------------------------------------------ */
 
 function StationMockup({ isDark }: { isDark: boolean }) {
-  const cardBg = isDark ? '#1E2A1A' : '#F5F0E4';
-  const borderC = isDark ? '#2E3E2A' : '#D4C88A';
-  const textCol = isDark ? '#FFF8EC' : '#1A2116';
-  const mutedC  = isDark ? '#7A9A7D' : '#6B7A64';
-  const goldC   = '#C8980A';
+  const cardBg = isDark ? '#001A05' : '#FFF9EC';
+  const borderC = isDark ? '#001A05' : '#DDAF3B';
+  const textCol = isDark ? '#FFEECA' : '#001201';
+  const mutedC  = isDark ? '#B0BFB1' : '#B0BFB1';
+  const goldC   = '#DDAF3B';
 
   const slots = [
     { time: '09:00', name: 'Jean D.', type: 'Ext.', active: true },
@@ -127,10 +127,10 @@ function StationMockup({ isDark }: { isDark: boolean }) {
         style={{ background: cardBg, border: `1.5px solid ${borderC}` }}
       >
         <div style={{ background: goldC, padding: '10px 16px' }} className="flex items-center justify-between">
-          <span className="text-[12px] font-bold tracking-[1.5px] uppercase text-[#0d1f0f]">
+          <span className="text-[12px] font-bold tracking-[1.5px] uppercase text-[#001201]">
             Agenda · Aujourd'hui
           </span>
-          <span className="text-[11px] font-semibold text-[#0d1f0f] opacity-70">3 rendez-vous</span>
+          <span className="text-[11px] font-semibold text-[#001201] opacity-70">3 rendez-vous</span>
         </div>
 
         <div className="p-4 flex flex-col gap-2.5">
@@ -140,9 +140,9 @@ function StationMockup({ isDark }: { isDark: boolean }) {
               className="flex items-center gap-3 rounded-xl p-3 transition-all"
               style={{
                 background: slot.active
-                  ? isDark ? 'rgba(200,152,10,0.15)' : 'rgba(200,152,10,0.12)'
+                  ? isDark ? 'rgba(221, 175, 59,0.15)' : 'rgba(221, 175, 59,0.12)'
                   : isDark ? 'rgba(255,255,255,0.04)' : 'rgba(0,0,0,0.04)',
-                border: `1px solid ${slot.active ? 'rgba(200,152,10,0.4)' : borderC}`,
+                border: `1px solid ${slot.active ? 'rgba(221, 175, 59,0.4)' : borderC}`,
               }}
             >
               <div
@@ -190,11 +190,11 @@ function StationMockup({ isDark }: { isDark: boolean }) {
 }
 
 function AccountSetupMockup({ isDark }: { isDark: boolean }) {
-  const cardBg  = isDark ? '#1E2A1A' : '#F5F0E4';
-  const borderC = isDark ? '#2E3E2A' : '#D4C88A';
-  const textCol = isDark ? '#FFF8EC' : '#1A2116';
-  const mutedC  = isDark ? '#7A9A7D' : '#6B7A64';
-  const goldC   = '#C8980A';
+  const cardBg  = isDark ? '#001A05' : '#FFF9EC';
+  const borderC = isDark ? '#001A05' : '#DDAF3B';
+  const textCol = isDark ? '#FFEECA' : '#001201';
+  const mutedC  = isDark ? '#B0BFB1' : '#B0BFB1';
+  const goldC   = '#DDAF3B';
 
   const fields = [
     { label: 'Email professionnel', filled: true },
@@ -212,7 +212,7 @@ function AccountSetupMockup({ isDark }: { isDark: boolean }) {
           <div className="w-6 h-6 rounded-full bg-[rgba(0,0,0,0.15)] flex items-center justify-center">
             <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2.5"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
           </div>
-          <span className="text-[12px] font-bold tracking-[1.5px] uppercase text-[#0d1f0f]">Création de compte</span>
+          <span className="text-[12px] font-bold tracking-[1.5px] uppercase text-[#001201]">Création de compte</span>
         </div>
         <div className="p-4 flex flex-col gap-3">
           {fields.map((f) => (
@@ -221,8 +221,8 @@ function AccountSetupMockup({ isDark }: { isDark: boolean }) {
               <div
                 className="h-9 rounded-lg flex items-center px-3"
                 style={{
-                  background: f.filled ? (isDark ? 'rgba(200,152,10,0.12)' : 'rgba(200,152,10,0.10)') : (isDark ? 'rgba(255,255,255,0.04)' : 'rgba(0,0,0,0.04)'),
-                  border: `1px solid ${f.filled ? 'rgba(200,152,10,0.4)' : borderC}`,
+                  background: f.filled ? (isDark ? 'rgba(221, 175, 59,0.12)' : 'rgba(221, 175, 59,0.10)') : (isDark ? 'rgba(255,255,255,0.04)' : 'rgba(0,0,0,0.04)'),
+                  border: `1px solid ${f.filled ? 'rgba(221, 175, 59,0.4)' : borderC}`,
                 }}
               >
                 {f.filled && (
@@ -238,7 +238,7 @@ function AccountSetupMockup({ isDark }: { isDark: boolean }) {
             className="mt-1 h-9 rounded-lg flex items-center justify-center"
             style={{ background: goldC }}
           >
-            <span className="text-[12px] font-bold text-[#0d1f0f] tracking-wider">Continuer</span>
+            <span className="text-[12px] font-bold text-[#001201] tracking-wider">Continuer</span>
           </div>
         </div>
         <div
@@ -262,10 +262,10 @@ function AccountSetupMockup({ isDark }: { isDark: boolean }) {
 }
 
 function KycMockup({ isDark }: { isDark: boolean }) {
-  const cardBg  = isDark ? '#1E2A1A' : '#F5F0E4';
-  const borderC = isDark ? '#2E3E2A' : '#D4C88A';
-  const mutedC  = isDark ? '#7A9A7D' : '#6B7A64';
-  const goldC   = '#C8980A';
+  const cardBg  = isDark ? '#001A05' : '#FFF9EC';
+  const borderC = isDark ? '#001A05' : '#DDAF3B';
+  const mutedC  = isDark ? '#B0BFB1' : '#B0BFB1';
+  const goldC   = '#DDAF3B';
 
   const steps = [
     { label: 'Documents envoyés',    done: true,  active: false },
@@ -283,7 +283,7 @@ function KycMockup({ isDark }: { isDark: boolean }) {
           <div className="w-6 h-6 rounded-full bg-[rgba(0,0,0,0.15)] flex items-center justify-center">
             <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2.5"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2h11"/></svg>
           </div>
-          <span className="text-[12px] font-bold tracking-[1.5px] uppercase text-[#0d1f0f]">Vérification KYC</span>
+          <span className="text-[12px] font-bold tracking-[1.5px] uppercase text-[#001201]">Vérification KYC</span>
         </div>
         <div className="p-4 flex flex-col gap-0">
           {steps.map((s, i) => (
@@ -299,7 +299,7 @@ function KycMockup({ isDark }: { isDark: boolean }) {
                   {s.done ? (
                     <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="3"><polyline points="20 6 9 17 4 12"/></svg>
                   ) : s.active ? (
-                    <div className="w-2.5 h-2.5 rounded-full bg-[#0d1f0f] animate-pulse" />
+                    <div className="w-2.5 h-2.5 rounded-full bg-dark-bg animate-pulse" />
                   ) : (
                     <div className="w-2 h-2 rounded-full" style={{ background: mutedC }} />
                   )}
@@ -398,8 +398,8 @@ export function StationBrandPanel({ step }: StationBrandPanelProps) {
     startInterval();
   };
 
-  const textPrimary   = isDark ? 'text-white'         : 'text-[#1A1A1A]';
-  const textSecondary = isDark ? 'text-[#7A9A7D]'     : 'text-[#4A6A4D]';
+  const textPrimary   = isDark ? 'text-white'         : 'text-[#001201]';
+  const textSecondary = isDark ? 'text-[#B0BFB1]'     : 'text-[var(--foreground)]';
   const trackColor    = isDark ? 'bg-white/10'         : 'bg-black/10';
   const inactiveDot   = isDark ? 'bg-white/20 hover:bg-white/40' : 'bg-black/20 hover:bg-black/40';
   const featureCardBg = isDark ? 'bg-white/5 border border-white/8' : 'bg-black/5 border border-black/6';
@@ -439,7 +439,7 @@ export function StationBrandPanel({ step }: StationBrandPanelProps) {
       />
 
       {/* Gold shimmer top bar */}
-      <div className="absolute top-0 left-0 right-0 h-[3px] bg-[#C8980A] animate-gold-shimmer" />
+      <div className="absolute top-0 left-0 right-0 h-[3px] bg-[#DDAF3B] animate-gold-shimmer" />
 
       {/* Content */}
       <div className="relative z-10 flex flex-col justify-between h-full p-10 xl:p-14">
@@ -449,18 +449,18 @@ export function StationBrandPanel({ step }: StationBrandPanelProps) {
           <div>
             {isDark ? (
               <div className="flex items-center gap-2.5">
-                <div className="rounded-xl bg-white/95 p-1 border border-[rgba(200,152,10,0.25)] shadow-sm shrink-0">
+                <div className="rounded-xl bg-white/95 p-1 border border-[#FFF9EC] shadow-sm shrink-0">
                   <Image src="/logo/frame2.png" alt="" width={36} height={36} className="w-9 h-9 object-contain" aria-hidden="true" />
                 </div>
                 <div>
                   <span className="text-xl font-bold text-white tracking-wide">Hurryline</span>
-                  <p className="text-[10px] font-semibold tracking-[2px] uppercase text-[#C8980A] leading-none">Marchands</p>
+                  <p className="text-[10px] font-semibold tracking-[2px] uppercase text-[#DDAF3B] leading-none">Marchands</p>
                 </div>
               </div>
             ) : (
               <div>
                 <Image src={lightLogoSrc} alt="Hurryline" width={160} height={44} className="object-contain h-9 w-auto" />
-                <p className="text-[10px] font-semibold tracking-[2px] uppercase text-[#C8980A] mt-1">Espace Marchands</p>
+                <p className="text-[10px] font-semibold tracking-[2px] uppercase text-[#DDAF3B] mt-1">Espace Marchands</p>
               </div>
             )}
           </div>
@@ -475,7 +475,7 @@ export function StationBrandPanel({ step }: StationBrandPanelProps) {
                   style={{
                     width: n === step ? 20 : 6,
                     height: 6,
-                    background: n === step ? '#C8980A' : (isDark ? 'rgba(255,255,255,0.2)' : 'rgba(0,0,0,0.15)'),
+                    background: n === step ? '#DDAF3B' : (isDark ? 'rgba(255,255,255,0.2)' : 'rgba(0,0,0,0.15)'),
                   }}
                 />
               ))}
@@ -494,12 +494,12 @@ export function StationBrandPanel({ step }: StationBrandPanelProps) {
               {stepKeys ? (
                 <>
                   {t(stepKeys.headline)}{' '}
-                  <span className="text-[#C8980A]">{t(stepKeys.accent)}</span>
+                  <span className="text-[#DDAF3B]">{t(stepKeys.accent)}</span>
                 </>
               ) : (
                 <>
                   {t('headline')}{' '}
-                  <span className="text-[#C8980A]">{t('headline_accent')}</span>
+                  <span className="text-[#DDAF3B]">{t('headline_accent')}</span>
                 </>
               )}
             </h2>
@@ -513,8 +513,8 @@ export function StationBrandPanel({ step }: StationBrandPanelProps) {
         <div className="flex flex-col gap-3">
           {!isControlled && (
             <div className="flex items-center gap-3">
-              <div className="h-px w-8 bg-[rgba(200,152,10,0.6)]" />
-              <span className={`text-[11px] font-bold tracking-[0.2em] uppercase ${isDark ? 'text-[rgba(200,152,10,0.8)]' : 'text-[#C8980A]'}`}>
+              <div className="h-px w-8 bg-[rgba(221,175,59,0.6)]" />
+              <span className={`text-[11px] font-bold tracking-[0.2em] uppercase ${isDark ? 'text-[rgba(221,175,59,0.8)]' : 'text-[#DDAF3B]'}`}>
                 {String(activeIdx + 1).padStart(2, '0')} / {String(FEATURE_KEYS.length).padStart(2, '0')}
               </span>
             </div>
@@ -524,7 +524,7 @@ export function StationBrandPanel({ step }: StationBrandPanelProps) {
             key={isControlled ? `step-feature-${step}` : activeIdx}
             className={`flex items-center gap-5 animate-fade-in-up rounded-2xl p-5 ${featureCardBg}`}
           >
-            <div className="w-14 h-14 rounded-2xl bg-[rgba(200,152,10,0.2)] border-2 border-[rgba(200,152,10,0.4)] flex items-center justify-center text-[#C8980A] shrink-0">
+            <div className="w-14 h-14 rounded-2xl bg-[rgba(221,175,59,0.2)] border-2 border-[rgba(221,175,59,0.4)] flex items-center justify-center text-[#DDAF3B] shrink-0">
               {stepIcon}
             </div>
             <div>
@@ -542,7 +542,7 @@ export function StationBrandPanel({ step }: StationBrandPanelProps) {
               <div className={`flex-1 h-[3px] rounded-full ${trackColor}`}>
                 <div
                   key={progressKey}
-                  className="h-full bg-[#C8980A] rounded-full animate-progress-fill"
+                  className="h-full bg-[#DDAF3B] rounded-full animate-progress-fill"
                   style={{ animationDuration: `${INTERVAL_MS}ms` }}
                 />
               </div>
@@ -554,7 +554,7 @@ export function StationBrandPanel({ step }: StationBrandPanelProps) {
                     onClick={() => handleDotClick(i)}
                     aria-label={`Feature ${i + 1}`}
                     className={`rounded-full transition-all duration-300 ${
-                      i === activeIdx ? 'w-6 h-2.5 bg-[#C8980A]' : `w-2.5 h-2.5 ${inactiveDot}`
+                      i === activeIdx ? 'w-6 h-2.5 bg-[#DDAF3B]' : `w-2.5 h-2.5 ${inactiveDot}`
                     }`}
                   />
                 ))}

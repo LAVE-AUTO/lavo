@@ -39,10 +39,10 @@ function ToolbarButton({ onClick, active, disabled, label, children }: ToolbarBu
       aria-pressed={active}
       className={[
         'inline-flex h-8 w-8 items-center justify-center rounded-[8px] text-[13px] font-bold transition-colors',
-        'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#C49A1E]/40',
+        'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#DDAF3B]/40',
         active
-          ? 'bg-[#1A1A0A] text-[#F0EDD4] shadow-[0_6px_12px_rgba(26,26,10,0.18)] dark:bg-[#F0EDD4] dark:text-[#1A1A0A]'
-          : 'text-[#5A554B] hover:bg-[#EFE8D7] hover:text-[#1A1A0A] dark:text-[#A6A091] dark:hover:bg-[#1A2410] dark:hover:text-[#F0D98C]',
+          ? 'bg-dark-bg text-[#FFF9EC] shadow-[0_6px_12px_rgba(26,26,10,0.18)] dark:bg-[#FFF9EC] dark:text-[#001201]'
+          : 'text-[#5A554B] hover:bg-[#EFE8D7] hover:text-[#001201] dark:text-[#A6A091] dark:hover:bg-[#1A2410] dark:hover:text-[#F0D98C]',
         'disabled:cursor-not-allowed disabled:opacity-40',
       ].join(' ')}
     >
@@ -52,7 +52,7 @@ function ToolbarButton({ onClick, active, disabled, label, children }: ToolbarBu
 }
 
 function ToolbarDivider() {
-  return <span className="mx-1 inline-block h-5 w-px bg-[#E1DBCF] dark:bg-[#243020]" aria-hidden="true" />;
+  return <span className="mx-1 inline-block h-5 w-px bg-[#E1DBCF] dark:bg-[#001A05]" aria-hidden="true" />;
 }
 
 /**
@@ -236,19 +236,19 @@ export function LegalEditor({ pageKey, html, onChange, disabled = false, placeho
       attributes: {
         class: [
           'tiptap min-h-[420px] max-h-[640px] overflow-y-auto p-6 text-[14px] leading-[1.7] outline-none',
-          'text-[#1A1A0A] dark:text-[#F0EDD4]',
+          'text-[#001201] dark:text-[#FFF9EC]',
           'prose prose-sm max-w-none',
-          '[&_h1]:text-[22px] [&_h1]:font-black [&_h1]:tracking-tight [&_h1]:mt-6 [&_h1]:mb-3 [&_h1]:text-[#1A1A0A] dark:[&_h1]:text-[#F0EDD4]',
-          '[&_h2]:text-[18px] [&_h2]:font-black [&_h2]:tracking-tight [&_h2]:mt-5 [&_h2]:mb-2.5 [&_h2]:text-[#1A1A0A] dark:[&_h2]:text-[#F0EDD4]',
-          '[&_h3]:text-[15px] [&_h3]:font-bold [&_h3]:mt-4 [&_h3]:mb-2 [&_h3]:text-[#1A1A0A] dark:[&_h3]:text-[#F0EDD4]',
+          '[&_h1]:text-[22px] [&_h1]:font-black [&_h1]:tracking-tight [&_h1]:mt-6 [&_h1]:mb-3 [&_h1]:text-[#001201] dark:[&_h1]:text-[#FFF9EC]',
+          '[&_h2]:text-[18px] [&_h2]:font-black [&_h2]:tracking-tight [&_h2]:mt-5 [&_h2]:mb-2.5 [&_h2]:text-[#001201] dark:[&_h2]:text-[#FFF9EC]',
+          '[&_h3]:text-[15px] [&_h3]:font-bold [&_h3]:mt-4 [&_h3]:mb-2 [&_h3]:text-[#001201] dark:[&_h3]:text-[#FFF9EC]',
           '[&_p]:mb-3',
           '[&_ul]:my-3 [&_ul]:pl-6 [&_ul]:list-disc',
           '[&_ol]:my-3 [&_ol]:pl-6 [&_ol]:list-decimal',
           '[&_li]:mb-1',
-          '[&_blockquote]:border-l-4 [&_blockquote]:border-[#C49A1E] [&_blockquote]:pl-4 [&_blockquote]:italic [&_blockquote]:text-[#5A554B] dark:[&_blockquote]:text-[#A6A091] [&_blockquote]:my-4',
+          '[&_blockquote]:border-l-4 [&_blockquote]:border-[#DDAF3B] [&_blockquote]:pl-4 [&_blockquote]:italic [&_blockquote]:text-[#5A554B] dark:[&_blockquote]:text-[#A6A091] [&_blockquote]:my-4',
           '[&_a]:text-[#9A7A13] [&_a]:underline [&_a]:underline-offset-2',
-          '[&_code]:bg-[#F4F1E8] [&_code]:px-1.5 [&_code]:py-0.5 [&_code]:rounded [&_code]:text-[12.5px] [&_code]:font-mono dark:[&_code]:bg-[#171F12]',
-          '[&_hr]:border-0 [&_hr]:border-t [&_hr]:border-[#E1DBCF] [&_hr]:my-6 dark:[&_hr]:border-[#243020]',
+          '[&_code]:bg-[#FFF9EC] [&_code]:px-1.5 [&_code]:py-0.5 [&_code]:rounded [&_code]:text-[12.5px] [&_code]:font-mono dark:[&_code]:bg-[#171F12]',
+          '[&_hr]:border-0 [&_hr]:border-t [&_hr]:border-[#E1DBCF] [&_hr]:my-6 dark:[&_hr]:border-[#001A05]',
           '[&_.is-editor-empty:first-child]:before:content-[attr(data-placeholder)] [&_.is-editor-empty:first-child]:before:float-left [&_.is-editor-empty:first-child]:before:text-[#BBB6A7] [&_.is-editor-empty:first-child]:before:pointer-events-none [&_.is-editor-empty:first-child]:before:h-0',
         ].join(' '),
         'aria-label': t('editor_aria_label'),
@@ -281,7 +281,7 @@ export function LegalEditor({ pageKey, html, onChange, disabled = false, placeho
     <div className="overflow-hidden rounded-[18px] border border-[#E1DBCF] bg-white shadow-[0_4px_12px_rgba(26,26,10,0.04)] dark:border-[#1E2E18] dark:bg-[#0E170C]">
       {!mounted || !editor ? (
         <div className="flex min-h-[420px] items-center justify-center">
-          <div className="h-7 w-7 animate-spin rounded-full border-[3px] border-[#C49A1E] border-t-transparent" />
+          <div className="h-7 w-7 animate-spin rounded-full border-[3px] border-[#DDAF3B] border-t-transparent" />
         </div>
       ) : (
         <>

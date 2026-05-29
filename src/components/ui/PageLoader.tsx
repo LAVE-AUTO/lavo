@@ -22,7 +22,7 @@ export function PageLoader({ label }: Props) {
         height="28"
         viewBox="0 0 24 24"
         fill="none"
-        stroke="#C49A1E"
+        stroke="#DDAF3B"
         strokeWidth="2.5"
         strokeLinecap="round"
         aria-hidden="true"
@@ -30,7 +30,7 @@ export function PageLoader({ label }: Props) {
         <path d="M21 12a9 9 0 11-6.219-8.56" />
       </svg>
       {label && (
-        <span className="text-[13px] font-semibold text-[#666] dark:text-[#A0A090]">
+        <span className="text-[13px] font-semibold text-foreground/65 dark:text-[#B0BFB1]">
           {label}
         </span>
       )}

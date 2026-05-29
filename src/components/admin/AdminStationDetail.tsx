@@ -152,17 +152,17 @@ export function AdminStationDetail({ id }: Props) {
 
   /* ── Loading ── */
   if (loading) return (
-    <div className="flex flex-1 items-center justify-center bg-[#F5F5EE] dark:bg-[#0C1209]">
-      <div className="h-8 w-8 animate-spin rounded-full border-[3px] border-[#C49A1E] border-t-transparent" />
+    <div className="flex flex-1 items-center justify-center bg-[#FFF9EC] dark:bg-dark-bg">
+      <div className="h-8 w-8 animate-spin rounded-full border-[3px] border-[#DDAF3B] border-t-transparent" />
     </div>
   );
 
   /* ── Error ── */
   if (loadError || !station) return (
-    <div className="flex flex-1 flex-col items-center justify-center gap-3 bg-[#F5F5EE] dark:bg-[#0C1209]">
-      <p className="text-[14px] font-semibold text-[#555] dark:text-[#B0B0A0]">{t('error_load')}</p>
+    <div className="flex flex-1 flex-col items-center justify-center gap-3 bg-[#FFF9EC] dark:bg-dark-bg">
+      <p className="text-[14px] font-semibold text-foreground/70">{t('error_load')}</p>
       <button type="button" onClick={loadStation}
-        className="rounded-xl border border-[#C49A1E]/50 px-4 py-2 text-[13px] font-semibold text-[#C49A1E] hover:bg-[#C49A1E]/10">
+        className="rounded-xl border border-[#DDAF3B]/50 px-4 py-2 text-[13px] font-semibold text-[#DDAF3B] hover:bg-[#DDAF3B]/10">
         {t('btn_retry')}
       </button>
     </div>
@@ -176,19 +176,19 @@ export function AdminStationDetail({ id }: Props) {
   );
 
   return (
-    <div className="flex flex-1 flex-col overflow-hidden bg-[#F5F5EE] dark:bg-[#0C1209]">
+    <div className="flex flex-1 flex-col overflow-hidden bg-[#FFF9EC] dark:bg-dark-bg">
 
       {/* ── Sticky sub-header ── */}
-      <div className="flex items-center gap-4 border-b border-[#E8E4D8] bg-white px-7 py-4 dark:border-[#1A2A14] dark:bg-[#111A0E]">
+      <div className="flex items-center gap-4 border-b border-[#FFF9EC] bg-white px-7 py-4 dark:border-[#1A2A14] dark:bg-dark-bg">
         <Link href={'/admin/stations' as Parameters<typeof Link>[0]['href']}
-          className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-[#F0EDE0] text-[#888] transition-colors hover:bg-[#E8E4D8] dark:bg-[#1E2A1A] dark:text-[#9A9A8A]">
+          className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-[#F0EDE0] text-foreground/55 transition-colors hover:bg-[#FFF9EC] dark:bg-[#001A05] dark:text-[#B0BFB1]">
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="15 18 9 12 15 6" /></svg>
         </Link>
         <div className="min-w-0 flex-1">
-          <h1 className="truncate pb-0.5 text-[16px] font-black text-[#0F1A0C] dark:text-[#F0EDD4]">{station.name}</h1>
-          <p className="text-[12px] text-[#999] dark:text-[#A0A090]">{station.city}</p>
+          <h1 className="truncate pb-0.5 text-[16px] font-black text-[#001201] dark:text-[#FFF9EC]">{station.name}</h1>
+          <p className="text-[12px] text-[#999] dark:text-[#B0BFB1]">{station.city}</p>
         </div>
-        <span className="shrink-0 rounded-full bg-[#C49A1E]/10 px-3 py-1 text-[11px] font-black uppercase tracking-wider text-[#C49A1E]">
+        <span className="shrink-0 rounded-full bg-[#DDAF3B]/10 px-3 py-1 text-[11px] font-black uppercase tracking-wider text-[#DDAF3B]">
           KYC
         </span>
       </div>
@@ -197,23 +197,23 @@ export function AdminStationDetail({ id }: Props) {
       <div className="flex flex-1 flex-col gap-5 overflow-y-auto px-7 py-6">
 
         {/* ── Hero card ── */}
-        <div className="relative rounded-2xl bg-white p-6 shadow-sm ring-1 ring-black/[0.04] dark:bg-[#1A2416] dark:ring-white/[0.06]">
+        <div className="relative rounded-2xl bg-white p-6 shadow-sm ring-1 ring-black/[0.04] dark:bg-[#001A05] dark:ring-white/[0.06]">
           <div className="pointer-events-none absolute inset-0 overflow-hidden rounded-2xl">
-            <div className="absolute right-0 top-0 h-full w-64 bg-gradient-to-l from-[#C49A1E]/6 to-transparent dark:from-[#C49A1E]/4" />
+            <div className="absolute right-0 top-0 h-full w-64 bg-gradient-to-l from-[#DDAF3B]/6 to-transparent dark:from-[#DDAF3B]/4" />
           </div>
           <div className="flex items-start gap-5">
             {/* Large avatar */}
-            <div className="flex h-[68px] w-[68px] shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br from-[#C49A1E]/25 to-[#C49A1E]/10 text-[22px] font-black text-[#C49A1E] ring-2 ring-[#C49A1E]/15">
+            <div className="flex h-[68px] w-[68px] shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br from-[#DDAF3B]/25 to-[#DDAF3B]/10 text-[22px] font-black text-[#DDAF3B] ring-2 ring-[#DDAF3B]/15">
               {stationInit}
             </div>
             <div className="min-w-0 flex-1">
-              <h2 className="text-[19px] font-black text-[#0F1A0C] dark:text-[#F0EDD4]">{station.name}</h2>
-              <p className="mt-0.5 text-[13px] text-[#888] dark:text-[#9A9A8A]">
+              <h2 className="text-[19px] font-black text-[#001201] dark:text-[#FFF9EC]">{station.name}</h2>
+              <p className="mt-0.5 text-[13px] text-foreground/55 dark:text-[#B0BFB1]">
                 {station.city}{station.address ? ` · ${station.address}` : ''}
               </p>
               <div className="mt-3 flex flex-wrap items-center gap-2">
                 {/* Date badge */}
-                <span className="flex items-center gap-1.5 rounded-lg bg-[#F5F3ED] px-2.5 py-1 text-[12px] font-semibold text-[#777] dark:bg-[#1E2A1A] dark:text-[#9A9A8A]">
+                <span className="flex items-center gap-1.5 rounded-lg bg-[#F5F3ED] px-2.5 py-1 text-[12px] font-semibold text-[#777] dark:bg-[#001A05] dark:text-[#B0BFB1]">
                   <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
                     <rect x="3" y="4" width="18" height="18" rx="2" ry="2" /><line x1="16" y1="2" x2="16" y2="6" /><line x1="8" y1="2" x2="8" y2="6" /><line x1="3" y1="10" x2="21" y2="10" />
                   </svg>
@@ -221,7 +221,7 @@ export function AdminStationDetail({ id }: Props) {
                 </span>
                 {/* Doc count badge */}
                 {station.documents.length > 0 && (
-                  <span className="flex items-center gap-1.5 rounded-lg bg-[#F5F3ED] px-2.5 py-1 text-[12px] font-semibold text-[#777] dark:bg-[#1E2A1A] dark:text-[#9A9A8A]">
+                  <span className="flex items-center gap-1.5 rounded-lg bg-[#F5F3ED] px-2.5 py-1 text-[12px] font-semibold text-[#777] dark:bg-[#001A05] dark:text-[#B0BFB1]">
                     <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
                       <path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z" /><polyline points="14 2 14 8 20 8" />
                     </svg>
@@ -229,10 +229,10 @@ export function AdminStationDetail({ id }: Props) {
                   </span>
                 )}
                 {/* KYC status badge */}
-                <span className="flex items-center gap-1.5 rounded-lg bg-[#C49A1E]/10 px-2.5 py-1 text-[12px] font-black uppercase tracking-wider text-[#C49A1E]">
+                <span className="flex items-center gap-1.5 rounded-lg bg-[#DDAF3B]/10 px-2.5 py-1 text-[12px] font-black uppercase tracking-wider text-[#DDAF3B]">
                   <span className="relative flex h-1.5 w-1.5 shrink-0">
-                    <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-[#C49A1E] opacity-70" />
-                    <span className="relative inline-flex h-1.5 w-1.5 rounded-full bg-[#C49A1E]" />
+                    <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-[#DDAF3B] opacity-70" />
+                    <span className="relative inline-flex h-1.5 w-1.5 rounded-full bg-[#DDAF3B]" />
                   </span>
                   KYC
                 </span>
@@ -242,8 +242,8 @@ export function AdminStationDetail({ id }: Props) {
         </div>
 
         {/* ── Info card ── */}
-        <div className="rounded-2xl bg-white p-6 shadow-sm ring-1 ring-black/[0.04] dark:bg-[#1A2416] dark:ring-white/[0.06]">
-          <p className="mb-5 text-[11px] font-black uppercase tracking-[0.15em] text-[#C49A1E]">{t('detail_info')}</p>
+        <div className="rounded-2xl bg-white p-6 shadow-sm ring-1 ring-black/[0.04] dark:bg-[#001A05] dark:ring-white/[0.06]">
+          <p className="mb-5 text-[11px] font-black uppercase tracking-[0.15em] text-[#DDAF3B]">{t('detail_info')}</p>
           <div className="grid grid-cols-2 gap-x-8 gap-y-4">
             <InfoField label={t('label_name')}       value={station.name} />
             {station.legal_name          && <InfoField label={t('label_legal_name')} value={station.legal_name} />}
@@ -258,9 +258,9 @@ export function AdminStationDetail({ id }: Props) {
 
         {/* ── Documents card ── */}
         {station.documents.length > 0 && (
-          <div className="rounded-2xl bg-white p-6 shadow-sm ring-1 ring-black/[0.04] dark:bg-[#1A2416] dark:ring-white/[0.06]">
-            <p className="mb-3 text-[11px] font-black uppercase tracking-[0.15em] text-[#C49A1E]">{t('detail_docs')}</p>
-            <p className="mb-4 rounded-lg border border-[#C49A1E]/30 bg-[#C49A1E]/10 px-3 py-2 text-[11px] leading-relaxed text-[#7A5A00] dark:text-[#E0C060]">
+          <div className="rounded-2xl bg-white p-6 shadow-sm ring-1 ring-black/[0.04] dark:bg-[#001A05] dark:ring-white/[0.06]">
+            <p className="mb-3 text-[11px] font-black uppercase tracking-[0.15em] text-[#DDAF3B]">{t('detail_docs')}</p>
+            <p className="mb-4 rounded-lg border border-[#DDAF3B]/30 bg-[#DDAF3B]/10 px-3 py-2 text-[11px] leading-relaxed text-[#7A5A00] dark:text-[#E0C060]">
               {t('expiry_unsaved_notice')}
             </p>
             <div className="grid grid-cols-2 gap-3">
@@ -317,8 +317,8 @@ export function AdminStationDetail({ id }: Props) {
         )}
 
         {/* ── History timeline ── */}
-        <div className="rounded-2xl bg-white p-6 shadow-sm ring-1 ring-black/[0.04] dark:bg-[#1A2416] dark:ring-white/[0.06]">
-          <p className="mb-5 text-[11px] font-black uppercase tracking-[0.15em] text-[#C49A1E]">{t('detail_history')}</p>
+        <div className="rounded-2xl bg-white p-6 shadow-sm ring-1 ring-black/[0.04] dark:bg-[#001A05] dark:ring-white/[0.06]">
+          <p className="mb-5 text-[11px] font-black uppercase tracking-[0.15em] text-[#DDAF3B]">{t('detail_history')}</p>
           <div className="flex flex-col gap-0">
             <TimelineEvent
               icon="submit"
@@ -360,7 +360,7 @@ export function AdminStationDetail({ id }: Props) {
 
       {/* ── Sticky action bar ── */}
       {isPending && (
-        <div className="border-t border-[#E8E4D8] bg-white px-7 py-4 dark:border-[#1A2A14] dark:bg-[#111A0E]">
+        <div className="border-t border-[#FFF9EC] bg-white px-7 py-4 dark:border-[#1A2A14] dark:bg-dark-bg">
           {actionError && <p className="mb-3 text-[13px] font-semibold text-[#EF4444]">{actionError}</p>}
 
           {!showReject ? (
@@ -379,9 +379,9 @@ export function AdminStationDetail({ id }: Props) {
                 </>
               ) : (
                 <div className="flex flex-1 items-center gap-3 rounded-xl border-2 border-[#00C851]/40 bg-[#00C851]/5 px-4 py-3">
-                  <p className="flex-1 text-[13px] font-semibold text-[#0F1A0C] dark:text-[#F0EDD4]">{t('btn_approve')} ?</p>
+                  <p className="flex-1 text-[13px] font-semibold text-[#001201] dark:text-[#FFF9EC]">{t('btn_approve')} ?</p>
                   <button type="button" onClick={() => setConfirmApprove(false)} disabled={approving}
-                    className="rounded-lg px-3 py-1.5 text-[13px] font-semibold text-[#888] hover:bg-[#F0EDE0] dark:hover:bg-[#1E2A1A]">
+                    className="rounded-lg px-3 py-1.5 text-[13px] font-semibold text-foreground/55 hover:bg-[#F0EDE0] dark:hover:bg-[#001A05]">
                     {t('btn_cancel')}
                   </button>
                   <button type="button" onClick={handleApprove} disabled={approving}
@@ -395,7 +395,7 @@ export function AdminStationDetail({ id }: Props) {
           ) : (
             <div className="space-y-3">
               <div>
-                <label htmlFor="reject-reason" className="mb-1.5 block text-[12px] font-bold uppercase tracking-wider text-[#888] dark:text-[#9A9A8A]">
+                <label htmlFor="reject-reason" className="mb-1.5 block text-[12px] font-bold uppercase tracking-wider text-foreground/55 dark:text-[#B0BFB1]">
                   {t('reject_reason_label')}
                 </label>
                 <textarea
@@ -406,19 +406,19 @@ export function AdminStationDetail({ id }: Props) {
                   rows={3}
                   disabled={rejecting}
                   placeholder={t('reject_reason_placeholder')}
-                  className="w-full resize-none rounded-xl border border-[#E8E4D8] bg-[#F8F6F2] px-4 py-3 text-[13px] text-[#0F1A0C] outline-none transition focus:border-[#EF4444]/50 focus:ring-2 focus:ring-[#EF4444]/10 disabled:opacity-50 dark:border-[#1E2A1A] dark:bg-[#0F1A0C] dark:text-[#F0EDD4]"
+                  className="w-full resize-none rounded-xl border border-[#FFF9EC] bg-[#F8F6F2] px-4 py-3 text-[13px] text-[#001201] outline-none transition focus:border-[#EF4444]/50 focus:ring-2 focus:ring-[#EF4444]/10 disabled:opacity-50 dark:border-[#001A05] dark:bg-dark-bg dark:text-[#FFF9EC]"
                 />
                 <div className="mt-1 flex items-center justify-between">
                   <span className={`text-[11px] font-semibold transition-colors ${rejectReason.trim().length > 0 && rejectReason.trim().length < MIN_REASON ? 'text-[#EF4444]' : 'text-transparent'}`}>
                     {t('reject_reason_min', { n: MIN_REASON })}
                   </span>
-                  <span className="text-[11px] text-[#CCC] dark:text-[#A0A090]">{rejectReason.length}/{MAX_REASON}</span>
+                  <span className="text-[11px] text-[#CCC] dark:text-[#B0BFB1]">{rejectReason.length}/{MAX_REASON}</span>
                 </div>
               </div>
               <div className="flex gap-3">
                 <button type="button" onClick={() => { setShowReject(false); setRejectReason(''); setActionError(null); }}
                   disabled={rejecting}
-                  className="flex-1 rounded-xl border border-[#E0DCD0] py-2.5 text-[13px] font-semibold text-[#666] hover:bg-[#F0EDE0] disabled:opacity-50 dark:border-[#243020] dark:text-[#9A9A8A]">
+                  className="flex-1 rounded-xl border border-[#FFF9EC] py-2.5 text-[13px] font-semibold text-foreground/65 hover:bg-[#F0EDE0] disabled:opacity-50 dark:border-[#001A05] dark:text-[#B0BFB1]">
                   {t('btn_cancel')}
                 </button>
                 <button type="button" onClick={handleReject} disabled={rejecting || rejectReason.trim().length < MIN_REASON}
@@ -440,8 +440,8 @@ export function AdminStationDetail({ id }: Props) {
 function InfoField({ label, value, full }: { label: string; value: string; full?: boolean }) {
   return (
     <div className={full ? 'col-span-2' : ''}>
-      <p className="mb-0.5 text-[11px] font-bold uppercase tracking-wider text-[#C8C4B4] dark:text-[#A0A090]">{label}</p>
-      <p className="text-[13px] font-semibold text-[#0F1A0C] dark:text-[#F0EDD4]">{value}</p>
+      <p className="mb-0.5 text-[11px] font-bold uppercase tracking-wider text-[#C8C4B4] dark:text-[#B0BFB1]">{label}</p>
+      <p className="text-[13px] font-semibold text-[#001201] dark:text-[#FFF9EC]">{value}</p>
     </div>
   );
 }
@@ -522,11 +522,11 @@ function DocCard({
   };
 
   return (
-    <div className="flex flex-col gap-3 rounded-xl border border-[#E8E4D8] bg-[#FAFAF6] p-4 transition-all hover:border-[#C49A1E]/40 hover:bg-white hover:shadow-sm dark:border-[#1E2A1A] dark:bg-[#151E12] dark:hover:border-[#C49A1E]/30 dark:hover:bg-[#1A2416]">
+    <div className="flex flex-col gap-3 rounded-xl border border-[#FFF9EC] bg-[#FAFAF6] p-4 transition-all hover:border-[#DDAF3B]/40 hover:bg-white hover:shadow-sm dark:border-[#001A05] dark:bg-[#151E12] dark:hover:border-[#DDAF3B]/30 dark:hover:bg-[#001A05]">
       <div className="flex items-start justify-between gap-2">
         {/* Doc icon */}
-        <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-[#C49A1E]/10">
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#C49A1E" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+        <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-[#DDAF3B]/10">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#DDAF3B" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
             <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
             <polyline points="14 2 14 8 20 8" />
             <line x1="16" y1="13" x2="8" y2="13" />
@@ -541,8 +541,8 @@ function DocCard({
         )}
       </div>
 
-      <p className="text-[13px] font-bold leading-snug text-[#0F1A0C] dark:text-[#F0EDD4]">{label}</p>
-      <p className="text-[11px] font-semibold text-[#888] dark:text-[#9A9A8A]">
+      <p className="text-[13px] font-bold leading-snug text-[#001201] dark:text-[#FFF9EC]">{label}</p>
+      <p className="text-[11px] font-semibold text-foreground/55 dark:text-[#B0BFB1]">
         {formattedExpiry
           ? `Date d'expiration enregistrée : ${formattedExpiry}`
           : 'Aucune date d\'expiration enregistrée'}
@@ -552,21 +552,21 @@ function DocCard({
       <div className="flex flex-col gap-1.5">
         {!editing ? (
           <div className="flex items-center justify-between gap-2">
-            <span className="text-[11px] text-[#888] dark:text-[#9A9A8A]">
+            <span className="text-[11px] text-foreground/55 dark:text-[#B0BFB1]">
               {formattedExpiry ?? labels.noExpiry}
             </span>
             <button
               type="button"
               onClick={startEditing}
               aria-label={expiry ? labels.edit : labels.set}
-              className="rounded-lg border border-[#C49A1E]/40 bg-[#C49A1E]/10 px-2.5 py-1 text-[11px] font-bold text-[#9A7A10] transition-colors hover:bg-[#C49A1E]/15 focus:outline-none focus-visible:ring-2 focus-visible:ring-[#C49A1E] dark:border-[#C49A1E]/30 dark:text-[#C49A1E]"
+              className="rounded-lg border border-[#DDAF3B]/40 bg-[#DDAF3B]/10 px-2.5 py-1 text-[11px] font-bold text-[#9A7A10] transition-colors hover:bg-[#DDAF3B]/15 focus:outline-none focus-visible:ring-2 focus-visible:ring-[#DDAF3B] dark:border-[#DDAF3B]/30 dark:text-[#DDAF3B]"
             >
               {expiry ? labels.edit : labels.set}
             </button>
           </div>
         ) : (
           <div className="flex flex-col gap-2">
-            <label htmlFor={inputId} className="text-[11px] font-bold uppercase tracking-wider text-[#888] dark:text-[#9A9A8A]">
+            <label htmlFor={inputId} className="text-[11px] font-bold uppercase tracking-wider text-foreground/55 dark:text-[#B0BFB1]">
               {labels.fieldLabel}
             </label>
             <input
@@ -574,15 +574,15 @@ function DocCard({
               type="date"
               value={draft}
               onChange={(e) => setDraft(e.target.value)}
-              className="w-full rounded-lg border border-[#E8E4D8] bg-white px-3 py-1.5 text-[12px] text-[#0F1A0C] outline-none transition focus:border-[#C49A1E]/50 focus:ring-2 focus:ring-[#C49A1E]/10 dark:border-[#1E2A1A] dark:bg-[#0F1A0C] dark:text-[#F0EDD4] [color-scheme:light] dark:[color-scheme:dark]"
+              className="w-full rounded-lg border border-[#FFF9EC] bg-white px-3 py-1.5 text-[12px] text-[#001201] outline-none transition focus:border-[#DDAF3B]/50 focus:ring-2 focus:ring-[#DDAF3B]/10 dark:border-[#001A05] dark:bg-dark-bg dark:text-[#FFF9EC] [color-scheme:light] dark:[color-scheme:dark]"
             />
             <div className="flex flex-wrap gap-2">
               <button type="button" onClick={handleSave} disabled={!draft}
-                className="flex-1 rounded-lg bg-[#C49A1E] px-3 py-1.5 text-[11px] font-bold text-[#0C1209] transition-opacity hover:opacity-90 focus:outline-none focus-visible:ring-2 focus-visible:ring-[#C49A1E] focus-visible:ring-offset-1 disabled:cursor-not-allowed disabled:opacity-50">
+                className="flex-1 rounded-lg bg-[#DDAF3B] px-3 py-1.5 text-[11px] font-bold text-[#001201] transition-opacity hover:opacity-90 focus:outline-none focus-visible:ring-2 focus-visible:ring-[#DDAF3B] focus-visible:ring-offset-1 disabled:cursor-not-allowed disabled:opacity-50">
                 {labels.save}
               </button>
               <button type="button" onClick={handleCancel}
-                className="rounded-lg border border-[#E0DCD0] px-3 py-1.5 text-[11px] font-semibold text-[#666] transition-colors hover:bg-[#F0EDE0] focus:outline-none focus-visible:ring-2 focus-visible:ring-[#C49A1E] dark:border-[#243020] dark:text-[#9A9A8A] dark:hover:bg-[#1E2A1A]">
+                className="rounded-lg border border-[#FFF9EC] px-3 py-1.5 text-[11px] font-semibold text-foreground/65 transition-colors hover:bg-[#F0EDE0] focus:outline-none focus-visible:ring-2 focus-visible:ring-[#DDAF3B] dark:border-[#001A05] dark:text-[#B0BFB1] dark:hover:bg-[#001A05]">
                 {labels.cancel}
               </button>
               {expiry && (
@@ -646,7 +646,7 @@ function DocCard({
             showError('Unable to download document');
           }
         }}
-        className="flex items-center gap-1 rounded text-[12px] font-semibold text-[#C49A1E] transition-colors hover:text-[#B08A10] focus:outline-none focus-visible:ring-2 focus-visible:ring-[#C49A1E]"
+        className="flex items-center gap-1 rounded text-[12px] font-semibold text-[#DDAF3B] transition-colors hover:text-[#B08A10] focus:outline-none focus-visible:ring-2 focus-visible:ring-[#DDAF3B]"
       >
         {openLabel}
         <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
@@ -679,7 +679,7 @@ function TimelineEvent({
   active?: boolean;
 }) {
   const colorMap: Record<TimelineColor, { dot: string; text: string; bg: string }> = {
-    gold:  { dot: '#C49A1E', text: '#C49A1E', bg: 'rgba(196,154,30,0.12)' },
+    gold:  { dot: '#DDAF3B', text: '#DDAF3B', bg: 'rgba(221, 175, 59,0.12)' },
     green: { dot: '#00C851', text: '#00C851', bg: 'rgba(0,200,81,0.10)' },
     red:   { dot: '#EF4444', text: '#EF4444', bg: 'rgba(239,68,68,0.10)' },
     grey:  { dot: '#AAAAAA', text: '#888',    bg: 'rgba(170,170,170,0.10)' },
@@ -702,7 +702,7 @@ function TimelineEvent({
   return (
     <div className="group relative flex gap-4 pb-6 last:pb-0">
       {/* Connector line */}
-      <div className="absolute left-[15px] top-8 bottom-0 w-px bg-[#E8E4DC] group-last:hidden dark:bg-[#1A2A14]" />
+      <div className="absolute left-[15px] top-8 bottom-0 w-px bg-[#FFF9EC] group-last:hidden dark:bg-[#1A2A14]" />
 
       {/* Icon */}
       <div className="relative z-10 flex h-8 w-8 shrink-0 items-center justify-center rounded-full" style={{ background: c.bg }}>
@@ -718,11 +718,11 @@ function TimelineEvent({
       <div className="flex flex-1 flex-col gap-0.5 pt-1">
         <p className="text-[13px] font-bold" style={{ color: c.text }}>{label}</p>
         {formattedDate && (
-          <p className="text-[12px] text-[#999] dark:text-[#A0A090]">{formattedDate}</p>
+          <p className="text-[12px] text-[#999] dark:text-[#B0BFB1]">{formattedDate}</p>
         )}
         {note && (
           <div className="mt-2 rounded-[8px] border border-[#EF4444]/20 bg-[#FEF2F2] px-3 py-2 dark:border-[#3A1A1A] dark:bg-[#200D0D]">
-            <p className="text-[13px] leading-relaxed text-[#555] dark:text-[#E0B0B0]">{note}</p>
+            <p className="text-[13px] leading-relaxed text-foreground/70 dark:text-[#E0B0B0]">{note}</p>
           </div>
         )}
       </div>

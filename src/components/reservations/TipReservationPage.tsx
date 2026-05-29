@@ -159,7 +159,7 @@ export default function TipReservationPage() {
   /* ---- Non-form states ---- */
   if (pageState === 'loading') {
     return (
-      <main className="min-h-screen bg-[#F5F5E6] dark:bg-[#0F0F0D] flex items-center justify-center pb-20">
+      <main className="min-h-screen bg-background flex items-center justify-center pb-20">
         <div className="h-8 w-8 animate-spin rounded-full border-[3px] border-gold border-t-transparent" />
       </main>
     );
@@ -212,7 +212,7 @@ export default function TipReservationPage() {
 
   /* ---- Form ---- */
   return (
-    <main className="min-h-screen bg-[#F5F5E6] dark:bg-[#0F0F0D] pb-24 sm:pb-8">
+    <main className="min-h-screen bg-background pb-24 sm:pb-8">
       {/* Header */}
       <div className="px-4 pt-4 pb-2 max-w-2xl mx-auto">
         <Link
@@ -224,26 +224,26 @@ export default function TipReservationPage() {
           </svg>
           {t('btn_back')}
         </Link>
-        <h1 className="text-[22px] font-black text-[#0A0A14] dark:text-white mt-3">{t('page_title')}</h1>
-        <p className="text-[14px] text-[#666] dark:text-[#B0B0A0] mt-1">{t('subtitle')}</p>
+        <h1 className="text-[22px] font-black text-foreground mt-3">{t('page_title')}</h1>
+        <p className="text-[14px] text-foreground/65 mt-1">{t('subtitle')}</p>
       </div>
 
       <div className="px-4 max-w-2xl mx-auto space-y-4">
         {/* Reservation recap */}
         {res && (
-          <div className="bg-[#E8E8D8] dark:bg-dark-card rounded-xl border border-[#D0D0C0] dark:border-tab-inactive p-4 space-y-1">
-            <p className="text-[15px] font-black text-[#0A0A14] dark:text-white">{res.stationName}</p>
-            <p className="text-[13px] text-[#666] dark:text-[#B0B0A0]">{res.forfaitName}</p>
+          <div className="bg-surface rounded-xl border border-border p-4 space-y-1">
+            <p className="text-[15px] font-black text-foreground">{res.stationName}</p>
+            <p className="text-[13px] text-foreground/65">{res.forfaitName}</p>
             <div className="flex items-center justify-between mt-1">
-              <p className="text-[13px] text-[#999] dark:text-[#888]">{res.dateLabel}</p>
+              <p className="text-[13px] text-[#999] dark:text-foreground/55">{res.dateLabel}</p>
               <p className="text-[14px] font-bold text-gold">{res.totalPrice.toFixed(2)}$</p>
             </div>
           </div>
         )}
 
         {/* Preset amounts */}
-        <div className="bg-[#E8E8D8] dark:bg-dark-card rounded-xl border border-[#D0D0C0] dark:border-tab-inactive p-5">
-          <p className="text-[15px] font-black text-[#0A0A14] dark:text-white mb-4">{t('amount_label')}</p>
+        <div className="bg-surface rounded-xl border border-border p-5">
+          <p className="text-[15px] font-black text-foreground mb-4">{t('amount_label')}</p>
           <div className="grid grid-cols-4 gap-3">
             {PRESET_AMOUNTS.map((a) => (
               <button
@@ -254,7 +254,7 @@ export default function TipReservationPage() {
                   'py-3.5 rounded-xl text-[15px] font-black transition-all cursor-pointer',
                   preset === a
                     ? 'bg-gold text-dark-bg shadow-sm scale-[1.03]'
-                    : 'bg-[#D8D8C8] dark:bg-dark-surface text-[#0A0A14] dark:text-white hover:bg-gold/20 hover:text-gold border border-[#D0D0C0] dark:border-tab-inactive',
+                    : 'bg-[#D8D8C8] dark:bg-surface text-foreground hover:bg-gold/20 hover:text-gold border border-border',
                 ].join(' ')}
               >
                 {a}$
@@ -264,10 +264,10 @@ export default function TipReservationPage() {
         </div>
 
         {/* Custom amount */}
-        <div className="bg-[#E8E8D8] dark:bg-dark-card rounded-xl border border-[#D0D0C0] dark:border-tab-inactive p-5">
+        <div className="bg-surface rounded-xl border border-border p-5">
           <label
             htmlFor="tip-custom"
-            className="block text-[15px] font-black text-[#0A0A14] dark:text-white mb-3"
+            className="block text-[15px] font-black text-foreground mb-3"
           >
             {t('custom_label')}
           </label>
@@ -279,16 +279,16 @@ export default function TipReservationPage() {
               value={custom}
               onChange={(e) => handleCustomChange(e.target.value)}
               placeholder={t('custom_placeholder')}
-              className="w-full bg-white/60 dark:bg-dark-bg/50 border border-[#D0D0C0] dark:border-tab-inactive rounded-[10px] pl-4 pr-10 py-3 text-[15px] font-bold text-[#0A0A14] dark:text-white placeholder-[#AAA] dark:placeholder-[#666] focus:outline-none focus:border-gold/60 transition-colors"
+              className="w-full bg-white/60 dark:bg-background/50 border border-border rounded-[10px] pl-4 pr-10 py-3 text-[15px] font-bold text-foreground placeholder-[#AAA] dark:placeholder-[#666] focus:outline-none focus:border-gold/60 transition-colors"
             />
-            <span className="absolute right-4 top-1/2 -translate-y-1/2 text-[15px] font-bold text-[#999] dark:text-[#666]">$</span>
+            <span className="absolute right-4 top-1/2 -translate-y-1/2 text-[15px] font-bold text-[#999] dark:text-foreground/65">$</span>
           </div>
         </div>
 
         {/* Amount preview */}
         {amount > 0 && (
           <div className="flex items-center justify-between bg-gold/10 border border-gold/30 rounded-xl px-4 py-3">
-            <p className="text-[14px] font-bold text-[#0A0A14] dark:text-white">{t('amount_preview')}</p>
+            <p className="text-[14px] font-bold text-foreground">{t('amount_preview')}</p>
             <p className="text-[18px] font-black text-gold">{amount.toFixed(2)}$</p>
           </div>
         )}
@@ -316,7 +316,7 @@ export default function TipReservationPage() {
         <div className="text-center pb-2">
           <Link
             href={`/client/reservations/${id}`}
-            className="text-[14px] font-semibold text-[#999] dark:text-[#777] hover:text-[#555] dark:hover:text-[#B0B0A0] transition-colors"
+            className="text-[14px] font-semibold text-[#999] dark:text-[#777] hover:text-foreground/70 dark:hover:text-[#B0B0A0] transition-colors"
           >
             {t('btn_skip')}
           </Link>
@@ -333,15 +333,15 @@ export default function TipReservationPage() {
 function SuccessView({ stationId }: { stationId: string }) {
   const t = useTranslations('tip');
   return (
-    <main className="min-h-screen bg-[#F5F5E6] dark:bg-[#0F0F0D] flex items-center justify-center p-6 pb-20">
+    <main className="min-h-screen bg-background flex items-center justify-center p-6 pb-20">
       <div className="flex flex-col items-center text-center gap-5 max-w-xs w-full">
         <div className="w-20 h-20 rounded-full bg-Hurryline-success/15 flex items-center justify-center">
           <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="#00C851" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
             <polyline points="20 6 9 17 4 12" />
           </svg>
         </div>
-        <h2 className="text-[22px] font-black text-[#0A0A14] dark:text-white">{t('success_title')}</h2>
-        <p className="text-[15px] text-[#555] dark:text-[#B0B0A0] leading-relaxed">{t('success_desc')}</p>
+        <h2 className="text-[22px] font-black text-foreground">{t('success_title')}</h2>
+        <p className="text-[15px] text-foreground/70 leading-relaxed">{t('success_desc')}</p>
         <div className="flex flex-col gap-3 w-full mt-2">
           {stationId && (
             <Link
@@ -375,7 +375,7 @@ function StatusView({
 }) {
   const iconMap: Record<string, ReactNode> = {
     error: (
-      <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#E8472A" strokeWidth="2" strokeLinecap="round" aria-hidden="true">
+      <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#FF383C" strokeWidth="2" strokeLinecap="round" aria-hidden="true">
         <circle cx="12" cy="12" r="10" /><line x1="12" y1="8" x2="12" y2="12" /><line x1="12" y1="16" x2="12.01" y2="16" />
       </svg>
     ),
@@ -391,13 +391,13 @@ function StatusView({
   };
 
   return (
-    <main className="min-h-screen bg-[#F5F5E6] dark:bg-[#0F0F0D] flex items-center justify-center p-6 pb-20">
+    <main className="min-h-screen bg-background flex items-center justify-center p-6 pb-20">
       <div className="flex flex-col items-center text-center gap-4 max-w-xs w-full">
         <div className={`w-16 h-16 rounded-full flex items-center justify-center ${bgMap[icon]}`}>
           {iconMap[icon]}
         </div>
-        <h2 className="text-[20px] font-black text-[#0A0A14] dark:text-white">{title}</h2>
-        {desc && <p className="text-[14px] text-[#555] dark:text-[#B0B0A0] leading-relaxed">{desc}</p>}
+        <h2 className="text-[20px] font-black text-foreground">{title}</h2>
+        {desc && <p className="text-[14px] text-foreground/70 leading-relaxed">{desc}</p>}
         {action}
         {backHref && backLabel && (
           <Link href={backHref} className="text-[14px] font-bold text-gold hover:text-gold-hover transition-colors mt-1">
@@ -453,7 +453,7 @@ function TipPayStep({
   };
 
   return (
-    <main className="min-h-screen bg-[#F5F5E6] dark:bg-[#0F0F0D] pb-24 sm:pb-8">
+    <main className="min-h-screen bg-background pb-24 sm:pb-8">
       <div className="px-4 pt-4 pb-2 max-w-2xl mx-auto">
         <button
           type="button"
@@ -465,20 +465,20 @@ function TipPayStep({
           </svg>
           {t('btn_back')}
         </button>
-        <h1 className="text-[22px] font-black text-[#0A0A14] dark:text-white mt-3">{t('pay_title')}</h1>
-        <p className="text-[14px] text-[#666] dark:text-[#B0B0A0] mt-1">{t('pay_subtitle')}</p>
+        <h1 className="text-[22px] font-black text-foreground mt-3">{t('pay_title')}</h1>
+        <p className="text-[14px] text-foreground/65 mt-1">{t('pay_subtitle')}</p>
       </div>
 
       <div className="px-4 max-w-2xl mx-auto space-y-4">
-        <div className="bg-[#E8E8D8] dark:bg-dark-card rounded-xl border border-[#D0D0C0] dark:border-tab-inactive p-5 space-y-4">
+        <div className="bg-surface rounded-xl border border-border p-5 space-y-4">
           <div className="flex items-center gap-2">
             <svg width="28" height="18" viewBox="0 0 28 18" fill="none" aria-hidden="true">
               <rect width="28" height="18" rx="3" fill="#635BFF" />
               <text x="5" y="13" fontSize="10" fill="white" fontWeight="bold">S</text>
             </svg>
-            <span className="text-[13px] font-bold text-[#555] dark:text-[#A0A090]">{t('payment_secured')}</span>
+            <span className="text-[13px] font-bold text-foreground/70 dark:text-[#B0BFB1]">{t('payment_secured')}</span>
           </div>
-          <div className="rounded-lg border-2 border-[#D0D0C0] dark:border-tab-inactive bg-white dark:bg-dark-bg/40 px-4 py-3">
+          <div className="rounded-lg border-2 border-border bg-white dark:bg-background/40 px-4 py-3">
             <CardElement
               options={{
                 style: {
@@ -488,7 +488,7 @@ function TipPayStep({
                     '::placeholder': { color: '#BBBBBB' },
                     fontFamily: 'Rajdhani, sans-serif',
                   },
-                  invalid: { color: '#E8472A' },
+                  invalid: { color: '#FF383C' },
                 },
                 hidePostalCode: true,
               }}
@@ -500,7 +500,7 @@ function TipPayStep({
         </div>
 
         <div className="bg-gold/10 border-2 border-gold rounded-xl px-4 py-3 flex items-center justify-between">
-          <span className="text-[14px] font-bold text-[#0A0A14] dark:text-white">{t('amount_preview')}</span>
+          <span className="text-[14px] font-bold text-foreground">{t('amount_preview')}</span>
           <span className="text-[20px] font-black text-gold">{amount.toFixed(2)}$</span>
         </div>
 

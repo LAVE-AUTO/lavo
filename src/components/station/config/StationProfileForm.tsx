@@ -24,7 +24,7 @@ function Field({ label, hint, children }: { label: string; hint?: string; childr
   return (
     <div className="flex flex-col gap-1.5">
       <div className="flex items-baseline gap-2">
-        <label className="text-[11px] font-bold uppercase tracking-[0.5px] text-[#888] dark:text-[#9A9A8A]">
+        <label className="text-[11px] font-bold uppercase tracking-[0.5px] text-foreground/55 dark:text-[#B0BFB1]">
           {label}
         </label>
         {hint && <span className="text-[12px] text-[#BBBBAA] dark:text-[#4A4A3A]">{hint}</span>}
@@ -38,7 +38,7 @@ function ReadField({ label, value }: { label: string; value: string }) {
   return (
     <div>
       <p className="mb-0.5 text-[11px] font-bold uppercase tracking-wider text-[#C8C4B4] dark:text-[#2E3C2A]">{label}</p>
-      <p className="text-[13px] font-semibold text-[#1A1A0A] dark:text-[#F0EDD4]">{value || '-'}</p>
+      <p className="text-[13px] font-semibold text-[#001201] dark:text-[#FFF9EC]">{value || '-'}</p>
     </div>
   );
 }
@@ -131,15 +131,15 @@ export function StationProfileForm({ profile, onSaved, locked = false }: Props) 
   }
 
   return (
-    <section className="rounded-2xl border border-[#E8E4DC] bg-white shadow-sm dark:border-[#1A2A14] dark:bg-[#182214]">
+    <section className="rounded-2xl border border-[#FFF9EC] bg-white shadow-sm dark:border-[#1A2A14] dark:bg-[#182214]">
       <div className="flex items-center gap-2.5 border-b border-[#F0EDE4] px-5 py-3.5 dark:border-[#1A2A14]">
-        <span className="h-4 w-[3px] rounded-full bg-[#C49A1E]" />
-        <span className="flex-1 text-[13px] font-bold text-[#1A1A0A] dark:text-[#F0EDD4]">{t('section_profile')}</span>
+        <span className="h-4 w-[3px] rounded-full bg-[#DDAF3B]" />
+        <span className="flex-1 text-[13px] font-bold text-[#001201] dark:text-[#FFF9EC]">{t('section_profile')}</span>
         {!isEditing && !locked && (
           <button
             type="button"
             onClick={() => setIsEditing(true)}
-            className="flex items-center gap-1.5 rounded-[8px] border border-[#C49A1E]/40 px-3 py-1 text-[13px] font-semibold text-[#C49A1E] transition-colors hover:bg-[#C49A1E]/8"
+            className="flex items-center gap-1.5 rounded-[8px] border border-[#DDAF3B]/40 px-3 py-1 text-[13px] font-semibold text-[#DDAF3B] transition-colors hover:bg-[#DDAF3B]/8"
           >
             <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
               <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" />
@@ -155,13 +155,13 @@ export function StationProfileForm({ profile, onSaved, locked = false }: Props) 
           /* Read-only view */
           <div className="flex flex-col gap-4">
             <div className="flex items-center gap-4">
-              <div className="flex h-[52px] w-[52px] shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-[#C49A1E]/20 to-[#C49A1E]/8 text-[15px] font-black text-[#C49A1E] ring-1 ring-[#C49A1E]/15 dark:from-[#C49A1E]/15 dark:to-[#C49A1E]/5">
+              <div className="flex h-[52px] w-[52px] shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-[#DDAF3B]/20 to-[#DDAF3B]/8 text-[15px] font-black text-[#DDAF3B] ring-1 ring-[#DDAF3B]/15 dark:from-[#DDAF3B]/15 dark:to-[#DDAF3B]/5">
                 {profile.name ? profile.name.substring(0, 2).toUpperCase() : '-'}
               </div>
               <div className="flex flex-col gap-0.5">
-                <p className="text-[16px] font-black text-[#1A1A0A] dark:text-[#F0EDD4]">{profile.name || '-'}</p>
+                <p className="text-[16px] font-black text-[#001201] dark:text-[#FFF9EC]">{profile.name || '-'}</p>
                 {profile.service_scope && (
-                  <span className="w-fit rounded-full bg-[#FDF3D8] px-2.5 py-0.5 text-[12px] font-semibold text-[#C49A1E] dark:bg-[#2A1E08]">
+                  <span className="w-fit rounded-full bg-[#FDF3D8] px-2.5 py-0.5 text-[12px] font-semibold text-[#DDAF3B] dark:bg-[#2A1E08]">
                     {scopeLabels[profile.service_scope as ScopeValue] ?? profile.service_scope}
                   </span>
                 )}
@@ -173,8 +173,8 @@ export function StationProfileForm({ profile, onSaved, locked = false }: Props) 
                 <div className="col-span-2">
                   <p className="mb-0.5 text-[11px] font-bold uppercase tracking-wider text-[#C8C4B4] dark:text-[#2E3C2A]">{t('field_email')}</p>
                   <div className="flex items-center gap-2">
-                    <span className="text-[13px] font-semibold text-[#1A1A0A] dark:text-[#F0EDD4]">{user.email}</span>
-                    <span className="rounded-full bg-[#E8E4DC] px-2 py-0.5 text-[11px] font-semibold text-[#AAAAAA] dark:bg-[#1A2A14] dark:text-[#4A4A3A]">
+                    <span className="text-[13px] font-semibold text-[#001201] dark:text-[#FFF9EC]">{user.email}</span>
+                    <span className="rounded-full bg-[#FFF9EC] px-2 py-0.5 text-[11px] font-semibold text-[#AAAAAA] dark:bg-[#1A2A14] dark:text-[#4A4A3A]">
                       {t('field_email_readonly')}
                     </span>
                   </div>
@@ -194,10 +194,10 @@ export function StationProfileForm({ profile, onSaved, locked = false }: Props) 
               {user?.email && (
                 <div className="col-span-2">
                   <Field label={t('field_email')}>
-                    <div className="flex items-center gap-2.5 rounded-xl border border-[#E0DCD0] bg-[#F0EFEB] px-3 py-2.5 dark:border-[#243020] dark:bg-[#0A1208]">
+                    <div className="flex items-center gap-2.5 rounded-xl border border-[#FFF9EC] bg-[#F0EFEB] px-3 py-2.5 dark:border-[#001A05] dark:bg-[#0A1208]">
                       <MailIcon />
                       <span className="text-[13px] text-[#999] dark:text-[#5A5A4A]">{user.email}</span>
-                      <span className="ml-auto rounded-full bg-[#E8E4DC] px-2 py-0.5 text-[11px] font-semibold text-[#AAAAAA] dark:bg-[#1A2A14] dark:text-[#4A4A3A]">
+                      <span className="ml-auto rounded-full bg-[#FFF9EC] px-2 py-0.5 text-[11px] font-semibold text-[#AAAAAA] dark:bg-[#1A2A14] dark:text-[#4A4A3A]">
                         {t('field_email_readonly')}
                       </span>
                     </div>
@@ -225,14 +225,14 @@ export function StationProfileForm({ profile, onSaved, locked = false }: Props) 
 
               <div className="col-span-2">
                 <Field label={t('field_service_scope')}>
-                  <div className="flex gap-1 rounded-xl border border-[#E0DCD0] bg-[#F7F6F2] p-1 dark:border-[#243020] dark:bg-[#0F1A0C]">
+                  <div className="flex gap-1 rounded-xl border border-[#FFF9EC] bg-[#FFF9EC] p-1 dark:border-[#001A05] dark:bg-dark-bg">
                     <button
                       type="button"
                       onClick={() => setServiceScope('')}
                       className={`rounded-[10px] px-3 py-1.5 text-[13px] font-semibold transition-all duration-150 ${
                         !serviceScope
-                          ? 'bg-white text-[#5A5A4A] shadow-sm dark:bg-[#182214] dark:text-[#9A9A8A]'
-                          : 'text-[#BBBBAA] hover:text-[#888] dark:text-[#3A3A2A] dark:hover:text-[#9A9A8A]'
+                          ? 'bg-white text-[#5A5A4A] shadow-sm dark:bg-[#182214] dark:text-[#B0BFB1]'
+                          : 'text-[#BBBBAA] hover:text-foreground/55 dark:text-[#3A3A2A] dark:hover:text-[#B0BFB1]'
                       }`}
                     >
                       -
@@ -244,8 +244,8 @@ export function StationProfileForm({ profile, onSaved, locked = false }: Props) 
                         onClick={() => setServiceScope(v)}
                         className={`flex-1 rounded-[10px] py-1.5 text-[13px] font-semibold transition-all duration-150 ${
                           serviceScope === v
-                            ? 'bg-[#C49A1E] text-[#0C1209] shadow-sm'
-                            : 'text-[#AAAAAA] hover:text-[#5A5A4A] dark:text-[#4A4A3A] dark:hover:text-[#9A9A8A]'
+                            ? 'bg-[#DDAF3B] text-[#001201] shadow-sm'
+                            : 'text-[#AAAAAA] hover:text-[#5A5A4A] dark:text-[#4A4A3A] dark:hover:text-[#B0BFB1]'
                         }`}
                       >
                         {scopeLabels[v]}
@@ -273,14 +273,14 @@ export function StationProfileForm({ profile, onSaved, locked = false }: Props) 
                 type="button"
                 onClick={handleCancel}
                 disabled={saving}
-                className="rounded-xl border border-[#E0DCD0] px-4 py-2.5 text-[13px] font-semibold text-[#666] transition-colors hover:bg-[#F0EDE0] disabled:opacity-50 dark:border-[#243020] dark:text-[#9A9A8A]"
+                className="rounded-xl border border-[#FFF9EC] px-4 py-2.5 text-[13px] font-semibold text-foreground/65 transition-colors hover:bg-[#F0EDE0] disabled:opacity-50 dark:border-[#001A05] dark:text-[#B0BFB1]"
               >
                 {t('btn_cancel_edit')}
               </button>
               <button
                 type="submit"
                 disabled={saving}
-                className="rounded-xl bg-[#C49A1E] px-6 py-2.5 text-[13px] font-bold text-[#0C1209] transition-opacity hover:opacity-85 disabled:opacity-50"
+                className="rounded-xl bg-[#DDAF3B] px-6 py-2.5 text-[13px] font-bold text-[#001201] transition-opacity hover:opacity-85 disabled:opacity-50"
               >
                 {saving ? t('btn_saving') : t('btn_save')}
               </button>

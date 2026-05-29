@@ -12,6 +12,9 @@ export interface AgendaEntry {
   slotEnd: string | null;
   amountPaid: number | null;
   postId: string | null;
+  /** True for walk-in entries added manually by the merchant. The
+   *  start-service flow skips the ticket code prompt for these. */
+  isWalkIn?: boolean;
 }
 
 export interface AgendaPost {
@@ -60,10 +63,10 @@ function statusToBlockClass(status: string): { bg: string; border: string; chip:
   switch (status) {
     case 'completed':
       return {
-        bg: 'bg-[#F0EDE0] dark:bg-[#0F1A0C]/60',
-        border: 'border-[#D8D4C4] dark:border-[#243020]',
-        chip: 'text-[#888] dark:text-[#A0A090]',
-        chipBg: 'bg-[#E0DCD0] dark:bg-[#1A2A14]',
+        bg: 'bg-[#F0EDE0] dark:bg-dark-bg/60',
+        border: 'border-[#D8D4C4] dark:border-[#001A05]',
+        chip: 'text-foreground/55 dark:text-[#B0BFB1]',
+        chipBg: 'bg-[#FFF9EC] dark:bg-[#1A2A14]',
       };
     case 'in_progress':
       return {
@@ -75,24 +78,24 @@ function statusToBlockClass(status: string): { bg: string; border: string; chip:
     case 'late':
       return {
         bg: 'bg-[#FDECE6] dark:bg-[#291210]',
-        border: 'border-[#E8472A]/50',
+        border: 'border-[#FF383C]/50',
         chip: 'text-[#B33B1F] dark:text-[#FF8866]',
-        chipBg: 'bg-[#E8472A]/15',
+        chipBg: 'bg-[#FF383C]/15',
       };
     case 'cancelled':
       return {
         bg: 'bg-[#F0EDE0]/70',
         border: 'border-[#D8D4C4]',
-        chip: 'text-[#888]',
-        chipBg: 'bg-[#E0DCD0]',
+        chip: 'text-foreground/55',
+        chipBg: 'bg-[#FFF9EC]',
       };
     default:
       // confirmed / pending / pending_payment
       return {
         bg: 'bg-[#E6EEFD] dark:bg-[#10182B]',
-        border: 'border-[#3B82F6]/50',
+        border: 'border-[#1E40AF]/50',
         chip: 'text-[#1E40AF] dark:text-[#8AB4FF]',
-        chipBg: 'bg-[#3B82F6]/15',
+        chipBg: 'bg-[#1E40AF]/15',
       };
   }
 }
@@ -193,12 +196,12 @@ export function DashboardAgendaTimeline({
   const totalHeight = totalMinutes * PX_PER_MINUTE;
 
   return (
-    <div className="flex flex-1 min-h-0 flex-col overflow-hidden bg-white dark:bg-[#111A0E]">
+    <div className="flex flex-1 min-h-0 flex-col overflow-hidden bg-white dark:bg-dark-bg">
       {/* Header strip — sticky bay names */}
-      <div className="flex flex-shrink-0 border-b border-[#E0DCD0] bg-[#F7F6F2] dark:border-[#1A2A14] dark:bg-[#0F1A0C]">
-        <div className="w-14 flex-shrink-0 border-r border-[#E0DCD0] dark:border-[#1A2A14]" />
+      <div className="flex flex-shrink-0 border-b border-[#FFF9EC] bg-[#FFF9EC] dark:border-[#1A2A14] dark:bg-dark-bg">
+        <div className="w-14 flex-shrink-0 border-r border-[#FFF9EC] dark:border-[#1A2A14]" />
         {visiblePosts.length === 0 ? (
-          <div className="flex-1 px-4 py-3 text-center text-[12px] text-[#888] dark:text-[#A0A090]">
+          <div className="flex-1 px-4 py-3 text-center text-[12px] text-foreground/55 dark:text-[#B0BFB1]">
             {t('agenda_no_posts')}
           </div>
         ) : (
@@ -208,12 +211,12 @@ export function DashboardAgendaTimeline({
             return (
               <div
                 key={post.id}
-                className="min-w-[200px] flex-1 border-l border-[#E0DCD0] px-3 py-2 dark:border-[#1A2A14]"
+                className="min-w-[200px] flex-1 border-l border-[#FFF9EC] px-3 py-2 dark:border-[#1A2A14]"
               >
-                <div className="text-[13px] font-bold text-[#1A1A0A] dark:text-[#F0EDD4]">
+                <div className="text-[13px] font-bold text-[#001201] dark:text-[#FFF9EC]">
                   {t('filter_post', { n: post.position })}
                 </div>
-                <div className={`mt-0.5 text-[11px] font-bold ${inProgress ? 'text-[#0E8C45] dark:text-[#65E69A]' : 'text-[#3B82F6] dark:text-[#8AB4FF]'}`}>
+                <div className={`mt-0.5 text-[11px] font-bold ${inProgress ? 'text-[#0E8C45] dark:text-[#65E69A]' : 'text-[#1E40AF] dark:text-[#8AB4FF]'}`}>
                   {inProgress ? `● ${t('post_in_service')}` : `● ${t('post_available')}`}
                 </div>
               </div>
@@ -225,7 +228,7 @@ export function DashboardAgendaTimeline({
       {/* Scrollable body */}
       <div className="flex flex-1 overflow-auto">
         {/* Hour gutter */}
-        <div className="sticky left-0 z-10 w-14 flex-shrink-0 border-r border-[#E0DCD0] bg-white dark:border-[#1A2A14] dark:bg-[#111A0E]">
+        <div className="sticky left-0 z-10 w-14 flex-shrink-0 border-r border-[#FFF9EC] bg-white dark:border-[#1A2A14] dark:bg-dark-bg">
           <div className="relative" style={{ height: totalHeight }}>
             {hours.map((h) => {
               const top = (parseHHMM(h, '00:00').h * 60 + parseHHMM(h, '00:00').m - openMinutes) * PX_PER_MINUTE;
@@ -248,7 +251,7 @@ export function DashboardAgendaTimeline({
           return (
             <div
               key={post.id}
-              className="relative min-w-[200px] flex-1 border-l border-[#E0DCD0] dark:border-[#1A2A14]"
+              className="relative min-w-[200px] flex-1 border-l border-[#FFF9EC] dark:border-[#1A2A14]"
             >
               <div className="relative" style={{ height: totalHeight }}>
                 {/* Hour grid lines */}
@@ -257,7 +260,7 @@ export function DashboardAgendaTimeline({
                   return (
                     <div
                       key={h}
-                      className="absolute left-0 right-0 h-px bg-[#E8E4D8] dark:bg-[#1A2A14]"
+                      className="absolute left-0 right-0 h-px bg-[#FFF9EC] dark:bg-[#1A2A14]"
                       style={{ top }}
                     />
                   );
@@ -266,7 +269,7 @@ export function DashboardAgendaTimeline({
                 {/* Break overlay */}
                 {breakSpan && (
                   <div
-                    className="absolute left-1 right-1 flex items-center justify-center rounded-md bg-[#1A1A0A]/[0.06] text-[10px] font-bold uppercase tracking-wider text-[#666] dark:bg-[#0F1A0C] dark:text-[#5A5A4A]"
+                    className="absolute left-1 right-1 flex items-center justify-center rounded-md bg-dark-bg/[0.06] text-[10px] font-bold uppercase tracking-wider text-foreground/65 dark:bg-dark-bg dark:text-[#5A5A4A]"
                     style={{ top: breakSpan.top, height: breakSpan.height }}
                     aria-hidden="true"
                   >
@@ -277,10 +280,10 @@ export function DashboardAgendaTimeline({
                 {/* Now line */}
                 {nowLineTop !== null && (
                   <div
-                    className="pointer-events-none absolute left-0 right-0 z-20 h-px bg-[#C49A1E]"
+                    className="pointer-events-none absolute left-0 right-0 z-20 h-px bg-[#DDAF3B]"
                     style={{ top: nowLineTop }}
                   >
-                    <span className="absolute -left-1 -top-[3px] block h-1.5 w-1.5 rounded-full bg-[#C49A1E]" />
+                    <span className="absolute -left-1 -top-[3px] block h-1.5 w-1.5 rounded-full bg-[#DDAF3B]" />
                   </div>
                 )}
 
@@ -332,33 +335,33 @@ function SlotBlock({ entry, openMinutes, closeMinutes, onSelect }: SlotBlockProp
   const primaryLabel = entry.status === 'in_progress' ? t('btn_complete') : t('btn_start');
   const primaryClass = entry.status === 'in_progress'
     ? 'bg-[#2ECC71] text-white'
-    : 'bg-[#3B82F6] text-white';
+    : 'bg-[#1E40AF] text-white';
 
   return (
     <button
       type="button"
       onClick={() => onSelect(entry)}
       aria-label={t('slot_block_aria', { name: entry.clientName, time: `${formatTime(start)}–${formatTime(end)}` })}
-      className={`group absolute left-1.5 right-1.5 flex flex-col overflow-hidden rounded-lg border text-left ${styles.bg} ${styles.border} px-2 py-1.5 shadow-sm transition-all hover:-translate-y-px hover:shadow-md focus:outline-none focus:ring-2 focus:ring-[#C49A1E]/40`}
+      className={`group absolute left-1.5 right-1.5 flex flex-col overflow-hidden rounded-lg border text-left ${styles.bg} ${styles.border} px-2 py-1.5 shadow-sm transition-all hover:-translate-y-px hover:shadow-md focus:outline-none focus:ring-2 focus:ring-[#DDAF3B]/40`}
       style={{ top, height }}
     >
       <div className="flex items-start gap-1.5">
-        <span className="text-[10px] font-bold tabular-nums text-[#1A1A0A] dark:text-[#F0EDD4]">
+        <span className="text-[10px] font-bold tabular-nums text-[#001201] dark:text-[#FFF9EC]">
           {formatTime(start)}–{formatTime(end)}
         </span>
         <span className={`ml-auto rounded-full px-1.5 py-0.5 text-[9px] font-black uppercase tracking-wide ${styles.chip} ${styles.chipBg}`}>
           {statusLbl}
         </span>
       </div>
-      <div className="mt-0.5 truncate text-[11px] font-semibold text-[#1A1A0A] dark:text-[#F0EDD4]">
+      <div className="mt-0.5 truncate text-[11px] font-semibold text-[#001201] dark:text-[#FFF9EC]">
         {entry.clientName}
       </div>
       <div className="mt-auto flex items-end justify-between gap-1.5 pt-1">
-        <div className="min-w-0 truncate text-[10px] text-[#666] dark:text-[#A0A090]">
+        <div className="min-w-0 truncate text-[10px] text-foreground/65 dark:text-[#B0BFB1]">
           {entry.vehicleFormat ?? ''}
           {entry.vehicleFormat && entry.amountPaid !== null ? ' · ' : ''}
           {entry.amountPaid !== null ? (
-            <span className="font-black text-[#1A1A0A] dark:text-[#F0EDD4]">{entry.amountPaid}$</span>
+            <span className="font-black text-[#001201] dark:text-[#FFF9EC]">{entry.amountPaid}$</span>
           ) : null}
         </div>
         {showPrimary && (

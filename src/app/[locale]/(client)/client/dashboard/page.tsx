@@ -96,15 +96,15 @@ export default function ClientDashboardPage() {
   })} $`;
 
   return (
-    <main className="min-h-screen bg-[#F5F5E6] dark:bg-[#0F0F0D] pb-24 sm:pb-8">
+    <main className="min-h-screen bg-background pb-24 sm:pb-8">
       <div className="mx-auto max-w-5xl px-4 py-6 sm:px-6 lg:px-8">
-        <section className="overflow-hidden rounded-3xl border border-[rgba(200,152,10,0.12)] bg-[#E8E8D8] dark:bg-dark-card">
-          <div className="border-b border-[rgba(200,152,10,0.1)] px-5 py-5 sm:px-6">
-            <p className="text-[11px] font-black uppercase tracking-[0.2em] text-[#888] dark:text-[#666]">{t('kicker')}</p>
-            <h1 className="mt-2 text-[24px] font-black text-[#1a1a1a] dark:text-white sm:text-[30px]">
+        <section className="overflow-hidden rounded-3xl border border-[rgba(221,175,59,0.12)] bg-surface">
+          <div className="border-b border-[rgba(221,175,59,0.1)] px-5 py-5 sm:px-6">
+            <p className="text-[11px] font-black uppercase tracking-[0.2em] text-foreground/55 dark:text-foreground/65">{t('kicker')}</p>
+            <h1 className="mt-2 text-[24px] font-black text-[#001201] dark:text-white sm:text-[30px]">
               {t('title', { name: user?.first_name ?? user?.email ?? '' })}
             </h1>
-            <p className="mt-2 max-w-2xl text-[14px] text-[#666] dark:text-[#A0A090]">{t('subtitle')}</p>
+            <p className="mt-2 max-w-2xl text-[14px] text-foreground/65 dark:text-[#B0BFB1]">{t('subtitle')}</p>
           </div>
 
           <div className="grid gap-3 px-5 py-5 sm:grid-cols-2 lg:grid-cols-4 sm:px-6">
@@ -116,8 +116,8 @@ export default function ClientDashboardPage() {
         </section>
 
         <section className="mt-6 grid gap-4 lg:grid-cols-[1.1fr_0.9fr]">
-          <div className="rounded-3xl border border-[rgba(200,152,10,0.12)] bg-white p-5 dark:bg-dark-card sm:p-6">
-            <h2 className="text-[16px] font-black text-[#1a1a1a] dark:text-white">{t('shortcuts_title')}</h2>
+          <div className="rounded-3xl border border-[rgba(221,175,59,0.12)] bg-white p-5 dark:bg-surface sm:p-6">
+            <h2 className="text-[16px] font-black text-[#001201] dark:text-white">{t('shortcuts_title')}</h2>
             <div className="mt-4 grid gap-3 sm:grid-cols-2">
               <ShortcutLink href="/stations" label={t('shortcut_stations')} desc={t('shortcut_stations_desc')} />
               <ShortcutLink href="/client/reservations" label={t('shortcut_reservations')} desc={t('shortcut_reservations_desc')} />
@@ -128,14 +128,14 @@ export default function ClientDashboardPage() {
             </div>
           </div>
 
-          <div className="rounded-3xl border border-[rgba(200,152,10,0.12)] bg-white p-5 dark:bg-dark-card sm:p-6">
-            <h2 className="text-[16px] font-black text-[#1a1a1a] dark:text-white">{t('account_title')}</h2>
+          <div className="rounded-3xl border border-[rgba(221,175,59,0.12)] bg-white p-5 dark:bg-surface sm:p-6">
+            <h2 className="text-[16px] font-black text-[#001201] dark:text-white">{t('account_title')}</h2>
             <div className="mt-4 space-y-3 text-[14px]">
               <InfoRow label={t('account_email')} value={user?.email ?? '-'} />
               <InfoRow label={t('account_member_since')} value={memberSinceLabel} />
               <InfoRow label={t('account_verified')} value={user?.email_verified_at ? t('yes') : t('no')} />
             </div>
-            <div className="mt-5 rounded-2xl bg-gold/10 px-4 py-4 text-[13px] text-[#4E2507] dark:text-[#FFF8EC]">
+            <div className="mt-5 rounded-2xl bg-gold/10 px-4 py-4 text-[13px] text-[#4E2507] dark:text-foreground">
               {t('account_hint')}
             </div>
           </div>
@@ -172,10 +172,10 @@ function SummaryCard({
   helper: string;
 }) {
   return (
-    <div className="rounded-2xl border border-[rgba(200,152,10,0.12)] bg-[#F7F6F2] px-4 py-4 dark:bg-[#111A0E]">
-      <p className="text-[11px] font-black uppercase tracking-[0.18em] text-[#888] dark:text-[#666]">{label}</p>
-      <p className="mt-2 text-[22px] font-black text-[#1a1a1a] dark:text-white">{value}</p>
-      <p className="mt-1 text-[12px] text-[#666] dark:text-[#A0A090]">{helper}</p>
+    <div className="rounded-2xl border border-[rgba(221,175,59,0.12)] bg-[#FFF9EC] px-4 py-4 dark:bg-dark-bg">
+      <p className="text-[11px] font-black uppercase tracking-[0.18em] text-foreground/55 dark:text-foreground/65">{label}</p>
+      <p className="mt-2 text-[22px] font-black text-[#001201] dark:text-white">{value}</p>
+      <p className="mt-1 text-[12px] text-foreground/65 dark:text-[#B0BFB1]">{helper}</p>
     </div>
   );
 }
@@ -192,19 +192,19 @@ function ShortcutLink({
   return (
     <Link
       href={href}
-      className="group rounded-2xl border border-[#E0E0D0] bg-[#F7F6F2] px-4 py-4 transition-colors hover:border-gold/30 hover:bg-gold/5 dark:border-tab-inactive dark:bg-[#111A0E]"
+      className="group rounded-2xl border border-[#E0E0D0] bg-[#FFF9EC] px-4 py-4 transition-colors hover:border-gold/30 hover:bg-gold/5 dark:border-border dark:bg-dark-bg"
     >
-      <p className="text-[14px] font-black text-[#1a1a1a] transition-colors group-hover:text-gold dark:text-white">{label}</p>
-      <p className="mt-1 text-[12px] text-[#666] dark:text-[#A0A090]">{desc}</p>
+      <p className="text-[14px] font-black text-[#001201] transition-colors group-hover:text-gold dark:text-white">{label}</p>
+      <p className="mt-1 text-[12px] text-foreground/65 dark:text-[#B0BFB1]">{desc}</p>
     </Link>
   );
 }
 
 function InfoRow({ label, value }: { label: string; value: string }) {
   return (
-    <div className="flex items-center justify-between gap-4 rounded-2xl bg-[#F7F6F2] px-4 py-3 text-[13px] dark:bg-[#111A0E]">
-      <span className="font-semibold text-[#666] dark:text-[#A0A090]">{label}</span>
-      <span className="font-bold text-[#1a1a1a] dark:text-white">{value}</span>
+    <div className="flex items-center justify-between gap-4 rounded-2xl bg-[#FFF9EC] px-4 py-3 text-[13px] dark:bg-dark-bg">
+      <span className="font-semibold text-foreground/65 dark:text-[#B0BFB1]">{label}</span>
+      <span className="font-bold text-[#001201] dark:text-white">{value}</span>
     </div>
   );
 }

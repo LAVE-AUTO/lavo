@@ -18,9 +18,9 @@ function SuccessIcon() {
 function ErrorIcon() {
   return (
     <svg width="20" height="20" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-      <circle cx="12" cy="12" r="10" fill="#E8472A" opacity="0.15" />
-      <path d="M15 9l-6 6M9 9l6 6" stroke="#E8472A" strokeWidth="2" strokeLinecap="round" />
-      <circle cx="12" cy="12" r="10" stroke="#E8472A" strokeWidth="1.5" fill="none" />
+      <circle cx="12" cy="12" r="10" fill="#FF383C" opacity="0.15" />
+      <path d="M15 9l-6 6M9 9l6 6" stroke="#FF383C" strokeWidth="2" strokeLinecap="round" />
+      <circle cx="12" cy="12" r="10" stroke="#FF383C" strokeWidth="1.5" fill="none" />
     </svg>
   );
 }
@@ -39,10 +39,10 @@ function WarningIcon() {
 function InfoIcon() {
   return (
     <svg width="20" height="20" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-      <circle cx="12" cy="12" r="10" fill="#3B82F6" opacity="0.15" />
-      <circle cx="12" cy="12" r="10" stroke="#3B82F6" strokeWidth="1.5" fill="none" />
-      <line x1="12" y1="11" x2="12" y2="16" stroke="#3B82F6" strokeWidth="2" strokeLinecap="round" />
-      <circle cx="12" cy="8" r="1" fill="#3B82F6" />
+      <circle cx="12" cy="12" r="10" fill="#1E40AF" opacity="0.15" />
+      <circle cx="12" cy="12" r="10" stroke="#1E40AF" strokeWidth="1.5" fill="none" />
+      <line x1="12" y1="11" x2="12" y2="16" stroke="#1E40AF" strokeWidth="2" strokeLinecap="round" />
+      <circle cx="12" cy="8" r="1" fill="#1E40AF" />
     </svg>
   );
 }
@@ -64,9 +64,9 @@ const ICONS: Record<ToastType, () => ReactElement> = {
 
 const ACCENT_COLORS: Record<ToastType, string> = {
   success: '#00C851',
-  error:   '#E8472A',
+  error:   '#FF383C',
   warning: '#F59E0B',
-  info:    '#3B82F6',
+  info:    '#1E40AF',
 };
 
 /**
@@ -198,7 +198,7 @@ function ToastCard({ Icon, accent, message, duration, onDismiss }: ToastCardProp
         </div>
         <p
           className="flex-1 text-[14px] font-medium leading-snug"
-          style={{ color: 'var(--toast-text, #1a1a1a)' }}
+          style={{ color: 'var(--toast-text, #001201)' }}
         >
           {message}
         </p>

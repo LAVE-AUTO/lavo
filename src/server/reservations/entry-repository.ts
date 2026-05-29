@@ -4,7 +4,7 @@
  */
 import { and, asc, desc, eq, gte, inArray, isNull, lt, lte, sql } from 'drizzle-orm';
 import { db, type DbTransaction } from '@/lib/db';
-import { reservations, timeSlots, stationConfigs, stations, vehicleFormats, users } from '@/lib/db/schema';
+import { reservations, timeSlots, stationConfigs, stations, vehicleFormats, users, stationServices } from '@/lib/db/schema';
 
 export type Entry = typeof reservations.$inferSelect;
 export type EntryInsert = typeof reservations.$inferInsert;
@@ -21,6 +21,7 @@ const RESERVATION_COLUMNS = {
   time_slot_id: reservations.time_slot_id,
   station_id: reservations.station_id,
   vehicle_format_id: reservations.vehicle_format_id,
+  service_id: reservations.service_id,
   post_id: reservations.post_id,
   status: reservations.status,
   queue_position: reservations.queue_position,
@@ -41,6 +42,9 @@ const RESERVATION_COLUMNS = {
   penalty_amount: reservations.penalty_amount,
   confirmed_at: reservations.confirmed_at,
   completed_at: reservations.completed_at,
+  walk_in_client_email: reservations.walk_in_client_email,
+  walk_in_client_name: reservations.walk_in_client_name,
+  walk_in_receipt_sent_at: reservations.walk_in_receipt_sent_at,
   created_at: reservations.created_at,
   updated_at: reservations.updated_at,
 } as const;
@@ -50,6 +54,7 @@ export type CreateReservationEntryData = {
   user_id: string;
   station_id: string;
   vehicle_format_id?: string | null;
+  service_id?: string | null;
   post_id?: string | null;
   time_slot_id: string;
   booking_source?: 'standard' | 'qr';
@@ -60,6 +65,8 @@ export type CreateReservationEntryData = {
   station_payout?: string;
   stripe_payment_id?: string | null;
   ticket_code?: string | null;
+  walk_in_client_email?: string | null;
+  walk_in_client_name?: string | null;
 };
 
 /** Payload for creating a queue entry: queue_position required. */
@@ -67,6 +74,7 @@ export type CreateQueueEntryData = {
   user_id: string;
   station_id: string;
   vehicle_format_id?: string | null;
+  service_id?: string | null;
   queue_position: number;
   status: string;
   amount_paid: string;
@@ -75,6 +83,8 @@ export type CreateQueueEntryData = {
   station_payout?: string;
   stripe_payment_id?: string | null;
   ticket_code?: string | null;
+  walk_in_client_email?: string | null;
+  walk_in_client_name?: string | null;
 };
 
 /**
@@ -91,6 +101,7 @@ export async function createReservationEntry(
       user_id: data.user_id,
       station_id: data.station_id,
       vehicle_format_id: data.vehicle_format_id,
+      service_id: data.service_id ?? null,
       post_id: data.post_id ?? null,
       entry_type: 'reservation',
       booking_source: data.booking_source ?? 'standard',
@@ -103,6 +114,8 @@ export async function createReservationEntry(
       station_payout: data.station_payout ?? '0.00',
       stripe_payment_id: data.stripe_payment_id ?? null,
       ticket_code: data.ticket_code ?? null,
+      walk_in_client_email: data.walk_in_client_email ?? null,
+      walk_in_client_name: data.walk_in_client_name ?? null,
     })
     .returning();
   if (!row) throw new Error('Insert reservation entry failed');
@@ -120,6 +133,7 @@ export async function createQueueEntry(data: CreateQueueEntryData, tx?: DbTransa
       user_id: data.user_id,
       station_id: data.station_id,
       vehicle_format_id: data.vehicle_format_id,
+      service_id: data.service_id ?? null,
       entry_type: 'queue',
       booking_source: 'standard',
       time_slot_id: null,
@@ -131,6 +145,8 @@ export async function createQueueEntry(data: CreateQueueEntryData, tx?: DbTransa
       station_payout: data.station_payout ?? '0.00',
       stripe_payment_id: data.stripe_payment_id ?? null,
       ticket_code: data.ticket_code ?? null,
+      walk_in_client_email: data.walk_in_client_email ?? null,
+      walk_in_client_name: data.walk_in_client_name ?? null,
     })
     .returning();
   if (!row) throw new Error('Insert queue entry failed');
@@ -548,6 +564,7 @@ export async function updateEntry(
     stripe_payment_id: string | null;
     stripe_charge_id: string | null;
     stripe_refund_id: string | null;
+    walk_in_receipt_sent_at: Date | null;
     updated_at: Date;
   }>,
   tx?: DbTransaction
@@ -852,6 +869,7 @@ export type RichEntry = {
     free_cancellation_minutes: number | null;
   };
   vehicle_format: { id: string; label: string; price: string } | null;
+  service: { id: string; name: string; category: string } | null;
   is_rated: boolean;
   is_tipped: boolean;
   estimated_wait_minutes: number | null;
@@ -878,6 +896,8 @@ function richEntrySelect() {
     slot_end_time: timeSlots.end_time,
     vf_label: vehicleFormats.label,
     vf_price: vehicleFormats.price,
+    svc_name: stationServices.name,
+    svc_category: stationServices.category,
     is_rated: sql<boolean>`EXISTS (SELECT 1 FROM ratings WHERE ratings.reservation_id = ${reservations.id})`,
     is_tipped: sql<boolean>`EXISTS (SELECT 1 FROM reservation_tips WHERE reservation_tips.reservation_id = ${reservations.id})`,
     // Estimated wait: position × wash_duration / wash_posts (queue entries only).
@@ -919,6 +939,13 @@ function mapToRichEntry(r: Record<string, unknown>): RichEntry {
           price: r.vf_price as string,
         }
       : null,
+    service: r.svc_name
+      ? {
+          id: r.service_id as string,
+          name: r.svc_name as string,
+          category: r.svc_category as string,
+        }
+      : null,
     is_rated: Boolean(r.is_rated),
     is_tipped: Boolean(r.is_tipped),
     estimated_wait_minutes: r.estimated_wait_minutes as number | null,
@@ -953,6 +980,7 @@ export async function listRichEntriesByUser(
       .leftJoin(stations, eq(stations.id, reservations.station_id))
       .leftJoin(stationConfigs, eq(stationConfigs.id, reservations.station_id))
       .leftJoin(vehicleFormats, eq(vehicleFormats.id, reservations.vehicle_format_id))
+      .leftJoin(stationServices, eq(stationServices.id, reservations.service_id))
       .leftJoin(timeSlots, eq(timeSlots.id, reservations.time_slot_id))
       .where(where)
       .orderBy(desc(reservations.created_at))
@@ -996,8 +1024,14 @@ export type RichStationEntry = Entry & {
   user_first_name: string | null;
   user_last_name: string | null;
   vehicle_format: { id: string; label: string } | null;
+  service: { id: string; name: string; category: string } | null;
   slot_start_time: Date | null;
   slot_end_time: Date | null;
+  /* Walk-in client identity, mirrored from the reservations row so the
+   * station UI can label the card with the actual merchant-set name
+   * (or fall back to the email) instead of a placeholder. */
+  walk_in_client_email: string | null;
+  walk_in_client_name: string | null;
 };
 
 /**
@@ -1034,6 +1068,9 @@ export async function listRichStationEntriesPaginated(
         user_last_name: users.last_name,
         vf_id: vehicleFormats.id,
         vf_label: vehicleFormats.label,
+        svc_id: stationServices.id,
+        svc_name: stationServices.name,
+        svc_category: stationServices.category,
         slot_start_time: timeSlots.start_time,
         slot_end_time: timeSlots.end_time,
       })
@@ -1041,6 +1078,7 @@ export async function listRichStationEntriesPaginated(
       .leftJoin(timeSlots, eq(reservations.time_slot_id, timeSlots.id))
       .leftJoin(users, eq(reservations.user_id, users.id))
       .leftJoin(vehicleFormats, eq(reservations.vehicle_format_id, vehicleFormats.id))
+      .leftJoin(stationServices, eq(reservations.service_id, stationServices.id))
       .where(where)
       .orderBy(desc(reservations.entry_type), asc(timeSlots.start_time), asc(reservations.queue_position))
       .limit(limit)
@@ -1052,6 +1090,7 @@ export async function listRichStationEntriesPaginated(
     user_first_name: r.user_first_name,
     user_last_name: r.user_last_name,
     vehicle_format: r.vf_id ? { id: r.vf_id, label: r.vf_label ?? '' } : null,
+    service: r.svc_id ? { id: r.svc_id, name: r.svc_name ?? '', category: r.svc_category ?? '' } : null,
     slot_start_time: r.slot_start_time ?? null,
     slot_end_time: r.slot_end_time ?? null,
   }));

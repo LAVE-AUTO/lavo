@@ -137,7 +137,7 @@ export function StepAccount({ data, errors, isLoading, onChange, onErrors, onNex
             type="button"
             onClick={() => setShowPassword((v) => !v)}
             aria-label={showPassword ? 'Masquer le mot de passe' : 'Afficher le mot de passe'}
-            className="text-[#888] hover:text-[#555] dark:hover:text-[#ccc] transition-colors"
+            className="text-foreground/55 hover:text-foreground/70 dark:hover:text-[#ccc] transition-colors"
           >
             <EyeIcon open={showPassword} />
           </button>
@@ -167,7 +167,7 @@ export function StepAccount({ data, errors, isLoading, onChange, onErrors, onNex
             type="button"
             onClick={() => setShowConfirmPassword((v) => !v)}
             aria-label={showConfirmPassword ? 'Masquer le mot de passe' : 'Afficher le mot de passe'}
-            className="text-[#888] hover:text-[#555] dark:hover:text-[#ccc] transition-colors"
+            className="text-foreground/55 hover:text-foreground/70 dark:hover:text-[#ccc] transition-colors"
           >
             <EyeIcon open={showConfirmPassword} />
           </button>

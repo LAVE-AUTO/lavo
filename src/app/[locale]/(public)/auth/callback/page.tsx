@@ -61,7 +61,7 @@ export default function OAuthCallbackPage() {
     <div className="flex items-center justify-center min-h-[60vh]">
       <div className="flex flex-col items-center gap-4">
         <Spinner size="lg" />
-        <p className="text-[15px] text-[#555] dark:text-[#C0C0B0]">Connexion en cours...</p>
+        <p className="text-[15px] text-foreground/70">Connexion en cours...</p>
       </div>
     </div>
   );

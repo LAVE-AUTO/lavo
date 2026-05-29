@@ -38,12 +38,12 @@ export function ExtrasStep({
     <div>
       {/* Extras grid */}
       <div className="px-1 pb-4">
-        <p className="text-[14px] text-[#555] dark:text-[#B0B0A0] mb-3">
+        <p className="text-[14px] text-foreground/70 mb-3">
           {t('extras_subtitle')}
         </p>
 
         {extras.length === 0 ? (
-          <div className="rounded-xl border border-[#D0D0C0] dark:border-tab-inactive bg-[#F0F0E2] dark:bg-dark-bg/50 px-5 py-8 text-center text-[14px] text-[#555] dark:text-[#B0B0A0]">
+          <div className="rounded-xl border border-border bg-surface/60 dark:bg-background/50 px-5 py-8 text-center text-[14px] text-foreground/70">
             {t('extras_no_extras')}
           </div>
         ) : (
@@ -58,7 +58,7 @@ export function ExtrasStep({
                   className={`w-full text-left p-4 rounded-xl border-2 transition-all cursor-pointer ${
                     checked
                       ? 'border-gold bg-gold/10 dark:bg-gold/5'
-                      : 'border-[#D0D0C0] dark:border-tab-inactive bg-white/40 dark:bg-dark-bg/40 hover:border-gold/30'
+                      : 'border-border bg-white/40 dark:bg-background/40 hover:border-gold/30'
                   }`}
                 >
                   <div className="flex items-start justify-between gap-3">
@@ -68,13 +68,13 @@ export function ExtrasStep({
                           checked ? 'bg-gold border-gold' : 'border-[#BBB] dark:border-[#555]'
                         }`}>
                           {checked && (
-                            <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="#1a1a1a" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12" /></svg>
+                            <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="#001201" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12" /></svg>
                           )}
                         </span>
-                        <span className="text-[15px] font-bold text-[#000C1F] dark:text-[#FFF8EC]">{extra.name}</span>
+                        <span className="text-[15px] font-bold text-foreground">{extra.name}</span>
                       </div>
                       <div className="ml-7 space-y-1">
-                        <div className="flex items-center gap-1 text-[12px] text-[#888] dark:text-[#888]">
+                        <div className="flex items-center gap-1 text-[12px] text-foreground/55">
                           <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10" /><polyline points="12 6 12 12 16 14" /></svg>
                           {extra.duration} min
                           <span className="mx-1">·</span>
@@ -92,36 +92,36 @@ export function ExtrasStep({
       </div>
 
       {/* Ticket summary */}
-      <div className="border-t border-[#D0D0C0] dark:border-tab-inactive pt-4 space-y-3 px-1">
-        <div className="bg-[#E8E8D8] dark:bg-dark-bg/60 rounded-xl p-4 space-y-2">
-          <h4 className="text-[13px] font-bold text-[#555] dark:text-[#A0A090] uppercase tracking-wider mb-2">{t('ticket_title')}</h4>
+      <div className="border-t border-border pt-4 space-y-3 px-1">
+        <div className="bg-surface dark:bg-background/60 rounded-xl p-4 space-y-2">
+          <h4 className="text-[13px] font-bold text-foreground/70 dark:text-[#B0BFB1] uppercase tracking-wider mb-2">{t('ticket_title')}</h4>
 
           <div className="flex justify-between text-[14px]">
-            <span className="text-[#000C1F] dark:text-[#FFF8EC] font-semibold">{serviceName}</span>
-            <span className="text-[#000C1F] dark:text-[#FFF8EC] font-bold">${servicePrice.toLocaleString()}</span>
+            <span className="text-foreground font-semibold">{serviceName}</span>
+            <span className="text-foreground font-bold">${servicePrice.toLocaleString()}</span>
           </div>
 
           {selectedItems.map((item) => (
             <div key={item.id} className="flex justify-between text-[13px]">
-              <span className="text-[#555] dark:text-[#B0B0A0]">+ {item.name}</span>
-              <span className="text-[#555] dark:text-[#B0B0A0]">${item.price.toLocaleString()}</span>
+              <span className="text-foreground/70">+ {item.name}</span>
+              <span className="text-foreground/70">${item.price.toLocaleString()}</span>
             </div>
           ))}
 
           {extrasTotal > 0 && (
-            <div className="flex justify-between text-[13px] border-t border-[#D0D0C0] dark:border-tab-inactive pt-2 mt-2">
-              <span className="text-[#555] dark:text-[#B0B0A0]">{t('ticket_extras_total')}</span>
+            <div className="flex justify-between text-[13px] border-t border-border pt-2 mt-2">
+              <span className="text-foreground/70">{t('ticket_extras_total')}</span>
               <span className="text-gold font-bold">${extrasTotal.toLocaleString()}</span>
             </div>
           )}
 
           <div className="flex justify-between text-[13px]">
-            <span className="text-[#555] dark:text-[#B0B0A0]">{t('ticket_duration')}</span>
-            <span className="text-[#555] dark:text-[#B0B0A0] font-semibold">{totalDuration} min</span>
+            <span className="text-foreground/70">{t('ticket_duration')}</span>
+            <span className="text-foreground/70 font-semibold">{totalDuration} min</span>
           </div>
 
-          <div className="flex justify-between text-[16px] border-t border-[#D0D0C0] dark:border-tab-inactive pt-2 mt-2">
-            <span className="font-black text-[#000C1F] dark:text-[#FFF8EC]">{t('ticket_total')}</span>
+          <div className="flex justify-between text-[16px] border-t border-border pt-2 mt-2">
+            <span className="font-black text-foreground">{t('ticket_total')}</span>
             <span className="font-black text-gold">${grandTotal.toLocaleString()}</span>
           </div>
         </div>
@@ -138,7 +138,7 @@ export function ExtrasStep({
           <button
             type="button"
             onClick={onSkip}
-            className="flex-1 py-3 border-2 border-[#D0D0C0] dark:border-tab-inactive rounded-xl text-[15px] font-bold text-[#555] dark:text-[#B0B0A0] hover:border-gold/30 transition-colors cursor-pointer"
+            className="flex-1 py-3 border-2 border-border rounded-xl text-[15px] font-bold text-foreground/70 hover:border-gold/30 transition-colors cursor-pointer"
           >
             {t('without_extras')}
           </button>

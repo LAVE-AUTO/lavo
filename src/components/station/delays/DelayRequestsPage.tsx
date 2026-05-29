@@ -214,13 +214,13 @@ export function DelayRequestsPage() {
   }
 
   return (
-    <div className="flex flex-1 flex-col overflow-hidden bg-[#F0EDE0] dark:bg-[#111A0E]">
+    <div className="flex flex-1 flex-col overflow-hidden bg-[#F0EDE0] dark:bg-dark-bg">
       {/* Header */}
       <div className="border-b border-[#DDD9CC] bg-[#E8E4D4] px-6 pb-0 pt-5 dark:border-[#1A2A14] dark:bg-[#182214]">
         <div className="flex items-end justify-between gap-4">
           <div>
-            <h1 className="text-[20px] font-black text-[#1A1A0A] dark:text-[#F0EDD4]">{t('page_title')}</h1>
-            <p className="mt-0.5 mb-3 text-[13px] text-[#555]/60 dark:text-[#FFFFF0]/40">
+            <h1 className="text-[20px] font-black text-[#001201] dark:text-[#FFF9EC]">{t('page_title')}</h1>
+            <p className="mt-0.5 mb-3 text-[13px] text-foreground/70/60 dark:text-[#FFFFF0]/40">
               {requests.length > 0 ? t('pending_n', { n: requests.length }) : t('no_pending')}
             </p>
           </div>
@@ -244,7 +244,7 @@ export function DelayRequestsPage() {
               className={`flex items-center gap-1.5 border-b-2 px-4 py-2.5 text-[13px] font-bold transition-all duration-150 ${
                 tab === t_
                   ? 'border-[#C09A18] text-[#C09A18]'
-                  : 'border-transparent text-[#555]/50 hover:text-[#555]/80 dark:text-[#FFFFF0]/30 dark:hover:text-[#FFFFF0]/60'
+                  : 'border-transparent text-foreground/70/50 hover:text-foreground/70/80 dark:text-[#FFFFF0]/30 dark:hover:text-[#FFFFF0]/60'
               }`}
             >
               {t_ === 'pending' ? t('tab_pending') : t('tab_history')}
@@ -254,7 +254,7 @@ export function DelayRequestsPage() {
                 </span>
               )}
               {t_ === 'history' && history.length > 0 && (
-                <span className="rounded-full bg-[#888]/20 px-1.5 py-0.5 text-[9px] font-black leading-none text-[#666] dark:bg-[#444]/40 dark:text-[#AAA]">
+                <span className="rounded-full bg-[#888]/20 px-1.5 py-0.5 text-[9px] font-black leading-none text-foreground/65 dark:bg-[#444]/40 dark:text-[#AAA]">
                   {history.length}
                 </span>
               )}
@@ -386,7 +386,7 @@ function PendingCard({
 
   return (
     <div
-      className="animate-fade-in-up overflow-hidden rounded-[14px] border border-[#DDD9CC] bg-white shadow-sm transition-all duration-200 hover:-translate-y-0.5 hover:shadow-md dark:border-[#2A3826] dark:bg-[#1A2416]"
+      className="animate-fade-in-up overflow-hidden rounded-[14px] border border-[#DDD9CC] bg-white shadow-sm transition-all duration-200 hover:-translate-y-0.5 hover:shadow-md dark:border-[#001A05] dark:bg-[#001A05]"
       style={{ animationDelay }}
     >
       <div className="h-[3px] w-full bg-gradient-to-r from-[#C09A18] to-[#E8C040]" />
@@ -398,7 +398,7 @@ function PendingCard({
           </div>
           <div className="flex-1 min-w-0">
             <div className="flex items-center gap-2">
-              <span className="text-[13px] font-bold text-[#1A1A0A] dark:text-[#F0EDD4]">{request.client_name}</span>
+              <span className="text-[13px] font-bold text-[#001201] dark:text-[#FFF9EC]">{request.client_name}</span>
               <span className="rounded-full bg-[#FEF3C7] px-2 py-0.5 text-[9px] font-bold uppercase tracking-wide text-[#92400E] dark:bg-[#3A2800] dark:text-[#FCD34D]">
                 {badgeLabel}
               </span>
@@ -406,7 +406,7 @@ function PendingCard({
             <p className="mt-1.5 text-[13px] italic leading-relaxed text-[#333]/65 dark:text-[#FFFFF0]/55">
               « {request.message} »
             </p>
-            <span className="mt-1.5 inline-flex items-center gap-1 text-[11px] text-[#555]/40 dark:text-[#FFFFF0]/30">
+            <span className="mt-1.5 inline-flex items-center gap-1 text-[11px] text-foreground/70/40 dark:text-[#FFFFF0]/30">
               <ClockMiniIcon />
               {agoLabel}
             </span>
@@ -414,20 +414,20 @@ function PendingCard({
         </div>
 
         {/* Impact summary */}
-        <dl className="mt-4 grid grid-cols-2 gap-2 rounded-[8px] border border-[#E8E4D4] bg-[#FAF9F2] px-3 py-2.5 text-[11px] dark:border-[#243020] dark:bg-[#111A0E]">
+        <dl className="mt-4 grid grid-cols-2 gap-2 rounded-[8px] border border-[#E8E4D4] bg-[#FAF9F2] px-3 py-2.5 text-[11px] dark:border-[#001A05] dark:bg-dark-bg">
           <div>
-            <dt className="font-bold uppercase tracking-wide text-[#555]/50 dark:text-[#FFFFF0]/30">
+            <dt className="font-bold uppercase tracking-wide text-foreground/70/50 dark:text-[#FFFFF0]/30">
               {impactScheduledLabel}
             </dt>
-            <dd className="mt-0.5 font-semibold text-[#1A1A0A] dark:text-[#F0EDD4]">
+            <dd className="mt-0.5 font-semibold text-[#001201] dark:text-[#FFF9EC]">
               {scheduledText}
             </dd>
           </div>
           <div>
-            <dt className="font-bold uppercase tracking-wide text-[#555]/50 dark:text-[#FFFFF0]/30">
+            <dt className="font-bold uppercase tracking-wide text-foreground/70/50 dark:text-[#FFFFF0]/30">
               {impactFormatLabel}
             </dt>
-            <dd className="mt-0.5 font-semibold text-[#1A1A0A] dark:text-[#F0EDD4]">
+            <dd className="mt-0.5 font-semibold text-[#001201] dark:text-[#FFF9EC]">
               {formatText}
             </dd>
           </div>
@@ -437,7 +437,7 @@ function PendingCard({
           <button
             type="button"
             onClick={onRefuse}
-            className="rounded-[8px] border border-[#E8472A]/30 py-2.5 text-[13px] font-bold text-[#E8472A] transition-all duration-150 hover:bg-[#E8472A]/08 dark:border-[#E8472A]/30"
+            className="rounded-[8px] border border-[#FF383C]/30 py-2.5 text-[13px] font-bold text-[#FF383C] transition-all duration-150 hover:bg-[#FF383C]/08 dark:border-[#FF383C]/30"
           >
             {refuseLabel}
           </button>
@@ -463,12 +463,12 @@ interface HistoryCardProps {
 
 function HistoryCard({ request, animationDelay, statusLabel, agoLabel }: HistoryCardProps) {
   const accepted = request.status === 'accepted';
-  const accentColor = accepted ? '#00C851' : '#E8472A';
+  const accentColor = accepted ? '#00C851' : '#FF383C';
   const initials = request.client_name.replace('Client #', '');
 
   return (
     <div
-      className="animate-fade-in-up flex gap-0 overflow-hidden rounded-[12px] border border-[#DDD9CC]/70 bg-white/70 dark:border-[#2A3826] dark:bg-[#1A2416]/70"
+      className="animate-fade-in-up flex gap-0 overflow-hidden rounded-[12px] border border-[#DDD9CC]/70 bg-white/70 dark:border-[#001A05] dark:bg-[#001A05]/70"
       style={{ animationDelay }}
     >
       <div className="w-1 shrink-0 rounded-l-[12px]" style={{ background: accentColor }} />
@@ -482,7 +482,7 @@ function HistoryCard({ request, animationDelay, statusLabel, agoLabel }: History
         </div>
         <div className="flex-1 min-w-0">
           <div className="flex items-center justify-between gap-2">
-            <span className="text-[13px] font-bold text-[#1A1A0A] dark:text-[#F0EDD4]">{request.client_name}</span>
+            <span className="text-[13px] font-bold text-[#001201] dark:text-[#FFF9EC]">{request.client_name}</span>
             <span
               className="shrink-0 rounded-full px-2 py-0.5 text-[9px] font-bold uppercase tracking-wide text-white"
               style={{ background: accentColor }}
@@ -498,7 +498,7 @@ function HistoryCard({ request, animationDelay, statusLabel, agoLabel }: History
               {request.refusal_reason}
             </p>
           )}
-          <span className="mt-1.5 inline-flex items-center gap-1 text-[11px] text-[#555]/35 dark:text-[#FFFFF0]/25">
+          <span className="mt-1.5 inline-flex items-center gap-1 text-[11px] text-foreground/70/35 dark:text-[#FFFFF0]/25">
             <ClockMiniIcon />
             {agoLabel}
           </span>
@@ -516,13 +516,13 @@ function EmptyState({ icon, label, sublabel }: { icon: 'check' | 'clock'; label:
           <circle cx="12" cy="12" r="10" /><polyline points="9 12 12 15 15 9" />
         </svg>
       ) : (
-        <svg width="44" height="44" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1} strokeLinecap="round" strokeLinejoin="round" className="text-[#1A1A0A]/15 dark:text-[#FFF8EC]/15" aria-hidden="true">
+        <svg width="44" height="44" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1} strokeLinecap="round" strokeLinejoin="round" className="text-[#001201]/15 dark:text-foreground/15" aria-hidden="true">
           <circle cx="12" cy="12" r="10" /><polyline points="12 6 12 12 16 14" />
         </svg>
       )}
       <div>
-        <p className="text-[13px] font-bold text-[#1A1A0A]/50 dark:text-[#FFF8EC]/30">{label}</p>
-        <p className="mt-0.5 text-[12px] text-[#1A1A0A]/30 dark:text-[#FFF8EC]/20">{sublabel}</p>
+        <p className="text-[13px] font-bold text-[#001201]/50 dark:text-foreground/30">{label}</p>
+        <p className="mt-0.5 text-[12px] text-[#001201]/30 dark:text-foreground/20">{sublabel}</p>
       </div>
     </div>
   );

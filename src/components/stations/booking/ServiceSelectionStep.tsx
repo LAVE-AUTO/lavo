@@ -47,27 +47,27 @@ export function ServiceSelectionStep({
       <div className="flex-1 overflow-y-auto px-1 space-y-4 pb-4">
 
         {/* Stats banner */}
-        <div className="grid grid-cols-3 gap-2 bg-[#F0F0E2] dark:bg-dark-bg/50 rounded-xl p-3 border border-[#D8D8C8] dark:border-tab-inactive text-center">
+        <div className="grid grid-cols-3 gap-2 bg-surface/60 dark:bg-background/50 rounded-xl p-3 border border-border text-center">
           <div>
-            <div className="text-[18px] font-black text-[#000C1F] dark:text-[#FFF8EC] leading-none">{station.queueCount}</div>
-            <div className="text-[11px] text-[#555] dark:text-[#C0C0B0] mt-0.5">{t('service_stat_queue')}</div>
+            <div className="text-[18px] font-black text-foreground leading-none">{station.queueCount}</div>
+            <div className="text-[11px] text-foreground/70 mt-0.5">{t('service_stat_queue')}</div>
           </div>
           <div>
-            <div className="text-[18px] font-black text-[#000C1F] dark:text-[#FFF8EC] leading-none">{station.availableSlots}</div>
-            <div className="text-[11px] text-[#555] dark:text-[#C0C0B0] mt-0.5">{t('service_stat_slots')}</div>
+            <div className="text-[18px] font-black text-foreground leading-none">{station.availableSlots}</div>
+            <div className="text-[11px] text-foreground/70 mt-0.5">{t('service_stat_slots')}</div>
           </div>
           <div>
-            <div className="text-[18px] font-black text-[#000C1F] dark:text-[#FFF8EC] leading-none">
+            <div className="text-[18px] font-black text-foreground leading-none">
               {station.estimatedWaitMinutes > 0 ? `${station.estimatedWaitMinutes}` : '0'}
             </div>
-            <div className="text-[11px] text-[#555] dark:text-[#C0C0B0] mt-0.5">{t('service_stat_min_time')}</div>
+            <div className="text-[11px] text-foreground/70 mt-0.5">{t('service_stat_min_time')}</div>
           </div>
         </div>
 
-        <p className="text-[14px] text-[#555] dark:text-[#B0B0A0]">{t('service_selection_subtitle')}</p>
+        <p className="text-[14px] text-foreground/70">{t('service_selection_subtitle')}</p>
 
         {services.length === 0 ? (
-          <div className="rounded-xl border border-[#D0D0C0] dark:border-tab-inactive bg-[#F0F0E2] dark:bg-dark-bg/50 px-5 py-8 text-center text-[14px] text-[#555] dark:text-[#B0B0A0]">
+          <div className="rounded-xl border border-border bg-surface/60 dark:bg-background/50 px-5 py-8 text-center text-[14px] text-foreground/70">
             {t('service_no_services')}
           </div>
         ) : (
@@ -84,7 +84,7 @@ export function ServiceSelectionStep({
                   className={`w-full text-left p-4 rounded-xl border-2 transition-all cursor-pointer ${
                     selected
                       ? 'border-gold bg-gold/10 dark:bg-gold/5'
-                      : 'border-[#D0D0C0] dark:border-tab-inactive bg-white/40 dark:bg-dark-bg/40 hover:border-gold/30'
+                      : 'border-border bg-white/40 dark:bg-background/40 hover:border-gold/30'
                   }`}
                 >
                   <div className="flex items-start justify-between gap-3">
@@ -94,9 +94,9 @@ export function ServiceSelectionStep({
                         <span className={`w-5 h-5 rounded-full border-2 flex items-center justify-center shrink-0 transition-colors ${
                           selected ? 'border-gold bg-gold' : 'border-[#BBB] dark:border-[#555]'
                         }`}>
-                          {selected && <span className="w-2.5 h-2.5 rounded-full bg-[#1a1a1a]" />}
+                          {selected && <span className="w-2.5 h-2.5 rounded-full bg-dark-bg" />}
                         </span>
-                        <span className="text-[15px] font-bold text-[#000C1F] dark:text-[#FFF8EC]">{svc.name}</span>
+                        <span className="text-[15px] font-bold text-foreground">{svc.name}</span>
                         {svc.isPopular && (
                           <span className="px-2 py-0.5 rounded-full text-[11px] font-bold bg-gold/20 text-gold border border-gold/30">
                             Populaire
@@ -104,13 +104,13 @@ export function ServiceSelectionStep({
                         )}
                       </div>
                       <div className="ml-7">
-                        <span className="text-[12px] text-[#888] dark:text-[#888] bg-[#E8E8D8] dark:bg-tab-inactive px-2 py-0.5 rounded-full">
+                        <span className="text-[12px] text-foreground/55 bg-surface dark:bg-tab-inactive px-2 py-0.5 rounded-full">
                           {categoryLabel(svc.category)}
                         </span>
                         {svc.description && (
-                          <p className="text-[13px] text-[#555] dark:text-[#B0B0A0] mt-1.5 line-clamp-2">{svc.description}</p>
+                          <p className="text-[13px] text-foreground/70 mt-1.5 line-clamp-2">{svc.description}</p>
                         )}
-                        <div className="flex items-center gap-3 mt-2 text-[12px] text-[#888] dark:text-[#888]">
+                        <div className="flex items-center gap-3 mt-2 text-[12px] text-foreground/55">
                           {duration != null && (
                             <span className="flex items-center gap-1">
                               <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10" /><polyline points="12 6 12 12 16 14" /></svg>
@@ -125,7 +125,7 @@ export function ServiceSelectionStep({
                     </div>
                     {price != null && (
                       <div className="text-right shrink-0">
-                        <span className="text-[11px] text-[#888] dark:text-[#888]">{t('service_from')}</span>
+                        <span className="text-[11px] text-foreground/55">{t('service_from')}</span>
                         <div className="text-[18px] font-black text-gold">${price.toLocaleString()}</div>
                       </div>
                     )}
@@ -138,7 +138,7 @@ export function ServiceSelectionStep({
       </div>
 
       {/* Actions */}
-      <div className="border-t border-[#D0D0C0] dark:border-tab-inactive pt-4">
+      <div className="border-t border-border pt-4">
         <button
           type="button"
           disabled={!selectedService}
@@ -146,7 +146,7 @@ export function ServiceSelectionStep({
           className={`w-full py-3.5 rounded-xl text-[15px] font-black transition-colors cursor-pointer ${
             selectedService
               ? 'bg-gold hover:bg-gold-hover text-dark-bg'
-              : 'bg-[#D0D0C0] dark:bg-tab-inactive text-[#888] cursor-not-allowed'
+              : 'bg-[#D0D0C0] dark:bg-tab-inactive text-foreground/55 cursor-not-allowed'
           }`}
         >
           {t('continue')}

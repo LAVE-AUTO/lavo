@@ -19,9 +19,9 @@ const STATUS_STYLE: Record<DisputeStatus, { bar: string; badge: string; dot: str
 type TimelineActor = 'client' | 'station' | 'admin';
 
 const ACTOR_STYLE: Record<TimelineActor, { bg: string; text: string; label: string; dot: string }> = {
-  client:  { bg: 'bg-[#EFF6FF] dark:bg-[#0A1A2E]', text: 'text-[#1D4ED8] dark:text-[#93C5FD]', label: 'timeline_by_client',  dot: 'bg-[#3B82F6]' },
+  client:  { bg: 'bg-[#EFF6FF] dark:bg-[#0A1A2E]', text: 'text-[#1D4ED8] dark:text-[#93C5FD]', label: 'timeline_by_client',  dot: 'bg-[#1E40AF]' },
   station: { bg: 'bg-[#FFF4EC] dark:bg-[#2A1408]', text: 'text-[#C2410C] dark:text-[#FDBA74]', label: 'timeline_by_station', dot: 'bg-[#F97316]' },
-  admin:   { bg: 'bg-[#C49A1E]/10 dark:bg-[#2A2008]', text: 'text-[#7A5E0A] dark:text-[#C49A1E]', label: 'timeline_by_admin',   dot: 'bg-[#C49A1E]' },
+  admin:   { bg: 'bg-[#DDAF3B]/10 dark:bg-[#2A2008]', text: 'text-[#7A5E0A] dark:text-[#DDAF3B]', label: 'timeline_by_admin',   dot: 'bg-[#DDAF3B]' },
 };
 
 interface TimelineEvent {
@@ -138,17 +138,17 @@ export function AdminDisputeDetail({ id }: Props) {
 
   if (loading) return (
     <div className="flex items-center justify-center py-32">
-      <div className="h-8 w-8 animate-spin rounded-full border-[3px] border-[#C49A1E] border-t-transparent" />
+      <div className="h-8 w-8 animate-spin rounded-full border-[3px] border-[#DDAF3B] border-t-transparent" />
     </div>
   );
 
   if (fetchError || !dispute) return (
     <div className="flex flex-col items-center gap-4 py-32">
-      <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-white shadow-sm ring-1 ring-[#E8E4DC] dark:bg-[#131E10] dark:ring-[#1E2E18]">
-        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#C49A1E" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10" /><line x1="12" y1="8" x2="12" y2="12" /><line x1="12" y1="16" x2="12.01" y2="16" /></svg>
+      <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-white shadow-sm ring-1 ring-[#FFF9EC] dark:bg-[#131E10] dark:ring-[#1E2E18]">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#DDAF3B" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10" /><line x1="12" y1="8" x2="12" y2="12" /><line x1="12" y1="16" x2="12.01" y2="16" /></svg>
       </div>
-      <p className="text-[14px] font-semibold text-[#666] dark:text-[#9A9A8A]">{fetchError ? t('fetch_error') : t('not_found')}</p>
-      <Link href="/admin/disputes" className="rounded-xl bg-[#C49A1E] px-4 py-2 text-[13px] font-bold text-[#0C1209] transition-colors hover:bg-[#B08A14]">
+      <p className="text-[14px] font-semibold text-foreground/65 dark:text-[#B0BFB1]">{fetchError ? t('fetch_error') : t('not_found')}</p>
+      <Link href="/admin/disputes" className="rounded-xl bg-[#DDAF3B] px-4 py-2 text-[13px] font-bold text-[#001201] transition-colors hover:bg-[#B08A14]">
         {t('back_link')}
       </Link>
     </div>
@@ -224,8 +224,8 @@ export function AdminDisputeDetail({ id }: Props) {
 
       <div className="flex min-h-full flex-col">
         {/* Header */}
-        <div className="shrink-0 border-b border-[#E0DCD0] bg-[#F5F5EE] px-6 py-4 dark:border-[#1A2A14] dark:bg-[#0C1209]">
-          <Link href="/admin/disputes" className="mb-4 inline-flex items-center gap-1.5 text-[12px] font-bold text-[#AAAAAA] transition-colors hover:text-[#C49A1E]">
+        <div className="shrink-0 border-b border-[#FFF9EC] bg-[#FFF9EC] px-6 py-4 dark:border-[#1A2A14] dark:bg-dark-bg">
+          <Link href="/admin/disputes" className="mb-4 inline-flex items-center gap-1.5 text-[12px] font-bold text-[#AAAAAA] transition-colors hover:text-[#DDAF3B]">
             <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" aria-hidden="true"><polyline points="15 18 9 12 15 6" /></svg>
             {t('back_link')}
           </Link>
@@ -237,19 +237,19 @@ export function AdminDisputeDetail({ id }: Props) {
               </div>
               <div>
                 <div className="flex items-center gap-3">
-                  <h1 className="text-[20px] font-black text-[#1A1A0A] dark:text-[#F0EDD4]">{clientName || t('label_unknown_client')}</h1>
+                  <h1 className="text-[20px] font-black text-[#001201] dark:text-[#FFF9EC]">{clientName || t('label_unknown_client')}</h1>
                   <span className={`inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-[12px] font-bold ${s.badge}`}>
                     <span className={`h-1.5 w-1.5 rounded-full ${s.dot}`} />{t(s.label)}
                   </span>
                 </div>
-                <p className="mt-0.5 text-[13px] text-[#999] dark:text-[#9A9A8A]">
+                <p className="mt-0.5 text-[13px] text-[#999] dark:text-[#B0BFB1]">
                   {stationName}{stationCity ? ` · ${stationCity}` : ''} · {formatDate(dispute.created_at, true)}
                 </p>
               </div>
             </div>
             <div className="shrink-0 text-right">
-              <p className="text-[12px] font-bold uppercase tracking-wider text-[#AAAAAA] dark:text-[#A0A090]">{t('label_amount_paid')}</p>
-              <p className="text-[26px] font-black text-[#1A1A0A] dark:text-[#F0EDD4]">{formatAmount(amountPaid)}</p>
+              <p className="text-[12px] font-bold uppercase tracking-wider text-[#AAAAAA] dark:text-[#B0BFB1]">{t('label_amount_paid')}</p>
+              <p className="text-[26px] font-black text-[#001201] dark:text-[#FFF9EC]">{formatAmount(amountPaid)}</p>
               {refunded > 0 && (
                 <p className="mt-1 text-[12px] font-semibold text-[#15803D]">{t('label_refunded', { amount: formatAmount(refunded) })}</p>
               )}
@@ -258,30 +258,30 @@ export function AdminDisputeDetail({ id }: Props) {
         </div>
 
         {/* Body */}
-        <div className="flex-1 overflow-y-auto bg-[#F5F5EE] p-6 dark:bg-[#0C1209]">
+        <div className="flex-1 overflow-y-auto bg-[#FFF9EC] p-6 dark:bg-dark-bg">
           <div className="grid gap-5 lg:grid-cols-[1fr_300px]">
 
             {/* Left column */}
             <div className="flex flex-col gap-5">
 
               {/* Dispute reason highlight */}
-              <div className={`flex gap-4 overflow-hidden rounded-2xl border bg-white p-5 shadow-sm dark:bg-[#131E10] ${dispute.status === 'open' ? 'border-[#F97316]/30 dark:border-[#F97316]/20' : 'border-[#E8E4DC] dark:border-[#1E2E18]'}`}>
+              <div className={`flex gap-4 overflow-hidden rounded-2xl border bg-white p-5 shadow-sm dark:bg-[#131E10] ${dispute.status === 'open' ? 'border-[#F97316]/30 dark:border-[#F97316]/20' : 'border-[#FFF9EC] dark:border-[#1E2E18]'}`}>
                 <div className={`mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-xl ${s.bar}`}>
                   <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2" strokeLinecap="round" aria-hidden="true"><path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z" /><line x1="12" y1="9" x2="12" y2="13" /><line x1="12" y1="17" x2="12.01" y2="17" /></svg>
                 </div>
                 <div className="min-w-0 flex-1">
-                  <p className="mb-1 text-[11px] font-black uppercase tracking-widest text-[#AAAAAA] dark:text-[#A0A090]">{t('label_reason')}</p>
+                  <p className="mb-1 text-[11px] font-black uppercase tracking-widest text-[#AAAAAA] dark:text-[#B0BFB1]">{t('label_reason')}</p>
                   <p className="text-[14px] leading-relaxed text-[#333] dark:text-[#C0C0B0]">{dispute.reason}</p>
                   {dispute.description && (
-                    <p className="mt-2 text-[13px] leading-relaxed text-[#666] dark:text-[#9A9A8A]">{dispute.description}</p>
+                    <p className="mt-2 text-[13px] leading-relaxed text-foreground/65 dark:text-[#B0BFB1]">{dispute.description}</p>
                   )}
                 </div>
               </div>
 
               {/* Reservation card */}
-              <div className="overflow-hidden rounded-2xl border border-[#E8E4DC] bg-white shadow-sm dark:border-[#1E2E18] dark:bg-[#131E10]">
+              <div className="overflow-hidden rounded-2xl border border-[#FFF9EC] bg-white shadow-sm dark:border-[#1E2E18] dark:bg-[#131E10]">
                 <div className="border-b border-[#F0EDE6] bg-[#F9F8F5] px-5 py-3 dark:border-[#1A2A14] dark:bg-[#0E1A0C]">
-                  <p className="text-[12px] font-black uppercase tracking-widest text-[#AAAAAA] dark:text-[#A0A090]">{t('section_reservation')}</p>
+                  <p className="text-[12px] font-black uppercase tracking-widest text-[#AAAAAA] dark:text-[#B0BFB1]">{t('section_reservation')}</p>
                 </div>
                 <div className="grid grid-cols-3 divide-x divide-[#F0EDE6] dark:divide-[#1A2A14]">
                   {[
@@ -307,18 +307,18 @@ export function AdminDisputeDetail({ id }: Props) {
                     },
                   ].map(({ label, value, sub }) => (
                     <div key={label} className="flex flex-col items-center gap-1 px-5 py-4 text-center">
-                      <p className="text-[11px] font-black uppercase tracking-widest text-[#AAAAAA] dark:text-[#A0A090]">{label}</p>
-                      <p className="text-[15px] font-black text-[#1A1A0A] dark:text-[#F0EDD4]">{value}</p>
-                      {sub && <p className="text-[11px] text-[#BBBBAA] dark:text-[#A0A090]">{sub}</p>}
+                      <p className="text-[11px] font-black uppercase tracking-widest text-[#AAAAAA] dark:text-[#B0BFB1]">{label}</p>
+                      <p className="text-[15px] font-black text-[#001201] dark:text-[#FFF9EC]">{value}</p>
+                      {sub && <p className="text-[11px] text-[#BBBBAA] dark:text-[#B0BFB1]">{sub}</p>}
                     </div>
                   ))}
                 </div>
               </div>
 
               {/* Timeline */}
-              <div className="overflow-hidden rounded-2xl border border-[#E8E4DC] bg-white shadow-sm dark:border-[#1E2E18] dark:bg-[#131E10]">
+              <div className="overflow-hidden rounded-2xl border border-[#FFF9EC] bg-white shadow-sm dark:border-[#1E2E18] dark:bg-[#131E10]">
                 <div className="border-b border-[#F0EDE6] bg-[#F9F8F5] px-5 py-3 dark:border-[#1A2A14] dark:bg-[#0E1A0C]">
-                  <p className="text-[12px] font-black uppercase tracking-widest text-[#AAAAAA] dark:text-[#A0A090]">{t('section_timeline')}</p>
+                  <p className="text-[12px] font-black uppercase tracking-widest text-[#AAAAAA] dark:text-[#B0BFB1]">{t('section_timeline')}</p>
                 </div>
                 <div className="p-5">
                   {timeline.map((ev, i) => {
@@ -330,7 +330,7 @@ export function AdminDisputeDetail({ id }: Props) {
                             <span className={`h-2.5 w-2.5 rounded-full ${a.dot}`} />
                           </div>
                           {i < timeline.length - 1 && (
-                            <div className="my-1 w-px flex-1 bg-[#E8E4DC] dark:bg-[#1E2E18]" />
+                            <div className="my-1 w-px flex-1 bg-[#FFF9EC] dark:bg-[#1E2E18]" />
                           )}
                         </div>
                         <div className={`${i < timeline.length - 1 ? 'pb-5' : ''} min-w-0 pt-1`}>
@@ -338,9 +338,9 @@ export function AdminDisputeDetail({ id }: Props) {
                             <span className={`rounded-lg px-2 py-0.5 text-[11px] font-black uppercase tracking-wide ${a.bg} ${a.text}`}>
                               {t(a.label)}
                             </span>
-                            <span className="text-[12px] text-[#BBBBAA] dark:text-[#A0A090]">{formatDate(ev.date)}</span>
+                            <span className="text-[12px] text-[#BBBBAA] dark:text-[#B0BFB1]">{formatDate(ev.date)}</span>
                           </div>
-                          <p className="text-[13px] leading-relaxed text-[#444] dark:text-[#9A9A8A]">{ev.label}</p>
+                          <p className="text-[13px] leading-relaxed text-[#444] dark:text-[#B0BFB1]">{ev.label}</p>
                         </div>
                       </div>
                     );
@@ -352,9 +352,9 @@ export function AdminDisputeDetail({ id }: Props) {
             {/* Right sidebar */}
             <div className="flex flex-col gap-4">
               {/* Actions */}
-              <div className="overflow-hidden rounded-2xl border border-[#E8E4DC] bg-white shadow-sm dark:border-[#1E2E18] dark:bg-[#131E10]">
+              <div className="overflow-hidden rounded-2xl border border-[#FFF9EC] bg-white shadow-sm dark:border-[#1E2E18] dark:bg-[#131E10]">
                 <div className="border-b border-[#F0EDE6] bg-[#F9F8F5] px-5 py-3 dark:border-[#1A2A14] dark:bg-[#0E1A0C]">
-                  <p className="text-[12px] font-black uppercase tracking-widest text-[#AAAAAA] dark:text-[#A0A090]">{t('section_actions')}</p>
+                  <p className="text-[12px] font-black uppercase tracking-widest text-[#AAAAAA] dark:text-[#B0BFB1]">{t('section_actions')}</p>
                 </div>
                 <div className="flex flex-col gap-2.5 p-4">
                   {isResolved ? (
@@ -362,20 +362,20 @@ export function AdminDisputeDetail({ id }: Props) {
                       <div className={`flex h-10 w-10 items-center justify-center rounded-xl ${s.bar}`}>
                         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2.5" strokeLinecap="round" aria-hidden="true"><polyline points="20 6 9 17 4 12" /></svg>
                       </div>
-                      <p className="text-center text-[13px] font-semibold text-[#999] dark:text-[#A0A090]">{t('already_resolved')}</p>
+                      <p className="text-center text-[13px] font-semibold text-[#999] dark:text-[#B0BFB1]">{t('already_resolved')}</p>
                     </div>
                   ) : (
                     <>
                       <button type="button" onClick={() => setModal('refund_full')}
-                        className="flex w-full items-center gap-3 rounded-xl bg-[#C49A1E] px-4 py-3 text-[13px] font-bold text-[#0C1209] shadow-sm transition-all hover:-translate-y-0.5 hover:bg-[#B08A14] hover:shadow-md active:translate-y-0">
+                        className="flex w-full items-center gap-3 rounded-xl bg-[#DDAF3B] px-4 py-3 text-[13px] font-bold text-[#001201] shadow-sm transition-all hover:-translate-y-0.5 hover:bg-[#B08A14] hover:shadow-md active:translate-y-0">
                         <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-white/20">
                           <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" aria-hidden="true"><polyline points="1 4 1 10 7 10" /><path d="M3.51 15a9 9 0 102.13-9.36L1 10" /></svg>
                         </div>
                         {t('btn_refund_full')}
                       </button>
                       <button type="button" onClick={() => setModal('refund_partial')}
-                        className="flex w-full items-center gap-3 rounded-xl border border-[#3B82F6]/30 bg-[#EFF6FF] px-4 py-3 text-[13px] font-bold text-[#1D4ED8] transition-all hover:-translate-y-0.5 hover:bg-[#DBEAFE] hover:shadow-sm active:translate-y-0 dark:border-[#1E40AF]/30 dark:bg-[#0A1A2E] dark:text-[#93C5FD] dark:hover:bg-[#0F2040]">
-                        <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-[#3B82F6]/15 dark:bg-[#3B82F6]/20">
+                        className="flex w-full items-center gap-3 rounded-xl border border-[#1E40AF]/30 bg-[#EFF6FF] px-4 py-3 text-[13px] font-bold text-[#1D4ED8] transition-all hover:-translate-y-0.5 hover:bg-[#DBEAFE] hover:shadow-sm active:translate-y-0 dark:border-[#1E40AF]/30 dark:bg-[#0A1A2E] dark:text-[#93C5FD] dark:hover:bg-[#0F2040]">
+                        <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-[#1E40AF]/15 dark:bg-[#1E40AF]/20">
                           <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" aria-hidden="true"><line x1="12" y1="1" x2="12" y2="23" /><path d="M17 5H9.5a3.5 3.5 0 000 7h5a3.5 3.5 0 010 7H6" /></svg>
                         </div>
                         {t('btn_refund_partial')}
@@ -394,9 +394,9 @@ export function AdminDisputeDetail({ id }: Props) {
               </div>
 
               {/* Client card */}
-              <div className="overflow-hidden rounded-2xl border border-[#E8E4DC] bg-white shadow-sm dark:border-[#1E2E18] dark:bg-[#131E10]">
+              <div className="overflow-hidden rounded-2xl border border-[#FFF9EC] bg-white shadow-sm dark:border-[#1E2E18] dark:bg-[#131E10]">
                 <div className="border-b border-[#F0EDE6] bg-[#F9F8F5] px-5 py-3 dark:border-[#1A2A14] dark:bg-[#0E1A0C]">
-                  <p className="text-[12px] font-black uppercase tracking-widest text-[#AAAAAA] dark:text-[#A0A090]">{t('label_client')}</p>
+                  <p className="text-[12px] font-black uppercase tracking-widest text-[#AAAAAA] dark:text-[#B0BFB1]">{t('label_client')}</p>
                 </div>
                 <div className="p-4">
                   <div className="flex items-center gap-3">
@@ -404,59 +404,59 @@ export function AdminDisputeDetail({ id }: Props) {
                       {initials(clientName)}
                     </div>
                     <div className="min-w-0">
-                      <p className="truncate text-[13px] font-bold text-[#1A1A0A] dark:text-[#F0EDD4]">{clientName || t('label_unknown_client')}</p>
+                      <p className="truncate text-[13px] font-bold text-[#001201] dark:text-[#FFF9EC]">{clientName || t('label_unknown_client')}</p>
                     </div>
                   </div>
                   <div className="mt-3 flex flex-col gap-1.5">
                     {clientContactPhone && (
                       <a href={`tel:${clientContactPhone}`}
-                        className="flex items-center gap-2 rounded-xl bg-[#F5F5EE] px-3 py-2 text-[12px] font-semibold text-[#444] transition-colors hover:bg-[#EDEAE0] dark:bg-[#0E1A0C] dark:text-[#C0C0B0] dark:hover:bg-[#152010]">
-                        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#C49A1E" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M22 16.92v3a2 2 0 01-2.18 2 19.79 19.79 0 01-8.63-3.07A19.5 19.5 0 013.07 10.8 19.79 19.79 0 01.03 2.18 2 2 0 012 0h3a2 2 0 012 1.72c.127.96.361 1.903.7 2.81a2 2 0 01-.45 2.11L6.91 7.91a16 16 0 006.72 6.72l1.28-1.27a2 2 0 012.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0122 16.92z" /></svg>
+                        className="flex items-center gap-2 rounded-xl bg-[#FFF9EC] px-3 py-2 text-[12px] font-semibold text-[#444] transition-colors hover:bg-[#EDEAE0] dark:bg-[#0E1A0C] dark:text-[#C0C0B0] dark:hover:bg-[#152010]">
+                        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#DDAF3B" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M22 16.92v3a2 2 0 01-2.18 2 19.79 19.79 0 01-8.63-3.07A19.5 19.5 0 013.07 10.8 19.79 19.79 0 01.03 2.18 2 2 0 012 0h3a2 2 0 012 1.72c.127.96.361 1.903.7 2.81a2 2 0 01-.45 2.11L6.91 7.91a16 16 0 006.72 6.72l1.28-1.27a2 2 0 012.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0122 16.92z" /></svg>
                         <span className="truncate">{clientContactPhone}</span>
                       </a>
                     )}
                     {clientContactEmail && (
                       <a href={`mailto:${clientContactEmail}`}
-                        className="flex items-center gap-2 rounded-xl bg-[#F5F5EE] px-3 py-2 text-[12px] font-semibold text-[#444] transition-colors hover:bg-[#EDEAE0] dark:bg-[#0E1A0C] dark:text-[#C0C0B0] dark:hover:bg-[#152010]">
-                        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#C49A1E" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z" /><polyline points="22,6 12,13 2,6" /></svg>
+                        className="flex items-center gap-2 rounded-xl bg-[#FFF9EC] px-3 py-2 text-[12px] font-semibold text-[#444] transition-colors hover:bg-[#EDEAE0] dark:bg-[#0E1A0C] dark:text-[#C0C0B0] dark:hover:bg-[#152010]">
+                        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#DDAF3B" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z" /><polyline points="22,6 12,13 2,6" /></svg>
                         <span className="truncate">{clientContactEmail}</span>
                       </a>
                     )}
                     {!clientContactPhone && !clientContactEmail && (
-                      <p className="text-[12px] text-[#BBBBAA] dark:text-[#A0A090]">{t('no_contact')}</p>
+                      <p className="text-[12px] text-[#BBBBAA] dark:text-[#B0BFB1]">{t('no_contact')}</p>
                     )}
                   </div>
                 </div>
               </div>
 
               {/* Station card */}
-              <div className="overflow-hidden rounded-2xl border border-[#E8E4DC] bg-white shadow-sm dark:border-[#1E2E18] dark:bg-[#131E10]">
+              <div className="overflow-hidden rounded-2xl border border-[#FFF9EC] bg-white shadow-sm dark:border-[#1E2E18] dark:bg-[#131E10]">
                 <div className="border-b border-[#F0EDE6] bg-[#F9F8F5] px-5 py-3 dark:border-[#1A2A14] dark:bg-[#0E1A0C]">
-                  <p className="text-[12px] font-black uppercase tracking-widest text-[#AAAAAA] dark:text-[#A0A090]">{t('label_station')}</p>
+                  <p className="text-[12px] font-black uppercase tracking-widest text-[#AAAAAA] dark:text-[#B0BFB1]">{t('label_station')}</p>
                 </div>
                 <div className="p-4">
                   <div className="flex items-center gap-3">
                     <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-[#F0EDE6] dark:bg-[#1A2A14]">
-                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#C49A1E" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z" /></svg>
+                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#DDAF3B" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z" /></svg>
                     </div>
                     <div className="min-w-0">
-                      <p className="truncate text-[13px] font-bold text-[#1A1A0A] dark:text-[#F0EDD4]">{stationName}</p>
-                      <p className="truncate text-[12px] text-[#BBBBAA] dark:text-[#A0A090]">{stationCity}</p>
+                      <p className="truncate text-[13px] font-bold text-[#001201] dark:text-[#FFF9EC]">{stationName}</p>
+                      <p className="truncate text-[12px] text-[#BBBBAA] dark:text-[#B0BFB1]">{stationCity}</p>
                     </div>
                   </div>
                   {(stationPhone || stationEmail) && (
                     <div className="mt-3 flex flex-col gap-1.5">
                       {stationPhone && (
                         <a href={`tel:${stationPhone}`}
-                          className="flex items-center gap-2 rounded-xl bg-[#F5F5EE] px-3 py-2 text-[12px] font-semibold text-[#444] transition-colors hover:bg-[#EDEAE0] dark:bg-[#0E1A0C] dark:text-[#C0C0B0] dark:hover:bg-[#152010]">
-                          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#C49A1E" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M22 16.92v3a2 2 0 01-2.18 2 19.79 19.79 0 01-8.63-3.07A19.5 19.5 0 013.07 10.8 19.79 19.79 0 01.03 2.18 2 2 0 012 0h3a2 2 0 012 1.72c.127.96.361 1.903.7 2.81a2 2 0 01-.45 2.11L6.91 7.91a16 16 0 006.72 6.72l1.28-1.27a2 2 0 012.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0122 16.92z" /></svg>
+                          className="flex items-center gap-2 rounded-xl bg-[#FFF9EC] px-3 py-2 text-[12px] font-semibold text-[#444] transition-colors hover:bg-[#EDEAE0] dark:bg-[#0E1A0C] dark:text-[#C0C0B0] dark:hover:bg-[#152010]">
+                          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#DDAF3B" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M22 16.92v3a2 2 0 01-2.18 2 19.79 19.79 0 01-8.63-3.07A19.5 19.5 0 013.07 10.8 19.79 19.79 0 01.03 2.18 2 2 0 012 0h3a2 2 0 012 1.72c.127.96.361 1.903.7 2.81a2 2 0 01-.45 2.11L6.91 7.91a16 16 0 006.72 6.72l1.28-1.27a2 2 0 012.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0122 16.92z" /></svg>
                           <span className="truncate">{stationPhone}</span>
                         </a>
                       )}
                       {stationEmail && (
                         <a href={`mailto:${stationEmail}`}
-                          className="flex items-center gap-2 rounded-xl bg-[#F5F5EE] px-3 py-2 text-[12px] font-semibold text-[#444] transition-colors hover:bg-[#EDEAE0] dark:bg-[#0E1A0C] dark:text-[#C0C0B0] dark:hover:bg-[#152010]">
-                          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#C49A1E" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z" /><polyline points="22,6 12,13 2,6" /></svg>
+                          className="flex items-center gap-2 rounded-xl bg-[#FFF9EC] px-3 py-2 text-[12px] font-semibold text-[#444] transition-colors hover:bg-[#EDEAE0] dark:bg-[#0E1A0C] dark:text-[#C0C0B0] dark:hover:bg-[#152010]">
+                          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#DDAF3B" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z" /><polyline points="22,6 12,13 2,6" /></svg>
                           <span className="truncate">{stationEmail}</span>
                         </a>
                       )}

@@ -37,11 +37,11 @@ export default function FavoritesPage() {
   }
 
   return (
-    <main className="min-h-screen bg-[#F5F5E6] dark:bg-[#0F0F0D] pb-24 sm:pb-8">
+    <main className="min-h-screen bg-background pb-24 sm:pb-8">
       {/* Header */}
       <div className="px-4 pt-6 pb-4 max-w-2xl mx-auto">
-        <h1 className="text-[22px] font-black text-[#0A0A14] dark:text-white">{t('title')}</h1>
-        <p className="text-[14px] text-[#666] dark:text-[#B0B0A0] mt-1">{t('subtitle')}</p>
+        <h1 className="text-[22px] font-black text-foreground">{t('title')}</h1>
+        <p className="text-[14px] text-foreground/65 mt-1">{t('subtitle')}</p>
       </div>
 
       <div className="px-4 max-w-2xl mx-auto">

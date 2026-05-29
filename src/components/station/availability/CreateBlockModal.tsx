@@ -208,10 +208,10 @@ export function CreateBlockModal({
         <div className="space-y-5 p-5">
           {/* Dates */}
           <div>
-            <p className="mb-1 text-[10px] font-black uppercase tracking-widest text-[#C49A1E]">
+            <p className="mb-1 text-[10px] font-black uppercase tracking-widest text-[#DDAF3B]">
               {t('availability_modal_section_dates')}
             </p>
-            <p className="mb-3 text-xs text-[#666] dark:text-[#A0A090]">
+            <p className="mb-3 text-xs text-foreground/65 dark:text-[#B0BFB1]">
               {t('availability_modal_dates_hint')}
             </p>
 
@@ -221,14 +221,14 @@ export function CreateBlockModal({
                 {dates.map((d) => (
                   <span
                     key={d}
-                    className="flex items-center gap-1.5 rounded-full border border-[#C49A1E]/30 bg-[#C49A1E]/10 px-3 py-1 text-[11px] font-semibold text-[#1A1A0A] dark:bg-[#C49A1E]/15 dark:text-[#F0EDD4]"
+                    className="flex items-center gap-1.5 rounded-full border border-[#DDAF3B]/30 bg-[#DDAF3B]/10 px-3 py-1 text-[11px] font-semibold text-[#001201] dark:bg-[#DDAF3B]/15 dark:text-[#FFF9EC]"
                   >
                     {isoToDisplay(d)}
                     <button
                       type="button"
                       onClick={() => removeDate(d)}
                       aria-label={`Retirer ${isoToDisplay(d)}`}
-                      className="cursor-pointer text-[#666] hover:text-[#FF2525]"
+                      className="cursor-pointer text-foreground/65 hover:text-[#FF2525]"
                     >
                       ✕
                     </button>
@@ -241,7 +241,7 @@ export function CreateBlockModal({
               <button
                 type="button"
                 onClick={() => setDates([])}
-                className="mb-3 cursor-pointer text-xs font-semibold text-[#666] underline decoration-dotted underline-offset-2 transition-colors hover:text-[#FF2525] dark:text-[#A0A090]"
+                className="mb-3 cursor-pointer text-xs font-semibold text-foreground/65 underline decoration-dotted underline-offset-2 transition-colors hover:text-[#FF2525] dark:text-[#B0BFB1]"
               >
                 {t('availability_modal_clear_dates')}
               </button>
@@ -262,9 +262,9 @@ export function CreateBlockModal({
                     e.target.value = '';
                   }
                 }}
-                className="rounded-xl border border-[#C49A1E]/30 bg-[#F0EDE0] px-3 py-2 text-sm text-[#1A1A0A] focus:border-[#C49A1E] focus:outline-none dark:bg-[#1E2A1A] dark:text-[#F0EDD4]"
+                className="rounded-xl border border-[#DDAF3B]/30 bg-[#F0EDE0] px-3 py-2 text-sm text-[#001201] focus:border-[#DDAF3B] focus:outline-none dark:bg-[#001A05] dark:text-[#FFF9EC]"
               />
-              <span className="text-xs text-[#666] dark:text-[#A0A090]">
+              <span className="text-xs text-foreground/65 dark:text-[#B0BFB1]">
                 {t('availability_modal_add_date')}
               </span>
             </div>
@@ -275,30 +275,30 @@ export function CreateBlockModal({
 
           {/* Hours */}
           <div>
-            <p className="mb-3 text-[10px] font-black uppercase tracking-widest text-[#C49A1E]">
+            <p className="mb-3 text-[10px] font-black uppercase tracking-widest text-[#DDAF3B]">
               {t('availability_modal_section_hours')}
             </p>
             <div className="grid grid-cols-2 gap-3">
               <div>
-                <label className="mb-1 block text-xs font-semibold text-[#666] dark:text-[#A0A090]">
+                <label className="mb-1 block text-xs font-semibold text-foreground/65 dark:text-[#B0BFB1]">
                   {t('availability_modal_from')}
                 </label>
                 <input
                   type="time"
                   value={startTime}
                   onChange={(e) => setStartTime(e.target.value)}
-                  className="w-full rounded-xl border border-[#C49A1E]/30 bg-[#F0EDE0] px-3 py-2 text-sm text-[#1A1A0A] focus:border-[#C49A1E] focus:outline-none dark:bg-[#1E2A1A] dark:text-[#F0EDD4]"
+                  className="w-full rounded-xl border border-[#DDAF3B]/30 bg-[#F0EDE0] px-3 py-2 text-sm text-[#001201] focus:border-[#DDAF3B] focus:outline-none dark:bg-[#001A05] dark:text-[#FFF9EC]"
                 />
               </div>
               <div>
-                <label className="mb-1 block text-xs font-semibold text-[#666] dark:text-[#A0A090]">
+                <label className="mb-1 block text-xs font-semibold text-foreground/65 dark:text-[#B0BFB1]">
                   {t('availability_modal_to')}
                 </label>
                 <input
                   type="time"
                   value={endTime}
                   onChange={(e) => setEndTime(e.target.value)}
-                  className="w-full rounded-xl border border-[#C49A1E]/30 bg-[#F0EDE0] px-3 py-2 text-sm text-[#1A1A0A] focus:border-[#C49A1E] focus:outline-none dark:bg-[#1E2A1A] dark:text-[#F0EDD4]"
+                  className="w-full rounded-xl border border-[#DDAF3B]/30 bg-[#F0EDE0] px-3 py-2 text-sm text-[#001201] focus:border-[#DDAF3B] focus:outline-none dark:bg-[#001A05] dark:text-[#FFF9EC]"
                 />
               </div>
             </div>
@@ -309,19 +309,19 @@ export function CreateBlockModal({
 
           {/* Postes */}
           <div>
-            <p className="mb-3 text-[10px] font-black uppercase tracking-widest text-[#C49A1E]">
+            <p className="mb-3 text-[10px] font-black uppercase tracking-widest text-[#DDAF3B]">
               {t('availability_modal_section_postes')}
             </p>
             <div className="grid grid-cols-2 gap-2">
               {/* All bays option */}
-              <label className={`flex cursor-pointer items-center gap-2 rounded-xl border-2 p-3 transition-colors ${allBays ? 'border-[#C49A1E] bg-[#C49A1E]/10' : 'border-[#C49A1E]/20 bg-[#F0EDE0] dark:bg-[#1E2A1A]'}`}>
+              <label className={`flex cursor-pointer items-center gap-2 rounded-xl border-2 p-3 transition-colors ${allBays ? 'border-[#DDAF3B] bg-[#DDAF3B]/10' : 'border-[#DDAF3B]/20 bg-[#F0EDE0] dark:bg-[#001A05]'}`}>
                 <input
                   type="checkbox"
                   checked={allBays}
                   onChange={handleAllBays}
-                  className="accent-[#C49A1E]"
+                  className="accent-[#DDAF3B]"
                 />
-                <span className={`text-[13px] font-semibold ${allBays ? 'text-[#C49A1E]' : 'text-[#1A1A0A] dark:text-[#F0EDD4]'}`}>
+                <span className={`text-[13px] font-semibold ${allBays ? 'text-[#DDAF3B]' : 'text-[#001201] dark:text-[#FFF9EC]'}`}>
                   {t('availability_block_all_postes')}
                 </span>
               </label>
@@ -330,21 +330,21 @@ export function CreateBlockModal({
                   key={bay}
                   className={`flex cursor-pointer items-center gap-2 rounded-xl border-2 p-3 transition-colors ${
                     allBays || selectedBays.includes(bay)
-                      ? 'border-[#C49A1E] bg-[#C49A1E]/10'
-                      : 'border-[#C49A1E]/20 bg-[#F0EDE0] dark:bg-[#1E2A1A]'
+                      ? 'border-[#DDAF3B] bg-[#DDAF3B]/10'
+                      : 'border-[#DDAF3B]/20 bg-[#F0EDE0] dark:bg-[#001A05]'
                   }`}
                 >
                   <input
                     type="checkbox"
                     checked={allBays || selectedBays.includes(bay)}
                     onChange={() => toggleBay(bay)}
-                    className="accent-[#C49A1E]"
+                    className="accent-[#DDAF3B]"
                   />
                   <span
                     className={`text-[13px] font-semibold ${
                       allBays || selectedBays.includes(bay)
-                        ? 'text-[#C49A1E]'
-                        : 'text-[#666] dark:text-[#A0A090]'
+                        ? 'text-[#DDAF3B]'
+                        : 'text-foreground/65 dark:text-[#B0BFB1]'
                     }`}
                   >
                     {t('availability_modal_poste')} {bay}
@@ -359,45 +359,87 @@ export function CreateBlockModal({
         </div>
 
         {/* Right: quick dates + mini-calendar */}
-        <div className="border-t border-[#C49A1E]/20 p-5 md:border-t-0 md:border-l dark:border-[#C49A1E]/10">
-          <p className="mb-3 text-[10px] font-black uppercase tracking-widest text-[#C49A1E]">
-            {t('availability_modal_quick_dates')}
+        <div className="border-t border-[#DDAF3B]/20 p-5 md:border-t-0 md:border-l dark:border-[#DDAF3B]/10">
+          {/* Premium intro header — same gold pill style used elsewhere
+              on the station chrome so the merchant immediately recognises
+              this as 'one-click shortcuts' rather than dead form rows. */}
+          <div className="mb-3 flex items-center gap-2">
+            <span className="flex h-6 w-6 items-center justify-center rounded-full bg-[#DDAF3B] text-[#001201]" aria-hidden="true">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor">
+                <path d="M13 2L3 14h7l-1 8 10-12h-7l1-8z" />
+              </svg>
+            </span>
+            <p className="text-[10px] font-black uppercase tracking-widest text-[#DDAF3B]">
+              {t('availability_modal_quick_dates')}
+            </p>
+          </div>
+          <p className="mb-3 text-[11px] leading-snug text-foreground/65 dark:text-[#B0BFB1]">
+            {t('availability_modal_quick_dates_hint')}
           </p>
+
           <div className="mb-5 flex flex-col gap-2">
-            <button
-              type="button"
-              onClick={() => addDate(todayISO())}
-              className="cursor-pointer rounded-xl bg-[#F0EDE0] px-3 py-2.5 text-left text-[12px] font-semibold text-[#1A1A0A] transition-colors hover:bg-[#C49A1E]/15 dark:bg-[#1E2A1A] dark:text-[#F0EDD4]"
-            >
-              {t('availability_modal_today')}
-            </button>
-            <button
-              type="button"
-              onClick={() => addDate(tomorrowISO())}
-              className="cursor-pointer rounded-xl bg-[#F0EDE0] px-3 py-2.5 text-left text-[12px] font-semibold text-[#1A1A0A] transition-colors hover:bg-[#C49A1E]/15 dark:bg-[#1E2A1A] dark:text-[#F0EDD4]"
-            >
-              {t('availability_modal_tomorrow')}
-            </button>
-            <button
-              type="button"
-              onClick={() => addDates(thisWeek)}
-              className="cursor-pointer rounded-xl bg-[#F0EDE0] px-3 py-2.5 text-left text-[12px] font-semibold text-[#1A1A0A] transition-colors hover:bg-[#C49A1E]/15 dark:bg-[#1E2A1A] dark:text-[#F0EDD4]"
-            >
-              {t('availability_modal_this_week')}
-              <span className="mt-0.5 block text-[10px] text-[#666] dark:text-[#A0A090]">
-                {formatWeekLabel(thisWeek)}
-              </span>
-            </button>
-            <button
-              type="button"
-              onClick={() => addDates(nextWeek)}
-              className="cursor-pointer rounded-xl bg-[#F0EDE0] px-3 py-2.5 text-left text-[12px] font-semibold text-[#1A1A0A] transition-colors hover:bg-[#C49A1E]/15 dark:bg-[#1E2A1A] dark:text-[#F0EDD4]"
-            >
-              {t('availability_modal_next_week')}
-              <span className="mt-0.5 block text-[10px] text-[#666] dark:text-[#A0A090]">
-                {formatWeekLabel(nextWeek)}
-              </span>
-            </button>
+            <QuickDateShortcut
+              icon={
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                  <rect x="3" y="4" width="18" height="18" rx="2" />
+                  <line x1="16" y1="2" x2="16" y2="6" />
+                  <line x1="8" y1="2" x2="8" y2="6" />
+                  <line x1="3" y1="10" x2="21" y2="10" />
+                  <circle cx="12" cy="16" r="1.5" fill="currentColor" />
+                </svg>
+              }
+              label={t('availability_modal_today')}
+              targetDates={[todayISO()]}
+              currentDates={dates}
+              onApply={() => addDate(todayISO())}
+            />
+            <QuickDateShortcut
+              icon={
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                  <rect x="3" y="4" width="18" height="18" rx="2" />
+                  <line x1="16" y1="2" x2="16" y2="6" />
+                  <line x1="8" y1="2" x2="8" y2="6" />
+                  <line x1="3" y1="10" x2="21" y2="10" />
+                  <polyline points="9 14 13 18 9 22" transform="translate(2, -4)" />
+                </svg>
+              }
+              label={t('availability_modal_tomorrow')}
+              targetDates={[tomorrowISO()]}
+              currentDates={dates}
+              onApply={() => addDate(tomorrowISO())}
+            />
+            <QuickDateShortcut
+              icon={
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                  <rect x="3" y="4" width="18" height="18" rx="2" />
+                  <line x1="16" y1="2" x2="16" y2="6" />
+                  <line x1="8" y1="2" x2="8" y2="6" />
+                  <line x1="3" y1="10" x2="21" y2="10" />
+                  <line x1="6" y1="14" x2="18" y2="14" strokeWidth="2.5" />
+                </svg>
+              }
+              label={t('availability_modal_this_week')}
+              subLabel={formatWeekLabel(thisWeek)}
+              targetDates={thisWeek}
+              currentDates={dates}
+              onApply={() => addDates(thisWeek)}
+            />
+            <QuickDateShortcut
+              icon={
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                  <rect x="3" y="4" width="18" height="18" rx="2" />
+                  <line x1="16" y1="2" x2="16" y2="6" />
+                  <line x1="8" y1="2" x2="8" y2="6" />
+                  <line x1="3" y1="10" x2="21" y2="10" />
+                  <polyline points="13 14 17 17 13 20" />
+                </svg>
+              }
+              label={t('availability_modal_next_week')}
+              subLabel={formatWeekLabel(nextWeek)}
+              targetDates={nextWeek}
+              currentDates={dates}
+              onApply={() => addDates(nextWeek)}
+            />
           </div>
 
           {/* Mini-calendar */}
@@ -406,25 +448,25 @@ export function CreateBlockModal({
               type="button"
               onClick={() => setMiniCalMonth(new Date(miniYear, miniMonthIdx - 1, 1))}
               aria-label="Mois précédent"
-              className="flex h-[22px] w-[22px] cursor-pointer items-center justify-center rounded-full bg-[#C49A1E]/15 text-[#C49A1E] text-[10px] hover:bg-[#C49A1E]/25"
+              className="flex h-[22px] w-[22px] cursor-pointer items-center justify-center rounded-full bg-[#DDAF3B]/15 text-[#DDAF3B] text-[10px] hover:bg-[#DDAF3B]/25"
             >
               ◀
             </button>
-            <p className="flex-1 text-center text-[11px] font-black tracking-wide text-[#C49A1E]">
+            <p className="flex-1 text-center text-[11px] font-black tracking-wide text-[#DDAF3B]">
               {miniMonthLabel}
             </p>
             <button
               type="button"
               onClick={() => setMiniCalMonth(new Date(miniYear, miniMonthIdx + 1, 1))}
               aria-label="Mois suivant"
-              className="flex h-[22px] w-[22px] cursor-pointer items-center justify-center rounded-full bg-[#C49A1E]/15 text-[#C49A1E] text-[10px] hover:bg-[#C49A1E]/25"
+              className="flex h-[22px] w-[22px] cursor-pointer items-center justify-center rounded-full bg-[#DDAF3B]/15 text-[#DDAF3B] text-[10px] hover:bg-[#DDAF3B]/25"
             >
               ▶
             </button>
           </div>
           <div className="grid grid-cols-7 gap-[2px] mb-1">
             {['L','M','M','J','V','S','D'].map((d, i) => (
-              <div key={i} className="text-center text-[8px] font-bold text-[#666] dark:text-[#A0A090] py-[2px]">{d}</div>
+              <div key={i} className="text-center text-[8px] font-bold text-foreground/65 dark:text-[#B0BFB1] py-[2px]">{d}</div>
             ))}
           </div>
           <div className="grid grid-cols-7 gap-[2px]">
@@ -449,9 +491,9 @@ export function CreateBlockModal({
                   className={[
                     'rounded-[3px] py-[3px] text-center text-[9px] font-bold transition-colors',
                     isDisabled ? 'cursor-default opacity-30' : 'cursor-pointer',
-                    !isDisabled && isSelected ? 'bg-[#C49A1E] text-[#1A1A0A]' :
-                    !isDisabled && isToday ? 'border border-[#C49A1E] bg-[#EDE9CC] text-[#1A1A0A] dark:bg-[#1E2A1A] dark:text-[#F0EDD4]' :
-                    !isDisabled ? 'bg-[#F0EDE0] text-[#1A1A0A] hover:bg-[#C49A1E]/20 dark:bg-[#1E2A1A] dark:text-[#F0EDD4]' : '',
+                    !isDisabled && isSelected ? 'bg-[#DDAF3B] text-[#001201]' :
+                    !isDisabled && isToday ? 'border border-[#DDAF3B] bg-[#EDE9CC] text-[#001201] dark:bg-[#001A05] dark:text-[#FFF9EC]' :
+                    !isDisabled ? 'bg-[#F0EDE0] text-[#001201] hover:bg-[#DDAF3B]/20 dark:bg-[#001A05] dark:text-[#FFF9EC]' : '',
                   ].join(' ')}
                 >
                   {dayNum}
@@ -460,13 +502,13 @@ export function CreateBlockModal({
             })}
           </div>
           {/* Mini-cal legend */}
-          <div className="mt-2 flex flex-wrap gap-3 text-[9px] text-[#666] dark:text-[#A0A090]">
+          <div className="mt-2 flex flex-wrap gap-3 text-[9px] text-foreground/65 dark:text-[#B0BFB1]">
             <span className="flex items-center gap-1">
-              <span className="inline-block h-2.5 w-2.5 rounded-[2px] border border-[#C49A1E] bg-[#EDE9CC] dark:bg-[#1E2A1A]" />
+              <span className="inline-block h-2.5 w-2.5 rounded-[2px] border border-[#DDAF3B] bg-[#EDE9CC] dark:bg-[#001A05]" />
               Aujourd'hui
             </span>
             <span className="flex items-center gap-1">
-              <span className="inline-block h-2.5 w-2.5 rounded-[2px] bg-[#C49A1E]" />
+              <span className="inline-block h-2.5 w-2.5 rounded-[2px] bg-[#DDAF3B]" />
               Sélectionné
             </span>
           </div>
@@ -474,22 +516,119 @@ export function CreateBlockModal({
       </div>
 
       {/* Footer */}
-      <div className="flex justify-end gap-3 border-t border-[#C49A1E]/20 px-5 py-4 dark:border-[#C49A1E]/10">
+      <div className="flex justify-end gap-3 border-t border-[#DDAF3B]/20 px-5 py-4 dark:border-[#DDAF3B]/10">
         <button
           type="button"
           onClick={onClose}
-          className="cursor-pointer rounded-xl border border-[#C49A1E]/30 bg-transparent px-5 py-2.5 text-sm font-bold text-[#666] transition-colors hover:bg-[#C49A1E]/10 dark:text-[#A0A090]"
+          className="cursor-pointer rounded-xl border border-[#DDAF3B]/30 bg-transparent px-5 py-2.5 text-sm font-bold text-foreground/65 transition-colors hover:bg-[#DDAF3B]/10 dark:text-[#B0BFB1]"
         >
           {t('btn_cancel')}
         </button>
         <button
           type="button"
           onClick={handleSubmit}
-          className="cursor-pointer rounded-xl bg-[#C49A1E] px-5 py-2.5 text-sm font-black text-[#1A1A0A] transition-colors hover:bg-[#A07818] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#C49A1E] focus-visible:ring-offset-2"
+          className="cursor-pointer rounded-xl bg-[#DDAF3B] px-5 py-2.5 text-sm font-black text-[#001201] transition-colors hover:bg-[#A07818] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#DDAF3B] focus-visible:ring-offset-2"
         >
           {t(editingBlock ? 'availability_block_edit' : 'availability_create_block')}
         </button>
       </div>
     </Modal>
+  );
+}
+
+/* ------------------------------------------------------------------ */
+/* QuickDateShortcut — one row of the Dates rapides shortcut list      */
+/* ------------------------------------------------------------------ */
+
+interface QuickDateShortcutProps {
+  icon: React.ReactNode;
+  label: string;
+  /** Optional second line (e.g. '23 May – 27 May' for a week shortcut). */
+  subLabel?: string;
+  /** Dates the shortcut would add to the selection. */
+  targetDates: string[];
+  /** Dates currently selected — used to compute the 'new dates' counter
+   *  and whether the shortcut has already been applied. */
+  currentDates: string[];
+  onApply: () => void;
+}
+
+function QuickDateShortcut({
+  icon,
+  label,
+  subLabel,
+  targetDates,
+  currentDates,
+  onApply,
+}: QuickDateShortcutProps) {
+  const t = useTranslations('station_dashboard');
+  /* How many of the proposed dates would actually be added if the user
+   * clicked the shortcut. Already-selected ones don't count. We also
+   * filter out past dates to mirror the addDates() guard. */
+  const today = todayISO();
+  const futureTargets = targetDates.filter((d) => d >= today);
+  const newCount = futureTargets.filter((d) => !currentDates.includes(d)).length;
+  const isFullyApplied = futureTargets.length > 0 && newCount === 0;
+  const isEmptyShortcut = futureTargets.length === 0;
+
+  return (
+    <button
+      type="button"
+      onClick={onApply}
+      disabled={isEmptyShortcut}
+      aria-pressed={isFullyApplied}
+      className={[
+        'group flex items-center gap-3 rounded-xl border px-3 py-2.5 text-left transition-all',
+        'cursor-pointer disabled:cursor-not-allowed disabled:opacity-45',
+        isFullyApplied
+          ? 'border-[#22C47A]/40 bg-[#22C47A]/8 hover:border-[#22C47A]/60'
+          : 'border-[#DDAF3B]/30 bg-[#F0EDE0] hover:-translate-y-px hover:border-[#DDAF3B] hover:bg-[#DDAF3B]/15 hover:shadow-sm dark:bg-[#001A05] dark:border-[#DDAF3B]/20',
+      ].join(' ')}
+    >
+      {/* Icon — gold for new add, green for already applied. */}
+      <span
+        className={[
+          'flex h-8 w-8 shrink-0 items-center justify-center rounded-lg transition-colors',
+          isFullyApplied
+            ? 'bg-[#22C47A]/15 text-[#16A964]'
+            : 'bg-[#DDAF3B]/15 text-[#DDAF3B] group-hover:bg-[#DDAF3B]/25',
+        ].join(' ')}
+        aria-hidden="true"
+      >
+        {icon}
+      </span>
+
+      {/* Label + sub-label */}
+      <span className="min-w-0 flex-1">
+        <span className="block text-[12.5px] font-bold text-[#001201] dark:text-[#FFF9EC]">
+          {label}
+        </span>
+        {subLabel && (
+          <span className="mt-0.5 block text-[10.5px] text-foreground/60 dark:text-[#B0BFB1] tabular-nums">
+            {subLabel}
+          </span>
+        )}
+      </span>
+
+      {/* Counter pill — '+1' / '+5' for fresh adds, 'Ajouté ✓' once applied,
+          'Passé' for shortcuts that resolve to no future dates. */}
+      <span
+        className={[
+          'shrink-0 inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-[10.5px] font-black uppercase tracking-wider transition-colors',
+          isEmptyShortcut
+            ? 'bg-foreground/8 text-foreground/55 dark:text-[#B0BFB1]'
+            : isFullyApplied
+              ? 'bg-[#22C47A]/15 text-[#16A964]'
+              : 'bg-[#DDAF3B] text-[#001201] group-hover:bg-[#A07818] group-hover:text-[#FFF9EC]',
+        ].join(' ')}
+        aria-hidden="true"
+      >
+        {isEmptyShortcut
+          ? t('availability_modal_shortcut_past')
+          : isFullyApplied
+            ? <><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12" /></svg>{t('availability_modal_shortcut_added')}</>
+            : t('availability_modal_shortcut_add', { count: newCount })}
+      </span>
+    </button>
   );
 }

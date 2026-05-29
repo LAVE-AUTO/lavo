@@ -8,14 +8,14 @@ export function LandingFinalCTA() {
   const t = useTranslations('landing');
 
   return (
-    <section className="py-16 sm:py-28 bg-white dark:bg-dark-bg transition-colors">
+    <section className="py-16 sm:py-28 bg-white dark:bg-background transition-colors">
       <div className="max-w-6xl mx-auto px-4 sm:px-6">
         <ScrollReveal>
           <div className="text-center max-w-2xl mx-auto">
-            <h2 className="text-[28px] sm:text-[36px] lg:text-[44px] font-black text-[#0A0A14] dark:text-white leading-tight">
+            <h2 className="text-[28px] sm:text-[36px] lg:text-[44px] font-black text-foreground leading-tight">
               {t('final_cta_title')}
             </h2>
-            <p className="mt-3 sm:mt-4 text-[15px] sm:text-[17px] text-[#666] dark:text-[#C0C0B0] leading-relaxed">
+            <p className="mt-3 sm:mt-4 text-[15px] sm:text-[17px] text-foreground/65 dark:text-[#C0C0B0] leading-relaxed">
               {t('final_cta_subtitle')}
             </p>
             <div className="mt-6 sm:mt-8">

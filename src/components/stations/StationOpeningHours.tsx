@@ -53,10 +53,10 @@ export function StationOpeningHours({ hours }: StationOpeningHoursProps) {
 
   return (
     <section>
-      <h2 className="text-[17px] font-black text-[#000C1F] dark:text-[#FFF8EC] mb-3">
+      <h2 className="text-[17px] font-black text-foreground mb-3">
         {t('hours_title')}
       </h2>
-      <ul className="rounded-2xl border border-[#D0D0C0] dark:border-tab-inactive bg-[#E8E8D8] dark:bg-dark-card overflow-hidden">
+      <ul className="rounded-2xl border border-border bg-surface overflow-hidden">
         {ordered.map((row, idx) => {
           /* Use a fixed reference week (2024-01-07 = Sunday) to derive locale-aware
            * weekday names without hardcoding strings. */
@@ -72,14 +72,14 @@ export function StationOpeningHours({ hours }: StationOpeningHoursProps) {
             <li
               key={row.dayOfWeek}
               className={`flex items-center justify-between gap-3 px-5 py-3 text-[13.5px] ${
-                idx > 0 ? 'border-t border-[#D8D8C8] dark:border-tab-inactive' : ''
+                idx > 0 ? 'border-t border-border' : ''
               } ${isToday ? 'bg-gold/10 dark:bg-gold/15' : ''}`}
             >
               <span
                 className={`font-bold ${
                   isToday
                     ? 'text-gold'
-                    : 'text-[#000C1F] dark:text-[#FFF8EC]'
+                    : 'text-foreground'
                 }`}
               >
                 {dayLabel}
@@ -90,15 +90,15 @@ export function StationOpeningHours({ hours }: StationOpeningHoursProps) {
                 )}
               </span>
               {row.isOpen && (morning || afternoon) ? (
-                <span className="text-right text-[#333] dark:text-[#C0C0B0] font-semibold tabular-nums">
+                <span className="font-bebas text-right text-foreground tabular-nums text-[16px] tracking-wider">
                   {morning && <span>{morning}</span>}
                   {morning && afternoon && (
-                    <span className="text-[#888] dark:text-[#888] mx-1.5">•</span>
+                    <span className="text-foreground/55 mx-1.5">•</span>
                   )}
                   {afternoon && <span>{afternoon}</span>}
                 </span>
               ) : (
-                <span className="text-[#999] dark:text-[#888] font-semibold italic">
+                <span className="text-foreground/55 font-semibold italic">
                   {t('hours_closed')}
                 </span>
               )}

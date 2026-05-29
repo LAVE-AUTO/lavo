@@ -92,7 +92,7 @@ export function AnalyticsExportButton({ data, period }: AnalyticsExportButtonPro
   return (
     <button
       onClick={handleExportCsv}
-      className="flex items-center gap-2 rounded-lg bg-[#C49A1E] px-4 py-2 text-sm font-black text-[#0C1209] transition-opacity hover:opacity-90"
+      className="flex items-center gap-2 rounded-lg bg-[#DDAF3B] px-4 py-2 text-sm font-black text-[#001201] transition-opacity hover:opacity-90"
       title={t('export_csv_title') || 'Export as CSV'}
     >
       <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">

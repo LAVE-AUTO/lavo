@@ -78,7 +78,7 @@ export function Modal({
         aria-modal="true"
         aria-labelledby={labelId}
         className={[
-          'relative w-full bg-white dark:bg-dark-card rounded-[10px] shadow-xl',
+          'relative w-full bg-white dark:bg-surface rounded-[10px] shadow-xl',
           'flex flex-col max-h-[90vh] overflow-hidden animate-fade-in-up',
           SIZE_CLASSES[size],
         ].join(' ')}
@@ -86,10 +86,10 @@ export function Modal({
       >
         {/* Header */}
         {title && (
-          <div className="flex items-center justify-between px-5 py-4 border-b border-[#CCCCCC] dark:border-tab-inactive shrink-0">
+          <div className="flex items-center justify-between px-5 py-4 border-b border-[#CCCCCC] dark:border-border shrink-0">
             <h2
               id={labelId}
-              className="text-[17px] font-bold text-[#1A1A1A] dark:text-white"
+              className="text-[17px] font-bold text-[#001201] dark:text-white"
             >
               {title}
             </h2>
@@ -97,7 +97,7 @@ export function Modal({
               type="button"
               onClick={onClose}
               aria-label="Fermer"
-              className="text-Hurryline-muted hover:text-[#1A1A1A] dark:hover:text-white transition-colors"
+              className="text-Hurryline-muted hover:text-[#001201] dark:hover:text-white transition-colors"
             >
               <svg width="20" height="20" viewBox="0 0 20 20" fill="none" aria-hidden="true">
                 <path d="M5 5l10 10M15 5L5 15" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" />
@@ -111,7 +111,7 @@ export function Modal({
 
         {/* Footer */}
         {footer && (
-          <div className="px-5 py-4 border-t border-[#CCCCCC] dark:border-tab-inactive shrink-0">
+          <div className="px-5 py-4 border-t border-[#CCCCCC] dark:border-border shrink-0">
             {footer}
           </div>
         )}

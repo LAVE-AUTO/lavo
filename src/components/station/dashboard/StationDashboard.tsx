@@ -17,6 +17,7 @@ import { DashboardDelaysPanel, type DashboardDelayItem } from './DashboardDelays
 import { DashboardBayFilter, BayFilterMobilePills } from './DashboardBayFilter';
 import { AgendaSlotDetailModal } from './AgendaSlotDetailModal';
 import { StartServiceModal } from './StartServiceModal';
+import { ManualQueueAddModal } from '../queue/ManualQueueAddModal';
 import type { KpiData, ReservationItem } from './types';
 import type { QueueEntry } from './QueueCard';
 
@@ -52,6 +53,10 @@ interface RawEntry {
   completed_at: string | null;
   user?: { first_name: string | null } | null;
   vehicle_format?: { id: string; label: string } | null;
+  service?: { id: string; name: string; category: string } | null;
+  walk_in_client_email?: string | null;
+  walk_in_client_name?: string | null;
+  is_walk_in?: boolean;
 }
 
 interface RawDashboard {
@@ -86,6 +91,16 @@ interface PendingAction {
 }
 
 function clientNameOf(entry: RawEntry): string {
+  /* Walk-in (off-platform) clients added manually by the merchant:
+   *   1. Display the name typed in the modal if any.
+   *   2. Otherwise fall back to the typed email.
+   * Registered clients (matched walk-ins included) use their account
+   * first_name, and only as a last resort do we surface a placeholder
+   * from the user_id. */
+  const walkInName = entry.walk_in_client_name?.trim();
+  if (walkInName) return walkInName;
+  const walkInEmail = entry.walk_in_client_email?.trim();
+  if (walkInEmail) return walkInEmail;
   const first = entry.user?.first_name?.trim();
   if (first) return first;
   return `Client #${entry.user_id.slice(0, 4).toUpperCase()}`;
@@ -125,10 +140,11 @@ function buildQueueEntries(raw: RawEntry[]): QueueEntry[] {
       position: 0,
       clientName: clientNameOf(e),
       entryType: e.entry_type,
-      serviceLabel: e.vehicle_format?.label ?? undefined,
+      serviceLabel: e.service?.name ?? e.vehicle_format?.label ?? undefined,
       price: e.amount_paid ? parseFloat(e.amount_paid) : undefined,
       isNext: false,
       status: e.status,
+      isWalkIn: Boolean(e.is_walk_in),
     }));
   const waiting = raw
     .filter((e) => (ACTIVE_QUEUE_STATUSES as readonly string[]).includes(e.status))
@@ -138,10 +154,11 @@ function buildQueueEntries(raw: RawEntry[]): QueueEntry[] {
       position: e.queue_position ?? idx + 1,
       clientName: clientNameOf(e),
       entryType: e.entry_type,
-      serviceLabel: e.vehicle_format?.label ?? undefined,
+      serviceLabel: e.service?.name ?? e.vehicle_format?.label ?? undefined,
       price: e.amount_paid ? parseFloat(e.amount_paid) : undefined,
       isNext: inProgress.length === 0 && idx === 0,
       status: e.status,
+      isWalkIn: Boolean(e.is_walk_in),
     }));
   return [...inProgress, ...waiting];
 }
@@ -150,12 +167,15 @@ function buildAgendaEntries(raw: RawEntry[]): AgendaEntry[] {
   return raw.map((e): AgendaEntry => ({
     id: e.id,
     clientName: clientNameOf(e),
-    vehicleFormat: e.vehicle_format?.label ?? null,
+    /* Prefer the merchant-set service name; the vehicle format becomes
+     * a secondary descriptor surfaced in the agenda detail modal. */
+    vehicleFormat: e.service?.name ?? e.vehicle_format?.label ?? null,
     status: e.status,
     slotStart: e.slot_start_time,
     slotEnd: e.slot_end_time,
     amountPaid: e.amount_paid ? parseFloat(e.amount_paid) : null,
     postId: e.post_id,
+    isWalkIn: Boolean(e.is_walk_in),
   }));
 }
 
@@ -169,6 +189,7 @@ function buildReservationItems(raw: RawEntry[]): ReservationItem[] {
     .map((e): ReservationItem => ({
       id: e.id,
       clientName: clientNameOf(e),
+      serviceName: e.service?.name ?? null,
       vehicleFormat: e.vehicle_format?.label ?? null,
       status: e.status,
       slotStart: e.slot_start_time ?? null,
@@ -200,7 +221,7 @@ const CONFIRM_DIALOG_LABELS: Record<DashboardAction, { title: string; message: s
 
 export function StationDashboard() {
   const { isLoading: authLoading } = useAuth();
-  const { error: showError, info: showInfo } = useToast();
+  const { error: showError, info: showInfo, success: showSuccess } = useToast();
   const t = useTranslations('station_dashboard');
   const mountedRef = useRef(true);
   useEffect(() => { mountedRef.current = true; return () => { mountedRef.current = false; }; }, []);
@@ -228,6 +249,7 @@ export function StationDashboard() {
    * pure presentational component. */
   const [detailEntry, setDetailEntry] = useState<AgendaEntry | null>(null);
   const [startEntry, setStartEntry] = useState<AgendaEntry | null>(null);
+  const [manualAddOpen, setManualAddOpen] = useState(false);
 
   const loadData = useCallback(async () => {
     const { from: queueFrom, to: queueTo } = dayRange(selectedDate);
@@ -321,22 +343,58 @@ export function StationDashboard() {
   }
 
   function handleOpenManualAdd() {
-    /* Manual queue add modal requires vehicleFormats + availableSlots wiring
-     * which lives on the queue page. For now we direct the merchant there. */
-    showInfo(t('queue_manual_add_redirect'));
+    /* Open the dedicated walk-in modal. The modal fetches services + their
+     * vehicle entries on its own and posts to /station/entries on confirm. */
+    setManualAddOpen(true);
+  }
+
+  async function handleManualAddSuccess(_entryId: string) {
+    void _entryId;
+    setManualAddOpen(false);
+    /* Refresh the dashboard data so the new walk-in shows up immediately
+     * in the queue band / agenda. */
+    await loadData();
+    showSuccess(t('manual_queue_success'));
+  }
+
+  /** Starts a walk-in entry directly via PATCH (no code required) — the
+   *  off-platform client never received a ticket. Used by both the
+   *  agenda and queue start buttons. Returns true on success. */
+  async function startWalkInDirectly(entryId: string): Promise<boolean> {
+    const [ok, data] = await patchWithApi(`/station/entries/${entryId}`, { status: 'in_progress' });
+    if (!mountedRef.current) return false;
+    if (ok) {
+      await loadData();
+      return true;
+    }
+    const raw = (data as { message?: string })?.message ?? '';
+    showError(raw.includes('Cannot transition') ? t('error_invalid_transition') : t('action_error_generic'));
+    return false;
   }
 
   function requestStart(id: string) {
     /* Resolve the agenda entry so the modal can show client name + verify. */
     const entry = agendaEntries.find((e) => e.id === id);
-    if (entry) setStartEntry(entry);
+    if (!entry) return;
+    if (entry.isWalkIn) {
+      /* Walk-in clients (matched or off-platform) never received a
+       * 6-char ticket code, so the merchant starts the service straight
+       * away without the verification modal. */
+      void startWalkInDirectly(entry.id);
+      return;
+    }
+    setStartEntry(entry);
   }
 
   function requestQueueStart(id: string) {
-    /* Queue entries live in a different slice but share the start-with-code
-     * flow: we synthesize a minimal AgendaEntry for the modal. */
     const q = queueEntries.find((e) => e.id === id);
     if (!q) return;
+    if (q.isWalkIn) {
+      void startWalkInDirectly(q.id);
+      return;
+    }
+    /* Real queue entries (client booked through the app) keep the
+     * code-verification flow: synthesize an AgendaEntry for the modal. */
     setStartEntry({
       id: q.id,
       clientName: q.clientName,
@@ -486,6 +544,12 @@ export function StationDashboard() {
         clientName={startEntry?.clientName ?? ''}
         onClose={() => setStartEntry(null)}
         onSubmit={submitStartCode}
+      />
+
+      <ManualQueueAddModal
+        isOpen={manualAddOpen}
+        onClose={() => setManualAddOpen(false)}
+        onSuccess={handleManualAddSuccess}
       />
     </div>
   );

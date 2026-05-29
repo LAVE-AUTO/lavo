@@ -26,8 +26,8 @@ interface Props {
 const STATION_STATUS_VALUES = ['active', 'suspended', 'disabled'] as const;
 const SERVICE_SCOPE_VALUES  = ['', 'exterior', 'interior', 'both'] as const;
 
-const inputBase = 'w-full rounded-lg border bg-transparent px-3 py-2 text-[13px] text-[#1A1A0A] outline-none transition-all dark:text-[#F0EDD4]';
-const inputIdle = 'border-[#D8D4C8] focus:border-[#C49A1E] focus:shadow-[0_0_0_3px_rgba(196,154,30,0.10)] dark:border-[#243020] dark:focus:border-[#C49A1E]';
+const inputBase = 'w-full rounded-lg border bg-transparent px-3 py-2 text-[13px] text-[#001201] outline-none transition-all dark:text-[#FFF9EC]';
+const inputIdle = 'border-[#D8D4C8] focus:border-[#DDAF3B] focus:shadow-[0_0_0_3px_rgba(221, 175, 59,0.10)] dark:border-[#001A05] dark:focus:border-[#DDAF3B]';
 const inputErr  = 'border-red-400 focus:border-red-400';
 
 /**
@@ -116,13 +116,13 @@ export function AdminEditStationModal({ open, station, onClose, onSaved }: Props
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
       <div className="absolute inset-0 bg-black/40 backdrop-blur-[2px]" onClick={() => !busy && onClose()} />
 
-      <div className="relative z-10 w-full max-w-[520px] animate-fade-in-up overflow-hidden rounded-2xl border border-[#E8E4DC] bg-white shadow-2xl dark:border-[#1E2E18] dark:bg-[#0F1A0C]">
+      <div className="relative z-10 w-full max-w-[520px] animate-fade-in-up overflow-hidden rounded-2xl border border-[#FFF9EC] bg-white shadow-2xl dark:border-[#1E2E18] dark:bg-dark-bg">
 
         {/* Header */}
         <div className="flex items-center justify-between border-b border-[#F0EDE6] px-6 py-4 dark:border-[#1A2A14]">
-          <h2 className="text-[15px] font-black text-[#1A1A0A] dark:text-[#F0EDD4]">{t('modal_title')}</h2>
+          <h2 className="text-[15px] font-black text-[#001201] dark:text-[#FFF9EC]">{t('modal_title')}</h2>
           <button type="button" onClick={onClose} disabled={busy} aria-label={t('btn_cancel')}
-            className="flex h-7 w-7 items-center justify-center rounded-lg text-[#BBBBAA] transition-colors hover:bg-[#F0EDE6] hover:text-[#555] disabled:opacity-40 dark:hover:bg-[#1A2A14]">
+            className="flex h-7 w-7 items-center justify-center rounded-lg text-[#BBBBAA] transition-colors hover:bg-[#F0EDE6] hover:text-foreground/70 disabled:opacity-40 dark:hover:bg-[#1A2A14]">
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" aria-hidden="true"><line x1="18" y1="6" x2="6" y2="18" /><line x1="6" y1="6" x2="18" y2="18" /></svg>
           </button>
         </div>
@@ -138,7 +138,7 @@ export function AdminEditStationModal({ open, station, onClose, onSaved }: Props
 
           {/* Name */}
           <div className="flex flex-col gap-1.5">
-            <label htmlFor="edit-stn-name" className="text-[13px] font-bold text-[#555] dark:text-[#9A9A8A]">{t('field_name')}</label>
+            <label htmlFor="edit-stn-name" className="text-[13px] font-bold text-foreground/70 dark:text-[#B0BFB1]">{t('field_name')}</label>
             <input id="edit-stn-name" type="text" value={name} maxLength={200}
               onChange={(e) => setName(e.target.value)}
               className={`${inputBase} ${errors.name ? inputErr : inputIdle}`} />
@@ -147,7 +147,7 @@ export function AdminEditStationModal({ open, station, onClose, onSaved }: Props
 
           {/* Legal name */}
           <div className="flex flex-col gap-1.5">
-            <label htmlFor="edit-stn-legal" className="text-[13px] font-bold text-[#555] dark:text-[#9A9A8A]">{t('field_legal_name')}</label>
+            <label htmlFor="edit-stn-legal" className="text-[13px] font-bold text-foreground/70 dark:text-[#B0BFB1]">{t('field_legal_name')}</label>
             <input id="edit-stn-legal" type="text" value={legalName} maxLength={200}
               onChange={(e) => setLegalName(e.target.value)}
               className={`${inputBase} ${inputIdle}`} />
@@ -156,14 +156,14 @@ export function AdminEditStationModal({ open, station, onClose, onSaved }: Props
           {/* Address + City */}
           <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
             <div className="flex flex-col gap-1.5">
-              <label htmlFor="edit-stn-address" className="text-[13px] font-bold text-[#555] dark:text-[#9A9A8A]">{t('field_address')}</label>
+              <label htmlFor="edit-stn-address" className="text-[13px] font-bold text-foreground/70 dark:text-[#B0BFB1]">{t('field_address')}</label>
               <input id="edit-stn-address" type="text" value={address}
                 onChange={(e) => setAddress(e.target.value)}
                 className={`${inputBase} ${errors.address ? inputErr : inputIdle}`} />
               {errors.address && <p className="text-[12px] font-semibold text-red-500">{errors.address}</p>}
             </div>
             <div className="flex flex-col gap-1.5">
-              <label htmlFor="edit-stn-city" className="text-[13px] font-bold text-[#555] dark:text-[#9A9A8A]">{t('field_city')}</label>
+              <label htmlFor="edit-stn-city" className="text-[13px] font-bold text-foreground/70 dark:text-[#B0BFB1]">{t('field_city')}</label>
               <input id="edit-stn-city" type="text" value={city} maxLength={100}
                 onChange={(e) => setCity(e.target.value)}
                 className={`${inputBase} ${errors.city ? inputErr : inputIdle}`} />
@@ -173,7 +173,7 @@ export function AdminEditStationModal({ open, station, onClose, onSaved }: Props
 
           {/* Service scope */}
           <div className="flex flex-col gap-1.5">
-            <label htmlFor="edit-stn-scope" className="text-[13px] font-bold text-[#555] dark:text-[#9A9A8A]">{t('field_service_scope')}</label>
+            <label htmlFor="edit-stn-scope" className="text-[13px] font-bold text-foreground/70 dark:text-[#B0BFB1]">{t('field_service_scope')}</label>
             <select id="edit-stn-scope" value={serviceScope} onChange={(e) => setServiceScope(e.target.value)}
               className={`${inputBase} ${inputIdle} cursor-pointer`}>
               <option value="">{t('scope_unset')}</option>
@@ -185,7 +185,7 @@ export function AdminEditStationModal({ open, station, onClose, onSaved }: Props
 
           {/* Description */}
           <div className="flex flex-col gap-1.5">
-            <label htmlFor="edit-stn-desc" className="text-[13px] font-bold text-[#555] dark:text-[#9A9A8A]">{t('field_description')}</label>
+            <label htmlFor="edit-stn-desc" className="text-[13px] font-bold text-foreground/70 dark:text-[#B0BFB1]">{t('field_description')}</label>
             <textarea id="edit-stn-desc" value={description} maxLength={1000} rows={3}
               onChange={(e) => setDescription(e.target.value)}
               className={`${inputBase} ${inputIdle} resize-none`} />
@@ -194,7 +194,7 @@ export function AdminEditStationModal({ open, station, onClose, onSaved }: Props
           {/* Status + is_open */}
           <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
             <div className="flex flex-col gap-1.5">
-              <label htmlFor="edit-stn-status" className="text-[13px] font-bold text-[#555] dark:text-[#9A9A8A]">{t('field_status')}</label>
+              <label htmlFor="edit-stn-status" className="text-[13px] font-bold text-foreground/70 dark:text-[#B0BFB1]">{t('field_status')}</label>
               <select id="edit-stn-status" value={status} onChange={(e) => setStatus(e.target.value)}
                 className={`${inputBase} ${inputIdle} cursor-pointer`}>
                 {STATION_STATUS_VALUES.map((s) => (
@@ -203,13 +203,13 @@ export function AdminEditStationModal({ open, station, onClose, onSaved }: Props
               </select>
             </div>
             <div className="flex flex-col gap-1.5">
-              <span className="text-[13px] font-bold text-[#555] dark:text-[#9A9A8A]">{t('field_is_open')}</span>
+              <span className="text-[13px] font-bold text-foreground/70 dark:text-[#B0BFB1]">{t('field_is_open')}</span>
               <button type="button" onClick={() => setIsOpen((v) => !v)}
                 className={[
                   'flex items-center gap-2 rounded-lg border px-3 py-2 text-[13px] font-bold transition-all',
                   isOpen
                     ? 'border-[#22C55E]/40 bg-[#F0FDF4] text-[#166534] dark:bg-[#0A2A14] dark:text-[#86EFAC]'
-                    : 'border-[#D8D4C8] text-[#888] dark:border-[#243020] dark:text-[#9A9A8A]',
+                    : 'border-[#D8D4C8] text-foreground/55 dark:border-[#001A05] dark:text-[#B0BFB1]',
                 ].join(' ')}>
                 <span className={`h-2 w-2 rounded-full ${isOpen ? 'bg-[#22C55E]' : 'bg-[#CCC]'}`} />
                 {isOpen ? t('is_open_yes') : t('is_open_no')}
@@ -221,11 +221,11 @@ export function AdminEditStationModal({ open, station, onClose, onSaved }: Props
         {/* Footer */}
         <div className="flex justify-end gap-2 border-t border-[#F0EDE6] px-6 py-4 dark:border-[#1A2A14]">
           <button type="button" onClick={onClose} disabled={busy}
-            className="rounded-lg border border-[#D8D4C8] px-4 py-2 text-[13px] font-semibold text-[#666] transition-colors hover:bg-[#F5F3EE] disabled:opacity-50 dark:border-[#243020] dark:text-[#9A9A8A]">
+            className="rounded-lg border border-[#D8D4C8] px-4 py-2 text-[13px] font-semibold text-foreground/65 transition-colors hover:bg-[#F5F3EE] disabled:opacity-50 dark:border-[#001A05] dark:text-[#B0BFB1]">
             {t('btn_cancel')}
           </button>
           <button type="button" onClick={handleSubmit} disabled={busy}
-            className="rounded-lg bg-[#C49A1E] px-4 py-2 text-[13px] font-bold text-[#0C1209] transition-colors hover:bg-[#B08A14] disabled:opacity-50 disabled:cursor-not-allowed">
+            className="rounded-lg bg-[#DDAF3B] px-4 py-2 text-[13px] font-bold text-[#001201] transition-colors hover:bg-[#B08A14] disabled:opacity-50 disabled:cursor-not-allowed">
             {busy ? t('btn_saving') : t('btn_save')}
           </button>
         </div>

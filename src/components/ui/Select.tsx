@@ -26,7 +26,7 @@ export const Select = forwardRef<HTMLSelectElement, SelectProps>(function Select
       {label && (
         <label
           htmlFor={selectId}
-          className="text-[13px] font-medium text-[#555] dark:text-Hurryline-muted"
+          className="text-[13px] font-medium text-foreground/70 dark:text-Hurryline-muted"
         >
           {label}
         </label>
@@ -36,13 +36,13 @@ export const Select = forwardRef<HTMLSelectElement, SelectProps>(function Select
           ref={ref}
           id={selectId}
           className={[
-            'w-full appearance-none rounded-[10px] border bg-white dark:bg-dark-card',
-            'text-[#1A1A1A] dark:text-white px-3 py-2.5 text-[15px]',
+            'w-full appearance-none rounded-[10px] border bg-white dark:bg-surface',
+            'text-[#001201] dark:text-white px-3 py-2.5 text-[15px]',
             'outline-none focus:ring-2 focus:ring-gold/40 focus:border-gold transition-colors',
             'pr-9 cursor-pointer',
             error
               ? 'border-Hurryline-error focus:ring-Hurryline-error/30'
-              : 'border-[#CCCCCC] dark:border-tab-inactive',
+              : 'border-[#CCCCCC] dark:border-border',
             className,
           ]
             .filter(Boolean)

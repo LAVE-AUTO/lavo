@@ -400,10 +400,10 @@ export function BookingFlow({ station, qrToken, qrVersion, initialServiceId, ini
           </div>
 
           <div className="text-center">
-            <h3 id="booking-result-title" className="text-[20px] font-black text-[#000C1F] dark:text-[#FFF8EC]">
+            <h3 id="booking-result-title" className="text-[20px] font-black text-foreground">
               {t('result_success_title')}
             </h3>
-            <p className="text-[14px] text-[#555] dark:text-[#B0B0A0] max-w-sm leading-relaxed mt-1">
+            <p className="text-[14px] text-foreground/70 max-w-sm leading-relaxed mt-1">
               {isQueueNow ? t('result_queue_now_desc') : t('result_success_desc')}
             </p>
           </div>
@@ -434,7 +434,7 @@ export function BookingFlow({ station, qrToken, qrVersion, initialServiceId, ini
                   href={mapsUrl}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="flex-1 inline-flex items-center justify-center gap-2 py-3 bg-dark-bg hover:bg-[#243020] rounded-xl text-[14px] font-bold text-white text-center transition-colors"
+                  className="flex-1 inline-flex items-center justify-center gap-2 py-3 bg-dark-bg hover:bg-[#001A05] rounded-xl text-[14px] font-bold text-white text-center transition-colors"
                 >
                   <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
                     <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z" />
@@ -445,7 +445,7 @@ export function BookingFlow({ station, qrToken, qrVersion, initialServiceId, ini
                 <button
                   type="button"
                   onClick={onClose}
-                  className="flex-1 py-3 border-2 border-[#D0D0C0] dark:border-tab-inactive rounded-xl text-[14px] font-bold text-[#555] dark:text-[#C0C0B0] hover:bg-[#F0F0E2] dark:hover:bg-tab-inactive transition-colors cursor-pointer"
+                  className="flex-1 py-3 border-2 border-border rounded-xl text-[14px] font-bold text-foreground/70 hover:bg-surface/60 dark:hover:bg-tab-inactive transition-colors cursor-pointer"
                 >
                   {t('result_done')}
                 </button>
@@ -454,14 +454,14 @@ export function BookingFlow({ station, qrToken, qrVersion, initialServiceId, ini
               <>
                 <Link
                   href="/client/reservations"
-                  className="flex-1 inline-flex items-center justify-center py-3 bg-dark-bg hover:bg-[#243020] rounded-xl text-[14px] font-bold text-white text-center transition-colors"
+                  className="flex-1 inline-flex items-center justify-center py-3 bg-dark-bg hover:bg-[#001A05] rounded-xl text-[14px] font-bold text-white text-center transition-colors"
                 >
                   {t('result_view_reservations')}
                 </Link>
                 <button
                   type="button"
                   onClick={onClose}
-                  className="flex-1 py-3 border-2 border-[#D0D0C0] dark:border-tab-inactive rounded-xl text-[14px] font-bold text-[#555] dark:text-[#C0C0B0] hover:bg-[#F0F0E2] dark:hover:bg-tab-inactive transition-colors cursor-pointer"
+                  className="flex-1 py-3 border-2 border-border rounded-xl text-[14px] font-bold text-foreground/70 hover:bg-surface/60 dark:hover:bg-tab-inactive transition-colors cursor-pointer"
                 >
                   {t('result_done')}
                 </button>
@@ -475,13 +475,13 @@ export function BookingFlow({ station, qrToken, qrVersion, initialServiceId, ini
     return (
       <div className="flex flex-col items-center justify-center text-center px-6 py-12 gap-5">
         <div className="w-20 h-20 rounded-full bg-Hurryline-error/15 flex items-center justify-center">
-          <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="#E8472A" strokeWidth="2.5" strokeLinecap="round"><line x1="18" y1="6" x2="6" y2="18" /><line x1="6" y1="6" x2="18" y2="18" /></svg>
+          <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="#FF383C" strokeWidth="2.5" strokeLinecap="round"><line x1="18" y1="6" x2="6" y2="18" /><line x1="6" y1="6" x2="18" y2="18" /></svg>
         </div>
 
-        <h3 id="booking-result-title" className="text-[22px] font-black text-[#000C1F] dark:text-[#FFF8EC]">
+        <h3 id="booking-result-title" className="text-[22px] font-black text-foreground">
           {t('result_error_title')}
         </h3>
-        <p className="text-[15px] text-[#555] dark:text-[#B0B0A0] max-w-sm leading-relaxed">
+        <p className="text-[15px] text-foreground/70 max-w-sm leading-relaxed">
           {t('result_error_desc')}
         </p>
 
@@ -510,7 +510,7 @@ export function BookingFlow({ station, qrToken, qrVersion, initialServiceId, ini
       <>
         <div className="hidden md:flex fixed inset-0 z-60 items-center justify-center bg-black/50 backdrop-blur-sm p-4">
           <div
-            className="relative w-full max-w-lg max-h-[92vh] overflow-y-auto bg-[#F5F5E6] dark:bg-dark-card rounded-2xl shadow-2xl"
+            className="relative w-full max-w-lg max-h-[92vh] overflow-y-auto bg-background dark:bg-surface rounded-2xl shadow-2xl"
             role="dialog"
             aria-modal="true"
             aria-labelledby="booking-result-title"
@@ -518,7 +518,7 @@ export function BookingFlow({ station, qrToken, qrVersion, initialServiceId, ini
             {renderResultScreen()}
           </div>
         </div>
-        <div className="md:hidden fixed inset-0 z-60 bg-[#F5F5E6] dark:bg-dark-card overflow-y-auto">
+        <div className="md:hidden fixed inset-0 z-60 bg-background dark:bg-surface overflow-y-auto">
           <div className="min-h-full flex items-start justify-center py-4">
             {renderResultScreen()}
           </div>
@@ -536,25 +536,25 @@ export function BookingFlow({ station, qrToken, qrVersion, initialServiceId, ini
       >
         <div
           ref={dialogRootRef}
-          className="relative w-full max-w-2xl bg-[#F5F5E6] dark:bg-dark-card rounded-2xl shadow-2xl flex flex-col max-h-[90vh]"
+          className="relative w-full max-w-2xl bg-background dark:bg-surface rounded-2xl shadow-2xl flex flex-col max-h-[90vh]"
           role="dialog"
           aria-modal="true"
           aria-labelledby="booking-dialog-title-desktop"
           onClick={(e) => e.stopPropagation()}
         >
           {/* Header */}
-          <div className="p-5 pb-4 border-b border-[#D0D0C0] dark:border-tab-inactive">
+          <div className="p-5 pb-4 border-b border-border">
             <div className="flex items-center justify-between mb-4">
               <h2
                 id="booking-dialog-title-desktop"
-                className="text-[18px] font-black text-[#000C1F] dark:text-[#FFF8EC]"
+                className="text-[18px] font-black text-foreground"
               >
                 {t('booking_title')}
               </h2>
               <button
                 type="button"
                 onClick={onClose}
-                className="w-8 h-8 rounded-full bg-[#E8E8D8] dark:bg-tab-inactive flex items-center justify-center hover:bg-[#D0D0C0] transition-colors cursor-pointer"
+                className="w-8 h-8 rounded-full bg-surface dark:bg-tab-inactive flex items-center justify-center hover:bg-[#D0D0C0] transition-colors cursor-pointer"
                 aria-label={t('close')}
               >
                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"><line x1="18" y1="6" x2="6" y2="18" /><line x1="6" y1="6" x2="18" y2="18" /></svg>
@@ -568,7 +568,7 @@ export function BookingFlow({ station, qrToken, qrVersion, initialServiceId, ini
                   <div className={`h-1 w-full rounded-full transition-colors ${
                     i <= stepIndex ? 'bg-gold' : 'bg-[#D0D0C0] dark:bg-tab-inactive'
                   }`} />
-                  <span className={`text-[11px] font-bold ${i === stepIndex ? 'text-gold' : 'text-[#888]'}`}>
+                  <span className={`text-[11px] font-bold ${i === stepIndex ? 'text-gold' : 'text-foreground/55'}`}>
                     {stepLabels[s]}
                   </span>
                 </div>
@@ -585,13 +585,13 @@ export function BookingFlow({ station, qrToken, qrVersion, initialServiceId, ini
 
       {/* Mobile: Full screen */}
       <div
-        className="md:hidden fixed inset-0 z-60 bg-[#F5F5E6] dark:bg-dark-card flex flex-col"
+        className="md:hidden fixed inset-0 z-60 bg-background dark:bg-surface flex flex-col"
         role="dialog"
         aria-modal="true"
         aria-labelledby="booking-dialog-title-mobile"
       >
         {/* Header */}
-        <div className="px-4 pt-4 pb-3 border-b border-[#D0D0C0] dark:border-tab-inactive safe-area-top">
+        <div className="px-4 pt-4 pb-3 border-b border-border safe-area-top">
           <div className="flex items-center justify-between mb-3">
             <button
               type="button"
@@ -601,7 +601,7 @@ export function BookingFlow({ station, qrToken, qrVersion, initialServiceId, ini
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="15 18 9 12 15 6" /></svg>
               {stepIndex === 0 ? t('close') : t('back')}
             </button>
-            <span className="text-[13px] font-bold text-[#555] dark:text-[#A0A090]">
+            <span className="text-[13px] font-bold text-foreground/70 dark:text-[#B0BFB1]">
               {stepIndex + 1}/{activeSteps.length}
             </span>
           </div>
@@ -620,7 +620,7 @@ export function BookingFlow({ station, qrToken, qrVersion, initialServiceId, ini
 
           <h2
             id="booking-dialog-title-mobile"
-            className="text-[17px] font-black text-[#000C1F] dark:text-[#FFF8EC] mt-3"
+            className="text-[17px] font-black text-foreground mt-3"
           >
             {stepLabels[step]}
           </h2>

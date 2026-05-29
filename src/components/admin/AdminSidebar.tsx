@@ -82,8 +82,8 @@ export function AdminSidebar({ open = false, onClose }: AdminSidebarProps) {
   ];
 
   const base = 'group relative flex items-center rounded-lg text-[13px] font-semibold transition-colors duration-150';
-  const active = 'bg-[#C49A1E] text-[#0C1209] shadow-sm';
-  const idle = 'text-[#5A5A4A] hover:bg-[#E8E4D8] dark:text-[#A0A090] dark:hover:bg-[#182214]';
+  const active = 'bg-[#DDAF3B] text-[#001201] shadow-sm';
+  const idle = 'text-[#5A5A4A] hover:bg-[#FFF9EC] dark:text-[#B0BFB1] dark:hover:bg-[#182214]';
   const layoutClass = collapsed ? 'h-10 w-10 justify-center' : 'gap-2.5 px-3 py-2.5';
 
   /* Close mobile sidebar on Escape */
@@ -102,7 +102,7 @@ export function AdminSidebar({ open = false, onClose }: AdminSidebarProps) {
           aria-label={collapsed ? t('nav_expand') : t('nav_collapse')}
           aria-pressed={collapsed}
           onClick={toggleCollapsed}
-          className="flex h-7 w-7 items-center justify-center rounded-lg text-[#888] transition-colors hover:bg-[#E8E4D8] hover:text-[#1A1A0A] dark:text-[#9A9A8A] dark:hover:bg-[#182214] dark:hover:text-[#F0EDD4]"
+          className="flex h-7 w-7 items-center justify-center rounded-lg text-foreground/55 transition-colors hover:bg-[#FFF9EC] hover:text-[#001201] dark:text-[#B0BFB1] dark:hover:bg-[#182214] dark:hover:text-[#FFF9EC]"
         >
           <CollapseIcon collapsed={collapsed} />
         </button>
@@ -110,7 +110,7 @@ export function AdminSidebar({ open = false, onClose }: AdminSidebarProps) {
 
       {/* Brand */}
       <div className="mb-4 px-3 pt-1">
-        <span className="text-[11px] font-black uppercase tracking-[0.2em] text-[#C49A1E]">Administration</span>
+        <span className="text-[11px] font-black uppercase tracking-[0.2em] text-[#DDAF3B]">Administration</span>
       </div>
 
       <nav className={`flex flex-col ${collapsed ? 'gap-2' : 'gap-3'}`}>
@@ -164,7 +164,7 @@ export function AdminSidebar({ open = false, onClose }: AdminSidebarProps) {
       </nav>
 
       <div className="mt-auto pt-3">
-        <div className="mb-3 h-px bg-[#E0DCD0] dark:bg-[#1A2A14]" />
+        <div className="mb-3 h-px bg-[#FFF9EC] dark:bg-[#1A2A14]" />
 
         {/* Profile link */}
         <Link
@@ -177,7 +177,7 @@ export function AdminSidebar({ open = false, onClose }: AdminSidebarProps) {
           <ProfileIcon />
           {!collapsed && <span className="truncate">{t('nav_profile')}</span>}
           {collapsed && (
-            <span className="pointer-events-none absolute left-full top-1/2 z-30 ml-2 -translate-y-1/2 whitespace-nowrap rounded-lg bg-[#0C1209] px-2.5 py-1 text-[12px] font-semibold text-[#F0EDD4] opacity-0 shadow-lg transition-opacity duration-150 group-hover:opacity-100">
+            <span className="pointer-events-none absolute left-full top-1/2 z-30 ml-2 -translate-y-1/2 whitespace-nowrap rounded-lg bg-dark-bg px-2.5 py-1 text-[12px] font-semibold text-[#FFF9EC] opacity-0 shadow-lg transition-opacity duration-150 group-hover:opacity-100">
               {t('nav_profile')}
             </span>
           )}
@@ -188,12 +188,12 @@ export function AdminSidebar({ open = false, onClose }: AdminSidebarProps) {
           onClick={() => logout()}
           title={collapsed ? t('nav_logout') : undefined}
           aria-label={collapsed ? t('nav_logout') : undefined}
-          className={`group relative flex items-center rounded-lg text-[13px] font-semibold text-[#888] transition-colors duration-150 hover:bg-[#FEF2F2] hover:text-[#EF4444] dark:text-[#9A9A8A] dark:hover:bg-[#2A0A0A] dark:hover:text-[#FF8A80] ${collapsed ? 'h-10 w-10 justify-center' : 'w-full gap-2.5 px-3 py-2.5'}`}
+          className={`group relative flex items-center rounded-lg text-[13px] font-semibold text-foreground/55 transition-colors duration-150 hover:bg-[#FEF2F2] hover:text-[#EF4444] dark:text-[#FF383C] dark:hover:bg-[#2A0A0A] dark:hover:text-[#FF383C] ${collapsed ? 'h-10 w-10 justify-center' : 'w-full gap-2.5 px-3 py-2.5'}`}
         >
           <LogoutIcon />
           {!collapsed && <span>{t('nav_logout')}</span>}
           {collapsed && (
-            <span className="pointer-events-none absolute left-full top-1/2 z-30 ml-2 -translate-y-1/2 whitespace-nowrap rounded-lg bg-[#0C1209] px-2.5 py-1 text-[12px] font-semibold text-[#F0EDD4] opacity-0 shadow-lg transition-opacity duration-150 group-hover:opacity-100">
+            <span className="pointer-events-none absolute left-full top-1/2 z-30 ml-2 -translate-y-1/2 whitespace-nowrap rounded-lg bg-dark-bg px-2.5 py-1 text-[12px] font-semibold text-[#FF383C] opacity-0 shadow-lg transition-opacity duration-150 group-hover:opacity-100">
               {t('nav_logout')}
             </span>
           )}
@@ -205,7 +205,7 @@ export function AdminSidebar({ open = false, onClose }: AdminSidebarProps) {
   return (
     <>
       {/* Desktop sidebar - always visible at lg+ */}
-      <aside className={`hidden lg:flex shrink-0 flex-col border-r border-[#E0DCD0] bg-[#F7F6F2] p-3 transition-all duration-200 dark:border-[#1A2A14] dark:bg-[#111A0E] ${collapsed ? 'w-[72px]' : 'w-[220px]'}`}>
+      <aside className={`hidden lg:flex shrink-0 flex-col border-r border-[#FFF9EC] bg-[#FFF9EC] p-3 transition-all duration-200 dark:border-[#1A2A14] dark:bg-dark-bg ${collapsed ? 'w-[72px]' : 'w-[220px]'}`}>
         {sidebarContent}
       </aside>
 
@@ -217,7 +217,7 @@ export function AdminSidebar({ open = false, onClose }: AdminSidebarProps) {
         >
           <div className="absolute inset-0 bg-black/40" aria-hidden="true" />
           <aside
-            className="relative flex h-full w-[220px] shrink-0 flex-col border-r border-[#E0DCD0] bg-[#F7F6F2] p-3 shadow-xl animate-fade-in dark:border-[#1A2A14] dark:bg-[#111A0E]"
+            className="relative flex h-full w-[220px] shrink-0 flex-col border-r border-[#FFF9EC] bg-[#FFF9EC] p-3 shadow-xl animate-fade-in dark:border-[#1A2A14] dark:bg-dark-bg"
             onClick={(e) => e.stopPropagation()}
           >
             {sidebarContent}

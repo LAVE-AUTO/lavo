@@ -35,7 +35,7 @@ export function QrDisplay({ url, size = DEFAULT_QR_SIZE }: Props) {
       <CornerBracket position="bottom-right" />
 
       <div
-        className={`relative rounded-2xl border border-[#E8E4DC] bg-white p-4 shadow-lg dark:border-[#243020] ${
+        className={`relative rounded-2xl border border-[#FFF9EC] bg-white p-4 shadow-lg dark:border-[#001A05] ${
           ready ? '' : 'animate-pulse'
         }`}
         style={{ width: size + 32, height: size + 32 }}
@@ -51,7 +51,7 @@ interface BracketProps {
 }
 
 function CornerBracket({ position }: BracketProps) {
-  const base = 'pointer-events-none absolute h-7 w-7 border-[#C49A1E]';
+  const base = 'pointer-events-none absolute h-7 w-7 border-[#DDAF3B]';
   const cls = {
     'top-left': 'top-[-10px] left-[-10px] border-l-[3px] border-t-[3px] rounded-tl-xl',
     'top-right': 'top-[-10px] right-[-10px] border-r-[3px] border-t-[3px] rounded-tr-xl',

@@ -7,7 +7,7 @@ export default function ClientNewReservationPage() {
   const t = useTranslations('coupons');
 
   return (
-    <main className="min-h-screen bg-[#F5F5E6] dark:bg-dark-bg pb-24 sm:pb-8">
+    <main className="min-h-screen bg-background pb-24 sm:pb-8">
       <div className="mx-auto flex min-h-[60vh] max-w-xl flex-col items-center justify-center px-4 py-10 text-center">
         <div className="mb-6 flex h-16 w-16 items-center justify-center rounded-full bg-gold/15 text-gold">
           <svg
@@ -26,13 +26,13 @@ export default function ClientNewReservationPage() {
           </svg>
         </div>
 
-        <h1 className="text-[22px] font-black text-[#0A0A14] dark:text-white">
+        <h1 className="text-[22px] font-black text-foreground">
           {t('new_title')}
         </h1>
-        <p className="mt-2 text-[14px] font-semibold text-[#555] dark:text-[#B0B0A0]">
+        <p className="mt-2 text-[14px] font-semibold text-foreground/70">
           {t('new_subtitle')}
         </p>
-        <p className="mt-4 max-w-md text-[13px] leading-relaxed text-[#666] dark:text-[#A0A090]">
+        <p className="mt-4 max-w-md text-[13px] leading-relaxed text-foreground/65 dark:text-[#B0BFB1]">
           {t('new_help')}
         </p>
 

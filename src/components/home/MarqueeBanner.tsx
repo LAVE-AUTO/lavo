@@ -14,15 +14,15 @@ export function MarqueeBanner() {
   ];
 
   return (
-    <div className="overflow-hidden bg-[#c8980a] py-3.5 whitespace-nowrap">
+    <div className="overflow-hidden bg-[#DDAF3B] py-3.5 whitespace-nowrap">
       <div className="animate-marquee">
         {items.map((item, i) => (
           <span
             key={i}
-            className="font-dm-mono mr-10 inline-flex items-center gap-3.5 text-[11px] font-medium uppercase tracking-[2px] text-[#0d1f0f]"
+            className="font-dm-mono mr-10 inline-flex items-center gap-3.5 text-[11px] font-medium uppercase tracking-[2px] text-[#001201]"
           >
             {item}
-            <span className="inline-block h-1 w-1 rounded-full bg-[#0d1f0f] opacity-35" />
+            <span className="inline-block h-1 w-1 rounded-full bg-dark-bg opacity-35" />
           </span>
         ))}
       </div>

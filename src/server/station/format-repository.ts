@@ -1,7 +1,7 @@
 /**
  * Data access for vehicle_formats. Global catalog — not station-scoped.
  */
-import { eq, sql } from 'drizzle-orm';
+import { and, eq, ne, sql } from 'drizzle-orm';
 import { db } from '@/lib/db';
 import { vehicleFormats, reservations } from '@/lib/db/schema';
 
@@ -53,6 +53,22 @@ export async function findFormatById(formatId: string): Promise<VehicleFormat | 
   return db.query.vehicleFormats.findFirst({
     where: eq(vehicleFormats.id, formatId),
   });
+}
+
+/**
+ * Case-insensitive lookup by trimmed label. Used to enforce uniqueness
+ * before insert / update so the service can return a friendly
+ * ConflictError instead of a raw unique-violation from Postgres.
+ */
+export async function findFormatByNormalizedLabel(
+  label: string,
+  excludeId?: string,
+): Promise<VehicleFormat | undefined> {
+  const normalized = label.trim().toLowerCase();
+  if (!normalized) return undefined;
+  const conditions = [sql`lower(btrim(${vehicleFormats.label})) = ${normalized}`];
+  if (excludeId) conditions.push(ne(vehicleFormats.id, excludeId));
+  return db.query.vehicleFormats.findFirst({ where: and(...conditions) });
 }
 
 export async function createFormat(data: CreateFormatData): Promise<VehicleFormat> {

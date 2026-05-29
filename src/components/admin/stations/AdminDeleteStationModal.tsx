@@ -80,13 +80,13 @@ export function AdminDeleteStationModal({ open, station, onClose, onDeleted }: P
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
       <div className="absolute inset-0 bg-black/40 backdrop-blur-[2px]" onClick={() => !busy && onClose()} />
 
-      <div className="relative z-10 w-full max-w-[440px] animate-fade-in-up overflow-hidden rounded-2xl border border-[#E8E4DC] bg-white shadow-2xl dark:border-[#1E2E18] dark:bg-[#0F1A0C]">
+      <div className="relative z-10 w-full max-w-[440px] animate-fade-in-up overflow-hidden rounded-2xl border border-[#FFF9EC] bg-white shadow-2xl dark:border-[#1E2E18] dark:bg-dark-bg">
 
         {/* Header */}
         <div className="flex items-center justify-between border-b border-[#F0EDE6] px-6 py-4 dark:border-[#1A2A14]">
-          <h2 className="text-[15px] font-black text-[#1A1A0A] dark:text-[#F0EDD4]">{t('modal_title')}</h2>
+          <h2 className="text-[15px] font-black text-[#001201] dark:text-[#FFF9EC]">{t('modal_title')}</h2>
           <button type="button" onClick={onClose} disabled={busy} aria-label={t('btn_cancel')}
-            className="flex h-7 w-7 items-center justify-center rounded-lg text-[#BBBBAA] transition-colors hover:bg-[#F0EDE6] hover:text-[#555] disabled:opacity-40 dark:hover:bg-[#1A2A14]">
+            className="flex h-7 w-7 items-center justify-center rounded-lg text-[#BBBBAA] transition-colors hover:bg-[#F0EDE6] hover:text-foreground/70 disabled:opacity-40 dark:hover:bg-[#1A2A14]">
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" aria-hidden="true"><line x1="18" y1="6" x2="6" y2="18" /><line x1="6" y1="6" x2="18" y2="18" /></svg>
           </button>
         </div>
@@ -96,12 +96,12 @@ export function AdminDeleteStationModal({ open, station, onClose, onDeleted }: P
 
           {/* Target station info */}
           <div className="flex items-center gap-3 rounded-xl bg-[#F5F3EE] px-4 py-3 dark:bg-[#131E10]">
-            <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-[#C49A1E]/12 text-[12px] font-black text-[#C49A1E]">
+            <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-[#DDAF3B]/12 text-[12px] font-black text-[#DDAF3B]">
               {station.name.slice(0, 2).toUpperCase()}
             </div>
             <div className="min-w-0">
-              <p className="truncate text-[13px] font-bold text-[#1A1A0A] dark:text-[#F0EDD4]">{station.name}</p>
-              {station.city && <p className="truncate text-[12px] text-[#888] dark:text-[#9A9A8A]">{station.city}</p>}
+              <p className="truncate text-[13px] font-bold text-[#001201] dark:text-[#FFF9EC]">{station.name}</p>
+              {station.city && <p className="truncate text-[12px] text-foreground/55 dark:text-[#B0BFB1]">{station.city}</p>}
             </div>
           </div>
 
@@ -119,14 +119,14 @@ export function AdminDeleteStationModal({ open, station, onClose, onDeleted }: P
                 'flex items-start gap-3 rounded-xl border-[1.5px] px-4 py-3 text-left transition-all',
                 mode === 'soft'
                   ? 'border-[#F97316] bg-orange-50 dark:bg-orange-950/20'
-                  : 'border-[#E8E4DC] bg-white hover:border-[#F97316]/50 dark:border-[#1E2E18] dark:bg-[#0F1A0C]',
+                  : 'border-[#FFF9EC] bg-white hover:border-[#F97316]/50 dark:border-[#1E2E18] dark:bg-dark-bg',
               ].join(' ')}>
               <div className="mt-0.5 flex h-4 w-4 shrink-0 items-center justify-center rounded-full border-2 border-[#F97316]">
                 {mode === 'soft' && <div className="h-2 w-2 rounded-full bg-[#F97316]" />}
               </div>
               <div>
                 <p className="text-[13px] font-bold text-[#F97316]">{t('soft_title')}</p>
-                <p className="mt-0.5 text-[12px] leading-snug text-[#666] dark:text-[#A0A090]">{t('soft_description')}</p>
+                <p className="mt-0.5 text-[12px] leading-snug text-foreground/65 dark:text-[#B0BFB1]">{t('soft_description')}</p>
               </div>
             </button>
 
@@ -136,14 +136,14 @@ export function AdminDeleteStationModal({ open, station, onClose, onDeleted }: P
                 'flex items-start gap-3 rounded-xl border-[1.5px] px-4 py-3 text-left transition-all',
                 mode === 'hard'
                   ? 'border-red-500 bg-red-50 dark:bg-red-950/20'
-                  : 'border-[#E8E4DC] bg-white hover:border-red-300 dark:border-[#1E2E18] dark:bg-[#0F1A0C]',
+                  : 'border-[#FFF9EC] bg-white hover:border-red-300 dark:border-[#1E2E18] dark:bg-dark-bg',
               ].join(' ')}>
               <div className="mt-0.5 flex h-4 w-4 shrink-0 items-center justify-center rounded-full border-2 border-red-500">
                 {mode === 'hard' && <div className="h-2 w-2 rounded-full bg-red-500" />}
               </div>
               <div>
                 <p className="text-[13px] font-bold text-red-600">{t('hard_title')}</p>
-                <p className="mt-0.5 text-[12px] leading-snug text-[#666] dark:text-[#A0A090]">{t('hard_description')}</p>
+                <p className="mt-0.5 text-[12px] leading-snug text-foreground/65 dark:text-[#B0BFB1]">{t('hard_description')}</p>
               </div>
             </button>
           </div>
@@ -171,7 +171,7 @@ export function AdminDeleteStationModal({ open, station, onClose, onDeleted }: P
         {/* Footer */}
         <div className="flex justify-end gap-2 border-t border-[#F0EDE6] px-6 py-4 dark:border-[#1A2A14]">
           <button type="button" onClick={onClose} disabled={busy}
-            className="rounded-lg border border-[#D8D4C8] px-4 py-2 text-[13px] font-semibold text-[#666] transition-colors hover:bg-[#F5F3EE] disabled:opacity-50 dark:border-[#243020] dark:text-[#9A9A8A]">
+            className="rounded-lg border border-[#D8D4C8] px-4 py-2 text-[13px] font-semibold text-foreground/65 transition-colors hover:bg-[#F5F3EE] disabled:opacity-50 dark:border-[#001A05] dark:text-[#B0BFB1]">
             {t('btn_cancel')}
           </button>
           {mode === 'soft' ? (

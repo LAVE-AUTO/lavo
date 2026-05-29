@@ -52,7 +52,18 @@ export function ReservationCard({ entry, onValidate, onStart, onCancel, onExtraT
   const firstName = entry.user?.first_name?.trim();
   const lastName = entry.user?.last_name?.trim();
   const fullName = [firstName, lastName].filter((part): part is string => Boolean(part && part.length > 0)).join(' ');
-  const clientIdentity = fullName.length > 0 ? fullName : `#${entry.user_id.slice(0, 8)}`;
+  /* Off-platform walk-ins: prefer the merchant-typed name, fall back to
+   * the email so the merchant card stays readable even without a name. */
+  const walkInName = entry.walk_in_client_name?.trim();
+  const walkInEmail = entry.walk_in_client_email?.trim();
+  const clientIdentity =
+    walkInName && walkInName.length > 0
+      ? walkInName
+      : walkInEmail && walkInEmail.length > 0
+        ? walkInEmail
+        : fullName.length > 0
+          ? fullName
+          : `#${entry.user_id.slice(0, 8)}`;
   const time = formatHourMinute(entry.created_at);
   const isReservation = entry.entry_type === 'reservation';
   const verificationCode = entry.id.slice(0, 8).toUpperCase();
@@ -60,7 +71,7 @@ export function ReservationCard({ entry, onValidate, onStart, onCancel, onExtraT
   const hasActions = canDoStart(entry.status) || canDoValidate(entry.status) || canDoCancel(entry.status);
 
   return (
-    <div className="relative overflow-hidden rounded-2xl bg-[#C8C8B4] transition-shadow hover:shadow-md dark:bg-dark-card">
+    <div className="relative overflow-hidden rounded-2xl bg-[#C8C8B4] transition-shadow hover:shadow-md dark:bg-surface">
       {/* Left accent bar */}
       <div className="absolute inset-y-0 left-0 w-1" style={{ background: accent }} />
 
@@ -70,13 +81,13 @@ export function ReservationCard({ entry, onValidate, onStart, onCancel, onExtraT
         onClick={() => setExpanded(!expanded)}
         className="flex w-full items-center gap-4 p-4 pl-5 text-left"
       >
-        <div className="flex h-10 w-20 shrink-0 items-center justify-center rounded-lg bg-white/60 dark:bg-dark-surface">
-          <span className="whitespace-nowrap font-mono text-[13px] font-bold text-[#000C1F] dark:text-[#FFF8EC]">{time}</span>
+        <div className="flex h-10 w-20 shrink-0 items-center justify-center rounded-lg bg-white/60 dark:bg-surface">
+          <span className="whitespace-nowrap font-mono text-[13px] font-bold text-foreground">{time}</span>
         </div>
 
         <div className="min-w-0 flex-1">
           <div className="flex items-center gap-2">
-            <span className="truncate text-[14px] font-semibold text-[#000C1F] dark:text-[#FFF8EC]">
+            <span className="truncate text-[14px] font-semibold text-foreground">
               {clientIdentity}
             </span>
             <span className={`shrink-0 rounded px-1.5 py-px text-[9px] font-bold uppercase tracking-wide ${
@@ -88,8 +99,8 @@ export function ReservationCard({ entry, onValidate, onStart, onCancel, onExtraT
             </span>
           </div>
           <div className="mt-0.5 flex items-center gap-2">
-            <span className="truncate text-[12px] font-semibold text-[#000C1F]/70 dark:text-[#FFF8EC]/70">
-              {entry.vehicle_format?.label ?? t('label_no_service')}
+            <span className="truncate text-[12px] font-semibold text-foreground/70 dark:text-foreground/70">
+              {entry.service?.name ?? entry.vehicle_format?.label ?? t('label_no_service')}
             </span>
             {entry.amount_paid && (
               <span className="font-mono text-[13px] font-bold text-[#C09A18]">
@@ -120,9 +131,15 @@ export function ReservationCard({ entry, onValidate, onStart, onCancel, onExtraT
             <div className="mb-3 grid grid-cols-2 gap-x-6 gap-y-2 text-[13px]">
               <DetailRow
                 label={t('detail_service')}
-                value={entry.vehicle_format?.label ?? t('label_no_service')}
-                muted={!entry.vehicle_format?.label}
+                value={entry.service?.name ?? entry.vehicle_format?.label ?? t('label_no_service')}
+                muted={!entry.service?.name && !entry.vehicle_format?.label}
               />
+              {entry.vehicle_format?.label && entry.service?.name && (
+                <DetailRow
+                  label={t('detail_vehicle_format')}
+                  value={entry.vehicle_format.label}
+                />
+              )}
               <DetailRow label={t('detail_entry_type')} value={isReservation ? t('type_reservation') : t('type_queue')} />
               <DetailRow label={t('detail_entry_id')} value={`#${entry.id.slice(0, 8)}`} mono />
               <DetailRow label={t('detail_created_at')} value={formatTime(entry.created_at)} />
@@ -145,11 +162,11 @@ export function ReservationCard({ entry, onValidate, onStart, onCancel, onExtraT
             </div>
 
             {/* Verification code row */}
-            <div className="mb-3 flex items-center gap-2 rounded-lg bg-white/40 px-3 py-2 dark:bg-dark-surface/60">
+            <div className="mb-3 flex items-center gap-2 rounded-lg bg-white/40 px-3 py-2 dark:bg-surface/60">
               <span className="text-[10px] font-bold uppercase tracking-wider text-[#000717]/50 dark:text-[#FFFFF0]/40">
                 {t('code_verification_label')}
               </span>
-              <span className="ml-1 font-mono text-[12px] font-bold tracking-widest text-[#000C1F] dark:text-[#FFF8EC]">
+              <span className="ml-1 font-mono text-[12px] font-bold tracking-widest text-foreground">
                 {codeVisible ? verificationCode : '••••••••'}
               </span>
               <button
@@ -255,7 +272,7 @@ function ExtraTimeInput({
         <button type="button" onClick={onCancel} className="ml-auto text-[11px] text-[#000717]/40 hover:text-[#C09A18]">✕</button>
       </div>
       <div className="flex gap-2">
-        <div className="flex flex-1 items-center gap-1 rounded-[10px] border border-[#B8B8A4] bg-white/60 px-3 dark:border-[#3A4A36] dark:bg-dark-surface/60">
+        <div className="flex flex-1 items-center gap-1 rounded-[10px] border border-[#B8B8A4] bg-white/60 px-3 dark:border-[#3A4A36] dark:bg-surface/60">
           <input
             type="number"
             min={1}
@@ -264,7 +281,7 @@ function ExtraTimeInput({
             onChange={(e) => setValue(e.target.value)}
             onKeyDown={(e) => { if (e.key === 'Enter' && valid) onSubmit(minutes); }}
             placeholder="ex: 15"
-            className="w-full bg-transparent py-2 text-[13px] font-mono font-bold text-[#000C1F] outline-none placeholder:text-[#000717]/25 dark:text-[#FFF8EC]"
+            className="w-full bg-transparent py-2 text-[13px] font-mono font-bold text-foreground outline-none placeholder:text-[#000717]/25 dark:text-foreground"
             autoFocus
           />
           <span className="shrink-0 text-[11px] text-[#000717]/40 dark:text-[#FFFFF0]/30">min</span>
@@ -289,7 +306,7 @@ function DetailRow({ label, value, mono, gold, muted }: { label: string; value: 
       <span className={`text-right font-semibold ${
         gold ? 'text-[#C09A18]' :
         muted ? 'text-[#000717]/40 dark:text-[#FFFFF0]/30' :
-        'text-[#000C1F] dark:text-[#FFF8EC]'
+        'text-foreground'
       } ${mono ? 'font-mono' : ''}`}>
         {value}
       </span>
@@ -300,7 +317,7 @@ function DetailRow({ label, value, mono, gold, muted }: { label: string; value: 
 const ChevronIcon = ({ expanded }: { expanded: boolean }) => (
   <svg
     width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round"
-    className={`shrink-0 text-[#000C1F]/30 transition-transform duration-200 dark:text-[#FFF8EC]/30 ${expanded ? 'rotate-180' : ''}`}
+    className={`shrink-0 text-foreground/30 transition-transform duration-200 dark:text-foreground/30 ${expanded ? 'rotate-180' : ''}`}
   >
     <polyline points="6 9 12 15 18 9" />
   </svg>

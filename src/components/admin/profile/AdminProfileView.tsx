@@ -19,16 +19,16 @@ const OTP_COOLDOWN_SECONDS = 60;
 /* ─── Premium form primitives (mirrors the rest of the admin shell) ─── */
 
 const inputBase =
-  'w-full rounded-[12px] border bg-white/95 px-3.5 py-2.5 text-[13px] font-medium text-[#1A1A0A] outline-none transition-all dark:bg-[#0D170B] dark:text-[#F0EDD4]';
+  'w-full rounded-[12px] border bg-white/95 px-3.5 py-2.5 text-[13px] font-medium text-[#001201] outline-none transition-all dark:bg-[#0D170B] dark:text-[#FFF9EC]';
 const inputIdle =
-  'border-[#D8D4C8] focus:border-[#C49A1E] focus:shadow-[0_0_0_3px_rgba(196,154,30,0.12)] focus:ring-0 dark:border-[#243020] dark:focus:border-[#C49A1E]';
+  'border-[#D8D4C8] focus:border-[#DDAF3B] focus:shadow-[0_0_0_3px_rgba(221, 175, 59,0.12)] focus:ring-0 dark:border-[#001A05] dark:focus:border-[#DDAF3B]';
 const inputErr =
   'border-red-400 focus:border-red-400 focus:shadow-[0_0_0_3px_rgba(248,113,113,0.15)]';
 
 const primaryBtn =
-  'inline-flex items-center justify-center gap-2 rounded-[12px] bg-[#C49A1E] px-4 py-2.5 text-[12.5px] font-black text-[#0C1209] transition-all hover:bg-[#B08A14] hover:shadow-[0_10px_20px_rgba(196,154,30,0.25)] disabled:cursor-not-allowed disabled:opacity-50 dark:disabled:opacity-40';
+  'inline-flex items-center justify-center gap-2 rounded-[12px] bg-[#DDAF3B] px-4 py-2.5 text-[12.5px] font-black text-[#001201] transition-all hover:bg-[#B08A14] hover:shadow-[0_10px_20px_rgba(221, 175, 59,0.25)] disabled:cursor-not-allowed disabled:opacity-50 dark:disabled:opacity-40';
 const secondaryBtn =
-  'inline-flex items-center gap-1.5 rounded-[12px] border border-[#E1DBCF] bg-white px-3.5 py-2 text-[12.5px] font-bold text-[#5A554B] transition-all hover:border-[#C49A1E]/40 hover:bg-[#FCF6E5] hover:text-[#9A7A13] disabled:cursor-not-allowed disabled:opacity-40 dark:border-[#1E2E18] dark:bg-[#0E170C] dark:text-[#A6A091] dark:hover:bg-[#1A2410] dark:hover:text-[#F0D98C]';
+  'inline-flex items-center gap-1.5 rounded-[12px] border border-[#E1DBCF] bg-white px-3.5 py-2 text-[12.5px] font-bold text-[#5A554B] transition-all hover:border-[#DDAF3B]/40 hover:bg-[#FCF6E5] hover:text-[#9A7A13] disabled:cursor-not-allowed disabled:opacity-40 dark:border-[#1E2E18] dark:bg-[#0E170C] dark:text-[#A6A091] dark:hover:bg-[#1A2410] dark:hover:text-[#F0D98C]';
 
 function FieldLabel({ htmlFor, children }: { htmlFor: string; children: React.ReactNode }) {
   return (
@@ -63,7 +63,7 @@ function Section({ eyebrow, title, description, children }: SectionProps) {
         <p className="text-[10.5px] font-black uppercase tracking-[0.22em] text-[#9A7A13] dark:text-[#F0D98C]">
           {eyebrow}
         </p>
-        <h2 className="mt-1.5 text-[18px] font-black text-[#1A1A0A] dark:text-[#F0EDD4]">
+        <h2 className="mt-1.5 text-[18px] font-black text-[#001201] dark:text-[#FFF9EC]">
           {title}
         </h2>
         {description && (
@@ -389,7 +389,7 @@ export function AdminProfileView() {
 
   if (loadingData) return (
     <div className="flex h-full items-center justify-center">
-      <div className="h-7 w-7 animate-spin rounded-full border-[3px] border-[#C49A1E] border-t-transparent" />
+      <div className="h-7 w-7 animate-spin rounded-full border-[3px] border-[#DDAF3B] border-t-transparent" />
     </div>
   );
 
@@ -405,17 +405,17 @@ export function AdminProfileView() {
 
   const metrics = [
     { label: t('metric_status'),   value: t.has(statusKey) ? t(statusKey) : profile.status, accent: '#22C55E' },
-    { label: t('metric_security'), value: t('metric_security_value'),                       accent: '#3B82F6' },
+    { label: t('metric_security'), value: t('metric_security_value'),                       accent: '#1E40AF' },
     {
       label: t('metric_phone'),
       value: profile.phone ? t('metric_phone_set') : t('metric_phone_missing'),
-      accent: profile.phone ? '#C49A1E' : '#94A3B8',
+      accent: profile.phone ? '#DDAF3B' : '#94A3B8',
     },
     { label: t('metric_sections'), value: t('metric_sections_value'),                       accent: '#94A3B8' },
   ];
 
   return (
-    <div className="relative flex h-full min-h-0 flex-col overflow-hidden bg-[radial-gradient(circle_at_top,_rgba(196,154,30,0.12),_transparent_36%),linear-gradient(180deg,#faf8f2_0%,#f2efe7_100%)] dark:bg-[radial-gradient(circle_at_top,_rgba(196,154,30,0.12),_transparent_32%),linear-gradient(180deg,#0C1209_0%,#091009_100%)]">
+    <div className="relative flex h-full min-h-0 flex-col overflow-hidden bg-[radial-gradient(circle_at_top,_rgba(221, 175, 59,0.12),_transparent_36%),linear-gradient(180deg,#faf8f2_0%,#f2efe7_100%)] dark:bg-[radial-gradient(circle_at_top,_rgba(221, 175, 59,0.12),_transparent_32%),linear-gradient(180deg,#001201_0%,#091009_100%)]">
       <div className="pointer-events-none absolute inset-0 bg-[linear-gradient(135deg,rgba(255,255,255,0.55),transparent_42%)] dark:bg-[linear-gradient(135deg,rgba(255,255,255,0.04),transparent_42%)]" />
 
       <div className="relative mx-auto flex h-full min-h-0 w-full max-w-[1280px] flex-1 flex-col gap-5 overflow-y-auto scrollbar-none px-3 py-4 sm:px-4 lg:px-6 lg:py-6">
@@ -424,10 +424,10 @@ export function AdminProfileView() {
         <section className="rounded-[28px] border border-[#E1DBCF] bg-white/88 p-5 shadow-[0_24px_80px_rgba(26,26,10,0.08)] backdrop-blur-xl dark:border-[#1E2E18] dark:bg-[#101A0D]/90 dark:shadow-[0_24px_80px_rgba(0,0,0,0.35)]">
           <div className="flex flex-col gap-6 xl:flex-row xl:items-end xl:justify-between">
             <div className="max-w-3xl">
-              <span className="inline-flex rounded-full border border-[#C49A1E]/18 bg-[#C49A1E]/10 px-3 py-1 text-[11px] font-black uppercase tracking-[0.22em] text-[#9A7A13] dark:border-[#C49A1E]/25 dark:bg-[#C49A1E]/12 dark:text-[#F0D98C]">
+              <span className="inline-flex rounded-full border border-[#DDAF3B]/18 bg-[#DDAF3B]/10 px-3 py-1 text-[11px] font-black uppercase tracking-[0.22em] text-[#9A7A13] dark:border-[#DDAF3B]/25 dark:bg-[#DDAF3B]/12 dark:text-[#F0D98C]">
                 {t('badge_account')}
               </span>
-              <h1 className="mt-4 text-[clamp(28px,3vw,42px)] font-black leading-[1.04] text-[#1A1A0A] dark:text-[#F0EDD4]">
+              <h1 className="mt-4 text-[clamp(28px,3vw,42px)] font-black leading-[1.04] text-[#001201] dark:text-[#FFF9EC]">
                 {t('page_title')}
               </h1>
               <p className="mt-3 max-w-2xl text-[14px] leading-6 text-[#6F6B5F] dark:text-[#A6A091]">
@@ -435,11 +435,11 @@ export function AdminProfileView() {
               </p>
 
               <div className="mt-5 inline-flex items-center gap-3 rounded-[18px] border border-[#E7E1D5] bg-[#F8F6F1]/90 px-4 py-2.5 shadow-[inset_0_1px_0_rgba(255,255,255,0.75)] backdrop-blur dark:border-[#1E2E18] dark:bg-[#0C150B]/85">
-                <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-[14px] bg-[#1A1A0A]/5 text-[13px] font-black text-[#1A1A0A] ring-1 ring-inset ring-[#1A1A0A]/8 dark:bg-[#F0EDD4]/8 dark:text-[#F0EDD4] dark:ring-[#F0EDD4]/10">
+                <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-[14px] bg-dark-bg/5 text-[13px] font-black text-[#001201] ring-1 ring-inset ring-[#001201]/8 dark:bg-[#FFF9EC]/8 dark:text-[#FFF9EC] dark:ring-[#FFF9EC]/10">
                   {initials}
                 </div>
                 <div className="min-w-0">
-                  <p className="truncate text-[14px] font-black text-[#1A1A0A] dark:text-[#F0EDD4]">{fullName}</p>
+                  <p className="truncate text-[14px] font-black text-[#001201] dark:text-[#FFF9EC]">{fullName}</p>
                   <p className="truncate text-[12px] text-[#9B9588] dark:text-[#7E8A75]">{profile.email}</p>
                 </div>
               </div>
@@ -456,7 +456,7 @@ export function AdminProfileView() {
                   <div className="pointer-events-none absolute -right-8 -top-8 h-20 w-20 rounded-full blur-3xl opacity-15 transition-opacity duration-200 group-hover:opacity-25" style={{ background: metric.accent }} />
                   <div className="min-w-0">
                     <div className="truncate text-[11px] font-bold uppercase tracking-[0.18em] text-[#9B9588] dark:text-[#7E8A75]">{metric.label}</div>
-                    <div className="mt-3 truncate text-[18px] font-black leading-tight text-[#1A1A0A] dark:text-[#F0EDD4]">{metric.value}</div>
+                    <div className="mt-3 truncate text-[18px] font-black leading-tight text-[#001201] dark:text-[#FFF9EC]">{metric.value}</div>
                   </div>
                 </div>
               ))}
@@ -678,29 +678,29 @@ export function AdminProfileView() {
         </div>{/* /grid */}
 
         <section className="rounded-[28px] border border-[#E1DBCF] bg-white/88 p-5 shadow-[0_12px_40px_rgba(26,26,10,0.06)] backdrop-blur-xl dark:border-[#1E2E18] dark:bg-[#101A0D]/90">
-          <h2 className="mb-4 text-[14px] font-black text-[#1A1A0A] dark:text-[#F0EDD4]">{t('section_notifications')}</h2>
+          <h2 className="mb-4 text-[14px] font-black text-[#001201] dark:text-[#FFF9EC]">{t('section_notifications')}</h2>
           <p className="mb-4 text-[13px] text-[#6F6B5F] dark:text-[#A6A091]">{t('section_notifications_hint')}</p>
           {([
             ['station_lifecycle', t('notif_station_lifecycle')],
             ['kyc_alerts', t('notif_kyc_alerts')],
             ['support_alerts', t('notif_support_alerts')],
           ] as const).map(([key, label]) => (
-            <div key={key} className="mb-3 rounded-2xl border border-[#E1DBCF] bg-[#FBF9F3] p-3 dark:border-[#243020] dark:bg-[#0E170B]">
-              <p className="mb-2 text-[13px] font-bold text-[#1A1A0A] dark:text-[#F0EDD4]">{label}</p>
+            <div key={key} className="mb-3 rounded-2xl border border-[#E1DBCF] bg-[#FBF9F3] p-3 dark:border-[#001A05] dark:bg-[#0E170B]">
+              <p className="mb-2 text-[13px] font-bold text-[#001201] dark:text-[#FFF9EC]">{label}</p>
               <div className="grid grid-cols-1 gap-2 sm:grid-cols-3">
                 {([
                   ['in_app', t('notif_channel_in_app')],
                   ['push', t('notif_channel_push')],
                   ['email', t('notif_channel_email')],
                 ] as const).map(([channel, channelLabel]) => (
-                  <label key={channel} className="flex items-center gap-2 rounded-lg border border-[#E1DBCF] px-3 py-2 text-[12px] dark:border-[#243020]">
+                  <label key={channel} className="flex items-center gap-2 rounded-lg border border-[#E1DBCF] px-3 py-2 text-[12px] dark:border-[#001A05]">
                     <input
                       type="checkbox"
                       checked={notifPrefs[key][channel]}
                       onChange={(e) => toggleNotif(key, channel, e.target.checked)}
-                      className="h-4 w-4 accent-[#C49A1E]"
+                      className="h-4 w-4 accent-[#DDAF3B]"
                     />
-                    <span className="font-semibold text-[#4F4C40] dark:text-[#D2CEBE]">{channelLabel}</span>
+                    <span className="font-semibold text-[#B0BFB1] dark:text-[#B0BFB1]">{channelLabel}</span>
                   </label>
                 ))}
               </div>
@@ -711,7 +711,7 @@ export function AdminProfileView() {
               type="button"
               onClick={handleSaveNotificationPrefs}
               disabled={savingNotif}
-              className="rounded-lg bg-[#C49A1E] px-4 py-2 text-[13px] font-bold text-[#0C1209] transition-colors hover:bg-[#B08A14] disabled:cursor-not-allowed disabled:opacity-50"
+              className="rounded-lg bg-[#DDAF3B] px-4 py-2 text-[13px] font-bold text-[#001201] transition-colors hover:bg-[#B08A14] disabled:cursor-not-allowed disabled:opacity-50"
             >
               {savingNotif ? t('btn_saving') : t('btn_save_notifications')}
             </button>

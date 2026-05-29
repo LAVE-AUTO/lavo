@@ -9,7 +9,7 @@ const STATUS: Record<string, { dot: string; text: string; label: string }> = {
   active:               { dot: 'bg-[#22C55E]', text: 'text-[#166534] dark:text-[#86EFAC]', label: 'status_active' },
   suspended:            { dot: 'bg-[#F97316]', text: 'text-[#9A3412] dark:text-[#FDBA74]', label: 'status_suspended' },
   blocked:              { dot: 'bg-[#F43F5E]', text: 'text-[#9F1239] dark:text-[#FDA4AF]', label: 'status_blocked' },
-  pending_verification: { dot: 'bg-[#C49A1E]', text: 'text-[#7A5E0A] dark:text-[#F0D98C]', label: 'status_pending' },
+  pending_verification: { dot: 'bg-[#DDAF3B]', text: 'text-[#7A5E0A] dark:text-[#F0D98C]', label: 'status_pending' },
 };
 
 interface ClientRow {
@@ -108,7 +108,7 @@ export function AdminClientsList({ query, onAction, onCountChange, onEditUser, o
 
   if (loading) return (
     <div className="flex flex-col items-center gap-3 py-20 text-center">
-      <div className="h-6 w-6 animate-spin rounded-full border-2 border-[#C49A1E] border-t-transparent" />
+      <div className="h-6 w-6 animate-spin rounded-full border-2 border-[#DDAF3B] border-t-transparent" />
       <p className="text-[13px] text-[#999]">{t('loading')}</p>
     </div>
   );
@@ -122,7 +122,7 @@ export function AdminClientsList({ query, onAction, onCountChange, onEditUser, o
   if (!filtered.length) return (
     <div className="flex flex-col items-center gap-3 py-20 text-center">
       <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-[#F5F3EE] dark:bg-[#131E10]">
-        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#C49A1E" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2" /><circle cx="9" cy="7" r="4" /></svg>
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#DDAF3B" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2" /><circle cx="9" cy="7" r="4" /></svg>
       </div>
       <p className="text-[13px] font-semibold text-[#999]">{q ? t('empty_search') : t('empty_data')}</p>
     </div>
@@ -132,14 +132,14 @@ export function AdminClientsList({ query, onAction, onCountChange, onEditUser, o
     const s = STATUS[client.status];
     if (!s) return null;
     return (
-      <span className={`inline-flex w-fit items-center gap-1.5 rounded-full bg-[#F4F1E8] px-2.5 py-1 text-[11.5px] font-bold dark:bg-[#171F12] ${s.text}`}>
+      <span className={`inline-flex w-fit items-center gap-1.5 rounded-full bg-[#FFF9EC] px-2.5 py-1 text-[11.5px] font-bold dark:bg-[#171F12] ${s.text}`}>
         <span className={`h-1.5 w-1.5 rounded-full ${s.dot}`} />{t(s.label)}
       </span>
     );
   }
 
-  const actionPrimary   = 'inline-flex items-center gap-1 rounded-[12px] bg-[#1A1A0A] px-3 py-1.5 text-[12px] font-bold text-[#F0EDD4] transition-all hover:bg-[#33321E] disabled:opacity-50 dark:bg-[#F0EDD4] dark:text-[#1A1A0A] dark:hover:bg-[#E1DBC8]';
-  const actionSecondary = 'inline-flex items-center gap-1 rounded-[12px] border border-[#E1DBCF] bg-white px-3 py-1.5 text-[12px] font-semibold text-[#5A554B] transition-all hover:border-[#C49A1E]/40 hover:bg-[#FCF6E5] hover:text-[#9A7A13] disabled:opacity-50 dark:border-[#1E2E18] dark:bg-[#0E170C] dark:text-[#A6A091] dark:hover:bg-[#1A2410] dark:hover:text-[#F0D98C]';
+  const actionPrimary   = 'inline-flex items-center gap-1 rounded-[12px] bg-dark-bg px-3 py-1.5 text-[12px] font-bold text-[#FFF9EC] transition-all hover:bg-[#33321E] disabled:opacity-50 dark:bg-[#FFF9EC] dark:text-[#001201] dark:hover:bg-[#E1DBC8]';
+  const actionSecondary = 'inline-flex items-center gap-1 rounded-[12px] border border-[#E1DBCF] bg-white px-3 py-1.5 text-[12px] font-semibold text-[#5A554B] transition-all hover:border-[#DDAF3B]/40 hover:bg-[#FCF6E5] hover:text-[#9A7A13] disabled:opacity-50 dark:border-[#1E2E18] dark:bg-[#0E170C] dark:text-[#A6A091] dark:hover:bg-[#1A2410] dark:hover:text-[#F0D98C]';
   const actionDanger    = 'inline-flex items-center gap-1 rounded-[12px] border border-[#F43F5E]/30 bg-[#FFF1F2] px-3 py-1.5 text-[12px] font-bold text-[#9F1239] transition-all hover:bg-[#FCE7EB] disabled:opacity-50 dark:border-[#F43F5E]/20 dark:bg-[#2A0A12] dark:text-[#FDA4AF]';
 
   function renderActions(client: (typeof clients)[number], compact = false) {
@@ -192,27 +192,27 @@ export function AdminClientsList({ query, onAction, onCountChange, onEditUser, o
             <article key={client.id} className="rounded-[24px] border border-[#E8E3D7] bg-[#FBFAF7] p-4 shadow-[0_12px_30px_rgba(26,26,10,0.05)] dark:border-[#1E2E18] dark:bg-[#111A0D]">
               <div className="flex items-start justify-between gap-3">
                 <div className="flex min-w-0 items-start gap-3">
-                  <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-[14px] bg-[#1A1A0A]/5 text-[12px] font-black text-[#1A1A0A] ring-1 ring-inset ring-[#1A1A0A]/8 dark:bg-[#F0EDD4]/8 dark:text-[#F0EDD4] dark:ring-[#F0EDD4]/10">
+                  <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-[14px] bg-dark-bg/5 text-[12px] font-black text-[#001201] ring-1 ring-inset ring-[#001201]/8 dark:bg-[#FFF9EC]/8 dark:text-[#FFF9EC] dark:ring-[#FFF9EC]/10">
                     {initials(client.first_name, client.last_name)}
                   </div>
                   <div className="min-w-0">
-                    <p className="truncate text-[14px] font-black text-[#1A1A0A] dark:text-[#F0EDD4]">{client.first_name ?? ''} {client.last_name ?? ''}</p>
-                    <p className="mt-0.5 text-[12px] text-[#979083] dark:text-[#A0A090]">{formatDate(client.created_at)}</p>
+                    <p className="truncate text-[14px] font-black text-[#001201] dark:text-[#FFF9EC]">{client.first_name ?? ''} {client.last_name ?? ''}</p>
+                    <p className="mt-0.5 text-[12px] text-[#979083] dark:text-[#B0BFB1]">{formatDate(client.created_at)}</p>
                   </div>
                 </div>
                 {renderStatus(client)}
               </div>
 
               <div className="mt-4 grid gap-2">
-                <div className="rounded-[16px] bg-white px-3 py-2.5 text-[13px] text-[#555] shadow-[0_1px_0_rgba(26,26,10,0.04)] dark:bg-[#0C150B] dark:text-[#C8C2B3]">{client.email}</div>
-                <div className="rounded-[16px] bg-white px-3 py-2.5 text-[13px] text-[#555] shadow-[0_1px_0_rgba(26,26,10,0.04)] dark:bg-[#0C150B] dark:text-[#C8C2B3]">{client.phone ?? '—'}</div>
+                <div className="rounded-[16px] bg-white px-3 py-2.5 text-[13px] text-foreground/70 shadow-[0_1px_0_rgba(26,26,10,0.04)] dark:bg-[#0C150B] dark:text-[#C8C2B3]">{client.email}</div>
+                <div className="rounded-[16px] bg-white px-3 py-2.5 text-[13px] text-foreground/70 shadow-[0_1px_0_rgba(26,26,10,0.04)] dark:bg-[#0C150B] dark:text-[#C8C2B3]">{client.phone ?? '—'}</div>
               </div>
 
               <div className="mt-4 flex flex-wrap gap-2">
                 {renderActions(client, true)}
                 {onEditUser && (
                   <button type="button" onClick={() => onEditUser(client)} title={t('btn_edit')}
-                    className="flex h-8 w-8 items-center justify-center rounded-[12px] border border-[#E1DBCF] bg-white text-[#888] transition-colors hover:border-[#C49A1E]/40 hover:bg-[#FCF6E5] hover:text-[#9A7A13] dark:border-[#1E2E18] dark:bg-[#0E170C] dark:text-[#A0A090]">
+                    className="flex h-8 w-8 items-center justify-center rounded-[12px] border border-[#E1DBCF] bg-white text-foreground/55 transition-colors hover:border-[#DDAF3B]/40 hover:bg-[#FCF6E5] hover:text-[#9A7A13] dark:border-[#1E2E18] dark:bg-[#0E170C] dark:text-[#B0BFB1]">
                     <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7" /><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z" /></svg>
                   </button>
                 )}
@@ -248,20 +248,20 @@ export function AdminClientsList({ query, onAction, onCountChange, onEditUser, o
                       : 'bg-white hover:bg-[#FCFBF6] dark:border-[#1A2A14] dark:bg-[#111A0D] dark:hover:bg-[#161F12]',
                   ].join(' ')}>
 
-                  <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-[12px] bg-[#1A1A0A]/5 text-[12px] font-black text-[#1A1A0A] ring-1 ring-inset ring-[#1A1A0A]/8 dark:bg-[#F0EDD4]/8 dark:text-[#F0EDD4] dark:ring-[#F0EDD4]/10">
+                  <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-[12px] bg-dark-bg/5 text-[12px] font-black text-[#001201] ring-1 ring-inset ring-[#001201]/8 dark:bg-[#FFF9EC]/8 dark:text-[#FFF9EC] dark:ring-[#FFF9EC]/10">
                     {initials(client.first_name, client.last_name)}
                   </div>
 
                   <div className="min-w-0">
-                    <p className="block truncate text-[13px] font-bold text-[#1A1A0A] dark:text-[#F0EDD4]">
+                    <p className="block truncate text-[13px] font-bold text-[#001201] dark:text-[#FFF9EC]">
                       {client.first_name ?? ''} {client.last_name ?? ''}
                     </p>
-                    <p className="truncate text-[12px] text-[#979083] dark:text-[#A0A090]">{formatDate(client.created_at)}</p>
+                    <p className="truncate text-[12px] text-[#979083] dark:text-[#B0BFB1]">{formatDate(client.created_at)}</p>
                   </div>
 
                   <div className="min-w-0">
                     <p className="truncate text-[13px] text-[#5A554B] dark:text-[#C8C2B3]">{client.email}</p>
-                    <p className="truncate text-[12px] text-[#A8A293] dark:text-[#A0A090]">{client.phone ?? '—'}</p>
+                    <p className="truncate text-[12px] text-[#A8A293] dark:text-[#B0BFB1]">{client.phone ?? '—'}</p>
                   </div>
 
                   <div>{renderStatus(client)}</div>
@@ -270,7 +270,7 @@ export function AdminClientsList({ query, onAction, onCountChange, onEditUser, o
                     {renderActions(client)}
                     {onEditUser && (
                       <button type="button" onClick={() => onEditUser(client)} title={t('btn_edit')}
-                        className="flex h-8 w-8 items-center justify-center rounded-[12px] border border-[#E1DBCF] bg-white text-[#888] transition-colors hover:border-[#C49A1E]/40 hover:bg-[#FCF6E5] hover:text-[#9A7A13] dark:border-[#1E2E18] dark:bg-[#0E170C] dark:text-[#A0A090] dark:hover:bg-[#1A2410] dark:hover:text-[#F0D98C]">
+                        className="flex h-8 w-8 items-center justify-center rounded-[12px] border border-[#E1DBCF] bg-white text-foreground/55 transition-colors hover:border-[#DDAF3B]/40 hover:bg-[#FCF6E5] hover:text-[#9A7A13] dark:border-[#1E2E18] dark:bg-[#0E170C] dark:text-[#B0BFB1] dark:hover:bg-[#1A2410] dark:hover:text-[#F0D98C]">
                         <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7" /><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z" /></svg>
                       </button>
                     )}

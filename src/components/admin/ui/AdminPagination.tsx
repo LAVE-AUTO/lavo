@@ -46,19 +46,19 @@ export function AdminPagination({ page, totalPages, total, perPage, onPageChange
   const navBtn = [
     'flex h-9 w-9 items-center justify-center rounded-[12px] border border-[#E1DBCF] bg-white text-[#5A554B]',
     'transition-all duration-150',
-    'hover:border-[#C49A1E]/40 hover:bg-[#FCF6E5] hover:text-[#9A7A13]',
-    'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#C49A1E]/40',
+    'hover:border-[#DDAF3B]/40 hover:bg-[#FCF6E5] hover:text-[#9A7A13]',
+    'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#DDAF3B]/40',
     'disabled:cursor-not-allowed disabled:opacity-40 disabled:hover:border-[#E1DBCF] disabled:hover:bg-white disabled:hover:text-[#5A554B]',
     'dark:border-[#1E2E18] dark:bg-[#0E170C] dark:text-[#A6A091]',
-    'dark:hover:border-[#C49A1E]/30 dark:hover:bg-[#1A2410] dark:hover:text-[#F0D98C]',
+    'dark:hover:border-[#DDAF3B]/30 dark:hover:bg-[#1A2410] dark:hover:text-[#F0D98C]',
   ].join(' ');
 
   const pageBtn = (isActive: boolean) => [
     'min-w-[36px] h-9 px-2 rounded-[12px] text-[12.5px] font-bold transition-all duration-150',
-    'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#C49A1E]/40',
+    'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#DDAF3B]/40',
     isActive
-      ? 'bg-[#1A1A0A] text-[#F0EDD4] shadow-[0_8px_18px_rgba(26,26,10,0.18)] dark:bg-[#F0EDD4] dark:text-[#1A1A0A]'
-      : 'border border-[#E1DBCF] bg-white text-[#5A554B] hover:border-[#C49A1E]/40 hover:bg-[#FCF6E5] hover:text-[#9A7A13] dark:border-[#1E2E18] dark:bg-[#0E170C] dark:text-[#A6A091] dark:hover:border-[#C49A1E]/30 dark:hover:bg-[#1A2410] dark:hover:text-[#F0D98C]',
+      ? 'bg-dark-bg text-[#FFF9EC] shadow-[0_8px_18px_rgba(26,26,10,0.18)] dark:bg-[#FFF9EC] dark:text-[#001201]'
+      : 'border border-[#E1DBCF] bg-white text-[#5A554B] hover:border-[#DDAF3B]/40 hover:bg-[#FCF6E5] hover:text-[#9A7A13] dark:border-[#1E2E18] dark:bg-[#0E170C] dark:text-[#A6A091] dark:hover:border-[#DDAF3B]/30 dark:hover:bg-[#1A2410] dark:hover:text-[#F0D98C]',
   ].join(' ');
 
   return (
@@ -66,7 +66,7 @@ export function AdminPagination({ page, totalPages, total, perPage, onPageChange
       className="flex flex-col gap-3 rounded-[18px] border border-[#E7E1D5] bg-[#FCFBF8]/85 px-4 py-3 shadow-[inset_0_1px_0_rgba(255,255,255,0.65)] backdrop-blur sm:flex-row sm:items-center sm:justify-between dark:border-[#1E2E18] dark:bg-[#0C150B]/80"
       aria-label={t('aria_label')}
     >
-      <p className="text-[12px] font-semibold text-[#7E796B] dark:text-[#A0A090]">
+      <p className="text-[12px] font-semibold text-[#7E796B] dark:text-[#B0BFB1]">
         {t('range', { from, to, total })}
       </p>
 

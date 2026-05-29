@@ -1,8 +1,10 @@
 'use client';
 
-import { useState, useMemo } from 'react';
-import { useTranslations } from 'next-intl';
+import { useState, useMemo, useEffect } from 'react';
+import { useLocale, useTranslations } from 'next-intl';
 import type { StationServicePublic } from '@/types/station';
+
+
 
 interface StationServicesSectionProps {
   services: StationServicePublic[];
@@ -15,15 +17,14 @@ interface StationServicesSectionProps {
   disabledBook?: boolean;
 }
 
+/* Aligned on the DB enum (station_services.category): three values only. */
 const CATEGORY_LABELS: Record<string, { fr: string; en: string }> = {
-  hand_wash:      { fr: 'Lavage à la main',  en: 'Hand wash' },
-  automatic_wash: { fr: 'Lavage automatique', en: 'Auto wash' },
-  self_service:   { fr: 'Self-service',      en: 'Self-service' },
-  exterior_wash:  { fr: 'Lavage extérieur',  en: 'Exterior wash' },
-  detailing:      { fr: 'Détailing',         en: 'Detailing' },
+  hand_wash:    { fr: 'Lavage à la main',  en: 'Hand wash' },
+  automatic:    { fr: 'Lavage automatique', en: 'Automatic wash' },
+  self_service: { fr: 'Self-service',      en: 'Self-service' },
 };
 
-function categoryLabel(cat: string, locale: string): string {
+function categoryLabel(cat: string, locale: 'fr' | 'en'): string {
   const entry = CATEGORY_LABELS[cat];
   if (!entry) return cat;
   return locale === 'en' ? entry.en : entry.fr;
@@ -47,11 +48,10 @@ function minDuration(svc: StationServicePublic): number | null {
 }
 
 /**
- * Rich services section for the station detail screen.
- * Shows one "featured" service in a hero card and the remaining services
- * as compact action cards. Selecting any service updates the highlight and
- * also surfaces it through `onSelectService` so the parent can sync price
- * and pre-select it in the booking flow.
+ * Services section grouped by category.
+ * Renders a tab strip when the station offers more than one category, then a
+ * featured card for the selected service plus the rest of that category as
+ * compact items. With a single category the tab strip is hidden.
  */
 export function StationServicesSection({
   services,
@@ -65,35 +65,113 @@ export function StationServicesSection({
 }: StationServicesSectionProps) {
   const t = useTranslations('stations');
   const tb = useTranslations('booking');
+  const rawLocale = useLocale();
+  const locale: 'fr' | 'en' = rawLocale === 'en' ? 'en' : 'fr';
+
+  const categories = useMemo(() => {
+    const order: string[] = [];
+    const grouped = new Map<string, StationServicePublic[]>();
+    for (const svc of services) {
+      if (!grouped.has(svc.category)) {
+        order.push(svc.category);
+        grouped.set(svc.category, []);
+      }
+      grouped.get(svc.category)!.push(svc);
+    }
+    return order.map((cat) => ({ category: cat, services: grouped.get(cat)! }));
+  }, [services]);
 
   const featuredDefault = useMemo(() => pickFeatured(services), [services]);
-  const [featuredOverride, setFeaturedOverride] = useState<string | null>(null);
 
-  const featured = useMemo(() => {
-    if (featuredOverride) return services.find((s) => s.id === featuredOverride) ?? featuredDefault;
-    if (selectedServiceId) return services.find((s) => s.id === selectedServiceId) ?? featuredDefault;
-    return featuredDefault;
-  }, [services, featuredOverride, selectedServiceId, featuredDefault]);
-
-  const others = useMemo(
-    () => services.filter((s) => s.id !== featured?.id),
-    [services, featured],
+  const [activeCategory, setActiveCategory] = useState<string | null>(
+    () => featuredDefault?.category ?? categories[0]?.category ?? null,
   );
 
-  /* Locale-aware category label without pulling another hook. */
-  const locale = (typeof document !== 'undefined' ? document.documentElement.lang : 'fr').toLowerCase().startsWith('en') ? 'en' : 'fr';
+  useEffect(() => {
+    if (!activeCategory && categories.length > 0) {
+      setActiveCategory(categories[0].category);
+      return;
+    }
+    if (activeCategory && !categories.find((c) => c.category === activeCategory)) {
+      setActiveCategory(categories[0]?.category ?? null);
+    }
+  }, [categories, activeCategory]);
+
+  /* Whenever the user switches the selected service, jump to the matching tab
+   * so the highlight stays in sync with the right-column summary. */
+  useEffect(() => {
+    if (!selectedServiceId) return;
+    const svc = services.find((s) => s.id === selectedServiceId);
+    if (svc && svc.category !== activeCategory) setActiveCategory(svc.category);
+  }, [selectedServiceId, services, activeCategory]);
 
   if (services.length === 0) {
     return (
-      <div className="rounded-2xl border border-[#D0D0C0] dark:border-tab-inactive bg-[#F0F0E2] dark:bg-dark-bg/40 px-5 py-8 text-center text-[14px] text-[#555] dark:text-[#B0B0A0]">
+      <div className="rounded-2xl border border-border bg-surface/60 px-5 py-8 text-center text-[14px] text-foreground/70">
         {tb('service_no_services')}
       </div>
     );
   }
 
+  const visibleServices = activeCategory
+    ? categories.find((c) => c.category === activeCategory)?.services ?? []
+    : services;
+
+  const featured = (() => {
+    if (selectedServiceId) {
+      const match = visibleServices.find((s) => s.id === selectedServiceId);
+      if (match) return match;
+    }
+    const popular = visibleServices.find((s) => s.isPopular);
+    return popular ?? visibleServices[0] ?? null;
+  })();
+
+  const others = featured
+    ? visibleServices.filter((s) => s.id !== featured.id)
+    : [];
+
   return (
     <div className="space-y-5">
-      <h2 className="text-[17px] font-black text-[#000C1F] dark:text-[#FFF8EC]">{t('detail_services')}</h2>
+      <div>
+        <h2 className="text-[17px] font-black text-foreground">{t('detail_services')}</h2>
+        <p className="text-[12.5px] text-foreground/65 mt-1">
+          {t('detail_services_subtitle')}
+        </p>
+      </div>
+
+      {categories.length > 1 && (
+        <div
+          role="tablist"
+          aria-label={t('detail_services')}
+          className="flex flex-wrap gap-2"
+        >
+          {categories.map((cat) => {
+            const isActive = cat.category === activeCategory;
+            return (
+              <button
+                key={cat.category}
+                type="button"
+                role="tab"
+                aria-selected={isActive}
+                onClick={() => {
+                  setActiveCategory(cat.category);
+                  const next = cat.services.find((s) => s.isPopular) ?? cat.services[0];
+                  if (next) onSelectService(next.id);
+                }}
+                className={[
+                  'px-3.5 py-1.5 rounded-full text-[12.5px] font-bold transition-colors cursor-pointer border',
+                  isActive
+                    ? 'bg-gold text-dark-bg border-gold shadow-sm'
+                    : 'bg-surface/60 text-foreground/70 border-border hover:border-gold/40 hover:text-gold',
+                ].join(' ')}
+              >
+                {categoryLabel(cat.category, locale)}
+                <span className="ml-1.5 opacity-70 font-semibold">({cat.services.length})</span>
+              </button>
+            );
+          })}
+        </div>
+      )}
 
       {featured && (
         <FeaturedServiceCard
@@ -110,7 +188,7 @@ export function StationServicesSection({
 
       {others.length > 0 && (
         <div className="space-y-2.5">
-          <p className="text-[11px] font-black text-[#555] dark:text-[#A0A090] uppercase tracking-[0.15em]">
+          <p className="text-[11px] font-black text-foreground/70 dark:text-[#B0BFB1] uppercase tracking-[0.15em]">
             {t('services_other')}
           </p>
           {others.map((svc) => (
@@ -118,10 +196,7 @@ export function StationServicesSection({
               key={svc.id}
               service={svc}
               locale={locale}
-              onSelect={() => {
-                setFeaturedOverride(svc.id);
-                onSelectService(svc.id);
-              }}
+              onSelect={() => onSelectService(svc.id)}
             />
           ))}
         </div>
@@ -176,11 +251,11 @@ function FeaturedServiceCard({
       'rounded-2xl border-[1.5px] overflow-hidden transition-colors',
       selected
         ? 'border-gold bg-gold/5 dark:bg-gold/10'
-        : 'border-[#D0D0C0] dark:border-tab-inactive bg-[#F0F0E2] dark:bg-dark-bg/40',
+        : 'border-border bg-surface/60',
     ].join(' ')}>
       <div className="px-5 pt-5 flex items-start justify-between gap-3">
         <div className="min-w-0">
-          <p className="text-[18px] font-black text-[#000C1F] dark:text-[#FFF8EC] leading-tight">{service.name}</p>
+          <p className="text-[18px] font-black text-foreground leading-tight">{service.name}</p>
           <div className="flex flex-wrap gap-1.5 mt-2">
             {service.isPopular && (
               <span className="text-[10px] font-bold tracking-wide px-2 py-0.5 rounded-full bg-gold/15 text-gold border border-gold/30">
@@ -188,11 +263,11 @@ function FeaturedServiceCard({
               </span>
             )}
             {duration != null && (
-              <span className="text-[10px] font-bold tracking-wide px-2 py-0.5 rounded-full bg-[#E0E0D0] dark:bg-tab-inactive border border-[#D0D0C0] dark:border-tab-inactive text-[#555] dark:text-[#B0B0A0]">
+              <span className="text-[10px] font-bold tracking-wide px-2 py-0.5 rounded-full bg-surface dark:bg-tab-inactive border border-border text-foreground/70">
                 {t('badge_duration', { min: duration })}
               </span>
             )}
-            <span className="text-[10px] font-bold tracking-wide px-2 py-0.5 rounded-full bg-[#E0E0D0] dark:bg-tab-inactive border border-[#D0D0C0] dark:border-tab-inactive text-[#555] dark:text-[#B0B0A0]">
+            <span className="text-[10px] font-bold tracking-wide px-2 py-0.5 rounded-full bg-surface dark:bg-tab-inactive border border-border text-foreground/70">
               {categoryLabel(service.category, locale)}
             </span>
           </div>
@@ -200,28 +275,28 @@ function FeaturedServiceCard({
         {price != null && (
           <div className="text-right shrink-0">
             <span className="text-[12px] font-bold text-gold align-top mr-0.5">$</span>
-            <span className="text-[28px] font-black text-[#000C1F] dark:text-[#FFF8EC] leading-none">{price.toLocaleString()}</span>
-            <p className="text-[10px] text-[#888] dark:text-[#888] mt-1 uppercase tracking-wider">{t('detail_price_from')}</p>
+            <span className="text-[28px] font-black text-foreground leading-none">{price.toLocaleString()}</span>
+            <p className="text-[10px] text-foreground/55 mt-1 uppercase tracking-wider">{t('detail_price_from')}</p>
           </div>
         )}
       </div>
 
       {service.description && (
-        <p className="px-5 mt-3 text-[13.5px] text-[#555] dark:text-[#B0B0A0] leading-relaxed">
+        <p className="px-5 mt-3 text-[13.5px] text-foreground/70 leading-relaxed">
           {service.description}
         </p>
       )}
 
       {service.extras.length > 0 && (
         <div className="px-5 mt-4">
-          <p className="text-[11px] font-black text-[#555] dark:text-[#A0A090] uppercase tracking-[0.15em] mb-2.5">
+          <p className="text-[11px] font-black text-foreground/70 dark:text-[#B0BFB1] uppercase tracking-[0.15em] mb-2.5">
             {t('services_extras_label')}
           </p>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
             {service.extras.slice(0, 4).map((extra) => (
               <div
                 key={extra.id}
-                className="flex items-center gap-2 rounded-xl border border-[#D8D8C8] dark:border-tab-inactive bg-white/60 dark:bg-dark-bg/50 px-3 py-2 text-[12.5px] font-semibold text-[#222] dark:text-[#D0D0C0]"
+                className="flex items-center gap-2 rounded-xl border border-border bg-white/60 dark:bg-background/50 px-3 py-2 text-[12.5px] font-semibold text-[#222] dark:text-[#D0D0C0]"
               >
                 <span className="w-5 h-5 rounded-md bg-Hurryline-success flex items-center justify-center shrink-0">
                   <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
@@ -237,7 +312,7 @@ function FeaturedServiceCard({
 
       {isHandWash && formatEntries.length > 0 && (
         <div className="px-5 mt-4">
-          <p className="text-[11px] font-black text-[#555] dark:text-[#A0A090] uppercase tracking-[0.15em] mb-2.5">
+          <p className="text-[11px] font-black text-foreground/70 dark:text-[#B0BFB1] uppercase tracking-[0.15em] mb-2.5">
             {t('services_format_label')}
           </p>
           <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
@@ -253,11 +328,11 @@ function FeaturedServiceCard({
                     'text-left rounded-xl border-[1.5px] p-3 transition-colors cursor-pointer',
                     isSelected
                       ? 'border-gold bg-gold/10 dark:bg-gold/15'
-                      : 'border-[#D8D8C8] dark:border-tab-inactive bg-white/60 dark:bg-dark-bg/50 hover:border-gold/40',
+                      : 'border-border bg-white/60 dark:bg-background/50 hover:border-gold/40',
                   ].join(' ')}
                 >
                   <div className="flex items-center justify-between gap-2">
-                    <span className="text-[13px] font-black text-[#000C1F] dark:text-[#FFF8EC] leading-tight truncate">
+                    <span className="text-[13px] font-black text-foreground leading-tight truncate">
                       {entry.formatLabel}
                     </span>
                     <span className={`w-4 h-4 rounded-full border-2 flex items-center justify-center shrink-0 ${isSelected ? 'border-gold bg-gold' : 'border-[#BBB] dark:border-[#555]'}`}>
@@ -268,7 +343,7 @@ function FeaturedServiceCard({
                     <span className="text-[14px] font-black text-gold leading-none">
                       ${entry.price.toLocaleString()}
                     </span>
-                    <span className="text-[10.5px] font-bold text-[#888] dark:text-[#888]">
+                    <span className="text-[10.5px] font-bold text-foreground/55">
                       · {entry.duration} min
                     </span>
                   </div>
@@ -279,7 +354,7 @@ function FeaturedServiceCard({
         </div>
       )}
 
-      <div className="px-5 py-4 mt-4 border-t border-[#D8D8C8] dark:border-tab-inactive bg-[#E8E8D8]/40 dark:bg-dark-bg/30">
+      <div className="px-5 py-4 mt-4 border-t border-border bg-surface/40 dark:bg-background/30">
         <button
           type="button"
           onClick={onBook}
@@ -317,13 +392,13 @@ function OtherServiceCard({ service, locale, onSelect }: OtherServiceCardProps) 
     <button
       type="button"
       onClick={onSelect}
-      className="w-full text-left flex items-center gap-3 px-4 py-3 rounded-xl border border-[#D0D0C0] dark:border-tab-inactive bg-[#F0F0E2] dark:bg-dark-bg/40 hover:border-gold/40 hover:bg-gold/5 dark:hover:bg-gold/10 transition-colors cursor-pointer"
+      className="w-full text-left flex items-center gap-3 px-4 py-3 rounded-xl border border-border bg-surface/60 hover:border-gold/40 hover:bg-gold/5 dark:hover:bg-gold/10 transition-colors cursor-pointer"
     >
       <div className="flex-1 min-w-0">
-        <p className="text-[14.5px] font-bold text-[#000C1F] dark:text-[#FFF8EC] truncate">{service.name}</p>
+        <p className="text-[14.5px] font-bold text-foreground truncate">{service.name}</p>
         <div className="flex items-center gap-1.5 mt-1.5 flex-wrap">
           {duration != null && (
-            <span className="inline-flex items-center gap-1 text-[10.5px] font-bold text-[#777] dark:text-[#888]">
+            <span className="inline-flex items-center gap-1 text-[10.5px] font-bold text-[#777] dark:text-foreground/55">
               <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
                 <circle cx="12" cy="12" r="10" />
                 <polyline points="12 6 12 12 16 14" />
@@ -331,7 +406,7 @@ function OtherServiceCard({ service, locale, onSelect }: OtherServiceCardProps) 
               {t('badge_duration', { min: duration })}
             </span>
           )}
-          <span className="text-[10.5px] font-bold tracking-wide text-[#777] dark:text-[#888]">
+          <span className="text-[10.5px] font-bold tracking-wide text-[#777] dark:text-foreground/55">
             · {categoryLabel(service.category, locale)}
           </span>
         </div>

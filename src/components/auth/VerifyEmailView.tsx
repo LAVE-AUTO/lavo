@@ -28,7 +28,7 @@ function CheckIcon() {
 
 function AlertIcon() {
   return (
-    <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#E8472A" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+    <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#FF383C" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
       <circle cx="12" cy="12" r="10" />
       <line x1="12" y1="8" x2="12" y2="12" />
       <line x1="12" y1="16" x2="12.01" y2="16" />
@@ -38,7 +38,7 @@ function AlertIcon() {
 
 function MailIcon() {
   return (
-    <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="#C49A1E" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+    <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="#DDAF3B" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
       <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z" />
       <polyline points="22,6 12,13 2,6" />
     </svg>
@@ -118,7 +118,7 @@ export function VerifyEmailView({ token }: VerifyEmailViewProps) {
     return (
       <div className="px-8 pb-8 pt-4 flex flex-col items-center gap-4 text-center animate-fade-in">
         <Spinner size="md" />
-        <p className="text-[15px] text-[#555] dark:text-Hurryline-muted">{t('loading')}</p>
+        <p className="text-[15px] text-foreground/70 dark:text-Hurryline-muted">{t('loading')}</p>
       </div>
     );
   }
@@ -132,7 +132,7 @@ export function VerifyEmailView({ token }: VerifyEmailViewProps) {
         <h2 className="text-[22px] font-bold text-dark-bg dark:text-white mb-3">
           {t('success_title')}
         </h2>
-        <p className="text-[15px] text-[#555] dark:text-Hurryline-muted leading-relaxed mb-8">
+        <p className="text-[15px] text-foreground/70 dark:text-Hurryline-muted leading-relaxed mb-8">
           {t('success_message')}
         </p>
         <Link
@@ -154,7 +154,7 @@ export function VerifyEmailView({ token }: VerifyEmailViewProps) {
         <h2 className="text-[22px] font-bold text-dark-bg dark:text-white mb-3">
           {t('resend_success_title')}
         </h2>
-        <p className="text-[15px] text-[#555] dark:text-Hurryline-muted leading-relaxed mb-8">
+        <p className="text-[15px] text-foreground/70 dark:text-Hurryline-muted leading-relaxed mb-8">
           {t('resend_success_message')}
         </p>
         <Link
@@ -177,7 +177,7 @@ export function VerifyEmailView({ token }: VerifyEmailViewProps) {
         <h2 className="text-[20px] font-bold text-dark-bg dark:text-white mb-2">
           {t('error_title')}
         </h2>
-        <p className="text-[14px] text-[#555] dark:text-Hurryline-muted leading-relaxed">
+        <p className="text-[14px] text-foreground/70 dark:text-Hurryline-muted leading-relaxed">
           {t('error_message')}
         </p>
       </div>

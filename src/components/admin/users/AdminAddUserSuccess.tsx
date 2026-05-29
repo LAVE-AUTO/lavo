@@ -39,13 +39,13 @@ export function AdminAddUserSuccess({ data, onClose }: Props) {
             <CheckIcon />
           </div>
           <div>
-            <p className="text-[13px] font-bold text-[#1A1A0A] dark:text-[#F0EDD4]">
+            <p className="text-[13px] font-bold text-[#001201] dark:text-[#FFF9EC]">
               {data.first_name} {data.last_name}
-              <span className="ml-2 inline-flex items-center rounded-full border border-[#C49A1E]/30 bg-[#C49A1E]/10 px-2 py-0.5 text-[11px] font-black uppercase tracking-wide text-[#C49A1E]">
+              <span className="ml-2 inline-flex items-center rounded-full border border-[#DDAF3B]/30 bg-[#DDAF3B]/10 px-2 py-0.5 text-[11px] font-black uppercase tracking-wide text-[#DDAF3B]">
                 {t(`role_${data.role}`)}
               </span>
             </p>
-            <p className="text-[13px] text-[#888] dark:text-[#9A9A8A]">{t('success_account_created')}</p>
+            <p className="text-[13px] text-foreground/55 dark:text-[#B0BFB1]">{t('success_account_created')}</p>
           </div>
         </div>
 
@@ -56,8 +56,8 @@ export function AdminAddUserSuccess({ data, onClose }: Props) {
             <polyline points="22,6 12,13 2,6" />
           </svg>
           <div className="flex flex-col gap-0.5">
-            <p className="text-[13px] font-bold text-[#1A1A0A] dark:text-[#F0EDD4]">{t('success_email_sent_title')}</p>
-            <p className="text-[12px] leading-relaxed text-[#555] dark:text-[#A0A090]">
+            <p className="text-[13px] font-bold text-[#001201] dark:text-[#FFF9EC]">{t('success_email_sent_title')}</p>
+            <p className="text-[12px] leading-relaxed text-foreground/70 dark:text-[#B0BFB1]">
               {t('success_email_sent_body', { email: data.email })}
             </p>
           </div>
@@ -69,14 +69,14 @@ export function AdminAddUserSuccess({ data, onClose }: Props) {
             <path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z" />
             <line x1="12" y1="9" x2="12" y2="13" /><line x1="12" y1="17" x2="12.01" y2="17" />
           </svg>
-          <p className="text-[12px] leading-relaxed text-[#1A1A0A] dark:text-[#F0EDD4]">{t('success_force_change_notice')}</p>
+          <p className="text-[12px] leading-relaxed text-[#001201] dark:text-[#FFF9EC]">{t('success_force_change_notice')}</p>
         </div>
       </div>
 
       {/* Footer */}
       <div className="flex justify-end border-t border-[#F0EDE6] px-6 py-4 dark:border-[#1A2A14]">
         <button type="button" onClick={onClose}
-          className="rounded-lg bg-[#C49A1E] px-4 py-2 text-[13px] font-bold text-[#0C1209] transition-colors hover:bg-[#B08A14]">
+          className="rounded-lg bg-[#DDAF3B] px-4 py-2 text-[13px] font-bold text-[#001201] transition-colors hover:bg-[#B08A14]">
           {t('btn_close')}
         </button>
       </div>

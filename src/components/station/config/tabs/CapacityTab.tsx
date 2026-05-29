@@ -21,7 +21,7 @@ const MIN_BAYS = 1;
 function Field({ label, hint, children }: { label: string; hint?: string; children: React.ReactNode }) {
   return (
     <div className="flex flex-col gap-1.5">
-      <label className="text-[11px] font-bold uppercase tracking-[0.5px] text-[#888] dark:text-[#9A9A8A]">
+      <label className="text-[11px] font-bold uppercase tracking-[0.5px] text-foreground/55 dark:text-[#B0BFB1]">
         {label}
       </label>
       {children}
@@ -32,8 +32,8 @@ function Field({ label, hint, children }: { label: string; hint?: string; childr
 
 function Card({ title, children }: { title: string; children: React.ReactNode }) {
   return (
-    <section className="rounded-2xl border border-[#E8E4DC] bg-white p-6 shadow-sm dark:border-[#1A2A14] dark:bg-[#182214]">
-      <h3 className="mb-4 text-[11px] font-bold uppercase tracking-[1.5px] text-[#C49A1E]">{title}</h3>
+    <section className="rounded-2xl border border-[#FFF9EC] bg-white p-6 shadow-sm dark:border-[#1A2A14] dark:bg-[#182214]">
+      <h3 className="mb-4 text-[11px] font-bold uppercase tracking-[1.5px] text-[#DDAF3B]">{title}</h3>
       {children}
     </section>
   );
@@ -254,8 +254,8 @@ export function CapacityTab({ config, posts, locked, onSaved }: Props) {
 
       <Card title={t('capacity_card_bay_status')}>
         <div className="mb-3 flex items-baseline justify-between">
-          <p className="text-[12px] text-[#888] dark:text-[#9A9A8A]">{t('capacity_bay_status_hint')}</p>
-          <p className="text-[12px] font-semibold text-[#C49A1E]">
+          <p className="text-[12px] text-foreground/55 dark:text-[#B0BFB1]">{t('capacity_bay_status_hint')}</p>
+          <p className="text-[12px] font-semibold text-[#DDAF3B]">
             {t('capacity_bays_active', { active: activeCount, total: totalBays })}
           </p>
         </div>
@@ -272,20 +272,20 @@ export function CapacityTab({ config, posts, locked, onSaved }: Props) {
                 aria-pressed={active}
                 className={`group relative flex flex-col items-center gap-2 rounded-xl border p-4 text-center transition-all duration-150 disabled:cursor-not-allowed disabled:opacity-60 ${
                   active
-                    ? 'border-[#C49A1E]/40 bg-[#C49A1E]/8 hover:border-[#C49A1E]'
-                    : 'border-[#E0DCD0] bg-[#F7F6F2] hover:border-[#C8C4B4] dark:border-[#243020] dark:bg-[#0F1A0C]'
+                    ? 'border-[#DDAF3B]/40 bg-[#DDAF3B]/8 hover:border-[#DDAF3B]'
+                    : 'border-[#FFF9EC] bg-[#FFF9EC] hover:border-[#C8C4B4] dark:border-[#001A05] dark:bg-dark-bg'
                 }`}
               >
                 {isNew && (
-                  <span className="absolute right-1.5 top-1.5 rounded-full bg-[#C49A1E] px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wider text-[#0C1209]">
+                  <span className="absolute right-1.5 top-1.5 rounded-full bg-[#DDAF3B] px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wider text-[#001201]">
                     {t('capacity_bay_new')}
                   </span>
                 )}
                 <div
                   className={`flex h-9 w-9 items-center justify-center rounded-lg ${
                     active
-                      ? 'bg-[#C49A1E]/20 text-[#C49A1E]'
-                      : 'bg-[#E8E4DC] text-[#AAAAAA] dark:bg-[#1A2A14] dark:text-[#4A4A3A]'
+                      ? 'bg-[#DDAF3B]/20 text-[#DDAF3B]'
+                      : 'bg-[#FFF9EC] text-[#AAAAAA] dark:bg-[#1A2A14] dark:text-[#4A4A3A]'
                   }`}
                   aria-hidden="true"
                 >
@@ -302,7 +302,7 @@ export function CapacityTab({ config, posts, locked, onSaved }: Props) {
                     <path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z" />
                   </svg>
                 </div>
-                <span className="text-[12px] font-bold text-[#1A1A0A] dark:text-[#F0EDD4]">
+                <span className="text-[12px] font-bold text-[#001201] dark:text-[#FFF9EC]">
                   {t('post_label', { n: position })}
                 </span>
                 <span className={`text-[11px] font-semibold ${active ? 'text-[#00A040]' : 'text-[#EF4444]'}`}>
@@ -318,7 +318,7 @@ export function CapacityTab({ config, posts, locked, onSaved }: Props) {
         <button
           type="submit"
           disabled={locked || saving}
-          className="flex items-center gap-2 rounded-xl bg-[#C49A1E] px-6 py-2.5 text-[13px] font-bold text-[#0C1209] transition-opacity hover:opacity-85 disabled:cursor-not-allowed disabled:opacity-50"
+          className="flex items-center gap-2 rounded-xl bg-[#DDAF3B] px-6 py-2.5 text-[13px] font-bold text-[#001201] transition-opacity hover:opacity-85 disabled:cursor-not-allowed disabled:opacity-50"
         >
           {saving ? t('btn_saving') : t('capacity_btn_save')}
         </button>

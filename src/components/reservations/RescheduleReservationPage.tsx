@@ -277,7 +277,7 @@ export default function RescheduleReservationPage() {
   /* État chargement */
   if (loading) {
     return (
-      <main className="min-h-screen bg-[#F5F5E6] dark:bg-[#0F0F0D] flex items-center justify-center pb-24 sm:pb-8">
+      <main className="min-h-screen bg-background flex items-center justify-center pb-24 sm:pb-8">
         <div className="h-8 w-8 animate-spin rounded-full border-[3px] border-gold border-t-transparent" />
       </main>
     );
@@ -286,8 +286,8 @@ export default function RescheduleReservationPage() {
   /* État erreur */
   if (loadError) {
     return (
-      <main className="min-h-screen bg-[#F5F5E6] dark:bg-[#0F0F0D] flex flex-col items-center justify-center gap-3 pb-24 sm:pb-8">
-        <p className="text-[15px] font-semibold text-[#555] dark:text-[#B0B0A0] text-center px-4">
+      <main className="min-h-screen bg-background flex flex-col items-center justify-center gap-3 pb-24 sm:pb-8">
+        <p className="text-[15px] font-semibold text-foreground/70 text-center px-4">
           {t('error_load')}
         </p>
         <button
@@ -305,7 +305,7 @@ export default function RescheduleReservationPage() {
   const canConfirm = selectedSlotId !== null && !submitting;
 
   return (
-    <main className="min-h-screen bg-[#F5F5E6] dark:bg-[#0F0F0D] pb-24 sm:pb-8">
+    <main className="min-h-screen bg-background pb-24 sm:pb-8">
       {/* En-tête */}
       <div className="px-4 pt-4 pb-2 max-w-2xl mx-auto">
         <Link
@@ -317,7 +317,7 @@ export default function RescheduleReservationPage() {
           </svg>
           {t('btn_back')}
         </Link>
-        <h1 className="text-[22px] font-black text-[#0A0A14] dark:text-white mt-3">
+        <h1 className="text-[22px] font-black text-foreground mt-3">
           {t('page_title')}
         </h1>
       </div>
@@ -336,13 +336,13 @@ export default function RescheduleReservationPage() {
         {hasFee && <FeeWarningBanner fee={RESCHEDULE_FEE} t={t} />}
 
         {/* Sélecteur de créneau */}
-        <section className="bg-[#E8E8D8] dark:bg-dark-card rounded-xl border border-[#D0D0C0] dark:border-tab-inactive p-5 space-y-4">
-          <h2 className="text-[16px] font-black text-[#0A0A14] dark:text-white">
+        <section className="bg-surface rounded-xl border border-border p-5 space-y-4">
+          <h2 className="text-[16px] font-black text-foreground">
             {t('select_slot')}
           </h2>
 
           {availableDates.length === 0 ? (
-            <p className="text-[14px] text-[#666] dark:text-[#B0B0A0]">{t('no_slots')}</p>
+            <p className="text-[14px] text-foreground/65">{t('no_slots')}</p>
           ) : (
             <>
               {/* Sélecteur de date - défilement horizontal */}
@@ -356,10 +356,10 @@ export default function RescheduleReservationPage() {
                       'flex flex-col items-center min-w-[58px] py-2 px-3 rounded-xl border-2 transition-colors cursor-pointer shrink-0',
                       selectedDate === d.key
                         ? 'bg-gold border-gold text-dark-bg'
-                        : 'border-[#D0D0C0] dark:border-tab-inactive text-[#0A0A14] dark:text-[#FFF8EC] hover:border-gold/40',
+                        : 'border-border text-foreground dark:text-foreground hover:border-gold/40',
                     ].join(' ')}
                   >
-                    <span className={`text-[11px] font-bold uppercase ${selectedDate === d.key ? 'text-dark-bg' : 'text-[#888]'}`}>
+                    <span className={`text-[11px] font-bold uppercase ${selectedDate === d.key ? 'text-dark-bg' : 'text-foreground/55'}`}>
                       {d.dayShort}
                     </span>
                     <span className="text-[18px] font-black leading-snug">{d.dateNum}</span>
@@ -381,10 +381,10 @@ export default function RescheduleReservationPage() {
                         className={[
                           'py-2.5 rounded-[10px] text-[14px] font-bold border transition-all font-[family-name:var(--font-roboto-mono)]',
                           slot.isFull
-                            ? 'border-[#D0D0C0] dark:border-tab-inactive text-[#CCC] dark:text-[#555] cursor-not-allowed opacity-50'
+                            ? 'border-border text-[#CCC] dark:text-foreground/70 cursor-not-allowed opacity-50'
                             : isSelected
                               ? 'border-gold bg-gold text-dark-bg shadow-sm cursor-pointer'
-                              : 'border-[#D0D0C0] dark:border-tab-inactive text-[#0A0A14] dark:text-white hover:border-gold/60 cursor-pointer',
+                              : 'border-border text-foreground hover:border-gold/60 cursor-pointer',
                         ].join(' ')}
                       >
                         {slot.time}
@@ -424,21 +424,21 @@ export default function RescheduleReservationPage() {
               role="dialog"
               aria-modal="true"
               aria-labelledby="confirm-reschedule-title"
-              className="bg-[#F5F5E6] dark:bg-[#1A1A18] rounded-2xl shadow-2xl w-full max-w-sm p-6 space-y-4"
+              className="bg-background dark:bg-[#1A1A18] rounded-2xl shadow-2xl w-full max-w-sm p-6 space-y-4"
             >
               <div className="w-14 h-14 rounded-full bg-gold/15 flex items-center justify-center mx-auto">
-                <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#af8408" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#DDAF3B" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                   <rect x="3" y="4" width="18" height="18" rx="2" /><line x1="16" y1="2" x2="16" y2="6" /><line x1="8" y1="2" x2="8" y2="6" /><line x1="3" y1="10" x2="21" y2="10" />
                 </svg>
               </div>
 
               <h3
                 id="confirm-reschedule-title"
-                className="text-[18px] font-black text-[#0A0A14] dark:text-white text-center"
+                className="text-[18px] font-black text-foreground text-center"
               >
                 {t('confirm_modal_title')}
               </h3>
-              <p className="text-[14px] text-[#555] dark:text-[#B0B0A0] text-center leading-relaxed">
+              <p className="text-[14px] text-foreground/70 text-center leading-relaxed">
                 {t('confirm_modal_desc')}
               </p>
               <div className="bg-gold/10 border border-gold/30 rounded-xl px-4 py-3 text-center">
@@ -447,7 +447,7 @@ export default function RescheduleReservationPage() {
 
               {hasFee && (
                 <div className="flex justify-between text-[14px] px-1">
-                  <span className="text-[#999] dark:text-[#888]">{t('fee_label')}</span>
+                  <span className="text-[#999] dark:text-foreground/55">{t('fee_label')}</span>
                   <span className="font-bold text-[#FF8800]">+{RESCHEDULE_FEE.toFixed(2)}$</span>
                 </div>
               )}
@@ -457,7 +457,7 @@ export default function RescheduleReservationPage() {
                   type="button"
                   onClick={() => setShowConfirmModal(false)}
                   disabled={submitting}
-                  className="flex-1 py-3 border-2 border-[#D0D0C0] dark:border-tab-inactive rounded-xl text-[14px] font-bold text-[#555] dark:text-[#B0B0A0] hover:bg-[#E0E0D0] dark:hover:bg-dark-surface transition-colors cursor-pointer disabled:opacity-50"
+                  className="flex-1 py-3 border-2 border-border rounded-xl text-[14px] font-bold text-foreground/70 hover:bg-surface dark:hover:bg-dark-surface transition-colors cursor-pointer disabled:opacity-50"
                 >
                   {t('confirm_modal_keep')}
                 </button>
@@ -497,14 +497,14 @@ function CurrentBookingCard({
   t: ReturnType<typeof useTranslations>;
 }) {
   return (
-    <div className="bg-[#E8E8D8] dark:bg-dark-card rounded-xl border border-[#D0D0C0] dark:border-tab-inactive p-5 space-y-3">
-      <h2 className="text-[16px] font-black text-[#0A0A14] dark:text-white">{t('current_booking')}</h2>
+    <div className="bg-surface rounded-xl border border-border p-5 space-y-3">
+      <h2 className="text-[16px] font-black text-foreground">{t('current_booking')}</h2>
       <div className="space-y-2 text-[14px]">
         <Row label={t('label_station')} value={stationName} />
         <Row label={t('label_forfait')} value={forfait} />
         {currentLabel && <Row label={t('label_date')} value={currentLabel} />}
-        <div className="pt-2 border-t border-[#D0D0C0] dark:border-tab-inactive flex items-center justify-between">
-          <span className="font-bold text-[#0A0A14] dark:text-white">{t('total')}</span>
+        <div className="pt-2 border-t border-border flex items-center justify-between">
+          <span className="font-bold text-foreground">{t('total')}</span>
           <span className="text-[18px] font-black text-gold">{amount.toFixed(2)}$</span>
         </div>
       </div>
@@ -538,10 +538,10 @@ function ConfirmSection({
   t: ReturnType<typeof useTranslations>;
 }) {
   return (
-    <div className="bg-[#E8E8D8] dark:bg-dark-card rounded-xl border border-[#D0D0C0] dark:border-tab-inactive p-5 space-y-4">
+    <div className="bg-surface rounded-xl border border-border p-5 space-y-4">
       {hasFee && (
         <div className="space-y-2 text-[14px]">
-          <div className="flex justify-between text-[#555] dark:text-[#C0C0B0]">
+          <div className="flex justify-between text-foreground/70">
             <span>{t('subtotal')}</span>
             <span>{amount.toFixed(2)}$</span>
           </div>
@@ -549,7 +549,7 @@ function ConfirmSection({
             <span>{t('fee_label')}</span>
             <span>+{fee.toFixed(2)}$</span>
           </div>
-          <div className="pt-2 border-t border-[#D0D0C0] dark:border-tab-inactive flex justify-between font-black text-[#0A0A14] dark:text-white text-[16px]">
+          <div className="pt-2 border-t border-border flex justify-between font-black text-foreground text-[16px]">
             <span>{t('total')}</span>
             <span className="text-gold">{(amount + fee).toFixed(2)}$</span>
           </div>
@@ -571,7 +571,7 @@ function ConfirmSection({
       </button>
 
       {hasFee && (
-        <p className="text-[11px] text-[#999] dark:text-[#888] text-center flex items-center justify-center gap-1.5">
+        <p className="text-[11px] text-[#999] dark:text-foreground/55 text-center flex items-center justify-center gap-1.5">
           <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
             <rect x="3" y="11" width="18" height="11" rx="2" ry="2" /><path d="M7 11V7a5 5 0 0110 0v4" />
           </svg>
@@ -585,8 +585,8 @@ function ConfirmSection({
 function Row({ label, value }: { label: string; value: string }) {
   return (
     <div className="flex items-start justify-between gap-4">
-      <span className="text-[#999] dark:text-[#888] shrink-0">{label}</span>
-      <span className="font-semibold text-[#0A0A14] dark:text-white text-right">{value}</span>
+      <span className="text-[#999] dark:text-foreground/55 shrink-0">{label}</span>
+      <span className="font-semibold text-foreground text-right">{value}</span>
     </div>
   );
 }

@@ -335,15 +335,15 @@ export function ArrivalStep({
   return (
     <div className="flex flex-col h-full">
       <div className="flex-1 overflow-y-auto px-1 space-y-3 pb-4">
-        <p className="text-[14px] text-[#555] dark:text-[#B0B0A0]">{t('arrival_subtitle')}</p>
+        <p className="text-[14px] text-foreground/70">{t('arrival_subtitle')}</p>
 
         {/* ── Section 1: Queue ── */}
-        <div className="rounded-xl border-2 overflow-hidden transition-colors border-[#D0D0C0] dark:border-tab-inactive">
+        <div className="rounded-xl border-2 overflow-hidden transition-colors border-border">
           <button
             type="button"
             onClick={() => toggleSection('queue')}
             className={`w-full flex items-center justify-between px-4 py-3.5 cursor-pointer transition-colors ${
-              isQueueOpen ? 'bg-gold/10 dark:bg-gold/5' : 'bg-white/40 dark:bg-dark-bg/40 hover:bg-gold/5'
+              isQueueOpen ? 'bg-gold/10 dark:bg-gold/5' : 'bg-white/40 dark:bg-background/40 hover:bg-gold/5'
             }`}
           >
             <div className="flex items-center gap-2.5">
@@ -351,11 +351,11 @@ export function ArrivalStep({
                 (arrivalMode === 'queue_now' || arrivalMode === 'queue_later') ? 'border-gold bg-gold' : 'border-[#BBB] dark:border-[#555]'
               }`}>
                 {(arrivalMode === 'queue_now' || arrivalMode === 'queue_later') && (
-                  <span className="w-2.5 h-2.5 rounded-full bg-[#1a1a1a]" />
+                  <span className="w-2.5 h-2.5 rounded-full bg-dark-bg" />
                 )}
               </div>
               <div>
-                <span className="text-[15px] font-bold text-[#000C1F] dark:text-[#FFF8EC]">
+                <span className="text-[15px] font-bold text-foreground">
                   {t('arrival_queue_title')}
                 </span>
                 {serviceBasePrice > 0 && (
@@ -365,29 +365,29 @@ export function ArrivalStep({
                 )}
               </div>
             </div>
-            <span className={isQueueOpen ? 'text-gold' : 'text-[#888]'}>
+            <span className={isQueueOpen ? 'text-gold' : 'text-foreground/55'}>
               <ChevronIcon open={isQueueOpen} />
             </span>
           </button>
 
           {isQueueOpen && (
-            <div className="px-4 pb-4 pt-3 space-y-3 bg-white/20 dark:bg-dark-bg/20">
+            <div className="px-4 pb-4 pt-3 space-y-3 bg-white/20 dark:bg-background/20">
               {/* Queue position card */}
-              <div className="rounded-xl bg-[#E8E8D8] dark:bg-dark-card border border-[#D0D0C0] dark:border-tab-inactive p-4">
+              <div className="rounded-xl bg-surface border border-border p-4">
                 <div className="flex items-center gap-2 mb-3">
                   <span className="w-2 h-2 rounded-full bg-Hurryline-success animate-pulse shrink-0" />
-                  <span className="text-[12px] font-bold text-[#555] dark:text-[#A0A090] uppercase tracking-wider">
+                  <span className="text-[12px] font-bold text-foreground/70 dark:text-[#B0BFB1] uppercase tracking-wider">
                     {t('arrival_queue_status')}
                   </span>
                 </div>
                 <div className="grid grid-cols-2 gap-3 text-center">
-                  <div className="bg-white/50 dark:bg-dark-bg/40 rounded-lg p-3">
-                    <div className="text-[26px] font-black text-[#000C1F] dark:text-[#FFF8EC] leading-none">{station.queueCount}</div>
-                    <div className="text-[12px] text-[#555] dark:text-[#B0B0A0] mt-1">{t('arrival_queue_waiting')}</div>
+                  <div className="bg-white/50 dark:bg-background/40 rounded-lg p-3">
+                    <div className="text-[26px] font-black text-foreground leading-none">{station.queueCount}</div>
+                    <div className="text-[12px] text-foreground/70 mt-1">{t('arrival_queue_waiting')}</div>
                   </div>
                   <div className="bg-gold/10 dark:bg-gold/8 rounded-lg p-3 border border-gold/20">
                     <div className="text-[26px] font-black text-gold leading-none">#{myQueuePosition}</div>
-                    <div className="text-[12px] text-[#555] dark:text-[#B0B0A0] mt-1">{t('arrival_queue_your_position')}</div>
+                    <div className="text-[12px] text-foreground/70 mt-1">{t('arrival_queue_your_position')}</div>
                   </div>
                 </div>
               </div>
@@ -399,16 +399,16 @@ export function ArrivalStep({
                 disabled={!nowPossible}
                 className={`w-full text-left px-4 py-3 rounded-xl border-2 transition-all ${
                   !nowPossible
-                    ? 'border-[#E0E0D0] dark:border-tab-inactive bg-[#F0F0E0] dark:bg-dark-bg/20 opacity-60 cursor-not-allowed'
+                    ? 'border-[#E0E0D0] dark:border-border bg-[#F0F0E0] dark:bg-background/20 opacity-60 cursor-not-allowed'
                     : arrivalMode === 'queue_now'
                       ? 'border-gold bg-gold/10 dark:bg-gold/5 cursor-pointer'
-                      : 'border-[#D0D0C0] dark:border-tab-inactive bg-white/40 dark:bg-dark-bg/40 hover:border-gold/30 cursor-pointer'
+                      : 'border-border bg-white/40 dark:bg-background/40 hover:border-gold/30 cursor-pointer'
                 }`}
               >
                 <div className="flex items-center justify-between">
                   <div>
-                    <span className="text-[15px] font-bold text-[#000C1F] dark:text-[#FFF8EC]">{t('arrival_now')}</span>
-                    <p className="text-[13px] text-[#555] dark:text-[#B0B0A0] mt-0.5">
+                    <span className="text-[15px] font-bold text-foreground">{t('arrival_now')}</span>
+                    <p className="text-[13px] text-foreground/70 mt-0.5">
                       {nowPossible
                         ? t('arrival_queue_position', { position: myQueuePosition })
                         : t('arrival_immediate_not_possible')}
@@ -418,7 +418,7 @@ export function ArrivalStep({
                     <span className={`w-5 h-5 rounded-full border-2 flex items-center justify-center shrink-0 ${
                       arrivalMode === 'queue_now' ? 'border-gold bg-gold' : 'border-[#BBB] dark:border-[#555]'
                     }`}>
-                      {arrivalMode === 'queue_now' && <span className="w-2.5 h-2.5 rounded-full bg-[#1a1a1a]" />}
+                      {arrivalMode === 'queue_now' && <span className="w-2.5 h-2.5 rounded-full bg-dark-bg" />}
                     </span>
                   )}
                 </div>
@@ -431,16 +431,16 @@ export function ArrivalStep({
                 disabled={laterSlots.length === 0}
                 className={`w-full text-left px-4 py-3 rounded-xl border-2 transition-all ${
                   laterSlots.length === 0
-                    ? 'border-[#E0E0D0] dark:border-tab-inactive bg-[#F0F0E0] dark:bg-dark-bg/20 opacity-60 cursor-not-allowed'
+                    ? 'border-[#E0E0D0] dark:border-border bg-[#F0F0E0] dark:bg-background/20 opacity-60 cursor-not-allowed'
                     : arrivalMode === 'queue_later'
                       ? 'border-gold bg-gold/10 dark:bg-gold/5 cursor-pointer'
-                      : 'border-[#D0D0C0] dark:border-tab-inactive bg-white/40 dark:bg-dark-bg/40 hover:border-gold/30 cursor-pointer'
+                      : 'border-border bg-white/40 dark:bg-background/40 hover:border-gold/30 cursor-pointer'
                 }`}
               >
                 <div className="flex items-center justify-between">
                   <div>
-                    <span className="text-[15px] font-bold text-[#000C1F] dark:text-[#FFF8EC]">{t('arrival_later')}</span>
-                    <p className="text-[13px] text-[#555] dark:text-[#B0B0A0] mt-0.5">
+                    <span className="text-[15px] font-bold text-foreground">{t('arrival_later')}</span>
+                    <p className="text-[13px] text-foreground/70 mt-0.5">
                       {laterSlots.length === 0 ? t('arrival_no_later_slots') : t('arrival_later_desc')}
                     </p>
                   </div>
@@ -448,7 +448,7 @@ export function ArrivalStep({
                     <span className={`w-5 h-5 rounded-full border-2 flex items-center justify-center shrink-0 ${
                       arrivalMode === 'queue_later' ? 'border-gold bg-gold' : 'border-[#BBB] dark:border-[#555]'
                     }`}>
-                      {arrivalMode === 'queue_later' && <span className="w-2.5 h-2.5 rounded-full bg-[#1a1a1a]" />}
+                      {arrivalMode === 'queue_later' && <span className="w-2.5 h-2.5 rounded-full bg-dark-bg" />}
                     </span>
                   )}
                 </div>
@@ -466,7 +466,7 @@ export function ArrivalStep({
                         className={`px-4 py-2 rounded-lg text-[14px] font-bold border-2 transition-colors cursor-pointer ${
                           laterTime === time
                             ? 'bg-gold border-gold text-dark-bg'
-                            : 'border-[#D0D0C0] dark:border-tab-inactive text-[#000C1F] dark:text-[#FFF8EC] hover:border-gold/40'
+                            : 'border-border text-foreground hover:border-gold/40'
                         }`}
                       >
                         {time}
@@ -475,8 +475,8 @@ export function ArrivalStep({
                   </div>
 
                   {/* Custom time entry */}
-                  <div className="rounded-xl border border-dashed border-[#D0D0C0] dark:border-tab-inactive bg-white/40 dark:bg-dark-bg/30 px-3 py-2.5">
-                    <label className="block text-[11px] font-black uppercase tracking-wider text-[#555] dark:text-[#A0A090] mb-1.5">
+                  <div className="rounded-xl border border-dashed border-border bg-white/40 dark:bg-background/30 px-3 py-2.5">
+                    <label className="block text-[11px] font-black uppercase tracking-wider text-foreground/70 dark:text-[#B0BFB1] mb-1.5">
                       {t('arrival_custom_time_label')}
                     </label>
                     <div className="flex items-center gap-2">
@@ -484,7 +484,7 @@ export function ArrivalStep({
                         type="time"
                         value={customTime}
                         onChange={(e) => { setCustomTime(e.target.value); setCustomTimeError(null); }}
-                        className="flex-1 px-3 py-2 rounded-lg border-2 border-[#D0D0C0] dark:border-tab-inactive bg-white dark:bg-dark-bg/40 text-[14px] font-mono text-[#000C1F] dark:text-[#FFF8EC] focus:border-gold outline-none transition-colors"
+                        className="flex-1 px-3 py-2 rounded-lg border-2 border-border bg-white dark:bg-background/40 text-[14px] font-mono text-foreground focus:border-gold outline-none transition-colors"
                       />
                       <button
                         type="button"
@@ -493,7 +493,7 @@ export function ArrivalStep({
                         className={`px-4 py-2 rounded-lg text-[13px] font-bold transition-colors ${
                           customTime
                             ? 'bg-gold text-dark-bg hover:bg-gold-hover cursor-pointer'
-                            : 'bg-[#E0E0D0] dark:bg-tab-inactive text-[#888] cursor-not-allowed'
+                            : 'bg-surface dark:bg-tab-inactive text-foreground/55 cursor-not-allowed'
                         }`}
                       >
                         {t('arrival_custom_time_apply')}
@@ -515,22 +515,22 @@ export function ArrivalStep({
         </div>
 
         {/* ── Section 2: Book a slot ── */}
-        <div className="rounded-xl border-2 overflow-hidden transition-colors border-[#D0D0C0] dark:border-tab-inactive">
+        <div className="rounded-xl border-2 overflow-hidden transition-colors border-border">
           <button
             type="button"
             onClick={() => toggleSection('book')}
             className={`w-full flex items-center justify-between px-4 py-3.5 cursor-pointer transition-colors ${
-              isBookOpen ? 'bg-gold/10 dark:bg-gold/5' : 'bg-white/40 dark:bg-dark-bg/40 hover:bg-gold/5'
+              isBookOpen ? 'bg-gold/10 dark:bg-gold/5' : 'bg-white/40 dark:bg-background/40 hover:bg-gold/5'
             }`}
           >
             <div className="flex items-center gap-2.5 flex-1 min-w-0">
               <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center shrink-0 transition-colors ${
                 arrivalMode === 'book_slot' ? 'border-gold bg-gold' : 'border-[#BBB] dark:border-[#555]'
               }`}>
-                {arrivalMode === 'book_slot' && <span className="w-2.5 h-2.5 rounded-full bg-[#1a1a1a]" />}
+                {arrivalMode === 'book_slot' && <span className="w-2.5 h-2.5 rounded-full bg-dark-bg" />}
               </div>
               <div className="flex items-center gap-2 flex-wrap">
-                <span className="text-[15px] font-bold text-[#000C1F] dark:text-[#FFF8EC]">
+                <span className="text-[15px] font-bold text-foreground">
                   {t('arrival_book_title')}
                 </span>
                 {serviceBasePrice > 0 && (
@@ -545,20 +545,20 @@ export function ArrivalStep({
                 )}
               </div>
             </div>
-            <span className={`${isBookOpen ? 'text-gold' : 'text-[#888]'} shrink-0`}>
+            <span className={`${isBookOpen ? 'text-gold' : 'text-foreground/55'} shrink-0`}>
               <ChevronIcon open={isBookOpen} />
             </span>
           </button>
 
           {isBookOpen && (
-            <div className="px-4 pb-4 pt-3 space-y-3 bg-white/20 dark:bg-dark-bg/20">
+            <div className="px-4 pb-4 pt-3 space-y-3 bg-white/20 dark:bg-background/20">
               <div className="flex items-center justify-between gap-3">
-                <p className="text-[13px] text-[#555] dark:text-[#B0B0A0]">{t('arrival_book_desc')}</p>
+                <p className="text-[13px] text-foreground/70">{t('arrival_book_desc')}</p>
                 <button
                   type="button"
                   onClick={() => setMonthViewOpen((v) => !v)}
                   className={`shrink-0 inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[12px] font-bold transition-colors cursor-pointer ${
-                    monthViewOpen ? 'bg-gold text-dark-bg' : 'bg-[#E8E8D8] dark:bg-dark-card text-[#000C1F] dark:text-[#FFF8EC] hover:bg-gold/15'
+                    monthViewOpen ? 'bg-gold text-dark-bg' : 'bg-surface text-foreground hover:bg-gold/15'
                   }`}
                   aria-expanded={monthViewOpen}
                 >
@@ -574,29 +574,29 @@ export function ArrivalStep({
 
               {/* Month grid (toggleable, up to 5 weeks ahead) */}
               {monthViewOpen && (
-                <div className="rounded-xl bg-white dark:bg-dark-card border border-[#D0D0C0] dark:border-tab-inactive p-3 space-y-2">
+                <div className="rounded-xl bg-white dark:bg-surface border border-border p-3 space-y-2">
                   <div className="flex items-center justify-between">
                     <button
                       type="button"
                       onClick={() => shiftMonth(-1)}
-                      className="w-7 h-7 rounded-full bg-[#F0F0E2] dark:bg-tab-inactive flex items-center justify-center text-[#000C1F] dark:text-[#FFF8EC] hover:bg-gold/15 cursor-pointer"
+                      className="w-7 h-7 rounded-full bg-surface/60 dark:bg-tab-inactive flex items-center justify-center text-foreground hover:bg-gold/15 cursor-pointer"
                       aria-label={t('arrival_month_prev')}
                     >
                       &#8249;
                     </button>
-                    <span className="text-[14px] font-black text-[#000C1F] dark:text-[#FFF8EC] capitalize">
+                    <span className="text-[14px] font-black text-foreground capitalize">
                       {monthLabel}
                     </span>
                     <button
                       type="button"
                       onClick={() => shiftMonth(1)}
-                      className="w-7 h-7 rounded-full bg-[#F0F0E2] dark:bg-tab-inactive flex items-center justify-center text-[#000C1F] dark:text-[#FFF8EC] hover:bg-gold/15 cursor-pointer"
+                      className="w-7 h-7 rounded-full bg-surface/60 dark:bg-tab-inactive flex items-center justify-center text-foreground hover:bg-gold/15 cursor-pointer"
                       aria-label={t('arrival_month_next')}
                     >
                       &#8250;
                     </button>
                   </div>
-                  <div className="grid grid-cols-7 gap-1 text-[10px] font-bold uppercase tracking-wider text-[#888]">
+                  <div className="grid grid-cols-7 gap-1 text-[10px] font-bold uppercase tracking-wider text-foreground/55">
                     {weekdayHeaders.map((w, i) => (
                       <div key={i} className="text-center py-1">{w}</div>
                     ))}
@@ -616,12 +616,12 @@ export function ArrivalStep({
                             !cell.bookable
                               ? 'text-[#CCC] dark:text-[#444] cursor-not-allowed'
                               : isClosed
-                                ? 'text-[#999] dark:text-[#666] bg-[#E8E8D8]/60 dark:bg-dark-bg/40 cursor-not-allowed'
+                                ? 'text-[#999] dark:text-foreground/65 bg-surface/60 dark:bg-background/40 cursor-not-allowed'
                                 : isSelected
                                   ? 'bg-gold text-dark-bg cursor-pointer'
                                   : cell.isToday
                                     ? 'bg-gold/15 text-gold border border-gold/40 cursor-pointer hover:bg-gold/25'
-                                    : `${cell.inMonth ? 'text-[#000C1F] dark:text-[#FFF8EC]' : 'text-[#999] dark:text-[#666]'} hover:bg-gold/15 cursor-pointer`
+                                    : `${cell.inMonth ? 'text-foreground' : 'text-[#999] dark:text-foreground/65'} hover:bg-gold/15 cursor-pointer`
                           }`}
                           aria-label={isClosed ? t('arrival_closed_badge') : undefined}
                         >
@@ -651,10 +651,10 @@ export function ArrivalStep({
                       onClick={() => { if (isClosed) return; onSetDate(d.key); onSetMode('book_slot'); }}
                       className={`relative flex flex-col items-center min-w-[58px] py-2 px-3 rounded-xl border-2 transition-colors ${
                         isClosed
-                          ? 'border-[#D0D0C0] dark:border-tab-inactive bg-[#E5E5D5]/60 dark:bg-dark-bg/40 text-[#999] dark:text-[#666] cursor-not-allowed'
+                          ? 'border-border bg-[#E5E5D5]/60 dark:bg-background/40 text-[#999] dark:text-foreground/65 cursor-not-allowed'
                           : isSelected
                             ? 'bg-gold border-gold text-dark-bg cursor-pointer'
-                            : 'border-[#D0D0C0] dark:border-tab-inactive text-[#000C1F] dark:text-[#FFF8EC] hover:border-gold/40 cursor-pointer'
+                            : 'border-border text-foreground hover:border-gold/40 cursor-pointer'
                       }`}
                       aria-label={isClosed ? t('arrival_closed_badge') : undefined}
                     >
@@ -663,11 +663,11 @@ export function ArrivalStep({
                           {t('arrival_closed_badge')}
                         </span>
                       )}
-                      <span className={`text-[11px] font-bold uppercase ${isClosed ? 'text-[#AAA] dark:text-[#666]' : isSelected ? 'text-dark-bg' : 'text-[#888]'}`}>
+                      <span className={`text-[11px] font-bold uppercase ${isClosed ? 'text-[#AAA] dark:text-foreground/65' : isSelected ? 'text-dark-bg' : 'text-foreground/55'}`}>
                         {d.dayShort}
                       </span>
                       <span className={`text-[18px] font-black ${isClosed ? 'line-through opacity-60' : ''}`}>{d.dateNum}</span>
-                      <span className={`text-[10px] font-semibold uppercase ${isClosed ? 'text-[#AAA] dark:text-[#666]' : isSelected ? 'text-dark-bg/80' : 'text-[#999]'}`}>
+                      <span className={`text-[10px] font-semibold uppercase ${isClosed ? 'text-[#AAA] dark:text-foreground/65' : isSelected ? 'text-dark-bg/80' : 'text-[#999]'}`}>
                         {d.monthShort}
                       </span>
                     </button>
@@ -679,13 +679,13 @@ export function ArrivalStep({
               {selectedDate && arrivalMode === 'book_slot' && (
                 <>
                   {availabilityLoading ? (
-                    <p className="text-[13px] text-[#888] dark:text-[#888] text-center py-3">{t('arrival_loading_slots')}</p>
+                    <p className="text-[13px] text-foreground/55 text-center py-3">{t('arrival_loading_slots')}</p>
                   ) : availabilityClosedReason === 'day_closed' || availabilityClosedReason === 'exception' ? (
-                    <p className="text-[13px] text-[#888] dark:text-[#888] text-center py-3">{t('arrival_day_closed')}</p>
+                    <p className="text-[13px] text-foreground/55 text-center py-3">{t('arrival_day_closed')}</p>
                   ) : availabilityClosedReason === 'no_active_post' ? (
-                    <p className="text-[13px] text-[#888] dark:text-[#888] text-center py-3">{t('arrival_no_active_post')}</p>
+                    <p className="text-[13px] text-foreground/55 text-center py-3">{t('arrival_no_active_post')}</p>
                   ) : timeSlotsFromAvailability.length === 0 ? (
-                    <p className="text-[13px] text-[#888] dark:text-[#888] text-center py-3">{t('arrival_no_slots_for_date')}</p>
+                    <p className="text-[13px] text-foreground/55 text-center py-3">{t('arrival_no_slots_for_date')}</p>
                   ) : (
                     <div className="grid grid-cols-3 gap-2">
                       {timeSlotsFromAvailability.map((slot) => (
@@ -696,7 +696,7 @@ export function ArrivalStep({
                           className={`py-2.5 rounded-lg text-[14px] font-bold border-2 transition-colors cursor-pointer ${
                             selectedSlot && selectedSlot.id === slot.id
                               ? 'bg-gold border-gold text-dark-bg'
-                              : 'border-[#D0D0C0] dark:border-tab-inactive text-[#000C1F] dark:text-[#FFF8EC] hover:border-gold/40'
+                              : 'border-border text-foreground hover:border-gold/40'
                           }`}
                         >
                           {slot.time}
@@ -712,7 +712,7 @@ export function ArrivalStep({
       </div>
 
       {/* Actions */}
-      <div className="border-t border-[#D0D0C0] dark:border-tab-inactive pt-4 flex gap-3">
+      <div className="border-t border-border pt-4 flex gap-3">
         <button
           type="button"
           onClick={onBack}
@@ -727,7 +727,7 @@ export function ArrivalStep({
           className={`flex-1 py-3 rounded-xl text-[15px] font-black transition-colors cursor-pointer ${
             canContinue
               ? 'bg-gold hover:bg-gold-hover text-dark-bg'
-              : 'bg-[#D0D0C0] dark:bg-tab-inactive text-[#888] cursor-not-allowed'
+              : 'bg-[#D0D0C0] dark:bg-tab-inactive text-foreground/55 cursor-not-allowed'
           }`}
         >
           {t('continue')}

@@ -30,7 +30,7 @@ export function Tabs({ tabs, activeTabId, onTabChange, className = '' }: TabsPro
     <div
       role="tablist"
       className={[
-        'flex gap-1 overflow-x-auto scrollbar-none border-b border-[#CCCCCC] dark:border-tab-inactive',
+        'flex gap-1 overflow-x-auto scrollbar-none border-b border-[#CCCCCC] dark:border-border',
         className,
       ]
         .filter(Boolean)
@@ -50,7 +50,7 @@ export function Tabs({ tabs, activeTabId, onTabChange, className = '' }: TabsPro
               'transition-colors border-b-2 -mb-px',
               isActive
                 ? 'border-gold text-gold'
-                : 'border-transparent text-Hurryline-muted hover:text-[#1A1A1A] dark:hover:text-white',
+                : 'border-transparent text-Hurryline-muted hover:text-[#001201] dark:hover:text-white',
             ].join(' ')}
           >
             {tab.icon && (

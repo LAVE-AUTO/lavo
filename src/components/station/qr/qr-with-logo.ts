@@ -1,17 +1,22 @@
 import QRCode from 'qrcode';
 
-export const QR_COLOR_DARK = '#0C1209';
+export const QR_COLOR_DARK = '#001201';
 export const QR_COLOR_LIGHT = '#FFFFFF';
 /* The square hourglass icon reads better at small sizes than the full
  * wordmark, and stays balanced inside the centered white badge. */
 export const QR_LOGO_SRC = '/logo/frame2.png';
 
 /* Logo footprint as a ratio of the QR size. errorCorrectionLevel "H"
- * recovers up to 30% of the code; we stay at ~28% to keep a wide margin
- * for printers and angled scans. */
-const LOGO_WIDTH_RATIO = 0.28;
-const LOGO_PADDING_RATIO = 0.03;
-const LOGO_BG_RADIUS_RATIO = 0.05;
+ * recovers up to 30% of the code; we stay at ~26% with a circular badge
+ * to keep a wide margin for printers and angled scans. */
+const LOGO_WIDTH_RATIO = 0.26;
+const LOGO_PADDING_RATIO = 0.045;
+/* Thin gold ring around the white disc gives the badge a premium
+ * 'sphere' feel and helps the eye separate the logo from the QR
+ * pattern at a glance. Width is scaled with the QR size so it never
+ * looks like a scanner artefact. */
+const LOGO_RING_COLOR = '#DDAF3B';
+const LOGO_RING_WIDTH_RATIO = 0.0075;
 
 function loadLogo(): Promise<HTMLImageElement> {
   return new Promise((resolve, reject) => {
@@ -66,15 +71,35 @@ export async function renderQrWithLogo(
   const logoW = renderedSize * LOGO_WIDTH_RATIO;
   const logoH = logoW / aspect;
   const padding = renderedSize * LOGO_PADDING_RATIO;
-  const bgW = logoW + padding * 2;
-  const bgH = logoH + padding * 2;
-  const bgX = (renderedSize - bgW) / 2;
-  const bgY = (renderedSize - bgH) / 2;
-  const radius = renderedSize * LOGO_BG_RADIUS_RATIO;
+  /* Spherical badge: the disc diameter is the longest side of the logo
+   * bounding box plus uniform padding, so the logo (square or wide)
+   * always sits centered with a comfortable margin to the ring. */
+  const diameter = Math.max(logoW, logoH) + padding * 2;
+  const cx = renderedSize / 2;
+  const cy = renderedSize / 2;
+  const ringWidth = renderedSize * LOGO_RING_WIDTH_RATIO;
+
+  /* White fill disc — sized slightly larger than the visible diameter
+   * so the gold ring sits flush on the edge of the white circle, not
+   * outside it. */
   ctx.fillStyle = QR_COLOR_LIGHT;
-  roundRectPath(ctx, bgX, bgY, bgW, bgH, radius);
+  ctx.beginPath();
+  ctx.arc(cx, cy, diameter / 2, 0, Math.PI * 2);
+  ctx.closePath();
   ctx.fill();
-  ctx.drawImage(logo, bgX + padding, bgY + padding, logoW, logoH);
+
+  /* Thin gold ring on top of the disc. Stroked just inside the disc
+   * radius so the visible white area shrinks by half the stroke width
+   * — looks like a circular bezel rather than an extra outline. */
+  ctx.strokeStyle = LOGO_RING_COLOR;
+  ctx.lineWidth = ringWidth;
+  ctx.beginPath();
+  ctx.arc(cx, cy, diameter / 2 - ringWidth / 2, 0, Math.PI * 2);
+  ctx.closePath();
+  ctx.stroke();
+
+  /* Logo centered inside the disc. */
+  ctx.drawImage(logo, cx - logoW / 2, cy - logoH / 2, logoW, logoH);
   void size;
 }
 
@@ -92,8 +117,8 @@ export async function renderQrWithLogoToDataUrl(
 /** Wide wordmark used in the poster header. Sits well above the QR. */
 const WORDMARK_SRC = '/logo/logo_2.png';
 
-const POSTER_BRAND_GOLD = '#C49A1E';
-const POSTER_TEXT       = '#0C1209';
+const POSTER_BRAND_GOLD = '#DDAF3B';
+const POSTER_TEXT       = '#001201';
 const POSTER_MUTED      = '#7A6F4A';
 const POSTER_BG         = '#FFFFFF';
 const POSTER_ACCENT_BG  = '#FBF6E8';
@@ -179,7 +204,7 @@ export async function renderBrandedQrPosterToDataUrl(
   const frameInset = 36;
   const frameRadius = 32;
   ctx.lineWidth = 2;
-  ctx.strokeStyle = 'rgba(196, 154, 30, 0.18)';
+  ctx.strokeStyle = 'rgba(221, 175, 59, 0.18)';
   roundRectPath(ctx, frameInset, accentH + frameInset, W - frameInset * 2, H - accentH - frameInset * 2, frameRadius);
   ctx.stroke();
 

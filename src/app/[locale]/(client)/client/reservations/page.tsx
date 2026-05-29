@@ -13,6 +13,22 @@ type Tab = 'reservations' | 'queue';
 type ReservationStatus = 'confirmed' | 'in_progress' | 'completed' | 'cancelled' | 'pending_payment' | 'pending';
 type QueueStatus = 'waiting' | 'in_progress' | 'completed' | 'cancelled';
 
+/* Service category → localized display label. The three values mirror the
+ * DB enum on station_services.category and match the tab strip on
+ * /stations/[id] so users see the exact same wording end-to-end. */
+const SERVICE_CATEGORY_LABELS: Record<string, { fr: string; en: string }> = {
+  hand_wash:    { fr: 'Lavage à la main',  en: 'Hand wash' },
+  automatic:    { fr: 'Lavage automatique', en: 'Automatic wash' },
+  self_service: { fr: 'Self-service',      en: 'Self-service' },
+};
+
+function serviceCategoryLabel(category: string | null, locale: string): string | null {
+  if (!category) return null;
+  const entry = SERVICE_CATEGORY_LABELS[category];
+  if (!entry) return null;
+  return locale === 'en' ? entry.en : entry.fr;
+}
+
 /* ------------------------------------------------------------------ */
 /* API shapes (rich entry returned by GET /me/entries)                  */
 /* ------------------------------------------------------------------ */
@@ -43,6 +59,7 @@ interface ApiRichEntry {
   completed_at: string | null;
   station: ApiRichStation;
   vehicle_format: { id: string; label: string; price: string } | null;
+  service: { id: string; name: string; category: string } | null;
   estimated_wait_minutes: number | null;
   slot_start_time: string | null;
   slot_end_time: string | null;
@@ -65,6 +82,14 @@ interface ClientReservation {
   stationImageUrl: string;
   stationLatitude: number;
   stationLongitude: number;
+  /** Free-form service name as set by the merchant (e.g. "Lavage Premium").
+   *  Null for legacy entries created before service_id was persisted. */
+  serviceName: string | null;
+  /** Service category enum (hand_wash / automatic / self_service…). */
+  serviceCategory: string | null;
+  /** Vehicle format label kept as the secondary descriptor below the title. */
+  vehicleFormatLabel: string | null;
+  /** Legacy: kept for the cancel modal summary. Pre-resolves the best label. */
   forfaitName: string;
   categoryLabel: string;
   extras: string[];
@@ -90,6 +115,9 @@ interface ClientQueueEntry {
   stationImageUrl: string;
   stationLatitude: number;
   stationLongitude: number;
+  serviceName: string | null;
+  serviceCategory: string | null;
+  vehicleFormatLabel: string | null;
   forfaitName: string;
   categoryLabel: string;
   extras: string[];
@@ -180,7 +208,10 @@ function enrichEntry(entry: ApiRichEntry): ClientReservation | ClientQueueEntry 
   const stationLatitude = entry.station?.latitude ? parseFloat(entry.station.latitude) : 0;
   const stationLongitude = entry.station?.longitude ? parseFloat(entry.station.longitude) : 0;
   const stationImageUrl = entry.station?.image_url ?? '';
-  const forfaitName = entry.vehicle_format?.label ?? '-';
+  const serviceName = entry.service?.name ?? null;
+  const serviceCategory = entry.service?.category ?? null;
+  const vehicleFormatLabel = entry.vehicle_format?.label ?? null;
+  const forfaitName = serviceName ?? vehicleFormatLabel ?? '-';
   const totalPrice = parseFloat(entry.amount_paid ?? '0');
 
   const base = {
@@ -190,6 +221,9 @@ function enrichEntry(entry: ApiRichEntry): ClientReservation | ClientQueueEntry 
     stationImageUrl,
     stationLatitude,
     stationLongitude,
+    serviceName,
+    serviceCategory,
+    vehicleFormatLabel,
     forfaitName,
     categoryLabel: '',
     extras: [] as string[],
@@ -410,7 +444,7 @@ export default function ClientReservationsPage() {
   /* Loading state */
   if (loading) {
     return (
-      <main className="min-h-screen bg-[#F5F5E6] dark:bg-[#0F0F0D] flex items-center justify-center pb-24 sm:pb-8">
+      <main className="min-h-screen bg-background flex items-center justify-center pb-24 sm:pb-8">
         <div className="h-8 w-8 animate-spin rounded-full border-[3px] border-gold border-t-transparent" />
       </main>
     );
@@ -419,8 +453,8 @@ export default function ClientReservationsPage() {
   /* Error state */
   if (loadError) {
     return (
-      <main className="min-h-screen bg-[#F5F5E6] dark:bg-[#0F0F0D] flex flex-col items-center justify-center gap-3 pb-24 sm:pb-8 text-center">
-        <p className="text-[15px] font-semibold text-[#555] dark:text-[#B0B0A0]">{t('error_load')}</p>
+      <main className="min-h-screen bg-background flex flex-col items-center justify-center gap-3 pb-24 sm:pb-8 text-center">
+        <p className="text-[15px] font-semibold text-foreground/70">{t('error_load')}</p>
         <button
           type="button"
           onClick={loadEntries}
@@ -433,15 +467,15 @@ export default function ClientReservationsPage() {
   }
 
   return (
-    <main className="min-h-screen bg-[#F5F5E6] dark:bg-[#0F0F0D] pb-24 sm:pb-8">
+    <main className="min-h-screen bg-background pb-24 sm:pb-8">
       {/* Header */}
       <div className="px-4 sm:px-6 lg:px-8 pt-6 pb-4 max-w-6xl mx-auto">
-        <h1 className="text-[22px] sm:text-[26px] font-black text-[#0A0A14] dark:text-white">{t('title')}</h1>
+        <h1 className="text-[22px] sm:text-[26px] font-black text-foreground">{t('title')}</h1>
       </div>
 
       {/* Tabs */}
       <div className="px-4 sm:px-6 lg:px-8 max-w-6xl mx-auto">
-        <div className="flex bg-[#E0E0D0] dark:bg-dark-card rounded-xl p-1 mb-6 sm:max-w-md">
+        <div className="flex bg-surface rounded-xl p-1 mb-6 sm:max-w-md">
           {(['reservations', 'queue'] as const).map((key) => (
             <button
               key={key}
@@ -451,7 +485,7 @@ export default function ClientReservationsPage() {
                 'flex-1 py-2.5 rounded-lg text-[14px] font-bold transition-all cursor-pointer',
                 tab === key
                   ? 'bg-gold text-dark-bg shadow-sm'
-                  : 'text-[#555] dark:text-[#B0B0A0] hover:text-[#0A0A14] dark:hover:text-white',
+                  : 'text-foreground/70 hover:text-foreground dark:hover:text-white',
               ].join(' ')}
             >
               {t(`tab_${key}`)}
@@ -469,7 +503,7 @@ export default function ClientReservationsPage() {
           <div className="space-y-6">
             {upcoming.length > 0 && (
               <section>
-                <h2 className="text-[15px] font-black text-[#555] dark:text-[#B0B0A0] uppercase tracking-widest mb-3">
+                <h2 className="text-[15px] font-black text-foreground/70 uppercase tracking-widest mb-3">
                   {t('upcoming')}
                   <span className="ml-2 text-[12px] font-semibold opacity-70">({upcoming.length})</span>
                 </h2>
@@ -494,7 +528,7 @@ export default function ClientReservationsPage() {
 
             {past.length > 0 && (
               <section>
-                <h2 className="text-[15px] font-black text-[#555] dark:text-[#B0B0A0] uppercase tracking-widest mb-3">
+                <h2 className="text-[15px] font-black text-foreground/70 uppercase tracking-widest mb-3">
                   {t('past')}
                   <span className="ml-2 text-[12px] font-semibold opacity-70">({past.length})</span>
                 </h2>
@@ -526,7 +560,7 @@ export default function ClientReservationsPage() {
           <div className="space-y-6">
             {upcomingQueue.length > 0 && (
               <section>
-                <h2 className="text-[15px] font-black text-[#555] dark:text-[#B0B0A0] uppercase tracking-widest mb-3">
+                <h2 className="text-[15px] font-black text-foreground/70 uppercase tracking-widest mb-3">
                   {t('upcoming')}
                   <span className="ml-2 text-[12px] font-semibold opacity-70">({upcomingQueue.length})</span>
                 </h2>
@@ -548,7 +582,7 @@ export default function ClientReservationsPage() {
 
             {pastQueue.length > 0 && (
               <section>
-                <h2 className="text-[15px] font-black text-[#555] dark:text-[#B0B0A0] uppercase tracking-widest mb-3">
+                <h2 className="text-[15px] font-black text-foreground/70 uppercase tracking-widest mb-3">
                   {t('past')}
                   <span className="ml-2 text-[12px] font-semibold opacity-70">({pastQueue.length})</span>
                 </h2>
@@ -645,10 +679,10 @@ function ReservationCard({
   const statusColors: Record<string, string> = {
     confirmed:       'bg-Hurryline-success/15 text-Hurryline-success',
     in_progress:     'bg-gold/15 text-gold',
-    completed:       'bg-[#999]/15 text-[#666]',
+    completed:       'bg-[#999]/15 text-foreground/65',
     cancelled:       'bg-Hurryline-error/15 text-Hurryline-error',
     pending:         'bg-blue-500/15 text-blue-500',
-    pending_payment: 'bg-[#999]/15 text-[#888]',
+    pending_payment: 'bg-[#999]/15 text-foreground/55',
   };
 
   /* Upcoming actions are hidden once the entry is in_progress (only the
@@ -680,39 +714,39 @@ function ReservationCard({
       : showRateAction || showTipAction;
 
   return (
-    <div className="bg-[#E8E8D8] dark:bg-dark-card rounded-xl border border-[#D0D0C0] dark:border-tab-inactive overflow-hidden hover:border-gold/30 transition-colors">
+    <div className="bg-surface rounded-xl border border-border overflow-hidden hover:border-gold/30 transition-colors">
       <Link href={`/client/reservations/${r.id}`} className="block p-4">
         <div className="flex gap-3">
           <div className="w-16 h-16 rounded-lg overflow-hidden shrink-0 bg-[#D0D0C0] dark:bg-tab-inactive flex items-center justify-center">
             {r.stationImageUrl ? (
               <img src={r.stationImageUrl} alt={r.stationName} className="w-full h-full object-cover" />
             ) : (
-              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#9A9A8A" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-                <path d="M3 17l2-7h14l2 7" /><path d="M5 17v2h2v-2M17 17v2h2v-2" /><circle cx="7.5" cy="17" r="1.5" fill="#9A9A8A" /><circle cx="16.5" cy="17" r="1.5" fill="#9A9A8A" />
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#B0BFB1" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                <path d="M3 17l2-7h14l2 7" /><path d="M5 17v2h2v-2M17 17v2h2v-2" /><circle cx="7.5" cy="17" r="1.5" fill="#B0BFB1" /><circle cx="16.5" cy="17" r="1.5" fill="#B0BFB1" />
               </svg>
             )}
           </div>
 
           <div className="flex-1 min-w-0">
             <div className="flex items-start justify-between gap-2">
-              <h3 className="text-[15px] font-bold text-[#0A0A14] dark:text-white leading-tight truncate">
-                {r.stationName}
+              <h3 className="text-[15px] font-bold text-foreground leading-tight truncate">
+                {r.serviceName ?? serviceCategoryLabel(r.serviceCategory, locale) ?? t('service_unknown')}
               </h3>
               <span className={`shrink-0 px-2 py-0.5 rounded-full text-[11px] font-bold ${statusColors[displayStatus(r.status)] || 'bg-gray-200 text-gray-600'}`}>
                 {t(`status_${displayStatus(r.status)}`)}
               </span>
             </div>
 
-            <p className="text-[13px] text-[#666] dark:text-[#B0B0A0] mt-0.5 truncate">
-              {r.forfaitName}
+            <p className="text-[13px] text-foreground/65 mt-0.5 truncate">
+              {r.stationName}
             </p>
 
             <div className="flex items-center gap-3 mt-2 text-[13px]">
-              <span className="flex items-center gap-1 text-[#555] dark:text-[#C0C0B0]">
+              <span className="flex items-center gap-1 text-foreground/70 font-bebas tracking-wider text-[14px]">
                 <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><rect x="3" y="4" width="18" height="18" rx="2" /><line x1="16" y1="2" x2="16" y2="6" /><line x1="8" y1="2" x2="8" y2="6" /><line x1="3" y1="10" x2="21" y2="10" /></svg>
                 {dateLabel}
               </span>
-              <span className="flex items-center gap-1 text-[#555] dark:text-[#C0C0B0]">
+              <span className="flex items-center gap-1 text-foreground/70 font-bebas tracking-wider text-[14px]">
                 <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10" /><polyline points="12 6 12 12 16 14" /></svg>
                 {r.timeSlot}
               </span>
@@ -734,7 +768,7 @@ function ReservationCard({
                 {r.ticketCode}
               </span>
             </div>
-            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#af8408" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#DDAF3B" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
               <rect x="3" y="11" width="18" height="11" rx="2" />
               <path d="M7 11V7a5 5 0 0110 0v4" />
             </svg>
@@ -743,7 +777,7 @@ function ReservationCard({
       </Link>
 
       {showActions && (
-        <div className="px-4 pb-3 pt-2 border-t border-[#D0D0C0] dark:border-tab-inactive flex flex-wrap items-center gap-x-4 gap-y-1.5">
+        <div className="px-4 pb-3 pt-2 border-t border-border flex flex-wrap items-center gap-x-4 gap-y-1.5">
           {canReschedule && (
             <Link
               href={`/client/reservations/${r.id}/reschedule`}
@@ -756,13 +790,13 @@ function ReservationCard({
             signalDelayEnabled ? (
               <Link
                 href={`/client/reservations/${r.id}/signal-delay`}
-                className="text-[13px] font-semibold text-[#666] dark:text-[#B0B0A0] hover:text-gold transition-colors"
+                className="text-[13px] font-semibold text-foreground/65 hover:text-gold transition-colors"
               >
                 {t('signal_delay_btn')}
               </Link>
             ) : (
               <span
-                className="text-[13px] font-semibold text-[#999] dark:text-[#666] cursor-not-allowed"
+                className="text-[13px] font-semibold text-[#999] dark:text-foreground/65 cursor-not-allowed"
                 title={t('signal_delay_btn_disabled_tooltip')}
                 aria-disabled="true"
               >
@@ -790,7 +824,7 @@ function ReservationCard({
           {showTipAction && (
             <Link
               href={`/client/reservations/${r.id}/tip`}
-              className="text-[13px] font-semibold text-[#666] dark:text-[#B0B0A0] hover:text-gold transition-colors"
+              className="text-[13px] font-semibold text-foreground/65 hover:text-gold transition-colors"
             >
               {t('tip_btn')}
             </Link>
@@ -868,28 +902,28 @@ function CancelModal({
         role="dialog"
         aria-modal="true"
         aria-labelledby="cancel-modal-title"
-        className="w-full sm:max-w-sm bg-[#F5F5E6] dark:bg-dark-surface rounded-t-2xl sm:rounded-2xl shadow-2xl overflow-hidden animate-fade-in-up mb-14 sm:mb-0"
+        className="w-full sm:max-w-sm bg-background dark:bg-surface rounded-t-2xl sm:rounded-2xl shadow-2xl overflow-hidden animate-fade-in-up mb-14 sm:mb-0"
       >
         {/* Header */}
-        <div className="px-5 py-4 border-b border-[#D0D0C0] dark:border-tab-inactive">
-          <h2 id="cancel-modal-title" className="text-[17px] font-black text-[#0A0A14] dark:text-white">{t('cancel_modal_title')}</h2>
+        <div className="px-5 py-4 border-b border-border">
+          <h2 id="cancel-modal-title" className="text-[17px] font-black text-foreground">{t('cancel_modal_title')}</h2>
         </div>
 
         {/* Body */}
         <div className="px-5 py-4 space-y-3">
-          <div className="rounded-xl bg-[#E8E8D8] dark:bg-dark-card border border-[#D0D0C0] dark:border-tab-inactive p-3.5">
-            <p className="text-[14px] font-bold text-[#0A0A14] dark:text-white">{r.stationName}</p>
-            <p className="text-[13px] text-[#666] dark:text-[#B0B0A0] mt-0.5">
+          <div className="rounded-xl bg-surface border border-border p-3.5">
+            <p className="text-[14px] font-bold text-foreground">{r.stationName}</p>
+            <p className="text-[13px] text-foreground/65 mt-0.5">
               {r.forfaitName} &mdash; {dateLabel} {r.timeSlot}
             </p>
             <p className="text-[15px] font-black text-gold mt-1">{r.totalPrice.toFixed(2)}$</p>
           </div>
 
-          <p className="text-[13px] text-[#555] dark:text-[#C0C0B0]">{t('cancel_modal_desc')}</p>
+          <p className="text-[13px] text-foreground/70">{t('cancel_modal_desc')}</p>
 
           {showFeesWarning && (
             <div className="flex gap-2.5 bg-Hurryline-error/10 border border-Hurryline-error/20 rounded-xl px-3.5 py-3">
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#E8472A" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="shrink-0 mt-0.5" aria-hidden="true">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#FF383C" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="shrink-0 mt-0.5" aria-hidden="true">
                 <path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z" />
                 <line x1="12" y1="9" x2="12" y2="13" /><line x1="12" y1="17" x2="12.01" y2="17" />
               </svg>
@@ -901,12 +935,12 @@ function CancelModal({
         </div>
 
         {/* Actions */}
-        <div className="px-5 py-4 border-t border-[#D0D0C0] dark:border-tab-inactive flex gap-3">
+        <div className="px-5 py-4 border-t border-border flex gap-3">
           <button
             type="button"
             onClick={onClose}
             disabled={loading}
-            className="flex-1 py-3 rounded-xl text-[14px] font-bold border-2 border-[#D0D0C0] dark:border-tab-inactive text-[#555] dark:text-[#B0B0A0] hover:bg-[#E0E0D0] dark:hover:bg-tab-inactive transition-colors cursor-pointer disabled:opacity-50"
+            className="flex-1 py-3 rounded-xl text-[14px] font-bold border-2 border-border text-foreground/70 hover:bg-surface dark:hover:bg-tab-inactive transition-colors cursor-pointer disabled:opacity-50"
           >
             {t('cancel_modal_keep')}
           </button>
@@ -970,7 +1004,7 @@ function QueueCard({
         ? t('queue_in_progress')
         : t('queue_waiting');
   const statusBadgeClass = isCompleted
-    ? 'bg-[#999]/15 text-[#666]'
+    ? 'bg-[#999]/15 text-foreground/65'
     : isCancelled
       ? 'bg-Hurryline-error/15 text-Hurryline-error'
       : isInProgress
@@ -986,39 +1020,39 @@ function QueueCard({
     : null;
 
   return (
-    <div className="bg-[#E8E8D8] dark:bg-dark-card rounded-xl border border-[#D0D0C0] dark:border-tab-inactive overflow-hidden hover:border-gold/30 transition-colors">
+    <div className="bg-surface rounded-xl border border-border overflow-hidden hover:border-gold/30 transition-colors">
       <Link href={`/client/reservations/queue/${q.id}`} className="block p-4">
         <div className="flex gap-3">
           <div className="w-16 h-16 rounded-lg overflow-hidden shrink-0 bg-[#D0D0C0] dark:bg-tab-inactive flex items-center justify-center">
             {q.stationImageUrl ? (
               <img src={q.stationImageUrl} alt={q.stationName} className="w-full h-full object-cover" />
             ) : (
-              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#9A9A8A" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-                <path d="M3 17l2-7h14l2 7" /><path d="M5 17v2h2v-2M17 17v2h2v-2" /><circle cx="7.5" cy="17" r="1.5" fill="#9A9A8A" /><circle cx="16.5" cy="17" r="1.5" fill="#9A9A8A" />
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#B0BFB1" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                <path d="M3 17l2-7h14l2 7" /><path d="M5 17v2h2v-2M17 17v2h2v-2" /><circle cx="7.5" cy="17" r="1.5" fill="#B0BFB1" /><circle cx="16.5" cy="17" r="1.5" fill="#B0BFB1" />
               </svg>
             )}
           </div>
 
           <div className="flex-1 min-w-0">
             <div className="flex items-start justify-between gap-2">
-              <h3 className="text-[15px] font-bold text-[#0A0A14] dark:text-white leading-tight truncate">
-                {q.stationName}
+              <h3 className="text-[15px] font-bold text-foreground leading-tight truncate">
+                {q.serviceName ?? serviceCategoryLabel(q.serviceCategory, locale) ?? t('service_unknown')}
               </h3>
               <span className={`shrink-0 px-2 py-0.5 rounded-full text-[11px] font-bold ${statusBadgeClass}`}>
                 {statusLabel}
               </span>
             </div>
 
-            <p className="text-[13px] text-[#666] dark:text-[#B0B0A0] mt-0.5 truncate">{q.forfaitName}</p>
+            <p className="text-[13px] text-foreground/65 mt-0.5 truncate">{q.stationName}</p>
 
             <div className="flex items-center gap-3 mt-2 text-[13px]">
               {variant === 'past' && completedLabel ? (
-                <span className="flex items-center gap-1 text-[#555] dark:text-[#C0C0B0]">
+                <span className="flex items-center gap-1 text-foreground/70">
                   <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><rect x="3" y="4" width="18" height="18" rx="2" /><line x1="16" y1="2" x2="16" y2="6" /><line x1="8" y1="2" x2="8" y2="6" /><line x1="3" y1="10" x2="21" y2="10" /></svg>
                   {completedLabel}
                 </span>
               ) : (
-                <span className="flex items-center gap-1 text-[#555] dark:text-[#C0C0B0]">
+                <span className="flex items-center gap-1 text-foreground/70">
                   <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
                     <path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2" /><circle cx="9" cy="7" r="4" />
                     <path d="M23 21v-2a4 4 0 00-3-3.87" /><path d="M16 3.13a4 4 0 010 7.75" />
@@ -1042,7 +1076,7 @@ function QueueCard({
                 {q.ticketCode}
               </span>
             </div>
-            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#af8408" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#DDAF3B" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
               <rect x="3" y="11" width="18" height="11" rx="2" />
               <path d="M7 11V7a5 5 0 0110 0v4" />
             </svg>
@@ -1051,7 +1085,7 @@ function QueueCard({
       </Link>
 
       {showActions && (
-        <div className="px-4 pb-3 pt-2 border-t border-[#D0D0C0] dark:border-tab-inactive flex flex-wrap items-center gap-x-4 gap-y-1.5">
+        <div className="px-4 pb-3 pt-2 border-t border-border flex flex-wrap items-center gap-x-4 gap-y-1.5">
           {showActiveActions && onLeaveAndBook && (
             <button
               type="button"
@@ -1081,7 +1115,7 @@ function QueueCard({
           {showTipAction && (
             <Link
               href={`/client/reservations/${q.id}/tip`}
-              className="text-[13px] font-semibold text-[#666] dark:text-[#B0B0A0] hover:text-gold transition-colors"
+              className="text-[13px] font-semibold text-foreground/65 hover:text-gold transition-colors"
             >
               {t('tip_btn')}
             </Link>
@@ -1112,19 +1146,19 @@ function EmptyState({
   return (
     <div className="flex flex-col items-center justify-center py-12 sm:py-16 gap-5 text-center px-4">
       <div className="w-20 h-20 rounded-full bg-gold/10 border border-gold/30 flex items-center justify-center">
-        <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#af8408" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+        <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#DDAF3B" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
           <path d="M2 9a2 2 0 012-2h16a2 2 0 012 2v1a2 2 0 010 4v1a2 2 0 01-2 2H4a2 2 0 01-2-2v-1a2 2 0 010-4V9z" />
           <path d="M9 7v10" strokeDasharray="2 2" />
         </svg>
       </div>
       <div className="max-w-sm">
-        <h2 className="text-[17px] sm:text-[19px] font-black text-[#0A0A14] dark:text-white">{title}</h2>
-        <p className="mt-2 text-[14px] text-[#666] dark:text-[#B0B0A0] leading-relaxed">{description}</p>
+        <h2 className="text-[17px] sm:text-[19px] font-black text-foreground">{title}</h2>
+        <p className="mt-2 text-[14px] text-foreground/65 leading-relaxed">{description}</p>
       </div>
       <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 w-full sm:w-auto pt-2">
         <Link
           href={ctaHref}
-          className="btn-shine inline-flex items-center justify-center gap-2 px-7 py-3 bg-gold hover:bg-gold-hover rounded-md text-[14px] font-bold text-dark-bg transition-all duration-300 hover:-translate-y-0.5 hover:shadow-[0_8px_24px_rgba(200,152,10,0.35)]"
+          className="btn-shine inline-flex items-center justify-center gap-2 px-7 py-3 bg-gold hover:bg-gold-hover rounded-md text-[14px] font-bold text-dark-bg transition-all duration-300 hover:-translate-y-0.5 hover:shadow-[0_8px_24px_rgba(221, 175, 59,0.35)]"
         >
           {ctaLabel}
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
@@ -1134,7 +1168,7 @@ function EmptyState({
         </Link>
         <Link
           href="/client/history"
-          className="inline-flex items-center justify-center gap-2 px-5 py-3 border border-[#D0D0C0] dark:border-tab-inactive hover:border-gold/50 rounded-md text-[14px] font-semibold text-[#555] dark:text-[#B0B0A0] hover:text-gold transition-colors"
+          className="inline-flex items-center justify-center gap-2 px-5 py-3 border border-border hover:border-gold/50 rounded-md text-[14px] font-semibold text-foreground/70 hover:text-gold transition-colors"
         >
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
             <path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z" />

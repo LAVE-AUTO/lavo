@@ -3,7 +3,7 @@
  * POST /api/v1/station/entries - create a walk-in entry (no Stripe payment). Auth: station.
  *
  * GET query params: status, from (ISO date), to (ISO date), page, per_page
- * POST body: { vehicle_format_id: UUID, time_slot_id?: UUID }
+ * POST body: { vehicle_format_id: UUID, service_id?: UUID, time_slot_id?: UUID }
  */
 import { requireRole } from '@/lib/require-role';
 import { successResponse, error400, error404, error500, fromAppError } from '@/lib/responses';
@@ -18,8 +18,30 @@ import { z } from 'zod';
 import type { NextResponse } from 'next/server';
 
 const walkInBodySchema = z.object({
-  vehicle_format_id: z.string().uuid('Invalid vehicle_format_id'),
+  /* Optional: services without any configured vehicle_format still need
+   * to allow walk-in queue entries. When absent, amount_paid falls back
+   * to the service's cheapest active vehicle entry (or 0). */
+  vehicle_format_id: z.string().uuid('Invalid vehicle_format_id').optional(),
+  /* Optional: when provided, the entry is snapshooted with the picked
+   * station service so card titles can show the merchant-set name
+   * (Lavage Premium…) instead of the bare vehicle format. */
+  service_id: z.string().uuid('Invalid service_id').optional(),
   time_slot_id: z.string().uuid('Invalid time_slot_id').optional(),
+  /* Walk-in client capture. Email is required when the merchant uses
+   * the manual-add modal; the legacy walk-in path with neither email
+   * nor format stays supported for the existing UI. */
+  client_email: z
+    .string()
+    .trim()
+    .toLowerCase()
+    .email('Invalid client_email')
+    .max(320, 'client_email must not exceed 320 characters')
+    .optional(),
+  client_name: z
+    .string()
+    .trim()
+    .max(200, 'client_name must not exceed 200 characters')
+    .optional(),
 });
 
 export async function GET(request: Request): Promise<NextResponse> {
@@ -81,16 +103,24 @@ export async function POST(request: Request): Promise<NextResponse> {
   }
 
   try {
-    const entry = await createWalkInEntry(
-      station.id,
-      auth.sub, // station owner's user_id - used as walk-in placeholder for the FK-constrained user_id column
-      parsed.data.vehicle_format_id,
-      parsed.data.time_slot_id
-    );
+    const entry = await createWalkInEntry({
+      stationId: station.id,
+      stationOwnerUserId: auth.sub,
+      vehicleFormatId: parsed.data.vehicle_format_id,
+      timeSlotId: parsed.data.time_slot_id,
+      serviceId: parsed.data.service_id,
+      clientEmail: parsed.data.client_email,
+      clientName: parsed.data.client_name,
+    });
     return applyNoStoreHeaders(successResponse(serializeEntry(entry)));
   } catch (e) {
     if (e instanceof NotFoundError) return applyNoStoreHeaders(error404(e.message));
     if (e instanceof AppError) return applyNoStoreHeaders(fromAppError(e));
-    return applyNoStoreHeaders(error500(e));
+    /* Log the raw error server-side so DB drift (missing column / FK)
+     * leaves a trace; surface a short identifying message to the client
+     * so the modal can show 'check the DB migrations' instead of {}. */
+    const msg = e instanceof Error ? e.message : String(e);
+    console.error('[STATION_ENTRIES_POST] Unhandled walk-in failure', { error: msg });
+    return applyNoStoreHeaders(error500(msg));
   }
 }

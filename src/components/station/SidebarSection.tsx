@@ -30,7 +30,7 @@ export function SidebarSection({
       <button
         type="button"
         onClick={() => setIsOpen(!isOpen)}
-        className="flex w-full items-center gap-2 rounded-lg px-3 py-1.5 text-[10px] font-bold uppercase tracking-[1px] text-[#888] transition-colors duration-150 hover:bg-[#E8E4D8] dark:text-[#9A9A8A] dark:hover:bg-[#182214]"
+        className="flex w-full items-center gap-2 rounded-lg px-3 py-1.5 text-[10px] font-bold uppercase tracking-[1px] text-foreground/55 transition-colors duration-150 hover:bg-[#FFF9EC] dark:text-[#B0BFB1] dark:hover:bg-[#182214]"
         aria-expanded={isOpen}
       >
         {icon && <span className="shrink-0">{icon}</span>}

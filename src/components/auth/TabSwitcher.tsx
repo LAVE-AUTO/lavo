@@ -40,7 +40,7 @@ export function TabSwitcher({
     'bg-transparent text-[#333] dark:text-white font-semibold hover:bg-black/5 dark:hover:bg-white/5';
 
   return (
-    <div className="flex mb-4 bg-[#E0E0D0] dark:bg-tab-inactive rounded-[10px] p-1 gap-1">
+    <div className="flex mb-4 bg-surface dark:bg-tab-inactive rounded-[10px] p-1 gap-1">
       {(
         [
           { key: 'login', label: loginLabel },

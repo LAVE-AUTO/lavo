@@ -21,12 +21,12 @@ function NumericField({
 }) {
   return (
     <div className="flex flex-col gap-2">
-      <label className="text-[12px] font-black uppercase tracking-wider text-[#A0A090] dark:text-[#9A9A8A]">{label}</label>
+      <label className="text-[12px] font-black uppercase tracking-wider text-[#B0BFB1] dark:text-[#B0BFB1]">{label}</label>
       <div className={[
         'flex overflow-hidden rounded-[10px] border-2 transition-all duration-200',
         readOnly
-          ? 'border-[#E8E4D8] bg-[#F5F2EB] dark:border-[#1E2E18] dark:bg-[#0F1A0C]'
-          : 'border-[#D8D4C8] bg-white hover:border-[#C4A830]/60 focus-within:border-[#C49A1E] focus-within:shadow-[0_0_0_4px_rgba(196,154,30,0.12)] dark:border-[#243020] dark:bg-[#0F1A0C] dark:hover:border-[#3A5030] dark:focus-within:border-[#C49A1E]',
+          ? 'border-[#FFF9EC] bg-[#F5F2EB] dark:border-[#1E2E18] dark:bg-dark-bg'
+          : 'border-[#D8D4C8] bg-white hover:border-[#C4A830]/60 focus-within:border-[#DDAF3B] focus-within:shadow-[0_0_0_4px_rgba(221, 175, 59,0.12)] dark:border-[#001A05] dark:bg-dark-bg dark:hover:border-[#3A5030] dark:focus-within:border-[#DDAF3B]',
       ].join(' ')}>
         <input
           type="number" min={min} max={max} step={step} readOnly={readOnly} value={value}
@@ -36,14 +36,14 @@ function NumericField({
           className={[
             'flex-1 bg-transparent px-4 py-3 text-[18px] font-bold outline-none',
             '[appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none',
-            readOnly ? 'cursor-not-allowed text-[#9A9A8A] dark:text-[#A0A090]' : 'text-[#1A1A0A] dark:text-[#F0EDD4]',
+            readOnly ? 'cursor-not-allowed text-[#B0BFB1] dark:text-[#B0BFB1]' : 'text-[#001201] dark:text-[#FFF9EC]',
           ].join(' ')}
         />
-        <span className="flex items-center border-l border-[#E8E4D8] bg-[#F0EDE0] px-3.5 text-[13px] font-black text-[#8A8A6A] dark:border-[#243020] dark:bg-[#141E10] dark:text-[#A0A090]">
+        <span className="flex items-center border-l border-[#FFF9EC] bg-[#F0EDE0] px-3.5 text-[13px] font-black text-[#8A8A6A] dark:border-[#001A05] dark:bg-[#141E10] dark:text-[#B0BFB1]">
           {unit}
         </span>
       </div>
-      {hint && <p className="text-[12px] leading-relaxed text-[#AAAAAA] dark:text-[#A0A090]">{hint}</p>}
+      {hint && <p className="text-[12px] leading-relaxed text-[#AAAAAA] dark:text-[#B0BFB1]">{hint}</p>}
     </div>
   );
 }
@@ -55,14 +55,14 @@ function EmailField({
 }) {
   return (
     <div className="flex flex-col gap-2">
-      <label className="text-[12px] font-black uppercase tracking-wider text-[#A0A090] dark:text-[#9A9A8A]">{label}</label>
+      <label className="text-[12px] font-black uppercase tracking-wider text-[#B0BFB1] dark:text-[#B0BFB1]">{label}</label>
       <input
         type="email" value={value}
         onChange={(e) => onChange(e.target.value)}
         placeholder="email@exemple.com"
-        className="rounded-[10px] border-2 border-[#D8D4C8] bg-white px-4 py-3 text-[14px] font-semibold text-[#1A1A0A] outline-none transition-all hover:border-[#C4A830]/60 focus:border-[#C49A1E] focus:shadow-[0_0_0_4px_rgba(196,154,30,0.12)] dark:border-[#243020] dark:bg-[#0F1A0C] dark:text-[#F0EDD4] dark:hover:border-[#3A5030] dark:focus:border-[#C49A1E] placeholder:text-[#CCCCBB] dark:placeholder:text-[#505040]"
+        className="rounded-[10px] border-2 border-[#D8D4C8] bg-white px-4 py-3 text-[14px] font-semibold text-[#001201] outline-none transition-all hover:border-[#C4A830]/60 focus:border-[#DDAF3B] focus:shadow-[0_0_0_4px_rgba(221, 175, 59,0.12)] dark:border-[#001A05] dark:bg-dark-bg dark:text-[#FFF9EC] dark:hover:border-[#3A5030] dark:focus:border-[#DDAF3B] placeholder:text-[#CCCCBB] dark:placeholder:text-[#505040]"
       />
-      {hint && <p className="text-[12px] leading-relaxed text-[#AAAAAA] dark:text-[#A0A090]">{hint}</p>}
+      {hint && <p className="text-[12px] leading-relaxed text-[#AAAAAA] dark:text-[#B0BFB1]">{hint}</p>}
     </div>
   );
 }
@@ -72,10 +72,10 @@ function SectionCard({ icon, title, children, colSpan }: {
 }) {
   return (
     <div className={colSpan}>
-      <div className="flex h-full flex-col rounded-2xl bg-white p-6 shadow-sm ring-1 ring-black/[0.04] transition-shadow duration-200 hover:shadow-md dark:bg-[#1A2416] dark:ring-white/[0.06]">
+      <div className="flex h-full flex-col rounded-2xl bg-white p-6 shadow-sm ring-1 ring-black/[0.04] transition-shadow duration-200 hover:shadow-md dark:bg-[#001A05] dark:ring-white/[0.06]">
         <div className="mb-5 flex items-center gap-3">
-          <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-[#C49A1E]/10 text-[#C49A1E]">{icon}</div>
-          <h2 className="text-[13px] font-black uppercase tracking-wider text-[#1A1A0A] dark:text-[#F0EDD4]">{title}</h2>
+          <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-[#DDAF3B]/10 text-[#DDAF3B]">{icon}</div>
+          <h2 className="text-[13px] font-black uppercase tracking-wider text-[#001201] dark:text-[#FFF9EC]">{title}</h2>
         </div>
         <div className="flex flex-col gap-4">{children}</div>
       </div>
@@ -326,7 +326,7 @@ export function AdminPlatformSettings() {
   if (loadingSettings) {
     return (
       <div className="flex min-h-full items-center justify-center">
-        <div className="h-8 w-8 animate-spin rounded-full border-[3px] border-[#C49A1E] border-t-transparent" />
+        <div className="h-8 w-8 animate-spin rounded-full border-[3px] border-[#DDAF3B] border-t-transparent" />
       </div>
     );
   }
@@ -335,28 +335,28 @@ export function AdminPlatformSettings() {
     <form onSubmit={handleSave} className="flex min-h-full flex-col">
 
       {/* Header */}
-      <div className="shrink-0 flex items-center justify-between border-b border-[#E0DCD0] bg-[#F5F5EE] px-6 py-4 dark:border-[#1A2A14] dark:bg-[#0C1209]">
+      <div className="shrink-0 flex items-center justify-between border-b border-[#FFF9EC] bg-[#FFF9EC] px-6 py-4 dark:border-[#1A2A14] dark:bg-dark-bg">
         <div>
-          <h1 className="text-[18px] font-black text-[#1A1A0A] dark:text-[#F0EDD4]">{t('page_title')}</h1>
-          <p className="text-[13px] text-[#888] dark:text-[#9A9A8A]">{t('page_subtitle')}</p>
+          <h1 className="text-[18px] font-black text-[#001201] dark:text-[#FFF9EC]">{t('page_title')}</h1>
+          <p className="text-[13px] text-foreground/55 dark:text-[#B0BFB1]">{t('page_subtitle')}</p>
         </div>
         <div className="flex items-center gap-3">
           {isDirty && !saving && (
-            <span className="text-[12px] font-semibold text-[#AAAAAA] dark:text-[#A0A090]">{t('label_unsaved')}</span>
+            <span className="text-[12px] font-semibold text-[#AAAAAA] dark:text-[#B0BFB1]">{t('label_unsaved')}</span>
           )}
           <button type="submit" disabled={saving || !isDirty}
-            className="relative flex items-center gap-2 rounded-[10px] bg-[#C49A1E] px-6 py-2.5 text-[13px] font-bold text-[#0C1209] shadow-sm transition-all duration-200 hover:bg-[#D4A830] hover:shadow-md active:scale-[0.98] disabled:opacity-50">
+            className="relative flex items-center gap-2 rounded-[10px] bg-[#DDAF3B] px-6 py-2.5 text-[13px] font-bold text-[#001201] shadow-sm transition-all duration-200 hover:bg-[#D4A830] hover:shadow-md active:scale-[0.98] disabled:opacity-50">
             {saving
-              ? <><span className="h-3.5 w-3.5 animate-spin rounded-full border-2 border-[#0C1209] border-t-transparent" />{t('btn_saving')}</>
+              ? <><span className="h-3.5 w-3.5 animate-spin rounded-full border-2 border-[#001201] border-t-transparent" />{t('btn_saving')}</>
               : t('btn_save')}
             {isDirty && !saving && (
-              <span className="absolute -right-1 -top-1 h-2.5 w-2.5 animate-pulse rounded-full bg-[#EF4444] ring-2 ring-white dark:ring-[#1A2416]" />
+              <span className="absolute -right-1 -top-1 h-2.5 w-2.5 animate-pulse rounded-full bg-[#EF4444] ring-2 ring-white dark:ring-[#001A05]" />
             )}
           </button>
         </div>
       </div>
 
-      <div className="flex-1 overflow-y-auto bg-[#F5F5EE] dark:bg-[#0C1209]">
+      <div className="flex-1 overflow-y-auto bg-[#FFF9EC] dark:bg-dark-bg">
       <div className="grid auto-rows-min gap-5 p-6 md:grid-cols-2 xl:grid-cols-3">
 
         {/* ── Groupe A — Annulation ── */}
@@ -394,15 +394,15 @@ export function AdminPlatformSettings() {
           <div>
             <div className="overflow-hidden rounded-full bg-[#F0EDE0] dark:bg-[#0E1A0A]" style={{ height: 8 }}>
               <div
-                className="h-full rounded-full bg-gradient-to-r from-[#C49A1E] to-[#D4A830] transition-all duration-500 ease-out"
+                className="h-full rounded-full bg-gradient-to-r from-[#DDAF3B] to-[#D4A830] transition-all duration-500 ease-out"
                 style={{ width: `${Math.max(1, Math.min(99, platformPct))}%` }}
               />
             </div>
             <div className="mt-2 flex justify-between text-[12px] font-bold">
-              <span className="text-[#C49A1E]">{t('label_platform')} · {platformPct}%</span>
+              <span className="text-[#DDAF3B]">{t('label_platform')} · {platformPct}%</span>
               <span className="text-[#5A8A50] dark:text-[#7AAA6A]">{t('label_station')} · {stationPct}%</span>
             </div>
-            <p className="mt-1 text-[11px] text-[#AAAAAA] dark:text-[#A0A090]">{t('hint_penalty_split_note')}</p>
+            <p className="mt-1 text-[11px] text-[#AAAAAA] dark:text-[#B0BFB1]">{t('hint_penalty_split_note')}</p>
           </div>
         </SectionCard>
 

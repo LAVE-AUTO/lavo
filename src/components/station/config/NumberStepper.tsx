@@ -83,10 +83,10 @@ export function NumberStepper({
 
   return (
     <div
-      className={`group relative flex items-stretch overflow-hidden rounded-xl border bg-white transition-all duration-150 focus-within:border-[#C49A1E] focus-within:shadow-[0_0_0_3px_rgba(196,154,30,0.12)] dark:bg-[#0F1A0C] ${
+      className={`group relative flex items-stretch overflow-hidden rounded-xl border bg-white transition-all duration-150 focus-within:border-[#DDAF3B] focus-within:shadow-[0_0_0_3px_rgba(221, 175, 59,0.12)] dark:bg-dark-bg ${
         disabled
-          ? 'cursor-not-allowed border-[#E8E4DC] opacity-60 dark:border-[#1A2A14]'
-          : 'border-[#E0DCD0] hover:border-[#D0C8B0] dark:border-[#243020] dark:hover:border-[#2E3C2A]'
+          ? 'cursor-not-allowed border-[#FFF9EC] opacity-60 dark:border-[#1A2A14]'
+          : 'border-[#FFF9EC] hover:border-[#D0C8B0] dark:border-[#001A05] dark:hover:border-[#2E3C2A]'
       }`}
     >
       <button
@@ -95,7 +95,7 @@ export function NumberStepper({
         disabled={!canDecrement}
         aria-label={ariaLabel ? `${ariaLabel} − ${step}` : `Decrease by ${step}`}
         tabIndex={-1}
-        className="flex w-11 shrink-0 items-center justify-center text-[#888] transition-colors hover:bg-[#FBF7E8] hover:text-[#C49A1E] active:bg-[#F5EDD0] disabled:cursor-not-allowed disabled:opacity-30 disabled:hover:bg-transparent disabled:hover:text-[#888] dark:text-[#9A9A8A] dark:hover:bg-[#1E2A18] dark:hover:text-[#C49A1E]"
+        className="flex w-11 shrink-0 items-center justify-center text-foreground/55 transition-colors hover:bg-[#FBF7E8] hover:text-[#DDAF3B] active:bg-[#F5EDD0] disabled:cursor-not-allowed disabled:opacity-30 disabled:hover:bg-transparent disabled:hover:text-foreground/55 dark:text-[#B0BFB1] dark:hover:bg-[#1E2A18] dark:hover:text-[#DDAF3B]"
       >
         <MinusIcon />
       </button>
@@ -120,7 +120,7 @@ export function NumberStepper({
         // Stepping is handled by the +/- buttons; free typing is allowed and clamped on blur.
         disabled={disabled}
         aria-label={ariaLabel}
-        className="flex-1 bg-transparent text-center font-black tabular-nums text-[18px] text-[#1A1A0A] outline-none transition-colors placeholder:text-[#BBBBAA] disabled:cursor-not-allowed dark:text-[#F0EDD4] dark:placeholder:text-[#4A4A3A] [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
+        className="flex-1 bg-transparent text-center font-black tabular-nums text-[18px] text-[#001201] outline-none transition-colors placeholder:text-[#BBBBAA] disabled:cursor-not-allowed dark:text-[#FFF9EC] dark:placeholder:text-[#4A4A3A] [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
       />
 
       {unit && (
@@ -135,7 +135,7 @@ export function NumberStepper({
         disabled={!canIncrement}
         aria-label={ariaLabel ? `${ariaLabel} + ${step}` : `Increase by ${step}`}
         tabIndex={-1}
-        className="flex w-11 shrink-0 items-center justify-center text-[#888] transition-colors hover:bg-[#FBF7E8] hover:text-[#C49A1E] active:bg-[#F5EDD0] disabled:cursor-not-allowed disabled:opacity-30 disabled:hover:bg-transparent disabled:hover:text-[#888] dark:text-[#9A9A8A] dark:hover:bg-[#1E2A18] dark:hover:text-[#C49A1E]"
+        className="flex w-11 shrink-0 items-center justify-center text-foreground/55 transition-colors hover:bg-[#FBF7E8] hover:text-[#DDAF3B] active:bg-[#F5EDD0] disabled:cursor-not-allowed disabled:opacity-30 disabled:hover:bg-transparent disabled:hover:text-foreground/55 dark:text-[#B0BFB1] dark:hover:bg-[#1E2A18] dark:hover:text-[#DDAF3B]"
       >
         <PlusIcon />
       </button>

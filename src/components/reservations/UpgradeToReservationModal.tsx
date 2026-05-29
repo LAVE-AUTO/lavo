@@ -71,11 +71,11 @@ function UpgradeCardForm({
 
   return (
     <div className="space-y-4">
-      <p className="text-[13px] text-[#666] dark:text-[#B0B0A0] text-center">
+      <p className="text-[13px] text-foreground/65 text-center">
         {t('upgrade_payment_desc')}
       </p>
 
-      <div className="rounded-xl border-2 border-[#D0D0C0] dark:border-tab-inactive bg-white dark:bg-dark-bg px-4 py-3">
+      <div className="rounded-xl border-2 border-border bg-white dark:bg-background px-4 py-3">
         <CardElement
           options={{
             style: {
@@ -85,7 +85,7 @@ function UpgradeCardForm({
                 '::placeholder': { color: '#BBBBBB' },
                 fontFamily: 'Rajdhani, sans-serif',
               },
-              invalid: { color: '#E8472A' },
+              invalid: { color: '#FF383C' },
             },
             hidePostalCode: true,
           }}
@@ -101,7 +101,7 @@ function UpgradeCardForm({
           type="button"
           onClick={onBack}
           disabled={processing}
-          className="flex-1 py-3 border-2 border-[#D0D0C0] dark:border-tab-inactive rounded-xl text-[14px] font-bold text-[#555] dark:text-[#B0B0A0] hover:bg-[#E0E0D0] dark:hover:bg-[#222220] transition-colors cursor-pointer disabled:opacity-50"
+          className="flex-1 py-3 border-2 border-border rounded-xl text-[14px] font-bold text-foreground/70 hover:bg-surface dark:hover:bg-[#222220] transition-colors cursor-pointer disabled:opacity-50"
         >
           {t('upgrade_btn_back')}
         </button>
@@ -298,14 +298,14 @@ export default function UpgradeToReservationModal({ entryId, stationId, onClose,
         aria-modal="true"
         aria-labelledby="upgrade-modal-title"
         onClick={(e) => e.stopPropagation()}
-        className="relative bg-[#F5F5E6] dark:bg-[#1A1A18] rounded-t-2xl sm:rounded-2xl shadow-2xl w-full sm:max-w-md max-h-[92vh] flex flex-col animate-fade-in-up"
+        className="relative bg-background dark:bg-[#1A1A18] rounded-t-2xl sm:rounded-2xl shadow-2xl w-full sm:max-w-md max-h-[92vh] flex flex-col animate-fade-in-up"
       >
         {/* = Close button */}
         <button
           type="button"
           onClick={onClose}
           aria-label={t('upgrade_modal_close')}
-          className="absolute top-3 right-3 z-10 w-9 h-9 rounded-full hover:bg-black/5 dark:hover:bg-white/10 flex items-center justify-center text-[#666] dark:text-[#B0B0A0] hover:text-gold transition-colors cursor-pointer"
+          className="absolute top-3 right-3 z-10 w-9 h-9 rounded-full hover:bg-black/5 dark:hover:bg-white/10 flex items-center justify-center text-foreground/65 hover:text-gold transition-colors cursor-pointer"
         >
           <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" aria-hidden="true">
             <line x1="18" y1="6" x2="6" y2="18" />
@@ -316,15 +316,15 @@ export default function UpgradeToReservationModal({ entryId, stationId, onClose,
         {/* = Header */}
         <div className="px-6 pt-6 pb-4 text-center shrink-0">
           <div className="w-12 h-12 rounded-full bg-gold/15 border border-gold/30 flex items-center justify-center mx-auto mb-3">
-            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#af8408" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#DDAF3B" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
               <polyline points="17 1 21 5 17 9" /><path d="M3 11V9a4 4 0 014-4h14" />
               <polyline points="7 23 3 19 7 15" /><path d="M21 13v2a4 4 0 01-4 4H3" />
             </svg>
           </div>
-          <h3 id="upgrade-modal-title" className="text-[18px] font-black text-[#0A0A14] dark:text-white">
+          <h3 id="upgrade-modal-title" className="text-[18px] font-black text-foreground">
             {t('upgrade_modal_title')}
           </h3>
-          <p className="text-[13px] text-[#666] dark:text-[#B0B0A0] mt-1">
+          <p className="text-[13px] text-foreground/65 mt-1">
             {step === 'slot' ? t('upgrade_modal_desc') : t('upgrade_payment_desc')}
           </p>
         </div>
@@ -338,7 +338,7 @@ export default function UpgradeToReservationModal({ entryId, stationId, onClose,
               </div>
             ) : slots.length === 0 ? (
               <div className="text-center py-8">
-                <p className="text-[13px] text-[#999] dark:text-[#666]">{t('upgrade_no_slots')}</p>
+                <p className="text-[13px] text-[#999] dark:text-foreground/65">{t('upgrade_no_slots')}</p>
               </div>
             ) : (
               <SlotStepPicker
@@ -372,12 +372,12 @@ export default function UpgradeToReservationModal({ entryId, stationId, onClose,
 
         {/* = Footer actions (slot step only) */}
         {step === 'slot' && (
-          <div className="px-6 pt-3 pb-5 border-t border-[#D0D0C0] dark:border-tab-inactive flex gap-3 shrink-0 bg-[#F5F5E6] dark:bg-[#1A1A18]">
+          <div className="px-6 pt-3 pb-5 border-t border-border flex gap-3 shrink-0 bg-background dark:bg-[#1A1A18]">
             <button
               type="button"
               onClick={onClose}
               disabled={upgrading}
-              className="flex-1 py-3 border-2 border-[#D0D0C0] dark:border-tab-inactive rounded-xl text-[14px] font-bold text-[#555] dark:text-[#B0B0A0] hover:bg-[#E0E0D0] dark:hover:bg-[#222220] transition-colors cursor-pointer disabled:opacity-50"
+              className="flex-1 py-3 border-2 border-border rounded-xl text-[14px] font-bold text-foreground/70 hover:bg-surface dark:hover:bg-[#222220] transition-colors cursor-pointer disabled:opacity-50"
             >
               {t('upgrade_btn_cancel')}
             </button>
@@ -456,7 +456,7 @@ function SlotStepPicker({ slots, selectedSlotId, onSelect, locale, pickDateLabel
     <div className="space-y-5 pb-2">
       {/* = Date selection strip */}
       <div>
-        <p className="text-[11px] font-bold text-[#555] dark:text-[#A0A090] uppercase tracking-wider mb-2">
+        <p className="text-[11px] font-bold text-foreground/70 dark:text-[#B0BFB1] uppercase tracking-wider mb-2">
           {pickDateLabel}
         </p>
         <div className="flex gap-2 overflow-x-auto pb-1 scrollbar-none -mx-1 px-1">
@@ -473,7 +473,7 @@ function SlotStepPicker({ slots, selectedSlotId, onSelect, locale, pickDateLabel
                   'shrink-0 flex flex-col items-center justify-center w-[56px] py-2 rounded-xl border-2 transition-all cursor-pointer',
                   isActive
                     ? 'border-gold bg-gold text-dark-bg shadow-sm'
-                    : 'border-[#D0D0C0] dark:border-tab-inactive text-[#0A0A14] dark:text-white hover:border-gold/60',
+                    : 'border-border text-foreground hover:border-gold/60',
                 ].join(' ')}
               >
                 <span className="text-[10px] font-bold uppercase tracking-wider opacity-75">{g.dayShort}</span>
@@ -486,7 +486,7 @@ function SlotStepPicker({ slots, selectedSlotId, onSelect, locale, pickDateLabel
 
       {/* = Time slot selection for the picked day */}
       <div>
-        <p className="text-[11px] font-bold text-[#555] dark:text-[#A0A090] uppercase tracking-wider mb-2">
+        <p className="text-[11px] font-bold text-foreground/70 dark:text-[#B0BFB1] uppercase tracking-wider mb-2">
           {pickTimeLabel}
         </p>
         {activeGroup && activeGroup.slots.length > 0 ? (
@@ -507,10 +507,10 @@ function SlotStepPicker({ slots, selectedSlotId, onSelect, locale, pickDateLabel
                     'py-2.5 rounded-[10px] text-[14px] font-bold border-2 transition-all',
                     'font-[family-name:var(--font-roboto-mono)]',
                     isDisabled
-                      ? 'border-[#D0D0C0] dark:border-tab-inactive text-[#CCC] dark:text-[#555] cursor-not-allowed line-through'
+                      ? 'border-border text-[#CCC] dark:text-foreground/70 cursor-not-allowed line-through'
                       : isSelected
                         ? 'border-gold bg-gold text-dark-bg shadow-sm cursor-pointer'
-                        : 'border-[#D0D0C0] dark:border-tab-inactive text-[#0A0A14] dark:text-white hover:border-gold/60 cursor-pointer',
+                        : 'border-border text-foreground hover:border-gold/60 cursor-pointer',
                   ].join(' ')}
                 >
                   {time}
@@ -519,7 +519,7 @@ function SlotStepPicker({ slots, selectedSlotId, onSelect, locale, pickDateLabel
             })}
           </div>
         ) : (
-          <p className="text-[13px] text-[#999] dark:text-[#666] text-center py-6">{emptyDayLabel}</p>
+          <p className="text-[13px] text-[#999] dark:text-foreground/65 text-center py-6">{emptyDayLabel}</p>
         )}
       </div>
     </div>

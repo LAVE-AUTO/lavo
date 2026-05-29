@@ -40,13 +40,15 @@ export function StationCard({ station, unavailable = false }: StationCardProps) 
 
   return (
     <article
-      className={[
-        'h-full flex flex-col bg-[#E8E8D8] dark:bg-dark-card rounded-[14px] overflow-hidden border border-[#D0D0C0] dark:border-tab-inactive group hover:border-gold/30 transition-all duration-300',
-        unavailable ? 'opacity-50 grayscale pointer-events-none' : '',
-      ].join(' ')}
+      className="h-full flex flex-col bg-surface rounded-[14px] overflow-hidden border border-border group hover:border-gold/30 transition-all duration-300"
     >
       {/* Photo */}
-      <div className="relative h-[140px] sm:h-[160px] bg-[#D0D0C0] dark:bg-tab-inactive flex items-center justify-center overflow-hidden">
+      <div
+        className={[
+          'relative h-[140px] sm:h-[160px] bg-[#D0D0C0] dark:bg-tab-inactive flex items-center justify-center overflow-hidden',
+          unavailable ? 'grayscale' : '',
+        ].join(' ')}
+      >
         {station.imageUrl && !imgFailed ? (
           <img
             src={station.imageUrl}
@@ -55,12 +57,12 @@ export function StationCard({ station, unavailable = false }: StationCardProps) 
             className="w-full h-full object-cover group-hover:scale-[1.01] transition-transform duration-300"
           />
         ) : (
-          <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#9A9A8A" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+          <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#B0BFB1" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
             <path d="M3 17l2-7h14l2 7" />
             <path d="M5 17v2h2v-2M17 17v2h2v-2" />
             <path d="M8 10V7a1 1 0 011-1h6a1 1 0 011 1v3" />
-            <circle cx="7.5" cy="17" r="1.5" fill="#9A9A8A" />
-            <circle cx="16.5" cy="17" r="1.5" fill="#9A9A8A" />
+            <circle cx="7.5" cy="17" r="1.5" fill="#B0BFB1" />
+            <circle cx="16.5" cy="17" r="1.5" fill="#B0BFB1" />
           </svg>
         )}
 
@@ -92,7 +94,7 @@ export function StationCard({ station, unavailable = false }: StationCardProps) 
       <div className="p-4 flex flex-col flex-1">
         {/* Name + price (hidden until backend exposes price_from on the list payload) */}
         <div className="flex items-start justify-between gap-2 mb-2">
-          <h3 className="text-[17px] font-bold text-[#0A0A14] dark:text-white leading-tight line-clamp-1">
+          <h3 className="text-[17px] font-bold text-foreground leading-tight line-clamp-1">
             {station.name}
           </h3>
           {station.priceFrom != null && (
@@ -105,26 +107,26 @@ export function StationCard({ station, unavailable = false }: StationCardProps) 
         {/* Rating */}
         <div className="flex items-center gap-1.5 mb-3 text-[15px]">
           <span className="text-gold text-[17px]">&#9733;</span>
-          <span className="text-[#0A0A14] dark:text-white font-semibold">{station.rating.toFixed(1)}</span>
+          <span className="text-foreground font-semibold">{station.rating.toFixed(1)}</span>
           <span className="text-gold">{t('reviews_count', { count: station.reviewCount })}</span>
         </div>
 
         {/* Stats grid: distance | wait */}
         <div className="grid grid-cols-2 mb-3 text-center">
           {/* Distance */}
-          <div className="border-r border-[#C8C8B4] dark:border-tab-inactive pr-2">
-            <div className="text-[17px] font-black text-[#0A0A14] dark:text-white leading-none truncate">
+          <div className="border-r border-border pr-2">
+            <div className="text-[17px] font-black text-foreground leading-none truncate">
               {distanceLabel ?? '--'}
             </div>
-            <div className="text-[13px] text-[#555] dark:text-[#D8D8C8] mt-1">{t('stat_distance')}</div>
+            <div className="text-[13px] text-foreground/70 dark:text-[#D8D8C8] mt-1">{t('stat_distance')}</div>
           </div>
 
           {/* Min service duration */}
           <div className="pl-2">
-            <div className="text-[17px] font-black text-[#0A0A14] dark:text-white leading-none">
+            <div className="text-[17px] font-black text-foreground leading-none">
               {station.estimatedWaitMinutes > 0 ? `${station.estimatedWaitMinutes} min` : '0 min'}
             </div>
-            <div className="text-[13px] text-[#555] dark:text-[#D8D8C8] mt-1">{t('min_attente')}</div>
+            <div className="text-[13px] text-foreground/70 dark:text-[#D8D8C8] mt-1">{t('min_attente')}</div>
           </div>
         </div>
 
@@ -134,7 +136,7 @@ export function StationCard({ station, unavailable = false }: StationCardProps) 
             {forfaitNames.slice(0, 4).map((name) => (
               <span
                 key={name}
-                className="py-1 px-2.5 rounded-full text-[13px] font-bold bg-[#E8E8D8] dark:bg-tab-inactive text-[#000000] dark:text-[#F0F0E8] border border-[#D0D0C0] dark:border-tab-inactive"
+                className="py-1 px-2.5 rounded-full text-[13px] font-bold bg-surface dark:bg-tab-inactive text-[#000000] dark:text-[#FFF9EC] border border-border"
               >
                 {name}
               </span>

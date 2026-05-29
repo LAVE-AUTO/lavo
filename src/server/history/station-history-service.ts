@@ -13,6 +13,8 @@ export type StationHistoryEntry = {
   status: string;
   client: { first_name: string; last_name: string } | null;
   vehicle_format_label: string | null;
+  service_name: string | null;
+  service_category: string | null;
   amount_paid: string;
   station_payout: string | null;
   commission_rate: string;
@@ -70,6 +72,8 @@ export async function getStationHistory(
         ? { first_name: item.client_first_name, last_name: item.client_last_name }
         : null,
     vehicle_format_label: item.vehicle_format_label,
+    service_name: item.service_name,
+    service_category: item.service_category,
     amount_paid: item.amount_paid,
     station_payout: item.station_payout,
     commission_rate: item.commission_rate,

@@ -48,22 +48,22 @@ export function DayDetailsModal({
     >
       <div className="p-5">
         {/* Section label */}
-        <p className="mb-3 text-[10px] font-black uppercase tracking-widest text-[#C49A1E]">
+        <p className="mb-3 text-[10px] font-black uppercase tracking-widest text-[#DDAF3B]">
           {t('availability_day_blocks_section')}
         </p>
 
         {blocks.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-6 text-center">
-            <p className="mb-1 text-sm font-black text-[#1A1A0A] dark:text-[#F0EDD4]">
+            <p className="mb-1 text-sm font-black text-[#001201] dark:text-[#FFF9EC]">
               {t('availability_day_no_blocks')}
             </p>
-            <p className="mb-4 text-[11px] text-[#666] dark:text-[#A0A090]">
+            <p className="mb-4 text-[11px] text-foreground/65 dark:text-[#B0BFB1]">
               {t('availability_all_postes_closed')}
             </p>
             {/* Tip card - matches prototype gold-border callout */}
-            <div className="mb-5 w-full rounded-xl border-l-4 border-[#C49A1E] bg-[#C49A1E]/10 p-3 text-left dark:bg-[#C49A1E]/8">
-              <p className="text-[11px] text-[#666] dark:text-[#A0A090]">
-                <strong className="text-[#C49A1E]">{t('availability_tip_label')}</strong>{' '}
+            <div className="mb-5 w-full rounded-xl border-l-4 border-[#DDAF3B] bg-[#DDAF3B]/10 p-3 text-left dark:bg-[#DDAF3B]/8">
+              <p className="text-[11px] text-foreground/65 dark:text-[#B0BFB1]">
+                <strong className="text-[#DDAF3B]">{t('availability_tip_label')}</strong>{' '}
                 {t('availability_day_no_blocks_tip')}
               </p>
             </div>
@@ -74,17 +74,17 @@ export function DayDetailsModal({
             {blocks.map((block) => (
               <div
                 key={block.id}
-                className="rounded-xl bg-[#F7F6F2] p-4 dark:bg-[#0F1A0C]"
+                className="rounded-xl bg-[#FFF9EC] p-4 dark:bg-dark-bg"
               >
-                <p className="mb-1 text-[11px] font-semibold text-[#555] dark:text-[#A0A090]">
+                <p className="mb-1 text-[11px] font-semibold text-foreground/70 dark:text-[#B0BFB1]">
                   {formatBays(block.bayIds)}
                 </p>
-                <p className="mb-0.5 text-[12px] font-bold text-[#1A1A0A] dark:text-[#F0EDD4]">
+                <p className="mb-0.5 text-[12px] font-bold text-[#001201] dark:text-[#FFF9EC]">
                   {block.dates.length > 1
                     ? t('availability_dates_count', { count: block.dates.length })
                     : ''}
                 </p>
-                <p className="mb-2.5 text-[13px] font-black text-[#C49A1E]">
+                <p className="mb-2.5 text-[13px] font-black text-[#DDAF3B]">
                   {block.startTime} – {block.endTime}
                 </p>
                 <div className="flex flex-wrap gap-2">
@@ -101,7 +101,7 @@ export function DayDetailsModal({
                       onClose();
                       onEditBlock(block);
                     }}
-                    className="rounded-lg bg-[#C49A1E] px-2.5 py-1 text-[10px] font-bold text-[#1A1A0A] transition-colors hover:bg-[#A07818]"
+                    className="rounded-lg bg-[#DDAF3B] px-2.5 py-1 text-[10px] font-bold text-[#001201] transition-colors hover:bg-[#A07818]"
                   >
                     {t('availability_block_edit')}
                   </button>
@@ -113,11 +113,11 @@ export function DayDetailsModal({
 
         {/* Footer CTA */}
         {date && (
-          <div className="flex flex-col-reverse justify-end gap-2 border-t border-[#C49A1E]/20 pt-4 dark:border-[#C49A1E]/10 sm:flex-row sm:gap-3">
+          <div className="flex flex-col-reverse justify-end gap-2 border-t border-[#DDAF3B]/20 pt-4 dark:border-[#DDAF3B]/10 sm:flex-row sm:gap-3">
             <button
               type="button"
               onClick={onClose}
-              className="rounded-xl border border-[#E0DCD0] px-4 py-2.5 text-sm font-bold text-[#666] transition-colors hover:bg-[#F0EDE0] dark:border-[#243020] dark:text-[#A0A090] dark:hover:bg-[#182214]"
+              className="rounded-xl border border-[#FFF9EC] px-4 py-2.5 text-sm font-bold text-foreground/65 transition-colors hover:bg-[#F0EDE0] dark:border-[#001A05] dark:text-[#B0BFB1] dark:hover:bg-[#182214]"
             >
               {t('availability_btn_close')}
             </button>
@@ -127,7 +127,7 @@ export function DayDetailsModal({
                 onClose();
                 onCreateForDay(date);
               }}
-              className="rounded-xl bg-[#C49A1E] px-4 py-2.5 text-sm font-black text-[#0C1209] transition-opacity hover:opacity-85"
+              className="rounded-xl bg-[#DDAF3B] px-4 py-2.5 text-sm font-black text-[#001201] transition-opacity hover:opacity-85"
             >
               + {t('availability_day_create_for_day')}
             </button>

@@ -21,7 +21,7 @@ export function ApplySuccess() {
       <h2 className="text-[22px] font-bold text-dark-bg dark:text-white mb-3">
         {t('success_title')}
       </h2>
-      <p className="text-[15px] text-[#555] dark:text-Hurryline-muted leading-relaxed mb-8 max-w-sm mx-auto">
+      <p className="text-[15px] text-foreground/70 dark:text-Hurryline-muted leading-relaxed mb-8 max-w-sm mx-auto">
         {t('success_message')}
       </p>
 
@@ -47,7 +47,7 @@ export function ApplySuccess() {
         </Link>
         <Link
           href="/"
-          className="inline-flex items-center justify-center py-3.5 px-6 border border-[#CCCCCC] dark:border-tab-inactive rounded-[10px] text-[16px] font-semibold text-[#1A1A1A] dark:text-white hover:border-gold transition-colors duration-150"
+          className="inline-flex items-center justify-center py-3.5 px-6 border border-[#CCCCCC] dark:border-border rounded-[10px] text-[16px] font-semibold text-[#001201] dark:text-white hover:border-gold transition-colors duration-150"
         >
           {t('success_cta_home')}
         </Link>

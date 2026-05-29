@@ -28,7 +28,7 @@ function Toggle({ checked, onChange }: { checked: boolean; onChange: () => void 
 /* ─── Section wrapper ─── */
 function Section({ children, className = '' }: { children: React.ReactNode; className?: string }) {
   return (
-    <div className={`bg-[#E8E8D8] dark:bg-dark-card rounded-2xl border border-[rgba(200,152,10,0.12)] overflow-hidden ${className}`}>
+    <div className={`bg-surface rounded-2xl border border-[rgba(221,175,59,0.12)] overflow-hidden ${className}`}>
       {children}
     </div>
   );
@@ -37,8 +37,8 @@ function Section({ children, className = '' }: { children: React.ReactNode; clas
 /* ─── Section header ─── */
 function SectionHeader({ title, action }: { title: string; action?: React.ReactNode }) {
   return (
-    <div className="flex items-center justify-between px-5 py-4 border-b border-[rgba(200,152,10,0.1)]">
-      <h2 className="text-[14px] font-black uppercase tracking-wider text-[#888] dark:text-[#666]">{title}</h2>
+    <div className="flex items-center justify-between px-5 py-4 border-b border-[rgba(221,175,59,0.1)]">
+      <h2 className="text-[14px] font-black uppercase tracking-wider text-foreground/55 dark:text-foreground/65">{title}</h2>
       {action}
     </div>
   );
@@ -47,8 +47,8 @@ function SectionHeader({ title, action }: { title: string; action?: React.ReactN
 /* ─── "Coming soon" pill - paints disabled actions so users know the wiring is in flight. */
 function ComingSoonBadge({ label }: { label: string }) {
   return (
-    <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-[#E0E0D0] dark:bg-[#2C2C28] text-[10px] font-bold uppercase tracking-wider text-[#888] dark:text-[#666] whitespace-nowrap">
-      <span className="w-1.5 h-1.5 rounded-full bg-[#c8980a]/60" />
+    <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-surface dark:bg-[#2C2C28] text-[10px] font-bold uppercase tracking-wider text-foreground/55 dark:text-foreground/65 whitespace-nowrap">
+      <span className="w-1.5 h-1.5 rounded-full bg-[#DDAF3B]/60" />
       {label}
     </span>
   );
@@ -362,15 +362,15 @@ export default function ProfilePage() {
         <span className="w-5 h-5 rounded-full bg-[#f79e1b] opacity-90 inline-block -ml-2" />
       </span>
     );
-    return <span className="text-[12px] font-bold text-[#888]">{brand}</span>;
+    return <span className="text-[12px] font-bold text-foreground/55">{brand}</span>;
   };
 
   return (
-    <main className="min-h-screen bg-[#F5F5E6] dark:bg-[#0F0F0D] pb-28 sm:pb-10">
+    <main className="min-h-screen bg-background pb-28 sm:pb-10">
       <div className="max-w-2xl mx-auto px-4 pt-8 space-y-5">
 
         {/* ── Header card ── */}
-        <div className="bg-[#E8E8D8] dark:bg-dark-card rounded-2xl border border-[rgba(200,152,10,0.12)] p-6">
+        <div className="bg-surface rounded-2xl border border-[rgba(221,175,59,0.12)] p-6">
           <div className="flex items-center gap-5">
 
             {/* Avatar - disabled until POST /me/avatar (or PATCH /me { avatar_url }) ships */}
@@ -399,8 +399,8 @@ export default function ProfilePage() {
 
             {/* Name + email */}
             <div className="min-w-0 flex-1">
-              <p className="text-[19px] font-black text-[#1a1a1a] dark:text-white truncate leading-tight">{fullName}</p>
-              <p className="text-[13px] text-[#888] dark:text-[#666] truncate mt-0.5">{user?.email}</p>
+              <p className="text-[19px] font-black text-[#001201] dark:text-white truncate leading-tight">{fullName}</p>
+              <p className="text-[13px] text-foreground/55 dark:text-foreground/65 truncate mt-0.5">{user?.email}</p>
               {isVerified ? (
                 <span className="inline-flex items-center gap-1 mt-2 text-[11px] font-bold text-Hurryline-success bg-Hurryline-success/10 px-2.5 py-0.5 rounded-full">
                   <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round"><polyline points="20 6 9 17 4 12"/></svg>
@@ -424,7 +424,7 @@ export default function ProfilePage() {
             href="/client/history"
             className="mt-5 group flex items-center gap-3 rounded-xl border border-gold/30 bg-gold/8 hover:bg-gold/15 px-4 py-3 transition-colors"
           >
-            <span className="w-10 h-10 rounded-xl bg-gold/15 flex items-center justify-center text-[#c8980a] shrink-0">
+            <span className="w-10 h-10 rounded-xl bg-gold/15 flex items-center justify-center text-[#DDAF3B] shrink-0">
               <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
                 <path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z" />
                 <polyline points="14 2 14 8 20 8" />
@@ -433,25 +433,25 @@ export default function ProfilePage() {
               </svg>
             </span>
             <div className="flex-1 min-w-0">
-              <p className="text-[14px] font-black text-[#1a1a1a] dark:text-white leading-tight">{t('statements_invoices')}</p>
-              <p className="text-[12px] text-[#888] dark:text-[#666] mt-0.5">{t('statements_invoices_desc')}</p>
+              <p className="text-[14px] font-black text-[#001201] dark:text-white leading-tight">{t('statements_invoices')}</p>
+              <p className="text-[12px] text-foreground/55 dark:text-foreground/65 mt-0.5">{t('statements_invoices_desc')}</p>
             </div>
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#c8980a" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="shrink-0 group-hover:translate-x-0.5 transition-transform" aria-hidden="true">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#DDAF3B" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="shrink-0 group-hover:translate-x-0.5 transition-transform" aria-hidden="true">
               <polyline points="9 18 15 12 9 6" />
             </svg>
           </Link>
 
           {/* Stats row - live from /me/entries (completed count, member since) */}
-          <div className="grid grid-cols-2 gap-3 mt-5 pt-5 border-t border-[rgba(200,152,10,0.1)]">
+          <div className="grid grid-cols-2 gap-3 mt-5 pt-5 border-t border-[rgba(221,175,59,0.1)]">
             {statsRow.map(({ label, value, icon }) => (
               <div key={label} className="flex flex-col items-center gap-1.5 text-center">
-                <div className="w-9 h-9 rounded-xl bg-gold/10 text-[#c8980a] flex items-center justify-center">
+                <div className="w-9 h-9 rounded-xl bg-gold/10 text-[#DDAF3B] flex items-center justify-center">
                   {icon}
                 </div>
-                <p className="text-[15px] sm:text-[17px] font-black text-[#1a1a1a] dark:text-white leading-none">
+                <p className="text-[15px] sm:text-[17px] font-black text-[#001201] dark:text-white leading-none">
                   {statsLoading ? <span className="inline-block w-8 h-4 bg-gold/10 rounded animate-pulse" /> : value}
                 </p>
-                <p className="text-[11px] text-[#888] dark:text-[#666]">{label}</p>
+                <p className="text-[11px] text-foreground/55 dark:text-foreground/65">{label}</p>
               </div>
             ))}
           </div>
@@ -462,29 +462,29 @@ export default function ProfilePage() {
           <SectionHeader
             title={t('location_section')}
             action={userLocation ? (
-              <span className="text-[11px] font-mono text-[#c8980a]/50 tabular-nums">
+              <span className="text-[11px] font-mono text-[#DDAF3B]/50 tabular-nums">
                 {userLocation.latitude.toFixed(5)}, {userLocation.longitude.toFixed(5)}
               </span>
             ) : undefined}
           />
           <div className="flex items-center justify-between gap-4 px-5 py-4">
             <div className="flex items-center gap-3 min-w-0">
-              <span className="shrink-0 w-9 h-9 rounded-xl bg-gold/10 flex items-center justify-center text-[#c8980a]" aria-hidden="true">
+              <span className="shrink-0 w-9 h-9 rounded-xl bg-gold/10 flex items-center justify-center text-[#DDAF3B]" aria-hidden="true">
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                   <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z"/>
                   <circle cx="12" cy="10" r="3"/>
                 </svg>
               </span>
               <div className="min-w-0">
-                <p className="text-[14px] font-semibold text-[#1a1a1a] dark:text-white">{t('location_label')}</p>
-                <p className="text-[12px] text-[#888] dark:text-[#666] mt-0.5">{t('location_desc')}</p>
+                <p className="text-[14px] font-semibold text-[#001201] dark:text-white">{t('location_label')}</p>
+                <p className="text-[12px] text-foreground/55 dark:text-foreground/65 mt-0.5">{t('location_desc')}</p>
               </div>
             </div>
             <button
               type="button"
               onClick={() => void handleActivateLocation()}
               disabled={locationActivating}
-              className="shrink-0 flex items-center gap-1.5 px-4 py-2 border border-gold/40 rounded-xl text-[12px] font-bold text-[#c8980a] hover:bg-gold/10 transition-colors cursor-pointer disabled:opacity-60 disabled:cursor-not-allowed"
+              className="shrink-0 flex items-center gap-1.5 px-4 py-2 border border-gold/40 rounded-xl text-[12px] font-bold text-[#DDAF3B] hover:bg-gold/10 transition-colors cursor-pointer disabled:opacity-60 disabled:cursor-not-allowed"
             >
               {locationActivating ? (
                 <svg className="animate-spin" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" aria-hidden="true">
@@ -512,7 +512,7 @@ export default function ProfilePage() {
                     type="button"
                     onClick={() => setEditingInfo(false)}
                     disabled={savingInfo}
-                    className="text-[12px] font-bold text-[#888] hover:text-[#1a1a1a] dark:hover:text-white transition-colors cursor-pointer disabled:opacity-50"
+                    className="text-[12px] font-bold text-foreground/55 hover:text-[#001201] dark:hover:text-white transition-colors cursor-pointer disabled:opacity-50"
                   >
                     {t('cancel')}
                   </button>
@@ -534,7 +534,7 @@ export default function ProfilePage() {
                 <button
                   type="button"
                   onClick={handleEditInfo}
-                  className="flex items-center gap-1.5 text-[12px] font-bold text-[#c8980a] hover:text-[#a07008] transition-colors cursor-pointer"
+                  className="flex items-center gap-1.5 text-[12px] font-bold text-[#DDAF3B] hover:text-[#a07008] transition-colors cursor-pointer"
                 >
                   <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" aria-hidden="true">
                     <path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/>
@@ -545,7 +545,7 @@ export default function ProfilePage() {
               )
             }
           />
-          <div className="divide-y divide-[rgba(200,152,10,0.08)]">
+          <div className="divide-y divide-[rgba(221,175,59,0.08)]">
             {editingInfo ? (
               <>
                 {[
@@ -554,20 +554,20 @@ export default function ProfilePage() {
                   { key: 'phone',      label: t('phone')      },
                 ].map(({ key, label }) => (
                   <div key={key} className="flex items-center justify-between gap-4 px-5 py-3">
-                    <span className="text-[12px] font-bold uppercase tracking-wider text-[#888] dark:text-[#666] w-28 shrink-0">{label}</span>
+                    <span className="text-[12px] font-bold uppercase tracking-wider text-foreground/55 dark:text-foreground/65 w-28 shrink-0">{label}</span>
                     <input
                       type={key === 'phone' ? 'tel' : 'text'}
                       value={infoForm[key as keyof typeof infoForm]}
                       onChange={(e) => setInfoForm((f) => ({ ...f, [key]: e.target.value }))}
                       disabled={savingInfo}
-                      className="flex-1 min-w-0 bg-white dark:bg-[#1E1E1A] border border-[#D0D0C0] dark:border-[#3A3A36] rounded-xl px-3 py-2 text-[14px] text-[#1a1a1a] dark:text-white text-right outline-none focus:border-gold focus:ring-1 focus:ring-gold/30 transition disabled:opacity-50"
+                      className="flex-1 min-w-0 bg-white dark:bg-[#1E1E1A] border border-border dark:border-[#3A3A36] rounded-xl px-3 py-2 text-[14px] text-[#001201] dark:text-white text-right outline-none focus:border-gold focus:ring-1 focus:ring-gold/30 transition disabled:opacity-50"
                     />
                   </div>
                 ))}
                 {/* Email is never editable */}
                 <div className="flex items-center justify-between px-5 py-3.5">
-                  <span className="text-[12px] font-bold uppercase tracking-wider text-[#888] dark:text-[#666] w-28 shrink-0">{t('email')}</span>
-                  <span className="text-[14px] text-[#888] dark:text-[#666] text-right truncate">{user?.email || '-'}</span>
+                  <span className="text-[12px] font-bold uppercase tracking-wider text-foreground/55 dark:text-foreground/65 w-28 shrink-0">{t('email')}</span>
+                  <span className="text-[14px] text-foreground/55 dark:text-foreground/65 text-right truncate">{user?.email || '-'}</span>
                 </div>
               </>
             ) : (
@@ -579,8 +579,8 @@ export default function ProfilePage() {
                   { label: t('email'),      value: user?.email      || '-' },
                 ].map(({ label, value }) => (
                   <div key={label} className="flex items-center justify-between px-5 py-3.5">
-                    <span className="text-[12px] font-bold uppercase tracking-wider text-[#888] dark:text-[#666] w-28 shrink-0">{label}</span>
-                    <span className="text-[14px] text-[#1a1a1a] dark:text-white text-right truncate">{value}</span>
+                    <span className="text-[12px] font-bold uppercase tracking-wider text-foreground/55 dark:text-foreground/65 w-28 shrink-0">{label}</span>
+                    <span className="text-[14px] text-[#001201] dark:text-white text-right truncate">{value}</span>
                   </div>
                 ))}
               </>
@@ -593,13 +593,13 @@ export default function ProfilePage() {
           <SectionHeader title={t('password_section')} />
           <div className="flex items-center justify-between px-5 py-4">
             <div>
-              <p className="text-[14px] font-semibold text-[#1a1a1a] dark:text-white">{t('change_password')}</p>
-              <p className="text-[12px] text-[#888] dark:text-[#666] mt-0.5">{t('password_desc')}</p>
+              <p className="text-[14px] font-semibold text-[#001201] dark:text-white">{t('change_password')}</p>
+              <p className="text-[12px] text-foreground/55 dark:text-foreground/65 mt-0.5">{t('password_desc')}</p>
             </div>
             <button
               type="button"
               onClick={() => setShowPasswordModal(true)}
-              className="flex items-center gap-1.5 px-4 py-2 border border-gold/40 rounded-xl text-[12px] font-bold text-[#c8980a] hover:bg-gold/10 transition-colors cursor-pointer shrink-0"
+              className="flex items-center gap-1.5 px-4 py-2 border border-gold/40 rounded-xl text-[12px] font-bold text-[#DDAF3B] hover:bg-gold/10 transition-colors cursor-pointer shrink-0"
             >
               <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" aria-hidden="true">
                 <rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0110 0v4"/>
@@ -618,22 +618,22 @@ export default function ProfilePage() {
           {cards.length === 0 ? (
             <div className="flex flex-col items-center gap-2 py-8 text-center">
               <div className="w-10 h-10 rounded-full bg-gold/10 flex items-center justify-center">
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#c8980a" strokeWidth="2" strokeLinecap="round" aria-hidden="true">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#DDAF3B" strokeWidth="2" strokeLinecap="round" aria-hidden="true">
                   <rect x="1" y="4" width="22" height="16" rx="2"/><line x1="1" y1="10" x2="23" y2="10"/>
                 </svg>
               </div>
-              <p className="text-[13px] text-[#888] dark:text-[#666]">{t('no_cards')}</p>
+              <p className="text-[13px] text-foreground/55 dark:text-foreground/65">{t('no_cards')}</p>
             </div>
           ) : (
-            <div className="divide-y divide-[rgba(200,152,10,0.08)]">
+            <div className="divide-y divide-[rgba(221,175,59,0.08)]">
               {cards.map((card) => (
                 <div key={card.id} className="flex items-center gap-4 px-5 py-3.5 opacity-60">
                   <CardBrandIcon brand={card.brand} />
                   <div className="flex-1 min-w-0">
-                    <p className="text-[14px] font-semibold text-[#1a1a1a] dark:text-white">
+                    <p className="text-[14px] font-semibold text-[#001201] dark:text-white">
                       {card.brand} •••• {card.last4}
                     </p>
-                    <p className="text-[12px] text-[#888] dark:text-[#666]">{t('card_expires')} {card.expiry}</p>
+                    <p className="text-[12px] text-foreground/55 dark:text-foreground/65">{t('card_expires')} {card.expiry}</p>
                   </div>
                   <button
                     type="button"
@@ -652,7 +652,7 @@ export default function ProfilePage() {
         {/* ── Notifications ── */}
         <Section>
           <SectionHeader title={t('notif_section')} />
-          <div className={`divide-y divide-[rgba(200,152,10,0.08)] ${savingNotif ? 'opacity-60' : ''}`}>
+          <div className={`divide-y divide-[rgba(221,175,59,0.08)] ${savingNotif ? 'opacity-60' : ''}`}>
             {[
               { key: 'wash_status', label: t('notif_wash_status'), desc: t('notif_wash_status_desc'), checked: notifWash },
               { key: 'reminder', label: t('notif_reminder'), desc: t('notif_reminder_desc'), checked: notifReminder },
@@ -661,8 +661,8 @@ export default function ProfilePage() {
             ].map(({ key, label, desc, checked }) => (
               <div key={key} className="flex items-center justify-between gap-4 px-5 py-3.5">
                 <div className="min-w-0">
-                  <p className="text-[14px] font-semibold text-[#1a1a1a] dark:text-white leading-snug">{label}</p>
-                  <p className="text-[12px] text-[#888] dark:text-[#666] mt-0.5 leading-snug">{desc}</p>
+                  <p className="text-[14px] font-semibold text-[#001201] dark:text-white leading-snug">{label}</p>
+                  <p className="text-[12px] text-foreground/55 dark:text-foreground/65 mt-0.5 leading-snug">{desc}</p>
                 </div>
                 <Toggle checked={checked} onChange={() => {
                   if (savingNotif) return;
@@ -679,7 +679,7 @@ export default function ProfilePage() {
         {/* ── Aide & légal ── */}
         <Section>
           <SectionHeader title={t('help_section')} />
-          <div className="divide-y divide-[rgba(200,152,10,0.08)]">
+          <div className="divide-y divide-[rgba(221,175,59,0.08)]">
             {[
               { href: '/support',              label: t('help_center'),  icon: <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 015.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg> },
               { href: '/cgu',                  label: t('help_cgu'),     icon: <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg> },
@@ -691,10 +691,10 @@ export default function ProfilePage() {
                 className="flex items-center justify-between px-5 py-3.5 hover:bg-gold/5 transition-colors group"
               >
                 <div className="flex items-center gap-3">
-                  <span className="text-[#c8980a]">{icon}</span>
-                  <span className="text-[14px] font-semibold text-[#1a1a1a] dark:text-white">{label}</span>
+                  <span className="text-[#DDAF3B]">{icon}</span>
+                  <span className="text-[14px] font-semibold text-[#001201] dark:text-white">{label}</span>
                 </div>
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" className="text-[#C8C8B4] dark:text-[#444] group-hover:text-[#c8980a] transition-colors" aria-hidden="true">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" className="text-[#C8C8B4] dark:text-[#444] group-hover:text-[#DDAF3B] transition-colors" aria-hidden="true">
                   <polyline points="9 18 15 12 9 6"/>
                 </svg>
               </Link>
@@ -709,8 +709,8 @@ export default function ProfilePage() {
           </div>
           <div className="flex items-center justify-between px-5 py-4">
             <div>
-              <p className="text-[14px] font-semibold text-[#1a1a1a] dark:text-white">{t('delete_account')}</p>
-              <p className="text-[12px] text-[#888] dark:text-[#666] mt-0.5 max-w-[260px] leading-snug">{t('danger_desc')}</p>
+              <p className="text-[14px] font-semibold text-[#001201] dark:text-white">{t('delete_account')}</p>
+              <p className="text-[12px] text-foreground/55 dark:text-foreground/65 mt-0.5 max-w-[260px] leading-snug">{t('danger_desc')}</p>
             </div>
             <button
               type="button"
@@ -790,7 +790,7 @@ function PasswordModal({ onClose, onSuccess }: { onClose: () => void; onSuccess:
     onSuccess();
   };
 
-  const inputClass = 'w-full px-4 py-2.5 bg-[#F5F5E6] dark:bg-[#0F0F0D] border border-[#D0D0C0] dark:border-tab-inactive rounded-xl text-[14px] text-[#1a1a1a] dark:text-white focus:outline-none focus:border-gold transition-colors';
+  const inputClass = 'w-full px-4 py-2.5 bg-background border border-border rounded-xl text-[14px] text-[#001201] dark:text-white focus:outline-none focus:border-gold transition-colors';
 
   return (
     <Modal onClose={onClose}>
@@ -799,29 +799,29 @@ function PasswordModal({ onClose, onSuccess }: { onClose: () => void; onSuccess:
           <div className="w-14 h-14 rounded-full bg-Hurryline-success/15 flex items-center justify-center">
             <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#00C851" strokeWidth="2.5" strokeLinecap="round"><polyline points="20 6 9 17 4 12"/></svg>
           </div>
-          <p className="text-[18px] font-black text-[#1a1a1a] dark:text-white">{t('password_success')}</p>
+          <p className="text-[18px] font-black text-[#001201] dark:text-white">{t('password_success')}</p>
           <button type="button" onClick={onClose} className="w-full py-3 bg-gold hover:bg-gold-hover rounded-xl text-[14px] font-black text-dark-bg transition-colors cursor-pointer">{t('close')}</button>
         </div>
       ) : (
         <>
-          <h3 className="text-[18px] font-black text-[#1a1a1a] dark:text-white mb-5">{t('change_password')}</h3>
+          <h3 className="text-[18px] font-black text-[#001201] dark:text-white mb-5">{t('change_password')}</h3>
           <div className="space-y-4">
             <div>
-              <label className="block text-[12px] font-bold uppercase tracking-wider text-[#555] dark:text-[#888] mb-1.5">{t('old_password')}</label>
+              <label className="block text-[12px] font-bold uppercase tracking-wider text-foreground/70 dark:text-foreground/55 mb-1.5">{t('old_password')}</label>
               <input type="password" value={oldPwd} onChange={(e) => setOldPwd(e.target.value)} className={inputClass} />
             </div>
             <div>
-              <label className="block text-[12px] font-bold uppercase tracking-wider text-[#555] dark:text-[#888] mb-1.5">{t('new_password')}</label>
+              <label className="block text-[12px] font-bold uppercase tracking-wider text-foreground/70 dark:text-foreground/55 mb-1.5">{t('new_password')}</label>
               <input type="password" value={newPwd} onChange={(e) => setNewPwd(e.target.value)} className={inputClass} />
             </div>
             <div>
-              <label className="block text-[12px] font-bold uppercase tracking-wider text-[#555] dark:text-[#888] mb-1.5">{t('confirm_password')}</label>
+              <label className="block text-[12px] font-bold uppercase tracking-wider text-foreground/70 dark:text-foreground/55 mb-1.5">{t('confirm_password')}</label>
               <input type="password" value={confirmPwd} onChange={(e) => setConfirmPwd(e.target.value)} className={inputClass} />
             </div>
             {error && <p className="text-[13px] text-Hurryline-error font-semibold">{error}</p>}
           </div>
           <div className="flex gap-3 mt-6">
-            <button type="button" onClick={onClose} disabled={submitting} className="flex-1 py-3 border-2 border-[#D0D0C0] dark:border-tab-inactive rounded-xl text-[14px] font-bold text-[#555] dark:text-[#B0B0A0] hover:bg-[#E0E0D0] dark:hover:bg-[#1A1A18] transition-colors cursor-pointer disabled:opacity-50">{t('cancel')}</button>
+            <button type="button" onClick={onClose} disabled={submitting} className="flex-1 py-3 border-2 border-border rounded-xl text-[14px] font-bold text-foreground/70 hover:bg-surface dark:hover:bg-[#1A1A18] transition-colors cursor-pointer disabled:opacity-50">{t('cancel')}</button>
             <button type="button" onClick={handleSubmit} disabled={submitting} className="flex-1 py-3 bg-gold hover:bg-gold-hover rounded-xl text-[14px] font-black text-dark-bg transition-colors cursor-pointer disabled:opacity-60 flex items-center justify-center gap-2">
               {submitting && (
                 <svg className="animate-spin" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" aria-hidden="true">
@@ -846,7 +846,7 @@ function DeleteAccountModal({ onClose, onDeleted }: { onClose: () => void; onDel
   const mountedRef = useRef(true);
   useEffect(() => { mountedRef.current = true; return () => { mountedRef.current = false; }; }, []);
 
-  const inputClass = 'w-full px-4 py-2.5 bg-[#F5F5E6] dark:bg-[#0F0F0D] border border-[#D0D0C0] dark:border-tab-inactive rounded-xl text-[14px] text-[#1a1a1a] dark:text-white focus:outline-none focus:border-Hurryline-error transition-colors';
+  const inputClass = 'w-full px-4 py-2.5 bg-background border border-border rounded-xl text-[14px] text-[#001201] dark:text-white focus:outline-none focus:border-Hurryline-error transition-colors';
 
   const handleDelete = async () => {
     setError('');
@@ -872,11 +872,11 @@ function DeleteAccountModal({ onClose, onDeleted }: { onClose: () => void; onDel
 
   return (
     <Modal onClose={onClose}>
-      <h3 className="text-[18px] font-black text-[#1a1a1a] dark:text-white mb-2">{t('delete_title')}</h3>
+      <h3 className="text-[18px] font-black text-[#001201] dark:text-white mb-2">{t('delete_title')}</h3>
       <p className="text-[13px] text-Hurryline-error mb-4">{t('delete_warning')}</p>
       <div className="space-y-4">
         <div>
-          <label className="block text-[12px] font-bold uppercase tracking-wider text-[#555] dark:text-[#888] mb-1.5">{t('confirm_with_password')}</label>
+          <label className="block text-[12px] font-bold uppercase tracking-wider text-foreground/70 dark:text-foreground/55 mb-1.5">{t('confirm_with_password')}</label>
           <input
             type="password"
             value={password}
@@ -892,7 +892,7 @@ function DeleteAccountModal({ onClose, onDeleted }: { onClose: () => void; onDel
           type="button"
           onClick={onClose}
           disabled={submitting}
-          className="flex-1 py-3 border-2 border-[#D0D0C0] dark:border-tab-inactive rounded-xl text-[14px] font-bold text-[#555] dark:text-[#B0B0A0] hover:bg-[#E0E0D0] dark:hover:bg-[#1A1A18] transition-colors cursor-pointer disabled:opacity-50"
+          className="flex-1 py-3 border-2 border-border rounded-xl text-[14px] font-bold text-foreground/70 hover:bg-surface dark:hover:bg-[#1A1A18] transition-colors cursor-pointer disabled:opacity-50"
         >
           {t('cancel')}
         </button>
@@ -928,13 +928,13 @@ function Modal({ children, onClose }: { children: React.ReactNode; onClose: () =
     >
       <div
         onClick={(e) => e.stopPropagation()}
-        className="relative bg-[#F5F5E6] dark:bg-[#1A1A18] rounded-t-3xl sm:rounded-2xl shadow-2xl w-full sm:max-w-sm p-6 animate-fade-in-up"
+        className="relative bg-background dark:bg-[#1A1A18] rounded-t-3xl sm:rounded-2xl shadow-2xl w-full sm:max-w-sm p-6 animate-fade-in-up"
       >
         <button
           type="button"
           onClick={onClose}
           aria-label="Close"
-          className="absolute top-3 right-3 z-10 w-9 h-9 rounded-full hover:bg-black/5 dark:hover:bg-white/10 flex items-center justify-center text-[#666] dark:text-[#B0B0A0] hover:text-gold transition-colors cursor-pointer"
+          className="absolute top-3 right-3 z-10 w-9 h-9 rounded-full hover:bg-black/5 dark:hover:bg-white/10 flex items-center justify-center text-foreground/65 hover:text-gold transition-colors cursor-pointer"
         >
           <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" aria-hidden="true">
             <line x1="18" y1="6" x2="6" y2="18" />

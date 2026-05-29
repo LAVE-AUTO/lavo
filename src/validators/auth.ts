@@ -12,7 +12,9 @@ export const registerSchema = z
       .email()
       .max(320, 'Email must not exceed 320 characters')
       .refine((s) => !s.includes('..'), { message: 'Email cannot contain consecutive dots' }),
-    phone: phoneSchema,
+    /* Phone is optional on client sign-up: the users.phone column is nullable
+     * and the public frontend marks the field as optional. */
+    phone: phoneSchema.optional(),
     password: passwordSchema,
     confirm_password: z.string().min(1, 'Password confirmation is required'),
     remember_me: z.boolean().optional().default(false),

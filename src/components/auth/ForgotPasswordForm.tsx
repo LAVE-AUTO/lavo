@@ -17,7 +17,7 @@ function MailSentIcon() {
       height="40"
       viewBox="0 0 24 24"
       fill="none"
-      stroke="#C49A1E"
+      stroke="#DDAF3B"
       strokeWidth="1.75"
       strokeLinecap="round"
       strokeLinejoin="round"
@@ -92,10 +92,10 @@ export function ForgotPasswordForm({ backHref = '/login' }: ForgotPasswordFormPr
         <h2 className="text-[22px] font-bold text-dark-bg dark:text-white mb-3">
           {t('success_title')}
         </h2>
-        <p className="text-[15px] text-[#555] dark:text-Hurryline-muted leading-relaxed mb-2">
+        <p className="text-[15px] text-foreground/70 dark:text-Hurryline-muted leading-relaxed mb-2">
           {t('success_message')}
         </p>
-        <p className="text-[20px] text-[#888] dark:text-Hurryline-muted mb-8">
+        <p className="text-[20px] text-foreground/55 dark:text-Hurryline-muted mb-8">
           {t('success_spam')}
         </p>
         <Link

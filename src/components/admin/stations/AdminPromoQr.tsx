@@ -169,13 +169,13 @@ export function AdminPromoQr({
     } catch { /* silently ignore - user stays on the page */ }
   }
 
-  const inputBase = 'w-full rounded-lg border bg-transparent px-3 py-2 text-[13px] text-[#1A1A0A] outline-none transition-all dark:text-[#F0EDD4] border-[#D8D4C8] focus:border-[#C49A1E] focus:shadow-[0_0_0_3px_rgba(196,154,30,0.10)] dark:border-[#243020] dark:focus:border-[#C49A1E]';
+  const inputBase = 'w-full rounded-lg border bg-transparent px-3 py-2 text-[13px] text-[#001201] outline-none transition-all dark:text-[#FFF9EC] border-[#D8D4C8] focus:border-[#DDAF3B] focus:shadow-[0_0_0_3px_rgba(221, 175, 59,0.10)] dark:border-[#001A05] dark:focus:border-[#DDAF3B]';
 
   return (
-    <div className="rounded-2xl bg-white p-6 shadow-sm ring-1 ring-black/4 dark:bg-[#1A2416] dark:ring-white/6">
+    <div className="rounded-2xl bg-white p-6 shadow-sm ring-1 ring-black/4 dark:bg-[#001A05] dark:ring-white/6">
 
-      <div className="mb-5 flex items-start gap-2 rounded-xl border border-[#C49A1E]/20 bg-[#C49A1E]/8 px-4 py-3">
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#C49A1E" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="mt-0.5 shrink-0" aria-hidden="true">
+      <div className="mb-5 flex items-start gap-2 rounded-xl border border-[#DDAF3B]/20 bg-[#DDAF3B]/8 px-4 py-3">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#DDAF3B" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="mt-0.5 shrink-0" aria-hidden="true">
           <circle cx="12" cy="12" r="10" /><line x1="12" y1="8" x2="12" y2="12" /><line x1="12" y1="16" x2="12.01" y2="16" />
         </svg>
         <p className="text-[13px] leading-snug text-[#725800] dark:text-[#E7C96A]">
@@ -186,11 +186,11 @@ export function AdminPromoQr({
       {/* Section header */}
       <div className="mb-5 flex items-center justify-between">
         <div>
-          <p className="text-[11px] font-black uppercase tracking-[0.15em] text-[#C49A1E]">{t('section_title')}</p>
-          <p className="mt-0.5 text-[12px] text-[#888] dark:text-[#9A9A8A]">{t('section_subtitle')}</p>
+          <p className="text-[11px] font-black uppercase tracking-[0.15em] text-[#DDAF3B]">{t('section_title')}</p>
+          <p className="mt-0.5 text-[12px] text-foreground/55 dark:text-[#B0BFB1]">{t('section_subtitle')}</p>
         </div>
         {appliedRate && (
-          <span className="rounded-full border border-[#C49A1E]/30 bg-[#C49A1E]/10 px-3 py-1 text-[11px] font-black text-[#C49A1E]">
+          <span className="rounded-full border border-[#DDAF3B]/30 bg-[#DDAF3B]/10 px-3 py-1 text-[11px] font-black text-[#DDAF3B]">
             {t('commission_active_badge', { rate: appliedRate })}
           </span>
         )}
@@ -203,8 +203,8 @@ export function AdminPromoQr({
 
           {/* Commission input */}
           <div className="flex flex-col gap-1.5">
-            <label htmlFor="promo-commission" className="text-[13px] font-bold text-[#555] dark:text-[#9A9A8A]">
-              {t('field_commission')}<span className="ml-0.5 text-[#C49A1E]">*</span>
+            <label htmlFor="promo-commission" className="text-[13px] font-bold text-foreground/70 dark:text-[#B0BFB1]">
+              {t('field_commission')}<span className="ml-0.5 text-[#DDAF3B]">*</span>
             </label>
             <div className="flex items-center gap-2">
               <input
@@ -215,15 +215,15 @@ export function AdminPromoQr({
                 onChange={(e) => { setCommission(e.target.value); setCommissionError(null); }}
                 className={`w-32 ${inputBase} ${commissionError ? 'border-red-400 focus:border-red-400' : ''}`}
               />
-              <span className="text-[13px] font-bold text-[#888] dark:text-[#9A9A8A]">%</span>
+              <span className="text-[13px] font-bold text-foreground/55 dark:text-[#B0BFB1]">%</span>
             </div>
-            <p className="text-[12px] text-[#999] dark:text-[#A0A090]">{t('field_commission_hint')}</p>
+            <p className="text-[12px] text-[#999] dark:text-[#B0BFB1]">{t('field_commission_hint')}</p>
             {commissionError && <p className="text-[12px] font-semibold text-red-500">{commissionError}</p>}
           </div>
 
           {/* Generate button */}
           <button type="button" onClick={handleGenerate} disabled={generating}
-            className="flex w-full items-center justify-center gap-2 rounded-xl bg-[#C49A1E] px-4 py-2.5 text-[13px] font-bold text-[#0C1209] transition-colors hover:bg-[#B08A14] disabled:opacity-50 sm:w-auto">
+            className="flex w-full items-center justify-center gap-2 rounded-xl bg-[#DDAF3B] px-4 py-2.5 text-[13px] font-bold text-[#001201] transition-colors hover:bg-[#B08A14] disabled:opacity-50 sm:w-auto">
             {generating ? (
               <svg className="animate-spin" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" aria-hidden="true"><path d="M21 12a9 9 0 11-6.219-8.56" /></svg>
             ) : (
@@ -236,20 +236,20 @@ export function AdminPromoQr({
           </button>
 
           {/* How it works notice */}
-          <div className="flex gap-2.5 rounded-xl border border-[#C49A1E]/15 bg-[#C49A1E]/5 px-3.5 py-3">
-            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#C49A1E" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="mt-0.5 shrink-0" aria-hidden="true">
+          <div className="flex gap-2.5 rounded-xl border border-[#DDAF3B]/15 bg-[#DDAF3B]/5 px-3.5 py-3">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#DDAF3B" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="mt-0.5 shrink-0" aria-hidden="true">
               <circle cx="12" cy="12" r="10" /><line x1="12" y1="8" x2="12" y2="12" /><line x1="12" y1="16" x2="12.01" y2="16" />
             </svg>
             <div>
-              <p className="text-[12px] font-bold text-[#1A1A0A] dark:text-[#F0EDD4]">{t('qr_notice_title')}</p>
-              <p className="mt-0.5 text-[12px] leading-relaxed text-[#666] dark:text-[#A0A090]">{t('qr_notice_body')}</p>
+              <p className="text-[12px] font-bold text-[#001201] dark:text-[#FFF9EC]">{t('qr_notice_title')}</p>
+              <p className="mt-0.5 text-[12px] leading-relaxed text-foreground/65 dark:text-[#B0BFB1]">{t('qr_notice_body')}</p>
             </div>
           </div>
 
           {refCode && (
-            <div className="rounded-xl border border-[#E8E4DC] bg-[#F8F6F2] px-3.5 py-3 dark:border-dark-surface dark:bg-[#0F1A0C]">
+            <div className="rounded-xl border border-[#FFF9EC] bg-[#F8F6F2] px-3.5 py-3 dark:border-dark-surface dark:bg-dark-bg">
               <p className="mb-0.5 text-[9px] font-bold uppercase tracking-wider text-[#BBBBAA]">{t('ref_code_label')}</p>
-              <p className="break-all text-[11px] font-mono text-[#555] dark:text-[#B8B2A2]">{refCode}</p>
+              <p className="break-all text-[11px] font-mono text-foreground/70 dark:text-[#B8B2A2]">{refCode}</p>
             </div>
           )}
         </div>
@@ -257,27 +257,27 @@ export function AdminPromoQr({
         {/* Right: QR display + actions */}
         {promoUrl && (
           <div className="flex flex-col items-center gap-3">
-            <div className={`rounded-xl border border-[#E8E4DC] bg-white p-3 dark:border-dark-surface ${qrReady ? '' : 'animate-pulse'}`}>
+            <div className={`rounded-xl border border-[#FFF9EC] bg-white p-3 dark:border-dark-surface ${qrReady ? '' : 'animate-pulse'}`}>
               <canvas ref={canvasRef} className="block" />
             </div>
 
             {/* Referral URL */}
-            <div className="w-full max-w-60 rounded-lg border border-[#E8E4DC] bg-[#F8F6F2] px-3 py-2 dark:border-dark-surface dark:bg-[#0F1A0C]">
+            <div className="w-full max-w-60 rounded-lg border border-[#FFF9EC] bg-[#F8F6F2] px-3 py-2 dark:border-dark-surface dark:bg-dark-bg">
               <p className="mb-0.5 text-[9px] font-bold uppercase tracking-wider text-[#BBBBAA]">{t('referral_url_label')}</p>
-              <p className="break-all text-[9px] text-[#888] dark:text-[#9A9A8A]">{promoUrl}</p>
+              <p className="break-all text-[9px] text-foreground/55 dark:text-[#B0BFB1]">{promoUrl}</p>
             </div>
 
             {/* Download + Print */}
             <div className="flex w-full max-w-60 gap-2">
               <button type="button" onClick={downloadPng}
-                className="flex flex-1 items-center justify-center gap-1.5 rounded-lg bg-[#C49A1E] px-3 py-2 text-[12px] font-bold text-[#0C1209] hover:bg-[#B08A14]">
+                className="flex flex-1 items-center justify-center gap-1.5 rounded-lg bg-[#DDAF3B] px-3 py-2 text-[12px] font-bold text-[#001201] hover:bg-[#B08A14]">
                 <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" aria-hidden="true">
                   <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" /><polyline points="7 10 12 15 17 10" /><line x1="12" y1="15" x2="12" y2="3" />
                 </svg>
                 {t('btn_download_png')}
               </button>
               <button type="button" onClick={printPdf}
-                className="flex flex-1 items-center justify-center gap-1.5 rounded-lg border border-[#D8D4C8] px-3 py-2 text-[12px] font-semibold text-[#555] hover:bg-[#F5F3EE] dark:border-dark-surface dark:text-[#9A9A8A] dark:hover:bg-[#1A2A14]">
+                className="flex flex-1 items-center justify-center gap-1.5 rounded-lg border border-[#D8D4C8] px-3 py-2 text-[12px] font-semibold text-foreground/70 hover:bg-[#F5F3EE] dark:border-dark-surface dark:text-[#B0BFB1] dark:hover:bg-[#1A2A14]">
                 <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" aria-hidden="true">
                   <polyline points="6 9 6 2 18 2 18 9" /><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2" /><rect x="6" y="14" width="12" height="8" />
                 </svg>

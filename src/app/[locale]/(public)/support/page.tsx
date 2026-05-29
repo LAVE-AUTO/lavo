@@ -18,7 +18,7 @@ export default async function SupportPage({ params }: Props) {
   return (
     <>
       <PublicNavbar />
-      <main className="min-h-screen bg-[#F7F3EC] dark:bg-[#0d1f0f] transition-colors">
+      <main className="min-h-screen bg-[#FFEECA] dark:bg-dark-bg transition-colors">
         <SupportContent />
       </main>
       <div className="hidden sm:block"><PublicFooter /></div>

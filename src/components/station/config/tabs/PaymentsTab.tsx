@@ -72,9 +72,9 @@ function StatusRow({ label, enabled }: { label: string; enabled: boolean }) {
 
 function Skeleton() {
   return (
-    <div className="animate-pulse rounded-2xl border border-[#E8E4DC] bg-white p-6 dark:border-[#1A2A14] dark:bg-[#182214]">
-      <div className="h-4 w-32 rounded bg-[#E8E4DC] dark:bg-[#243020] mb-4" />
-      <div className="h-10 w-full rounded-xl bg-[#F0EDE4] dark:bg-[#0F1A0C]" />
+    <div className="animate-pulse rounded-2xl border border-[#FFF9EC] bg-white p-6 dark:border-[#1A2A14] dark:bg-[#182214]">
+      <div className="h-4 w-32 rounded bg-[#FFF9EC] dark:bg-[#001A05] mb-4" />
+      <div className="h-10 w-full rounded-xl bg-[#F0EDE4] dark:bg-dark-bg" />
     </div>
   );
 }
@@ -120,9 +120,9 @@ export function PaymentsTab({ locked }: Props) {
 
   return (
     <div className="flex flex-col gap-5">
-      <section className="rounded-2xl border border-[#E8E4DC] bg-white p-6 shadow-sm dark:border-[#1A2A14] dark:bg-[#182214]">
+      <section className="rounded-2xl border border-[#FFF9EC] bg-white p-6 shadow-sm dark:border-[#1A2A14] dark:bg-[#182214]">
         <div className="mb-4 flex items-center justify-between gap-3">
-          <h3 className="text-[11px] font-bold uppercase tracking-[1.5px] text-[#C49A1E]">
+          <h3 className="text-[11px] font-bold uppercase tracking-[1.5px] text-[#DDAF3B]">
             {t('payments_stripe_title')}
           </h3>
           {isActive && (
@@ -132,7 +132,7 @@ export function PaymentsTab({ locked }: Props) {
             </span>
           )}
           {isPending && (
-            <span className="flex items-center gap-1 rounded-full bg-[#FFF8E6] px-2.5 py-0.5 text-[10px] font-bold uppercase tracking-wider text-[#C49A1E] dark:bg-[#1A1200] dark:text-[#C49A1E]">
+            <span className="flex items-center gap-1 rounded-full bg-[#FFF8E6] px-2.5 py-0.5 text-[10px] font-bold uppercase tracking-wider text-[#DDAF3B] dark:bg-[#1A1200] dark:text-[#DDAF3B]">
               <WarningIcon />
               {t('payments_stripe_pending_badge')}
             </span>
@@ -141,7 +141,7 @@ export function PaymentsTab({ locked }: Props) {
 
         {!isConnected && (
           <div className="flex flex-col gap-4">
-            <p className="text-[13px] leading-relaxed text-[#666] dark:text-[#9A9A8A]">
+            <p className="text-[13px] leading-relaxed text-foreground/65 dark:text-[#B0BFB1]">
               {t('payments_stripe_not_connected_desc')}
             </p>
             <button
@@ -158,14 +158,14 @@ export function PaymentsTab({ locked }: Props) {
 
         {isPending && (
           <div className="flex flex-col gap-4">
-            <p className="text-[13px] leading-relaxed text-[#666] dark:text-[#9A9A8A]">
+            <p className="text-[13px] leading-relaxed text-foreground/65 dark:text-[#B0BFB1]">
               {t('payments_stripe_pending_desc')}
             </p>
             <button
               type="button"
               disabled={actionLoading || locked}
               onClick={handleConnect}
-              className="flex w-full items-center justify-center gap-2 rounded-xl bg-[#C49A1E] px-5 py-3 text-[13px] font-bold text-[#0C1209] transition-opacity hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-50 sm:w-auto"
+              className="flex w-full items-center justify-center gap-2 rounded-xl bg-[#DDAF3B] px-5 py-3 text-[13px] font-bold text-[#001201] transition-opacity hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-50 sm:w-auto"
             >
               {actionLoading ? t('payments_stripe_connecting') : t('payments_stripe_complete_btn')}
             </button>

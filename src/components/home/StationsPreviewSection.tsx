@@ -11,7 +11,7 @@ function StationRow({
   bookLabel: string; joinLabel: string; dimmed?: boolean;
 }) {
   return (
-    <div className={`rounded-[12px] p-5 transition-all duration-300 hover:translate-x-1.5 hover:shadow-[0_16px_40px_rgba(0,0,0,0.18)] dark:hover:shadow-[0_16px_40px_rgba(0,0,0,0.35)] bg-[#e8e2d4] dark:bg-[#f5edd6] ${dimmed ? 'opacity-50' : ''}`}>
+    <div className={`rounded-[12px] p-5 transition-all duration-300 hover:translate-x-1.5 hover:shadow-[0_16px_40px_rgba(0,0,0,0.18)] dark:hover:shadow-[0_16px_40px_rgba(0,0,0,0.35)] bg-[#FFF9EC] dark:bg-[#f5edd6] ${dimmed ? 'opacity-50' : ''}`}>
       <div className="mb-2.5 flex items-start justify-between">
         <span className="text-[15px] font-bold text-[#3d2a10]">{name}</span>
         <span className={`rounded-full px-2 py-0.5 text-[9px] font-bold ${
@@ -31,7 +31,7 @@ function StationRow({
       </div>
 
       <div className="mb-1 flex items-center justify-between">
-        <span className="text-[11px] text-[#c8980a]">
+        <span className="text-[11px] text-[#DDAF3B]">
           {'★'.repeat(Math.floor(parseFloat(rating)))}
           {parseFloat(rating) % 1 !== 0 && '☆'}
           {' '}{rating}
@@ -45,7 +45,7 @@ function StationRow({
 
       {status === 'open' && (
         <div className="mt-2.5 flex gap-2">
-          <span className="inline-block rounded-[4px] bg-[#c8980a] px-3.5 py-1.5 text-[10px] font-bold uppercase tracking-[0.8px] text-[#0d1f0f]">
+          <span className="inline-block rounded-[4px] bg-[#DDAF3B] px-3.5 py-1.5 text-[10px] font-bold uppercase tracking-[0.8px] text-[#001201]">
             {bookLabel}
           </span>
           <span className="inline-block rounded-[4px] border border-[rgba(61,42,16,0.2)] px-3.5 py-1.5 text-[10px] uppercase tracking-[0.8px] text-[rgba(61,42,16,0.5)]">
@@ -73,21 +73,21 @@ export function StationsPreviewSection() {
           <div className="grid grid-cols-1 gap-10 lg:grid-cols-2 lg:gap-[72px] items-center">
             {/* Left: text + pricing */}
             <div>
-              <div className="font-dm-mono mb-4 flex items-center gap-3 text-[11px] uppercase tracking-[3px] text-[#c8980a]">
+              <div className="font-dm-mono mb-4 flex items-center gap-3 text-[11px] uppercase tracking-[3px] text-[#DDAF3B]">
                 {t('tag')}
-                <span className="h-px w-9 bg-[#c8980a] opacity-50" />
+                <span className="h-px w-9 bg-[#DDAF3B] opacity-50" />
               </div>
-              <h2 className="font-playfair mb-5 text-[clamp(34px,3.8vw,52px)] font-bold leading-[1.1] text-[#1a1a1a] dark:text-[#fef9e7]">
+              <h2 className="font-playfair mb-5 text-[clamp(34px,3.8vw,52px)] font-bold leading-[1.1] text-[#001201] dark:text-[#FFEECA]">
                 {t('title')}<br />
-                <em className="italic text-[#c8980a]">{t('title_accent')}</em>
+                <em className="italic text-[#DDAF3B]">{t('title_accent')}</em>
               </h2>
-              <p className="mb-7 text-[16px] leading-[1.75] text-[#4a6a4d] dark:text-[#7a9a7d]">
+              <p className="mb-7 text-[16px] leading-[1.75] text-[var(--foreground)] dark:text-[#B0BFB1]">
                 {t('desc')}
               </p>
 
               {/* Pricing card */}
-              <div className="rounded-[12px] border border-[rgba(200,152,10,0.15)] bg-[#1a1a0f] dark:bg-[#162218] p-6">
-                <div className="font-dm-mono mb-3.5 text-[10px] uppercase tracking-[2px] text-[#c8980a]">
+              <div className="rounded-[12px] border border-[rgba(221,175,59,0.15)] bg-[#1a1a0f] dark:bg-[#001A05] p-6">
+                <div className="font-dm-mono mb-3.5 text-[10px] uppercase tracking-[2px] text-[#DDAF3B]">
                   {t('pricing_label')}
                 </div>
                 <div className="grid grid-cols-3 gap-2">
@@ -96,7 +96,7 @@ export function StationsPreviewSection() {
                       <div className="mb-1 text-[8px] uppercase tracking-[1.5px] text-[rgba(245,237,214,0.4)]">
                         {fmt.type}
                       </div>
-                      <div className="font-rajdhani text-[22px] font-bold text-[#e8b520]">{fmt.price}</div>
+                      <div className="font-rajdhani text-[22px] font-bold text-[#DDAF3B]">{fmt.price}</div>
                       <div className="mt-0.5 text-[9px] text-[rgba(245,237,214,0.35)]">{fmt.dur}</div>
                     </div>
                   ))}

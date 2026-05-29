@@ -306,7 +306,7 @@ export function StationListView({ washTypes, vehicleFormats }: StationListViewPr
     <div className="animate-fade-in">
 
       {/* Sticky controls */}
-      <div className="sticky top-[58px] z-30 bg-[#EDEDED] dark:bg-dark-bg pb-3 -mx-4 px-4 sm:-mx-6 sm:px-6 pt-3 space-y-3">
+      <div className="sticky top-[58px] z-30 bg-[#FFF9EC] dark:bg-background pb-3 -mx-4 px-4 sm:-mx-6 sm:px-6 pt-3 space-y-3">
         {/* Unified search row + filter button */}
         <div className="flex gap-2">
           <div className="flex-1">
@@ -325,7 +325,7 @@ export function StationListView({ washTypes, vehicleFormats }: StationListViewPr
               'relative flex items-center gap-1.5 px-4 py-2.5 rounded-xl text-[14px] font-bold transition-colors cursor-pointer',
               panelOpen || activeCount > 0
                 ? 'bg-gold text-dark-bg'
-                : 'bg-[#E0E0D0] dark:bg-tab-inactive text-[#222] dark:text-[#D0D0C0] hover:bg-[#D0D0C0] dark:hover:bg-tab-inactive',
+                : 'bg-surface dark:bg-tab-inactive text-[#222] dark:text-[#D0D0C0] hover:bg-[#D0D0C0] dark:hover:bg-tab-inactive',
             ].join(' ')}
             aria-label={t('filter_panel_title')}
           >
@@ -346,7 +346,7 @@ export function StationListView({ washTypes, vehicleFormats }: StationListViewPr
         {/* Geocoded location pill — shown when background geocoding resolves */}
         {(geocoding && searchQuery) || geocodedCoords ? (
           <div className="flex items-center gap-2">
-            <span className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-gold/15 border border-gold/30 text-[12.5px] font-semibold text-[#1A1A1A] dark:text-white max-w-[calc(100%-5rem)] overflow-hidden">
+            <span className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-gold/15 border border-gold/30 text-[12.5px] font-semibold text-[#001201] dark:text-white max-w-[calc(100%-5rem)] overflow-hidden">
               {geocoding ? (
                 <svg className="animate-spin shrink-0" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" aria-hidden="true">
                   <path d="M12 2a10 10 0 0 1 10 10" strokeLinecap="round" />
@@ -411,7 +411,7 @@ export function StationListView({ washTypes, vehicleFormats }: StationListViewPr
                 'py-1.5 px-3.5 rounded-full text-[13.5px] font-bold whitespace-nowrap transition-colors duration-150 shrink-0 flex items-center gap-1.5',
                 sort === key && !(key === 'default' && filters.onlyAvail)
                   ? 'bg-gold text-dark-bg'
-                  : 'bg-[#E0E0D0] dark:bg-dark-card text-[#222] dark:text-[#D0D0C0] hover:bg-[#D0D0C0] dark:hover:bg-tab-inactive',
+                  : 'bg-surface text-[#222] dark:text-[#D0D0C0] hover:bg-[#D0D0C0] dark:hover:bg-tab-inactive',
               ].join(' ')}
             >
               {icon && <span aria-hidden="true">{icon}</span>}
@@ -426,7 +426,7 @@ export function StationListView({ washTypes, vehicleFormats }: StationListViewPr
               'py-1.5 px-3.5 rounded-full text-[13.5px] font-bold whitespace-nowrap transition-colors duration-150 shrink-0',
               filters.onlyAvail
                 ? 'bg-gold text-dark-bg'
-                : 'bg-[#E0E0D0] dark:bg-dark-card text-[#222] dark:text-[#D0D0C0] hover:bg-[#D0D0C0] dark:hover:bg-tab-inactive',
+                : 'bg-surface text-[#222] dark:text-[#D0D0C0] hover:bg-[#D0D0C0] dark:hover:bg-tab-inactive',
             ].join(' ')}
           >
             {t('filter_available')}

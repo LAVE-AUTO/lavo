@@ -234,6 +234,34 @@ const TEXTS = {
       cta: 'Open Hurryline',
     },
   },
+  walkInReceipt: {
+    fr: {
+      subject: 'Votre lavage est terminé — Hurryline',
+      greeting: 'Bonjour,',
+      lead: "Votre véhicule vient d'être lavé. Voici le récapitulatif de votre passage.",
+      stationLabel: 'Station',
+      serviceLabel: 'Service',
+      formatLabel: 'Format véhicule',
+      dateLabel: 'Date',
+      ctaIntro:
+        "Ce service a été enregistré hors plateforme. Pour réserver vos prochains lavages en quelques secondes, suivre vos passages et profiter d'offres dédiées, créez votre compte gratuitement.",
+      ctaLabel: 'Créer mon compte Hurryline',
+      closing: 'Merci de votre confiance et à très vite.',
+    },
+    en: {
+      subject: 'Your wash is complete — Hurryline',
+      greeting: 'Hello,',
+      lead: 'Your car has just been washed. Here is a quick recap of your visit.',
+      stationLabel: 'Station',
+      serviceLabel: 'Service',
+      formatLabel: 'Vehicle format',
+      dateLabel: 'Date',
+      ctaIntro:
+        'This service was logged off-platform. Create a free Hurryline account to book your next washes in seconds, track your visits and unlock member perks.',
+      ctaLabel: 'Create my Hurryline account',
+      closing: 'Thanks for your trust — see you soon.',
+    },
+  },
   paymentFailed: {
     fr: {
       subject: 'Paiement non abouti - Hurryline',
@@ -290,7 +318,7 @@ function brandedEmail(
         <td align="center" style="padding: 28px 0 8px;">
           <a href="${safeCtaHref}" target="_blank" rel="noopener noreferrer" style="
             display: inline-block;
-            background-color: #af8408;
+            background-color: #DDAF3B;
             color: #ffffff;
             font-family: 'Rajdhani', 'Segoe UI', Tahoma, sans-serif;
             font-size: 16px;
@@ -316,8 +344,8 @@ function brandedEmail(
   <meta http-equiv="X-UA-Compatible" content="IE=edge" />
   <title>Hurryline</title>
 </head>
-<body style="margin: 0; padding: 0; background-color: #f4f2ec; font-family: 'Rajdhani', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;">
-  <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background-color: #f4f2ec; padding: 40px 16px;">
+<body style="margin: 0; padding: 0; background-color: #FFEECA; font-family: 'Rajdhani', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;">
+  <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background-color: #FFEECA; padding: 40px 16px;">
     <tr>
       <td align="center">
         <table role="presentation" width="560" cellpadding="0" cellspacing="0" style="max-width: 560px; width: 100%;">
@@ -343,7 +371,7 @@ function brandedEmail(
                   <td style="
                     font-size: 18px;
                     font-weight: 700;
-                    color: #1A1A1A;
+                    color: #001201;
                     padding-bottom: 16px;
                     line-height: 1.4;
                   ">${escapeHtmlPlain(opts.greeting)}</td>
@@ -382,7 +410,7 @@ function brandedEmail(
           <!-- Footer -->
           <tr>
             <td align="center" style="padding: 20px 0 0;">
-              <p style="margin: 0 0 4px; font-size: 13px; color: #af8408; font-weight: 600; letter-spacing: 0.04em;">${f.teamLine}</p>
+              <p style="margin: 0 0 4px; font-size: 13px; color: #DDAF3B; font-weight: 600; letter-spacing: 0.04em;">${f.teamLine}</p>
               <p style="margin: 0 0 4px; font-size: 12px; color: #aaaaaa;">${f.autoMessage}</p>
               <p style="margin: 0; font-size: 12px; color: #aaaaaa;">© ${new Date().getFullYear()} Hurryline. ${locale === 'fr' ? 'Tous droits réservés.' : 'All rights reserved.'}</p>
             </td>
@@ -551,7 +579,7 @@ export async function sendStationRejectionEmail(
     subject: t.subject(subjectName),
     html: brandedEmail(locale, {
       greeting: t.greeting,
-      bodyHtml: `${t.body(escapedName)}<br/><br/><p style="margin:0 0 6px;font-weight:bold;">${t.reasonLabel}</p><p style="margin:0;padding:12px 16px;background:#F7F6F0;border-left:3px solid #C49A1E;border-radius:4px;line-height:1.5;">${escapedReason}</p><br/>${t.extra}`,
+      bodyHtml: `${t.body(escapedName)}<br/><br/><p style="margin:0 0 6px;font-weight:bold;">${t.reasonLabel}</p><p style="margin:0;padding:12px 16px;background:#F7F6F0;border-left:3px solid #DDAF3B;border-radius:4px;line-height:1.5;">${escapedReason}</p><br/>${t.extra}`,
       ctaUrl: resubmitUrl || undefined,
       ctaLabel: t.cta,
       footNote: t.closing,
@@ -718,6 +746,99 @@ export async function sendPaymentSuccessEmail(params: {
 }
 
 
+/**
+ * Walk-in service completion email — sent to clients who were added
+ * manually by a station merchant and have not yet registered on
+ * Hurryline. Contains a clean off-platform receipt (no payment ref
+ * because the merchant collected payment outside the app) and a CTA
+ * to create an account.
+ */
+export async function sendWalkInReceiptEmail(params: {
+  to: string;
+  locale?: Locale;
+  clientName?: string;
+  stationName?: string;
+  serviceName?: string;
+  vehicleFormatLabel?: string;
+  completedAt?: Date;
+}): Promise<void> {
+  const {
+    to,
+    locale = 'fr',
+    clientName,
+    stationName,
+    serviceName,
+    vehicleFormatLabel,
+    completedAt,
+  } = params;
+  const client = getResendClient();
+  if (!client) {
+    warnResendMissingOnce('sendWalkInReceiptEmail');
+    return;
+  }
+  if (!isReasonableRecipientEmail(to)) return;
+
+  const t = TEXTS.walkInReceipt[locale];
+  const greeting = clientName?.trim()
+    ? `${locale === 'en' ? 'Hello' : 'Bonjour'} ${escapeHtmlPlain(clientName.trim())},`
+    : t.greeting;
+
+  /* Build the receipt block as a clean table so it renders well in
+   * Gmail / Outlook / Apple Mail without needing inline CSS gymnastics. */
+  const rows: Array<{ label: string; value: string }> = [];
+  if (stationName?.trim()) rows.push({ label: t.stationLabel, value: stationName.trim() });
+  if (serviceName?.trim()) rows.push({ label: t.serviceLabel, value: serviceName.trim() });
+  if (vehicleFormatLabel?.trim()) rows.push({ label: t.formatLabel, value: vehicleFormatLabel.trim() });
+  if (completedAt) {
+    const formatted = completedAt.toLocaleDateString(locale === 'en' ? 'en-CA' : 'fr-CA', {
+      day: 'numeric', month: 'long', year: 'numeric', hour: '2-digit', minute: '2-digit',
+    });
+    rows.push({ label: t.dateLabel, value: formatted });
+  }
+
+  const receiptHtml = rows.length
+    ? `<table role="presentation" cellpadding="0" cellspacing="0" style="border-collapse:collapse;border:1px solid #e8e4d8;border-radius:8px;overflow:hidden;margin:18px 0;width:100%;max-width:520px;">
+        ${rows
+          .map(
+            (row, idx) => `
+              <tr>
+                <td style="padding:10px 14px;background:${idx % 2 === 0 ? '#FFEECA' : '#FFF9EC'};font-size:12px;color:#666;font-weight:700;text-transform:uppercase;letter-spacing:0.5px;width:38%;">
+                  ${escapeHtmlPlain(row.label)}
+                </td>
+                <td style="padding:10px 14px;background:${idx % 2 === 0 ? '#FFEECA' : '#FFF9EC'};font-size:14px;color:#001201;font-weight:600;">
+                  ${escapeHtmlPlain(row.value)}
+                </td>
+              </tr>`,
+          )
+          .join('')}
+      </table>`
+    : '';
+
+  const registerUrl =
+    safeHttpUrlForEmailHref(`${APP_URL}/${locale}/register?source=walk_in`) ??
+    safeHttpUrlForEmailHref(`${APP_URL}/${locale}/register`) ??
+    '';
+
+  const bodyHtml = `${t.lead}${receiptHtml}<p style="margin:18px 0 0;font-size:14px;line-height:1.6;color:#444;">${t.ctaIntro}</p><br/>${t.closing}`;
+
+  try {
+    await client.emails.send({
+      from: FROM,
+      to,
+      subject: t.subject,
+      html: brandedEmail(locale, {
+        greeting,
+        bodyHtml,
+        ctaUrl: registerUrl || undefined,
+        ctaLabel: t.ctaLabel,
+      }),
+    });
+  } catch (e) {
+    console.error('sendWalkInReceiptEmail: Resend send failed', e instanceof Error ? e.message : String(e));
+  }
+}
+
+
 /** Payment failed or cancelled; reservation voided. No-op without Resend; send errors logged only. */
 export async function sendPaymentFailedEmail(params: {
   to: string;
@@ -871,14 +992,14 @@ export async function sendAdminOtpEmail(
     <div style="margin: 0 0 16px; text-align: center;">
       <span style="
         display: inline-block;
-        background-color: #f4f2ec;
-        border: 1.5px solid #C49A1E;
+        background-color: #FFEECA;
+        border: 1.5px solid #DDAF3B;
         border-radius: 12px;
         padding: 16px 32px;
         font-size: 32px;
         font-weight: 900;
         letter-spacing: 0.25em;
-        color: #1A1A0A;
+        color: #001201;
         font-family: 'Courier New', Courier, monospace;
       ">${safeCode}</span>
     </div>
@@ -943,19 +1064,19 @@ export async function sendAdminWelcomeEmail(
     <p style="margin: 0 0 16px;">Voici vos identifiants de connexion :</p>
     <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin: 0 0 16px;">
       <tr>
-        <td style="padding: 8px 12px; background: #f4f2ec; border-radius: 8px 8px 0 0; border: 1px solid #e8e4da;">
+        <td style="padding: 8px 12px; background: #FFEECA; border-radius: 8px 8px 0 0; border: 1px solid #e8e4da;">
           <span style="font-size: 13px; color: #888;">Adresse e-mail</span><br/>
-          <strong style="font-size: 14px; color: #1A1A0A;">${escapeHtmlPlain(toEmail)}</strong>
+          <strong style="font-size: 14px; color: #001201;">${escapeHtmlPlain(toEmail)}</strong>
         </td>
       </tr>
       <tr>
-        <td style="padding: 8px 12px; background: #f4f2ec; border-radius: 0 0 8px 8px; border: 1px solid #e8e4da; border-top: none;">
+        <td style="padding: 8px 12px; background: #FFEECA; border-radius: 0 0 8px 8px; border: 1px solid #e8e4da; border-top: none;">
           <span style="font-size: 13px; color: #888;">Mot de passe temporaire</span><br/>
-          <strong style="font-size: 16px; font-family: 'Courier New', Courier, monospace; letter-spacing: 0.08em; color: #1A1A0A;">${safePassword}</strong>
+          <strong style="font-size: 16px; font-family: 'Courier New', Courier, monospace; letter-spacing: 0.08em; color: #001201;">${safePassword}</strong>
         </td>
       </tr>
     </table>
-    <div style="padding: 12px 16px; background: #FFF8E8; border-left: 3px solid #C49A1E; border-radius: 4px; margin: 0 0 12px;">
+    <div style="padding: 12px 16px; background: #FFF8E8; border-left: 3px solid #DDAF3B; border-radius: 4px; margin: 0 0 12px;">
       <p style="margin: 0; font-size: 13px; color: #7A5E0A;">
         Vous devrez changer ce mot de passe lors de votre première connexion.
       </p>

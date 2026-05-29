@@ -28,7 +28,7 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(function Input(
       {label && (
         <label
           htmlFor={inputId}
-          className="text-[13px] font-medium text-[#555] dark:text-Hurryline-muted"
+          className="text-[13px] font-medium text-foreground/70 dark:text-Hurryline-muted"
         >
           {label}
         </label>
@@ -43,12 +43,12 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(function Input(
           ref={ref}
           id={inputId}
           className={[
-            'w-full rounded-[10px] border bg-white dark:bg-dark-card text-[#1A1A1A] dark:text-white',
+            'w-full rounded-[10px] border bg-white dark:bg-surface text-[#001201] dark:text-white',
             'px-3 py-2.5 text-[15px] placeholder:text-Hurryline-muted',
             'outline-none focus:ring-2 focus:ring-gold/40 focus:border-gold transition-colors',
             error
               ? 'border-Hurryline-error focus:ring-Hurryline-error/30'
-              : 'border-[#CCCCCC] dark:border-tab-inactive',
+              : 'border-[#CCCCCC] dark:border-border',
             leftIcon ? 'pl-9' : '',
             rightIcon ? 'pr-9' : '',
             className,

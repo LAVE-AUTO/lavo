@@ -16,7 +16,7 @@ interface Props {
 }
 
 const timeInputClass =
-  'w-full rounded-lg border border-[#E0DCD0] bg-white px-2.5 py-1.5 text-center font-mono text-[12px] tabular-nums text-[#1A1A0A] outline-none transition-all duration-150 placeholder:text-[#BBBBAA] hover:border-[#D0C8B0] focus:border-[#C49A1E] focus:shadow-[0_0_0_3px_rgba(196,154,30,0.12)] disabled:cursor-not-allowed disabled:opacity-50 dark:border-[#243020] dark:bg-[#0F1A0C] dark:text-[#F0EDD4] dark:placeholder:text-[#4A4A3A] dark:hover:border-[#2E3C2A]';
+  'w-full rounded-lg border border-[#FFF9EC] bg-white px-2.5 py-1.5 text-center font-mono text-[12px] tabular-nums text-[#001201] outline-none transition-all duration-150 placeholder:text-[#BBBBAA] hover:border-[#D0C8B0] focus:border-[#DDAF3B] focus:shadow-[0_0_0_3px_rgba(221, 175, 59,0.12)] disabled:cursor-not-allowed disabled:opacity-50 dark:border-[#001A05] dark:bg-dark-bg dark:text-[#FFF9EC] dark:placeholder:text-[#4A4A3A] dark:hover:border-[#2E3C2A]';
 
 function Toggle({
   checked,
@@ -39,7 +39,7 @@ function Toggle({
       <span
         className={`absolute inset-0 rounded-full transition-colors ${
           disabled ? 'cursor-not-allowed opacity-60' : 'cursor-pointer'
-        } ${checked ? 'bg-[#C49A1E]' : 'bg-[#D8D4C8] dark:bg-[#243020]'}`}
+        } ${checked ? 'bg-[#DDAF3B]' : 'bg-[#D8D4C8] dark:bg-[#001A05]'}`}
         aria-hidden="true"
       >
         <span
@@ -76,7 +76,7 @@ function TimeRange({
         onChange={onStartChange ? (e) => onStartChange(e.target.value) : undefined}
         aria-label="Start"
       />
-      <span className="text-[12px] font-bold text-[#C49A1E] select-none" aria-hidden="true">
+      <span className="text-[12px] font-bold text-[#DDAF3B] select-none" aria-hidden="true">
         →
       </span>
       <input
@@ -108,7 +108,7 @@ export function HoursDayRow({
 }: Props) {
   return (
     <div className="grid grid-cols-[100px_44px_1fr] items-center gap-3 border-b border-[#F0EDE4] py-3 last:border-b-0 dark:border-[#1A2A14]">
-      <span className="text-[13px] font-bold text-[#1A1A0A] dark:text-[#F0EDD4]">{dayLabel}</span>
+      <span className="text-[13px] font-bold text-[#001201] dark:text-[#FFF9EC]">{dayLabel}</span>
       <Toggle checked={enabled} disabled={disabled} onChange={onToggle} />
       <div className={`grid grid-cols-1 gap-2 sm:grid-cols-2 ${enabled ? '' : 'opacity-40'}`}>
         <TimeRange

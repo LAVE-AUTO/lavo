@@ -32,12 +32,12 @@ export function DashboardDelaysPanel({ items, totalPending }: Props) {
   const locale = useLocale();
 
   return (
-    <div className="flex w-full max-h-[35vh] mt-2 shrink-0 flex-col overflow-hidden border-b border-[#E0DCD0] bg-[#F0EDE0] md:max-h-none md:w-[280px] md:border-b-0 md:border-r dark:border-[#1A2A14] dark:bg-[#182214]">
+    <div className="flex w-full max-h-[35vh] mt-2 shrink-0 flex-col overflow-hidden border-b border-[#FFF9EC] bg-[#F0EDE0] md:max-h-none md:w-[280px] md:border-b-0 md:border-r dark:border-[#1A2A14] dark:bg-[#182214]">
       {/* Header */}
-      <div className="border-b border-[#E0DCD0] px-4 py-3.5 dark:border-[#1A2A14]">
+      <div className="border-b border-[#FFF9EC] px-4 py-3.5 dark:border-[#1A2A14]">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
-            <div className="text-[14px] font-black text-[#1A1A0A] dark:text-[#F0EDD4]">
+            <div className="text-[14px] font-black text-[#001201] dark:text-[#FFF9EC]">
               {t('delays_title')}
             </div>
             {totalPending > 0 && (
@@ -48,12 +48,12 @@ export function DashboardDelaysPanel({ items, totalPending }: Props) {
           </div>
           <Link
             href={`/${locale}/station/delays`}
-            className="text-[11px] font-bold text-[#C49A1E] transition-colors hover:text-[#D4A820]"
+            className="text-[11px] font-bold text-[#DDAF3B] transition-colors hover:text-[#DDAF3B]"
           >
             {t('delays_see_all')} →
           </Link>
         </div>
-        <div className="mt-0.5 text-[12px] text-[#666] dark:text-[#A0A090]">
+        <div className="mt-0.5 text-[12px] text-foreground/65 dark:text-[#B0BFB1]">
           {totalPending > 0 ? t('delays_pending', { n: totalPending }) : t('delays_empty')}
         </div>
       </div>
@@ -76,24 +76,24 @@ export function DashboardDelaysPanel({ items, totalPending }: Props) {
               <circle cx="12" cy="12" r="10" />
               <polyline points="12 6 12 12 16 14" />
             </svg>
-            <p className="text-[12px] text-[#888] dark:text-[#9A9A8A]">{t('delays_empty')}</p>
+            <p className="text-[12px] text-foreground/55 dark:text-[#B0BFB1]">{t('delays_empty')}</p>
           </div>
         ) : (
           items.map((item) => (
             <Link
               key={item.id}
               href={`/${locale}/station/delays`}
-              className="group flex flex-col gap-1 rounded-xl border border-[#E8E4DC] bg-white p-3 transition-all duration-150 hover:border-[#C49A1E]/40 hover:shadow-sm dark:border-[#1A2A14] dark:bg-[#0F1A0C]"
+              className="group flex flex-col gap-1 rounded-xl border border-[#FFF9EC] bg-white p-3 transition-all duration-150 hover:border-[#DDAF3B]/40 hover:shadow-sm dark:border-[#1A2A14] dark:bg-dark-bg"
             >
               <div className="flex items-center justify-between gap-2">
-                <span className="truncate text-[12px] font-bold text-[#1A1A0A] dark:text-[#F0EDD4]">
+                <span className="truncate text-[12px] font-bold text-[#001201] dark:text-[#FFF9EC]">
                   {item.clientName}
                 </span>
-                <span className="shrink-0 text-[10px] font-semibold text-[#888] dark:text-[#9A9A8A]">
+                <span className="shrink-0 text-[10px] font-semibold text-foreground/55 dark:text-[#B0BFB1]">
                   {timeAgo(item.requestedAt, locale)}
                 </span>
               </div>
-              <p className="line-clamp-2 text-[11px] leading-snug text-[#666] dark:text-[#A0A090]">
+              <p className="line-clamp-2 text-[11px] leading-snug text-foreground/65 dark:text-[#B0BFB1]">
                 {item.message || t('delays_no_message')}
               </p>
               <div className="mt-1 inline-flex w-fit items-center gap-1 rounded-full bg-[#EF4444]/10 px-2 py-0.5 text-[9px] font-bold uppercase tracking-wider text-[#EF4444]">

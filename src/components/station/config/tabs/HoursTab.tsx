@@ -43,8 +43,63 @@ function buildDefaultDays(): HourDay[] {
   }));
 }
 
+/**
+ * Builds a Modèle row from the saved per-day schedule so the merchant
+ * sees the plage they previously configured instead of an empty form
+ * when they come back to tweak hours. Picks the most frequent
+ * (morning_start, morning_end) and (afternoon_start, afternoon_end)
+ * tuple across opened days; ties resolve to the first opened day so
+ * stations with identical schedules across the week (the common case)
+ * get a deterministic and intuitive result.
+ */
+function deriveTemplateFromDays(days: HourDay[]): HourTemplate {
+  const empty: HourTemplate = {
+    morning_start: '',
+    morning_end: '',
+    afternoon_start: '',
+    afternoon_end: '',
+  };
+  const openDays = days.filter((d) => d.is_open);
+  if (openDays.length === 0) return empty;
+
+  function mostFrequentPair(
+    pairs: Array<[string | null, string | null]>,
+  ): [string, string] {
+    /* Count non-null pairs only — half-empty rows must not pollute the
+     * template (e.g. a Sunday open only in the afternoon should not
+     * blank the morning slot for the other days). */
+    const counts = new Map<string, { start: string; end: string; count: number }>();
+    for (const [start, end] of pairs) {
+      if (!start || !end) continue;
+      const key = `${start}|${end}`;
+      const existing = counts.get(key);
+      if (existing) existing.count += 1;
+      else counts.set(key, { start, end, count: 1 });
+    }
+    let best: { start: string; end: string; count: number } | null = null;
+    for (const entry of counts.values()) {
+      if (!best || entry.count > best.count) best = entry;
+    }
+    return best ? [best.start, best.end] : ['', ''];
+  }
+
+  const [morningStart, morningEnd] = mostFrequentPair(
+    openDays.map((d) => [d.morning_start, d.morning_end] as [string | null, string | null]),
+  );
+  const [afternoonStart, afternoonEnd] = mostFrequentPair(
+    openDays.map((d) => [d.afternoon_start, d.afternoon_end] as [string | null, string | null]),
+  );
+
+  return {
+    morning_start: morningStart,
+    morning_end: morningEnd,
+    afternoon_start: afternoonStart,
+    afternoon_end: afternoonEnd,
+  };
+}
+
 const timeInputClass =
-  'w-full rounded-lg border border-[#E0DCD0] bg-white px-2.5 py-1.5 text-center font-mono text-[12px] tabular-nums text-[#1A1A0A] outline-none transition-all duration-150 placeholder:text-[#BBBBAA] hover:border-[#D0C8B0] focus:border-[#C49A1E] focus:shadow-[0_0_0_3px_rgba(196,154,30,0.12)] disabled:cursor-not-allowed disabled:opacity-50 dark:border-[#243020] dark:bg-[#0F1A0C] dark:text-[#F0EDD4] dark:placeholder:text-[#4A4A3A] dark:hover:border-[#2E3C2A]';
+  'w-full rounded-lg border border-[#FFF9EC] bg-white px-2.5 py-1.5 text-center font-mono text-[12px] tabular-nums text-[#001201] outline-none transition-all duration-150 placeholder:text-[#BBBBAA] hover:border-[#D0C8B0] focus:border-[#DDAF3B] focus:shadow-[0_0_0_3px_rgba(221, 175, 59,0.12)] disabled:cursor-not-allowed disabled:opacity-50 dark:border-[#001A05] dark:bg-dark-bg dark:text-[#FFF9EC] dark:placeholder:text-[#4A4A3A] dark:hover:border-[#2E3C2A]';
 
 export function HoursTab({ config, locked }: Props) {
   const t = useTranslations('station_config');
@@ -76,6 +131,14 @@ export function HoursTab({ config, locked }: Props) {
           return found ?? def;
         });
         setDays(merged);
+        /* Rehydrate the Modèle d'horaires inputs from the saved per-day
+         * schedule. Without this the section opens empty (or stale
+         * config) and the 'Appliquer à tous les jours' shortcut forces
+         * the merchant to re-type the plage they already configured. */
+        const derived = deriveTemplateFromDays(merged);
+        if (derived.morning_start || derived.morning_end || derived.afternoon_start || derived.afternoon_end) {
+          setTemplate(derived);
+        }
       }
     } else {
       showError(t('hours_load_error'));
@@ -165,17 +228,17 @@ export function HoursTab({ config, locked }: Props) {
   return (
     <div className="flex flex-col gap-5">
       {/* Global template — defines default hours applied to all days */}
-      <section className="rounded-2xl border border-[#E8E4DC] bg-white p-6 shadow-sm dark:border-[#1A2A14] dark:bg-[#182214]">
-        <h3 className="mb-2 text-[11px] font-bold uppercase tracking-[1.5px] text-[#C49A1E]">
+      <section className="rounded-2xl border border-[#FFF9EC] bg-white p-6 shadow-sm dark:border-[#1A2A14] dark:bg-[#182214]">
+        <h3 className="mb-2 text-[11px] font-bold uppercase tracking-[1.5px] text-[#DDAF3B]">
           {t('hours_template_title')}
         </h3>
-        <p className="mb-4 text-[12px] leading-snug text-[#888] dark:text-[#9A9A8A]">
+        <p className="mb-4 text-[12px] leading-snug text-foreground/55 dark:text-[#B0BFB1]">
           {t('hours_template_hint')}
         </p>
 
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
           {/* Morning slot */}
-          <div className="rounded-xl bg-[#F7F6F2] p-4 dark:bg-[#0F1A0C]">
+          <div className="rounded-xl bg-[#FFF9EC] p-4 dark:bg-dark-bg">
             <span className="mb-3 block text-[10px] font-bold uppercase tracking-[0.5px] text-[#AAAAAA] dark:text-[#5A5A4A]">
               {t('hours_morning')}
             </span>
@@ -188,7 +251,7 @@ export function HoursTab({ config, locked }: Props) {
                 onChange={(e) => setTemplate((p) => ({ ...p, morning_start: e.target.value }))}
                 aria-label={t('hours_morning_start')}
               />
-              <span className="shrink-0 text-[12px] font-bold text-[#C49A1E]" aria-hidden="true">→</span>
+              <span className="shrink-0 text-[12px] font-bold text-[#DDAF3B]" aria-hidden="true">→</span>
               <input
                 className={timeInputClass}
                 type="time"
@@ -201,7 +264,7 @@ export function HoursTab({ config, locked }: Props) {
           </div>
 
           {/* Afternoon slot */}
-          <div className="rounded-xl bg-[#F7F6F2] p-4 dark:bg-[#0F1A0C]">
+          <div className="rounded-xl bg-[#FFF9EC] p-4 dark:bg-dark-bg">
             <span className="mb-3 block text-[10px] font-bold uppercase tracking-[0.5px] text-[#AAAAAA] dark:text-[#5A5A4A]">
               {t('hours_afternoon')}
             </span>
@@ -214,7 +277,7 @@ export function HoursTab({ config, locked }: Props) {
                 onChange={(e) => setTemplate((p) => ({ ...p, afternoon_start: e.target.value }))}
                 aria-label={t('hours_afternoon_start')}
               />
-              <span className="shrink-0 text-[12px] font-bold text-[#C49A1E]" aria-hidden="true">→</span>
+              <span className="shrink-0 text-[12px] font-bold text-[#DDAF3B]" aria-hidden="true">→</span>
               <input
                 className={timeInputClass}
                 type="time"
@@ -232,7 +295,7 @@ export function HoursTab({ config, locked }: Props) {
             type="button"
             onClick={applyTemplateToAllDays}
             disabled={locked || saving}
-            className="rounded-xl border border-[#C49A1E] px-4 py-2 text-[12px] font-bold text-[#C49A1E] transition-colors hover:bg-[#C49A1E]/10 disabled:cursor-not-allowed disabled:opacity-40"
+            className="rounded-xl border border-[#DDAF3B] px-4 py-2 text-[12px] font-bold text-[#DDAF3B] transition-colors hover:bg-[#DDAF3B]/10 disabled:cursor-not-allowed disabled:opacity-40"
           >
             {t('hours_apply_to_all')}
           </button>
@@ -240,14 +303,14 @@ export function HoursTab({ config, locked }: Props) {
       </section>
 
       {/* Per-day schedule */}
-      <section className="rounded-2xl border border-[#E8E4DC] bg-white p-6 shadow-sm dark:border-[#1A2A14] dark:bg-[#182214]">
-        <h3 className="mb-2 text-[11px] font-bold uppercase tracking-[1.5px] text-[#C49A1E]">
+      <section className="rounded-2xl border border-[#FFF9EC] bg-white p-6 shadow-sm dark:border-[#1A2A14] dark:bg-[#182214]">
+        <h3 className="mb-2 text-[11px] font-bold uppercase tracking-[1.5px] text-[#DDAF3B]">
           {t('hours_per_day_title')}
         </h3>
-        <p className="mb-4 text-[12px] leading-snug text-[#888] dark:text-[#9A9A8A]">
+        <p className="mb-4 text-[12px] leading-snug text-foreground/55 dark:text-[#B0BFB1]">
           {t('hours_per_day_hint')}
         </p>
-        <div className="grid grid-cols-[100px_44px_1fr] gap-3 border-b border-[#E0DCD0] pb-2 text-[10px] font-bold uppercase tracking-[0.5px] text-[#AAAAAA] dark:border-[#243020] dark:text-[#5A5A4A]">
+        <div className="grid grid-cols-[100px_44px_1fr] gap-3 border-b border-[#FFF9EC] pb-2 text-[10px] font-bold uppercase tracking-[0.5px] text-[#AAAAAA] dark:border-[#001A05] dark:text-[#5A5A4A]">
           <span />
           <span />
           <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
@@ -292,7 +355,7 @@ export function HoursTab({ config, locked }: Props) {
           type="button"
           onClick={handleSave}
           disabled={locked || saving}
-          className="flex items-center gap-2 rounded-xl bg-[#C49A1E] px-6 py-2.5 text-[13px] font-bold text-[#0C1209] transition-opacity hover:opacity-85 disabled:cursor-not-allowed disabled:opacity-40"
+          className="flex items-center gap-2 rounded-xl bg-[#DDAF3B] px-6 py-2.5 text-[13px] font-bold text-[#001201] transition-opacity hover:opacity-85 disabled:cursor-not-allowed disabled:opacity-40"
         >
           {saving ? (
             <svg className="animate-spin" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" aria-hidden="true">

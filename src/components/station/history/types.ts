@@ -5,6 +5,8 @@ export interface StationHistoryEntry {
   status: string;
   client: { first_name: string; last_name: string } | null;
   vehicle_format_label: string | null;
+  service_name: string | null;
+  service_category: string | null;
   amount_paid: string;
   station_payout: string | null;
   commission_rate: string;
