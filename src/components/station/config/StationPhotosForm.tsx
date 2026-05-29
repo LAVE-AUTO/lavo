@@ -27,12 +27,31 @@ export function StationPhotosForm({ locked = false }: Props) {
   const [uploadingIdx, setUploadingIdx] = useState<number | null>(null);
   const [isDirty,      setIsDirty]      = useState(false);
 
+  /* The /station/me endpoint serialises photos as the raw StationPhoto
+   * rows ({ url, position, … }), but the legacy POST /station/photos
+   * upload echo used plain URL strings, so we normalise both shapes
+   * here. Falsy items become empty slot strings. */
+  function normalizePhotos(raw: unknown): string[] {
+    if (!Array.isArray(raw)) return [];
+    return raw
+      .map((item) => {
+        if (typeof item === 'string') return item;
+        if (item && typeof item === 'object' && 'url' in item) {
+          const url = (item as { url?: unknown }).url;
+          return typeof url === 'string' ? url : '';
+        }
+        return '';
+      })
+      .filter((url): url is string => Boolean(url));
+  }
+
   useEffect(() => {
     let active = true;
 
     getFromApi('/station/me').then(([ok, data]) => {
       if (!mountedRef.current || !active || !ok) return;
-      const fromApi = (data as { data?: { photos?: string[] } })?.data?.photos ?? [];
+      const rawPhotos = (data as { data?: { photos?: unknown } })?.data?.photos;
+      const fromApi = normalizePhotos(rawPhotos);
       const next = Array(MAX_PHOTOS).fill('').map((_, i) => fromApi[i] ?? '');
       setPhotos(next);
       setIsDirty(false);
@@ -102,7 +121,9 @@ export function StationPhotosForm({ locked = false }: Props) {
     if (!mountedRef.current) return;
 
     if (ok) {
-      const saved = (data as { data?: { photos?: string[] } })?.data?.photos ?? photos.filter(Boolean);
+      const rawSaved = (data as { data?: { photos?: unknown } })?.data?.photos;
+      const savedUrls = normalizePhotos(rawSaved);
+      const saved = savedUrls.length > 0 ? savedUrls : photos.filter(Boolean);
       const next = Array(MAX_PHOTOS).fill('').map((_, i) => saved[i] ?? '');
       setPhotos(next);
       setIsDirty(false);

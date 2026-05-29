@@ -43,6 +43,61 @@ function buildDefaultDays(): HourDay[] {
   }));
 }
 
+/**
+ * Builds a Modèle row from the saved per-day schedule so the merchant
+ * sees the plage they previously configured instead of an empty form
+ * when they come back to tweak hours. Picks the most frequent
+ * (morning_start, morning_end) and (afternoon_start, afternoon_end)
+ * tuple across opened days; ties resolve to the first opened day so
+ * stations with identical schedules across the week (the common case)
+ * get a deterministic and intuitive result.
+ */
+function deriveTemplateFromDays(days: HourDay[]): HourTemplate {
+  const empty: HourTemplate = {
+    morning_start: '',
+    morning_end: '',
+    afternoon_start: '',
+    afternoon_end: '',
+  };
+  const openDays = days.filter((d) => d.is_open);
+  if (openDays.length === 0) return empty;
+
+  function mostFrequentPair(
+    pairs: Array<[string | null, string | null]>,
+  ): [string, string] {
+    /* Count non-null pairs only — half-empty rows must not pollute the
+     * template (e.g. a Sunday open only in the afternoon should not
+     * blank the morning slot for the other days). */
+    const counts = new Map<string, { start: string; end: string; count: number }>();
+    for (const [start, end] of pairs) {
+      if (!start || !end) continue;
+      const key = `${start}|${end}`;
+      const existing = counts.get(key);
+      if (existing) existing.count += 1;
+      else counts.set(key, { start, end, count: 1 });
+    }
+    let best: { start: string; end: string; count: number } | null = null;
+    for (const entry of counts.values()) {
+      if (!best || entry.count > best.count) best = entry;
+    }
+    return best ? [best.start, best.end] : ['', ''];
+  }
+
+  const [morningStart, morningEnd] = mostFrequentPair(
+    openDays.map((d) => [d.morning_start, d.morning_end] as [string | null, string | null]),
+  );
+  const [afternoonStart, afternoonEnd] = mostFrequentPair(
+    openDays.map((d) => [d.afternoon_start, d.afternoon_end] as [string | null, string | null]),
+  );
+
+  return {
+    morning_start: morningStart,
+    morning_end: morningEnd,
+    afternoon_start: afternoonStart,
+    afternoon_end: afternoonEnd,
+  };
+}
+
 const timeInputClass =
   'w-full rounded-lg border border-[#FFF9EC] bg-white px-2.5 py-1.5 text-center font-mono text-[12px] tabular-nums text-[#001201] outline-none transition-all duration-150 placeholder:text-[#BBBBAA] hover:border-[#D0C8B0] focus:border-[#DDAF3B] focus:shadow-[0_0_0_3px_rgba(221, 175, 59,0.12)] disabled:cursor-not-allowed disabled:opacity-50 dark:border-[#001A05] dark:bg-dark-bg dark:text-[#FFF9EC] dark:placeholder:text-[#4A4A3A] dark:hover:border-[#2E3C2A]';
 
@@ -76,6 +131,14 @@ export function HoursTab({ config, locked }: Props) {
           return found ?? def;
         });
         setDays(merged);
+        /* Rehydrate the Modèle d'horaires inputs from the saved per-day
+         * schedule. Without this the section opens empty (or stale
+         * config) and the 'Appliquer à tous les jours' shortcut forces
+         * the merchant to re-type the plage they already configured. */
+        const derived = deriveTemplateFromDays(merged);
+        if (derived.morning_start || derived.morning_end || derived.afternoon_start || derived.afternoon_end) {
+          setTemplate(derived);
+        }
       }
     } else {
       showError(t('hours_load_error'));
