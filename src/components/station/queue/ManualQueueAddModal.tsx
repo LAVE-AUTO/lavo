@@ -232,11 +232,21 @@ export function ManualQueueAddModal({
       if (process.env.NODE_ENV !== 'production') {
         console.error('[ManualQueueAddModal] POST /station/entries failed', data);
       }
-      const code = (data as { code?: string } | null)?.code;
+      const errorBody = data as { code?: string; message?: string; _dev?: string } | null;
+      const code = errorBody?.code;
+      /* Dev-mode: surface the server's _dev hint so 'column X does not
+       * exist' shows up directly in the modal instead of a generic
+       * 'try again' message. */
+      const devHint =
+        process.env.NODE_ENV !== 'production' && errorBody?._dev
+          ? errorBody._dev
+          : null;
       setSubmitError(
-        code === 'VALIDATION_FAILED'
-          ? t('manual_queue_error_format')
-          : t('manual_queue_error_unavailable'),
+        devHint
+          ? `${t('manual_queue_error_unavailable')} — ${devHint}`
+          : code === 'VALIDATION_FAILED'
+            ? t('manual_queue_error_format')
+            : t('manual_queue_error_unavailable'),
       );
       return;
     }

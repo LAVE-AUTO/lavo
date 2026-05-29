@@ -116,6 +116,11 @@ export async function POST(request: Request): Promise<NextResponse> {
   } catch (e) {
     if (e instanceof NotFoundError) return applyNoStoreHeaders(error404(e.message));
     if (e instanceof AppError) return applyNoStoreHeaders(fromAppError(e));
-    return applyNoStoreHeaders(error500(e));
+    /* Log the raw error server-side so DB drift (missing column / FK)
+     * leaves a trace; surface a short identifying message to the client
+     * so the modal can show 'check the DB migrations' instead of {}. */
+    const msg = e instanceof Error ? e.message : String(e);
+    console.error('[STATION_ENTRIES_POST] Unhandled walk-in failure', { error: msg });
+    return applyNoStoreHeaders(error500(msg));
   }
 }
