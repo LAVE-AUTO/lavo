@@ -360,44 +360,86 @@ export function CreateBlockModal({
 
         {/* Right: quick dates + mini-calendar */}
         <div className="border-t border-[#DDAF3B]/20 p-5 md:border-t-0 md:border-l dark:border-[#DDAF3B]/10">
-          <p className="mb-3 text-[10px] font-black uppercase tracking-widest text-[#DDAF3B]">
-            {t('availability_modal_quick_dates')}
+          {/* Premium intro header — same gold pill style used elsewhere
+              on the station chrome so the merchant immediately recognises
+              this as 'one-click shortcuts' rather than dead form rows. */}
+          <div className="mb-3 flex items-center gap-2">
+            <span className="flex h-6 w-6 items-center justify-center rounded-full bg-[#DDAF3B] text-[#001201]" aria-hidden="true">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor">
+                <path d="M13 2L3 14h7l-1 8 10-12h-7l1-8z" />
+              </svg>
+            </span>
+            <p className="text-[10px] font-black uppercase tracking-widest text-[#DDAF3B]">
+              {t('availability_modal_quick_dates')}
+            </p>
+          </div>
+          <p className="mb-3 text-[11px] leading-snug text-foreground/65 dark:text-[#B0BFB1]">
+            {t('availability_modal_quick_dates_hint')}
           </p>
+
           <div className="mb-5 flex flex-col gap-2">
-            <button
-              type="button"
-              onClick={() => addDate(todayISO())}
-              className="cursor-pointer rounded-xl bg-[#F0EDE0] px-3 py-2.5 text-left text-[12px] font-semibold text-[#001201] transition-colors hover:bg-[#DDAF3B]/15 dark:bg-[#001A05] dark:text-[#FFF9EC]"
-            >
-              {t('availability_modal_today')}
-            </button>
-            <button
-              type="button"
-              onClick={() => addDate(tomorrowISO())}
-              className="cursor-pointer rounded-xl bg-[#F0EDE0] px-3 py-2.5 text-left text-[12px] font-semibold text-[#001201] transition-colors hover:bg-[#DDAF3B]/15 dark:bg-[#001A05] dark:text-[#FFF9EC]"
-            >
-              {t('availability_modal_tomorrow')}
-            </button>
-            <button
-              type="button"
-              onClick={() => addDates(thisWeek)}
-              className="cursor-pointer rounded-xl bg-[#F0EDE0] px-3 py-2.5 text-left text-[12px] font-semibold text-[#001201] transition-colors hover:bg-[#DDAF3B]/15 dark:bg-[#001A05] dark:text-[#FFF9EC]"
-            >
-              {t('availability_modal_this_week')}
-              <span className="mt-0.5 block text-[10px] text-foreground/65 dark:text-[#B0BFB1]">
-                {formatWeekLabel(thisWeek)}
-              </span>
-            </button>
-            <button
-              type="button"
-              onClick={() => addDates(nextWeek)}
-              className="cursor-pointer rounded-xl bg-[#F0EDE0] px-3 py-2.5 text-left text-[12px] font-semibold text-[#001201] transition-colors hover:bg-[#DDAF3B]/15 dark:bg-[#001A05] dark:text-[#FFF9EC]"
-            >
-              {t('availability_modal_next_week')}
-              <span className="mt-0.5 block text-[10px] text-foreground/65 dark:text-[#B0BFB1]">
-                {formatWeekLabel(nextWeek)}
-              </span>
-            </button>
+            <QuickDateShortcut
+              icon={
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                  <rect x="3" y="4" width="18" height="18" rx="2" />
+                  <line x1="16" y1="2" x2="16" y2="6" />
+                  <line x1="8" y1="2" x2="8" y2="6" />
+                  <line x1="3" y1="10" x2="21" y2="10" />
+                  <circle cx="12" cy="16" r="1.5" fill="currentColor" />
+                </svg>
+              }
+              label={t('availability_modal_today')}
+              targetDates={[todayISO()]}
+              currentDates={dates}
+              onApply={() => addDate(todayISO())}
+            />
+            <QuickDateShortcut
+              icon={
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                  <rect x="3" y="4" width="18" height="18" rx="2" />
+                  <line x1="16" y1="2" x2="16" y2="6" />
+                  <line x1="8" y1="2" x2="8" y2="6" />
+                  <line x1="3" y1="10" x2="21" y2="10" />
+                  <polyline points="9 14 13 18 9 22" transform="translate(2, -4)" />
+                </svg>
+              }
+              label={t('availability_modal_tomorrow')}
+              targetDates={[tomorrowISO()]}
+              currentDates={dates}
+              onApply={() => addDate(tomorrowISO())}
+            />
+            <QuickDateShortcut
+              icon={
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                  <rect x="3" y="4" width="18" height="18" rx="2" />
+                  <line x1="16" y1="2" x2="16" y2="6" />
+                  <line x1="8" y1="2" x2="8" y2="6" />
+                  <line x1="3" y1="10" x2="21" y2="10" />
+                  <line x1="6" y1="14" x2="18" y2="14" strokeWidth="2.5" />
+                </svg>
+              }
+              label={t('availability_modal_this_week')}
+              subLabel={formatWeekLabel(thisWeek)}
+              targetDates={thisWeek}
+              currentDates={dates}
+              onApply={() => addDates(thisWeek)}
+            />
+            <QuickDateShortcut
+              icon={
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                  <rect x="3" y="4" width="18" height="18" rx="2" />
+                  <line x1="16" y1="2" x2="16" y2="6" />
+                  <line x1="8" y1="2" x2="8" y2="6" />
+                  <line x1="3" y1="10" x2="21" y2="10" />
+                  <polyline points="13 14 17 17 13 20" />
+                </svg>
+              }
+              label={t('availability_modal_next_week')}
+              subLabel={formatWeekLabel(nextWeek)}
+              targetDates={nextWeek}
+              currentDates={dates}
+              onApply={() => addDates(nextWeek)}
+            />
           </div>
 
           {/* Mini-calendar */}
@@ -491,5 +533,102 @@ export function CreateBlockModal({
         </button>
       </div>
     </Modal>
+  );
+}
+
+/* ------------------------------------------------------------------ */
+/* QuickDateShortcut — one row of the Dates rapides shortcut list      */
+/* ------------------------------------------------------------------ */
+
+interface QuickDateShortcutProps {
+  icon: React.ReactNode;
+  label: string;
+  /** Optional second line (e.g. '23 May – 27 May' for a week shortcut). */
+  subLabel?: string;
+  /** Dates the shortcut would add to the selection. */
+  targetDates: string[];
+  /** Dates currently selected — used to compute the 'new dates' counter
+   *  and whether the shortcut has already been applied. */
+  currentDates: string[];
+  onApply: () => void;
+}
+
+function QuickDateShortcut({
+  icon,
+  label,
+  subLabel,
+  targetDates,
+  currentDates,
+  onApply,
+}: QuickDateShortcutProps) {
+  const t = useTranslations('station_dashboard');
+  /* How many of the proposed dates would actually be added if the user
+   * clicked the shortcut. Already-selected ones don't count. We also
+   * filter out past dates to mirror the addDates() guard. */
+  const today = todayISO();
+  const futureTargets = targetDates.filter((d) => d >= today);
+  const newCount = futureTargets.filter((d) => !currentDates.includes(d)).length;
+  const isFullyApplied = futureTargets.length > 0 && newCount === 0;
+  const isEmptyShortcut = futureTargets.length === 0;
+
+  return (
+    <button
+      type="button"
+      onClick={onApply}
+      disabled={isEmptyShortcut}
+      aria-pressed={isFullyApplied}
+      className={[
+        'group flex items-center gap-3 rounded-xl border px-3 py-2.5 text-left transition-all',
+        'cursor-pointer disabled:cursor-not-allowed disabled:opacity-45',
+        isFullyApplied
+          ? 'border-[#22C47A]/40 bg-[#22C47A]/8 hover:border-[#22C47A]/60'
+          : 'border-[#DDAF3B]/30 bg-[#F0EDE0] hover:-translate-y-px hover:border-[#DDAF3B] hover:bg-[#DDAF3B]/15 hover:shadow-sm dark:bg-[#001A05] dark:border-[#DDAF3B]/20',
+      ].join(' ')}
+    >
+      {/* Icon — gold for new add, green for already applied. */}
+      <span
+        className={[
+          'flex h-8 w-8 shrink-0 items-center justify-center rounded-lg transition-colors',
+          isFullyApplied
+            ? 'bg-[#22C47A]/15 text-[#16A964]'
+            : 'bg-[#DDAF3B]/15 text-[#DDAF3B] group-hover:bg-[#DDAF3B]/25',
+        ].join(' ')}
+        aria-hidden="true"
+      >
+        {icon}
+      </span>
+
+      {/* Label + sub-label */}
+      <span className="min-w-0 flex-1">
+        <span className="block text-[12.5px] font-bold text-[#001201] dark:text-[#FFF9EC]">
+          {label}
+        </span>
+        {subLabel && (
+          <span className="mt-0.5 block text-[10.5px] text-foreground/60 dark:text-[#B0BFB1] tabular-nums">
+            {subLabel}
+          </span>
+        )}
+      </span>
+
+      {/* Counter pill — '+1' / '+5' for fresh adds, 'Ajouté ✓' once applied,
+          'Passé' for shortcuts that resolve to no future dates. */}
+      <span
+        className={[
+          'shrink-0 inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-[10.5px] font-black uppercase tracking-wider transition-colors',
+          isEmptyShortcut
+            ? 'bg-foreground/8 text-foreground/55 dark:text-[#B0BFB1]'
+            : isFullyApplied
+              ? 'bg-[#22C47A]/15 text-[#16A964]'
+              : 'bg-[#DDAF3B] text-[#001201] group-hover:bg-[#A07818] group-hover:text-[#FFF9EC]',
+        ].join(' ')}
+        aria-hidden="true"
+      >
+        {isEmptyShortcut
+          ? t('availability_modal_shortcut_past')
+          : isFullyApplied
+            ? <><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12" /></svg>{t('availability_modal_shortcut_added')}</>
+            : t('availability_modal_shortcut_add', { count: newCount })}
+      </span>
+    </button>
   );
 }
