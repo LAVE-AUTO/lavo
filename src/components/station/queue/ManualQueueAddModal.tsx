@@ -257,7 +257,7 @@ export function ManualQueueAddModal({
   }, [canSubmit, formatId, name, onClose, onSuccess, serviceId, t, trimmedEmail]);
 
   return (
-    <Modal open={isOpen} onClose={onClose} title={t('manual_queue_title')} size="lg">
+    <Modal open={isOpen} onClose={onClose} title={t('manual_queue_title')} size="2xl">
       <div className="space-y-5 px-5 py-5">
         <p className="text-[13px] leading-relaxed text-foreground/65">
           {t('manual_queue_subtitle')}

@@ -80,19 +80,26 @@ export function ClientSupportContainer({ sectionLabel }: Props) {
   }
 
   return (
-    <div className="flex min-h-full flex-col">
+    <div className="flex min-h-full flex-col bg-background">
       {/* Header */}
-      <div className="shrink-0 border-b border-[#FFF9EC] bg-[#FFF9EC] px-6 pb-4 pt-5 dark:border-[#1A2A14] dark:bg-dark-bg">
+      <div className="shrink-0 border-b border-border bg-surface px-6 pb-5 pt-5">
         <div className="flex items-start justify-between gap-4">
-          <div>
-            <h1 className="text-[20px] font-black text-[#001201] dark:text-[#FFF9EC]">{t('page_title')}</h1>
-            <p className="mt-0.5 text-[12px] text-foreground/55 dark:text-[#6A6A5A]">{t('page_subtitle')}</p>
+          <div className="min-w-0">
+            <div className="flex items-center gap-2">
+              <span className="flex h-7 w-7 items-center justify-center rounded-lg bg-gold/15 text-gold" aria-hidden="true">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M21 11.5a8.38 8.38 0 01-.9 3.8 8.5 8.5 0 01-7.6 4.7 8.38 8.38 0 01-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 01-.9-3.8 8.5 8.5 0 014.7-7.6 8.38 8.38 0 013.8-.9h.5a8.48 8.48 0 018 8v.5z" />
+                </svg>
+              </span>
+              <h1 className="text-[20px] font-black tracking-tight text-foreground">{t('page_title')}</h1>
+            </div>
+            <p className="mt-1 text-[13px] text-foreground/60">{t('page_subtitle')}</p>
           </div>
           {!showForm && (
             <button
               type="button"
               onClick={() => setShowForm(true)}
-              className="flex shrink-0 items-center gap-2 rounded-[10px] bg-[#DDAF3B] px-4 py-2.5 text-[13px] font-bold text-[#001201] shadow-sm transition-all hover:bg-[#D4A830] hover:shadow-md active:scale-[0.98]"
+              className="btn-shine flex shrink-0 items-center gap-2 rounded-xl bg-gold px-4 py-2.5 text-[13px] font-bold text-background shadow-sm transition-all hover:bg-gold-hover hover:shadow-md active:scale-[0.98]"
             >
               <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" aria-hidden="true">
                 <line x1="12" y1="5" x2="12" y2="19" /><line x1="5" y1="12" x2="19" y2="12" />
@@ -106,7 +113,7 @@ export function ClientSupportContainer({ sectionLabel }: Props) {
         {tickets.length > 0 && (
           <div className="mt-4 flex flex-wrap gap-2">
             {STATS.map(({ key, label, dot }) => counts[key] > 0 && (
-              <span key={key} className="flex items-center gap-1.5 rounded-full bg-white px-3 py-1 text-[11px] font-bold text-foreground/70 shadow-sm ring-1 ring-[#FFF9EC] dark:bg-[#131E10] dark:text-[#B0BFB1] dark:ring-[#1E2E18]">
+              <span key={key} className="flex items-center gap-1.5 rounded-full border border-border bg-background px-3 py-1 text-[11px] font-bold text-foreground/70">
                 <span className={`h-2 w-2 rounded-full ${dot}`} />
                 {counts[key]} {t(label)}
               </span>
@@ -116,7 +123,7 @@ export function ClientSupportContainer({ sectionLabel }: Props) {
       </div>
 
       {/* Content */}
-      <div className="flex-1 overflow-y-auto bg-[#FFF9EC] p-6 dark:bg-dark-bg">
+      <div className="flex-1 overflow-y-auto p-6">
         <div className="mx-auto flex max-w-2xl flex-col gap-4">
 
           {/* Create form */}
@@ -127,7 +134,7 @@ export function ClientSupportContainer({ sectionLabel }: Props) {
           {/* Loading state */}
           {loading && (
             <div className="flex items-center justify-center py-16">
-              <div className="h-8 w-8 animate-spin rounded-full border-[3px] border-[#DDAF3B] border-t-transparent" />
+              <div className="h-8 w-8 animate-spin rounded-full border-[3px] border-gold border-t-transparent" />
             </div>
           )}
 
@@ -136,21 +143,21 @@ export function ClientSupportContainer({ sectionLabel }: Props) {
             <div
               role="alert"
               aria-live="assertive"
-              className="flex flex-col items-center gap-3 rounded-[10px] border border-[#FF383C]/30 bg-[#FF383C]/5 px-4 py-6 text-center dark:border-[#FF383C]/40 dark:bg-[#FF383C]/10"
+              className="flex flex-col items-center gap-3 rounded-2xl border border-Hurryline-error/30 bg-Hurryline-error/10 px-4 py-6 text-center"
             >
               <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#FF383C" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
                 <circle cx="12" cy="12" r="10" />
                 <line x1="12" y1="8" x2="12" y2="12" />
                 <line x1="12" y1="16" x2="12.01" y2="16" />
               </svg>
-              <p className="text-[13px] font-semibold text-[#B2351F] dark:text-[#F0A090]">
+              <p className="text-[13px] font-semibold text-Hurryline-error">
                 {t(`error_load_${loadErrorKind}`)}
               </p>
               <button
                 type="button"
                 onClick={loadTickets}
                 aria-label={t('btn_retry_aria')}
-                className="rounded-[10px] border border-[#DDAF3B]/50 px-4 py-2 text-[13px] font-semibold text-[#DDAF3B] transition-colors hover:bg-[#DDAF3B]/10 focus:outline-none focus-visible:ring-2 focus-visible:ring-[#DDAF3B]"
+                className="rounded-xl border border-gold/50 px-4 py-2 text-[13px] font-bold text-gold transition-colors hover:bg-gold/10 focus:outline-none focus-visible:ring-2 focus-visible:ring-gold"
               >
                 {t('btn_retry')}
               </button>
@@ -161,18 +168,21 @@ export function ClientSupportContainer({ sectionLabel }: Props) {
           {!loading && !loadErrorKind && (
             <div className="flex flex-col gap-3">
               {!showForm && (
-                <h2 className="text-[11px] font-black uppercase tracking-wider text-[#AAAAAA] dark:text-[#4A4A3A]">
+                <h2 className="text-[10.5px] font-black uppercase tracking-[0.15em] text-foreground/55">
                   {sectionLabel ?? t('section_tickets')}
                 </h2>
               )}
               {tickets.length === 0 ? (
-                <div className="flex flex-col items-center gap-3 py-20 text-center">
-                  <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-white shadow-sm ring-1 ring-[#FFF9EC] dark:bg-[#131E10] dark:ring-[#1E2E18]">
+                <div className="flex flex-col items-center gap-4 py-20 text-center">
+                  <div className="flex h-16 w-16 items-center justify-center rounded-2xl border border-border bg-surface">
                     <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#DDAF3B" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
                       <path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z" />
                     </svg>
                   </div>
-                  <p className="text-[13px] font-semibold text-[#999]">{t('empty_tickets')}</p>
+                  <div className="max-w-xs">
+                    <p className="text-[15px] font-black text-foreground">{t('empty_tickets')}</p>
+                    <p className="mt-1 text-[12.5px] leading-relaxed text-foreground/55">{t('empty_tickets_hint')}</p>
+                  </div>
                 </div>
               ) : (
                 tickets.map((ticket) => (
