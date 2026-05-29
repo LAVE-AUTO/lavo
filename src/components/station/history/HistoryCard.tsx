@@ -53,7 +53,22 @@ export function HistoryCard({ entry }: Props) {
     { hour: '2-digit', minute: '2-digit' },
   );
 
-  const statusKey = `status_${entry.status}` as const;
+  /* Defensive lookup: any new status emitted by the backend that we
+   * have not localised yet falls back to a generic 'Unknown status'
+   * label so the whole history list never crashes on a missing key. */
+  const KNOWN_STATUSES = new Set([
+    'pending',
+    'pending_payment',
+    'confirmed',
+    'in_progress',
+    'completed',
+    'cancelled',
+    'late',
+    'no_show',
+  ]);
+  const statusKey = KNOWN_STATUSES.has(entry.status)
+    ? (`status_${entry.status}` as const)
+    : ('status_unknown' as const);
 
   return (
     <div className="relative overflow-hidden rounded-2xl bg-[#C8C8B4] transition-shadow hover:shadow-md dark:bg-[#001A05]">
