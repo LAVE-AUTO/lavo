@@ -1,5 +1,4 @@
-import { headers } from 'next/headers';
-import { verifyCronSecret } from '@/lib/verify-cron-secret';
+import { isAuthorizedCronRequest } from '@/lib/cron-auth';
 import { runPurgeAdminLogs } from '@/jobs/purge-admin-logs';
 import { successResponse, error401, error500 } from '@/lib/responses';
 
@@ -10,18 +9,16 @@ import { successResponse, error401, error500 } from '@/lib/responses';
  *
  * Recommended schedule: nightly at 3am (0 3 * * *)
  *
+ * Idempotent: DELETE WHERE created_at < cutoff. Re-running on the same day deletes nothing
+ * new — only newly-expired rows beyond the retention horizon are affected.
+ *
  * Responses:
  *   200 { data: { deleted, retention_days, cutoff } }
  *   401 Missing or invalid cron secret
  *   500 INTERNAL_ERROR
  */
 export async function GET() {
-  const headersList = await headers();
-  const auth = headersList.get('authorization');
-  const bearerToken = auth?.match(/^Bearer\s*(.*)$/i)?.[1]?.trim() ?? '';
-  const secret = headersList.get('x-cron-secret') ?? bearerToken;
-
-  if (!verifyCronSecret(secret, process.env.CRON_SECRET ?? '')) {
+  if (!(await isAuthorizedCronRequest())) {
     return error401('Missing or invalid cron secret');
   }
 

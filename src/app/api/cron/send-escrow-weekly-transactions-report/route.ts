@@ -4,20 +4,17 @@
  *
  * Requires x-cron-secret or Authorization: Bearer <CRON_SECRET>.
  */
-import { headers } from 'next/headers';
-import { verifyCronSecret } from '@/lib/verify-cron-secret';
+import { isAuthorizedCronRequest } from '@/lib/cron-auth';
 import { runSendEscrowWeeklyTransactionsReport } from '@/jobs/send-escrow-weekly-transactions-report';
 import { successResponse, error401, error500 } from '@/lib/responses';
 import { HTTP_STATUS } from '@/helpers/constants';
 
+/**
+ * NOT idempotent at the email side: a manual re-run within the same week will resend the
+ * report to recipients. Schedule strictly once per period (weekly).
+ */
 export async function GET() {
-  const headersList = await headers();
-  const auth = headersList.get('authorization');
-  const bearerToken = auth?.match(/^Bearer\s*(.*)$/i)?.[1]?.trim() ?? '';
-  const secret = headersList.get('x-cron-secret') ?? bearerToken;
-  const expected = process.env.CRON_SECRET ?? '';
-
-  if (!verifyCronSecret(secret, expected)) {
+  if (!(await isAuthorizedCronRequest())) {
     return error401('Missing or invalid cron secret');
   }
 

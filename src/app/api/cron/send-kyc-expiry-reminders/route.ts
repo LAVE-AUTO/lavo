@@ -11,8 +11,7 @@
  *   401 Missing or invalid cron secret
  *   500 INTERNAL_ERROR
  */
-import { headers } from 'next/headers';
-import { verifyCronSecret } from '@/lib/verify-cron-secret';
+import { isAuthorizedCronRequest } from '@/lib/cron-auth';
 import { runSendKycExpiryReminders } from '@/jobs/send-kyc-expiry-reminders';
 import { successResponse, error401, error500 } from '@/lib/responses';
 import { HTTP_STATUS } from '@/helpers/constants';
@@ -20,16 +19,13 @@ import { HTTP_STATUS } from '@/helpers/constants';
 
 // %%%%% Route handler %%%%%
 // Auth check, job dispatch, and response shaping
+//
+// NOT idempotent: re-running the cron the same day resends reminders. Caller responsible
+// for scheduling a single daily invocation. The job-side reminder_sent_at flag would make
+// it idempotent but is not yet implemented.
 
 export async function GET() {
-  // Extract secret from x-cron-secret header or Bearer token
-  const headersList = await headers();
-  const auth = headersList.get('authorization');
-  const bearerToken = auth?.match(/^Bearer\s*(.*)$/i)?.[1]?.trim() ?? '';
-  const secret = headersList.get('x-cron-secret') ?? bearerToken;
-  const expected = process.env.CRON_SECRET ?? '';
-
-  if (!verifyCronSecret(secret, expected)) {
+  if (!(await isAuthorizedCronRequest())) {
     return error401('Missing or invalid cron secret');
   }
 

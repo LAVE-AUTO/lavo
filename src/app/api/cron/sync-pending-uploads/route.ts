@@ -1,5 +1,4 @@
-import { headers } from 'next/headers';
-import { verifyCronSecret } from '@/lib/verify-cron-secret';
+import { isAuthorizedCronRequest } from '@/lib/cron-auth';
 import { runSyncPendingUploads } from '@/jobs/sync-pending-uploads';
 import { successResponse, error401, error500 } from '@/lib/responses';
 import { HTTP_STATUS } from '@/helpers/constants';
@@ -9,19 +8,17 @@ import { HTTP_STATUS } from '@/helpers/constants';
  * Cron endpoint: processes up to 100 pending_uploads (local files to Cloudinary).
  * Requires x-cron-secret or Authorization: Bearer <CRON_SECRET> to match CRON_SECRET env var.
  *
+ * Idempotent: pending_uploads rows are deleted on success — re-runs only pick up rows still
+ * marked pending. A row whose Cloudinary upload succeeded but whose deletion failed would be
+ * re-uploaded once, producing a duplicate Cloudinary asset; acceptable for a recovery cron.
+ *
  * Responses:
  *   200 { data: { processed, succeeded, failed } }
  *   401 Missing or invalid cron secret
  *   500 INTERNAL_ERROR
  */
 export async function GET() {
-  const headersList = await headers();
-  const auth = headersList.get('authorization');
-  const bearerToken = auth?.match(/^Bearer\s*(.*)$/i)?.[1]?.trim() ?? '';
-  const secret = headersList.get('x-cron-secret') ?? bearerToken;
-  const expected = process.env.CRON_SECRET ?? '';
-
-  if (!verifyCronSecret(secret, expected)) {
+  if (!(await isAuthorizedCronRequest())) {
     return error401('Missing or invalid cron secret');
   }
 

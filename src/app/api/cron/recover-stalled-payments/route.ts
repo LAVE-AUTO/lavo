@@ -11,22 +11,19 @@
  *
  * Authentication: Authorization: Bearer <CRON_SECRET> or x-cron-secret header.
  */
-import { headers } from 'next/headers';
-import { verifyCronSecret } from '@/lib/verify-cron-secret';
+import { isAuthorizedCronRequest } from '@/lib/cron-auth';
 import { successResponse, error401, error500 } from '@/lib/responses';
 import { HTTP_STATUS } from '@/helpers/constants';
 import { recoverStalledPayments } from '@/server/reservations/stalled-payment-recovery-service';
 
 const DEFAULT_STALE_MINUTES = 10;
 
+/**
+ * Idempotent: confirmEntryIfPendingPayment and cancelEntryForStripePaymentFailureIfEligible
+ * are status-guarded UPDATEs; concurrent webhook + cron handling produces no double effects.
+ */
 export async function GET() {
-  const headersList = await headers();
-  const auth = headersList.get('authorization');
-  const bearerToken = auth?.match(/^Bearer\s*(.*)$/i)?.[1]?.trim() ?? '';
-  const secret = headersList.get('x-cron-secret') ?? bearerToken;
-  const expected = process.env.CRON_SECRET ?? '';
-
-  if (!verifyCronSecret(secret, expected)) {
+  if (!(await isAuthorizedCronRequest())) {
     return error401('Missing or invalid cron secret');
   }
 

@@ -10,20 +10,18 @@
  *   401 Missing or invalid cron secret
  *   500 INTERNAL_ERROR
  */
-import { headers } from 'next/headers';
-import { verifyCronSecret } from '@/lib/verify-cron-secret';
+import { isAuthorizedCronRequest } from '@/lib/cron-auth';
 import { runSendReservationReminders } from '@/jobs/send-reservation-reminders';
 import { successResponse, error401, error500 } from '@/lib/responses';
 import { HTTP_STATUS } from '@/helpers/constants';
 
+/**
+ * NOT idempotent at the push side: the 5h/30min windows are time-bucketed but a re-run
+ * within the same tolerance window can resend a reminder. Schedule once per tolerance
+ * window (e.g. every 10 minutes for a 14-min window).
+ */
 export async function GET() {
-  const headersList = await headers();
-  const auth = headersList.get('authorization');
-  const bearerToken = auth?.match(/^Bearer\s*(.*)$/i)?.[1]?.trim() ?? '';
-  const secret = headersList.get('x-cron-secret') ?? bearerToken;
-  const expected = process.env.CRON_SECRET ?? '';
-
-  if (!verifyCronSecret(secret, expected)) {
+  if (!(await isAuthorizedCronRequest())) {
     return error401('Missing or invalid cron secret');
   }
 
