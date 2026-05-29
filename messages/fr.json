@@ -1945,6 +1945,9 @@
     "station_reservations": {
         "page_title": "Réservations du jour",
         "page_subtitle": "{count} réservation{count, plural, =0 {} =1 {} other {s}}",
+        "page_subtitle_reservations": "{count, plural, =0 {Aucune réservation} =1 {1 réservation programmée} other {# réservations programmées}}",
+        "empty_state_reservations": "Aucune réservation pour cette journée",
+        "empty_state_reservations_hint": "Les créneaux réservés par vos clients via Hurryline apparaîtront ici. Naviguez sur une autre date pour consulter le programme à venir.",
         "tab_all": "Toutes",
         "tab_confirmed": "Confirmées",
         "tab_in_progress": "En cours",
@@ -2671,6 +2674,8 @@
         "section_waiting": "En attente",
         "stat_reserved": "Réservations",
         "stat_walkin": "File",
+        "stat_waiting": "En attente",
+        "stat_completed_today": "Terminés",
         "stat_in_progress": "En cours",
         "badge_in_progress": "EN COURS",
         "confirm_call_title": "Appeler le client",

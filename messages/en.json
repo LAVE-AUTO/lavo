@@ -1945,6 +1945,9 @@
     "station_reservations": {
         "page_title": "Today's reservations",
         "page_subtitle": "{count} reservation{count, plural, =0 {} =1 {} other {s}}",
+        "page_subtitle_reservations": "{count, plural, =0 {No reservation} =1 {1 reservation scheduled} other {# reservations scheduled}}",
+        "empty_state_reservations": "No reservation for this day",
+        "empty_state_reservations_hint": "Slots booked by your clients through Hurryline will appear here. Browse another date to look at the upcoming schedule.",
         "tab_all": "All",
         "tab_confirmed": "Confirmed",
         "tab_in_progress": "In progress",
@@ -2672,6 +2675,8 @@
         "section_waiting": "Waiting",
         "stat_reserved": "Reserved",
         "stat_walkin": "Walk-in",
+        "stat_waiting": "Waiting",
+        "stat_completed_today": "Completed",
         "stat_in_progress": "In progress",
         "badge_in_progress": "IN PROGRESS",
         "confirm_call_title": "Call client",

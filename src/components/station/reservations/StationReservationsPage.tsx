@@ -9,7 +9,6 @@ import { ReservationCard } from './ReservationCard';
 import type { ReservationEntry, StatusTab } from './types';
 
 type ActionType = 'validate' | 'start' | 'cancel';
-type EntryTypeFilter = 'all' | 'reservation' | 'queue';
 
 interface PendingAction {
   type: ActionType;
@@ -62,7 +61,6 @@ export function StationReservationsPage() {
   const t = useTranslations('station_reservations');
 
   const [selectedDate, setSelectedDate] = useState(() => new Date());
-  const [entryTypeFilter, setEntryTypeFilter] = useState<EntryTypeFilter>('all');
   const [entries, setEntries] = useState<ReservationEntry[]>([]);
   const [loading, setLoading] = useState(true);
   const [loadError, setLoadError] = useState(false);
@@ -81,36 +79,15 @@ export function StationReservationsPage() {
     const from = dayStart(selectedDate);
     const to = dayEnd(selectedDate);
 
-    // For reservations filter by slot time; for queue and all filter by created_at
-    let params: URLSearchParams;
-    if (entryTypeFilter === 'reservation') {
-      params = new URLSearchParams({
-        entry_type: 'reservation',
-        slot_from: toISO(from),
-        slot_to: toISO(to),
-        per_page: '200',
-      });
-    } else if (entryTypeFilter === 'queue') {
-      params = new URLSearchParams({
-        entry_type: 'queue',
-        from: toISO(from),
-        to: toISO(to),
-        per_page: '200',
-      });
-    } else {
-      // All: combine both fetches
-      const [resResult, queueResult] = await Promise.all([
-        getFromApi(`/station/entries?entry_type=reservation&slot_from=${encodeURIComponent(toISO(from))}&slot_to=${encodeURIComponent(toISO(to))}&per_page=200`),
-        getFromApi(`/station/entries?entry_type=queue&from=${encodeURIComponent(toISO(from))}&to=${encodeURIComponent(toISO(to))}&per_page=200`),
-      ]);
-      if (!mountedRef.current) return;
-      const resEntries = resResult[0] ? ((resResult[1] as { data: { entries: ReservationEntry[] } })?.data?.entries ?? []) : [];
-      const queueEntries = queueResult[0] ? ((queueResult[1] as { data: { entries: ReservationEntry[] } })?.data?.entries ?? []) : [];
-      if (!resResult[0] && !queueResult[0]) { setLoadError(true); }
-      setEntries([...resEntries, ...queueEntries]);
-      setLoading(false);
-      return;
-    }
+    /* This screen is strictly the reservations agenda. Queue entries
+     * live on the dedicated /station/queue board; mixing them here was
+     * confusing — slots and walk-ins follow different lifecycles. */
+    const params = new URLSearchParams({
+      entry_type: 'reservation',
+      slot_from: toISO(from),
+      slot_to: toISO(to),
+      per_page: '200',
+    });
 
     const [ok, data] = await getFromApi(`/station/entries?${params.toString()}`);
     if (!mountedRef.current) return;
@@ -120,7 +97,7 @@ export function StationReservationsPage() {
       setLoadError(true);
     }
     setLoading(false);
-  }, [selectedDate, entryTypeFilter]);
+  }, [selectedDate]);
 
   useEffect(() => {
     const timer = window.setTimeout(() => {
@@ -216,22 +193,32 @@ export function StationReservationsPage() {
   const confirm = getConfirmProps();
 
   return (
-    <div className="flex flex-1 flex-col overflow-hidden bg-[#FFF9EC] dark:bg-background">
+    <div className="flex flex-1 flex-col overflow-hidden bg-background">
       {/* Header */}
-      <div className="border-b border-[#CCCCCC] bg-surface px-6 pb-4 pt-5 dark:border-[#3A4A36] dark:bg-surface">
+      <div className="border-b border-border bg-surface px-6 pb-4 pt-5">
         <div className="flex flex-wrap items-start justify-between gap-4">
           <div className="min-w-0">
-            <h1 className="text-[20px] font-bold text-foreground">
-              {t('page_title')}
-            </h1>
-            <p className="mt-0.5 text-[13px] text-[#000717]/50 dark:text-[#FFFFF0]/50">
-              {t('page_subtitle', { count: entries.length })}
+            <div className="flex items-center gap-2">
+              <span className="flex h-7 w-7 items-center justify-center rounded-lg bg-gold/15 text-gold" aria-hidden="true">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+                  <rect x="3" y="4" width="18" height="18" rx="2" />
+                  <line x1="16" y1="2" x2="16" y2="6" />
+                  <line x1="8" y1="2" x2="8" y2="6" />
+                  <line x1="3" y1="10" x2="21" y2="10" />
+                </svg>
+              </span>
+              <h1 className="text-[20px] font-black tracking-tight text-foreground">
+                {t('page_title')}
+              </h1>
+            </div>
+            <p className="mt-1 text-[13px] text-foreground/60">
+              {t('page_subtitle_reservations', { count: entries.length })}
             </p>
           </div>
           <div className="hidden shrink-0 items-center gap-2 sm:flex">
-            <KpiChip value={kpis.active} color="#00C851" label={t('tab_in_progress')} />
-            <KpiChip value={kpis.done} color="#0044FF" label={t('tab_completed')} />
-            <KpiChip value={`${kpis.revenue.toFixed(0)}$`} color="#C09A18" label={t('amount_label')} />
+            <KpiChip value={kpis.active} color="#DDAF3B" label={t('tab_in_progress')} />
+            <KpiChip value={kpis.done} color="#00C851" label={t('tab_completed')} />
+            <KpiChip value={`${kpis.revenue.toFixed(0)}$`} color="#1E40AF" label={t('amount_label')} />
           </div>
         </div>
 
@@ -240,23 +227,23 @@ export function StationReservationsPage() {
           <button
             type="button"
             onClick={() => setSelectedDate((d) => { const p = new Date(d); p.setDate(p.getDate() - 1); return p; })}
-            className="flex h-8 w-8 items-center justify-center rounded-lg border border-[#CCCCCC] bg-white text-foreground/70 transition-colors hover:border-[#C09A18] hover:text-[#C09A18] dark:border-[#3A4A36] dark:bg-background dark:text-[#B0BFB1]"
+            className="flex h-9 w-9 items-center justify-center rounded-xl border border-border bg-background text-foreground/70 transition-colors hover:border-gold hover:text-gold"
             aria-label={t('date_prev')}
           >
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
               <polyline points="15 18 9 12 15 6" />
             </svg>
           </button>
-          <div className="flex min-w-50 flex-col items-center rounded-xl border border-[#CCCCCC] bg-white px-4 py-1.5 dark:border-[#3A4A36] dark:bg-background">
-            <span className="text-[13px] font-bold text-foreground">{dateLabel}</span>
+          <div className="flex min-w-[230px] flex-col items-center rounded-xl border border-border bg-background px-4 py-1.5">
+            <span className="text-[13.5px] font-bold text-foreground">{dateLabel}</span>
             {today && (
-              <span className="text-[10px] font-bold uppercase tracking-wider text-[#C09A18]">{t('date_today')}</span>
+              <span className="text-[9.5px] font-black uppercase tracking-[0.2em] text-gold">{t('date_today')}</span>
             )}
           </div>
           <button
             type="button"
             onClick={() => setSelectedDate((d) => { const n = new Date(d); n.setDate(n.getDate() + 1); return n; })}
-            className="flex h-8 w-8 items-center justify-center rounded-lg border border-[#CCCCCC] bg-white text-foreground/70 transition-colors hover:border-[#C09A18] hover:text-[#C09A18] dark:border-[#3A4A36] dark:bg-background dark:text-[#B0BFB1]"
+            className="flex h-9 w-9 items-center justify-center rounded-xl border border-border bg-background text-foreground/70 transition-colors hover:border-gold hover:text-gold"
             aria-label={t('date_next')}
           >
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
@@ -267,55 +254,40 @@ export function StationReservationsPage() {
             <button
               type="button"
               onClick={() => setSelectedDate(new Date())}
-              className="rounded-lg border border-[#C09A18]/40 px-3 py-1.5 text-[11px] font-bold text-[#C09A18] transition-colors hover:bg-[#C09A18]/10"
+              className="rounded-xl border border-gold/40 px-3 py-1.5 text-[11px] font-black uppercase tracking-wide text-gold transition-colors hover:bg-gold/10"
             >
               {t('date_go_today')}
             </button>
           )}
         </div>
 
-        {/* Entry type filter */}
-        <div className="mt-3 flex items-center gap-2">
-          {(['all', 'reservation', 'queue'] as EntryTypeFilter[]).map((f) => (
-            <button
-              key={f}
-              type="button"
-              onClick={() => setEntryTypeFilter(f)}
-              className={`rounded-lg px-3 py-1.5 text-[11px] font-bold transition-colors ${
-                entryTypeFilter === f
-                  ? 'bg-[#C09A18] text-[#001201]'
-                  : 'border border-[#CCCCCC] bg-white text-foreground/70 hover:border-[#C09A18] hover:text-[#C09A18] dark:border-[#3A4A36] dark:bg-background dark:text-[#B0BFB1]'
-              }`}
-            >
-              {t(`filter_type_${f}`)}
-            </button>
-          ))}
-        </div>
-
-        <div className="mt-3">
+        <div className="mt-4">
           <StatusTabs active={activeTab} counts={counts} onChange={setActiveTab} />
         </div>
       </div>
 
       {/* Content */}
-      <div className="flex-1 overflow-y-auto p-4">
+      <div className="flex-1 overflow-y-auto p-4 sm:p-5">
         {loading ? (
           <div className="flex flex-1 items-center justify-center py-16">
-            <div className="h-8 w-8 animate-spin rounded-full border-[3px] border-[#C09A18] border-t-transparent" />
+            <div className="h-8 w-8 animate-spin rounded-full border-[3px] border-gold border-t-transparent" />
           </div>
         ) : loadError ? (
           <div className="flex flex-col items-center justify-center gap-3 py-16 text-center">
-            <span className="text-[14px] font-semibold text-foreground/50 dark:text-foreground/40">{t('error_load')}</span>
-            <button type="button" onClick={loadData} className="rounded-[10px] border-[1.5px] border-[#C09A18]/50 px-4 py-2 text-[13px] font-semibold text-[#C09A18] transition-colors hover:bg-[#C09A18]/10">
+            <span className="text-[14px] font-semibold text-foreground/55">{t('error_load')}</span>
+            <button type="button" onClick={loadData} className="rounded-xl border-[1.5px] border-gold/50 px-4 py-2 text-[13px] font-bold text-gold transition-colors hover:bg-gold/10">
               {t('btn_retry')}
             </button>
           </div>
         ) : filtered.length === 0 ? (
           <div className="flex flex-col items-center justify-center gap-3 py-16 text-center">
             <EmptyIcon />
-            <span className="text-[13px] font-semibold text-foreground/40 dark:text-foreground/30">
-              {activeTab === 'all' ? t('empty_state') : t('empty_filtered')}
+            <span className="text-[13.5px] font-bold text-foreground/45">
+              {activeTab === 'all' ? t('empty_state_reservations') : t('empty_filtered')}
             </span>
+            <p className="max-w-sm text-[12px] text-foreground/40 leading-relaxed">
+              {t('empty_state_reservations_hint')}
+            </p>
           </div>
         ) : (
           <div className="grid grid-cols-1 items-start gap-3 xl:grid-cols-2">
@@ -351,10 +323,10 @@ export function StationReservationsPage() {
 
 function KpiChip({ value, color, label }: { value: string | number; color: string; label: string }) {
   return (
-    <div className="flex items-center gap-1.5 rounded-lg bg-[#C8C8B4] px-3 py-1.5 dark:bg-surface">
+    <div className="flex items-center gap-1.5 rounded-xl border border-border bg-background px-3 py-1.5">
       <span className="inline-block h-2 w-2 rounded-full" style={{ background: color }} />
-      <span className="font-mono text-[14px] font-bold text-foreground">{value}</span>
-      <span className="text-[11px] font-semibold text-[#000717]/50 dark:text-[#FFFFF0]/50">{label}</span>
+      <span className="font-mono text-[14px] font-black text-foreground tabular-nums">{value}</span>
+      <span className="text-[10.5px] font-bold uppercase tracking-wider text-foreground/55">{label}</span>
     </div>
   );
 }
