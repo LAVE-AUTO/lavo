@@ -516,7 +516,7 @@ export default function ClientReservationsPage() {
                       locale={locale}
                       variant="upcoming"
                       onCancel={
-                        res.status === 'confirmed' || res.status === 'pending'
+                        res.status === 'confirmed' || res.status === 'pending' || res.status === 'pending_payment'
                           ? () => setCancelTarget(res)
                           : undefined
                       }

@@ -27,7 +27,7 @@ import {
   incrementSlotBookedCount,
   decrementSlotBookedCount,
 } from '@/server/station/slot-repository';
-import { createPaymentIntent, cancelPaymentIntent, capturePaymentIntent, refundPaymentIntent, distributePenalty, updatePaymentIntentMetadata } from '@/server/payments/payment-service';
+import { createPaymentIntent, cancelPaymentIntent, capturePaymentIntent, classifyStripeError, refundPaymentIntent, distributePenalty, updatePaymentIntentMetadata } from '@/server/payments/payment-service';
 import { cancelReservation } from '@/server/reservations/cancellation-service';
 import { findById, findByEmail } from '@/server/auth/user-repository';
 import { notifyEntry } from '@/server/notifications/notification-service';
@@ -556,20 +556,23 @@ export async function cancelEntry(
 
     // Stripe: capture full amount → partial refund → distribute penalty share.
     // Kept outside the transaction: Stripe calls must not hold DB locks.
-    let captured = false;
-    let chargeId: string | null = null;
-    let transferId: string | null = null;
+    let captureResult: Awaited<ReturnType<typeof capturePaymentIntent>> | null = null;
     try {
-      ({ chargeId, transferId } = await capturePaymentIntent(entry.stripe_payment_id));
-      captured = true;
+      captureResult = await capturePaymentIntent(entry.stripe_payment_id);
     } catch (e) {
+      const err = classifyStripeError(e);
       console.error('[QUEUE_CANCEL_CAPTURE_FAILED]', {
         entryId,
         stripe_payment_id: entry.stripe_payment_id,
-        error: e instanceof Error ? e.message : String(e),
+        error_class: err.class,
+        error_code: err.code,
+        error: err.message,
       });
     }
-    if (captured && chargeId) {
+    const charged = captureResult?.charged ?? false;
+    const chargeId = captureResult?.chargeId ?? null;
+    const transferId = captureResult?.transferId ?? null;
+    if (charged && chargeId) {
       try {
         await updateEntry(entryId, { stripe_charge_id: chargeId });
       } catch (e) {
@@ -580,7 +583,7 @@ export async function cancelEntry(
         });
       }
     }
-    if (captured && refundedAmount > 0) {
+    if (charged && refundedAmount > 0) {
       try {
         const refundId = await refundPaymentIntent(
           entry.stripe_payment_id,
@@ -596,7 +599,7 @@ export async function cancelEntry(
         });
       }
     }
-    if (captured && penaltyAmount > 0) {
+    if (charged && penaltyAmount > 0) {
       try {
         await distributePenalty(
           entry.stripe_payment_id,
@@ -809,13 +812,15 @@ export async function upgradeQueueToReservation(
   const commissionCents = Math.round(split.commissionAmount * 100);
 
   // Create Stripe PaymentIntent before the DB transaction (Stripe-first pattern).
-  // reservation_id is set via a non-fatal metadata update after DB commit.
+  // entryId is known at this point (queue entry being upgraded), so we can derive a stable
+  // idempotency key — if the request times out and is retried, Stripe returns the same PI.
   const { paymentIntentId, clientSecret } = await createPaymentIntent({
     amountCents,
     userId,
     stationId,
     stationStripeAccountId,
     commissionCents,
+    idempotencyKey: `pi-create:upgrade:${entryId}`,
     metadata: {
       time_slot_id: timeSlotId,
       vehicle_format_id: entry.vehicle_format_id ?? '',
@@ -1089,15 +1094,25 @@ export async function setEntryStatusByStation(
     // Capture the payment (distributes funds to station + platform).
     if (entry.stripe_payment_id) {
       try {
-        const { chargeId } = await capturePaymentIntent(entry.stripe_payment_id);
-        if (chargeId) {
+        const { chargeId, charged } = await capturePaymentIntent(entry.stripe_payment_id);
+        if (charged && chargeId) {
           await updateEntry(entryId, { stripe_charge_id: chargeId });
+        } else if (!charged) {
+          // PI was already cancelled — funds were never held. Service is complete but
+          // no financial distribution occurs. Log for ops visibility.
+          console.warn('[CAPTURE_SKIPPED] PI was already canceled at service completion', {
+            entryId,
+            stripe_payment_id: entry.stripe_payment_id,
+          });
         }
       } catch (e) {
-        const error = e instanceof Error ? e.message : String(e);
-        console.error('[CAPTURE_FAILED] Service completed but Stripe capture failed - manual resolution required', {
+        const err = classifyStripeError(e);
+        console.error('[CAPTURE_FAILED] Service completed but Stripe capture failed — manual resolution required', {
           entryId,
-          error,
+          stripe_payment_id: entry.stripe_payment_id,
+          error_class: err.class,
+          error_code: err.code,
+          error: err.message,
         });
       }
     }
@@ -1139,13 +1154,11 @@ export async function setEntryStatusByStation(
   }
 
   /* Notify the client of service status changes (best-effort, never block the station UI).
-   * Walk-ins to an unregistered client (entry.walk_in_client_email set,
-   * entry.user_id = station owner placeholder) skip the in-app notifications
-   * since there is no client account to receive them; the receipt email
-   * fires below on completion instead. */
-  const isUnregisteredWalkIn =
-    Boolean(entry.walk_in_client_email) && entry.user_id === entry.station_id /* not actual check */;
-  const hasRealClient = !entry.walk_in_client_email; /* matched walk-ins clear walk_in_client_* */
+   * Unregistered walk-ins (walk_in_client_email set, no matching account) skip
+   * in-app notifications since there is no client account to receive them;
+   * a receipt email fires on completion instead.
+   * Matched walk-ins have walk_in_client_email cleared so hasRealClient = true. */
+  const hasRealClient = !entry.walk_in_client_email;
   if (status === 'in_progress' && hasRealClient) {
     notifyEntry({ entryId, userId: entry.user_id, stationId, type: 'service_started' }).catch(() => {});
     notifyClientFeed({ userId: entry.user_id, entryId, stationId, kind: 'service_started', body: 'Votre lavage a commencé. Vous serez notifié quand il sera terminé.' }).catch(() => {});
@@ -1153,10 +1166,10 @@ export async function setEntryStatusByStation(
     if (hasRealClient) {
       notifyEntry({ entryId, userId: entry.user_id, stationId, type: 'service_completed' }).catch(() => {});
       notifyClientFeed({ userId: entry.user_id, entryId, stationId, kind: 'service_completed', body: 'Votre lavage est terminé ! Venez récupérer votre véhicule.' }).catch(() => {});
-    } else if (entry.walk_in_client_email && !entry.walk_in_receipt_sent_at) {
-      /* Unregistered walk-in client: send the off-platform receipt email
-       * with a CTA to create an account. Mark the entry as 'sent' so we
-       * never double-send if the merchant toggles statuses. */
+    } else if (updated.walk_in_client_email && !updated.walk_in_receipt_sent_at) {
+      /* Read from `updated` (the RETURNING row) to avoid a race where two
+       * concurrent "Complete" requests both read walk_in_receipt_sent_at=null
+       * from the pre-update snapshot and both fire the email. */
       void sendWalkInReceiptEmailForEntry(updated).catch((err) => {
         console.error('[WALK_IN_RECEIPT] Failed to send completion email', {
           entryId,
@@ -1165,7 +1178,6 @@ export async function setEntryStatusByStation(
       });
     }
   }
-  void isUnregisteredWalkIn; /* kept for readability */
 
   return updated;
 }

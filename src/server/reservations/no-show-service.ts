@@ -23,6 +23,7 @@ import {
   capturePaymentIntent,
   refundPaymentIntent,
   distributePenalty,
+  classifyStripeError,
 } from '@/server/payments/payment-service';
 import { notifyEntry } from '@/server/notifications/notification-service';
 import { notifyClientFeed } from '@/server/notifications/client-feed-notifications';
@@ -107,20 +108,25 @@ export async function markQueueNoShows(): Promise<MarkNoShowsResult> {
     // idempotent on a PaymentIntent (subsequent captures return the same charge), so no key is
     // required there.
     if (entry.stripe_payment_id) {
-      let captured = false;
-      let chargeId: string | null = null;
-      let transferId: string | null = null;
+      let captureResult: Awaited<ReturnType<typeof capturePaymentIntent>> | null = null;
       try {
-        ({ chargeId, transferId } = await capturePaymentIntent(entry.stripe_payment_id));
-        captured = true;
+        captureResult = await capturePaymentIntent(entry.stripe_payment_id);
       } catch (e) {
+        const err = classifyStripeError(e);
         console.error('[NO_SHOW_CAPTURE_FAILED]', {
           entryId: entry.id,
           stripe_payment_id: entry.stripe_payment_id,
-          error: e instanceof Error ? e.message : String(e),
+          error_class: err.class,
+          error_code: err.code,
+          error: err.message,
         });
       }
-      if (captured && chargeId) {
+
+      const charged = captureResult?.charged ?? false;
+      const chargeId = captureResult?.chargeId ?? null;
+      const transferId = captureResult?.transferId ?? null;
+
+      if (charged && chargeId) {
         try {
           await updateEntry(entry.id, { stripe_charge_id: chargeId });
         } catch (e) {
@@ -131,7 +137,7 @@ export async function markQueueNoShows(): Promise<MarkNoShowsResult> {
           });
         }
       }
-      if (captured && refundedAmount > 0) {
+      if (charged && refundedAmount > 0) {
         try {
           const refundId = await refundPaymentIntent(
             entry.stripe_payment_id,
@@ -146,19 +152,21 @@ export async function markQueueNoShows(): Promise<MarkNoShowsResult> {
           });
         }
       }
-      if (captured && penaltyAmount > 0) {
+      if (charged && penaltyAmount > 0) {
         try {
           await distributePenalty(
             entry.stripe_payment_id,
             Math.round(penaltyAmount * 100),
             policy.stationPenaltyShare,
-            undefined,
+            `no-show-penalty:${entry.id}`,
             chargeId ?? undefined,
             transferId ?? undefined,
           );
         } catch (e) {
           console.error('[NO_SHOW_PENALTY_DIST_FAILED]', {
             entryId: entry.id,
+            stripe_payment_id: entry.stripe_payment_id,
+            penalty_amount_cents: Math.round(penaltyAmount * 100),
             error: e instanceof Error ? e.message : String(e),
           });
         }

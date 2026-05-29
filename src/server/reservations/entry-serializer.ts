@@ -72,11 +72,12 @@ export function serializeStationEntry(entry: Entry) {
 
 /** Station-side rich entry: adds denormalized user name, vehicle format, and slot times. */
 export function serializeRichStationEntry(entry: RichStationEntry) {
-  /* A walk-in is any entry created off-payment (no Stripe PI). The
-   * merchant added it manually, so they should be able to start the
-   * service without prompting for the client's ticket_code (the
-   * client never received one). */
-  const isWalkIn = !entry.stripe_payment_id;
+  /* Walk-ins are identified by the presence of walk_in_client_* columns,
+   * not by the absence of a Stripe PI (which is also null for entries whose
+   * payment intent was never created — failed/pending standard reservations).
+   * Matched walk-ins (email resolved to a real account) have these fields
+   * cleared to null so they behave as regular entries. */
+  const isWalkIn = Boolean(entry.walk_in_client_email) || Boolean(entry.walk_in_client_name);
   return {
     id: entry.id,
     user_id: entry.user_id,

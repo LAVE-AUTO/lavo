@@ -17,6 +17,7 @@ interface ApiEntry {
   entry_type: 'reservation' | 'queue';
   station_id: string;
   vehicle_format_id: string | null;
+  service: { id: string; name: string; category: string } | null;
   status: string;
   queue_position: number | null;
   amount_paid: string | null;
@@ -107,7 +108,7 @@ export default function QueueDetailPage({ params }: PageProps) {
         stationAddress: station ? `${station.address}, ${station.city}` : '',
         stationLatitude: parseFloat(station?.latitude ?? '0'),
         stationLongitude: parseFloat(station?.longitude ?? '0'),
-        forfaitName: format?.label ?? '-',
+        forfaitName: found.service?.name ?? format?.label ?? '-',
         position: found.queue_position ?? 1,
         totalPrice: parseFloat(found.amount_paid ?? '0'),
         washDurationMinutes: station?.stationConfig?.wash_duration_minutes ?? 15,

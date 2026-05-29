@@ -28,6 +28,7 @@ import { MAX_ADVANCE_BOOKING_DAYS } from '@/helpers/constants';
 import { getCancellationPolicy } from '@/server/admin/platform-settings-service';
 import {
   capturePaymentIntent,
+  classifyStripeError,
   createPaymentIntent,
   distributePenalty,
   refundPaymentIntent,
@@ -275,29 +276,36 @@ export async function rescheduleReservation(
     // If the original PI had no payment (no stripe_payment_id), skip capture/refund entirely
     // and proceed directly to creating the new PI.
     if (reservation.stripe_payment_id) {
-      let captured = false;
-      let chargeId: string | null = null;
-      let transferId: string | null = null;
+      let captureResult: Awaited<ReturnType<typeof capturePaymentIntent>> | null = null;
       try {
-        ({ chargeId, transferId } = await capturePaymentIntent(reservation.stripe_payment_id));
-        captured = true;
+        captureResult = await capturePaymentIntent(reservation.stripe_payment_id);
       } catch (e) {
+        const err = classifyStripeError(e);
         console.error('[RESCHEDULE_CAPTURE_FAILED]', {
           reservationId,
           stripe_payment_id: reservation.stripe_payment_id,
-          error: e instanceof Error ? e.message : String(e),
+          error_class: err.class,
+          error_code: err.code,
+          error: err.message,
         });
       }
 
-      if (!captured) {
-        // The original payment authorization could not be settled. Creating a new PI now would
-        // leave two active authorizations on the client's card. Abort and surface the error.
+      if (!captureResult) {
+        // A non-recoverable Stripe error (network, invalid request) prevented capture.
+        // Creating a new PI now would leave two active authorizations on the client's card.
+        // Abort so the caller returns a 5xx and the client can retry.
         throw new Error(
-          `[RESCHEDULE_CAPTURE_FAILED] Could not capture original PaymentIntent ${reservation.stripe_payment_id} - reschedule aborted to prevent double charge. Manual resolution required for reservation ${reservationId}.`
+          `[RESCHEDULE_CAPTURE_FAILED] Could not capture original PaymentIntent ${reservation.stripe_payment_id} — reschedule aborted to prevent double charge. Manual resolution required for reservation ${reservationId}.`
         );
       }
 
-      if (captured && chargeId) {
+      // charged=false: PI was already cancelled (expired). No funds moved — skip penalty/refund
+      // and proceed directly to creating a new PI at the standard (non-late) rate.
+      const charged = captureResult.charged;
+      const chargeId = captureResult.chargeId;
+      const transferId = captureResult.transferId;
+
+      if (charged && chargeId) {
         try {
           await updateEntry(reservationId, { stripe_charge_id: chargeId });
         } catch (e) {
@@ -309,11 +317,12 @@ export async function rescheduleReservation(
         }
       }
 
-      if (captured && refundedAmount > 0) {
+      if (charged && refundedAmount > 0) {
         try {
           const refundId = await refundPaymentIntent(
             reservation.stripe_payment_id,
-            Math.round(refundedAmount * 100)
+            Math.round(refundedAmount * 100),
+            `rescheduled-refund:${reservationId}`
           );
           await updateEntry(reservationId, { stripe_refund_id: refundId });
         } catch (e) {
@@ -325,13 +334,13 @@ export async function rescheduleReservation(
         }
       }
 
-      if (captured && penaltyAmount > 0) {
+      if (charged && penaltyAmount > 0) {
         try {
           await distributePenalty(
             reservation.stripe_payment_id,
             Math.round(penaltyAmount * 100),
             policy.stationPenaltyShare,
-            undefined,
+            `rescheduled-penalty:${reservationId}`,
             chargeId ?? undefined,
             transferId ?? undefined,
           );

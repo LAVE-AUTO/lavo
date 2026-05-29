@@ -28,8 +28,8 @@
  *   - Unique constraint on stripe_payment_intent_id prevents PI re-use
  */
 import { db } from '@/lib/db';
-import { reservations, stations } from '@/lib/db/schema';
-import { eq } from 'drizzle-orm';
+import { reservations, reservationTips, stations } from '@/lib/db/schema';
+import { eq, sql } from 'drizzle-orm';
 import { AppError } from '@/lib/errors';
 import { HTTP_STATUS } from '@/helpers/constants';
 import { createTipPaymentIntent } from '@/server/payments/payment-service';
@@ -138,11 +138,14 @@ export async function createTip(
     getPlatformSettingWithFallback('max_tip_amount_xaf', 'PLATFORM_MAX_TIP_AMOUNT_XAF', String(DEFAULT_TIP_MAX_AMOUNT)),
     getPlatformSettingWithFallback('platform_currency', 'PLATFORM_CURRENCY', DEFAULT_PLATFORM_CURRENCY),
   ]);
-  const maxAmount = parseFloat(maxRaw);
+  // Strip whitespace before parsing (e.g. "50 000" → 50000) to guard against
+  // locale-formatted values stored by an admin ("50 000 XAF", "50,000").
+  const maxAmount = parseInt(maxRaw.replace(/[\s,]/g, ''), 10);
   const currency = currencyRaw.trim().toLowerCase() || DEFAULT_PLATFORM_CURRENCY;
-  if (!Number.isFinite(maxAmount) || data.amount > maxAmount) {
+  const effectiveMax = Number.isFinite(maxAmount) && maxAmount > 0 ? maxAmount : DEFAULT_TIP_MAX_AMOUNT;
+  if (data.amount > effectiveMax) {
     throw new AppError(
-      `Tip amount must not exceed ${Number.isFinite(maxAmount) ? maxAmount : DEFAULT_TIP_MAX_AMOUNT}`,
+      `Tip amount must not exceed ${effectiveMax}`,
       HTTP_STATUS.UNPROCESSABLE_ENTITY
     );
   }
@@ -162,18 +165,38 @@ export async function createTip(
     reservationId,
   });
 
-  // 9. Persist the tip record.
-  const tip = await repo.createTip({
-    reservation_id: reservationId,
-    client_id: userId,
-    station_id: reservation.station_id,
-    amount: data.amount.toFixed(2),
-    stripe_payment_intent_id: paymentIntentId,
-    status: 'pending',
+  // 9 & 10. Persist tip record + denormalize tip_amount in a single transaction.
+  // If either write fails, neither is committed: the PI will expire uncaptured (Stripe-side),
+  // and the reservation keeps a consistent view of the tip state.
+  const tip = await db.transaction(async (tx) => {
+    let created: typeof reservationTips.$inferSelect;
+    try {
+      [created] = await tx
+        .insert(reservationTips)
+        .values({
+          reservation_id: reservationId,
+          client_id: userId,
+          station_id: reservation.station_id,
+          amount: data.amount.toFixed(2),
+          stripe_payment_intent_id: paymentIntentId,
+          status: 'pending',
+        })
+        .returning();
+    } catch (err: unknown) {
+      const code = err && typeof err === 'object' && 'code' in err
+        ? (err as { code?: string }).code
+        : undefined;
+      if (code === '23505') {
+        throw new AppError('A tip has already been sent for this reservation', HTTP_STATUS.CONFLICT);
+      }
+      throw err;
+    }
+    await tx
+      .update(reservations)
+      .set({ tip_amount: data.amount.toFixed(2), updated_at: sql`now()` })
+      .where(eq(reservations.id, reservationId));
+    return created;
   });
-
-  // 10. Denormalize tip_amount onto the reservation row.
-  await repo.setReservationTipAmount(reservationId, data.amount.toFixed(2));
 
   // 11. Notify station - fire-and-forget (notification failure must not abort the tip).
   if (station.user_id) {

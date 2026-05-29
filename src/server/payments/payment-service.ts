@@ -4,9 +4,37 @@
  * The station's stripe_account_id is used as the connected account (destination).
  */
 import { stripe } from '@/lib/stripe';
-import type Stripe from 'stripe';
+import Stripe from 'stripe';
 import { APP_URL } from '@/helpers/constants';
 import { ConflictError, NotImplementedError, ValidationError } from '@/lib/errors';
+import { logFinancialEvent } from './financial-event-logger';
+
+// ─── Stripe error classification ──────────────────────────────────────────────
+
+export type StripeErrorClass =
+  | 'network'      // transient — SDK already retried; log and potentially schedule retry
+  | 'card_declined' // non-retryable — client must use a different payment method
+  | 'invalid_request' // non-retryable — bad parameters, wrong PI state
+  | 'unknown';     // catchall
+
+/**
+ * Classifies a Stripe error for structured logging and retry decisions.
+ * Callers should log the `class` so ops can distinguish "retry later" from
+ * "client action required" without reading raw Stripe error strings.
+ */
+export function classifyStripeError(e: unknown): { class: StripeErrorClass; code: string | null; message: string } {
+  if (e instanceof Stripe.errors.StripeConnectionError || e instanceof Stripe.errors.StripeAPIError) {
+    return { class: 'network', code: null, message: e.message };
+  }
+  if (e instanceof Stripe.errors.StripeCardError) {
+    return { class: 'card_declined', code: e.code ?? null, message: e.message };
+  }
+  if (e instanceof Stripe.errors.StripeInvalidRequestError) {
+    return { class: 'invalid_request', code: e.code ?? null, message: e.message };
+  }
+  const message = e instanceof Error ? e.message : String(e);
+  return { class: 'unknown', code: null, message };
+}
 
 // ─── Legacy queue payment (immediate charge) ────────────────────────────────
 
@@ -48,6 +76,11 @@ export type CreatePaymentIntentParams = {
   stationStripeAccountId: string;
   commissionCents: number;
   metadata?: Record<string, string>;
+  /**
+   * Stripe idempotency key — prevents duplicate PIs when the client retries
+   * a failed request before our response arrives. Pass `pi-create:<entryId>`.
+   */
+  idempotencyKey?: string;
 };
 
 export type CreatePaymentIntentResult = {
@@ -71,6 +104,7 @@ export async function createPaymentIntent(
     stationStripeAccountId,
     commissionCents,
     metadata = {},
+    idempotencyKey,
   } = params;
 
   if (!Number.isInteger(amountCents) || amountCents <= 0) {
@@ -92,22 +126,23 @@ export async function createPaymentIntent(
 
   let paymentIntent: Stripe.PaymentIntent;
   try {
-    paymentIntent = await stripe.paymentIntents.create({
-      amount: amountCents,
-      currency,
-      capture_method: 'manual',
-      application_fee_amount: commissionCents,
-      transfer_data: {
-        destination,
+    paymentIntent = await stripe.paymentIntents.create(
+      {
+        amount: amountCents,
+        currency,
+        capture_method: 'manual',
+        application_fee_amount: commissionCents,
+        transfer_data: { destination },
+        metadata: mergedMetadata,
+        automatic_payment_methods: { enabled: true, allow_redirects: 'never' },
       },
-      metadata: mergedMetadata,
-      automatic_payment_methods: { enabled: true, allow_redirects: 'never' },
-    });
+      idempotencyKey ? { idempotencyKey } : undefined
+    );
   } catch (e) {
-    const msg = e instanceof Error ? e.message : String(e);
+    const err = classifyStripeError(e);
     if (
-      msg.includes('destination account needs to have at least one of the following capabilities') ||
-      msg.includes('capabilities.stripe_balance.stripe_transfers')
+      err.message.includes('destination account needs to have at least one of the following capabilities') ||
+      err.message.includes('capabilities.stripe_balance.stripe_transfers')
     ) {
       throw new ConflictError('Station payment account is not fully configured');
     }
@@ -118,6 +153,16 @@ export async function createPaymentIntent(
     throw new Error('Stripe did not return a client_secret');
   }
 
+  logFinancialEvent({
+    event: 'PI_CREATED',
+    stripePaymentIntentId: paymentIntent.id,
+    amountCents,
+    currency,
+    userId: params.userId,
+    stationId: params.stationId,
+    meta: { commission_cents: commissionCents },
+  });
+
   return {
     paymentIntentId: paymentIntent.id,
     clientSecret: paymentIntent.client_secret,
@@ -125,29 +170,66 @@ export async function createPaymentIntent(
 }
 
 /**
- * Captures a previously authorized PaymentIntent.
- * Triggers fund distribution: station receives (amount - application_fee), platform retains the commission.
- * Called when a reservation is marked as completed by the station, or when a client is detected as late
- * (no refund - distribution proceeds as if the service was rendered).
- * Returns the charge ID and transfer ID so callers can persist them without extra Stripe API calls.
+ * Result of a capture attempt.
+ * `charged = true`  — funds were captured now, OR the PI was already `succeeded`
+ *                     (idempotent re-capture): charge/transfer IDs are valid, proceed
+ *                     with refund and penalty distribution as normal.
+ * `charged = false` — the PI was already `canceled` before capture (expired PI,
+ *                     concurrent cancellation): no funds were moved, callers must
+ *                     skip all refund and penalty operations.
  */
-export async function capturePaymentIntent(
-  paymentIntentId: string
-): Promise<{ chargeId: string | null; transferId: string | null }> {
-  const captured = await stripe.paymentIntents.capture(paymentIntentId, {
-    expand: ['latest_charge'],
-  });
+export type CaptureResult = {
+  chargeId: string | null;
+  transferId: string | null;
+  charged: boolean;
+};
 
-  const charge = typeof captured.latest_charge === 'string'
-    ? null
-    : captured.latest_charge ?? null;
+/**
+ * Captures a previously authorized PaymentIntent.
+ * Triggers fund distribution: station receives (amount - application_fee), platform retains commission.
+ * Called on service completion, late cancellation, and no-show detection.
+ *
+ * Resilient to concurrent state changes:
+ *   - `already succeeded` (concurrent webhook): retrieves existing charge/transfer, charged=true.
+ *   - `already canceled`  (PI expired or race): returns charged=false so callers skip money movement.
+ */
+export async function capturePaymentIntent(paymentIntentId: string): Promise<CaptureResult> {
+  let pi: Stripe.PaymentIntent;
+  try {
+    pi = await stripe.paymentIntents.capture(paymentIntentId, { expand: ['latest_charge'] });
+  } catch (e) {
+    if (
+      e instanceof Stripe.errors.StripeInvalidRequestError &&
+      e.code === 'payment_intent_unexpected_state'
+    ) {
+      // PI is either already `succeeded` (idempotent) or `canceled` (abandoned/expired).
+      const existing = await stripe.paymentIntents.retrieve(paymentIntentId, {
+        expand: ['latest_charge'],
+      });
+      if (existing.status === 'canceled') {
+        return { chargeId: null, transferId: null, charged: false };
+      }
+      // status === 'succeeded': extract existing charge so callers can distribute/refund normally.
+      pi = existing;
+    } else {
+      throw e;
+    }
+  }
+
+  const charge = typeof pi.latest_charge === 'string' ? null : pi.latest_charge ?? null;
   const chargeId = charge?.id ?? null;
   const rawTransfer = charge?.transfer as string | Stripe.Transfer | undefined;
-  const transferId = typeof rawTransfer === 'string'
-    ? rawTransfer
-    : rawTransfer?.id ?? null;
+  const transferId =
+    typeof rawTransfer === 'string' ? rawTransfer : rawTransfer?.id ?? null;
 
-  return { chargeId, transferId };
+  logFinancialEvent({
+    event: 'PI_CAPTURED',
+    stripePaymentIntentId: paymentIntentId,
+    stripeChargeId: chargeId ?? undefined,
+    stripeTransferId: transferId ?? undefined,
+  });
+
+  return { chargeId, transferId, charged: true };
 }
 
 /**
@@ -155,6 +237,7 @@ export async function capturePaymentIntent(
  */
 export async function cancelPaymentIntent(paymentIntentId: string): Promise<void> {
   await stripe.paymentIntents.cancel(paymentIntentId);
+  logFinancialEvent({ event: 'PI_CANCELLED', stripePaymentIntentId: paymentIntentId });
 }
 
 /**
@@ -180,6 +263,12 @@ export async function refundPaymentIntent(
     },
     idempotencyKey ? { idempotencyKey } : undefined
   );
+  logFinancialEvent({
+    event: 'REFUND_ISSUED',
+    stripePaymentIntentId: paymentIntentId,
+    stripeRefundId: refund.id,
+    amountCents,
+  });
   return refund.id;
 }
 
@@ -244,6 +333,13 @@ export async function distributePenalty(
     { amount: clawbackCents },
     idempotencyKey ? { idempotencyKey } : undefined
   );
+  logFinancialEvent({
+    event: 'PENALTY_DISTRIBUTED',
+    stripePaymentIntentId: paymentIntentId,
+    stripeReversalId: reversal.id,
+    amountCents: clawbackCents,
+    meta: { penalty_cents: penaltyCents, station_penalty_share: stationPenaltyShare },
+  });
   return reversal.id;
 }
 

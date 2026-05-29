@@ -2,7 +2,7 @@
  * Data access for station entries (reservations and queue) in the single reservations table.
  * Enforces entry_type constraints: reservation => time_slot_id set; queue => queue_position set.
  */
-import { and, asc, desc, eq, gte, inArray, isNull, lt, lte, sql } from 'drizzle-orm';
+import { and, asc, desc, eq, gte, inArray, isNotNull, isNull, lt, lte, sql } from 'drizzle-orm';
 import { db, type DbTransaction } from '@/lib/db';
 import { reservations, timeSlots, stationConfigs, stations, vehicleFormats, users, stationServices } from '@/lib/db/schema';
 
@@ -663,11 +663,20 @@ export async function cancelQueueEntryForNoShowIfEligible(
   return row;
 }
 
-const STRIPE_PAYMENT_CANCEL_STATUSES = ['pending_payment', 'confirmed'] as const;
+/**
+ * Only `pending_payment` entries may be cancelled by Stripe failure webhooks.
+ *
+ * `confirmed` is intentionally excluded: a `confirmed` entry means the card has
+ * already been authorized via `amount_capturable_updated`. A late `payment_failed`
+ * Stripe retry (3DS timeout, network glitch) must NOT override an authorization
+ * that already succeeded — doing so would cancel a reservation for a client whose
+ * card is legitimately held, causing them to show up at the station with no slot.
+ */
+const STRIPE_PAYMENT_CANCEL_STATUSES = ['pending_payment'] as const;
 
 /**
  * Cancels an entry for Stripe payment_failed / canceled webhooks only while status is still
- * pending_payment or confirmed. Returns the updated row if a row matched; otherwise undefined.
+ * pending_payment. Returns the updated row if a row matched; otherwise undefined.
  * Callers must run slot decrement in the same transaction so webhook replays cannot double-decrement.
  */
 export async function cancelEntryForStripePaymentFailureIfEligible(
@@ -836,6 +845,25 @@ export async function findOrphanedPendingPaymentEntries(olderThanMinutes: number
       eq(reservations.entry_type, 'queue'),
       lt(reservations.created_at, cutoff)
     ),
+  });
+}
+
+/**
+ * Returns entries stuck in pending_payment WITH a stripe_payment_id but older than
+ * olderThanMinutes — these are entries where the Stripe authorization happened but
+ * the `amount_capturable_updated` webhook never arrived (Stripe outage, bad URL,
+ * missing STRIPE_WEBHOOK_SECRET). The cron polls Stripe directly for these.
+ */
+export async function findStalledPendingPaymentEntries(olderThanMinutes: number): Promise<Entry[]> {
+  const cutoff = new Date(Date.now() - olderThanMinutes * 60_000);
+  return db.query.reservations.findMany({
+    where: and(
+      eq(reservations.status, 'pending_payment'),
+      isNotNull(reservations.stripe_payment_id),
+      lt(reservations.created_at, cutoff)
+    ),
+    // Limit to avoid hammering Stripe with thousands of retrieve() calls in one run.
+    limit: 50,
   });
 }
 
@@ -1010,6 +1038,7 @@ export async function findRichEntryByIdAndUser(
     .leftJoin(stations, eq(stations.id, reservations.station_id))
     .leftJoin(stationConfigs, eq(stationConfigs.id, reservations.station_id))
     .leftJoin(vehicleFormats, eq(vehicleFormats.id, reservations.vehicle_format_id))
+    .leftJoin(stationServices, eq(stationServices.id, reservations.service_id))
     .leftJoin(timeSlots, eq(timeSlots.id, reservations.time_slot_id))
     .where(and(eq(reservations.id, entryId), eq(reservations.user_id, userId)))
     .limit(1);

@@ -30,6 +30,7 @@ import {
   cancelPaymentIntent,
   refundPaymentIntent,
   distributePenalty,
+  classifyStripeError,
 } from '@/server/payments/payment-service';
 import {
   findReservationWithSlot,
@@ -157,21 +158,27 @@ export async function cancelReservation(
       // Late cancellation: capture the full amount first (materialises the charge),
       // then issue a partial refund for the refundable portion,
       // then claw back the platform's penalty share from the station's transfer.
-      let captured = false;
-      let chargeId: string | null = null;
-      let transferId: string | null = null;
+      let captureResult: Awaited<ReturnType<typeof capturePaymentIntent>> | null = null;
       try {
-        ({ chargeId, transferId } = await capturePaymentIntent(reservation.stripe_payment_id));
-        captured = true;
+        captureResult = await capturePaymentIntent(reservation.stripe_payment_id);
       } catch (e) {
+        const err = classifyStripeError(e);
         console.error('[CAPTURE_FAILED_FOR_LATE_CANCELLATION]', {
           reservationId,
           stripe_payment_id: reservation.stripe_payment_id,
-          error: e instanceof Error ? e.message : String(e),
+          error_class: err.class,
+          error_code: err.code,
+          error: err.message,
         });
       }
 
-      if (captured && chargeId) {
+      // charged=false means the PI was already cancelled before our capture (e.g. expired PI).
+      // In that case, no funds were moved so we skip refund and penalty entirely.
+      const charged = captureResult?.charged ?? false;
+      const chargeId = captureResult?.chargeId ?? null;
+      const transferId = captureResult?.transferId ?? null;
+
+      if (charged && chargeId) {
         try {
           await updateEntry(reservationId, { stripe_charge_id: chargeId });
         } catch (e) {
@@ -183,7 +190,7 @@ export async function cancelReservation(
         }
       }
 
-      if (captured && refundedAmount > 0) {
+      if (charged && refundedAmount > 0) {
         try {
           const refundId = await refundPaymentIntent(
             reservation.stripe_payment_id,
@@ -201,13 +208,13 @@ export async function cancelReservation(
         }
       }
 
-      if (captured && penaltyAmount > 0) {
+      if (charged && penaltyAmount > 0) {
         try {
           await distributePenalty(
             reservation.stripe_payment_id,
             Math.round(penaltyAmount * 100),
             policy.stationPenaltyShare,
-            undefined,
+            `reservation-cancel-penalty:${reservationId}`,
             chargeId ?? undefined,
             transferId ?? undefined,
           );

@@ -36,7 +36,12 @@ const OPAQUE_ID_PATTERN = /^[a-zA-Z0-9_-]+$/;
 
 export async function POST(request: Request): Promise<NextResponse> {
   if (!webhookSecret) {
-    console.error('STRIPE_WEBHOOK_SECRET is not configured');
+    // CRITICAL: every Stripe webhook call returns 500 until this is fixed.
+    // Stripe will retry for 72h then disable the endpoint, leaving ALL paid
+    // reservations stuck in pending_payment. Fix by setting STRIPE_WEBHOOK_SECRET.
+    console.error('[STRIPE_WEBHOOK] CRITICAL — STRIPE_WEBHOOK_SECRET is not configured. All webhook events are being dropped. Set STRIPE_WEBHOOK_SECRET immediately to prevent stuck reservations.', {
+      timestamp: new Date().toISOString(),
+    });
     return errorResponse('Webhook not configured', 500, { code: ApiCode.INTERNAL_ERROR });
   }
 
@@ -173,41 +178,35 @@ async function handleTransferCreated(transfer: Stripe.Transfer | Record<string, 
     return;
   }
 
-  try {
-    const charge = await stripe.charges.retrieve(sourceTransactionId);
-    const piRaw = charge.payment_intent;
-    const paymentIntentId =
-      typeof piRaw === 'string'
-        ? sanitizeStripeId(piRaw, 'pi_')
-        : piRaw && typeof piRaw === 'object' && piRaw !== null && 'id' in piRaw
-          ? sanitizeStripeId((piRaw as { id: unknown }).id, 'pi_')
-          : null;
+  // Re-throw here so the outer try/catch returns 500 → Stripe retries automatically.
+  // Swallowing DB errors would silently lose the transfer_id mapping.
+  const charge = await stripe.charges.retrieve(sourceTransactionId);
+  const piRaw = charge.payment_intent;
+  const paymentIntentId =
+    typeof piRaw === 'string'
+      ? sanitizeStripeId(piRaw, 'pi_')
+      : piRaw && typeof piRaw === 'object' && piRaw !== null && 'id' in piRaw
+        ? sanitizeStripeId((piRaw as { id: unknown }).id, 'pi_')
+        : null;
 
-    if (!paymentIntentId) {
-      console.warn('[WEBHOOK transfer.created] Charge has no payment_intent', {
-        transferId,
-        sourceTransactionId,
-      });
-      return;
-    }
-
-    const entry = await findEntryByStripePaymentId(paymentIntentId);
-    if (!entry) {
-      console.warn('[WEBHOOK transfer.created] No reservation found for payment_intent', {
-        transferId,
-        paymentIntentId,
-      });
-      return;
-    }
-
-    await setStripeTransferIdIfMissing(entry.id, transferId);
-  } catch (err) {
-    console.error('[WEBHOOK transfer.created] Fallback mapping failed; acking without retry', {
+  if (!paymentIntentId) {
+    console.warn('[WEBHOOK transfer.created] Charge has no payment_intent — cannot map transfer', {
       transferId,
       sourceTransactionId,
-      error: err instanceof Error ? err.message : String(err),
     });
+    return;
   }
+
+  const entry = await findEntryByStripePaymentId(paymentIntentId);
+  if (!entry) {
+    console.warn('[WEBHOOK transfer.created] No reservation found for payment_intent', {
+      transferId,
+      paymentIntentId,
+    });
+    return;
+  }
+
+  await setStripeTransferIdIfMissing(entry.id, transferId);
 }
 
 
