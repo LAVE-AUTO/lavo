@@ -32,9 +32,13 @@ import {
   distributePenalty,
   classifyStripeError,
 } from '@/server/payments/payment-service';
+import { logFinancialEvent } from '@/server/payments/financial-event-logger';
 import {
   findReservationWithSlot,
   findEntryByIdAndUser,
+  markPiCancelFailed,
+  markRefundPersistFailed,
+  setStripeTransferIdIfMissing,
   updateEntry,
   type Entry,
 } from '@/server/reservations/entry-repository';
@@ -145,14 +149,36 @@ export async function cancelReservation(
     if (!isLateCancellation) {
       // Free cancellation: the PaymentIntent was authorized but never captured.
       // Cancelling it releases the hold on the client's card - no charge at all.
+      // On failure we emit a PI_CANCEL_FAILED financial event so a reconciliation cron
+      // (or a manual ops sweep) can pick the entry up and retry — without this the hold
+      // would silently sit on the client's card until Stripe auto-expires it (bug #12).
       try {
         await cancelPaymentIntent(reservation.stripe_payment_id);
       } catch (e) {
+        const err = classifyStripeError(e);
         console.error('[CANCEL_PAYMENT_INTENT_FAILED]', {
           reservationId,
           stripe_payment_id: reservation.stripe_payment_id,
-          error: e instanceof Error ? e.message : String(e),
+          error_class: err.class,
+          error_code: err.code,
+          error: err.message,
         });
+        logFinancialEvent({
+          event: 'PI_CANCEL_FAILED',
+          stripePaymentIntentId: reservation.stripe_payment_id,
+          reservationId,
+          entryId: reservationId,
+          userId,
+          stationId: reservation.station_id,
+          meta: {
+            error_class: err.class,
+            error_code: err.code ?? null,
+            context: 'free_cancellation',
+          },
+        });
+        // Mark for reconciliation cron retry. Best-effort: a DB failure here only loses the
+        // retry signal — the financial event log still records the failure.
+        await markPiCancelFailed(reservationId).catch(() => undefined);
       }
     } else {
       // Late cancellation: capture the full amount first (materialises the charge),
@@ -190,14 +216,26 @@ export async function cancelReservation(
         }
       }
 
+      if (charged && transferId) {
+        // Persist stripe_transfer_id so a future dispute refund can correctly decide whether
+        // to reverse_transfer (bill the station) versus refund from the platform balance.
+        await setStripeTransferIdIfMissing(reservationId, transferId).catch((e) => {
+          console.error('[CANCEL_TRANSFER_ID_PERSIST_FAILED]', {
+            reservationId,
+            transferId,
+            error: e instanceof Error ? e.message : String(e),
+          });
+        });
+      }
+
       if (charged && refundedAmount > 0) {
+        let refundId: string | null = null;
         try {
-          const refundId = await refundPaymentIntent(
+          refundId = await refundPaymentIntent(
             reservation.stripe_payment_id,
             Math.round(refundedAmount * 100),
             `reservation-cancel-refund:${reservationId}`
           );
-          await updateEntry(reservationId, { stripe_refund_id: refundId });
         } catch (e) {
           console.error('[REFUND_FAILED]', {
             reservationId,
@@ -205,6 +243,31 @@ export async function cancelReservation(
             refunded_amount_cents: Math.round(refundedAmount * 100),
             error: e instanceof Error ? e.message : String(e),
           });
+        }
+        // Persist refund id separately so a Stripe success followed by a DB hiccup is detectable
+        // by ops (bug #26): the REFUND_ISSUED event already logged the refundId in payment-service,
+        // so we emit a REFUND_PERSIST_FAILED for reconciliation.
+        if (refundId) {
+          try {
+            await updateEntry(reservationId, { stripe_refund_id: refundId });
+          } catch (e) {
+            console.error('[REFUND_ID_PERSIST_FAILED]', {
+              reservationId,
+              stripe_refund_id: refundId,
+              error: e instanceof Error ? e.message : String(e),
+            });
+            logFinancialEvent({
+              event: 'REFUND_PERSIST_FAILED',
+              stripePaymentIntentId: reservation.stripe_payment_id,
+              stripeRefundId: refundId,
+              reservationId,
+              entryId: reservationId,
+              userId,
+              stationId: reservation.station_id,
+              amountCents: Math.round(refundedAmount * 100),
+            });
+            await markRefundPersistFailed(reservationId).catch(() => undefined);
+          }
         }
       }
 

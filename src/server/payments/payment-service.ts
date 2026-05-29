@@ -6,6 +6,7 @@
 import { stripe } from '@/lib/stripe';
 import Stripe from 'stripe';
 import { APP_URL } from '@/helpers/constants';
+import { DEFAULT_PLATFORM_CURRENCY } from '@/helpers/server-constants';
 import { ConflictError, NotImplementedError, ValidationError } from '@/lib/errors';
 import { logFinancialEvent } from './financial-event-logger';
 
@@ -100,7 +101,9 @@ export async function createPaymentIntent(
 ): Promise<CreatePaymentIntentResult> {
   const {
     amountCents,
-    currency = 'eur',
+    // Default sourced from server-constants so reservations and tips share the same default
+    // currency (bug #25). Per-call override still supported.
+    currency = DEFAULT_PLATFORM_CURRENCY,
     stationStripeAccountId,
     commissionCents,
     metadata = {},
@@ -353,6 +356,12 @@ export type CreateTipPaymentIntentParams = {
   stationStripeAccountId: string;
   reservationId: string;
   metadata?: Record<string, string>;
+  /**
+   * Stripe idempotency key — prevents duplicate PIs when the client retries (or two
+   * concurrent tip requests race past the application-level unicity check). Pass
+   * `tip-create:<reservationId>` so retries return the same PI instead of a new one.
+   */
+  idempotencyKey?: string;
 };
 
 /**
@@ -364,7 +373,7 @@ export type CreateTipPaymentIntentParams = {
 export async function createTipPaymentIntent(
   params: CreateTipPaymentIntentParams
 ): Promise<CreatePaymentIntentResult> {
-  const { amountCents, currency, stationStripeAccountId, metadata = {} } = params;
+  const { amountCents, currency, stationStripeAccountId, metadata = {}, idempotencyKey } = params;
 
   if (!Number.isInteger(amountCents) || amountCents <= 0) {
     throw new ValidationError('Invalid tip amount');
@@ -382,14 +391,17 @@ export async function createTipPaymentIntent(
     type: 'tip',
   };
 
-  const paymentIntent = await stripe.paymentIntents.create({
-    amount: amountCents,
-    currency,
-    capture_method: 'automatic',
-    transfer_data: { destination },
-    metadata: mergedMetadata,
-    automatic_payment_methods: { enabled: true, allow_redirects: 'never' },
-  });
+  const paymentIntent = await stripe.paymentIntents.create(
+    {
+      amount: amountCents,
+      currency,
+      capture_method: 'automatic',
+      transfer_data: { destination },
+      metadata: mergedMetadata,
+      automatic_payment_methods: { enabled: true, allow_redirects: 'never' },
+    },
+    idempotencyKey ? { idempotencyKey } : undefined
+  );
 
   if (!paymentIntent.client_secret) {
     throw new Error('Stripe did not return a client_secret');

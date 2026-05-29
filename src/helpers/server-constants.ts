@@ -59,3 +59,11 @@ export const OTP_RATE_LIMIT_WINDOW_MS = parseInt(process.env.OTP_RATE_LIMIT_WIND
 
 /** Default platform commission rate applied to reservations (10%). */
 export const DEFAULT_COMMISSION_RATE = process.env.PLATFORM_COMMISSION_RATE ?? '0.1000';
+
+/**
+ * Default platform currency for all Stripe operations (PaymentIntents and tips).
+ * Stripe currency codes are 3-letter ISO 4217 strings, lowercase.
+ * Overridable per deployment via PLATFORM_CURRENCY; defaults to EUR to match the rest of
+ * the codebase (reservations were hard-coded to 'eur' in payment-service.ts).
+ */
+export const DEFAULT_PLATFORM_CURRENCY = (process.env.PLATFORM_CURRENCY ?? 'eur').trim().toLowerCase();

@@ -28,6 +28,7 @@ import {
   decrementSlotBookedCount,
 } from '@/server/station/slot-repository';
 import { createPaymentIntent, cancelPaymentIntent, capturePaymentIntent, classifyStripeError, refundPaymentIntent, distributePenalty, updatePaymentIntentMetadata } from '@/server/payments/payment-service';
+import { logFinancialEvent } from '@/server/payments/financial-event-logger';
 import { cancelReservation } from '@/server/reservations/cancellation-service';
 import { findById, findByEmail } from '@/server/auth/user-repository';
 import { notifyEntry } from '@/server/notifications/notification-service';
@@ -38,17 +39,21 @@ import { sendWalkInReceiptEmail } from '@/lib/email';
 import { findStationById } from '@/server/station/station-repository';
 import { findMatchingAvailabilitySlot } from '@/server/station/post-availability-service';
 import { generateTicketCode } from './ticket-code';
-import { sql as sqlInline } from 'drizzle-orm';
-import { timeSlots as timeSlotsTable } from '@/lib/db/schema';
+import { and, eq as eqInline, sql as sqlInline } from 'drizzle-orm';
+import { reservations as reservationsTableModule, timeSlots as timeSlotsTable } from '@/lib/db/schema';
 import {
   createReservationEntry,
   createQueueEntry,
+  findEntryById,
   findEntryByIdAndUser,
   findEntryByIdAndStation,
   hasActiveReservationForSlot,
   findPendingPaymentReservationForSlot,
   clearStripePaymentSucceededNotifiedAt,
+  markPiCancelFailed,
+  markRefundPersistFailed,
   setStripePaymentSucceededNotifiedAtIfMissing,
+  setStripeTransferIdIfMissing,
   updateEntry,
   shiftQueuePositions,
   repositionQueueEntry,
@@ -206,26 +211,50 @@ export async function createReservation(
 
   // Cancel any stale pending_payment entry for this user+slot before creating a new PI.
   // This lets users retry after abandoning the Stripe form without hitting a duplicate error.
+  //
+  // Use a guarded UPDATE so two concurrent retries don't both attempt to cancel the same PI
+  // and don't both reach the "create new PI" step thinking they own the cleanup (bug #8 sibling).
   const stalePending = await findPendingPaymentReservationForSlot(userId, timeSlotId);
   if (stalePending) {
-    if (stalePending.stripe_payment_id) {
+    let stripePaymentIdToCancel: string | null = null;
+    await db.transaction(async (tx) => {
+      const [row] = await tx
+        .update(reservationsTableModule)
+        .set({ status: 'cancelled', updated_at: new Date() })
+        .where(
+          and(
+            eqInline(reservationsTableModule.id, stalePending.id),
+            eqInline(reservationsTableModule.status, 'pending_payment')
+          )
+        )
+        .returning({
+          id: reservationsTableModule.id,
+          stripe_payment_id: reservationsTableModule.stripe_payment_id,
+        });
+      if (row) stripePaymentIdToCancel = row.stripe_payment_id;
+    });
+    if (stripePaymentIdToCancel) {
       try {
-        await cancelPaymentIntent(stalePending.stripe_payment_id);
+        await cancelPaymentIntent(stripePaymentIdToCancel);
       } catch {
         // Non-fatal: PI may already be expired or cancelled by Stripe
       }
     }
-    await updateEntry(stalePending.id, { status: 'cancelled' });
   }
 
   // Create Stripe PaymentIntent before the DB transaction (Stripe-first pattern).
   // reservation_id is set via a non-fatal metadata update after DB commit.
+  // Idempotency key: scoped to (user, slot, service, vehicle, minute). A network-retry
+  // from the client within the same minute returns the same PI instead of producing a
+  // second authorization hold on the card.
+  const piIdempotencyKey = `pi-create:reservation:${userId}:${timeSlotId}:${serviceId}:${vehicleFormatId ?? 'na'}:${Math.floor(Date.now() / 60_000)}`;
   const { paymentIntentId, clientSecret } = await createPaymentIntent({
     amountCents,
     userId,
     stationId,
     stationStripeAccountId,
     commissionCents,
+    idempotencyKey: piIdempotencyKey,
     metadata: {
       time_slot_id: timeSlotId,
       service_id: serviceId,
@@ -370,13 +399,17 @@ export async function createReservationByStartTime(
   const commissionCents = Math.round(split.commissionAmount * 100);
 
   /* Stripe-first: create PI before the DB transaction. If the txn fails,
-   * the PI auto-expires after 24h (never charged). */
+   * the PI auto-expires after 24h (never charged).
+   * Idempotency key: (user, station, service, vehicle, start_time, minute). A retry
+   * within the same minute returns the same PI rather than producing a second card hold. */
+  const piIdempotencyKey = `pi-create:reservation-start:${userId}:${stationId}:${serviceId}:${vehicleFormatId ?? 'na'}:${startTime.getTime()}:${Math.floor(Date.now() / 60_000)}`;
   const { paymentIntentId, clientSecret } = await createPaymentIntent({
     amountCents,
     userId,
     stationId,
     stationStripeAccountId,
     commissionCents,
+    idempotencyKey: piIdempotencyKey,
     metadata: {
       service_id: serviceId,
       vehicle_format_id: vehicleFormatId ?? '',
@@ -516,13 +549,11 @@ export async function cancelEntry(
   ) {
     const policy = await getCancellationPolicy();
 
-    // Compute penalty and refund amounts inside the transaction so they are
-    // derived from the transactionally-consistent amount_paid, not the stale
-    // pre-read value. Declared with let so the Stripe block below can read them.
-    let penaltyAmount = 0;
-    let refundedAmount = 0;
-
-    const updated = await db.transaction(async (tx) => {
+    // Compute penalty and refund amounts inside the transaction so they are derived from the
+    // transactionally-consistent amount_paid. Return them from the transaction (rather than
+    // mutating `let` bindings outside) so a transaction rollback never leaves stale values
+    // visible to the Stripe block below (bug #15).
+    const { entry: updated, penaltyAmount, refundedAmount } = await db.transaction(async (tx) => {
       const current = await findEntryByIdAndUser(entryId, userId, tx);
       if (!current) throw new NotFoundError('Entry not found');
       if (current.status === STATUS_CANCELLED) throw new ConflictError('Entry already cancelled');
@@ -531,27 +562,28 @@ export async function cancelEntry(
       // finite number so a corrupt / migrated row cannot produce negative Stripe cents.
       const rawAmount = parseFloat(String(current.amount_paid));
       const amountPaid = Number.isFinite(rawAmount) && rawAmount > 0 ? rawAmount : 0;
-      penaltyAmount = Math.max(
+      const computedPenalty = Math.max(
         0,
         Math.round(amountPaid * policy.penaltyRate * 100) / 100
       );
-      refundedAmount = Math.max(
+      const computedRefund = Math.max(
         0,
-        Math.round((amountPaid - penaltyAmount) * 100) / 100
+        Math.round((amountPaid - computedPenalty) * 100) / 100
       );
 
       if (current.entry_type === 'queue' && current.queue_position != null) {
         await shiftQueuePositions(current.station_id, current.queue_position + 1, -1, tx);
       }
-      return updateEntry(
+      const row = await updateEntry(
         entryId,
         {
           status: STATUS_CANCELLED,
           cancellation_reason: reason ?? null,
-          penalty_amount: penaltyAmount > 0 ? penaltyAmount.toFixed(2) : null,
+          penalty_amount: computedPenalty > 0 ? computedPenalty.toFixed(2) : null,
         },
         tx
       );
+      return { entry: row, penaltyAmount: computedPenalty, refundedAmount: computedRefund };
     });
 
     // Stripe: capture full amount → partial refund → distribute penalty share.
@@ -582,6 +614,16 @@ export async function cancelEntry(
           error: e instanceof Error ? e.message : String(e),
         });
       }
+    }
+    if (charged && transferId) {
+      // Persist transfer_id so a subsequent admin dispute refund correctly bills the station.
+      await setStripeTransferIdIfMissing(entryId, transferId).catch((e) => {
+        console.error('[QUEUE_CANCEL_TRANSFER_ID_PERSIST_FAILED]', {
+          entryId,
+          transferId,
+          error: e instanceof Error ? e.message : String(e),
+        });
+      });
     }
     if (charged && refundedAmount > 0) {
       try {
@@ -659,14 +701,31 @@ export async function cancelEntry(
   });
 
   // Cancel the PaymentIntent if payment hasn't been confirmed yet (no charge).
+  // On failure emit PI_CANCEL_FAILED for ops visibility (bug #12).
   if (entry.stripe_payment_id && entry.status === STATUS_PENDING_PAYMENT) {
     try {
       await cancelPaymentIntent(entry.stripe_payment_id);
     } catch (e) {
+      const err = classifyStripeError(e);
       console.error('[CANCEL_PAYMENT_INTENT_FAILED]', {
         entryId,
-        error: e instanceof Error ? e.message : String(e),
+        error_class: err.class,
+        error_code: err.code,
+        error: err.message,
       });
+      logFinancialEvent({
+        event: 'PI_CANCEL_FAILED',
+        stripePaymentIntentId: entry.stripe_payment_id,
+        entryId,
+        userId,
+        stationId: entry.station_id,
+        meta: {
+          error_class: err.class,
+          error_code: err.code ?? null,
+          context: 'unified_entry_cancel',
+        },
+      });
+      await markPiCancelFailed(entryId).catch(() => undefined);
     }
   }
 
@@ -949,12 +1008,16 @@ export async function upgradeQueueToReservationByStartTime(
   const amountCents = Math.round(amountTotal * 100);
   const commissionCents = Math.round(split.commissionAmount * 100);
 
+  // Idempotency key: scoped to the queue entry being upgraded and the chosen start time, so
+  // a network-retry returns the same PI instead of producing a second card authorization.
+  const piIdempotencyKey = `pi-create:upgrade-start:${entryId}:${startTime.getTime()}`;
   const { paymentIntentId, clientSecret } = await createPaymentIntent({
     amountCents,
     userId,
     stationId,
     stationStripeAccountId,
     commissionCents,
+    idempotencyKey: piIdempotencyKey,
     metadata: {
       vehicle_format_id: entry.vehicle_format_id ?? '',
       upgraded_from_queue: 'true',
@@ -1086,18 +1149,81 @@ export async function setEntryStatusByStation(
     );
   }
 
-  const updated = await updateEntry(entryId, {
-    status,
-    ...(status === 'completed' ? { completed_at: new Date() } : {}),
+  // Station-side cancellation: atomically free the slot in the same transaction as the
+  // status update so the slot booked_count never lingers above reality (bug #7).
+  // The PI release (cancel for pending_payment, refund for confirmed) happens after the
+  // commit so we never hold DB locks during Stripe network I/O.
+  const updated = await db.transaction(async (tx) => {
+    const row = await updateEntry(
+      entryId,
+      {
+        status,
+        ...(status === 'completed' ? { completed_at: new Date() } : {}),
+      },
+      tx
+    );
+    if (status === 'cancelled' && entry.entry_type === 'reservation' && entry.time_slot_id) {
+      await decrementSlotBookedCount(entry.time_slot_id, tx);
+    }
+    return row;
   });
+
+  if (status === 'cancelled' && entry.stripe_payment_id) {
+    // pending_payment → cancel the authorization (no charge ever happened).
+    // confirmed → also cancel: funds were authorized but never captured, releasing the hold
+    //             is the correct behaviour for a station-initiated cancellation. Compensation
+    //             policy (refund vs penalty) lives in the client-driven cancellation path.
+    if (entry.status === 'pending_payment' || entry.status === 'confirmed') {
+      try {
+        await cancelPaymentIntent(entry.stripe_payment_id);
+      } catch (e) {
+        const err = classifyStripeError(e);
+        console.error('[STATION_CANCEL_PI_FAILED]', {
+          entryId,
+          stripe_payment_id: entry.stripe_payment_id,
+          previous_status: entry.status,
+          error_class: err.class,
+          error_code: err.code,
+          error: err.message,
+        });
+        logFinancialEvent({
+          event: 'PI_CANCEL_FAILED',
+          stripePaymentIntentId: entry.stripe_payment_id,
+          entryId,
+          stationId,
+          meta: {
+            error_class: err.class,
+            error_code: err.code ?? null,
+            context: 'station_cancel',
+            previous_status: entry.status,
+          },
+        });
+        await markPiCancelFailed(entryId).catch(() => undefined);
+      }
+    }
+  }
   if (status === 'completed') {
     // Capture the payment (distributes funds to station + platform).
     if (entry.stripe_payment_id) {
       try {
-        const { chargeId, charged } = await capturePaymentIntent(entry.stripe_payment_id);
+        const { chargeId, transferId, charged } = await capturePaymentIntent(entry.stripe_payment_id);
         if (charged && chargeId) {
           await updateEntry(entryId, { stripe_charge_id: chargeId });
-        } else if (!charged) {
+        }
+        if (charged && transferId) {
+          // Persist stripe_transfer_id right after capture: this is the most reliable moment
+          // to map the destination-charge transfer to the reservation. Without this, the
+          // transfer.created webhook is the only fallback and may race against the lookup
+          // (bug #4: stripe_transfer_id never persisted → dispute refunds wrongly billed to platform).
+          await setStripeTransferIdIfMissing(entryId, transferId).catch((e) => {
+            console.error('[CAPTURE_TRANSFER_ID_PERSIST_FAILED]', {
+              entryId,
+              transferId,
+              error: e instanceof Error ? e.message : String(e),
+            });
+          });
+        }
+        if (!charged) {
           // PI was already cancelled — funds were never held. Service is complete but
           // no financial distribution occurs. Log for ops visibility.
           console.warn('[CAPTURE_SKIPPED] PI was already canceled at service completion', {
@@ -1117,22 +1243,33 @@ export async function setEntryStatusByStation(
       }
     }
 
-    // Late capture: `updated` reflects RETURNING row (not stale `entry`) for succeeded_at / notify flag.
-    if (updated.entry_type === 'reservation' && updated.stripe_payment_succeeded_at) {
+    // Re-fetch after capture: the Stripe webhook `payment_intent.succeeded` may have written
+    // `stripe_payment_succeeded_at` while we were awaiting capturePaymentIntent. Reading from
+    // the pre-capture `updated` snapshot would miss it and skip the escrow notification (bug #5).
+    const postCapture = (await findEntryById(entryId)) ?? updated;
+    if (postCapture.entry_type === 'reservation' && postCapture.stripe_payment_succeeded_at) {
       try {
         const claimed = await setStripePaymentSucceededNotifiedAtIfMissing(
-          updated.id,
-          updated.stripe_payment_succeeded_at
+          postCapture.id,
+          postCapture.stripe_payment_succeeded_at
         );
 
         if (claimed) {
           try {
             await sendEscrowReleasedNotificationsForEntry(
-              updated,
-              updated.stripe_payment_succeeded_at
+              postCapture,
+              postCapture.stripe_payment_succeeded_at
             );
           } catch (err) {
-            await clearStripePaymentSucceededNotifiedAt(updated.id);
+            // Isolated try/catch so a clear failure does not mask the original notification error (bug #20).
+            try {
+              await clearStripePaymentSucceededNotifiedAt(postCapture.id);
+            } catch (clearErr) {
+              console.error('[ESCROW_FALLBACK] CRITICAL: failed to clear notified_at after notification failure — will not retry', {
+                entryId: postCapture.id,
+                clearError: clearErr instanceof Error ? clearErr.message : String(clearErr),
+              });
+            }
             const msg = err instanceof Error ? err.message : String(err);
             console.error('[ESCROW_FALLBACK] Escrow released notifications failed', { error: msg });
           }

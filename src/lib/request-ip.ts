@@ -1,14 +1,13 @@
+import { isIP } from 'net';
 import { normalizeRateLimitKey } from './rate-limiter';
 
 function isValidIp(ip: string): boolean {
-  // Very small safeguard: reject values that clearly are not an IP address.
-  // This is not a full validator but helps mitigate simple header spoofing.
   const trimmed = ip.trim();
   if (!trimmed) return false;
   if (trimmed.length > 45) return false; // longer than max IPv6 textual length
-  const ipv4 = /^(\d{1,3}\.){3}\d{1,3}$/;
-  const ipv6 = /^[0-9a-fA-F:]+$/;
-  return ipv4.test(trimmed) || ipv6.test(trimmed);
+  // net.isIP returns 4 / 6 for valid IPv4/IPv6, 0 otherwise — replaces the previous
+  // loose regex that accepted strings like "::::::" as valid IPv6.
+  return isIP(trimmed) !== 0;
 }
 
 /** Uses the standard web `Headers` type; Next.js `headers()` is compatible at runtime. */

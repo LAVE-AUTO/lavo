@@ -5,6 +5,8 @@
  */
 import { NotFoundError, ConflictError } from '@/lib/errors';
 import { db } from '@/lib/db';
+import { and, eq } from 'drizzle-orm';
+import { reservations as reservationsTable } from '@/lib/db/schema';
 import { findServiceVehicleEntryForBooking, findServiceByIdAndStation } from '@/server/station/service-repository';
 import { decrementSlotBookedCount } from '@/server/station/slot-repository';
 import { createPaymentIntent, cancelPaymentIntent, updatePaymentIntentMetadata } from '@/server/payments/payment-service';
@@ -65,28 +67,57 @@ export async function joinQueue(
 
   // Cancel any stale pending_payment queue entry before creating a new PI.
   // Allows users to retry after abandoning the Stripe form.
+  //
+  // The cancel + shift must run atomically (bug #8): two concurrent join attempts from the
+  // same user could otherwise both observe the same stalePending and each apply the shift,
+  // double-decrementing queue positions and corrupting the queue for the whole station.
+  // We use a conditional UPDATE so only the first transaction wins; subsequent ones see no
+  // matching row and skip the shift.
   const stalePending = await findPendingPaymentQueueEntryAtStation(userId, stationId);
   if (stalePending) {
-    if (stalePending.stripe_payment_id) {
+    let wonRace = false;
+    let stripePaymentIdToCancel: string | null = null;
+    await db.transaction(async (tx) => {
+      const [updated] = await tx
+        .update(reservationsTable)
+        .set({ status: 'cancelled', queue_position: null, updated_at: new Date() })
+        .where(
+          and(
+            eq(reservationsTable.id, stalePending.id),
+            eq(reservationsTable.status, 'pending_payment')
+          )
+        )
+        .returning({
+          id: reservationsTable.id,
+          stripe_payment_id: reservationsTable.stripe_payment_id,
+        });
+      if (!updated) return; // another concurrent call already handled this stale entry.
+      wonRace = true;
+      stripePaymentIdToCancel = updated.stripe_payment_id;
+      if (stalePending.queue_position != null) {
+        await shiftQueuePositions(stationId, stalePending.queue_position + 1, -1, tx);
+      }
+    });
+    if (wonRace && stripePaymentIdToCancel) {
       try {
-        await cancelPaymentIntent(stalePending.stripe_payment_id);
+        await cancelPaymentIntent(stripePaymentIdToCancel);
       } catch {
         // Non-fatal: PI may already be expired
       }
     }
-    // Shift queue positions to fill the gap left by the cancelled entry
-    if (stalePending.queue_position != null) {
-      await shiftQueuePositions(stationId, stalePending.queue_position + 1, -1);
-    }
-    await updateEntry(stalePending.id, { status: 'cancelled', queue_position: null });
   }
 
+  // Idempotency key: scoped to (user, station, service, vehicle, minute). A network-retry from
+  // the client within the same minute returns the same PI rather than producing a second
+  // authorization hold on the card.
+  const piIdempotencyKey = `pi-create:queue:${userId}:${stationId}:${serviceId}:${vehicleFormatId ?? 'na'}:${Math.floor(Date.now() / 60_000)}`;
   const { paymentIntentId, clientSecret } = await createPaymentIntent({
     amountCents,
     userId,
     stationId,
     stationStripeAccountId,
     commissionCents,
+    idempotencyKey: piIdempotencyKey,
     metadata: {
       service_id: serviceId,
       vehicle_format_id: vehicleFormatId ?? '',

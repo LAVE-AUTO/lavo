@@ -85,7 +85,17 @@ export function middleware(request: NextRequest) {
     }
   }
 
-  /* --- 2. Admin route guard --- */
+  /* --- 2. Admin UX redirect (NOT an authorization check) ---
+   *
+   * This block only redirects unauthenticated visitors to /login/admin to avoid a flash
+   * of the protected page before the server-side guard kicks in. It checks for the mere
+   * presence of `Hurryline_admin_session` — a hint cookie set on login — but does NOT
+   * verify its signature or content. An attacker can trivially set that cookie to any
+   * value and pass this block.
+   *
+   * Real authorization happens server-side in every admin page/route via
+   * `requireRole(request, 'admin')`. Do not rely on this middleware for access control.
+   */
   const isAdminPath = LOCALES.some(
     (l) => pathname === `/${l}/admin` || pathname.startsWith(`/${l}/admin/`)
   );

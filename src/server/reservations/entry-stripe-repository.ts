@@ -94,3 +94,57 @@ export async function clearStripePaymentSucceededNotifiedAt(
     })
     .where(eq(reservations.id, entryId));
 }
+
+/**
+ * Marks a reservation as needing PI-cancel reconciliation (bug #12). The reconciliation cron
+ * scans `pi_cancel_failed_at IS NOT NULL` entries and retries Stripe.paymentIntents.cancel.
+ */
+export async function markPiCancelFailed(
+  entryId: string,
+  tx?: DbTransaction
+): Promise<void> {
+  const client = tx ?? db;
+  await client
+    .update(reservations)
+    .set({ pi_cancel_failed_at: new Date(), updated_at: new Date() })
+    .where(eq(reservations.id, entryId));
+}
+
+/** Clears the PI-cancel failure marker after a successful reconciliation. */
+export async function clearPiCancelFailed(
+  entryId: string,
+  tx?: DbTransaction
+): Promise<void> {
+  const client = tx ?? db;
+  await client
+    .update(reservations)
+    .set({ pi_cancel_failed_at: null, updated_at: new Date() })
+    .where(eq(reservations.id, entryId));
+}
+
+/**
+ * Marks a reservation whose Stripe refund succeeded but whose `stripe_refund_id` failed to
+ * persist (bug #26). The reconciliation cron looks up the refund on Stripe and writes the id.
+ */
+export async function markRefundPersistFailed(
+  entryId: string,
+  tx?: DbTransaction
+): Promise<void> {
+  const client = tx ?? db;
+  await client
+    .update(reservations)
+    .set({ refund_persist_failed_at: new Date(), updated_at: new Date() })
+    .where(eq(reservations.id, entryId));
+}
+
+/** Clears the refund-persist failure marker after a successful reconciliation. */
+export async function clearRefundPersistFailed(
+  entryId: string,
+  tx?: DbTransaction
+): Promise<void> {
+  const client = tx ?? db;
+  await client
+    .update(reservations)
+    .set({ refund_persist_failed_at: null, updated_at: new Date() })
+    .where(eq(reservations.id, entryId));
+}

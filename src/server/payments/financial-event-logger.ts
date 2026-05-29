@@ -14,7 +14,9 @@ export type FinancialEventType =
   | 'PI_CREATED'            // PaymentIntent authorized on client card
   | 'PI_CAPTURED'           // Funds captured (service completed / no-show / late cancel)
   | 'PI_CANCELLED'          // Authorization released (free cancel / abandoned)
+  | 'PI_CANCEL_FAILED'      // cancelPaymentIntent threw — card hold may persist until Stripe auto-expires (bug #12)
   | 'REFUND_ISSUED'         // Partial or full refund issued to client
+  | 'REFUND_PERSIST_FAILED' // Stripe refund succeeded but stripe_refund_id failed to persist on entry (bug #26)
   | 'PENALTY_DISTRIBUTED'   // Transfer reversal: platform claws back its penalty share
   | 'TIP_CREATED'           // Tip PI created (capture_method: automatic)
   | 'TIP_CAPTURED'          // Tip PI confirmed by webhook

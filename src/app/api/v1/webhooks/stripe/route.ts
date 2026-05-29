@@ -230,19 +230,32 @@ async function handlePaymentSucceeded(paymentIntentId: string, created: number |
 
   await setStripePaymentSucceededAtIfMissing(entry.id, succeededAt);
 
-  // Only notify on the moment the station has marked the service complete.
-  if (entry.status !== 'completed') return;
+  // Re-fetch after writing succeeded_at to catch races where the station marked the entry
+  // as 'completed' between our initial findEntryByStripePaymentId and now. Without this
+  // re-fetch, the entry.status snapshot is stale and we would skip notifying a freshly
+  // completed reservation (bug #5).
+  const fresh = await findEntryByStripePaymentId(paymentIntentId);
+  if (!fresh || fresh.status !== 'completed') return;
 
   const shouldNotify = await setStripePaymentSucceededNotifiedAtIfMissing(
-    entry.id,
+    fresh.id,
     succeededAt
   );
   if (!shouldNotify) return;
 
   try {
-    await sendEscrowReleasedNotificationsForEntry(entry, succeededAt);
+    await sendEscrowReleasedNotificationsForEntry(fresh, succeededAt);
   } catch (err) {
-    await clearStripePaymentSucceededNotifiedAt(entry.id);
+    // Wrap the clear in its own try/catch so a DB failure here does not mask the original
+    // notification error (bug #20). If both fail, log the second error explicitly.
+    try {
+      await clearStripePaymentSucceededNotifiedAt(fresh.id);
+    } catch (clearErr) {
+      console.error('[WEBHOOK payment_intent.succeeded] CRITICAL: failed to clear notified_at after notification failure — escrow notification will not retry', {
+        entryId: fresh.id,
+        clearError: clearErr instanceof Error ? clearErr.message : String(clearErr),
+      });
+    }
     const error = err instanceof Error ? err.message : String(err);
     console.error('[WEBHOOK payment_intent.succeeded] Escrow released notifications failed', { error });
     throw err;

@@ -50,6 +50,7 @@ import {
   findEntryByIdAndUser,
   findReservationWithSlot,
   setStripePaymentSucceededAtIfMissing,
+  setStripeTransferIdIfMissing,
   updateEntry,
   type Entry,
 } from './entry-repository';
@@ -228,9 +229,23 @@ export async function rescheduleReservation(
         user_id: userId,
         station_id: reservation.station_id,
         vehicle_format_id: reservation.vehicle_format_id,
+        // Preserve the service, post, booking source and ticket code from the original
+        // reservation. Without these, the station cannot validate the ticket code at start
+        // (InvalidTicketCodeError), the receipt PDF loses its service label, and the per-post
+        // availability layer cannot reuse the same wash bay.
+        service_id: reservation.service_id ?? null,
+        post_id: reservation.post_id ?? null,
+        booking_source: (reservation.booking_source as 'standard' | 'qr') ?? 'standard',
+        ticket_code: reservation.ticket_code ?? null,
         time_slot_id: newTimeSlotId,
         status: newStatus,
         amount_paid: reservation.amount_paid,
+        // Commission policy on FREE reschedule: keep the original commission_rate / amounts.
+        // Reason: in Case 1 the PaymentIntent is reused, and Stripe's application_fee_amount
+        // is fixed at PI creation — recomputing the rate here would create a mismatch between
+        // what Stripe withholds and what we record. The client made their commitment under the
+        // commission rate in force at booking time; reschedule is not a re-pricing event.
+        // For LATE reschedule (Case 2 below), a fresh PI is created with the current rate.
         commission_rate: reservation.commission_rate,
         commission_amount: reservation.commission_amount ?? undefined,
         station_payout: reservation.station_payout ?? undefined,
@@ -315,6 +330,18 @@ export async function rescheduleReservation(
             error: e instanceof Error ? e.message : String(e),
           });
         }
+      }
+
+      if (charged && transferId) {
+        // Persist stripe_transfer_id on the now-cancelled original reservation so a future
+        // dispute refund (rare, since the old row is cancelled) correctly bills the station.
+        await setStripeTransferIdIfMissing(reservationId, transferId).catch((e) => {
+          console.error('[RESCHEDULE_TRANSFER_ID_PERSIST_FAILED]', {
+            reservationId,
+            transferId,
+            error: e instanceof Error ? e.message : String(e),
+          });
+        });
       }
 
       if (charged && refundedAmount > 0) {

@@ -28,16 +28,32 @@ import { db } from '@/lib/db';
 import { notifyEntry } from '@/server/notifications/notification-service';
 import { notifyClientFeed } from '@/server/notifications/client-feed-notifications';
 import { logFinancialEvent } from '@/server/payments/financial-event-logger';
+import { cancelPaymentIntent } from '@/server/payments/payment-service';
 
 export type StalledPaymentRecoveryResult = {
   checked: number;
   confirmed: number;
   cancelled: number;
+  /** Entries whose PI sat in a non-terminal state past the absolute timeout and were force-cancelled. */
+  forceCancelled: number;
   skipped: number;
   errors: Array<{ entryId: string; error: string }>;
 };
 
 const RECOVERY_CONCURRENCY = 5;
+
+/**
+ * Absolute age (in hours) after which a `pending_payment` entry is force-cancelled regardless of
+ * Stripe PI status. Covers cases where the PI stays in `requires_action` (3DS abandoned),
+ * `processing` (SEPA/voucher that never resolves) or `requires_confirmation` forever, which
+ * would otherwise keep the slot blocked indefinitely (bug #9).
+ *
+ * Default: 48h. Override via STALLED_PAYMENT_FORCE_CANCEL_AGE_HOURS.
+ */
+const FORCE_CANCEL_AGE_HOURS = (() => {
+  const raw = parseInt(process.env.STALLED_PAYMENT_FORCE_CANCEL_AGE_HOURS ?? '48', 10);
+  return Number.isFinite(raw) && raw > 0 ? raw : 48;
+})();
 
 /**
  * Polls Stripe for all pending_payment entries with a PI older than staleMinutes
@@ -51,9 +67,11 @@ export async function recoverStalledPayments(
     checked: entries.length,
     confirmed: 0,
     cancelled: 0,
+    forceCancelled: 0,
     skipped: 0,
     errors: [],
   };
+  const forceCancelCutoffMs = FORCE_CANCEL_AGE_HOURS * 60 * 60 * 1000;
 
   await runWithConcurrencyLimit(entries, RECOVERY_CONCURRENCY, async (entry) => {
     if (!entry.stripe_payment_id) return;
@@ -104,18 +122,32 @@ export async function recoverStalledPayments(
 
     if (pi.status === 'canceled' || pi.status === 'requires_payment_method') {
       // Card never authorized or PI explicitly cancelled — cancel the entry.
-      let cancelled: Awaited<ReturnType<typeof cancelEntryForStripePaymentFailureIfEligible>>;
-      await db.transaction(async (tx) => {
-        cancelled = await cancelEntryForStripePaymentFailureIfEligible(
-          entry.id,
-          `Stripe PI ${pi.status} (recovered by stalled-payment cron)`,
-          tx
-        );
-        if (cancelled?.time_slot_id) {
-          await decrementSlotBookedCount(cancelled.time_slot_id, tx);
-        }
-      });
-      if (cancelled!) {
+      // Track effective cancellation via a flag set only after the transaction commits, so a
+      // rollback inside the transaction (e.g. decrementSlotBookedCount failure) does not lead
+      // the counter to over-count cancellations (bug #6). Same pattern as orphan-cleanup-service.
+      let wasActuallyCancelled = false;
+      try {
+        await db.transaction(async (tx) => {
+          const row = await cancelEntryForStripePaymentFailureIfEligible(
+            entry.id,
+            `Stripe PI ${pi.status} (recovered by stalled-payment cron)`,
+            tx
+          );
+          if (!row) return;
+          if (row.time_slot_id) {
+            await decrementSlotBookedCount(row.time_slot_id, tx);
+          }
+          wasActuallyCancelled = true;
+        });
+      } catch (e) {
+        // Transaction rolled back. Surface the error and treat as a skip for accounting.
+        result.errors.push({
+          entryId: entry.id,
+          error: e instanceof Error ? e.message : String(e),
+        });
+        return;
+      }
+      if (wasActuallyCancelled) {
         result.cancelled += 1;
         console.warn('[STALLED_PAYMENT_RECOVERY] Cancelled stalled entry', {
           entryId: entry.id,
@@ -128,9 +160,54 @@ export async function recoverStalledPayments(
       return;
     }
 
-    // PI is `processing`, `succeeded`, or some other status — skip for now.
-    // `processing` (SEPA) will resolve on its own; `succeeded` entries are handled
-    // by the `payment_intent.succeeded` webhook (escrow release).
+    // PI is `processing`, `succeeded`, `requires_action`, `requires_confirmation`, etc.
+    // For most of these the system can simply wait — but if the entry has been pending for
+    // longer than FORCE_CANCEL_AGE_HOURS, the slot is being blocked indefinitely (bug #9):
+    // force-cancel the entry and best-effort cancel the PI on the Stripe side.
+    const ageMs = Date.now() - entry.created_at.getTime();
+    if (ageMs > forceCancelCutoffMs) {
+      let wasActuallyCancelled = false;
+      try {
+        await db.transaction(async (tx) => {
+          const row = await cancelEntryForStripePaymentFailureIfEligible(
+            entry.id,
+            `pi_${pi.status}_timeout_${FORCE_CANCEL_AGE_HOURS}h`,
+            tx
+          );
+          if (!row) return;
+          if (row.time_slot_id) {
+            await decrementSlotBookedCount(row.time_slot_id, tx);
+          }
+          wasActuallyCancelled = true;
+        });
+      } catch (e) {
+        result.errors.push({
+          entryId: entry.id,
+          error: e instanceof Error ? e.message : String(e),
+        });
+        return;
+      }
+      if (!wasActuallyCancelled) {
+        result.skipped += 1;
+        return;
+      }
+      // Cancel the PI on Stripe's side too — best-effort, the auth either expires naturally
+      // or this releases the hold sooner. Some statuses (succeeded, canceled) reject cancel,
+      // which is fine.
+      if (entry.stripe_payment_id) {
+        cancelPaymentIntent(entry.stripe_payment_id).catch(() => undefined);
+      }
+      result.forceCancelled += 1;
+      console.warn('[STALLED_PAYMENT_RECOVERY] Force-cancelled entry past timeout', {
+        entryId: entry.id,
+        pi_status: pi.status,
+        age_hours: Math.round(ageMs / 3_600_000),
+      });
+      return;
+    }
+
+    // Below the absolute timeout: keep waiting. `processing` (SEPA) will resolve on its own,
+    // `succeeded` is handled by the payment_intent.succeeded webhook.
     result.skipped += 1;
   });
 

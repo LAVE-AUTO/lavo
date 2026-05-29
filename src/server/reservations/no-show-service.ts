@@ -31,6 +31,7 @@ import {
   listActiveQueueEntries,
   updateEntry,
   cancelQueueEntryForNoShowIfEligible,
+  setStripeTransferIdIfMissing,
   type Entry,
 } from './entry-repository';
 
@@ -44,13 +45,20 @@ export type MarkNoShowsResult = {
 // runWithConcurrencyLimit enforces an internal ceiling of 10; keep this value <= 10.
 const NO_SHOW_CONCURRENCY = 8;
 
+/** Max entries scanned per cron invocation — protects memory and Stripe API quotas. */
+const NO_SHOW_BATCH_LIMIT = 500;
+
 /**
- * Detects all active queue entries whose station has closed for the entry's effective date,
+ * Detects active queue entries whose station has closed for the entry's effective date,
  * applies cancellation fees, and cancels them.
+ *
+ * Bounded scan: processes at most NO_SHOW_BATCH_LIMIT entries per invocation. Run the cron
+ * more frequently if your platform regularly accumulates more no-shows per closing wave —
+ * the operation is idempotent (cancelQueueEntryForNoShowIfEligible is conditional).
  */
 export async function markQueueNoShows(): Promise<MarkNoShowsResult> {
   const [entries, policy] = await Promise.all([
-    listActiveQueueEntries(),
+    listActiveQueueEntries(NO_SHOW_BATCH_LIMIT),
     getCancellationPolicy(),
   ]);
 
@@ -136,6 +144,17 @@ export async function markQueueNoShows(): Promise<MarkNoShowsResult> {
             error: e instanceof Error ? e.message : String(e),
           });
         }
+      }
+      if (charged && transferId) {
+        // Persist stripe_transfer_id so a later admin refund correctly reverses the
+        // station's transfer instead of taking the loss from the platform balance.
+        await setStripeTransferIdIfMissing(entry.id, transferId).catch((e) => {
+          console.error('[NO_SHOW_TRANSFER_ID_PERSIST_FAILED]', {
+            entryId: entry.id,
+            transferId,
+            error: e instanceof Error ? e.message : String(e),
+          });
+        });
       }
       if (charged && refundedAmount > 0) {
         try {
