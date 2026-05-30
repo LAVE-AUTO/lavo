@@ -1,0 +1,22 @@
+name: Mirror to lavo-deploy-test
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  mirror:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout lavo
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Push vers lavo-deploy-test
+        env:
+          TOKEN: ${{ secrets.LAVO_MIRROR_TOKEN }}
+        run: |
+          git remote add deploy "https://x-access-token:${TOKEN}@github.com/LAVE-AUTO/lavo-deploy-test.git"
+          git push deploy main --force
